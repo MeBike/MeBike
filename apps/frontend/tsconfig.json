@@ -28,11 +28,15 @@
       "@lib/*": ["./src/lib/*"],
       "@app/*": ["./src/app/*"],
       "@styles/*": ["./src/styles/*"],
-      "@utils/*": ["./src/utils/*"],
       "@contexts/*": ["./src/contexts/*"],
       "@providers/*": ["./src/providers/*"],
       "@custom-types": ["./src/types/index"],
-      "@constants/*": ["./src/constants/*"]
+      "@constants": ["./src/constants/index"],
+      "@mutations": ["./src/hooks/mutations/index"],
+      "@queries": ["./src/hooks/query/index"],
+      "@schemas": ["./src/schemas/index"],
+      "@utils": ["./src/utils/index"],
+
 
     }
   },

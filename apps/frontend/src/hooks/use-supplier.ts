@@ -1,20 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useGetAllSupplierQuery } from "@hooks/query/Supplier/useGetAllSupplier";
-import { useGetAllStatsSupplierQuery } from "./query/Supplier/useGetAllStatsSupplier";
-import { useCreateSupplierMutation } from "./mutations/Supplier/useCreateSupplierMutation";
-import { CreateSupplierSchema } from "@/schemas/supplier-schema";
+import { CreateSupplierSchema } from "@schemas";
 import { toast } from "sonner";
-import { useGetBikeStatsSupplierQuery } from "./query/Supplier/useGetBikeStatsSupplierQuery";
-import { useChangeStatusSupplierMutation } from "./mutations/Supplier/useChangeStatusSupplierMutation";
-import { useUpdateSupplierMutation } from "./mutations/Supplier/useUpdateSupplierMutation";
-import { useGetSupplierByIDQuery } from "./query/Supplier/useGetSupplierByIDQuery";
-import getErrorMessage from "@/utils/error-message";
-import { SUPPLIER_MESSAGE } from "@/constants/messages";
-import getAxiosErrorCodeMessage from "@/utils/error-util";
-import HTTP_STATUS from "@/constants/http-status";
-import { getErrorMessageFromSupplierCode } from "@/utils/map-message";
+import {useUpdateSupplierMutation,useChangeStatusSupplierMutation,useCreateSupplierMutation} from "@mutations"
+import {useGetSupplierByIDQuery,useGetBikeStatsSupplierQuery,useGetAllSupplierQuery,useGetAllStatsSupplierQuery} from "@queries"
+import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
+import {HTTP_STATUS , SUPPLIER_MESSAGE} from "@constants";
 export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -84,11 +76,9 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
             }
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(
-              error,
-              "Error changing supplier status"
-            );
-            toast.error(errorMessage);
+            const code_error = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromSupplierCode(code_error));
+        throw error; 
           },
         }
       );

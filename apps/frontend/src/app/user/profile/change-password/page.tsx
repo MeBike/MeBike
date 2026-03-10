@@ -14,7 +14,7 @@ import { useAuthActions } from "@/hooks/useAuthAction";
 import {
   changePasswordSchema,
   ChangePasswordSchemaFormData,
-} from "@/schemas/auth-schema";
+} from "@schemas";
 import Link from "next/link";
 import { Progress } from "@radix-ui/react-progress";
 

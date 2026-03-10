@@ -1,23 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
-import { useGetStationByIDQuery } from "./query/Station/useGetStationByIDQuery";
-import { StationSchemaFormData } from "@/schemas/station-schema";
+import { StationSchemaFormData } from "@schemas";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useCreateStationMutation } from "./mutations/Station/useCreateStationQuery";
-import { useSoftDeleteStationMutation } from "./mutations/Station/useSoftDeleteStationMutation";
-import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQuery";
-import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
-import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
-import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
-import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
-import { QUERY_KEYS } from "@constants/queryKey";
-import getAxiosErrorCodeMessage from "@/utils/error-util";
-import {
-  getErrorMessageFromStationCode,
-} from "@/utils/map-message";
-import HTTP_STATUS from "@/constants/http-status";
+import { QUERY_KEYS , HTTP_STATUS } from "@constants";
+import { useCreateStationMutation,useSoftDeleteStationMutation,useUpdateStationMutation} from "@mutations"
+import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationStatsReservationQuery,useGetStationByIDQuery,useGetAllStation} from "@queries";
+import {getAxiosErrorCodeMessage , getErrorMessageFromStationCode} from "@utils";
 interface StationActionProps {
   hasToken?: boolean;
   stationId?: string;

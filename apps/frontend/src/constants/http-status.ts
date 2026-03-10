@@ -12,4 +12,4 @@ const HTTP_STATUS = {
   PARTIAL_CONTENT: 206,
 } as const;
 
-export default HTTP_STATUS;
+export { HTTP_STATUS}

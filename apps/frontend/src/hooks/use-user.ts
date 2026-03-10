@@ -3,17 +3,14 @@ import { useGetAllUserQuery } from "./query/User/useGetAllUserQuery";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { VerifyStatus } from "@/types";
+import { VerifyStatus } from "@custom-types";
 import {useGetDetailUserQuery,useGetAllStatisticsUserQuery,useGetActiveUserQuery,useGetNewRegistrationStatsQuery,useGetTopRenterQuery
   ,useGetSearchUserQuery,useGetDashboardStatsQuery
-} from "@hooks/query/index";
-import {useCreateUserMutation,useResetPasswordUserMutation,useUpdateProfileUserMutation} from "@hooks/mutations/index";
-import { UserProfile , CreateUserFormData,ResetPasswordRequest} from "@/schemas/user-schema";
-import getAxiosErrorCodeMessage from "@/utils/error-util";
-import HTTP_STATUS from "@/constants/http-status";
-import { getErrorMessageFromCustomerCode } from "@/utils/map-message";
-
-
+} from "@queries";
+import {useCreateUserMutation,useResetPasswordUserMutation,useUpdateProfileUserMutation} from "@mutations";
+import { UserProfile , CreateUserFormData,ResetPasswordSchemaFormData} from "@schemas";
+import {HTTP_STATUS} from "@constants";
+import { getErrorMessageFromCustomerCode , getAxiosErrorCodeMessage } from "@utils";
 export const useUserActions = ({
   hasToken,
   verify,
@@ -178,7 +175,7 @@ export const useUserActions = ({
   const useResetPassword = useResetPasswordUserMutation();
   const useUpdateProfile = useUpdateProfileUserMutation();
   const resetPassword = useCallback(
-    async (userData: ResetPasswordRequest) => {
+    async (userData: ResetPasswordSchemaFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;

@@ -8,13 +8,11 @@ import {
   TopUpSchemaFormData,
 } from "@/schemas/wallet-schema";
 import { toast } from "sonner";
-import { useGetManageTransactionQuery } from "./query/Wallet/useGetManageTransactionQuery";
-import { useGetWalletOverviewQuery } from "./query/Wallet/useGetWalletOverviewQuery";
-import { useGetDetailWalletQuery } from "./query/Wallet/useGetDetailWalletQuery";
-import { useUpdateStatusWalletMutation } from "./mutations/Wallet/useUpdateStatusWalletMutation";
+import { useUpdateStatusWalletMutation } from "@mutations";
+import {useGetManageTransactionQuery , useGetWalletOverviewQuery , useGetDetailWalletQuery } from "@queries";
 import { useRouter } from "next/navigation";
 import { QUERY_KEYS } from "@/constants/queryKey";
-import getErrorMessage from "@/utils/error-message";
+import getErrorMessage from "@utils";
 export function useWalletActions(
   hasToken: boolean,
   page?: number,
