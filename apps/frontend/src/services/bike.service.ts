@@ -117,8 +117,8 @@ export const bikeService = {
   },
   getRentalHistoryBike: async (
     id: string
-  ): Promise<AxiosResponse<BikeRentalHistory>> => {
-    const response = await fetchHttpClient.get<BikeRentalHistory>(
+  ): Promise<AxiosResponse<BikeRentalHistory[]>> => {
+    const response = await fetchHttpClient.get<BikeRentalHistory[]>(
       ENDPOINT.BIKE.RENTAL_HISTORY(id)
     );
     return response;

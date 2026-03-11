@@ -84,3 +84,8 @@ export interface BikeActionProps {
   pageSize?: number,
   page?: number,
 }
+export interface BikeFiltersProps {
+  statusFilter: BikeStatus | "all";
+  setStatusFilter: (status: BikeStatus | "all") => void;
+  onReset?: () => void;
+}
