@@ -12,7 +12,7 @@ import { useSupplierActions } from "@/hooks/use-supplier";
 import { bikeColumn } from "@/columns/bike-colums";
 import { BikeStatus } from "@custom-types";
 import { BikeStats } from "./components/bike-stats";
-import {BikeFilters} from "@/components/bikes/bike-filter";
+import {BikeFilters} from "./components/bike-filter";
 
 export default function BikeClient() {
   const router = useRouter();

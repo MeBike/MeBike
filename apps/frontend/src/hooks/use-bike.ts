@@ -20,6 +20,7 @@ import {
 } from "@queries";
 import { HTTP_STATUS } from "@constants";
 import { getErrorMessageFromBikeCode, getAxiosErrorCodeMessage } from "@utils";
+import { th } from "date-fns/locale";
 export const useBikeActions = ({
   hasToken,
   bike_detail_id,
@@ -129,6 +130,7 @@ export const useBikeActions = ({
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
         toast.error(getErrorMessageFromBikeCode(error_code));
+        throw error;
       }
     },
     [
@@ -160,6 +162,7 @@ export const useBikeActions = ({
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
         toast.error(getErrorMessageFromBikeCode(error_code));
+        throw error;
       }
     },
     [

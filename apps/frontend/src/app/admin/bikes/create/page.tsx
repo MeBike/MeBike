@@ -29,6 +29,13 @@ const BIKE_STATUS_LABELS: Record<BikeStatus, string> = {
   UNAVAILABLE: "Không khả dụng",
   "": "Không xác định",
 };
+const VALID_STATUSES: BikeStatus[] = [
+  "AVAILABLE",
+  "BOOKED",
+  "BROKEN",
+  "MAINTENANCE",
+  "UNAVAILABLE",
+];
 
 export default function CreateBikePage() {
   const router = useRouter();
@@ -46,8 +53,8 @@ export default function CreateBikePage() {
     resolver: zodResolver(bikeSchema),
     defaultValues: {
       chipId: "",
-      stationId: "",
-      supplierId: "",
+      stationId: undefined,
+      supplierId: undefined,
       status: "AVAILABLE",
     },
   });
@@ -61,6 +68,7 @@ export default function CreateBikePage() {
     });
     router.push("/admin/bikes");
     router.refresh();
+    
   };
 
   return (
@@ -121,8 +129,10 @@ export default function CreateBikePage() {
               Trạm xe <span className="text-red-500">*</span>
             </Label>
             <Select
-              value={watch("stationId")}
-              onValueChange={(value) => setValue("stationId", value, { shouldValidate: true })}
+              value={watch("stationId") || ""}
+              onValueChange={(value) =>
+                setValue("stationId", value, { shouldValidate: true })
+              }
             >
               <SelectTrigger
                 id="stationId"
@@ -164,7 +174,13 @@ export default function CreateBikePage() {
             </Label>
             <Select
               value={watch("supplierId") || ""}
-              onValueChange={(value) => setValue("supplierId", value === "no-supplier" ? undefined : value, { shouldValidate: true })}
+              onValueChange={(value) =>
+                setValue(
+                  "supplierId",
+                  value === "no-supplier" ? undefined : value,
+                  { shouldValidate: true },
+                )
+              }
             >
               <SelectTrigger
                 id="supplierId"
@@ -204,7 +220,9 @@ export default function CreateBikePage() {
             </Label>
             <Select
               value={selectedStatus}
-              onValueChange={(value: BikeStatus) => setValue("status", value, { shouldValidate: true })}
+              onValueChange={(value: BikeStatus) =>
+                setValue("status", value, { shouldValidate: true })
+              }
             >
               <SelectTrigger
                 id="status"
@@ -213,28 +231,16 @@ export default function CreateBikePage() {
                 <SelectValue placeholder="Chọn trạng thái" />
               </SelectTrigger>
               <SelectContent>
-                {(Object.keys(BIKE_STATUS_LABELS) as BikeStatus[]).filter((status) => status !== "").map((status) => (
-                  <SelectItem key={status} value={status}>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          status === "AVAILABLE"
-                            ? "bg-green-500"
-                            : status === "BOOKED"
-                            ? "bg-purple-500"
-                            : status === "BROKEN"
-                            ? "bg-red-500"
-                            : status === "RESERVED"
-                            ? "bg-indigo-500"
-                            : status === "MAINTENANCE"
-                            ? "bg-yellow-500"
-                            : "bg-gray-500"
-                        }`}
-                      />
-                      {BIKE_STATUS_LABELS[status]}
-                    </div>
-                  </SelectItem>
-                ))}
+                {VALID_STATUSES.filter((status) => status === "AVAILABLE").map(
+                  (status) => (
+                    <SelectItem key={status} value={status}>
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-green-500" />
+                        {BIKE_STATUS_LABELS[status]}
+                      </div>
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
             {errors.status && (

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { BikeStatus } from "@custom-types";
+import { Select } from "@radix-ui/react-select";
 
 interface BikeFiltersProps {
   statusFilter: BikeStatus | "all";
@@ -27,12 +28,12 @@ export function BikeFilters({
           className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="all">Tất cả trạng thái</option>
-          <option value="CÓ SẴN">Có sẵn</option>
-          <option value="ĐANG ĐƯỢC THUÊ">Đang được thuê</option>
-          <option value="BỊ HỎNG">Bị hỏng</option>
-          <option value="ĐÃ ĐẶT TRƯỚC">Đã đặt trước</option>
-          <option value="ĐANG BẢO TRÌ">Đang bảo trì</option>
-          <option value="KHÔNG CÓ SẴN">Không có sẵn</option>
+          <option value="AVAILABLE">Có sẵn</option>
+          <option value="RENTED">Đang được thuê</option>
+          <option value="BROKEN">Bị hỏng</option>
+          <option value="RESERVED">Đã đặt trước</option>
+          <option value="MAINTAINED">Đang bảo trì</option>
+          <option value="UNAVAILABLE">Không có sẵn</option>
         </select>
         
         <Button

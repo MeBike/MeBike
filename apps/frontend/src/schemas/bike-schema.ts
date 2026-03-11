@@ -1,13 +1,12 @@
 import * as z from "zod";
-import { BikeStatus } from "@/types";
-import { isValidUUID } from "@/utils/is-valid-UUID";
+import { BikeStatus } from "@custom-types";
+import { isValidUUID } from "@utils";
 export const bikeSchema = z.object({
   stationId: z
     .string()
-    .min(24, "Mã trạm phải là một ObjectId hợp lệ")
-    .max(24, "Mã trạm phải là một ObjectId hợp lệ")
+    .min(1, "Mã trạm không được để trống")
     .refine(isValidUUID, {
-      message: "Mã trạm phải là một ObjectId hợp lệ",
+      message: "Mã trạm phải là một UUID hợp lệ",
     }),
   status: z.enum([
     "AVAILABLE",
@@ -19,30 +18,28 @@ export const bikeSchema = z.object({
   ] as BikeStatus[]),
   supplierId: z
     .string()
-    .min(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
-    .max(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
     .refine(isValidUUID, {
-      message: "Mã nhà cung cấp phải là một ObjectId hợp lệ",
+      message: "Mã nhà cung cấp phải là một UUID hợp lệ",
     })
-    .optional(),
+    .optional()
+    .or(z.literal("")),
   chipId: z.string(),
 });
 export const updateBikeSchema = z.object({
   stationId: z
     .string()
-    .min(24, "Mã trạm phải là một ObjectId hợp lệ")
-    .max(24, "Mã trạm phải là một ObjectId hợp lệ")
+    .min(1, "Mã trạm không được để trống")
     .refine(isValidUUID, {
-      message: "Mã trạm phải là một ObjectId hợp lệ",
+      message: "Mã trạm phải là một UUID hợp lệ",
     }),
   status: z.enum(["AVAILABLE", "RENTED", "BROKEN", "MAINTENANCE", "BOOKED", "UNAVAILABLE"] as BikeStatus[]),
   supplierId: z
     .string()
-    .min(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
-    .max(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
     .refine(isValidUUID, {
-      message: "Mã nhà cung cấp phải là một ObjectId hợp lệ",
-    }),
+      message: "Mã nhà cung cấp phải là một UUID hợp lệ",
+    })
+    .optional()
+    .or(z.literal("")),
   chipId: z.string(),
 });
 export type BikeSchemaFormData = z.infer<typeof bikeSchema>;
