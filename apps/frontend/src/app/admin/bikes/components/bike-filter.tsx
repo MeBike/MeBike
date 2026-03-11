@@ -29,7 +29,7 @@ export function BikeFilters({
         >
           <option value="all">Tất cả trạng thái</option>
           <option value="AVAILABLE">Có sẵn</option>
-          <option value="RENTED">Đang được thuê</option>
+          <option value="BOOKED">Đang được thuê</option>
           <option value="BROKEN">Bị hỏng</option>
           <option value="RESERVED">Đã đặt trước</option>
           <option value="MAINTAINED">Đang bảo trì</option>
