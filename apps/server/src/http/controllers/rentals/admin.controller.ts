@@ -14,6 +14,7 @@ import {
   toContractAdminRentalDetail,
   toContractAdminRentalListItem,
   toContractRentalListItem,
+  toContractStaffBikeSwapRequest,
   toContractStaffBikeSwapRequestDetail,
 } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
@@ -302,10 +303,47 @@ const adminGetBikeSwapRequests: RouteHandler<
   );
 };
 
+const adminListBikeSwapRequests: RouteHandler<
+  RentalsRoutes["adminListBikeSwapRequests"]
+> = async (c) => {
+  const query = c.req.valid("query");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const repo = yield* RentalRepository;
+      return yield* repo.adminListBikeSwapRequests(
+        {
+          userId: query.userId,
+          status: query.status,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: query.sortBy ?? "createdAt",
+          sortDir: query.sortDir ?? "desc",
+        },
+      );
+    }),
+    "GET /v1/admin/bike-swap-requests",
+  );
+
+  const value = await c.var.runPromise(eff);
+  const response: RentalsContracts.BikeSwapRequestListResponse = {
+    data: value.items.map(toContractStaffBikeSwapRequest),
+    pagination: toContractPage(value),
+  };
+
+  return c.json<RentalsContracts.BikeSwapRequestListResponse, 200>(
+    response,
+    200,
+  );
+};
+
 export const RentalAdminController = {
   adminListRentals,
   adminGetRental,
   adminGetBikeSwapRequests,
   endRentalByAdmin,
   getActiveRentalsByPhone,
+  adminListBikeSwapRequests,
 } as const;

@@ -180,3 +180,8 @@ export type StaffBikeSwapRequestRow = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type AdminBikeSwapRequestFilter = {
+  userId?: string;
+  status?: BikeSwapStatus;
+};

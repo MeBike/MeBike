@@ -1,6 +1,6 @@
 import type { RouteConfig } from "@hono/zod-openapi";
 
-import { serverRoutes } from "@mebike/shared";
+import { requestBikeSwap, serverRoutes } from "@mebike/shared";
 
 import {
   RentalAdminController,
@@ -11,6 +11,7 @@ import {
   requireAdminMiddleware,
   requireAdminOrStaffMiddleware,
   requireStaffMiddleware,
+  requireUserMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerRentalRoutes(
@@ -73,18 +74,29 @@ export function registerRentalRoutes(
 
   const requestSwapRoute = {
     ...rentals.requestBikeSwap,
+    middleware: [requireUserMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(requestSwapRoute, RentalMeController.requestBikeSwap);
 
   const staffListSwapRequestsRoute = {
     ...rentals.staffListBikeSwapRequests,
-    middleware: [requireAdminOrStaffMiddleware] as const,
+    middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
     staffListSwapRequestsRoute,
     RentalStaffController.staffListBikeSwapRequests,
+  );
+
+  const adminListSwapRequestsRoute = {
+    ...rentals.adminListBikeSwapRequests,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    adminListSwapRequestsRoute,
+    RentalAdminController.adminListBikeSwapRequests,
   );
 
   const approveSwapRoute = {

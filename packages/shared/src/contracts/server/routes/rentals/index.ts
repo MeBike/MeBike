@@ -31,6 +31,7 @@ export {
   getStationActivity,
   staffGetRental,
   staffListBikeSwapRequests,
+  adminListBikeSwapRequests,
   adminGetBikeSwapRequests,
   staffGetBikeSwapRequests,
 } from "./queries";

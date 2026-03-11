@@ -609,9 +609,49 @@ export function makeRentalRepository(
         return Option.some(mapToStaffBikeSwapRequestRow(raw));
       });
     },
+
+    adminListBikeSwapRequests(filter, pageReq) {
+      return Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+        const orderBy = toStaffBikeSwapRequestsOrderBy(pageReq);
+
+        const where = toStaffBikeSwapRequestsWhere(filter);
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.bikeSwapRequest.count({ where }),
+            catch: (e) =>
+              new RentalRepositoryError({
+                operation: "adminListBikeSwapRequests.count",
+                cause: e,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.bikeSwapRequest.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                select: staffBikeSwapRequestSelect,
+              }),
+            catch: (e) =>
+              new RentalRepositoryError({
+                operation: "adminListBikeSwapRequests.findMany",
+                cause: e,
+              }),
+          }),
+        ]);
+
+        const mappedItems: StaffBikeSwapRequestRow[] = items.map(
+          mapToStaffBikeSwapRequestRow,
+        );
+
+        return makePageResult(mappedItems, total, page, pageSize);
+      });
+    },
   };
 }
-
 
 const makeRentalRepositoryEffect = Effect.gen(function* () {
   const { client } = yield* Prisma;

@@ -5,6 +5,7 @@ import type { RentalStatus } from "generated/prisma/client";
 
 import type { RentalRepoError, RentalRepositoryError } from "../domain-errors";
 import type {
+  AdminBikeSwapRequestFilter,
   AdminRentalDetail,
   AdminRentalFilter,
   AdminRentalListItem,
@@ -155,6 +156,14 @@ export type RentalRepo = {
     bikeSwapRequestId: string,
   ) => Effect.Effect<
     Option.Option<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
+
+  adminListBikeSwapRequests: (
+    filter: AdminBikeSwapRequestFilter,
+    pageReq: PageRequest<StaffBikeSwapRequestSortField>,
+  ) => Effect.Effect<
+    PageResult<StaffBikeSwapRequestRow>,
     RentalRepositoryError
   >;
 };

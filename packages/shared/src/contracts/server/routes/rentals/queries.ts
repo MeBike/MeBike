@@ -614,6 +614,52 @@ export const staffListBikeSwapRequests = createRoute({
       },
     },
     403: {
+      description: "Forbidden - Staff access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const adminListBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/admin/bike-swap-requests",
+  tags: ["Admin", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z
+      .object({
+        userId: z.uuidv7().optional(),
+        status: BikeSwapStatusSchema.optional(),
+        ...paginationQueryFields,
+        sortBy: z.enum(["status", "updatedAt"]).optional(),
+        sortDir: SortDirectionSchema.optional(),
+      })
+      .openapi("AdminBikeSwapRequestsListQuery", {
+        description: "Query parameters for admin bike swap requests listing",
+      }),
+  },
+  responses: {
+    200: {
+      description: "List of bike swap requests",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
       description: "Forbidden - Admin access required",
       content: {
         "application/json": {
