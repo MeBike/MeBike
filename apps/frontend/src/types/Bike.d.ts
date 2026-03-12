@@ -71,7 +71,7 @@ export interface BikeHasHighestRevenue {
 export interface BikeStatistics {
   "RESERVED": number;
   "AVAILABLE": number;
-  "RENTED": number;
+  "BOOKED": number;
   "UNAVAILABLE": number;
   "BROKEN": number;
 }
