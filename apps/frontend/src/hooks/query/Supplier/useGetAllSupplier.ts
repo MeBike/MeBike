@@ -7,11 +7,12 @@ const fetchAllSuppliers = async (
   status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | ""
 ) => {
   try {
-    const response = await supplierService.getAllSuppliers({
+    const query: Record<string, number | string> = {
       page: page ?? 1,
       limit: limit ?? 10,
-      status: status ?? "",
-    });
+    };
+    if(status) query.status = status;
+    const response = await supplierService.getAllSuppliers(query);
     if (response.status === 200) {
       return response.data;
     }

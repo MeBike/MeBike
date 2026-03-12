@@ -1,6 +1,6 @@
 import { AxiosError } from "axios";
 
-export default function getAxiosErrorCodeMessage(error: unknown): string {
+export function getAxiosErrorCodeMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     return error.response?.data?.details.code || error.message;
   }

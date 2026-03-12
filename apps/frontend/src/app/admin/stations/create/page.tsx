@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
+import { stationSchema, StationSchemaFormData } from "@/schemas/station-schema";
 import { useStationActions } from "@/hooks/use-station";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";

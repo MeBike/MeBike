@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import type { ConfirmResetPasswordSchemaFormData } from "@/schemas/authSchema";
+import type { ConfirmResetPasswordSchemaFormData } from "@/schemas/auth-schema";
 import { authService } from "@/services/auth.service";
 
 export const useConfirmResetPasswordMutation = () => {

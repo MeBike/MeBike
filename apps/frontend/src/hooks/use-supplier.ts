@@ -1,20 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useGetAllSupplierQuery } from "@hooks/query/Supplier/useGetAllSupplier";
-import { useGetAllStatsSupplierQuery } from "./query/Supplier/useGetAllStatsSupplier";
-import { useCreateSupplierMutation } from "./mutations/Supplier/useCreateSupplierMutation";
-import { CreateSupplierSchema } from "@/schemas/supplier.schema";
+import { CreateSupplierSchema } from "@schemas";
 import { toast } from "sonner";
-import { useGetBikeStatsSupplierQuery } from "./query/Supplier/useGetBikeStatsSupplierQuery";
-import { useChangeStatusSupplierMutation } from "./mutations/Supplier/useChangeStatusSupplierMutation";
-import { useUpdateSupplierMutation } from "./mutations/Supplier/useUpdateSupplierMutation";
-import { useGetSupplierByIDQuery } from "./query/Supplier/useGetSupplierByIDQuery";
-import getErrorMessage from "@/utils/error-message";
-import { SUPPLIER_MESSAGE } from "@/constants/messages";
-import getAxiosErrorCodeMessage from "@/utils/error-util";
-import { getErrorMessageFromSupplierCode } from "@/utils/map-message";
-export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) => {
+import {useUpdateSupplierMutation,useChangeStatusSupplierMutation,useCreateSupplierMutation} from "@mutations"
+import {useGetSupplierByIDQuery,useGetBikeStatsSupplierQuery,useGetAllSupplierQuery,useGetAllStatsSupplierQuery} from "@queries"
+import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
+import {HTTP_STATUS , SUPPLIER_MESSAGE} from "@constants";
+import { SupplierActionProps } from "@custom-types";
+export const useSupplierActions = ({hasToken,supplier_id}: SupplierActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
@@ -51,7 +45,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
       }
       try {
         const result = await useCreateSupplier.mutateAsync(supplierData);
-        if(result.status === 200){
+        if(result.status === HTTP_STATUS.OK){
           toast.success(SUPPLIER_MESSAGE.CREATE_SUCCESS);
           queryClient.invalidateQueries({ queryKey : ["suppliers", "all"]})
         }
@@ -74,7 +68,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
         { id, newStatus },
         {
           onSuccess: (result) => {
-            if (result.status === 200) {
+            if (result.status === HTTP_STATUS.OK) {
               toast.success(SUPPLIER_MESSAGE.UPDATE_SUCCESS|| "Trạng thái nhà cung cấp đã được thay đổi thành công");
               queryClient.invalidateQueries({
                 queryKey: ["suppliers", "all", 1, 10],
@@ -83,11 +77,9 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
             }
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(
-              error,
-              "Error changing supplier status"
-            );
-            toast.error(errorMessage);
+            const code_error = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromSupplierCode(code_error));
+        throw error; 
           },
         }
       );
@@ -101,7 +93,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     }
     try {
       const result = await useUpdateSupplier.mutateAsync({id, data});
-      if(result.status === 200){
+      if(result.status === HTTP_STATUS.OK){
         toast.success(SUPPLIER_MESSAGE.UPDATE_SUCCESS);
         queryClient.invalidateQueries({ queryKey : ["suppliers", "all"]})
         queryClient.invalidateQueries({ queryKey: ["supplier", id] });

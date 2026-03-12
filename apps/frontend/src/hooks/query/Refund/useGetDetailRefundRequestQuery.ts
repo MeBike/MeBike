@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { refundService } from "@services/refund.service";
 import axios from "axios";
-import { QUERY_KEYS } from "@constants/queryKey";
+import { QUERY_KEYS } from "@constants";
 import { toast } from "sonner";
 const fetchDetailRefundRequests = async ({
     id

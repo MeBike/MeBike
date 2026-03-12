@@ -10,13 +10,13 @@ import { Label } from "@/components/ui/label";
 import {
   CreateSupplierSchema,
   createSupplierSchema,
-} from "@/schemas/supplier.schema";
+} from "@/schemas/supplier-schema";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { toast } from "sonner";
 
 export default function CreateSupplierPage() {
   const router = useRouter();
-  const { createSupplier } = useSupplierActions(true);
+  const { createSupplier } = useSupplierActions({hasToken:true});
 
   const {
     register,

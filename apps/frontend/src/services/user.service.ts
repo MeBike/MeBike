@@ -1,11 +1,11 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { DetailUser } from "@/types";
-import { CreateUserFormData, UserProfile } from "@/schemas/userSchema";
-import { ResetPasswordRequest } from "@/schemas/userSchema";
+import { CreateUserFormData, UserProfile } from "@/schemas/user-schema";
+import { ResetPasswordSchemaFormData } from "@schemas";
 import { ApiResponse } from "@/types";
 import {ENDPOINT} from "@/constants/end-point";
-import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse} from "@/types";
+import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse } from "@/types";
 interface DetailUserResponse<T> {
   message: string;
   result: T;
@@ -141,7 +141,7 @@ export const userService = {
   },
   postResetPassword: async (
     id: string,
-    data: ResetPasswordRequest
+    data: ResetPasswordSchemaFormData
   ): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.post(ENDPOINT.USER.RESET_PASSWORD(id), data);
     return response;

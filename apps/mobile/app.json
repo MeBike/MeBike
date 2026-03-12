@@ -3,10 +3,10 @@
     "name": "mobile",
     "slug": "mobile",
     "version": "1.0.0",
+    "scheme": "mebike",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -25,6 +25,7 @@
     },
     "android": {
       "package": "com.aaang123.mobile",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -45,7 +46,11 @@
           "cameraPermission": "Cho phép MeBike truy cập máy ảnh của bạn để quét mã QR."
         }
       ],
-      "@rnmapbox/maps"
+      "@rnmapbox/maps",
+      [
+        "@stripe/stripe-react-native",
+        {}
+      ]
     ],
     "extra": {
       "eas": {

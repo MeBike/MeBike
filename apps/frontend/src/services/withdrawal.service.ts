@@ -6,7 +6,7 @@ import type {
   DetailWithdrawRequest,
   WithdrawalOverview
 } from "@/types";
-import { UpdateWithdrawSchemaFormData } from "@/schemas/withdrawalSchema";
+import { UpdateWithdrawSchemaFormData } from "@/schemas/withdraw-schema";
 interface ApiResponse<T> {
   data: T[];
   pagination: {

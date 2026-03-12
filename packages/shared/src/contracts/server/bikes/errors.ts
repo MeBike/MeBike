@@ -4,6 +4,8 @@ import { ServerErrorDetailSchema, ServerErrorResponseSchema } from "../schemas";
 export const bikeErrorCodes = [
   "BIKE_NOT_FOUND",
   "DUPLICATE_CHIP_ID",
+  "BIKE_STATION_NOT_FOUND",
+  "BIKE_SUPPLIER_NOT_FOUND",
   "INVALID_BIKE_STATUS",
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
@@ -17,6 +19,8 @@ export const BikeErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: BikeErrorCodeSchema,
   bikeId: z.uuidv7().optional(),
   chipId: z.string().optional(),
+  stationId: z.uuidv7().optional(),
+  supplierId: z.uuidv7().optional(),
   status: z.string().optional(),
 }).openapi({
   description: "Bike-specific error detail",
@@ -32,6 +36,8 @@ export const BikeUpdateConflictCodeSchema = z.enum([
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
   "DUPLICATE_CHIP_ID",
+  "BIKE_STATION_NOT_FOUND",
+  "BIKE_SUPPLIER_NOT_FOUND",
   "INVALID_BIKE_STATUS",
 ]);
 export const BikeReportForbiddenCodeSchema = z.enum(["BIKE_NOT_RENTED_BY_USER"]);
@@ -95,6 +101,8 @@ export type BikeReportForbiddenResponse = z.infer<typeof BikeReportForbiddenResp
 export const bikeErrorMessages: Record<BikeErrorCode, string> = {
   BIKE_NOT_FOUND: "Bike not found",
   DUPLICATE_CHIP_ID: "Chip ID already exists",
+  BIKE_STATION_NOT_FOUND: "Station not found",
+  BIKE_SUPPLIER_NOT_FOUND: "Supplier not found",
   INVALID_BIKE_STATUS: "Invalid bike status transition",
   BIKE_CURRENTLY_RENTED: "Bike is currently rented and cannot be modified/deleted",
   BIKE_CURRENTLY_RESERVED: "Bike is currently reserved and cannot be modified/deleted",

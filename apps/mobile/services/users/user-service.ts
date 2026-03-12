@@ -12,7 +12,12 @@ import type { ApiUserError, UserError } from "./user-error";
 export type UserDetail = z.output<typeof UsersContracts.UserDetailSchema>;
 type MeStatus = keyof typeof ServerRoutes.users.me.responses;
 type UpdateMeStatus = keyof typeof ServerRoutes.users.updateMe.responses;
+type RegisterPushTokenStatus = keyof typeof ServerRoutes.users.registerPushToken.responses;
+type UnregisterPushTokenStatus = keyof typeof ServerRoutes.users.unregisterPushToken.responses;
+type UnregisterAllPushTokensStatus = keyof typeof ServerRoutes.users.unregisterAllPushTokens.responses;
 export type UpdateMeRequest = z.output<typeof UsersContracts.UpdateMeRequestSchema>;
+export type RegisterPushTokenRequest = z.output<typeof UsersContracts.RegisterPushTokenRequestSchema>;
+export type PushTokenSummary = z.output<typeof UsersContracts.PushTokenSummarySchema>;
 
 const HTTP_STATUS = {
   OK: 200,
@@ -41,6 +46,33 @@ function parseUserError(data: unknown): UserError {
       _tag: "ApiError",
       code: notFound.value.details.code as ApiUserError["code"],
       message: notFound.value.error,
+    };
+  }
+
+  return { _tag: "DecodeError" };
+}
+
+function parsePushTokenError(data: unknown): UserError {
+  const unauthorizedSchema
+    = ServerRoutes.users.registerPushToken.responses[401].content["application/json"].schema;
+  const badRequestSchema
+    = ServerRoutes.users.registerPushToken.responses[400].content["application/json"].schema;
+
+  const unauthorized = decodeWithSchema(unauthorizedSchema, data);
+  if (unauthorized.ok) {
+    return {
+      _tag: "ApiError",
+      code: unauthorized.value.details.code as ApiUserError["code"],
+      message: unauthorized.value.error,
+    };
+  }
+
+  const badRequest = decodeWithSchema(badRequestSchema, data);
+  if (badRequest.ok) {
+    return {
+      _tag: "ApiError",
+      code: badRequest.value.details.code as ApiUserError["code"],
+      message: badRequest.value.error,
     };
   }
 
@@ -136,6 +168,95 @@ export const userService = {
           }
 
           return err({ _tag: "DecodeError" });
+        }
+        default:
+          return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
+      }
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
+
+  registerPushToken: async (
+    payload: RegisterPushTokenRequest,
+  ): Promise<Result<PushTokenSummary, UserError>> => {
+    try {
+      const response = await kyClient.post(routePath(ServerRoutes.users.registerPushToken), {
+        json: payload,
+        throwHttpErrors: false,
+      });
+
+      const status = response.status as RegisterPushTokenStatus | number;
+      switch (status) {
+        case HTTP_STATUS.OK: {
+          const data = await readJson(response);
+          const okSchema = ServerRoutes.users.registerPushToken.responses[200]
+            .content["application/json"].schema;
+          const parsed = decodeWithSchema(okSchema, data);
+          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        }
+        case HTTP_STATUS.UNAUTHORIZED:
+        case 400: {
+          const data = await readJson(response);
+          return err(parsePushTokenError(data));
+        }
+        default:
+          return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
+      }
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
+
+  unregisterPushToken: async (token: string): Promise<Result<void, UserError>> => {
+    try {
+      const response = await kyClient.delete(routePath(ServerRoutes.users.unregisterPushToken), {
+        json: { token },
+        throwHttpErrors: false,
+      });
+
+      const status = response.status as UnregisterPushTokenStatus | number;
+      switch (status) {
+        case 204:
+          return ok(undefined);
+        case HTTP_STATUS.UNAUTHORIZED:
+        case 400: {
+          const data = await readJson(response);
+          return err(parsePushTokenError(data));
+        }
+        default:
+          return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
+      }
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
+
+  unregisterAllPushTokens: async (): Promise<Result<void, UserError>> => {
+    try {
+      const response = await kyClient.delete(routePath(ServerRoutes.users.unregisterAllPushTokens), {
+        throwHttpErrors: false,
+      });
+
+      const status = response.status as UnregisterAllPushTokensStatus | number;
+      switch (status) {
+        case 204:
+          return ok(undefined);
+        case HTTP_STATUS.UNAUTHORIZED: {
+          const data = await readJson(response);
+          return err(parsePushTokenError(data));
         }
         default:
           return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });

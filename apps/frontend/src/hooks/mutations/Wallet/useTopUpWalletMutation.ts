@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { TopUpSchemaFormData } from "@/schemas/walletSchema";
+import { TopUpSchemaFormData } from "@/schemas/wallet-schema";
 import { walletService } from "@/services/wallet.service";
 export const useTopUpWalletMutation = () => {
     return useMutation({

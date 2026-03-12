@@ -17,3 +17,11 @@ model Station {
   rentalsEnd   Rental[]            @relation("RentalEndStation")
   fixedSlots   FixedSlotTemplate[]
 }
+
+model GeoBoundary {
+  code String                                   @id
+  geom Unsupported("geometry(MultiPolygon,4326)")
+
+  @@index([geom], type: Gist, map: "GeoBoundary_geom_gix")
+  @@map("GeoBoundary")
+}

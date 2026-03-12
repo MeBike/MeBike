@@ -52,6 +52,12 @@ export const PaymentStatus = {
     CANCELLED: "CANCELLED"
 } as const;
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+export const PushTokenPlatform = {
+    ANDROID: "ANDROID",
+    IOS: "IOS",
+    UNKNOWN: "UNKNOWN"
+} as const;
+export type PushTokenPlatform = (typeof PushTokenPlatform)[keyof typeof PushTokenPlatform];
 export const RatingReasonType = {
     ISSUE: "ISSUE",
     COMPLIMENT: "COMPLIMENT"
@@ -189,6 +195,9 @@ export type FixedSlotTemplate = {
     status: Generated<FixedSlotStatus>;
     updated_at: Generated<Timestamp>;
 };
+export type GeoBoundary = {
+    code: string;
+};
 export type JobOutbox = {
     id: string;
     type: string;
@@ -217,6 +226,18 @@ export type PaymentAttempt = {
     currency: string;
     failure_reason: string | null;
     metadata: unknown | null;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type PushToken = {
+    id: string;
+    user_id: string;
+    token: string;
+    platform: Generated<PushTokenPlatform>;
+    device_id: string | null;
+    app_version: string | null;
+    is_active: Generated<boolean>;
+    last_seen_at: Generated<Timestamp>;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
@@ -359,6 +380,10 @@ export type WalletWithdrawal = {
     wallet_id: string;
     amount: string;
     currency: string;
+    payout_amount: string | null;
+    payout_currency: string | null;
+    fx_rate: string | null;
+    fx_quoted_at: Timestamp | null;
     status: Generated<WalletWithdrawalStatus>;
     idempotency_key: string;
     stripe_transfer_id: string | null;
@@ -373,8 +398,10 @@ export type DB = {
     BikeSwapRequest: BikeSwapRequest;
     FixedSlotDate: FixedSlotDate;
     FixedSlotTemplate: FixedSlotTemplate;
+    GeoBoundary: GeoBoundary;
     job_outbox: JobOutbox;
     payment_attempts: PaymentAttempt;
+    push_tokens: PushToken;
     Rating: Rating;
     RatingReason: RatingReason;
     RatingReasonLink: RatingReasonLink;

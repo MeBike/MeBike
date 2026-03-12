@@ -1,6 +1,6 @@
 export interface User {
   _id: string;
-  fullname:string;
+  fullname: string;
   email: string;
   password: string;
   created_at: string;
@@ -12,5 +12,15 @@ export interface User {
   username: string;
   phone_number: string;
   avatar: string;
-  role:"USER" | "STAFF" | "ADMIN";
+  role: "USER" | "STAFF" | "ADMIN";
+}
+export interface UserActionProps {
+  hasToken: boolean;
+  verify?: VerifyStatus;
+  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+  limit?: number;
+  page?: number;
+  searchQuery?: string;
+  id?: string;
+  fullName?: string;
 }

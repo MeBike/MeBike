@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { sosService } from "@/services/sos.service";
-import type { CancelSOSSchema } from "@/schemas/sosSchema";
+import type { CancelSOSSchema } from "@/schemas/sos-schema";
 
 export const useCancelSOSRequestMutation = (sosId: string) => {
   return useMutation({

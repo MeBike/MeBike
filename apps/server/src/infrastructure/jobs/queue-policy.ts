@@ -10,6 +10,7 @@ export type QueueOptionsWithDeadLetter = QueueOptions & { deadLetter?: string };
 
 export const JobDeadLetters: Partial<Record<JobType, string>> = {
   [JobTypes.EmailSend]: "emails.dlq",
+  [JobTypes.PushSend]: "notifications.push.send.dlq",
   [JobTypes.SubscriptionAutoActivate]: "subscriptions.autoActivate.dlq",
   [JobTypes.ReservationFixedSlotAssign]: "reservations.fixedSlotAssign.dlq",
   [JobTypes.ReservationNotifyNearExpiry]: "reservations.notifyNearExpiry.dlq",
@@ -37,6 +38,13 @@ const DEFAULT_QUEUE_OPTIONS: Record<JobType, QueueOptionsWithDeadLetter> = {
     retryBackoff: true,
     retryDelayMax: 15 * 60,
     deadLetter: JobDeadLetters[JobTypes.EmailSend],
+  },
+  [JobTypes.PushSend]: {
+    retryLimit: 3,
+    retryDelay: 30,
+    retryBackoff: true,
+    retryDelayMax: 5 * 60,
+    deadLetter: JobDeadLetters[JobTypes.PushSend],
   },
   [JobTypes.SubscriptionAutoActivate]: {
     retryLimit: 10,

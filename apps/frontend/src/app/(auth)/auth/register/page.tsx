@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RegisterSchemaFormData, registerSchema } from "@/schemas/authSchema";
+import { RegisterSchemaFormData, registerSchema } from "@/schemas/auth-schema";
 import {
   Card,
   CardContent,
@@ -34,7 +34,7 @@ const RegisterPage = () => {
   } = useForm<RegisterSchemaFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      fullName: "",
+      fullname: "",
       email: "",
       password: "",
       phoneNumber: "",
@@ -94,21 +94,21 @@ const RegisterPage = () => {
                 className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-sm font-medium">
+                  <Label htmlFor="fullname" className="text-sm font-medium">
                     Họ và tên
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="fullName"
-                      {...register("fullName")}
+                      id="fullname"
+                      {...register("fullname")}
                       type="text"
                       placeholder="Nguyễn Văn A"
                       className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     />
-                    {errors.fullName && (
+                    {errors.fullname && (
                       <p className="text-sm text-red-500 mt-1">
-                        {errors.fullName.message}
+                        {errors.fullname.message}
                       </p>
                     )}
                   </div>

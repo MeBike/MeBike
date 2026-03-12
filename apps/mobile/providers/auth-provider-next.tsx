@@ -4,7 +4,9 @@ import type { UserError } from "@services/users/user-error";
 import { useMeQuery } from "@hooks/query/auth-next/use-me-query";
 import { clearTokens, getAccessToken, getRefreshToken } from "@lib/auth-tokens";
 import { log } from "@lib/log";
+import { clearPushToken, getPushToken } from "@lib/push-token";
 import { authService } from "@services/auth/auth-service";
+import { userService } from "@services/users/user-service";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
@@ -96,11 +98,20 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 
   const logout = useCallback(async () => {
+    const currentPushToken = await getPushToken();
+    if (currentPushToken) {
+      const unregister = await userService.unregisterPushToken(currentPushToken);
+      if (!unregister.ok) {
+        log.warn("Failed to unregister current push token on logout", unregister.error);
+      }
+    }
+
     const refreshToken = await getRefreshToken();
     if (refreshToken) {
       await authService.logout({ refreshToken });
     }
     await clearTokens();
+    await clearPushToken();
     setHasToken(false);
     queryClient.removeQueries({ queryKey: ["authNext", "me"] });
   }, [queryClient]);

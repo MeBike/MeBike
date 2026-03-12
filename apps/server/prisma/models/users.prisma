@@ -41,6 +41,7 @@ model User {
   paymentAttempts  PaymentAttempt[]
   withdrawals      WalletWithdrawal[]
   bikeSwapRequests BikeSwapRequest[]
+  pushTokens      PushToken[]
 
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")

@@ -12,7 +12,7 @@ import { useUserReport } from "@/hooks/use-report";
 import {
   ResolveReportSchema,
   type ResolveReportSchemaFormData,
-} from "@/schemas/reportSchema";
+} from "@/schemas/report-schema";
 import type { Report } from "@custom-types";
 import type { ReportStatus } from "@/types";
 import { uploadMultipleImagesToFirebase } from "@/lib/firebase";

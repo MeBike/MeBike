@@ -5,6 +5,8 @@ import {
   BikeErrorDetailSchema,
   BikeRentalHistoryItemSchema,
   BikeRentalStatsSchema,
+  BikeStatisticsSchema,
+  BikeStatsSchema,
   BikeStatusSchema,
   BikeSummarySchema,
   HighestRevenueBikeSchema,
@@ -125,6 +127,14 @@ export const HighestRevenueBikeSchemaOpenApi = HighestRevenueBikeSchema.openapi(
 
 export const BikeRentalStatsResponseSchema = BikeRentalStatsSchema.openapi("BikeRentalStatsResponse", {
   description: "Bike rental stats response",
+});
+
+export const BikeStatisticsResponseSchema = BikeStatisticsSchema.openapi("BikeStatisticsResponse", {
+  description: "Bike status distribution statistics",
+});
+
+export const BikeStatsResponseSchema = BikeStatsSchema.openapi("BikeStatsResponse", {
+  description: "Summary statistics for a specific bike",
 });
 
 export const HighestRevenueBikeResponseSchema = HighestRevenueBikeSchema.nullable().openapi("HighestRevenueBikeResponse", {

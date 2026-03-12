@@ -20,6 +20,8 @@ import {
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
+  BikeStationNotFound,
+  BikeSupplierNotFound,
 } from "../domain-errors";
 import { BikeRepository } from "../repository/bike.repository";
 
@@ -31,7 +33,10 @@ export type BikeService = {
       supplierId: string;
       status?: BikeStatus;
     },
-  ) => Effect.Effect<BikeRow, BikeRepositoryError | DuplicateChipId>;
+  ) => Effect.Effect<
+    BikeRow,
+    BikeRepositoryError | DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
+  >;
 
   listBikes: (
     filter: BikeFilter,
@@ -54,7 +59,13 @@ export type BikeService = {
     }>,
   ) => Effect.Effect<
     Option.Option<BikeRow>,
-    BikeCurrentlyRented | BikeCurrentlyReserved | BikeNotFound
+    | BikeCurrentlyRented
+    | BikeCurrentlyReserved
+    | BikeNotFound
+    | DuplicateChipId
+    | BikeStationNotFound
+    | BikeSupplierNotFound
+    | BikeRepositoryError
   >;
 };
 
@@ -64,11 +75,33 @@ function makeBikeService(
 ): BikeService {
   return {
     createBike: input =>
-      repo.create({
-        chipId: input.chipId,
-        stationId: input.stationId,
-        supplierId: input.supplierId,
-        status: input.status ?? "AVAILABLE",
+      Effect.gen(function* () {
+        const [station, supplier] = yield* Effect.all([
+          Effect.promise(() =>
+            client.station.findUnique({
+              where: { id: input.stationId },
+              select: { id: true },
+            })),
+          Effect.promise(() =>
+            client.supplier.findUnique({
+              where: { id: input.supplierId },
+              select: { id: true },
+            })),
+        ]);
+
+        if (!station) {
+          return yield* Effect.fail(new BikeStationNotFound({ stationId: input.stationId }));
+        }
+        if (!supplier) {
+          return yield* Effect.fail(new BikeSupplierNotFound({ supplierId: input.supplierId }));
+        }
+
+        return yield* repo.create({
+          chipId: input.chipId,
+          stationId: input.stationId,
+          supplierId: input.supplierId,
+          status: input.status ?? "AVAILABLE",
+        });
       }),
 
     listBikes: (filter, pageReq) =>
@@ -123,30 +156,35 @@ function makeBikeService(
               new BikeCurrentlyReserved({ bikeId, action: "update_station" }),
             );
           }
+
+          const station = yield* Effect.promise(() =>
+            client.station.findUnique({
+              where: { id: patch.stationId },
+              select: { id: true },
+            }));
+          if (!station) {
+            return yield* Effect.fail(new BikeStationNotFound({ stationId: patch.stationId }));
+          }
         }
 
-        const updated = yield* Effect.promise(() =>
-          client.bike.update({
-            where: { id: bikeId },
-            data: {
-              ...(patch.chipId ? { chipId: patch.chipId } : {}),
-              ...(patch.stationId ? { stationId: patch.stationId } : {}),
-              ...(patch.status ? { status: patch.status } : {}),
-              ...(patch.supplierId !== undefined
-                ? { supplierId: patch.supplierId }
-                : {}),
-            },
-            select: {
-              id: true,
-              chipId: true,
-              stationId: true,
-              supplierId: true,
-              status: true,
-            },
-          }),
-        );
+        if (typeof patch.supplierId === "string" && patch.supplierId !== current.value.supplierId) {
+          const supplierId = patch.supplierId;
+          const supplier = yield* Effect.promise(() =>
+            client.supplier.findUnique({
+              where: { id: supplierId },
+              select: { id: true },
+            }));
+          if (!supplier) {
+            return yield* Effect.fail(new BikeSupplierNotFound({ supplierId }));
+          }
+        }
 
-        return Option.some(updated);
+        const updated = yield* repo.updateById(bikeId, patch);
+        if (Option.isNone(updated)) {
+          return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
+        }
+
+        return updated;
       }),
 
   };

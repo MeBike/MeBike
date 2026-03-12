@@ -22,13 +22,13 @@ export default function BikesPage() {
     getBikeByID,
     isLoadingDetail,
   } = useBikeActions(
-    true,
-    id,
-    undefined,
-    undefined,
-    statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
-    limit,
-    page
+    {
+      hasToken: true,
+      bike_detail_id: id,
+      status: statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
+      pageSize: limit,
+      page: page,
+    }
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const handleViewDetails = (bikeId: string) => {
@@ -128,24 +128,24 @@ export default function BikesPage() {
             <div className="space-y-3">
               <div>
                 <p className="text-sm text-muted-foreground">ID Xe</p>
-                <p className="text-foreground font-medium">{detailBike._id}</p>
+                <p className="text-foreground font-medium">{detailBike.id}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Chip ID</p>
                 <p className="text-foreground font-medium">
-                  {detailBike.chip_id}
+                  {detailBike.chipId}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Trạm</p>
                 <p className="text-foreground font-medium">
-                  {detailBike.station_id}
+                  {detailBike.stationId}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Nhà cung cấp</p>
                 <p className="text-foreground font-medium">
-                  {detailBike.supplier_id || "-"}
+                  {detailBike.supplierId || "-"}
                 </p>
               </div>
               <div>
@@ -159,13 +159,13 @@ export default function BikesPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Ngày tạo</p>
                 <p className="text-foreground font-medium">
-                  {new Date(detailBike.created_at).toLocaleString("vi-VN")}
+                  {new Date(detailBike.createdAt).toLocaleString("vi-VN")}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Ngày cập nhật</p>
                 <p className="text-foreground font-medium">
-                  {new Date(detailBike.updated_at).toLocaleString("vi-VN")}
+                  {new Date(detailBike.updatedAt).toLocaleString("vi-VN")}
                 </p>
               </div>
             </div>

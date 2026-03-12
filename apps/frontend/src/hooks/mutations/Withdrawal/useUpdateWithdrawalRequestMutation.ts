@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { withdrawalsService } from "@/services/withdrawal.service";
-import { UpdateWithdrawSchemaFormData } from "@/schemas/withdrawalSchema";
+import { UpdateWithdrawSchemaFormData } from "@/schemas/withdraw-schema";
 export const useUpdateWithdrawRequestMutation = (id: string) => {
   return useMutation({
     mutationKey: ["updateWithdrawRequest", id],

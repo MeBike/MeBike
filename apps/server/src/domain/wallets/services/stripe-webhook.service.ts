@@ -15,7 +15,10 @@ import type { WithdrawalRepositoryError } from "@/domain/wallets/withdrawals/dom
 import type { StripeAccountUpdatedOutcome } from "@/domain/wallets/withdrawals/services/stripe-connect.service";
 import type { StripePayoutOutcome } from "@/domain/wallets/withdrawals/services/stripe-payout.service";
 
-import { handleStripeTopupWebhookEventUseCase } from "@/domain/wallets/topups";
+import {
+  handleStripePaymentIntentWebhookEventUseCase,
+  handleStripeTopupWebhookEventUseCase,
+} from "@/domain/wallets/topups";
 import { handleStripeAccountUpdatedUseCase } from "@/domain/wallets/withdrawals/services/stripe-connect.service";
 import { handleStripePayoutWebhookUseCase } from "@/domain/wallets/withdrawals/services/stripe-payout.service";
 
@@ -53,6 +56,10 @@ export function handleStripeWebhookUseCase(
     Match.when(
       type => type === "checkout.session.completed",
       () => handleStripeTopupWebhookEventUseCase(event),
+    ),
+    Match.when(
+      type => type === "payment_intent.succeeded" || type === "payment_intent.payment_failed",
+      () => handleStripePaymentIntentWebhookEventUseCase(event),
     ),
     Match.orElse(() => Effect.succeed({
       status: "ignored",

@@ -4,7 +4,7 @@ import type { Report, ReportOverview, ReportStatus } from "@custom-types";
 import {
   type ResolveReportSchemaFormData ,
   type UpdateReportSchemaFormData,
-} from "@/schemas/reportSchema";
+} from "@/schemas/report-schema";
 type ApiResponse<T> = {
   data: T;
   pagination?: {

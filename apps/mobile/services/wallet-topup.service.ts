@@ -27,21 +27,26 @@ export type StripeTopupSession = {
   checkoutUrl: string;
 };
 
+export type StripeTopupPaymentSheet = {
+  paymentAttemptId: string;
+  paymentIntentClientSecret: string;
+};
+
 export type CreateStripeTopupSessionInput = {
   amount: string;
-  currency?: "usd";
+  currency?: "vnd";
   successUrl: string;
   cancelUrl: string;
 };
 
 export function walletTopupErrorMessage(error: WalletTopupError): string {
   if (error._tag === "ApiError") {
-    return error.message ?? "Yeu cau khong hop le";
+    return error.message ?? "Yêu cầu không hợp lệ";
   }
   if (error._tag === "NetworkError") {
-    return "Khong the ket noi toi may chu.";
+    return "Không thể kết nối tới máy chủ.";
   }
-  return "Da co loi xay ra. Vui long thu lai.";
+  return "Đã có lỗi xảy ra. Vui lòng thử lại.";
 }
 
 export async function parseWalletTopupError(response: Response): Promise<WalletTopupError> {
@@ -83,7 +88,7 @@ export const walletTopupService = {
       const response = await kyClient.post(routePath(ServerRoutes.wallets.createStripeTopupSession), {
         json: {
           amount: input.amount,
-          currency: input.currency ?? "usd",
+          currency: input.currency ?? "vnd",
           successUrl: input.successUrl,
           cancelUrl: input.cancelUrl,
         },
@@ -97,6 +102,36 @@ export const walletTopupService = {
           ? ok({
               paymentAttemptId: parsed.value.data.paymentAttemptId,
               checkoutUrl: parsed.value.data.checkoutUrl,
+            })
+          : err({ _tag: "DecodeError" });
+      }
+
+      return err(await parseWalletTopupError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  createStripePaymentSheet: async (
+    input: Pick<CreateStripeTopupSessionInput, "amount" | "currency">,
+  ): Promise<Result<StripeTopupPaymentSheet, WalletTopupError>> => {
+    try {
+      const response = await kyClient.post(routePath(ServerRoutes.wallets.createStripeTopupPaymentSheet), {
+        json: {
+          amount: input.amount,
+          currency: input.currency ?? "vnd",
+        },
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const data = await readJson(response);
+        const parsed = decodeWithSchema(ServerContracts.WalletsContracts.StripeTopupPaymentSheetResponseSchema, data);
+        return parsed.ok
+          ? ok({
+              paymentAttemptId: parsed.value.data.paymentAttemptId,
+              paymentIntentClientSecret: parsed.value.data.paymentIntentClientSecret,
             })
           : err({ _tag: "DecodeError" });
       }

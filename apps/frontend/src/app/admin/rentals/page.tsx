@@ -18,7 +18,7 @@ import { rentalColumn } from "@/columns/rental-columns";
 import {
   updateRentalSchema,
   type UpdateRentalSchema,
-} from "@schemas/rentalSchema";
+} from "@/schemas/rental-schema";
 export default function RentalsPage() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);

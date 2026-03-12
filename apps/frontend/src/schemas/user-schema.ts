@@ -8,18 +8,7 @@ export const userProfileSchema = z.object({
   role: z.enum(["USER", "STAFF", "ADMIN"]),
   verify: z.enum([] as VerifyStatus[]).optional(),
 });
-export const resetPasswordSchema = z
-  .object({
-    newPassword: z.string().min(8, "Mật khẩu phải ít nhất 6 ký tự"),
-    confirmNewPassword: z
-      .string()
-      .min(8, "Mật khẩu xác nhận phải ít nhất 6 ký tự"),
-  })
-  .refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "Mật khẩu xác nhận không khớp",
-  });
 export type UserProfile = z.infer<typeof userProfileSchema>;
-export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
 export const createUserSchema = z.object({
   fullName: z.string().min(1, "Họ tên là bắt buộc"),
   email: z.email("Email không hợp lệ"),

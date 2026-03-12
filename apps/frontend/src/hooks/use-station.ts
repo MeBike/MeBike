@@ -1,31 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
-import { useGetStationByIDQuery } from "./query/Station/useGetStationByIDQuery";
-import { StationSchemaFormData } from "@/schemas/stationSchema";
+import { StationSchemaFormData } from "@schemas";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useCreateStationMutation } from "./mutations/Station/useCreateStationQuery";
-import { useSoftDeleteStationMutation } from "./mutations/Station/useSoftDeleteStationMutation";
-import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQuery";
-import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
-import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
-import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
-import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
-import { QUERY_KEYS } from "@constants/queryKey";
-import getAxiosErrorCodeMessage from "@/utils/error-util";
-import {
-  getErrorMessageFromStationCode,
-} from "@/utils/map-message";
-interface StationActionProps {
-  hasToken?: boolean;
-  stationId?: string;
-  page?: number;
-  limit?: number;
-  latitude?: number;
-  name?: string;
-  longitude?: number;
-}
+import { QUERY_KEYS , HTTP_STATUS } from "@constants";
+import { useCreateStationMutation,useSoftDeleteStationMutation,useUpdateStationMutation} from "@mutations"
+import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationStatsReservationQuery,useGetStationByIDQuery,useGetAllStation} from "@queries";
+import {getAxiosErrorCodeMessage , getErrorMessageFromStationCode} from "@utils";
+import type { StationActionProps } from "@custom-types";
 export const useStationActions = ({
   hasToken,
   stationId,
@@ -80,7 +62,7 @@ export const useStationActions = ({
       }
       try {
         const result = await useCreateStation.mutateAsync(data);
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.CREATED) {
           toast.success(result.data?.message || "Đã tạo trạm thành công");
           queryClient.invalidateQueries({
             queryKey: ["stations", "all"],
@@ -103,7 +85,7 @@ export const useStationActions = ({
       }
       useSoftDeleteStation.mutate(stationId, {
         onSuccess: (result) => {
-          if (result.status === 200) {
+          if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.message || "Đã xóa trạm thành công");
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
@@ -127,7 +109,7 @@ export const useStationActions = ({
       }
       try {
         const result = await useUpdateStation.mutateAsync(data);
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(result.data?.message || "Đã cập nhật trạm thành công");
           queryClient.invalidateQueries({
             queryKey: ["stations", "all"],

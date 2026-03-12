@@ -71,7 +71,7 @@ const WALLET_ENDPOINTS = {
 import type {
   TopUpSchemaFormData,
   DecreaseSchemaFormData,
-} from "@/schemas/walletSchema";
+} from "@/schemas/wallet-schema";
 export const walletService = {
   topUpWallet: async (
     data: TopUpSchemaFormData

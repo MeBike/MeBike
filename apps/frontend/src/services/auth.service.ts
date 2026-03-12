@@ -8,7 +8,7 @@ import type {
   ConfirmResetPasswordSchemaFormData,
   VerifyEmailSchemaFormData,
   VerifyOTPForForgotPasswordSchemaFormData
-} from "@schemas/authSchema";
+} from "@/schemas/auth-schema";
 import type { AxiosResponse } from "axios";
 import { ProfileUserResponse , AuthResponse , MessageResponse , ResetTokenResponse, DetailUser} from "@/types";
 import { ENDPOINT } from "@/constants/end-point";

@@ -35,12 +35,20 @@ export const WalletWithdrawalStatusSchema = z
   .enum(["PENDING", "PROCESSING", "SUCCEEDED", "FAILED"])
   .openapi("WalletWithdrawalStatus");
 
+export const WalletWithdrawalCurrencySchema = z
+  .enum(["vnd", "usd"])
+  .openapi("WalletWithdrawalCurrency");
+
 export const WalletWithdrawalDetailSchema = z.object({
   id: z.uuidv7(),
   walletId: z.uuidv7(),
   userId: z.uuidv7(),
   amount: z.string().openapi({ example: "50000" }),
-  currency: z.literal("usd").openapi({ example: "usd" }),
+  currency: WalletWithdrawalCurrencySchema.openapi({ example: "vnd" }),
+  payoutAmount: z.string().nullable().optional().openapi({ example: "192" }),
+  payoutCurrency: z.literal("usd").nullable().optional().openapi({ example: "usd" }),
+  fxRate: z.string().nullable().optional().openapi({ example: "26000" }),
+  fxQuotedAt: z.string().datetime().nullable().optional(),
   status: WalletWithdrawalStatusSchema,
   idempotencyKey: z.string(),
   stripeTransferId: z.string().nullable().optional(),

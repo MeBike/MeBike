@@ -1,7 +1,7 @@
 import fetchHttpClient from "@lib/httpClient";
 import { AxiosResponse } from "axios";
 import { Station, NearestStationResponse } from "@/types";
-import { StationSchemaFormData } from "@/schemas/stationSchema";
+import { StationSchemaFormData } from "@/schemas/station-schema";
 import type {
   StationBikeRevenue,
   StationStatisticsResponse,

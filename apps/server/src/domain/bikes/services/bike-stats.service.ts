@@ -8,6 +8,8 @@ import type {
   BikeRentalHistoryItem,
   BikeRentalHistorySortField,
   BikeRentalStats,
+  BikeStatistics,
+  BikeStats,
   HighestRevenueBike,
 } from "../models";
 import type { BikeStatsRepo } from "../repository/bike-stats.repository";
@@ -27,6 +29,14 @@ export type BikeStatsService = {
   readonly getRentalStats: () => Effect.Effect<
     BikeRentalStats,
     BikeRepositoryError
+  >;
+  readonly getBikeStatistics: () => Effect.Effect<
+    BikeStatistics,
+    BikeRepositoryError
+  >;
+  readonly getBikeStatsById: (bikeId: string) => Effect.Effect<
+    BikeStats,
+    BikeRepositoryError | BikeNotFound
   >;
   readonly getHighestRevenueBike: () => Effect.Effect<
     HighestRevenueBike | null,
@@ -70,6 +80,18 @@ export function makeBikeStatsService(repo: BikeStatsRepo) {
     const service: BikeStatsService = {
       getRentalStats: () =>
         repo.getRentalStats(),
+
+      getBikeStatistics: () =>
+        repo.getBikeStatistics(),
+
+      getBikeStatsById: bikeId =>
+        Effect.gen(function* () {
+          yield* ensureBikeExists(bikeRepo, bikeId).pipe(
+            Effect.catchTag("BikeRepositoryError", err => Effect.fail(err)),
+          );
+
+          return yield* repo.getBikeStatsById(bikeId);
+        }),
 
       getHighestRevenueBike: () =>
         repo.getHighestRevenueBike(),

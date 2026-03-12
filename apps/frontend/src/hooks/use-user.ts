@@ -3,22 +3,31 @@ import { useGetAllUserQuery } from "./query/User/useGetAllUserQuery";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { VerifyStatus } from "@/types";
-import { useGetAllStatisticsUserQuery } from "./query/User/useGetAllStatisticsQuery";
-import { useGetActiveUserQuery } from "./query/User/useGetActiveUserQuery";
-import { useGetNewRegistrationStatsQuery } from "./query/User/useGetNewRegistrationStatsQuery";
-import { useGetTopRenterQuery } from "./query/User/useGetTopRenterQuery";
-import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
-import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
-import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
-import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
-import { CreateUserFormData, ResetPasswordRequest } from "@/schemas/userSchema";
-import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
-import { UserProfile } from "@/schemas/userSchema";
-import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
-import { QUERY_KEYS } from "@/constants/queryKey";
-import getAxiosErrorCodeMessage from "@/utils/error-util";
-import { getErrorMessageFromCustomerCode } from "@/utils/map-message";
+import {
+  useGetDetailUserQuery,
+  useGetAllStatisticsUserQuery,
+  useGetActiveUserQuery,
+  useGetNewRegistrationStatsQuery,
+  useGetTopRenterQuery,
+  useGetSearchUserQuery,
+  useGetDashboardStatsQuery,
+} from "@queries";
+import {
+  useCreateUserMutation,
+  useResetPasswordUserMutation,
+  useUpdateProfileUserMutation,
+} from "@mutations";
+import {
+  UserProfile,
+  CreateUserFormData,
+  ResetPasswordSchemaFormData,
+} from "@schemas";
+import { HTTP_STATUS } from "@constants";
+import {
+  getErrorMessageFromCustomerCode,
+  getAxiosErrorCodeMessage,
+} from "@utils";
+import type { UserActionProps } from "@custom-types";
 export const useUserActions = ({
   hasToken,
   verify,
@@ -28,16 +37,7 @@ export const useUserActions = ({
   searchQuery,
   fullName,
   id,
-}: {
-  hasToken: boolean;
-  verify?: VerifyStatus;
-  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
-  limit?: number;
-  page?: number;
-  searchQuery?: string;
-  id?: string;
-  fullName?: string;
-}) => {
+}: UserActionProps) => {
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();
   const queryClient = useQueryClient();
@@ -146,7 +146,7 @@ export const useUserActions = ({
       }
       try {
         const result = await useCreateUser.mutateAsync(userData);
-        if (result?.status === 201) {
+        if (result?.status === HTTP_STATUS.CREATED) {
           queryClient.invalidateQueries({
             queryKey: ["user", "all"],
           });
@@ -183,7 +183,7 @@ export const useUserActions = ({
   const useResetPassword = useResetPasswordUserMutation();
   const useUpdateProfile = useUpdateProfileUserMutation();
   const resetPassword = useCallback(
-    async (userData: ResetPasswordRequest) => {
+    async (userData: ResetPasswordSchemaFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -193,7 +193,7 @@ export const useUserActions = ({
           id: id || "",
           data: userData,
         });
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
         }
         queryClient.invalidateQueries({
@@ -219,7 +219,7 @@ export const useUserActions = ({
           id: id || "",
           data: userData,
         });
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(
             result.data?.message || "Cập nhật thông tin thành công",
           );

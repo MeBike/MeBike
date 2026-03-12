@@ -4,15 +4,15 @@ import type { Bike, BikeStatus, Station, Supplier } from "@/types";
 import { formatDateUTC } from "@/utils/formatDateTime";
 export const getStatusColor = (status: BikeStatus) => {
   switch (status) {
-    case "ĐANG ĐƯỢC THUÊ":
+    case "BOOKED":
       return "bg-yellow-100 text-yellow-800";
-    case "ĐANG BẢO TRÌ":
+    case "MAINTENANCE":
       return "bg-blue-100 text-blue-800";
-    case "BỊ HỎNG":
+    case "BROKEN":
       return "bg-red-100 text-red-800";
-    case "CÓ SẴN":
+    case "AVAILABLE":
       return "bg-green-100 text-green-800";
-    case "ĐÃ ĐẶT TRƯỚC":
+    case "RESERVED":
       return "bg-yellow-100 text-yellow-800";
     default:
       return "bg-gray-100 text-gray-800";
@@ -38,33 +38,33 @@ export const bikeColumn = (
   }
 ): ColumnDef<Bike>[] => [
   {
-    accessorKey: "_id",
+    accessorKey: "id",
     header: "Mã xe",
     cell: ({ row }) => {
-      return shortenId(row.original._id) || "Không có";
+      return shortenId(row.original.id) || "Không có";
     },
   },
   {
-    accessorKey: "chip_id",
+    accessorKey: "chipId",
     header: "Tên chip",
     cell: ({ row }) => {
-      return row.original.chip_id || "Không có";
+      return shortenId(row.original.chipId) || "Không có";
     },
   },
   {
-    accessorKey: "station_id",
+    accessorKey: "stationId",
     header: "Tên trạm",
     cell: ({ row }) => {
-      const station = stations.find((s) => s.id === row.original.station_id);
+      const station = stations.find((s) => s.id === row.original.stationId);
       return station ? station.name : "Không có";
     },
   },
   {
-    accessorKey: "supplier_id",
+    accessorKey: "supplierId",
     header: "Tên nhà cung cấp",
     cell: ({ row }) => {
       const supplier = suppliers.find(
-        (s) => s.id === row.original.supplier_id
+        (s) => s.id === row.original.supplierId
       );
       return supplier ? supplier.name : "Không có";
     },
@@ -81,17 +81,17 @@ export const bikeColumn = (
     ),
   },
   {
-    accessorKey: "created_at",
+    accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.created_at);
+      return row.original.createdAt ? formatDateUTC(row.original.createdAt) : "Không có";
     },
   },
   {
-    accessorKey: "updated_at",
+    accessorKey: "updatedAt",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.updated_at);
+      return row.original.updatedAt ? formatDateUTC(row.original.updatedAt) : "Không có";
     },
   },
   {
@@ -104,7 +104,7 @@ export const bikeColumn = (
           title="Xem chi tiết"
           onClick={() => {
             if (onView) {
-              onView({ id: row.original._id });
+              onView({ id: row.original.id });
             }
           }}
         >
@@ -115,7 +115,7 @@ export const bikeColumn = (
           title="Chỉnh sửa"
           onClick={() => {
             if (onEdit) {
-              onEdit({ id: row.original._id });
+              onEdit({ id: row.original.id });
             }
           }}
         >

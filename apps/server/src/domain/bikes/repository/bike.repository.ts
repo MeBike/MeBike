@@ -4,8 +4,9 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { BikeStatus, PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
+import { pickDefined } from "@/domain/shared/pick-defined";
 import { Prisma } from "@/infrastructure/prisma";
-import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+import { isPrismaRecordNotFound, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 
@@ -55,6 +56,16 @@ export type BikeRepo = {
     bikeId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, BikeRepositoryError>;
+
+  updateById: (
+    bikeId: string,
+    patch: Partial<{
+      chipId: string;
+      stationId: string;
+      status: BikeStatus;
+      supplierId: string | null;
+    }>,
+  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError | DuplicateChipId>;
 };
 const makeBikeRepositoryEffect = Effect.gen(function* () {
   const { client } = yield* Prisma;
@@ -92,6 +103,8 @@ export function makeBikeRepository(
     stationId: true,
     supplierId: true,
     status: true,
+    createdAt: true,
+    updatedAt: true,
   } as const;
 
   const findById = (
@@ -326,6 +339,41 @@ export function makeBikeRepository(
             message: "Failed to release reserved bike",
           }),
       }),
+
+    updateById: (bikeId, patch) =>
+      Effect.tryPromise({
+        try: () =>
+          client.bike.update({
+            where: { id: bikeId },
+            data: {
+              ...pickDefined({
+                chipId: patch.chipId,
+                stationId: patch.stationId,
+                status: patch.status,
+                supplierId: patch.supplierId,
+              }),
+              updatedAt: new Date(),
+            },
+            select,
+          }),
+        catch: err => err as unknown,
+      }).pipe(
+        Effect.catchAll((err): Effect.Effect<BikeRow | null, BikeRepositoryError | DuplicateChipId> => {
+          if (isPrismaRecordNotFound(err)) {
+            return Effect.succeed<BikeRow | null>(null);
+          }
+          if (isPrismaUniqueViolation(err) && patch.chipId) {
+            return Effect.fail(new DuplicateChipId({ chipId: patch.chipId }));
+          }
+
+          return Effect.fail(new BikeRepositoryError({
+            operation: "updateById.update",
+            cause: err,
+            message: "Failed to update bike",
+          }));
+        }),
+        Effect.map((row): Option.Option<BikeRow> => Option.fromNullable(row)),
+      ),
   };
 }
 

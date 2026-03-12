@@ -22,6 +22,7 @@ import {
   UserRepository,
   UserRepositoryLive,
 } from "@/domain/users/repository/user.repository";
+import { sendJob } from "@/infrastructure/jobs/send-job";
 import { Prisma, PrismaLive } from "@/infrastructure/prisma";
 import {
   buildReservationExpiredEmail,
@@ -124,7 +125,8 @@ export async function handleReservationNotifyNearExpiry(
 
       yield* Effect.tryPromise({
         try: () =>
-          boss.send(
+          sendJob(
+            boss,
             JobTypes.EmailSend,
             {
               version: 1,
@@ -135,6 +137,30 @@ export async function handleReservationNotifyNearExpiry(
             },
             {
               singletonKey: `reservation:near-expiry:${reservation.id}`,
+            },
+          ),
+        catch: err => err as unknown,
+      }).pipe(Effect.catchAll(err => Effect.die(err)));
+
+      yield* Effect.tryPromise({
+        try: () =>
+          sendJob(
+            boss,
+            JobTypes.PushSend,
+            {
+              version: 1,
+              userId: reservation.userId,
+              event: "reservations.nearExpiry",
+              title: "Reservation expiring soon",
+              body: `Your bike reservation at ${station.name} expires in about ${minutesRemaining} minute(s).`,
+              channelId: "default",
+              data: {
+                reservationId: reservation.id,
+                event: "reservations.nearExpiry",
+              },
+            },
+            {
+              singletonKey: `reservation:near-expiry:push:${reservation.id}`,
             },
           ),
         catch: err => err as unknown,
@@ -273,7 +299,8 @@ export async function handleReservationExpireHold(
 
       yield* Effect.tryPromise({
         try: () =>
-          boss.send(
+          sendJob(
+            boss,
             JobTypes.EmailSend,
             {
               version: 1,
@@ -284,6 +311,30 @@ export async function handleReservationExpireHold(
             },
             {
               singletonKey: `reservation:expired:${outcome.reservationId}`,
+            },
+          ),
+        catch: err => err as unknown,
+      }).pipe(Effect.catchAll(err => Effect.die(err)));
+
+      yield* Effect.tryPromise({
+        try: () =>
+          sendJob(
+            boss,
+            JobTypes.PushSend,
+            {
+              version: 1,
+              userId: outcome.userId,
+              event: "reservations.expired",
+              title: "Reservation expired",
+              body: `Your bike reservation at ${station.name} has expired.`,
+              channelId: "default",
+              data: {
+                reservationId: outcome.reservationId,
+                event: "reservations.expired",
+              },
+            },
+            {
+              singletonKey: `reservation:expired:push:${outcome.reservationId}`,
             },
           ),
         catch: err => err as unknown,

@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { supplierService } from "@/services/supplier.service";
-import { CreateSupplierSchema } from "@/schemas/supplier.schema";
+import { CreateSupplierSchema } from "@/schemas/supplier-schema";
 export const useUpdateSupplierMutation = () => {
     return useMutation({
       mutationKey: ["suppliers", "update"],

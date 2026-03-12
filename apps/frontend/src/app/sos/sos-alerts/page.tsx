@@ -11,7 +11,7 @@ import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resolveSOSSchema, type ResolveSOSSchema } from "@/schemas/sosSchema";
+import { resolveSOSSchema, type ResolveSOSSchema } from "@/schemas/sos-schema";
 import { uploadMultipleImagesToFirebase } from "@/lib/firebase";
 import {
   Form,

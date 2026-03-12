@@ -24,13 +24,13 @@ enum WalletWithdrawalStatus {
 }
 
 model Wallet {
-  id        String       @id @default(uuid(7)) @db.Uuid
-  userId    String       @unique @map("user_id") @db.Uuid
-  balance   BigInt       @default(0) @db.BigInt
-  reservedBalance BigInt @default(0) @map("reserved_balance") @db.BigInt
-  status    WalletStatus @default(ACTIVE)
-  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  id              String       @id @default(uuid(7)) @db.Uuid
+  userId          String       @unique @map("user_id") @db.Uuid
+  balance         BigInt       @default(0) @db.BigInt
+  reservedBalance BigInt       @default(0) @map("reserved_balance") @db.BigInt
+  status          WalletStatus @default(ACTIVE)
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
 
   user            User                @relation(fields: [userId], references: [id])
   transactions    WalletTransaction[]
@@ -67,6 +67,10 @@ model WalletWithdrawal {
   walletId         String                 @map("wallet_id") @db.Uuid
   amount           BigInt                 @db.BigInt
   currency         String                 @db.VarChar(8)
+  payoutAmount     BigInt?                @map("payout_amount") @db.BigInt
+  payoutCurrency   String?                @map("payout_currency") @db.VarChar(8)
+  fxRate           BigInt?                @map("fx_rate") @db.BigInt
+  fxQuotedAt       DateTime?              @map("fx_quoted_at") @db.Timestamptz
   status           WalletWithdrawalStatus @default(PENDING)
   idempotencyKey   String                 @map("idempotency_key") @db.Text
   stripeTransferId String?                @map("stripe_transfer_id") @db.Text
