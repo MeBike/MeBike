@@ -8,7 +8,7 @@ import { useGetReportInProgressQuery } from "./query/Report/useGetReportInProgre
 import type {
   ResolveReportSchemaFormData,
   UpdateReportSchemaFormData,
-} from "@/schemas/reportSchema";
+} from "@/schemas/report-schema";
 import { useRouter } from "next/navigation";
 import { useResolveReportMutation } from "./mutations/Report/useResolveReportMutation";
 import { useGetReportByIdQuery } from "./query/Report/useGetReportByIDQuery";

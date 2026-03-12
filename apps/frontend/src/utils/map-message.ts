@@ -1,4 +1,4 @@
-import { USERS_MESSAGES , AUTH_MESSAGE , STATIONS_MESSAGE , SUPPLIER_MESSAGE} from "@/constants/messages";
+import { USERS_MESSAGES , AUTH_MESSAGE , STATIONS_MESSAGE , SUPPLIER_MESSAGE, BIKES_MESSAGES} from "@/constants/messages";
 const getErrorMessageUserFromCode = (code?: string) => {
   if (!code) return "Something went wrong";
   return USERS_MESSAGES[code as keyof typeof USERS_MESSAGES] 
@@ -23,6 +23,11 @@ const getErrorMessageFromCustomerCode = (code?: string) => {
   return USERS_MESSAGES[code as keyof typeof USERS_MESSAGES] 
     || "Something went wrong";
 }
+const getErrorMessageFromBikeCode = (code?: string) => {
+  if (!code) return "Something went wrong";
+  return BIKES_MESSAGES[code as keyof typeof BIKES_MESSAGES] 
+    || "Something went wrong";
+}
 export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, getErrorMessageFromStationCode , getErrorMessageFromSupplierCode, 
-  getErrorMessageFromCustomerCode
+  getErrorMessageFromCustomerCode, getErrorMessageFromBikeCode
  };

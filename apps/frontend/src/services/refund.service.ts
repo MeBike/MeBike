@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import type { UpdateRefundSchemaFormData } from "@/schemas/refund.schema";
+import type { UpdateRefundSchemaFormData } from "@/schemas/refund-schema";
 import type { RefundRequest , RefundStatus , DetailRefundRequest , RefundOverview} from "@/types";
 interface ApiResponse<T> {
   data: T[];

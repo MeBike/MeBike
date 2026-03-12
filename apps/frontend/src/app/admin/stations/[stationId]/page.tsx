@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useStationActions } from "@/hooks/use-station";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
+import { stationSchema, StationSchemaFormData } from "@/schemas/station-schema";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, Edit, Save, X, Bike, Info, MapPin, Calendar } from "lucide-react";
 import { Station } from "@/types";

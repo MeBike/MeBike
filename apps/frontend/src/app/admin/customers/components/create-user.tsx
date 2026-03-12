@@ -22,7 +22,7 @@ import {
   AtSign,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { CreateUserFormData } from "@/schemas/userSchema";
+import { CreateUserFormData } from "@/schemas/user-schema";
 interface CreateUserProps {
   onSubmit: ({data}: {data: CreateUserFormData}) => void;
 }

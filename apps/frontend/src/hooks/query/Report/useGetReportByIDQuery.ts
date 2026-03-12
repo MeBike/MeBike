@@ -1,6 +1,6 @@
 import { reportService } from "@/services/report.service";
 import { useQuery } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@constants/queryKey";
+import { QUERY_KEYS } from "@constants";
 const getReportById = async ({
   id
 }: {

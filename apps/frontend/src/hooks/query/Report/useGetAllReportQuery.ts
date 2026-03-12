@@ -1,7 +1,7 @@
 import { reportService } from "@/services/report.service";
 import { useQuery } from "@tanstack/react-query";
 import { ReportStatus } from "@/types";
-import { QUERY_KEYS } from "@constants/queryKey";
+import { QUERY_KEYS } from "@constants";
 const getAllManageReport = async ({
   page , limit , status
 }: {page ?: number , limit ?: number , status ?: ReportStatus

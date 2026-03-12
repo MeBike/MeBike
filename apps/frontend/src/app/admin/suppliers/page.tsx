@@ -22,7 +22,7 @@ export default function SuppliersPage() {
   const {
     useGetAllSupplierQuery,
     changeStatusSupplier,
-  } = useSupplierActions(true);
+  } = useSupplierActions({hasToken:true});
 
   const { data: supplierData, isLoading: isLoadingGetAllSuppliers } =
     useGetAllSupplierQuery(page, limit, statusFilter);

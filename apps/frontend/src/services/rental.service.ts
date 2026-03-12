@@ -1,5 +1,5 @@
 import type { AxiosResponse } from "axios";
-import type { RentalSchemaFormData, UpdateRentalSchema } from "@schemas/rentalSchema";
+import type { RentalSchemaFormData, UpdateRentalSchema } from "@/schemas/rental-schema";
 import fetchHttpClient from "@lib/httpClient";
 import type { RentingHistory } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
@@ -37,7 +37,7 @@ interface Dashboardsummary {
     totalRentals: number;
   }>;
 }
-import { EndRentalSchema } from "@schemas/rentalSchema";
+import { EndRentalSchema } from "@/schemas/rental-schema";
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
   BASE: RENTAL_BASE,

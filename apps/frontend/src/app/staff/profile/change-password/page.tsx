@@ -10,7 +10,7 @@ import { Eye, EyeOff, Lock, ArrowLeft, Shield, User, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { useAuthActions } from "@/hooks/useAuthAction";
-import { changePasswordSchema, ChangePasswordSchemaFormData } from "@/schemas/authSchema";
+import { changePasswordSchema, ChangePasswordSchemaFormData } from "@/schemas/auth-schema";
 import Link from "next/link";
 import { Progress } from "@radix-ui/react-progress";
 

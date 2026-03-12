@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import { CreateSupplierSchema } from "@/schemas/supplier.schema";
+import { CreateSupplierSchema } from "@/schemas/supplier-schema";
 import type { StatsSupplierBike , Supplier} from "@custom-types";
 import { ApiResponse  } from "@custom-types";
 import { ENDPOINT } from "@/constants/end-point";

@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
-import type { UpdateBikeSchemaFormData } from "@/schemas/bikeSchema";
+import type { UpdateBikeSchemaFormData } from "@/schemas/bike-schema";
 
 export const useUpdateBike = () => {
     return useMutation({

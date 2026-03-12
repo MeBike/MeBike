@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { sosService } from "@/services/sos.service";
-import type { AssignSOSSchema } from "@/schemas/sosSchema";
+import type { AssignSOSSchema } from "@/schemas/sos-schema";
 
 export const useAssignSOSRequestMutation = (sosId: string) => {
     return useMutation({

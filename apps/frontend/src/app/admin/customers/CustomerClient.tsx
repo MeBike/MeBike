@@ -11,7 +11,7 @@ import { Label } from "@radix-ui/react-label";
 import {
   CreateUserFormData,
   createUserSchema,
-} from "@schemas/userSchema";
+} from "@/schemas/user-schema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";

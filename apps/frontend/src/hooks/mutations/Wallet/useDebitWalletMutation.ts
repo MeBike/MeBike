@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { DecreaseSchemaFormData } from "@/schemas/walletSchema";
+import { DecreaseSchemaFormData } from "@/schemas/wallet-schema";
 import { walletService } from "@/services/wallet.service";
 export const useDebitWalletMutation = () => {
   return useMutation({

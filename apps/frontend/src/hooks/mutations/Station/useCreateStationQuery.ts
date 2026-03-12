@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
-import { StationSchemaFormData } from "@/schemas/stationSchema";
+import { StationSchemaFormData } from "@/schemas/station-schema";
 export const useCreateStationMutation = () => {
   return useMutation({
     mutationKey: ["create-station"],

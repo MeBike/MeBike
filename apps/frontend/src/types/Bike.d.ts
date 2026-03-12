@@ -1,61 +1,91 @@
 
 export interface Bike {
-  _id: string;
-  station_id: string;
+  id: string;
+  chipId: string;
+  stationId: string;
   status: BikeStatus;
-  supplier_id: string | null;
-  created_at: string;
-  updated_at: string;
-  chip_id: string;
-  average_rating?: number;
-  total_ratings?: number;
+  supplierId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  chipId: string;
+  averageRating?: number;
+  totalRatings?: number;
 }
 export type BikeStatus =
-  | "CÓ SẴN"
-  | "ĐANG ĐƯỢC THUÊ"
-  | "BỊ HỎNG"
-  | "ĐÃ ĐẶT TRƯỚC"
-  | "ĐANG BẢO TRÌ"
-  | "KHÔNG CÓ SẴN"
+  | "AVAILABLE"
+  | "BOOKED"
+  | "BROKEN"
+  | "RESERVED"
+  | "MAINTENANCE"
+  | "UNAVAILABLE"
   | "";
 export interface BikeActivityStats {
-  bike_id: string;
-  total_minutes_active: number;
-  total_reports: number;
-  uptime_percentage: number;
-  monthly_stats: Array<{
+  bikeId: string;
+  totalMinutesActive: number;
+  totalReports: number;
+  uptimePercentage: number;
+  monthlyStats: Array<{
     year: number;
     month: number;
-    rentals_count: number;
-    minutes_active: number;
+    rentalsCount: number;
+    minutesActive: number;
     revenue: number;
   }>;
 }
 export interface BikeStats {
-  _id: string;
-  total_rentals: number;
-  total_revenue: number;
-  total_duration_minutes: number;
-  total_reports: number;
+  id: string;
+  totalRentals: number;
+  totalRevenue: number;
+  totalDurationMinutes: number;
+  totalReports: number;
 }
 export interface BikeRentalHistory {
-  _id: string;
-  start_station: {
-    _id: string;
+  id: string;
+  startStation: {
+    id: string;
     name: string;
   };
-  end_station: {
-    _id: string;
+  endStation: {
+    id: string;
     name: string;
   };
-  start_time: string;
-  end_time: string;
+  startTime: string;
+  endTime: string;
   duration: number;
-  total_price: {
-    $numberDecimal: string;
-  };
+  totalPrice: number;
   user: {
-    _id: string;
+    id: string;
     fullname: string;
   };
+}
+export interface BikeHasHighestRevenue {
+  bikdId: string;
+  bikeChipId: string;
+  totalRevenue: number;
+  rentalCount: number;
+  station : {
+    id : string;
+    name : string;
+  }
+}
+export interface BikeStatistics {
+  "RESERVED": number;
+  "AVAILABLE": number;
+  "BOOKED": number;
+  "UNAVAILABLE": number;
+  "BROKEN": number;
+}
+export interface BikeActionProps {
+  hasToken: boolean,
+  bike_detail_id?: string,
+  stationId?: string,
+  supplierId?: string,
+  status?: BikeStatus,
+  pageSize?: number,
+  page?: number,
+}
+export interface BikeFiltersProps {
+  statusFilter: BikeStatus | "all";
+  setStatusFilter: (status: BikeStatus | "all") => void;
+  onReset?: () => void;
 }
