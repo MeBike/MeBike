@@ -15,7 +15,7 @@ export default function DashboardPage() {
   const { newRegistrationStats, getNewRegistrationStats } = useUserActions({
     hasToken: true,
   }); 
-  const { statisticData, totalRecord , getStatisticsBike} = useBikeActions(true);
+  const { statisticData, totalRecord , getStatisticsBike} = useBikeActions({hasToken:true});
   const { dashboardSummaryData, getDashboardSummary , getSummaryRental , summaryRental } = useRentalsActions({
     hasToken: true,
   });

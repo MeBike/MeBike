@@ -35,7 +35,10 @@ export default function SupplierDetailPage() {
     fetchDetailSupplier,
     getUpdateSupplier,
     bikeStats,
-  } = useSupplierActions(true, supplierId);
+  } = useSupplierActions({
+    hasToken: true,
+    supplier_id: supplierId,
+  });
   const supplier = detailSupplier as unknown as Supplier | undefined;
   const {
     register,

@@ -12,7 +12,7 @@ import { useUpdateStatusWalletMutation } from "@mutations";
 import {useGetManageTransactionQuery , useGetWalletOverviewQuery , useGetDetailWalletQuery } from "@queries";
 import { useRouter } from "next/navigation";
 import { QUERY_KEYS } from "@/constants/queryKey";
-import getErrorMessage from "@utils";
+import getErrorMessage from "@/utils/error-message";
 export function useWalletActions(
   hasToken: boolean,
   page?: number,

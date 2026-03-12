@@ -7,10 +7,23 @@ import { ChevronLeft, Loader2 } from "lucide-react";
 import { useBikeActions } from "@/hooks/use-bike";
 import { BikeDetailTabs } from "../components/bike-detail-tabs";
 
-export default function BikeDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function BikeDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const router = useRouter();
-  const { detailBike, getBikeByID, getBikeActivityStats, getRentalBikes, isLoadingDetail, bikeRentals, bikeActivityStats, bikeStats } = useBikeActions({ hasToken: true, bike_detail_id: id });
+  const {
+    detailBike,
+    getBikeByID,
+    getBikeActivityStats,
+    getRentalBikes,
+    isLoadingDetail,
+    bikeRentals,
+    bikeActivityStats,
+    bikeStats,
+  } = useBikeActions({ hasToken: true, bike_detail_id: id });
 
   useEffect(() => {
     getBikeByID();
@@ -22,15 +35,21 @@ export default function BikeDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-6">
-      <Button variant="outline" onClick={() => router.push("/admin/bikes")}><ChevronLeft className="w-4 h-4 mr-1" /> Quay lại</Button>
+      <Button variant="outline" onClick={() => router.push("/admin/bikes")}>
+        <ChevronLeft className="w-4 h-4 mr-1" /> Quay lại
+      </Button>
       <div className="bg-card border rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-4">Chi tiết xe: {detailBike?.chipId}</h1>
-        <BikeDetailTabs 
-          bike={detailBike || null} 
-          rentals={bikeRentals || []} 
-          activity={bikeActivityStats} 
-          stats={bikeStats} 
-        />
+        <h1 className="text-2xl font-bold mb-4">
+          Chi tiết xe: {detailBike?.chipId}
+        </h1>
+        {
+          <BikeDetailTabs
+            bike={detailBike || null}
+            rentals={bikeRentals || []}
+            activity={bikeActivityStats || null}
+            stats={bikeStats || null}
+          />
+        }
       </div>
     </div>
   );

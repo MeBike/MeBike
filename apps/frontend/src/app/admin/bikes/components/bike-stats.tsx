@@ -1,8 +1,8 @@
 import { BikeStatus , BikeStatistics } from "@custom-types";
 
-export function BikeStats({ stats }: { stats: BikeStatistics}) {
+export function BikeStats({ stats , total }: { stats: BikeStatistics; total: number }) {
   const data = [
-    { label: "Tổng số", value: Object.values(stats || {}).reduce((a: any, b: any) => Number(a) + Number(b), 0), color: "" },
+    { label: "Tổng số", value: total, color: "" },
     { label: "Có sẵn", value: stats.AVAILABLE, color: "text-green-500" },
     { label: "Đang thuê", value: stats.RENTED, color: "text-blue-500" },
     { label: "Đặt trước", value: stats.RESERVED, color: "text-yellow-500" },

@@ -38,8 +38,8 @@ export default function BikeClient() {
         <Button onClick={() => router.push("/admin/bikes/create")}><Plus className="w-4 h-4 mr-2" /> Thêm xe</Button>
       </div>
         {
-            statisticData && (
-                <BikeStats stats={statisticData} />
+            statisticData && data &&  (
+                <BikeStats stats={statisticData} total={data?.pagination.totalRecords} />
             )
         }
       <BikeFilters statusFilter={statusFilter} setStatusFilter={setStatusFilter} />

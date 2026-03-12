@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 export default function CreateSupplierPage() {
   const router = useRouter();
-  const { createSupplier } = useSupplierActions(true);
+  const { createSupplier } = useSupplierActions({hasToken:true});
 
   const {
     register,

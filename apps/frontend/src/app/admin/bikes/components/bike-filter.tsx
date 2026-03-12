@@ -1,24 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { BikeStatus } from "@custom-types";
-import { Select } from "@radix-ui/react-select";
-
 interface BikeFiltersProps {
   statusFilter: BikeStatus | "all";
   setStatusFilter: (status: BikeStatus | "all") => void;
   onReset?: () => void;
 }
-
 export function BikeFilters({ 
   statusFilter, 
   setStatusFilter, 
   onReset 
 }: BikeFiltersProps) {
-  
   const handleReset = () => {
     setStatusFilter("all");
     if (onReset) onReset();
   };
-
   return (
     <div className="bg-card border border-border rounded-lg p-4 space-y-4">
       <div className="flex items-center gap-4">
