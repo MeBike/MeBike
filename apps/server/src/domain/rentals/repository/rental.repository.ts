@@ -18,7 +18,13 @@ import {
 } from "../models";
 import type { CreateRentalInput, RentalRepo } from "./rental.repository.types";
 
-import { RentalRepositoryError, RentalUniqueViolation } from "../domain-errors";
+import {
+  BikeSwapRequestNotFound,
+  InvalidBikeSwapRequestStatus,
+  NoAvailableBike,
+  RentalRepositoryError,
+  RentalUniqueViolation,
+} from "../domain-errors";
 import {
   adminRentalDetailSelect,
   adminRentalListSelect,
@@ -38,7 +44,7 @@ import {
   toStaffBikeSwapRequestsOrderBy,
   toStaffBikeSwapRequestsWhere,
 } from "./rental.repository.query";
-import { BikeSwapStatus } from "generated/kysely/types";
+import { BikeStatus, BikeSwapStatus } from "generated/kysely/types";
 
 export type {
   CreateRentalInput,
@@ -90,6 +96,105 @@ export function makeRentalRepository(
           ),
         ),
     }).pipe(Effect.map(mapToRentalRow));
+
+  const approveBikeSwapRequestWithClient = (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    bikeSwapRequestId: string,
+  ) =>
+    Effect.gen(function* () {
+      const bikeSwapRequest = yield* Effect.tryPromise({
+        try: () =>
+          tx.bikeSwapRequest.findUnique({
+            where: { id: bikeSwapRequestId },
+            select: { status: true },
+          }),
+        catch: (e) =>
+          new RentalRepositoryError({
+            operation: "approveBikeSwapRequest.findBikeSwapRequest",
+            cause: e,
+          }),
+      });
+
+      if (!bikeSwapRequest) {
+        return yield* Effect.fail(
+          new BikeSwapRequestNotFound({ bikeSwapRequestId }),
+        );
+      }
+
+      if (bikeSwapRequest.status !== "PENDING") {
+        return yield* Effect.fail(
+          new InvalidBikeSwapRequestStatus({
+            status: bikeSwapRequest.status,
+          }),
+        );
+      }
+
+      const bike = yield* Effect.tryPromise({
+        try: () =>
+          tx.bike.findFirst({
+            where: { status: "AVAILABLE" },
+            select: { id: true },
+          }),
+        catch: (e) =>
+          new RentalRepositoryError({
+            operation: "approveBikeSwapRequest.findBike",
+            cause: e,
+          }),
+      });
+
+      if (!bike) {
+        return yield* Effect.fail(new NoAvailableBike());
+      }
+
+      yield* Effect.tryPromise({
+        try: () =>
+          tx.bike.update({
+            where: { id: bike.id },
+            data: {
+              status: "BOOKED" as BikeStatus,
+            },
+          }),
+        catch: (e) =>
+          new RentalRepositoryError({
+            operation: "approveBikeSwapRequest.updateBike",
+            cause: e,
+          }),
+      });
+
+      const updatedBikeSwapRequest = yield* Effect.tryPromise({
+        try: () =>
+          tx.bikeSwapRequest.update({
+            where: { id: bikeSwapRequestId },
+            data: {
+              status: "CONFIRMED" as BikeSwapStatus,
+              newBikeId: bike.id,
+            },
+            select: staffBikeSwapRequestSelect,
+          }),
+        catch: (e) =>
+          new RentalRepositoryError({
+            operation: "approveBikeSwapRequest.updateRequest",
+            cause: e,
+          }),
+      });
+
+      yield* Effect.tryPromise({
+        try: () =>
+          tx.rental.update({
+            where: { id: updatedBikeSwapRequest.rentalId },
+            data: {
+              bikeId: bike.id,
+            },
+          }),
+        catch: (e) =>
+          new RentalRepositoryError({
+            operation: "approveBikeSwapRequest.updateRental",
+            cause: e,
+          }),
+      });
+
+      return Option.some(mapToStaffBikeSwapRequestRow(updatedBikeSwapRequest));
+    });
 
   return {
     listMyRentals(userId, filter, pageReq) {
@@ -648,6 +753,58 @@ export function makeRentalRepository(
         );
 
         return makePageResult(mappedItems, total, page, pageSize);
+      });
+    },
+
+    staffApproveBikeSwapRequests(bikeSwapRequestId: string) {
+      return approveBikeSwapRequestWithClient(client, bikeSwapRequestId);
+    },
+
+    staffRejectBikeSwapRequests(bikeSwapRequestId: string, reason: string) {
+      return Effect.gen(function* () {
+        const current = yield* Effect.tryPromise({
+          try: () =>
+            client.bikeSwapRequest.findUnique({
+              where: { id: bikeSwapRequestId },
+              select: { status: true },
+            }),
+          catch: (e) =>
+            new RentalRepositoryError({
+              operation: "staffRejectBikeSwapRequests.find",
+              cause: e,
+            }),
+        });
+
+        if (!current) {
+          return Option.none();
+        }
+
+        if (current.status !== "PENDING") {
+          return yield* Effect.fail(
+            new InvalidBikeSwapRequestStatus({
+              status: current.status,
+            }),
+          );
+        }
+
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            client.bikeSwapRequest.update({
+              where: { id: bikeSwapRequestId },
+              data: {
+                status: "REJECTED" as BikeSwapStatus,
+                reason,
+              },
+              select: staffBikeSwapRequestSelect,
+            }),
+          catch: (e) =>
+            new RentalRepositoryError({
+              operation: "staffRejectBikeSwapRequests.update",
+              cause: e,
+            }),
+        });
+
+        return Option.some(mapToStaffBikeSwapRequestRow(raw));
       });
     },
   };

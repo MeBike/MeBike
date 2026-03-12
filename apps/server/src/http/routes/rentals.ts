@@ -99,10 +99,25 @@ export function registerRentalRoutes(
     RentalAdminController.adminListBikeSwapRequests,
   );
 
-  const approveSwapRoute = {
+  const staffApproveSwapRoute = {
     ...rentals.approveBikeSwapRequest,
     middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
+
+  app.openapi(
+    staffApproveSwapRoute,
+    RentalStaffController.staffApproveBikeSwapRequest,
+  );
+
+  const staffRejectSwapRequestRoute = {
+    ...rentals.rejectBikeSwapRequest,
+    middleware: [requireStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    staffRejectSwapRequestRoute,
+    RentalStaffController.staffRejectBikeSwapRequest,
+  );
 
   const staffGetSwapRequestRoute = {
     ...rentals.staffGetBikeSwapRequests,

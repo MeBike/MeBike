@@ -3,7 +3,13 @@ import type { Effect, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { RentalStatus } from "generated/prisma/client";
 
-import type { RentalRepoError, RentalRepositoryError } from "../domain-errors";
+import type {
+  BikeSwapRequestNotFound,
+  InvalidBikeSwapRequestStatus,
+  NoAvailableBike,
+  RentalRepoError,
+  RentalRepositoryError,
+} from "../domain-errors";
 import type {
   AdminBikeSwapRequestFilter,
   AdminRentalDetail,
@@ -18,6 +24,7 @@ import type {
   StaffBikeSwapRequestRow,
   StaffBikeSwapRequestSortField,
 } from "../models";
+import { StaffBikeRequestNotFound } from "../services/staff-rental.service";
 
 export type CreateRentalInput = {
   userId: string;
@@ -165,5 +172,25 @@ export type RentalRepo = {
   ) => Effect.Effect<
     PageResult<StaffBikeSwapRequestRow>,
     RentalRepositoryError
+  >;
+
+  staffApproveBikeSwapRequests: (
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    Option.Option<StaffBikeSwapRequestRow>,
+    | RentalRepositoryError
+    | BikeSwapRequestNotFound
+    | NoAvailableBike
+    | InvalidBikeSwapRequestStatus
+  >;
+
+  staffRejectBikeSwapRequests: (
+    bikeSwapRequestId: string,
+    reason: string,
+  ) => Effect.Effect<
+    Option.Option<StaffBikeSwapRequestRow>,
+    | RentalRepositoryError
+    | BikeSwapRequestNotFound
+    | InvalidBikeSwapRequestStatus
   >;
 };

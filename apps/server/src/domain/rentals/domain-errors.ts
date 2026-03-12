@@ -7,6 +7,7 @@ import type {
   SubscriptionUsageExceeded,
 } from "@/domain/subscriptions/domain-errors";
 import type { BikeStatus, RentalStatus } from "generated/prisma/enums";
+import { BikeSwapStatus } from "generated/kysely/types";
 
 export class RentalRepositoryError extends Data.TaggedError(
   "RentalRepositoryError",
@@ -108,6 +109,14 @@ export class BikeSwapRequestNotFound extends Data.TaggedError(
   readonly bikeSwapRequestId: string;
 }> {}
 
+export class NoAvailableBike extends Data.TaggedError("NoAvailableBike")<{}> {}
+
+export class InvalidBikeSwapRequestStatus extends Data.TaggedError(
+  "InvalidBikeSwapRequestStatus",
+)<{
+  readonly status: BikeSwapStatus;
+}> {}
+
 export type RentalServiceFailure =
   | RentalNotFound
   | ActiveRentalExists
@@ -128,5 +137,7 @@ export type RentalServiceFailure =
   | SubscriptionNotUsable
   | SubscriptionUsageExceeded
   | CannotRequestSwap
-  | BikeSwapRequestNotFound;
+  | BikeSwapRequestNotFound
+  | NoAvailableBike
+  | InvalidBikeSwapRequestStatus;
 export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;

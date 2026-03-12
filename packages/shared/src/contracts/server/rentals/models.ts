@@ -240,6 +240,10 @@ export const RequestBikeSwapRequestSchema = z.object({
   rentalId: z.uuidv7(),
 });
 
+export const ApproveBikeSwapRequestSchema = z.object({
+  bikeSwapRequestId: z.uuidv7(),
+});
+
 export const BikeSwapUserSchema = z.object({
   id: z.uuidv7(),
   fullName: z.string(),

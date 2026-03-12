@@ -2,6 +2,8 @@ import { createRoute } from "@hono/zod-openapi";
 
 import { z } from "../../../../zod";
 import {
+  BikeSwapRequestErrorCodeSchema,
+  BikeSwapRequestErrorResponseSchema,
   CancelRentalRequestSchema,
   CardTapRentalRequestSchema,
   CreateRentalRequestSchema,
@@ -17,6 +19,8 @@ import {
   UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
+  ApprovedBikeSwapRequestSchemaOpenApi,
+  BikeSwapRequestDetailSchemaOpenApi,
   createSuccessResponse,
   RentalDetailSchemaOpenApi,
   RentalErrorResponseSchema,
@@ -490,7 +494,7 @@ export const requestBikeSwap = createRoute({
   method: "post",
   path: "/v1/rentals/{rentalId}/request-bike-swap",
   security: [{ bearerAuth: [] }],
-  tags: ["Rentals"],
+  tags: ["Bike Swap"],
   request: {
     params: RentalIdParamSchema,
   },
@@ -570,12 +574,12 @@ export const requestBikeSwap = createRoute({
 
 export const approveBikeSwapRequest = createRoute({
   method: "post",
-  path: "/v1/rentals/request-bike-swap/{requestId}/approve",
+  path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}/approve",
   security: [{ bearerAuth: [] }],
-  tags: ["Rentals"],
+  tags: ["Bike Swap"],
   request: {
     params: z.object({
-      requestId: z.uuidv7(),
+      bikeSwapRequestId: z.uuidv7(),
     }),
   },
   responses: {
@@ -584,7 +588,90 @@ export const approveBikeSwapRequest = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RequestBikeSwapRequestSchemaOpenApi,
+            BikeSwapRequestDetailSchemaOpenApi,
+            "Approve bike swap response",
+          ),
+        },
+      },
+    },
+    400: {
+      description: "Cannot approve bike swap",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestErrorResponseSchema,
+          examples: {
+            CannotApproveSwapWithStatus: {
+              value: {
+                error: "Cannot approve bike swap in this status",
+                details: {
+                  code: RentalErrorCodeSchema.enum
+                    .CANNOT_APPROVE_SWAP_THIS_RENTAL_WITH_STATUS,
+                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                  status: "COMPLETED",
+                },
+              },
+            },
+            NoAvailableBike: {
+              value: {
+                error: "No available bike found for swap",
+                details: {
+                  code: BikeSwapRequestErrorCodeSchema.enum.NO_AVAILABLE_BIKE,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Bike swap request not found",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestErrorResponseSchema,
+          examples: {
+            BikeSwapRequestNotFound: {
+              value: {
+                error: "Bike swap request not found",
+                details: {
+                  code: BikeSwapRequestErrorCodeSchema.enum
+                    .BIKE_SWAP_REQUEST_NOT_FOUND,
+                  bikeSwapRequestId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const rejectBikeSwapRequest = createRoute({
+  method: "post",
+  path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}/reject",
+  security: [{ bearerAuth: [] }],
+  tags: ["Bike Swap"],
+  request: {
+    params: z.object({
+      bikeSwapRequestId: z.uuidv7(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            reason: z.string(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Bike swap approved successfully",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            BikeSwapRequestDetailSchemaOpenApi,
             "Approve bike swap response",
           ),
         },
@@ -607,22 +694,33 @@ export const approveBikeSwapRequest = createRoute({
                 },
               },
             },
+            BikeSwapRequestNotFound: {
+              value: {
+                error: "Bike swap request not found",
+                details: {
+                  code: BikeSwapRequestErrorCodeSchema.enum
+                    .BIKE_SWAP_REQUEST_NOT_FOUND,
+                  bikeSwapRequestId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
           },
         },
       },
     },
     404: {
-      description: "Rental not found",
+      description: "Bike swap request not found",
       content: {
         "application/json": {
-          schema: RentalErrorResponseSchema,
+          schema: BikeSwapRequestErrorResponseSchema,
           examples: {
-            RentalNotFound: {
+            BikeSwapRequestNotFound: {
               value: {
-                error: "Rental not found",
+                error: "Bike swap request not found",
                 details: {
-                  code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
-                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                  code: BikeSwapRequestErrorCodeSchema.enum
+                    .BIKE_SWAP_REQUEST_NOT_FOUND,
+                  bikeSwapRequestId: "665fd6e36b7e5d53f8f3d2c9",
                 },
               },
             },

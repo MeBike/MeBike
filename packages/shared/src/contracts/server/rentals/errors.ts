@@ -26,6 +26,7 @@ export const rentalErrorCodes = [
   "BIKE_IS_RESERVED",
   "UNAVAILABLE_BIKE",
   "NOT_AVAILABLE_BIKE",
+  "NO_AVAILABLE_BIKE",
   "INVALID_BIKE_STATUS",
 
   // Payment & Wallet Errors
@@ -71,6 +72,8 @@ export const rentalErrorCodes = [
 
 export const bikeSwapRequestErrorCodes = [
   "BIKE_SWAP_REQUEST_NOT_FOUND",
+  "NO_AVAILABLE_BIKE",
+  "INVALID_BIKE_SWAP_REQUEST_STATUS",
 ] as const;
 
 export const RentalErrorCodeSchema = z.enum(rentalErrorCodes);
@@ -174,6 +177,7 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   BIKE_IS_RESERVED: "Bike is reserved",
   UNAVAILABLE_BIKE: "Bike is unavailable",
   NOT_AVAILABLE_BIKE: "Bike is not available",
+  NO_AVAILABLE_BIKE: "No available bike found for swap",
   INVALID_BIKE_STATUS: "Invalid bike status",
 
   NOT_ENOUGH_BALANCE_TO_RENT: "Insufficient balance to start rental",
@@ -216,5 +220,7 @@ export const bikeSwapRequestErrorMessages: Record<
   string
 > = {
   BIKE_SWAP_REQUEST_NOT_FOUND: "Bike swap request not found",
+  NO_AVAILABLE_BIKE: "No available bike found for swap",
+  INVALID_BIKE_SWAP_REQUEST_STATUS:
+    "Bike swap request must be in PENDING status",
 };
-

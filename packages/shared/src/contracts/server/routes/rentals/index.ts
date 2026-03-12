@@ -12,6 +12,7 @@ export {
   updateRental,
   requestBikeSwap,
   approveBikeSwapRequest,
+  rejectBikeSwapRequest,
 } from "./mutations";
 
 export {

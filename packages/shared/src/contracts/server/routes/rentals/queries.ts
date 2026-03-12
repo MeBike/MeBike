@@ -627,7 +627,7 @@ export const staffListBikeSwapRequests = createRoute({
 export const adminListBikeSwapRequests = createRoute({
   method: "get",
   path: "/v1/admin/bike-swap-requests",
-  tags: ["Admin", "Bike Swap"],
+  tags: ["Bike Swap"],
   security: [{ bearerAuth: [] }],
   request: {
     query: z
@@ -673,7 +673,7 @@ export const adminListBikeSwapRequests = createRoute({
 export const adminGetBikeSwapRequests = createRoute({
   method: "get",
   path: "/v1/admin/bike-swap-requests/{bikeSwapRequestId}",
-  tags: ["Admin", "Bike Swap"],
+  tags: ["Bike Swap"],
   security: [{ bearerAuth: [] }],
   request: {
     params: BikeSwapRequestIdParamSchema,
@@ -720,7 +720,7 @@ export const adminGetBikeSwapRequests = createRoute({
 export const staffGetBikeSwapRequests = createRoute({
   method: "get",
   path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}",
-  tags: ["Staff", "Bike Swap"],
+  tags: ["Bike Swap"],
   security: [{ bearerAuth: [] }],
   request: {
     params: BikeSwapRequestIdParamSchema,

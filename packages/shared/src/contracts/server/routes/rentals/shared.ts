@@ -1,5 +1,6 @@
 import { z } from "../../../../zod";
 import {
+  ApproveBikeSwapRequestSchema,
   BikeSwapRequestDetailSchema,
   BikeSwapRequestSchema,
   DashboardResponseSchema,
@@ -128,12 +129,11 @@ export const RentalDetailSchemaOpenApi = RentalDetailSchema.openapi(
   },
 );
 
-export const BikeSwapRequestDetailSchemaOpenApi = BikeSwapRequestDetailSchema.openapi(
-  "BikeSwapRequestDetail",
-  {
-    description: "Detailed bike swap request with populated user, bike, and station data",
-  },
-);
+export const BikeSwapRequestDetailSchemaOpenApi =
+  BikeSwapRequestDetailSchema.openapi("BikeSwapRequestDetail", {
+    description:
+      "Detailed bike swap request with populated user, bike, and station data",
+  });
 
 export const BikeSwapRequestSchemaOpenApi = BikeSwapRequestSchema.openapi(
   "BikeSwapRequest",
@@ -160,6 +160,11 @@ export const RentalListItemSchemaOpenApi = RentalListItemSchema.openapi(
     description: "Rental item for paginated lists",
   },
 );
+
+export const ApprovedBikeSwapRequestSchemaOpenApi =
+  ApproveBikeSwapRequestSchema.openapi("ApprovedBikeSwapRequest", {
+    description: "Approved bike swap request",
+  });
 
 export const RentalListResponseSchema = z
   .object({
