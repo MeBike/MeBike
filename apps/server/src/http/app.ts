@@ -23,6 +23,7 @@ import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerReservationRoutes } from "./routes/reservations";
 import { registerStationRoutes } from "./routes/stations";
+import { registerStatsRoutes } from "./routes/stats";
 import { registerStripeConnectRoutes } from "./routes/stripe-connect.routes";
 import { registerStripeWebhookRoutes } from "./routes/stripe-webhook.routes";
 import { registerSubscriptionRoutes } from "./routes/subscriptions";
@@ -97,6 +98,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   );
 
   registerStationRoutes(app);
+  registerStatsRoutes(app);
   registerHealthRoutes(app);
   registerBikeRoutes(app);
   registerEventRoutes(app);

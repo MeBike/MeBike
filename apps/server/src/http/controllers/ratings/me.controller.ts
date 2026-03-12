@@ -6,11 +6,17 @@ import { Effect, Match } from "effect";
 import { createRatingWithGuardsUseCase } from "@/domain/ratings";
 import { RatingServiceTag } from "@/domain/ratings/services/rating.service";
 import { withLoggedCause } from "@/domain/shared";
-import { toRatingDetail } from "@/http/presenters/ratings.presenter";
+import { toRatingDetail, toRatingSummary } from "@/http/presenters/ratings.presenter";
 
 import type { RatingsRoutes } from "./shared";
 
-import { RatingErrorCodeSchema, ratingErrorMessages, unauthorizedBody } from "./shared";
+import {
+  RatingErrorCodeSchema,
+  ratingErrorMessages,
+  RatingSummaryErrorCodeSchema,
+  ratingSummaryErrorMessages,
+  unauthorizedBody,
+} from "./shared";
 
 const create: RouteHandler<RatingsRoutes["create"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
@@ -122,8 +128,64 @@ const getReasons: RouteHandler<RatingsRoutes["getReasons"]> = async (c) => {
   );
 };
 
+const getBikeSummary: RouteHandler<RatingsRoutes["getBikeSummary"]> = async (c) => {
+  const { bikeId } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(RatingServiceTag, svc => svc.getBikeSummary(bikeId)),
+    "GET /v1/ratings/bikes/{bikeId}/summary",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<RatingsContracts.RatingSummaryResponse, 200>(toRatingSummary(right), 200)),
+    Match.tag("Left", ({ left }) => Match.value(left).pipe(
+      Match.tag("BikeNotFound", () =>
+        c.json<RatingsContracts.RatingSummaryErrorResponse, 404>({
+          error: ratingSummaryErrorMessages.BIKE_NOT_FOUND,
+          details: { code: RatingSummaryErrorCodeSchema.enum.BIKE_NOT_FOUND },
+        }, 404)),
+      Match.orElse((err) => {
+        throw err;
+      }),
+    )),
+    Match.exhaustive,
+  );
+};
+
+const getStationSummary: RouteHandler<RatingsRoutes["getStationSummary"]> = async (c) => {
+  const { stationId } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(RatingServiceTag, svc => svc.getStationSummary(stationId)),
+    "GET /v1/ratings/stations/{stationId}/summary",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<RatingsContracts.RatingSummaryResponse, 200>(toRatingSummary(right), 200)),
+    Match.tag("Left", ({ left }) => Match.value(left).pipe(
+      Match.tag("StationNotFound", () =>
+        c.json<RatingsContracts.RatingSummaryErrorResponse, 404>({
+          error: ratingSummaryErrorMessages.STATION_NOT_FOUND,
+          details: { code: RatingSummaryErrorCodeSchema.enum.STATION_NOT_FOUND },
+        }, 404)),
+      Match.orElse((err) => {
+        throw err;
+      }),
+    )),
+    Match.exhaustive,
+  );
+};
+
 export const RatingMeController = {
   create,
   getReasons,
+  getBikeSummary,
+  getStationSummary,
   getByRental,
 } as const;

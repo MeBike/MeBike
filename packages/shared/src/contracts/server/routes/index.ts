@@ -5,6 +5,7 @@ import { ratingsRoutes } from "./ratings";
 import { rentalsRoutes } from "./rentals";
 import { reservationsRoutes } from "./reservations";
 import { stationsRoutes } from "./stations";
+import { statsRoutes } from "./stats";
 import { stripeRoutes } from "./stripe";
 import { subscriptionsRoutes } from "./subscriptions";
 import { suppliersRoutes } from "./suppliers";
@@ -18,6 +19,7 @@ export * from "./ratings";
 export * from "./rentals";
 export * from "./reservations";
 export * from "./stations";
+export * from "./stats";
 export * from "./stripe";
 export * from "./subscriptions";
 export * from "./suppliers";
@@ -29,6 +31,7 @@ export const serverRoutes = {
   health: healthRoutes,
   rentals: rentalsRoutes,
   reservations: reservationsRoutes,
+  stats: statsRoutes,
   stations: stationsRoutes,
   bikes: bikesRoutes,
   suppliers: suppliersRoutes,

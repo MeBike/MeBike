@@ -2,7 +2,12 @@ import { RatingsContracts, UnauthorizedErrorCodeSchema, unauthorizedErrorMessage
 
 export type RatingsRoutes = typeof import("@mebike/shared")["serverRoutes"]["ratings"];
 
-export const { ratingErrorMessages, RatingErrorCodeSchema } = RatingsContracts;
+export const {
+  ratingErrorMessages,
+  RatingErrorCodeSchema,
+  ratingSummaryErrorMessages,
+  RatingSummaryErrorCodeSchema,
+} = RatingsContracts;
 
 export const unauthorizedBody = {
   error: unauthorizedErrorMessages.UNAUTHORIZED,
