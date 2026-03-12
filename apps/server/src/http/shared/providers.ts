@@ -271,6 +271,8 @@ const RatingReposLive = Layer.mergeAll(
 
 const RatingServiceLayer = RatingServiceLive.pipe(
   Layer.provide(RatingReposLive),
+  Layer.provide(BikeReposLive),
+  Layer.provide(StationReposLive),
 );
 
 export const RatingDepsLive = Layer.mergeAll(

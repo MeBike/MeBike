@@ -1,9 +1,13 @@
-import type { Option } from "effect";
+import { Context, Effect, Layer, Option } from "effect";
 
-import { Context, Effect, Layer } from "effect";
+import type { BikeNotFound, BikeRepositoryError } from "@/domain/bikes";
+import type { StationNotFound, StationRepositoryError } from "@/domain/stations";
+
+import { BikeNotFound as BikeNotFoundError, BikeRepository } from "@/domain/bikes";
+import { StationNotFound as StationNotFoundError, StationRepository } from "@/domain/stations";
 
 import type { RatingAlreadyExists, RatingRepositoryError } from "../domain-errors";
-import type { CreateRatingInput, RatingReasonRow, RatingRow } from "../models";
+import type { CreateRatingInput, RatingReasonRow, RatingRow, RatingSummary } from "../models";
 
 import { RatingReasonRepository } from "../repository/rating-reason.repository";
 import { RatingRepository } from "../repository/rating.repository";
@@ -27,6 +31,18 @@ export type RatingService = {
       readonly appliesTo?: RatingReasonRow["appliesTo"];
     },
   ) => Effect.Effect<readonly RatingReasonRow[]>;
+  getBikeSummary: (
+    bikeId: string,
+  ) => Effect.Effect<
+    RatingSummary,
+    RatingRepositoryError | BikeRepositoryError | BikeNotFound
+  >;
+  getStationSummary: (
+    stationId: string,
+  ) => Effect.Effect<
+    RatingSummary,
+    RatingRepositoryError | StationRepositoryError | StationNotFound
+  >;
 };
 
 export class RatingServiceTag extends Context.Tag("RatingService")<
@@ -39,6 +55,8 @@ export const RatingServiceLive = Layer.effect(
   Effect.gen(function* () {
     const repo = yield* RatingRepository;
     const reasonRepo = yield* RatingReasonRepository;
+    const bikeRepo = yield* BikeRepository;
+    const stationRepo = yield* StationRepository;
 
     const service: RatingService = {
       create: input =>
@@ -49,6 +67,26 @@ export const RatingServiceLive = Layer.effect(
 
       getReasons: filters =>
         reasonRepo.findMany(filters).pipe(Effect.orDie),
+
+      getBikeSummary: bikeId =>
+        Effect.gen(function* () {
+          const bike = yield* bikeRepo.getById(bikeId);
+          if (Option.isNone(bike)) {
+            return yield* Effect.fail(new BikeNotFoundError({ id: bikeId }));
+          }
+
+          return yield* repo.findBikeSummary(bikeId);
+        }),
+
+      getStationSummary: stationId =>
+        Effect.gen(function* () {
+          const station = yield* stationRepo.getById(stationId);
+          if (Option.isNone(station)) {
+            return yield* Effect.fail(new StationNotFoundError({ id: stationId }));
+          }
+
+          return yield* repo.findStationSummary(stationId);
+        }),
     };
 
     return service;

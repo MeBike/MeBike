@@ -210,4 +210,65 @@ describe("ratingRepository Integration", () => {
 
     await broken.stop();
   });
+
+  it("findBikeSummary returns average, total, and breakdown", async () => {
+    const { id: userId } = await createUser();
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId);
+    const { id: otherBikeId } = await createBike(stationId);
+    const reason = await createReason();
+
+    const rentalOne = await createRental(userId, bikeId, stationId);
+    const rentalTwo = await createRental(userId, bikeId, stationId);
+    const rentalOther = await createRental(userId, otherBikeId, stationId);
+
+    await Effect.runPromise(repo.createRating({
+      userId,
+      rentalId: rentalOne.id,
+      rating: 5,
+      reasonIds: [reason.id],
+    }));
+
+    await Effect.runPromise(repo.createRating({
+      userId,
+      rentalId: rentalTwo.id,
+      rating: 3,
+      reasonIds: [reason.id],
+    }));
+
+    await Effect.runPromise(repo.createRating({
+      userId,
+      rentalId: rentalOther.id,
+      rating: 1,
+      reasonIds: [reason.id],
+    }));
+
+    const summary = await Effect.runPromise(repo.findBikeSummary(bikeId));
+
+    expect(summary.averageRating).toBe(4);
+    expect(summary.totalRatings).toBe(2);
+    expect(summary.breakdown).toEqual({
+      oneStar: 0,
+      twoStar: 0,
+      threeStar: 1,
+      fourStar: 0,
+      fiveStar: 1,
+    });
+  });
+
+  it("findStationSummary returns zeroed summary when no ratings", async () => {
+    const { id: stationId } = await createStation();
+
+    const summary = await Effect.runPromise(repo.findStationSummary(stationId));
+
+    expect(summary.averageRating).toBe(0);
+    expect(summary.totalRatings).toBe(0);
+    expect(summary.breakdown).toEqual({
+      oneStar: 0,
+      twoStar: 0,
+      threeStar: 0,
+      fourStar: 0,
+      fiveStar: 0,
+    });
+  });
 });

@@ -10,6 +10,7 @@ export * from "./reservations";
 export * from "./routes";
 export * from "./schemas";
 export * as StationsContracts from "./stations";
+export * as StatsContracts from "./stats";
 export * as StripeContracts from "./stripe";
 export * as SubscriptionsContracts from "./subscriptions";
 export * as SuppliersContracts from "./suppliers";

@@ -17,5 +17,20 @@ export const RatingReasonSchema = z.object({
   messages: z.string(),
 });
 
+export const RatingSummaryBreakdownSchema = z.object({
+  oneStar: z.number().int().nonnegative(),
+  twoStar: z.number().int().nonnegative(),
+  threeStar: z.number().int().nonnegative(),
+  fourStar: z.number().int().nonnegative(),
+  fiveStar: z.number().int().nonnegative(),
+});
+
+export const RatingSummarySchema = z.object({
+  averageRating: z.number(),
+  totalRatings: z.number().int().nonnegative(),
+  breakdown: RatingSummaryBreakdownSchema,
+});
+
 export type RatingDetail = z.infer<typeof RatingDetailSchema>;
 export type RatingReason = z.infer<typeof RatingReasonSchema>;
+export type RatingSummary = z.infer<typeof RatingSummarySchema>;
