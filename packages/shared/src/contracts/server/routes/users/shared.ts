@@ -127,7 +127,7 @@ export const DashboardStatsResponseSchema = DashboardStatsSchema.openapi("Dashbo
 const ActiveUsersGroupBySchema = z
   .enum(["day", "month"])
   .openapi({
-    description: "Time bucket granularity for the series. day = daily buckets, month = monthly buckets.",
+    description: "Time bucket granularity for the series. day = daily buckets, month = monthly buckets. Defaults to month when omitted.",
     example: "month",
   });
 
@@ -135,7 +135,7 @@ const ActiveUsersStartDateSchema = z
   .iso
   .datetime()
   .openapi({
-    description: "Inclusive range start (ISO datetime). Must be provided together with endDate.",
+    description: "Inclusive range start (ISO datetime). Must be provided together with endDate. If both dates are omitted, the API defaults to the previous full calendar month (UTC).",
     example: "2026-02-01T00:00:00.000Z",
   });
 
@@ -143,7 +143,7 @@ const ActiveUsersEndDateSchema = z
   .iso
   .datetime()
   .openapi({
-    description: "Inclusive range end (ISO datetime). Must be provided together with startDate.",
+    description: "Inclusive range end (ISO datetime). Must be provided together with startDate. If both dates are omitted, the API defaults to the previous full calendar month (UTC).",
     example: "2026-02-28T23:59:59.999Z",
   });
 

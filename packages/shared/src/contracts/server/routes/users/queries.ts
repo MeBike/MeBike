@@ -315,6 +315,8 @@ export const adminActiveUsersRoute = createRoute({
   method: "get",
   path: "/v1/users/manage-users/stats/active-users",
   tags: ["Users"],
+  description:
+    "Returns active users time-series. Defaults when query is omitted: groupBy=month and date range = previous full calendar month (UTC).",
   security: [{ bearerAuth: [] }],
   request: {
     query: ActiveUsersQuerySchema,
