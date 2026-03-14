@@ -125,9 +125,9 @@ export const NewUsersStatsResponseSchema = NewUsersStatsSchema.openapi("NewUsers
 export const DashboardStatsResponseSchema = DashboardStatsSchema.openapi("DashboardStatsResponse");
 
 export const ActiveUsersQuerySchema = z.object({
-  groupBy: z.enum(["day", "month"]),
-  startDate: z.iso.datetime(),
-  endDate: z.iso.datetime(),
+  groupBy: z.enum(["day", "month"]).optional(),
+  startDate: z.iso.datetime().optional(),
+  endDate: z.iso.datetime().optional(),
 });
 
 export const StatsPaginationQuerySchema = z.object({
