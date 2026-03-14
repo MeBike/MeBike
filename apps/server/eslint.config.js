@@ -5,6 +5,7 @@ export default createConfig({
     "dist/**",
     "dist-test/**",
     "generated/**",
+    "knowledge/**",
     "AGENTS.md",
     "prisma/migrations/migration_lock.toml",
   ],

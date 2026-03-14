@@ -42,12 +42,12 @@ const adminActiveUsers: RouteHandler<UsersRoutes["adminActiveUsers"]> = async (c
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-        const service = yield* UserStatsServiceTag;
-        return yield* service.getActiveUsersSeries({
-          groupBy,
-          startDate,
-          endDate,
-        });
+      const service = yield* UserStatsServiceTag;
+      return yield* service.getActiveUsersSeries({
+        groupBy,
+        startDate,
+        endDate,
+      });
     }),
     routeContext(users.adminActiveUsers),
   );
