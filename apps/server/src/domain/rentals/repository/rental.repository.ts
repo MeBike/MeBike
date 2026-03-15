@@ -13,6 +13,8 @@ import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 
 import {
   AdminRentalListItem,
+  RentalRevenueGroupBy,
+  RentalRevenuePoint,
   BikeSwapRequestRow,
   StaffBikeSwapRequestRow,
 } from "../models";
@@ -96,6 +98,20 @@ export function makeRentalRepository(
           ),
         ),
     }).pipe(Effect.map(mapToRentalRow));
+
+  const toBucketDate = (value: Date, groupBy: RentalRevenueGroupBy): Date => {
+    const year = value.getUTCFullYear();
+    const month = value.getUTCMonth();
+    const day = value.getUTCDate();
+
+    if (groupBy === "YEAR") {
+      return new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+    }
+    if (groupBy === "MONTH") {
+      return new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+    }
+    return new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+  };
 
   const approveBikeSwapRequestWithClient = (
     tx: PrismaClient | PrismaTypes.TransactionClient,
@@ -753,6 +769,107 @@ export function makeRentalRepository(
         );
 
         return makePageResult(mappedItems, total, page, pageSize);
+      });
+    },
+
+    getRevenueSeries(from, to, groupBy) {
+      return Effect.tryPromise({
+        try: async () => {
+          const rows = await client.rental.findMany({
+            where: {
+              status: "COMPLETED",
+              endTime: {
+                gte: from,
+                lte: to,
+              },
+            },
+            select: {
+              endTime: true,
+              totalPrice: true,
+            },
+          });
+
+          const buckets = new Map<string, RentalRevenuePoint>();
+
+          for (const row of rows) {
+            if (!row.endTime) {
+              continue;
+            }
+            const bucketDate = toBucketDate(row.endTime, groupBy);
+            const key = bucketDate.toISOString();
+            const amount = row.totalPrice === null ? 0 : Number(row.totalPrice);
+
+            const current = buckets.get(key);
+            if (current) {
+              buckets.set(key, {
+                ...current,
+                totalRevenue: current.totalRevenue + amount,
+                totalRentals: current.totalRentals + 1,
+              });
+              continue;
+            }
+
+            buckets.set(key, {
+              date: bucketDate,
+              totalRevenue: amount,
+              totalRentals: 1,
+            });
+          }
+
+          return [...buckets.values()].sort((a, b) => a.date.getTime() - b.date.getTime());
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "getRevenueSeries",
+            cause: e,
+          }),
+      });
+    },
+
+    getCompletedRevenueTotal(from, to) {
+      return Effect.tryPromise({
+        try: async () => {
+          const result = await client.rental.aggregate({
+            where: {
+              status: "COMPLETED",
+              endTime: {
+                gte: from,
+                lte: to,
+              },
+            },
+            _sum: {
+              totalPrice: true,
+            },
+          });
+
+          return result._sum.totalPrice === null ? 0 : Number(result._sum.totalPrice);
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "getCompletedRevenueTotal",
+            cause: e,
+          }),
+      });
+    },
+
+    getGlobalRentalCounts() {
+      return Effect.tryPromise({
+        try: async () => {
+          const rows = await client.rental.groupBy({
+            by: ["status"],
+            _count: { _all: true },
+          });
+
+          return rows.map(row => ({
+            status: row.status,
+            count: row._count._all,
+          }));
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "getGlobalRentalCounts",
+            cause: e,
+          }),
       });
     },
 

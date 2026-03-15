@@ -1,5 +1,5 @@
 import { z } from "../../../zod";
-import { RatingDetailSchema, RatingReasonSchema } from "./models";
+import { RatingDetailSchema, RatingReasonSchema, RatingSummarySchema } from "./models";
 
 export const RatingErrorCodeSchema = z.enum([
   "RENTAL_NOT_FOUND",
@@ -19,6 +19,16 @@ export const ratingErrorMessages = {
   RATING_REASON_NOT_FOUND: "One or more rating reasons were not found",
 } as const;
 
+export const RatingSummaryErrorCodeSchema = z.enum([
+  "BIKE_NOT_FOUND",
+  "STATION_NOT_FOUND",
+]).openapi("RatingSummaryErrorCode");
+
+export const ratingSummaryErrorMessages = {
+  BIKE_NOT_FOUND: "Bike not found",
+  STATION_NOT_FOUND: "Station not found",
+} as const;
+
 export const CreateRatingRequestSchema = z.object({
   rating: z.number().int().min(1).max(5),
   reasonIds: z.array(z.uuidv7()).min(1),
@@ -30,6 +40,15 @@ export const CreateRatingResponseSchema = RatingDetailSchema.openapi("CreateRati
 export const RatingResponseSchema = CreateRatingResponseSchema;
 
 export const RatingReasonsResponseSchema = z.array(RatingReasonSchema).openapi("RatingReasonsResponse");
+
+export const RatingSummaryResponseSchema = RatingSummarySchema.openapi("RatingSummaryResponse");
+
+export const RatingSummaryErrorResponseSchema = z.object({
+  error: z.string(),
+  details: z.object({
+    code: RatingSummaryErrorCodeSchema,
+  }).passthrough(),
+}).openapi("RatingSummaryErrorResponse");
 
 export const RatingErrorResponseSchema = z.object({
   error: z.string(),
@@ -43,6 +62,8 @@ export { RatingDetailSchema } from "./models";
 export type CreateRatingResponse = z.infer<typeof CreateRatingResponseSchema>;
 export type RatingResponse = z.infer<typeof RatingResponseSchema>;
 export type RatingReasonsResponse = z.infer<typeof RatingReasonsResponseSchema>;
+export type RatingSummaryResponse = z.infer<typeof RatingSummaryResponseSchema>;
+export type RatingSummaryErrorResponse = z.infer<typeof RatingSummaryErrorResponseSchema>;
 export type RatingErrorCode = z.infer<typeof RatingErrorCodeSchema>;
 export type RatingErrorResponse = z.infer<typeof RatingErrorResponseSchema>;
 export type CreateRatingRequest = z.infer<typeof CreateRatingRequestSchema>;

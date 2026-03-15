@@ -7,5 +7,7 @@ export function registerRatingRoutes(app: import("@hono/zod-openapi").OpenAPIHon
 
   app.openapi(ratings.create, RatingMeController.create);
   app.openapi(ratings.getReasons, RatingMeController.getReasons);
+  app.openapi(ratings.getBikeSummary, RatingMeController.getBikeSummary);
+  app.openapi(ratings.getStationSummary, RatingMeController.getStationSummary);
   app.openapi(ratings.getByRental, RatingMeController.getByRental);
 }

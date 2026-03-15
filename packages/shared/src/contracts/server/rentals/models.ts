@@ -202,6 +202,26 @@ export const RentalCountsResponseSchema = z.object({
   result: RentalStatusCountsSchema,
 });
 
+export const RevenueDeltaSchema = z.object({
+  current: z.number(),
+  previous: z.number(),
+  difference: z.number(),
+  percentChange: z.number(),
+});
+
+export const RentalSummaryStatsSchema = z.object({
+  rentalList: z.object({
+    Rented: z.number(),
+    Completed: z.number(),
+    Cancelled: z.number(),
+    Reserved: z.number(),
+  }),
+  dailyRevenue: RevenueDeltaSchema,
+  monthlyRevenue: RevenueDeltaSchema,
+});
+
+export const RentalSummaryStatsResponseSchema = RentalSummaryStatsSchema;
+
 export const CreateRentalRequestSchema = z.object({
   bikeId: z.uuidv7(),
   startStationId: z.uuidv7(),
@@ -354,6 +374,9 @@ export type StationActivityResponse = z.infer<
 export type DashboardResponse = z.infer<typeof DashboardResponseSchema>;
 export type RentalStatusCounts = z.infer<typeof RentalStatusCountsSchema>;
 export type RentalCountsResponse = z.infer<typeof RentalCountsResponseSchema>;
+export type RevenueDelta = z.infer<typeof RevenueDeltaSchema>;
+export type RentalSummaryStats = z.infer<typeof RentalSummaryStatsSchema>;
+export type RentalSummaryStatsResponse = z.infer<typeof RentalSummaryStatsResponseSchema>;
 export type CreateRentalRequest = z.infer<typeof CreateRentalRequestSchema>;
 export type StaffCreateRentalRequest = z.infer<
   typeof StaffCreateRentalRequestSchema

@@ -130,6 +130,41 @@ export type RentalStatusCounts = {
   RESERVED: number;
 };
 
+export type RentalRevenueGroupBy = "DAY" | "MONTH" | "YEAR";
+
+export type RentalRevenuePoint = {
+  date: Date;
+  totalRevenue: number;
+  totalRentals: number;
+};
+
+export type RentalRevenueStats = {
+  period: {
+    from: Date;
+    to: Date;
+  };
+  groupBy: RentalRevenueGroupBy;
+  data: readonly RentalRevenuePoint[];
+};
+
+export type RevenueDelta = {
+  current: number;
+  previous: number;
+  difference: number;
+  percentChange: number;
+};
+
+export type RentalSummaryStats = {
+  rentalList: {
+    Rented: number;
+    Completed: number;
+    Cancelled: number;
+    Reserved: number;
+  };
+  dailyRevenue: RevenueDelta;
+  monthlyRevenue: RevenueDelta;
+};
+
 export type BikeSwapRequestRow = {
   id: string;
   rentalId: string;

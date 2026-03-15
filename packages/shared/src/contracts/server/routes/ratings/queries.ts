@@ -4,6 +4,10 @@ import {
   RatingErrorCodeSchema,
   RatingReasonsResponseSchema,
   RatingResponseSchema,
+  RatingSummaryErrorCodeSchema,
+  ratingSummaryErrorMessages,
+  RatingSummaryErrorResponseSchema,
+  RatingSummaryResponseSchema,
 } from "../../ratings/schemas";
 import {
   UnauthorizedErrorCodeSchema,
@@ -100,6 +104,114 @@ export const getRatingReasonsRoute = createRoute({
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
                 details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const getBikeRatingSummaryRoute = createRoute({
+  method: "get",
+  path: "/v1/ratings/bikes/{bikeId}/summary",
+  tags: ["Ratings"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      bikeId: z.uuidv7(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Bike rating summary",
+      content: {
+        "application/json": {
+          schema: RatingSummaryResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Bike not found",
+      content: {
+        "application/json": {
+          schema: RatingSummaryErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: ratingSummaryErrorMessages.BIKE_NOT_FOUND,
+                details: { code: RatingSummaryErrorCodeSchema.enum.BIKE_NOT_FOUND },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const getStationRatingSummaryRoute = createRoute({
+  method: "get",
+  path: "/v1/ratings/stations/{stationId}/summary",
+  tags: ["Ratings"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      stationId: z.uuidv7(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Station rating summary",
+      content: {
+        "application/json": {
+          schema: RatingSummaryResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Station not found",
+      content: {
+        "application/json": {
+          schema: RatingSummaryErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: ratingSummaryErrorMessages.STATION_NOT_FOUND,
+                details: { code: RatingSummaryErrorCodeSchema.enum.STATION_NOT_FOUND },
               },
             },
           },

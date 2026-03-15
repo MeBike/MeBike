@@ -1,4 +1,4 @@
-import type { UsersContracts } from "@mebike/shared";
+import type { RatingsContracts } from "@mebike/shared";
 import type { Kysely } from "kysely";
 
 import jwt from "jsonwebtoken";
@@ -10,7 +10,7 @@ import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
 import { seed } from "@/test/db/seed";
 import { getTestDatabase } from "@/test/db/test-database";
 
-const ADMIN_USER_ID = "018d4529-6880-77a8-8e6f-4d2c88d22309";
+const USER_ID = "018d4529-6880-77a8-8e6f-4d2c88d22312";
 
 type RuntimeLike = {
   runPromise: <A>(effect: unknown) => Promise<A>;
@@ -21,7 +21,7 @@ type TestAppLike = {
   request: (input: string | URL | Request, init?: RequestInit) => Response | Promise<Response>;
 };
 
-describe("manage-users route ordering e2e", () => {
+describe("ratings routing e2e", () => {
   let container: { stop: () => Promise<void>; url: string };
   let testDb: Kysely<DB>;
   let app: TestAppLike;
@@ -35,18 +35,18 @@ describe("manage-users route ordering e2e", () => {
     await testDb
       .insertInto("User")
       .values({
-        id: ADMIN_USER_ID,
-        fullname: "Route Admin",
-        email: "route-admin@example.com",
+        id: USER_ID,
+        fullname: "Ratings User",
+        email: "ratings-user@example.com",
         password_hash: "hash123",
         phone_number: null,
         username: null,
         avatar: null,
         location: null,
         nfc_card_uid: null,
-        role: "ADMIN",
+        role: "USER",
         verify: "VERIFIED",
-        updated_at: new Date("2024-01-10T10:00:00Z"),
+        updated_at: new Date("2024-01-12T10:00:00Z"),
       })
       .execute();
 
@@ -59,18 +59,34 @@ describe("manage-users route ordering e2e", () => {
     const { createHttpApp } = await import("@/http/app");
     const { PrismaLive } = await import("@/infrastructure/prisma");
     const { UserRepositoryLive } = await import("@/domain/users/repository/user.repository");
-    const { UserStatsRepositoryLive } = await import("@/domain/users/repository/user-stats.repository");
     const { UserServiceLive } = await import("@/domain/users/services/user.service");
-    const { UserStatsServiceLive } = await import("@/domain/users/services/user-stats.service");
+    const { BikeRepositoryLive } = await import("@/domain/bikes/repository/bike.repository");
+    const { StationRepositoryLive } = await import("@/domain/stations/repository/station.repository");
+    const { RatingRepositoryLive } = await import("@/domain/ratings/repository/rating.repository");
+    const { RatingReasonRepositoryLive } = await import("@/domain/ratings/repository/rating-reason.repository");
+    const { RatingServiceLive } = await import("@/domain/ratings/services/rating.service");
 
     const userRepoLayer = UserRepositoryLive.pipe(Layer.provide(PrismaLive));
     const userServiceLayer = UserServiceLive.pipe(Layer.provide(userRepoLayer));
-    const userStatsServiceLayer = UserStatsServiceLive.pipe(Layer.provide(UserStatsRepositoryLive));
+    const bikeRepoLayer = BikeRepositoryLive.pipe(Layer.provide(PrismaLive));
+    const stationRepoLayer = StationRepositoryLive.pipe(Layer.provide(PrismaLive));
+    const ratingReposLayer = Layer.mergeAll(
+      RatingRepositoryLive,
+      RatingReasonRepositoryLive,
+    ).pipe(Layer.provide(PrismaLive));
+    const ratingServiceLayer = RatingServiceLive.pipe(
+      Layer.provide(ratingReposLayer),
+      Layer.provide(bikeRepoLayer),
+      Layer.provide(stationRepoLayer),
+    );
+
     const httpTestLayer = Layer.mergeAll(
       userRepoLayer,
       userServiceLayer,
-      UserStatsRepositoryLive,
-      userStatsServiceLayer,
+      bikeRepoLayer,
+      stationRepoLayer,
+      ratingReposLayer,
+      ratingServiceLayer,
       PrismaLive,
     );
 
@@ -101,8 +117,6 @@ describe("manage-users route ordering e2e", () => {
     return jwt.sign(
       {
         userId,
-        role: "ADMIN",
-        verifyStatus: "VERIFIED",
         tokenType: "access",
       },
       process.env.JWT_SECRET ?? "secret",
@@ -110,65 +124,37 @@ describe("manage-users route ordering e2e", () => {
     );
   }
 
-  it("get /v1/users/manage-users/stats does not get swallowed by {userId}", async () => {
-    const token = makeAccessToken(ADMIN_USER_ID);
+  it("get /v1/ratings/bikes/{bikeId}/summary resolves bike summary route", async () => {
+    const token = makeAccessToken(USER_ID);
+    const bikeId = "018d4529-6880-77a8-8e6f-4d2c88d22313";
 
-    const response = await app.request("http://test/v1/users/manage-users/stats", {
+    const response = await app.request(`http://test/v1/ratings/bikes/${bikeId}/summary`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    const body = await response.json() as UsersContracts.AdminUserStatsResponse;
 
-    expect(response.status).toBe(200);
-    expect(body.totalUsers).toBeTypeOf("number");
+    const body = await response.json() as RatingsContracts.RatingSummaryErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.details.code).toBe("BIKE_NOT_FOUND");
   });
 
-  it("get /v1/users/manage-users/dashboard-stats does not get swallowed by {userId}", async () => {
-    const token = makeAccessToken(ADMIN_USER_ID);
+  it("get /v1/ratings/stations/{stationId}/summary resolves station summary route", async () => {
+    const token = makeAccessToken(USER_ID);
+    const stationId = "018d4529-6880-77a8-8e6f-4d2c88d22314";
 
-    const response = await app.request("http://test/v1/users/manage-users/dashboard-stats", {
+    const response = await app.request(`http://test/v1/ratings/stations/${stationId}/summary`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    const body = await response.json() as UsersContracts.DashboardStatsResponse;
 
-    expect(response.status).toBe(200);
-    expect(body.totalCustomers).toBeTypeOf("number");
-    expect(body.averageSpending).toBeTypeOf("number");
-  });
+    const body = await response.json() as RatingsContracts.RatingSummaryErrorResponse;
 
-  it("get /v1/users/manage-users/stats/active-users defaults query when omitted", async () => {
-    const token = makeAccessToken(ADMIN_USER_ID);
-
-    const response = await app.request("http://test/v1/users/manage-users/stats/active-users", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const body = await response.json() as UsersContracts.ActiveUsersSeriesResponse;
-
-    expect(response.status).toBe(200);
-    expect(Array.isArray(body.data)).toBe(true);
-  });
-
-  it("get /v1/users/manage-users/{userId} still resolves detail route", async () => {
-    const token = makeAccessToken(ADMIN_USER_ID);
-
-    const response = await app.request(`http://test/v1/users/manage-users/${ADMIN_USER_ID}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const body = await response.json() as UsersContracts.AdminUserDetailResponse;
-
-    expect(response.status).toBe(200);
-    expect(body.id).toBe(ADMIN_USER_ID);
-    expect(body.role).toBe("ADMIN");
+    expect(response.status).toBe(404);
+    expect(body.details.code).toBe("STATION_NOT_FOUND");
   });
 });

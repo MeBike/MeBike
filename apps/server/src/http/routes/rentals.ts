@@ -72,6 +72,20 @@ export function registerRentalRoutes(
 
   app.openapi(adminGetRoute, RentalAdminController.adminGetRental);
 
+  const revenueRoute = {
+    ...rentals.getRentalRevenue,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(revenueRoute, RentalAdminController.getRentalRevenue);
+
+  const statsSummaryRoute = {
+    ...rentals.getRentalStatsSummary,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(statsSummaryRoute, RentalAdminController.getRentalStatsSummary);
+
   const requestSwapRoute = {
     ...rentals.requestBikeSwap,
     middleware: [requireUserMiddleware] as const,

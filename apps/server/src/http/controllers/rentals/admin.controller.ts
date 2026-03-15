@@ -8,7 +8,9 @@ import {
   adminGetRentalDetailUseCase,
   endRentalByAdminUseCase,
   RentalRepository,
+  RentalStatsServiceTag,
 } from "@/domain/rentals";
+import { previousUtcMonthFullRange } from "@/domain/rentals/services/rental-stats-time";
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractAdminRentalDetail,
@@ -28,6 +30,144 @@ import {
   RentalErrorCodeSchema,
   rentalErrorMessages,
 } from "./shared";
+
+const getRentalRevenue: RouteHandler<
+  RentalsRoutes["getRentalRevenue"]
+> = async (c) => {
+  const query = c.req.valid("query");
+
+  const groupBy = query.groupBy ?? "DAY";
+  const from = query.from ? new Date(query.from) : null;
+  const to = query.to ? new Date(query.to) : null;
+
+  if ((from && !to) || (!from && to)) {
+    return c.json<RentalsContracts.RentalErrorResponse, 400>(
+      {
+        error: "from and to must be provided together",
+        details: {
+          code: RentalErrorCodeSchema.enum.INVALID_OBJECT_ID,
+          from: query.from,
+          to: query.to,
+        },
+      },
+      400,
+    );
+  }
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const stats = yield* RentalStatsServiceTag;
+
+      const range =
+        from && to ? { from, to } : previousUtcMonthFullRange(new Date());
+
+      return yield* stats.getRevenueSeries({
+        from: range.from,
+        to: range.to,
+        groupBy,
+      });
+    }),
+    "GET /v1/rentals/stats/revenue",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json<RentalsContracts.RentalRevenueResponse, 200>(
+    {
+      period: {
+        from: result.period.from.toISOString(),
+        to: result.period.to.toISOString(),
+      },
+      groupBy: result.groupBy,
+      data: result.data.map((item) => ({
+        date: item.date.toISOString(),
+        totalRevenue: item.totalRevenue,
+        totalRentals: item.totalRentals,
+      })),
+    },
+    200,
+  );
+};
+
+const getRentalStatsSummary: RouteHandler<
+  RentalsRoutes["getRentalStatsSummary"]
+> = async (c) => {
+  const eff = withLoggedCause(
+    Effect.flatMap(RentalStatsServiceTag, (svc) => svc.getSummary()),
+    "GET /v1/rentals/stats/summary",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json(result, 200);
+};
+
+const getRentalRevenue: RouteHandler<
+  RentalsRoutes["getRentalRevenue"]
+> = async (c) => {
+  const query = c.req.valid("query");
+
+  const groupBy = query.groupBy ?? "DAY";
+  const from = query.from ? new Date(query.from) : null;
+  const to = query.to ? new Date(query.to) : null;
+
+  if ((from && !to) || (!from && to)) {
+    return c.json<RentalsContracts.RentalErrorResponse, 400>(
+      {
+        error: "from and to must be provided together",
+        details: {
+          code: RentalErrorCodeSchema.enum.INVALID_OBJECT_ID,
+          from: query.from,
+          to: query.to,
+        },
+      },
+      400,
+    );
+  }
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const stats = yield* RentalStatsServiceTag;
+
+      const range =
+        from && to ? { from, to } : previousUtcMonthFullRange(new Date());
+
+      return yield* stats.getRevenueSeries({
+        from: range.from,
+        to: range.to,
+        groupBy,
+      });
+    }),
+    "GET /v1/rentals/stats/revenue",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json<RentalsContracts.RentalRevenueResponse, 200>(
+    {
+      period: {
+        from: result.period.from.toISOString(),
+        to: result.period.to.toISOString(),
+      },
+      groupBy: result.groupBy,
+      data: result.data.map((item) => ({
+        date: item.date.toISOString(),
+        totalRevenue: item.totalRevenue,
+        totalRentals: item.totalRentals,
+      })),
+    },
+    200,
+  );
+};
+
+const getRentalStatsSummary: RouteHandler<
+  RentalsRoutes["getRentalStatsSummary"]
+> = async (c) => {
+  const eff = withLoggedCause(
+    Effect.flatMap(RentalStatsServiceTag, (svc) => svc.getSummary()),
+    "GET /v1/rentals/stats/summary",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json(result, 200);
+};
 
 const adminListRentals: RouteHandler<
   RentalsRoutes["adminListRentals"]
@@ -79,13 +219,7 @@ const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
       const detail = toContractAdminRentalDetail(right);
-      return c.json(
-        {
-          message: "OK",
-          result: detail,
-        },
-        200,
-      );
+      return c.json(detail, 200);
     }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
@@ -172,15 +306,9 @@ const endRentalByAdmin: RouteHandler<
         "GET /v1/admin/rentals/{rentalId}",
       );
 
-      return c.var.runPromise(detailEff).then((detail) =>
-        c.json(
-          {
-            message: "Rental ended successfully",
-            result: toContractAdminRentalDetail(detail),
-          },
-          200,
-        ),
-      );
+      return c.var
+        .runPromise(detailEff)
+        .then((detail) => c.json(toContractAdminRentalDetail(detail), 200));
     }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
@@ -345,5 +473,7 @@ export const RentalAdminController = {
   adminGetBikeSwapRequests,
   endRentalByAdmin,
   getActiveRentalsByPhone,
+  getRentalRevenue,
+  getRentalStatsSummary,
   adminListBikeSwapRequests,
 } as const;

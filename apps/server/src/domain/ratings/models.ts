@@ -24,3 +24,17 @@ export type CreateRatingInput = {
   readonly reasonIds: readonly string[];
   readonly comment?: string | null;
 };
+
+export type RatingSummaryBreakdown = {
+  readonly oneStar: number;
+  readonly twoStar: number;
+  readonly threeStar: number;
+  readonly fourStar: number;
+  readonly fiveStar: number;
+};
+
+export type RatingSummary = {
+  readonly averageRating: number;
+  readonly totalRatings: number;
+  readonly breakdown: RatingSummaryBreakdown;
+};
