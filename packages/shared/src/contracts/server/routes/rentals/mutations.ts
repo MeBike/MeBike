@@ -141,10 +141,25 @@ export const endMyRental = createRoute({
       description: "Rental ended successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalSchemaOpenApi,
-            "End rental response",
-          ),
+          schema: RentalSchemaOpenApi,
+          examples: {
+            Success: {
+              value: {
+                id: "019b17bd-d130-7e7d-be69-91ceef7b6959",
+                userId: "019b17bd-d130-7e7d-be69-91ceef7b6999",
+                bikeId: "019b17bd-d130-7e7d-be69-91ceef7b6888",
+                startStation: "019b17bd-d130-7e7d-be69-91ceef7b6111",
+                endStation: "019b17bd-d130-7e7d-be69-91ceef7b6222",
+                startTime: "2026-03-10T09:10:00.000Z",
+                endTime: "2026-03-10T10:25:00.000Z",
+                duration: 75,
+                totalPrice: 30000,
+                subscriptionId: "019b17bd-d130-7e7d-be69-91ceef7b6333",
+                status: "COMPLETED",
+                updatedAt: "2026-03-10T10:25:00.000Z",
+              },
+            },
+          },
         },
       },
     },
@@ -351,10 +366,7 @@ export const endRentalByAdmin = createRoute({
       description: "Rental ended by admin/staff",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalWithPricingSchemaOpenApi,
-            "End rental by admin response",
-          ),
+          schema: RentalDetailSchemaOpenApi,
         },
       },
     },

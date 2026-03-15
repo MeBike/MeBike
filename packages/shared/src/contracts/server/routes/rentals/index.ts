@@ -25,6 +25,7 @@ export {
   getRental,
   getRentalRevenue,
   getRentalsByUser,
+  getRentalStatsSummary,
   getRentalSummary,
   getStationActivity,
   staffGetRental,

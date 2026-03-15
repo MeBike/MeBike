@@ -23,6 +23,7 @@ import {
 import {
   RentalRepositoryLive,
   RentalServiceLive,
+  RentalStatsServiceLive,
 } from "@/domain/rentals";
 import {
   ReservationHoldServiceLive,
@@ -116,6 +117,10 @@ const RentalServiceLayer = RentalServiceLive.pipe(
   Layer.provide(BikeReposLive),
 );
 
+const RentalStatsServiceLayer = RentalStatsServiceLive.pipe(
+  Layer.provide(RentalReposLive),
+);
+
 const WalletReposLive = WalletRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
@@ -151,6 +156,7 @@ export const WalletDepsLive = Layer.mergeAll(
 export const RentalDepsLive = Layer.mergeAll(
   RentalReposLive,
   RentalServiceLayer,
+  RentalStatsServiceLayer,
   BikeDepsLive,
   WalletDepsLive,
   SubscriptionReposLive,
