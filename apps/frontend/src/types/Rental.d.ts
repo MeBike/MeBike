@@ -2,22 +2,24 @@ import { Bike } from "./Bike";
 import { DetailUser } from "./Customer";
 import { Station } from "./Station";
 
-export type RentingHistory = {
-  _id: string;
-  user_id: string;
-  bike_id: string;
-  start_station: string;
-  end_station: string | null;
-  start_time: string;
-  end_time: string | null;
-  duration: number;
-  total_price: number;
-  status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
-  created_at: string;
-  updated_at: string;
-  user: {
-    fullname: string;
+export type RentalStatus = "RENTED" | "COMPLETED" | "CANCELLED"
+export type Rental = {
+  id : string;
+  user : {
+    id : string;
+    fullName : string;
   }
+  status : RentalStatus,
+  startStation : string,
+  startTime : string,
+  duration : number,
+  totalPrice : number,
+  createdAt : string,
+  updatedAt : string,
+  bikeId : string,
+  endStation : string,
+  endTime : string,
+  subscriptionId : string,
 };
 export type RentalDetail = {
   _id: string;

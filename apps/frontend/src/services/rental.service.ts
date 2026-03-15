@@ -1,22 +1,11 @@
 import type { AxiosResponse } from "axios";
 import type { RentalSchemaFormData, UpdateRentalSchema } from "@/schemas/rental-schema";
 import fetchHttpClient from "@lib/httpClient";
-import type { RentingHistory } from "@custom-types";
+import type { Rental, RentalStatus } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
 import { RentalRecord} from "@custom-types";
-export type Pagination = {
-  limit: number;
-  currentPage: number;
-  totalPages: number;
-  totalRecords: number;
-};
-export interface GetAllRentalsForStaffAdminProps {
-  page?: number;
-  limit?: number;
-  start_station?: string;
-  end_station?: string;
-  status?: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
-}
+import { ENDPOINT } from "@/constants";
+import { ApiResponse } from "@custom-types";
 interface Dashboardsummary {
   revenueSummary: {
     today: {
@@ -64,10 +53,6 @@ const RENTAL_ENDPOINTS = {
   END_RENTAL_SOS: (id: string) => `${RENTAL_BASE}/${id}/end`,
   SUMMARY: () => `${RENTAL_BASE}/summary`,
 };
-type RentalResponse = {
-  data: RentingHistory[];
-  pagination: Pagination;
-};
 export interface SummaryRental {
   rentalList: {
     Rented: number;
@@ -89,16 +74,6 @@ export interface SummaryRental {
   }
  
 }
-interface ApiResponse<T> {
-  data: T;
-  pagination: {
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-    totalRecords: number;
-  };
-  message: string;
-}
 interface DetailApiResponse<T> {
   result: T;
   message: string;
@@ -106,17 +81,17 @@ interface DetailApiResponse<T> {
 export const rentalService = {
   userPostRent: async (
     data: RentalSchemaFormData
-  ): Promise<AxiosResponse<DetailApiResponse<RentingHistory>>> => {
+  ): Promise<AxiosResponse<DetailApiResponse<Rental>>> => {
     const response = await fetchHttpClient.post<
-      DetailApiResponse<RentingHistory>
+      DetailApiResponse<Rental>
     >(RENTAL_ENDPOINTS.USER_RENT(), data);
     return response;
   },
   userGetAllRentalsForUser: async (
     page: number,
     limit: number
-  ): Promise<AxiosResponse<RentalResponse>> => {
-    const response = await fetchHttpClient.get<RentalResponse>(
+  ): Promise<AxiosResponse<ApiResponse<Rental>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Rental>>(
       RENTAL_ENDPOINTS.USER_RENTAL_ME(),
       {
         params: {
@@ -145,6 +120,7 @@ export const rentalService = {
     );
     return response;
   },
+  //dashboard
   adminGetRentalRevenue: async (): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
       RENTAL_ENDPOINTS.ADMIN_RENTAL_REVENUE()
@@ -183,21 +159,33 @@ export const rentalService = {
   },
   getAllRentalsForStaffAdmin: async ({
     page,
-    limit,
-    start_station,
-    end_station,
+    pageSize,
+    startStation,
+    endStation,
     status,
-  }: GetAllRentalsForStaffAdminProps): Promise<
-    AxiosResponse<ApiResponse<RentingHistory[]>>
+    userId,
+    bikeId,
+  }: {
+    page ?: number,
+    pageSize ?: number,
+    startStation ?: string,
+    endStation ?: string,
+    status ?: RentalStatus,
+    userId ?: string,
+    bikeId ?: string,
+  }): Promise<
+    AxiosResponse<ApiResponse<Rental[]>>
   > => {
-    const response = await fetchHttpClient.get<ApiResponse<RentingHistory[]>>(
-      RENTAL_ENDPOINTS.STAFF_ADMIN_GET_ALL_RENTALS(),
+    const response = await fetchHttpClient.get<ApiResponse<Rental[]>>(
+      ENDPOINT.RENTAL.BASE,
       {
-        page,
-        limit,
-        start_station,
-        end_station,
-        status,
+        page : page,
+        pageSize : pageSize,
+        startStation : startStation,
+        endStation : endStation,
+        status : status,
+        userId : userId,
+        bikeId : bikeId
       }
     );
     return response;
@@ -224,7 +212,7 @@ export const rentalService = {
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<RentalRecord>>> => {
     const response = await fetchHttpClient.get<DetailApiResponse<RentalRecord>>(
-      RENTAL_ENDPOINTS.DETAIL_RENTAL(id)
+      ENDPOINT.RENTAL.ID(id)
     );
     return response;
   },

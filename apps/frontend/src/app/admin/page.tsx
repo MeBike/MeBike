@@ -99,17 +99,6 @@ export default function DashboardPage() {
               changeType={(newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "positive" : "negative"}
               icon={Users}
             />
-            {/* <StatsCard
-              title="Khách hàng mới tháng trước"
-              value={
-                newRegistrationStats
-                  ? newRegistrationStats.result.newUsersLastMonth.toString()
-                  : "0"
-              }
-              change="+8% tuần này"
-              changeType="positive"
-              icon={Users}
-            /> */}
             <StatsCard
               title="Doanh thu tháng này"
               value={formatRevenue(

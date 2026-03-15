@@ -120,7 +120,9 @@ export const userService = {
   > => {
     const response = await fetchHttpClient.get<
       DetailUserResponse<GetNewRegistrationStats>
-    >(ENDPOINT.USER.NEW_USER);
+    >(ENDPOINT.USER.NEW_USER,
+      
+    );
     return response;
   },
   getActiveUser: async (): Promise<
