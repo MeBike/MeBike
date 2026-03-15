@@ -211,10 +211,7 @@ export const RentalSummaryStatsSchema = z.object({
   monthlyRevenue: RevenueDeltaSchema,
 });
 
-export const RentalSummaryStatsResponseSchema = z.object({
-  message: z.string(),
-  result: RentalSummaryStatsSchema,
-});
+export const RentalSummaryStatsResponseSchema = RentalSummaryStatsSchema;
 
 export const CreateRentalRequestSchema = z.object({
   bikeId: z.uuidv7(),

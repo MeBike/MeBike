@@ -84,10 +84,7 @@ const getRentalStatsSummary: RouteHandler<RentalsRoutes["getRentalStatsSummary"]
   );
 
   const result = await c.var.runPromise(eff);
-  return c.json<RentalsContracts.RentalSummaryStatsResponse, 200>({
-    message: "OK",
-    result,
-  }, 200);
+  return c.json(result, 200);
 };
 
 const adminListRentals: RouteHandler<RentalsRoutes["adminListRentals"]> = async (c) => {
