@@ -178,6 +178,12 @@ function makeRentalService(
       Effect.gen(function* () {
         const rental = yield* service.getByIdForUser({ rentalId, userId });
 
+        if (rental.userId !== userId) {
+          return yield* Effect.fail(
+            new UnauthorizedRentalAccess({ rentalId, userId }),
+          );
+        }
+
         if (rental.status !== "RENTED") {
           return yield* Effect.fail(
             new CannotRequestSwap({ rentalId, status: rental.status }),
