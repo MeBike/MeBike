@@ -20,7 +20,6 @@ import { notifyBikeStatusUpdate } from "@/realtime/bike-status-events";
 import type { RentalsRoutes } from "./shared";
 
 import { RentalErrorCodeSchema, rentalErrorMessages } from "./shared";
-import { C } from "node_modules/vitest/dist/chunks/reporters.d.Rsi0PyxX";
 
 const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
   const userId = c.var.currentUser!.userId;

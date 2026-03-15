@@ -1,6 +1,6 @@
 import type { RouteConfig } from "@hono/zod-openapi";
 
-import { requestBikeSwap, serverRoutes } from "@mebike/shared";
+import { serverRoutes } from "@mebike/shared";
 
 import {
   RentalAdminController,

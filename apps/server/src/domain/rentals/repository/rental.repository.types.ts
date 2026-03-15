@@ -26,7 +26,6 @@ import type {
   StaffBikeSwapRequestRow,
   StaffBikeSwapRequestSortField,
 } from "../models";
-import { StaffBikeRequestNotFound } from "../services/staff-rental.service";
 
 export type CreateRentalInput = {
   userId: string;

@@ -11,6 +11,7 @@ import type {
   StaffBikeSwapRequestRow,
   StaffBikeSwapRequestSortField,
 } from "../models";
+import { BikeSwapStatus } from "generated/kysely/types";
 
 export function toMyRentalsWhere(
   userId: string,
@@ -142,7 +143,7 @@ export function mapToBikeSwapRequestRow(
     oldBikeId: raw.oldBikeId,
     newBikeId: raw.newBikeId,
     reason: raw.reason ?? "",
-    status: raw.status as any,
+    status: raw.status as BikeSwapStatus,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };
@@ -235,7 +236,7 @@ export function mapToStaffBikeSwapRequestRow(
     oldBike: mapBikeInfo(raw.oldBike)!,
     newBike: mapBikeInfo(raw.newBike),
     reason: raw.reason ?? "",
-    status: raw.status as any,
+    status: raw.status as BikeSwapStatus,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };
