@@ -418,7 +418,6 @@ async function main() {
     ]);
 
     const users = buildDemoUsers();
-    const userIds = users.map(u => u.id);
     const userEmails = users.map(u => u.email);
 
     await prisma.ratingReasonLink.deleteMany({
