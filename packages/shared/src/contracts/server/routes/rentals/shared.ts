@@ -10,6 +10,7 @@ import {
   RentalRevenueResponseSchema,
   RentalSchema,
   RentalStatusSchema,
+  RentalSummaryStatsResponseSchema,
   RentalWithPriceSchema,
   RentalWithPricingSchema,
   StationActivityResponseSchema,
@@ -158,5 +159,6 @@ export {
   RentalErrorCodeSchema,
   RentalRevenueResponseSchema,
   RentalStatusSchema,
+  RentalSummaryStatsResponseSchema,
   StationActivityResponseSchema,
 };

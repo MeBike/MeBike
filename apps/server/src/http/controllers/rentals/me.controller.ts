@@ -224,13 +224,7 @@ const getMyRental: RouteHandler<RentalsRoutes["getMyRental"]> = async (c) => {
 
   const result = await c.var.runPromise(eff);
   if (Option.isSome(result)) {
-    return c.json(
-      {
-        message: "OK",
-        result: toContractRental(result.value),
-      },
-      200,
-    );
+    return c.json(toContractRental(result.value), 200);
   }
 
   return c.json(
@@ -292,10 +286,7 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
       }
 
       return c.json(
-        {
-          message: "Rental ended successfully",
-          result: toContractRental(right),
-        },
+        toContractRental(right),
         200,
       );
     }),
