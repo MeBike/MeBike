@@ -13,8 +13,8 @@ import { RentalRepository } from "../repository/rental.repository";
 export class StaffBikeRequestNotFound extends Data.TaggedError(
   "StaffBikeRequestNotFound",
 )<{
-  readonly bikeSwapRequestId: string;
-}> {
+    readonly bikeSwapRequestId: string;
+  }> {
   constructor(readonly bikeSwapRequestId: string) {
     super({ bikeSwapRequestId });
   }

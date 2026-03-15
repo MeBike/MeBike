@@ -8,8 +8,8 @@ import { RentalRepository } from "../repository/rental.repository";
 export class AdminRentalNotFound extends Data.TaggedError(
   "AdminRentalNotFound",
 )<{
-  readonly rentalId: string;
-}> {
+    readonly rentalId: string;
+  }> {
   constructor(readonly rentalId: string) {
     super({ rentalId });
   }
@@ -18,8 +18,8 @@ export class AdminRentalNotFound extends Data.TaggedError(
 export class AdminBikeRequestNotFound extends Data.TaggedError(
   "AdminBikeRequestNotFound",
 )<{
-  readonly bikeSwapRequestId: string;
-}> {
+    readonly bikeSwapRequestId: string;
+  }> {
   constructor(readonly bikeSwapRequestId: string) {
     super({ bikeSwapRequestId });
   }

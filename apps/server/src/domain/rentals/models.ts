@@ -1,4 +1,4 @@
-import { BikeSwapStatus } from "generated/kysely/types";
+import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
   RentalStatus,
@@ -45,10 +45,10 @@ export type StaffBikeSwapRequestFilter = {
   stationId?: string;
 };
 
-export type StaffBikeSwapRequestSortField =
-  | "status"
-  | "updatedAt"
-  | "createdAt";
+export type StaffBikeSwapRequestSortField
+  = | "status"
+    | "updatedAt"
+    | "createdAt";
 
 export type AdminRentalListItem = {
   id: string;

@@ -6,8 +6,8 @@ import type {
   SubscriptionNotUsable,
   SubscriptionUsageExceeded,
 } from "@/domain/subscriptions/domain-errors";
+import type { BikeSwapStatus } from "generated/kysely/types";
 import type { BikeStatus, RentalStatus } from "generated/prisma/enums";
-import { BikeSwapStatus } from "generated/kysely/types";
 
 export class RentalRepositoryError extends Data.TaggedError(
   "RentalRepositoryError",
@@ -42,9 +42,9 @@ export class BikeMissingStation extends Data.TaggedError("BikeMissingStation")<{
 export class BikeNotFoundInStation extends Data.TaggedError(
   "BikeNotFoundInStation",
 )<{
-  readonly bikeId: string;
-  readonly stationId: string;
-}> {}
+    readonly bikeId: string;
+    readonly stationId: string;
+  }> {}
 
 export class BikeIsBroken extends Data.TaggedError("BikeIsBroken")<{
   readonly bikeId: string;
@@ -74,10 +74,10 @@ export class UserWalletNotFound extends Data.TaggedError("UserWalletNotFound")<{
 export class InsufficientBalanceToRent extends Data.TaggedError(
   "InsufficientBalanceToRent",
 )<{
-  readonly userId: string;
-  readonly requiredBalance: number;
-  readonly currentBalance: number;
-}> {}
+    readonly userId: string;
+    readonly requiredBalance: number;
+    readonly currentBalance: number;
+  }> {}
 
 export class InvalidRentalState extends Data.TaggedError("InvalidRentalState")<{
   readonly rentalId: string;
@@ -94,9 +94,9 @@ export class EndStationMismatch extends Data.TaggedError("EndStationMismatch")<{
 export class UnauthorizedRentalAccess extends Data.TaggedError(
   "UnauthorizedRentalAccess",
 )<{
-  readonly rentalId: string;
-  readonly userId: string;
-}> {}
+    readonly rentalId: string;
+    readonly userId: string;
+  }> {}
 
 export class CannotRequestSwap extends Data.TaggedError("CannotRequestSwap")<{
   readonly rentalId: string;
@@ -106,38 +106,38 @@ export class CannotRequestSwap extends Data.TaggedError("CannotRequestSwap")<{
 export class BikeSwapRequestNotFound extends Data.TaggedError(
   "BikeSwapRequestNotFound",
 )<{
-  readonly bikeSwapRequestId: string;
-}> {}
+    readonly bikeSwapRequestId: string;
+  }> {}
 
-export class NoAvailableBike extends Data.TaggedError("NoAvailableBike")<{}> {}
+export class NoAvailableBike extends Data.TaggedError("NoAvailableBike")<Record<string, never>> {}
 
 export class InvalidBikeSwapRequestStatus extends Data.TaggedError(
   "InvalidBikeSwapRequestStatus",
 )<{
-  readonly status: BikeSwapStatus;
-}> {}
+    readonly status: BikeSwapStatus;
+  }> {}
 
-export type RentalServiceFailure =
-  | RentalNotFound
-  | ActiveRentalExists
-  | BikeAlreadyRented
-  | BikeNotFound
-  | BikeMissingStation
-  | BikeNotFoundInStation
-  | BikeIsBroken
-  | BikeIsMaintained
-  | BikeIsReserved
-  | BikeUnavailable
-  | InvalidBikeStatus
-  | UserWalletNotFound
-  | InsufficientBalanceToRent
-  | InvalidRentalState
-  | EndStationMismatch
-  | SubscriptionNotFound
-  | SubscriptionNotUsable
-  | SubscriptionUsageExceeded
-  | CannotRequestSwap
-  | BikeSwapRequestNotFound
-  | NoAvailableBike
-  | InvalidBikeSwapRequestStatus;
+export type RentalServiceFailure
+  = | RentalNotFound
+    | ActiveRentalExists
+    | BikeAlreadyRented
+    | BikeNotFound
+    | BikeMissingStation
+    | BikeNotFoundInStation
+    | BikeIsBroken
+    | BikeIsMaintained
+    | BikeIsReserved
+    | BikeUnavailable
+    | InvalidBikeStatus
+    | UserWalletNotFound
+    | InsufficientBalanceToRent
+    | InvalidRentalState
+    | EndStationMismatch
+    | SubscriptionNotFound
+    | SubscriptionNotUsable
+    | SubscriptionUsageExceeded
+    | CannotRequestSwap
+    | BikeSwapRequestNotFound
+    | NoAvailableBike
+    | InvalidBikeSwapRequestStatus;
 export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;

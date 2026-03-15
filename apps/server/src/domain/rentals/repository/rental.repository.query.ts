@@ -1,4 +1,5 @@
 import type { PageRequest } from "@/domain/shared/pagination";
+import type { BikeSwapStatus } from "generated/kysely/types";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type {
@@ -11,7 +12,6 @@ import type {
   StaffBikeSwapRequestRow,
   StaffBikeSwapRequestSortField,
 } from "../models";
-import { BikeSwapStatus } from "generated/kysely/types";
 
 export function toMyRentalsWhere(
   userId: string,
@@ -207,7 +207,8 @@ type StaffBikeSwapSelect = PrismaTypes.BikeSwapRequestGetPayload<{
 }>;
 
 function mapBikeInfo(bike: any) {
-  if (!bike) return null;
+  if (!bike)
+    return null;
   return {
     id: bike.id,
     chipId: bike.chipId,

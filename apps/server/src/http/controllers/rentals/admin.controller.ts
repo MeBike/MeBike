@@ -58,8 +58,8 @@ const getRentalRevenue: RouteHandler<
     Effect.gen(function* () {
       const stats = yield* RentalStatsServiceTag;
 
-      const range =
-        from && to ? { from, to } : previousUtcMonthFullRange(new Date());
+      const range
+        = from && to ? { from, to } : previousUtcMonthFullRange(new Date());
 
       return yield* stats.getRevenueSeries({
         from: range.from,
@@ -78,7 +78,7 @@ const getRentalRevenue: RouteHandler<
         to: result.period.to.toISOString(),
       },
       groupBy: result.groupBy,
-      data: result.data.map((item) => ({
+      data: result.data.map(item => ({
         date: item.date.toISOString(),
         totalRevenue: item.totalRevenue,
         totalRentals: item.totalRentals,
@@ -92,14 +92,13 @@ const getRentalStatsSummary: RouteHandler<
   RentalsRoutes["getRentalStatsSummary"]
 > = async (c) => {
   const eff = withLoggedCause(
-    Effect.flatMap(RentalStatsServiceTag, (svc) => svc.getSummary()),
+    Effect.flatMap(RentalStatsServiceTag, svc => svc.getSummary()),
     "GET /v1/rentals/stats/summary",
   );
 
   const result = await c.var.runPromise(eff);
   return c.json(result, 200);
 };
-
 
 const adminListRentals: RouteHandler<
   RentalsRoutes["adminListRentals"]
@@ -165,13 +164,11 @@ const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.orElse(() => {
           throw left;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
@@ -240,7 +237,7 @@ const endRentalByAdmin: RouteHandler<
 
       return c.var
         .runPromise(detailEff)
-        .then((detail) => c.json(toContractAdminRentalDetail(detail), 200));
+        .then(detail => c.json(toContractAdminRentalDetail(detail), 200));
     }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
@@ -254,8 +251,7 @@ const endRentalByAdmin: RouteHandler<
               },
             },
             400,
-          ),
-        ),
+          )),
         Match.tag("EndStationMismatch", () =>
           c.json(
             {
@@ -266,8 +262,7 @@ const endRentalByAdmin: RouteHandler<
               },
             },
             400,
-          ),
-        ),
+          )),
         Match.tag("InvalidRentalState", () =>
           c.json(
             {
@@ -278,8 +273,7 @@ const endRentalByAdmin: RouteHandler<
               },
             },
             400,
-          ),
-        ),
+          )),
         Match.tag("UserWalletNotFound", ({ userId: missingUserId }) =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -290,8 +284,7 @@ const endRentalByAdmin: RouteHandler<
               },
             },
             400,
-          ),
-        ),
+          )),
         Match.tag(
           "InsufficientBalanceToRent",
           ({ requiredBalance, currentBalance }) =>
@@ -310,8 +303,7 @@ const endRentalByAdmin: RouteHandler<
         Match.orElse(() => {
           throw left;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
@@ -352,13 +344,11 @@ const adminGetBikeSwapRequests: RouteHandler<
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.orElse((e) => {
           throw e;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };

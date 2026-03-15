@@ -18,10 +18,13 @@ const unauthorizedBody = {
 } as const;
 
 function parseBearerToken(header: string | null | undefined): string | null {
-  if (!header) return null;
+  if (!header)
+    return null;
   const [scheme, token] = header.split(" ");
-  if (!scheme || !token) return null;
-  if (scheme.toLowerCase() !== "bearer") return null;
+  if (!scheme || !token)
+    return null;
+  if (scheme.toLowerCase() !== "bearer")
+    return null;
   return token;
 }
 
@@ -31,9 +34,11 @@ function verifyAccessToken(token: string): AccessTokenPayload | null {
       token,
       requireJwtSecret(),
     ) as AccessTokenPayload & jwt.JwtPayload;
-    if (payload.tokenType !== "access") return null;
+    if (payload.tokenType !== "access")
+      return null;
     return payload;
-  } catch {
+  }
+  catch {
     return null;
   }
 }
@@ -55,7 +60,8 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
       const userOpt = await loadUser(c.var.runPromise, payload.userId);
       if (Option.isNone(userOpt) || userOpt.value.verify === "BANNED") {
         c.set("authFailure", "forbidden");
-      } else {
+      }
+      else {
         const user = userOpt.value;
         const role = user.role === "SOS" ? "USER" : user.role;
         c.set("currentUser", {

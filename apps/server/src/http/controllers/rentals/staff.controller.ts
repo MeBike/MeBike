@@ -4,7 +4,11 @@ import type { RentalsContracts } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import { RentalRepository } from "@/domain/rentals";
-
+import {
+  staffApproveBikeSwapRequestUseCase,
+  staffGetChangeBikeDetailUseCase,
+  staffRejectBikeSwapRequestUseCase,
+} from "@/domain/rentals/services/staff-rental.service";
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractStaffBikeSwapRequest,
@@ -13,17 +17,13 @@ import {
 import { toContractPage } from "@/http/shared/pagination";
 
 import type { RentalsRoutes } from "./shared";
+
 import {
   BikeSwapRequestErrorCodeSchema,
   bikeSwapRequestErrorMessages,
   RentalErrorCodeSchema,
   rentalErrorMessages,
 } from "./shared";
-import {
-  staffApproveBikeSwapRequestUseCase,
-  staffGetChangeBikeDetailUseCase,
-  staffRejectBikeSwapRequestUseCase,
-} from "@/domain/rentals/services/staff-rental.service";
 
 const staffListBikeSwapRequests: RouteHandler<
   RentalsRoutes["staffListBikeSwapRequests"]
@@ -96,14 +96,12 @@ const staffGetBikeSwapRequests: RouteHandler<
               },
             },
             404,
-          ),
-        ),
+          )),
 
         Match.orElse((e) => {
           throw e;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
@@ -133,7 +131,7 @@ const staffApproveBikeSwapRequest: RouteHandler<
     }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
-        Match.tag("BikeSwapRequestNotFound", (error) =>
+        Match.tag("BikeSwapRequestNotFound", error =>
           c.json(
             {
               error: bikeSwapRequestErrorMessages.BIKE_SWAP_REQUEST_NOT_FOUND,
@@ -144,8 +142,7 @@ const staffApproveBikeSwapRequest: RouteHandler<
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("StaffBikeRequestNotFound", () =>
           c.json(
             {
@@ -157,8 +154,7 @@ const staffApproveBikeSwapRequest: RouteHandler<
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("NoAvailableBike", () =>
           c.json(
             {
@@ -168,9 +164,8 @@ const staffApproveBikeSwapRequest: RouteHandler<
               },
             },
             400,
-          ),
-        ),
-        Match.tag("InvalidBikeSwapRequestStatus", (error) =>
+          )),
+        Match.tag("InvalidBikeSwapRequestStatus", error =>
           c.json(
             {
               error:
@@ -182,14 +177,12 @@ const staffApproveBikeSwapRequest: RouteHandler<
               },
             },
             400,
-          ),
-        ),
+          )),
 
         Match.orElse((e) => {
           throw e;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
@@ -231,14 +224,12 @@ const staffRejectBikeSwapRequest: RouteHandler<
               },
             },
             404,
-          ),
-        ),
+          )),
 
         Match.orElse((e) => {
           throw e;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
