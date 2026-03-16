@@ -40,10 +40,10 @@ export default function DashboardPage() {
   //     ? `${(monthlyRev / 1000000).toFixed(1)}M VND`
   //     : `${monthlyRev.toLocaleString('vi-VN')} VND`;
 
-  const changeRentPercent = dashboardSummaryData?.result.revenueSummary.today.totalRentals && dashboardSummaryData?.result.revenueSummary.yesterday.totalRentals
+  const changeRentPercent = dashboardSummaryData?.revenueSummary.today.totalRentals && dashboardSummaryData?.revenueSummary.yesterday.totalRentals
     ? Math.round(
-        ((dashboardSummaryData.result.revenueSummary.today.totalRentals - dashboardSummaryData.result.revenueSummary.yesterday.totalRentals) /
-          dashboardSummaryData.result.revenueSummary.yesterday.totalRentals) *
+        ((dashboardSummaryData.revenueSummary.today.totalRentals - dashboardSummaryData.revenueSummary.yesterday.totalRentals) /
+          dashboardSummaryData.revenueSummary.yesterday.totalRentals) *
           100
       )
     : 0;
@@ -61,12 +61,12 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold text-foreground mb-4">
             Thống kê tổng quan
           </h2>
-          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title="Tổng lượt thuê hôm nay"
               value={
                 dashboardSummaryData
-                  ? dashboardSummaryData.result.revenueSummary.today.totalRentals.toString()
+                  ? dashboardSummaryData.revenueSummary.today.totalRentals.toString()
                   : "0"
               }
               change={`${changeRentPercent}% so với hôm qua`}
@@ -90,13 +90,13 @@ export default function DashboardPage() {
               title="Khách hàng mới trong tháng"
               value={
                 newRegistrationStats
-                  ? newRegistrationStats.result.newUsersThisMonth.toString()
+                  ? newRegistrationStats.newUsersThisMonth.toString()
                   : "0"
               }
               change={`${
-                (newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "+" : ""
-              }${newRegistrationStats?.result.percentageChange ?? 0}% so với tháng trước`}
-              changeType={(newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "positive" : "negative"}
+                (newRegistrationStats?.percentageChange ?? 0) > 1 ? "+" : ""
+              }${newRegistrationStats?.percentageChange ?? 0}% so với tháng trước`}
+              changeType={(newRegistrationStats?.percentageChange ?? 0) > 1 ? "positive" : "negative"}
               icon={Users}
             />
             <StatsCard
@@ -110,14 +110,14 @@ export default function DashboardPage() {
               }${summaryRental?.monthlyRevenue?.percentChange ?? 0}% so với tháng trước`}
               changeType={(summaryRental?.monthlyRevenue?.percentChange ?? 0) > 1 ? "positive" : "negative"}
             />
-          </div> */}
+          </div>
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* <div className="lg:col-span-2">
+          <div className="lg:col-span-2">
             <RentalChart
               data={
-                dashboardSummaryData?.result.hourlyRentalStats.map(
+                dashboardSummaryData?.hourlyRentalStats.map(
                   (stat: { hour: string; totalRentals: number }) => ({
                     time: stat.hour,
                     rentals: stat.totalRentals,
@@ -125,7 +125,7 @@ export default function DashboardPage() {
                 ) || []
               }
             />
-          </div> */}
+          </div>
           <div className="lg:col-span-1">
             <RecentActivity />
           </div>

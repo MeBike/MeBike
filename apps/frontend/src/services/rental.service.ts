@@ -187,10 +187,10 @@ export const rentalService = {
     return response;
   },
   getDashboardRentalStats: async (): Promise<
-    AxiosResponse<DetailApiResponse<Dashboardsummary>>
+    AxiosResponse<Dashboardsummary>
   > => {
     const response = await fetchHttpClient.get<
-      DetailApiResponse<Dashboardsummary>
+      Dashboardsummary
     >(RENTAL_ENDPOINTS.DASHBOARD_RENTAL_STATS());
     return response;
   },

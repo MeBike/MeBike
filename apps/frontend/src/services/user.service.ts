@@ -116,10 +116,10 @@ export const userService = {
     return response;
   },
   getNewRegistrationStats: async (): Promise<
-    AxiosResponse<DetailUserResponse<GetNewRegistrationStats>>
+    AxiosResponse<GetNewRegistrationStats>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<GetNewRegistrationStats>
+      GetNewRegistrationStats
     >(ENDPOINT.USER.NEW_USER,
       
     );
