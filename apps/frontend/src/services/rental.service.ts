@@ -3,29 +3,10 @@ import type { RentalSchemaFormData, UpdateRentalSchema } from "@/schemas/rental-
 import fetchHttpClient from "@lib/httpClient";
 import type { Rental, RentalStatus } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
-import { RentalRecord} from "@custom-types";
+import { RentalRecord , SummaryRental ,Dashboardsummary } from "@custom-types";
 import { ENDPOINT } from "@/constants";
 import { ApiResponse } from "@custom-types";
-interface Dashboardsummary {
-  revenueSummary: {
-    today: {
-      totalRevenue: number;
-      totalRentals: number;
-    };
-    yesterday: {
-      totalRevenue: number;
-      totalRentals: number;
-    };
-    revenueChange: number;
-    revenueTrend: string;
-    rentalChange: number;
-    rentalTrend: string;
-  };
-  hourlyRentalStats: Array<{
-    hour: string;
-    totalRentals: number;
-  }>;
-}
+
 import { EndRentalSchema } from "@/schemas/rental-schema";
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
@@ -53,27 +34,6 @@ const RENTAL_ENDPOINTS = {
   END_RENTAL_SOS: (id: string) => `${RENTAL_BASE}/${id}/end`,
   SUMMARY: () => `${RENTAL_BASE}/summary`,
 };
-export interface SummaryRental {
-  rentalList: {
-    Rented: number;
-    Completed: number;
-    Cancelled: number;
-    Reserved: number;
-  };
-  dailyRevenue: {
-    current : number;
-    previous : number;
-    difference : number;
-    percentChange : number;
-  }
-  monthlyRevenue: {
-    current : number;
-    previous : number;
-    difference : number;
-    percentChange : number;
-  }
- 
-}
 interface DetailApiResponse<T> {
   result: T;
   message: string;
@@ -244,9 +204,9 @@ export const rentalService = {
     );
     return response;
   },
-  getSummaryRental : async (): Promise<AxiosResponse<DetailApiResponse<SummaryRental>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<SummaryRental>>(
-      RENTAL_ENDPOINTS.SUMMARY()
+  getSummaryRental : async (): Promise<AxiosResponse<SummaryRental>> => {
+    const response = await fetchHttpClient.get<SummaryRental>(
+      ENDPOINT.RENTAL.GET_SUMMARY
     );
     return response;
   }

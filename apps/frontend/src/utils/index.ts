@@ -6,3 +6,4 @@ export * from "./error-message";
 export * from "./bike-status";
 export * from "./error-util";
 export * from "./formatDateTime";
+export * from "./shorten-id"

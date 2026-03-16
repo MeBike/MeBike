@@ -61,7 +61,7 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold text-foreground mb-4">
             Thống kê tổng quan
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title="Tổng lượt thuê hôm nay"
               value={
@@ -102,19 +102,19 @@ export default function DashboardPage() {
             <StatsCard
               title="Doanh thu tháng này"
               value={formatRevenue(
-                summaryRental?.result?.monthlyRevenue.current
+                summaryRental?.monthlyRevenue.current
               )}
               icon={DollarSign}
               change={`${
-                (summaryRental?.result?.monthlyRevenue?.percentChange ?? 0) > 1 ? "+" : ""
-              }${summaryRental?.result?.monthlyRevenue?.percentChange ?? 0}% so với tháng trước`}
-              changeType={(summaryRental?.result?.monthlyRevenue?.percentChange ?? 0) > 1 ? "positive" : "negative"}
+                (summaryRental?.monthlyRevenue?.percentChange ?? 0) > 1 ? "+" : ""
+              }${summaryRental?.monthlyRevenue?.percentChange ?? 0}% so với tháng trước`}
+              changeType={(summaryRental?.monthlyRevenue?.percentChange ?? 0) > 1 ? "positive" : "negative"}
             />
-          </div>
+          </div> */}
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          {/* <div className="lg:col-span-2">
             <RentalChart
               data={
                 dashboardSummaryData?.result.hourlyRentalStats.map(
@@ -125,7 +125,7 @@ export default function DashboardPage() {
                 ) || []
               }
             />
-          </div>
+          </div> */}
           <div className="lg:col-span-1">
             <RecentActivity />
           </div>

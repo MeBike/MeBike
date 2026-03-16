@@ -2,7 +2,7 @@ import { Bike } from "./Bike";
 import { DetailUser } from "./Customer";
 import { Station } from "./Station";
 
-export type RentalStatus = "RENTED" | "COMPLETED" | "CANCELLED"
+export type RentalStatus = "RENTED" | "COMPLETED" | "CANCELLED" | "RESERVED"
 export type Rental = {
   id : string;
   user : {
@@ -193,4 +193,44 @@ interface RentalRecord {
   status: "ĐANG THUÊ" | "ĐÃ HỦY" | "ĐÃ HOÀN THÀNH";
   created_at: string;
   updated_at: string;
+}
+export interface SummaryRental {
+  rentalList: {
+    Rented: number;
+    Completed: number;
+    Cancelled: number;
+    Reserved: number;
+  };
+  dailyRevenue: {
+    current : number;
+    previous : number;
+    difference : number;
+    percentChange : number;
+  }
+  monthlyRevenue: {
+    current : number;
+    previous : number;
+    difference : number;
+    percentChange : number;
+  }
+}
+export interface Dashboardsummary {
+  revenueSummary: {
+    today: {
+      totalRevenue: number;
+      totalRentals: number;
+    };
+    yesterday: {
+      totalRevenue: number;
+      totalRentals: number;
+    };
+    revenueChange: number;
+    revenueTrend: string;
+    rentalChange: number;
+    rentalTrend: string;
+  };
+  hourlyRentalStats: Array<{
+    hour: string;
+    totalRentals: number;
+  }>;
 }
