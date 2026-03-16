@@ -11,8 +11,7 @@ import {
 } from "@/domain/rentals/services/staff-rental.service";
 import { withLoggedCause } from "@/domain/shared";
 import {
-  toContractStaffBikeSwapRequest,
-  toContractStaffBikeSwapRequestDetail,
+  toContractBikeSwapRequestDetail,
 } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
 
@@ -51,7 +50,7 @@ const staffListBikeSwapRequests: RouteHandler<
 
   const value = await c.var.runPromise(eff);
   const response: RentalsContracts.BikeSwapRequestListResponse = {
-    data: value.items.map(toContractStaffBikeSwapRequest),
+    data: value.items.map(toContractBikeSwapRequestDetail),
     pagination: toContractPage(value),
   };
   return c.json<RentalsContracts.BikeSwapRequestListResponse, 200>(
@@ -76,7 +75,7 @@ const staffGetBikeSwapRequests: RouteHandler<
     Match.tag("Right", ({ right }) => {
       const response: RentalsContracts.BikeSwapRequestDetailResponse = {
         message: "ok",
-        result: toContractStaffBikeSwapRequestDetail(right),
+        result: toContractBikeSwapRequestDetail(right),
       };
       return c.json<RentalsContracts.BikeSwapRequestDetailResponse, 200>(
         response,
@@ -122,7 +121,7 @@ const staffApproveBikeSwapRequest: RouteHandler<
     Match.tag("Right", ({ right }) => {
       const response: RentalsContracts.BikeSwapRequestDetailResponse = {
         message: "ok",
-        result: toContractStaffBikeSwapRequestDetail(right),
+        result: toContractBikeSwapRequestDetail(right),
       };
       return c.json<RentalsContracts.BikeSwapRequestDetailResponse, 200>(
         response,
@@ -204,7 +203,7 @@ const staffRejectBikeSwapRequest: RouteHandler<
     Match.tag("Right", ({ right }) => {
       const response: RentalsContracts.BikeSwapRequestDetailResponse = {
         message: "ok",
-        result: toContractStaffBikeSwapRequestDetail(right),
+        result: toContractBikeSwapRequestDetail(right),
       };
       return c.json<RentalsContracts.BikeSwapRequestDetailResponse, 200>(
         response,

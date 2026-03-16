@@ -156,13 +156,13 @@ export function toContractBikeSwapRequest(
     oldBikeId: row.oldBikeId,
     newBikeId: row.newBikeId,
     reason: row.reason || null,
-    status: row.status as any,
+    status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
 }
 
-export function toContractStaffBikeSwapRequest(
+export function toContractBikeSwapRequestDetail(
   row: StaffBikeSwapRequestRow,
 ): RentalsContracts.BikeSwapRequestDetail {
   return {
@@ -201,52 +201,7 @@ export function toContractStaffBikeSwapRequest(
         }
       : null,
     reason: row.reason || null,
-    status: row.status as any,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}
-
-export function toContractStaffBikeSwapRequestDetail(
-  row: StaffBikeSwapRequestRow,
-): RentalsContracts.BikeSwapRequestDetail {
-  return {
-    id: row.id,
-    rentalId: row.rentalId,
-    user: {
-      id: row.user.id,
-      fullName: row.user.fullName,
-    },
-    oldBike: {
-      id: row.oldBike.id,
-      chipId: row.oldBike.chipId,
-      station: {
-        id: row.oldBike.station.id,
-        name: row.oldBike.station.name,
-        address: row.oldBike.station.address,
-      },
-      supplier: {
-        id: row.oldBike.supplier.id,
-        name: row.oldBike.supplier.name,
-      },
-    },
-    newBike: row.newBike
-      ? {
-          id: row.newBike.id,
-          chipId: row.newBike.chipId,
-          station: {
-            id: row.newBike.station.id,
-            name: row.newBike.station.name,
-            address: row.newBike.station.address,
-          },
-          supplier: {
-            id: row.newBike.supplier.id,
-            name: row.newBike.supplier.name,
-          },
-        }
-      : null,
-    reason: row.reason || null,
-    status: row.status as any,
+    status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

@@ -15,9 +15,8 @@ import { withLoggedCause } from "@/domain/shared";
 import {
   toContractAdminRentalDetail,
   toContractAdminRentalListItem,
+  toContractBikeSwapRequestDetail,
   toContractRentalListItem,
-  toContractStaffBikeSwapRequest,
-  toContractStaffBikeSwapRequestDetail,
 } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
 import { notifyBikeStatusUpdate } from "@/realtime/bike-status-events";
@@ -324,7 +323,7 @@ const adminGetBikeSwapRequests: RouteHandler<
     Match.tag("Right", ({ right }) => {
       const response: RentalsContracts.BikeSwapRequestDetailResponse = {
         message: "ok",
-        result: toContractStaffBikeSwapRequestDetail(right),
+        result: toContractBikeSwapRequestDetail(right),
       };
       return c.json<RentalsContracts.BikeSwapRequestDetailResponse, 200>(
         response,
@@ -379,7 +378,7 @@ const adminListBikeSwapRequests: RouteHandler<
 
   const value = await c.var.runPromise(eff);
   const response: RentalsContracts.BikeSwapRequestListResponse = {
-    data: value.items.map(toContractStaffBikeSwapRequest),
+    data: value.items.map(toContractBikeSwapRequestDetail),
     pagination: toContractPage(value),
   };
 
