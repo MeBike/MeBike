@@ -877,7 +877,20 @@ export function makeRentalRepository(
     },
 
     staffApproveBikeSwapRequests(bikeSwapRequestId: string) {
-      return approveBikeSwapRequestWithClient(client, bikeSwapRequestId);
+      return Effect.tryPromise({
+        try: () =>
+          (client as PrismaClient).$transaction(async (tx) => {
+            return await Effect.runPromise(
+              approveBikeSwapRequestWithClient(tx, bikeSwapRequestId),
+            );
+          }),
+        catch: (error) => {
+          return new RentalRepositoryError({
+            operation: "staffApproveBikeSwapRequests",
+            cause: error,
+          });
+        },
+      });
     },
 
     staffRejectBikeSwapRequests(bikeSwapRequestId: string, reason: string) {
