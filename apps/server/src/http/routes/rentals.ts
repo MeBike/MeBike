@@ -68,4 +68,11 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   } satisfies RouteConfig;
 
   app.openapi(statsSummaryRoute, RentalAdminController.getRentalStatsSummary);
+
+  const dashboardSummaryRoute = {
+    ...rentals.getDashboardSummary,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(dashboardSummaryRoute, RentalAdminController.getDashboardSummary);
 }
