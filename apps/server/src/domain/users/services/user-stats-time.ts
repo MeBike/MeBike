@@ -53,3 +53,16 @@ export function computeNewUsersRanges(now: Date): {
     lastMonthEnd,
   };
 }
+
+export function computePreviousMonthFullRange(now: Date): {
+  readonly startDate: Date;
+  readonly endDate: Date;
+} {
+  const utcNow = toZonedTime(now, UTC_TZ);
+  const lastMonthBase = subMonths(utcNow, 1);
+
+  return {
+    startDate: toUtc(startOfMonth(lastMonthBase)),
+    endDate: toUtc(endOfMonth(lastMonthBase)),
+  };
+}

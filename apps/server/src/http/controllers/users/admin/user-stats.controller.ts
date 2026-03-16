@@ -8,6 +8,7 @@ import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import { UserStatsServiceTag } from "@/domain/users";
+import { computePreviousMonthFullRange } from "@/domain/users/services/user-stats-time";
 import { routeContext } from "@/http/shared/route-context";
 
 type UsersRoutes = typeof import("@mebike/shared")["serverRoutes"]["users"];
@@ -28,14 +29,22 @@ const adminStats: RouteHandler<UsersRoutes["adminStats"]> = async (c) => {
 
 const adminActiveUsers: RouteHandler<UsersRoutes["adminActiveUsers"]> = async (c) => {
   const query = c.req.valid("query");
-  const startDate = new Date(query.startDate);
-  const endDate = new Date(query.endDate);
+
+  const groupBy = query.groupBy ?? "month";
+  const hasBothDates = Boolean(query.startDate) && Boolean(query.endDate);
+
+  const { startDate, endDate } = hasBothDates
+    ? {
+        startDate: new Date(query.startDate!),
+        endDate: new Date(query.endDate!),
+      }
+    : computePreviousMonthFullRange(new Date());
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const service = yield* UserStatsServiceTag;
       return yield* service.getActiveUsersSeries({
-        groupBy: query.groupBy,
+        groupBy,
         startDate,
         endDate,
       });

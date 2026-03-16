@@ -26,6 +26,7 @@ import {
   RentalSchemaOpenApi,
   RentalStatsQuerySchema,
   RentalStatusSchema,
+  RentalSummaryStatsResponseSchema,
   StationActivityResponseSchema,
   UserIdParamSchema,
 } from "./shared";
@@ -153,10 +154,7 @@ export const getMyRental = createRoute({
       description: "User's detailed rental",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalSchemaOpenApi,
-            "Get rental detail response",
-          ),
+          schema: RentalSchemaOpenApi,
         },
       },
     },
@@ -362,6 +360,8 @@ export const getRentalRevenue = createRoute({
   method: "get",
   path: "/v1/rentals/stats/revenue",
   tags: ["Rentals"],
+  description:
+    "Revenue series for completed rentals. Defaults when query is omitted: groupBy=DAY and period = previous full calendar month (UTC).",
   request: {
     query: RentalStatsQuerySchema,
   },
@@ -391,6 +391,22 @@ export const getRentalRevenue = createRoute({
               },
             },
           },
+        },
+      },
+    },
+  },
+});
+
+export const getRentalStatsSummary = createRoute({
+  method: "get",
+  path: "/v1/rentals/stats/summary",
+  tags: ["Rentals"],
+  responses: {
+    200: {
+      description: "Rental status and revenue summary",
+      content: {
+        "application/json": {
+          schema: RentalSummaryStatsResponseSchema,
         },
       },
     },
@@ -445,6 +461,38 @@ export const adminListRentals = createRoute({
       content: {
         "application/json": {
           schema: AdminRentalsListResponseSchema,
+          examples: {
+            Success: {
+              value: {
+                data: [
+                  {
+                    id: "019b17bd-d130-7e7d-be69-91ceef7b6959",
+                    user: {
+                      id: "019b17bd-d130-7e7d-be69-91ceef7b6999",
+                      fullname: "Nguyen Van A",
+                    },
+                    bikeId: "019b17bd-d130-7e7d-be69-91ceef7b6888",
+                    status: "COMPLETED",
+                    startStation: "019b17bd-d130-7e7d-be69-91ceef7b6111",
+                    endStation: "019b17bd-d130-7e7d-be69-91ceef7b6222",
+                    createdAt: "2026-03-10T09:10:00.000Z",
+                    startTime: "2026-03-10T09:10:00.000Z",
+                    endTime: "2026-03-10T10:25:00.000Z",
+                    duration: 75,
+                    totalPrice: 30000,
+                    subscriptionId: "019b17bd-d130-7e7d-be69-91ceef7b6333",
+                    updatedAt: "2026-03-10T10:25:00.000Z",
+                  },
+                ],
+                pagination: {
+                  page: 1,
+                  pageSize: 10,
+                  total: 1,
+                  totalPages: 1,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -480,10 +528,59 @@ export const adminGetRental = createRoute({
       description: "Detailed rental with all populated data (admin view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalDetailSchemaOpenApi,
-            "Get admin rental detail response",
-          ),
+          schema: RentalDetailSchemaOpenApi,
+          examples: {
+            Success: {
+              value: {
+                id: "019b17bd-d130-7e7d-be69-91ceef7b6959",
+                user: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6999",
+                  fullname: "Nguyen Van A",
+                  email: "user@example.com",
+                  verify: "VERIFIED",
+                  location: "Ho Chi Minh City",
+                  username: "nguyenvana",
+                  phoneNumber: "0901234567",
+                  avatar: "https://example.com/avatar.png",
+                  role: "USER",
+                  nfcCardUid: "NFC-0001",
+                  updatedAt: "2026-03-10T09:00:00.000Z",
+                },
+                bike: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6888",
+                  chipId: "CHIP-001",
+                  status: "AVAILABLE",
+                  supplierId: "019b17bd-d130-7e7d-be69-91ceef7b6777",
+                  updatedAt: "2026-03-10T09:05:00.000Z",
+                },
+                startStation: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6111",
+                  name: "Ben Thanh Station",
+                  address: "District 1, Ho Chi Minh City",
+                  latitude: 10.772,
+                  longitude: 106.698,
+                  capacity: 30,
+                  updatedAt: "2026-03-10T08:00:00.000Z",
+                },
+                endStation: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6222",
+                  name: "Tao Dan Station",
+                  address: "District 1, Ho Chi Minh City",
+                  latitude: 10.776,
+                  longitude: 106.691,
+                  capacity: 25,
+                  updatedAt: "2026-03-10T08:00:00.000Z",
+                },
+                startTime: "2026-03-10T09:10:00.000Z",
+                endTime: "2026-03-10T10:25:00.000Z",
+                duration: 75,
+                totalPrice: 30000,
+                subscriptionId: "019b17bd-d130-7e7d-be69-91ceef7b6333",
+                status: "COMPLETED",
+                updatedAt: "2026-03-10T10:25:00.000Z",
+              },
+            },
+          },
         },
       },
     },
@@ -527,10 +624,59 @@ export const staffGetRental = createRoute({
       description: "Detailed rental with all populated data (staff view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalDetailSchemaOpenApi,
-            "Get staff rental detail response",
-          ),
+          schema: RentalDetailSchemaOpenApi,
+          examples: {
+            Success: {
+              value: {
+                id: "019b17bd-d130-7e7d-be69-91ceef7b6959",
+                user: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6999",
+                  fullname: "Nguyen Van A",
+                  email: "user@example.com",
+                  verify: "VERIFIED",
+                  location: "Ho Chi Minh City",
+                  username: "nguyenvana",
+                  phoneNumber: "0901234567",
+                  avatar: "https://example.com/avatar.png",
+                  role: "USER",
+                  nfcCardUid: "NFC-0001",
+                  updatedAt: "2026-03-10T09:00:00.000Z",
+                },
+                bike: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6888",
+                  chipId: "CHIP-001",
+                  status: "AVAILABLE",
+                  supplierId: "019b17bd-d130-7e7d-be69-91ceef7b6777",
+                  updatedAt: "2026-03-10T09:05:00.000Z",
+                },
+                startStation: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6111",
+                  name: "Ben Thanh Station",
+                  address: "District 1, Ho Chi Minh City",
+                  latitude: 10.772,
+                  longitude: 106.698,
+                  capacity: 30,
+                  updatedAt: "2026-03-10T08:00:00.000Z",
+                },
+                endStation: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6222",
+                  name: "Tao Dan Station",
+                  address: "District 1, Ho Chi Minh City",
+                  latitude: 10.776,
+                  longitude: 106.691,
+                  capacity: 25,
+                  updatedAt: "2026-03-10T08:00:00.000Z",
+                },
+                startTime: "2026-03-10T09:10:00.000Z",
+                endTime: "2026-03-10T10:25:00.000Z",
+                duration: 75,
+                totalPrice: 30000,
+                subscriptionId: "019b17bd-d130-7e7d-be69-91ceef7b6333",
+                status: "COMPLETED",
+                updatedAt: "2026-03-10T10:25:00.000Z",
+              },
+            },
+          },
         },
       },
     },

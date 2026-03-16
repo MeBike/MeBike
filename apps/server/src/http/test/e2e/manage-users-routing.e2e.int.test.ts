@@ -141,6 +141,21 @@ describe("manage-users route ordering e2e", () => {
     expect(body.averageSpending).toBeTypeOf("number");
   });
 
+  it("get /v1/users/manage-users/stats/active-users defaults query when omitted", async () => {
+    const token = makeAccessToken(ADMIN_USER_ID);
+
+    const response = await app.request("http://test/v1/users/manage-users/stats/active-users", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const body = await response.json() as UsersContracts.ActiveUsersSeriesResponse;
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(body.data)).toBe(true);
+  });
+
   it("get /v1/users/manage-users/{userId} still resolves detail route", async () => {
     const token = makeAccessToken(ADMIN_USER_ID);
 
