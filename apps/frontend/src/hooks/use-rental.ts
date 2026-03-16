@@ -75,7 +75,8 @@ export function useRentalsActions({
     refetchRevenue();
   }, [hasToken, refetchRevenue]);
   const { data: todayRevenueData , refetch : refetchTodayRevenue , isLoading : isLoadingTodayRevenue } = useGetRevenueQuery(
-    { from: new Date().toISOString().slice(0,10), to: new Date().toISOString().slice(0,10), groupBy: "DAY" }
+    // { from: new Date().toISOString().slice(0,10), to: new Date().toISOString().slice(0,10), groupBy: "DAY" }
+    {}
   );
   const getTodayRevenue = useCallback(() => {
     if(!hasToken){

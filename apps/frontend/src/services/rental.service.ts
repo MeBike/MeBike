@@ -158,9 +158,9 @@ export const rentalService = {
     from?: string;
     to?: string;
     groupBy?: "MONTH" | "YEAR" | "DAY";
-  }): Promise<AxiosResponse<DetailApiResponse<StatwithRevenue>>> => {
+  }): Promise<AxiosResponse<StatwithRevenue>> => {
     const response = await fetchHttpClient.get<
-      DetailApiResponse<StatwithRevenue>
+      StatwithRevenue
     >(RENTAL_ENDPOINTS.GET_REVENUE(), {
       from,
       to,

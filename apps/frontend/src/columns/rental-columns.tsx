@@ -15,7 +15,7 @@ export const rentalColumn = ({
   {
     accessorKey: "fullname",
     header: "Tên người dùng",
-    cell: ({ row }) => row.original.user.fullName,
+    cell: ({ row }) => row.original.user.fullname,
   },
   {
     accessorKey: "bike_id",

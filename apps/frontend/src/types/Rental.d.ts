@@ -2,12 +2,13 @@ import { Bike } from "./Bike";
 import { DetailUser } from "./Customer";
 import { Station } from "./Station";
 
-export type RentalStatus = "RENTED" | "COMPLETED" | "CANCELLED" | "RESERVED"
+export type RentalStatus = "RENTED" | "COMPLETED" | "CANCELLED" | "RESERVED" | ""
 export type Rental = {
   id : string;
   user : {
     id : string;
     fullName : string;
+    fullname?: string;
   }
   status : RentalStatus,
   startStation : string,

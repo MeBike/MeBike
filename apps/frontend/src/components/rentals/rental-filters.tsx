@@ -17,7 +17,7 @@ interface RentalFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   statusFilter: RentalStatus | "all";
-  onStatusChange: (value: RentalStatus | "all") => void;
+  onStatusChange: (value: RentalStatus) => void;
   onReset: () => void;
 }
 
@@ -61,10 +61,10 @@ export function RentalFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
-              <SelectItem value="active">Đang thuê</SelectItem>
-              <SelectItem value="completed">Hoàn thành</SelectItem>
-              <SelectItem value="cancelled">Đã hủy</SelectItem>
-              <SelectItem value="reserved">Đã đặt trước</SelectItem>
+              <SelectItem value="RENTED">Đang thuê</SelectItem>
+              <SelectItem value="COMPLETED">Hoàn thành</SelectItem>
+              <SelectItem value="CANCELLED">Đã hủy</SelectItem>
+              <SelectItem value="RESERVED">Đã đặt trước</SelectItem>
             </SelectContent>
           </Select>
         </div>
