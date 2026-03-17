@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { RentalFilters } from "@/components/rentals/rental-filters";
 import { RentalStats } from "@/components/rentals/rental-stats";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import { formatDateUTC } from "@/utils/formatDateTime";
 import type {
   RentalStatus,
@@ -20,6 +21,7 @@ import {
   type UpdateRentalSchema,
 } from "@/schemas/rental-schema";
 export default function RentalsPage() {
+  const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,8 +57,8 @@ export default function RentalsPage() {
     getSummaryRental,
   } = useRentalsActions({
     hasToken: true,
-    limit,
-    page,
+    limit : limit,
+    page : page,
     bike_id: selectedRentalId,
     ...(statusFilter !== "" && { status: statusFilter })
   });
@@ -113,7 +115,9 @@ export default function RentalsPage() {
         0
       ) || 0,
   };
-
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
   return (
     <div>
       <div className="space-y-6">
@@ -165,9 +169,10 @@ export default function RentalsPage() {
           <DataTable
             columns={rentalColumn({
               onView: ({ id }) => {
-                setSelectedRentalId(id);
-                getDetailRental();
-                setIsDetailModalOpen(true);
+                // setSelectedRentalId(id);
+                // getDetailRental();
+                // setIsDetailModalOpen(true);
+                router.push(`/admin/rentals/detail/${id}`);
               },
               onEdit: ({ data }) => {
                 setSelectedRentalId(data.id);
@@ -187,7 +192,7 @@ export default function RentalsPage() {
             data={rentals}
           />
           <PaginationDemo
-            currentPage={pagination?.currentPage ?? 1}
+            currentPage={pagination?.page ?? 1}
             onPageChange={setPage}
             totalPages={pagination?.totalPages ?? 1}
           />
@@ -359,7 +364,7 @@ export default function RentalsPage() {
                       Mã đơn thuê
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?._id}
+                      {detailData.id}
                     </p>
                   </div>
                   <div>
@@ -367,7 +372,7 @@ export default function RentalsPage() {
                       Trạng thái
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.status}
+                      {detailData.status}
                     </p>
                   </div>
                 </div>
@@ -379,7 +384,7 @@ export default function RentalsPage() {
                       Tên người dùng
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.user?.fullname}
+                      {detailData.user?.fullname}
                     </p>
                   </div>
                   <div>
@@ -387,7 +392,7 @@ export default function RentalsPage() {
                       Email
                     </label>
                     <p className="text-foreground text-sm">
-                      {detailData.result?.user?.email}
+                      {detailData.user?.email}
                     </p>
                   </div>
                 </div>
@@ -399,7 +404,7 @@ export default function RentalsPage() {
                       Số điện thoại
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.user?.phone_number}
+                      {detailData.user?.phoneNumber}
                     </p>
                   </div>
                   <div>
@@ -407,7 +412,7 @@ export default function RentalsPage() {
                       Trạng thái xác minh
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.user?.verify}
+                      {detailData.user?.verify}
                     </p>
                   </div>
                 </div>
@@ -419,7 +424,7 @@ export default function RentalsPage() {
                       Mã xe đạp
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.bike?._id || "Không có"}
+                      {detailData.bike?.id || "Không có"}
                     </p>
                   </div>
                   <div>
@@ -427,7 +432,7 @@ export default function RentalsPage() {
                       Chip ID
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.bike?.chip_id || "Không có"}
+                      {detailData.bike?.chipId || "Không có"}
                     </p>
                   </div>
                 </div>
@@ -439,7 +444,7 @@ export default function RentalsPage() {
                       Trạng thái xe
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.bike?.status || "Không có"}
+                      {detailData.bike?.status || "Không có"}
                     </p>
                   </div>
                   <div>
@@ -447,7 +452,7 @@ export default function RentalsPage() {
                       Nhà cung cấp
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.bike?.supplier_id || "Không có"}
+                      {detailData.bike?.supplierId || "Không có"}
                     </p>
                   </div>
                 </div>
@@ -459,10 +464,10 @@ export default function RentalsPage() {
                       Trạm bắt đầu
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.start_station?.name}
+                          {detailData.startStation?.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {detailData.result?.start_station?.address}
+                      {detailData.startStation?.address}
                     </p>
                   </div>
                   <div>
@@ -470,8 +475,8 @@ export default function RentalsPage() {
                       Tọa độ trạm bắt đầu
                     </label>
                     <p className="text-foreground text-sm">
-                      {detailData.result?.start_station?.latitude},{" "}
-                      {detailData.result?.start_station?.longitude}
+                      {detailData.startStation?.latitude},{" "}
+                      {detailData.startStation?.longitude}
                     </p>
                   </div>
                 </div>
@@ -483,10 +488,10 @@ export default function RentalsPage() {
                       Trạm kết thúc
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.end_station?.name || "Chưa trả"}
+                      {detailData.endStation?.name || "Chưa trả"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {detailData.result?.end_station?.address || ""}
+                      {detailData.endStation?.address || ""}
                     </p>
                   </div>
                   <div>
@@ -494,9 +499,7 @@ export default function RentalsPage() {
                       Tọa độ trạm kết thúc
                     </label>
                     <p className="text-foreground text-sm">
-                      {detailData.result?.end_station
-                        ? `${detailData.result.end_station.latitude}, ${detailData.result.end_station.longitude}`
-                        : "Chưa trả"}
+                      {detailData.endStation?.latitude}, ${detailData.endStation?.longitude}`
                     </p>
                   </div>
                 </div>
@@ -508,7 +511,7 @@ export default function RentalsPage() {
                       Thời gian bắt đầu
                     </label>
                     <p className="text-foreground text-sm">
-                      {formatDateUTC(detailData.result?.start_time)}
+                      {formatDateUTC(detailData.startTime)}
                     </p>
                   </div>
                   <div>
@@ -516,8 +519,8 @@ export default function RentalsPage() {
                       Thời gian kết thúc
                     </label>
                     <p className="text-foreground text-sm">
-                      {detailData.result?.end_time
-                        ? formatDateUTC(detailData.result.end_time)
+                      {detailData.endTime
+                        ? formatDateUTC(detailData.endTime)
                         : "Chưa trả"}
                     </p>
                   </div>
@@ -530,7 +533,7 @@ export default function RentalsPage() {
                       Thời lượng (phút)
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.duration}
+                      {detailData.duration}
                     </p>
                   </div>
                   <div>
@@ -538,7 +541,7 @@ export default function RentalsPage() {
                       Tổng tiền
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.total_price?.toLocaleString("vi-VN")}{" "}
+                      {detailData.totalPrice?.toLocaleString("vi-VN")}{" "}
                       VND
                     </p>
                   </div>
@@ -551,7 +554,7 @@ export default function RentalsPage() {
                       Ngày tạo
                     </label>
                     <p className="text-foreground text-sm">
-                      {formatDateUTC(detailData.result?.created_at)}
+                      {formatDateUTC(detailData.updatedAt)}
                     </p>
                   </div>
                   <div>
@@ -559,7 +562,7 @@ export default function RentalsPage() {
                       Cập nhật lần cuối
                     </label>
                     <p className="text-foreground text-sm">
-                      {formatDateUTC(detailData.result?.updated_at)}
+                      {formatDateUTC(detailData.updatedAt)}
                     </p>
                   </div>
                 </div>
@@ -608,20 +611,20 @@ export default function RentalsPage() {
                       {...register("status")}
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                     >
-                      {detailData.result?.status === "ĐANG THUÊ" && (
+                      {detailData.status === "RENTED" && (
                         <>
                           <option value="ĐANG THUÊ">ĐANG THUÊ</option>
                           <option value="ĐÃ HOÀN THÀNH">ĐÃ HOÀN THÀNH</option>
                           <option value="ĐÃ HỦY">ĐÃ HỦY</option>
                         </>
                       )}
-                      {detailData.result?.status === "ĐÃ HOÀN THÀNH" && (
+                      {detailData.status === "COMPLETED" && (
                         <>
                           <option value="ĐÃ HOÀN THÀNH">ĐÃ HOÀN THÀNH</option>
                           <option value="ĐÃ HỦY">ĐÃ HỦY</option>
                         </>
                       )}
-                      {detailData.result?.status === "ĐÃ HỦY" && (
+                      {detailData.status === "CANCELLED" && (
                         <option value="ĐÃ HỦY">ĐÃ HỦY</option>
                       )}
                     </select>
