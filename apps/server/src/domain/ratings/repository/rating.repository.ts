@@ -1,6 +1,9 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
+import type {
+  PrismaClient,
+  Prisma as PrismaTypes,
+} from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -13,16 +16,10 @@ import { selectRatingRow, toRatingRow } from "./rating.mappers";
 export type RatingRepo = {
   readonly createRating: (
     input: CreateRatingInput,
-  ) => Effect.Effect<
-    RatingRow,
-    RatingRepositoryError | RatingAlreadyExists
-  >;
+  ) => Effect.Effect<RatingRow, RatingRepositoryError | RatingAlreadyExists>;
   readonly findByRentalId: (
     rentalId: string,
-  ) => Effect.Effect<
-    Option.Option<RatingRow>,
-    RatingRepositoryError
-  >;
+  ) => Effect.Effect<Option.Option<RatingRow>, RatingRepositoryError>;
   readonly findBikeSummary: (
     bikeId: string,
   ) => Effect.Effect<RatingSummary, RatingRepositoryError>;
@@ -63,7 +60,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
         ]);
 
         const groupedCounts = new Map(
-          grouped.map(row => [row.rating, row._count._all]),
+          grouped.map((row) => [row.rating, row._count._all]),
         );
 
         return {
@@ -78,7 +75,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
           },
         } satisfies RatingSummary;
       },
-      catch: err =>
+      catch: (err) =>
         new RatingRepositoryError({
           operation,
           cause: err,
@@ -86,7 +83,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
     });
 
   return {
-    createRating: input =>
+    createRating: (input) =>
       Effect.tryPromise({
         try: () =>
           client.rating.create({
@@ -97,7 +94,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
               comment: input.comment ?? null,
               reasons: {
                 createMany: {
-                  data: input.reasonIds.map(id => ({
+                  data: input.reasonIds.map((id) => ({
                     reasonId: id,
                   })),
                 },
@@ -117,39 +114,53 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
         },
       }).pipe(Effect.map(toRatingRow)),
 
-    findByRentalId: rentalId =>
+    findByRentalId: (rentalId) =>
       Effect.tryPromise({
         try: () =>
           client.rating.findUnique({
             where: { rentalId },
             select: selectRatingRow,
           }),
-        catch: err =>
+        catch: (err) =>
           new RatingRepositoryError({
             operation: "findByRentalId",
             cause: err,
           }),
       }).pipe(
-        Effect.map(row =>
+        Effect.map((row) =>
           Option.fromNullable(row).pipe(Option.map(toRatingRow)),
         ),
       ),
 
-    findBikeSummary: bikeId =>
+    findBikeSummary: (bikeId) =>
       findSummaryByWhere(
         {
           rental: {
             bikeId,
           },
+          reasons: {
+            some: {
+              reason: {
+                appliesTo: "bike",
+              },
+            },
+          },
         },
         "findBikeSummary",
       ),
 
-    findStationSummary: stationId =>
+    findStationSummary: (stationId) =>
       findSummaryByWhere(
         {
           rental: {
             startStationId: stationId,
+          },
+          reasons: {
+            some: {
+              reason: {
+                appliesTo: "station",
+              },
+            },
           },
         },
         "findStationSummary",
