@@ -60,7 +60,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
         ]);
 
         const groupedCounts = new Map(
-          grouped.map((row) => [row.rating, row._count._all]),
+          grouped.map(row => [row.rating, row._count._all]),
         );
 
         return {
@@ -75,7 +75,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
           },
         } satisfies RatingSummary;
       },
-      catch: (err) =>
+      catch: err =>
         new RatingRepositoryError({
           operation,
           cause: err,
@@ -83,7 +83,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
     });
 
   return {
-    createRating: (input) =>
+    createRating: input =>
       Effect.tryPromise({
         try: () =>
           client.rating.create({
@@ -94,7 +94,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
               comment: input.comment ?? null,
               reasons: {
                 createMany: {
-                  data: input.reasonIds.map((id) => ({
+                  data: input.reasonIds.map(id => ({
                     reasonId: id,
                   })),
                 },
@@ -114,25 +114,25 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
         },
       }).pipe(Effect.map(toRatingRow)),
 
-    findByRentalId: (rentalId) =>
+    findByRentalId: rentalId =>
       Effect.tryPromise({
         try: () =>
           client.rating.findUnique({
             where: { rentalId },
             select: selectRatingRow,
           }),
-        catch: (err) =>
+        catch: err =>
           new RatingRepositoryError({
             operation: "findByRentalId",
             cause: err,
           }),
       }).pipe(
-        Effect.map((row) =>
+        Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toRatingRow)),
         ),
       ),
 
-    findBikeSummary: (bikeId) =>
+    findBikeSummary: bikeId =>
       findSummaryByWhere(
         {
           rental: {
@@ -149,7 +149,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
         "findBikeSummary",
       ),
 
-    findStationSummary: (stationId) =>
+    findStationSummary: stationId =>
       findSummaryByWhere(
         {
           rental: {
