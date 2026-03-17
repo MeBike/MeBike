@@ -121,7 +121,7 @@ export function makeRentalRepository(
         try: () =>
           tx.bikeSwapRequest.findUnique({
             where: { id: bikeSwapRequestId },
-            select: { status: true },
+            select: { status: true, oldBikeId: true },
           }),
         catch: e =>
           new RentalRepositoryError({
@@ -172,6 +172,21 @@ export function makeRentalRepository(
         catch: e =>
           new RentalRepositoryError({
             operation: "approveBikeSwapRequest.updateBike",
+            cause: e,
+          }),
+      });
+
+      yield* Effect.tryPromise({
+        try: () =>
+          tx.bike.update({
+            where: { id: bikeSwapRequest.oldBikeId },
+            data: {
+              status: "BROKEN" as BikeStatus,
+            },
+          }),
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "approveBikeSwapRequest.updateOldBike",
             cause: e,
           }),
       });
