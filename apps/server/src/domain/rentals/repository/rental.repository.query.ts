@@ -222,13 +222,13 @@ function mapBikeInfo(bike: any) {
     id: bike.id,
     chipId: bike.chipId,
     station: {
-      id: bike.station?.id ?? "",
-      name: bike.station?.name ?? "Unknown",
-      address: bike.station?.address ?? "Unknown",
+      id: bike.station?.id,
+      name: bike.station?.name,
+      address: bike.station?.address,
     },
     supplier: {
-      id: bike.supplier?.id ?? "",
-      name: bike.supplier?.name ?? "Unknown",
+      id: bike.supplier?.id,
+      name: bike.supplier?.name,
     },
   };
 }
