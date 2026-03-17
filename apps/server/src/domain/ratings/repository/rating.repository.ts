@@ -138,13 +138,24 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
           rental: {
             bikeId,
           },
-          reasons: {
-            some: {
-              reason: {
-                appliesTo: "bike",
+          OR: [
+            {
+              reasons: {
+                some: {
+                  reason: {
+                    appliesTo: "bike",
+                  },
+                },
               },
             },
-          },
+            {
+              NOT: {
+                reasons: {
+                  some: {},
+                },
+              },
+            },
+          ],
         },
         "findBikeSummary",
       ),
@@ -155,13 +166,24 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
           rental: {
             startStationId: stationId,
           },
-          reasons: {
-            some: {
-              reason: {
-                appliesTo: "station",
+          OR: [
+            {
+              reasons: {
+                some: {
+                  reason: {
+                    appliesTo: "station",
+                  },
+                },
               },
             },
-          },
+            {
+              NOT: {
+                reasons: {
+                  some: {},
+                },
+              },
+            },
+          ],
         },
         "findStationSummary",
       ),
