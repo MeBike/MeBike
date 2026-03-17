@@ -31,7 +31,7 @@ export default function RentalsPage() {
   } = useForm<UpdateRentalSchema>({
     resolver: zodResolver(updateRentalSchema),
     defaultValues: {
-      status: "ĐANG THUÊ",
+      status: "",
       end_station: "",
       end_time: "",
       reason: "",
@@ -129,11 +129,7 @@ export default function RentalsPage() {
                 setSelectedRentalId(data.id);
                 getDetailRental();
                 reset({
-                  status: data.status as
-                    | "ĐANG THUÊ"
-                    | "HOÀN THÀNH"
-                    | "ĐÃ HỦY"
-                    | "ĐÃ ĐẶT TRƯỚC",
+                  status: data.status as RentalStatus,
                   end_station: data.endStation || "",
                   end_time: data.endTime
                     ? new Date(data.endTime).toISOString().slice(0, 16)
