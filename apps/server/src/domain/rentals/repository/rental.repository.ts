@@ -11,7 +11,6 @@ import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type {
   AdminRentalListItem,
@@ -78,11 +77,11 @@ export function makeRentalRepository(
           },
           select,
         }),
-      catch: (error) =>
+      catch: error =>
         Match.value(error).pipe(
           Match.when(
             isPrismaUniqueViolation,
-            (e) =>
+            e =>
               new RentalUniqueViolation({
                 operation: "createRental",
                 constraint: uniqueTargets(e),
@@ -90,7 +89,7 @@ export function makeRentalRepository(
               }),
           ),
           Match.orElse(
-            (e) =>
+            e =>
               new RentalRepositoryError({
                 operation: "createRental",
                 cause: e,
@@ -124,7 +123,7 @@ export function makeRentalRepository(
             where: { id: bikeSwapRequestId },
             select: { status: true, oldBikeId: true, stationId: true },
           }),
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "approveBikeSwapRequest.findBikeSwapRequest",
             cause: e,
@@ -154,7 +153,7 @@ export function makeRentalRepository(
             },
             select: { id: true },
           }),
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "approveBikeSwapRequest.findBike",
             cause: e,
@@ -173,7 +172,7 @@ export function makeRentalRepository(
               status: "BOOKED" as BikeStatus,
             },
           }),
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "approveBikeSwapRequest.updateBike",
             cause: e,
@@ -188,7 +187,7 @@ export function makeRentalRepository(
               status: "BROKEN" as BikeStatus,
             },
           }),
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "approveBikeSwapRequest.updateOldBike",
             cause: e,
@@ -205,7 +204,7 @@ export function makeRentalRepository(
             },
             select: staffBikeSwapRequestSelect,
           }),
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "approveBikeSwapRequest.updateRequest",
             cause: e,
@@ -220,7 +219,7 @@ export function makeRentalRepository(
               bikeId: bike.id,
             },
           }),
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "approveBikeSwapRequest.updateRental",
             cause: e,
@@ -241,7 +240,7 @@ export function makeRentalRepository(
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
             try: () => client.rental.count({ where }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "listMyRentals.count",
                 cause: e,
@@ -256,7 +255,7 @@ export function makeRentalRepository(
                 orderBy,
                 select,
               }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "listMyRentals.findMany",
                 cause: e,
@@ -280,7 +279,7 @@ export function makeRentalRepository(
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
             try: () => client.rental.count({ where }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "listMyCurrentRentals.count",
                 cause: e,
@@ -295,7 +294,7 @@ export function makeRentalRepository(
                 orderBy,
                 select,
               }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "listMyCurrentRentals.findMany",
                 cause: e,
@@ -317,7 +316,7 @@ export function makeRentalRepository(
               where: { id: rentalId, userId },
               select,
             }),
-          catch: (e) =>
+          catch: e =>
             new RentalRepositoryError({
               operation: "getMyRentalById",
               cause: e,
@@ -336,12 +335,12 @@ export function makeRentalRepository(
             _count: { _all: true },
             where: { userId },
           });
-          return rows.map((row) => ({
+          return rows.map(row => ({
             status: row.status,
             count: row._count._all,
           }));
         },
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "getMyRentalCounts",
             cause: e,
@@ -357,7 +356,7 @@ export function makeRentalRepository(
               where: { bikeId, status: "RENTED" as RentalStatus },
               select,
             }),
-          catch: (e) =>
+          catch: e =>
             new RentalRepositoryError({
               operation: "findActiveByBikeId",
               cause: e,
@@ -376,7 +375,7 @@ export function makeRentalRepository(
               where: { userId, status: "RENTED" as RentalStatus },
               select,
             }),
-          catch: (e) =>
+          catch: e =>
             new RentalRepositoryError({
               operation: "findActiveByUserId",
               cause: e,
@@ -406,11 +405,11 @@ export function makeRentalRepository(
             },
             select,
           }),
-        catch: (error) =>
+        catch: error =>
           Match.value(error).pipe(
             Match.when(
               isPrismaUniqueViolation,
-              (e) =>
+              e =>
                 new RentalUniqueViolation({
                   operation: "createReservedRentalForReservation",
                   constraint: uniqueTargets(e),
@@ -418,7 +417,7 @@ export function makeRentalRepository(
                 }),
             ),
             Match.orElse(
-              (e) =>
+              e =>
                 new RentalRepositoryError({
                   operation: "createReservedRentalForReservation",
                   cause: e,
@@ -455,13 +454,13 @@ export function makeRentalRepository(
             select,
           });
         },
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "updateRentalOnEnd",
             cause: e,
           }),
       }).pipe(
-        Effect.map((row) =>
+        Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
         ),
       );
@@ -474,13 +473,13 @@ export function makeRentalRepository(
             where: { id: rentalId },
             select,
           }),
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "findById",
             cause: e,
           }),
       }).pipe(
-        Effect.map((row) =>
+        Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
         ),
       );
@@ -502,7 +501,7 @@ export function makeRentalRepository(
           });
           return updated.count > 0;
         },
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "assignBikeToReservedRental",
             cause: e,
@@ -527,7 +526,7 @@ export function makeRentalRepository(
           });
           return updated.count > 0;
         },
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "startReservedRental",
             cause: e,
@@ -550,7 +549,7 @@ export function makeRentalRepository(
           });
           return updated.count > 0;
         },
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "cancelReservedRental",
             cause: e,
@@ -568,7 +567,7 @@ export function makeRentalRepository(
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
             try: () => client.rental.count({ where }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "adminListRentals.count",
                 cause: e,
@@ -583,7 +582,7 @@ export function makeRentalRepository(
                 orderBy,
                 select: adminRentalListSelect,
               }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "adminListRentals.findMany",
                 cause: e,
@@ -607,7 +606,7 @@ export function makeRentalRepository(
               where: { id: rentalId },
               select: adminRentalDetailSelect,
             }),
-          catch: (e) =>
+          catch: e =>
             new RentalRepositoryError({
               operation: "adminGetRentalById",
               cause: e,
@@ -635,7 +634,7 @@ export function makeRentalRepository(
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
             try: () => client.rental.count({ where }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "listActiveRentalsByPhone.count",
                 cause: e,
@@ -650,7 +649,7 @@ export function makeRentalRepository(
                 orderBy,
                 select: adminRentalListSelect,
               }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "listActiveRentalsByPhone.findMany",
                 cause: e,
@@ -679,7 +678,7 @@ export function makeRentalRepository(
             },
             select: bikeSwapRequestSelect,
           }),
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "requestBikeSwap",
             cause: e,
@@ -697,7 +696,7 @@ export function makeRentalRepository(
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
             try: () => client.bikeSwapRequest.count({ where }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "staffListBikeSwapRequests.count",
                 cause: e,
@@ -712,7 +711,7 @@ export function makeRentalRepository(
                 orderBy,
                 select: staffBikeSwapRequestSelect,
               }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "staffListBikeSwapRequests.findMany",
                 cause: e,
@@ -736,7 +735,7 @@ export function makeRentalRepository(
               where: { id: bikeSwapRequestId },
               select: staffBikeSwapRequestSelect,
             }),
-          catch: (e) =>
+          catch: e =>
             new RentalRepositoryError({
               operation: "staffGetBikeSwapRequests",
               cause: e,
@@ -760,7 +759,7 @@ export function makeRentalRepository(
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
             try: () => client.bikeSwapRequest.count({ where }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "adminListBikeSwapRequests.count",
                 cause: e,
@@ -775,7 +774,7 @@ export function makeRentalRepository(
                 orderBy,
                 select: staffBikeSwapRequestSelect,
               }),
-            catch: (e) =>
+            catch: e =>
               new RentalRepositoryError({
                 operation: "adminListBikeSwapRequests.findMany",
                 cause: e,
@@ -839,7 +838,7 @@ export function makeRentalRepository(
             (a, b) => a.date.getTime() - b.date.getTime(),
           );
         },
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "getRevenueSeries",
             cause: e,
@@ -867,7 +866,7 @@ export function makeRentalRepository(
             ? 0
             : Number(result._sum.totalPrice);
         },
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "getCompletedRevenueTotal",
             cause: e,
@@ -883,12 +882,12 @@ export function makeRentalRepository(
             _count: { _all: true },
           });
 
-          return rows.map((row) => ({
+          return rows.map(row => ({
             status: row.status,
             count: row._count._all,
           }));
         },
-        catch: (e) =>
+        catch: e =>
           new RentalRepositoryError({
             operation: "getGlobalRentalCounts",
             cause: e,
@@ -908,7 +907,7 @@ export function makeRentalRepository(
               where: { id: bikeSwapRequestId },
               select: { status: true },
             }),
-          catch: (e) =>
+          catch: e =>
             new RentalRepositoryError({
               operation: "staffRejectBikeSwapRequests.find",
               cause: e,
@@ -937,7 +936,7 @@ export function makeRentalRepository(
               },
               select: staffBikeSwapRequestSelect,
             }),
-          catch: (e) =>
+          catch: e =>
             new RentalRepositoryError({
               operation: "staffRejectBikeSwapRequests.update",
               cause: e,

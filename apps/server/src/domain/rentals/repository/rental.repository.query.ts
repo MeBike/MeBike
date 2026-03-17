@@ -216,7 +216,8 @@ type StaffBikeSwapSelect = PrismaTypes.BikeSwapRequestGetPayload<{
 }>;
 
 function mapBikeInfo(bike: any) {
-  if (!bike) return null;
+  if (!bike)
+    return null;
   return {
     id: bike.id,
     chipId: bike.chipId,
@@ -233,7 +234,8 @@ function mapBikeInfo(bike: any) {
 }
 
 function mapStationInfo(station: any) {
-  if (!station) return null;
+  if (!station)
+    return null;
   return {
     id: station.id,
     name: station.name,
