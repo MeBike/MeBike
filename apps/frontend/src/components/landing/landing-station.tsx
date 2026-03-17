@@ -19,9 +19,9 @@ export function Stations() {
     const fetchStations = async () => {
       try {
         const response = await dashboardService.getStations();
-        if (response.data.result) {
+        if (response.data) {
           //order by most available first
-          const sortedStations = response.data.result.sort((a, b) => b.availableBikes - a.availableBikes);
+          const sortedStations = response.data.data.sort((a, b) => b.availableBikes - a.availableBikes);
           setStations(sortedStations);
         }
       } catch (error) {

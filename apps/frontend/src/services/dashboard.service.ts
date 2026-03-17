@@ -1,16 +1,12 @@
 import fetchHttpClient from "@lib/httpClient";
 import { AxiosResponse } from "axios";
-import { DashboardStats, StationData } from "@custom-types";
+import { DashboardStats, Station, StationData , ApiResponse } from "@custom-types";
 import {ENDPOINT} from "@/constants/end-point";
 const DASHBOARD_BASE = "/dashboard";
 const DASHBOARD_ENDPOINTS = {
   STATS: `${DASHBOARD_BASE}/stats`,
-  STATIONS: `${DASHBOARD_BASE}/stations`,
+  STATIONS: `/stations`,
 } as const;
-interface ApiResponse<T> {
-  result?: T;
-  message?: string;
-}
 
 export const dashboardService = {
   getDashboardStats: async (): Promise<AxiosResponse<DashboardStats>> => {
@@ -19,8 +15,8 @@ export const dashboardService = {
     );
     return response;
   },
-  getStations: async (): Promise<AxiosResponse<ApiResponse<StationData[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<StationData[]>>(
+  getStations: async (): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
       DASHBOARD_ENDPOINTS.STATIONS
     );
     return response;
