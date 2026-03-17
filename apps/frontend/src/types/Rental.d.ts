@@ -138,62 +138,52 @@ export interface DetailRentalReponse {
   updated_at : string;
 }
 interface RentalRecord {
-  _id: string;
+  id: string;
   user: {
-    _id: string;
+    id: string;
     fullname: string;
     email: string;
-    email_verify_otp: string | null;
-    email_verify_otp_expires: string | null;
-    forgot_password_otp: string | null;
-    forgot_password_otp_expires: string | null;
-    verify: "UNVERIFIED" | "VERIFIED";
+    verify: string;
     location: string;
     username: string;
-    phone_number: string;
+    phoneNumber: string;
     avatar: string;
-    role: "USER" | "ADMIN" | "SUPPLIER";
-    nfc_card_uid: string;
-    created_at: string;
-    updated_at: string;
-    forgot_password_token: string;
+    role: string;
+    nfcCardUid: string;
+    updatedAt: string;
   };
   bike: {
-    _id: string;
-    status: "CÓ SẴN" | "ĐANG THUÊ" | "BẢO TRÌ";
-    supplier_id: string;
-    created_at: string;
-    updated_at: string;
-    chip_id: string;
+    id: string;
+    chipId: string;
+    status: string;
+    supplierId: string;
+    updatedAt: string;
   };
-  start_station: {
-    _id: string;
+  startStation: {
+    id: string;
     name: string;
     address: string;
     latitude: number;
     longitude: number;
     capacity: number;
-    created_at: string;
-    updated_at: string;
-    location_geo: {
-      type: "Point";
-      coordinates: [number, number];
-    };
+    updatedAt: string;
   };
-  end_station: null | {
-    _id: string;
+  endStation: null | {
+    id: string;
     name: string;
     address: string;
     latitude: number;
     longitude: number;
+    capacity: number;
+    updatedAt: string;
   };
-  start_time: string;
-  end_time: string | null;
+  startTime: string;
+  endTime: string;
   duration: number;
-  total_price: number;
-  status: "ĐANG THUÊ" | "ĐÃ HỦY" | "ĐÃ HOÀN THÀNH";
-  created_at: string;
-  updated_at: string;
+  totalPrice: number;
+  subscriptionId: string;
+  status: RentalStatus;
+  updatedAt: string;
 }
 export interface SummaryRental {
   rentalList: {

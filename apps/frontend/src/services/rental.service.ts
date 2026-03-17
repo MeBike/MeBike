@@ -170,8 +170,8 @@ export const rentalService = {
   },
   getDetailRental: async (
     id: string
-  ): Promise<AxiosResponse<DetailApiResponse<RentalRecord>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<RentalRecord>>(
+  ): Promise<AxiosResponse<RentalRecord>> => {
+    const response = await fetchHttpClient.get<RentalRecord>(
       ENDPOINT.RENTAL.ID(id)
     );
     return response;
