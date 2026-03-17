@@ -177,6 +177,7 @@ export type BikeSwapRequest = {
     user_id: string;
     old_bike_id: string;
     new_bike_id: string | null;
+    station_id: string | null;
     reason: string | null;
     status: Generated<BikeSwapStatus>;
     created_at: Generated<Timestamp>;

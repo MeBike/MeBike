@@ -157,12 +157,16 @@ export type RentalRepo = {
     to: Date,
   ) => Effect.Effect<number, RentalRepositoryError>;
 
-  getGlobalRentalCounts: () => Effect.Effect<readonly RentalCountsRow[], RentalRepositoryError>;
+  getGlobalRentalCounts: () => Effect.Effect<
+    readonly RentalCountsRow[],
+    RentalRepositoryError
+  >;
 
   requestBikeSwap: (
     rentalId: string,
     userId: string,
     oldBikeId: string,
+    stationId: string,
   ) => Effect.Effect<BikeSwapRequestRow, RentalRepositoryError>;
 
   staffListBikeSwapRequests: (

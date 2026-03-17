@@ -61,7 +61,7 @@ export function toStaffBikeSwapRequestsWhere(
   return {
     ...(filter.status ? { status: filter.status } : {}),
     ...(filter.userId ? { userId: filter.userId } : {}),
-    ...(filter.stationId ? { oldBike: { stationId: filter.stationId } } : {}),
+    ...(filter.stationId ? { stationId: filter.stationId } : {}),
   };
 }
 
@@ -123,6 +123,7 @@ export const bikeSwapRequestSelect = {
   userId: true,
   oldBikeId: true,
   newBikeId: true,
+  stationId: true,
   reason: true,
   status: true,
   createdAt: true,
@@ -142,6 +143,7 @@ export function mapToBikeSwapRequestRow(
     userId: raw.userId,
     oldBikeId: raw.oldBikeId,
     newBikeId: raw.newBikeId,
+    stationId: raw.stationId!,
     reason: raw.reason ?? "",
     status: raw.status as BikeSwapStatus,
     createdAt: raw.createdAt,
@@ -196,6 +198,13 @@ export const staffBikeSwapRequestSelect = {
       },
     },
   },
+  station: {
+    select: {
+      id: true,
+      name: true,
+      address: true,
+    },
+  },
   reason: true,
   status: true,
   createdAt: true,
@@ -207,8 +216,7 @@ type StaffBikeSwapSelect = PrismaTypes.BikeSwapRequestGetPayload<{
 }>;
 
 function mapBikeInfo(bike: any) {
-  if (!bike)
-    return null;
+  if (!bike) return null;
   return {
     id: bike.id,
     chipId: bike.chipId,
@@ -224,6 +232,15 @@ function mapBikeInfo(bike: any) {
   };
 }
 
+function mapStationInfo(station: any) {
+  if (!station) return null;
+  return {
+    id: station.id,
+    name: station.name,
+    address: station.address,
+  };
+}
+
 export function mapToStaffBikeSwapRequestRow(
   raw: StaffBikeSwapSelect,
 ): StaffBikeSwapRequestRow {
@@ -236,6 +253,7 @@ export function mapToStaffBikeSwapRequestRow(
     },
     oldBike: mapBikeInfo(raw.oldBike)!,
     newBike: mapBikeInfo(raw.newBike),
+    station: mapStationInfo(raw.station),
     reason: raw.reason ?? "",
     status: raw.status as BikeSwapStatus,
     createdAt: raw.createdAt,

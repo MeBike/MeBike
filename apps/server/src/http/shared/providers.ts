@@ -115,6 +115,7 @@ const RentalReposLive = RentalRepositoryLive.pipe(
 const RentalServiceLayer = RentalServiceLive.pipe(
   Layer.provide(RentalReposLive),
   Layer.provide(BikeReposLive),
+  Layer.provide(StationReposLive),
 );
 
 const RentalStatsServiceLayer = RentalStatsServiceLive.pipe(

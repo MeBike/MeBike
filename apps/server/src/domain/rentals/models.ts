@@ -171,6 +171,7 @@ export type BikeSwapRequestRow = {
   userId: string;
   oldBikeId: string;
   newBikeId: string | null;
+  stationId: string;
   reason: string;
   status: BikeSwapStatus;
   createdAt: Date;
@@ -210,6 +211,11 @@ export type StaffBikeSwapRequestRow = {
       name: string;
     };
   } | null;
+  station: {
+    id: string;
+    name: string;
+    address: string;
+  } | null;
   reason: string;
   status: BikeSwapStatus;
   createdAt: Date;
@@ -219,4 +225,5 @@ export type StaffBikeSwapRequestRow = {
 export type AdminBikeSwapRequestFilter = {
   userId?: string;
   status?: BikeSwapStatus;
+  stationId?: string;
 };

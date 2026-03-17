@@ -155,6 +155,7 @@ export function toContractBikeSwapRequest(
     userId: row.userId,
     oldBikeId: row.oldBikeId,
     newBikeId: row.newBikeId,
+    stationId: row.stationId,
     reason: row.reason || null,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
@@ -198,6 +199,13 @@ export function toContractBikeSwapRequestDetail(
             id: row.newBike.supplier.id,
             name: row.newBike.supplier.name,
           },
+        }
+      : null,
+    station: row.station
+      ? {
+          id: row.station.id,
+          name: row.station.name,
+          address: row.station.address,
         }
       : null,
     reason: row.reason || null,

@@ -16,6 +16,7 @@ model Station {
   rentalsStart Rental[]            @relation("RentalStartStation")
   rentalsEnd   Rental[]            @relation("RentalEndStation")
   fixedSlots   FixedSlotTemplate[]
+  bikeSwapRequests BikeSwapRequest[]
 }
 
 model GeoBoundary {

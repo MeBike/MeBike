@@ -1,5 +1,8 @@
 import { Data, Effect, Option } from "effect";
 
+import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+
 import type {
   BikeSwapRequestNotFound,
   InvalidBikeSwapRequestStatus,
@@ -8,7 +11,7 @@ import type {
 } from "../domain-errors";
 import type { StaffBikeSwapRequestRow } from "../models";
 
-import { RentalRepository } from "../repository/rental.repository";
+import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
 
 export class StaffBikeRequestNotFound extends Data.TaggedError(
   "StaffBikeRequestNotFound",
@@ -50,13 +53,17 @@ export function staffApproveBikeSwapRequestUseCase(
   | StaffBikeRequestNotFound
   | NoAvailableBike
   | InvalidBikeSwapRequestStatus
-  | BikeSwapRequestNotFound,
-  RentalRepository
+  | BikeSwapRequestNotFound
+  | import("@/lib/effect/prisma-tx").PrismaTransactionError,
+  RentalRepository | Prisma
 > {
   return Effect.gen(function* () {
-    const repo = yield* RentalRepository;
+    const { client } = yield* Prisma;
 
-    const result = yield* repo.staffApproveBikeSwapRequests(bikeSwapRequestId);
+    const result = yield* runPrismaTransaction(client, (tx) => {
+      const txRepo = makeRentalRepository(tx);
+      return txRepo.staffApproveBikeSwapRequests(bikeSwapRequestId);
+    });
 
     if (Option.isNone(result)) {
       return yield* Effect.fail(

@@ -20,8 +20,6 @@ import type { RentalsRoutes } from "./shared";
 import {
   BikeSwapRequestErrorCodeSchema,
   bikeSwapRequestErrorMessages,
-  RentalErrorCodeSchema,
-  rentalErrorMessages,
 } from "./shared";
 
 const staffListBikeSwapRequests: RouteHandler<
@@ -97,6 +95,13 @@ const staffGetBikeSwapRequests: RouteHandler<
             404,
           )),
 
+        Match.tag("RentalRepositoryError", () =>
+          c.json(
+            {
+              error: "Internal Server Error",
+            },
+            500,
+          )),
         Match.orElse((e) => {
           throw e;
         }),
@@ -157,9 +162,9 @@ const staffApproveBikeSwapRequest: RouteHandler<
         Match.tag("NoAvailableBike", () =>
           c.json(
             {
-              error: rentalErrorMessages.NO_AVAILABLE_BIKE,
+              error: bikeSwapRequestErrorMessages.NO_AVAILABLE_BIKE,
               details: {
-                code: RentalErrorCodeSchema.enum.NO_AVAILABLE_BIKE,
+                code: BikeSwapRequestErrorCodeSchema.enum.NO_AVAILABLE_BIKE,
               },
             },
             400,
@@ -178,6 +183,20 @@ const staffApproveBikeSwapRequest: RouteHandler<
             400,
           )),
 
+        Match.tag("PrismaTransactionError", () =>
+          c.json(
+            {
+              error: "Internal Server Error",
+            },
+            500,
+          )),
+        Match.tag("RentalRepositoryError", () =>
+          c.json(
+            {
+              error: "Internal Server Error",
+            },
+            500,
+          )),
         Match.orElse((e) => {
           throw e;
         }),
@@ -225,6 +244,38 @@ const staffRejectBikeSwapRequest: RouteHandler<
             404,
           )),
 
+        Match.tag("BikeSwapRequestNotFound", error =>
+          c.json(
+            {
+              error: bikeSwapRequestErrorMessages.BIKE_SWAP_REQUEST_NOT_FOUND,
+              details: {
+                code: BikeSwapRequestErrorCodeSchema.enum
+                  .BIKE_SWAP_REQUEST_NOT_FOUND,
+                bikeSwapRequestId: error.bikeSwapRequestId,
+              },
+            },
+            404,
+          )),
+        Match.tag("InvalidBikeSwapRequestStatus", error =>
+          c.json(
+            {
+              error:
+                bikeSwapRequestErrorMessages.INVALID_BIKE_SWAP_REQUEST_STATUS,
+              details: {
+                code: BikeSwapRequestErrorCodeSchema.enum
+                  .INVALID_BIKE_SWAP_REQUEST_STATUS,
+                currentStatus: error.status,
+              },
+            },
+            400,
+          )),
+        Match.tag("RentalRepositoryError", () =>
+          c.json(
+            {
+              error: "Internal Server Error",
+            },
+            500,
+          )),
         Match.orElse((e) => {
           throw e;
         }),

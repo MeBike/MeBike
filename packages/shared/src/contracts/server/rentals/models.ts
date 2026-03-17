@@ -257,7 +257,7 @@ export const CancelRentalRequestSchema = z.object({
 });
 
 export const RequestBikeSwapRequestSchema = z.object({
-  rentalId: z.uuidv7(),
+  stationId: z.uuidv7(),
 });
 
 export const ApproveBikeSwapRequestSchema = z.object({
@@ -293,6 +293,7 @@ export const BikeSwapRequestSchema = z.object({
   userId: z.uuidv7(),
   oldBikeId: z.uuidv7(),
   newBikeId: z.uuidv7().nullable(),
+  stationId: z.uuidv7(),
   reason: z.string().nullable(),
   status: BikeSwapStatusSchema,
   createdAt: z.iso.datetime(),
@@ -305,6 +306,7 @@ export const BikeSwapRequestDetailSchema = z.object({
   user: BikeSwapUserSchema,
   oldBike: BikeSwapBikeSchema,
   newBike: BikeSwapBikeSchema.nullable(),
+  station: BikeSwapStationSchema.nullable(),
   reason: z.string().nullable(),
   status: BikeSwapStatusSchema,
   createdAt: z.iso.datetime(),

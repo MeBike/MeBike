@@ -1,23 +1,25 @@
 enum BikeSwapStatus {
-    PENDING
-    CONFIRMED
-    REJECTED
-    CANCELLED
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
 }
 
 model BikeSwapRequest {
-    id        String         @id @default(uuid(7)) @db.Uuid
-    rentalId  String         @map("rental_id") @db.Uuid
-    userId    String         @map("user_id") @db.Uuid
-    oldBikeId String         @map("old_bike_id") @db.Uuid
-    newBikeId String?        @map("new_bike_id") @db.Uuid
-    reason    String?
-    status    BikeSwapStatus @default(PENDING)
-    createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz
-    updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  id        String         @id @default(uuid(7)) @db.Uuid
+  rentalId  String         @map("rental_id") @db.Uuid
+  userId    String         @map("user_id") @db.Uuid
+  oldBikeId String         @map("old_bike_id") @db.Uuid
+  newBikeId String?        @map("new_bike_id") @db.Uuid
+  stationId String?        @map("station_id") @db.Uuid
+  reason    String?
+  status    BikeSwapStatus @default(PENDING)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz
 
-    user    User   @relation(fields: [userId], references: [id])
-    rental  Rental @relation(fields: [rentalId], references: [id])
-    oldBike Bike   @relation("old_bike", fields: [oldBikeId], references: [id])
-    newBike Bike?  @relation("new_bike", fields: [newBikeId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+  rental  Rental   @relation(fields: [rentalId], references: [id])
+  oldBike Bike     @relation("old_bike", fields: [oldBikeId], references: [id])
+  newBike Bike?    @relation("new_bike", fields: [newBikeId], references: [id])
+  station Station? @relation(fields: [stationId], references: [id])
 }
