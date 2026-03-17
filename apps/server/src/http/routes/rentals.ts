@@ -86,6 +86,13 @@ export function registerRentalRoutes(
 
   app.openapi(statsSummaryRoute, RentalAdminController.getRentalStatsSummary);
 
+  const dashboardSummaryRoute = {
+    ...rentals.getDashboardSummary,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(dashboardSummaryRoute, RentalAdminController.getDashboardSummary);
+
   const requestSwapRoute = {
     ...rentals.requestBikeSwap,
     middleware: [requireUserMiddleware] as const,

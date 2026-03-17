@@ -12,6 +12,7 @@ import useEndCurrentRental from "./mutations/Rentals/useEndCurrentRentalMutation
 import { useGetSummaryRentalQuery } from "./query/Rent/useGetSummaryRental";
 import { QUERY_KEYS } from "@/constants/queryKey";
 import getErrorMessage from "@/utils/error-message";
+import { RentalStatus } from "@/types";
 
 interface UseRentalsActionsProps {
   hasToken: boolean;
@@ -20,7 +21,7 @@ interface UseRentalsActionsProps {
   page ?: number;
   start_station?: string;
   end_station?: string;
-  status?: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
+  status?: RentalStatus;
   rental_id?: string;
 }
 export function useRentalsActions({
@@ -52,9 +53,9 @@ export function useRentalsActions({
   } = useGetAllRentalsAdminStaffQuery(
     {
       page: page,
-      limit: limit,
-      start_station: start_station,
-      end_station: end_station,
+      pageSize: limit,
+      startStation: start_station,
+      endStation: end_station,
       status: status,
     }
   );
@@ -74,7 +75,8 @@ export function useRentalsActions({
     refetchRevenue();
   }, [hasToken, refetchRevenue]);
   const { data: todayRevenueData , refetch : refetchTodayRevenue , isLoading : isLoadingTodayRevenue } = useGetRevenueQuery(
-    { from: new Date().toISOString().slice(0,10), to: new Date().toISOString().slice(0,10), groupBy: "DAY" }
+    // { from: new Date().toISOString().slice(0,10), to: new Date().toISOString().slice(0,10), groupBy: "DAY" }
+    {}
   );
   const getTodayRevenue = useCallback(() => {
     if(!hasToken){

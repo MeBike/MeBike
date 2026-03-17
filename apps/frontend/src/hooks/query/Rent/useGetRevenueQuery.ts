@@ -17,7 +17,7 @@ const getRevenue = async ({
       groupBy,
     });
     if (response.status === 200) {
-      return response.data.result;
+      return response.data;
     }
   } catch (error) {
     console.error("Error fetching revenue data:", error);

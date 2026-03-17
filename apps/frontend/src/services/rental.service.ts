@@ -1,42 +1,12 @@
 import type { AxiosResponse } from "axios";
 import type { RentalSchemaFormData, UpdateRentalSchema } from "@/schemas/rental-schema";
 import fetchHttpClient from "@lib/httpClient";
-import type { RentingHistory } from "@custom-types";
+import type { Rental, RentalStatus } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
-import { RentalRecord} from "@custom-types";
-export type Pagination = {
-  limit: number;
-  currentPage: number;
-  totalPages: number;
-  totalRecords: number;
-};
-export interface GetAllRentalsForStaffAdminProps {
-  page?: number;
-  limit?: number;
-  start_station?: string;
-  end_station?: string;
-  status?: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
-}
-interface Dashboardsummary {
-  revenueSummary: {
-    today: {
-      totalRevenue: number;
-      totalRentals: number;
-    };
-    yesterday: {
-      totalRevenue: number;
-      totalRentals: number;
-    };
-    revenueChange: number;
-    revenueTrend: string;
-    rentalChange: number;
-    rentalTrend: string;
-  };
-  hourlyRentalStats: Array<{
-    hour: string;
-    totalRentals: number;
-  }>;
-}
+import { RentalRecord , SummaryRental ,Dashboardsummary } from "@custom-types";
+import { ENDPOINT } from "@/constants";
+import { ApiResponse } from "@custom-types";
+
 import { EndRentalSchema } from "@/schemas/rental-schema";
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
@@ -64,41 +34,6 @@ const RENTAL_ENDPOINTS = {
   END_RENTAL_SOS: (id: string) => `${RENTAL_BASE}/${id}/end`,
   SUMMARY: () => `${RENTAL_BASE}/summary`,
 };
-type RentalResponse = {
-  data: RentingHistory[];
-  pagination: Pagination;
-};
-export interface SummaryRental {
-  rentalList: {
-    Rented: number;
-    Completed: number;
-    Cancelled: number;
-    Reserved: number;
-  };
-  dailyRevenue: {
-    current : number;
-    previous : number;
-    difference : number;
-    percentChange : number;
-  }
-  monthlyRevenue: {
-    current : number;
-    previous : number;
-    difference : number;
-    percentChange : number;
-  }
- 
-}
-interface ApiResponse<T> {
-  data: T;
-  pagination: {
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-    totalRecords: number;
-  };
-  message: string;
-}
 interface DetailApiResponse<T> {
   result: T;
   message: string;
@@ -106,17 +41,17 @@ interface DetailApiResponse<T> {
 export const rentalService = {
   userPostRent: async (
     data: RentalSchemaFormData
-  ): Promise<AxiosResponse<DetailApiResponse<RentingHistory>>> => {
+  ): Promise<AxiosResponse<DetailApiResponse<Rental>>> => {
     const response = await fetchHttpClient.post<
-      DetailApiResponse<RentingHistory>
+      DetailApiResponse<Rental>
     >(RENTAL_ENDPOINTS.USER_RENT(), data);
     return response;
   },
   userGetAllRentalsForUser: async (
     page: number,
     limit: number
-  ): Promise<AxiosResponse<RentalResponse>> => {
-    const response = await fetchHttpClient.get<RentalResponse>(
+  ): Promise<AxiosResponse<ApiResponse<Rental>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Rental>>(
       RENTAL_ENDPOINTS.USER_RENTAL_ME(),
       {
         params: {
@@ -145,6 +80,7 @@ export const rentalService = {
     );
     return response;
   },
+  //dashboard
   adminGetRentalRevenue: async (): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
       RENTAL_ENDPOINTS.ADMIN_RENTAL_REVENUE()
@@ -183,21 +119,33 @@ export const rentalService = {
   },
   getAllRentalsForStaffAdmin: async ({
     page,
-    limit,
-    start_station,
-    end_station,
+    pageSize,
+    startStation,
+    endStation,
     status,
-  }: GetAllRentalsForStaffAdminProps): Promise<
-    AxiosResponse<ApiResponse<RentingHistory[]>>
+    userId,
+    bikeId,
+  }: {
+    page ?: number,
+    pageSize ?: number,
+    startStation ?: string,
+    endStation ?: string,
+    status ?: RentalStatus,
+    userId ?: string,
+    bikeId ?: string,
+  }): Promise<
+    AxiosResponse<ApiResponse<Rental[]>>
   > => {
-    const response = await fetchHttpClient.get<ApiResponse<RentingHistory[]>>(
-      RENTAL_ENDPOINTS.STAFF_ADMIN_GET_ALL_RENTALS(),
+    const response = await fetchHttpClient.get<ApiResponse<Rental[]>>(
+      ENDPOINT.RENTAL.BASE,
       {
-        page,
-        limit,
-        start_station,
-        end_station,
-        status,
+        page : page,
+        pageSize : pageSize,
+        startStation : startStation,
+        endStation : endStation,
+        status : status,
+        userId : userId,
+        bikeId : bikeId
       }
     );
     return response;
@@ -210,9 +158,9 @@ export const rentalService = {
     from?: string;
     to?: string;
     groupBy?: "MONTH" | "YEAR" | "DAY";
-  }): Promise<AxiosResponse<DetailApiResponse<StatwithRevenue>>> => {
+  }): Promise<AxiosResponse<StatwithRevenue>> => {
     const response = await fetchHttpClient.get<
-      DetailApiResponse<StatwithRevenue>
+      StatwithRevenue
     >(RENTAL_ENDPOINTS.GET_REVENUE(), {
       from,
       to,
@@ -224,7 +172,7 @@ export const rentalService = {
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<RentalRecord>>> => {
     const response = await fetchHttpClient.get<DetailApiResponse<RentalRecord>>(
-      RENTAL_ENDPOINTS.DETAIL_RENTAL(id)
+      ENDPOINT.RENTAL.ID(id)
     );
     return response;
   },
@@ -239,10 +187,10 @@ export const rentalService = {
     return response;
   },
   getDashboardRentalStats: async (): Promise<
-    AxiosResponse<DetailApiResponse<Dashboardsummary>>
+    AxiosResponse<Dashboardsummary>
   > => {
     const response = await fetchHttpClient.get<
-      DetailApiResponse<Dashboardsummary>
+      Dashboardsummary
     >(RENTAL_ENDPOINTS.DASHBOARD_RENTAL_STATS());
     return response;
   },
@@ -256,9 +204,9 @@ export const rentalService = {
     );
     return response;
   },
-  getSummaryRental : async (): Promise<AxiosResponse<DetailApiResponse<SummaryRental>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<SummaryRental>>(
-      RENTAL_ENDPOINTS.SUMMARY()
+  getSummaryRental : async (): Promise<AxiosResponse<SummaryRental>> => {
+    const response = await fetchHttpClient.get<SummaryRental>(
+      ENDPOINT.RENTAL.GET_SUMMARY
     );
     return response;
   }

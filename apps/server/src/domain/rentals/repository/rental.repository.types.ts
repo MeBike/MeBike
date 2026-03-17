@@ -18,8 +18,6 @@ import type {
   BikeSwapRequestRow,
   MyRentalFilter,
   RentalCountsRow,
-  RentalRevenueGroupBy,
-  RentalRevenuePoint,
   RentalRow,
   RentalSortField,
   StaffBikeSwapRequestFilter,
@@ -145,22 +143,6 @@ export type RentalRepo = {
     phoneNumber: string,
     pageReq: PageRequest<RentalSortField>,
   ) => Effect.Effect<PageResult<AdminRentalListItem>, RentalRepositoryError>;
-
-  getRevenueSeries: (
-    from: Date,
-    to: Date,
-    groupBy: RentalRevenueGroupBy,
-  ) => Effect.Effect<readonly RentalRevenuePoint[], RentalRepositoryError>;
-
-  getCompletedRevenueTotal: (
-    from: Date,
-    to: Date,
-  ) => Effect.Effect<number, RentalRepositoryError>;
-
-  getGlobalRentalCounts: () => Effect.Effect<
-    readonly RentalCountsRow[],
-    RentalRepositoryError
-  >;
 
   requestBikeSwap: (
     rentalId: string,

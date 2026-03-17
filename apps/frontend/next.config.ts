@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "media.bongda.com.vn",
       },
+      {
+        protocol:"https",
+        hostname:"api.dicebear.com",
+      }
     ],
   },
 };

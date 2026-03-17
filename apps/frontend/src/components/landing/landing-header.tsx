@@ -22,8 +22,8 @@ export function Hero() {
     const fetchStats = async () => {
       try {
         const response = await dashboardService.getDashboardStats();
-        if (response.data.result) {
-          setStats(response.data.result);
+        if (response.data) {
+          setStats(response.data);
         }
       } catch (error) {
         console.error("Failed to fetch dashboard stats:", error);

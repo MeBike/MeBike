@@ -99,10 +99,10 @@ export const userService = {
   //   return response;
   // },
   getTopRenter: async (): Promise<
-    AxiosResponse<GetTopRentersResponse[]>
+    AxiosResponse<ApiResponse<GetTopRentersResponse[]>>
   > => {
     const response = await fetchHttpClient.get<
-      GetTopRentersResponse[]
+      ApiResponse<GetTopRentersResponse[]>
     >(ENDPOINT.USER.STATS_TOP_RENTER);
     return response;
   },
@@ -116,10 +116,10 @@ export const userService = {
     return response;
   },
   getNewRegistrationStats: async (): Promise<
-    AxiosResponse<DetailUserResponse<GetNewRegistrationStats>>
+    AxiosResponse<GetNewRegistrationStats>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<GetNewRegistrationStats>
+      GetNewRegistrationStats
     >(ENDPOINT.USER.NEW_USER);
     return response;
   },

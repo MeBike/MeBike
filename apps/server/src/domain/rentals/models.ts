@@ -165,6 +165,30 @@ export type RentalSummaryStats = {
   monthlyRevenue: RevenueDelta;
 };
 
+export type DashboardTrend = "UP" | "DOWN" | "STABLE";
+
+export type DashboardRevenueSnapshot = {
+  totalRevenue: number;
+  totalRentals: number;
+};
+
+export type HourlyRentalStat = {
+  hour: number;
+  totalRentals: number;
+};
+
+export type RentalDashboardSummary = {
+  revenueSummary: {
+    today: DashboardRevenueSnapshot;
+    yesterday: DashboardRevenueSnapshot;
+    revenueChange: number;
+    revenueTrend: DashboardTrend;
+    rentalChange: number;
+    rentalTrend: DashboardTrend;
+  };
+  hourlyRentalStats: HourlyRentalStat[];
+};
+
 export type BikeSwapRequestRow = {
   id: string;
   rentalId: string;

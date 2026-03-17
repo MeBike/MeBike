@@ -40,10 +40,10 @@ export default function DashboardPage() {
   //     ? `${(monthlyRev / 1000000).toFixed(1)}M VND`
   //     : `${monthlyRev.toLocaleString('vi-VN')} VND`;
 
-  const changeRentPercent = dashboardSummaryData?.result.revenueSummary.today.totalRentals && dashboardSummaryData?.result.revenueSummary.yesterday.totalRentals
+  const changeRentPercent = dashboardSummaryData?.revenueSummary.today.totalRentals && dashboardSummaryData?.revenueSummary.yesterday.totalRentals
     ? Math.round(
-        ((dashboardSummaryData.result.revenueSummary.today.totalRentals - dashboardSummaryData.result.revenueSummary.yesterday.totalRentals) /
-          dashboardSummaryData.result.revenueSummary.yesterday.totalRentals) *
+        ((dashboardSummaryData.revenueSummary.today.totalRentals - dashboardSummaryData.revenueSummary.yesterday.totalRentals) /
+          dashboardSummaryData.revenueSummary.yesterday.totalRentals) *
           100
       )
     : 0;
@@ -66,7 +66,7 @@ export default function DashboardPage() {
               title="Tổng lượt thuê hôm nay"
               value={
                 dashboardSummaryData
-                  ? dashboardSummaryData.result.revenueSummary.today.totalRentals.toString()
+                  ? dashboardSummaryData.revenueSummary.today.totalRentals.toString()
                   : "0"
               }
               change={`${changeRentPercent}% so với hôm qua`}
@@ -90,36 +90,25 @@ export default function DashboardPage() {
               title="Khách hàng mới trong tháng"
               value={
                 newRegistrationStats
-                  ? newRegistrationStats.result.newUsersThisMonth.toString()
+                  ? newRegistrationStats.newUsersThisMonth.toString()
                   : "0"
               }
               change={`${
-                (newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "+" : ""
-              }${newRegistrationStats?.result.percentageChange ?? 0}% so với tháng trước`}
-              changeType={(newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "positive" : "negative"}
+                (newRegistrationStats?.percentageChange ?? 0) > 1 ? "+" : ""
+              }${newRegistrationStats?.percentageChange ?? 0}% so với tháng trước`}
+              changeType={(newRegistrationStats?.percentageChange ?? 0) > 1 ? "positive" : "negative"}
               icon={Users}
             />
-            {/* <StatsCard
-              title="Khách hàng mới tháng trước"
-              value={
-                newRegistrationStats
-                  ? newRegistrationStats.result.newUsersLastMonth.toString()
-                  : "0"
-              }
-              change="+8% tuần này"
-              changeType="positive"
-              icon={Users}
-            /> */}
             <StatsCard
               title="Doanh thu tháng này"
               value={formatRevenue(
-                summaryRental?.result?.monthlyRevenue.current
+                summaryRental?.monthlyRevenue.current
               )}
               icon={DollarSign}
               change={`${
-                (summaryRental?.result?.monthlyRevenue?.percentChange ?? 0) > 1 ? "+" : ""
-              }${summaryRental?.result?.monthlyRevenue?.percentChange ?? 0}% so với tháng trước`}
-              changeType={(summaryRental?.result?.monthlyRevenue?.percentChange ?? 0) > 1 ? "positive" : "negative"}
+                (summaryRental?.monthlyRevenue?.percentChange ?? 0) > 1 ? "+" : ""
+              }${summaryRental?.monthlyRevenue?.percentChange ?? 0}% so với tháng trước`}
+              changeType={(summaryRental?.monthlyRevenue?.percentChange ?? 0) > 1 ? "positive" : "negative"}
             />
           </div>
         </section>
@@ -128,7 +117,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <RentalChart
               data={
-                dashboardSummaryData?.result.hourlyRentalStats.map(
+                dashboardSummaryData?.hourlyRentalStats.map(
                   (stat: { hour: string; totalRentals: number }) => ({
                     time: stat.hour,
                     rentals: stat.totalRentals,

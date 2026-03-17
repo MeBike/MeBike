@@ -99,6 +99,18 @@ const getRentalStatsSummary: RouteHandler<
   return c.json(result, 200);
 };
 
+const getDashboardSummary: RouteHandler<
+  RentalsRoutes["getDashboardSummary"]
+> = async (c) => {
+  const eff = withLoggedCause(
+    Effect.flatMap(RentalStatsServiceTag, svc => svc.getDashboardSummary()),
+    "GET /v1/rentals/dashboard-summary",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json<RentalsContracts.DashboardResponse, 200>(result, 200);
+};
+
 const adminListRentals: RouteHandler<
   RentalsRoutes["adminListRentals"]
 > = async (c) => {
@@ -394,6 +406,7 @@ export const RentalAdminController = {
   adminGetBikeSwapRequests,
   endRentalByAdmin,
   getActiveRentalsByPhone,
+  getDashboardSummary,
   getRentalRevenue,
   getRentalStatsSummary,
   adminListBikeSwapRequests,

@@ -13,7 +13,7 @@ export const rentalSchema = z.object({
       }),
 });
 export const updateRentalSchema = z.object({
-  status: z.enum(["ĐANG THUÊ", "HOÀN THÀNH", "ĐÃ HỦY", "ĐÃ ĐẶT TRƯỚC"]),
+  status: z.enum(["RENTED", "COMPLETED", "CANCELLED", "RESERVED",""]),
   end_time: z.string(),
   end_station: z
     .string()

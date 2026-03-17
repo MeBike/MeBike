@@ -2,14 +2,19 @@ import { Context, Effect, Layer } from "effect";
 
 import type { RentalRepositoryError } from "../domain-errors";
 import type {
+  RentalDashboardSummary,
   RentalRevenueGroupBy,
   RentalRevenueStats,
   RentalSummaryStats,
-  RevenueDelta,
 } from "../models";
 
-import { RentalRepository } from "../repository/rental.repository";
+import { RentalAnalyticsRepository } from "../repository/rental-analytics.repository";
 import { aggregateRentalStatusCounts } from "./rental-counts";
+import {
+  comparePercentage,
+  compareRevenue,
+  toTrend,
+} from "./rental-stats-math";
 import {
   currentUtcDayRange,
   currentUtcMonthRange,
@@ -24,6 +29,7 @@ export type RentalStatsService = {
     groupBy: RentalRevenueGroupBy;
   }) => Effect.Effect<RentalRevenueStats, RentalRepositoryError>;
   getSummary: (now?: Date) => Effect.Effect<RentalSummaryStats, RentalRepositoryError>;
+  getDashboardSummary: (now?: Date) => Effect.Effect<RentalDashboardSummary, RentalRepositoryError>;
 };
 
 export class RentalStatsServiceTag extends Context.Tag("RentalStatsService")<
@@ -31,29 +37,10 @@ export class RentalStatsServiceTag extends Context.Tag("RentalStatsService")<
   RentalStatsService
 >() {}
 
-function compareRevenue(current: number, previous: number): RevenueDelta {
-  const difference = current - previous;
-  if (previous === 0) {
-    return {
-      current,
-      previous,
-      difference,
-      percentChange: current > 0 ? 100 : 0,
-    };
-  }
-
-  return {
-    current,
-    previous,
-    difference,
-    percentChange: (difference / previous) * 100,
-  };
-}
-
 export const RentalStatsServiceLive = Layer.effect(
   RentalStatsServiceTag,
   Effect.gen(function* () {
-    const repo = yield* RentalRepository;
+    const repo = yield* RentalAnalyticsRepository;
 
     const service: RentalStatsService = {
       getRevenueSeries: ({ from, to, groupBy }) =>
@@ -92,6 +79,50 @@ export const RentalStatsServiceLive = Layer.effect(
             },
             dailyRevenue: compareRevenue(dailyCurrent, dailyPrevious),
             monthlyRevenue: compareRevenue(monthlyCurrent, monthlyPrevious),
+          };
+        }),
+
+      getDashboardSummary: (now = new Date()) =>
+        Effect.gen(function* () {
+          const today = currentUtcDayRange(now);
+          const yesterday = previousUtcDayRange(now);
+
+          const [
+            todayRevenue,
+            yesterdayRevenue,
+            todayCompletedRentals,
+            yesterdayCompletedRentals,
+            hourlyRentalStats,
+          ] = yield* Effect.all([
+            repo.getCompletedRevenueTotal(today.from, today.to),
+            repo.getCompletedRevenueTotal(yesterday.from, yesterday.to),
+            repo.getCompletedRentalCount(today.from, today.to),
+            repo.getCompletedRentalCount(yesterday.from, yesterday.to),
+            repo.getRentalStartHourlyStats(today.from, today.to),
+          ]);
+
+          return {
+            revenueSummary: {
+              today: {
+                totalRevenue: todayRevenue,
+                totalRentals: todayCompletedRentals,
+              },
+              yesterday: {
+                totalRevenue: yesterdayRevenue,
+                totalRentals: yesterdayCompletedRentals,
+              },
+              revenueChange: comparePercentage(todayRevenue, yesterdayRevenue),
+              revenueTrend: toTrend(todayRevenue, yesterdayRevenue),
+              rentalChange: comparePercentage(
+                todayCompletedRentals,
+                yesterdayCompletedRentals,
+              ),
+              rentalTrend: toTrend(
+                todayCompletedRentals,
+                yesterdayCompletedRentals,
+              ),
+            },
+            hourlyRentalStats,
           };
         }),
     };
