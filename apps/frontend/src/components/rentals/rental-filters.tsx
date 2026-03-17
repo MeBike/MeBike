@@ -60,7 +60,7 @@ export function RentalFilters({
               <SelectValue placeholder="Chọn trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="">Tất cả</SelectItem>
               <SelectItem value="RENTED">Đang thuê</SelectItem>
               <SelectItem value="COMPLETED">Hoàn thành</SelectItem>
               <SelectItem value="CANCELLED">Đã hủy</SelectItem>
