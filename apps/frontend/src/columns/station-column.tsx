@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Edit2, Trash2 } from "lucide-react";
 import type { Station } from "@custom-types";
+import { formatToVNTime } from "@/lib/formatVNDate";
 import Link from "next/link";
 import {
   Dialog,
@@ -11,18 +12,6 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-export function formatDateVN(dateString: string) {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return ""; 
-  return date.toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
 export const stationColumns = ({
   onEdit,
   onDelete,
@@ -48,12 +37,12 @@ export const stationColumns = ({
   {
     accessorKey: "created_at",
     header: "Ngày tạo",
-    cell: ({ row }) => formatDateVN(row.original.createdAt),
+    cell: ({ row }) => formatToVNTime(row.original.createdAt),
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
-    cell: ({ row }) => formatDateVN(row.original.updatedAt),
+    cell: ({ row }) => formatToVNTime(row.original.updatedAt),
   },
   {
     id: "actions",

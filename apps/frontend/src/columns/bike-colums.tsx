@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw, Pencil } from "lucide-react";
 import type { Bike, BikeStatus, Station, Supplier } from "@/types";
-import { formatDateUTC } from "@/utils/formatDateTime";
+import { formatToVNTime } from "@/lib/formatVNDate";
 export const getStatusColor = (status: BikeStatus) => {
   switch (status) {
     case "BOOKED":
@@ -77,14 +77,14 @@ export const bikeColumn = (
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return row.original.createdAt ? formatDateUTC(row.original.createdAt) : "Không có";
+      return row.original.createdAt ? formatToVNTime(row.original.createdAt) : "Không có";
     },
   },
   {
     accessorKey: "updatedAt",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return row.original.updatedAt ? formatDateUTC(row.original.updatedAt) : "Không có";
+      return row.original.updatedAt ? formatToVNTime(row.original.updatedAt) : "Không có";
     },
   },
   {
