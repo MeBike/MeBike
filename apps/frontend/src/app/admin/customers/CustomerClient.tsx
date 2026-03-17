@@ -69,6 +69,9 @@ export default function CustomersClient() {
     currentPage,
     getRefetchDashboardStats,
   ]);
+  useEffect(() => {
+    setCurrentPage(1);
+  },[roleFilter])
   const handleReset = () => {
     setSearchQuery("");
     setVerifyFilter("all");

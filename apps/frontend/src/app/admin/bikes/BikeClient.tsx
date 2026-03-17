@@ -26,9 +26,10 @@ export default function BikeClient() {
     pageSize: 10,
     page: page,
   });
-
   useEffect(() => { getStatisticsBike(); }, [getStatisticsBike]);
-
+  useEffect(() => {
+    setPage(1);
+  },[statusFilter])
   if (isLoadingStatistics) return <Loader2 className="animate-spin m-auto" />;
 
   return (
@@ -52,7 +53,7 @@ export default function BikeClient() {
         })}
         data={data?.data || []}
       />
-      <PaginationDemo currentPage={paginationBikes?.currentPage ?? 1} onPageChange={setPage} totalPages={paginationBikes?.totalPages ?? 1} />
+      <PaginationDemo currentPage={paginationBikes?.page ?? 1} onPageChange={setPage} totalPages={paginationBikes?.totalPages ?? 1} />
     </div>
   );
 }

@@ -22,13 +22,13 @@ export function BikeFilters({
           onChange={(e) => setStatusFilter(e.target.value as BikeStatus | "all")}
           className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <option value="all">Tất cả trạng thái</option>
-          <option value="AVAILABLE">Có sẵn</option>
-          <option value="BOOKED">Đang được thuê</option>
-          <option value="BROKEN">Bị hỏng</option>
-          <option value="RESERVED">Đã đặt trước</option>
-          <option value="MAINTAINED">Đang bảo trì</option>
-          <option value="UNAVAILABLE">Không có sẵn</option>
+          <option value="all">ALL</option>
+          <option value="AVAILABLE">AVAILABLE</option>
+          <option value="BOOKED">BOOKED</option>
+          <option value="BROKEN">BROKEN</option>
+          <option value="RESERVED">RESERVED</option>
+          <option value="MAINTAINED">MAINTAINED</option>
+          <option value="UNAVAILABLE">UNAVAILABLE</option>
         </select>
         
         <Button

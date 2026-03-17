@@ -38,13 +38,6 @@ export const bikeColumn = (
   }
 ): ColumnDef<Bike>[] => [
   {
-    accessorKey: "id",
-    header: "Mã xe",
-    cell: ({ row }) => {
-      return shortenId(row.original.id) || "Không có";
-    },
-  },
-  {
     accessorKey: "chipId",
     header: "Tên chip",
     cell: ({ row }) => {
