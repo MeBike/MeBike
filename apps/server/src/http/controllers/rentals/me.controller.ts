@@ -19,7 +19,12 @@ import { notifyBikeStatusUpdate } from "@/realtime/bike-status-events";
 
 import type { RentalsRoutes } from "./shared";
 
-import { RentalErrorCodeSchema, rentalErrorMessages } from "./shared";
+import {
+  BikeSwapRequestErrorCodeSchema,
+  bikeSwapRequestErrorMessages,
+  RentalErrorCodeSchema,
+  rentalErrorMessages,
+} from "./shared";
 
 const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
   const userId = c.var.currentUser!.userId;
@@ -46,7 +51,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
           result: toContractRentalWithPrice(right),
         },
         200,
-      )),
+      ),
+    ),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("ActiveRentalExists", () =>
@@ -58,7 +64,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("BikeNotFound", ({ bikeId }) =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -69,7 +76,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("BikeMissingStation", ({ bikeId }) =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -80,7 +88,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("BikeNotFoundInStation", ({ bikeId, stationId }) =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -92,7 +101,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("BikeAlreadyRented", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -100,7 +110,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               details: { code: RentalErrorCodeSchema.enum.BIKE_IN_USE },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("BikeIsBroken", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -108,7 +119,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               details: { code: RentalErrorCodeSchema.enum.BIKE_IS_BROKEN },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("BikeIsMaintained", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -116,7 +128,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               details: { code: RentalErrorCodeSchema.enum.BIKE_IS_MAINTAINED },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("BikeIsReserved", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -124,7 +137,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               details: { code: RentalErrorCodeSchema.enum.BIKE_IS_RESERVED },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("BikeUnavailable", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -132,7 +146,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               details: { code: RentalErrorCodeSchema.enum.UNAVAILABLE_BIKE },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("InvalidBikeStatus", ({ status }) =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -143,7 +158,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("UserWalletNotFound", ({ userId: missingUserId }) =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -154,7 +170,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag(
           "InsufficientBalanceToRent",
           ({ requiredBalance, currentBalance }) =>
@@ -180,7 +197,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("SubscriptionNotUsable", ({ subscriptionId, status }) =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -192,7 +210,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag(
           "SubscriptionUsageExceeded",
           ({ subscriptionId, usageCount, maxUsages }) =>
@@ -212,7 +231,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
         Match.orElse(() => {
           throw left;
         }),
-      )),
+      ),
+    ),
     Match.exhaustive,
   );
 };
@@ -366,7 +386,8 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("EndStationMismatch", () =>
           c.json(
             {
@@ -377,7 +398,8 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("InvalidRentalState", () =>
           c.json(
             {
@@ -388,7 +410,8 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("UserWalletNotFound", ({ userId: missingUserId }) =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -399,7 +422,8 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag(
           "InsufficientBalanceToRent",
           ({ requiredBalance, currentBalance }) =>
@@ -424,7 +448,8 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("ActiveRentalExists", () =>
           c.json(
             {
@@ -434,11 +459,13 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.orElse(() => {
           throw left;
         }),
-      )),
+      ),
+    ),
     Match.exhaustive,
   );
 };
@@ -472,7 +499,8 @@ const requestBikeSwap: RouteHandler<RentalsRoutes["requestBikeSwap"]> = async (
           result: toContractBikeSwapRequest(right),
         },
         200,
-      )),
+      ),
+    ),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RentalNotFound", () =>
@@ -482,7 +510,8 @@ const requestBikeSwap: RouteHandler<RentalsRoutes["requestBikeSwap"]> = async (
               details: { code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND },
             },
             404,
-          )),
+          ),
+        ),
         Match.tag("UnauthorizedRentalAccess", () =>
           c.json(
             {
@@ -490,7 +519,8 @@ const requestBikeSwap: RouteHandler<RentalsRoutes["requestBikeSwap"]> = async (
               details: { code: RentalErrorCodeSchema.enum.ACCESS_DENIED },
             },
             403,
-          )),
+          ),
+        ),
         Match.tag("CannotRequestSwap", ({ status }) =>
           c.json(
             {
@@ -503,7 +533,8 @@ const requestBikeSwap: RouteHandler<RentalsRoutes["requestBikeSwap"]> = async (
               },
             },
             400,
-          )),
+          ),
+        ),
         Match.tag("StationNotFound", () =>
           c.json(
             {
@@ -511,11 +542,25 @@ const requestBikeSwap: RouteHandler<RentalsRoutes["requestBikeSwap"]> = async (
               details: { code: RentalErrorCodeSchema.enum.STATION_NOT_FOUND },
             },
             404,
-          )),
+          ),
+        ),
+        Match.tag("BikeSwapRequestExisted", () =>
+          c.json(
+            {
+              error: rentalErrorMessages.BIKE_SWAP_REQUEST_ALREADY_PENDING,
+              details: {
+                code: RentalErrorCodeSchema.enum
+                  .BIKE_SWAP_REQUEST_ALREADY_PENDING,
+              },
+            },
+            400,
+          ),
+        ),
         Match.orElse((e) => {
           throw e;
         }),
-      )),
+      ),
+    ),
     Match.exhaustive,
   );
 };

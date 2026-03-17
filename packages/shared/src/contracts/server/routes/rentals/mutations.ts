@@ -547,6 +547,16 @@ export const requestBikeSwap = createRoute({
                 },
               },
             },
+            BikeSwapRequestAlreadyPending: {
+              value: {
+                error: "Bike swap request already pending",
+                details: {
+                  code: RentalErrorCodeSchema.enum
+                    .BIKE_SWAP_REQUEST_ALREADY_PENDING,
+                },
+              },
+            },
+
           },
         },
       },

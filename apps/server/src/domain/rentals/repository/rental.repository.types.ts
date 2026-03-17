@@ -4,6 +4,7 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { RentalStatus } from "generated/prisma/client";
 
 import type {
+  BikeSwapRequestExisted,
   BikeSwapRequestNotFound,
   InvalidBikeSwapRequestStatus,
   NoAvailableBike,
@@ -149,7 +150,10 @@ export type RentalRepo = {
     userId: string,
     oldBikeId: string,
     stationId: string,
-  ) => Effect.Effect<BikeSwapRequestRow, RentalRepositoryError>;
+  ) => Effect.Effect<
+    BikeSwapRequestRow,
+    RentalRepositoryError | BikeSwapRequestExisted
+  >;
 
   staffListBikeSwapRequests: (
     filter: StaffBikeSwapRequestFilter,

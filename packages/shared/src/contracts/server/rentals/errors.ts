@@ -68,13 +68,16 @@ export const rentalErrorCodes = [
   "BIKE_NOT_FOUND_FOR_CHIP",
   "BIKE_MISSING_STATION",
   "BIKE_NOT_AVAILABLE_FOR_RENTAL",
+  "BIKE_SWAP_REQUEST_ALREADY_PENDING",
 ] as const;
+
 
 export const bikeSwapRequestErrorCodes = [
   "BIKE_SWAP_REQUEST_NOT_FOUND",
   "NO_AVAILABLE_BIKE",
   "INVALID_BIKE_SWAP_REQUEST_STATUS",
 ] as const;
+
 
 export const RentalErrorCodeSchema = z.enum(rentalErrorCodes);
 
@@ -213,7 +216,9 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   BIKE_NOT_FOUND_FOR_CHIP: "Bike not found for the provided chip",
   BIKE_MISSING_STATION: "Bike is missing station information",
   BIKE_NOT_AVAILABLE_FOR_RENTAL: "Bike is not available for rental",
+  BIKE_SWAP_REQUEST_ALREADY_PENDING: "A bike swap request is already pending for this rental",
 };
+
 
 export const bikeSwapRequestErrorMessages: Record<
   BikeSwapRequestErrorCode,
@@ -224,3 +229,4 @@ export const bikeSwapRequestErrorMessages: Record<
   INVALID_BIKE_SWAP_REQUEST_STATUS:
     "Bike swap request must be in PENDING status",
 };
+

@@ -22,4 +22,6 @@ model BikeSwapRequest {
   oldBike Bike     @relation("old_bike", fields: [oldBikeId], references: [id])
   newBike Bike?    @relation("new_bike", fields: [newBikeId], references: [id])
   station Station? @relation(fields: [stationId], references: [id])
+
+  @@unique([rentalId], map: "unique_pending_bike_swap_request")
 }

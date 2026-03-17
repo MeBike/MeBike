@@ -111,6 +111,12 @@ export class BikeSwapRequestNotFound extends Data.TaggedError(
 
 export class NoAvailableBike extends Data.TaggedError("NoAvailableBike")<Record<string, never>> {}
 
+export class BikeSwapRequestExisted extends Data.TaggedError(
+  "BikeSwapRequestExisted",
+)<{
+    readonly rentalId: string;
+  }> {}
+
 export class InvalidBikeSwapRequestStatus extends Data.TaggedError(
   "InvalidBikeSwapRequestStatus",
 )<{
@@ -139,5 +145,7 @@ export type RentalServiceFailure
     | CannotRequestSwap
     | BikeSwapRequestNotFound
     | NoAvailableBike
-    | InvalidBikeSwapRequestStatus;
+    | InvalidBikeSwapRequestStatus
+    | BikeSwapRequestExisted;
+
 export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;
