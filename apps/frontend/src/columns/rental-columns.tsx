@@ -1,42 +1,32 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit2, Eye, RefreshCw } from "lucide-react";
-import type { RentingHistory } from "@/types/Rental";
+import type { Rental } from "@/types/Rental";
 import { formatDateUTC } from "@/utils/formatDateTime";
-export const shortenId = (id: string, start: number = 6, end: number = 4) => {
-  if (!id) return "";
-  return `${id.slice(0, start)}...${id.slice(-end)}`;
-};
+import { shortenId } from "@utils";
 export const rentalColumn = ({
   onView,
   onUpdateStatus,
   onEdit,
 }: {
   onView?: ({ id }: { id: string }) => void;
-  onUpdateStatus?: ((data: RentingHistory) => void) | undefined;
-  onEdit?: ({ data }: { data: RentingHistory }) => void;
-}): ColumnDef<RentingHistory>[] => [
+  onUpdateStatus?: ((data: Rental) => void) | undefined;
+  onEdit?: ({ data }: { data: Rental }) => void;
+}): ColumnDef<Rental>[] => [
   {
-    accessorKey: "_id",
-    header: "Mã đơn thuê",
-    cell: ({ row }) => {
-      return shortenId(row.original._id);
-    },
-  },
-  {
-    accessorKey: "user_id",
+    accessorKey: "fullname",
     header: "Tên người dùng",
     cell: ({ row }) => row.original.user.fullname,
   },
   {
     accessorKey: "bike_id",
     header: "Mã xe",
-    cell: ({ row }) => row.original.bike_id || "Không có",
+    cell: ({ row }) => shortenId(row.original.bikeId) || "Không có",
   },
   {
     accessorKey: "total_price",
     header: "Tổng tiền",
     cell: ({ row }) =>
-      `${Number(row.original.total_price).toLocaleString("vi-VN")} VND`,
+      `${Number(row.original.totalPrice).toLocaleString("vi-VN")} VND`,
   },
   {
     accessorKey: "status",
@@ -44,11 +34,11 @@ export const rentalColumn = ({
     cell: ({ row }) => (
       <span
         className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "ĐANG THUÊ"
+          row.original.status === "RENTED"
             ? "bg-blue-100 text-blue-800"
-            : row.original.status === "HOÀN THÀNH"
+            : row.original.status === "COMPLETED"
             ? "bg-green-100 text-green-800"
-            : row.original.status === "ĐÃ ĐẶT TRƯỚC"
+            : row.original.status === "RESERVED"
             ? "bg-yellow-100 text-yellow-800"
             : "bg-red-100 text-red-800"
         }`}
@@ -61,14 +51,14 @@ export const rentalColumn = ({
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.created_at);
+      return formatDateUTC(row.original.createdAt);
     },
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.updated_at);
+      return formatDateUTC(row.original.updatedAt);
     },
   },
   {
@@ -81,14 +71,14 @@ export const rentalColumn = ({
           title="Xem chi tiết"
           onClick={() => {
             if (onView) {
-              onView({ id: row.original._id });
+              onView({ id: row.original.id });
             }
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
-        {row.original.status !== "HOÀN THÀNH" &&
-        row.original.status !== "ĐÃ HỦY" &&
+        {row.original.status !== "COMPLETED" &&
+        row.original.status !== "CANCELLED" &&
         onEdit ? (
           <button
             className="p-2 hover:bg-muted rounded-lg transition-colors"

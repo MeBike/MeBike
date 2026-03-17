@@ -19,7 +19,7 @@ export default function RentalsPage() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<RentalStatus>("");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedRentalId, setSelectedRentalId] = useState<string>("");
@@ -31,7 +31,7 @@ export default function RentalsPage() {
   } = useForm<UpdateRentalSchema>({
     resolver: zodResolver(updateRentalSchema),
     defaultValues: {
-      status: "ĐANG THUÊ",
+      status: "",
       end_station: "",
       end_time: "",
       reason: "",
@@ -48,18 +48,7 @@ export default function RentalsPage() {
     limit,
     page,
     bike_id: selectedRentalId,
-    status:
-      statusFilter !== "all"
-        ? statusFilter === "active"
-          ? "ĐANG THUÊ"
-          : statusFilter === "completed"
-            ? "HOÀN THÀNH"
-            : statusFilter === "cancelled"
-              ? "ĐÃ HỦY"
-              : statusFilter === "reserved"
-                ? "ĐÃ ĐẶT TRƯỚC"
-                : undefined
-        : undefined,
+    ...(statusFilter !== "" && { status: statusFilter })
   });
 
   const { stations, getAllStations } = useStationActions({
@@ -75,7 +64,7 @@ export default function RentalsPage() {
 
   const handleReset = () => {
     setSearchQuery("");
-    setStatusFilter("all");
+    setStatusFilter("");
   };
 
   const handleUpdateRental = (data: UpdateRentalSchema) => {
@@ -137,20 +126,16 @@ export default function RentalsPage() {
                 setIsDetailModalOpen(true);
               },
               onEdit: ({ data }) => {
-                setSelectedRentalId(data._id);
+                setSelectedRentalId(data.id);
                 getDetailRental();
                 reset({
-                  status: data.status as
-                    | "ĐANG THUÊ"
-                    | "HOÀN THÀNH"
-                    | "ĐÃ HỦY"
-                    | "ĐÃ ĐẶT TRƯỚC",
-                  end_station: data.end_station || "",
-                  end_time: data.end_time
-                    ? new Date(data.end_time).toISOString().slice(0, 16)
+                  status: data.status as RentalStatus,
+                  end_station: data.endStation || "",
+                  end_time: data.endTime
+                    ? new Date(data.endTime).toISOString().slice(0, 16)
                     : "",
                   reason: "",
-                  total_price: data.total_price,
+                  total_price: data.totalPrice,
                 });
                 setIsUpdateModalOpen(true);
               },

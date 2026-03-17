@@ -1,22 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { rentalService } from "@services/rental.service";
-import { GetAllRentalsForStaffAdminProps } from "@services/rental.service";
 import { QUERY_KEYS } from "@constants";
+import { RentalStatus } from "@/types";
 
 const getAllRentalsForStaffAdmin = async ({
   page,
-  limit,
-  start_station,
-  end_station,
+  pageSize,
+  startStation,
+  endStation,
   status,
-}: GetAllRentalsForStaffAdminProps) => {
+}: {
+  page ?: number,
+  pageSize ?: number,
+  startStation ?: string,
+  endStation ?: string,
+  status ?: RentalStatus,
+}) => {
   try {
     const response = await rentalService.getAllRentalsForStaffAdmin({
-      page,
-      limit,
-      start_station,
-      end_station,
-      status,
+      page : page,
+      pageSize : pageSize,
+      startStation : startStation,
+      endStation : endStation,
+      status : status,
     });
     if (response.status === 200) {
       return response.data;
@@ -28,25 +34,31 @@ const getAllRentalsForStaffAdmin = async ({
 };
 export function useGetAllRentalsAdminStaffQuery({
   page,
-  limit,
-  start_station,
-  end_station,
+  pageSize,
+  startStation,
+  endStation,
   status,
-}: GetAllRentalsForStaffAdminProps) {
+}: {
+  page ?: number,
+  pageSize ?: number,
+  startStation ?: string,
+  endStation ?: string,
+  status ?: RentalStatus,
+}) {
   return useQuery({
     queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(
       page,
-      limit,
-      start_station,
-      end_station,
+      pageSize,
+      startStation,
+      endStation,
       status
     ),
     queryFn: () =>
       getAllRentalsForStaffAdmin({
         page,
-        limit,
-        start_station,
-        end_station,
+        pageSize,
+        startStation,
+        endStation,
         status,
       }),
   });

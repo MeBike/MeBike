@@ -8,7 +8,7 @@ import {
   TrendingUp,
   AlertCircle,
 } from "lucide-react";
-import { SummaryRental } from "@/services/rental.service";
+import { SummaryRental } from "@custom-types";
 import { formatRevenue } from "@/lib/formatVND";
 // interface RentalStatsProps {
 //   stats: {

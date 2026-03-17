@@ -272,7 +272,7 @@ export const useUserActions = ({
     refetchNewRegistrationStats,
     getNewRegistrationStats,
     isLoadingNewRegistrationStats,
-    topRenter: topRenterData,
+    topRenter: topRenterData?.data,
     refetchTopRenter,
     getTopRenter,
     isLoadingTopRenter,
