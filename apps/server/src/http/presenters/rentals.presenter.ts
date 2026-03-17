@@ -3,7 +3,9 @@ import type { RentalsContracts } from "@mebike/shared";
 import type {
   AdminRentalDetail,
   AdminRentalListItem,
+  BikeSwapRequestRow,
   RentalRow,
+  StaffBikeSwapRequestRow,
 } from "@/domain/rentals";
 
 export function toContractRental(
@@ -141,5 +143,74 @@ export function toContractAdminRentalDetail(
     subscriptionId: detail.subscriptionId ?? undefined,
     status: detail.status,
     updatedAt: detail.updatedAt.toISOString(),
+  };
+}
+
+export function toContractBikeSwapRequest(
+  row: BikeSwapRequestRow,
+): RentalsContracts.BikeSwapRequest {
+  return {
+    id: row.id,
+    rentalId: row.rentalId,
+    userId: row.userId,
+    oldBikeId: row.oldBikeId,
+    newBikeId: row.newBikeId,
+    stationId: row.stationId,
+    reason: row.reason || null,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toContractBikeSwapRequestDetail(
+  row: StaffBikeSwapRequestRow,
+): RentalsContracts.BikeSwapRequestDetail {
+  return {
+    id: row.id,
+    rentalId: row.rentalId,
+    user: {
+      id: row.user.id,
+      fullName: row.user.fullName,
+    },
+    oldBike: {
+      id: row.oldBike.id,
+      chipId: row.oldBike.chipId,
+      station: {
+        id: row.oldBike.station.id,
+        name: row.oldBike.station.name,
+        address: row.oldBike.station.address,
+      },
+      supplier: {
+        id: row.oldBike.supplier.id,
+        name: row.oldBike.supplier.name,
+      },
+    },
+    newBike: row.newBike
+      ? {
+          id: row.newBike.id,
+          chipId: row.newBike.chipId,
+          station: {
+            id: row.newBike.station.id,
+            name: row.newBike.station.name,
+            address: row.newBike.station.address,
+          },
+          supplier: {
+            id: row.newBike.supplier.id,
+            name: row.newBike.supplier.name,
+          },
+        }
+      : null,
+    station: row.station
+      ? {
+          id: row.station.id,
+          name: row.station.name,
+          address: row.station.address,
+        }
+      : null,
+    reason: row.reason || null,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }

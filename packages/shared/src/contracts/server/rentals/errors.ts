@@ -7,6 +7,8 @@ export const rentalErrorCodes = [
   "ACCESS_DENIED",
   "CANNOT_CREATE_RENTAL_WITH_SOS_STATUS",
   "CANNOT_END_RENTAL_WITH_SOS_STATUS",
+  "CANNOT_REQUEST_SWAP_THIS_RENTAL_WITH_STATUS",
+  "CANNOT_APPROVE_SWAP_THIS_RENTAL_WITH_STATUS",
 
   // Not Found Errors
   "RENTAL_NOT_FOUND",
@@ -24,6 +26,7 @@ export const rentalErrorCodes = [
   "BIKE_IS_RESERVED",
   "UNAVAILABLE_BIKE",
   "NOT_AVAILABLE_BIKE",
+  "NO_AVAILABLE_BIKE",
   "INVALID_BIKE_STATUS",
 
   // Payment & Wallet Errors
@@ -65,9 +68,20 @@ export const rentalErrorCodes = [
   "BIKE_NOT_FOUND_FOR_CHIP",
   "BIKE_MISSING_STATION",
   "BIKE_NOT_AVAILABLE_FOR_RENTAL",
+  "BIKE_SWAP_REQUEST_ALREADY_PENDING",
 ] as const;
 
+
+export const bikeSwapRequestErrorCodes = [
+  "BIKE_SWAP_REQUEST_NOT_FOUND",
+  "NO_AVAILABLE_BIKE",
+  "INVALID_BIKE_SWAP_REQUEST_STATUS",
+] as const;
+
+
 export const RentalErrorCodeSchema = z.enum(rentalErrorCodes);
+
+export const BikeSwapRequestErrorCodeSchema = z.enum(bikeSwapRequestErrorCodes);
 
 export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: RentalErrorCodeSchema,
@@ -103,22 +117,54 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   },
 });
 
+export const BikeSwapRequestErrorDetailSchema = ServerErrorDetailSchema.extend({
+  code: BikeSwapRequestErrorCodeSchema,
+  bikeSwapRequestId: z.uuidv7().optional(),
+}).openapi({
+  description: "Bike swap request-specific error detail",
+  example: {
+    code: "BIKE_SWAP_REQUEST_NOT_FOUND",
+    bikeSwapRequestId: "665fd6e36b7e5d53f8f3d2c9",
+  },
+});
+
 export const RentalErrorResponseSchema = ServerErrorResponseSchema.extend({
   details: RentalErrorDetailSchema.optional(),
 }).openapi("RentalErrorResponse", {
   description: "Standard error payload for rental endpoints",
 });
 
+export const BikeSwapRequestErrorResponseSchema =
+  ServerErrorResponseSchema.extend({
+    details: BikeSwapRequestErrorDetailSchema.optional(),
+  }).openapi("BikeSwapRequestErrorResponse", {
+    description: "Standard error payload for bike swap request endpoints",
+  });
+
 export type RentalErrorCode = (typeof rentalErrorCodes)[number];
 export type RentalErrorDetail = z.infer<typeof RentalErrorDetailSchema>;
 export type RentalErrorResponse = z.infer<typeof RentalErrorResponseSchema>;
+export type BikeSwapRequestErrorCode =
+  (typeof bikeSwapRequestErrorCodes)[number];
+export type BikeSwapRequestErrorDetail = z.infer<
+  typeof BikeSwapRequestErrorDetailSchema
+>;
+export type BikeSwapRequestErrorResponse = z.infer<
+  typeof BikeSwapRequestErrorResponseSchema
+>;
 
 // Basic message map (feel free to localize downstream)
 export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   CANNOT_END_OTHER_RENTAL: "Cannot end another user's rental",
   ACCESS_DENIED: "Access denied",
-  CANNOT_CREATE_RENTAL_WITH_SOS_STATUS: "Cannot create rental from SOS with this status",
-  CANNOT_END_RENTAL_WITH_SOS_STATUS: "Cannot end rental from SOS with this status",
+  CANNOT_CREATE_RENTAL_WITH_SOS_STATUS:
+    "Cannot create rental from SOS with this status",
+  CANNOT_END_RENTAL_WITH_SOS_STATUS:
+    "Cannot end rental from SOS with this status",
+  CANNOT_REQUEST_SWAP_THIS_RENTAL_WITH_STATUS:
+    "Cannot request bike swap in this status",
+  CANNOT_APPROVE_SWAP_THIS_RENTAL_WITH_STATUS:
+    "Cannot approve bike swap in this status",
 
   RENTAL_NOT_FOUND: "Rental not found",
   NOT_FOUND_RENTED_RENTAL: "No active rental found",
@@ -134,6 +180,7 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   BIKE_IS_RESERVED: "Bike is reserved",
   UNAVAILABLE_BIKE: "Bike is unavailable",
   NOT_AVAILABLE_BIKE: "Bike is not available",
+  NO_AVAILABLE_BIKE: "No available bike found for swap",
   INVALID_BIKE_STATUS: "Invalid bike status",
 
   NOT_ENOUGH_BALANCE_TO_RENT: "Insufficient balance to start rental",
@@ -156,7 +203,8 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
 
   CANNOT_END_WITHOUT_END_STATION: "End station is required",
   CANNOT_END_WITHOUT_END_TIME: "End time is required",
-  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON: "Provide at least one field to update",
+  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON:
+    "Provide at least one field to update",
   MUST_END_AT_START_STATION: "Must end at the start station",
 
   CARD_RENTAL_ACTIVE_EXISTS: "Active rental already exists for this card",
@@ -168,4 +216,17 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   BIKE_NOT_FOUND_FOR_CHIP: "Bike not found for the provided chip",
   BIKE_MISSING_STATION: "Bike is missing station information",
   BIKE_NOT_AVAILABLE_FOR_RENTAL: "Bike is not available for rental",
+  BIKE_SWAP_REQUEST_ALREADY_PENDING: "A bike swap request is already pending for this rental",
 };
+
+
+export const bikeSwapRequestErrorMessages: Record<
+  BikeSwapRequestErrorCode,
+  string
+> = {
+  BIKE_SWAP_REQUEST_NOT_FOUND: "Bike swap request not found",
+  NO_AVAILABLE_BIKE: "No available bike found for swap",
+  INVALID_BIKE_SWAP_REQUEST_STATUS:
+    "Bike swap request must be in PENDING status",
+};
+

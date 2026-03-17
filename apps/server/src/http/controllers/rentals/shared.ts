@@ -5,4 +5,6 @@ export type RentalsRoutes = typeof import("@mebike/shared")["serverRoutes"]["ren
 export const {
   RentalErrorCodeSchema,
   rentalErrorMessages,
+  BikeSwapRequestErrorCodeSchema,
+  bikeSwapRequestErrorMessages,
 } = RentalsContracts;

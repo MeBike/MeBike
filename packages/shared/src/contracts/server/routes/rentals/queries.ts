@@ -1,7 +1,12 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { z } from "../../../../zod";
-import { AdminRentalsListResponseSchema } from "../../rentals";
+import {
+  AdminRentalsListResponseSchema,
+  BikeSwapRequestErrorResponseSchema,
+  BikeSwapRequestListResponseSchema,
+  BikeSwapStatusSchema,
+} from "../../rentals";
 import {
   paginationQueryFields,
   SortDirectionSchema,
@@ -10,6 +15,8 @@ import {
   UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
+  BikeSwapRequestDetailSchemaOpenApi,
+  BikeSwapRequestIdParamSchema,
   createSuccessResponse,
   DashboardResponseSchema,
   MyRentalListResponseSchema,
@@ -57,7 +64,9 @@ export const getMyRentals = createRoute({
             Unauthorized: {
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+                details: {
+                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
+                },
               },
             },
           },
@@ -93,7 +102,9 @@ export const getMyCurrentRentals = createRoute({
             Unauthorized: {
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+                details: {
+                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
+                },
               },
             },
           },
@@ -131,7 +142,9 @@ export const getMyRentalCounts = createRoute({
             Unauthorized: {
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+                details: {
+                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
+                },
               },
             },
           },
@@ -167,7 +180,9 @@ export const getMyRental = createRoute({
             Unauthorized: {
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+                details: {
+                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
+                },
               },
             },
           },
@@ -448,7 +463,9 @@ export const adminListRentals = createRoute({
         endStation: z.uuidv7().optional(),
         status: RentalStatusSchema.optional(),
         ...paginationQueryFields,
-        sortBy: z.enum(["startTime", "endTime", "status", "updatedAt"]).optional(),
+        sortBy: z
+          .enum(["startTime", "endTime", "status", "updatedAt"])
+          .optional(),
         sortDir: SortDirectionSchema.optional(),
       })
       .openapi("AdminRentalsListQuery", {
@@ -701,6 +718,192 @@ export const staffGetRental = createRoute({
       content: {
         "application/json": {
           schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const staffListBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/staff/bike-swap-requests",
+  tags: ["Staff", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z
+      .object({
+        userId: z.uuidv7().optional(),
+        status: BikeSwapStatusSchema.optional(),
+        ...paginationQueryFields,
+        sortBy: z.enum(["status", "updatedAt"]).optional(),
+        sortDir: SortDirectionSchema.optional(),
+      })
+      .openapi("StaffBikeSwapRequestsListQuery", {
+        description: "Query parameters for staff bike swap requests listing",
+      }),
+  },
+  responses: {
+    200: {
+      description: "List of bike swap requests",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Staff access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const adminListBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/admin/bike-swap-requests",
+  tags: ["Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z
+      .object({
+        userId: z.uuidv7().optional(),
+        status: BikeSwapStatusSchema.optional(),
+        ...paginationQueryFields,
+        sortBy: z.enum(["status", "updatedAt"]).optional(),
+        sortDir: SortDirectionSchema.optional(),
+      })
+      .openapi("AdminBikeSwapRequestsListQuery", {
+        description: "Query parameters for admin bike swap requests listing",
+      }),
+  },
+  responses: {
+    200: {
+      description: "List of bike swap requests",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Admin access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const adminGetBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/admin/bike-swap-requests/{bikeSwapRequestId}",
+  tags: ["Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Detailed rental with all populated data (admin view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            BikeSwapRequestDetailSchemaOpenApi,
+            "Get admin bike swap request detail response",
+          ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Admin access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Bike swap request not found",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const staffGetBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}",
+  tags: ["Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Detailed rental with all populated data (staff view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            BikeSwapRequestDetailSchemaOpenApi,
+            "Get staff bike swap request detail response",
+          ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Staff access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Bike swap request not found",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestErrorResponseSchema,
         },
       },
     },

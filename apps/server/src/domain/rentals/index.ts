@@ -6,4 +6,5 @@ export * from "./services/admin-rentals.service";
 export * from "./services/end-rental.service";
 export * from "./services/rental-stats.service";
 export * from "./services/rental.service";
+export * from "./services/staff-rental.service";
 export * from "./services/start-rental.service";
