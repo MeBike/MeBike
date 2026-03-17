@@ -21,6 +21,8 @@ interface RentalFiltersProps {
   onReset: () => void;
 }
 
+const STATUS_ALL_VALUE = "ALL" as const;
+
 export function RentalFilters({
   searchQuery,
   onSearchChange,
@@ -55,12 +57,18 @@ export function RentalFilters({
 
         <div className="space-y-2">
           <Label htmlFor="status">Trạng thái đơn</Label>
-          <Select value={statusFilter} onValueChange={onStatusChange}>
+          <Select
+            value={statusFilter === "" ? STATUS_ALL_VALUE : statusFilter}
+            onValueChange={(value) => {
+              if (value === STATUS_ALL_VALUE) onStatusChange("");
+              else onStatusChange(value as RentalStatus);
+            }}
+          >
             <SelectTrigger id="status">
               <SelectValue placeholder="Chọn trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tất cả</SelectItem>
+              <SelectItem value={STATUS_ALL_VALUE}>Tất cả</SelectItem>
               <SelectItem value="RENTED">Đang thuê</SelectItem>
               <SelectItem value="COMPLETED">Hoàn thành</SelectItem>
               <SelectItem value="CANCELLED">Đã hủy</SelectItem>
