@@ -1,14 +1,12 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
   UserErrorCodeSchema,
   userErrorMessages,
 } from "../../users/schemas";
+import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   AdminCreateUserRequestSchema,
   AdminResetPasswordRequestSchema,
@@ -55,22 +53,7 @@ export const changePasswordRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "User not found",
       content: {
@@ -113,22 +96,7 @@ export const updateMeRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "User not found",
       content: {
@@ -209,22 +177,7 @@ export const registerPushTokenRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -260,22 +213,7 @@ export const unregisterPushTokenRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -286,22 +224,7 @@ export const unregisterAllPushTokensRoute = createRoute({
   security: [{ bearerAuth: [] }],
   responses: {
     204: { description: "All push tokens unregistered" },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -331,38 +254,8 @@ export const adminUpdateUserRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
     404: {
       description: "User not found",
       content: {
@@ -427,38 +320,8 @@ export const adminCreateUserRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
     409: {
       description: "Duplicate email or phone number",
       content: {
@@ -503,38 +366,8 @@ export const adminResetPasswordRoute = createRoute({
   },
   responses: {
     200: { description: "Password reset" },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
     404: {
       description: "User not found",
       content: {

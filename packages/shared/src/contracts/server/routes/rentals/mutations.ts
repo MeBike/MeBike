@@ -13,11 +13,7 @@ import {
   StaffCreateRentalRequestSchema,
   UpdateRentalRequestSchema,
 } from "../../rentals";
-import {
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
-} from "../../schemas";
+import { unauthorizedResponse } from "../helpers";
 import {
   ApprovedBikeSwapRequestSchemaOpenApi,
   BikeSwapRequestDetailSchemaOpenApi,
@@ -103,24 +99,7 @@ export const createRental = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: {
-                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -170,24 +149,7 @@ export const endMyRental = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: {
-                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     400: {
       description: "Cannot end rental",
       content: {

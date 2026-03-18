@@ -1,17 +1,18 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
-} from "../../schemas";
-import {
   GetMyWalletResponseSchema,
   ListMyWalletTransactionsQuerySchema,
   ListMyWalletTransactionsResponseSchema,
   WalletErrorCodeSchema,
   walletErrorMessages,
 } from "../../wallets/schemas";
+import {
+  forbiddenResponse,
+  notFoundResponse,
+  paginatedResponse,
+  unauthorizedResponse,
+} from "../helpers";
 
 const WalletUserIdParamSchema = z.object({
   userId: z.uuidv7().openapi({
@@ -34,43 +35,20 @@ export const getMyWalletRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    404: {
+    401: unauthorizedResponse(),
+    404: notFoundResponse({
       description: "Wallet not found",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-            details: z.object({
-              code: WalletErrorCodeSchema,
-            }),
-          }),
-          examples: {
-            NotFound: {
-              value: {
-                error: walletErrorMessages.WALLET_NOT_FOUND,
-                details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
-              },
-            },
-          },
-        },
+      schema: z.object({
+        error: z.string(),
+        details: z.object({
+          code: WalletErrorCodeSchema,
+        }),
+      }),
+      example: {
+        error: walletErrorMessages.WALLET_NOT_FOUND,
+        details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
       },
-    },
+    }),
   },
 });
 
@@ -83,51 +61,21 @@ export const listMyWalletTransactionsRoute = createRoute({
     query: ListMyWalletTransactionsQuerySchema,
   },
   responses: {
-    200: {
-      description: "Paginated wallet transactions",
-      content: {
-        "application/json": {
-          schema: ListMyWalletTransactionsResponseSchema,
-        },
-      },
-    },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    404: {
+    200: paginatedResponse(ListMyWalletTransactionsResponseSchema, "Paginated wallet transactions"),
+    401: unauthorizedResponse(),
+    404: notFoundResponse({
       description: "Wallet not found",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-            details: z.object({
-              code: WalletErrorCodeSchema,
-            }),
-          }),
-          examples: {
-            NotFound: {
-              value: {
-                error: walletErrorMessages.WALLET_NOT_FOUND,
-                details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
-              },
-            },
-          },
-        },
+      schema: z.object({
+        error: z.string(),
+        details: z.object({
+          code: WalletErrorCodeSchema,
+        }),
+      }),
+      example: {
+        error: walletErrorMessages.WALLET_NOT_FOUND,
+        details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
       },
-    },
+    }),
   },
 });
 
@@ -148,59 +96,21 @@ export const adminGetUserWalletRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Admin access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    404: {
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+    404: notFoundResponse({
       description: "Wallet not found",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-            details: z.object({
-              code: WalletErrorCodeSchema,
-            }),
-          }),
-          examples: {
-            NotFound: {
-              value: {
-                error: walletErrorMessages.WALLET_NOT_FOUND,
-                details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
-              },
-            },
-          },
-        },
+      schema: z.object({
+        error: z.string(),
+        details: z.object({
+          code: WalletErrorCodeSchema,
+        }),
+      }),
+      example: {
+        error: walletErrorMessages.WALLET_NOT_FOUND,
+        details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
       },
-    },
+    }),
   },
 });
 
@@ -214,66 +124,24 @@ export const adminListUserWalletTransactionsRoute = createRoute({
     query: ListMyWalletTransactionsQuerySchema,
   },
   responses: {
-    200: {
-      description: "Paginated wallet transactions for a specific user",
-      content: {
-        "application/json": {
-          schema: ListMyWalletTransactionsResponseSchema,
-        },
-      },
-    },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Admin access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    404: {
+    200: paginatedResponse(
+      ListMyWalletTransactionsResponseSchema,
+      "Paginated wallet transactions for a specific user",
+    ),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+    404: notFoundResponse({
       description: "Wallet not found",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-            details: z.object({
-              code: WalletErrorCodeSchema,
-            }),
-          }),
-          examples: {
-            NotFound: {
-              value: {
-                error: walletErrorMessages.WALLET_NOT_FOUND,
-                details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
-              },
-            },
-          },
-        },
+      schema: z.object({
+        error: z.string(),
+        details: z.object({
+          code: WalletErrorCodeSchema,
+        }),
+      }),
+      example: {
+        error: walletErrorMessages.WALLET_NOT_FOUND,
+        details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
       },
-    },
+    }),
   },
 });

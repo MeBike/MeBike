@@ -1,10 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 
-import {
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
-} from "../../schemas";
+import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   SupplierCreateBodySchema,
   SupplierErrorCodeSchema,
@@ -52,38 +48,8 @@ export const createSupplier = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 
@@ -123,38 +89,8 @@ export const updateSupplier = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 
@@ -194,38 +130,8 @@ export const updateSupplierStatus = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 
@@ -252,38 +158,8 @@ export const deleteSupplier = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Forbidden: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 

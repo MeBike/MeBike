@@ -15,20 +15,13 @@ import {
   VerifyEmailOtpRequestSchema,
   VerifyResetPasswordOtpRequestSchema,
 } from "../../auth/schemas";
+import { jsonBody } from "../helpers";
 
 export const registerRoute = createRoute({
   method: "post",
   path: "/v1/auth/register",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: RegisterRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(RegisterRequestSchema),
   responses: {
     201: {
       description: "Registered",
@@ -65,15 +58,7 @@ export const loginRoute = createRoute({
   method: "post",
   path: "/v1/auth/login",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: LoginRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(LoginRequestSchema),
   responses: {
     200: {
       description: "Login successful",
@@ -104,15 +89,7 @@ export const refreshRoute = createRoute({
   method: "post",
   path: "/v1/auth/refresh",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: RefreshRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(RefreshRequestSchema),
   responses: {
     200: {
       description: "Tokens refreshed",
@@ -143,15 +120,7 @@ export const logoutRoute = createRoute({
   method: "post",
   path: "/v1/auth/logout",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: RefreshRequestSchema.openapi("LogoutRequest"),
-        },
-      },
-    },
-  },
+  request: jsonBody(RefreshRequestSchema.openapi("LogoutRequest")),
   responses: {
     200: { description: "Logged out" },
     401: {
@@ -186,15 +155,7 @@ export const sendVerifyEmailRoute = createRoute({
   method: "post",
   path: "/v1/auth/verify-email/send",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: SendVerifyEmailRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(SendVerifyEmailRequestSchema),
   responses: {
     200: { description: "Verification email sent" },
   },
@@ -204,15 +165,7 @@ export const resendVerifyEmailRoute = createRoute({
   method: "post",
   path: "/v1/auth/verify-email/resend",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: SendVerifyEmailRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(SendVerifyEmailRequestSchema),
   responses: {
     200: { description: "Verification email resent" },
   },
@@ -222,15 +175,7 @@ export const verifyEmailOtpRoute = createRoute({
   method: "post",
   path: "/v1/auth/verify-email/otp",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: VerifyEmailOtpRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(VerifyEmailOtpRequestSchema),
   responses: {
     200: { description: "Email verified" },
     400: {
@@ -259,15 +204,7 @@ export const sendResetPasswordRoute = createRoute({
   method: "post",
   path: "/v1/auth/password/reset/send",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: SendResetPasswordRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(SendResetPasswordRequestSchema),
   responses: {
     200: { description: "Password reset email sent (if user exists)" },
   },
@@ -277,15 +214,7 @@ export const resetPasswordRoute = createRoute({
   method: "post",
   path: "/v1/auth/password/reset/confirm",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: ResetPasswordRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(ResetPasswordRequestSchema),
   responses: {
     200: {
       description: "Password reset",
@@ -313,15 +242,7 @@ export const verifyResetPasswordOtpRoute = createRoute({
   method: "post",
   path: "/v1/auth/password/reset/verify-otp",
   tags: ["Auth"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: VerifyResetPasswordOtpRequestSchema,
-        },
-      },
-    },
-  },
+  request: jsonBody(VerifyResetPasswordOtpRequestSchema),
   responses: {
     200: {
       description: "OTP verified for password reset",

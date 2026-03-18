@@ -1,9 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
   StripeTopupPaymentSheetRequestSchema,
@@ -18,6 +15,7 @@ import {
   WalletWithdrawalRequestSchema,
   WalletWithdrawalResponseSchema,
 } from "../../wallets/schemas";
+import { unauthorizedResponse } from "../helpers";
 
 export const creditMyWalletRoute = createRoute({
   method: "post",
@@ -42,22 +40,7 @@ export const creditMyWalletRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "Wallet not found",
       content: {
@@ -126,22 +109,7 @@ export const debitMyWalletRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "Wallet not found",
       content: {
@@ -210,22 +178,7 @@ export const createStripeTopupSessionRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "Wallet not found",
       content: {
@@ -336,22 +289,7 @@ export const createStripeTopupPaymentSheetRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "Wallet not found",
       content: {
@@ -468,22 +406,7 @@ export const createWalletWithdrawalRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     403: {
       description: "Withdrawal not enabled",
       content: {

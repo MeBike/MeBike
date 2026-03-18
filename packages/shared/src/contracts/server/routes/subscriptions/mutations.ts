@@ -1,9 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
   ActivateSubscriptionResponseSchema,
@@ -13,6 +10,7 @@ import {
   subscriptionErrorMessages,
   SubscriptionErrorResponseSchema,
 } from "../../subscriptions/schemas";
+import { unauthorizedResponse } from "../helpers";
 
 export const createSubscriptionRoute = createRoute({
   method: "post",
@@ -53,22 +51,7 @@ export const createSubscriptionRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "Wallet not found",
       content: {
@@ -123,22 +106,7 @@ export const activateSubscriptionRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "Subscription not found",
       content: {

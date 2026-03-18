@@ -2,13 +2,11 @@ import { createRoute } from "@hono/zod-openapi";
 
 import {
   CreateReservationRequestSchema,
+  ReservationDetailResponseSchema,
   ReservationErrorCodeSchema,
   ReservationErrorResponseSchema,
-  ReservationDetailResponseSchema,
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
 } from "../../reservations";
+import { unauthorizedResponse } from "../helpers";
 import { ReservationIdParamSchema } from "./shared";
 
 export const reserveBikeRoute = createRoute({
@@ -62,22 +60,7 @@ export const reserveBikeRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -126,22 +109,7 @@ export const confirmReservationRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -184,21 +152,6 @@ export const cancelReservationRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });

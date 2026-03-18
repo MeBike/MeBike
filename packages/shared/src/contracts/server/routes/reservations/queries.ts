@@ -8,10 +8,13 @@ import {
   ReservationDetailResponseSchema,
   ReservationErrorCodeSchema,
   ReservationErrorResponseSchema,
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
 } from "../../reservations";
+import {
+  forbiddenResponse,
+  notFoundResponse,
+  paginatedResponse,
+  unauthorizedResponse,
+} from "../helpers";
 import { ReservationIdParamSchema } from "./shared";
 
 export const listMyReservationsRoute = createRoute({
@@ -23,30 +26,8 @@ export const listMyReservationsRoute = createRoute({
     query: ListMyReservationsQuerySchema,
   },
   responses: {
-    200: {
-      description: "List current user's reservations",
-      content: {
-        "application/json": {
-          schema: ListMyReservationsResponseSchema,
-        },
-      },
-    },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    200: paginatedResponse(ListMyReservationsResponseSchema, "List current user's reservations"),
+    401: unauthorizedResponse(),
   },
 });
 
@@ -89,22 +70,7 @@ export const getMyReservationRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -117,38 +83,9 @@ export const adminListReservationsRoute = createRoute({
     query: ListAdminReservationsQuerySchema,
   },
   responses: {
-    200: {
-      description: "List reservations for admin",
-      content: {
-        "application/json": {
-          schema: ListAdminReservationsResponseSchema,
-        },
-      },
-    },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Admin access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    200: paginatedResponse(ListAdminReservationsResponseSchema, "List reservations for admin"),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 
@@ -169,45 +106,15 @@ export const adminGetReservationRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Admin access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    404: {
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+    404: notFoundResponse({
       description: "Reservation not found",
-      content: {
-        "application/json": {
-          schema: ReservationErrorResponseSchema,
-          examples: {
-            NotFound: {
-              value: {
-                error: "Reservation not found",
-                details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND },
-              },
-            },
-          },
-        },
+      schema: ReservationErrorResponseSchema,
+      example: {
+        error: "Reservation not found",
+        details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND },
       },
-    },
+    }),
   },
 });
