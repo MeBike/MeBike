@@ -393,26 +393,26 @@ const getMyReservation: RouteHandler<ReservationsRoutes["getMyReservation"]> = a
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
       if (Option.isNone(right)) {
-        return c.json<ReservationErrorResponse, 400>({
+        return c.json<ReservationErrorResponse, 404>({
           error: reservationErrorMessages.RESERVATION_NOT_FOUND,
           details: {
             code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND,
             reservationId,
           },
-        }, 400);
+        }, 404);
       }
 
       const detail = right.value;
 
       if (detail.userId !== userId) {
-        return c.json<ReservationErrorResponse, 400>({
+        return c.json<ReservationErrorResponse, 403>({
           error: reservationErrorMessages.RESERVATION_NOT_OWNED,
           details: {
             code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_OWNED,
             reservationId,
             userId,
           },
-        }, 400);
+        }, 403);
       }
 
       return c.json<ReservationExpandedDetailResponse, 200>(

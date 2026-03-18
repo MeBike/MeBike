@@ -49,18 +49,12 @@ export const getMyReservationRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "Reservation access error",
+    403: {
+      description: "Reservation does not belong to current user",
       content: {
         "application/json": {
           schema: ReservationErrorResponseSchema,
           examples: {
-            NotFound: {
-              value: {
-                error: "Reservation not found",
-                details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND },
-              },
-            },
             NotOwned: {
               value: {
                 error: "Reservation does not belong to user",
@@ -71,6 +65,14 @@ export const getMyReservationRoute = createRoute({
         },
       },
     },
+    404: notFoundResponse({
+      description: "Reservation not found",
+      schema: ReservationErrorResponseSchema,
+      example: {
+        error: "Reservation not found",
+        details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND },
+      },
+    }),
     401: unauthorizedResponse(),
   },
 });

@@ -2,8 +2,6 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match, Option } from "effect";
 
-import type { ReservationExpandedDetailRow } from "@/domain/reservations";
-
 import { ReservationRepository } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
 import {
@@ -78,23 +76,22 @@ const adminGetReservation: RouteHandler<
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
-      if (Option.isSome(right)) {
-        const detail = right.value as ReservationExpandedDetailRow;
-        return c.json<ReservationExpandedDetailResponse, 200>(
-          toContractReservationExpanded(detail),
-          200,
+      if (Option.isNone(right)) {
+        return c.json<ReservationErrorResponse, 404>(
+          {
+            error: reservationErrorMessages.RESERVATION_NOT_FOUND,
+            details: {
+              code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND,
+              reservationId,
+            },
+          },
+          404,
         );
       }
 
-      return c.json<ReservationErrorResponse, 404>(
-        {
-          error: reservationErrorMessages.RESERVATION_NOT_FOUND,
-          details: {
-            code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND,
-            reservationId,
-          },
-        },
-        404,
+      return c.json<ReservationExpandedDetailResponse, 200>(
+        toContractReservationExpanded(right.value),
+        200,
       );
     }),
     Match.tag("Left", ({ left }) => {
