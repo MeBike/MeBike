@@ -16,6 +16,7 @@ import {
 export const ReservationErrorCodeSchema = z
   .enum([
     "ACTIVE_RESERVATION_EXISTS",
+    "RESERVATION_CONFIRM_BLOCKED_BY_ACTIVE_RENTAL",
     "BIKE_ALREADY_RESERVED",
     "BIKE_NOT_FOUND",
     "BIKE_NOT_FOUND_IN_STATION",
@@ -37,6 +38,8 @@ export const ReservationErrorCodeSchema = z
 
 export const reservationErrorMessages = {
   ACTIVE_RESERVATION_EXISTS: "User already has an active reservation",
+  RESERVATION_CONFIRM_BLOCKED_BY_ACTIVE_RENTAL:
+    "Cannot confirm reservation because user already has an active rental",
   BIKE_ALREADY_RESERVED: "Bike is already reserved",
   BIKE_NOT_FOUND: "Bike not found",
   BIKE_NOT_FOUND_IN_STATION: "Bike not found in station",

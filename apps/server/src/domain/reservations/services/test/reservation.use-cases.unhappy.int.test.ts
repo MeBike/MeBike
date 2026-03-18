@@ -496,7 +496,7 @@ describe("reservation use-cases unhappy paths", () => {
     expectLeftTag(result, "InvalidReservationTransition");
   });
 
-  it("confirmReservationUseCase fails with ActiveReservationExists when user already has rented bike", async () => {
+  it("confirmReservationUseCase fails with ReservationConfirmBlockedByActiveRental when user already has rented bike", async () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: activeBikeId } = await createBike({ stationId });
@@ -533,7 +533,7 @@ describe("reservation use-cases unhappy paths", () => {
       now: new Date(),
     });
 
-    expectLeftTag(result, "ActiveReservationExists");
+    expectLeftTag(result, "ReservationConfirmBlockedByActiveRental");
   });
 
   it("cancelReservationUseCase fails with ReservationNotOwned", async () => {

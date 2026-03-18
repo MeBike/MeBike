@@ -19,6 +19,16 @@ export class ActiveReservationExists extends Data.TaggedError("ActiveReservation
 }> {}
 
 /**
+ * EN: Confirming this reservation is blocked because user already has an active rental.
+ * VI: Không thể xác nhận reservation vì user đã có rental đang active.
+ */
+export class ReservationConfirmBlockedByActiveRental extends Data.TaggedError(
+  "ReservationConfirmBlockedByActiveRental",
+)<{
+  readonly userId: string;
+}> {}
+
+/**
  * EN: Bike is already reserved by another reservation.
  * VI: Xe đã bị giữ bởi reservation khác.
  */
@@ -113,6 +123,7 @@ export class ReservationNotFound extends Data.TaggedError("ReservationNotFound")
 
 export type ReservationServiceFailure
   = | ActiveReservationExists
+    | ReservationConfirmBlockedByActiveRental
     | BikeAlreadyReserved
     | BikeNotFound
     | BikeNotFoundInStation

@@ -15,9 +15,9 @@ import type { ReservationServiceFailure } from "../domain-errors";
 import type { ReservationRow } from "../models";
 
 import {
-  ActiveReservationExists,
   BikeNotAvailable,
   BikeNotFound,
+  ReservationConfirmBlockedByActiveRental,
   ReservedRentalNotFound,
 } from "../domain-errors";
 import { ReservationServiceTag } from "../services/reservation.service";
@@ -64,7 +64,7 @@ export function confirmReservationUseCase(
           userId: input.userId,
         }).pipe(
           Effect.catchTag("ActiveRentalExists", () =>
-            Effect.fail(new ActiveReservationExists({ userId: input.userId }))),
+            Effect.fail(new ReservationConfirmBlockedByActiveRental({ userId: input.userId }))),
           Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
         );
         if (!rentalStarted) {

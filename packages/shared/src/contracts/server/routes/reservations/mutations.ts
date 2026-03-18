@@ -105,6 +105,14 @@ export const confirmReservationRoute = createRoute({
                 details: { code: ReservationErrorCodeSchema.enum.INVALID_RESERVATION_TRANSITION },
               },
             },
+            ConfirmBlockedByActiveRental: {
+              value: {
+                error: "Cannot confirm reservation because user already has an active rental",
+                details: {
+                  code: ReservationErrorCodeSchema.enum.RESERVATION_CONFIRM_BLOCKED_BY_ACTIVE_RENTAL,
+                },
+              },
+            },
           },
         },
       },
