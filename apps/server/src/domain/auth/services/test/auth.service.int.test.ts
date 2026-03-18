@@ -102,7 +102,11 @@ describe("authService Integration", () => {
   ) =>
     Effect.runPromise(eff.pipe(Effect.provide(depsLayer)));
 
-  const createUser = async (args: { email: string; password: string; verify?: "UNVERIFIED" | "VERIFIED" }) => {
+  const createUser = async (args: {
+    email: string;
+    password: string;
+    verify?: "UNVERIFIED" | "VERIFIED" | "BANNED";
+  }) => {
     const id = uuidv7();
     const passwordHash = await bcrypt.hash(args.password, env.BCRYPT_SALT_ROUNDS);
 
@@ -153,6 +157,25 @@ describe("authService Integration", () => {
         const service = yield* AuthServiceTag;
         return yield* service
           .loginWithPassword({ email, password: "wrong" })
+          .pipe(Effect.either);
+      }),
+    );
+
+    expectLeftTag(result, "InvalidCredentials");
+  });
+
+  it("loginWithPassword rejects banned users", async () => {
+    const { email } = await createUser({
+      email: "banned@example.com",
+      password: "Password123!",
+      verify: "BANNED",
+    });
+
+    const result = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service
+          .loginWithPassword({ email, password: "Password123!" })
           .pipe(Effect.either);
       }),
     );
