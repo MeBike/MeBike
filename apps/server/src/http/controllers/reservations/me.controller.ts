@@ -177,6 +177,14 @@ const confirmReservation: RouteHandler<ReservationsRoutes["confirmReservation"]>
       c.json<ReservationDetailResponse, 200>(toContractReservation(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
+        Match.tag("ReservationConfirmBlockedByActiveRental", ({ userId: ownerId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.RESERVATION_CONFIRM_BLOCKED_BY_ACTIVE_RENTAL,
+            details: {
+              code: ReservationErrorCodeSchema.enum.RESERVATION_CONFIRM_BLOCKED_BY_ACTIVE_RENTAL,
+              userId: ownerId,
+            },
+          }, 400)),
         Match.tag("ReservationNotFound", ({ reservationId: missingId }) =>
           c.json<ReservationErrorResponse, 400>({
             error: reservationErrorMessages.RESERVATION_NOT_FOUND,

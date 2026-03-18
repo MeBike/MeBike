@@ -510,11 +510,25 @@ export function makeRentalRepository(
           });
           return updated.count > 0;
         },
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "startReservedRental",
-            cause: e,
-          }),
+        catch: error =>
+          Match.value(error).pipe(
+            Match.when(
+              isPrismaUniqueViolation,
+              e =>
+                new RentalUniqueViolation({
+                  operation: "startReservedRental",
+                  constraint: uniqueTargets(e),
+                  cause: e,
+                }),
+            ),
+            Match.orElse(
+              e =>
+                new RentalRepositoryError({
+                  operation: "startReservedRental",
+                  cause: e,
+                }),
+            ),
+          ),
       });
     },
 
