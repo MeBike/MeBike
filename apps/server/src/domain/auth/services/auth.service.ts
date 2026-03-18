@@ -200,6 +200,10 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidCredentials({}));
       }
 
+      if (user.verify === "BANNED") {
+        return yield* Effect.fail(new InvalidCredentials({}));
+      }
+
       const sessionId = uuidv7();
       const tokens = makeTokensForUser(user, sessionId);
       const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
