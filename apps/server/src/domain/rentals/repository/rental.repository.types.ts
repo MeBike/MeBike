@@ -3,15 +3,27 @@ import type { Effect, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { RentalStatus } from "generated/prisma/client";
 
-import type { RentalRepoError, RentalRepositoryError } from "../domain-errors";
 import type {
+  BikeSwapRequestExisted,
+  BikeSwapRequestNotFound,
+  InvalidBikeSwapRequestStatus,
+  NoAvailableBike,
+  RentalRepoError,
+  RentalRepositoryError,
+} from "../domain-errors";
+import type {
+  AdminBikeSwapRequestFilter,
   AdminRentalDetail,
   AdminRentalFilter,
   AdminRentalListItem,
+  BikeSwapRequestRow,
   MyRentalFilter,
   RentalCountsRow,
   RentalRow,
   RentalSortField,
+  StaffBikeSwapRequestFilter,
+  StaffBikeSwapRequestRow,
+  StaffBikeSwapRequestSortField,
 } from "../models";
 
 export type CreateRentalInput = {
@@ -132,4 +144,57 @@ export type RentalRepo = {
     phoneNumber: string,
     pageReq: PageRequest<RentalSortField>,
   ) => Effect.Effect<PageResult<AdminRentalListItem>, RentalRepositoryError>;
+
+  requestBikeSwap: (
+    rentalId: string,
+    userId: string,
+    oldBikeId: string,
+    stationId: string,
+  ) => Effect.Effect<
+    BikeSwapRequestRow,
+    RentalRepositoryError | BikeSwapRequestExisted
+  >;
+
+  staffListBikeSwapRequests: (
+    filter: StaffBikeSwapRequestFilter,
+    pageReq: PageRequest<StaffBikeSwapRequestSortField>,
+  ) => Effect.Effect<
+    PageResult<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
+
+  staffGetBikeSwapRequests: (
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    Option.Option<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
+
+  adminListBikeSwapRequests: (
+    filter: AdminBikeSwapRequestFilter,
+    pageReq: PageRequest<StaffBikeSwapRequestSortField>,
+  ) => Effect.Effect<
+    PageResult<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
+
+  staffApproveBikeSwapRequests: (
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    Option.Option<StaffBikeSwapRequestRow>,
+    | RentalRepositoryError
+    | BikeSwapRequestNotFound
+    | NoAvailableBike
+    | InvalidBikeSwapRequestStatus
+  >;
+
+  staffRejectBikeSwapRequests: (
+    bikeSwapRequestId: string,
+    reason: string,
+  ) => Effect.Effect<
+    Option.Option<StaffBikeSwapRequestRow>,
+    | RentalRepositoryError
+    | BikeSwapRequestNotFound
+    | InvalidBikeSwapRequestStatus
+  >;
 };

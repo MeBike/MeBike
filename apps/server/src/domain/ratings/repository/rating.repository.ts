@@ -1,6 +1,9 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
+import type {
+  PrismaClient,
+  Prisma as PrismaTypes,
+} from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -13,16 +16,10 @@ import { selectRatingRow, toRatingRow } from "./rating.mappers";
 export type RatingRepo = {
   readonly createRating: (
     input: CreateRatingInput,
-  ) => Effect.Effect<
-    RatingRow,
-    RatingRepositoryError | RatingAlreadyExists
-  >;
+  ) => Effect.Effect<RatingRow, RatingRepositoryError | RatingAlreadyExists>;
   readonly findByRentalId: (
     rentalId: string,
-  ) => Effect.Effect<
-    Option.Option<RatingRow>,
-    RatingRepositoryError
-  >;
+  ) => Effect.Effect<Option.Option<RatingRow>, RatingRepositoryError>;
   readonly findBikeSummary: (
     bikeId: string,
   ) => Effect.Effect<RatingSummary, RatingRepositoryError>;
@@ -141,6 +138,24 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
           rental: {
             bikeId,
           },
+          OR: [
+            {
+              reasons: {
+                some: {
+                  reason: {
+                    appliesTo: "bike",
+                  },
+                },
+              },
+            },
+            {
+              NOT: {
+                reasons: {
+                  some: {},
+                },
+              },
+            },
+          ],
         },
         "findBikeSummary",
       ),
@@ -151,6 +166,24 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
           rental: {
             startStationId: stationId,
           },
+          OR: [
+            {
+              reasons: {
+                some: {
+                  reason: {
+                    appliesTo: "station",
+                  },
+                },
+              },
+            },
+            {
+              NOT: {
+                reasons: {
+                  some: {},
+                },
+              },
+            },
+          ],
         },
         "findStationSummary",
       ),

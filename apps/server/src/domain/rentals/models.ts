@@ -1,3 +1,4 @@
+import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
   RentalStatus,
@@ -37,6 +38,17 @@ export type AdminRentalFilter = {
   endStationId?: string;
   status?: RentalStatus;
 };
+
+export type StaffBikeSwapRequestFilter = {
+  userId?: string;
+  status?: BikeSwapStatus;
+  stationId?: string;
+};
+
+export type StaffBikeSwapRequestSortField
+  = | "status"
+    | "updatedAt"
+    | "createdAt";
 
 export type AdminRentalListItem = {
   id: string;
@@ -175,4 +187,67 @@ export type RentalDashboardSummary = {
     rentalTrend: DashboardTrend;
   };
   hourlyRentalStats: HourlyRentalStat[];
+};
+
+export type BikeSwapRequestRow = {
+  id: string;
+  rentalId: string;
+  userId: string;
+  oldBikeId: string;
+  newBikeId: string | null;
+  stationId: string;
+  reason: string;
+  status: BikeSwapStatus;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type StaffBikeSwapRequestRow = {
+  id: string;
+  rentalId: string;
+  user: {
+    id: string;
+    fullName: string;
+  };
+  oldBike: {
+    id: string;
+    chipId: string;
+    station: {
+      id: string;
+      name: string;
+      address: string;
+    };
+    supplier: {
+      id: string;
+      name: string;
+    };
+  };
+  newBike: {
+    id: string;
+    chipId: string;
+    station: {
+      id: string;
+      name: string;
+      address: string;
+    };
+    supplier: {
+      id: string;
+      name: string;
+    };
+  } | null;
+  station: {
+    id: string;
+    name: string;
+    address: string;
+  } | null;
+  reason: string;
+  status: BikeSwapStatus;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type AdminBikeSwapRequestFilter = {
+  userId?: string;
+  status?: BikeSwapStatus;
+  stationId?: string;
 };

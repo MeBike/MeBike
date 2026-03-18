@@ -4,6 +4,7 @@ import type { RentalsContracts } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import {
+  adminGetChangeBikeDetailUseCase,
   adminGetRentalDetailUseCase,
   endRentalByAdminUseCase,
   RentalRepository,
@@ -14,6 +15,7 @@ import { withLoggedCause } from "@/domain/shared";
 import {
   toContractAdminRentalDetail,
   toContractAdminRentalListItem,
+  toContractBikeSwapRequestDetail,
   toContractRentalListItem,
 } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
@@ -22,11 +24,15 @@ import { notifyBikeStatusUpdate } from "@/realtime/bike-status-events";
 import type { RentalsRoutes } from "./shared";
 
 import {
+  BikeSwapRequestErrorCodeSchema,
+  bikeSwapRequestErrorMessages,
   RentalErrorCodeSchema,
   rentalErrorMessages,
 } from "./shared";
 
-const getRentalRevenue: RouteHandler<RentalsRoutes["getRentalRevenue"]> = async (c) => {
+const getRentalRevenue: RouteHandler<
+  RentalsRoutes["getRentalRevenue"]
+> = async (c) => {
   const query = c.req.valid("query");
 
   const groupBy = query.groupBy ?? "DAY";
@@ -34,23 +40,25 @@ const getRentalRevenue: RouteHandler<RentalsRoutes["getRentalRevenue"]> = async 
   const to = query.to ? new Date(query.to) : null;
 
   if ((from && !to) || (!from && to)) {
-    return c.json<RentalsContracts.RentalErrorResponse, 400>({
-      error: "from and to must be provided together",
-      details: {
-        code: RentalErrorCodeSchema.enum.INVALID_OBJECT_ID,
-        from: query.from,
-        to: query.to,
+    return c.json<RentalsContracts.RentalErrorResponse, 400>(
+      {
+        error: "from and to must be provided together",
+        details: {
+          code: RentalErrorCodeSchema.enum.INVALID_OBJECT_ID,
+          from: query.from,
+          to: query.to,
+        },
       },
-    }, 400);
+      400,
+    );
   }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const stats = yield* RentalStatsServiceTag;
 
-      const range = (from && to)
-        ? { from, to }
-        : previousUtcMonthFullRange(new Date());
+      const range
+        = from && to ? { from, to } : previousUtcMonthFullRange(new Date());
 
       return yield* stats.getRevenueSeries({
         from: range.from,
@@ -62,21 +70,26 @@ const getRentalRevenue: RouteHandler<RentalsRoutes["getRentalRevenue"]> = async 
   );
 
   const result = await c.var.runPromise(eff);
-  return c.json<RentalsContracts.RentalRevenueResponse, 200>({
-    period: {
-      from: result.period.from.toISOString(),
-      to: result.period.to.toISOString(),
+  return c.json<RentalsContracts.RentalRevenueResponse, 200>(
+    {
+      period: {
+        from: result.period.from.toISOString(),
+        to: result.period.to.toISOString(),
+      },
+      groupBy: result.groupBy,
+      data: result.data.map(item => ({
+        date: item.date.toISOString(),
+        totalRevenue: item.totalRevenue,
+        totalRentals: item.totalRentals,
+      })),
     },
-    groupBy: result.groupBy,
-    data: result.data.map(item => ({
-      date: item.date.toISOString(),
-      totalRevenue: item.totalRevenue,
-      totalRentals: item.totalRentals,
-    })),
-  }, 200);
+    200,
+  );
 };
 
-const getRentalStatsSummary: RouteHandler<RentalsRoutes["getRentalStatsSummary"]> = async (c) => {
+const getRentalStatsSummary: RouteHandler<
+  RentalsRoutes["getRentalStatsSummary"]
+> = async (c) => {
   const eff = withLoggedCause(
     Effect.flatMap(RentalStatsServiceTag, svc => svc.getSummary()),
     "GET /v1/rentals/stats/summary",
@@ -86,7 +99,9 @@ const getRentalStatsSummary: RouteHandler<RentalsRoutes["getRentalStatsSummary"]
   return c.json(result, 200);
 };
 
-const getDashboardSummary: RouteHandler<RentalsRoutes["getDashboardSummary"]> = async (c) => {
+const getDashboardSummary: RouteHandler<
+  RentalsRoutes["getDashboardSummary"]
+> = async (c) => {
   const eff = withLoggedCause(
     Effect.flatMap(RentalStatsServiceTag, svc => svc.getDashboardSummary()),
     "GET /v1/rentals/dashboard-summary",
@@ -96,7 +111,9 @@ const getDashboardSummary: RouteHandler<RentalsRoutes["getDashboardSummary"]> = 
   return c.json<RentalsContracts.DashboardResponse, 200>(result, 200);
 };
 
-const adminListRentals: RouteHandler<RentalsRoutes["adminListRentals"]> = async (c) => {
+const adminListRentals: RouteHandler<
+  RentalsRoutes["adminListRentals"]
+> = async (c) => {
   const query = c.req.valid("query");
 
   const eff = withLoggedCause(
@@ -129,7 +146,9 @@ const adminListRentals: RouteHandler<RentalsRoutes["adminListRentals"]> = async 
   return c.json<RentalsContracts.AdminRentalsListResponse, 200>(response, 200);
 };
 
-const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (c) => {
+const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (
+  c,
+) => {
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
@@ -165,7 +184,9 @@ const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (c) 
   );
 };
 
-const getActiveRentalsByPhone: RouteHandler<RentalsRoutes["getActiveRentalsByPhone"]> = async (c) => {
+const getActiveRentalsByPhone: RouteHandler<
+  RentalsRoutes["getActiveRentalsByPhone"]
+> = async (c) => {
   const { number } = c.req.valid("param");
   const query = c.req.valid("query");
 
@@ -191,7 +212,9 @@ const getActiveRentalsByPhone: RouteHandler<RentalsRoutes["getActiveRentalsByPho
   return c.json<RentalsContracts.RentalListResponse, 200>(response, 200);
 };
 
-const endRentalByAdmin: RouteHandler<RentalsRoutes["endRentalByAdmin"]> = async (c) => {
+const endRentalByAdmin: RouteHandler<
+  RentalsRoutes["endRentalByAdmin"]
+> = async (c) => {
   const { rentalId } = c.req.valid("param");
   const body = c.req.valid("json");
 
@@ -223,8 +246,9 @@ const endRentalByAdmin: RouteHandler<RentalsRoutes["endRentalByAdmin"]> = async 
         "GET /v1/admin/rentals/{rentalId}",
       );
 
-      return c.var.runPromise(detailEff).then(detail =>
-        c.json(toContractAdminRentalDetail(detail), 200));
+      return c.var
+        .runPromise(detailEff)
+        .then(detail => c.json(toContractAdminRentalDetail(detail), 200));
     }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
@@ -262,22 +286,31 @@ const endRentalByAdmin: RouteHandler<RentalsRoutes["endRentalByAdmin"]> = async 
             400,
           )),
         Match.tag("UserWalletNotFound", ({ userId: missingUserId }) =>
-          c.json<RentalsContracts.RentalErrorResponse, 400>({
-            error: rentalErrorMessages.USER_NOT_HAVE_WALLET,
-            details: {
-              code: RentalErrorCodeSchema.enum.USER_NOT_HAVE_WALLET,
-              userId: missingUserId,
+          c.json<RentalsContracts.RentalErrorResponse, 400>(
+            {
+              error: rentalErrorMessages.USER_NOT_HAVE_WALLET,
+              details: {
+                code: RentalErrorCodeSchema.enum.USER_NOT_HAVE_WALLET,
+                userId: missingUserId,
+              },
             },
-          }, 400)),
-        Match.tag("InsufficientBalanceToRent", ({ requiredBalance, currentBalance }) =>
-          c.json<RentalsContracts.RentalErrorResponse, 400>({
-            error: rentalErrorMessages.NOT_ENOUGH_BALANCE_TO_RENT,
-            details: {
-              code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_TO_RENT,
-              requiredBalance,
-              currentBalance,
-            },
-          }, 400)),
+            400,
+          )),
+        Match.tag(
+          "InsufficientBalanceToRent",
+          ({ requiredBalance, currentBalance }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>(
+              {
+                error: rentalErrorMessages.NOT_ENOUGH_BALANCE_TO_RENT,
+                details: {
+                  code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_TO_RENT,
+                  requiredBalance,
+                  currentBalance,
+                },
+              },
+              400,
+            ),
+        ),
         Match.orElse(() => {
           throw left;
         }),
@@ -286,12 +319,95 @@ const endRentalByAdmin: RouteHandler<RentalsRoutes["endRentalByAdmin"]> = async 
   );
 };
 
+const adminGetBikeSwapRequests: RouteHandler<
+  RentalsRoutes["adminGetBikeSwapRequests"]
+> = async (c) => {
+  const { bikeSwapRequestId } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    adminGetChangeBikeDetailUseCase(bikeSwapRequestId),
+    "GET /v1/admin/bike-swap-requests/{bikeSwapRequestId}",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) => {
+      const response: RentalsContracts.BikeSwapRequestDetailResponse = {
+        message: "ok",
+        result: toContractBikeSwapRequestDetail(right),
+      };
+      return c.json<RentalsContracts.BikeSwapRequestDetailResponse, 200>(
+        response,
+        200,
+      );
+    }),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("AdminBikeRequestNotFound", () =>
+          c.json(
+            {
+              error: bikeSwapRequestErrorMessages.BIKE_SWAP_REQUEST_NOT_FOUND,
+              details: {
+                code: BikeSwapRequestErrorCodeSchema.enum
+                  .BIKE_SWAP_REQUEST_NOT_FOUND,
+                bikeSwapRequestId,
+              },
+            },
+            404,
+          )),
+        Match.orElse((e) => {
+          throw e;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
+const adminListBikeSwapRequests: RouteHandler<
+  RentalsRoutes["adminListBikeSwapRequests"]
+> = async (c) => {
+  const query = c.req.valid("query");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const repo = yield* RentalRepository;
+      return yield* repo.adminListBikeSwapRequests(
+        {
+          userId: query.userId,
+          status: query.status,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: query.sortBy ?? "createdAt",
+          sortDir: query.sortDir ?? "desc",
+        },
+      );
+    }),
+    "GET /v1/admin/bike-swap-requests",
+  );
+
+  const value = await c.var.runPromise(eff);
+  const response: RentalsContracts.BikeSwapRequestListResponse = {
+    data: value.items.map(toContractBikeSwapRequestDetail),
+    pagination: toContractPage(value),
+  };
+
+  return c.json<RentalsContracts.BikeSwapRequestListResponse, 200>(
+    response,
+    200,
+  );
+};
+
 export const RentalAdminController = {
   adminListRentals,
   adminGetRental,
+  adminGetBikeSwapRequests,
   endRentalByAdmin,
   getActiveRentalsByPhone,
   getDashboardSummary,
   getRentalRevenue,
   getRentalStatsSummary,
+  adminListBikeSwapRequests,
 } as const;

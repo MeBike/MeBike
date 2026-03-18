@@ -10,6 +10,9 @@ export {
   processCardTapRental,
   staffCreateRental,
   updateRental,
+  requestBikeSwap,
+  approveBikeSwapRequest,
+  rejectBikeSwapRequest,
 } from "./mutations";
 
 export {
@@ -29,6 +32,10 @@ export {
   getRentalSummary,
   getStationActivity,
   staffGetRental,
+  staffListBikeSwapRequests,
+  adminListBikeSwapRequests,
+  adminGetBikeSwapRequests,
+  staffGetBikeSwapRequests,
 } from "./queries";
 
 export const rentalsRoutes = {

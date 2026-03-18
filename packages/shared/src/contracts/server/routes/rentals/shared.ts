@@ -1,5 +1,8 @@
 import { z } from "../../../../zod";
 import {
+  ApproveBikeSwapRequestSchema,
+  BikeSwapRequestDetailSchema,
+  BikeSwapRequestSchema,
   DashboardResponseSchema,
   RentalCountsResponseSchema,
   RentalDetailSchema,
@@ -13,6 +16,7 @@ import {
   RentalSummaryStatsResponseSchema,
   RentalWithPriceSchema,
   RentalWithPricingSchema,
+  RequestBikeSwapRequestSchema,
   StationActivityResponseSchema,
 } from "../../rentals";
 import { paginationQueryFields, PaginationSchema } from "../../schemas";
@@ -45,6 +49,17 @@ export const RentalIdParamSchema = z
   })
   .openapi("RentalIdParam", {
     description: "Path params for rental id",
+  });
+
+export const BikeSwapRequestIdParamSchema = z
+  .object({
+    bikeSwapRequestId: z.uuidv7().openapi({
+      example: "019b17bd-d130-7e7d-be69-91ceef7b6959",
+      description: "Bike swap request identifier",
+    }),
+  })
+  .openapi("BikeSwapRequestIdParam", {
+    description: "Path params for bike swap request id",
   });
 
 export const UserIdParamSchema = z
@@ -108,9 +123,25 @@ export const RentalWithPriceSchemaOpenApi = RentalWithPriceSchema.openapi(
   },
 );
 
-export const RentalDetailSchemaOpenApi = RentalDetailSchema.openapi("RentalDetail", {
-  description: "Detailed rental with populated user, bike, and station data",
-});
+export const RentalDetailSchemaOpenApi = RentalDetailSchema.openapi(
+  "RentalDetail",
+  {
+    description: "Detailed rental with populated user, bike, and station data",
+  },
+);
+
+export const BikeSwapRequestDetailSchemaOpenApi =
+  BikeSwapRequestDetailSchema.openapi("BikeSwapRequestDetail", {
+    description:
+      "Detailed bike swap request with populated user, bike, and station data",
+  });
+
+export const BikeSwapRequestSchemaOpenApi = BikeSwapRequestSchema.openapi(
+  "BikeSwapRequest",
+  {
+    description: "Basic bike swap request information",
+  },
+);
 
 export const RentalWithPricingSchemaOpenApi = RentalWithPricingSchema.openapi(
   "RentalWithPricing",
@@ -119,12 +150,22 @@ export const RentalWithPricingSchemaOpenApi = RentalWithPricingSchema.openapi(
   },
 );
 
+export const RequestBikeSwapRequestSchemaOpenApi =
+  RequestBikeSwapRequestSchema.openapi("RequestBikeSwapRequest", {
+    description: "Request bike swap",
+  });
+
 export const RentalListItemSchemaOpenApi = RentalListItemSchema.openapi(
   "RentalListItem",
   {
     description: "Rental item for paginated lists",
   },
 );
+
+export const ApprovedBikeSwapRequestSchemaOpenApi =
+  ApproveBikeSwapRequestSchema.openapi("ApprovedBikeSwapRequest", {
+    description: "Approved bike swap request",
+  });
 
 export const RentalListResponseSchema = z
   .object({
@@ -144,7 +185,10 @@ export const MyRentalListResponseSchema = z
     description: "Paginated user rental list",
   });
 
-export function createSuccessResponse<T extends z.ZodType>(dataSchema: T, description: string) {
+export function createSuccessResponse<T extends z.ZodType>(
+  dataSchema: T,
+  description: string,
+) {
   return z
     .object({
       message: z.string(),

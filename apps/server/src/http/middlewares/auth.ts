@@ -1,4 +1,7 @@
-import { UnauthorizedErrorCodeSchema, unauthorizedErrorMessages } from "@mebike/shared";
+import {
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+} from "@mebike/shared";
 import { Effect, Option } from "effect";
 import { createMiddleware } from "hono/factory";
 import jwt from "jsonwebtoken";
@@ -27,7 +30,10 @@ function parseBearerToken(header: string | null | undefined): string | null {
 
 function verifyAccessToken(token: string): AccessTokenPayload | null {
   try {
-    const payload = jwt.verify(token, requireJwtSecret()) as AccessTokenPayload & jwt.JwtPayload;
+    const payload = jwt.verify(
+      token,
+      requireJwtSecret(),
+    ) as AccessTokenPayload & jwt.JwtPayload;
     if (payload.tokenType !== "access")
       return null;
     return payload;
@@ -38,10 +44,12 @@ function verifyAccessToken(token: string): AccessTokenPayload | null {
 }
 
 async function loadUser(runPromise: RunPromise, userId: string) {
-  return await runPromise(Effect.gen(function* () {
-    const service = yield* UserServiceTag;
-    return yield* service.getById(userId);
-  }));
+  return await runPromise(
+    Effect.gen(function* () {
+      const service = yield* UserServiceTag;
+      return yield* service.getById(userId);
+    }),
+  );
 }
 
 export const currentUserMiddleware = createMiddleware(async (c, next) => {
@@ -93,7 +101,23 @@ export const requireAdminMiddleware = createMiddleware(async (c, next) => {
   await next();
 });
 
-export const requireAdminOrStaffMiddleware = createMiddleware(async (c, next) => {
+export const requireAdminOrStaffMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (user.role !== "ADMIN" && user.role !== "STAFF") {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
+export const requireStaffMiddleware = createMiddleware(async (c, next) => {
   const user = c.var.currentUser;
   if (!user) {
     if (c.var.authFailure === "forbidden") {
@@ -101,8 +125,24 @@ export const requireAdminOrStaffMiddleware = createMiddleware(async (c, next) =>
     }
     return c.json(unauthorizedBody, 401);
   }
-  if (user.role !== "ADMIN" && user.role !== "STAFF") {
+  if (user.role !== "STAFF") {
     return c.json(unauthorizedBody, 403);
   }
   await next();
 });
+
+export const requireUserMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (user.role !== "USER") {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
