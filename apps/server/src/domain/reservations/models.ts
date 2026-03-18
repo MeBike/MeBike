@@ -20,8 +20,17 @@ export type ReservationRow = {
 
 export type ReservationSortField = "startTime" | "endTime" | "status" | "updatedAt";
 
+export type AdminReservationSortField
+  = | ReservationSortField
+    | "createdAt";
+
 export type ReservationFilter = {
   readonly status?: ReservationStatus;
   readonly stationId?: string;
   readonly reservationOption?: ReservationOption;
+};
+
+export type AdminReservationFilter = ReservationFilter & {
+  readonly userId?: string;
+  readonly bikeId?: string;
 };

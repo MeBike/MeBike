@@ -46,10 +46,17 @@ export function registerRentalRoutes(
 
   const staffGetRoute = {
     ...rentals.staffGetRental,
-    middleware: [requireAdminOrStaffMiddleware] as const,
+    middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
 
-  app.openapi(staffGetRoute, RentalAdminController.adminGetRental);
+  app.openapi(staffGetRoute, RentalStaffController.staffGetRental);
+
+  const staffListRoute = {
+    ...rentals.staffListRentals,
+    middleware: [requireStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(staffListRoute, RentalStaffController.staffListRentals);
 
   const endByAdminRoute = {
     ...rentals.endRentalByAdmin,

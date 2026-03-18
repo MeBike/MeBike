@@ -1,0 +1,92 @@
+import type { RouteHandler } from "@hono/zod-openapi";
+import type { WalletsContracts } from "@mebike/shared";
+
+import { Effect, Match } from "effect";
+
+import { withLoggedCause } from "@/domain/shared";
+import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import {
+  toWalletDetail,
+  toWalletTransactionDetail,
+} from "@/http/presenters/wallets.presenter";
+
+import type { WalletsRoutes } from "./shared";
+
+import { WalletErrorCodeSchema, walletErrorMessages } from "./shared";
+
+const adminGetUserWallet: RouteHandler<
+  WalletsRoutes["adminGetUserWallet"]
+> = async (c) => {
+  const { userId } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(WalletServiceTag, service => service.getByUserId(userId)),
+    "GET /v1/admin/users/{userId}/wallet",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<WalletsContracts.GetMyWalletResponse, 200>(toWalletDetail(right), 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("WalletNotFound", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WALLET_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
+const adminListUserWalletTransactions: RouteHandler<
+  WalletsRoutes["adminListUserWalletTransactions"]
+> = async (c) => {
+  const { userId } = c.req.valid("param");
+  const query = c.req.valid("query");
+  const page = query.page ?? 1;
+  const pageSize = query.pageSize ?? 50;
+
+  const eff = withLoggedCause(
+    Effect.flatMap(WalletServiceTag, service =>
+      service.listTransactionsForUser({ userId, pageReq: { page, pageSize } })),
+    "GET /v1/admin/users/{userId}/wallet/transactions",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<WalletsContracts.ListMyWalletTransactionsResponse, 200>({
+        data: right.items.map(toWalletTransactionDetail),
+        pagination: {
+          page: right.page,
+          pageSize: right.pageSize,
+          total: right.total,
+          totalPages: right.totalPages,
+        },
+      }, 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("WalletNotFound", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WALLET_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
+export const WalletAdminController = {
+  adminGetUserWallet,
+  adminListUserWalletTransactions,
+} as const;

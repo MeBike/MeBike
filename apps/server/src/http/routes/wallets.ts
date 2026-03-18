@@ -1,6 +1,9 @@
+import type { RouteConfig } from "@hono/zod-openapi";
+
 import { serverRoutes } from "@mebike/shared";
 
-import { WalletMeController } from "@/http/controllers/wallets";
+import { WalletAdminController, WalletMeController } from "@/http/controllers/wallets";
+import { requireAdminMiddleware } from "@/http/middlewares/auth";
 
 export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const wallets = serverRoutes.wallets;
@@ -12,4 +15,21 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   app.openapi(wallets.createStripeTopupSession, WalletMeController.createStripeTopupSession);
   app.openapi(wallets.createStripeTopupPaymentSheet, WalletMeController.createStripeTopupPaymentSheet);
   app.openapi(wallets.createWalletWithdrawal, WalletMeController.createWalletWithdrawal);
+
+  const adminGetUserWalletRoute = {
+    ...wallets.adminGetUserWallet,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(adminGetUserWalletRoute, WalletAdminController.adminGetUserWallet);
+
+  const adminListUserWalletTransactionsRoute = {
+    ...wallets.adminListUserWalletTransactions,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    adminListUserWalletTransactionsRoute,
+    WalletAdminController.adminListUserWalletTransactions,
+  );
 }
