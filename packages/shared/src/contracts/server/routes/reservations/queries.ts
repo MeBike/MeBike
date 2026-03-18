@@ -1,6 +1,8 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import {
+  ListAdminReservationsQuerySchema,
+  ListAdminReservationsResponseSchema,
   ListMyReservationsQuerySchema,
   ListMyReservationsResponseSchema,
   ReservationDetailResponseSchema,
@@ -97,6 +99,110 @@ export const getMyReservationRoute = createRoute({
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
                 details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const adminListReservationsRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/reservations",
+  tags: ["Admin", "Reservations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ListAdminReservationsQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "List reservations for admin",
+      content: {
+        "application/json": {
+          schema: ListAdminReservationsResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Admin access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const adminGetReservationRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/reservations/{reservationId}",
+  tags: ["Admin", "Reservations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: ReservationIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get reservation detail for admin",
+      content: {
+        "application/json": {
+          schema: ReservationDetailResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Admin access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Reservation not found",
+      content: {
+        "application/json": {
+          schema: ReservationErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: "Reservation not found",
+                details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND },
               },
             },
           },

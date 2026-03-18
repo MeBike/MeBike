@@ -24,6 +24,7 @@ import {
   activeStatusWhere,
   pendingHoldWhere,
   toReservationOrderBy,
+  toReservationWhereForAdmin,
   toReservationWhereForUser,
 } from "./reservation.queries";
 
@@ -335,6 +336,42 @@ export function makeReservationRepository(
             catch: err =>
               new ReservationRepositoryError({
                 operation: "listForUser.findMany",
+                cause: err,
+              }),
+          }),
+        ]);
+
+        const rows = items.map(toReservationRow);
+        return makePageResult(rows, total, page, pageSize);
+      }),
+
+    listForAdmin: (filter, pageReq) =>
+      Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+        const where = toReservationWhereForAdmin(filter);
+        const orderBy = toReservationOrderBy(pageReq);
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.reservation.count({ where }),
+            catch: err =>
+              new ReservationRepositoryError({
+                operation: "listForAdmin.count",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.reservation.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                select: selectReservationRow,
+              }),
+            catch: err =>
+              new ReservationRepositoryError({
+                operation: "listForAdmin.findMany",
                 cause: err,
               }),
           }),

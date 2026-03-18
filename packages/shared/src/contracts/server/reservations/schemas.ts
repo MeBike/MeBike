@@ -2,6 +2,7 @@ import { z } from "../../../zod";
 import {
   paginationQueryFields,
   PaginationSchema,
+  SortDirectionSchema,
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
   UnauthorizedErrorResponseSchema,
@@ -101,10 +102,27 @@ export const ListMyReservationsResponseSchema = z.object({
   pagination: PaginationSchema,
 }).openapi("ListMyReservationsResponse");
 
+export const ListAdminReservationsQuerySchema = z.object({
+  ...paginationQueryFields,
+  userId: z.uuidv7().optional(),
+  bikeId: z.uuidv7().optional(),
+  status: ReservationStatusSchema.optional(),
+  stationId: z.uuidv7().optional(),
+  reservationOption: ReservationOptionSchema.optional(),
+  sortBy: z.enum(["startTime", "endTime", "status", "createdAt", "updatedAt"]).optional(),
+  sortDir: SortDirectionSchema.optional(),
+}).openapi("ListAdminReservationsQuery");
+
+export const ListAdminReservationsResponseSchema = z.object({
+  data: ReservationDetailSchema.array(),
+  pagination: PaginationSchema,
+}).openapi("ListAdminReservationsResponse");
+
 export type ReservationErrorResponse = z.infer<typeof ReservationErrorResponseSchema>;
 export type CreateReservationRequest = z.infer<typeof CreateReservationRequestSchema>;
 export type ReservationDetailResponse = z.infer<typeof ReservationDetailResponseSchema>;
 export type ListMyReservationsResponse = z.infer<typeof ListMyReservationsResponseSchema>;
+export type ListAdminReservationsResponse = z.infer<typeof ListAdminReservationsResponseSchema>;
 
 export {
   ReservationDetailSchema,

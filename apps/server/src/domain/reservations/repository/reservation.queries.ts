@@ -1,15 +1,21 @@
 import type { PageRequest } from "@/domain/shared/pagination";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { pickDefined } from "@/domain/shared";
 import { ReservationStatus } from "generated/prisma/client";
 
-import type { ReservationFilter, ReservationSortField } from "../models";
+import type {
+  AdminReservationFilter,
+  AdminReservationSortField,
+  ReservationFilter,
+  ReservationSortField,
+} from "../models";
 
 const STATUS_PENDING = ReservationStatus.PENDING;
 const STATUS_ACTIVE = ReservationStatus.ACTIVE;
 
 export function toReservationOrderBy(
-  req: PageRequest<ReservationSortField>,
+  req: PageRequest<ReservationSortField | AdminReservationSortField>,
 ): PrismaTypes.ReservationOrderByWithRelationInput {
   const sortBy = req.sortBy ?? "startTime";
   const sortDir = req.sortDir ?? "desc";
@@ -20,6 +26,8 @@ export function toReservationOrderBy(
       return { status: sortDir };
     case "updatedAt":
       return { updatedAt: sortDir };
+    case "createdAt":
+      return { createdAt: sortDir };
     case "startTime":
     default:
       return { startTime: sortDir };
@@ -77,4 +85,16 @@ export function toReservationWhereForUser(
     ...(filter.stationId ? { stationId: filter.stationId } : {}),
     ...(filter.reservationOption ? { reservationOption: filter.reservationOption } : {}),
   };
+}
+
+export function toReservationWhereForAdmin(
+  filter: AdminReservationFilter,
+): PrismaTypes.ReservationWhereInput {
+  return pickDefined({
+    userId: filter.userId,
+    bikeId: filter.bikeId,
+    status: filter.status,
+    stationId: filter.stationId,
+    reservationOption: filter.reservationOption,
+  });
 }

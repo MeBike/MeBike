@@ -7,7 +7,13 @@ import type {
   ReservationRepositoryError,
   ReservationUniqueViolation,
 } from "../domain-errors";
-import type { ReservationFilter, ReservationRow, ReservationSortField } from "../models";
+import type {
+  AdminReservationFilter,
+  AdminReservationSortField,
+  ReservationFilter,
+  ReservationRow,
+  ReservationSortField,
+} from "../models";
 import type { CreateReservationInput, UpdateReservationStatusInput } from "../types";
 
 export type ReservationRepo = {
@@ -111,6 +117,15 @@ export type ReservationRepo = {
     userId: string,
     filter: ReservationFilter,
     pageReq: PageRequest<ReservationSortField>,
+  ) => Effect.Effect<PageResult<ReservationRow>, ReservationRepositoryError>;
+
+  /**
+   * EN: Returns a paginated reservation list for admin (global scope).
+   * VI: Trả về danh sách reservation phân trang cho admin (phạm vi toàn hệ thống).
+   */
+  listForAdmin: (
+    filter: AdminReservationFilter,
+    pageReq: PageRequest<AdminReservationSortField>,
   ) => Effect.Effect<PageResult<ReservationRow>, ReservationRepositoryError>;
 
   /**

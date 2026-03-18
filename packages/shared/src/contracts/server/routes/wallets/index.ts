@@ -6,6 +6,8 @@ import {
   debitMyWalletRoute,
 } from "./mutations";
 import {
+  adminGetUserWalletRoute,
+  adminListUserWalletTransactionsRoute,
   getMyWalletRoute,
   listMyWalletTransactionsRoute,
 } from "./queries";
@@ -17,6 +19,8 @@ export * from "./queries";
 export const walletsRoutes = {
   getMyWallet: getMyWalletRoute,
   listMyWalletTransactions: listMyWalletTransactionsRoute,
+  adminGetUserWallet: adminGetUserWalletRoute,
+  adminListUserWalletTransactions: adminListUserWalletTransactionsRoute,
   creditMyWallet: creditMyWalletRoute,
   debitMyWallet: debitMyWalletRoute,
   createStripeTopupSession: createStripeTopupSessionRoute,

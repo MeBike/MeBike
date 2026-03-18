@@ -2,21 +2,23 @@ import * as mutations from "./mutations";
 import * as queries from "./queries";
 
 export {
+  approveBikeSwapRequest,
   cancelRental,
   createRental,
   createRentalFromSOS,
   endMyRental,
   endRentalByAdmin,
   processCardTapRental,
+  rejectBikeSwapRequest,
+  requestBikeSwap,
   staffCreateRental,
   updateRental,
-  requestBikeSwap,
-  approveBikeSwapRequest,
-  rejectBikeSwapRequest,
 } from "./mutations";
 
 export {
+  adminGetBikeSwapRequests,
   adminGetRental,
+  adminListBikeSwapRequests,
   adminListRentals,
   getActiveRentalsByPhone,
   getAllRentals,
@@ -31,11 +33,10 @@ export {
   getRentalStatsSummary,
   getRentalSummary,
   getStationActivity,
+  staffGetBikeSwapRequests,
   staffGetRental,
   staffListBikeSwapRequests,
-  adminListBikeSwapRequests,
-  adminGetBikeSwapRequests,
-  staffGetBikeSwapRequests,
+  staffListRentals,
 } from "./queries";
 
 export const rentalsRoutes = {

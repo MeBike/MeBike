@@ -234,6 +234,61 @@ describe("reservationRepository Integration", () => {
     expect(Option.getOrThrow(result).id).toBe(active.id);
   });
 
+  it("listForAdmin supports global listing with user filters", async () => {
+    const station = await createStation(client, { name: "Station D" });
+    const userA = await createUser(client);
+    const userB = await createUser(client);
+    const bikeA = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
+    const bikeB = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
+    const now = new Date();
+
+    await client.reservation.create({
+      data: {
+        id: uuidv7(),
+        userId: userA.id,
+        bikeId: bikeA.id,
+        stationId: station.id,
+        reservationOption: "ONE_TIME",
+        startTime: new Date(now.getTime() - 60 * 60 * 1000),
+        endTime: new Date(now.getTime() + 60 * 60 * 1000),
+        prepaid: "0",
+        status: "CANCELLED",
+        updatedAt: now,
+      },
+    });
+
+    await client.reservation.create({
+      data: {
+        id: uuidv7(),
+        userId: userB.id,
+        bikeId: bikeB.id,
+        stationId: station.id,
+        reservationOption: "ONE_TIME",
+        startTime: new Date(now.getTime() - 30 * 60 * 1000),
+        endTime: new Date(now.getTime() + 90 * 60 * 1000),
+        prepaid: "0",
+        status: "CANCELLED",
+        updatedAt: now,
+      },
+    });
+
+    const result = await Effect.runPromise(
+      repo.listForAdmin(
+        { userId: userA.id },
+        {
+          page: 1,
+          pageSize: 10,
+          sortBy: "startTime",
+          sortDir: "desc",
+        },
+      ),
+    );
+
+    expect(result.total).toBe(1);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].userId).toBe(userA.id);
+  });
+
   it.skip("findNextUpcomingByUserId respects onlyFixedSlot option", async () => {
     // TODO(reservations/fixed-slot): This test requires creating both a normal hold (bike_id != null)
     // and a FIXED_SLOT reservation (bike_id = null) for the same user in PENDING/ACTIVE.

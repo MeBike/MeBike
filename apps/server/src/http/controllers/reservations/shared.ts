@@ -10,3 +10,4 @@ export const {
 export type ReservationErrorResponse = ReservationsContracts.ReservationErrorResponse;
 export type ReservationDetailResponse = ReservationsContracts.ReservationDetailResponse;
 export type ListMyReservationsResponse = ReservationsContracts.ListMyReservationsResponse;
+export type ListAdminReservationsResponse = ReservationsContracts.ListAdminReservationsResponse;
