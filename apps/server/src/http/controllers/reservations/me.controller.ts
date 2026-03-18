@@ -177,6 +177,14 @@ const confirmReservation: RouteHandler<ReservationsRoutes["confirmReservation"]>
       c.json<ReservationDetailResponse, 200>(toContractReservation(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
+        Match.tag("ActiveReservationExists", ({ userId: ownerId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.ACTIVE_RESERVATION_EXISTS,
+            details: {
+              code: ReservationErrorCodeSchema.enum.ACTIVE_RESERVATION_EXISTS,
+              userId: ownerId,
+            },
+          }, 400)),
         Match.tag("ReservationNotFound", ({ reservationId: missingId }) =>
           c.json<ReservationErrorResponse, 400>({
             error: reservationErrorMessages.RESERVATION_NOT_FOUND,

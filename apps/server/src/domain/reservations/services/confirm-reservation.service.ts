@@ -3,7 +3,11 @@ import { Effect, Option } from "effect";
 import type { BikeRepository } from "@/domain/bikes";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
+import {
+  makeRentalRepository,
+  RentalRepository,
+  startReservedRentalInTx,
+} from "@/domain/rentals";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -11,6 +15,7 @@ import type { ReservationServiceFailure } from "../domain-errors";
 import type { ReservationRow } from "../models";
 
 import {
+  ActiveReservationExists,
   BikeNotAvailable,
   BikeNotFound,
   ReservedRentalNotFound,
@@ -49,12 +54,17 @@ export function confirmReservationUseCase(
           },
         );
 
-        const rentalStarted = yield* txRentalRepo.startReservedRental(
-          reservation.id,
-          now,
-          now,
-          reservation.subscriptionId ?? null,
-        ).pipe(
+        const rentalStarted = yield* startReservedRentalInTx({
+          repo: txRentalRepo,
+          rentalId: reservation.id,
+          startTime: now,
+          updatedAt: now,
+          subscriptionId: reservation.subscriptionId ?? null,
+          bikeId,
+          userId: input.userId,
+        }).pipe(
+          Effect.catchTag("ActiveRentalExists", () =>
+            Effect.fail(new ActiveReservationExists({ userId: input.userId }))),
           Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
         );
         if (!rentalStarted) {

@@ -496,6 +496,46 @@ describe("reservation use-cases unhappy paths", () => {
     expectLeftTag(result, "InvalidReservationTransition");
   });
 
+  it("confirmReservationUseCase fails with ActiveReservationExists when user already has rented bike", async () => {
+    const { id: userId } = await createUser();
+    const { id: stationId } = await createStation();
+    const { id: activeBikeId } = await createBike({ stationId });
+    const { id: reservedBikeId } = await createBike({ stationId });
+    await createWallet(userId, 50000n);
+
+    const reserveNow = new Date();
+    const reserveResult = await runReserve({
+      userId,
+      bikeId: reservedBikeId,
+      stationId,
+      startTime: reserveNow,
+      now: reserveNow,
+    });
+
+    if (Either.isLeft(reserveResult)) {
+      throw new Error(`Expected Right, got ${reserveResult.left._tag}`);
+    }
+
+    await client.rental.create({
+      data: {
+        id: uuidv7(),
+        userId,
+        bikeId: activeBikeId,
+        startStationId: stationId,
+        startTime: new Date(),
+        status: "RENTED",
+      },
+    });
+
+    const result = await runConfirm({
+      reservationId: reserveResult.right.id,
+      userId,
+      now: new Date(),
+    });
+
+    expectLeftTag(result, "ActiveReservationExists");
+  });
+
   it("cancelReservationUseCase fails with ReservationNotOwned", async () => {
     const { id: userId } = await createUser();
     const { id: otherUserId } = await createUser();

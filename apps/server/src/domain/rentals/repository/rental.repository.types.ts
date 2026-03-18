@@ -119,7 +119,7 @@ export type RentalRepo = {
     startTime: Date,
     updatedAt: Date,
     subscriptionId: string | null,
-  ) => Effect.Effect<boolean, RentalRepositoryError>;
+  ) => Effect.Effect<boolean, RentalRepoError>;
 
   /**
    * EN: Cancel a RESERVED rental (no-op if status already changed).
