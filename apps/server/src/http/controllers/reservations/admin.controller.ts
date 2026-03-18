@@ -5,6 +5,7 @@ import { Effect, Match, Option } from "effect";
 import { ReservationRepository } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
 import { toContractReservation } from "@/http/presenters/reservations.presenter";
+import { toContractPage } from "@/http/shared/pagination";
 
 import type {
   ListAdminReservationsResponse,
@@ -49,12 +50,7 @@ const adminListReservations: RouteHandler<
   return c.json<ListAdminReservationsResponse, 200>(
     {
       data: value.items.map(toContractReservation),
-      pagination: {
-        page: value.page,
-        pageSize: value.pageSize,
-        total: value.total,
-        totalPages: value.totalPages,
-      },
+      pagination: toContractPage(value),
     },
     200,
   );

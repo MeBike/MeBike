@@ -9,6 +9,7 @@ import {
   toWalletDetail,
   toWalletTransactionDetail,
 } from "@/http/presenters/wallets.presenter";
+import { toContractPage } from "@/http/shared/pagination";
 
 import type { WalletsRoutes } from "./shared";
 
@@ -64,12 +65,7 @@ const adminListUserWalletTransactions: RouteHandler<
     Match.tag("Right", ({ right }) =>
       c.json<WalletsContracts.ListMyWalletTransactionsResponse, 200>({
         data: right.items.map(toWalletTransactionDetail),
-        pagination: {
-          page: right.page,
-          pageSize: right.pageSize,
-          total: right.total,
-          totalPages: right.totalPages,
-        },
+        pagination: toContractPage(right),
       }, 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
