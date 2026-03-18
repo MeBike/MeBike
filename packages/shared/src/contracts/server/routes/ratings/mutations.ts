@@ -7,10 +7,8 @@ import {
   ratingErrorMessages,
 } from "../../ratings/schemas";
 import {
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
 } from "../../schemas";
+import { unauthorizedResponse } from "../helpers";
 
 export const createRatingRoute = createRoute({
   method: "post",
@@ -38,22 +36,7 @@ export const createRatingRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     400: {
       description: "Rental not completed or rating window expired",
       content: {

@@ -10,9 +10,6 @@ import {
 import {
   paginationQueryFields,
   SortDirectionSchema,
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
   BikeSwapRequestDetailSchemaOpenApi,
@@ -37,6 +34,11 @@ import {
   StationActivityResponseSchema,
   UserIdParamSchema,
 } from "./shared";
+import {
+  forbiddenResponse,
+  paginatedResponse,
+  unauthorizedResponse,
+} from "../helpers";
 
 export const getMyRentals = createRoute({
   method: "get",
@@ -55,24 +57,7 @@ export const getMyRentals = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: {
-                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -93,24 +78,7 @@ export const getMyCurrentRentals = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: {
-                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -133,24 +101,7 @@ export const getMyRentalCounts = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: {
-                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -171,24 +122,7 @@ export const getMyRental = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: {
-                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "Rental not found",
       content: {
@@ -513,22 +447,8 @@ export const adminListRentals = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Admin access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 
@@ -601,22 +521,8 @@ export const adminGetRental = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Admin access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
     404: {
       description: "Rental not found",
       content: {
@@ -697,22 +603,8 @@ export const staffGetRental = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Staff access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
     404: {
       description: "Rental not found",
       content: {
@@ -748,30 +640,12 @@ export const staffListRentals = createRoute({
       }),
   },
   responses: {
-    200: {
-      description: "Paginated list of all rentals (staff view)",
-      content: {
-        "application/json": {
-          schema: AdminRentalsListResponseSchema,
-        },
-      },
-    },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Staff access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    200: paginatedResponse(
+      AdminRentalsListResponseSchema,
+      "Paginated list of all rentals (staff view)",
+    ),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
   },
 });
 
@@ -802,22 +676,8 @@ export const staffListBikeSwapRequests = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Staff access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
   },
 });
 
@@ -848,22 +708,8 @@ export const adminListBikeSwapRequests = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Admin access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 
@@ -887,22 +733,8 @@ export const adminGetBikeSwapRequests = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Admin access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
     404: {
       description: "Bike swap request not found",
       content: {
@@ -934,22 +766,8 @@ export const staffGetBikeSwapRequests = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
-    403: {
-      description: "Forbidden - Staff access required",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-        },
-      },
-    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
     404: {
       description: "Bike swap request not found",
       content: {

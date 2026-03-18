@@ -1,11 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
-  UnauthorizedErrorCodeSchema,
-  unauthorizedErrorMessages,
-  UnauthorizedErrorResponseSchema,
-} from "../../schemas";
-import {
   ListSubscriptionPackagesResponseSchema,
   ListSubscriptionsQuerySchema,
   ListSubscriptionsResponseSchema,
@@ -14,6 +9,7 @@ import {
   subscriptionErrorMessages,
   SubscriptionErrorResponseSchema,
 } from "../../subscriptions/schemas";
+import { unauthorizedResponse } from "../helpers";
 
 export const getSubscriptionRoute = createRoute({
   method: "get",
@@ -34,22 +30,7 @@ export const getSubscriptionRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
     404: {
       description: "Subscription not found",
       content: {
@@ -86,22 +67,7 @@ export const listSubscriptionsRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
 
@@ -119,21 +85,6 @@ export const listSubscriptionPackagesRoute = createRoute({
         },
       },
     },
-    401: {
-      description: "Unauthorized",
-      content: {
-        "application/json": {
-          schema: UnauthorizedErrorResponseSchema,
-          examples: {
-            Unauthorized: {
-              value: {
-                error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-              },
-            },
-          },
-        },
-      },
-    },
+    401: unauthorizedResponse(),
   },
 });
