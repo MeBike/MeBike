@@ -1,8 +1,6 @@
 export const formatToVNTime = (dateString : string) => {
   if (!dateString) return "";
-
   const date = new Date(dateString);
-
   return new Intl.DateTimeFormat("vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh",
     hour: "2-digit",

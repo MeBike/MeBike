@@ -31,8 +31,10 @@ export default function StationsPage() {
 
   useEffect(() => {
     getAllStations();
-  }, [page, searchQuery, getAllStations, limit]);
-
+  }, [page, getAllStations, limit]);
+  useEffect(() => {
+    setPage(1);
+  },[searchQuery])
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 max-w-7xl">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">

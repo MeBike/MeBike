@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import type { UserRole } from "@/types";
 import type { DetailUser } from "@/types";
-import { formatDateUTC } from "@/utils/formatDateTime";
+import { formatToVNTime } from "@/lib/formatVNDate";
 export const getVerifyStatusColor = (status: string) => {
   switch (status) {
     case "VERIFIED":
@@ -92,14 +92,14 @@ export const userColumns = ({
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.createdAt);
+      return formatToVNTime(row.original.createdAt);
     },
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.updatedAt);
+      return formatToVNTime(row.original.updatedAt);
     },
   },
   {

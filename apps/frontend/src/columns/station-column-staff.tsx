@@ -1,17 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import type { Station } from "@custom-types";
-export function formatDateVN(dateString: string) {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return ""; // Nếu date không hợp lệ trả về rỗng
-  return date.toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
+import { formatToVNTime } from "@/lib/formatVNDate";
 export const stationColumns = (): ColumnDef<Station>[] => [
   {
     accessorKey: "name",
@@ -41,11 +30,11 @@ export const stationColumns = (): ColumnDef<Station>[] => [
   {
     accessorKey: "created_at",
     header: "Ngày tạo",
-    cell: ({ row }) => formatDateVN(row.original.createdAt),
+    cell: ({ row }) => formatToVNTime(row.original.createdAt),
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
-    cell: ({ row }) => formatDateVN(row.original.updatedAt),
+    cell: ({ row }) => formatToVNTime(row.original.updatedAt),
   },
 ];

@@ -29,7 +29,6 @@ export default function SuppliersPage() {
 
   useEffect(() => {
     setPage(1);
-    setLimit(10);
   }, [statusFilter, searchQuery]);
 
   const handleChangeStatusFilter = (

@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit2, Eye, RefreshCw } from "lucide-react";
 import type { Rental } from "@/types/Rental";
-import { formatDateUTC } from "@/utils/formatDateTime";
+import { formatToVNTime } from "@/lib/formatVNDate";
 import { shortenId } from "@utils";
 export const rentalColumn = ({
   onView,
@@ -51,14 +51,14 @@ export const rentalColumn = ({
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.createdAt);
+      return formatToVNTime(row.original.createdAt);
     },
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.updatedAt);
+      return formatToVNTime(row.original.updatedAt);
     },
   },
   {
