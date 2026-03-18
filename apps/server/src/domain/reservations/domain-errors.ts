@@ -25,8 +25,8 @@ export class ActiveReservationExists extends Data.TaggedError("ActiveReservation
 export class ReservationConfirmBlockedByActiveRental extends Data.TaggedError(
   "ReservationConfirmBlockedByActiveRental",
 )<{
-  readonly userId: string;
-}> {}
+    readonly userId: string;
+  }> {}
 
 /**
  * EN: Bike is already reserved by another reservation.
