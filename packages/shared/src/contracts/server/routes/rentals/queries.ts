@@ -724,6 +724,57 @@ export const staffGetRental = createRoute({
   },
 });
 
+export const staffListRentals = createRoute({
+  method: "get",
+  path: "/v1/staff/rentals",
+  tags: ["Staff", "Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z
+      .object({
+        userId: z.uuidv7().optional(),
+        bikeId: z.uuidv7().optional(),
+        startStation: z.uuidv7().optional(),
+        endStation: z.uuidv7().optional(),
+        status: RentalStatusSchema.optional(),
+        ...paginationQueryFields,
+        sortBy: z
+          .enum(["startTime", "endTime", "status", "updatedAt"])
+          .optional(),
+        sortDir: SortDirectionSchema.optional(),
+      })
+      .openapi("StaffRentalsListQuery", {
+        description: "Query parameters for staff rental listing",
+      }),
+  },
+  responses: {
+    200: {
+      description: "Paginated list of all rentals (staff view)",
+      content: {
+        "application/json": {
+          schema: AdminRentalsListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Staff access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 export const staffListBikeSwapRequests = createRoute({
   method: "get",
   path: "/v1/staff/bike-swap-requests",
