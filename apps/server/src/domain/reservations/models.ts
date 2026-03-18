@@ -1,4 +1,10 @@
-import type { Prisma as PrismaTypes, ReservationOption, ReservationStatus } from "generated/prisma/client";
+import type {
+  BikeStatus,
+  Prisma as PrismaTypes,
+  ReservationOption,
+  ReservationStatus,
+  UserRole,
+} from "generated/prisma/client";
 
 export type ReservationDecimal = PrismaTypes.Decimal;
 
@@ -16,6 +22,36 @@ export type ReservationRow = {
   readonly status: ReservationStatus;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+};
+
+export type ReservationDetailUserRow = {
+  readonly id: string;
+  readonly fullName: string;
+  readonly username: string | null;
+  readonly email: string;
+  readonly phoneNumber: string | null;
+  readonly avatar: string | null;
+  readonly role: UserRole;
+};
+
+export type ReservationDetailBikeRow = {
+  readonly id: string;
+  readonly chipId: string;
+  readonly status: BikeStatus;
+};
+
+export type ReservationDetailStationRow = {
+  readonly id: string;
+  readonly name: string;
+  readonly address: string;
+  readonly latitude: number;
+  readonly longitude: number;
+};
+
+export type ReservationExpandedDetailRow = ReservationRow & {
+  readonly user: ReservationDetailUserRow;
+  readonly bike: ReservationDetailBikeRow | null;
+  readonly station: ReservationDetailStationRow;
 };
 
 export type ReservationSortField = "startTime" | "endTime" | "status" | "updatedAt";

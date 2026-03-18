@@ -5,8 +5,12 @@ import { serverRoutes } from "@mebike/shared";
 import {
   ReservationAdminController,
   ReservationMeController,
+  ReservationStaffController,
 } from "@/http/controllers/reservations";
-import { requireAdminMiddleware } from "@/http/middlewares/auth";
+import {
+  requireAdminMiddleware,
+  requireStaffMiddleware,
+} from "@/http/middlewares/auth";
 
 export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const reservations = serverRoutes.reservations;
@@ -30,4 +34,18 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
   } satisfies RouteConfig;
 
   app.openapi(adminGetRoute, ReservationAdminController.adminGetReservation);
+
+  const staffListRoute = {
+    ...reservations.staffListReservations,
+    middleware: [requireStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(staffListRoute, ReservationStaffController.staffListReservations);
+
+  const staffGetRoute = {
+    ...reservations.staffGetReservation,
+    middleware: [requireStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(staffGetRoute, ReservationStaffController.staffGetReservation);
 }

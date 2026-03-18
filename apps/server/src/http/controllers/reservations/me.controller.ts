@@ -5,13 +5,23 @@ import { Effect, Match, Option } from "effect";
 import {
   cancelReservationUseCase,
   confirmReservationUseCase,
+  ReservationRepository,
   ReservationServiceTag,
   reserveBikeUseCase,
 } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
-import { toContractReservation } from "@/http/presenters/reservations.presenter";
+import {
+  toContractReservation,
+  toContractReservationExpanded,
+} from "@/http/presenters/reservations.presenter";
 
-import type { ListMyReservationsResponse, ReservationDetailResponse, ReservationErrorResponse, ReservationsRoutes } from "./shared";
+import type {
+  ListMyReservationsResponse,
+  ReservationDetailResponse,
+  ReservationErrorResponse,
+  ReservationExpandedDetailResponse,
+  ReservationsRoutes,
+} from "./shared";
 
 import {
   ReservationErrorCodeSchema,
@@ -152,7 +162,9 @@ const reserveBike: RouteHandler<ReservationsRoutes["reserveBike"]> = async (c) =
           throw left;
         }),
       )),
-    Match.exhaustive,
+    Match.orElse(() => {
+      throw new Error("Unexpected reservation reserve result state");
+    }),
   );
 };
 
@@ -249,7 +261,9 @@ const confirmReservation: RouteHandler<ReservationsRoutes["confirmReservation"]>
           throw left;
         }),
       )),
-    Match.exhaustive,
+    Match.orElse(() => {
+      throw new Error("Unexpected reservation confirm result state");
+    }),
   );
 };
 
@@ -322,7 +336,9 @@ const cancelReservation: RouteHandler<ReservationsRoutes["cancelReservation"]> =
           throw left;
         }),
       )),
-    Match.exhaustive,
+    Match.orElse(() => {
+      throw new Error("Unexpected reservation cancel result state");
+    }),
   );
 };
 
@@ -366,36 +382,51 @@ const getMyReservation: RouteHandler<ReservationsRoutes["getMyReservation"]> = a
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* ReservationServiceTag;
-      return yield* service.getById(reservationId);
+      const repo = yield* ReservationRepository;
+      return yield* repo.findExpandedDetailById(reservationId);
     }),
     "GET /v1/reservations/me/{reservationId}",
   );
 
-  const reservationOpt = await c.var.runPromise(eff);
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
-  if (Option.isNone(reservationOpt)) {
-    return c.json<ReservationErrorResponse, 400>({
-      error: reservationErrorMessages.RESERVATION_NOT_FOUND,
-      details: {
-        code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND,
-        reservationId,
-      },
-    }, 400);
-  }
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) => {
+      if (Option.isNone(right)) {
+        return c.json<ReservationErrorResponse, 400>({
+          error: reservationErrorMessages.RESERVATION_NOT_FOUND,
+          details: {
+            code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND,
+            reservationId,
+          },
+        }, 400);
+      }
 
-  if (reservationOpt.value.userId !== userId) {
-    return c.json<ReservationErrorResponse, 400>({
-      error: reservationErrorMessages.RESERVATION_NOT_OWNED,
-      details: {
-        code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_OWNED,
-        reservationId,
-        userId,
-      },
-    }, 400);
-  }
+      const detail = right.value;
 
-  return c.json<ReservationDetailResponse, 200>(toContractReservation(reservationOpt.value), 200);
+      if (detail.userId !== userId) {
+        return c.json<ReservationErrorResponse, 400>({
+          error: reservationErrorMessages.RESERVATION_NOT_OWNED,
+          details: {
+            code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_OWNED,
+            reservationId,
+            userId,
+          },
+        }, 400);
+      }
+
+      return c.json<ReservationExpandedDetailResponse, 200>(
+        toContractReservationExpanded(detail),
+        200,
+      );
+    }),
+    Match.tag("Left", ({ left }) => {
+      throw left;
+    }),
+    Match.orElse(() => {
+      throw new Error("Unexpected reservation my-detail result state");
+    }),
+  );
 };
 
 export const ReservationMeController = {

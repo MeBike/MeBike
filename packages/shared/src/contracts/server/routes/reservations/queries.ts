@@ -5,9 +5,10 @@ import {
   ListAdminReservationsResponseSchema,
   ListMyReservationsQuerySchema,
   ListMyReservationsResponseSchema,
-  ReservationDetailResponseSchema,
+  ListStaffReservationsResponseSchema,
   ReservationErrorCodeSchema,
   ReservationErrorResponseSchema,
+  ReservationExpandedDetailResponseSchema,
 } from "../../reservations";
 import {
   forbiddenResponse,
@@ -44,7 +45,7 @@ export const getMyReservationRoute = createRoute({
       description: "Get reservation detail for current user",
       content: {
         "application/json": {
-          schema: ReservationDetailResponseSchema,
+          schema: ReservationExpandedDetailResponseSchema,
         },
       },
     },
@@ -102,12 +103,57 @@ export const adminGetReservationRoute = createRoute({
       description: "Get reservation detail for admin",
       content: {
         "application/json": {
-          schema: ReservationDetailResponseSchema,
+          schema: ReservationExpandedDetailResponseSchema,
         },
       },
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Admin"),
+    404: notFoundResponse({
+      description: "Reservation not found",
+      schema: ReservationErrorResponseSchema,
+      example: {
+        error: "Reservation not found",
+        details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND },
+      },
+    }),
+  },
+});
+
+export const staffListReservationsRoute = createRoute({
+  method: "get",
+  path: "/v1/staff/reservations",
+  tags: ["Staff", "Reservations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ListAdminReservationsQuerySchema,
+  },
+  responses: {
+    200: paginatedResponse(ListStaffReservationsResponseSchema, "List reservations for staff"),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
+  },
+});
+
+export const staffGetReservationRoute = createRoute({
+  method: "get",
+  path: "/v1/staff/reservations/{reservationId}",
+  tags: ["Staff", "Reservations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: ReservationIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get reservation detail for staff",
+      content: {
+        "application/json": {
+          schema: ReservationExpandedDetailResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
     404: notFoundResponse({
       description: "Reservation not found",
       schema: ReservationErrorResponseSchema,
