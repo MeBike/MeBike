@@ -11,7 +11,7 @@ import {
 import { toContractPage } from "@/http/shared/pagination";
 
 import type {
-  ListAdminReservationsResponse,
+  ListStaffReservationsResponse,
   ReservationErrorResponse,
   ReservationExpandedDetailResponse,
   ReservationsRoutes,
@@ -22,8 +22,8 @@ import {
   reservationErrorMessages,
 } from "./shared";
 
-const adminListReservations: RouteHandler<
-  ReservationsRoutes["adminListReservations"]
+const staffListReservations: RouteHandler<
+  ReservationsRoutes["staffListReservations"]
 > = async (c) => {
   const query = c.req.valid("query");
 
@@ -46,11 +46,11 @@ const adminListReservations: RouteHandler<
         },
       );
     }),
-    "GET /v1/admin/reservations",
+    "GET /v1/staff/reservations",
   );
 
   const value = await c.var.runPromise(eff);
-  return c.json<ListAdminReservationsResponse, 200>(
+  return c.json<ListStaffReservationsResponse, 200>(
     {
       data: value.items.map(toContractReservation),
       pagination: toContractPage(value),
@@ -59,8 +59,8 @@ const adminListReservations: RouteHandler<
   );
 };
 
-const adminGetReservation: RouteHandler<
-  ReservationsRoutes["adminGetReservation"]
+const staffGetReservation: RouteHandler<
+  ReservationsRoutes["staffGetReservation"]
 > = async (c) => {
   const { reservationId } = c.req.valid("param");
 
@@ -69,7 +69,7 @@ const adminGetReservation: RouteHandler<
       const repo = yield* ReservationRepository;
       return yield* repo.findExpandedDetailById(reservationId);
     }),
-    "GET /v1/admin/reservations/{reservationId}",
+    "GET /v1/staff/reservations/{reservationId}",
   );
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
@@ -98,12 +98,12 @@ const adminGetReservation: RouteHandler<
       throw left;
     }),
     Match.orElse(() => {
-      throw new Error("Unexpected reservation admin detail result state");
+      throw new Error("Unexpected reservation staff detail result state");
     }),
   );
 };
 
-export const ReservationAdminController = {
-  adminListReservations,
-  adminGetReservation,
+export const ReservationStaffController = {
+  staffListReservations,
+  staffGetReservation,
 } as const;

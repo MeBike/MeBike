@@ -19,7 +19,12 @@ import {
   ReservationRepositoryError,
   ReservationUniqueViolation,
 } from "../domain-errors";
-import { selectReservationRow, toReservationRow } from "./reservation.mappers";
+import {
+  selectReservationExpandedDetailRow,
+  selectReservationRow,
+  toReservationExpandedDetailRow,
+  toReservationRow,
+} from "./reservation.mappers";
 import {
   activeStatusWhere,
   pendingHoldWhere,
@@ -146,6 +151,24 @@ export function makeReservationRepository(
       }).pipe(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
+        ),
+      ),
+
+    findExpandedDetailById: reservationId =>
+      Effect.tryPromise({
+        try: () =>
+          client.reservation.findUnique({
+            where: { id: reservationId },
+            select: selectReservationExpandedDetailRow,
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "findExpandedDetailById",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toReservationExpandedDetailRow)),
         ),
       ),
 

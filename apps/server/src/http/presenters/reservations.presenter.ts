@@ -1,10 +1,11 @@
 import type { ReservationsContracts } from "@mebike/shared";
 
-import type { ReservationRow } from "@/domain/reservations";
+import type { ReservationExpandedDetailRow, ReservationRow } from "@/domain/reservations";
 
-type ReservationResponseItem = ReservationsContracts.ReservationDetail;
+type ReservationListItem = ReservationsContracts.ReservationDetail;
+type ReservationExpandedDetail = ReservationsContracts.ReservationExpandedDetail;
 
-export function toContractReservation(row: ReservationRow): ReservationResponseItem {
+export function toContractReservation(row: ReservationRow): ReservationListItem {
   return {
     id: row.id,
     userId: row.userId,
@@ -19,5 +20,36 @@ export function toContractReservation(row: ReservationRow): ReservationResponseI
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toContractReservationExpanded(
+  row: ReservationExpandedDetailRow,
+): ReservationExpandedDetail {
+  return {
+    ...toContractReservation(row),
+    user: {
+      id: row.user.id,
+      fullName: row.user.fullName,
+      username: row.user.username,
+      email: row.user.email,
+      phoneNumber: row.user.phoneNumber,
+      avatar: row.user.avatar,
+      role: row.user.role,
+    },
+    bike: row.bike
+      ? {
+          id: row.bike.id,
+          chipId: row.bike.chipId,
+          status: row.bike.status,
+        }
+      : null,
+    station: {
+      id: row.station.id,
+      name: row.station.name,
+      address: row.station.address,
+      latitude: row.station.latitude,
+      longitude: row.station.longitude,
+    },
   };
 }

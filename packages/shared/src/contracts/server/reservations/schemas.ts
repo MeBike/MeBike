@@ -9,6 +9,7 @@ import {
 } from "../schemas";
 import {
   ReservationDetailSchema,
+  ReservationExpandedDetailSchema,
   ReservationOptionSchema,
   ReservationStatusSchema,
 } from "./models";
@@ -92,6 +93,7 @@ export const CreateReservationRequestSchema = z.object({
 }).openapi("CreateReservationRequest");
 
 export const ReservationDetailResponseSchema = ReservationDetailSchema.openapi("ReservationDetailResponse");
+export const ReservationExpandedDetailResponseSchema = ReservationExpandedDetailSchema.openapi("ReservationExpandedDetailResponse");
 
 export const ListMyReservationsQuerySchema = z.object({
   ...paginationQueryFields,
@@ -121,14 +123,22 @@ export const ListAdminReservationsResponseSchema = z.object({
   pagination: PaginationSchema,
 }).openapi("ListAdminReservationsResponse");
 
+export const ListStaffReservationsResponseSchema = z.object({
+  data: ReservationDetailSchema.array(),
+  pagination: PaginationSchema,
+}).openapi("ListStaffReservationsResponse");
+
 export type ReservationErrorResponse = z.infer<typeof ReservationErrorResponseSchema>;
 export type CreateReservationRequest = z.infer<typeof CreateReservationRequestSchema>;
 export type ReservationDetailResponse = z.infer<typeof ReservationDetailResponseSchema>;
+export type ReservationExpandedDetailResponse = z.infer<typeof ReservationExpandedDetailResponseSchema>;
 export type ListMyReservationsResponse = z.infer<typeof ListMyReservationsResponseSchema>;
 export type ListAdminReservationsResponse = z.infer<typeof ListAdminReservationsResponseSchema>;
+export type ListStaffReservationsResponse = z.infer<typeof ListStaffReservationsResponseSchema>;
 
 export {
   ReservationDetailSchema,
+  ReservationExpandedDetailSchema,
   ReservationOptionSchema,
   ReservationStatusSchema,
   UnauthorizedErrorCodeSchema,

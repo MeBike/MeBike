@@ -8,6 +8,8 @@ import {
   adminListReservationsRoute,
   getMyReservationRoute,
   listMyReservationsRoute,
+  staffGetReservationRoute,
+  staffListReservationsRoute,
 } from "./queries";
 
 export * from "../../reservations";
@@ -22,4 +24,6 @@ export const reservationsRoutes = {
   getMyReservation: getMyReservationRoute,
   adminListReservations: adminListReservationsRoute,
   adminGetReservation: adminGetReservationRoute,
+  staffListReservations: staffListReservationsRoute,
+  staffGetReservation: staffGetReservationRoute,
 } as const;

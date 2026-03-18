@@ -1,4 +1,6 @@
 import { z } from "../../../zod";
+import { BikeStatusSchema } from "../bikes";
+import { UserRoleSchema } from "../users";
 
 export const ReservationStatusSchema = z
   .enum(["PENDING", "ACTIVE", "CANCELLED", "EXPIRED"])
@@ -24,4 +26,35 @@ export const ReservationDetailSchema = z.object({
   updatedAt: z.iso.datetime(),
 }).openapi("ReservationDetail");
 
+export const ReservationDetailUserSchema = z.object({
+  id: z.uuidv7(),
+  fullName: z.string(),
+  username: z.string().nullable(),
+  email: z.string(),
+  phoneNumber: z.string().nullable(),
+  avatar: z.string().nullable(),
+  role: UserRoleSchema,
+}).openapi("ReservationDetailUser");
+
+export const ReservationDetailBikeSchema = z.object({
+  id: z.uuidv7(),
+  chipId: z.string(),
+  status: BikeStatusSchema,
+}).openapi("ReservationDetailBike");
+
+export const ReservationDetailStationSchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+  address: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+}).openapi("ReservationDetailStation");
+
+export const ReservationExpandedDetailSchema = ReservationDetailSchema.extend({
+  user: ReservationDetailUserSchema,
+  bike: ReservationDetailBikeSchema.nullable(),
+  station: ReservationDetailStationSchema,
+}).openapi("ReservationExpandedDetail");
+
 export type ReservationDetail = z.infer<typeof ReservationDetailSchema>;
+export type ReservationExpandedDetail = z.infer<typeof ReservationExpandedDetailSchema>;

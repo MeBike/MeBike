@@ -10,6 +10,7 @@ import type {
 import type {
   AdminReservationFilter,
   AdminReservationSortField,
+  ReservationExpandedDetailRow,
   ReservationFilter,
   ReservationRow,
   ReservationSortField,
@@ -32,6 +33,14 @@ export type ReservationRepo = {
   findById: (
     reservationId: string,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+
+  /**
+   * EN: Finds reservation detail by id with nested user / bike / station summaries.
+   * VI: Lấy chi tiết reservation theo id, kèm thông tin rút gọn user / bike / station.
+   */
+  findExpandedDetailById: (
+    reservationId: string,
+  ) => Effect.Effect<Option.Option<ReservationExpandedDetailRow>, ReservationRepositoryError>;
 
   /**
    * Returns the most recently updated reservation with status in (PENDING, ACTIVE).
