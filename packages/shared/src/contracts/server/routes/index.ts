@@ -13,8 +13,8 @@ import { suppliersRoutes } from "./suppliers";
 import { usersRoutes } from "./users";
 import { walletsRoutes } from "./wallets";
 
-export * from "./auth";
 export * from "./agency-requests";
+export * from "./auth";
 export * from "./bikes";
 export * from "./health";
 export * from "./ratings";
