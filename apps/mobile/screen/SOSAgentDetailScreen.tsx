@@ -57,7 +57,7 @@ export default function SOSAgentDetailScreen() {
     setRefreshing(false);
   }, [refetchSOSDetail]);
 
-  const detail = sosDetail?.result as SOSDetail | undefined;
+  const detail = sosDetail?.data as SOSDetail | undefined;
 
   const getStatusColor = (status: string) => {
     switch (status) {

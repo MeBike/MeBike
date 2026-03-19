@@ -133,7 +133,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
       isLoading: status === "loading",
       isStaff: role === "STAFF",
       isCustomer: role === "USER",
-      isSOS: role === "SOS",
+      isSOS: false,
       login,
       logout,
       hydrate,
