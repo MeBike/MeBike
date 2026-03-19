@@ -46,6 +46,10 @@ model User {
   pushTokens      PushToken[]
   orgAssignment   UserOrgAssignment?
 
+  submittedAgencyRequests   AgencyRequest[] @relation("AgencyRequestRequester")
+  reviewedAgencyRequests    AgencyRequest[] @relation("AgencyRequestReviewer")
+  createdAgencyUserRequests AgencyRequest[] @relation("AgencyRequestCreatedAgencyUser")
+
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")
   @@index([nfcCardUid], name: "idx_users_nfc", type: Brin) // partial index not expressible; BRIN as placeholder
