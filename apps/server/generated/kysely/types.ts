@@ -4,6 +4,13 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   : ColumnType<T, T | undefined, T>;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export const AccountStatus = {
+    ACTIVE: "ACTIVE",
+    INACTIVE: "INACTIVE",
+    SUSPENDED: "SUSPENDED",
+    BANNED: "BANNED"
+} as const;
+export type AccountStatus = (typeof AccountStatus)[keyof typeof AccountStatus];
 export const AuthEventType = {
     SESSION_ISSUED: "SESSION_ISSUED"
 } as const;
@@ -108,11 +115,18 @@ export const SupplierStatus = {
     TERMINATED: "TERMINATED"
 } as const;
 export type SupplierStatus = (typeof SupplierStatus)[keyof typeof SupplierStatus];
+export const TechnicianTeamAvailability = {
+    AVAILABLE: "AVAILABLE",
+    UNAVAILABLE: "UNAVAILABLE"
+} as const;
+export type TechnicianTeamAvailability = (typeof TechnicianTeamAvailability)[keyof typeof TechnicianTeamAvailability];
 export const UserRole = {
     USER: "USER",
     STAFF: "STAFF",
+    TECHNICIAN: "TECHNICIAN",
+    MANAGER: "MANAGER",
     ADMIN: "ADMIN",
-    SOS: "SOS"
+    AGENCY: "AGENCY"
 } as const;
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 export const UserVerifyStatus = {
@@ -156,6 +170,15 @@ export const WalletWithdrawalStatus = {
     FAILED: "FAILED"
 } as const;
 export type WalletWithdrawalStatus = (typeof WalletWithdrawalStatus)[keyof typeof WalletWithdrawalStatus];
+export type Agency = {
+    id: string;
+    name: string;
+    address: string | null;
+    contact_phone: string | null;
+    status: Generated<AccountStatus>;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
 export type AuthEvent = {
     id: string;
     user_id: string;
@@ -326,6 +349,14 @@ export type Supplier = {
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
+export type TechnicianTeam = {
+    id: string;
+    name: string;
+    station_id: string;
+    availability_status: Generated<TechnicianTeamAvailability>;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
 export type User = {
     id: string;
     fullname: string;
@@ -340,6 +371,15 @@ export type User = {
     verify: Generated<UserVerifyStatus>;
     stripe_connected_account_id: string | null;
     stripe_payouts_enabled: boolean | null;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type UserOrgAssignment = {
+    id: string;
+    user_id: string;
+    station_id: string | null;
+    agency_id: string | null;
+    technician_team_id: string | null;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
@@ -394,6 +434,7 @@ export type WalletWithdrawal = {
     updated_at: Timestamp;
 };
 export type DB = {
+    Agency: Agency;
     AuthEvent: AuthEvent;
     Bike: Bike;
     BikeSwapRequest: BikeSwapRequest;
@@ -411,7 +452,9 @@ export type DB = {
     Station: Station;
     Subscription: Subscription;
     Supplier: Supplier;
+    TechnicianTeam: TechnicianTeam;
     User: User;
+    UserOrgAssignment: UserOrgAssignment;
     wallet_holds: WalletHold;
     wallet_transactions: WalletTransaction;
     wallet_withdrawals: WalletWithdrawal;

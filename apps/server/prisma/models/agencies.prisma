@@ -1,0 +1,18 @@
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+}
+
+model Agency {
+  id           String        @id @default(uuid(7)) @db.Uuid
+  name         String
+  address      String?
+  contactPhone String?       @map("contact_phone")
+  status       AccountStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  userAssignments UserOrgAssignment[]
+}

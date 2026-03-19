@@ -1,7 +1,14 @@
 import { z } from "../../../zod";
 import { ServerErrorResponseSchema } from "../schemas";
 
-export const UserRoleSchema = z.enum(["USER", "STAFF", "ADMIN", "SOS"]);
+export const UserRoleSchema = z.enum([
+  "USER",
+  "STAFF",
+  "TECHNICIAN",
+  "MANAGER",
+  "ADMIN",
+  "AGENCY",
+]);
 
 export const VerifyStatusSchema = z.enum(["UNVERIFIED", "VERIFIED", "BANNED"]);
 

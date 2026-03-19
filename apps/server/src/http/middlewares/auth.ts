@@ -63,10 +63,9 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
       }
       else {
         const user = userOpt.value;
-        const role = user.role === "SOS" ? "USER" : user.role;
         c.set("currentUser", {
           userId: user.id,
-          role,
+          role: user.role,
           verifyStatus: user.verify,
           tokenType: "access",
         });
