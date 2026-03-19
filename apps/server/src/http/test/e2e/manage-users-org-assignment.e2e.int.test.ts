@@ -127,6 +127,50 @@ describe("manage-users org assignment e2e", () => {
     expect(body.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
 
+  it("creates technician with team assignment and returns it in filtered reads", async () => {
+    const station = await fixture.factories.station({ name: "Station Tech Base" });
+    const team = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Team Bravo",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+
+    const createResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Tech Org A",
+        email: "tech-org-a@example.com",
+        password: "password123",
+        role: "TECHNICIAN",
+        orgAssignment: {
+          technicianTeamId: team.id,
+        },
+      }),
+    });
+
+    const created = await createResponse.json() as UsersContracts.AdminUserDetailResponse;
+
+    expect(createResponse.status).toBe(201);
+    expect(created.role).toBe("TECHNICIAN");
+    expect(created.orgAssignment?.technicianTeam?.id).toBe(team.id);
+
+    const listResponse = await fixture.app.request(
+      `http://test/v1/users/manage-users/get-all?page=1&pageSize=20&technicianTeamId=${team.id}`,
+      {
+        method: "GET",
+        headers: adminAuthHeader(),
+      },
+    );
+    const list = await listResponse.json() as UsersContracts.AdminUserListResponse;
+
+    expect(listResponse.status).toBe(200);
+    expect(list.data.some(user => user.id === created.id)).toBe(true);
+  });
+
   it("replaces org assignment and can clear it on update", async () => {
     const station = await fixture.factories.station({ name: "Station Team Base" });
     const team = await fixture.prisma.technicianTeam.create({
@@ -189,5 +233,38 @@ describe("manage-users org assignment e2e", () => {
     expect(clearResponse.status).toBe(200);
     expect(cleared.role).toBe("MANAGER");
     expect(cleared.orgAssignment).toBeNull();
+  });
+
+  it("preserves existing org assignment when update omits orgAssignment", async () => {
+    const station = await fixture.factories.station({ name: "Station Preserve Base" });
+    const targetUser = await fixture.factories.user({
+      role: "STAFF",
+      email: "staff-preserve@example.com",
+    });
+
+    await fixture.prisma.userOrgAssignment.create({
+      data: {
+        id: uuidv7(),
+        userId: targetUser.id,
+        stationId: station.id,
+      },
+    });
+
+    const updateResponse = await fixture.app.request(
+      `http://test/v1/users/manage-users/${targetUser.id}`,
+      {
+        method: "PATCH",
+        headers: adminAuthHeader(),
+        body: JSON.stringify({
+          verify: "BANNED",
+        }),
+      },
+    );
+
+    const updated = await updateResponse.json() as UsersContracts.AdminUserDetailResponse;
+
+    expect(updateResponse.status).toBe(200);
+    expect(updated.verify).toBe("BANNED");
+    expect(updated.orgAssignment?.station?.id).toBe(station.id);
   });
 });

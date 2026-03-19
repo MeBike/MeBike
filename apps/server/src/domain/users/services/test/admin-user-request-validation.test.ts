@@ -70,6 +70,31 @@ describe("admin user request validation", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts invalid role and scope combinations at schema level for service-side validation", () => {
+    const staffWithTeam = UsersContracts.AdminCreateUserRequestSchema.safeParse({
+      fullname: "Staff With Team",
+      email: "staff-team@example.com",
+      password: "12345678",
+      role: "STAFF",
+      orgAssignment: {
+        technicianTeamId: "018d4529-6880-77a8-8e6f-4d2c88d22310",
+      },
+    });
+
+    const userWithStation = UsersContracts.AdminCreateUserRequestSchema.safeParse({
+      fullname: "User With Station",
+      email: "user-station@example.com",
+      password: "12345678",
+      role: "USER",
+      orgAssignment: {
+        stationId: "018d4529-6880-77a8-8e6f-4d2c88d22309",
+      },
+    });
+
+    expect(staffWithTeam.success).toBe(true);
+    expect(userWithStation.success).toBe(true);
+  });
+
   it("accepts admin update payload with orgAssignment set to null", () => {
     const result = UsersContracts.AdminUpdateUserRequestSchema.safeParse({
       orgAssignment: null,
