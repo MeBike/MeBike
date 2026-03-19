@@ -1,6 +1,6 @@
 import { uuidv7 } from "uuidv7";
 
-import type { CreatedBike, FactoryContext, BikeOverrides } from "./types";
+import type { BikeOverrides, CreatedBike, FactoryContext } from "./types";
 
 const defaults = {
   stationId: null,

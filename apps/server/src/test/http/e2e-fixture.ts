@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import { PrismaPg } from "@prisma/adapter-pg";
+import process from "node:process";
 import { afterAll, beforeAll, vi } from "vitest";
 
 import type { DB } from "generated/kysely/types";

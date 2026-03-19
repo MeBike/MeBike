@@ -1,10 +1,14 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
+import { migrate } from "@/test/db/migrate";
+import { startPostgres } from "@/test/db/postgres";
+import { PrismaClient } from "generated/prisma/client";
+
 import type { BikeFactory } from "./bike.factory";
-import type { CreatedBike, CreatedRental, CreatedStation, CreatedUser, CreatedWallet } from "./types";
 import type { RentalFactory } from "./rental.factory";
 import type { StationFactory } from "./station.factory";
+import type { CreatedBike, CreatedRental, CreatedStation, CreatedUser, CreatedWallet } from "./types";
 import type { UserFactory } from "./user.factory";
 import type { WalletFactory } from "./wallet.factory";
 
@@ -13,26 +17,23 @@ import { createRentalFactory } from "./rental.factory";
 import { createStationFactory } from "./station.factory";
 import { createUserFactory } from "./user.factory";
 import { createWalletFactory } from "./wallet.factory";
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
-import { PrismaClient } from "generated/prisma/client";
 
 export type { CreatedBike, CreatedRental, CreatedStation, CreatedUser, CreatedWallet };
 export type { BikeOverrides, RentalOverrides, StationOverrides, UserOverrides, WalletOverrides } from "./types";
 
-export interface TestFactories {
+export type TestFactories = {
   user: UserFactory;
   station: StationFactory;
   bike: BikeFactory;
   rental: RentalFactory;
   wallet: WalletFactory;
-}
+};
 
-export interface FactorySetup {
+export type FactorySetup = {
   factories: TestFactories;
   prisma: PrismaClient;
   container: { stop: () => Promise<void>; url: string };
-}
+};
 
 export function setupFactories(): FactorySetup {
   let container: { stop: () => Promise<void>; url: string };
@@ -69,8 +70,10 @@ export function setupFactories(): FactorySetup {
   });
 
   afterAll(async () => {
-    if (prisma) await prisma.$disconnect();
-    if (container) await container.stop();
+    if (prisma)
+      await prisma.$disconnect();
+    if (container)
+      await container.stop();
   });
 
   return {

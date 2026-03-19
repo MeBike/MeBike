@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import process from "node:process";
 
 type AccessTokenInput = {
   userId: string;

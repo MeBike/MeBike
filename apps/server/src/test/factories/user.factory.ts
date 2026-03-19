@@ -15,10 +15,7 @@ const defaults = {
 };
 
 export function createUserFactory(ctx: FactoryContext) {
-  let counter = 0;
-
   return async (overrides: UserOverrides = {}): Promise<CreatedUser> => {
-    counter++;
     const id = overrides.id ?? uuidv7();
     const email = overrides.email ?? `user-${id}@test.example.com`;
 
