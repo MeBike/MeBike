@@ -1,0 +1,18 @@
+enum TechnicianTeamAvailability {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+model TechnicianTeam {
+  id                 String                     @id @default(uuid(7)) @db.Uuid
+  name               String
+  stationId          String                     @map("station_id") @db.Uuid
+  availabilityStatus TechnicianTeamAvailability @default(AVAILABLE) @map("availability_status")
+  createdAt          DateTime                   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime                   @updatedAt @map("updated_at") @db.Timestamptz
+
+  station Station @relation(fields: [stationId], references: [id])
+  userAssignments UserOrgAssignment[]
+
+  @@index([stationId], name: "idx_technician_teams_station")
+}

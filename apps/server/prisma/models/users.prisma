@@ -2,8 +2,10 @@
 enum UserRole {
   USER
   STAFF
+  TECHNICIAN
+  MANAGER
   ADMIN
-  SOS
+  AGENCY
 }
 
 enum UserVerifyStatus {
@@ -42,6 +44,7 @@ model User {
   withdrawals      WalletWithdrawal[]
   bikeSwapRequests BikeSwapRequest[]
   pushTokens      PushToken[]
+  orgAssignment   UserOrgAssignment?
 
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")

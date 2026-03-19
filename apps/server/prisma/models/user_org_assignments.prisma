@@ -1,0 +1,18 @@
+model UserOrgAssignment {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  userId           String   @unique @map("user_id") @db.Uuid
+  stationId        String?  @map("station_id") @db.Uuid
+  agencyId         String?  @map("agency_id") @db.Uuid
+  technicianTeamId String?  @map("technician_team_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user           User            @relation(fields: [userId], references: [id])
+  station        Station?        @relation(fields: [stationId], references: [id])
+  agency         Agency?         @relation(fields: [agencyId], references: [id])
+  technicianTeam TechnicianTeam? @relation(fields: [technicianTeamId], references: [id])
+
+  @@index([stationId], name: "idx_user_org_assignments_station")
+  @@index([agencyId], name: "idx_user_org_assignments_agency")
+  @@index([technicianTeamId], name: "idx_user_org_assignments_technician_team")
+}

@@ -1,6 +1,6 @@
 export type AccessTokenPayload = {
   userId: string;
-  role: "USER" | "ADMIN" | "STAFF";
+  role: "USER" | "STAFF" | "TECHNICIAN" | "MANAGER" | "ADMIN" | "AGENCY";
   verifyStatus: "UNVERIFIED" | "VERIFIED" | "BANNED";
   tokenType: "access";
 };

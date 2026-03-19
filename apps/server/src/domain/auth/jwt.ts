@@ -4,7 +4,7 @@ import type { UserRow } from "@/domain/users";
 
 import { env } from "@/config/env";
 
-import type { UserRole, UserVerifyStatus } from "../../../generated/prisma/enums";
+import type { UserVerifyStatus } from "../../../generated/prisma/enums";
 import type { AccessTokenPayload, RefreshSession, RefreshTokenPayload } from "./models";
 
 import {
@@ -12,10 +12,6 @@ import {
   REFRESH_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_TTL_MS,
 } from "./config";
-
-function clampRole(role: UserRole): AccessTokenPayload["role"] {
-  return role === "SOS" ? "USER" : (role as AccessTokenPayload["role"]);
-}
 
 export const requireJwtSecret = (): string => env.JWT_SECRET;
 
@@ -28,7 +24,7 @@ export function makeTokensForUser(user: UserRow, sessionId: string): Tokens {
   const secret = requireJwtSecret();
   const accessPayload: AccessTokenPayload = {
     userId: user.id,
-    role: clampRole(user.role),
+    role: user.role,
     verifyStatus: user.verify as UserVerifyStatus,
     tokenType: "access",
   };
