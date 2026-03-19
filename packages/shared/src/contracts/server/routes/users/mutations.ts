@@ -254,6 +254,22 @@ export const adminUpdateUserRoute = createRoute({
         },
       },
     },
+    400: {
+      description: "Invalid org assignment for role",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            InvalidOrgAssignment: {
+              value: {
+                error: userErrorMessages.INVALID_ORG_ASSIGNMENT,
+                details: { code: UserErrorCodeSchema.enum.INVALID_ORG_ASSIGNMENT },
+              },
+            },
+          },
+        },
+      },
+    },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Admin"),
     404: {
@@ -317,6 +333,22 @@ export const adminCreateUserRoute = createRoute({
       content: {
         "application/json": {
           schema: AdminUserDetailResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid org assignment for role",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            InvalidOrgAssignment: {
+              value: {
+                error: userErrorMessages.INVALID_ORG_ASSIGNMENT,
+                details: { code: UserErrorCodeSchema.enum.INVALID_ORG_ASSIGNMENT },
+              },
+            },
+          },
         },
       },
     },

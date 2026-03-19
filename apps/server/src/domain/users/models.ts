@@ -1,5 +1,22 @@
 import type { Prisma as PrismaTypes, UserRole, UserVerifyStatus } from "generated/prisma/client";
 
+export type OrgUnitRef = {
+  readonly id: string;
+  readonly name: string;
+};
+
+export type UserOrgAssignment = {
+  readonly station: OrgUnitRef | null;
+  readonly agency: OrgUnitRef | null;
+  readonly technicianTeam: OrgUnitRef | null;
+};
+
+export type UserOrgAssignmentPatch = {
+  readonly stationId?: string | null;
+  readonly agencyId?: string | null;
+  readonly technicianTeamId?: string | null;
+};
+
 export type UserRow = {
   readonly id: string;
   readonly fullname: string;
@@ -11,6 +28,7 @@ export type UserRow = {
   readonly location: string | null;
   readonly role: UserRole;
   readonly verify: UserVerifyStatus;
+  readonly orgAssignment: UserOrgAssignment | null;
   readonly nfcCardUid: string | null;
   readonly stripeConnectedAccountId: string | null;
   readonly stripePayoutsEnabled: boolean | null;
@@ -28,6 +46,7 @@ export type CreateUserInput = {
   readonly location?: string | null;
   readonly role?: UserRole;
   readonly verify?: UserVerifyStatus;
+  readonly orgAssignment?: UserOrgAssignmentPatch | null;
   readonly nfcCardUid?: string | null;
 };
 
@@ -51,6 +70,7 @@ export type UpdateUserAdminPatch = Partial<{
   location: string | null;
   role: UserRole;
   verify: UserVerifyStatus;
+  orgAssignment: UserOrgAssignmentPatch | null;
   nfcCardUid: string | null;
 }>;
 
@@ -59,6 +79,9 @@ export type UserFilter = {
   readonly email?: string;
   readonly verify?: UserVerifyStatus;
   readonly role?: UserRole;
+  readonly stationId?: string;
+  readonly agencyId?: string;
+  readonly technicianTeamId?: string;
 };
 
 export type UserSortField = "fullname" | "email" | "role" | "verify" | "updatedAt";

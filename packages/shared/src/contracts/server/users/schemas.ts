@@ -10,6 +10,14 @@ export const UserRoleSchema = z.enum([
   "AGENCY",
 ]);
 
+export const AdminManageableUserRoleSchema = z.enum([
+  "USER",
+  "STAFF",
+  "TECHNICIAN",
+  "MANAGER",
+  "ADMIN",
+]);
+
 export const VerifyStatusSchema = z.enum(["UNVERIFIED", "VERIFIED", "BANNED"]);
 
 export type UserRole = z.infer<typeof UserRoleSchema>;
@@ -21,6 +29,7 @@ export const UserErrorCodeSchema = z.enum([
   "DUPLICATE_PHONE_NUMBER",
   "INVALID_CURRENT_PASSWORD",
   "INVALID_PUSH_TOKEN",
+  "INVALID_ORG_ASSIGNMENT",
 ]).openapi("UserErrorCode");
 
 export const userErrorMessages = {
@@ -29,6 +38,7 @@ export const userErrorMessages = {
   DUPLICATE_PHONE_NUMBER: "Phone number already in use",
   INVALID_CURRENT_PASSWORD: "Current password is incorrect",
   INVALID_PUSH_TOKEN: "Invalid push token",
+  INVALID_ORG_ASSIGNMENT: "Invalid org assignment for role",
 } as const;
 
 export const UserStatsErrorCodeSchema = z.enum([
@@ -65,6 +75,7 @@ export {
   TopRenterRowSchema,
   TopRenterUserSchema,
   UserDetailSchema,
+  UserOrgAssignmentSchema,
   UserStatsOverviewSchema,
   UserSummarySchema,
   VipCustomerSchema,
