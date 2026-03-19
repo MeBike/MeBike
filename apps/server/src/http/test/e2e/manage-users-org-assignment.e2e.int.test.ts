@@ -127,6 +127,55 @@ describe("manage-users org assignment e2e", () => {
     expect(body.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
 
+  it("returns INVALID_ORG_ASSIGNMENT for other invalid role and scope combinations", async () => {
+    const station = await fixture.factories.station({ name: "Station Org Invalid User" });
+    const teamStation = await fixture.factories.station({ name: "Station Org Invalid Staff" });
+    const team = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Team Invalid Combo",
+        stationId: teamStation.id,
+      },
+      select: { id: true },
+    });
+
+    const staffWithTeamResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Staff Invalid Team",
+        email: "staff-invalid-team@example.com",
+        password: "password123",
+        role: "STAFF",
+        orgAssignment: {
+          technicianTeamId: team.id,
+        },
+      }),
+    });
+
+    const userWithStationResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "User Invalid Station",
+        email: "user-invalid-station@example.com",
+        password: "password123",
+        role: "USER",
+        orgAssignment: {
+          stationId: station.id,
+        },
+      }),
+    });
+
+    const staffWithTeamBody = await staffWithTeamResponse.json() as UsersContracts.UserErrorResponse;
+    const userWithStationBody = await userWithStationResponse.json() as UsersContracts.UserErrorResponse;
+
+    expect(staffWithTeamResponse.status).toBe(400);
+    expect(staffWithTeamBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+    expect(userWithStationResponse.status).toBe(400);
+    expect(userWithStationBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+  });
+
   it("creates technician with team assignment and returns it in filtered reads", async () => {
     const station = await fixture.factories.station({ name: "Station Tech Base" });
     const team = await fixture.prisma.technicianTeam.create({
