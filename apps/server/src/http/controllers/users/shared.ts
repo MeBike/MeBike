@@ -17,6 +17,28 @@ export function mapUserDetail(
     phoneNumber: row.phoneNumber,
     avatar: row.avatar,
     role: row.role,
+    orgAssignment: row.orgAssignment
+      ? {
+          station: row.orgAssignment.station
+            ? {
+                id: row.orgAssignment.station.id,
+                name: row.orgAssignment.station.name,
+              }
+            : null,
+          agency: row.orgAssignment.agency
+            ? {
+                id: row.orgAssignment.agency.id,
+                name: row.orgAssignment.agency.name,
+              }
+            : null,
+          technicianTeam: row.orgAssignment.technicianTeam
+            ? {
+                id: row.orgAssignment.technicianTeam.id,
+                name: row.orgAssignment.technicianTeam.name,
+              }
+            : null,
+        }
+      : null,
     nfcCardUid: row.nfcCardUid,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

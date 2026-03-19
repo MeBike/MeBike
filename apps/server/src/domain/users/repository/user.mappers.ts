@@ -13,6 +13,28 @@ export const selectUserRow = {
   location: true,
   role: true,
   verify: true,
+  orgAssignment: {
+    select: {
+      station: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      agency: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      technicianTeam: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
   nfcCardUid: true,
   stripeConnectedAccountId: true,
   stripePayoutsEnabled: true,
@@ -32,6 +54,28 @@ export function toUserRow(row: PrismaTypes.UserGetPayload<{ select: typeof selec
     location: row.location,
     role: row.role,
     verify: row.verify,
+    orgAssignment: row.orgAssignment
+      ? {
+          station: row.orgAssignment.station
+            ? {
+                id: row.orgAssignment.station.id,
+                name: row.orgAssignment.station.name,
+              }
+            : null,
+          agency: row.orgAssignment.agency
+            ? {
+                id: row.orgAssignment.agency.id,
+                name: row.orgAssignment.agency.name,
+              }
+            : null,
+          technicianTeam: row.orgAssignment.technicianTeam
+            ? {
+                id: row.orgAssignment.technicianTeam.id,
+                name: row.orgAssignment.technicianTeam.name,
+              }
+            : null,
+        }
+      : null,
     nfcCardUid: row.nfcCardUid,
     stripeConnectedAccountId: row.stripeConnectedAccountId,
     stripePayoutsEnabled: row.stripePayoutsEnabled,

@@ -15,12 +15,14 @@ export function adminCreateUserUseCase(args: {
   location?: string | null;
   role?: import("../models").UserRow["role"];
   verify?: import("../models").UserRow["verify"];
+  orgAssignment?: import("../models").UserOrgAssignmentPatch | null;
   nfcCardUid?: string | null;
 }): Effect.Effect<
   UserRow,
   import("../domain-errors").UserRepositoryError
     | import("../domain-errors").DuplicateUserEmail
-    | import("../domain-errors").DuplicateUserPhoneNumber,
+    | import("../domain-errors").DuplicateUserPhoneNumber
+    | import("../domain-errors").InvalidOrgAssignment,
   UserServiceTag
 > {
   return Effect.gen(function* () {

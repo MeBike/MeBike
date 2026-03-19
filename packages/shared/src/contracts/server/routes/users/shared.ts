@@ -11,9 +11,9 @@ import {
   DashboardStatsSchema,
   NewUsersStatsSchema,
   TopRenterRowSchema,
+  AdminManageableUserRoleSchema,
   UserDetailSchema,
   UserErrorCodeSchema,
-  UserRoleSchema,
   UserStatsOverviewSchema,
   VerifyStatusSchema,
 } from "../../users/schemas";
@@ -79,6 +79,23 @@ export const AdminUserSearchResponseSchema = z.object({
 
 export const AdminUserDetailResponseSchema = UserDetailSchema.openapi("AdminUserDetailResponse");
 
+const AdminUserOrgAssignmentInputSchema = z
+  .object({
+    stationId: z.uuidv7().optional(),
+    technicianTeamId: z.uuidv7().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const count = Number(data.stationId !== undefined)
+      + Number(data.technicianTeamId !== undefined);
+
+    if (count > 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Provide only one org assignment scope.",
+      });
+    }
+  });
+
 export const AdminCreateUserRequestSchema = z.object({
   fullname: z.string().min(1),
   email: z.string().email(),
@@ -87,8 +104,9 @@ export const AdminCreateUserRequestSchema = z.object({
   username: z.string().optional().nullable(),
   avatar: z.string().url().optional().nullable(),
   location: z.string().optional().nullable(),
-  role: UserRoleSchema.optional(),
+  role: AdminManageableUserRoleSchema.optional(),
   verify: VerifyStatusSchema.optional(),
+  orgAssignment: AdminUserOrgAssignmentInputSchema.optional().nullable(),
   nfcCardUid: z.string().optional().nullable(),
 }).openapi("AdminCreateUserRequest");
 
@@ -99,8 +117,9 @@ export const AdminUpdateUserRequestSchema = z.object({
   username: z.string().optional().nullable(),
   avatar: z.url().optional().nullable(),
   location: z.string().optional().nullable(),
-  role: UserRoleSchema.optional(),
+  role: AdminManageableUserRoleSchema.optional(),
   verify: VerifyStatusSchema.optional(),
+  orgAssignment: AdminUserOrgAssignmentInputSchema.optional().nullable(),
   nfcCardUid: z.string().optional().nullable(),
 }).openapi("AdminUpdateUserRequest");
 

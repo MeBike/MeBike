@@ -1,6 +1,17 @@
 import { z } from "../../../zod";
 import { UserRoleSchema, VerifyStatusSchema } from "./schemas";
 
+const OrgUnitRefSchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+});
+
+export const UserOrgAssignmentSchema = z.object({
+  station: OrgUnitRefSchema.nullable(),
+  agency: OrgUnitRefSchema.nullable(),
+  technicianTeam: OrgUnitRefSchema.nullable(),
+});
+
 export const UserSummarySchema = z.object({
   id: z.uuidv7(),
   fullName: z.string(),
@@ -16,6 +27,7 @@ export const UserDetailSchema = z.object({
   phoneNumber: z.string().nullable(),
   avatar: z.string().nullable(),
   role: UserRoleSchema,
+  orgAssignment: UserOrgAssignmentSchema.nullable(),
   nfcCardUid: z.string().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -23,6 +35,7 @@ export const UserDetailSchema = z.object({
 
 export type UserSummary = z.infer<typeof UserSummarySchema>;
 export type UserDetail = z.infer<typeof UserDetailSchema>;
+export type UserOrgAssignment = z.infer<typeof UserOrgAssignmentSchema>;
 
 export const UserStatsOverviewSchema = z.object({
   totalUsers: z.number(),

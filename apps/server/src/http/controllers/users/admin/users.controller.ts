@@ -28,6 +28,9 @@ const adminList: RouteHandler<UsersRoutes["adminList"]> = async (c) => {
         fullname: query.fullName,
         role: query.role,
         verify: query.verify,
+        agencyId: query.agencyId,
+        stationId: query.stationId,
+        technicianTeamId: query.technicianTeamId,
       }, {
         page: query.page ?? 1,
         pageSize: query.pageSize ?? 50,
@@ -139,6 +142,16 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
             },
             409,
           )),
+        Match.tag("InvalidOrgAssignment", () =>
+          c.json<UsersContracts.UserErrorResponse, 400>(
+            {
+              error: UsersContracts.userErrorMessages.INVALID_ORG_ASSIGNMENT,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.INVALID_ORG_ASSIGNMENT,
+              },
+            },
+            400,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
@@ -174,6 +187,16 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
               },
             },
             409,
+          )),
+        Match.tag("InvalidOrgAssignment", () =>
+          c.json<UsersContracts.UserErrorResponse, 400>(
+            {
+              error: UsersContracts.userErrorMessages.INVALID_ORG_ASSIGNMENT,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.INVALID_ORG_ASSIGNMENT,
+              },
+            },
+            400,
           )),
         Match.orElse((err) => {
           throw err;

@@ -20,6 +20,13 @@ export class InvalidCurrentPassword extends Data.TaggedError("InvalidCurrentPass
   readonly userId: string;
 }> {}
 
+export class InvalidOrgAssignment extends Data.TaggedError("InvalidOrgAssignment")<{
+  readonly role: string;
+  readonly stationId: string | null;
+  readonly agencyId: string | null;
+  readonly technicianTeamId: string | null;
+}> {}
+
 export class UserStatsServiceError extends Data.TaggedError("UserStatsServiceError")<{
   readonly message: string;
   readonly cause?: unknown;

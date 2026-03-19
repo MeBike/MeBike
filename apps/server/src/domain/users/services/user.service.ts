@@ -8,17 +8,23 @@ import type {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
   InvalidCurrentPassword,
+  InvalidOrgAssignment,
   UserRepositoryError,
 } from "../domain-errors";
 import type {
   CreateUserInput,
+  UpdateUserAdminPatch,
   UserFilter,
+  UserOrgAssignmentPatch,
   UserRow,
   UserSortField,
 } from "../models";
 import type { UserRepo } from "../repository/user.repository";
 
-import { InvalidCurrentPassword as InvalidCurrentPasswordError } from "../domain-errors";
+import {
+  InvalidCurrentPassword as InvalidCurrentPasswordError,
+  InvalidOrgAssignment as InvalidOrgAssignmentError,
+} from "../domain-errors";
 import { UserRepository } from "../repository/user.repository";
 
 export type UserService = {
@@ -30,7 +36,7 @@ export type UserService = {
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
   create: (input: CreateUserInput) => Effect.Effect<
     UserRow,
-    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
+    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber | InvalidOrgAssignment
   >;
   updateProfile: (
     id: string,
@@ -44,7 +50,7 @@ export type UserService = {
     patch: Parameters<UserRepo["updateAdminById"]>[1],
   ) => Effect.Effect<
     Option.Option<UserRow>,
-    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
+    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber | InvalidOrgAssignment
   >;
   updatePassword: (
     id: string,
@@ -89,6 +95,80 @@ export type UserService = {
   ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
 };
 
+function normalizeOrgAssignment(
+  assignment: UserOrgAssignmentPatch | null | undefined,
+): UserOrgAssignmentPatch | null | undefined {
+  if (assignment === undefined) {
+    return undefined;
+  }
+
+  if (assignment === null) {
+    return null;
+  }
+
+  const normalized: UserOrgAssignmentPatch = {
+    stationId: assignment.stationId ?? undefined,
+    agencyId: assignment.agencyId ?? undefined,
+    technicianTeamId: assignment.technicianTeamId ?? undefined,
+  };
+
+  if (!normalized.stationId && !normalized.agencyId && !normalized.technicianTeamId) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function toOrgAssignmentPatch(
+  orgAssignment: UserRow["orgAssignment"],
+): UserOrgAssignmentPatch | null {
+  if (!orgAssignment) {
+    return null;
+  }
+
+  return normalizeOrgAssignment({
+    stationId: orgAssignment.station?.id,
+    agencyId: orgAssignment.agency?.id,
+    technicianTeamId: orgAssignment.technicianTeam?.id,
+  }) ?? null;
+}
+
+function validateOrgAssignmentForRole(
+  role: UserRow["role"],
+  assignment: UserOrgAssignmentPatch | null,
+): Effect.Effect<void, InvalidOrgAssignment> {
+  const stationId = assignment?.stationId ?? null;
+  const agencyId = assignment?.agencyId ?? null;
+  const technicianTeamId = assignment?.technicianTeamId ?? null;
+
+  const hasStation = stationId !== null;
+  const hasAgency = agencyId !== null;
+  const hasTechnicianTeam = technicianTeamId !== null;
+
+  const fail = () =>
+    Effect.fail(new InvalidOrgAssignmentError({
+      role,
+      stationId,
+      agencyId,
+      technicianTeamId,
+    }));
+
+  switch (role) {
+    case "USER":
+    case "ADMIN":
+    case "MANAGER":
+      return hasStation || hasAgency || hasTechnicianTeam ? fail() : Effect.void;
+    case "STAFF":
+      return hasStation && !hasAgency && !hasTechnicianTeam ? Effect.void : fail();
+    case "AGENCY":
+      return !hasStation && hasAgency && !hasTechnicianTeam ? Effect.void : fail();
+    case "TECHNICIAN":
+      return !hasStation && !hasAgency && hasTechnicianTeam ? Effect.void : fail();
+    default:
+      return fail();
+  }
+}
+
 function makeUserService(repo: UserRepo): UserService {
   return {
     getById: id =>
@@ -98,13 +178,46 @@ function makeUserService(repo: UserRepo): UserService {
       repo.findByEmail(email),
 
     create: input =>
-      repo.createUser(input),
+      Effect.gen(function* () {
+        const role = input.role ?? "USER";
+        const orgAssignment = normalizeOrgAssignment(input.orgAssignment) ?? null;
+
+        yield* validateOrgAssignmentForRole(role, orgAssignment);
+
+        return yield* repo.createUser({
+          ...input,
+          role,
+          orgAssignment,
+        });
+      }),
 
     updateProfile: (id, patch) =>
       repo.updateProfile(id, patch),
 
     updateAdminById: (id, patch) =>
-      repo.updateAdminById(id, patch),
+      Effect.gen(function* () {
+        // NOTE: This does a read-before-write to validate the merged next state,
+        // so there is a small TOCTOU window until the repo update runs.
+        const existingOpt = yield* repo.findById(id);
+        if (Option.isNone(existingOpt)) {
+          return Option.none<UserRow>();
+        }
+
+        const existing = existingOpt.value;
+        const nextRole = patch.role ?? existing.role;
+        const nextOrgAssignment = patch.orgAssignment === undefined
+          ? toOrgAssignmentPatch(existing.orgAssignment)
+          : (normalizeOrgAssignment(patch.orgAssignment) ?? null);
+
+        yield* validateOrgAssignmentForRole(nextRole, nextOrgAssignment);
+
+        const nextPatch: UpdateUserAdminPatch = {
+          ...patch,
+          ...(patch.orgAssignment === undefined ? {} : { orgAssignment: nextOrgAssignment }),
+        };
+
+        return yield* repo.updateAdminById(id, nextPatch);
+      }),
 
     updatePassword: (id, passwordHash) =>
       repo.updatePassword(id, passwordHash),

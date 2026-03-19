@@ -1,7 +1,9 @@
 import { Effect, Layer, Option } from "effect";
+import { uuidv7 } from "uuidv7";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { pickDefined } from "@/domain/shared/pick-defined";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaRecordNotFound, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { UserRole, UserVerifyStatus } from "generated/prisma/client";
@@ -18,7 +20,6 @@ import type {
 } from "../models";
 
 import { makePageResult, normalizedPage } from "../../shared/pagination";
-import { pickDefined } from "../../shared/pick-defined";
 import {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
@@ -109,6 +110,41 @@ export function makeUserRepository(
   db: PrismaClient | PrismaTypes.TransactionClient,
 ): UserRepo {
   const client = db;
+
+  const runInTransaction = <T>(
+    operation: (tx: PrismaTypes.TransactionClient) => Promise<T>,
+  ) => {
+    if ("$transaction" in client) {
+      return client.$transaction(operation);
+    }
+    return operation(client as PrismaTypes.TransactionClient);
+  };
+
+  const toOrgAssignmentData = (
+    assignment:
+      | CreateUserInput["orgAssignment"]
+      | UpdateUserAdminPatch["orgAssignment"]
+      | undefined,
+  ) => {
+    if (!assignment) {
+      return null;
+    }
+
+    const stationId = assignment.stationId ?? null;
+    const agencyId = assignment.agencyId ?? null;
+    const technicianTeamId = assignment.technicianTeamId ?? null;
+
+    if (stationId === null && agencyId === null && technicianTeamId === null) {
+      return null;
+    }
+
+    return {
+      stationId,
+      agencyId,
+      technicianTeamId,
+    };
+  };
+
   const toOrderBy = (
     pageReq: PageRequest<UserSortField>,
   ): UserOrderBy => {
@@ -129,16 +165,31 @@ export function makeUserRepository(
     }
   };
 
-  const toWhere = (filter: UserFilter) => ({
-    ...(filter.fullname
-      ? { fullname: { contains: filter.fullname, mode: "insensitive" as const } }
-      : {}),
-    ...(filter.email
-      ? { email: { contains: filter.email, mode: "insensitive" as const } }
-      : {}),
-    ...(filter.verify ? { verify: filter.verify } : {}),
-    ...(filter.role ? { role: filter.role } : {}),
-  });
+  const toWhere = (filter: UserFilter): PrismaTypes.UserWhereInput => {
+    const orgAssignment = pickDefined({
+      stationId: filter.stationId,
+      agencyId: filter.agencyId,
+      technicianTeamId: filter.technicianTeamId,
+    });
+
+    return {
+      ...(filter.fullname
+        ? { fullname: { contains: filter.fullname, mode: "insensitive" as const } }
+        : {}),
+      ...(filter.email
+        ? { email: { contains: filter.email, mode: "insensitive" as const } }
+        : {}),
+      ...(filter.verify ? { verify: filter.verify } : {}),
+      ...(filter.role ? { role: filter.role } : {}),
+      ...(Object.keys(orgAssignment).length
+        ? {
+            orgAssignment: {
+              is: orgAssignment,
+            },
+          }
+        : {}),
+    };
+  };
 
   return {
     findById: id =>
@@ -179,8 +230,10 @@ export function makeUserRepository(
 
     createUser: data =>
       Effect.tryPromise({
-        try: () =>
-          client.user.create({
+        try: async () => {
+          const orgAssignmentData = toOrgAssignmentData(data.orgAssignment);
+
+          return client.user.create({
             data: {
               fullname: data.fullname,
               email: data.email,
@@ -191,10 +244,18 @@ export function makeUserRepository(
               location: data.location ?? null,
               role: data.role ?? UserRole.USER,
               verify: data.verify ?? UserVerifyStatus.UNVERIFIED,
+              ...(orgAssignmentData
+                ? {
+                    orgAssignment: {
+                      create: orgAssignmentData,
+                    },
+                  }
+                : {}),
               nfcCardUid: data.nfcCardUid ?? null,
             },
             select: selectUserRow,
-          }),
+          });
+        },
         catch: (err) => {
           if (isPrismaUniqueViolation(err)) {
             const targets = uniqueTargets(err);
@@ -288,22 +349,56 @@ export function makeUserRepository(
         }
 
         const updated = yield* Effect.tryPromise({
-          try: () =>
-            client.user.update({
-              where: { id },
-              data: pickDefined({
-                fullname: patch.fullname,
-                email: patch.email,
-                phoneNumber: patch.phoneNumber,
-                username: patch.username,
-                avatar: patch.avatar,
-                location: patch.location,
-                role: patch.role,
-                verify: patch.verify,
-                nfcCardUid: patch.nfcCardUid,
-              }),
-              select: selectUserRow,
-            }),
+          try: async () => {
+            const orgAssignmentData = toOrgAssignmentData(patch.orgAssignment);
+
+            return runInTransaction(async (tx) => {
+              await tx.user.update({
+                where: { id },
+                data: pickDefined({
+                  fullname: patch.fullname,
+                  email: patch.email,
+                  phoneNumber: patch.phoneNumber,
+                  username: patch.username,
+                  avatar: patch.avatar,
+                  location: patch.location,
+                  role: patch.role,
+                  verify: patch.verify,
+                  nfcCardUid: patch.nfcCardUid,
+                }),
+              });
+
+              if (patch.orgAssignment !== undefined) {
+                if (orgAssignmentData === null) {
+                  await tx.userOrgAssignment.deleteMany({
+                    where: { userId: id },
+                  });
+                }
+                else {
+                  await tx.userOrgAssignment.upsert({
+                    where: { userId: id },
+                    create: {
+                      id: uuidv7(),
+                      userId: id,
+                      stationId: orgAssignmentData.stationId,
+                      agencyId: orgAssignmentData.agencyId,
+                      technicianTeamId: orgAssignmentData.technicianTeamId,
+                    },
+                    update: {
+                      stationId: orgAssignmentData.stationId,
+                      agencyId: orgAssignmentData.agencyId,
+                      technicianTeamId: orgAssignmentData.technicianTeamId,
+                    },
+                  });
+                }
+              }
+
+              return tx.user.findUnique({
+                where: { id },
+                select: selectUserRow,
+              });
+            });
+          },
           catch: (err) => {
             if (isPrismaUniqueViolation(err)) {
               const targets = uniqueTargets(err);
@@ -324,6 +419,10 @@ export function makeUserRepository(
             });
           },
         });
+
+        if (!updated) {
+          return Option.none<UserRow>();
+        }
 
         return Option.some(toUserRow(updated));
       }),

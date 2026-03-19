@@ -43,4 +43,38 @@ describe("admin user request validation", () => {
       expect(result.data.phoneNumber).toBeNull();
     }
   });
+
+  it("rejects admin create payload when more than one org assignment scope is provided", () => {
+    const result = UsersContracts.AdminCreateUserRequestSchema.safeParse({
+      fullname: "Ops User",
+      email: "ops@example.com",
+      password: "12345678",
+      role: "STAFF",
+      orgAssignment: {
+        stationId: "018d4529-6880-77a8-8e6f-4d2c88d22309",
+        technicianTeamId: "018d4529-6880-77a8-8e6f-4d2c88d22310",
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects admin create payload with role AGENCY", () => {
+    const result = UsersContracts.AdminCreateUserRequestSchema.safeParse({
+      fullname: "Agency User",
+      email: "agency@example.com",
+      password: "12345678",
+      role: "AGENCY",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts admin update payload with orgAssignment set to null", () => {
+    const result = UsersContracts.AdminUpdateUserRequestSchema.safeParse({
+      orgAssignment: null,
+    });
+
+    expect(result.success).toBe(true);
+  });
 });
