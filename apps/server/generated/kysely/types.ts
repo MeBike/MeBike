@@ -11,6 +11,13 @@ export const AccountStatus = {
     BANNED: "BANNED"
 } as const;
 export type AccountStatus = (typeof AccountStatus)[keyof typeof AccountStatus];
+export const AgencyRequestStatus = {
+    PENDING: "PENDING",
+    APPROVED: "APPROVED",
+    REJECTED: "REJECTED",
+    CANCELLED: "CANCELLED"
+} as const;
+export type AgencyRequestStatus = (typeof AgencyRequestStatus)[keyof typeof AgencyRequestStatus];
 export const AuthEventType = {
     SESSION_ISSUED: "SESSION_ISSUED"
 } as const;
@@ -176,6 +183,23 @@ export type Agency = {
     address: string | null;
     contact_phone: string | null;
     status: Generated<AccountStatus>;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type AgencyRequest = {
+    id: string;
+    requester_user_id: string | null;
+    requester_email: string;
+    requester_phone: string | null;
+    agency_name: string;
+    agency_address: string | null;
+    agency_contact_phone: string | null;
+    status: Generated<AgencyRequestStatus>;
+    description: string | null;
+    reviewed_by_user_id: string | null;
+    reviewed_at: Timestamp | null;
+    approved_agency_id: string | null;
+    created_agency_user_id: string | null;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
@@ -435,6 +459,7 @@ export type WalletWithdrawal = {
 };
 export type DB = {
     Agency: Agency;
+    AgencyRequest: AgencyRequest;
     AuthEvent: AuthEvent;
     Bike: Bike;
     BikeSwapRequest: BikeSwapRequest;

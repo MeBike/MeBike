@@ -1,0 +1,33 @@
+enum AgencyRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model AgencyRequest {
+  id                  String              @id @default(uuid(7)) @db.Uuid
+  requesterUserId     String?             @map("requester_user_id") @db.Uuid
+  requesterEmail      String              @map("requester_email")
+  requesterPhone      String?             @map("requester_phone")
+  agencyName          String              @map("agency_name")
+  agencyAddress       String?             @map("agency_address")
+  agencyContactPhone  String?             @map("agency_contact_phone")
+  status              AgencyRequestStatus @default(PENDING)
+  description         String?
+  reviewedByUserId    String?             @map("reviewed_by_user_id") @db.Uuid
+  reviewedAt          DateTime?           @map("reviewed_at") @db.Timestamptz
+  approvedAgencyId    String?             @map("approved_agency_id") @db.Uuid
+  createdAgencyUserId String?             @map("created_agency_user_id") @db.Uuid
+  createdAt           DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  requesterUser     User?   @relation("AgencyRequestRequester", fields: [requesterUserId], references: [id])
+  reviewedByUser    User?   @relation("AgencyRequestReviewer", fields: [reviewedByUserId], references: [id])
+  approvedAgency    Agency? @relation("AgencyRequestApprovedAgency", fields: [approvedAgencyId], references: [id])
+  createdAgencyUser User?   @relation("AgencyRequestCreatedAgencyUser", fields: [createdAgencyUserId], references: [id])
+
+  @@index([status], name: "idx_agency_requests_status")
+  @@index([requesterUserId], name: "idx_agency_requests_requester_user")
+  @@index([requesterEmail], name: "idx_agency_requests_requester_email")
+}

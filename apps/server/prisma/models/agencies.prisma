@@ -15,4 +15,5 @@ model Agency {
   updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
   userAssignments UserOrgAssignment[]
+  approvedRequests AgencyRequest[]    @relation("AgencyRequestApprovedAgency")
 }
