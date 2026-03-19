@@ -2,11 +2,12 @@ import type { Kysely } from "kysely";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import process from "node:process";
-import { afterAll, beforeAll, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 
 import type { DB } from "generated/kysely/types";
 
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
+import { resetTestData } from "@/test/db/reset";
 import { seed } from "@/test/db/seed";
 import { getTestDatabase } from "@/test/db/test-database";
 import { createBikeFactory } from "@/test/factories/bike.factory";
@@ -60,14 +61,6 @@ export function setupHttpE2eFixture(options: E2eFixtureOptions) {
     const adapter = new PrismaPg({ connectionString: container.url });
     prisma = new PrismaClient({ adapter });
 
-    if (options.seedBase ?? true) {
-      await seed(testDb);
-    }
-
-    if (options.seedData) {
-      await options.seedData(testDb, prisma);
-    }
-
     process.env.DATABASE_URL = container.url;
     process.env.JWT_SECRET = process.env.JWT_SECRET ?? "secret";
 
@@ -90,6 +83,22 @@ export function setupHttpE2eFixture(options: E2eFixtureOptions) {
       wallet: createWalletFactory({ prisma }),
     };
   }, 60000);
+
+  beforeEach(async () => {
+    await resetTestData(prisma);
+
+    if (options.seedBase ?? true) {
+      await seed(testDb);
+    }
+
+    if (options.seedData) {
+      await options.seedData(testDb, prisma);
+    }
+  });
+
+  afterEach(async () => {
+    await resetTestData(prisma);
+  });
 
   afterAll(async () => {
     if (runtime?.dispose) {

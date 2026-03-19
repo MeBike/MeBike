@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll } from "vitest";
 
 import { migrate } from "@/test/db/migrate";
 import { startPostgres } from "@/test/db/postgres";
+import { resetTestData } from "@/test/db/reset";
 import { PrismaClient } from "generated/prisma/client";
 
 import type { BikeFactory } from "./bike.factory";
@@ -57,16 +58,7 @@ export function setupFactories(): FactorySetup {
   }, 60000);
 
   afterEach(async () => {
-    await prisma.walletTransaction.deleteMany({});
-    await prisma.wallet.deleteMany({});
-    await prisma.walletWithdrawal.deleteMany({});
-    await prisma.walletHold.deleteMany({});
-    await prisma.rating.deleteMany({});
-    await prisma.rental.deleteMany({});
-    await prisma.reservation.deleteMany({});
-    await prisma.bike.deleteMany({});
-    await prisma.station.deleteMany({});
-    await prisma.user.deleteMany({});
+    await resetTestData(prisma);
   });
 
   afterAll(async () => {
