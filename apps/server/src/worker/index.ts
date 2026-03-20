@@ -31,7 +31,7 @@ import {
 } from "./reservation-hold-worker";
 import { handleWithdrawalExecute, handleWithdrawalSweep } from "./wallet-withdrawal-worker";
 import { attachJobRuntimeLogging, WorkerLog } from "./worker-logging";
-import { setupDLQWorker, setupQueue } from "./worker-setup";
+import { setupQueue } from "./worker-setup";
 // run effect with required dependencies
 function runSubscriptionEffect<A, E>(
   eff: Effect.Effect<A, E, SubscriptionServiceTag | Prisma>,
@@ -152,15 +152,6 @@ async function main() {
 
   const withdrawalSweepWorkerId = await runtime.register(JobTypes.WalletWithdrawalSweep, handleWithdrawalSweep);
   WorkerLog.workerRegistered(JobTypes.WalletWithdrawalSweep, withdrawalSweepWorkerId);
-
-  await setupDLQWorker(runtime, JobTypes.EmailSend, "Email job");
-  await setupDLQWorker(runtime, JobTypes.PushSend, "Push notification job");
-  await setupDLQWorker(runtime, JobTypes.SubscriptionAutoActivate, "Subscription auto-activate job");
-  await setupDLQWorker(runtime, JobTypes.ReservationFixedSlotAssign, "Fixed-slot assignment job");
-  await setupDLQWorker(runtime, JobTypes.ReservationNotifyNearExpiry, "Reservation near-expiry job");
-  await setupDLQWorker(runtime, JobTypes.ReservationExpireHold, "Reservation expire-hold job");
-  await setupDLQWorker(runtime, JobTypes.WalletWithdrawalExecute, "Wallet withdrawal execute job");
-  await setupDLQWorker(runtime, JobTypes.WalletWithdrawalSweep, "Wallet withdrawal sweep job");
 
   const stopDispatcher = startOutboxDispatcher({
     db,
