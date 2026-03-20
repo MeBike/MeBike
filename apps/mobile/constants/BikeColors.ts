@@ -1,29 +1,22 @@
+import { colors } from "@theme/colors";
+
 export const BikeColors = {
-  // Primary colors
-  primary: "#2563EB",
-  secondary: "#06B6D4",
-  accent: "#F59E0B",
-
-  // Background colors
-  background: "#FFFFFF",
-  surface: "#F8FAFC",
-
-  // Text colors
-  textPrimary: "#1E293B",
-  textSecondary: "#64748B",
-  onSurface: "#1E293B",
-  onSurfaceVariant: "#64748B",
-  onPrimary: "#FFFFFF",
-
-  // State colors
-  success: "#10B981",
-  warning: "#F59E0B",
-  error: "#EF4444",
-
-  // Utility colors
-  divider: "#E2E8F0",
-  shadow: "#000000",
-  lightGray: "#F1F5F9",
-  surfaceVariant: "#F1F5F9",
-  primaryContainer: "#DBEAFE",
+  primary: colors.brandPrimary,
+  secondary: colors.brandSecondary,
+  accent: colors.brandAccent,
+  background: colors.backgroundStrong,
+  surface: colors.background,
+  textPrimary: colors.textPrimary,
+  textSecondary: colors.textSecondary,
+  onSurface: colors.textPrimary,
+  onSurfaceVariant: colors.textSecondary,
+  onPrimary: colors.textOnBrand,
+  success: colors.success,
+  warning: colors.warning,
+  error: colors.error,
+  divider: colors.divider,
+  shadow: colors.shadowColor,
+  lightGray: colors.surfaceMuted,
+  surfaceVariant: colors.surfaceMuted,
+  primaryContainer: colors.surfaceAccent,
 };

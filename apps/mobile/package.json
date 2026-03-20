@@ -29,6 +29,7 @@
     "@react-navigation/stack": "^7.6.4",
     "@rnmapbox/maps": "^10.2.10",
     "@stripe/stripe-react-native": "0.50.3",
+    "@tamagui/shorthands": "2.0.0-rc.29",
     "@tanstack/react-query": "^5.90.2",
     "axios": "^1.12.2",
     "expo": "~54.0.10",
@@ -63,6 +64,7 @@
     "react-native-vector-icons": "^10.3.0",
     "react-native-webview": "13.15.0",
     "react-native-worklets": "0.5.1",
+    "tamagui": "2.0.0-rc.29",
     "zod": "^4.3.5"
   },
   "devDependencies": {
