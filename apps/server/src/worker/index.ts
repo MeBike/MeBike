@@ -15,8 +15,8 @@ import {
   SubscriptionServiceLive,
   SubscriptionServiceTag,
 } from "@/domain/subscriptions";
+import { makeJobBackend } from "@/infrastructure/jobs/backend";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
-import { makePgBoss, makePgBossJobProducer, makePgBossJobRuntime } from "@/infrastructure/jobs/pgboss";
 import { PrismaLive } from "@/infrastructure/prisma";
 import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
@@ -97,9 +97,7 @@ async function handleExpireSweep(job: QueueJob | undefined) {
 }
 
 async function main() {
-  const boss = makePgBoss();
-  const producer = makePgBossJobProducer(boss);
-  const runtime = makePgBossJobRuntime(boss);
+  const { producer, runtime, scheduler } = makeJobBackend();
   attachJobRuntimeLogging(runtime);
   await runtime.start();
   WorkerLog.runtimeStarted();
@@ -118,7 +116,7 @@ async function main() {
   await setupQueue(runtime, JobTypes.WalletWithdrawalExecute);
   await setupQueue(runtime, JobTypes.WalletWithdrawalSweep);
 
-  await ensureSchedules(runtime);
+  await ensureSchedules(scheduler);
 
   const autoActivateWorkerId = await runtime.register(JobTypes.SubscriptionAutoActivate, handleAutoActivate);
   WorkerLog.workerRegistered(JobTypes.SubscriptionAutoActivate, autoActivateWorkerId);

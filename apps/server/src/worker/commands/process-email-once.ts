@@ -1,7 +1,7 @@
 import process from "node:process";
 
+import { makeJobBackend } from "@/infrastructure/jobs/backend";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
-import { makePgBoss, makePgBossJobRuntime } from "@/infrastructure/jobs/pgboss";
 import { resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
@@ -10,8 +10,7 @@ import { handleEmailJob } from "../email-worker";
 import { attachJobRuntimeLogging, WorkerLog } from "../worker-logging";
 
 async function main() {
-  const boss = makePgBoss();
-  const runtime = makePgBossJobRuntime(boss);
+  const { runtime } = makeJobBackend();
   attachJobRuntimeLogging(runtime);
   await runtime.start();
   await runtime.ensureQueue(

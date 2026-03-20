@@ -1,8 +1,7 @@
-import type { QueueOptions } from "pg-boss";
-
 import { env } from "@/config/env";
 
 import type { JobType } from "./job-types";
+import type { JobQueueOptions } from "./ports";
 
 import { JobTypes } from "./job-types";
 
@@ -12,7 +11,7 @@ const WITHDRAWAL_EXECUTE_RETRY_LIMIT = Math.max(
   Math.ceil((env.WITHDRAWAL_SLA_MINUTES * 60) / WITHDRAWAL_EXECUTE_RETRY_DELAY_SECONDS),
 );
 
-const DEFAULT_QUEUE_OPTIONS: Record<JobType, QueueOptions> = {
+const DEFAULT_QUEUE_OPTIONS: Record<JobType, JobQueueOptions> = {
   [JobTypes.EmailSend]: {
     retryLimit: 10,
     retryDelay: 30,
@@ -71,8 +70,8 @@ const DEFAULT_QUEUE_OPTIONS: Record<JobType, QueueOptions> = {
 
 export function resolveQueueOptions(
   type: JobType,
-  overrides?: QueueOptions,
-): QueueOptions {
+  overrides?: JobQueueOptions,
+): JobQueueOptions {
   return {
     ...DEFAULT_QUEUE_OPTIONS[type],
     ...overrides,

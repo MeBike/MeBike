@@ -1,15 +1,13 @@
 import process from "node:process";
 
 import { db } from "@/database";
-import { makePgBoss, makePgBossJobProducer, makePgBossJobRuntime } from "@/infrastructure/jobs/pgboss";
+import { makeJobBackend } from "@/infrastructure/jobs/backend";
 import logger from "@/lib/logger";
 
 import { dispatchOutboxOnce } from "../outbox-dispatcher";
 
 async function main() {
-  const boss = makePgBoss();
-  const producer = makePgBossJobProducer(boss);
-  const runtime = makePgBossJobRuntime(boss);
+  const { producer, runtime } = makeJobBackend();
   await runtime.start();
 
   await dispatchOutboxOnce({
