@@ -170,10 +170,15 @@ describe("bikeRepository Integration", () => {
 
   it("returns BikeRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makeBikeRepository(broken.client);
+    try {
+      const brokenRepo = makeBikeRepository(broken.client);
 
-    const result = await runEffectEither(brokenRepo.getById(uuidv7()));
+      const result = await runEffectEither(brokenRepo.getById(uuidv7()));
 
-    expectLeftTag(result, "BikeRepositoryError");
+      expectLeftTag(result, "BikeRepositoryError");
+    }
+    finally {
+      await broken.stop();
+    }
   });
 });

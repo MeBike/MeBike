@@ -321,12 +321,15 @@ describe("rentalRepository Integration", () => {
 
   it("returns RentalRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makeRentalRepository(broken.client);
+    try {
+      const brokenRepo = makeRentalRepository(broken.client);
 
-    const result = await runEffectEither(brokenRepo.findById(uuidv7()));
+      const result = await runEffectEither(brokenRepo.findById(uuidv7()));
 
-    expectLeftTag(result, "RentalRepositoryError");
-
-    await broken.stop();
+      expectLeftTag(result, "RentalRepositoryError");
+    }
+    finally {
+      await broken.stop();
+    }
   });
 });
