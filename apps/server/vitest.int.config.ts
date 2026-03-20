@@ -13,6 +13,11 @@ export default defineConfig({
       "src/**/test/**/*.int.test.ts",
     ],
     globalSetup: ["./src/test/db/global-setup.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      reportsDirectory: "./coverage/int",
+    },
   },
   resolve: {
     alias: {

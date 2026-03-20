@@ -27,6 +27,9 @@ describe("authRepository Integration", () => {
       maxRetriesPerRequest: 0,
       retryStrategy: () => null,
     });
+    invalidClient.on("error", () => {
+      // Expected in failure-path tests; assertions happen on the returned Effect errors.
+    });
 
     return {
       invalidClient,
