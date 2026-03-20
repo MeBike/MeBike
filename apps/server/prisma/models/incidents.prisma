@@ -1,0 +1,135 @@
+enum IncidentSource {
+  DURING_RENTAL
+  POST_RETURN
+  STAFF_INSPECTION
+
+  @@map("incident_source")
+}
+
+enum IncidentStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+
+  @@map("incident_status")
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("incident_severity")
+}
+
+enum AssignmentStatus {
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+
+  @@map("assignment_status")
+}
+
+enum MaintenanceResult {
+  REPAIRED_ON_SITE
+  MOVED_TO_MAINTENANCE
+  NO_ISSUE_FOUND
+  NOT_FOUND
+  IRREPARABLE
+
+  @@map("maintenance_result")
+}
+
+model IncidentReport {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  reporterUserId String           @map("reporter_user_id") @db.Uuid
+  rentalId       String?          @map("rental_id") @db.Uuid
+  bikeId         String           @map("bike_id") @db.Uuid
+  stationId      String?          @map("station_id") @db.Uuid
+  source         IncidentSource
+  incidentType   String           @map("incident_type")
+  severity       IncidentSeverity
+  description    String?
+  latitude       Decimal?         @db.Decimal(10, 7)
+  longitude      Decimal?         @db.Decimal(10, 7)
+  bikeLocked     Boolean          @default(false) @map("bike_locked")
+  status         IncidentStatus   @default(OPEN)
+  reportedAt     DateTime         @default(now()) @map("reported_at") @db.Timestamptz
+  resolvedAt     DateTime?        @map("resolved_at") @db.Timestamptz
+  closedAt       DateTime?        @map("closed_at") @db.Timestamptz
+
+  reporterUser User                  @relation(fields: [reporterUserId], references: [id])
+  rental       Rental?               @relation(fields: [rentalId], references: [id])
+  bike         Bike                  @relation(fields: [bikeId], references: [id])
+  station      Station?              @relation(fields: [stationId], references: [id])
+  attachments  IncidentAttachment[]
+  assignments  TechnicianAssignment[]
+  maintenanceLogs BikeMaintenanceLog[]
+
+  @@index([reporterUserId], name: "idx_incident_reports_reporter")
+  @@index([rentalId], name: "idx_incident_reports_rental")
+  @@index([bikeId, status], name: "idx_incident_reports_bike_status")
+  @@index([stationId], name: "idx_incident_reports_station")
+  @@map("incident_reports")
+}
+
+model IncidentAttachment {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  incidentReportId String   @map("incident_report_id") @db.Uuid
+  fileUrl          String   @map("file_url")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  incidentReport IncidentReport @relation(fields: [incidentReportId], references: [id], onDelete: Cascade)
+
+  @@index([incidentReportId], name: "idx_incident_attachments_report")
+  @@map("incident_attachments")
+}
+
+model TechnicianAssignment {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  incidentReportId String           @map("incident_report_id") @db.Uuid
+  technicianTeamId String?          @map("technician_team_id") @db.Uuid
+  technicianUserId String?          @map("technician_user_id") @db.Uuid
+  assignedByUserId String?          @map("assigned_by_user_id") @db.Uuid
+  assignedAt       DateTime         @default(now()) @map("assigned_at") @db.Timestamptz
+  acceptedAt       DateTime?        @map("accepted_at") @db.Timestamptz
+  startedAt        DateTime?        @map("started_at") @db.Timestamptz
+  resolvedAt       DateTime?        @map("resolved_at") @db.Timestamptz
+  status           AssignmentStatus @default(ASSIGNED)
+
+  incidentReport IncidentReport  @relation(fields: [incidentReportId], references: [id], onDelete: Cascade)
+  technicianTeam TechnicianTeam? @relation(fields: [technicianTeamId], references: [id])
+  technicianUser User?           @relation("TechnicianAssignmentTechnicianUser", fields: [technicianUserId], references: [id])
+  assignedByUser User?           @relation("TechnicianAssignmentAssignedByUser", fields: [assignedByUserId], references: [id])
+
+  @@index([incidentReportId], name: "idx_technician_assignments_incident_report")
+  @@index([technicianTeamId], name: "idx_technician_assignments_team")
+  @@index([technicianUserId], name: "idx_technician_assignments_user")
+  @@index([status], name: "idx_technician_assignments_status")
+  @@map("technician_assignments")
+}
+
+model BikeMaintenanceLog {
+  id               String             @id @default(uuid(7)) @db.Uuid
+  bikeId           String             @map("bike_id") @db.Uuid
+  incidentReportId String?            @map("incident_report_id") @db.Uuid
+  technicianUserId String?            @map("technician_user_id") @db.Uuid
+  result           MaintenanceResult
+  notes            String?
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  bike           Bike            @relation(fields: [bikeId], references: [id])
+  incidentReport IncidentReport? @relation(fields: [incidentReportId], references: [id])
+  technicianUser User?           @relation(fields: [technicianUserId], references: [id])
+
+  @@index([bikeId], name: "idx_bike_maintenance_logs_bike")
+  @@index([incidentReportId], name: "idx_bike_maintenance_logs_incident_report")
+  @@index([technicianUserId], name: "idx_bike_maintenance_logs_technician_user")
+  @@map("bike_maintenance_logs")
+}

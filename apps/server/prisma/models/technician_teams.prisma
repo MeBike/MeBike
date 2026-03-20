@@ -13,6 +13,7 @@ model TechnicianTeam {
 
   station Station @relation(fields: [stationId], references: [id])
   userAssignments UserOrgAssignment[]
+  technicianAssignments TechnicianAssignment[]
 
   @@index([stationId], name: "idx_technician_teams_station")
 }

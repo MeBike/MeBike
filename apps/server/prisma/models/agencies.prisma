@@ -16,4 +16,6 @@ model Agency {
 
   userAssignments UserOrgAssignment[]
   approvedRequests AgencyRequest[]    @relation("AgencyRequestApprovedAgency")
+  returnConfirmations ReturnConfirmation[]
+  targetRedistributionRequests RedistributionRequest[] @relation("RedistributionRequestTargetAgency")
 }

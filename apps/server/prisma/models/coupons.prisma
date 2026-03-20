@@ -1,0 +1,87 @@
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+
+  @@map("discount_type")
+}
+
+enum CouponStatus {
+  ACTIVE
+  ASSIGNED
+  LOCKED
+  USED
+  EXPIRED
+  CANCELLED
+
+  @@map("coupon_status")
+}
+
+enum CouponTriggerType {
+  RIDING_DURATION
+  USAGE_FREQUENCY
+  CAMPAIGN
+  MEMBERSHIP_MILESTONE
+  MANUAL_GRANT
+
+  @@map("coupon_trigger_type")
+}
+
+model CouponRule {
+  id                  String            @id @default(uuid(7)) @db.Uuid
+  name                String
+  triggerType         CouponTriggerType @map("trigger_type")
+  minRidingMinutes    Int?              @map("min_riding_minutes")
+  minCompletedRentals Int?              @map("min_completed_rentals")
+  discountType        DiscountType      @map("discount_type")
+  discountValue       Decimal           @map("discount_value") @db.Decimal(12, 2)
+  status              AccountStatus     @default(ACTIVE)
+  priority            Int               @default(100)
+  activeFrom          DateTime?         @map("active_from") @db.Timestamptz
+  activeTo            DateTime?         @map("active_to") @db.Timestamptz
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+
+  coupons Coupon[]
+
+  @@map("coupon_rules")
+}
+
+model Coupon {
+  id            String        @id @default(uuid(7)) @db.Uuid
+  couponRuleId  String?       @map("coupon_rule_id") @db.Uuid
+  code          String        @unique
+  discountType  DiscountType  @map("discount_type")
+  discountValue Decimal       @map("discount_value") @db.Decimal(12, 2)
+  expiresAt     DateTime?     @map("expires_at") @db.Timestamptz
+  status        CouponStatus  @default(ACTIVE)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  couponRule CouponRule? @relation(fields: [couponRuleId], references: [id])
+  userCoupons UserCoupon[]
+
+  @@index([couponRuleId], name: "idx_coupons_rule")
+  @@map("coupons")
+}
+
+model UserCoupon {
+  id                String       @id @default(uuid(7)) @db.Uuid
+  userId            String       @map("user_id") @db.Uuid
+  couponId          String       @map("coupon_id") @db.Uuid
+  assignedAt        DateTime     @default(now()) @map("assigned_at") @db.Timestamptz
+  usedAt            DateTime?    @map("used_at") @db.Timestamptz
+  lockedAt          DateTime?    @map("locked_at") @db.Timestamptz
+  lockExpiresAt     DateTime?    @map("lock_expires_at") @db.Timestamptz
+  lockedForPaymentId String?     @map("locked_for_payment_id") @db.Uuid
+  status            CouponStatus @default(ASSIGNED)
+
+  user             User     @relation(fields: [userId], references: [id])
+  coupon           Coupon   @relation(fields: [couponId], references: [id])
+  lockedForPayment Payment? @relation("UserCouponLockedForPayment", fields: [lockedForPaymentId], references: [id])
+
+  @@index([userId], name: "idx_user_coupons_user")
+  @@index([couponId], name: "idx_user_coupons_coupon")
+  @@index([status], name: "idx_user_coupons_status")
+  @@index([lockedForPaymentId], name: "idx_user_coupons_locked_for_payment")
+  @@map("user_coupons")
+}

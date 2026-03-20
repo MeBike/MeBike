@@ -34,6 +34,7 @@ model Reservation {
   station           Station            @relation(fields: [stationId], references: [id])
   fixedSlotTemplate FixedSlotTemplate? @relation(fields: [fixedSlotTemplateId], references: [id])
   subscription      Subscription?      @relation(fields: [subscriptionId], references: [id])
+  payments          Payment[]
   // Partial unique index (active reservations per bike) cannot be expressed in Prisma; add manually:
   // CREATE UNIQUE INDEX idx_reservations_active_bike ON reservations(bike_id) WHERE status IN ('PENDING','ACTIVE') AND bike_id IS NOT NULL;
   // Partial unique index (active reservations per user) cannot be expressed in Prisma; add manually:

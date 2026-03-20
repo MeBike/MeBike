@@ -38,11 +38,71 @@ export const BikeStatus = {
     UNAVAILABLE: "UNAVAILABLE"
 } as const;
 export type BikeStatus = (typeof BikeStatus)[keyof typeof BikeStatus];
+export const DiscountType = {
+    PERCENTAGE: "PERCENTAGE",
+    FIXED_AMOUNT: "FIXED_AMOUNT"
+} as const;
+export type DiscountType = (typeof DiscountType)[keyof typeof DiscountType];
+export const CouponStatus = {
+    ACTIVE: "ACTIVE",
+    ASSIGNED: "ASSIGNED",
+    LOCKED: "LOCKED",
+    USED: "USED",
+    EXPIRED: "EXPIRED",
+    CANCELLED: "CANCELLED"
+} as const;
+export type CouponStatus = (typeof CouponStatus)[keyof typeof CouponStatus];
+export const CouponTriggerType = {
+    RIDING_DURATION: "RIDING_DURATION",
+    USAGE_FREQUENCY: "USAGE_FREQUENCY",
+    CAMPAIGN: "CAMPAIGN",
+    MEMBERSHIP_MILESTONE: "MEMBERSHIP_MILESTONE",
+    MANUAL_GRANT: "MANUAL_GRANT"
+} as const;
+export type CouponTriggerType = (typeof CouponTriggerType)[keyof typeof CouponTriggerType];
 export const FixedSlotStatus = {
     ACTIVE: "ACTIVE",
     CANCELLED: "CANCELLED"
 } as const;
 export type FixedSlotStatus = (typeof FixedSlotStatus)[keyof typeof FixedSlotStatus];
+export const IncidentSource = {
+    DURING_RENTAL: "DURING_RENTAL",
+    POST_RETURN: "POST_RETURN",
+    STAFF_INSPECTION: "STAFF_INSPECTION"
+} as const;
+export type IncidentSource = (typeof IncidentSource)[keyof typeof IncidentSource];
+export const IncidentStatus = {
+    OPEN: "OPEN",
+    ASSIGNED: "ASSIGNED",
+    IN_PROGRESS: "IN_PROGRESS",
+    RESOLVED: "RESOLVED",
+    CLOSED: "CLOSED",
+    CANCELLED: "CANCELLED"
+} as const;
+export type IncidentStatus = (typeof IncidentStatus)[keyof typeof IncidentStatus];
+export const IncidentSeverity = {
+    LOW: "LOW",
+    MEDIUM: "MEDIUM",
+    HIGH: "HIGH",
+    CRITICAL: "CRITICAL"
+} as const;
+export type IncidentSeverity = (typeof IncidentSeverity)[keyof typeof IncidentSeverity];
+export const AssignmentStatus = {
+    ASSIGNED: "ASSIGNED",
+    ACCEPTED: "ACCEPTED",
+    IN_PROGRESS: "IN_PROGRESS",
+    RESOLVED: "RESOLVED",
+    CANCELLED: "CANCELLED"
+} as const;
+export type AssignmentStatus = (typeof AssignmentStatus)[keyof typeof AssignmentStatus];
+export const MaintenanceResult = {
+    REPAIRED_ON_SITE: "REPAIRED_ON_SITE",
+    MOVED_TO_MAINTENANCE: "MOVED_TO_MAINTENANCE",
+    NO_ISSUE_FOUND: "NO_ISSUE_FOUND",
+    NOT_FOUND: "NOT_FOUND",
+    IRREPARABLE: "IRREPARABLE"
+} as const;
+export type MaintenanceResult = (typeof MaintenanceResult)[keyof typeof MaintenanceResult];
 export const JobOutboxStatus = {
     PENDING: "PENDING",
     SENT: "SENT",
@@ -66,6 +126,20 @@ export const PaymentStatus = {
     CANCELLED: "CANCELLED"
 } as const;
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+export const PaymentMethod = {
+    WALLET: "WALLET",
+    STRIPE: "STRIPE",
+    INTERNAL_ADJUSTMENT: "INTERNAL_ADJUSTMENT"
+} as const;
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+export const PaymentRecordStatus = {
+    PENDING: "PENDING",
+    SUCCESS: "SUCCESS",
+    FAILED: "FAILED",
+    REFUNDED: "REFUNDED",
+    PARTIALLY_REFUNDED: "PARTIALLY_REFUNDED"
+} as const;
+export type PaymentRecordStatus = (typeof PaymentRecordStatus)[keyof typeof PaymentRecordStatus];
 export const PushTokenPlatform = {
     ANDROID: "ANDROID",
     IOS: "IOS",
@@ -83,6 +157,36 @@ export const AppliesToEnum = {
     app: "app"
 } as const;
 export type AppliesToEnum = (typeof AppliesToEnum)[keyof typeof AppliesToEnum];
+export const RedistributionStatus = {
+    PENDING_APPROVAL: "PENDING_APPROVAL",
+    APPROVED: "APPROVED",
+    REJECTED: "REJECTED",
+    IN_TRANSIT: "IN_TRANSIT",
+    PARTIALLY_COMPLETED: "PARTIALLY_COMPLETED",
+    COMPLETED: "COMPLETED",
+    CANCELLED: "CANCELLED"
+} as const;
+export type RedistributionStatus = (typeof RedistributionStatus)[keyof typeof RedistributionStatus];
+export const ConfirmationMethod = {
+    QR_CODE: "QR_CODE",
+    MANUAL: "MANUAL"
+} as const;
+export type ConfirmationMethod = (typeof ConfirmationMethod)[keyof typeof ConfirmationMethod];
+export const HandoverStatus = {
+    PENDING: "PENDING",
+    CONFIRMED: "CONFIRMED",
+    UNDER_STATION_CARE: "UNDER_STATION_CARE",
+    UNDER_AGENCY_CARE: "UNDER_AGENCY_CARE",
+    DISPUTED: "DISPUTED"
+} as const;
+export type HandoverStatus = (typeof HandoverStatus)[keyof typeof HandoverStatus];
+export const RentalPenaltyType = {
+    LATE_RETURN: "LATE_RETURN",
+    LOSS: "LOSS",
+    DAMAGE: "DAMAGE",
+    OTHER: "OTHER"
+} as const;
+export type RentalPenaltyType = (typeof RentalPenaltyType)[keyof typeof RentalPenaltyType];
 export const RentalStatus = {
     RENTED: "RENTED",
     COMPLETED: "COMPLETED",
@@ -218,6 +322,15 @@ export type Bike = {
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
+export type BikeMaintenanceLog = {
+    id: string;
+    bike_id: string;
+    incident_report_id: string | null;
+    technician_user_id: string | null;
+    result: MaintenanceResult;
+    notes: string | null;
+    created_at: Generated<Timestamp>;
+};
 export type BikeSwapRequest = {
     id: string;
     rental_id: string;
@@ -229,6 +342,53 @@ export type BikeSwapRequest = {
     status: Generated<BikeSwapStatus>;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
+};
+export type Coupon = {
+    id: string;
+    coupon_rule_id: string | null;
+    code: string;
+    discount_type: DiscountType;
+    discount_value: string;
+    expires_at: Timestamp | null;
+    status: Generated<CouponStatus>;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type CouponRule = {
+    id: string;
+    name: string;
+    trigger_type: CouponTriggerType;
+    min_riding_minutes: number | null;
+    min_completed_rentals: number | null;
+    discount_type: DiscountType;
+    discount_value: string;
+    status: Generated<AccountStatus>;
+    priority: Generated<number>;
+    active_from: Timestamp | null;
+    active_to: Timestamp | null;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type EnvironmentalImpactPolicy = {
+    id: string;
+    name: string;
+    average_speed_kmh: string;
+    co2_saved_per_km: string;
+    status: Generated<AccountStatus>;
+    active_from: Timestamp | null;
+    active_to: Timestamp | null;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type EnvironmentalImpactStat = {
+    id: string;
+    user_id: string;
+    rental_id: string;
+    policy_id: string;
+    estimated_distance_km: string | null;
+    co2_saved: string;
+    policy_snapshot: unknown;
+    calculated_at: Generated<Timestamp>;
 };
 export type FixedSlotDate = {
     id: string;
@@ -246,6 +406,30 @@ export type FixedSlotTemplate = {
 export type GeoBoundary = {
     code: string;
 };
+export type IncidentAttachment = {
+    id: string;
+    incident_report_id: string;
+    file_url: string;
+    created_at: Generated<Timestamp>;
+};
+export type IncidentReport = {
+    id: string;
+    reporter_user_id: string;
+    rental_id: string | null;
+    bike_id: string;
+    station_id: string | null;
+    source: IncidentSource;
+    incident_type: string;
+    severity: IncidentSeverity;
+    description: string | null;
+    latitude: string | null;
+    longitude: string | null;
+    bike_locked: Generated<boolean>;
+    status: Generated<IncidentStatus>;
+    reported_at: Generated<Timestamp>;
+    resolved_at: Timestamp | null;
+    closed_at: Timestamp | null;
+};
 export type JobOutbox = {
     id: string;
     type: string;
@@ -261,6 +445,19 @@ export type JobOutbox = {
     created_at: Generated<Timestamp>;
     updated_at: Generated<Timestamp>;
 };
+export type Payment = {
+    id: string;
+    user_id: string;
+    wallet_id: string | null;
+    rental_id: string | null;
+    reservation_id: string | null;
+    amount: string;
+    method: PaymentMethod;
+    status: Generated<PaymentRecordStatus>;
+    paid_at: Timestamp | null;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
 export type PaymentAttempt = {
     id: string;
     user_id: string;
@@ -274,6 +471,21 @@ export type PaymentAttempt = {
     currency: string;
     failure_reason: string | null;
     metadata: unknown | null;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type PricingPolicy = {
+    id: string;
+    name: string;
+    base_rate: string;
+    billing_unit_minutes: number;
+    overtime_rate: string | null;
+    reservation_fee: Generated<string>;
+    deposit_required: Generated<string>;
+    late_return_cutoff: Generated<Timestamp>;
+    status: Generated<AccountStatus>;
+    active_from: Timestamp | null;
+    active_to: Timestamp | null;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
@@ -310,6 +522,28 @@ export type RatingReasonLink = {
     rating_id: string;
     reason_id: string;
 };
+export type RedistributionRequest = {
+    id: string;
+    requested_by_user_id: string;
+    approved_by_user_id: string | null;
+    source_station_id: string;
+    target_station_id: string | null;
+    target_agency_id: string | null;
+    reason: string | null;
+    status: Generated<RedistributionStatus>;
+    started_at: Timestamp | null;
+    completed_at: Timestamp | null;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type RedistributionRequestItem = {
+    id: string;
+    redistribution_request_id: string;
+    bike_id: string | null;
+    requested_quantity: number | null;
+    delivered_at: Timestamp | null;
+    created_at: Generated<Timestamp>;
+};
 export type Rental = {
     id: string;
     user_id: string;
@@ -325,6 +559,29 @@ export type Rental = {
     status: Generated<RentalStatus>;
     updated_at: Generated<Timestamp>;
 };
+export type RentalBillingRecord = {
+    id: string;
+    rental_id: string;
+    pricing_policy_id: string;
+    total_duration_minutes: number;
+    estimated_distance_km: string | null;
+    base_amount: Generated<string>;
+    overtime_amount: Generated<string>;
+    coupon_discount_amount: Generated<string>;
+    subscription_discount_amount: Generated<string>;
+    deposit_forfeited: Generated<boolean>;
+    total_amount: string;
+    created_at: Generated<Timestamp>;
+};
+export type RentalPenalty = {
+    id: string;
+    rental_id: string;
+    wallet_hold_id: string | null;
+    penalty_type: RentalPenaltyType;
+    amount: string;
+    description: string | null;
+    created_at: Generated<Timestamp>;
+};
 export type Reservation = {
     id: string;
     user_id: string;
@@ -339,6 +596,17 @@ export type Reservation = {
     status: Generated<ReservationStatus>;
     created_at: Generated<Timestamp>;
     updated_at: Generated<Timestamp>;
+};
+export type ReturnConfirmation = {
+    id: string;
+    rental_id: string;
+    station_id: string | null;
+    agency_id: string | null;
+    confirmed_by_user_id: string;
+    confirmation_method: Generated<ConfirmationMethod>;
+    handover_status: Generated<HandoverStatus>;
+    confirmed_at: Timestamp;
+    created_at: Generated<Timestamp>;
 };
 export type Station = {
     id: string;
@@ -373,6 +641,18 @@ export type Supplier = {
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
+export type TechnicianAssignment = {
+    id: string;
+    incident_report_id: string;
+    technician_team_id: string | null;
+    technician_user_id: string | null;
+    assigned_by_user_id: string | null;
+    assigned_at: Generated<Timestamp>;
+    accepted_at: Timestamp | null;
+    started_at: Timestamp | null;
+    resolved_at: Timestamp | null;
+    status: Generated<AssignmentStatus>;
+};
 export type TechnicianTeam = {
     id: string;
     name: string;
@@ -397,6 +677,17 @@ export type User = {
     stripe_payouts_enabled: boolean | null;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
+};
+export type UserCoupon = {
+    id: string;
+    user_id: string;
+    coupon_id: string;
+    assigned_at: Generated<Timestamp>;
+    used_at: Timestamp | null;
+    locked_at: Timestamp | null;
+    lock_expires_at: Timestamp | null;
+    locked_for_payment_id: string | null;
+    status: Generated<CouponStatus>;
 };
 export type UserOrgAssignment = {
     id: string;
@@ -462,23 +753,39 @@ export type DB = {
     AgencyRequest: AgencyRequest;
     AuthEvent: AuthEvent;
     Bike: Bike;
+    bike_maintenance_logs: BikeMaintenanceLog;
     BikeSwapRequest: BikeSwapRequest;
+    coupon_rules: CouponRule;
+    coupons: Coupon;
+    environmental_impact_policies: EnvironmentalImpactPolicy;
+    environmental_impact_stats: EnvironmentalImpactStat;
     FixedSlotDate: FixedSlotDate;
     FixedSlotTemplate: FixedSlotTemplate;
     GeoBoundary: GeoBoundary;
+    incident_attachments: IncidentAttachment;
+    incident_reports: IncidentReport;
     job_outbox: JobOutbox;
     payment_attempts: PaymentAttempt;
+    payments: Payment;
+    pricing_policies: PricingPolicy;
     push_tokens: PushToken;
     Rating: Rating;
     RatingReason: RatingReason;
     RatingReasonLink: RatingReasonLink;
+    redistribution_request_items: RedistributionRequestItem;
+    redistribution_requests: RedistributionRequest;
     Rental: Rental;
+    rental_billing_records: RentalBillingRecord;
+    rental_penalties: RentalPenalty;
     Reservation: Reservation;
+    return_confirmations: ReturnConfirmation;
     Station: Station;
     Subscription: Subscription;
     Supplier: Supplier;
+    technician_assignments: TechnicianAssignment;
     TechnicianTeam: TechnicianTeam;
     User: User;
+    user_coupons: UserCoupon;
     UserOrgAssignment: UserOrgAssignment;
     wallet_holds: WalletHold;
     wallet_transactions: WalletTransaction;

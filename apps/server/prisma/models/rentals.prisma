@@ -27,6 +27,12 @@ model Rental {
   subscription     Subscription?     @relation(fields: [subscriptionId], references: [id])
   rating           Rating?
   bikeSwapRequests BikeSwapRequest[]
+  payments         Payment[]
+  returnConfirmation ReturnConfirmation?
+  rentalBillingRecord RentalBillingRecord?
+  rentalPenalties  RentalPenalty[]
+  incidentReports  IncidentReport[]
+  environmentalImpactStat EnvironmentalImpactStat?
   // Partial unique index for active rentals per bike cannot be expressed in Prisma:
   // CREATE UNIQUE INDEX idx_rentals_active_bike ON rentals(bike_id) WHERE status = 'RENTED' AND bike_id IS NOT NULL;
   // Partial unique index for active rentals per user cannot be expressed in Prisma:

@@ -14,6 +14,51 @@ enum PaymentStatus {
   CANCELLED
 }
 
+enum PaymentMethod {
+  WALLET
+  STRIPE
+  INTERNAL_ADJUSTMENT
+
+  @@map("payment_method")
+}
+
+enum PaymentRecordStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+
+  @@map("payment_status")
+}
+
+model Payment {
+  id            String              @id @default(uuid(7)) @db.Uuid
+  userId        String              @map("user_id") @db.Uuid
+  walletId      String?             @map("wallet_id") @db.Uuid
+  rentalId      String?             @map("rental_id") @db.Uuid
+  reservationId String?             @map("reservation_id") @db.Uuid
+  amount        Decimal             @db.Decimal(12, 2)
+  method        PaymentMethod
+  status        PaymentRecordStatus @default(PENDING)
+  paidAt        DateTime?           @map("paid_at") @db.Timestamptz
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  user         User          @relation(fields: [userId], references: [id])
+  wallet       Wallet?       @relation(fields: [walletId], references: [id])
+  rental       Rental?       @relation(fields: [rentalId], references: [id])
+  reservation  Reservation?  @relation(fields: [reservationId], references: [id])
+  lockedCoupons UserCoupon[] @relation("UserCouponLockedForPayment")
+
+  @@index([userId], name: "idx_payments_user")
+  @@index([walletId], name: "idx_payments_wallet")
+  @@index([rentalId], name: "idx_payments_rental")
+  @@index([reservationId], name: "idx_payments_reservation")
+  @@index([status, createdAt], name: "idx_payments_status_created_at")
+  @@map("payments")
+}
+
 model PaymentAttempt {
   id            String          @id @default(uuid(7)) @db.Uuid
   userId        String          @map("user_id") @db.Uuid
