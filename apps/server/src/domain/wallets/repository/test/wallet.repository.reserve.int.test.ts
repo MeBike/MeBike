@@ -1,20 +1,25 @@
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { expectLeftTag } from "@/test/effect/assertions";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeWalletRepository } from "../wallet.repository";
-import { setupWalletRepositoryTests } from "./test-helpers";
 
 describe("wallet Repository - Reserve/Release Balance", () => {
-  const { getClient, getRepo, createUser, expectLeftTag } = setupWalletRepositoryTests();
+  const fixture = setupPrismaIntFixture();
+  let repo: ReturnType<typeof makeWalletRepository>;
+
+  beforeAll(() => {
+    repo = makeWalletRepository(fixture.prisma);
+  });
 
   it("reserveBalanceInTx successfully reserves funds", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     const wallet = await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const reserved = await Effect.runPromise(
         txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
@@ -22,19 +27,17 @@ describe("wallet Repository - Reserve/Release Balance", () => {
       expect(reserved).toBe(true);
     });
 
-    const updated = await client.wallet.findUnique({ where: { id: wallet.id } });
+    const updated = await fixture.prisma.wallet.findUnique({ where: { id: wallet.id } });
     expect(updated!.reservedBalance.toString()).toBe("30");
     expect(updated!.balance.toString()).toBe("100");
   });
 
   it("reserveBalanceInTx fails when insufficient available balance", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     const wallet = await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const reserved = await Effect.runPromise(
         txRepo.reserveBalance({ walletId: wallet.id, amount: 150n }),
@@ -42,25 +45,23 @@ describe("wallet Repository - Reserve/Release Balance", () => {
       expect(reserved).toBe(false);
     });
 
-    const updated = await client.wallet.findUnique({ where: { id: wallet.id } });
+    const updated = await fixture.prisma.wallet.findUnique({ where: { id: wallet.id } });
     expect(updated!.reservedBalance.toString()).toBe("0");
   });
 
   it("releaseReservedBalanceInTx successfully releases funds", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     const wallet = await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       await Effect.runPromise(
         txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
       );
     });
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const released = await Effect.runPromise(
         txRepo.releaseReservedBalance({ walletId: wallet.id, amount: 30n }),
@@ -68,18 +69,16 @@ describe("wallet Repository - Reserve/Release Balance", () => {
       expect(released).toBe(true);
     });
 
-    const updated = await client.wallet.findUnique({ where: { id: wallet.id } });
+    const updated = await fixture.prisma.wallet.findUnique({ where: { id: wallet.id } });
     expect(updated!.reservedBalance.toString()).toBe("0");
   });
 
   it("releaseReservedBalanceInTx fails when reserved balance is insufficient", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     const wallet = await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const released = await Effect.runPromise(
         txRepo.releaseReservedBalance({ walletId: wallet.id, amount: 30n }),
@@ -87,18 +86,16 @@ describe("wallet Repository - Reserve/Release Balance", () => {
       expect(released).toBe(false);
     });
 
-    const updated = await client.wallet.findUnique({ where: { id: wallet.id } });
+    const updated = await fixture.prisma.wallet.findUnique({ where: { id: wallet.id } });
     expect(updated!.reservedBalance.toString()).toBe("0");
   });
 
   it("decreaseBalance respects reserved balance constraint", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     const wallet = await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       await Effect.runPromise(
         txRepo.reserveBalance({ walletId: wallet.id, amount: 80n }),
@@ -111,20 +108,18 @@ describe("wallet Repository - Reserve/Release Balance", () => {
 
     expectLeftTag(result, "WalletBalanceConstraint");
 
-    const updated = await client.wallet.findUnique({ where: { id: wallet.id } });
+    const updated = await fixture.prisma.wallet.findUnique({ where: { id: wallet.id } });
     expect(updated!.balance.toString()).toBe("100");
     expect(updated!.reservedBalance.toString()).toBe("80");
   });
 
   it("reserveBalanceInTx rolls back on transaction failure", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     const wallet = await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     try {
-      await client.$transaction(async (tx) => {
+      await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeWalletRepository(tx);
         await Effect.runPromise(
           txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
@@ -136,7 +131,7 @@ describe("wallet Repository - Reserve/Release Balance", () => {
       // Expected
     }
 
-    const updated = await client.wallet.findUnique({ where: { id: wallet.id } });
+    const updated = await fixture.prisma.wallet.findUnique({ where: { id: wallet.id } });
     expect(updated!.reservedBalance.toString()).toBe("0");
   });
 });

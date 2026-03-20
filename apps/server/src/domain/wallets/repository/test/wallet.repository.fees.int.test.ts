@@ -1,15 +1,20 @@
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeWalletRepository } from "../wallet.repository";
-import { setupWalletRepositoryTests } from "./test-helpers";
 
 describe("wallet Repository - Fee Handling", () => {
-  const { getClient, getRepo, createUser } = setupWalletRepositoryTests();
+  const fixture = setupPrismaIntFixture();
+  let repo: ReturnType<typeof makeWalletRepository>;
+
+  beforeAll(() => {
+    repo = makeWalletRepository(fixture.prisma);
+  });
 
   it("increaseBalance deducts fees from amount", async () => {
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
     const increased = await Effect.runPromise(
@@ -26,12 +31,10 @@ describe("wallet Repository - Fee Handling", () => {
   });
 
   it("increaseBalance deducts fees from amount inside a transaction", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const increased = await Effect.runPromise(
         txRepo.increaseBalance({ userId, amount: 100n, fee: 15n }),

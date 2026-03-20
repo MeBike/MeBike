@@ -1,19 +1,23 @@
 import { Effect, Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeWalletRepository } from "../wallet.repository";
-import { setupWalletRepositoryTests } from "./test-helpers";
 
 describe("wallet Repository - Transaction-Scoped Operations", () => {
-  const { getClient, getRepo, createUser } = setupWalletRepositoryTests();
+  const fixture = setupPrismaIntFixture();
+  let repo: ReturnType<typeof makeWalletRepository>;
+
+  beforeAll(() => {
+    repo = makeWalletRepository(fixture.prisma);
+  });
 
   it("findByUserIdInTx finds wallet within transaction", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const found = await Effect.runPromise(txRepo.findByUserId(userId));
       expect(Option.isSome(found)).toBe(true);
@@ -21,11 +25,9 @@ describe("wallet Repository - Transaction-Scoped Operations", () => {
   });
 
   it("createForUserInTx commits on success", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const wallet = await Effect.runPromise(txRepo.createForUser(userId));
       expect(wallet.userId).toBe(userId);
@@ -36,12 +38,10 @@ describe("wallet Repository - Transaction-Scoped Operations", () => {
   });
 
   it("createForUserInTx rolls back on transaction failure", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
 
     try {
-      await client.$transaction(async (tx) => {
+      await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeWalletRepository(tx);
         await Effect.runPromise(txRepo.createForUser(userId));
         throw new Error("Simulated transaction failure");
@@ -56,12 +56,10 @@ describe("wallet Repository - Transaction-Scoped Operations", () => {
   });
 
   it("increaseBalanceInTx commits on success", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const increased = await Effect.runPromise(
         txRepo.increaseBalance({ userId, amount: 100n }),
@@ -77,13 +75,11 @@ describe("wallet Repository - Transaction-Scoped Operations", () => {
   });
 
   it("increaseBalanceInTx rolls back on transaction failure", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
     try {
-      await client.$transaction(async (tx) => {
+      await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeWalletRepository(tx);
         await Effect.runPromise(
           txRepo.increaseBalance({ userId, amount: 100n }),
@@ -103,13 +99,11 @@ describe("wallet Repository - Transaction-Scoped Operations", () => {
   });
 
   it("decreaseBalanceInTx commits on success", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWalletRepository(tx);
       const decreased = await Effect.runPromise(
         txRepo.decreaseBalance({ userId, amount: 30n }),
@@ -125,14 +119,12 @@ describe("wallet Repository - Transaction-Scoped Operations", () => {
   });
 
   it("decreaseBalanceInTx rolls back on transaction failure", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     try {
-      await client.$transaction(async (tx) => {
+      await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeWalletRepository(tx);
         await Effect.runPromise(
           txRepo.decreaseBalance({ userId, amount: 30n }),
@@ -152,13 +144,11 @@ describe("wallet Repository - Transaction-Scoped Operations", () => {
   });
 
   it("increaseBalance uses outer transaction when using tx client", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
     try {
-      await client.$transaction(async (tx) => {
+      await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeWalletRepository(tx);
         await Effect.runPromise(txRepo.increaseBalance({ userId, amount: 100n }));
         throw new Error("Simulated transaction failure");
@@ -176,14 +166,12 @@ describe("wallet Repository - Transaction-Scoped Operations", () => {
   });
 
   it("decreaseBalance uses outer transaction when using tx client", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     try {
-      await client.$transaction(async (tx) => {
+      await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeWalletRepository(tx);
         await Effect.runPromise(txRepo.decreaseBalance({ userId, amount: 30n }));
         throw new Error("Simulated transaction failure");

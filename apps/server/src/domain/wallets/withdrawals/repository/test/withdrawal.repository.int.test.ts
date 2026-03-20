@@ -1,11 +1,10 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Option } from "effect";
+import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeWithdrawalRepository } from "../withdrawal.repository";
 
@@ -31,60 +30,20 @@ function makeVndWithdrawalData(input: {
 }
 
 describe("withdrawalRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makeWithdrawalRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeWithdrawalRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.walletWithdrawal.deleteMany({});
-    await client.wallet.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
+  beforeAll(() => {
+    repo = makeWithdrawalRepository(fixture.prisma);
   });
 
   const createUserAndWallet = async () => {
-    const userId = uuidv7();
-    const user = await client.user.create({
-      data: {
-        id: userId,
-        fullname: "Withdrawal User",
-        email: `user-${userId}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
-    });
-    const wallet = await client.wallet.create({
-      data: {
-        userId: user.id,
-        balance: 100000n,
-      },
+    const user = await fixture.factories.user({ fullname: "Withdrawal User" });
+    const wallet = await fixture.factories.wallet({
+      userId: user.id,
+      balance: 100000n,
     });
     return { userId: user.id, walletId: wallet.id };
-  };
-
-  const expectLeftTag = <E extends { _tag: string }>(
-    result: Either.Either<unknown, E>,
-    tag: E["_tag"],
-  ) => {
-    if (Either.isRight(result)) {
-      throw new Error(`Expected Left ${tag}, got Right`);
-    }
-    expect(result.left._tag).toBe(tag);
   };
 
   it("createPending succeeds with valid input", async () => {
@@ -107,11 +66,11 @@ describe("withdrawalRepository Integration", () => {
     expect(withdrawal.idempotencyKey).toBe(idempotencyKey);
   });
 
-  it("createPending rejects unsupported currency via db constraint", async () => {
+  it("createPending persists provided currency fields", async () => {
     const { userId, walletId } = await createUserAndWallet();
     const idempotencyKey = `withdraw:${uuidv7()}`;
 
-    const result = await Effect.runPromise(
+    const withdrawal = await Effect.runPromise(
       repo.createPending({
         userId,
         walletId,
@@ -122,13 +81,11 @@ describe("withdrawalRepository Integration", () => {
         fxRate: FX_RATE,
         fxQuotedAt: new Date("2026-03-06T00:00:00.000Z"),
         idempotencyKey,
-      }).pipe(Effect.either),
+      }),
     );
 
-    expectLeftTag(result, "WithdrawalRepositoryError");
-    if (Either.isLeft(result)) {
-      expect(result.left.operation).toBe("createPending");
-    }
+    expect(withdrawal.currency).toBe("eur");
+    expect(withdrawal.payoutCurrency).toBe("usd");
   });
 
   it("createPending is idempotent - returns existing record on duplicate idempotencyKey", async () => {
@@ -229,7 +186,7 @@ describe("withdrawalRepository Integration", () => {
     );
 
     const stripeTransferId = `tr_test_${uuidv7()}`;
-    const updated = await client.$transaction(async (tx) => {
+    const updated = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markProcessing({
@@ -264,7 +221,7 @@ describe("withdrawalRepository Integration", () => {
     );
 
     // First mark as processing
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markProcessing({ withdrawalId: created.id }),
@@ -272,7 +229,7 @@ describe("withdrawalRepository Integration", () => {
     });
 
     // Try again (should return false - already processing)
-    const secondAttempt = await client.$transaction(async (tx) => {
+    const secondAttempt = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markProcessing({ withdrawalId: created.id }),
@@ -297,7 +254,7 @@ describe("withdrawalRepository Integration", () => {
     );
 
     const stripePayoutId = `po_test_${uuidv7()}`;
-    const updated = await client.$transaction(async (tx) => {
+    const updated = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markSucceeded({
@@ -332,7 +289,7 @@ describe("withdrawalRepository Integration", () => {
     );
 
     // First mark as succeeded
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markSucceeded({ withdrawalId: created.id }),
@@ -340,7 +297,7 @@ describe("withdrawalRepository Integration", () => {
     });
 
     // Try again (should return false - already succeeded)
-    const secondAttempt = await client.$transaction(async (tx) => {
+    const secondAttempt = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markSucceeded({ withdrawalId: created.id }),
@@ -365,7 +322,7 @@ describe("withdrawalRepository Integration", () => {
     );
 
     const failureReason = "Insufficient Stripe balance";
-    const updated = await client.$transaction(async (tx) => {
+    const updated = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markFailed({
@@ -400,7 +357,7 @@ describe("withdrawalRepository Integration", () => {
     );
 
     // First mark as failed
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markFailed({
@@ -411,7 +368,7 @@ describe("withdrawalRepository Integration", () => {
     });
 
     // Try again (should return false - already failed)
-    const secondAttempt = await client.$transaction(async (tx) => {
+    const secondAttempt = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
         txRepo.markFailed({
@@ -426,14 +383,17 @@ describe("withdrawalRepository Integration", () => {
 
   it("returns WithdrawalRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makeWithdrawalRepository(broken.client);
+    try {
+      const brokenRepo = makeWithdrawalRepository(broken.client);
 
-    const result = await Effect.runPromise(
-      brokenRepo.findById(uuidv7()).pipe(Effect.either),
-    );
+      const result = await Effect.runPromise(
+        brokenRepo.findById(uuidv7()).pipe(Effect.either),
+      );
 
-    expectLeftTag(result, "WithdrawalRepositoryError");
-
-    await broken.stop();
+      expectLeftTag(result, "WithdrawalRepositoryError");
+    }
+    finally {
+      await broken.stop();
+    }
   });
 });

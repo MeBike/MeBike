@@ -1,145 +1,57 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Option } from "effect";
+import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeRatingRepository } from "../rating.repository";
 
 describe("ratingRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makeRatingRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeRatingRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.ratingReasonLink.deleteMany({});
-    await client.rating.deleteMany({});
-    await client.ratingReason.deleteMany({});
-    await client.rental.deleteMany({});
-    await client.bike.deleteMany({});
-    await client.station.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
+  beforeAll(() => {
+    repo = makeRatingRepository(fixture.prisma);
   });
 
   const createUser = async () => {
-    const id = uuidv7();
-    await client.user.create({
-      data: {
-        id,
-        fullname: "Rating User",
-        email: `user-${id}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
-    });
-    return { id };
+    const user = await fixture.factories.user({ fullname: "Rating User" });
+    return { id: user.id };
   };
 
   const createStation = async () => {
-    const id = uuidv7();
-    const name = `Station ${id}`;
-    const address = "123 Test St";
-    const capacity = 10;
-    const latitude = 10.762622;
-    const longitude = 106.660172;
-    const updatedAt = new Date();
-
-    await client.$executeRaw`
-      INSERT INTO "Station" (
-        "id",
-        "name",
-        "address",
-        "capacity",
-        "latitude",
-        "longitude",
-        "updated_at",
-        "position"
-      ) VALUES (
-        ${id},
-        ${name},
-        ${address},
-        ${capacity},
-        ${latitude},
-        ${longitude},
-        ${updatedAt},
-        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
-      )
-    `;
-
-    return { id };
+    const station = await fixture.factories.station();
+    return { id: station.id };
   };
 
   const createBike = async (stationId: string) => {
-    const id = uuidv7();
-    await client.bike.create({
-      data: {
-        id,
-        chipId: `chip-${id}`,
-        stationId,
-        supplierId: null,
-        status: "AVAILABLE",
-        updatedAt: new Date(),
-      },
-    });
-    return { id };
+    const bike = await fixture.factories.bike({ stationId, status: "AVAILABLE" });
+    return { id: bike.id };
   };
 
   const createRental = async (userId: string, bikeId: string, stationId: string) => {
-    const id = uuidv7();
-    await client.rental.create({
-      data: {
-        id,
-        userId,
-        bikeId,
-        startStationId: stationId,
-        startTime: new Date(),
-        status: "COMPLETED",
-        updatedAt: new Date(),
-      },
+    const rental = await fixture.factories.rental({
+      userId,
+      bikeId,
+      startStationId: stationId,
+      status: "COMPLETED",
     });
-    return { id };
+    return { id: rental.id };
   };
 
-  const createReason = async () => {
+  const createReason = async (appliesTo: "bike" | "station" = "bike") => {
     const id = uuidv7();
-    await client.ratingReason.create({
+    await fixture.prisma.ratingReason.create({
       data: {
         id,
         type: "ISSUE",
-        appliesTo: "bike",
+        appliesTo,
         messages: `Reason ${id}`,
       },
     });
     return { id };
-  };
-
-  const expectLeftTag = <E extends { _tag: string }>(
-    result: Either.Either<unknown, E>,
-    tag: E["_tag"],
-  ) => {
-    if (Either.isRight(result)) {
-      throw new Error(`Expected Left ${tag}, got Right`);
-    }
-    expect(result.left._tag).toBe(tag);
   };
 
   it("createRating persists rating and reasons", async () => {
@@ -200,15 +112,18 @@ describe("ratingRepository Integration", () => {
 
   it("returns RatingRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makeRatingRepository(broken.client);
+    try {
+      const brokenRepo = makeRatingRepository(broken.client);
 
-    const result = await Effect.runPromise(
-      brokenRepo.findByRentalId(uuidv7()).pipe(Effect.either),
-    );
+      const result = await Effect.runPromise(
+        brokenRepo.findByRentalId(uuidv7()).pipe(Effect.either),
+      );
 
-    expectLeftTag(result, "RatingRepositoryError");
-
-    await broken.stop();
+      expectLeftTag(result, "RatingRepositoryError");
+    }
+    finally {
+      await broken.stop();
+    }
   });
 
   it("findBikeSummary returns average, total, and breakdown", async () => {

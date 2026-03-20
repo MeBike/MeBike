@@ -1,63 +1,33 @@
-import { PrismaPg } from "@prisma/adapter-pg";
 import { Effect, Either } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag, expectRight } from "@/test/effect/assertions";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeAgencyRequestRepository } from "../agency-request.repository";
 
 describe("agencyRequestRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makeAgencyRequestRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeAgencyRequestRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.agencyRequest.deleteMany({});
-    await client.userOrgAssignment.deleteMany({});
-    await client.agency.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client) {
-      await client.$disconnect();
-    }
-
-    if (container) {
-      await container.stop();
-    }
+  beforeAll(() => {
+    repo = makeAgencyRequestRepository(fixture.prisma);
   });
 
   async function createUser(role: "USER" | "ADMIN" | "AGENCY" = "USER") {
-    const id = uuidv7();
-    await client.user.create({
-      data: {
-        id,
-        fullname: `${role} User`,
-        email: `${role.toLowerCase()}-${id}@example.com`,
-        passwordHash: "hash",
-        role,
-        verify: "VERIFIED",
-      },
+    const user = await fixture.factories.user({
+      fullname: `${role} User`,
+      role,
     });
 
-    return { id };
+    return { id: user.id };
   }
 
   async function createAgencyRequest(status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED" = "PENDING") {
     const requester = await createUser("USER");
 
-    return client.agencyRequest.create({
+    return fixture.prisma.agencyRequest.create({
       data: {
         id: uuidv7(),
         requesterUserId: requester.id,
@@ -72,7 +42,7 @@ describe("agencyRequestRepository Integration", () => {
   async function createApprovalRefs() {
     const reviewer = await createUser("ADMIN");
     const agencyUser = await createUser("AGENCY");
-    const agency = await client.agency.create({
+    const agency = await fixture.prisma.agency.create({
       data: {
         id: uuidv7(),
         name: "Approved Agency",
@@ -98,13 +68,11 @@ describe("agencyRequestRepository Integration", () => {
       description: "Approved",
     }).pipe(Effect.either));
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(result.right.status).toBe("APPROVED");
-      expect(result.right.reviewedByUserId).toBe(refs.reviewer.id);
-      expect(result.right.approvedAgencyId).toBe(refs.agency.id);
-      expect(result.right.createdAgencyUserId).toBe(refs.agencyUser.id);
-    }
+    const approved = expectRight(result);
+    expect(approved.status).toBe("APPROVED");
+    expect(approved.reviewedByUserId).toBe(refs.reviewer.id);
+    expect(approved.approvedAgencyId).toBe(refs.agency.id);
+    expect(approved.createdAgencyUserId).toBe(refs.agencyUser.id);
   });
 
   it("returns InvalidAgencyRequestStatusTransition when transitioning a non-pending request", async () => {
@@ -116,14 +84,13 @@ describe("agencyRequestRepository Integration", () => {
       description: "Rejected after approval",
     }).pipe(Effect.either));
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left._tag).toBe("InvalidAgencyRequestStatusTransition");
-      if (result.left._tag === "InvalidAgencyRequestStatusTransition") {
-        expect(result.left.currentStatus).toBe("APPROVED");
-        expect(result.left.nextStatus).toBe("REJECTED");
-      }
+    const error = Either.isLeft(result) ? result.left : null;
+    expectLeftTag(result, "InvalidAgencyRequestStatusTransition");
+    if (!error || error._tag !== "InvalidAgencyRequestStatusTransition") {
+      throw new Error("Expected InvalidAgencyRequestStatusTransition");
     }
+    expect(error.currentStatus).toBe("APPROVED");
+    expect(error.nextStatus).toBe("REJECTED");
   });
 
   it("returns AgencyRequestNotFound when approving an unknown request", async () => {
@@ -135,9 +102,6 @@ describe("agencyRequestRepository Integration", () => {
       createdAgencyUserId: refs.agencyUser.id,
     }).pipe(Effect.either));
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left._tag).toBe("AgencyRequestNotFound");
-    }
+    expectLeftTag(result, "AgencyRequestNotFound");
   });
 });

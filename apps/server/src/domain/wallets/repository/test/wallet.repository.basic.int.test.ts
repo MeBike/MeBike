@@ -1,18 +1,23 @@
 import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeWalletRepository } from "../wallet.repository";
-import { setupWalletRepositoryTests } from "./test-helpers";
 
 describe("wallet Repository - Basic Operations", () => {
-  const { getRepo, createUser, expectLeftTag } = setupWalletRepositoryTests();
+  const fixture = setupPrismaIntFixture();
+  let repo: ReturnType<typeof makeWalletRepository>;
+
+  beforeAll(() => {
+    repo = makeWalletRepository(fixture.prisma);
+  });
 
   it("createForUser creates a wallet", async () => {
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
 
     const wallet = await Effect.runPromise(repo.createForUser(userId));
     expect(wallet.userId).toBe(userId);
@@ -22,8 +27,7 @@ describe("wallet Repository - Basic Operations", () => {
   });
 
   it("createForUser rejects duplicate wallet", async () => {
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
     const result = await Effect.runPromise(
@@ -34,8 +38,7 @@ describe("wallet Repository - Basic Operations", () => {
   });
 
   it("increaseBalance and decreaseBalance adjust balance", async () => {
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
     const increased = await Effect.runPromise(
@@ -55,7 +58,6 @@ describe("wallet Repository - Basic Operations", () => {
   });
 
   it("increaseBalance fails when wallet is missing", async () => {
-    const repo = getRepo();
     const result = await Effect.runPromise(
       repo.increaseBalance({ userId: uuidv7(), amount: 50n }).pipe(Effect.either),
     );
@@ -64,8 +66,7 @@ describe("wallet Repository - Basic Operations", () => {
   });
 
   it("increaseBalance returns WalletUniqueViolation for duplicate hash", async () => {
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
     const hash = `refund:reservation:${uuidv7()}`;
@@ -91,8 +92,7 @@ describe("wallet Repository - Basic Operations", () => {
   });
 
   it("decreaseBalance fails when balance is insufficient", async () => {
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
     const result = await Effect.runPromise(
@@ -104,14 +104,17 @@ describe("wallet Repository - Basic Operations", () => {
 
   it("returns WalletRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makeWalletRepository(broken.client);
+    try {
+      const brokenRepo = makeWalletRepository(broken.client);
 
-    const result = await Effect.runPromise(
-      brokenRepo.findByUserId(uuidv7()).pipe(Effect.either),
-    );
+      const result = await Effect.runPromise(
+        brokenRepo.findByUserId(uuidv7()).pipe(Effect.either),
+      );
 
-    expectLeftTag(result, "WalletRepositoryError");
-
-    await broken.stop();
+      expectLeftTag(result, "WalletRepositoryError");
+    }
+    finally {
+      await broken.stop();
+    }
   });
 });
