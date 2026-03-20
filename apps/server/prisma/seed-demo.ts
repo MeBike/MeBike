@@ -572,7 +572,7 @@ async function main() {
       }),
     ]);
 
-    const [techTeamA, techTeamB] = await Promise.all([
+    const [techTeamA] = await Promise.all([
       prisma.technicianTeam.upsert({
         where: { id: DEMO_TECH_TEAM_A_ID },
         create: {
