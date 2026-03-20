@@ -1,92 +1,40 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Option } from "effect";
+import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
+import { runEffect } from "@/test/effect/run";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeSupplierRepository } from "../supplier.repository";
 
 describe("supplierRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makeSupplierRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeSupplierRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.bike.deleteMany({});
-    await client.supplier.deleteMany({});
+  beforeAll(() => {
+    repo = makeSupplierRepository(fixture.prisma);
   });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
-  });
-
-  const createSupplier = async (name?: string) => {
-    const id = uuidv7();
-    const supplier = await client.supplier.create({
-      data: {
-        id,
-        name: name ?? `Supplier ${id}`,
-        address: "123 Supplier St",
-        phoneNumber: "0900000000",
-        contractFee: "10.00",
-        status: "ACTIVE",
-        updatedAt: new Date(),
-      },
-    });
-    return supplier;
-  };
-
-  const createBike = async (supplierId: string, status: "AVAILABLE" | "BOOKED") => {
-    const id = uuidv7();
-    await client.bike.create({
-      data: {
-        id,
-        chipId: `chip-${id}`,
-        stationId: null,
-        supplierId,
-        status,
-        updatedAt: new Date(),
-      },
-    });
-  };
 
   it("listWithOffset returns suppliers", async () => {
-    await createSupplier("Alpha");
-    await createSupplier("Beta");
+    await fixture.factories.supplier({ name: "Alpha" });
+    await fixture.factories.supplier({ name: "Beta" });
 
-    const result = await Effect.runPromise(
-      repo.listWithOffset({}, { page: 1, pageSize: 10 }),
-    );
+    const result = await runEffect(repo.listWithOffset({}, { page: 1, pageSize: 10 }));
 
     expect(result.items).toHaveLength(2);
     expect(result.total).toBe(2);
   });
 
   it("getById returns Option.none for missing supplier", async () => {
-    const result = await Effect.runPromise(repo.getById(uuidv7()));
+    const result = await runEffect(repo.getById(uuidv7()));
     expect(Option.isNone(result)).toBe(true);
   });
 
   it("update updates supplier fields", async () => {
-    const supplier = await createSupplier("Gamma");
+    const supplier = await fixture.factories.supplier({ name: "Gamma" });
 
-    const result = await Effect.runPromise(
-      repo.update(supplier.id, { name: "Gamma Updated" }),
-    );
+    const result = await runEffect(repo.update(supplier.id, { name: "Gamma Updated" }));
 
     if (Option.isNone(result)) {
       throw new Error("Expected supplier to be updated");
@@ -95,22 +43,19 @@ describe("supplierRepository Integration", () => {
   });
 
   it("update returns Option.none for missing supplier", async () => {
-    const result = await Effect.runPromise(
-      repo.update(uuidv7(), { name: "Missing" }),
-    );
-
+    const result = await runEffect(repo.update(uuidv7(), { name: "Missing" }));
     expect(Option.isNone(result)).toBe(true);
   });
 
   it("groupBikeCountsBySupplier groups counts", async () => {
-    const supplierA = await createSupplier("Supplier A");
-    const supplierB = await createSupplier("Supplier B");
+    const supplierA = await fixture.factories.supplier({ name: "Supplier A" });
+    const supplierB = await fixture.factories.supplier({ name: "Supplier B" });
 
-    await createBike(supplierA.id, "AVAILABLE");
-    await createBike(supplierA.id, "BOOKED");
-    await createBike(supplierB.id, "AVAILABLE");
+    await fixture.factories.bike({ supplierId: supplierA.id, status: "AVAILABLE" });
+    await fixture.factories.bike({ supplierId: supplierA.id, status: "BOOKED" });
+    await fixture.factories.bike({ supplierId: supplierB.id, status: "AVAILABLE" });
 
-    const grouped = await Effect.runPromise(repo.groupBikeCountsBySupplier());
+    const grouped = await runEffect(repo.groupBikeCountsBySupplier());
 
     const byA = grouped.filter(row => row.supplierId === supplierA.id);
     expect(byA).toHaveLength(2);
@@ -120,22 +65,20 @@ describe("supplierRepository Integration", () => {
   });
 
   it("groupBikeCountsForSupplier returns counts for one supplier", async () => {
-    const supplier = await createSupplier("Supplier C");
-    await createBike(supplier.id, "AVAILABLE");
-    await createBike(supplier.id, "AVAILABLE");
+    const supplier = await fixture.factories.supplier({ name: "Supplier C" });
+    await fixture.factories.bike({ supplierId: supplier.id, status: "AVAILABLE" });
+    await fixture.factories.bike({ supplierId: supplier.id, status: "AVAILABLE" });
 
-    const grouped = await Effect.runPromise(
-      repo.groupBikeCountsForSupplier(supplier.id),
-    );
+    const grouped = await runEffect(repo.groupBikeCountsForSupplier(supplier.id));
 
     expect(grouped).toHaveLength(1);
     expect(grouped[0].count).toBe(2);
   });
 
   it("listIdName returns id/name pairs", async () => {
-    const supplier = await createSupplier("Supplier D");
+    const supplier = await fixture.factories.supplier({ name: "Supplier D" });
 
-    const list = await Effect.runPromise(repo.listIdName());
+    const list = await runEffect(repo.listIdName());
     const match = list.find(item => item.id === supplier.id);
 
     expect(match?.name).toBe("Supplier D");
@@ -146,7 +89,7 @@ describe("supplierRepository Integration", () => {
     const brokenRepo = makeSupplierRepository(broken.client);
 
     await expect(
-      Effect.runPromise(brokenRepo.listWithOffset({}, { page: 1, pageSize: 10 })),
+      runEffect(brokenRepo.listWithOffset({}, { page: 1, pageSize: 10 })),
     ).rejects.toBeDefined();
 
     await broken.stop();

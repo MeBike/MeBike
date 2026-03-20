@@ -1,8 +1,8 @@
 import { Effect, Either, Match, Option } from "effect";
 import Redis from "ioredis";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { startRedis } from "@/test/db/redis";
+import { setupRedisIntFixture } from "@/test/redis/redis-int-fixture";
 
 import type {
   EmailOtpRecord,
@@ -14,20 +14,25 @@ import { OTP_MAX_ATTEMPTS } from "../../config";
 import { authRepositoryFactory } from "../auth.repository";
 
 describe("authRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
+  const redis = setupRedisIntFixture();
   let repo: ReturnType<typeof authRepositoryFactory>;
 
   beforeAll(async () => {
-    container = await startRedis();
-    // Create ioredis client from the test container URL
-    const client = new Redis(container.url);
-    repo = authRepositoryFactory(client);
+    repo = authRepositoryFactory(redis.client);
   }, 60000);
 
-  afterAll(async () => {
-    if (container)
-      await container.stop();
-  });
+  function makeBrokenRepo() {
+    const invalidClient = new Redis("redis://invalid:6379", {
+      connectTimeout: 100,
+      maxRetriesPerRequest: 0,
+      retryStrategy: () => null,
+    });
+
+    return {
+      invalidClient,
+      invalidRepo: authRepositoryFactory(invalidClient),
+    };
+  }
 
   describe("session Management", () => {
     const mockSession: RefreshSession = {
@@ -45,6 +50,8 @@ describe("authRepository Integration", () => {
     });
 
     it("getSession: retrieves a saved session", async () => {
+      await Effect.runPromise(repo.saveSession(mockSession));
+
       const result = await Effect.runPromise(repo.getSession(mockSession.sessionId));
 
       if (Option.isNone(result)) {
@@ -342,14 +349,7 @@ describe("authRepository Integration", () => {
 
   describe("failure Scenarios", () => {
     it("saveSession: returns AuthRepositoryError when Redis connection fails", async () => {
-      // Create a repo with invalid Redis connection
-      const invalidClient = new Redis("redis://invalid:6379", {
-        connectTimeout: 100,
-        maxRetriesPerRequest: 0,
-        retryStrategy: () => null,
-      });
-
-      const invalidRepo = authRepositoryFactory(invalidClient);
+      const { invalidClient, invalidRepo } = makeBrokenRepo();
 
       const testSession: RefreshSession = {
         sessionId: "fail-session",
@@ -386,13 +386,7 @@ describe("authRepository Integration", () => {
     });
 
     it("getSession: returns AuthRepositoryError when Redis connection fails", async () => {
-      const invalidClient = new Redis("redis://invalid:6379", {
-        connectTimeout: 100,
-        maxRetriesPerRequest: 0,
-        retryStrategy: () => null,
-      });
-
-      const invalidRepo = authRepositoryFactory(invalidClient);
+      const { invalidClient, invalidRepo } = makeBrokenRepo();
 
       const result = await Effect.runPromise(
         invalidRepo.getSession("test-session").pipe(Effect.either),
@@ -421,13 +415,7 @@ describe("authRepository Integration", () => {
     });
 
     it("deleteSession: returns AuthRepositoryError when Redis connection fails", async () => {
-      const invalidClient = new Redis("redis://invalid:6379", {
-        connectTimeout: 100,
-        maxRetriesPerRequest: 0,
-        retryStrategy: () => null,
-      });
-
-      const invalidRepo = authRepositoryFactory(invalidClient);
+      const { invalidClient, invalidRepo } = makeBrokenRepo();
 
       const result = await Effect.runPromise(
         invalidRepo.deleteSession("test-session").pipe(Effect.either),
@@ -456,13 +444,7 @@ describe("authRepository Integration", () => {
     });
 
     it("deleteAllSessionsForUser: returns AuthRepositoryError when Redis connection fails", async () => {
-      const invalidClient = new Redis("redis://invalid:6379", {
-        connectTimeout: 100,
-        maxRetriesPerRequest: 0,
-        retryStrategy: () => null,
-      });
-
-      const invalidRepo = authRepositoryFactory(invalidClient);
+      const { invalidClient, invalidRepo } = makeBrokenRepo();
 
       const result = await Effect.runPromise(
         invalidRepo.deleteAllSessionsForUser("test-user").pipe(Effect.either),
@@ -491,13 +473,7 @@ describe("authRepository Integration", () => {
     });
 
     it("saveEmailOtp: returns AuthRepositoryError when Redis connection fails", async () => {
-      const invalidClient = new Redis("redis://invalid:6379", {
-        connectTimeout: 100,
-        maxRetriesPerRequest: 0,
-        retryStrategy: () => null,
-      });
-
-      const invalidRepo = authRepositoryFactory(invalidClient);
+      const { invalidClient, invalidRepo } = makeBrokenRepo();
 
       const testOtp: EmailOtpRecord = {
         userId: "fail-user",
@@ -534,13 +510,7 @@ describe("authRepository Integration", () => {
     });
 
     it("consumeEmailOtp: returns AuthRepositoryError when Redis connection fails", async () => {
-      const invalidClient = new Redis("redis://invalid:6379", {
-        connectTimeout: 100,
-        maxRetriesPerRequest: 0,
-        retryStrategy: () => null,
-      });
-
-      const invalidRepo = authRepositoryFactory(invalidClient);
+      const { invalidClient, invalidRepo } = makeBrokenRepo();
 
       const result = await Effect.runPromise(
         invalidRepo.consumeEmailOtp({ userId: "test-user", kind: "verify-email" }).pipe(Effect.either),

@@ -1,67 +1,42 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Option } from "effect";
+import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { runEffect, runEffectEither } from "@/test/effect/run";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
+import { uniqueEmail } from "@/test/scenarios";
 
 import { makeUserRepository } from "../user.repository";
 
 function createUserInput(overrides?: Partial<{ email: string; phoneNumber: string | null }>) {
   return {
     fullname: "Test User",
-    email: overrides?.email ?? `user-${uuidv7()}@example.com`,
+    email: overrides?.email ?? uniqueEmail("user"),
     passwordHash: "hash",
     phoneNumber: overrides?.phoneNumber ?? null,
   };
 }
 
 describe("userRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makeUserRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeUserRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.user.deleteMany({});
+  beforeAll(() => {
+    repo = makeUserRepository(fixture.prisma);
   });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
-  });
-
-  const expectLeftTag = <E extends { _tag: string }>(
-    result: Either.Either<unknown, E>,
-    tag: E["_tag"],
-  ) => {
-    if (Either.isRight(result)) {
-      throw new Error(`Expected Left ${tag}, got Right`);
-    }
-    expect(result.left._tag).toBe(tag);
-  };
 
   it("createUser + findById/findByEmail returns the user", async () => {
-    const created = await Effect.runPromise(repo.createUser(createUserInput()));
+    const created = await runEffect(repo.createUser(createUserInput()));
 
-    const byId = await Effect.runPromise(repo.findById(created.id));
+    const byId = await runEffect(repo.findById(created.id));
     if (Option.isNone(byId)) {
       throw new Error("Expected user to exist");
     }
     expect(byId.value.email).toBe(created.email);
 
-    const byEmail = await Effect.runPromise(repo.findByEmail(created.email));
+    const byEmail = await runEffect(repo.findByEmail(created.email));
     if (Option.isNone(byEmail)) {
       throw new Error("Expected user to exist by email");
     }
@@ -69,49 +44,39 @@ describe("userRepository Integration", () => {
   });
 
   it("findById returns Option.none for missing user", async () => {
-    const result = await Effect.runPromise(repo.findById(uuidv7()));
+    const result = await runEffect(repo.findById(uuidv7()));
     expect(Option.isNone(result)).toBe(true);
   });
 
   it("createUser rejects duplicate email", async () => {
     const email = "duplicate@example.com";
-    await Effect.runPromise(repo.createUser(createUserInput({ email })));
+    await runEffect(repo.createUser(createUserInput({ email })));
 
-    const result = await Effect.runPromise(
-      repo.createUser(createUserInput({ email })).pipe(Effect.either),
-    );
-
+    const result = await runEffectEither(repo.createUser(createUserInput({ email })));
     expectLeftTag(result, "DuplicateUserEmail");
   });
 
   it("createUser rejects duplicate phone number", async () => {
     const phoneNumber = "0912345678";
-    await Effect.runPromise(repo.createUser(createUserInput({ phoneNumber })));
+    await runEffect(repo.createUser(createUserInput({ phoneNumber })));
 
-    const result = await Effect.runPromise(
-      repo
-        .createUser(createUserInput({ phoneNumber, email: `user-${uuidv7()}@example.com` }))
-        .pipe(Effect.either),
+    const result = await runEffectEither(
+      repo.createUser(createUserInput({ phoneNumber, email: uniqueEmail("phone") })),
     );
 
     expectLeftTag(result, "DuplicateUserPhoneNumber");
   });
 
   it("updateProfile returns Option.none for missing user", async () => {
-    const result = await Effect.runPromise(repo.updateProfile(uuidv7(), { fullname: "Missing" }));
+    const result = await runEffect(repo.updateProfile(uuidv7(), { fullname: "Missing" }));
     expect(Option.isNone(result)).toBe(true);
   });
 
   it("updateAdminById rejects duplicate email", async () => {
-    const first = await Effect.runPromise(repo.createUser(createUserInput({ email: "one@example.com" })));
-    const second = await Effect.runPromise(repo.createUser(createUserInput({ email: "two@example.com" })));
+    const first = await runEffect(repo.createUser(createUserInput({ email: "one@example.com" })));
+    const second = await runEffect(repo.createUser(createUserInput({ email: "two@example.com" })));
 
-    const result = await Effect.runPromise(
-      repo
-        .updateAdminById(second.id, { email: first.email })
-        .pipe(Effect.either),
-    );
-
+    const result = await runEffectEither(repo.updateAdminById(second.id, { email: first.email }));
     expectLeftTag(result, "DuplicateUserEmail");
   });
 
@@ -119,10 +84,7 @@ describe("userRepository Integration", () => {
     const broken = makeUnreachablePrisma();
     const brokenRepo = makeUserRepository(broken.client);
 
-    const result = await Effect.runPromise(
-      brokenRepo.findById(uuidv7()).pipe(Effect.either),
-    );
-
+    const result = await runEffectEither(brokenRepo.findById(uuidv7()));
     expectLeftTag(result, "UserRepositoryError");
 
     await broken.stop();
@@ -130,11 +92,11 @@ describe("userRepository Integration", () => {
 
   describe("transaction-bound repository", () => {
     it("findById returns user within transaction", async () => {
-      const user = await Effect.runPromise(repo.createUser(createUserInput()));
+      const user = await runEffect(repo.createUser(createUserInput()));
 
-      const result = await client.$transaction(async (tx) => {
+      const result = await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeUserRepository(tx);
-        return Effect.runPromise(txRepo.findById(user.id));
+        return runEffect(txRepo.findById(user.id));
       });
 
       expect(Option.isSome(result)).toBe(true);
@@ -144,9 +106,9 @@ describe("userRepository Integration", () => {
     });
 
     it("findById returns Option.none for missing user", async () => {
-      const result = await client.$transaction(async (tx) => {
+      const result = await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeUserRepository(tx);
-        return Effect.runPromise(txRepo.findById(uuidv7()));
+        return runEffect(txRepo.findById(uuidv7()));
       });
 
       expect(Option.isNone(result)).toBe(true);
@@ -155,27 +117,24 @@ describe("userRepository Integration", () => {
     it("createUser creates user within transaction", async () => {
       const input = createUserInput();
 
-      const created = await client.$transaction(async (tx) => {
+      const created = await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeUserRepository(tx);
-        return Effect.runPromise(txRepo.createUser(input));
+        return runEffect(txRepo.createUser(input));
       });
 
       expect(created.email).toBe(input.email);
 
-      // Verify persisted after commit
-      const fetched = await Effect.runPromise(repo.findById(created.id));
+      const fetched = await runEffect(repo.findById(created.id));
       expect(Option.isSome(fetched)).toBe(true);
     });
 
     it("createUser rejects duplicate email within transaction", async () => {
       const email = "tx-dup@example.com";
-      await Effect.runPromise(repo.createUser(createUserInput({ email })));
+      await runEffect(repo.createUser(createUserInput({ email })));
 
-      const result = await client.$transaction(async (tx) => {
+      const result = await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeUserRepository(tx);
-        return Effect.runPromise(
-          txRepo.createUser(createUserInput({ email })).pipe(Effect.either),
-        );
+        return runEffectEither(txRepo.createUser(createUserInput({ email })));
       });
 
       expectLeftTag(result, "DuplicateUserEmail");
@@ -183,14 +142,12 @@ describe("userRepository Integration", () => {
 
     it("createUser rejects duplicate phone within transaction", async () => {
       const phoneNumber = "0987654321";
-      await Effect.runPromise(repo.createUser(createUserInput({ phoneNumber })));
+      await runEffect(repo.createUser(createUserInput({ phoneNumber })));
 
-      const result = await client.$transaction(async (tx) => {
+      const result = await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeUserRepository(tx);
-        return Effect.runPromise(
-          txRepo
-            .createUser(createUserInput({ phoneNumber, email: `tx-${uuidv7()}@example.com` }))
-            .pipe(Effect.either),
+        return runEffectEither(
+          txRepo.createUser(createUserInput({ phoneNumber, email: uniqueEmail("tx") })),
         );
       });
 
@@ -198,63 +155,53 @@ describe("userRepository Integration", () => {
     });
 
     it("transaction rollback: first user NOT persisted when second user fails", async () => {
-      const firstEmail = `first-${uuidv7()}@example.com`;
+      const firstEmail = uniqueEmail("first");
       const duplicateEmail = "existing@example.com";
 
-      await Effect.runPromise(repo.createUser(createUserInput({ email: duplicateEmail })));
+      await runEffect(repo.createUser(createUserInput({ email: duplicateEmail })));
 
       try {
-        await client.$transaction(async (tx) => {
+        await fixture.prisma.$transaction(async (tx) => {
           const txRepo = makeUserRepository(tx);
-          await Effect.runPromise(txRepo.createUser(createUserInput({ email: firstEmail })));
-
-          // Second user - will fail due to duplicate email, causing tx rollback
-          await Effect.runPromise(txRepo.createUser(createUserInput({ email: duplicateEmail })));
+          await runEffect(txRepo.createUser(createUserInput({ email: firstEmail })));
+          await runEffect(txRepo.createUser(createUserInput({ email: duplicateEmail })));
         });
         throw new Error("Transaction should have failed");
       }
-
-      // eslint-disable-next-line unused-imports/no-unused-vars
-      catch (error) {
-        // Expected - transaction failed
+      catch {
+        // Expected - transaction failed.
       }
 
-      // Verify first user was NOT persisted (rollback worked)
-      const firstUser = await Effect.runPromise(repo.findByEmail(firstEmail));
+      const firstUser = await runEffect(repo.findByEmail(firstEmail));
       expect(Option.isNone(firstUser)).toBe(true);
     });
 
     it("transaction rollback: changes NOT persisted when Error thrown after createUser", async () => {
-      const email = `rollback-${uuidv7()}@example.com`;
+      const email = uniqueEmail("rollback");
 
       try {
-        await client.$transaction(async (tx) => {
+        await fixture.prisma.$transaction(async (tx) => {
           const txRepo = makeUserRepository(tx);
-          await Effect.runPromise(txRepo.createUser(createUserInput({ email })));
+          await runEffect(txRepo.createUser(createUserInput({ email })));
           throw new Error("Simulated business logic failure");
         });
         throw new Error("Transaction should have failed");
       }
-
-      // eslint-disable-next-line unused-imports/no-unused-vars
-      catch (error) {
-        // Expected
+      catch {
+        // Expected.
       }
 
-      const user = await Effect.runPromise(repo.findByEmail(email));
+      const user = await runEffect(repo.findByEmail(email));
       expect(Option.isNone(user)).toBe(true);
     });
 
     it("findById sees uncommitted changes from same transaction", async () => {
       const input = createUserInput();
 
-      const result = await client.$transaction(async (tx) => {
-        // Create user in tx
+      const result = await fixture.prisma.$transaction(async (tx) => {
         const txRepo = makeUserRepository(tx);
-        const created = await Effect.runPromise(txRepo.createUser(input));
-
-        // Should be able to find it in same tx before commit
-        const found = await Effect.runPromise(txRepo.findById(created.id));
+        const created = await runEffect(txRepo.createUser(input));
+        const found = await runEffect(txRepo.findById(created.id));
 
         return { created, found };
       });
@@ -268,12 +215,10 @@ describe("userRepository Integration", () => {
 
   describe("stripe Connect methods", () => {
     it("setStripeConnectedAccountId updates user and returns updated row", async () => {
-      const user = await Effect.runPromise(repo.createUser(createUserInput()));
+      const user = await runEffect(repo.createUser(createUserInput()));
       const accountId = `acct_test_${uuidv7().replace(/-/g, "").slice(0, 16)}`;
 
-      const result = await Effect.runPromise(
-        repo.setStripeConnectedAccountId(user.id, accountId),
-      );
+      const result = await runEffect(repo.setStripeConnectedAccountId(user.id, accountId));
 
       expect(Option.isSome(result)).toBe(true);
       if (Option.isSome(result)) {
@@ -282,22 +227,17 @@ describe("userRepository Integration", () => {
     });
 
     it("setStripeConnectedAccountId returns Option.none for missing user", async () => {
-      const result = await Effect.runPromise(
-        repo.setStripeConnectedAccountId(uuidv7(), "acct_missing"),
-      );
-
+      const result = await runEffect(repo.setStripeConnectedAccountId(uuidv7(), "acct_missing"));
       expect(Option.isNone(result)).toBe(true);
     });
 
     it("findByStripeConnectedAccountId returns user by account ID", async () => {
-      const user = await Effect.runPromise(repo.createUser(createUserInput()));
+      const user = await runEffect(repo.createUser(createUserInput()));
       const accountId = `acct_test_${uuidv7().replace(/-/g, "").slice(0, 16)}`;
 
-      await Effect.runPromise(repo.setStripeConnectedAccountId(user.id, accountId));
+      await runEffect(repo.setStripeConnectedAccountId(user.id, accountId));
 
-      const result = await Effect.runPromise(
-        repo.findByStripeConnectedAccountId(accountId),
-      );
+      const result = await runEffect(repo.findByStripeConnectedAccountId(accountId));
 
       expect(Option.isSome(result)).toBe(true);
       if (Option.isSome(result)) {
@@ -307,29 +247,21 @@ describe("userRepository Integration", () => {
     });
 
     it("findByStripeConnectedAccountId returns Option.none for unknown account", async () => {
-      const result = await Effect.runPromise(
-        repo.findByStripeConnectedAccountId("acct_nonexistent"),
-      );
-
+      const result = await runEffect(repo.findByStripeConnectedAccountId("acct_nonexistent"));
       expect(Option.isNone(result)).toBe(true);
     });
 
     it("setStripePayoutsEnabled updates flag and returns updated row", async () => {
-      const user = await Effect.runPromise(repo.createUser(createUserInput()));
+      const user = await runEffect(repo.createUser(createUserInput()));
 
-      const result = await Effect.runPromise(
-        repo.setStripePayoutsEnabled(user.id, true),
-      );
+      const result = await runEffect(repo.setStripePayoutsEnabled(user.id, true));
 
       expect(Option.isSome(result)).toBe(true);
       if (Option.isSome(result)) {
         expect(result.value.stripePayoutsEnabled).toBe(true);
       }
 
-      // Toggle back to false
-      const disabled = await Effect.runPromise(
-        repo.setStripePayoutsEnabled(user.id, false),
-      );
+      const disabled = await runEffect(repo.setStripePayoutsEnabled(user.id, false));
 
       expect(Option.isSome(disabled)).toBe(true);
       if (Option.isSome(disabled)) {
@@ -338,38 +270,28 @@ describe("userRepository Integration", () => {
     });
 
     it("setStripePayoutsEnabled returns Option.none for missing user", async () => {
-      const result = await Effect.runPromise(
-        repo.setStripePayoutsEnabled(uuidv7(), true),
-      );
-
+      const result = await runEffect(repo.setStripePayoutsEnabled(uuidv7(), true));
       expect(Option.isNone(result)).toBe(true);
     });
 
     it("setStripePayoutsEnabledByAccountId updates flag and returns true", async () => {
-      const user = await Effect.runPromise(repo.createUser(createUserInput()));
+      const user = await runEffect(repo.createUser(createUserInput()));
       const accountId = `acct_test_${uuidv7().replace(/-/g, "").slice(0, 16)}`;
 
-      await Effect.runPromise(repo.setStripeConnectedAccountId(user.id, accountId));
+      await runEffect(repo.setStripeConnectedAccountId(user.id, accountId));
 
-      const result = await Effect.runPromise(
-        repo.setStripePayoutsEnabledByAccountId(accountId, true),
-      );
-
+      const result = await runEffect(repo.setStripePayoutsEnabledByAccountId(accountId, true));
       expect(result).toBe(true);
 
-      // Verify the flag was actually set
-      const fetched = await Effect.runPromise(repo.findById(user.id));
-      expect(Option.isSome(fetched)).toBe(true);
-      if (Option.isSome(fetched)) {
-        expect(fetched.value.stripePayoutsEnabled).toBe(true);
+      const updated = await runEffect(repo.findById(user.id));
+      expect(Option.isSome(updated)).toBe(true);
+      if (Option.isSome(updated)) {
+        expect(updated.value.stripePayoutsEnabled).toBe(true);
       }
     });
 
     it("setStripePayoutsEnabledByAccountId returns false for unknown account", async () => {
-      const result = await Effect.runPromise(
-        repo.setStripePayoutsEnabledByAccountId("acct_unknown", true),
-      );
-
+      const result = await runEffect(repo.setStripePayoutsEnabledByAccountId("acct_unknown", true));
       expect(result).toBe(false);
     });
   });
