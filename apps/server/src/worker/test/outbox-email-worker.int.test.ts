@@ -8,7 +8,8 @@ import type { DB } from "generated/kysely/types";
 
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
-import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
+import { makePgBossJobProducer, toQueueJob } from "@/infrastructure/jobs/pgboss";
+import { resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
 import { getTestDatabase } from "@/test/db/test-database";
 import { handleEmailJob } from "@/worker/email-worker";
@@ -32,10 +33,6 @@ describe("outbox + email worker integration", () => {
 
     boss = new PgBoss({ connectionString: container.url });
     await boss.start();
-    const emailDlq = JobDeadLetters[JobTypes.EmailSend];
-    if (emailDlq) {
-      await boss.createQueue(emailDlq);
-    }
     await boss.createQueue(
       JobTypes.EmailSend,
       resolveQueueOptions(JobTypes.EmailSend),
@@ -80,7 +77,7 @@ describe("outbox + email worker integration", () => {
 
     await dispatchOutboxOnce({
       db,
-      boss,
+      producer: makePgBossJobProducer(boss),
       workerId: "test-dispatcher",
       batchSize: 1,
     });
@@ -117,7 +114,7 @@ describe("outbox + email worker integration", () => {
 
     await dispatchOutboxOnce({
       db,
-      boss,
+      producer: makePgBossJobProducer(boss),
       workerId: "test-dispatcher",
       batchSize: 1,
     });
@@ -127,7 +124,7 @@ describe("outbox + email worker integration", () => {
     expect(job).toBeDefined();
 
     const sent: Array<{ to: string; subject: string; html: string; from: string }> = [];
-    await handleEmailJob(job, {
+    await handleEmailJob(toQueueJob(job), {
       defaultFrom: "MeBike <no-reply@mebike.test>",
       transporter: {
         sendMail: async (options) => {

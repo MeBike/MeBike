@@ -1,8 +1,9 @@
 import type { JobPayload } from "@mebike/shared/contracts/server/jobs";
-import type { Job } from "pg-boss";
 
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect } from "effect";
+
+import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import {
   ExpoPushSenderServiceLive,
@@ -33,7 +34,7 @@ function runPushEffect<A, E>(
   );
 }
 
-export async function handlePushSend(job: Job<unknown> | undefined): Promise<void> {
+export async function handlePushSend(job: QueueJob | undefined): Promise<void> {
   if (!job) {
     logger.warn("Push worker received empty batch");
     return;

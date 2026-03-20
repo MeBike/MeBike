@@ -1,10 +1,12 @@
 import { useCallback } from "react";
 
+import type { Reservation } from "@/types/reservation-types";
+
 import { useGetPendingReservationsQuery } from "../query/reservation/use-get-pending-reservations-query";
 import { useGetReservationDetailQuery } from "../query/reservation/use-get-reservation-detail-query";
 import { useGetReservationHistoryQuery } from "../query/reservation/use-get-reservation-history-query";
 
-const EMPTY_RESERVATIONS: [] = [];
+const EMPTY_RESERVATIONS: Reservation[] = [];
 
 type UseReservationQueriesParams = {
   hasToken: boolean;

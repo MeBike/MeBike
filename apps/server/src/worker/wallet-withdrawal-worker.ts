@@ -1,8 +1,9 @@
 import type { JobPayload } from "@mebike/shared/contracts/server/jobs";
-import type { Job } from "pg-boss";
 
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Layer, Match } from "effect";
+
+import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import {
   UserRepositoryLive,
@@ -85,7 +86,7 @@ function runWithdrawalEffect<A, E>(
 }
 
 export async function handleWithdrawalExecute(
-  job: Job<unknown> | undefined,
+  job: QueueJob | undefined,
 ): Promise<void> {
   if (!job) {
     logger.warn("Withdrawal execute worker received empty batch");
@@ -129,7 +130,7 @@ export async function handleWithdrawalExecute(
 }
 
 export async function handleWithdrawalSweep(
-  job: Job<unknown> | undefined,
+  job: QueueJob | undefined,
 ): Promise<void> {
   if (!job) {
     logger.warn("Withdrawal sweep worker received empty batch");

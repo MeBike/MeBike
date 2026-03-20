@@ -110,7 +110,7 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.getMyRental.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));
@@ -156,7 +156,7 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.endMyRental.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));
@@ -177,7 +177,7 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.adminGetRental.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));
@@ -198,7 +198,7 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.staffGetRental.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));
@@ -232,7 +232,7 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.endRentalByAdmin.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));

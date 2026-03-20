@@ -1,24 +1,19 @@
 import process from "node:process";
 
+import { makeJobBackend } from "@/infrastructure/jobs/backend";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
-import { makePgBoss } from "@/infrastructure/jobs/pgboss";
-import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
+import { resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
 
 import { handleEmailJob } from "../email-worker";
-import { attachPgBossEventLogging, WorkerLog } from "../worker-logging";
+import { attachJobRuntimeLogging, WorkerLog } from "../worker-logging";
 
 async function main() {
-  const boss = makePgBoss();
-  attachPgBossEventLogging(boss);
-  await boss.start();
-  const emailDlq = JobDeadLetters[JobTypes.EmailSend];
-  if (emailDlq) {
-    await boss.createQueue(emailDlq);
-    WorkerLog.queueEnsured(emailDlq);
-  }
-  await boss.createQueue(
+  const { runtime } = makeJobBackend();
+  attachJobRuntimeLogging(runtime);
+  await runtime.start();
+  await runtime.ensureQueue(
     JobTypes.EmailSend,
     resolveQueueOptions(JobTypes.EmailSend),
   );
@@ -28,11 +23,10 @@ async function main() {
   await email.transporter.verify();
   WorkerLog.emailVerified();
 
-  const jobs = await boss.fetch(JobTypes.EmailSend, { batchSize: 1 });
-  const job = jobs[0];
+  const job = await runtime.fetchOne(JobTypes.EmailSend);
   if (!job) {
     WorkerLog.noJobs(JobTypes.EmailSend);
-    await boss.stop({ close: true });
+    await runtime.stop();
     if (typeof email.transporter.close === "function") {
       email.transporter.close();
     }
@@ -42,17 +36,17 @@ async function main() {
   try {
     WorkerLog.processingOnce(JobTypes.EmailSend, job.id);
     await handleEmailJob(job, email);
-    await boss.complete(JobTypes.EmailSend, job.id);
+    await runtime.complete(JobTypes.EmailSend, job.id);
     WorkerLog.completedOnce(JobTypes.EmailSend, job.id);
   }
   catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     WorkerLog.failedOnce(JobTypes.EmailSend, job.id, message);
-    await boss.fail(JobTypes.EmailSend, job.id, { message });
+    await runtime.fail(JobTypes.EmailSend, job.id, message);
     throw err;
   }
   finally {
-    await boss.stop({ close: true });
+    await runtime.stop();
     if (typeof email.transporter.close === "function") {
       email.transporter.close();
     }

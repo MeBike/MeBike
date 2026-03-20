@@ -55,7 +55,7 @@ const MySOSDetailScreen = () => {
     }
   }, [sosId]);
 
-  const detail = sosDetail?.result as SOSDetail | undefined;
+  const detail = sosDetail?.data as SOSDetail | undefined;
 
   const getStatusColor = (status: string) => {
     switch (status) {

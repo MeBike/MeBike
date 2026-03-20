@@ -1,9 +1,9 @@
-import type { Job, PgBoss } from "pg-boss";
-
 import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { uuidv7 } from "uuidv7";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { getTestDatabase } from "@/test/db/test-database";
 import {
@@ -15,25 +15,24 @@ import { PrismaClient } from "generated/prisma/client";
 type TestContainer = { stop: () => Promise<void>; url: string };
 
 function makeBossMock(): {
-  readonly boss: PgBoss;
+  readonly producer: JobProducer;
   readonly send: ReturnType<typeof vi.fn>;
 } {
   const send = vi.fn(async () => "mock-job-id");
   return {
-    boss: { send } as unknown as PgBoss,
+    producer: { send } as JobProducer,
     send,
   };
 }
 
-function makeReservationJob(reservationId: string): Job<unknown> {
+function makeReservationJob(reservationId: string): QueueJob {
   return {
     id: `job-${reservationId}`,
-    name: JobTypes.ReservationExpireHold,
     data: {
       version: 1,
       reservationId,
     },
-  } as Job<unknown>;
+  };
 }
 
 async function createStation(client: PrismaClient, input: {
@@ -123,10 +122,10 @@ describe("reservation hold worker integration", () => {
       },
     });
 
-    const { boss, send } = makeBossMock();
+    const { producer, send } = makeBossMock();
     await handleReservationNotifyNearExpiry(
       makeReservationJob(reservation.id),
-      boss,
+      producer,
     );
 
     expect(send).toHaveBeenCalledTimes(2);
@@ -144,7 +143,7 @@ describe("reservation hold worker integration", () => {
         }),
       }),
       expect.objectContaining({
-        singletonKey: `reservation:near-expiry:push:${reservation.id}`,
+        dedupeKey: `reservation:near-expiry:push:${reservation.id}`,
       }),
     );
   });
@@ -196,10 +195,10 @@ describe("reservation hold worker integration", () => {
       },
     });
 
-    const { boss, send } = makeBossMock();
+    const { producer, send } = makeBossMock();
     await handleReservationExpireHold(
       makeReservationJob(reservation.id),
-      boss,
+      producer,
     );
 
     expect(send).toHaveBeenCalledTimes(2);
@@ -217,7 +216,7 @@ describe("reservation hold worker integration", () => {
         }),
       }),
       expect.objectContaining({
-        singletonKey: `reservation:expired:push:${reservation.id}`,
+        dedupeKey: `reservation:expired:push:${reservation.id}`,
       }),
     );
 
