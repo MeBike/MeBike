@@ -1,31 +1,10 @@
-import { PrismaPg } from "@prisma/adapter-pg";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
-import { PrismaClient } from "generated/prisma/client";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 describe("job outbox dedupe integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
-
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-  }, 60000);
-
-  afterEach(async () => {
-    await client.jobOutbox.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
-  });
+  const fixture = setupPrismaIntFixture();
 
   it("prevents duplicate outbox entries for same type + dedupeKey while active", async () => {
     const dedupeKey = `test:${uuidv7()}`;
@@ -34,7 +13,7 @@ describe("job outbox dedupe integration", () => {
       reservationId: uuidv7(),
     } as const;
 
-    await client.jobOutbox.create({
+    await fixture.prisma.jobOutbox.create({
       data: {
         type: "reservations.expireHold",
         dedupeKey,
@@ -44,7 +23,7 @@ describe("job outbox dedupe integration", () => {
     });
 
     await expect(
-      client.jobOutbox.create({
+      fixture.prisma.jobOutbox.create({
         data: {
           type: "reservations.expireHold",
           dedupeKey,
@@ -54,7 +33,7 @@ describe("job outbox dedupe integration", () => {
       }),
     ).rejects.toBeDefined();
 
-    const count = await client.jobOutbox.count({
+    const count = await fixture.prisma.jobOutbox.count({
       where: {
         type: "reservations.expireHold",
         dedupeKey,

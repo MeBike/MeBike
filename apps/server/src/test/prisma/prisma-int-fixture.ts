@@ -77,6 +77,9 @@ export function setupPrismaIntFixture(options: PrismaIntFixtureOptions = {}) {
   });
 
   return {
+    get url() {
+      return container.url;
+    },
     get db() {
       return db;
     },

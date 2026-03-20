@@ -1,37 +1,20 @@
-import type { Kysely } from "kysely";
-
-import { PrismaPg } from "@prisma/adapter-pg";
 import { PgBoss } from "pg-boss";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-
-import type { DB } from "generated/kysely/types";
 
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import { makePgBossJobProducer, toQueueJob } from "@/infrastructure/jobs/pgboss";
 import { resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
-import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
-import { getTestDatabase } from "@/test/db/test-database";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { handleEmailJob } from "@/worker/email-worker";
 import { dispatchOutboxOnce } from "@/worker/outbox-dispatcher";
-import { PrismaClient } from "generated/prisma/client";
-
-type TestContainer = { stop: () => Promise<void>; url: string };
 
 describe("outbox + email worker integration", () => {
-  let container: TestContainer;
-  let client: PrismaClient;
-  let db: Kysely<DB>;
+  const fixture = setupPrismaIntFixture();
   let boss: PgBoss;
 
   beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    db = makeTestDb(container.url);
-
-    boss = new PgBoss({ connectionString: container.url });
+    boss = new PgBoss({ connectionString: fixture.url });
     await boss.start();
     await boss.createQueue(
       JobTypes.EmailSend,
@@ -40,21 +23,12 @@ describe("outbox + email worker integration", () => {
   }, 60000);
 
   beforeEach(async () => {
-    await client.jobOutbox.deleteMany({});
+    await fixture.prisma.jobOutbox.deleteMany({});
   });
 
   afterAll(async () => {
     if (boss) {
       await boss.stop({ close: true });
-    }
-    if (db) {
-      await destroyTestDb(db);
-    }
-    if (client) {
-      await client.$disconnect();
-    }
-    if (container) {
-      await container.stop();
     }
   });
 
@@ -68,7 +42,7 @@ describe("outbox + email worker integration", () => {
       html: "<p>Hello</p>",
     };
 
-    await enqueueOutboxJob(client, {
+    await enqueueOutboxJob(fixture.prisma, {
       type: JobTypes.EmailSend,
       payload,
       runAt: now,
@@ -76,7 +50,7 @@ describe("outbox + email worker integration", () => {
     });
 
     await dispatchOutboxOnce({
-      db,
+      db: fixture.db,
       producer: makePgBossJobProducer(boss),
       workerId: "test-dispatcher",
       batchSize: 1,
@@ -87,7 +61,7 @@ describe("outbox + email worker integration", () => {
     expect(jobs[0]?.data).toEqual(payload);
     await boss.complete(JobTypes.EmailSend, jobs[0]!.id);
 
-    const outboxRow = await client.jobOutbox.findFirst({
+    const outboxRow = await fixture.prisma.jobOutbox.findFirst({
       where: { dedupeKey: "outbox-email-test-1" },
     });
     expect(outboxRow).not.toBeNull();
@@ -105,7 +79,7 @@ describe("outbox + email worker integration", () => {
       html: "<p>Worker</p>",
     };
 
-    await enqueueOutboxJob(client, {
+    await enqueueOutboxJob(fixture.prisma, {
       type: JobTypes.EmailSend,
       payload,
       runAt: now,
@@ -113,7 +87,7 @@ describe("outbox + email worker integration", () => {
     });
 
     await dispatchOutboxOnce({
-      db,
+      db: fixture.db,
       producer: makePgBossJobProducer(boss),
       workerId: "test-dispatcher",
       batchSize: 1,
