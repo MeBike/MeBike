@@ -1,241 +1,170 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Layer } from "effect";
+import { Effect, Layer } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { BikeRepository } from "@/domain/bikes/repository/bike.repository";
 import { Prisma } from "@/infrastructure/prisma";
-import { getTestDatabase } from "@/test/db/test-database";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag, expectRight } from "@/test/effect/assertions";
+import { runEffectEitherWithLayer, runEffectWithLayer } from "@/test/effect/run";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { bikeRepositoryFactory } from "../../repository/bike.repository";
 import { BikeServiceLive, BikeServiceTag } from "../bike.service";
 
 describe("bikeService Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let depsLayer: Layer.Layer<BikeServiceTag | BikeRepository | Prisma>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-
+  beforeAll(() => {
+    const prismaLayer = Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma }));
     const bikeRepoLayer = Layer.succeed(
       BikeRepository,
-      BikeRepository.make(bikeRepositoryFactory(client)),
+      BikeRepository.make(bikeRepositoryFactory(fixture.prisma)),
     );
     const bikeServiceLayer = BikeServiceLive.pipe(
       Layer.provide(bikeRepoLayer),
-      Layer.provide(Layer.succeed(Prisma, Prisma.make({ client }))),
+      Layer.provide(prismaLayer),
     );
 
-    depsLayer = Layer.mergeAll(
-      Layer.succeed(Prisma, Prisma.make({ client })),
-      bikeRepoLayer,
-      bikeServiceLayer,
-    );
-  }, 60000);
-
-  afterEach(async () => {
-    await client.bike.deleteMany({});
-    await client.station.deleteMany({});
-    await client.supplier.deleteMany({});
+    depsLayer = Layer.mergeAll(prismaLayer, bikeRepoLayer, bikeServiceLayer);
   });
 
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
-  });
-
-  const createStation = async () => {
-    const id = uuidv7();
-    const name = `Station ${id}`;
-    const address = "123 Test St";
-    const capacity = 10;
-    const latitude = 10.762622;
-    const longitude = 106.660172;
-    const updatedAt = new Date();
-
-    await client.$executeRaw`
-      INSERT INTO "Station" (
-        "id",
-        "name",
-        "address",
-        "capacity",
-        "latitude",
-        "longitude",
-        "updated_at",
-        "position"
-      ) VALUES (
-        ${id},
-        ${name},
-        ${address},
-        ${capacity},
-        ${latitude},
-        ${longitude},
-        ${updatedAt},
-        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
-      )
-    `;
-
-    return { id };
-  };
-
-  const createSupplier = async () => {
-    const id = uuidv7();
-    await client.supplier.create({
-      data: {
-        id,
-        name: `Supplier ${id}`,
-        address: "123 Supplier St",
-        phoneNumber: "0900000000",
-        contractFee: "10.00",
-        status: "ACTIVE",
-        updatedAt: new Date(),
-      },
-    });
-    return { id };
-  };
-
-  const createBike = async (
-    stationId: string,
-    supplierId: string,
-    chipId = `chip-${uuidv7()}`,
-  ) => {
-    const id = uuidv7();
-    await client.bike.create({
-      data: {
-        id,
-        chipId,
-        stationId,
-        supplierId,
-        status: "AVAILABLE",
-        updatedAt: new Date(),
-      },
-      select: { id: true, chipId: true },
+  const createBike = (args: { stationId: string; supplierId: string; chipId?: string }) =>
+    fixture.factories.bike({
+      stationId: args.stationId,
+      supplierId: args.supplierId,
+      chipId: args.chipId,
+      status: "AVAILABLE",
     });
 
-    return { id, chipId };
-  };
+  const runCreateBike = (input: {
+    chipId: string;
+    stationId: string;
+    supplierId: string;
+    status: "AVAILABLE";
+  }) => runEffectWithLayer(
+    Effect.flatMap(BikeServiceTag, service => service.createBike(input)),
+    depsLayer,
+  );
 
-  const runWithService = <A, E>(
-    eff: Effect.Effect<A, E, BikeServiceTag>,
-  ) =>
-    Effect.runPromise(eff.pipe(Effect.provide(depsLayer)));
+  const runCreateBikeEither = (input: {
+    chipId: string;
+    stationId: string;
+    supplierId: string;
+    status: "AVAILABLE";
+  }) => runEffectEitherWithLayer(
+    Effect.flatMap(BikeServiceTag, service => service.createBike(input)),
+    depsLayer,
+  );
+
+  const runAdminUpdateBikeEither = (bikeId: string, input: {
+    stationId?: string;
+    supplierId?: string;
+    chipId?: string;
+  }) => runEffectEitherWithLayer(
+    Effect.flatMap(BikeServiceTag, service => service.adminUpdateBike(bikeId, input)),
+    depsLayer,
+  );
 
   it("fails with BikeStationNotFound when station does not exist", async () => {
-    const { id: supplierId } = await createSupplier();
+    const supplier = await fixture.factories.supplier();
 
-    const result = await runWithService(
-      Effect.flatMap(BikeServiceTag, service =>
-        service.createBike({
-          chipId: `chip-${uuidv7()}`,
-          stationId: uuidv7(),
-          supplierId,
-          status: "AVAILABLE",
-        })).pipe(Effect.either),
-    );
+    const result = await runCreateBikeEither({
+      chipId: `chip-${uuidv7()}`,
+      stationId: uuidv7(),
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
 
-    if (Either.isRight(result)) {
-      throw new Error("Expected BikeStationNotFound failure");
-    }
-    expect(result.left._tag).toBe("BikeStationNotFound");
+    expectLeftTag(result, "BikeStationNotFound");
   });
 
   it("fails with BikeSupplierNotFound when supplier does not exist", async () => {
-    const { id: stationId } = await createStation();
+    const station = await fixture.factories.station();
 
-    const result = await runWithService(
-      Effect.flatMap(BikeServiceTag, service =>
-        service.createBike({
-          chipId: `chip-${uuidv7()}`,
-          stationId,
-          supplierId: uuidv7(),
-          status: "AVAILABLE",
-        })).pipe(Effect.either),
-    );
+    const result = await runCreateBikeEither({
+      chipId: `chip-${uuidv7()}`,
+      stationId: station.id,
+      supplierId: uuidv7(),
+      status: "AVAILABLE",
+    });
 
-    if (Either.isRight(result)) {
-      throw new Error("Expected BikeSupplierNotFound failure");
-    }
-    expect(result.left._tag).toBe("BikeSupplierNotFound");
+    expectLeftTag(result, "BikeSupplierNotFound");
   });
 
   it("creates bike when station and supplier both exist", async () => {
-    const { id: stationId } = await createStation();
-    const { id: supplierId } = await createSupplier();
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
 
-    const created = await runWithService(
-      Effect.flatMap(BikeServiceTag, service =>
-        service.createBike({
-          chipId: `chip-${uuidv7()}`,
-          stationId,
-          supplierId,
-          status: "AVAILABLE",
-        })),
-    );
+    const created = await runCreateBike({
+      chipId: `chip-${uuidv7()}`,
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
 
-    expect(created.stationId).toBe(stationId);
-    expect(created.supplierId).toBe(supplierId);
+    expect(created.stationId).toBe(station.id);
+    expect(created.supplierId).toBe(supplier.id);
     expect(created.status).toBe("AVAILABLE");
   });
 
   it("update fails with BikeStationNotFound when station does not exist", async () => {
-    const { id: stationId } = await createStation();
-    const { id: supplierId } = await createSupplier();
-    const { id: bikeId } = await createBike(stationId, supplierId);
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
 
-    const result = await runWithService(
-      Effect.flatMap(BikeServiceTag, service =>
-        service.adminUpdateBike(bikeId, {
-          stationId: uuidv7(),
-        })).pipe(Effect.either),
-    );
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      stationId: uuidv7(),
+    });
 
-    if (Either.isRight(result)) {
-      throw new Error("Expected BikeStationNotFound failure");
-    }
-    expect(result.left._tag).toBe("BikeStationNotFound");
+    expectLeftTag(result, "BikeStationNotFound");
   });
 
   it("update fails with BikeSupplierNotFound when supplier does not exist", async () => {
-    const { id: stationId } = await createStation();
-    const { id: supplierId } = await createSupplier();
-    const { id: bikeId } = await createBike(stationId, supplierId);
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
 
-    const result = await runWithService(
-      Effect.flatMap(BikeServiceTag, service =>
-        service.adminUpdateBike(bikeId, {
-          supplierId: uuidv7(),
-        })).pipe(Effect.either),
-    );
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      supplierId: uuidv7(),
+    });
 
-    if (Either.isRight(result)) {
-      throw new Error("Expected BikeSupplierNotFound failure");
-    }
-    expect(result.left._tag).toBe("BikeSupplierNotFound");
+    expectLeftTag(result, "BikeSupplierNotFound");
   });
 
   it("update fails with DuplicateChipId when chipId already exists", async () => {
-    const { id: stationId } = await createStation();
-    const { id: supplierId } = await createSupplier();
-    const primaryBike = await createBike(stationId, supplierId);
-    const existingBike = await createBike(stationId, supplierId);
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const primaryBike = await createBike({ stationId: station.id, supplierId: supplier.id });
+    const existingBike = await createBike({ stationId: station.id, supplierId: supplier.id });
 
-    const result = await runWithService(
-      Effect.flatMap(BikeServiceTag, service =>
-        service.adminUpdateBike(primaryBike.id, {
-          chipId: existingBike.chipId,
-        })).pipe(Effect.either),
+    const result = await runAdminUpdateBikeEither(primaryBike.id, {
+      chipId: existingBike.chipId,
+    });
+
+    expectLeftTag(result, "DuplicateChipId");
+  });
+
+  it("update succeeds when changing to another valid station and supplier", async () => {
+    const originalStation = await fixture.factories.station();
+    const nextStation = await fixture.factories.station();
+    const originalSupplier = await fixture.factories.supplier();
+    const nextSupplier = await fixture.factories.supplier();
+    const bike = await createBike({ stationId: originalStation.id, supplierId: originalSupplier.id });
+
+    const result = await runEffectEitherWithLayer(
+      Effect.flatMap(BikeServiceTag, service => service.adminUpdateBike(bike.id, {
+        stationId: nextStation.id,
+        supplierId: nextSupplier.id,
+      })),
+      depsLayer,
     );
 
-    if (Either.isRight(result)) {
-      throw new Error("Expected DuplicateChipId failure");
+    const updated = expectRight(result);
+    expect(updated._tag).toBe("Some");
+    if (updated._tag === "Some") {
+      expect(updated.value.stationId).toBe(nextStation.id);
+      expect(updated.value.supplierId).toBe(nextSupplier.id);
     }
-    expect(result.left._tag).toBe("DuplicateChipId");
   });
 });
