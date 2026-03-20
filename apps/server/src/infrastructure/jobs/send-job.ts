@@ -1,16 +1,15 @@
 import type { JobPayload, JobType } from "@mebike/shared/contracts/server/jobs";
-import type { PgBoss } from "pg-boss";
 
 import { JobPayloadSchemas } from "@mebike/shared/contracts/server/jobs";
 
-type SendOptions = Parameters<PgBoss["send"]>[2];
+import type { EnqueueJobOptions, JobProducer } from "./ports";
 
 export async function sendJob<T extends JobType>(
-  boss: PgBoss,
+  producer: JobProducer,
   type: T,
   payload: JobPayload<T>,
-  options?: SendOptions,
+  options?: EnqueueJobOptions,
 ) {
   const parsedPayload = JobPayloadSchemas[type].parse(payload) as JobPayload<T>;
-  return boss.send(type, parsedPayload, options);
+  return producer.send(type, parsedPayload, options);
 }

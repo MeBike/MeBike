@@ -1,7 +1,7 @@
-import type { Job } from "pg-boss";
-
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Layer } from "effect";
+
+import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepositoryLive } from "@/domain/bikes";
 import { RentalRepositoryLive } from "@/domain/rentals";
@@ -14,9 +14,8 @@ import { PrismaLive } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
 
 export async function handleFixedSlotAssign(
-  jobs: ReadonlyArray<Job<unknown>>,
+  job: QueueJob | undefined,
 ): Promise<void> {
-  const job = jobs[0];
   if (!job) {
     logger.warn("Fixed-slot worker received empty batch");
     return;

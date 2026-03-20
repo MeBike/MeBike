@@ -8,6 +8,7 @@ import type { DB } from "generated/kysely/types";
 
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
+import { makePgBossJobProducer, toQueueJob } from "@/infrastructure/jobs/pgboss";
 import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
 import { getTestDatabase } from "@/test/db/test-database";
@@ -80,7 +81,7 @@ describe("outbox + email worker integration", () => {
 
     await dispatchOutboxOnce({
       db,
-      boss,
+      producer: makePgBossJobProducer(boss),
       workerId: "test-dispatcher",
       batchSize: 1,
     });
@@ -117,7 +118,7 @@ describe("outbox + email worker integration", () => {
 
     await dispatchOutboxOnce({
       db,
-      boss,
+      producer: makePgBossJobProducer(boss),
       workerId: "test-dispatcher",
       batchSize: 1,
     });
@@ -127,7 +128,7 @@ describe("outbox + email worker integration", () => {
     expect(job).toBeDefined();
 
     const sent: Array<{ to: string; subject: string; html: string; from: string }> = [];
-    await handleEmailJob(job, {
+    await handleEmailJob(toQueueJob(job), {
       defaultFrom: "MeBike <no-reply@mebike.test>",
       transporter: {
         sendMail: async (options) => {

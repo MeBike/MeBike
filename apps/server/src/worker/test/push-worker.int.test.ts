@@ -1,8 +1,7 @@
-import type { Job } from "pg-boss";
-
-import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import { getTestDatabase } from "@/test/db/test-database";
 import { handlePushSend } from "@/worker/push-worker";
@@ -33,12 +32,11 @@ vi.mock("expo-server-sdk", () => {
   return { Expo };
 });
 
-function makeJob(data: unknown): Job<unknown> {
+function makeJob(data: unknown): QueueJob {
   return {
     id: "job-push-1",
-    name: JobTypes.PushSend,
     data,
-  } as Job<unknown>;
+  };
 }
 
 describe("push worker integration", () => {
