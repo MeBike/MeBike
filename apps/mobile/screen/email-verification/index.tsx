@@ -1,87 +1,41 @@
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { spacing } from "@theme/metrics";
+import { AuthScreen } from "@ui/patterns/auth-screen";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppText } from "@ui/primitives/app-text";
+import { OtpCodeInput } from "@ui/primitives/otp-code-input";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { BikeColors } from "../../constants/BikeColors";
 import { EmailVerificationHeader } from "./components/email-verification-header";
-import { OtpInput } from "./components/otp-input";
 import { useEmailVerification } from "./hooks/use-email-verification";
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "white",
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
   formContainer: {
-    flex: 1,
-    paddingHorizontal: 32,
-    paddingTop: 20,
+    paddingHorizontal: spacing.xxl,
+    paddingBottom: spacing.xxxl,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 16,
-  },
-  verifyButton: {
-    backgroundColor: BikeColors.secondary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  verifyButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  disabledButton: {
-    opacity: 0.6,
+  content: {
+    gap: spacing.xxxl,
   },
   timerContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    gap: spacing.sm,
   },
-  timerText: {
-    fontSize: 14,
-    color: BikeColors.textSecondary,
-    marginBottom: 8,
+  helperBlock: {
+    gap: spacing.sm,
   },
-  timerValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: BikeColors.secondary,
+  actions: {
+    gap: spacing.xxl,
   },
   resendButton: {
     alignItems: "center",
-    paddingVertical: 12,
-  },
-  resendButtonText: {
-    color: BikeColors.secondary,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  resendButtonTextDisabled: {
-    color: BikeColors.lightGray,
-    fontSize: 16,
-    fontWeight: "600",
+    paddingVertical: spacing.sm,
   },
   skipContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
-  },
-  skipText: {
-    color: BikeColors.textSecondary,
-    fontSize: 14,
-  },
-  skipLink: {
-    color: BikeColors.secondary,
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 4,
+    marginTop: spacing.sm,
+    gap: spacing.xs,
   },
 });
 
@@ -96,6 +50,7 @@ export default function EmailVerificationScreen() {
     verify,
     resend,
     skip,
+    goBack,
     isVerifying,
     isResending,
     canResend,
@@ -103,72 +58,63 @@ export default function EmailVerificationScreen() {
   } = useEmailVerification();
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <EmailVerificationHeader email={email} />
-
-        <View style={styles.formContainer}>
-          <Text style={styles.sectionTitle}>Nhập mã OTP (6 chữ số)</Text>
-
-          <OtpInput
-            otp={otp}
-            disabled={timeLeft <= 0}
-            onChangeDigit={setOtpDigit}
-          />
-
-          <View style={styles.timerContainer}>
-            <Text style={styles.timerText}>Mã OTP sẽ hết hạn trong</Text>
-            <Text style={styles.timerValue}>{formatTime(timeLeft)}</Text>
+    <AuthScreen header={<EmailVerificationHeader email={email} onBack={goBack} />}>
+      <View style={styles.formContainer}>
+        <View style={styles.content}>
+          <View style={styles.helperBlock}>
+            <AppText variant="fieldLabel">Nhập mã OTP (6 chữ số)</AppText>
+            <OtpCodeInput disabled={timeLeft <= 0} otp={otp} onChangeDigit={setOtpDigit} />
           </View>
 
-          <Pressable
-            style={[
-              styles.verifyButton,
-              (!canSubmit || timeLeft <= 0) && styles.disabledButton,
-            ]}
-            onPress={verify}
-            disabled={!canSubmit || timeLeft <= 0}
-          >
-            <Text style={styles.verifyButtonText}>
-              {isVerifying ? "Đang xác nhận..." : "Xác nhận"}
-            </Text>
-          </Pressable>
-
           <View style={styles.timerContainer}>
-            <Text style={styles.timerText}>Không nhận được mã OTP?</Text>
+            <AppText align="center" tone="muted" variant="bodySmall">
+              Mã OTP sẽ hết hạn trong
+              {" "}
+              {formatTime(timeLeft)}
+            </AppText>
           </View>
 
-          <Pressable
-            style={styles.resendButton}
-            onPress={resend}
-            disabled={!canResend}
-          >
-            <Text
-              style={
-                canResend
-                  ? styles.resendButtonText
-                  : styles.resendButtonTextDisabled
-              }
+          <View style={styles.actions}>
+            <AppButton
+              backgroundColor={canSubmit && timeLeft > 0 ? "$brandPrimary" : "$divider"}
+              borderColor={canSubmit && timeLeft > 0 ? "$brandPrimary" : "$divider"}
+              disabled={!canSubmit || timeLeft <= 0}
+              loading={isVerifying}
+              onPress={verify}
             >
-              {isResending
-                ? "Đang gửi lại..."
-                : resendTimeLeft > 0
-                  ? `Gửi lại trong ${formatTime(resendTimeLeft)}`
-                  : "Gửi lại mã OTP"}
-            </Text>
-          </Pressable>
+              <AppText
+                align="center"
+                tone={canSubmit && timeLeft > 0 ? "inverted" : "muted"}
+                variant="bodySmall"
+              >
+                Xác nhận
+              </AppText>
+            </AppButton>
 
-          <View style={styles.skipContainer}>
-            <Text style={styles.skipText}>Muốn bỏ qua?</Text>
-            <Pressable onPress={skip}>
-              <Text style={styles.skipLink}>Tiếp tục sau</Text>
-            </Pressable>
+            <View style={styles.timerContainer}>
+              <AppText align="center" tone="muted" variant="bodySmall">
+                Không nhận được mã OTP?
+              </AppText>
+              <Pressable style={styles.resendButton} onPress={resend} disabled={!canResend}>
+                <AppText tone={canResend ? "brand" : "muted"} variant="label">
+                  {isResending
+                    ? "Đang gửi lại..."
+                    : resendTimeLeft > 0
+                      ? `Gửi lại trong ${formatTime(resendTimeLeft)}`
+                      : "Gửi lại mã OTP"}
+                </AppText>
+              </Pressable>
+            </View>
+
+            <View style={styles.skipContainer}>
+              <AppText tone="muted" variant="bodySmall">Muốn bỏ qua?</AppText>
+              <Pressable onPress={skip}>
+                <AppText tone="brand" variant="label">Tiếp tục sau</AppText>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </View>
+    </AuthScreen>
   );
 }
