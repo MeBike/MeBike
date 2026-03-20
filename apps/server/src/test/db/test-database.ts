@@ -1,3 +1,4 @@
+import process from "node:process";
 import { Client } from "pg";
 import { uuidv7 } from "uuidv7";
 import { inject } from "vitest";
@@ -5,13 +6,32 @@ import { inject } from "vitest";
 import { migrate } from "./migrate";
 import { startPostgres } from "./postgres";
 
+function wrapWithTestDatabaseEnv(container: { stop: () => Promise<void>; url: string }) {
+  const previousTestDatabaseUrl = process.env.TEST_DATABASE_URL;
+  process.env.TEST_DATABASE_URL = container.url;
+
+  return {
+    url: container.url,
+    stop: async () => {
+      if (previousTestDatabaseUrl) {
+        process.env.TEST_DATABASE_URL = previousTestDatabaseUrl;
+      }
+      else {
+        delete process.env.TEST_DATABASE_URL;
+      }
+
+      await container.stop();
+    },
+  };
+}
+
 export async function getTestDatabase() {
   const templateUrl = inject("testDatabaseUrl");
 
   if (!templateUrl) {
     const container = await startPostgres();
     await migrate(container.url);
-    return container;
+    return wrapWithTestDatabaseEnv(container);
   }
 
   const urlObj = new URL(templateUrl);
@@ -39,7 +59,7 @@ export async function getTestDatabase() {
   const testDbUrl = new URL(templateUrl);
   testDbUrl.pathname = `/${newDbName}`;
 
-  return {
+  return wrapWithTestDatabaseEnv({
     url: testDbUrl.toString(),
     stop: async () => {
       const dropClient = new Client({ connectionString: adminUrl.toString() });
@@ -59,5 +79,5 @@ export async function getTestDatabase() {
         await dropClient.end();
       }
     },
-  };
+  });
 }
