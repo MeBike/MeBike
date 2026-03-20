@@ -4,17 +4,14 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import process from "node:process";
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 
+import type { TestFactories } from "@/test/factories";
 import type { DB } from "generated/kysely/types";
 
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
 import { resetTestData } from "@/test/db/reset";
 import { seed } from "@/test/db/seed";
 import { getTestDatabase } from "@/test/db/test-database";
-import { createBikeFactory } from "@/test/factories/bike.factory";
-import { createRentalFactory } from "@/test/factories/rental.factory";
-import { createStationFactory } from "@/test/factories/station.factory";
-import { createUserFactory } from "@/test/factories/user.factory";
-import { createWalletFactory } from "@/test/factories/wallet.factory";
+import { createTestFactories } from "@/test/factories";
 import { makeAccessToken, makeAuthHeader } from "@/test/http/auth";
 import { PrismaClient } from "generated/prisma/client";
 
@@ -46,13 +43,7 @@ export function setupHttpE2eFixture(options: E2eFixtureOptions) {
   let prisma: PrismaClient;
   let app: TestAppLike;
   let runtime: RuntimeLike;
-  let factories: {
-    user: ReturnType<typeof createUserFactory>;
-    station: ReturnType<typeof createStationFactory>;
-    bike: ReturnType<typeof createBikeFactory>;
-    rental: ReturnType<typeof createRentalFactory>;
-    wallet: ReturnType<typeof createWalletFactory>;
-  };
+  let factories: TestFactories;
 
   beforeAll(async () => {
     container = await getTestDatabase();
@@ -75,13 +66,7 @@ export function setupHttpE2eFixture(options: E2eFixtureOptions) {
       runPromise: runtime.runPromise as never,
     });
 
-    factories = {
-      user: createUserFactory({ prisma }),
-      station: createStationFactory({ prisma }),
-      bike: createBikeFactory({ prisma }),
-      rental: createRentalFactory({ prisma }),
-      wallet: createWalletFactory({ prisma }),
-    };
+    factories = createTestFactories({ prisma });
   }, 60000);
 
   beforeEach(async () => {
