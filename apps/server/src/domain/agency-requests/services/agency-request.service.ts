@@ -1,7 +1,5 @@
 import { Effect, Layer, Option } from "effect";
 
-import { AgencyRequestStatus } from "generated/prisma/client";
-
 import type {
   AgencyRequestNotFound,
   AgencyRequestRepositoryError,
@@ -16,9 +14,6 @@ import type {
 } from "../models";
 import type { AgencyRequestRepo } from "../repository/agency-request.repository";
 
-import {
-  InvalidAgencyRequestStatusTransition as InvalidAgencyRequestStatusTransitionError,
-} from "../domain-errors";
 import { AgencyRequestRepository } from "../repository/agency-request.repository";
 
 export type AgencyRequestService = {
@@ -39,59 +34,14 @@ export type AgencyRequestService = {
   ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
 };
 
-function ensurePending(
-  agencyRequest: AgencyRequestRow,
-  nextStatus: AgencyRequestStatus,
-): Effect.Effect<void, InvalidAgencyRequestStatusTransition> {
-  if (agencyRequest.status === AgencyRequestStatus.PENDING) {
-    return Effect.void;
-  }
-
-  return Effect.fail(new InvalidAgencyRequestStatusTransitionError({
-    agencyRequestId: agencyRequest.id,
-    currentStatus: agencyRequest.status,
-    nextStatus,
-  }));
-}
-
 function makeAgencyRequestService(repo: AgencyRequestRepo): AgencyRequestService {
   return {
     getById: id => repo.findById(id),
     list: filter => repo.list(filter),
     submit: input => repo.submit(input),
-
-    approve: (agencyRequestId, input) =>
-      Effect.gen(function* () {
-        const existing = yield* repo.findById(agencyRequestId);
-        if (Option.isNone(existing)) {
-          return yield* repo.approve(agencyRequestId, input);
-        }
-
-        yield* ensurePending(existing.value, AgencyRequestStatus.APPROVED);
-        return yield* repo.approve(agencyRequestId, input);
-      }),
-
-    reject: (agencyRequestId, input) =>
-      Effect.gen(function* () {
-        const existing = yield* repo.findById(agencyRequestId);
-        if (Option.isNone(existing)) {
-          return yield* repo.reject(agencyRequestId, input);
-        }
-
-        yield* ensurePending(existing.value, AgencyRequestStatus.REJECTED);
-        return yield* repo.reject(agencyRequestId, input);
-      }),
-
-    cancel: (agencyRequestId, description) =>
-      Effect.gen(function* () {
-        const existing = yield* repo.findById(agencyRequestId);
-        if (Option.isNone(existing)) {
-          return yield* repo.cancel(agencyRequestId, description);
-        }
-
-        yield* ensurePending(existing.value, AgencyRequestStatus.CANCELLED);
-        return yield* repo.cancel(agencyRequestId, description);
-      }),
+    approve: (agencyRequestId, input) => repo.approve(agencyRequestId, input),
+    reject: (agencyRequestId, input) => repo.reject(agencyRequestId, input),
+    cancel: (agencyRequestId, description) => repo.cancel(agencyRequestId, description),
   };
 }
 
