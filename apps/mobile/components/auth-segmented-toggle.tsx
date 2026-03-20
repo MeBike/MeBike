@@ -1,33 +1,40 @@
-import { BikeColors } from "@constants/BikeColors";
+import { colors } from "@theme/colors";
+import { radii, spacing } from "@theme/metrics";
+import { fontSizes, fontWeights } from "@theme/typography";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    borderRadius: 10,
-    padding: 3,
-    backgroundColor: BikeColors.lightGray,
+    borderRadius: radii.lg,
+    padding: spacing.xs,
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
-    borderColor: BikeColors.divider,
+    borderColor: colors.borderSubtle,
   },
   item: {
     flex: 1,
-    borderRadius: 8,
-    paddingVertical: 8,
-    minHeight: 36,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
   },
   itemActive: {
-    backgroundColor: BikeColors.background,
+    backgroundColor: colors.backgroundStrong,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
   },
   itemText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: BikeColors.textSecondary,
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.semibold,
+    color: colors.textSecondary,
   },
   itemTextActive: {
-    color: BikeColors.textPrimary,
+    color: colors.textPrimary,
   },
 });
 

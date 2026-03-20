@@ -1,88 +1,35 @@
-import { BikeColors } from "@constants/BikeColors";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { spacing } from "@theme/metrics";
+import { AuthScreen } from "@ui/patterns/auth-screen";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppText } from "@ui/primitives/app-text";
+import { OtpCodeInput } from "@ui/primitives/otp-code-input";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { OtpInput } from "./components/otp-input";
 import { ResetPasswordOtpHeader } from "./components/reset-password-otp-header";
 import { useResetPasswordOtp } from "./hooks/use-reset-password-otp";
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BikeColors.surface,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  body: {
-    flex: 1,
-    backgroundColor: BikeColors.surface,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    marginTop: -24,
-    paddingTop: 8,
-    paddingBottom: 24,
-    overflow: "hidden",
-  },
   content: {
-    padding: 20,
+    paddingHorizontal: spacing.xxl,
+    paddingBottom: spacing.xxxl,
+    gap: spacing.xxxl,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: BikeColors.textPrimary,
-    marginBottom: 16,
+  section: {
+    gap: spacing.sm,
   },
-  timerContainer: {
+  timerRow: {
     alignItems: "center",
-    marginBottom: 18,
   },
-  timerText: {
-    fontSize: 14,
-    color: BikeColors.textSecondary,
-    marginBottom: 8,
+  actions: {
+    gap: spacing.xxl,
   },
-  timerValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: BikeColors.secondary,
-  },
-  primaryButton: {
-    backgroundColor: BikeColors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
+  resendBlock: {
     alignItems: "center",
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  primaryButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  resendHint: {
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  resendHintText: {
-    fontSize: 14,
-    color: BikeColors.textSecondary,
+    gap: spacing.sm,
   },
   resendButton: {
     alignItems: "center",
-    paddingVertical: 12,
-  },
-  resendButtonText: {
-    color: BikeColors.primary,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  resendButtonTextDisabled: {
-    color: BikeColors.textSecondary,
-    fontSize: 16,
-    fontWeight: "600",
+    paddingVertical: spacing.sm,
   },
 });
 
@@ -103,50 +50,53 @@ export default function ResetPasswordOTPScreen() {
     canResend,
   } = useResetPasswordOtp();
 
+  const isActive = canSubmit && timeLeft > 0;
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <ResetPasswordOtpHeader onBack={goBack} email={email} />
-        <View style={styles.body}>
-          <View style={styles.content}>
-            <Text style={styles.sectionTitle}>Nhập mã OTP (6 chữ số)</Text>
+    <AuthScreen header={<ResetPasswordOtpHeader email={email} onBack={goBack} />}>
+      <View style={styles.content}>
+        <View style={styles.section}>
+          <AppText variant="fieldLabel">Nhập mã OTP (6 chữ số)</AppText>
+          <OtpCodeInput disabled={timeLeft <= 0} otp={otp} onChangeDigit={setOtpDigit} />
+        </View>
 
-            <OtpInput otp={otp} disabled={timeLeft <= 0} onChangeDigit={setOtpDigit} />
+        <View style={styles.timerRow}>
+          <AppText align="center" tone="muted" variant="bodySmall">
+            Mã OTP sẽ hết hạn trong
+            {" "}
+            {formatTime(timeLeft)}
+          </AppText>
+        </View>
 
-            <View style={styles.timerContainer}>
-              <Text style={styles.timerText}>Mã OTP sẽ hết hạn trong</Text>
-              <Text style={styles.timerValue}>{formatTime(timeLeft)}</Text>
-            </View>
+        <View style={styles.actions}>
+          <AppButton
+            backgroundColor={isActive ? "$brandPrimary" : "$divider"}
+            borderColor={isActive ? "$brandPrimary" : "$divider"}
+            disabled={!isActive}
+            loading={isVerifying}
+            onPress={verify}
+          >
+            <AppText align="center" tone={isActive ? "inverted" : "muted"} variant="bodySmall">
+              Tiếp tục
+            </AppText>
+          </AppButton>
 
-            <Pressable
-              style={[styles.primaryButton, (!canSubmit || timeLeft <= 0) && styles.disabledButton]}
-              onPress={verify}
-              disabled={!canSubmit || timeLeft <= 0}
-            >
-              <Text style={styles.primaryButtonText}>
-                {isVerifying ? "Đang xác nhận..." : "Tiếp tục"}
-              </Text>
-            </Pressable>
-
-            <View style={styles.resendHint}>
-              <Text style={styles.resendHintText}>Không nhận được mã OTP?</Text>
-            </View>
-
-            <Pressable style={styles.resendButton} onPress={resend} disabled={!canResend}>
-              <Text style={canResend ? styles.resendButtonText : styles.resendButtonTextDisabled}>
+          <View style={styles.resendBlock}>
+            <AppText align="center" tone="muted" variant="bodySmall">
+              Không nhận được mã OTP?
+            </AppText>
+            <Pressable disabled={!canResend} onPress={resend} style={styles.resendButton}>
+              <AppText tone={canResend ? "brand" : "muted"} variant="label">
                 {isResending
                   ? "Đang gửi lại..."
                   : resendTimeLeft > 0
                     ? `Gửi lại trong ${formatTime(resendTimeLeft)}`
                     : "Gửi lại mã OTP"}
-              </Text>
+              </AppText>
             </Pressable>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </View>
+    </AuthScreen>
   );
 }

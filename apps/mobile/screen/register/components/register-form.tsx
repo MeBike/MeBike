@@ -1,76 +1,16 @@
 import type { Control, FieldErrors } from "react-hook-form";
 
-import { AuthSegmentedToggle } from "@components/auth-segmented-toggle";
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppInput } from "@ui/primitives/app-input";
+import { AppText } from "@ui/primitives/app-text";
+import { Field } from "@ui/primitives/field";
 import { Controller } from "react-hook-form";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable } from "react-native";
+import { YStack } from "tamagui";
 
 import type { RegisterFormValues } from "../hooks/use-register";
-
-import { IconSymbol } from "../../../components/IconSymbol";
-import { BikeColors } from "../../../constants/BikeColors";
-
-const styles = StyleSheet.create({
-  formContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  segmentedToggle: {
-    marginBottom: 18,
-  },
-  inputContainer: {
-    marginBottom: 14,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: BikeColors.textPrimary,
-    marginBottom: 6,
-  },
-  inputWithIcon: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: BikeColors.divider,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 48,
-    backgroundColor: BikeColors.background,
-  },
-  input: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 14,
-    lineHeight: 20,
-    paddingVertical: 0,
-    includeFontPadding: false,
-    color: BikeColors.textPrimary,
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  registerButton: {
-    backgroundColor: BikeColors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  registerButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  errorText: {
-    fontSize: 12,
-    color: "#EF4444",
-    marginTop: 4,
-    marginLeft: 4,
-  },
-});
 
 type RegisterFormProps = {
   control: Control<RegisterFormValues>;
@@ -96,185 +36,131 @@ function RegisterForm({
   isSubmitting,
 }: RegisterFormProps) {
   return (
-    <View style={styles.formContainer}>
-      <View style={styles.segmentedToggle}>
-        <AuthSegmentedToggle
-          value="register"
-          onChange={(next) => {
-            if (next === "login")
-              onGoToLogin();
-          }}
+    <YStack gap="$6">
+
+      <Field error={errors.fullname?.message} label="Họ và tên">
+        <Controller
+          control={control}
+          name="fullname"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <AppInput
+              autoCapitalize="words"
+              invalid={Boolean(errors.fullname?.message)}
+              leadingIcon={<IconSymbol name="person" size={18} color={colors.textSecondary} />}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="Nhập họ và tên"
+              value={value}
+            />
+          )}
         />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Họ và tên</Text>
-        <View style={styles.inputWithIcon}>
-          <IconSymbol
-            name="person"
-            size={20}
-            color={BikeColors.textSecondary}
-          />
-          <Controller
-            control={control}
-            name="fullname"
-            render={({ field: { value, onChange, onBlur } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập họ và tên"
-                placeholderTextColor={BikeColors.textSecondary}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                autoCapitalize="words"
-              />
-            )}
-          />
-        </View>
-        {errors.fullname?.message && <Text style={styles.errorText}>{errors.fullname.message}</Text>}
-      </View>
+      </Field>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Email</Text>
-        <View style={styles.inputWithIcon}>
-          <IconSymbol
-            name="envelope"
-            size={20}
-            color={BikeColors.textSecondary}
-          />
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { value, onChange, onBlur } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập email"
-                placeholderTextColor={BikeColors.textSecondary}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            )}
-          />
-        </View>
-        {errors.email?.message && <Text style={styles.errorText}>{errors.email.message}</Text>}
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Số điện thoại</Text>
-        <View style={styles.inputWithIcon}>
-          <IconSymbol
-            name="phone"
-            size={20}
-            color={BikeColors.textSecondary}
-          />
-          <Controller
-            control={control}
-            name="phoneNumber"
-            render={({ field: { value, onChange, onBlur } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập số điện thoại"
-                placeholderTextColor={BikeColors.textSecondary}
-                value={value ?? ""}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                autoCapitalize="none"
-              />
-            )}
-          />
-        </View>
-        {errors.phoneNumber?.message && <Text style={styles.errorText}>{errors.phoneNumber.message}</Text>}
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Mật khẩu</Text>
-        <View style={styles.inputWithIcon}>
-          <IconSymbol
-            name="lock"
-            size={20}
-            color={BikeColors.textSecondary}
-          />
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { value, onChange, onBlur } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập mật khẩu"
-                placeholderTextColor={BikeColors.textSecondary}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-              />
-            )}
-          />
-          <Pressable
-            onPress={() => setShowPassword(!showPassword)}
-            style={styles.eyeButton}
-          >
-            <IconSymbol
-              name={showPassword ? "eye.slash" : "eye"}
-              size={20}
-              color={BikeColors.textSecondary}
+      <Field error={errors.email?.message} label="Email">
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <AppInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              invalid={Boolean(errors.email?.message)}
+              keyboardType="email-address"
+              leadingIcon={<IconSymbol name="envelope" size={18} color={colors.textSecondary} />}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="Nhập email"
+              value={value}
             />
-          </Pressable>
-        </View>
-        {errors.password?.message && <Text style={styles.errorText}>{errors.password.message}</Text>}
-      </View>
+          )}
+        />
+      </Field>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Xác nhận mật khẩu</Text>
-        <View style={styles.inputWithIcon}>
-          <IconSymbol
-            name="lock"
-            size={20}
-            color={BikeColors.textSecondary}
-          />
-          <Controller
-            control={control}
-            name="confirmPassword"
-            render={({ field: { value, onChange, onBlur } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Xác nhận mật khẩu"
-                placeholderTextColor={BikeColors.textSecondary}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                secureTextEntry={!showConfirmPassword}
-                autoCapitalize="none"
-              />
-            )}
-          />
-          <Pressable
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            style={styles.eyeButton}
-          >
-            <IconSymbol
-              name={showConfirmPassword ? "eye.slash" : "eye"}
-              size={20}
-              color={BikeColors.textSecondary}
+      <Field error={errors.phoneNumber?.message} label="Số điện thoại">
+        <Controller
+          control={control}
+          name="phoneNumber"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <AppInput
+              invalid={Boolean(errors.phoneNumber?.message)}
+              keyboardType="phone-pad"
+              leadingIcon={<IconSymbol name="phone" size={18} color={colors.textSecondary} />}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="Nhập số điện thoại"
+              value={value ?? ""}
             />
-          </Pressable>
-        </View>
-        {errors.confirmPassword?.message && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
-      </View>
+          )}
+        />
+      </Field>
 
-      <Pressable
-        style={[styles.registerButton, isSubmitting && styles.disabledButton]}
-        onPress={onSubmit}
-        disabled={isSubmitting}
-      >
-        <Text style={styles.registerButtonText}>
-          {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
-        </Text>
-      </Pressable>
-    </View>
+      <Field error={errors.password?.message} label="Mật khẩu">
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <AppInput
+              autoCapitalize="none"
+              invalid={Boolean(errors.password?.message)}
+              leadingIcon={<IconSymbol name="lock" size={18} color={colors.textSecondary} />}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="Nhập mật khẩu"
+              secureTextEntry={!showPassword}
+              trailingIcon={(
+                <Pressable onPress={() => setShowPassword(!showPassword)}>
+                  <IconSymbol
+                    name={showPassword ? "eye.slash" : "eye"}
+                    size={18}
+                    color={colors.textSecondary}
+                  />
+                </Pressable>
+              )}
+              value={value}
+            />
+          )}
+        />
+      </Field>
+
+      <Field error={errors.confirmPassword?.message} label="Xác nhận mật khẩu">
+        <Controller
+          control={control}
+          name="confirmPassword"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <AppInput
+              autoCapitalize="none"
+              invalid={Boolean(errors.confirmPassword?.message)}
+              leadingIcon={<IconSymbol name="lock" size={18} color={colors.textSecondary} />}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="Xác nhận mật khẩu"
+              secureTextEntry={!showConfirmPassword}
+              trailingIcon={(
+                <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <IconSymbol
+                    name={showConfirmPassword ? "eye.slash" : "eye"}
+                    size={18}
+                    color={colors.textSecondary}
+                  />
+                </Pressable>
+              )}
+              value={value}
+            />
+          )}
+        />
+      </Field>
+
+      <AppButton loading={isSubmitting} onPress={onSubmit}>
+        Đăng ký
+      </AppButton>
+
+      <YStack alignItems="center" gap="$1">
+        <AppText tone="muted" variant="bodySmall">Đã có tài khoản?</AppText>
+        <Pressable onPress={onGoToLogin}>
+          <AppText tone="brand" variant="label">Quay lại đăng nhập</AppText>
+        </Pressable>
+      </YStack>
+    </YStack>
   );
 }
 

@@ -6,11 +6,13 @@ import { NavigationContainer } from "@react-navigation/native";
 import { initStripe } from "@stripe/stripe-react-native";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
+import { TamaguiProvider } from "tamagui";
 
 import { runSharedContractsSmokeTest } from "./debug/shared-contract-smoke";
-import { STRIPE_PUBLISHABLE_KEY, STRIPE_URL_SCHEME } from "./lib/stripe";
 import { log } from "./lib/log";
+import { STRIPE_PUBLISHABLE_KEY, STRIPE_URL_SCHEME } from "./lib/stripe";
 import RootNavigator from "./navigation/RootNavigator";
+import tamaguiConfig from "./tamagui.config";
 
 export default function App() {
   useEffect(() => {
@@ -33,17 +35,19 @@ export default function App() {
   }, []);
 
   return (
-    <Providers>
-      <NavigationContainer>
-        <AuthProviderNext>
-          <PushNotificationsProvider>
-            <BikeStatusStreamProvider>
-              <StatusBar style="auto" />
-              <RootNavigator />
-            </BikeStatusStreamProvider>
-          </PushNotificationsProvider>
-        </AuthProviderNext>
-      </NavigationContainer>
-    </Providers>
+    <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+      <Providers>
+        <NavigationContainer>
+          <AuthProviderNext>
+            <PushNotificationsProvider>
+              <BikeStatusStreamProvider>
+                <StatusBar style="dark" />
+                <RootNavigator />
+              </BikeStatusStreamProvider>
+            </PushNotificationsProvider>
+          </AuthProviderNext>
+        </NavigationContainer>
+      </Providers>
+    </TamaguiProvider>
   );
 }

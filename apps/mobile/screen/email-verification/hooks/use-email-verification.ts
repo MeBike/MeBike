@@ -233,6 +233,10 @@ export function useEmailVerification() {
     );
   }, [navigation]);
 
+  const goBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
   return {
     email,
     user,
@@ -244,6 +248,7 @@ export function useEmailVerification() {
     verify,
     resend,
     skip,
+    goBack,
     isVerifying: verifyMutation.isPending,
     isResending: resendMutation.isPending,
     canSubmit,
