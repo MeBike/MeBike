@@ -53,6 +53,7 @@ export async function dispatchOutboxOnce(options: {
         { jobId: job.id, jobType: job.type, attempts: job.attempts },
         "Dispatching outbox job to queue runtime",
       );
+      // Outbox rows persist payloads as JSON, so we re-validate at sendJob(...) before enqueueing.
       await sendJob(options.producer, job.type as JobType, job.payload as never, {
         dedupeKey: job.dedupeKey ?? undefined,
       });
