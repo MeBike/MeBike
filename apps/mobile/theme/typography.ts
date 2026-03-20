@@ -34,6 +34,17 @@ export const fontWeights = {
   heavy: "800",
 } as const;
 
+export const letterSpacing = {
+  xs: 0,
+  sm: 0,
+  md: 0,
+  lg: 0,
+  xl: -0.2,
+  xxl: -0.4,
+  xxxl: -0.6,
+  display: -0.8,
+} as const;
+
 export const textStyles = {
   caption: {
     fontSize: fontSizes.xs,

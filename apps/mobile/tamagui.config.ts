@@ -1,7 +1,7 @@
 import { shorthands } from "@tamagui/shorthands";
 import { colors } from "@theme/colors";
 import { radii, spacing } from "@theme/metrics";
-import { fontSizes, fontWeights, lineHeights } from "@theme/typography";
+import { fontSizes, fontWeights, letterSpacing, lineHeights } from "@theme/typography";
 import { createFont, createTamagui, createTokens, isWeb } from "tamagui";
 
 const appFont = createFont({
@@ -34,14 +34,14 @@ const appFont = createFont({
     8: fontWeights.heavy,
   },
   letterSpacing: {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: -0.2,
-    6: -0.4,
-    7: -0.6,
-    8: -0.8,
+    1: letterSpacing.xs,
+    2: letterSpacing.sm,
+    3: letterSpacing.md,
+    4: letterSpacing.lg,
+    5: letterSpacing.xl,
+    6: letterSpacing.xxl,
+    7: letterSpacing.xxxl,
+    8: letterSpacing.display,
   },
 });
 
