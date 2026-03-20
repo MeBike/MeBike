@@ -29,20 +29,28 @@ describe("agency requests routing", () => {
     },
   });
 
-  it("submits an agency request without authentication", async () => {
-    const response = await fixture.app.request("http://test/v1/agency-requests", {
+  async function submitAgencyRequest(
+    body: Record<string, unknown>,
+    init?: { token?: string },
+  ) {
+    return fixture.app.request("http://test/v1/agency-requests", {
       method: "POST",
       headers: {
+        ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        requesterEmail: "guest-agency@example.com",
-        requesterPhone: "0912345678",
-        agencyName: "Guest Agency Request",
-        agencyAddress: "1 Guest Street",
-        agencyContactPhone: "0987654321",
-        description: "Guest request description",
-      }),
+      body: JSON.stringify(body),
+    });
+  }
+
+  it("submits an agency request without authentication", async () => {
+    const response = await submitAgencyRequest({
+      requesterEmail: "guest-agency@example.com",
+      requesterPhone: "0912345678",
+      agencyName: "Guest Agency Request",
+      agencyAddress: "1 Guest Street",
+      agencyContactPhone: "0987654321",
+      description: "Guest request description",
     });
 
     const body = await response.json() as AgencyRequestsContracts.SubmitAgencyRequestResponse;
@@ -76,18 +84,11 @@ describe("agency requests routing", () => {
 
     const token = fixture.auth.makeAccessToken({ userId: requester.id, role: "USER" });
 
-    const response = await fixture.app.request("http://test/v1/agency-requests", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        requesterEmail: "user-agency@example.com",
-        requesterPhone: "0911111111",
-        agencyName: "User Agency Request",
-      }),
-    });
+    const response = await submitAgencyRequest({
+      requesterEmail: "user-agency@example.com",
+      requesterPhone: "0911111111",
+      agencyName: "User Agency Request",
+    }, { token });
 
     const body = await response.json() as AgencyRequestsContracts.SubmitAgencyRequestResponse;
 
@@ -101,5 +102,107 @@ describe("agency requests routing", () => {
     });
 
     expect(saved?.requesterUserId).toBe(requester.id);
+  });
+
+  it("stores omitted optional fields as null", async () => {
+    const response = await submitAgencyRequest({
+      requesterEmail: "minimal-agency@example.com",
+      agencyName: "Minimal Agency Request",
+    });
+
+    const body = await response.json() as AgencyRequestsContracts.SubmitAgencyRequestResponse;
+
+    expect(response.status).toBe(201);
+    expect(body.requesterPhone).toBeNull();
+    expect(body.agencyAddress).toBeNull();
+    expect(body.agencyContactPhone).toBeNull();
+    expect(body.description).toBeNull();
+
+    const saved = await fixture.prisma.agencyRequest.findUnique({
+      where: { id: body.id },
+      select: {
+        requesterPhone: true,
+        agencyAddress: true,
+        agencyContactPhone: true,
+        description: true,
+      },
+    });
+
+    expect(saved).toEqual({
+      requesterPhone: null,
+      agencyAddress: null,
+      agencyContactPhone: null,
+      description: null,
+    });
+  });
+
+  it("rejects invalid requester email", async () => {
+    const beforeCount = await fixture.prisma.agencyRequest.count();
+
+    const response = await submitAgencyRequest({
+      requesterEmail: "not-an-email",
+      agencyName: "Invalid Email Agency Request",
+    });
+
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+        issues?: Array<{ path?: string; message: string }>;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+    expect(body.details?.issues?.some(issue => issue.path?.includes("requesterEmail"))).toBe(true);
+    expect(await fixture.prisma.agencyRequest.count()).toBe(beforeCount);
+  });
+
+  it("rejects empty agency name", async () => {
+    const beforeCount = await fixture.prisma.agencyRequest.count();
+
+    const response = await submitAgencyRequest({
+      requesterEmail: "empty-name@example.com",
+      agencyName: "",
+    });
+
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+        issues?: Array<{ path?: string; message: string }>;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+    expect(body.details?.issues?.some(issue => issue.path?.includes("agencyName"))).toBe(true);
+    expect(await fixture.prisma.agencyRequest.count()).toBe(beforeCount);
+  });
+
+  it("rejects invalid requester phone", async () => {
+    const beforeCount = await fixture.prisma.agencyRequest.count();
+
+    const response = await submitAgencyRequest({
+      requesterEmail: "invalid-phone@example.com",
+      requesterPhone: "123",
+      agencyName: "Invalid Phone Agency Request",
+    });
+
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+        issues?: Array<{ path?: string; message: string }>;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+    expect(body.details?.issues?.some(issue => issue.path?.includes("requesterPhone"))).toBe(true);
+    expect(await fixture.prisma.agencyRequest.count()).toBe(beforeCount);
   });
 });
