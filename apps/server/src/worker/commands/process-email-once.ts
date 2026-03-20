@@ -2,7 +2,7 @@ import process from "node:process";
 
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { makePgBoss, makePgBossJobRuntime } from "@/infrastructure/jobs/pgboss";
-import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
+import { resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
 
@@ -14,11 +14,6 @@ async function main() {
   const runtime = makePgBossJobRuntime(boss);
   attachJobRuntimeLogging(runtime);
   await runtime.start();
-  const emailDlq = JobDeadLetters[JobTypes.EmailSend];
-  if (emailDlq) {
-    await runtime.ensureQueue(emailDlq);
-    WorkerLog.queueEnsured(emailDlq);
-  }
   await runtime.ensureQueue(
     JobTypes.EmailSend,
     resolveQueueOptions(JobTypes.EmailSend),

@@ -9,7 +9,6 @@ export type JobQueueOptions = {
   readonly retryDelay?: number;
   readonly retryBackoff?: boolean;
   readonly retryDelayMax?: number;
-  readonly deadLetter?: string;
 };
 
 export type QueueJob<TData = unknown> = {
