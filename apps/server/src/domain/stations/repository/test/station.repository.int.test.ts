@@ -1,11 +1,9 @@
-import { PrismaPg } from "@prisma/adapter-pg";
 import { Effect, Either, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeStationRepository } from "../station.repository";
 
@@ -20,73 +18,33 @@ const australiaCoords = {
 };
 
 describe("stationRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture({
+    seedData: async ({ prisma }) => {
+      await prisma.$executeRaw`
+        INSERT INTO "GeoBoundary" ("code", "geom")
+        VALUES (
+          'VN',
+          ST_Multi(
+            ST_GeomFromText(
+              'POLYGON((102 8, 110.5 8, 110.5 23.5, 102 23.5, 102 8))',
+              4326
+            )
+          )::geometry(MultiPolygon, 4326)
+        )
+        ON CONFLICT ("code") DO UPDATE
+          SET "geom" = EXCLUDED."geom"
+      `;
+    },
+  });
   let repo: ReturnType<typeof makeStationRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeStationRepository(client);
-
-    await client.$executeRaw`
-      INSERT INTO "GeoBoundary" ("code", "geom")
-      VALUES (
-        'VN',
-        ST_Multi(
-          ST_GeomFromText(
-            'POLYGON((102 8, 110.5 8, 110.5 23.5, 102 23.5, 102 8))',
-            4326
-          )
-        )::geometry(MultiPolygon, 4326)
-      )
-      ON CONFLICT ("code") DO UPDATE
-        SET "geom" = EXCLUDED."geom"
-    `;
-  }, 60000);
-
-  afterEach(async () => {
-    await client.station.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
+  beforeAll(() => {
+    repo = makeStationRepository(fixture.prisma);
   });
 
   const createStation = async (args: { name: string; latitude: number; longitude: number }) => {
-    const id = uuidv7();
-    const address = "123 Test St";
-    const capacity = 10;
-    const updatedAt = new Date();
-
-    await client.$executeRaw`
-      INSERT INTO "Station" (
-        "id",
-        "name",
-        "address",
-        "capacity",
-        "latitude",
-        "longitude",
-        "updated_at",
-        "position"
-      ) VALUES (
-        ${id},
-        ${args.name},
-        ${address},
-        ${capacity},
-        ${args.latitude},
-        ${args.longitude},
-        ${updatedAt},
-        ST_SetSRID(ST_MakePoint(${args.longitude}, ${args.latitude}), 4326)::geography
-      )
-    `;
-
-    return { id };
+    const station = await fixture.factories.station(args);
+    return { id: station.id };
   };
 
   it("listWithOffset returns stations", async () => {
@@ -262,18 +220,21 @@ describe("stationRepository Integration", () => {
 
   it("returns StationRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makeStationRepository(broken.client);
+    try {
+      const brokenRepo = makeStationRepository(broken.client);
 
-    const result = await Effect.runPromise(
-      brokenRepo.listWithOffset({}, { page: 1, pageSize: 10 }).pipe(Effect.either),
-    );
+      const result = await Effect.runPromise(
+        brokenRepo.listWithOffset({}, { page: 1, pageSize: 10 }).pipe(Effect.either),
+      );
 
-    if (Either.isRight(result)) {
-      throw new Error("Expected failure but got success");
+      if (Either.isRight(result)) {
+        throw new Error("Expected failure but got success");
+      }
+      expect(result.left._tag).toBe("StationRepositoryError");
     }
-    expect(result.left._tag).toBe("StationRepositoryError");
-
-    await broken.stop();
+    finally {
+      await broken.stop();
+    }
   });
 
   it("create returns StationOutsideSupportedArea for coordinates outside VN boundary", async () => {

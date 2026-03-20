@@ -1,42 +1,30 @@
-import { PrismaPg } from "@prisma/adapter-pg";
+import type { Either } from "effect";
+
 import bcrypt from "bcrypt";
-import { Effect, Either, Layer, Option } from "effect";
-import Redis from "ioredis";
+import { Effect, Layer, Option } from "effect";
 import jwt from "jsonwebtoken";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { env } from "@/config/env";
 import { makeUserRepository } from "@/domain/users/repository/user.repository";
-import { startRedis } from "@/test/db/redis";
-import { getTestDatabase } from "@/test/db/test-database";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { runEffectWithLayer } from "@/test/effect/run";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
+import { setupRedisIntFixture } from "@/test/redis/redis-int-fixture";
 
 import { OTP_MAX_ATTEMPTS } from "../../config";
 import { makeAuthEventRepository } from "../../repository/auth-event.repository";
 import { authRepositoryFactory } from "../../repository/auth.repository";
 import { AuthServiceTag, makeAuthService } from "../auth.service";
 
-function expectLeftTag<E extends { _tag: string }>(result: Either.Either<unknown, E>, tag: E["_tag"]) {
-  if (Either.isRight(result)) {
-    throw new Error(`Expected Left ${tag}, got Right`);
-  }
-  expect(result.left._tag).toBe(tag);
-}
-
 function expectInvalidOtp(result: Either.Either<unknown, { _tag: string; retriable?: boolean }>) {
-  if (Either.isRight(result)) {
-    throw new Error("Expected Left InvalidOtp, got Right");
-  }
-  expect(result.left._tag).toBe("InvalidOtp");
-  return result.left as { _tag: "InvalidOtp"; retriable: boolean };
+  const error = expectLeftTag(result, "InvalidOtp") as { _tag: "InvalidOtp"; retriable: boolean };
+  return error;
 }
 
 function expectInvalidResetToken(result: Either.Either<unknown, { _tag: string }>) {
-  if (Either.isRight(result)) {
-    throw new Error("Expected Left InvalidResetToken, got Right");
-  }
-  expect(result.left._tag).toBe("InvalidResetToken");
+  expectLeftTag(result, "InvalidResetToken");
 }
 
 function decodeSessionId(refreshToken: string) {
@@ -49,58 +37,30 @@ function decodeSessionId(refreshToken: string) {
 }
 
 describe("authService Integration", () => {
-  let pgContainer: { stop: () => Promise<void>; url: string };
-  let redisContainer: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
-  let redisClient: Redis;
+  const fixture = setupPrismaIntFixture();
+  const redis = setupRedisIntFixture();
   let depsLayer: Layer.Layer<AuthServiceTag>;
 
   let authRepo: ReturnType<typeof authRepositoryFactory>;
   let userRepo: ReturnType<typeof makeUserRepository>;
 
   beforeAll(async () => {
-    pgContainer = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: pgContainer.url });
-    client = new PrismaClient({ adapter });
-
-    redisContainer = await startRedis();
-    redisClient = new Redis(redisContainer.url);
-
-    authRepo = authRepositoryFactory(redisClient);
-    userRepo = makeUserRepository(client);
+    authRepo = authRepositoryFactory(redis.client);
+    userRepo = makeUserRepository(fixture.prisma);
 
     const authService = makeAuthService({
       authRepo,
-      authEventRepo: makeAuthEventRepository(client),
+      authEventRepo: makeAuthEventRepository(fixture.prisma),
       userRepo,
-      client,
+      client: fixture.prisma,
     });
 
     depsLayer = Layer.succeed(AuthServiceTag, AuthServiceTag.make(authService));
   }, 60000);
 
-  afterEach(async () => {
-    await client.authEvent.deleteMany({});
-    await client.user.deleteMany({});
-    await redisClient.flushdb();
-  });
-
-  afterAll(async () => {
-    if (redisClient)
-      await redisClient.quit();
-    if (redisContainer)
-      await redisContainer.stop();
-    if (client)
-      await client.$disconnect();
-    if (pgContainer)
-      await pgContainer.stop();
-  });
-
   const runWithService = <A, E>(
     eff: Effect.Effect<A, E, AuthServiceTag>,
-  ) =>
-    Effect.runPromise(eff.pipe(Effect.provide(depsLayer)));
+  ) => runEffectWithLayer(eff, depsLayer);
 
   const createUser = async (args: {
     email: string;
@@ -110,7 +70,7 @@ describe("authService Integration", () => {
     const id = uuidv7();
     const passwordHash = await bcrypt.hash(args.password, env.BCRYPT_SALT_ROUNDS);
 
-    await client.user.create({
+    await fixture.prisma.user.create({
       data: {
         id,
         fullname: "Auth User",

@@ -1,16 +1,21 @@
 import { Effect, Either, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeWalletRepository } from "../wallet.repository";
-import { setupWalletRepositoryTests } from "./test-helpers";
 
 describe("wallet Repository - Race Conditions", () => {
-  const { getClient, getRepo, createUser } = setupWalletRepositoryTests();
+  const fixture = setupPrismaIntFixture();
+  let repo: ReturnType<typeof makeWalletRepository>;
+
+  beforeAll(() => {
+    repo = makeWalletRepository(fixture.prisma);
+  });
 
   it("concurrent decreaseBalance operations maintain consistency", async () => {
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
@@ -40,34 +45,32 @@ describe("wallet Repository - Race Conditions", () => {
   });
 
   it("concurrent reserveBalance operations maintain consistency", async () => {
-    const client = getClient();
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     const wallet = await Effect.runPromise(repo.createForUser(userId));
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     const results = await Promise.allSettled([
-      client.$transaction(tx =>
+      fixture.prisma.$transaction(tx =>
         Effect.runPromise(
           makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
-      client.$transaction(tx =>
+      fixture.prisma.$transaction(tx =>
         Effect.runPromise(
           makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
-      client.$transaction(tx =>
+      fixture.prisma.$transaction(tx =>
         Effect.runPromise(
           makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
-      client.$transaction(tx =>
+      fixture.prisma.$transaction(tx =>
         Effect.runPromise(
           makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
-      client.$transaction(tx =>
+      fixture.prisma.$transaction(tx =>
         Effect.runPromise(
           makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
@@ -84,14 +87,13 @@ describe("wallet Repository - Race Conditions", () => {
     expect(successful).toBeGreaterThanOrEqual(3);
     expect(failed).toBeGreaterThan(0);
 
-    const updated = await client.wallet.findUnique({ where: { id: wallet.id } });
+    const updated = await fixture.prisma.wallet.findUnique({ where: { id: wallet.id } });
     const expectedReserved = successful * 30;
     expect(updated!.reservedBalance.toString()).toBe(expectedReserved.toString());
   });
 
   it("concurrent increase operations with same hash prevent duplicates", async () => {
-    const repo = getRepo();
-    const { id: userId } = await createUser();
+    const { id: userId } = await fixture.factories.user();
     await Effect.runPromise(repo.createForUser(userId));
 
     const hash = `deposit:${uuidv7()}`;

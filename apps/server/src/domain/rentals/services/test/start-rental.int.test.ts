@@ -1,11 +1,8 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Layer } from "effect";
+import { Effect, Layer } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import type {
-  SubscriptionServiceTag,
-} from "@/domain/subscriptions";
+import type { SubscriptionServiceTag } from "@/domain/subscriptions";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { makeRentalRepository, RentalRepository, startRentalUseCase } from "@/domain/rentals";
@@ -16,296 +13,150 @@ import {
 } from "@/domain/subscriptions";
 import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
-import logger from "@/lib/logger";
-import { getTestDatabase } from "@/test/db/test-database";
-import { PrismaClient } from "generated/prisma/client";
-
-type TestContainer = { stop: () => Promise<void>; url: string };
+import { expectLeftTag, expectRight } from "@/test/effect/assertions";
+import { runEffectEither, runEffectEitherWithLayer } from "@/test/effect/run";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
+import { givenActiveRental, givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
 describe("startRentalUseCase Integration", () => {
-  let container: TestContainer;
-  let client: PrismaClient;
-  let rentalRepo: ReturnType<typeof makeRentalRepository>;
-  let bikeRepo: ReturnType<typeof makeBikeRepository>;
-  let walletRepo: ReturnType<typeof makeWalletRepository>;
+  const fixture = setupPrismaIntFixture();
   let depsLayer: Layer.Layer<
     Prisma | RentalRepository | BikeRepository | WalletRepository | SubscriptionServiceTag
   >;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-
-    rentalRepo = makeRentalRepository(client);
-    bikeRepo = makeBikeRepository(client);
-    walletRepo = makeWalletRepository(client);
+  beforeAll(() => {
+    const rentalRepo = makeRentalRepository(fixture.prisma);
+    const bikeRepo = makeBikeRepository(fixture.prisma);
+    const walletRepo = makeWalletRepository(fixture.prisma);
     const subscriptionRepoLayer = Layer.succeed(
       SubscriptionRepository,
-      makeSubscriptionRepository(client),
+      makeSubscriptionRepository(fixture.prisma),
     );
     const subscriptionServiceLayer = SubscriptionServiceLive.pipe(
       Layer.provide(subscriptionRepoLayer),
     );
 
     depsLayer = Layer.mergeAll(
-      Layer.succeed(Prisma, Prisma.make({ client })),
+      Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma })),
       Layer.succeed(RentalRepository, RentalRepository.make(rentalRepo)),
       Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
       Layer.succeed(WalletRepository, walletRepo),
       subscriptionRepoLayer,
       subscriptionServiceLayer,
     );
-  }, 60000);
-  afterEach(async () => {
-    await client.rental.deleteMany({});
-    await client.walletTransaction.deleteMany({});
-    await client.wallet.deleteMany({});
-    await client.bike.deleteMany({});
-    await client.station.deleteMany({});
-    await client.user.deleteMany({});
   });
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
-  });
-
-  const provideDeps = <A, E>(
-    eff: Effect.Effect<
-      A,
-      E,
-      Prisma | RentalRepository | BikeRepository | WalletRepository | SubscriptionServiceTag
-    >,
-  ) => eff.pipe(Effect.provide(depsLayer));
-
-  const createUser = async () => {
-    const id = uuidv7();
-    await client.user.create({
-      data: {
-        id,
-        fullname: "Test User",
-        email: `user-${id}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
-    });
-    return { id };
-  };
-
-  const createStation = async (
-    overrides?: Partial<{ id: string; name: string }>,
-  ) => {
-    const id = overrides?.id ?? uuidv7();
-    const name = overrides?.name ?? `Station ${id}`;
-    const address = "123 Test St";
-    const capacity = 10;
-    const latitude = 10.762622;
-    const longitude = 106.660172;
-    const updatedAt = new Date();
-
-    await client.$executeRaw`
-      INSERT INTO "Station" (
-        "id",
-        "name",
-        "address",
-        "capacity",
-        "latitude",
-        "longitude",
-        "updated_at",
-        "position"
-      ) VALUES (
-        ${id},
-        ${name},
-        ${address},
-        ${capacity},
-        ${latitude},
-        ${longitude},
-        ${updatedAt},
-        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
-      )
-    `;
-
-    return { id };
-  };
-
-  const createBike = async (input: {
-    stationId: string | null;
-    status?:
-      | "AVAILABLE"
-      | "BOOKED"
-      | "BROKEN"
-      | "MAINTAINED"
-      | "RESERVED"
-      | "UNAVAILABLE";
-  }) => {
-    const id = uuidv7();
-    await client.bike.create({
-      data: {
-        id,
-        chipId: `chip-${id}`,
-        stationId: input.stationId,
-        supplierId: null,
-        status: input.status ?? "AVAILABLE",
-        updatedAt: new Date(),
-      },
-    });
-    return { id };
-  };
-
-  const createWallet = async (userId: string, balance: bigint) => {
-    await client.wallet.create({
-      data: {
-        userId,
-        balance,
-        status: "ACTIVE",
-      },
-    });
-  };
-
-  const createActiveRental = async (args: {
-    userId: string;
-    bikeId: string;
-    startStationId: string;
-  }) => {
-    await client.rental.create({
-      data: {
-        userId: args.userId,
-        bikeId: args.bikeId,
-        startStationId: args.startStationId,
-        startTime: new Date(),
-        status: "RENTED",
-        updatedAt: new Date(),
-      },
-    });
-  };
 
   const runStartRental = (args: {
     userId: string;
     bikeId: string;
     startStationId: string;
-  }) =>
-    Effect.runPromise(
-      provideDeps(
-        startRentalUseCase({
-          userId: args.userId,
-          bikeId: args.bikeId,
-          startStationId: args.startStationId,
-          startTime: new Date(),
-        }).pipe(Effect.either),
-      ),
-    );
-
-  const expectLeftTag = <E extends { _tag: string }>(
-    result: Either.Either<unknown, E>,
-    tag: E["_tag"],
-  ) => {
-    if (Either.isRight(result)) {
-      throw new Error(`Expected Left ${tag}, got Right`);
-    }
-    expect(result.left._tag).toBe(tag);
-  };
+  }) => runEffectEitherWithLayer(
+    startRentalUseCase({
+      userId: args.userId,
+      bikeId: args.bikeId,
+      startStationId: args.startStationId,
+      startTime: new Date(),
+    }),
+    depsLayer,
+  );
 
   it("creates a rental and books the bike", async () => {
-    const { id: userId } = await createUser();
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, 5000n);
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
 
     const result = await runStartRental({
-      userId,
-      bikeId,
-      startStationId: stationId,
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
     });
 
-    if (Either.isLeft(result)) {
-      throw new Error(`Expected Right, got ${result.left._tag}`);
-    }
+    const rental = expectRight(result);
+    expect(rental.status).toBe("RENTED");
+    expect(rental.userId).toBe(user.id);
+    expect(rental.bikeId).toBe(bike.id);
 
-    expect(result.right.status).toBe("RENTED");
-    expect(result.right.userId).toBe(userId);
-    expect(result.right.bikeId).toBe(bikeId);
-
-    const bike = await client.bike.findUnique({ where: { id: bikeId } });
-    expect(bike?.status).toBe("BOOKED");
+    const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
+    expect(updatedBike?.status).toBe("BOOKED");
   });
 
   it("fails when user already has an active rental", async () => {
-    const { id: userId } = await createUser();
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, 5000n);
-    await createActiveRental({ userId, bikeId, startStationId: stationId });
+    const { user, station, bike } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
 
     const result = await runStartRental({
-      userId,
-      bikeId,
-      startStationId: stationId,
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
     });
+
     expectLeftTag(result, "ActiveRentalExists");
   });
 
   it("fails when bike already rented by someone else", async () => {
-    const { id: userId } = await createUser();
-    const { id: otherUserId } = await createUser();
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, 5000n);
-    await createWallet(otherUserId, 5000n);
-    await createActiveRental({
-      userId: otherUserId,
-      bikeId,
-      startStationId: stationId,
+    const activeRental = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 5000n },
     });
 
     const result = await runStartRental({
-      userId,
-      bikeId,
-      startStationId: stationId,
+      userId: user.id,
+      bikeId: activeRental.bike.id,
+      startStationId: activeRental.station.id,
     });
+
     expectLeftTag(result, "BikeAlreadyRented");
   });
 
   it("fails when bike is missing", async () => {
-    const { id: userId } = await createUser();
-    const { id: stationId } = await createStation();
-    await createWallet(userId, 5000n);
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const station = await fixture.factories.station();
 
     const result = await runStartRental({
-      userId,
+      userId: user.id,
       bikeId: uuidv7(),
-      startStationId: stationId,
+      startStationId: station.id,
     });
+
     expectLeftTag(result, "BikeNotFound");
   });
 
   it("fails when bike has no station", async () => {
-    const { id: userId } = await createUser();
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike({ stationId: null });
-    await createWallet(userId, 5000n);
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: null });
 
     const result = await runStartRental({
-      userId,
-      bikeId,
-      startStationId: stationId,
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
     });
+
     expectLeftTag(result, "BikeMissingStation");
   });
 
   it("fails when bike is in a different station", async () => {
-    const { id: userId } = await createUser();
-    const { id: startStationId } = await createStation();
-    const { id: otherStationId } = await createStation({
-      name: `Station ${uuidv7()}`,
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 5000n },
     });
-    const { id: bikeId } = await createBike({ stationId: otherStationId });
-    await createWallet(userId, 5000n);
+    const startStation = await fixture.factories.station();
+    const otherStation = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: otherStation.id });
 
-    const result = await runStartRental({ userId, bikeId, startStationId });
+    const result = await runStartRental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: startStation.id,
+    });
+
     expectLeftTag(result, "BikeNotFoundInStation");
   });
 
@@ -316,113 +167,100 @@ describe("startRentalUseCase Integration", () => {
     { status: "RESERVED", tag: "BikeIsReserved" },
     { status: "UNAVAILABLE", tag: "BikeUnavailable" },
   ] as const)("fails when bike status is $status", async ({ status, tag }) => {
-    const { id: userId } = await createUser();
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike({ stationId, status });
-    await createWallet(userId, 5000n);
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id, status });
 
     const result = await runStartRental({
-      userId,
-      bikeId,
-      startStationId: stationId,
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
     });
+
     expectLeftTag(result, tag);
   });
 
   it("fails when user wallet is missing", async () => {
-    const { id: userId } = await createUser();
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike({ stationId });
+    const user = await fixture.factories.user();
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
 
     const result = await runStartRental({
-      userId,
-      bikeId,
-      startStationId: stationId,
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
     });
+
     expectLeftTag(result, "UserWalletNotFound");
   });
 
   it("fails when wallet balance is insufficient", async () => {
-    const { id: userId } = await createUser();
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, 1000n);
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 1000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
 
     const result = await runStartRental({
-      userId,
-      bikeId,
-      startStationId: stationId,
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
     });
+
     expectLeftTag(result, "InsufficientBalanceToRent");
   });
 
   it("emits RentalUniqueViolation on duplicate active rentals (repo)", async () => {
-    const { id: userId } = await createUser();
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike({ stationId });
+    const user = await fixture.factories.user();
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id });
 
-    const byBike = await client.$transaction(async (tx) => {
+    const byBike = await fixture.prisma.$transaction(async (tx) => {
       const txRentalRepo = makeRentalRepository(tx);
-      const first = await Effect.runPromise(
+      const first = await runEffectEither(
         txRentalRepo.createRental({
-          userId,
-          bikeId,
-          startStationId: stationId,
+          userId: user.id,
+          bikeId: bike.id,
+          startStationId: station.id,
           startTime: new Date(),
-        }).pipe(Effect.either),
+        }),
       );
 
-      if (Either.isLeft(first)) {
-        throw new Error(`Expected first create to succeed, got ${first.left._tag}`);
-      }
+      expectRight(first);
 
-      return Effect.runPromise(
+      return runEffectEither(
         txRentalRepo.createRental({
           userId: uuidv7(),
-          bikeId,
-          startStationId: stationId,
+          bikeId: bike.id,
+          startStationId: station.id,
           startTime: new Date(),
-        }).pipe(Effect.either),
+        }),
       );
     });
 
-    if (Either.isRight(byBike)) {
-      throw new Error("Expected unique violation by bike, got Right");
-    }
-    logger.info(
-      { error: byBike.left, cause: (byBike.left as { cause?: unknown }).cause },
-      "RentalUniqueViolation (by bike) shape",
-    );
-    expect(byBike.left._tag).toBe("RentalUniqueViolation");
+    expectLeftTag(byBike, "RentalUniqueViolation");
 
-    const bike2Id = (await createBike({ stationId })).id;
-    const byUser = await client.$transaction(async (tx) => {
+    const bike2 = await fixture.factories.bike({ stationId: station.id });
+    const byUser = await fixture.prisma.$transaction(async (tx) => {
       const txRentalRepo = makeRentalRepository(tx);
-      return Effect.runPromise(
+      return runEffectEither(
         Effect.all([
           txRentalRepo.createRental({
-            userId,
-            bikeId: bike2Id,
-            startStationId: stationId,
+            userId: user.id,
+            bikeId: bike2.id,
+            startStationId: station.id,
             startTime: new Date(),
           }),
           txRentalRepo.createRental({
-            userId,
+            userId: user.id,
             bikeId: uuidv7(),
-            startStationId: stationId,
+            startStationId: station.id,
             startTime: new Date(),
           }),
-        ]).pipe(Effect.either),
+        ]),
       );
     });
 
-    if (Either.isRight(byUser)) {
-      throw new Error("Expected unique violation by user, got Right");
-    }
-    logger.info(
-      { error: byUser.left, cause: (byUser.left as { cause?: unknown }).cause },
-      "RentalUniqueViolation (by user) shape",
-    );
-    expect(byUser.left._tag).toBe("RentalUniqueViolation");
+    expectLeftTag(byUser, "RentalUniqueViolation");
   });
 });

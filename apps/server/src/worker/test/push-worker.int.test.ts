@@ -1,13 +1,10 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import process from "node:process";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { QueueJob } from "@/infrastructure/jobs/ports";
 
-import { getTestDatabase } from "@/test/db/test-database";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { handlePushSend } from "@/worker/push-worker";
-import { PrismaClient } from "generated/prisma/client";
-
-type TestContainer = { stop: () => Promise<void>; url: string };
 
 const { sendPushNotificationsAsyncMock } = vi.hoisted(() => ({
   sendPushNotificationsAsyncMock: vi.fn(),
@@ -40,37 +37,20 @@ function makeJob(data: unknown): QueueJob {
 }
 
 describe("push worker integration", () => {
-  let container: TestContainer;
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-  }, 60000);
+  beforeAll(() => {
+    process.env.TEST_DATABASE_URL = fixture.url;
+  });
 
   beforeEach(async () => {
     sendPushNotificationsAsyncMock.mockReset();
-    await client.pushToken.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client) {
-      await client.$disconnect();
-    }
-    if (container) {
-      await container.stop();
-    }
   });
 
   it("sends push and deactivates invalid/unregistered tokens", async () => {
-    const user = await client.user.create({
-      data: {
-        fullname: "Push User",
-        email: "push-user@example.com",
-        passwordHash: "hash",
-      },
+    const user = await fixture.factories.user({
+      fullname: "Push User",
+      email: "push-user@example.com",
     });
 
     const invalidToken = "not-a-valid-expo-token";
@@ -78,7 +58,7 @@ describe("push worker integration", () => {
     const unregisteredToken = "ExponentPushToken[unregistered-token]";
     const errorToken = "ExponentPushToken[error-token]";
 
-    await client.pushToken.createMany({
+    await fixture.prisma.pushToken.createMany({
       data: [
         { userId: user.id, token: invalidToken, updatedAt: new Date() },
         { userId: user.id, token: deliveredToken, updatedAt: new Date() },
@@ -122,7 +102,7 @@ describe("push worker integration", () => {
 
     expect(sendPushNotificationsAsyncMock).toHaveBeenCalledTimes(1);
 
-    const rows = await client.pushToken.findMany({
+    const rows = await fixture.prisma.pushToken.findMany({
       where: { userId: user.id },
       select: { token: true, isActive: true },
     });
@@ -135,12 +115,9 @@ describe("push worker integration", () => {
   });
 
   it("is no-op when user has no active tokens", async () => {
-    const user = await client.user.create({
-      data: {
-        fullname: "No Token User",
-        email: "no-token-user@example.com",
-        passwordHash: "hash",
-      },
+    const user = await fixture.factories.user({
+      fullname: "No Token User",
+      email: "no-token-user@example.com",
     });
 
     await handlePushSend(
@@ -159,16 +136,13 @@ describe("push worker integration", () => {
   });
 
   it("continues when provider fails and keeps tokens active", async () => {
-    const user = await client.user.create({
-      data: {
-        fullname: "Provider Failure User",
-        email: "provider-failure@example.com",
-        passwordHash: "hash",
-      },
+    const user = await fixture.factories.user({
+      fullname: "Provider Failure User",
+      email: "provider-failure@example.com",
     });
 
     const token = "ExponentPushToken[provider-failure-token]";
-    await client.pushToken.create({
+    await fixture.prisma.pushToken.create({
       data: { userId: user.id, token, updatedAt: new Date() },
     });
 
@@ -188,7 +162,7 @@ describe("push worker integration", () => {
       ),
     ).resolves.toBeUndefined();
 
-    const row = await client.pushToken.findUnique({
+    const row = await fixture.prisma.pushToken.findUnique({
       where: { token },
       select: { isActive: true },
     });

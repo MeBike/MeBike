@@ -1,62 +1,24 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Option } from "effect";
+import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeSubscriptionRepository } from "../subscription.repository";
 
 describe("subscriptionRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makeSubscriptionRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeSubscriptionRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.subscription.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
+  beforeAll(() => {
+    repo = makeSubscriptionRepository(fixture.prisma);
   });
 
   const createUser = async () => {
-    const id = uuidv7();
-    await client.user.create({
-      data: {
-        id,
-        fullname: "Subscription User",
-        email: `user-${id}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
-    });
-    return { id };
-  };
-
-  const expectLeftTag = <E extends { _tag: string }>(
-    result: Either.Either<unknown, E>,
-    tag: E["_tag"],
-  ) => {
-    if (Either.isRight(result)) {
-      throw new Error(`Expected Left ${tag}, got Right`);
-    }
-    expect(result.left._tag).toBe(tag);
+    const user = await fixture.factories.user({ fullname: "Subscription User" });
+    return { id: user.id };
   };
 
   it("createPending + findById returns subscription", async () => {
@@ -239,22 +201,25 @@ describe("subscriptionRepository Integration", () => {
 
   it("returns SubscriptionRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makeSubscriptionRepository(broken.client);
+    try {
+      const brokenRepo = makeSubscriptionRepository(broken.client);
 
-    const result = await Effect.runPromise(
-      brokenRepo.findById(uuidv7()).pipe(Effect.either),
-    );
+      const result = await Effect.runPromise(
+        brokenRepo.findById(uuidv7()).pipe(Effect.either),
+      );
 
-    expectLeftTag(result, "SubscriptionRepositoryError");
-
-    await broken.stop();
+      expectLeftTag(result, "SubscriptionRepositoryError");
+    }
+    finally {
+      await broken.stop();
+    }
   });
 
   it("enforces unique ACTIVE subscription per user (partial unique index)", async () => {
     const { id: userId } = await createUser();
     const now = new Date();
 
-    await client.subscription.create({
+    await fixture.prisma.subscription.create({
       data: {
         id: uuidv7(),
         userId,
@@ -269,7 +234,7 @@ describe("subscriptionRepository Integration", () => {
     });
 
     await expect(
-      client.subscription.create({
+      fixture.prisma.subscription.create({
         data: {
           id: uuidv7(),
           userId,
@@ -284,7 +249,7 @@ describe("subscriptionRepository Integration", () => {
       }),
     ).rejects.toBeDefined();
 
-    const activeCount = await client.subscription.count({
+    const activeCount = await fixture.prisma.subscription.count({
       where: { userId, status: "ACTIVE" },
     });
     expect(activeCount).toBe(1);

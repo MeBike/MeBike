@@ -1,111 +1,32 @@
-import type { Kysely } from "kysely";
-
-import { PrismaPg } from "@prisma/adapter-pg";
 import { Effect, Either } from "effect";
-import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-
-import type { DB } from "generated/kysely/types";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
-import { getTestDatabase } from "@/test/db/test-database";
-import { PrismaClient } from "generated/prisma/client";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeBikeStatsRepository } from "../bike-stats.repository";
 
 describe("bikeStatsRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
-  let testDb: Kysely<DB>;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makeBikeStatsRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-
-    testDb = makeTestDb(container.url);
-    repo = makeBikeStatsRepository(testDb);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.rental.deleteMany({});
-    await client.bike.deleteMany({});
-    await client.station.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (testDb)
-      await destroyTestDb(testDb);
-    if (container)
-      await container.stop();
+  beforeAll(() => {
+    repo = makeBikeStatsRepository(fixture.db);
   });
 
   const createUser = async () => {
-    const id = uuidv7();
-    await client.user.create({
-      data: {
-        id,
-        fullname: "Stats User",
-        email: `user-${id}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
+    const user = await fixture.factories.user({
+      fullname: "Stats User",
     });
-    return { id };
+    return { id: user.id };
   };
 
   const createStation = async (name: string) => {
-    const id = uuidv7();
-    const address = "123 Test St";
-    const capacity = 10;
-    const latitude = 10.0;
-    const longitude = 20.0;
-    const updatedAt = new Date();
-
-    await client.$executeRaw`
-      INSERT INTO "Station" (
-        "id",
-        "name",
-        "address",
-        "capacity",
-        "latitude",
-        "longitude",
-        "updated_at",
-        "position"
-      ) VALUES (
-        ${id},
-        ${name},
-        ${address},
-        ${capacity},
-        ${latitude},
-        ${longitude},
-        ${updatedAt},
-        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
-      )
-    `;
-
-    return { id };
+    return fixture.factories.station({ name, latitude: 10.0, longitude: 20.0 });
   };
 
   const createBike = async (stationId: string, status: "AVAILABLE" | "BOOKED" | "UNAVAILABLE") => {
-    const id = uuidv7();
-    await client.bike.create({
-      data: {
-        id,
-        chipId: `chip-${id}`,
-        stationId,
-        supplierId: null,
-        status,
-        updatedAt: new Date(),
-      },
-    });
-    return { id };
+    return fixture.factories.bike({ stationId, status });
   };
 
   const createRental = async (input: {
@@ -118,20 +39,16 @@ describe("bikeStatsRepository Integration", () => {
     duration: number;
     totalPrice: string;
   }) => {
-    await client.rental.create({
-      data: {
-        id: uuidv7(),
-        userId: input.userId,
-        bikeId: input.bikeId,
-        startStationId: input.startStationId,
-        endStationId: input.endStationId,
-        startTime: input.startTime,
-        endTime: input.endTime,
-        duration: input.duration,
-        totalPrice: input.totalPrice,
-        status: "COMPLETED",
-        updatedAt: input.endTime,
-      },
+    await fixture.factories.rental({
+      userId: input.userId,
+      bikeId: input.bikeId,
+      startStationId: input.startStationId,
+      endStationId: input.endStationId,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      duration: input.duration,
+      totalPrice: input.totalPrice,
+      status: "COMPLETED",
     });
   };
 
@@ -307,20 +224,23 @@ describe("bikeStatsRepository Integration", () => {
       "postgresql://invalid:invalid@localhost:54321/invalid",
       { connectionTimeoutMillis: 100 },
     );
-    const brokenRepo = makeBikeStatsRepository(invalidDb);
+    try {
+      const brokenRepo = makeBikeStatsRepository(invalidDb);
 
-    const result = await Effect.runPromise(
-      brokenRepo.getRentalStats().pipe(Effect.either),
-    );
+      const result = await Effect.runPromise(
+        brokenRepo.getRentalStats().pipe(Effect.either),
+      );
 
-    if (Either.isLeft(result)) {
-      expect(result.left._tag).toBe("BikeRepositoryError");
-      expect(result.left.operation).toBe("stats.rentalStats");
+      if (Either.isLeft(result)) {
+        expect(result.left._tag).toBe("BikeRepositoryError");
+        expect(result.left.operation).toBe("stats.rentalStats");
+      }
+      else {
+        throw new Error("Expected failure but got success");
+      }
     }
-    else {
-      throw new Error("Expected failure but got success");
+    finally {
+      await destroyTestDb(invalidDb);
     }
-
-    await destroyTestDb(invalidDb);
   });
 });

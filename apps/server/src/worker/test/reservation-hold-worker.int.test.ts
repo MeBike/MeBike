@@ -1,18 +1,15 @@
 import { JobTypes } from "@mebike/shared/contracts/server/jobs";
-import { PrismaPg } from "@prisma/adapter-pg";
+import process from "node:process";
 import { uuidv7 } from "uuidv7";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
-import { getTestDatabase } from "@/test/db/test-database";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import {
   handleReservationExpireHold,
   handleReservationNotifyNearExpiry,
 } from "@/worker/reservation-hold-worker";
-import { PrismaClient } from "generated/prisma/client";
-
-type TestContainer = { stop: () => Promise<void>; url: string };
 
 function makeBossMock(): {
   readonly producer: JobProducer;
@@ -35,86 +32,46 @@ function makeReservationJob(reservationId: string): QueueJob {
   };
 }
 
-async function createStation(client: PrismaClient, input: {
-  id: string;
+async function createStation(fixture: ReturnType<typeof setupPrismaIntFixture>, input: {
   name: string;
   address: string;
   capacity: number;
   latitude: number;
   longitude: number;
 }) {
-  await client.$executeRaw`
-    INSERT INTO "Station" (id, name, address, capacity, latitude, longitude, updated_at, position)
-    VALUES (
-      ${input.id},
-      ${input.name},
-      ${input.address},
-      ${input.capacity},
-      ${input.latitude},
-      ${input.longitude},
-      ${new Date()},
-      ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography
-    )
-  `;
+  return fixture.factories.station(input);
 }
 
 describe("reservation hold worker integration", () => {
-  let container: TestContainer;
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-  }, 60000);
-
-  beforeEach(async () => {
-    await client.rental.deleteMany({});
-    await client.reservation.deleteMany({});
-    await client.bike.deleteMany({});
-    await client.station.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client) {
-      await client.$disconnect();
-    }
-    if (container) {
-      await container.stop();
-    }
+  beforeAll(() => {
+    process.env.TEST_DATABASE_URL = fixture.url;
   });
 
   it("enqueues push job for near-expiry reservation", async () => {
-    const user = await client.user.create({
-      data: {
-        fullname: "Near Expiry User",
-        email: "near-expiry-user@example.com",
-        passwordHash: "hash",
-      },
+    const user = await fixture.factories.user({
+      fullname: "Near Expiry User",
+      email: "near-expiry-user@example.com",
     });
-    const stationId = uuidv7();
-    await createStation(client, {
-      id: stationId,
+    const station = await createStation(fixture, {
       name: "Near Expiry Station",
       address: "District 2",
       capacity: 20,
       latitude: 10.779783,
       longitude: 106.699018,
     });
-    const bike = await client.bike.create({
-      data: {
-        chipId: "bike-near-expiry",
-        stationId,
-        status: "RESERVED",
-        updatedAt: new Date(),
-      },
+    const bike = await fixture.factories.bike({
+      chipId: "bike-near-expiry",
+      stationId: station.id,
+      status: "RESERVED",
     });
-    const reservation = await client.reservation.create({
+    const reservation = await fixture.prisma.reservation.create({
       data: {
+        id: uuidv7(),
         userId: user.id,
         bikeId: bike.id,
-        stationId,
+        stationId: station.id,
         reservationOption: "ONE_TIME",
         startTime: new Date(Date.now() - 5 * 60 * 1000),
         endTime: new Date(Date.now() + 10 * 60 * 1000),
@@ -149,50 +106,41 @@ describe("reservation hold worker integration", () => {
   });
 
   it("expires hold and enqueues expired push job", async () => {
-    const user = await client.user.create({
-      data: {
-        fullname: "Expired User",
-        email: "expired-user@example.com",
-        passwordHash: "hash",
-      },
+    const user = await fixture.factories.user({
+      fullname: "Expired User",
+      email: "expired-user@example.com",
     });
-    const stationId = uuidv7();
-    await createStation(client, {
-      id: stationId,
+    const station = await createStation(fixture, {
       name: "Expired Station",
       address: "District 1",
       capacity: 15,
       latitude: 10.775658,
       longitude: 106.700424,
     });
-    const bike = await client.bike.create({
-      data: {
-        chipId: "bike-expired-hold",
-        stationId,
-        status: "RESERVED",
-        updatedAt: new Date(),
-      },
+    const bike = await fixture.factories.bike({
+      chipId: "bike-expired-hold",
+      stationId: station.id,
+      status: "RESERVED",
     });
-    const reservation = await client.reservation.create({
+    const reservation = await fixture.prisma.reservation.create({
       data: {
+        id: uuidv7(),
         userId: user.id,
         bikeId: bike.id,
-        stationId,
+        stationId: station.id,
         reservationOption: "ONE_TIME",
         startTime: new Date(Date.now() - 60 * 60 * 1000),
         endTime: new Date(Date.now() - 10 * 60 * 1000),
         status: "PENDING",
       },
     });
-    await client.rental.create({
-      data: {
-        id: reservation.id,
-        userId: user.id,
-        bikeId: bike.id,
-        startStationId: stationId,
-        startTime: reservation.startTime,
-        status: "RESERVED",
-      },
+    await fixture.factories.rental({
+      id: reservation.id,
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime: reservation.startTime,
+      status: "RESERVED",
     });
 
     const { producer, send } = makeBossMock();
@@ -221,15 +169,15 @@ describe("reservation hold worker integration", () => {
     );
 
     const [reservationAfter, rentalAfter, bikeAfter] = await Promise.all([
-      client.reservation.findUnique({
+      fixture.prisma.reservation.findUnique({
         where: { id: reservation.id },
         select: { status: true },
       }),
-      client.rental.findUnique({
+      fixture.prisma.rental.findUnique({
         where: { id: reservation.id },
         select: { status: true },
       }),
-      client.bike.findUnique({
+      fixture.prisma.bike.findUnique({
         where: { id: bike.id },
         select: { status: true },
       }),

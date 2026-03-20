@@ -1,178 +1,90 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Option } from "effect";
+import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { runEffect, runEffectEither } from "@/test/effect/run";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeBikeRepository } from "../bike.repository";
 
 describe("bikeRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makeBikeRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeBikeRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.bike.deleteMany({});
-    await client.station.deleteMany({});
-    await client.supplier.deleteMany({});
+  beforeAll(() => {
+    repo = makeBikeRepository(fixture.prisma);
   });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
-  });
-
-  const createStation = async () => {
-    const id = uuidv7();
-    const name = `Station ${id}`;
-    const address = "123 Test St";
-    const capacity = 10;
-    const latitude = 10.762622;
-    const longitude = 106.660172;
-    const updatedAt = new Date();
-
-    await client.$executeRaw`
-      INSERT INTO "Station" (
-        "id",
-        "name",
-        "address",
-        "capacity",
-        "latitude",
-        "longitude",
-        "updated_at",
-        "position"
-      ) VALUES (
-        ${id},
-        ${name},
-        ${address},
-        ${capacity},
-        ${latitude},
-        ${longitude},
-        ${updatedAt},
-        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
-      )
-    `;
-
-    return { id };
-  };
-
-  const createSupplier = async () => {
-    const id = uuidv7();
-    await client.supplier.create({
-      data: {
-        id,
-        name: `Supplier ${id}`,
-        address: "123 Supplier St",
-        phoneNumber: "0900000000",
-        contractFee: "10.00",
-        status: "ACTIVE",
-        updatedAt: new Date(),
-      },
-    });
-    return { id };
-  };
-
-  const createBike = async (
-    stationId: string,
-    status: "AVAILABLE" | "BOOKED" | "RESERVED" = "AVAILABLE",
-  ) => {
-    const id = uuidv7();
-    await client.bike.create({
-      data: {
-        id,
-        chipId: `chip-${id}`,
-        stationId,
-        supplierId: null,
-        status,
-        updatedAt: new Date(),
-      },
-    });
-    return { id };
-  };
 
   it("getById returns the bike", async () => {
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike(stationId);
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id });
 
-    const result = await Effect.runPromise(repo.getById(bikeId));
+    const result = await runEffect(repo.getById(bike.id));
     if (Option.isNone(result)) {
       throw new Error("Expected bike to exist");
     }
-    expect(result.value.id).toBe(bikeId);
+
+    expect(result.value.id).toBe(bike.id);
   });
 
   it("create inserts a bike", async () => {
-    const { id: stationId } = await createStation();
-    const { id: supplierId } = await createSupplier();
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
 
-    const created = await Effect.runPromise(
+    const created = await runEffect(
       repo.create({
         chipId: `chip-${uuidv7()}`,
-        stationId,
-        supplierId,
+        stationId: station.id,
+        supplierId: supplier.id,
         status: "AVAILABLE",
       }),
     );
 
-    expect(created.stationId).toBe(stationId);
-    expect(created.supplierId).toBe(supplierId);
+    expect(created.stationId).toBe(station.id);
+    expect(created.supplierId).toBe(supplier.id);
     expect(created.status).toBe("AVAILABLE");
   });
 
   it("create rejects duplicate chipId", async () => {
-    const { id: stationId } = await createStation();
-    const { id: supplierId } = await createSupplier();
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
     const chipId = `chip-${uuidv7()}`;
 
-    await Effect.runPromise(
+    await runEffect(
       repo.create({
         chipId,
-        stationId,
-        supplierId,
+        stationId: station.id,
+        supplierId: supplier.id,
         status: "AVAILABLE",
       }),
     );
 
-    const result = await Effect.runPromise(
+    const result = await runEffectEither(
       repo.create({
         chipId,
-        stationId,
-        supplierId,
+        stationId: station.id,
+        supplierId: supplier.id,
         status: "AVAILABLE",
-      }).pipe(Effect.either),
+      }),
     );
 
-    if (Either.isRight(result)) {
-      throw new Error("Expected duplicate chipId failure");
-    }
-    expect(result.left._tag).toBe("DuplicateChipId");
+    expectLeftTag(result, "DuplicateChipId");
   });
 
   it("getById returns Option.none for missing bike", async () => {
-    const result = await Effect.runPromise(repo.getById(uuidv7()));
+    const result = await runEffect(repo.getById(uuidv7()));
     expect(Option.isNone(result)).toBe(true);
   });
 
   it("listByStationWithOffset returns bikes for station", async () => {
-    const { id: stationId } = await createStation();
-    await createBike(stationId, "AVAILABLE");
-    await createBike(stationId, "BOOKED");
+    const station = await fixture.factories.station();
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    await fixture.factories.bike({ stationId: station.id, status: "BOOKED" });
 
-    const result = await Effect.runPromise(
-      repo.listByStationWithOffset(stationId, {}, { page: 1, pageSize: 10 }),
+    const result = await runEffect(
+      repo.listByStationWithOffset(station.id, {}, { page: 1, pageSize: 10 }),
     );
 
     expect(result.items).toHaveLength(2);
@@ -180,91 +92,93 @@ describe("bikeRepository Integration", () => {
   });
 
   it("updateStatus updates the bike status", async () => {
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike(stationId, "AVAILABLE");
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
-    const result = await Effect.runPromise(repo.updateStatus(bikeId, "BOOKED"));
+    const result = await runEffect(repo.updateStatus(bike.id, "BOOKED"));
     if (Option.isNone(result)) {
       throw new Error("Expected bike to be updated");
     }
+
     expect(result.value.status).toBe("BOOKED");
   });
 
   it("updateStatus returns Option.none for missing bike", async () => {
-    const result = await Effect.runPromise(repo.updateStatus(uuidv7(), "BOOKED"));
+    const result = await runEffect(repo.updateStatus(uuidv7(), "BOOKED"));
     expect(Option.isNone(result)).toBe(true);
   });
 
   it("reserveBikeIfAvailableInTx marks available bike as reserved", async () => {
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike(stationId, "AVAILABLE");
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const now = new Date();
 
-    const reserved = await client.$transaction(async (tx) => {
+    const reserved = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeBikeRepository(tx);
-      return Effect.runPromise(txRepo.reserveBikeIfAvailable(bikeId, now));
+      return runEffect(txRepo.reserveBikeIfAvailable(bike.id, now));
     });
 
     expect(reserved).toBe(true);
 
-    const updated = await Effect.runPromise(repo.getById(bikeId));
+    const updated = await runEffect(repo.getById(bike.id));
     if (Option.isNone(updated)) {
       throw new Error("Expected bike to exist");
     }
+
     expect(updated.value.status).toBe("RESERVED");
   });
 
   it("bookBikeIfReservedInTx marks reserved bike as booked", async () => {
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike(stationId, "RESERVED");
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "RESERVED" });
     const now = new Date();
 
-    const booked = await client.$transaction(async (tx) => {
+    const booked = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeBikeRepository(tx);
-      return Effect.runPromise(txRepo.bookBikeIfReserved(bikeId, now));
+      return runEffect(txRepo.bookBikeIfReserved(bike.id, now));
     });
 
     expect(booked).toBe(true);
 
-    const updated = await Effect.runPromise(repo.getById(bikeId));
+    const updated = await runEffect(repo.getById(bike.id));
     if (Option.isNone(updated)) {
       throw new Error("Expected bike to exist");
     }
+
     expect(updated.value.status).toBe("BOOKED");
   });
 
   it("releaseBikeIfReservedInTx marks reserved bike as available", async () => {
-    const { id: stationId } = await createStation();
-    const { id: bikeId } = await createBike(stationId, "RESERVED");
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "RESERVED" });
     const now = new Date();
 
-    const released = await client.$transaction(async (tx) => {
+    const released = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makeBikeRepository(tx);
-      return Effect.runPromise(txRepo.releaseBikeIfReserved(bikeId, now));
+      return runEffect(txRepo.releaseBikeIfReserved(bike.id, now));
     });
 
     expect(released).toBe(true);
 
-    const updated = await Effect.runPromise(repo.getById(bikeId));
+    const updated = await runEffect(repo.getById(bike.id));
     if (Option.isNone(updated)) {
       throw new Error("Expected bike to exist");
     }
+
     expect(updated.value.status).toBe("AVAILABLE");
   });
 
   it("returns BikeRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makeBikeRepository(broken.client);
+    try {
+      const brokenRepo = makeBikeRepository(broken.client);
 
-    const result = await Effect.runPromise(
-      brokenRepo.getById(uuidv7()).pipe(Effect.either),
-    );
+      const result = await runEffectEither(brokenRepo.getById(uuidv7()));
 
-    if (Either.isRight(result)) {
-      throw new Error("Expected failure but got success");
+      expectLeftTag(result, "BikeRepositoryError");
     }
-    expect(result.left._tag).toBe("BikeRepositoryError");
-
-    await broken.stop();
+    finally {
+      await broken.stop();
+    }
   });
 });

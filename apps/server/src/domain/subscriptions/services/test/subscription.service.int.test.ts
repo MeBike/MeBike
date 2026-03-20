@@ -1,86 +1,51 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Layer, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import type { Prisma as PrismaNS } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
-import { getTestDatabase } from "@/test/db/test-database";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { runEffectWithLayer } from "@/test/effect/run";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeSubscriptionRepository, SubscriptionRepository } from "../..";
 import { SubscriptionServiceLive, SubscriptionServiceTag } from "../subscription.service";
 
-function expectLeftTag<E extends { _tag: string }>(result: Either.Either<unknown, E>, tag: E["_tag"]) {
-  if (Either.isRight(result)) {
-    throw new Error(`Expected Left ${tag}, got Right`);
-  }
-  expect(result.left._tag).toBe(tag);
-}
-
 describe("subscriptionService Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let depsLayer: Layer.Layer<SubscriptionServiceTag | SubscriptionRepository | Prisma, never, never>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-
+  beforeAll(() => {
     const subscriptionRepoLayer = Layer.succeed(
       SubscriptionRepository,
-      makeSubscriptionRepository(client),
+      makeSubscriptionRepository(fixture.prisma),
     );
     const subscriptionServiceLayer = SubscriptionServiceLive.pipe(
       Layer.provide(subscriptionRepoLayer),
     );
 
     depsLayer = Layer.mergeAll(
-      Layer.succeed(Prisma, Prisma.make({ client })),
+      Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma })),
       subscriptionRepoLayer,
       subscriptionServiceLayer,
     );
-  }, 60000);
-
-  afterEach(async () => {
-    await client.subscription.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
   });
 
   const createUser = async () => {
-    const id = uuidv7();
-    await client.user.create({
-      data: {
-        id,
-        fullname: "Subscription User",
-        email: `user-${id}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
-    });
-    return { id };
+    const user = await fixture.factories.user({ fullname: "Subscription User" });
+    return { id: user.id };
   };
 
   const runWithService = <A, E>(
     eff: Effect.Effect<A, E, SubscriptionServiceTag>,
   ) =>
-    Effect.runPromise(eff.pipe(Effect.provide(depsLayer)));
+    runEffectWithLayer(eff, depsLayer);
 
   const runInTxWithService = async <A, E>(
     f: (tx: PrismaNS.TransactionClient) => Effect.Effect<A, E, SubscriptionServiceTag>,
   ) =>
-    client.$transaction(async tx =>
+    fixture.prisma.$transaction(async tx =>
       Effect.runPromise(f(tx).pipe(Effect.provide(depsLayer))),
     );
 

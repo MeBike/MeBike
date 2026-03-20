@@ -14,7 +14,9 @@ export default defineConfig({
       "src/**/test/**/*.{test,spec}.ts",
     ],
     coverage: {
+      provider: "v8",
       reporter: ["text", "html"],
+      reportsDirectory: "./coverage/unit",
     },
     exclude: ["**/*.int.test.ts"],
   },

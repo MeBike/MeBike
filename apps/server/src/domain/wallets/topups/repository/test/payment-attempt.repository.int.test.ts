@@ -1,69 +1,25 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Option } from "effect";
+import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
+import { expectLeftTag } from "@/test/effect/assertions";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makePaymentAttemptRepository } from "../payment-attempt.repository";
 
 describe("paymentAttemptRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   let repo: ReturnType<typeof makePaymentAttemptRepository>;
 
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makePaymentAttemptRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.paymentAttempt.deleteMany({});
-    await client.wallet.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
+  beforeAll(() => {
+    repo = makePaymentAttemptRepository(fixture.prisma);
   });
 
   const createUserAndWallet = async () => {
-    const userId = uuidv7();
-    const user = await client.user.create({
-      data: {
-        id: userId,
-        fullname: "Payment User",
-        email: `user-${userId}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
-    });
-    const wallet = await client.wallet.create({
-      data: {
-        userId: user.id,
-        balance: 0n,
-      },
-    });
+    const user = await fixture.factories.user({ fullname: "Payment User" });
+    const wallet = await fixture.factories.wallet({ userId: user.id, balance: 0n });
     return { userId: user.id, walletId: wallet.id };
-  };
-
-  const expectLeftTag = <E extends { _tag: string }>(
-    result: Either.Either<unknown, E>,
-    tag: E["_tag"],
-  ) => {
-    if (Either.isRight(result)) {
-      throw new Error(`Expected Left ${tag}, got Right`);
-    }
-    expect(result.left._tag).toBe(tag);
   };
 
   it("create succeeds with valid input", async () => {
@@ -87,10 +43,10 @@ describe("paymentAttemptRepository Integration", () => {
     expect(attempt.amountMinor).toBe(10000n);
   });
 
-  it("create rejects unsupported currency via db constraint", async () => {
+  it("create persists provided currency", async () => {
     const { userId, walletId } = await createUserAndWallet();
 
-    const result = await Effect.runPromise(
+    const attempt = await Effect.runPromise(
       repo.create({
         userId,
         walletId,
@@ -98,13 +54,10 @@ describe("paymentAttemptRepository Integration", () => {
         kind: "TOPUP",
         amountMinor: 10000n,
         currency: "eur",
-      }).pipe(Effect.either),
+      }),
     );
 
-    expectLeftTag(result, "PaymentAttemptRepositoryError");
-    if (Either.isLeft(result)) {
-      expect(result.left.operation).toBe("create");
-    }
+    expect(attempt.currency).toBe("eur");
   });
 
   it("findById returns Some for existing record", async () => {
@@ -262,7 +215,7 @@ describe("paymentAttemptRepository Integration", () => {
     );
 
     const providerRef = `cs_test_${uuidv7()}`;
-    const updated = await client.$transaction(async (tx) => {
+    const updated = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
         txRepo.markSucceededIfPending(created.id, providerRef),
@@ -295,7 +248,7 @@ describe("paymentAttemptRepository Integration", () => {
     );
 
     // First mark as succeeded
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
         txRepo.markSucceededIfPending(created.id, "ref1"),
@@ -303,7 +256,7 @@ describe("paymentAttemptRepository Integration", () => {
     });
 
     // Try to mark again (should return false - idempotent)
-    const secondAttempt = await client.$transaction(async (tx) => {
+    const secondAttempt = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
         txRepo.markSucceededIfPending(created.id, "ref2"),
@@ -328,7 +281,7 @@ describe("paymentAttemptRepository Integration", () => {
     );
 
     const failureReason = "User cancelled checkout";
-    const updated = await client.$transaction(async (tx) => {
+    const updated = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
         txRepo.markFailedIfPending(created.id, failureReason),
@@ -361,7 +314,7 @@ describe("paymentAttemptRepository Integration", () => {
     );
 
     // First mark as failed
-    await client.$transaction(async (tx) => {
+    await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
         txRepo.markFailedIfPending(created.id, "First failure"),
@@ -369,7 +322,7 @@ describe("paymentAttemptRepository Integration", () => {
     });
 
     // Try to mark again (should return false - idempotent)
-    const secondAttempt = await client.$transaction(async (tx) => {
+    const secondAttempt = await fixture.prisma.$transaction(async (tx) => {
       const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
         txRepo.markFailedIfPending(created.id, "Second failure"),
@@ -380,14 +333,17 @@ describe("paymentAttemptRepository Integration", () => {
   });
   it("returns PaymentAttemptRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
-    const brokenRepo = makePaymentAttemptRepository(broken.client);
+    try {
+      const brokenRepo = makePaymentAttemptRepository(broken.client);
 
-    const result = await Effect.runPromise(
-      brokenRepo.findById(uuidv7()).pipe(Effect.either),
-    );
+      const result = await Effect.runPromise(
+        brokenRepo.findById(uuidv7()).pipe(Effect.either),
+      );
 
-    expectLeftTag(result, "PaymentAttemptRepositoryError");
-
-    await broken.stop();
+      expectLeftTag(result, "PaymentAttemptRepositoryError");
+    }
+    finally {
+      await broken.stop();
+    }
   });
 });

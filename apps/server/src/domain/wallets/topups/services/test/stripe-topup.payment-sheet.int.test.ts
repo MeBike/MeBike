@@ -1,14 +1,11 @@
 import type Stripe from "stripe";
 
-import { PrismaPg } from "@prisma/adapter-pg";
 import { Effect, Layer } from "effect";
-import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Prisma } from "@/infrastructure/prisma";
 import { StripeClient } from "@/infrastructure/stripe";
-import { getTestDatabase } from "@/test/db/test-database";
-import { PrismaClient } from "generated/prisma/client";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { WalletRepositoryLive } from "../../../repository/wallet.repository";
 import { WalletServiceLive } from "../../../services/wallet.service";
@@ -20,58 +17,23 @@ import {
 import { StripeTopupServiceLive } from "../stripe-topup.service";
 
 describe("stripe topup PaymentSheet integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
+  const fixture = setupPrismaIntFixture();
   const createPaymentIntent = vi.fn();
-
-  beforeAll(async () => {
-    container = await getTestDatabase();
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-  }, 60000);
 
   afterEach(async () => {
     createPaymentIntent.mockReset();
-    await client.jobOutbox.deleteMany({});
-    await client.walletTransaction.deleteMany({});
-    await client.paymentAttempt.deleteMany({});
-    await client.wallet.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
+    await fixture.prisma.jobOutbox.deleteMany({});
   });
 
   const createUserAndWallet = async () => {
-    const userId = uuidv7();
-    const user = await client.user.create({
-      data: {
-        id: userId,
-        fullname: "Stripe Wallet User",
-        email: `stripe-wallet-${userId}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
-    });
-
-    const wallet = await client.wallet.create({
-      data: {
-        userId: user.id,
-        balance: 0n,
-      },
-    });
+    const user = await fixture.factories.user({ fullname: "Stripe Wallet User" });
+    const wallet = await fixture.factories.wallet({ userId: user.id, balance: 0n });
 
     return { userId: user.id, walletId: wallet.id };
   };
 
   const makeDepsLayer = () => {
-    const prismaLayer = Layer.succeed(Prisma, Prisma.make({ client }));
+    const prismaLayer = Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma }));
     const stripeLayer = Layer.succeed(StripeClient, StripeClient.make({
       client: {
         paymentIntents: {
@@ -111,7 +73,7 @@ describe("stripe topup PaymentSheet integration", () => {
 
     expect(result.paymentIntentClientSecret).toBe("pi_test_payment_sheet_secret_123");
 
-    const attempt = await client.paymentAttempt.findUnique({ where: { id: result.paymentAttemptId } });
+    const attempt = await fixture.prisma.paymentAttempt.findUnique({ where: { id: result.paymentAttemptId } });
     expect(attempt?.providerRef).toBe("pi_test_payment_sheet");
     expect(attempt?.status).toBe("PENDING");
     expect(attempt?.metadata).toEqual({ mode: "payment_sheet" });
@@ -155,17 +117,17 @@ describe("stripe topup PaymentSheet integration", () => {
       paymentAttemptId: created.paymentAttemptId,
     });
 
-    const wallet = await client.wallet.findUnique({ where: { userId } });
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId } });
     expect(wallet?.balance).toBe(12000n);
 
-    const txs = await client.walletTransaction.findMany({
+    const txs = await fixture.prisma.walletTransaction.findMany({
       where: { walletId: wallet?.id },
       orderBy: { createdAt: "desc" },
     });
     expect(txs).toHaveLength(1);
     expect(txs[0]?.hash).toBe("stripe:payment_intent:pi_test_success");
 
-    const outboxRows = await client.jobOutbox.findMany({
+    const outboxRows = await fixture.prisma.jobOutbox.findMany({
       orderBy: { createdAt: "asc" },
     });
     expect(outboxRows).toHaveLength(1);
@@ -192,7 +154,7 @@ describe("stripe topup PaymentSheet integration", () => {
     );
     expect(repeated).toEqual({ status: "ignored", reason: "already_succeeded" });
 
-    const repeatedOutboxRows = await client.jobOutbox.findMany();
+    const repeatedOutboxRows = await fixture.prisma.jobOutbox.findMany();
     expect(repeatedOutboxRows).toHaveLength(1);
   });
 
@@ -237,16 +199,16 @@ describe("stripe topup PaymentSheet integration", () => {
       reason: "Card was declined",
     });
 
-    const attempt = await client.paymentAttempt.findUnique({ where: { id: created.paymentAttemptId } });
+    const attempt = await fixture.prisma.paymentAttempt.findUnique({ where: { id: created.paymentAttemptId } });
     expect(attempt?.status).toBe("FAILED");
 
-    const wallet = await client.wallet.findUnique({ where: { userId } });
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId } });
     expect(wallet?.balance).toBe(0n);
 
-    const txs = await client.walletTransaction.findMany({ where: { walletId: wallet?.id } });
+    const txs = await fixture.prisma.walletTransaction.findMany({ where: { walletId: wallet?.id } });
     expect(txs).toHaveLength(0);
 
-    const outboxRows = await client.jobOutbox.findMany();
+    const outboxRows = await fixture.prisma.jobOutbox.findMany();
     expect(outboxRows).toHaveLength(0);
   });
 });
