@@ -1,6 +1,10 @@
 import { Effect, Layer } from "effect";
 
 import {
+  AgencyRequestRepositoryLive,
+  AgencyRequestServiceLive,
+} from "@/domain/agency-requests";
+import {
   AuthEventRepositoryLive,
   AuthRepositoryLive,
   AuthServiceLive,
@@ -252,9 +256,23 @@ const UserServiceLayer = UserServiceLive.pipe(
   Layer.provide(UserReposLive),
 );
 
+const AgencyRequestReposLive = AgencyRequestRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const AgencyRequestServiceLayer = AgencyRequestServiceLive.pipe(
+  Layer.provide(AgencyRequestReposLive),
+);
+
 export const UserDepsLive = Layer.mergeAll(
   UserReposLive,
   UserServiceLayer,
+  PrismaLive,
+);
+
+export const AgencyRequestDepsLive = Layer.mergeAll(
+  AgencyRequestReposLive,
+  AgencyRequestServiceLayer,
   PrismaLive,
 );
 
@@ -417,6 +435,7 @@ export const HttpDepsLive = Layer.mergeAll(
   SubscriptionDepsLive,
   StationDepsLive,
   SupplierDepsLive,
+  AgencyRequestDepsLive,
   NotificationDepsLive,
   UserDepsLive,
   UserStatsDepsLive,

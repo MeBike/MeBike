@@ -15,6 +15,7 @@ import {
 } from "@/http/middlewares/auth";
 import logger from "@/lib/logger";
 
+import { registerAgencyRequestRoutes } from "./routes/agency-requests";
 import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
 import { registerEventRoutes } from "./routes/events";
@@ -100,6 +101,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerStationRoutes(app);
   registerStatsRoutes(app);
   registerHealthRoutes(app);
+  registerAgencyRequestRoutes(app);
   registerBikeRoutes(app);
   registerEventRoutes(app);
   registerRentalRoutes(app);

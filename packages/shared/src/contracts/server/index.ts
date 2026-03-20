@@ -1,3 +1,5 @@
+export * as AgencyRequestsContracts from "./agency-requests";
+export * from "./agency-requests";
 export * as AuthContracts from "./auth";
 export * as BikesContracts from "./bikes";
 export * as JobsContracts from "./jobs";
