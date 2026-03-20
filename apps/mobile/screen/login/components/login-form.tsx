@@ -2,6 +2,7 @@ import type { LoginSchemaFormData } from "@schemas/authSchema";
 import type { Control, FieldErrors } from "react-hook-form";
 
 import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
@@ -44,7 +45,7 @@ function LoginForm({
               autoCorrect={false}
               invalid={Boolean(errors.email?.message)}
               keyboardType="email-address"
-              leadingIcon={<IconSymbol name="envelope" size={18} color="#64748B" />}
+              leadingIcon={<IconSymbol name="envelope" size={18} color={colors.textSecondary} />}
               onChangeText={onChange}
               placeholder="Nhập email của bạn"
               value={value}
@@ -62,7 +63,7 @@ function LoginForm({
               autoCapitalize="none"
               autoCorrect={false}
               invalid={Boolean(errors.password?.message)}
-              leadingIcon={<IconSymbol name="lock" size={18} color="#64748B" />}
+              leadingIcon={<IconSymbol name="lock" size={18} color={colors.textSecondary} />}
               onChangeText={onChange}
               placeholder="Nhập mật khẩu"
               secureTextEntry={!showPassword}
@@ -71,7 +72,7 @@ function LoginForm({
                   <IconSymbol
                     name={showPassword ? "eye.slash" : "eye"}
                     size={18}
-                    color="#64748B"
+                    color={colors.textSecondary}
                   />
                 </Pressable>
               )}

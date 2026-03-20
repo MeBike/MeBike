@@ -2,6 +2,7 @@ import type { ForgotPasswordSchemaFormData } from "@schemas/authSchema";
 import type { Control, FieldErrors } from "react-hook-form";
 
 import { Ionicons } from "@expo/vector-icons";
+import { colors } from "@theme/colors";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppInput } from "@ui/primitives/app-input";
 import { Field } from "@ui/primitives/field";
@@ -33,7 +34,7 @@ export function ForgotPasswordForm({
               autoCorrect={false}
               invalid={Boolean(errors.email?.message)}
               keyboardType="email-address"
-              leadingIcon={<Ionicons name="mail" size={18} color="#64748B" />}
+              leadingIcon={<Ionicons name="mail" size={18} color={colors.textSecondary} />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Nhập email"

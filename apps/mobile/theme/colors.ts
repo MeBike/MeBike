@@ -36,6 +36,12 @@ export const colors = {
   error: palette.red500,
   info: palette.blue600,
   shadowColor: palette.slate900,
+  overlayLight: "rgba(255, 255, 255, 0.16)",
+  overlayLightMuted: "rgba(255, 255, 255, 0.12)",
+  successSoft: "rgba(16, 185, 129, 0.16)",
+  warningSoft: "rgba(245, 158, 11, 0.16)",
+  errorSoft: "rgba(239, 68, 68, 0.16)",
+  neutralSoft: "rgba(255, 255, 255, 0.18)",
 } as const;
 
 export const gradients = {

@@ -1,3 +1,4 @@
+import { colors } from "@theme/colors";
 import { AppText } from "@ui/primitives/app-text";
 import { XStack } from "tamagui";
 
@@ -10,11 +11,11 @@ type StatusBadgeProps = {
 };
 
 const toneStyles: Record<StatusBadgeTone, { bg: string; textTone: "success" | "warning" | "danger" | "muted" | "inverted"; dot: string }> = {
-  success: { bg: "rgba(16, 185, 129, 0.16)", textTone: "success", dot: "$success" },
-  warning: { bg: "rgba(245, 158, 11, 0.16)", textTone: "warning", dot: "$warning" },
-  danger: { bg: "rgba(239, 68, 68, 0.16)", textTone: "danger", dot: "$error" },
-  neutral: { bg: "rgba(255, 255, 255, 0.18)", textTone: "muted", dot: "$textMuted" },
-  inverted: { bg: "rgba(255, 255, 255, 0.2)", textTone: "inverted", dot: "$textOnBrand" },
+  success: { bg: colors.successSoft, textTone: "success", dot: "$success" },
+  warning: { bg: colors.warningSoft, textTone: "warning", dot: "$warning" },
+  danger: { bg: colors.errorSoft, textTone: "danger", dot: "$error" },
+  neutral: { bg: colors.neutralSoft, textTone: "muted", dot: "$textMuted" },
+  inverted: { bg: colors.overlayLight, textTone: "inverted", dot: "$textOnBrand" },
 };
 
 export function StatusBadge({ label, tone = "neutral", withDot = true }: StatusBadgeProps) {

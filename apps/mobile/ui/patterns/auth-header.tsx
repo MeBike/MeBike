@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
+import { colors, gradients } from "@theme/colors";
 import { iconSizes, spacing } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
 import { LinearGradient } from "expo-linear-gradient";
@@ -68,8 +68,8 @@ export function AuthHeader({
 }: AuthHeaderProps) {
   const insets = useSafeAreaInsets();
   const gradient = variant === "brand"
-    ? (["#2563EB", "#38BDF8"] as const)
-    : (["#3B82F6", "#7DD3FC"] as const);
+    ? gradients.brandHero
+    : gradients.brandSoft;
   const titleTone = "inverted";
   const subtitleTone = "inverted";
   const backColor = colors.textOnBrand;
@@ -80,7 +80,7 @@ export function AuthHeader({
       <View style={styles.topRow}>
         {onBack
           ? (
-              <Pressable onPress={onBack} style={[styles.backButton, { backgroundColor: "rgba(255, 255, 255, 0.16)" }]}>
+              <Pressable onPress={onBack} style={[styles.backButton, { backgroundColor: colors.overlayLight }]}>
                 <IconSymbol color={backColor} name="arrow.left" size={iconSizes.lg} />
               </Pressable>
             )

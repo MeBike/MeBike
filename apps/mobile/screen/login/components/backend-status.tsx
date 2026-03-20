@@ -17,9 +17,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: 999,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: colors.neutralSoft,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.12)",
+    borderColor: colors.overlayLightMuted,
   },
   dot: {
     width: 8,

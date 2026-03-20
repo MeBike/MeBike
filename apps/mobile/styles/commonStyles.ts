@@ -23,7 +23,7 @@ export const spacing = {
   md: themeSpacing.lg,
   lg: themeSpacing.xxl,
   xl: themeSpacing.xxxl,
-  xxl: 48,
+  xxl: themeSpacing.xxxxl,
 };
 
 export const borderRadius = {

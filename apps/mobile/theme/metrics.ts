@@ -1,3 +1,5 @@
+import { colors } from "@theme/colors";
+
 export const spacing = {
   none: 0,
   xs: 4,
@@ -7,6 +9,7 @@ export const spacing = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
+  xxxxl: 48,
 } as const;
 
 export const radii = {
@@ -29,14 +32,14 @@ export const iconSizes = {
 
 export const elevations = {
   soft: {
-    shadowColor: "#0F172A",
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 3,
   },
   medium: {
-    shadowColor: "#0F172A",
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
     shadowRadius: 20,
