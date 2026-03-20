@@ -1,4 +1,6 @@
-import { Effect, Layer, Option } from "effect";
+import type { Option } from "effect";
+
+import { Effect, Layer } from "effect";
 
 import type {
   AgencyRequestNotFound,
