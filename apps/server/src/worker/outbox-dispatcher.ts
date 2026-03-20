@@ -1,7 +1,8 @@
+import type { JobType } from "@mebike/shared/contracts/server/jobs";
 import type { Kysely } from "kysely";
-import type { PgBoss } from "pg-boss";
 
 import type { OutboxRetryOptions } from "@/infrastructure/jobs/outbox";
+import type { JobProducer } from "@/infrastructure/jobs/ports";
 import type { DB } from "generated/kysely/types";
 
 import {
@@ -10,11 +11,12 @@ import {
 
   rescheduleOutboxOnFailure,
 } from "@/infrastructure/jobs/outbox";
+import { sendJob } from "@/infrastructure/jobs/send-job";
 import logger from "@/lib/logger";
 
 type DispatcherOptions = {
   readonly db: Kysely<DB>;
-  readonly boss: PgBoss;
+  readonly producer: JobProducer;
   readonly workerId: string;
   readonly pollIntervalMs?: number;
   readonly batchSize?: number;
@@ -24,22 +26,9 @@ type DispatcherOptions = {
 const DEFAULT_POLL_INTERVAL_MS = 1000;
 const DEFAULT_BATCH_SIZE = 20;
 
-function toBossData(payload: unknown): object | null | undefined { // who knows kund if data from outbox
-  if (payload === undefined) {
-    return undefined;
-  }
-  if (payload === null) {
-    return null;
-  }
-  if (typeof payload === "object") {
-    return payload;
-  }
-  return null;
-}
-
 export async function dispatchOutboxOnce(options: {
   readonly db: Kysely<DB>;
-  readonly boss: PgBoss;
+  readonly producer: JobProducer;
   readonly workerId: string;
   readonly batchSize?: number;
   readonly retryOptions?: Partial<OutboxRetryOptions>;
@@ -62,10 +51,11 @@ export async function dispatchOutboxOnce(options: {
     try {
       logger.info(
         { jobId: job.id, jobType: job.type, attempts: job.attempts },
-        "Dispatching outbox job to pg-boss",
+        "Dispatching outbox job to queue runtime",
       );
-      await options.boss.send(job.type, toBossData(job.payload), {
-        singletonKey: job.dedupeKey ?? undefined,
+      // Outbox rows persist payloads as JSON, so we re-validate at sendJob(...) before enqueueing.
+      await sendJob(options.producer, job.type as JobType, job.payload as never, {
+        dedupeKey: job.dedupeKey ?? undefined,
       });
       await markOutboxSent(options.db, {
         id: job.id,
@@ -135,7 +125,7 @@ export function startOutboxDispatcher(options: DispatcherOptions): () => void {
     try {
       await dispatchOutboxOnce({
         db: options.db,
-        boss: options.boss,
+        producer: options.producer,
         workerId: options.workerId,
         batchSize,
         retryOptions: options.retryOptions,

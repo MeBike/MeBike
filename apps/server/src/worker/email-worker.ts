@@ -1,7 +1,8 @@
 import type { JobPayload } from "@mebike/shared/contracts/server/jobs";
-import type { Job } from "pg-boss";
 
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
+
+import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import { buildAuthOtpEmail } from "@/lib/email-templates";
 import logger from "@/lib/logger";
@@ -21,7 +22,7 @@ export type EmailTransport = {
 };
 
 export async function handleEmailJob(
-  job: Job<unknown> | undefined,
+  job: QueueJob | undefined,
   email: EmailTransport,
 ): Promise<void> {
   if (!job) {

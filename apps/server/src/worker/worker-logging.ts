@@ -1,14 +1,16 @@
-import type { PgBoss } from "pg-boss";
+import type { JobRuntime } from "@/infrastructure/jobs/ports";
 
 import logger from "@/lib/logger";
 
-export function attachPgBossEventLogging(boss: PgBoss) {
-  boss.on("error", err => logger.error({ err }, "pg-boss error"));
-  boss.on("warning", warning => logger.warn({ warning }, "pg-boss warning"));
+export function attachJobRuntimeLogging(runtime: JobRuntime) {
+  runtime.onError(err => logger.error({ err }, "job runtime error"));
+  runtime.onWarning(warning => logger.warn({ warning }, "job runtime warning"));
 }
 
+export const attachPgBossEventLogging = attachJobRuntimeLogging;
+
 export const WorkerLog = {
-  bossStarted: () => logger.info("pg-boss started"),
+  runtimeStarted: () => logger.info("Job runtime started"),
   emailVerified: () => logger.info("Email transporter verified"),
   queueEnsured: (queue: string) => logger.info({ queue }, "Queue ensured"),
   scheduleEnsured: (queue: string, cron: string) =>

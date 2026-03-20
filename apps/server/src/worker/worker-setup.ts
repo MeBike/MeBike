@@ -1,5 +1,6 @@
 import type { JobType } from "@mebike/shared/contracts/server/jobs";
-import type { Job, PgBoss } from "pg-boss";
+
+import type { JobRuntime } from "@/infrastructure/jobs/ports";
 
 import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import logger from "@/lib/logger";
@@ -11,18 +12,18 @@ import { WorkerLog } from "./worker-logging";
  * VI: Thiết lập queue cho job với cấu hình và DLQ tùy chọn.
  */
 export async function setupQueue(
-  boss: PgBoss,
+  runtime: JobRuntime,
   jobType: JobType,
 ): Promise<void> {
   // Create DLQ if configured
   const dlq = JobDeadLetters[jobType];
   if (dlq) {
-    await boss.createQueue(dlq);
+    await runtime.ensureQueue(dlq);
     WorkerLog.queueEnsured(dlq);
   }
 
   // Create main queue
-  await boss.createQueue(jobType, resolveQueueOptions(jobType));
+  await runtime.ensureQueue(jobType, resolveQueueOptions(jobType));
   WorkerLog.queueEnsured(jobType);
 }
 
@@ -31,7 +32,7 @@ export async function setupQueue(
  * VI: Đăng ký worker DLQ để ghi log các job thất bại.
  */
 export async function setupDLQWorker(
-  boss: PgBoss,
+  runtime: JobRuntime,
   jobType: JobType,
   jobDescription: string,
 ): Promise<void> {
@@ -39,8 +40,7 @@ export async function setupDLQWorker(
   if (!dlq)
     return;
 
-  const workerId = await boss.work(dlq, async (jobs: ReadonlyArray<Job<unknown>>) => {
-    const job = jobs[0];
+  const workerId = await runtime.register(dlq, async (job) => {
     logger.error(
       { jobId: job?.id, data: job?.data },
       `${jobDescription} moved to DLQ`,

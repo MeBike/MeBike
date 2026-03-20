@@ -1,7 +1,7 @@
-import type { Job, PgBoss } from "pg-boss";
-
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Option } from "effect";
+
+import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
 import {
@@ -54,8 +54,8 @@ function runReservationEffect<A, E>(
 }
 
 export async function handleReservationNotifyNearExpiry(
-  job: Job<unknown> | undefined,
-  boss: PgBoss,
+  job: QueueJob | undefined,
+  producer: JobProducer,
 ): Promise<void> {
   if (!job) {
     logger.warn("Reservation notify worker received empty batch");
@@ -126,7 +126,7 @@ export async function handleReservationNotifyNearExpiry(
       yield* Effect.tryPromise({
         try: () =>
           sendJob(
-            boss,
+            producer,
             JobTypes.EmailSend,
             {
               version: 1,
@@ -136,7 +136,7 @@ export async function handleReservationNotifyNearExpiry(
               html: email.html,
             },
             {
-              singletonKey: `reservation:near-expiry:${reservation.id}`,
+              dedupeKey: `reservation:near-expiry:${reservation.id}`,
             },
           ),
         catch: err => err as unknown,
@@ -145,7 +145,7 @@ export async function handleReservationNotifyNearExpiry(
       yield* Effect.tryPromise({
         try: () =>
           sendJob(
-            boss,
+            producer,
             JobTypes.PushSend,
             {
               version: 1,
@@ -160,7 +160,7 @@ export async function handleReservationNotifyNearExpiry(
               },
             },
             {
-              singletonKey: `reservation:near-expiry:push:${reservation.id}`,
+              dedupeKey: `reservation:near-expiry:push:${reservation.id}`,
             },
           ),
         catch: err => err as unknown,
@@ -177,8 +177,8 @@ export async function handleReservationNotifyNearExpiry(
 }
 
 export async function handleReservationExpireHold(
-  job: Job<unknown> | undefined,
-  boss: PgBoss,
+  job: QueueJob | undefined,
+  producer: JobProducer,
 ): Promise<void> {
   if (!job) {
     logger.warn("Reservation expire worker received empty batch");
@@ -300,7 +300,7 @@ export async function handleReservationExpireHold(
       yield* Effect.tryPromise({
         try: () =>
           sendJob(
-            boss,
+            producer,
             JobTypes.EmailSend,
             {
               version: 1,
@@ -310,7 +310,7 @@ export async function handleReservationExpireHold(
               html: email.html,
             },
             {
-              singletonKey: `reservation:expired:${outcome.reservationId}`,
+              dedupeKey: `reservation:expired:${outcome.reservationId}`,
             },
           ),
         catch: err => err as unknown,
@@ -319,7 +319,7 @@ export async function handleReservationExpireHold(
       yield* Effect.tryPromise({
         try: () =>
           sendJob(
-            boss,
+            producer,
             JobTypes.PushSend,
             {
               version: 1,
@@ -334,7 +334,7 @@ export async function handleReservationExpireHold(
               },
             },
             {
-              singletonKey: `reservation:expired:push:${outcome.reservationId}`,
+              dedupeKey: `reservation:expired:push:${outcome.reservationId}`,
             },
           ),
         catch: err => err as unknown,
