@@ -135,7 +135,7 @@ function makeBikeService(
         if (patch.stationId && patch.stationId !== current.value.stationId) {
           const activeRental = yield* Effect.promise(() =>
             client.rental.findFirst({
-              where: { bikeId, status: { in: ["RENTED", "RESERVED"] } },
+              where: { bikeId, status: "RENTED" },
               select: { id: true },
             }),
           );

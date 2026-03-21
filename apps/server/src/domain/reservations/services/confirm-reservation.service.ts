@@ -6,8 +6,8 @@ import { makeBikeRepository } from "@/domain/bikes";
 import {
   makeRentalRepository,
   RentalRepository,
-  startReservedRentalInTx,
 } from "@/domain/rentals";
+import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/unique-violation-mapper";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -18,7 +18,6 @@ import {
   BikeNotAvailable,
   BikeNotFound,
   ReservationConfirmBlockedByActiveRental,
-  ReservedRentalNotFound,
 } from "../domain-errors";
 import { ReservationServiceTag } from "../services/reservation.service";
 
@@ -54,23 +53,6 @@ export function confirmReservationUseCase(
           },
         );
 
-        const rentalStarted = yield* startReservedRentalInTx({
-          repo: txRentalRepo,
-          rentalId: reservation.id,
-          startTime: now,
-          updatedAt: now,
-          subscriptionId: reservation.subscriptionId ?? null,
-          bikeId,
-          userId: input.userId,
-        }).pipe(
-          Effect.catchTag("ActiveRentalExists", () =>
-            Effect.fail(new ReservationConfirmBlockedByActiveRental({ userId: input.userId }))),
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-        );
-        if (!rentalStarted) {
-          return yield* Effect.fail(new ReservedRentalNotFound({ reservationId: reservation.id }));
-        }
-
         const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now).pipe(
           Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
         );
@@ -87,8 +69,48 @@ export function confirmReservationUseCase(
           }));
         }
 
+        yield* txRentalRepo.createRental({
+          userId: input.userId,
+          reservationId: reservation.id,
+          bikeId,
+          startStationId: reservation.stationId,
+          startTime: now,
+          subscriptionId: reservation.subscriptionId ?? null,
+        }).pipe(
+          Effect.catchTag("RentalUniqueViolation", ({ constraint }) => {
+            const mapped = rentalUniqueViolationToFailure({
+              constraint,
+              bikeId,
+              userId: input.userId,
+            });
+
+            if (Option.isNone(mapped)) {
+              return Effect.die(new Error(
+                `Unhandled rental unique constraint while confirming reservation: ${String(constraint)}`,
+              ));
+            }
+
+            if (mapped.value._tag === "ActiveRentalExists") {
+              return Effect.fail(new ReservationConfirmBlockedByActiveRental({ userId: input.userId }));
+            }
+
+            return Effect.die(new Error(
+              `Invariant violated: bike ${bikeId} should not be concurrently rented while confirming reservation ${reservation.id}`,
+            ));
+          }),
+          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+        );
+
+        const updatedReservation = yield* reservationService.updateStatus({
+          reservationId: reservation.id,
+          status: "FULFILLED",
+          updatedAt: now,
+        }).pipe(
+          Effect.catchTag("ReservationNotFound", err => Effect.die(err)),
+        );
+
         // TODO(iot): send booking "claim" command once IoT integration is ready.
-        return reservation;
+        return updatedReservation;
       })).pipe(
       Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
     );

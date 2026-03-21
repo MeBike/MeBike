@@ -32,15 +32,7 @@ export type CreateRentalInput = {
   startStationId: string;
   startTime: Date;
   subscriptionId?: string | null;
-};
-
-export type CreateReservedRentalInput = {
-  reservationId: string;
-  userId: string;
-  bikeId: string;
-  startStationId: string;
-  startTime: Date;
-  subscriptionId?: string | null;
+  reservationId?: string | null;
 };
 
 export type UpdateRentalOnEndInput = {
@@ -88,10 +80,6 @@ export type RentalRepo = {
     data: CreateRentalInput,
   ) => Effect.Effect<RentalRow, RentalRepoError>;
 
-  createReservedRentalForReservation: (
-    data: CreateReservedRentalInput,
-  ) => Effect.Effect<RentalRow, RentalRepoError>;
-
   updateRentalOnEnd: (
     data: UpdateRentalOnEndInput,
   ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
@@ -99,36 +87,6 @@ export type RentalRepo = {
   findById: (
     rentalId: string,
   ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  /**
-   * EN: Assign bike to a reserved rental if it is still unassigned.
-   * VI: Gán bike cho rental RESERVED nếu vẫn chưa có bike.
-   */
-  assignBikeToReservedRental: (
-    rentalId: string,
-    bikeId: string,
-    updatedAt: Date,
-  ) => Effect.Effect<boolean, RentalRepositoryError>;
-
-  /**
-   * EN: Start a RESERVED rental by marking it RENTED and setting start time.
-   * VI: Bắt đầu rental RESERVED bằng cách chuyển sang RENTED và set start time.
-   */
-  startReservedRental: (
-    rentalId: string,
-    startTime: Date,
-    updatedAt: Date,
-    subscriptionId: string | null,
-  ) => Effect.Effect<boolean, RentalRepoError>;
-
-  /**
-   * EN: Cancel a RESERVED rental (no-op if status already changed).
-   * VI: Hủy rental RESERVED (không làm gì nếu status đã đổi).
-   */
-  cancelReservedRental: (
-    rentalId: string,
-    updatedAt: Date,
-  ) => Effect.Effect<boolean, RentalRepositoryError>;
 
   // Admin read views
   adminListRentals: (

@@ -232,14 +232,6 @@ const confirmReservation: RouteHandler<ReservationsRoutes["confirmReservation"]>
               to,
             },
           }, 400)),
-        Match.tag("ReservedRentalNotFound", ({ reservationId: missingId }) =>
-          c.json<ReservationErrorResponse, 400>({
-            error: reservationErrorMessages.RESERVED_RENTAL_NOT_FOUND,
-            details: {
-              code: ReservationErrorCodeSchema.enum.RESERVED_RENTAL_NOT_FOUND,
-              reservationId: missingId,
-            },
-          }, 400)),
         Match.tag("BikeNotFound", ({ bikeId }) =>
           c.json<ReservationErrorResponse, 400>({
             error: reservationErrorMessages.BIKE_NOT_FOUND,

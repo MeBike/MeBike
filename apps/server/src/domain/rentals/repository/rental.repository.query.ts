@@ -84,6 +84,7 @@ export function toStaffBikeSwapRequestsOrderBy(
 export const rentalSelect = {
   id: true,
   userId: true,
+  reservationId: true,
   bikeId: true,
   startStationId: true,
   endStationId: true,
@@ -104,6 +105,7 @@ export function mapToRentalRow(raw: RentalSelectRow): RentalRow {
   return {
     id: raw.id,
     userId: raw.userId,
+    reservationId: raw.reservationId,
     bikeId: raw.bikeId,
     startStationId: raw.startStationId,
     endStationId: raw.endStationId,

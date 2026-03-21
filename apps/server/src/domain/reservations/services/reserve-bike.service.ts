@@ -13,7 +13,6 @@ import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
-import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
 import { makeStationRepository } from "@/domain/stations";
@@ -82,20 +81,17 @@ export function reserveBikeUseCase(
   | ReservationHoldServiceTag
   | BikeRepository
   | SubscriptionServiceTag
-  | RentalRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const reservationService = yield* ReservationServiceTag;
     const reservationHoldService = yield* ReservationHoldServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
-    yield* RentalRepository;
     const now = input.now ?? new Date();
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
         const bikeRepo = makeBikeRepository(tx);
-        const txRentalRepo = makeRentalRepository(tx);
         if (input.reservationOption === "FIXED_SLOT") {
           return yield* Effect.fail(
             new ReservationOptionNotSupported({ option: input.reservationOption }),
@@ -189,18 +185,6 @@ export function reserveBikeUseCase(
           endTime,
           prepaid,
         });
-
-        yield* txRentalRepo.createReservedRentalForReservation({
-          reservationId: reservation.id,
-          userId: reservation.userId,
-          bikeId: reservation.bikeId ?? input.bikeId,
-          startStationId: reservation.stationId,
-          startTime: reservation.startTime,
-          subscriptionId: reservation.subscriptionId ?? null,
-        }).pipe(
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-          Effect.catchTag("RentalUniqueViolation", err => Effect.die(err)),
-        );
 
         const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now).pipe(
           Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
