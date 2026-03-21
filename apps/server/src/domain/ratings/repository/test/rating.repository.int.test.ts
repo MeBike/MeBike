@@ -48,7 +48,7 @@ describe("ratingRepository Integration", () => {
         id,
         type: "ISSUE",
         appliesTo,
-        messages: `Reason ${id}`,
+        message: `Reason ${id}`,
       },
     });
     return { id };
@@ -65,7 +65,10 @@ describe("ratingRepository Integration", () => {
       repo.createRating({
         userId,
         rentalId,
-        rating: 5,
+        bikeId,
+        stationId,
+        bikeScore: 5,
+        stationScore: 4,
         comment: "Great ride",
         reasonIds: [reason.id],
       }),
@@ -91,7 +94,10 @@ describe("ratingRepository Integration", () => {
       repo.createRating({
         userId,
         rentalId,
-        rating: 4,
+        bikeId,
+        stationId,
+        bikeScore: 4,
+        stationScore: 4,
         reasonIds: [reason.id],
       }),
     );
@@ -101,7 +107,10 @@ describe("ratingRepository Integration", () => {
         .createRating({
           userId,
           rentalId,
-          rating: 3,
+          bikeId,
+          stationId,
+          bikeScore: 3,
+          stationScore: 3,
           reasonIds: [reason.id],
         })
         .pipe(Effect.either),
@@ -140,21 +149,30 @@ describe("ratingRepository Integration", () => {
     await Effect.runPromise(repo.createRating({
       userId,
       rentalId: rentalOne.id,
-      rating: 5,
+      bikeId,
+      stationId,
+      bikeScore: 5,
+      stationScore: 4,
       reasonIds: [reason.id],
     }));
 
     await Effect.runPromise(repo.createRating({
       userId,
       rentalId: rentalTwo.id,
-      rating: 3,
+      bikeId,
+      stationId,
+      bikeScore: 3,
+      stationScore: 2,
       reasonIds: [reason.id],
     }));
 
     await Effect.runPromise(repo.createRating({
       userId,
       rentalId: rentalOther.id,
-      rating: 1,
+      bikeId: otherBikeId,
+      stationId,
+      bikeScore: 1,
+      stationScore: 1,
       reasonIds: [reason.id],
     }));
 

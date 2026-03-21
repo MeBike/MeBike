@@ -31,7 +31,8 @@ const create: RouteHandler<RatingsRoutes["create"]> = async (c) => {
     createRatingWithGuardsUseCase({
       rentalId,
       userId,
-      rating: body.rating,
+      bikeScore: body.bikeScore,
+      stationScore: body.stationScore,
       reasonIds: body.reasonIds,
       comment: body.comment ?? null,
     }),

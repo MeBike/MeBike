@@ -36,36 +36,31 @@ export class RatingRepository extends Context.Tag("RatingRepository")<
 export function makeRatingRepository(client: PrismaClient): RatingRepo {
   const findSummaryByWhere = (
     where: PrismaTypes.RatingWhereInput,
+    scoreField: "bikeScore" | "stationScore",
     operation: string,
   ) =>
     Effect.tryPromise({
       try: async () => {
-        const [aggregate, grouped] = await Promise.all([
-          client.rating.aggregate({
-            where,
-            _avg: {
-              rating: true,
-            },
-            _count: {
-              _all: true,
-            },
-          }),
-          client.rating.groupBy({
-            by: ["rating"],
-            where,
-            _count: {
-              _all: true,
-            },
-          }),
-        ]);
+        const scores = scoreField === "bikeScore"
+          ? (await client.rating.findMany({
+              where,
+              select: { bikeScore: true },
+            })).map(row => row.bikeScore)
+          : (await client.rating.findMany({
+              where,
+              select: { stationScore: true },
+            })).map(row => row.stationScore);
 
-        const groupedCounts = new Map(
-          grouped.map(row => [row.rating, row._count._all]),
-        );
+        const totalRatings = scores.length;
+        const totalScore = scores.reduce((sum, score) => sum + score, 0);
+        const groupedCounts = new Map<number, number>();
+        for (const score of scores) {
+          groupedCounts.set(score, (groupedCounts.get(score) ?? 0) + 1);
+        }
 
         return {
-          averageRating: Number(aggregate._avg.rating ?? 0),
-          totalRatings: aggregate._count._all,
+          averageRating: totalRatings === 0 ? 0 : Number((totalScore / totalRatings).toFixed(2)),
+          totalRatings,
           breakdown: {
             oneStar: groupedCounts.get(1) ?? 0,
             twoStar: groupedCounts.get(2) ?? 0,
@@ -86,21 +81,32 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
     createRating: input =>
       Effect.tryPromise({
         try: () =>
-          client.rating.create({
-            data: {
-              userId: input.userId,
-              rentalId: input.rentalId,
-              rating: input.rating,
-              comment: input.comment ?? null,
-              reasons: {
-                createMany: {
-                  data: input.reasonIds.map(id => ({
-                    reasonId: id,
-                  })),
+          client.$transaction(async (tx) => {
+            const reasons = await tx.ratingReason.findMany({
+              where: { id: { in: input.reasonIds as string[] } },
+              select: { id: true, appliesTo: true },
+            });
+
+            return tx.rating.create({
+              data: {
+                userId: input.userId,
+                rentalId: input.rentalId,
+                bikeId: input.bikeId ?? null,
+                stationId: input.stationId ?? null,
+                bikeScore: input.bikeScore,
+                stationScore: input.stationScore,
+                comment: input.comment ?? null,
+                reasons: {
+                  createMany: {
+                    data: reasons.map(reason => ({
+                      reasonId: reason.id,
+                      target: reason.appliesTo,
+                    })),
+                  },
                 },
               },
-            },
-            select: selectRatingRow,
+              select: selectRatingRow,
+            });
           }),
         catch: (err) => {
           if (isPrismaUniqueViolation(err)) {
@@ -135,56 +141,18 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
     findBikeSummary: bikeId =>
       findSummaryByWhere(
         {
-          rental: {
-            bikeId,
-          },
-          OR: [
-            {
-              reasons: {
-                some: {
-                  reason: {
-                    appliesTo: "bike",
-                  },
-                },
-              },
-            },
-            {
-              NOT: {
-                reasons: {
-                  some: {},
-                },
-              },
-            },
-          ],
+          bikeId,
         },
+        "bikeScore",
         "findBikeSummary",
       ),
 
     findStationSummary: stationId =>
       findSummaryByWhere(
         {
-          rental: {
-            startStationId: stationId,
-          },
-          OR: [
-            {
-              reasons: {
-                some: {
-                  reason: {
-                    appliesTo: "station",
-                  },
-                },
-              },
-            },
-            {
-              NOT: {
-                reasons: {
-                  some: {},
-                },
-              },
-            },
-          ],
+          stationId,
         },
+        "stationScore",
         "findStationSummary",
       ),
   };

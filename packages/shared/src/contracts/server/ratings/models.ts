@@ -4,17 +4,24 @@ export const RatingDetailSchema = z.object({
   id: z.uuidv7(),
   rentalId: z.uuidv7(),
   userId: z.uuidv7(),
-  rating: z.number().int().min(1).max(5),
+  bikeId: z.uuidv7().nullable(),
+  stationId: z.uuidv7().nullable(),
+  bikeScore: z.number().int().min(1).max(5),
+  stationScore: z.number().int().min(1).max(5),
   comment: z.string().max(500).nullable(),
   reasonIds: z.array(z.uuidv7()).min(1),
-  updatedAt: z.string(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+  editedAt: z.iso.datetime().nullable(),
 });
 
 export const RatingReasonSchema = z.object({
   id: z.uuidv7(),
   type: z.enum(["ISSUE", "COMPLIMENT"]),
-  appliesTo: z.enum(["bike", "station", "app"]),
-  messages: z.string(),
+  appliesTo: z.enum(["bike", "station"]),
+  message: z.string(),
+  isDefault: z.boolean(),
+  isActive: z.boolean(),
 });
 
 export const RatingSummaryBreakdownSchema = z.object({
