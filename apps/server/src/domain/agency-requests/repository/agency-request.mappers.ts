@@ -67,18 +67,18 @@ export function toAgencyRequestRow(
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     requesterUser: row.requesterUser
-        ? {
-            id: row.requesterUser.id,
-            fullName: row.requesterUser.fullName,
-            email: row.requesterUser.email,
-          }
+      ? {
+          id: row.requesterUser.id,
+          fullName: row.requesterUser.fullName,
+          email: row.requesterUser.email,
+        }
       : null,
     reviewedByUser: row.reviewedByUser
-        ? {
-            id: row.reviewedByUser.id,
-            fullName: row.reviewedByUser.fullName,
-            email: row.reviewedByUser.email,
-          }
+      ? {
+          id: row.reviewedByUser.id,
+          fullName: row.reviewedByUser.fullName,
+          email: row.reviewedByUser.email,
+        }
       : null,
     approvedAgency: row.approvedAgency
       ? {
@@ -87,11 +87,11 @@ export function toAgencyRequestRow(
         }
       : null,
     createdAgencyUser: row.createdAgencyUser
-        ? {
-            id: row.createdAgencyUser.id,
-            fullName: row.createdAgencyUser.fullName,
-            email: row.createdAgencyUser.email,
-          }
+      ? {
+          id: row.createdAgencyUser.id,
+          fullName: row.createdAgencyUser.fullName,
+          email: row.createdAgencyUser.email,
+        }
       : null,
   };
 }

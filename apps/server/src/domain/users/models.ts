@@ -62,7 +62,7 @@ export type UpdateUserProfilePatch = Partial<{
   accountStatus: AccountStatus;
   verify: UserVerifyStatus;
   nfcCardUid: string | null;
-}>; 
+}>;
 
 export type UpdateUserAdminPatch = Partial<{
   fullname: string;
@@ -76,7 +76,7 @@ export type UpdateUserAdminPatch = Partial<{
   verify: UserVerifyStatus;
   orgAssignment: UserOrgAssignmentPatch | null;
   nfcCardUid: string | null;
-}>; 
+}>;
 
 export type UserFilter = {
   readonly fullname?: string;
