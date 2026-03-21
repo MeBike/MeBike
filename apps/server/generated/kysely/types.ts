@@ -189,13 +189,13 @@ export type RentalPenaltyType = (typeof RentalPenaltyType)[keyof typeof RentalPe
 export const RentalStatus = {
     RENTED: "RENTED",
     COMPLETED: "COMPLETED",
-    CANCELLED: "CANCELLED",
-    RESERVED: "RESERVED"
+    CANCELLED: "CANCELLED"
 } as const;
 export type RentalStatus = (typeof RentalStatus)[keyof typeof RentalStatus];
 export const ReservationStatus = {
     PENDING: "PENDING",
     ACTIVE: "ACTIVE",
+    FULFILLED: "FULFILLED",
     CANCELLED: "CANCELLED",
     EXPIRED: "EXPIRED"
 } as const;
@@ -206,6 +206,12 @@ export const ReservationOption = {
     SUBSCRIPTION: "SUBSCRIPTION"
 } as const;
 export type ReservationOption = (typeof ReservationOption)[keyof typeof ReservationOption];
+export const ReturnSlotStatus = {
+    ACTIVE: "ACTIVE",
+    USED: "USED",
+    CANCELLED: "CANCELLED"
+} as const;
+export type ReturnSlotStatus = (typeof ReturnSlotStatus)[keyof typeof ReturnSlotStatus];
 export const SubscriptionStatus = {
     PENDING: "PENDING",
     ACTIVE: "ACTIVE",
@@ -552,6 +558,7 @@ export type RedistributionRequestItem = {
 export type Rental = {
     id: string;
     user_id: string;
+    reservation_id: string | null;
     bike_id: string | null;
     start_station: string;
     end_station: string | null;
@@ -612,6 +619,16 @@ export type ReturnConfirmation = {
     handover_status: Generated<HandoverStatus>;
     confirmed_at: Timestamp;
     created_at: Generated<Timestamp>;
+};
+export type ReturnSlotReservation = {
+    id: string;
+    rental_id: string;
+    user_id: string;
+    station_id: string;
+    reserved_from: Timestamp;
+    status: Generated<ReturnSlotStatus>;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
 };
 export type Station = {
     id: string;
@@ -785,6 +802,7 @@ export type DB = {
     rental_penalties: RentalPenalty;
     Reservation: Reservation;
     return_confirmations: ReturnConfirmation;
+    return_slot_reservations: ReturnSlotReservation;
     Station: Station;
     Subscription: Subscription;
     Supplier: Supplier;

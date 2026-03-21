@@ -1,0 +1,29 @@
+enum ReturnSlotStatus {
+  ACTIVE
+  USED
+  CANCELLED
+}
+
+model ReturnSlotReservation {
+  id           String           @id @default(uuid(7)) @db.Uuid
+  rentalId     String           @map("rental_id") @db.Uuid
+  userId       String           @map("user_id") @db.Uuid
+  stationId    String           @map("station_id") @db.Uuid
+  reservedFrom DateTime         @map("reserved_from") @db.Timestamptz
+  status       ReturnSlotStatus @default(ACTIVE)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  rental  Rental  @relation(fields: [rentalId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  station Station @relation(fields: [stationId], references: [id])
+
+  // Partial unique index (one active return slot per rental) cannot be expressed in Prisma; add manually:
+  // CREATE UNIQUE INDEX idx_return_slot_reservations_active_rental ON return_slot_reservations(rental_id) WHERE status = 'ACTIVE';
+
+  @@index([rentalId], name: "idx_return_slot_reservations_rental")
+  @@index([userId], name: "idx_return_slot_reservations_user")
+  @@index([stationId], name: "idx_return_slot_reservations_station")
+  @@index([status], name: "idx_return_slot_reservations_status")
+  @@map("return_slot_reservations")
+}

@@ -2,12 +2,12 @@ enum RentalStatus {
   RENTED
   COMPLETED
   CANCELLED
-  RESERVED
 }
 
 model Rental {
   id             String       @id @default(uuid(7)) @db.Uuid
   userId         String       @map("user_id") @db.Uuid
+  reservationId  String?      @unique @map("reservation_id") @db.Uuid
   bikeId         String?      @map("bike_id") @db.Uuid
   startStationId String       @map("start_station") @db.Uuid
   endStationId   String?      @map("end_station") @db.Uuid
@@ -20,18 +20,20 @@ model Rental {
   status         RentalStatus @default(RENTED)
   updatedAt      DateTime     @default(now()) @map("updated_at") @db.Timestamptz
 
-  user             User              @relation(fields: [userId], references: [id])
-  bike             Bike?             @relation(fields: [bikeId], references: [id])
-  startStation     Station           @relation("RentalStartStation", fields: [startStationId], references: [id])
-  endStation       Station?          @relation("RentalEndStation", fields: [endStationId], references: [id])
-  subscription     Subscription?     @relation(fields: [subscriptionId], references: [id])
-  rating           Rating?
-  bikeSwapRequests BikeSwapRequest[]
-  payments         Payment[]
-  returnConfirmation ReturnConfirmation?
-  rentalBillingRecord RentalBillingRecord?
-  rentalPenalties  RentalPenalty[]
-  incidentReports  IncidentReport[]
+  user                    User                     @relation(fields: [userId], references: [id])
+  reservation             Reservation?             @relation(fields: [reservationId], references: [id])
+  bike                    Bike?                    @relation(fields: [bikeId], references: [id])
+  startStation            Station                  @relation("RentalStartStation", fields: [startStationId], references: [id])
+  endStation              Station?                 @relation("RentalEndStation", fields: [endStationId], references: [id])
+  subscription            Subscription?            @relation(fields: [subscriptionId], references: [id])
+  rating                  Rating?
+  bikeSwapRequests        BikeSwapRequest[]
+  payments                Payment[]
+  returnConfirmation      ReturnConfirmation?
+  returnSlotReservations  ReturnSlotReservation[]
+  rentalBillingRecord     RentalBillingRecord?
+  rentalPenalties         RentalPenalty[]
+  incidentReports         IncidentReport[]
   environmentalImpactStat EnvironmentalImpactStat?
   // Partial unique index for active rentals per bike cannot be expressed in Prisma:
   // CREATE UNIQUE INDEX idx_rentals_active_bike ON rentals(bike_id) WHERE status = 'RENTED' AND bike_id IS NOT NULL;
