@@ -8,7 +8,6 @@ import type {
 
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
-import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 
 import type { ReturnSlotRepoError } from "../domain-errors";
 import type {
@@ -21,6 +20,7 @@ import {
 
   ReturnSlotUniqueViolation,
 } from "../domain-errors";
+import { isKnownReturnSlotUniqueConstraint, uniqueTargets } from "./unique-violation";
 
 type CreateActiveReturnSlotInput = {
   rentalId: string;
@@ -115,12 +115,20 @@ export function makeReturnSlotRepository(
           Match.value(cause).pipe(
             Match.when(
               isPrismaUniqueViolation,
-              error =>
-                new ReturnSlotUniqueViolation({
-                  operation: "returnSlot.createActive",
-                  constraint: uniqueTargets(error),
-                  cause: error,
-                }),
+              (error) => {
+                const constraint = uniqueTargets(error);
+
+                return isKnownReturnSlotUniqueConstraint(constraint)
+                  ? new ReturnSlotUniqueViolation({
+                      operation: "returnSlot.createActive",
+                      constraint,
+                      cause: error,
+                    })
+                  : new RentalRepositoryError({
+                      operation: "returnSlot.createActive",
+                      cause: error,
+                    });
+              },
             ),
             Match.orElse(
               error =>

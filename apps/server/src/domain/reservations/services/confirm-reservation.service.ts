@@ -44,7 +44,7 @@ export function confirmReservationUseCase(
       Effect.gen(function* () {
         const txRentalRepo = makeRentalRepository(tx);
         const bikeRepo = makeBikeRepository(tx);
-        const { reservation, bikeId } = yield* reservationService.confirmPendingInTx(
+        const { reservation, bikeId } = yield* reservationService.validatePendingForConfirmationInTx(
           tx,
           {
             reservationId: input.reservationId,
