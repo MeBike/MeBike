@@ -28,16 +28,30 @@ import {
   getAxiosErrorCodeMessage,
 } from "@utils";
 import type { UserActionProps } from "@custom-types";
+
+type UserActionArgs = UserActionProps & {
+  accountStatus?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
+};
+
+const toManageableUserRole = (role?: UserActionProps["role"]): "ADMIN" | "USER" | "STAFF" | "" => {
+  if (role === "ADMIN" || role === "USER" || role === "STAFF") {
+    return role;
+  }
+
+  return "";
+};
+
 export const useUserActions = ({
   hasToken,
   verify,
+  accountStatus,
   role,
   limit,
   page,
   searchQuery,
   fullName,
   id,
-}: UserActionProps) => {
+}: UserActionArgs) => {
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();
   const queryClient = useQueryClient();
@@ -49,10 +63,14 @@ export const useUserActions = ({
   const { data, refetch, isLoading, isFetching } = useGetAllUserQuery({
     page: page,
     pageSize: limit,
-    role: role || "",
+    role: toManageableUserRole(role),
     verify: verify || "",
+    accountStatus: accountStatus || "",
     fullName: fullName || "",
   });
+  const pagination = data?.pagination as
+    | { total?: number; totalRecords?: number }
+    | undefined;
   const {
     data: statisticsData,
     refetch: refetchStatistics,
@@ -280,7 +298,7 @@ export const useUserActions = ({
     createUser,
     paginationUser: data?.pagination,
     isLoadingSearch,
-    totalRecordUser: data?.pagination?.totalRecords || 0,
+    totalRecordUser: pagination?.total ?? pagination?.totalRecords ?? 0,
     getDetailUser,
     detailUserData,
     isLoadingDetailUser,

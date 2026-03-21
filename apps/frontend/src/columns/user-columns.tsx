@@ -3,6 +3,11 @@ import { Eye } from "lucide-react";
 import type { UserRole } from "@/types";
 import type { DetailUser } from "@/types";
 import { formatToVNTime } from "@/lib/formatVNDate";
+
+const getUserDisplayStatus = (user: { verify: string; accountStatus?: string }) => {
+  return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
+};
+
 export const getVerifyStatusColor = (status: string) => {
   switch (status) {
     case "VERIFIED":
@@ -76,17 +81,21 @@ export const userColumns = ({
   {
     accessorKey: "verify",
     header: "Trạng thái xác thực",
-    cell: ({ row }) => (
-      <div className="flex justify-center items-center">
-        <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
-          row.original.verify
-        )}`}
-      >
-        {row.original.verify === "VERIFIED" ? "VERIFIED" : "UNVERIFIED"}
-      </span>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const displayStatus = getUserDisplayStatus(row.original);
+
+      return (
+        <div className="flex justify-center items-center">
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
+              displayStatus
+            )}`}
+          >
+            {displayStatus}
+          </span>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "created_at",

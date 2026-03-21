@@ -16,10 +16,6 @@ import {
   User,
   Mail,
   Phone,
-  MapPin,
-  Calendar,
-  CreditCard,
-  AtSign,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CreateUserFormData } from "@/schemas/user-schema";
@@ -45,7 +41,7 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
         fullName: formData.fullName,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        role: formData.role.toUpperCase() as "USER" | "STAFF" | "ADMIN" | "SOS",
+        role: formData.role.toUpperCase() as "USER" | "STAFF" | "ADMIN",
     }
     onSubmit({data});
   };
@@ -122,7 +118,6 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
                       <SelectItem value="USER">User</SelectItem>
                       <SelectItem value="STAFF">Staff</SelectItem>
                       <SelectItem value="ADMIN">Admin</SelectItem>
-                      <SelectItem value="SOS">SOS</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -2,7 +2,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
   Shield,
   CreditCard,
   User,
@@ -16,12 +15,15 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatToVNTime } from "@lib/formatVNDate";
 import type { DetailUser as Me, VerifyStatus } from "@/types";
+
 type StatusConfig = {
   label: string;
   variant: "success" | "muted" | "destructive";
 };
 
-const statusConfig: Record<VerifyStatus, StatusConfig> = {
+type UserDisplayStatus = VerifyStatus | "BANNED";
+
+const statusConfig: Record<UserDisplayStatus, StatusConfig> = {
   VERIFIED: { label: "Đã xác thực", variant: "success" },
   UNVERIFIED: { label: "Chưa xác thực", variant: "muted" },
   BANNED: { label: "Bị khóa", variant: "destructive" },
@@ -32,14 +34,23 @@ const roleConfig = {
   ADMIN: { label: "Admin", variant: "default" as const },
   STAFF: { label: "Staff", variant: "info" as const },
   USER: { label: "User", variant: "secondary" as const },
-  SOS: { label: "Guest", variant: "secondary" as const },
+  SOS: { label: "SOS", variant: "secondary" as const },
 };
 
 interface UserDetailProps {
     user : Me;
 }
+
+const getUserDisplayStatus = (user: {
+  verify: VerifyStatus;
+  accountStatus?: string;
+}): UserDisplayStatus => {
+  return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
+};
+
 export default function DetailUser({user}: UserDetailProps) {
-   const status = statusConfig[user.verify] || statusConfig.UNVERIFIED;
+   const displayStatus = getUserDisplayStatus(user);
+   const status = statusConfig[displayStatus] || statusConfig.UNVERIFIED;
    const role = roleConfig[user.role] || roleConfig.USER;
   if (!user) {
     return (
@@ -63,17 +74,6 @@ export default function DetailUser({user}: UserDetailProps) {
       .slice(0, 2);
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   return (
     <div>
       <PageHeader title="User Details" backLink="/admin/customers" />
@@ -83,7 +83,7 @@ export default function DetailUser({user}: UserDetailProps) {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={user.avatar} alt={user.fullName} />
+                <AvatarImage src={user.avatar ?? undefined} alt={user.fullName} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
                   {getInitials(user.fullName)}
                 </AvatarFallback>
@@ -104,7 +104,7 @@ export default function DetailUser({user}: UserDetailProps) {
                 <Badge >{status.label}</Badge>
               </div>
 
-              {user.verify === "VERIFIED" && (
+              {displayStatus === "VERIFIED" && (
                 <div className="flex items-center gap-1 text-sm text-green-600 mt-3">
                   <CheckCircle className="h-4 w-4" />
                   <span>Verified Account</span>
@@ -194,7 +194,11 @@ export default function DetailUser({user}: UserDetailProps) {
               <div className="space-y-2">
                 <Label>Status</Label>
                 <p className="text-sm text-muted-foreground py-2">
-                  {user.verify === "VERIFIED" ? "Verified" : "Pending Verification"}
+                  {displayStatus === "VERIFIED"
+                    ? "Verified"
+                    : displayStatus === "BANNED"
+                      ? "Banned"
+                      : "Pending Verification"}
                 </p>
               </div>
 
@@ -248,11 +252,13 @@ export default function DetailUser({user}: UserDetailProps) {
                 <Label>Verification Status</Label>
                 <p className="text-sm text-muted-foreground">
                   <Badge
-                    variant={user.verify === "VERIFIED" ? "success" : "warning"}
+                    variant={displayStatus === "VERIFIED" ? "success" : "warning"}
                   >
-                    {user.verify === "VERIFIED"
+                    {displayStatus === "VERIFIED"
                       ? "Verified"
-                      : "Pending Verification"}
+                      : displayStatus === "BANNED"
+                        ? "Banned"
+                        : "Pending Verification"}
                   </Badge>
                 </p>
               </div>

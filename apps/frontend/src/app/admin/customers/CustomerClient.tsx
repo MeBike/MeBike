@@ -19,6 +19,9 @@ import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+
+type UserStatusFilter = VerifyStatus | "BANNED" | "all";
+
 export default function CustomersClient() {
   const router = useRouter();
   const {
@@ -30,12 +33,16 @@ export default function CustomersClient() {
     resolver: zodResolver(createUserSchema),
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
+  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const verifyQuery =
+    verifyFilter === "VERIFIED" || verifyFilter === "UNVERIFIED"
+      ? verifyFilter
+      : "";
+  const accountStatusQuery = verifyFilter === "BANNED" ? "BANNED" : "";
   const {
     users,
     getAllUsers,
@@ -51,9 +58,9 @@ export default function CustomersClient() {
     hasToken: true,
     limit: limit,
     page: currentPage,
-    verify: verifyFilter === "all" ? "" : verifyFilter,
+    verify: verifyFilter === "all" ? "" : verifyQuery,
+    accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
     role: roleFilter === "all" ? "" : (roleFilter as UserRole),
-    id: selectedUserId || "",
     fullName: searchQuery,
   });
   useEffect(() => {
@@ -144,7 +151,7 @@ export default function CustomersClient() {
               <select
                 value={verifyFilter}
                 onChange={(e) => {
-                  setVerifyFilter(e.target.value as VerifyStatus | "all");
+                  setVerifyFilter(e.target.value as UserStatusFilter);
                   handleFilterChange();
                 }}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
@@ -170,7 +177,6 @@ export default function CustomersClient() {
                 <option value="ADMIN">Admin</option>
                 <option value="STAFF">Staff</option>
                 <option value="USER">User</option>
-                <option value="SOS">SOS</option>
               </select>
             </div>
           </div>
@@ -274,7 +280,6 @@ export default function CustomersClient() {
                     <option value="USER">Người dùng (User)</option>
                     <option value="STAFF">Nhân viên (Staff)</option>
                     <option value="ADMIN">Quản trị viên (Admin)</option>
-                    <option value="SOS">Cấp cứu (SOS)</option>
                   </select>
                   {errors.role && (
                     <p className="text-destructive text-xs font-medium">
