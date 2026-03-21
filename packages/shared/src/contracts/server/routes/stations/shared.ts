@@ -38,15 +38,6 @@ const LongitudeSchema = z.number()
   .min(-180, { message: "longitude must be greater than or equal to -180" })
   .max(180, { message: "longitude must be less than or equal to 180" });
 
-function requiredNumberQuery(field: string, example?: number) {
-  return z.preprocess(
-    value => (typeof value === "string" ? Number(value) : value),
-    z
-      .number()
-      .refine(Number.isFinite, { message: `${field} must be a number` }),
-  ).openapi({ example });
-}
-
 function optionalNumberQuery(field: string, example?: number) {
   return z
     .preprocess(
