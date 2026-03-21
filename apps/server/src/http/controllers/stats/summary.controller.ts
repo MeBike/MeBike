@@ -8,7 +8,7 @@ const getSummary: RouteHandler<StatsRoutes["getSummary"]> = async (c) => {
   const [stationRow, bikeRow, userRow] = await Promise.all([
     db.selectFrom("Station").select(eb => eb.fn.countAll<number>().as("count")).executeTakeFirst(),
     db.selectFrom("Bike").select(eb => eb.fn.countAll<number>().as("count")).executeTakeFirst(),
-    db.selectFrom("User").select(eb => eb.fn.countAll<number>().as("count")).executeTakeFirst(),
+    db.selectFrom("users").select(eb => eb.fn.countAll<number>().as("count")).executeTakeFirst(),
   ]);
 
   return c.json({

@@ -11,23 +11,23 @@ enum UserRole {
 enum UserVerifyStatus {
   UNVERIFIED
   VERIFIED
-  BANNED
 }
 
 // Users table
 
 model User {
   id                       String           @id @default(uuid(7)) @db.Uuid
-  fullname                 String
+  fullName                 String           @map("full_name")
   email                    String           @unique
   phoneNumber              String?          @unique @map("phone_number")
   username                 String?
   passwordHash             String           @map("password_hash")
-  avatar                   String?
-  location                 String?
+  avatarUrl                String?          @map("avatar_url")
+  locationText             String?          @map("location_text")
   nfcCardUid               String?          @map("nfc_card_uid")
   role                     UserRole         @default(USER)
-  verify                   UserVerifyStatus @default(UNVERIFIED)
+  accountStatus            AccountStatus    @default(ACTIVE) @map("account_status")
+  verifyStatus             UserVerifyStatus @default(UNVERIFIED) @map("verify_status")
   stripeConnectedAccountId String?          @unique @map("stripe_connected_account_id") @db.Text
   stripePayoutsEnabled     Boolean?         @map("stripe_payouts_enabled")
   createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamptz
@@ -63,4 +63,5 @@ model User {
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")
   @@index([nfcCardUid], name: "idx_users_nfc", type: Brin) // partial index not expressible; BRIN as placeholder
+  @@map("users")
 }

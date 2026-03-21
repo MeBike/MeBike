@@ -1,14 +1,16 @@
 export type AccessTokenPayload = {
   userId: string;
   role: "USER" | "STAFF" | "TECHNICIAN" | "MANAGER" | "ADMIN" | "AGENCY";
-  verifyStatus: "UNVERIFIED" | "VERIFIED" | "BANNED";
+  accountStatus: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
+  verifyStatus: "UNVERIFIED" | "VERIFIED";
   tokenType: "access";
 };
 
 export type RefreshTokenPayload = {
   userId: string;
   tokenType: "refresh";
-  verifyStatus: "UNVERIFIED" | "VERIFIED" | "BANNED";
+  accountStatus: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
+  verifyStatus: "UNVERIFIED" | "VERIFIED";
   jti?: string;
 };
 

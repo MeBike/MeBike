@@ -155,13 +155,15 @@ export function makeUserRepository(
         return { email: sortDir };
       case "role":
         return { role: sortDir };
+      case "accountStatus":
+        return { accountStatus: sortDir };
       case "verify":
-        return { verify: sortDir };
+        return { verifyStatus: sortDir };
       case "updatedAt":
         return { updatedAt: sortDir };
       case "fullname":
       default:
-        return { fullname: sortDir };
+        return { fullName: sortDir };
     }
   };
 
@@ -174,12 +176,13 @@ export function makeUserRepository(
 
     return {
       ...(filter.fullname
-        ? { fullname: { contains: filter.fullname, mode: "insensitive" as const } }
+        ? { fullName: { contains: filter.fullname, mode: "insensitive" as const } }
         : {}),
       ...(filter.email
         ? { email: { contains: filter.email, mode: "insensitive" as const } }
         : {}),
-      ...(filter.verify ? { verify: filter.verify } : {}),
+      ...(filter.accountStatus ? { accountStatus: filter.accountStatus } : {}),
+      ...(filter.verify ? { verifyStatus: filter.verify } : {}),
       ...(filter.role ? { role: filter.role } : {}),
       ...(Object.keys(orgAssignment).length
         ? {
@@ -235,15 +238,16 @@ export function makeUserRepository(
 
           return client.user.create({
             data: {
-              fullname: data.fullname,
+              fullName: data.fullname,
               email: data.email,
               passwordHash: data.passwordHash,
               phoneNumber: data.phoneNumber ?? null,
               username: data.username ?? null,
-              avatar: data.avatar ?? null,
-              location: data.location ?? null,
+              avatarUrl: data.avatar ?? null,
+              locationText: data.location ?? null,
               role: data.role ?? UserRole.USER,
-              verify: data.verify ?? UserVerifyStatus.UNVERIFIED,
+              accountStatus: data.accountStatus ?? "ACTIVE",
+              verifyStatus: data.verify ?? UserVerifyStatus.UNVERIFIED,
               ...(orgAssignmentData
                 ? {
                     orgAssignment: {
@@ -299,13 +303,14 @@ export function makeUserRepository(
             client.user.update({
               where: { id },
               data: pickDefined({
-                fullname: patch.fullname,
+                fullName: patch.fullname,
                 phoneNumber: patch.phoneNumber,
                 username: patch.username,
-                avatar: patch.avatar,
-                location: patch.location,
+                avatarUrl: patch.avatar,
+                locationText: patch.location,
                 role: patch.role,
-                verify: patch.verify,
+                accountStatus: patch.accountStatus,
+                verifyStatus: patch.verify,
                 nfcCardUid: patch.nfcCardUid,
               }),
               select: selectUserRow,
@@ -356,14 +361,15 @@ export function makeUserRepository(
               await tx.user.update({
                 where: { id },
                 data: pickDefined({
-                  fullname: patch.fullname,
+                  fullName: patch.fullname,
                   email: patch.email,
                   phoneNumber: patch.phoneNumber,
                   username: patch.username,
-                  avatar: patch.avatar,
-                  location: patch.location,
+                  avatarUrl: patch.avatar,
+                  locationText: patch.location,
                   role: patch.role,
-                  verify: patch.verify,
+                  accountStatus: patch.accountStatus,
+                  verifyStatus: patch.verify,
                   nfcCardUid: patch.nfcCardUid,
                 }),
               });
@@ -479,7 +485,7 @@ export function makeUserRepository(
             client.user.update({
               where: { id },
               data: {
-                verify: UserVerifyStatus.VERIFIED,
+                verifyStatus: UserVerifyStatus.VERIFIED,
               },
               select: selectUserRow,
             }),

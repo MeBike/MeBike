@@ -65,7 +65,8 @@ describe("authService Integration", () => {
   const createUser = async (args: {
     email: string;
     password: string;
-    verify?: "UNVERIFIED" | "VERIFIED" | "BANNED";
+    verify?: "UNVERIFIED" | "VERIFIED";
+    accountStatus?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
   }) => {
     const id = uuidv7();
     const passwordHash = await bcrypt.hash(args.password, env.BCRYPT_SALT_ROUNDS);
@@ -73,11 +74,12 @@ describe("authService Integration", () => {
     await fixture.prisma.user.create({
       data: {
         id,
-        fullname: "Auth User",
+        fullName: "Auth User",
         email: args.email,
         passwordHash,
         role: "USER",
-        verify: args.verify ?? "UNVERIFIED",
+        accountStatus: args.accountStatus ?? "ACTIVE",
+        verifyStatus: args.verify ?? "UNVERIFIED",
       },
     });
 
@@ -128,7 +130,7 @@ describe("authService Integration", () => {
     const { email } = await createUser({
       email: "banned@example.com",
       password: "Password123!",
-      verify: "BANNED",
+      accountStatus: "BANNED",
     });
 
     const result = await runWithService(

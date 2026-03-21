@@ -3,6 +3,7 @@ import type { Insertable } from "kysely";
 import type { DB } from "generated/kysely/types";
 
 import {
+  AccountStatus,
   AuthEventType,
   RentalStatus,
   UserRole,
@@ -13,51 +14,54 @@ export const USER_VERIFIED_ID = "018d4529-6880-77a8-8e6f-4d2c88d22301";
 export const USER_UNVERIFIED_ID = "018d4529-6880-77a8-8e6f-4d2c88d22302";
 export const USER_BANNED_ID = "018d4529-6880-77a8-8e6f-4d2c88d22303";
 
-type UserSeed = Insertable<DB["User"]>;
+type UserSeed = Insertable<DB["users"]>;
 
 export const users: UserSeed[] = [
   {
     id: USER_VERIFIED_ID,
-    fullname: "Verified User",
+    full_name: "Verified User",
     email: "verified@example.com",
     password_hash: "hash123",
     phone_number: null,
     username: null,
-    avatar: null,
-    location: null,
+    avatar_url: null,
+    location_text: null,
     nfc_card_uid: null,
     role: UserRole.USER,
-    verify: UserVerifyStatus.VERIFIED,
+    account_status: AccountStatus.ACTIVE,
+    verify_status: UserVerifyStatus.VERIFIED,
     created_at: new Date("2024-01-15T10:00:00Z"),
     updated_at: new Date("2024-01-15T10:00:00Z"),
   },
   {
     id: USER_UNVERIFIED_ID,
-    fullname: "Unverified User",
+    full_name: "Unverified User",
     email: "unverified@example.com",
     password_hash: "hash123",
     phone_number: null,
     username: null,
-    avatar: null,
-    location: null,
+    avatar_url: null,
+    location_text: null,
     nfc_card_uid: null,
     role: UserRole.USER,
-    verify: UserVerifyStatus.UNVERIFIED,
+    account_status: AccountStatus.ACTIVE,
+    verify_status: UserVerifyStatus.UNVERIFIED,
     created_at: new Date("2024-02-15T10:00:00Z"),
     updated_at: new Date("2024-02-15T10:00:00Z"),
   },
   {
     id: USER_BANNED_ID,
-    fullname: "Banned User",
+    full_name: "Banned User",
     email: "banned@example.com",
     password_hash: "hash123",
     phone_number: null,
     username: null,
-    avatar: null,
-    location: null,
+    avatar_url: null,
+    location_text: null,
     nfc_card_uid: null,
     role: UserRole.USER,
-    verify: UserVerifyStatus.BANNED,
+    account_status: AccountStatus.BANNED,
+    verify_status: UserVerifyStatus.VERIFIED,
     created_at: new Date("2024-01-01T10:00:00Z"),
     updated_at: new Date("2024-01-01T10:00:00Z"),
   },

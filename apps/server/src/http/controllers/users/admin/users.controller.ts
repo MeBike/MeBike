@@ -26,6 +26,7 @@ const adminList: RouteHandler<UsersRoutes["adminList"]> = async (c) => {
       const service = yield* UserServiceTag;
       return yield* service.listWithOffset({
         fullname: query.fullName,
+        accountStatus: query.accountStatus,
         role: query.role,
         verify: query.verify,
         agencyId: query.agencyId,

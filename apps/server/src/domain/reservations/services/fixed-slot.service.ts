@@ -31,7 +31,7 @@ type FixedSlotTemplateWithDetails = {
   readonly stationId: string;
   readonly slotStart: Date;
   readonly user: {
-    readonly fullname: string;
+    readonly fullName: string;
     readonly email: string;
   };
   readonly station: {
@@ -128,7 +128,7 @@ export function assignFixedSlotReservationsUseCase(args: {
             userId: true,
             stationId: true,
             slotStart: true,
-            user: { select: { fullname: true, email: true } },
+            user: { select: { fullName: true, email: true } },
             station: { select: { name: true } },
           },
         }) as Promise<FixedSlotTemplateWithDetails[]>,
@@ -171,7 +171,7 @@ export function assignFixedSlotReservationsUseCase(args: {
 
               if (Option.isNone(bikeOpt)) {
                 const email = buildFixedSlotNoBikeEmail({
-                  fullName: template.user.fullname,
+                  fullName: template.user.fullName,
                   stationName: template.station.name,
                   slotDateLabel,
                   slotTimeLabel,
@@ -228,7 +228,7 @@ export function assignFixedSlotReservationsUseCase(args: {
               // TODO(iot): send reservation "reserve" command once IoT integration is ready.
 
               const email = buildFixedSlotAssignedEmail({
-                fullName: template.user.fullname,
+                fullName: template.user.fullName,
                 stationName: template.station.name,
                 slotDateLabel,
                 slotTimeLabel,

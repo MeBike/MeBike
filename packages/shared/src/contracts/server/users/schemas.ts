@@ -18,9 +18,11 @@ export const AdminManageableUserRoleSchema = z.enum([
   "ADMIN",
 ]);
 
-export const VerifyStatusSchema = z.enum(["UNVERIFIED", "VERIFIED", "BANNED"]);
+export const AccountStatusSchema = z.enum(["ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"]);
+export const VerifyStatusSchema = z.enum(["UNVERIFIED", "VERIFIED"]);
 
 export type UserRole = z.infer<typeof UserRoleSchema>;
+export type AccountStatus = z.infer<typeof AccountStatusSchema>;
 export type VerifyStatus = z.infer<typeof VerifyStatusSchema>;
 
 export const UserErrorCodeSchema = z.enum([

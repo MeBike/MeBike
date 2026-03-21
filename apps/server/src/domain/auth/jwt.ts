@@ -25,11 +25,13 @@ export function makeTokensForUser(user: UserRow, sessionId: string): Tokens {
   const accessPayload: AccessTokenPayload = {
     userId: user.id,
     role: user.role,
+    accountStatus: user.accountStatus,
     verifyStatus: user.verify as UserVerifyStatus,
     tokenType: "access",
   };
   const refreshPayload: RefreshTokenPayload = {
     userId: user.id,
+    accountStatus: user.accountStatus,
     verifyStatus: user.verify as UserVerifyStatus,
     tokenType: "refresh",
     jti: sessionId,

@@ -58,7 +58,7 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
     const payload = verifyAccessToken(token);
     if (payload) {
       const userOpt = await loadUser(c.var.runPromise, payload.userId);
-      if (Option.isNone(userOpt) || userOpt.value.verify === "BANNED") {
+      if (Option.isNone(userOpt) || userOpt.value.accountStatus === "BANNED") {
         c.set("authFailure", "forbidden");
       }
       else {
@@ -66,6 +66,7 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
         c.set("currentUser", {
           userId: user.id,
           role: user.role,
+          accountStatus: user.accountStatus,
           verifyStatus: user.verify,
           tokenType: "access",
         });

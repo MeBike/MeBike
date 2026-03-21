@@ -4,15 +4,16 @@ import type { UserRow } from "../models";
 
 export const selectUserRow = {
   id: true,
-  fullname: true,
+  fullName: true,
   email: true,
   phoneNumber: true,
   username: true,
   passwordHash: true,
-  avatar: true,
-  location: true,
+  avatarUrl: true,
+  locationText: true,
   role: true,
-  verify: true,
+  accountStatus: true,
+  verifyStatus: true,
   orgAssignment: {
     select: {
       station: {
@@ -45,15 +46,16 @@ export const selectUserRow = {
 export function toUserRow(row: PrismaTypes.UserGetPayload<{ select: typeof selectUserRow }>): UserRow {
   return {
     id: row.id,
-    fullname: row.fullname,
+    fullname: row.fullName,
     email: row.email,
     phoneNumber: row.phoneNumber,
     username: row.username,
     passwordHash: row.passwordHash,
-    avatar: row.avatar,
-    location: row.location,
+    avatar: row.avatarUrl,
+    location: row.locationText,
     role: row.role,
-    verify: row.verify,
+    accountStatus: row.accountStatus,
+    verify: row.verifyStatus,
     orgAssignment: row.orgAssignment
       ? {
           station: row.orgAssignment.station

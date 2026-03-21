@@ -11,6 +11,7 @@ export function mapUserDetail(
     id: row.id,
     fullName: row.fullname,
     email: row.email,
+    accountStatus: row.accountStatus,
     verify: row.verify,
     location: row.location,
     username: row.username,
