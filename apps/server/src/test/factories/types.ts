@@ -48,6 +48,7 @@ export type SupplierOverrides = {
 export type RentalOverrides = {
   id?: string;
   userId?: string;
+  reservationId?: string | null;
   bikeId?: string | null;
   startStationId?: string;
   endStationId?: string | null;
@@ -56,7 +57,7 @@ export type RentalOverrides = {
   duration?: number | null;
   totalPrice?: string | null;
   subscriptionId?: string | null;
-  status?: "RENTED" | "COMPLETED" | "CANCELLED" | "RESERVED";
+  status?: "RENTED" | "COMPLETED" | "CANCELLED";
 };
 
 export type ReservationOverrides = {
@@ -70,7 +71,7 @@ export type ReservationOverrides = {
   startTime?: Date;
   endTime?: Date | null;
   prepaid?: string;
-  status?: "PENDING" | "ACTIVE" | "CANCELLED" | "EXPIRED";
+  status?: "PENDING" | "ACTIVE" | "FULFILLED" | "CANCELLED" | "EXPIRED";
 };
 
 export type SubscriptionOverrides = {

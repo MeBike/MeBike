@@ -2,6 +2,7 @@ import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
   RentalStatus,
+  ReturnSlotStatus,
   UserRole,
   UserVerifyStatus,
 } from "generated/prisma/enums";
@@ -9,6 +10,7 @@ import type {
 export type RentalRow = {
   id: string;
   userId: string;
+  reservationId: string | null;
   bikeId: string | null;
   startStationId: string;
   endStationId: string | null;
@@ -127,7 +129,6 @@ export type RentalStatusCounts = {
   RENTED: number;
   COMPLETED: number;
   CANCELLED: number;
-  RESERVED: number;
 };
 
 export type RentalRevenueGroupBy = "DAY" | "MONTH" | "YEAR";
@@ -159,10 +160,27 @@ export type RentalSummaryStats = {
     Rented: number;
     Completed: number;
     Cancelled: number;
-    Reserved: number;
   };
   dailyRevenue: RevenueDelta;
   monthlyRevenue: RevenueDelta;
+};
+
+export type ReturnSlotRow = {
+  id: string;
+  rentalId: string;
+  userId: string;
+  stationId: string;
+  reservedFrom: Date;
+  status: ReturnSlotStatus;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ReturnSlotStationCapacityRow = {
+  stationId: string;
+  capacity: number;
+  totalBikes: number;
+  activeReturnSlots: number;
 };
 
 export type DashboardTrend = "UP" | "DOWN" | "STABLE";

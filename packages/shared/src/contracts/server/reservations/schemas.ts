@@ -33,7 +33,6 @@ export const ReservationErrorCodeSchema = z
     "RESERVATION_NOT_OWNED",
     "RESERVATION_MISSING_BIKE",
     "INVALID_RESERVATION_TRANSITION",
-    "RESERVED_RENTAL_NOT_FOUND",
   ])
   .openapi("ReservationErrorCode");
 
@@ -56,7 +55,6 @@ export const reservationErrorMessages = {
   RESERVATION_NOT_OWNED: "Reservation does not belong to user",
   RESERVATION_MISSING_BIKE: "Reservation missing bike assignment",
   INVALID_RESERVATION_TRANSITION: "Invalid reservation status transition",
-  RESERVED_RENTAL_NOT_FOUND: "Reserved rental not found",
 } as const;
 
 export const ReservationErrorDetailSchema = z.object({

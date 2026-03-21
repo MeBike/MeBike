@@ -28,6 +28,7 @@ export function createRentalFactory(ctx: FactoryContext) {
       data: {
         id,
         userId: overrides.userId,
+        reservationId: overrides.reservationId ?? null,
         bikeId: overrides.bikeId ?? defaults.bikeId,
         startStationId: overrides.startStationId,
         endStationId: overrides.endStationId ?? defaults.endStationId,

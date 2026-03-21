@@ -71,8 +71,8 @@ export type ReservationService = {
   ) => Effect.Effect<ReservationRow, ReservationNotFound>;
 
   /**
-   * EN: Confirm a PENDING reservation owned by the user (reservation-only update).
-   * VI: Xác nhận reservation PENDING của user (chỉ update reservation).
+   * EN: Validate a PENDING reservation owned by the user and return the assigned bike.
+   * VI: Kiểm tra reservation PENDING của user và trả về bike đã được gán.
    */
   confirmPendingInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
@@ -198,16 +198,8 @@ function makeReservationService(
           return yield* Effect.fail(new ReservationMissingBike({ reservationId: reservation.id }));
         }
 
-        const updatedReservation = yield* txRepo.updateStatus({
-          reservationId: reservation.id,
-          status: "ACTIVE",
-          updatedAt: input.now,
-        }).pipe(
-          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-        );
-
         return {
-          reservation: updatedReservation,
+          reservation,
           bikeId: reservation.bikeId,
         };
       }),

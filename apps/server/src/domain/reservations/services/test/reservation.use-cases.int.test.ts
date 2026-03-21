@@ -23,7 +23,7 @@ describe("reservation use-cases integration", () => {
     runCancel = runners.cancel;
   });
 
-  it("reserveBikeUseCase creates hold + rental + outbox jobs and reserves bike", async () => {
+  it("reserveBikeUseCase creates hold + outbox jobs and reserves bike", async () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 50000n },
     });
@@ -46,8 +46,8 @@ describe("reservation use-cases integration", () => {
     expect(reservation.bikeId).toBe(bike.id);
     expect(reservation.stationId).toBe(station.id);
 
-    const rental = await fixture.prisma.rental.findUnique({ where: { id: reservation.id } });
-    expect(rental?.status).toBe("RESERVED");
+    const rental = await fixture.prisma.rental.findFirst({ where: { reservationId: reservation.id } });
+    expect(rental).toBeNull();
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("RESERVED");
@@ -79,7 +79,7 @@ describe("reservation use-cases integration", () => {
     });
   });
 
-  it("confirmReservationUseCase activates reservation, rental, and bike", async () => {
+  it("confirmReservationUseCase fulfills reservation, creates rental, and books bike", async () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 50000n },
     });
@@ -106,10 +106,12 @@ describe("reservation use-cases integration", () => {
     expectRight(confirmResult);
 
     const updatedReservation = await fixture.prisma.reservation.findUnique({ where: { id: reservation.id } });
-    expect(updatedReservation?.status).toBe("ACTIVE");
+    expect(updatedReservation?.status).toBe("FULFILLED");
 
-    const rental = await fixture.prisma.rental.findUnique({ where: { id: reservation.id } });
+    const rental = await fixture.prisma.rental.findFirst({ where: { reservationId: reservation.id } });
     expect(rental?.status).toBe("RENTED");
+    expect(rental?.reservationId).toBe(reservation.id);
+    expect(rental?.bikeId).toBe(bike.id);
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("BOOKED");
@@ -145,8 +147,8 @@ describe("reservation use-cases integration", () => {
     const updatedReservation = await fixture.prisma.reservation.findUnique({ where: { id: reservation.id } });
     expect(updatedReservation?.status).toBe("CANCELLED");
 
-    const rental = await fixture.prisma.rental.findUnique({ where: { id: reservation.id } });
-    expect(rental?.status).toBe("CANCELLED");
+    const rental = await fixture.prisma.rental.findFirst({ where: { reservationId: reservation.id } });
+    expect(rental).toBeNull();
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("AVAILABLE");

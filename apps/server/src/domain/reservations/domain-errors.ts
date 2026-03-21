@@ -90,14 +90,6 @@ export class InvalidReservationTransition extends Data.TaggedError("InvalidReser
 }> {}
 
 /**
- * EN: Reserved rental row not found (reservation-rental pair broken).
- * VI: Không tìm thấy rental RESERVED tương ứng với reservation.
- */
-export class ReservedRentalNotFound extends Data.TaggedError("ReservedRentalNotFound")<{
-  readonly reservationId: string;
-}> {}
-
-/**
  * EN: Subscription id is required for subscription-based reservation.
  * VI: Cần subscription_id khi đặt bằng gói.
  */
@@ -133,5 +125,4 @@ export type ReservationServiceFailure
     | ReservationNotOwned
     | ReservationMissingBike
     | InvalidReservationTransition
-    | ReservedRentalNotFound
     | SubscriptionRequired;

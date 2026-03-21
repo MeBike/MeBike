@@ -31,6 +31,7 @@ import {
 } from "../domain-errors";
 import { computeSubscriptionCoverage } from "../pricing";
 import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
+import { makeReturnSlotRepository } from "../repository/return-slot.repository";
 
 export function endRentalUseCase(
   input: EndRentalInput,
@@ -97,15 +98,18 @@ export function endRentalUseCase(
         Effect.gen(function* () {
           const txBikeRepo = makeBikeRepository(tx);
           const txRentalRepo = makeRentalRepository(tx);
+          const txReturnSlotRepo = makeReturnSlotRepository(tx);
           let basePrice = Math.ceil(durationMinutes / 30) * env.PRICE_PER_30_MINS;
           const durationHours = durationMinutes / 60;
           let usageToAdd = 0;
           let prepaidMinor = 0n;
 
           const txReservationRepo = makeReservationRepository(tx);
-          const reservationOpt = yield* txReservationRepo.findById(rentalId).pipe(
-            Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-          );
+          const reservationOpt = current.reservationId
+            ? yield* txReservationRepo.findById(current.reservationId).pipe(
+              Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+            )
+            : Option.none();
           if (Option.isSome(reservationOpt)) {
             prepaidMinor = toMinorUnit(reservationOpt.value.prepaid);
           }
@@ -177,11 +181,9 @@ export function endRentalUseCase(
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
 
-          if (Option.isSome(reservationOpt) && reservationOpt.value.status === "ACTIVE") {
-            yield* txReservationRepo.expireActive(reservationOpt.value.id, endTime).pipe(
-              Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-            );
-          }
+          yield* txReturnSlotRepo.finalizeActiveByRentalId(rentalId, "CANCELLED", endTime).pipe(
+            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          );
 
           return yield* txRentalRepo.updateRentalOnEnd({
             rentalId,
@@ -276,15 +278,18 @@ export function endRentalByAdminUseCase(
         Effect.gen(function* () {
           const txBikeRepo = makeBikeRepository(tx);
           const txRentalRepo = makeRentalRepository(tx);
+          const txReturnSlotRepo = makeReturnSlotRepository(tx);
           let basePrice = Math.ceil(durationMinutes / 30) * env.PRICE_PER_30_MINS;
           const durationHours = durationMinutes / 60;
           let usageToAdd = 0;
           let prepaidMinor = 0n;
 
           const txReservationRepo = makeReservationRepository(tx);
-          const reservationOpt = yield* txReservationRepo.findById(rentalId).pipe(
-            Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-          );
+          const reservationOpt = current.reservationId
+            ? yield* txReservationRepo.findById(current.reservationId).pipe(
+              Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+            )
+            : Option.none();
           if (Option.isSome(reservationOpt)) {
             prepaidMinor = toMinorUnit(reservationOpt.value.prepaid);
           }
@@ -356,11 +361,9 @@ export function endRentalByAdminUseCase(
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
 
-          if (Option.isSome(reservationOpt) && reservationOpt.value.status === "ACTIVE") {
-            yield* txReservationRepo.expireActive(reservationOpt.value.id, endTime).pipe(
-              Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-            );
-          }
+          yield* txReturnSlotRepo.finalizeActiveByRentalId(rentalId, "CANCELLED", endTime).pipe(
+            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          );
 
           return yield* txRentalRepo.updateRentalOnEnd({
             rentalId,
