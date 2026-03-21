@@ -1,6 +1,8 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
+  AdminListUserWalletTransactionsQuerySchema,
+  AdminListUserWalletTransactionsResponseSchema,
   GetMyWalletResponseSchema,
   ListMyWalletTransactionsQuerySchema,
   ListMyWalletTransactionsResponseSchema,
@@ -121,13 +123,17 @@ export const adminListUserWalletTransactionsRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     params: WalletUserIdParamSchema,
-    query: ListMyWalletTransactionsQuerySchema,
+    query: AdminListUserWalletTransactionsQuerySchema,
   },
   responses: {
-    200: paginatedResponse(
-      ListMyWalletTransactionsResponseSchema,
-      "Paginated wallet transactions for a specific user",
-    ),
+    200: {
+      description: "Paginated wallet transactions for a specific user",
+      content: {
+        "application/json": {
+          schema: AdminListUserWalletTransactionsResponseSchema,
+        },
+      },
+    },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Admin"),
     404: notFoundResponse({

@@ -28,6 +28,16 @@ export type WalletTransactionRow = {
   readonly createdAt: Date;
 };
 
+export type WalletTransactionUserRow = {
+  readonly id: string;
+  readonly fullName: string;
+};
+
+export type WalletTransactionListOwnerRow = {
+  readonly walletId: string;
+  readonly user: WalletTransactionUserRow;
+};
+
 export type IncreaseBalanceInput = {
   readonly userId: string;
   readonly amount: bigint;

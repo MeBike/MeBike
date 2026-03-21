@@ -1,13 +1,19 @@
-import type { Option } from "effect";
+import type { WalletTransactionStatus } from "generated/prisma/client";
 
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import type {
   WalletRepositoryError,
 } from "../domain-errors";
-import type { DecreaseBalanceInput, IncreaseBalanceInput, WalletRow, WalletTransactionRow } from "../models";
+import type {
+  DecreaseBalanceInput,
+  IncreaseBalanceInput,
+  WalletRow,
+  WalletTransactionRow,
+  WalletTransactionUserRow,
+} from "../models";
 
 import {
   InsufficientWalletBalance,
@@ -41,8 +47,15 @@ export type WalletService = {
   >;
 
   listTransactionsForUser: (
-    args: { userId: string; pageReq: PageRequest<"createdAt"> },
+    args: { userId: string; pageReq: PageRequest<"createdAt">; status?: WalletTransactionStatus },
   ) => Effect.Effect<PageResult<WalletTransactionRow>, WalletNotFound | WalletRepositoryError>;
+
+  adminListTransactionsForUser: (
+    args: { userId: string; pageReq: PageRequest<"createdAt">; status?: WalletTransactionStatus },
+  ) => Effect.Effect<{
+    user: WalletTransactionUserRow;
+    transactions: PageResult<WalletTransactionRow>;
+  }, WalletNotFound | WalletRepositoryError>;
 };
 
 export class WalletServiceTag extends Context.Tag("WalletService")<
@@ -60,10 +73,11 @@ export const WalletServiceLive = Layer.effect(
 
     const getByUserId: WalletService["getByUserId"] = userId =>
       repo.findByUserId(userId).pipe(
-        Effect.flatMap(maybeWallet =>
-          maybeWallet._tag === "Some"
-            ? Effect.succeed(maybeWallet.value)
-            : Effect.fail(new WalletNotFound({ userId })),
+        Effect.flatMap(option =>
+          Option.match(option, {
+            onNone: () => Effect.fail(new WalletNotFound({ userId })),
+            onSome: value => Effect.succeed(value),
+          })
         ),
       );
 
@@ -96,10 +110,37 @@ export const WalletServiceLive = Layer.effect(
         ),
       );
 
-    const listTransactionsForUser: WalletService["listTransactionsForUser"] = ({ userId, pageReq }) =>
+    const listTransactionsForUser: WalletService["listTransactionsForUser"] = ({
+      userId,
+      pageReq,
+      status,
+    }) =>
       Effect.gen(function* () {
         const wallet = yield* getByUserId(userId);
-        return yield* repo.listTransactions(wallet.id, pageReq);
+        return yield* repo.listTransactions(wallet.id, pageReq, { status });
+      });
+
+    const adminListTransactionsForUser: WalletService["adminListTransactionsForUser"] = ({
+      userId,
+      pageReq,
+      status,
+    }) =>
+      Effect.gen(function* () {
+        const owner = yield* repo.findTransactionListOwnerByUserId(userId).pipe(
+          Effect.flatMap(option =>
+            Option.match(option, {
+              onNone: () => Effect.fail(new WalletNotFound({ userId })),
+              onSome: value => Effect.succeed(value),
+            })
+          ),
+        );
+
+        const transactions = yield* repo.listTransactions(owner.walletId, pageReq, { status });
+
+        return {
+          user: owner.user,
+          transactions,
+        };
       });
 
     const service: WalletService = {
@@ -109,6 +150,7 @@ export const WalletServiceLive = Layer.effect(
       creditWallet,
       debitWallet,
       listTransactionsForUser,
+      adminListTransactionsForUser,
     };
 
     return service;
