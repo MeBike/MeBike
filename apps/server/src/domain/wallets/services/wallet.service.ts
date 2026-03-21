@@ -1,8 +1,7 @@
-import type { WalletTransactionStatus } from "generated/prisma/client";
-
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { WalletTransactionStatus } from "generated/prisma/client";
 
 import type {
   WalletRepositoryError,
@@ -77,7 +76,7 @@ export const WalletServiceLive = Layer.effect(
           Option.match(option, {
             onNone: () => Effect.fail(new WalletNotFound({ userId })),
             onSome: value => Effect.succeed(value),
-          })
+          }),
         ),
       );
 
@@ -131,7 +130,7 @@ export const WalletServiceLive = Layer.effect(
             Option.match(option, {
               onNone: () => Effect.fail(new WalletNotFound({ userId })),
               onSome: value => Effect.succeed(value),
-            })
+            }),
           ),
         );
 
