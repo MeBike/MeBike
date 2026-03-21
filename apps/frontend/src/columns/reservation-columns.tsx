@@ -20,28 +20,35 @@ export const reservationColumn = ({
   stations?: Station[];
 }): ColumnDef<Reservation>[] => [
   {
-    accessorKey: "_id",
+    accessorKey: "id",
     header: "Mã đặt trước",
     cell: ({ row }) => {
-      return shortenId(row.original._id);
+      return shortenId(row.original.id);
     },
   },
   {
-    accessorKey: "user_id",
+    accessorKey: "userId",
     header: "Mã người dùng",
-    cell: ({ row }) => row.original.user_id,
+    cell: ({ row }) => row.original.userId,
   },
   {
-    accessorKey: "bike_id",
+    accessorKey: "bikeId",
     header: "Mã xe",
-    cell: ({ row }) => row.original.bike_id,
+    cell: ({ row }) => row.original.bikeId,
   },
   {
-    accessorKey: "station_id",
+    accessorKey: "stationId",
     header: "Tên trạm",
     cell: ({ row }) => {
-      const station = stations?.find((s) => s.id === row.original.station_id);
-      return station ? station.name : row.original.station_id;
+      const station = stations?.find((s) => s.id === row.original.stationId);
+      return station ? station.name : row.original.stationId;
+    },
+  },
+  {
+    accessorKey: "reservationOption",
+    header: "Loại đặt trước",
+    cell: ({ row }) => {
+      return row.original.reservationOption;
     },
   },
   {
@@ -56,13 +63,15 @@ export const reservationColumn = ({
     cell: ({ row }) => (
       <span
         className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "ĐANG HOẠT ĐỘNG"
+          row.original.status === "ACTIVE"
             ? "bg-green-100 text-green-800"
-            : row.original.status === "ĐANG CHỜ XỬ LÍ"
-            ? "bg-yellow-100 text-yellow-800"
-            : row.original.status === "ĐÃ HẾT HẠN"
-            ? "bg-red-100 text-red-800"
-            : "bg-gray-100 text-gray-800"
+            : row.original.status === "PENDING"
+              ? "bg-yellow-100 text-yellow-800"
+              : row.original.status === "EXPIRED"
+                ? "bg-orange-100 text-orange-800"
+                : row.original.status === "CANCELLED"
+                  ? "bg-gray-200 text-gray-800"
+                  : "bg-gray-100 text-gray-800"
         }`}
       >
         {row.original.status}
@@ -72,14 +81,14 @@ export const reservationColumn = ({
   {
     accessorKey: "start_time",
     header: "Thời gian bắt đầu",
-    cell: ({ row }) => formatToVNTime(row.original.start_time),
+    cell: ({ row }) => formatToVNTime(row.original.startTime),
   },
   {
     accessorKey: "end_time",
     header: "Thời gian kết thúc",
     cell: ({ row }) => {
-      if (row.original.end_time) {
-        return formatToVNTime(row.original.end_time);
+      if (row.original.endTime) {
+        return formatToVNTime(row.original.endTime);
       } else {
         return "Chưa kết thúc";
       }
@@ -95,14 +104,14 @@ export const reservationColumn = ({
           title="Xem chi tiết"
           onClick={() => {
             if (onView) {
-              onView({ id: row.original._id });
+              onView({ id: row.original.id });
             }
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
-        {row.original.status !== "ĐÃ HẾT HẠN" &&
-        row.original.status !== "ĐÃ HỦY" &&
+        {row.original.status !== "CANCELLED" &&
+        row.original.status !== "EXPIRED" &&
         onEdit ? (
           <div>
             <button

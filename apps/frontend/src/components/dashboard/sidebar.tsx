@@ -91,12 +91,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
     //   href: "/user/booking-history",
     //   roles: ["USER"],
     // },
-    {
-      title: "Quản lý ví",
-      icon: Wallet,
-      href: "/admin/wallet",
-      roles: ["ADMIN"],
-    },
+    // {
+    //   title: "Quản lý ví",
+    //   icon: Wallet,
+    //   href: "/admin/wallet",
+    //   roles: ["ADMIN"],
+    // },
     {
       title: "Quản lý nhà cung cấp",
       icon: Truck,

@@ -1,15 +1,18 @@
 export interface Reservation {
-  _id: string;
-  user_id: string;
-  bike_id: string;
-  station_id: string;
-  start_time: string;
-  end_time: string;
+  id: string;
+  userId: string;
+  bikeId: string;
+  stationId: string;
+  reservationOption : ReservationOption;
+  startTime: string;
+  endTime: string;
   prepaid: number;
-  status: "ĐÃ HẾT HẠN" | "ĐÃ HUỶ" | "ĐANG CHỜ XỬ LÍ" | "ĐANG HOẠT ĐỘNG" | "ĐÃ HỦY";
-  created_at: string;
-  updated_at: string;
+  status: ReservationStatus;
+  createdAt: string;
+  updatedAt: string;
 }
+export type ReservationOption = "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION"
+export type ReservationStatus = "PENDING" | "ACTIVE" | "CANCELLED" | "EXPIRED"
 export interface IUser {
   _id: string;
   fullname: string;

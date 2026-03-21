@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye } from "lucide-react";
+import { Eye , Wallet} from "lucide-react";
 import type { UserRole } from "@/types";
 import type { DetailUser } from "@/types";
 import { formatToVNTime } from "@/lib/formatVNDate";
@@ -117,6 +117,17 @@ export const userColumns = ({
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
+        </button>
+        <button
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          title="Xem chi tiết giao dịch người dùng"
+          onClick={() => {
+            if (onView) {
+              onView({ id: row.original.id });
+            }
+          }}
+        >
+          <Wallet className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
     ),
