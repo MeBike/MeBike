@@ -23,10 +23,11 @@ import type { EndRentalInput } from "../types";
 
 import {
   BikeNotFound,
-  EndStationMismatch,
   InsufficientBalanceToRent,
   InvalidRentalState,
   RentalNotFound,
+  ReturnSlotRequiredForReturn,
+  ReturnSlotStationMismatch,
   UserWalletNotFound,
 } from "../domain-errors";
 import { computeSubscriptionCoverage } from "../pricing";
@@ -70,16 +71,6 @@ export function endRentalUseCase(
       );
     }
 
-    if (current.startStationId !== endStationId) {
-      return yield* Effect.fail(
-        new EndStationMismatch({
-          rentalId,
-          startStationId: current.startStationId ?? null,
-          attemptedEndStationId: endStationId,
-        }),
-      );
-    }
-
     if (!current.bikeId) {
       return yield* Effect.fail(new BikeNotFound({ bikeId: "unknown" }));
     }
@@ -99,6 +90,27 @@ export function endRentalUseCase(
           const txBikeRepo = makeBikeRepository(tx);
           const txRentalRepo = makeRentalRepository(tx);
           const txReturnSlotRepo = makeReturnSlotRepository(tx);
+
+          const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rentalId).pipe(
+            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          );
+
+          if (Option.isNone(activeReturnSlotOpt)) {
+            return yield* Effect.fail(new ReturnSlotRequiredForReturn({
+              rentalId,
+              endStationId,
+            }));
+          }
+
+          const activeReturnSlot = activeReturnSlotOpt.value;
+          if (activeReturnSlot.stationId !== endStationId) {
+            return yield* Effect.fail(new ReturnSlotStationMismatch({
+              rentalId,
+              returnSlotStationId: activeReturnSlot.stationId,
+              attemptedEndStationId: endStationId,
+            }));
+          }
+
           let basePrice = Math.ceil(durationMinutes / 30) * env.PRICE_PER_30_MINS;
           const durationHours = durationMinutes / 60;
           let usageToAdd = 0;
@@ -181,7 +193,7 @@ export function endRentalUseCase(
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
 
-          yield* txReturnSlotRepo.finalizeActiveByRentalId(rentalId, "CANCELLED", endTime).pipe(
+          yield* txReturnSlotRepo.finalizeActiveByRentalId(rentalId, "USED", endTime).pipe(
             Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
           );
 
@@ -250,16 +262,6 @@ export function endRentalByAdminUseCase(
       );
     }
 
-    if (current.startStationId !== endStationId) {
-      return yield* Effect.fail(
-        new EndStationMismatch({
-          rentalId,
-          startStationId: current.startStationId ?? null,
-          attemptedEndStationId: endStationId,
-        }),
-      );
-    }
-
     if (!current.bikeId) {
       return yield* Effect.fail(new BikeNotFound({ bikeId: "unknown" }));
     }
@@ -279,6 +281,27 @@ export function endRentalByAdminUseCase(
           const txBikeRepo = makeBikeRepository(tx);
           const txRentalRepo = makeRentalRepository(tx);
           const txReturnSlotRepo = makeReturnSlotRepository(tx);
+
+          const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rentalId).pipe(
+            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          );
+
+          if (Option.isNone(activeReturnSlotOpt)) {
+            return yield* Effect.fail(new ReturnSlotRequiredForReturn({
+              rentalId,
+              endStationId,
+            }));
+          }
+
+          const activeReturnSlot = activeReturnSlotOpt.value;
+          if (activeReturnSlot.stationId !== endStationId) {
+            return yield* Effect.fail(new ReturnSlotStationMismatch({
+              rentalId,
+              returnSlotStationId: activeReturnSlot.stationId,
+              attemptedEndStationId: endStationId,
+            }));
+          }
+
           let basePrice = Math.ceil(durationMinutes / 30) * env.PRICE_PER_30_MINS;
           const durationHours = durationMinutes / 60;
           let usageToAdd = 0;
@@ -361,7 +384,7 @@ export function endRentalByAdminUseCase(
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
 
-          yield* txReturnSlotRepo.finalizeActiveByRentalId(rentalId, "CANCELLED", endTime).pipe(
+          yield* txReturnSlotRepo.finalizeActiveByRentalId(rentalId, "USED", endTime).pipe(
             Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
           );
 

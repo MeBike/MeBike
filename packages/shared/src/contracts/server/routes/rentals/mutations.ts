@@ -7,9 +7,11 @@ import {
   CancelRentalRequestSchema,
   CardTapRentalRequestSchema,
   CreateRentalRequestSchema,
+  CreateReturnSlotRequestSchema,
   EndRentalRequestSchema,
   RentalErrorCodeSchema,
   RequestBikeSwapRequestSchema,
+  ReturnSlotReservationSchema,
   StaffCreateRentalRequestSchema,
   UpdateRentalRequestSchema,
 } from "../../rentals";
@@ -175,6 +177,93 @@ export const endMyRental = createRoute({
               },
             },
           },
+        },
+      },
+    },
+  },
+});
+
+export const createMyReturnSlot = createRoute({
+  method: "post",
+  path: "/v1/rentals/me/{rentalId}/return-slot",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: CreateReturnSlotRequestSchema.openapi("CreateReturnSlotRequest"),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Create or replace the active return slot for a rental",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            ReturnSlotReservationSchema.openapi("ReturnSlotReservation"),
+            "Return slot response",
+          ),
+        },
+      },
+    },
+    400: {
+      description: "Cannot create return slot",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Rental or station not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const cancelMyReturnSlot = createRoute({
+  method: "delete",
+  path: "/v1/rentals/me/{rentalId}/return-slot",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Cancel the active return slot for a rental",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            ReturnSlotReservationSchema.openapi("CancelledReturnSlotReservation"),
+            "Cancelled return slot response",
+          ),
+        },
+      },
+    },
+    400: {
+      description: "Cannot cancel return slot",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Rental or return slot not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
         },
       },
     },

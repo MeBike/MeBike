@@ -54,7 +54,11 @@ export const rentalErrorCodes = [
   "CANNOT_END_WITHOUT_END_STATION",
   "CANNOT_END_WITHOUT_END_TIME",
   "PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON",
-  "MUST_END_AT_START_STATION",
+  "RETURN_SLOT_REQUIRED_FOR_RETURN",
+  "RETURN_SLOT_STATION_MISMATCH",
+  "RETURN_SLOT_NOT_FOUND",
+  "RETURN_SLOT_REQUIRES_ACTIVE_RENTAL",
+  "RETURN_SLOT_CAPACITY_EXCEEDED",
 
   // Card Tap Rental Errors
   "CARD_RENTAL_ACTIVE_EXISTS",
@@ -71,13 +75,11 @@ export const rentalErrorCodes = [
   "BIKE_SWAP_REQUEST_ALREADY_PENDING",
 ] as const;
 
-
 export const bikeSwapRequestErrorCodes = [
   "BIKE_SWAP_REQUEST_NOT_FOUND",
   "NO_AVAILABLE_BIKE",
   "INVALID_BIKE_SWAP_REQUEST_STATUS",
 ] as const;
-
 
 export const RentalErrorCodeSchema = z.enum(rentalErrorCodes);
 
@@ -103,12 +105,16 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   bikeStatus: z.string().optional(),
   startStationId: z.uuidv7().optional(),
   endStationId: z.uuidv7().optional(),
+  returnSlotStationId: z.uuidv7().optional(),
   fieldName: z.string().optional(),
   value: z.string().optional(),
   requestedStatus: z.string().optional(),
   requestedBikeStatus: z.string().optional(),
   usageCount: z.number().optional(),
   maxUsages: z.number().nullable().optional(),
+  capacity: z.number().optional(),
+  totalBikes: z.number().optional(),
+  activeReturnSlots: z.number().optional(),
 }).openapi({
   description: "Rental-specific error detail",
   example: {
@@ -134,8 +140,8 @@ export const RentalErrorResponseSchema = ServerErrorResponseSchema.extend({
   description: "Standard error payload for rental endpoints",
 });
 
-export const BikeSwapRequestErrorResponseSchema =
-  ServerErrorResponseSchema.extend({
+export const BikeSwapRequestErrorResponseSchema
+  = ServerErrorResponseSchema.extend({
     details: BikeSwapRequestErrorDetailSchema.optional(),
   }).openapi("BikeSwapRequestErrorResponse", {
     description: "Standard error payload for bike swap request endpoints",
@@ -144,8 +150,8 @@ export const BikeSwapRequestErrorResponseSchema =
 export type RentalErrorCode = (typeof rentalErrorCodes)[number];
 export type RentalErrorDetail = z.infer<typeof RentalErrorDetailSchema>;
 export type RentalErrorResponse = z.infer<typeof RentalErrorResponseSchema>;
-export type BikeSwapRequestErrorCode =
-  (typeof bikeSwapRequestErrorCodes)[number];
+export type BikeSwapRequestErrorCode
+  = (typeof bikeSwapRequestErrorCodes)[number];
 export type BikeSwapRequestErrorDetail = z.infer<
   typeof BikeSwapRequestErrorDetailSchema
 >;
@@ -205,7 +211,11 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   CANNOT_END_WITHOUT_END_TIME: "End time is required",
   PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON:
     "Provide at least one field to update",
-  MUST_END_AT_START_STATION: "Must end at the start station",
+  RETURN_SLOT_REQUIRED_FOR_RETURN: "An active return slot is required to end this rental",
+  RETURN_SLOT_STATION_MISMATCH: "The rental can only end at the station reserved by the active return slot",
+  RETURN_SLOT_NOT_FOUND: "Return slot not found",
+  RETURN_SLOT_REQUIRES_ACTIVE_RENTAL: "Return slot requires an active rental",
+  RETURN_SLOT_CAPACITY_EXCEEDED: "Station does not have enough capacity for another return slot",
 
   CARD_RENTAL_ACTIVE_EXISTS: "Active rental already exists for this card",
 
@@ -219,7 +229,6 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   BIKE_SWAP_REQUEST_ALREADY_PENDING: "A bike swap request is already pending for this rental",
 };
 
-
 export const bikeSwapRequestErrorMessages: Record<
   BikeSwapRequestErrorCode,
   string
@@ -229,4 +238,3 @@ export const bikeSwapRequestErrorMessages: Record<
   INVALID_BIKE_SWAP_REQUEST_STATUS:
     "Bike swap request must be in PENDING status",
 };
-

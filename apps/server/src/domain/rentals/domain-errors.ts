@@ -17,6 +17,10 @@ export class RentalUniqueViolation extends Data.TaggedError(
   "RentalUniqueViolation",
 )<WithGenericError<{ constraint?: string | string[] }>> {}
 
+export class ReturnSlotUniqueViolation extends Data.TaggedError(
+  "ReturnSlotUniqueViolation",
+)<WithGenericError<{ constraint?: string | string[] }>> {}
+
 // User-level domain errors
 export class RentalNotFound extends Data.TaggedError("RentalNotFound")<{
   readonly rentalId: string;
@@ -85,11 +89,20 @@ export class InvalidRentalState extends Data.TaggedError("InvalidRentalState")<{
   readonly to: RentalStatus;
 }> {}
 
-export class EndStationMismatch extends Data.TaggedError("EndStationMismatch")<{
-  readonly rentalId: string;
-  readonly startStationId: string | null;
-  readonly attemptedEndStationId: string;
-}> {}
+export class ReturnSlotRequiredForReturn extends Data.TaggedError(
+  "ReturnSlotRequiredForReturn",
+)<{
+    readonly rentalId: string;
+    readonly endStationId: string;
+  }> {}
+
+export class ReturnSlotStationMismatch extends Data.TaggedError(
+  "ReturnSlotStationMismatch",
+)<{
+    readonly rentalId: string;
+    readonly returnSlotStationId: string;
+    readonly attemptedEndStationId: string;
+  }> {}
 
 export class UnauthorizedRentalAccess extends Data.TaggedError(
   "UnauthorizedRentalAccess",
@@ -102,6 +115,27 @@ export class CannotRequestSwap extends Data.TaggedError("CannotRequestSwap")<{
   readonly rentalId: string;
   readonly status: string;
 }> {}
+
+export class ReturnSlotRequiresActiveRental extends Data.TaggedError(
+  "ReturnSlotRequiresActiveRental",
+)<{
+    readonly rentalId: string;
+    readonly status: RentalStatus;
+  }> {}
+
+export class ReturnSlotNotFound extends Data.TaggedError("ReturnSlotNotFound")<{
+  readonly rentalId: string;
+  readonly userId: string;
+}> {}
+
+export class ReturnSlotCapacityExceeded extends Data.TaggedError(
+  "ReturnSlotCapacityExceeded",
+)<{
+    readonly stationId: string;
+    readonly capacity: number;
+    readonly totalBikes: number;
+    readonly activeReturnSlots: number;
+  }> {}
 
 export class BikeSwapRequestNotFound extends Data.TaggedError(
   "BikeSwapRequestNotFound",
@@ -138,7 +172,11 @@ export type RentalServiceFailure
     | UserWalletNotFound
     | InsufficientBalanceToRent
     | InvalidRentalState
-    | EndStationMismatch
+    | ReturnSlotRequiredForReturn
+    | ReturnSlotStationMismatch
+    | ReturnSlotRequiresActiveRental
+    | ReturnSlotNotFound
+    | ReturnSlotCapacityExceeded
     | SubscriptionNotFound
     | SubscriptionNotUsable
     | SubscriptionUsageExceeded
@@ -149,3 +187,7 @@ export type RentalServiceFailure
     | BikeSwapRequestExisted;
 
 export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;
+
+export type ReturnSlotRepoError
+  = | RentalRepositoryError
+    | ReturnSlotUniqueViolation;

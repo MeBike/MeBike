@@ -32,7 +32,13 @@ export function registerRentalRoutes(
 
   app.openapi(rentals.getMyRental, RentalMeController.getMyRental);
 
+  app.openapi(rentals.getMyCurrentReturnSlot, RentalMeController.getMyCurrentReturnSlot);
+
   app.openapi(rentals.endMyRental, RentalMeController.endMyRental);
+
+  app.openapi(rentals.createMyReturnSlot, RentalMeController.createMyReturnSlot);
+
+  app.openapi(rentals.cancelMyReturnSlot, RentalMeController.cancelMyReturnSlot);
 
   const activeByPhoneRoute = {
     ...rentals.getActiveRentalsByPhone,

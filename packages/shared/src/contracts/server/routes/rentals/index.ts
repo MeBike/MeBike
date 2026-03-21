@@ -3,7 +3,9 @@ import * as queries from "./queries";
 
 export {
   approveBikeSwapRequest,
+  cancelMyReturnSlot,
   cancelRental,
+  createMyReturnSlot,
   createRental,
   createRentalFromSOS,
   endMyRental,
@@ -24,6 +26,7 @@ export {
   getAllRentals,
   getDashboardSummary,
   getMyCurrentRentals,
+  getMyCurrentReturnSlot,
   getMyRental,
   getMyRentalCounts,
   getMyRentals,
