@@ -1,0 +1,34 @@
+model EnvironmentalImpactPolicy {
+  id              String         @id @default(uuid(7)) @db.Uuid
+  name            String
+  averageSpeedKmh Decimal        @map("average_speed_kmh") @db.Decimal(6, 2)
+  co2SavedPerKm   Decimal        @map("co2_saved_per_km") @db.Decimal(12, 4)
+  status          AccountStatus  @default(ACTIVE)
+  activeFrom      DateTime?      @map("active_from") @db.Timestamptz
+  activeTo        DateTime?      @map("active_to") @db.Timestamptz
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  stats EnvironmentalImpactStat[]
+
+  @@map("environmental_impact_policies")
+}
+
+model EnvironmentalImpactStat {
+  id                  String                    @id @default(uuid(7)) @db.Uuid
+  userId              String                    @map("user_id") @db.Uuid
+  rentalId            String                    @unique @map("rental_id") @db.Uuid
+  policyId            String                    @map("policy_id") @db.Uuid
+  estimatedDistanceKm Decimal?                  @map("estimated_distance_km") @db.Decimal(8, 2)
+  co2Saved            Decimal                   @map("co2_saved") @db.Decimal(12, 4)
+  policySnapshot      Json                      @map("policy_snapshot") @db.JsonB
+  calculatedAt        DateTime                  @default(now()) @map("calculated_at") @db.Timestamptz
+
+  user   User                      @relation(fields: [userId], references: [id])
+  rental Rental                    @relation(fields: [rentalId], references: [id])
+  policy EnvironmentalImpactPolicy @relation(fields: [policyId], references: [id])
+
+  @@index([userId], name: "idx_environmental_impact_stats_user")
+  @@index([policyId], name: "idx_environmental_impact_stats_policy")
+  @@map("environmental_impact_stats")
+}

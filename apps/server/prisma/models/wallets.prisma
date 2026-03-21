@@ -33,6 +33,7 @@ model Wallet {
   updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
 
   user            User                @relation(fields: [userId], references: [id])
+  payments        Payment[]
   transactions    WalletTransaction[]
   paymentAttempts PaymentAttempt[]
   withdrawals     WalletWithdrawal[]

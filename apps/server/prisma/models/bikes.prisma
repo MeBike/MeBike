@@ -22,4 +22,7 @@ model Bike {
   rentals      Rental[]
   oldBikeSwaps BikeSwapRequest[] @relation("old_bike")
   newBikeSwaps BikeSwapRequest[] @relation("new_bike")
+  incidentReports IncidentReport[]
+  maintenanceLogs BikeMaintenanceLog[]
+  redistributionRequestItems RedistributionRequestItem[]
 }

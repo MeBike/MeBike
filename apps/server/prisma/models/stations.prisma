@@ -19,6 +19,10 @@ model Station {
   bikeSwapRequests BikeSwapRequest[]
   technicianTeams  TechnicianTeam[]
   userAssignments  UserOrgAssignment[]
+  returnConfirmations ReturnConfirmation[] @relation("ReturnConfirmationStation")
+  incidentReports IncidentReport[]
+  sourceRedistributionRequests RedistributionRequest[] @relation("RedistributionRequestSourceStation")
+  targetRedistributionRequests RedistributionRequest[] @relation("RedistributionRequestTargetStation")
 }
 
 model GeoBoundary {
