@@ -8,6 +8,7 @@ import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
 import {
   toWalletDetail,
   toWalletTransactionDetail,
+  toWalletTransactionUser,
 } from "@/http/presenters/wallets.presenter";
 import { toContractPage } from "@/http/shared/pagination";
 
@@ -52,10 +53,11 @@ const adminListUserWalletTransactions: RouteHandler<
   const query = c.req.valid("query");
   const page = query.page ?? 1;
   const pageSize = query.pageSize ?? 50;
+  const status = query.status;
 
   const eff = withLoggedCause(
     Effect.flatMap(WalletServiceTag, service =>
-      service.listTransactionsForUser({ userId, pageReq: { page, pageSize } })),
+      service.adminListTransactionsForUser({ userId, pageReq: { page, pageSize }, status })),
     "GET /v1/admin/users/{userId}/wallet/transactions",
   );
 
@@ -63,9 +65,10 @@ const adminListUserWalletTransactions: RouteHandler<
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<WalletsContracts.ListMyWalletTransactionsResponse, 200>({
-        data: right.items.map(toWalletTransactionDetail),
-        pagination: toContractPage(right),
+      c.json<WalletsContracts.AdminListUserWalletTransactionsResponse, 200>({
+        user: toWalletTransactionUser(right.user),
+        data: right.transactions.items.map(toWalletTransactionDetail),
+        pagination: toContractPage(right.transactions),
       }, 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(

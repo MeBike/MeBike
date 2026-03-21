@@ -30,6 +30,15 @@ export function toWalletTransactionDetail(
   };
 }
 
+export function toWalletTransactionUser(
+  row: { id: string; fullName: string },
+): WalletsContracts.WalletTransactionUser {
+  return {
+    id: row.id,
+    fullName: row.fullName,
+  };
+}
+
 export function toWalletWithdrawalDetail(
   row: WalletWithdrawalRow,
 ): WalletsContracts.WalletWithdrawalDetail {

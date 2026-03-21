@@ -9,7 +9,9 @@ import {
 import {
   WalletDetailSchema,
   WalletTransactionDetailSchema,
+  WalletTransactionStatusSchema,
   WalletTransactionTypeSchema,
+  WalletTransactionUserSchema,
   WalletWithdrawalDetailSchema,
 } from "./models";
 
@@ -107,10 +109,24 @@ export const ListMyWalletTransactionsQuerySchema = z.object({
   ...paginationQueryFields,
 }).openapi("ListMyWalletTransactionsQuery");
 
+export const AdminListUserWalletTransactionsQuerySchema = z.object({
+  ...paginationQueryFields,
+  status: WalletTransactionStatusSchema.optional().openapi({
+    description: "Filter transactions by status",
+    example: "SUCCESS",
+  }),
+}).openapi("AdminListUserWalletTransactionsQuery");
+
 export const ListMyWalletTransactionsResponseSchema = z.object({
   data: WalletTransactionDetailSchema.array(),
   pagination: PaginationSchema,
 }).openapi("ListMyWalletTransactionsResponse");
+
+export const AdminListUserWalletTransactionsResponseSchema = z.object({
+  user: WalletTransactionUserSchema,
+  data: WalletTransactionDetailSchema.array(),
+  pagination: PaginationSchema,
+}).openapi("AdminListUserWalletTransactionsResponse");
 
 export type WalletErrorResponse = z.infer<typeof WalletErrorResponseSchema>;
 export type GetMyWalletResponse = z.infer<typeof GetMyWalletResponseSchema>;
@@ -124,11 +140,15 @@ export type StripeTopupPaymentSheetResponse = z.infer<typeof StripeTopupPaymentS
 export type WalletWithdrawalRequest = z.infer<typeof WalletWithdrawalRequestSchema>;
 export type WalletWithdrawalResponse = z.infer<typeof WalletWithdrawalResponseSchema>;
 export type ListMyWalletTransactionsResponse = z.infer<typeof ListMyWalletTransactionsResponseSchema>;
+export type AdminListUserWalletTransactionsQuery = z.infer<typeof AdminListUserWalletTransactionsQuerySchema>;
+export type AdminListUserWalletTransactionsResponse = z.infer<typeof AdminListUserWalletTransactionsResponseSchema>;
 export {
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
   UnauthorizedErrorResponseSchema,
   WalletDetailSchema,
   WalletTransactionDetailSchema,
+  WalletTransactionStatusSchema,
+  WalletTransactionUserSchema,
   WalletWithdrawalDetailSchema,
 };

@@ -16,6 +16,7 @@ import type {
   DecreaseBalanceInput,
   IncreaseBalanceInput,
   WalletRow,
+  WalletTransactionListOwnerRow,
   WalletTransactionRow,
 } from "../models";
 
@@ -25,10 +26,20 @@ import {
   WalletRepositoryError,
   WalletUniqueViolation,
 } from "../domain-errors";
-import { selectWalletRow, selectWalletTransactionRow, toWalletRow, toWalletTransactionRow } from "./wallet.mappers";
+import {
+  selectWalletRow,
+  selectWalletTransactionListOwnerRow,
+  selectWalletTransactionRow,
+  toWalletRow,
+  toWalletTransactionListOwnerRow,
+  toWalletTransactionRow,
+} from "./wallet.mappers";
 
 export type WalletRepo = {
   findByUserId: (userId: string) => Effect.Effect<Option.Option<WalletRow>, WalletRepositoryError>;
+  findTransactionListOwnerByUserId: (
+    userId: string,
+  ) => Effect.Effect<Option.Option<WalletTransactionListOwnerRow>, WalletRepositoryError>;
   createForUser: (userId: string) => Effect.Effect<WalletRow, WalletUniqueViolation | WalletRepositoryError>;
   increaseBalance: (
     input: IncreaseBalanceInput,
@@ -46,6 +57,7 @@ export type WalletRepo = {
   listTransactions: (
     walletId: string,
     pageReq: PageRequest<"createdAt">,
+    filter?: { readonly status?: WalletTransactionStatus },
   ) => Effect.Effect<PageResult<WalletTransactionRow>, WalletRepositoryError>;
 };
 
@@ -110,6 +122,22 @@ export function makeWalletRepository(
         catch: err =>
           new WalletRepositoryError({
             operation: "findByUserId",
+            cause: err,
+          }),
+      }),
+
+    findTransactionListOwnerByUserId: userId =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.wallet.findUnique({
+            where: { userId },
+            select: selectWalletTransactionListOwnerRow,
+          });
+          return Option.fromNullable(row).pipe(Option.map(toWalletTransactionListOwnerRow));
+        },
+        catch: err =>
+          new WalletRepositoryError({
+            operation: "findTransactionListOwnerByUserId",
             cause: err,
           }),
       }),
@@ -277,13 +305,17 @@ export function makeWalletRepository(
           }),
       }),
 
-    listTransactions: (walletId, pageReq) => {
+    listTransactions: (walletId, pageReq, filter) => {
       const { page, pageSize, skip, take } = normalizedPage(pageReq);
+      const where = {
+        walletId,
+        ...(filter?.status ? { status: filter.status } : {}),
+      };
 
       return Effect.gen(function* () {
         const [total, rows] = yield* Effect.all([
           Effect.tryPromise({
-            try: () => client.walletTransaction.count({ where: { walletId } }),
+            try: () => client.walletTransaction.count({ where }),
             catch: err =>
               new WalletRepositoryError({
                 operation: "listTransactions.count",
@@ -293,7 +325,7 @@ export function makeWalletRepository(
           Effect.tryPromise({
             try: () =>
               client.walletTransaction.findMany({
-                where: { walletId },
+                where,
                 orderBy: { createdAt: "desc" },
                 skip,
                 take,
