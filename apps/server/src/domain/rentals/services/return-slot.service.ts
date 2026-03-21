@@ -127,6 +127,11 @@ export function createReturnSlotUseCase(
               Effect.flatMap(activeOpt =>
                 Option.isSome(activeOpt)
                   ? Effect.succeed(activeOpt.value)
+                  // This is still treated as a defect on purpose: once we hit the known
+                  // one-active-return-slot-per-rental unique constraint, rereading that
+                  // active slot should always succeed. We do not have a meaningful recovery
+                  // path here yet, so surfacing it as a typed domain error would only add
+                  // noise without changing runtime behavior.
                   : Effect.die(new Error(
                       `Active return slot unique violation without persisted slot for rental ${input.rentalId}`,
                     )),

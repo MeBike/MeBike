@@ -74,7 +74,7 @@ export type ReservationService = {
    * EN: Validate a PENDING reservation owned by the user and return the assigned bike.
    * VI: Kiểm tra reservation PENDING của user và trả về bike đã được gán.
    */
-  confirmPendingInTx: (
+  validatePendingForConfirmationInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     input: {
       readonly reservationId: string;
@@ -160,7 +160,7 @@ function makeReservationService(
         Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
       ),
 
-    confirmPendingInTx: (tx, input) =>
+    validatePendingForConfirmationInTx: (tx, input) =>
       Effect.gen(function* () {
         const txRepo = makeReservationRepository(tx);
         const reservationOpt = yield* txRepo.findById(input.reservationId).pipe(
