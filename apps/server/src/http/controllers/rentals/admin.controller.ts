@@ -263,13 +263,27 @@ const endRentalByAdmin: RouteHandler<
             },
             400,
           )),
-        Match.tag("EndStationMismatch", () =>
+        Match.tag("ReturnSlotRequiredForReturn", () =>
           c.json(
             {
-              error: rentalErrorMessages.MUST_END_AT_START_STATION,
+              error: rentalErrorMessages.RETURN_SLOT_REQUIRED_FOR_RETURN,
               details: {
-                code: RentalErrorCodeSchema.enum.MUST_END_AT_START_STATION,
+                code: RentalErrorCodeSchema.enum.RETURN_SLOT_REQUIRED_FOR_RETURN,
                 rentalId,
+                endStationId: body.endStation,
+              },
+            },
+            400,
+          )),
+        Match.tag("ReturnSlotStationMismatch", ({ returnSlotStationId, attemptedEndStationId }) =>
+          c.json(
+            {
+              error: rentalErrorMessages.RETURN_SLOT_STATION_MISMATCH,
+              details: {
+                code: RentalErrorCodeSchema.enum.RETURN_SLOT_STATION_MISMATCH,
+                rentalId,
+                returnSlotStationId,
+                endStationId: attemptedEndStationId,
               },
             },
             400,

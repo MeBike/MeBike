@@ -6,11 +6,17 @@ import {
   BikeSwapRequestErrorResponseSchema,
   BikeSwapRequestListResponseSchema,
   BikeSwapStatusSchema,
+  ReturnSlotReservationSchema,
 } from "../../rentals";
 import {
   paginationQueryFields,
   SortDirectionSchema,
 } from "../../schemas";
+import {
+  forbiddenResponse,
+  paginatedResponse,
+  unauthorizedResponse,
+} from "../helpers";
 import {
   BikeSwapRequestDetailSchemaOpenApi,
   BikeSwapRequestIdParamSchema,
@@ -34,11 +40,6 @@ import {
   StationActivityResponseSchema,
   UserIdParamSchema,
 } from "./shared";
-import {
-  forbiddenResponse,
-  paginatedResponse,
-  unauthorizedResponse,
-} from "../helpers";
 
 export const getMyRentals = createRoute({
   method: "get",
@@ -148,6 +149,46 @@ export const getMyRental = createRoute({
               },
             },
           },
+        },
+      },
+    },
+  },
+});
+
+export const getMyCurrentReturnSlot = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/{rentalId}/return-slot",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get the active return slot for a rental",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            ReturnSlotReservationSchema.openapi("CurrentReturnSlotReservation"),
+            "Current return slot response",
+          ),
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    400: {
+      description: "Rental is not active",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Rental or return slot not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
         },
       },
     },

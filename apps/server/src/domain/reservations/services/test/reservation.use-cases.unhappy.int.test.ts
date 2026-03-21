@@ -198,6 +198,57 @@ describe("reservation use-cases unhappy paths", () => {
     expectLeftTag(result, "InvalidReservationTransition");
   });
 
+  it("confirmReservationUseCase fails with InvalidReservationTransition when reservation is expired", async () => {
+    const user = await fixture.factories.user();
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id });
+    const reservation = await fixture.factories.reservation({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      status: "EXPIRED",
+      endTime: new Date(Date.now() - 60_000),
+    });
+
+    const result = await runConfirm({ reservationId: reservation.id, userId: user.id, now: new Date() });
+    expectLeftTag(result, "InvalidReservationTransition");
+  });
+
+  it("confirmReservationUseCase fails with InvalidReservationTransition when reservation is already fulfilled", async () => {
+    const user = await fixture.factories.user();
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id });
+    const reservation = await fixture.factories.reservation({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      status: "FULFILLED",
+      endTime: new Date(Date.now() + env.RESERVATION_HOLD_MINUTES * 60 * 1000),
+    });
+
+    const result = await runConfirm({ reservationId: reservation.id, userId: user.id, now: new Date() });
+    expectLeftTag(result, "InvalidReservationTransition");
+  });
+
+  it("confirmReservationUseCase fails with BikeNotAvailable when the reserved bike is no longer reserved", async () => {
+    const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 50_000n } });
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    const reservation = await fixture.factories.reservation({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      status: "PENDING",
+      endTime: new Date(Date.now() + env.RESERVATION_HOLD_MINUTES * 60 * 1000),
+    });
+
+    const result = await runConfirm({ reservationId: reservation.id, userId: user.id, now: new Date() });
+    expectLeftTag(result, "BikeNotAvailable");
+    if (result._tag === "Left" && result.left._tag === "BikeNotAvailable") {
+      expect(result.left.status).toBe("AVAILABLE");
+    }
+  });
+
   it("confirmReservationUseCase fails with ReservationConfirmBlockedByActiveRental when user already has rented bike", async () => {
     const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
     const station = await fixture.factories.station();
@@ -241,6 +292,13 @@ describe("reservation use-cases unhappy paths", () => {
     expectLeftTag(result, "ReservationNotOwned");
   });
 
+  it("cancelReservationUseCase fails with ReservationNotFound", async () => {
+    const user = await fixture.factories.user();
+
+    const result = await runCancel({ reservationId: uuidv7(), userId: user.id, now: new Date() });
+    expectLeftTag(result, "ReservationNotFound");
+  });
+
   it("cancelReservationUseCase fails with InvalidReservationTransition", async () => {
     const user = await fixture.factories.user();
     const station = await fixture.factories.station();
@@ -249,6 +307,21 @@ describe("reservation use-cases unhappy paths", () => {
       bikeId: null,
       stationId: station.id,
       status: "ACTIVE",
+      endTime: null,
+    });
+
+    const result = await runCancel({ reservationId: reservation.id, userId: user.id, now: new Date() });
+    expectLeftTag(result, "InvalidReservationTransition");
+  });
+
+  it("cancelReservationUseCase fails with InvalidReservationTransition when reservation is fulfilled", async () => {
+    const user = await fixture.factories.user();
+    const station = await fixture.factories.station();
+    const reservation = await fixture.factories.reservation({
+      userId: user.id,
+      bikeId: null,
+      stationId: station.id,
+      status: "FULFILLED",
       endTime: null,
     });
 

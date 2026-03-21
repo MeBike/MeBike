@@ -5,6 +5,7 @@ import type {
   AdminRentalListItem,
   BikeSwapRequestRow,
   RentalRow,
+  ReturnSlotRow,
   StaffBikeSwapRequestRow,
 } from "@/domain/rentals";
 
@@ -209,6 +210,21 @@ export function toContractBikeSwapRequestDetail(
         }
       : null,
     reason: row.reason || null,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toContractReturnSlot(
+  row: ReturnSlotRow,
+): RentalsContracts.ReturnSlotReservation {
+  return {
+    id: row.id,
+    rentalId: row.rentalId,
+    userId: row.userId,
+    stationId: row.stationId,
+    reservedFrom: row.reservedFrom.toISOString(),
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
