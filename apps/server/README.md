@@ -146,6 +146,39 @@ TL;DR:
 - **`migrate dev`**: chi dung khi ban dang tao migration moi.
 - **`migrate deploy`**: dung khi chi can ap cac migration da commit san (pull branch, CI, prod).
 
+Workflow thuong dung sau khi pull branch / doi branch:
+
+```bash
+pnpm install
+pnpm prisma migrate deploy
+pnpm prisma generate
+```
+
+Neu can co demo data de local test nhanh:
+
+```bash
+pnpm seed:demo
+```
+
+### 3.1) Khi local DB bi lech schema / branch switch gay loi
+
+Neu local database dang o trang thai loi (schema drift, migration fail do branch switch, muon reset sach DB local), co the dung:
+
+```bash
+pnpm prisma migrate reset --force
+pnpm prisma generate
+pnpm seed:demo
+```
+
+Chi dung `migrate reset --force` cho **local/dev database**. Lenh nay se drop / recreate schema va xoa du lieu hien tai.
+
+Khi nao nen nghi den `migrate reset --force`:
+
+- Vua pull branch co migration moi va local DB dang o trang thai lech / kho apply tiep
+- Da test nhieu schema change local va muon quay ve trang thai sach
+- Seed / app loi vi table / enum / column local khong con khop voi migration hien tai
+- Muon reset nhanh moi thu ve trang thai dev baseline
+
 Ghi chu:
 
 - Prisma config: `apps/server/prisma.config.ts`
@@ -163,6 +196,25 @@ pnpm seed
 Quan trong:
 
 - `pnpm seed` chay `prisma/seed.ts` va **TRUNCATE** bang `Station` (`TRUNCATE TABLE "Station" ... CASCADE`).
+
+Demo seed (khuyen dung cho local dev neu can data mau day du hon):
+
+```bash
+pnpm seed:demo
+```
+
+Phan biet nhanh:
+
+- `pnpm seed`: seed co ban theo `prisma/seed.ts`
+- `pnpm seed:demo`: seed demo data day du hon theo `prisma/seed-demo.ts`
+
+Neu vua co migration moi, hay chay migration truoc khi seed demo:
+
+```bash
+pnpm prisma migrate deploy
+pnpm prisma generate
+pnpm seed:demo
+```
 
 Seed them (tuy chon):
 
