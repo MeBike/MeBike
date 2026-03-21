@@ -53,7 +53,7 @@ export function CustomerStats({ stats }: { stats: GetUserDashboardStatsResponse 
           <div>
             <p className="text-sm text-muted-foreground">Khách VIP</p>
             <p className="text-3xl font-bold text-yellow-500 mt-1">
-              {stats.vipCustomer ? stats.vipCustomer.fullname : "Chưa có"}
+              {stats.vipCustomer?.fullName || "Chưa có"}
             </p>
           </div>
           <div className="p-3 bg-yellow-500/10 rounded-lg">

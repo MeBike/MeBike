@@ -1,17 +1,19 @@
 export type UserRole = "ADMIN" | "STAFF" | "USER" | "SOS";
-export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "BANNED" | "" ;
+export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "";
+export type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
 
 export interface DetailUser {
   id: string;
   fullName: string;
   email: string;
   verify: VerifyStatus;
-  location: string;
-  username: string;
-  phoneNumber: string;
-  avatar: string;
+  accountStatus?: AccountStatus;
+  location: string | null;
+  username: string | null;
+  phoneNumber: string | null;
+  avatar: string | null;
   role: UserRole;
-  nfcCardUid: string;
+  nfcCardUid: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,9 +62,9 @@ export interface GetUserDashboardStatsResponse {
   newCustomersThisMonth: number;
   vipCustomer: {
     userId: string;
-    fullname: string;
+    fullName: string;
     totalDuration: number;
-  };
+  } | null;
   averageSpending : number;
   totalRevenue: number;
 }
@@ -70,11 +72,10 @@ export interface GetTopRentersResponse {
   totalRentals: number;
   user: {
     id: string;
-    fullname: string;
+    fullName: string;
     email: string;
-    avatar: string;
-    phoneNumber: string;
-    location: string;
+    avatar: string | null;
+    phoneNumber: string | null;
+    location: string | null;
   };
 }
-

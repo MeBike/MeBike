@@ -4,6 +4,7 @@ import {
   SortDirectionSchema,
 } from "../../schemas";
 import {
+  AccountStatusSchema,
   UserErrorCodeSchema,
   userErrorMessages,
   UserRoleSchema,
@@ -72,11 +73,12 @@ export const adminListUsersRoute = createRoute({
       ...StatsPaginationQuerySchema.shape,
       fullName: z.string().optional(),
       role: UserRoleSchema.optional(),
+      accountStatus: AccountStatusSchema.optional(),
       verify: VerifyStatusSchema.optional(),
       agencyId: z.uuidv7().optional(),
       stationId: z.uuidv7().optional(),
       technicianTeamId: z.uuidv7().optional(),
-      sortBy: z.enum(["fullname", "email", "role", "verify", "updatedAt"]).optional(),
+      sortBy: z.enum(["fullname", "email", "role", "accountStatus", "verify", "updatedAt"]).optional(),
       sortDir: SortDirectionSchema.optional(),
     }),
   },

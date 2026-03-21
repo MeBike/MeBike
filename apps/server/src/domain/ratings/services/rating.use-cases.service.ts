@@ -59,6 +59,10 @@ export function createRatingWithGuardsUseCase(input: CreateRatingInput): Effect.
       return yield* Effect.fail(new RatingReasonNotFound({ missingIds: missing }));
     }
 
-    return yield* ratingService.create(input);
+    return yield* ratingService.create({
+      ...input,
+      bikeId: rental.bikeId,
+      stationId: rental.endStationId ?? rental.startStationId,
+    });
   });
 }

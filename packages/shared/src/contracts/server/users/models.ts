@@ -1,5 +1,5 @@
 import { z } from "../../../zod";
-import { UserRoleSchema, VerifyStatusSchema } from "./schemas";
+import { AccountStatusSchema, UserRoleSchema, VerifyStatusSchema } from "./schemas";
 
 const OrgUnitRefSchema = z.object({
   id: z.uuidv7(),
@@ -21,6 +21,7 @@ export const UserDetailSchema = z.object({
   id: z.uuidv7(),
   fullName: z.string(),
   email: z.string(),
+  accountStatus: AccountStatusSchema,
   verify: VerifyStatusSchema,
   location: z.string().nullable(),
   username: z.string().nullable(),

@@ -15,7 +15,8 @@ export type UserOverrides = {
   location?: string | null;
   nfcCardUid?: string | null;
   role?: "USER" | "STAFF" | "TECHNICIAN" | "MANAGER" | "ADMIN" | "AGENCY";
-  verify?: "UNVERIFIED" | "VERIFIED" | "BANNED";
+  accountStatus?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
+  verify?: "UNVERIFIED" | "VERIFIED";
 };
 
 export type StationOverrides = {

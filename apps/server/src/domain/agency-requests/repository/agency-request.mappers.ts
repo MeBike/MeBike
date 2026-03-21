@@ -21,14 +21,14 @@ export const selectAgencyRequestRow = {
   requesterUser: {
     select: {
       id: true,
-      fullname: true,
+      fullName: true,
       email: true,
     },
   },
   reviewedByUser: {
     select: {
       id: true,
-      fullname: true,
+      fullName: true,
       email: true,
     },
   },
@@ -41,7 +41,7 @@ export const selectAgencyRequestRow = {
   createdAgencyUser: {
     select: {
       id: true,
-      fullname: true,
+      fullName: true,
       email: true,
     },
   },
@@ -69,14 +69,14 @@ export function toAgencyRequestRow(
     requesterUser: row.requesterUser
       ? {
           id: row.requesterUser.id,
-          fullName: row.requesterUser.fullname,
+          fullName: row.requesterUser.fullName,
           email: row.requesterUser.email,
         }
       : null,
     reviewedByUser: row.reviewedByUser
       ? {
           id: row.reviewedByUser.id,
-          fullName: row.reviewedByUser.fullname,
+          fullName: row.reviewedByUser.fullName,
           email: row.reviewedByUser.email,
         }
       : null,
@@ -89,7 +89,7 @@ export function toAgencyRequestRow(
     createdAgencyUser: row.createdAgencyUser
       ? {
           id: row.createdAgencyUser.id,
-          fullName: row.createdAgencyUser.fullname,
+          fullName: row.createdAgencyUser.fullName,
           email: row.createdAgencyUser.email,
         }
       : null,

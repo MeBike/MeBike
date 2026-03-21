@@ -7,7 +7,9 @@ export async function resetTestData(prisma: PrismaClient): Promise<void> {
       "BikeSwapRequest",
       "FixedSlotDate",
       "FixedSlotTemplate",
-      "Rating",
+      "rating_reason_links",
+      "rating_reasons",
+      "ratings",
       "Rental",
       "Reservation",
       "Subscription",
@@ -23,7 +25,7 @@ export async function resetTestData(prisma: PrismaClient): Promise<void> {
       "Bike",
       "Station",
       "Supplier",
-      "User"
+      "users"
     CASCADE
   `);
 }

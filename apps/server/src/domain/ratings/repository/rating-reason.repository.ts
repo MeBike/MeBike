@@ -32,15 +32,18 @@ export function makeRatingReasonRepository(client: PrismaClient): RatingReasonRe
             where: {
               ...(filters?.type ? { type: filters.type } : {}),
               ...(filters?.appliesTo ? { appliesTo: filters.appliesTo } : {}),
+              isActive: true,
             },
             orderBy: {
-              messages: "asc",
+              message: "asc",
             },
             select: {
               id: true,
               type: true,
               appliesTo: true,
-              messages: true,
+              message: true,
+              isDefault: true,
+              isActive: true,
             },
           }),
         catch: err =>
@@ -53,12 +56,17 @@ export function makeRatingReasonRepository(client: PrismaClient): RatingReasonRe
       Effect.tryPromise({
         try: () =>
           client.ratingReason.findMany({
-            where: { id: { in: ids as string[] } },
+            where: {
+              id: { in: ids as string[] },
+              isActive: true,
+            },
             select: {
               id: true,
               type: true,
               appliesTo: true,
-              messages: true,
+              message: true,
+              isDefault: true,
+              isActive: true,
             },
           }),
         catch: err =>

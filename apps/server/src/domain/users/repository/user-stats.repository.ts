@@ -72,32 +72,34 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
           = yield* Effect.all([
             withOp("stats.totalUsers", async () => {
               const row = await db
-                .selectFrom("User")
+                .selectFrom("users")
                 .select(sql<number>`count(*)`.as("count"))
                 .executeTakeFirst();
               return Number(row?.count ?? 0);
             }),
             withOp("stats.totalVerified", async () => {
               const row = await db
-                .selectFrom("User")
+                .selectFrom("users")
                 .select(sql<number>`count(*)`.as("count"))
-                .where("verify", "=", UserVerifyStatus.VERIFIED)
+                .where("account_status", "=", "ACTIVE")
+                .where("verify_status", "=", UserVerifyStatus.VERIFIED)
                 .executeTakeFirst();
               return Number(row?.count ?? 0);
             }),
             withOp("stats.totalUnverified", async () => {
               const row = await db
-                .selectFrom("User")
+                .selectFrom("users")
                 .select(sql<number>`count(*)`.as("count"))
-                .where("verify", "=", UserVerifyStatus.UNVERIFIED)
+                .where("account_status", "=", "ACTIVE")
+                .where("verify_status", "=", UserVerifyStatus.UNVERIFIED)
                 .executeTakeFirst();
               return Number(row?.count ?? 0);
             }),
             withOp("stats.totalBanned", async () => {
               const row = await db
-                .selectFrom("User")
+                .selectFrom("users")
                 .select(sql<number>`count(*)`.as("count"))
-                .where("verify", "=", UserVerifyStatus.BANNED)
+                .where("account_status", "=", "BANNED")
                 .executeTakeFirst();
               return Number(row?.count ?? 0);
             }),
@@ -156,25 +158,25 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
             .with("ranked", qb =>
               qb
                 .selectFrom("rental_counts")
-                .innerJoin("User", "User.id", "rental_counts.user_id")
+                .innerJoin("users", "users.id", "rental_counts.user_id")
                 .select([
                   "rental_counts.user_id as user_id",
                   "rental_counts.total_rentals as total_rentals",
-                  "User.fullname as fullname",
-                  "User.email as email",
-                  "User.avatar as avatar",
-                  "User.phone_number as phone_number",
-                  "User.location as location",
+                  "users.full_name as full_name",
+                  "users.email as email",
+                  "users.avatar_url as avatar_url",
+                  "users.phone_number as phone_number",
+                  "users.location_text as location_text",
                 ]))
             .selectFrom("ranked")
             .select([
               "user_id",
               "total_rentals",
-              "fullname",
+              "full_name",
               "email",
-              "avatar",
+              "avatar_url",
               "phone_number",
-              "location",
+              "location_text",
               sql<number>`count(*) over()`.as("total_records"),
             ])
             .orderBy("total_rentals", "desc")
@@ -191,7 +193,7 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
         const [thisMonth, lastMonth] = yield* Effect.all([
           withOp("stats.newUsers.thisMonth", async () => {
             const row = await db
-              .selectFrom("User")
+              .selectFrom("users")
               .select(sql<number>`count(*)`.as("count"))
               .where("created_at", ">=", thisMonthStart)
               .where("created_at", "<=", thisMonthEnd)
@@ -200,7 +202,7 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
           }),
           withOp("stats.newUsers.lastMonth", async () => {
             const row = await db
-              .selectFrom("User")
+              .selectFrom("users")
               .select(sql<number>`count(*)`.as("count"))
               .where("created_at", ">=", lastMonthStart)
               .where("created_at", "<=", lastMonthEnd)
@@ -223,7 +225,7 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
         ] = yield* Effect.all([
           withOp("stats.dashboard.totalCustomers", async () => {
             const row = await db
-              .selectFrom("User")
+              .selectFrom("users")
               .select(sql<number>`count(*)`.as("count"))
               .where("role", "=", UserRole.USER)
               .executeTakeFirst();
@@ -231,16 +233,17 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
           }),
           withOp("stats.dashboard.activeCustomers", async () => {
             const row = await db
-              .selectFrom("User")
+              .selectFrom("users")
               .select(sql<number>`count(*)`.as("count"))
               .where("role", "=", UserRole.USER)
-              .where("verify", "=", UserVerifyStatus.VERIFIED)
+              .where("account_status", "=", "ACTIVE")
+              .where("verify_status", "=", UserVerifyStatus.VERIFIED)
               .executeTakeFirst();
             return Number(row?.count ?? 0);
           }),
           withOp("stats.dashboard.newCustomersThisMonth", async () => {
             const row = await db
-              .selectFrom("User")
+              .selectFrom("users")
               .select(sql<number>`count(*)`.as("count"))
               .where("role", "=", UserRole.USER)
               .where("created_at", ">=", monthStart)
@@ -261,17 +264,17 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
           withOp("stats.dashboard.vipCustomer", () =>
             db
               .selectFrom("Rental")
-              .innerJoin("User", "User.id", "Rental.user_id")
+              .innerJoin("users", "users.id", "Rental.user_id")
               .select([
                 "Rental.user_id as user_id",
-                "User.fullname as fullname",
+                "users.full_name as full_name",
                 sql<number>`coalesce(sum("Rental"."duration"), 0)`.as(
                   "total_duration",
                 ),
               ])
               .where("Rental.status", "=", "COMPLETED")
               .groupBy("Rental.user_id")
-              .groupBy("User.fullname")
+              .groupBy("users.full_name")
               .orderBy("total_duration", "desc")
               .limit(1)
               .execute() as Promise<VipCustomerRowRaw[]>),

@@ -200,7 +200,7 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidCredentials({}));
       }
 
-      if (user.verify === "BANNED") {
+      if (user.accountStatus === "BANNED") {
         return yield* Effect.fail(new InvalidCredentials({}));
       }
 

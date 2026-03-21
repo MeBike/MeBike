@@ -7,7 +7,6 @@ enum RatingReasonType {
 enum AppliesToEnum {
   bike
   station
-  app
 }
 
 // Ratings and reasons
@@ -16,20 +15,28 @@ model RatingReason {
   id        String             @id @default(uuid(7)) @db.Uuid
   type      RatingReasonType
   appliesTo AppliesToEnum      @map("applies_to")
-  messages  String
+  message   String
+  isDefault Boolean            @default(true) @map("is_default")
+  isActive  Boolean            @default(true) @map("is_active")
   createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime           @default(now()) @map("updated_at") @db.Timestamptz
+  updatedAt DateTime           @updatedAt @map("updated_at") @db.Timestamptz
   links     RatingReasonLink[]
+
+  @@map("rating_reasons")
 }
 
 model Rating {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  rentalId  String   @unique @map("rental_id") @db.Uuid
-  rating    Int
-  comment   String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  id           String   @id @default(uuid(7)) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  rentalId     String   @unique @map("rental_id") @db.Uuid
+  bikeId       String?  @map("bike_id") @db.Uuid
+  stationId    String?  @map("station_id") @db.Uuid
+  bikeScore    Int      @map("bike_score")
+  stationScore Int      @map("station_score")
+  comment      String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  editedAt     DateTime? @map("edited_at") @db.Timestamptz
 
   user    User               @relation(fields: [userId], references: [id])
   rental  Rental             @relation(fields: [rentalId], references: [id])
@@ -37,17 +44,23 @@ model Rating {
 
   @@index([userId], name: "idx_ratings_user")
   @@index([rentalId], name: "idx_ratings_rental")
-  @@index([rating], name: "idx_ratings_rating")
+  @@index([bikeId], name: "idx_ratings_bike")
+  @@index([stationId], name: "idx_ratings_station")
+  @@index([bikeScore], name: "idx_ratings_bike_score")
+  @@index([stationScore], name: "idx_ratings_station_score")
+  @@map("ratings")
 }
 
 model RatingReasonLink {
-  ratingId String @map("rating_id") @db.Uuid
-  reasonId String @map("reason_id") @db.Uuid
+  ratingId String        @map("rating_id") @db.Uuid
+  reasonId String        @map("reason_id") @db.Uuid
+  target   AppliesToEnum
 
   rating Rating       @relation(fields: [ratingId], references: [id], onDelete: Cascade)
   reason RatingReason @relation(fields: [reasonId], references: [id], onDelete: Cascade)
 
-  @@id([ratingId, reasonId])
+  @@id([ratingId, reasonId, target])
   @@index([ratingId], name: "idx_rating_reason_links_rating")
   @@index([reasonId], name: "idx_rating_reason_links_reason")
+  @@map("rating_reason_links")
 }

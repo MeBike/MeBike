@@ -250,7 +250,7 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
         const rows = yield* withOp("stats.rentalHistory", () =>
           db
             .selectFrom("Rental")
-            .innerJoin("User", "User.id", "Rental.user_id")
+            .innerJoin("users", "users.id", "Rental.user_id")
             .innerJoin("Station as StartStation", "StartStation.id", "Rental.start_station")
             .leftJoin("Station as EndStation", "EndStation.id", "Rental.end_station")
             .select([
@@ -259,8 +259,8 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
               "Rental.end_time as end_time",
               "Rental.duration as duration",
               "Rental.total_price as total_price",
-              "User.id as user_id",
-              "User.fullname as fullname",
+              "users.id as user_id",
+              "users.full_name as fullname",
               "StartStation.id as start_station_id",
               "StartStation.name as start_station_name",
               "EndStation.id as end_station_id",

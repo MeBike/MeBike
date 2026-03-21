@@ -1,18 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "@services/user.service";
 import { VerifyStatus } from "@/types";
-import { QUERY_KEYS } from "@constants/queryKey";
+
+type AccountStatusFilter = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
+
 const fetchAllUserRequests = async ({
   page,
   pageSize,
   verify,
+  accountStatus,
   role,
   fullName,
 }: {
   page?: number;
   pageSize?: number;
   verify?: VerifyStatus;
-  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+  accountStatus?: AccountStatusFilter;
+  role?: "ADMIN" | "USER" | "STAFF" | "";
   fullName?: string;
 }) => {
   try {
@@ -21,6 +25,7 @@ const fetchAllUserRequests = async ({
       pageSize: pageSize ?? 5,
     };
     if (verify) query.verify = verify;
+    if (accountStatus) query.accountStatus = accountStatus;
     if (role) query.role = role;
     if (fullName) query.fullName = fullName;
     const response = await userService.getAllUsers(query);
@@ -36,17 +41,19 @@ export const useGetAllUserQuery = ({
   page,
   pageSize,
   verify,
+  accountStatus,
   role,
   fullName,
 }: {
   page?: number;
   pageSize?: number;
   verify?: VerifyStatus;
-  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+  accountStatus?: AccountStatusFilter;
+  role?: "ADMIN" | "USER" | "STAFF" | "";
   fullName?: string;
 }) => {
   return useQuery({
-    queryKey: QUERY_KEYS.USER.ALL(page, pageSize, verify, role, fullName),
-    queryFn: () => fetchAllUserRequests({ page, pageSize, verify, role, fullName }),
+    queryKey: ["user", "all", { page, pageSize, verify, accountStatus, role, fullName }],
+    queryFn: () => fetchAllUserRequests({ page, pageSize, verify, accountStatus, role, fullName }),
   });
 };

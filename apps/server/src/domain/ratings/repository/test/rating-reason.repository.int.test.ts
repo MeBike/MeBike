@@ -22,7 +22,7 @@ describe("ratingReasonRepository Integration", () => {
         id,
         type,
         appliesTo: "bike",
-        messages: `Reason ${id}`,
+        message: `Reason ${id}`,
       },
     });
     return { id };

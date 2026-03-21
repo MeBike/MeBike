@@ -5,32 +5,47 @@ export const selectRatingRow = {
   id: true,
   userId: true,
   rentalId: true,
-  rating: true,
+  bikeId: true,
+  stationId: true,
+  bikeScore: true,
+  stationScore: true,
   comment: true,
   reasons: {
     select: {
       reasonId: true,
     },
   },
+  createdAt: true,
   updatedAt: true,
+  editedAt: true,
 } as const;
 
 export function toRatingRow(row: {
   id: string;
   userId: string;
   rentalId: string;
-  rating: number;
+  bikeId: string | null;
+  stationId: string | null;
+  bikeScore: number;
+  stationScore: number;
   comment: string | null;
+  createdAt: Date;
   updatedAt: Date;
+  editedAt: Date | null;
   reasons?: { reasonId: string }[];
 }): RatingRow {
   return {
     id: row.id,
     userId: row.userId,
     rentalId: row.rentalId,
-    rating: row.rating,
+    bikeId: row.bikeId,
+    stationId: row.stationId,
+    bikeScore: row.bikeScore,
+    stationScore: row.stationScore,
     comment: row.comment,
     reasonIds: Array.isArray(row.reasons) ? row.reasons.map(r => r.reasonId) : [],
+    createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    editedAt: row.editedAt,
   };
 }
