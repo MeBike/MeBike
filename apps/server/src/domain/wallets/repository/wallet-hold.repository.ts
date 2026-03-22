@@ -70,6 +70,10 @@ export type WalletHoldRepo = {
     holdId: string,
     settledAt: Date,
   ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  forfeitById: (
+    holdId: string,
+    forfeitedAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
   settleByWithdrawalId: (
     withdrawalId: string,
     settledAt: Date,
@@ -249,6 +253,26 @@ export function makeWalletHoldRepository(
         catch: err =>
           new WalletHoldRepositoryError({
             operation: "settleById",
+            cause: err,
+          }),
+      }),
+
+    forfeitById: (holdId, forfeitedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.walletHold.updateMany({
+            where: { id: holdId, status: "ACTIVE" },
+            data: {
+              status: "SETTLED",
+              settledAt: forfeitedAt,
+              forfeitedAt,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "forfeitById",
             cause: err,
           }),
       }),
