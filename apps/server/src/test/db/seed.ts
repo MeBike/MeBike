@@ -16,12 +16,25 @@ export async function seed(db: Kysely<DB>) {
       await db.executeQuery(
         sql`
           INSERT INTO "Station"
-            (id, name, address, capacity, latitude, longitude, updated_at, position)
+            (
+              id,
+              name,
+              address,
+              total_capacity,
+              pickup_slot_limit,
+              return_slot_limit,
+              latitude,
+              longitude,
+              updated_at,
+              position
+            )
           VALUES
             (
               ${station.id},
               ${station.name},
               ${station.address},
+              ${station.capacity},
+              ${station.capacity},
               ${station.capacity},
               ${station.latitude},
               ${station.longitude},

@@ -24,6 +24,8 @@ export type StationOverrides = {
   name?: string;
   address?: string;
   capacity?: number;
+  pickupSlotLimit?: number;
+  returnSlotLimit?: number;
   latitude?: number;
   longitude?: number;
 };

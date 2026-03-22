@@ -86,6 +86,38 @@ describe("reservation use-cases unhappy paths", () => {
     expectLeftTag(result, "InsufficientWalletBalance");
   });
 
+  it("reserveBikeUseCase fails when station pickup slot limit is reached", async () => {
+    const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
+    const other = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
+    const station = await fixture.factories.station({
+      capacity: 10,
+      pickupSlotLimit: 1,
+      returnSlotLimit: 10,
+    });
+    const bikeA = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    const bikeB = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    const now = new Date();
+    await fixture.factories.reservation({
+      userId: other.user.id,
+      bikeId: bikeA.id,
+      stationId: station.id,
+      status: "PENDING",
+      startTime: new Date(now.getTime() - 1000),
+      endTime: new Date(now.getTime() + 1000 * 60 * 10),
+    });
+
+    const result = await runReserve({
+      userId: user.id,
+      bikeId: bikeB.id,
+      stationId: station.id,
+      startTime: now,
+      now,
+    });
+
+    expectLeftTag(result, "StationPickupSlotLimitExceeded");
+  });
+
   it("reserveBikeUseCase fails with SubscriptionRequired when subscription option missing id", async () => {
     const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
     const { station, bike } = await givenStationWithAvailableBike(fixture);
