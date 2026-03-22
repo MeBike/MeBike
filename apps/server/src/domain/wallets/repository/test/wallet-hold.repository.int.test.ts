@@ -80,6 +80,27 @@ describe("wallet hold repository integration", () => {
     expect(hold.releasedAt?.toISOString()).toBe(releasedAt.toISOString());
   });
 
+  it("forfeits a hold by id", async () => {
+    const { user, rental } = await givenActiveRental(fixture, { wallet: { balance: 5000n } });
+    const wallet = await fixture.prisma.wallet.findUniqueOrThrow({ where: { userId: user.id } });
+    const created = await Effect.runPromise(repo.create({
+      walletId: wallet.id,
+      rentalId: rental.id,
+      amount: 2000n,
+      reason: "RENTAL_DEPOSIT",
+    }));
+
+    const forfeitedAt = new Date("2026-03-22T23:30:00.000Z");
+    const forfeited = await Effect.runPromise(repo.forfeitById(created.id, forfeitedAt));
+
+    expect(forfeited).toBe(true);
+
+    const hold = await fixture.prisma.walletHold.findUniqueOrThrow({ where: { id: created.id } });
+    expect(hold.status).toBe("SETTLED");
+    expect(hold.settledAt?.toISOString()).toBe(forfeitedAt.toISOString());
+    expect(hold.forfeitedAt?.toISOString()).toBe(forfeitedAt.toISOString());
+  });
+
   it("findByWithdrawalId returns none when the hold does not exist", async () => {
     const result = await Effect.runPromise(repo.findByWithdrawalId(uuidv7()));
 

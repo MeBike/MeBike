@@ -62,7 +62,7 @@ describe("startRentalUseCase Integration", () => {
 
   it("creates a rental and books the bike", async () => {
     const { user } = await givenUserWithWallet(fixture, {
-      wallet: { balance: 5000n },
+      wallet: { balance: 600000n },
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture);
 
