@@ -43,6 +43,11 @@ export type WalletHoldService = {
     holdId: string,
     settledAt: Date,
   ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  forfeitByIdInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    holdId: string,
+    forfeitedAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
   settleByWithdrawalIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     withdrawalId: string,
@@ -70,6 +75,8 @@ function makeWalletHoldService(
       makeWalletHoldRepository(tx).releaseByWithdrawalId(withdrawalId, releasedAt),
     settleByIdInTx: (tx, holdId, settledAt) =>
       makeWalletHoldRepository(tx).settleById(holdId, settledAt),
+    forfeitByIdInTx: (tx, holdId, forfeitedAt) =>
+      makeWalletHoldRepository(tx).forfeitById(holdId, forfeitedAt),
     settleByWithdrawalIdInTx: (tx, withdrawalId, settledAt) =>
       makeWalletHoldRepository(tx).settleByWithdrawalId(withdrawalId, settledAt),
   };

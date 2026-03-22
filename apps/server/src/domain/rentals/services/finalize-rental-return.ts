@@ -7,6 +7,7 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 import { makeBikeRepository } from "@/domain/bikes";
 import {
   calculateUsageChargeMinor,
+  isAfterLateReturnCutoff,
   makePricingPolicyRepository,
 } from "@/domain/pricing";
 import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
@@ -31,7 +32,10 @@ import {
 import { computeSubscriptionCoverage } from "../pricing";
 import { makeRentalRepository } from "../repository/rental.repository";
 import { makeReturnSlotRepository } from "../repository/return-slot.repository";
-import { releaseRentalDepositHoldInTx } from "./rental-deposit-hold.service";
+import {
+  forfeitRentalDepositHoldInTx,
+  releaseRentalDepositHoldInTx,
+} from "./rental-deposit-hold.service";
 
 type FinalizeRentalReturnInput = {
   tx: PrismaTypes.TransactionClient;
@@ -134,19 +138,35 @@ export function finalizeRentalReturnInTx(
       ? basePriceMinor - prepaidMinor
       : 0n;
 
-    if (rental.depositHoldId) {
-      const depositReleased = yield* releaseRentalDepositHoldInTx({
-        tx,
-        holdId: rental.depositHoldId,
-        releasedAt: endTime,
-      }).pipe(
-        Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-        Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
-      );
+    const depositForfeited = Boolean(rental.depositHoldId)
+      && isAfterLateReturnCutoff(endTime, pricingPolicy.lateReturnCutoff);
 
-      if (!depositReleased) {
+    if (rental.depositHoldId) {
+      const depositHandled = depositForfeited
+        ? yield* forfeitRentalDepositHoldInTx({
+          tx,
+          holdId: rental.depositHoldId,
+          userId: rental.userId,
+          rentalId: rental.id,
+          forfeitedAt: endTime,
+        }).pipe(
+          Effect.catchTag("WalletNotFound", err => Effect.die(err)),
+          Effect.catchTag("InsufficientWalletBalance", err => Effect.die(err)),
+          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+          Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
+        )
+        : yield* releaseRentalDepositHoldInTx({
+          tx,
+          holdId: rental.depositHoldId,
+          releasedAt: endTime,
+        }).pipe(
+          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+          Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
+        );
+
+      if (!depositHandled) {
         return yield* Effect.die(new Error(
-          `Expected rental ${rental.id} deposit hold ${rental.depositHoldId} to release during return finalization`,
+          `Expected rental ${rental.id} deposit hold ${rental.depositHoldId} to be handled during return finalization`,
         ));
       }
     }
@@ -217,7 +237,7 @@ export function finalizeRentalReturnInTx(
             overtimeAmount: toPrismaDecimal("0"),
             couponDiscountAmount: toPrismaDecimal("0"),
             subscriptionDiscountAmount: toPrismaDecimal(subscriptionDiscountMinor.toString()),
-            depositForfeited: false,
+            depositForfeited,
             totalAmount: toPrismaDecimal(totalPriceMinor.toString()),
           },
         }),

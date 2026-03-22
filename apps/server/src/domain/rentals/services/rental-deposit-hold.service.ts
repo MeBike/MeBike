@@ -4,7 +4,7 @@ import type {
   WalletHoldRepositoryError,
   WalletRepositoryError,
 } from "@/domain/wallets/domain-errors";
-import type { WalletHoldRow } from "@/domain/wallets/models";
+import type { DecreaseBalanceInput, WalletHoldRow } from "@/domain/wallets/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import {
@@ -114,4 +114,73 @@ export function releaseRentalDepositHoldInTx(
     });
     return releasedReservedBalance;
   });
+}
+
+type ForfeitRentalDepositHoldInput = {
+  tx: PrismaTypes.TransactionClient;
+  holdId: string;
+  userId: string;
+  rentalId: string;
+  forfeitedAt: Date;
+};
+
+export function forfeitRentalDepositHoldInTx(
+  input: ForfeitRentalDepositHoldInput,
+): Effect.Effect<
+  boolean,
+  | WalletHoldRepositoryError
+  | WalletRepositoryError
+  | WalletNotFound
+  | InsufficientWalletBalance
+> {
+  return Effect.gen(function* () {
+    const txWalletHoldRepo = makeWalletHoldRepository(input.tx);
+    const txWalletRepo = makeWalletRepository(input.tx);
+
+    const holdOpt = yield* txWalletHoldRepo.findById(input.holdId);
+    if (Option.isNone(holdOpt)) {
+      return false;
+    }
+
+    const hold = holdOpt.value;
+    if (hold.status !== "ACTIVE") {
+      return false;
+    }
+
+    const releasedReservedBalance = yield* txWalletRepo.releaseReservedBalance({
+      walletId: hold.walletId,
+      amount: hold.amount,
+    });
+    if (!releasedReservedBalance) {
+      return false;
+    }
+
+    yield* debitHeldAmount(txWalletRepo, {
+      userId: input.userId,
+      amount: hold.amount,
+      description: `Rental ${input.rentalId} deposit forfeiture`,
+      hash: `rental:${input.rentalId}:deposit-forfeit`,
+      type: "DEBIT",
+    });
+
+    const forfeited = yield* txWalletHoldRepo.forfeitById(input.holdId, input.forfeitedAt);
+    return forfeited;
+  });
+}
+
+function debitHeldAmount(
+  repo: ReturnType<typeof makeWalletRepository>,
+  input: DecreaseBalanceInput,
+) {
+  return repo.decreaseBalance(input).pipe(
+    Effect.catchTag("WalletRecordNotFound", () =>
+      Effect.fail(new WalletNotFound({ userId: input.userId }))),
+    Effect.catchTag("WalletBalanceConstraint", err =>
+      Effect.fail(new InsufficientWalletBalance({
+        walletId: err.walletId,
+        userId: err.userId,
+        balance: err.balance,
+        attemptedDebit: err.attemptedDebit,
+      }))),
+  );
 }
