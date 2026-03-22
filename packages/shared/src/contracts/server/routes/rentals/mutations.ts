@@ -17,7 +17,6 @@ import {
 } from "../../rentals";
 import { unauthorizedResponse } from "../helpers";
 import {
-  ApprovedBikeSwapRequestSchemaOpenApi,
   BikeSwapRequestDetailSchemaOpenApi,
   createSuccessResponse,
   RentalDetailSchemaOpenApi,
@@ -102,84 +101,6 @@ export const createRental = createRoute({
       },
     },
     401: unauthorizedResponse(),
-  },
-});
-
-export const endMyRental = createRoute({
-  method: "put",
-  path: "/v1/rentals/me/{rentalId}/end",
-  tags: ["Rentals"],
-  security: [{ bearerAuth: [] }],
-  request: {
-    params: RentalIdParamSchema,
-    body: {
-      content: {
-        "application/json": {
-          schema: z
-            .object({
-              endStation: z.string(),
-            })
-            .openapi("EndMyRentalRequest"),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: "Rental ended successfully",
-      content: {
-        "application/json": {
-          schema: RentalSchemaOpenApi,
-          examples: {
-            Success: {
-              value: {
-                id: "019b17bd-d130-7e7d-be69-91ceef7b6959",
-                userId: "019b17bd-d130-7e7d-be69-91ceef7b6999",
-                bikeId: "019b17bd-d130-7e7d-be69-91ceef7b6888",
-                startStation: "019b17bd-d130-7e7d-be69-91ceef7b6111",
-                endStation: "019b17bd-d130-7e7d-be69-91ceef7b6222",
-                startTime: "2026-03-10T09:10:00.000Z",
-                endTime: "2026-03-10T10:25:00.000Z",
-                duration: 75,
-                totalPrice: 30000,
-                subscriptionId: "019b17bd-d130-7e7d-be69-91ceef7b6333",
-                status: "COMPLETED",
-                updatedAt: "2026-03-10T10:25:00.000Z",
-              },
-            },
-          },
-        },
-      },
-    },
-    401: unauthorizedResponse(),
-    400: {
-      description: "Cannot end rental",
-      content: {
-        "application/json": {
-          schema: RentalErrorResponseSchema,
-          examples: {
-            RentalNotFound: {
-              value: {
-                error: "No active rental found",
-                details: {
-                  code: RentalErrorCodeSchema.enum.NOT_FOUND_RENTED_RENTAL,
-                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                },
-              },
-            },
-            AccessDenied: {
-              value: {
-                error: "Cannot end another user's rental",
-                details: {
-                  code: RentalErrorCodeSchema.enum.CANNOT_END_OTHER_RENTAL,
-                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                },
-              },
-            },
-          },
-        },
-      },
-    },
   },
 });
 
@@ -409,7 +330,7 @@ export const updateRental = createRoute({
   },
 });
 
-export const endRentalByAdmin = createRoute({
+export const confirmRentalReturnByOperator = createRoute({
   method: "put",
   path: "/v1/rentals/{rentalId}/end",
   tags: ["Rentals"],
@@ -418,14 +339,14 @@ export const endRentalByAdmin = createRoute({
     body: {
       content: {
         "application/json": {
-          schema: EndRentalRequestSchema.openapi("EndRentalRequest"),
+          schema: EndRentalRequestSchema.openapi("ConfirmRentalReturnRequest"),
         },
       },
     },
   },
   responses: {
     200: {
-      description: "Rental ended by admin/staff",
+      description: "Rental return confirmed by admin/staff",
       content: {
         "application/json": {
           schema: RentalDetailSchemaOpenApi,
@@ -433,7 +354,7 @@ export const endRentalByAdmin = createRoute({
       },
     },
     400: {
-      description: "Cannot end rental",
+      description: "Cannot confirm rental return",
       content: {
         "application/json": {
           schema: RentalErrorResponseSchema,
@@ -442,6 +363,9 @@ export const endRentalByAdmin = createRoute({
     },
   },
 });
+
+// Legacy alias kept so existing generated route consumers do not break immediately.
+export const endRentalByAdmin = confirmRentalReturnByOperator;
 
 export const cancelRental = createRoute({
   method: "post",

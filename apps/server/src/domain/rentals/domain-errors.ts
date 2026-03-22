@@ -21,6 +21,10 @@ export class ReturnSlotUniqueViolation extends Data.TaggedError(
   "ReturnSlotUniqueViolation",
 )<WithGenericError<{ constraint?: string | string[] }>> {}
 
+export class ReturnConfirmationUniqueViolation extends Data.TaggedError(
+  "ReturnConfirmationUniqueViolation",
+)<WithGenericError<{ constraint?: string | string[] }>> {}
+
 // User-level domain errors
 export class RentalNotFound extends Data.TaggedError("RentalNotFound")<{
   readonly rentalId: string;
@@ -137,6 +141,12 @@ export class ReturnSlotCapacityExceeded extends Data.TaggedError(
     readonly activeReturnSlots: number;
   }> {}
 
+export class ReturnAlreadyConfirmed extends Data.TaggedError(
+  "ReturnAlreadyConfirmed",
+)<{
+    readonly rentalId: string;
+  }> {}
+
 export class BikeSwapRequestNotFound extends Data.TaggedError(
   "BikeSwapRequestNotFound",
 )<{
@@ -177,6 +187,7 @@ export type RentalServiceFailure
     | ReturnSlotRequiresActiveRental
     | ReturnSlotNotFound
     | ReturnSlotCapacityExceeded
+    | ReturnAlreadyConfirmed
     | SubscriptionNotFound
     | SubscriptionNotUsable
     | SubscriptionUsageExceeded
@@ -191,3 +202,7 @@ export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;
 export type ReturnSlotRepoError
   = | RentalRepositoryError
     | ReturnSlotUniqueViolation;
+
+export type ReturnConfirmationRepoError
+  = | RentalRepositoryError
+    | ReturnConfirmationUniqueViolation;

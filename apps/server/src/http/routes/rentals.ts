@@ -34,8 +34,6 @@ export function registerRentalRoutes(
 
   app.openapi(rentals.getMyCurrentReturnSlot, RentalMeController.getMyCurrentReturnSlot);
 
-  app.openapi(rentals.endMyRental, RentalMeController.endMyRental);
-
   app.openapi(rentals.createMyReturnSlot, RentalMeController.createMyReturnSlot);
 
   app.openapi(rentals.cancelMyReturnSlot, RentalMeController.cancelMyReturnSlot);
@@ -64,12 +62,15 @@ export function registerRentalRoutes(
 
   app.openapi(staffListRoute, RentalStaffController.staffListRentals);
 
-  const endByAdminRoute = {
-    ...rentals.endRentalByAdmin,
+  const confirmReturnByOperatorRoute = {
+    ...rentals.confirmRentalReturnByOperator,
     middleware: [requireAdminOrStaffMiddleware] as const,
   } satisfies RouteConfig;
 
-  app.openapi(endByAdminRoute, RentalAdminController.endRentalByAdmin);
+  app.openapi(
+    confirmReturnByOperatorRoute,
+    RentalAdminController.confirmRentalReturnByOperator,
+  );
 
   const adminListRoute = {
     ...rentals.adminListRentals,
