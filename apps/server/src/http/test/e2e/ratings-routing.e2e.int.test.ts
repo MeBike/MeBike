@@ -47,16 +47,17 @@ describe("ratings routing e2e", () => {
       await prisma.user.create({
         data: {
           id: USER_ID,
-          fullname: "Ratings User",
+          fullName: "Ratings User",
           email: "ratings-user@example.com",
           passwordHash: "hash123",
           phoneNumber: null,
           username: null,
-          avatar: null,
-          location: null,
+          avatarUrl: null,
+          locationText: null,
           nfcCardUid: null,
           role: "USER",
-          verify: "VERIFIED",
+          accountStatus: "ACTIVE",
+          verifyStatus: "VERIFIED",
         },
       });
     },

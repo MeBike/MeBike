@@ -14,6 +14,7 @@ export function adminCreateUserUseCase(args: {
   avatar?: string | null;
   location?: string | null;
   role?: import("../models").UserRow["role"];
+  accountStatus?: import("../models").UserRow["accountStatus"];
   verify?: import("../models").UserRow["verify"];
   orgAssignment?: import("../models").UserOrgAssignmentPatch | null;
   nfcCardUid?: string | null;

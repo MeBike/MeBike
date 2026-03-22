@@ -30,7 +30,8 @@ export const ratingSummaryErrorMessages = {
 } as const;
 
 export const CreateRatingRequestSchema = z.object({
-  rating: z.number().int().min(1).max(5),
+  bikeScore: z.number().int().min(1).max(5),
+  stationScore: z.number().int().min(1).max(5),
   reasonIds: z.array(z.uuidv7()).min(1),
   comment: z.string().max(500).optional().nullable(),
 }).openapi("CreateRatingRequest");

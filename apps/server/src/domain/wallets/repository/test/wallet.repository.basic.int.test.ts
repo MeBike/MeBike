@@ -57,6 +57,55 @@ describe("wallet Repository - Basic Operations", () => {
     expect(transactions.items).toHaveLength(2);
   });
 
+  it("findTransactionListOwnerByUserId returns wallet owner context", async () => {
+    const { id: userId } = await fixture.factories.user({ fullname: "Wallet Owner" });
+    const wallet = await Effect.runPromise(repo.createForUser(userId));
+
+    const owner = await Effect.runPromise(repo.findTransactionListOwnerByUserId(userId));
+
+    expect(Option.isSome(owner)).toBe(true);
+    if (Option.isSome(owner)) {
+      expect(owner.value.walletId).toBe(wallet.id);
+      expect(owner.value.user).toEqual({
+        id: userId,
+        fullName: "Wallet Owner",
+      });
+    }
+  });
+
+  it("listTransactions filters by status", async () => {
+    const { id: userId } = await fixture.factories.user();
+    const wallet = await Effect.runPromise(repo.createForUser(userId));
+
+    await fixture.prisma.walletTransaction.createMany({
+      data: [
+        {
+          walletId: wallet.id,
+          amount: 100n,
+          fee: 0n,
+          type: "DEPOSIT",
+          status: "SUCCESS",
+        },
+        {
+          walletId: wallet.id,
+          amount: 80n,
+          fee: 0n,
+          type: "DEPOSIT",
+          status: "PENDING",
+        },
+      ],
+    });
+
+    const filtered = await Effect.runPromise(
+      repo.listTransactions(wallet.id, { page: 1, pageSize: 10, sortBy: "createdAt", sortDir: "desc" }, {
+        status: "PENDING",
+      }),
+    );
+
+    expect(filtered.items).toHaveLength(1);
+    expect(filtered.items[0].status).toBe("PENDING");
+  });
+
   it("increaseBalance fails when wallet is missing", async () => {
     const result = await Effect.runPromise(
       repo.increaseBalance({ userId: uuidv7(), amount: 50n }).pipe(Effect.either),

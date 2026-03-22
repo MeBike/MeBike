@@ -18,6 +18,7 @@ export const userService = {
     page,
     pageSize,
     verify,
+    accountStatus,
     role,
     fullName,
     sortBy,
@@ -25,10 +26,11 @@ export const userService = {
   }: {
     page?: number;
     pageSize?: number;
-    verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
-    role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+    verify?: "VERIFIED" | "UNVERIFIED" | "";
+    accountStatus?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
+    role?: "ADMIN" | "USER" | "STAFF" | "";
     fullName?: string;
-    sortBy?: "fullname" | "email" | "role" | "verify" | "updatedAt";
+    sortBy?: "fullname" | "email" | "role" | "accountStatus" | "verify" | "updatedAt";
     sortDir?: "asc" | "desc";
   }): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
@@ -37,6 +39,7 @@ export const userService = {
         page: page,
         pageSize: pageSize,
         verify: verify,
+        accountStatus: accountStatus,
         fullName: fullName,
         role: role,
         sortBy: sortBy,

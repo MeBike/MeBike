@@ -7,10 +7,15 @@ export function toRatingDetail(row: RatingRow): RatingsContracts.RatingDetail {
     id: row.id,
     rentalId: row.rentalId,
     userId: row.userId,
-    rating: row.rating,
+    bikeId: row.bikeId,
+    stationId: row.stationId,
+    bikeScore: row.bikeScore,
+    stationScore: row.stationScore,
     comment: row.comment,
     reasonIds: [...row.reasonIds],
+    createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    editedAt: row.editedAt ? row.editedAt.toISOString() : null,
   };
 }
 

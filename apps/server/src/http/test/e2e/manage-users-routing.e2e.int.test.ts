@@ -32,16 +32,17 @@ describe("manage-users route ordering e2e", () => {
       await prisma.user.create({
         data: {
           id: ADMIN_USER_ID,
-          fullname: "Route Admin",
+          fullName: "Route Admin",
           email: "route-admin@example.com",
           passwordHash: "hash123",
           phoneNumber: null,
           username: null,
-          avatar: null,
-          location: null,
+          avatarUrl: null,
+          locationText: null,
           nfcCardUid: null,
           role: "ADMIN",
-          verify: "VERIFIED",
+          accountStatus: "ACTIVE",
+          verifyStatus: "VERIFIED",
         },
       });
     },

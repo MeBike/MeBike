@@ -9,15 +9,22 @@ import { useUserActions } from "@/hooks/use-user";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 
+type UserStatusFilter = VerifyStatus | "BANNED" | "all";
+
 export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
+  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit,] = useState<number>(10);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<"info" | "activity" | "stats">("info");
+  const verifyQuery =
+    verifyFilter === "VERIFIED" || verifyFilter === "UNVERIFIED"
+      ? verifyFilter
+      : "";
+  const accountStatusQuery = verifyFilter === "BANNED" ? "BANNED" : "";
   const {
     users,
     getAllUsers,
@@ -33,11 +40,18 @@ export default function CustomersPage() {
     hasToken: true,
     limit: limit,
     page: currentPage,
-    verify: verifyFilter === "all" ? "" : verifyFilter,
+    verify: verifyFilter === "all" ? "" : verifyQuery,
+    accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
     role: roleFilter === "all" ? "" : (roleFilter as UserRole),
     searchQuery: searchQuery,
     id: selectedUserId || "",
   });
+  const getUserDisplayStatus = (user: { verify: string; accountStatus?: string }) => {
+    return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
+  };
+  const detailStatus = detailUserData
+    ? getUserDisplayStatus(detailUserData.data)
+    : "";
 
   const handleReset = () => {
     setSearchQuery("");
@@ -94,7 +108,7 @@ export default function CustomersPage() {
               <select
                 value={verifyFilter}
                 onChange={(e) => {
-                  setVerifyFilter(e.target.value as VerifyStatus | "all");
+                  setVerifyFilter(e.target.value as UserStatusFilter);
                   handleFilterChange();
                 }}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
@@ -127,8 +141,7 @@ export default function CustomersPage() {
 
         <div>
           <p className="text-sm text-muted-foreground mb-4">
-            Hiển thị {paginationUser?.currentPage ?? 1} /{" "}
-            {paginationUser?.totalPages ?? 1} trang
+            Hiển thị {paginationUser?.page ?? 1} / {paginationUser?.totalPages ?? 1} trang
           </p>
           <DataTable
             title="Danh sách người dùng"
@@ -221,8 +234,8 @@ export default function CustomersPage() {
                   </div>
                 ) : (
                   <>
-                    {/* Tabs for different sections */}
-                    <div className="flex gap-2 mb-6 border-b border-border">
+                     {/* Tabs for different sections */}
+                     <div className="flex gap-2 mb-6 border-b border-border">
                       <button
                         onClick={() => setDetailTab("info")}
                         className={`px-4 py-2 text-sm font-medium transition-colors ${
@@ -320,20 +333,23 @@ export default function CustomersPage() {
                           <p className="text-sm text-muted-foreground">
                             Trạng thái xác thực
                           </p>
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData.data.verify ===
+                           <span
+                             className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              detailStatus ===
                               "VERIFIED"
                                 ? "bg-green-100 text-green-800"
-                                : detailUserData.data.verify ===
-                                    "UNVERIFIED"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {detailUserData.data.verify}
-                          </span>
-                        </div>
+                                : detailStatus ===
+                                      "BANNED"
+                                  ? "bg-red-100 text-red-800"
+                                  : detailStatus ===
+                                      "UNVERIFIED"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-gray-100 text-gray-800"
+                             }`}
+                           >
+                              {detailStatus}
+                            </span>
+                          </div>
 
                         <div>
                           <p className="text-sm text-muted-foreground">
@@ -423,7 +439,7 @@ export default function CustomersPage() {
                                 Trạng thái
                               </p>
                               <p className="text-lg font-bold text-yellow-800">
-                                {detailUserData.data.verify}
+                                {detailStatus}
                               </p>
                             </div>
                           </div>
@@ -440,4 +456,3 @@ export default function CustomersPage() {
     </div>
   );
 }
-

@@ -31,6 +31,11 @@ export const WalletTransactionDetailSchema = z.object({
   createdAt: z.string().datetime(),
 }).openapi("WalletTransactionDetail");
 
+export const WalletTransactionUserSchema = z.object({
+  id: z.uuidv7(),
+  fullName: z.string(),
+}).openapi("WalletTransactionUser");
+
 export const WalletWithdrawalStatusSchema = z
   .enum(["PENDING", "PROCESSING", "SUCCEEDED", "FAILED"])
   .openapi("WalletWithdrawalStatus");
@@ -60,4 +65,5 @@ export const WalletWithdrawalDetailSchema = z.object({
 
 export type WalletDetail = z.infer<typeof WalletDetailSchema>;
 export type WalletTransactionDetail = z.infer<typeof WalletTransactionDetailSchema>;
+export type WalletTransactionUser = z.infer<typeof WalletTransactionUserSchema>;
 export type WalletWithdrawalDetail = z.infer<typeof WalletWithdrawalDetailSchema>;

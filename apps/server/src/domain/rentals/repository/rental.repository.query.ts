@@ -157,7 +157,7 @@ export const staffBikeSwapRequestSelect = {
   user: {
     select: {
       id: true,
-      fullname: true,
+      fullName: true,
     },
   },
   oldBike: {
@@ -251,7 +251,7 @@ export function mapToStaffBikeSwapRequestRow(
     rentalId: raw.rentalId,
     user: {
       id: raw.user.id,
-      fullName: raw.user.fullname,
+      fullName: raw.user.fullName,
     },
     oldBike: mapBikeInfo(raw.oldBike)!,
     newBike: mapBikeInfo(raw.newBike),

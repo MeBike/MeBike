@@ -19,7 +19,7 @@ export const adminRentalListSelect = {
   user: {
     select: {
       id: true,
-      fullname: true,
+      fullName: true,
     },
   },
 } as const;
@@ -35,7 +35,7 @@ export function mapToAdminRentalListItem(
     id: item.id,
     user: {
       id: item.user.id,
-      fullname: item.user.fullname,
+      fullname: item.user.fullName,
     },
     bikeId: item.bikeId,
     status: item.status,
@@ -67,13 +67,13 @@ export const adminRentalDetailSelect = {
   user: {
     select: {
       id: true,
-      fullname: true,
+      fullName: true,
       email: true,
-      verify: true,
-      location: true,
+      verifyStatus: true,
+      locationText: true,
       username: true,
       phoneNumber: true,
-      avatar: true,
+      avatarUrl: true,
       role: true,
       nfcCardUid: true,
       updatedAt: true,
@@ -121,13 +121,13 @@ export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRe
     id: raw.id,
     user: {
       id: raw.user.id,
-      fullname: raw.user.fullname,
+      fullname: raw.user.fullName,
       email: raw.user.email,
-      verify: raw.user.verify,
-      location: raw.user.location ?? "",
+      verify: raw.user.verifyStatus,
+      location: raw.user.locationText ?? "",
       username: raw.user.username ?? "",
       phoneNumber: raw.user.phoneNumber ?? "",
-      avatar: raw.user.avatar ?? "",
+      avatar: raw.user.avatarUrl ?? "",
       role: raw.user.role,
       nfcCardUid: raw.user.nfcCardUid,
       updatedAt: raw.user.updatedAt,

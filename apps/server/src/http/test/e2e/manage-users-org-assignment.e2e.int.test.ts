@@ -33,16 +33,17 @@ describe("manage-users org assignment e2e", () => {
       await prisma.user.create({
         data: {
           id: ADMIN_USER_ID,
-          fullname: "Route Admin",
+          fullName: "Route Admin",
           email: "route-admin@example.com",
           passwordHash: "hash123",
           phoneNumber: null,
           username: null,
-          avatar: null,
-          location: null,
+          avatarUrl: null,
+          locationText: null,
           nfcCardUid: null,
           role: "ADMIN",
-          verify: "VERIFIED",
+          accountStatus: "ACTIVE",
+          verifyStatus: "VERIFIED",
         },
       });
     },
@@ -305,7 +306,7 @@ describe("manage-users org assignment e2e", () => {
         method: "PATCH",
         headers: adminAuthHeader(),
         body: JSON.stringify({
-          verify: "BANNED",
+          accountStatus: "BANNED",
         }),
       },
     );
@@ -313,7 +314,7 @@ describe("manage-users org assignment e2e", () => {
     const updated = await updateResponse.json() as UsersContracts.AdminUserDetailResponse;
 
     expect(updateResponse.status).toBe(200);
-    expect(updated.verify).toBe("BANNED");
+    expect(updated.accountStatus).toBe("BANNED");
     expect(updated.orgAssignment?.station?.id).toBe(station.id);
   });
 });

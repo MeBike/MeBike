@@ -1,4 +1,4 @@
-import type { Prisma as PrismaTypes, UserRole, UserVerifyStatus } from "generated/prisma/client";
+import type { AccountStatus, Prisma as PrismaTypes, UserRole, UserVerifyStatus } from "generated/prisma/client";
 
 export type OrgUnitRef = {
   readonly id: string;
@@ -27,6 +27,7 @@ export type UserRow = {
   readonly avatar: string | null;
   readonly location: string | null;
   readonly role: UserRole;
+  readonly accountStatus: AccountStatus;
   readonly verify: UserVerifyStatus;
   readonly orgAssignment: UserOrgAssignment | null;
   readonly nfcCardUid: string | null;
@@ -45,6 +46,7 @@ export type CreateUserInput = {
   readonly avatar?: string | null;
   readonly location?: string | null;
   readonly role?: UserRole;
+  readonly accountStatus?: AccountStatus;
   readonly verify?: UserVerifyStatus;
   readonly orgAssignment?: UserOrgAssignmentPatch | null;
   readonly nfcCardUid?: string | null;
@@ -57,6 +59,7 @@ export type UpdateUserProfilePatch = Partial<{
   avatar: string | null;
   location: string | null;
   role: UserRole;
+  accountStatus: AccountStatus;
   verify: UserVerifyStatus;
   nfcCardUid: string | null;
 }>;
@@ -69,6 +72,7 @@ export type UpdateUserAdminPatch = Partial<{
   avatar: string | null;
   location: string | null;
   role: UserRole;
+  accountStatus: AccountStatus;
   verify: UserVerifyStatus;
   orgAssignment: UserOrgAssignmentPatch | null;
   nfcCardUid: string | null;
@@ -77,6 +81,7 @@ export type UpdateUserAdminPatch = Partial<{
 export type UserFilter = {
   readonly fullname?: string;
   readonly email?: string;
+  readonly accountStatus?: AccountStatus;
   readonly verify?: UserVerifyStatus;
   readonly role?: UserRole;
   readonly stationId?: string;
@@ -84,7 +89,7 @@ export type UserFilter = {
   readonly technicianTeamId?: string;
 };
 
-export type UserSortField = "fullname" | "email" | "role" | "verify" | "updatedAt";
+export type UserSortField = "fullname" | "email" | "role" | "accountStatus" | "verify" | "updatedAt";
 
 export type UserOrderBy = PrismaTypes.UserOrderByWithRelationInput;
 

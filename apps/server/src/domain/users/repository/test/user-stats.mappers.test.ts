@@ -8,21 +8,21 @@ describe("user-stats mappers", () => {
       {
         user_id: "user-1",
         total_rentals: 4,
-        fullname: "User One",
+        full_name: "User One",
         email: "one@example.com",
-        avatar: null,
+        avatar_url: null,
         phone_number: "0900000000",
-        location: "HN",
+        location_text: "HN",
         total_records: 2,
       },
       {
         user_id: "user-2",
         total_rentals: 2,
-        fullname: "User Two",
+        full_name: "User Two",
         email: "two@example.com",
-        avatar: "avatar.png",
+        avatar_url: "avatar.png",
         phone_number: null,
-        location: null,
+        location_text: null,
         total_records: 2,
       },
     ];
@@ -39,7 +39,7 @@ describe("user-stats mappers", () => {
     const vip = selectVipCustomer([
       {
         user_id: "user-1",
-        fullname: "User One",
+        full_name: "User One",
         total_duration: 120,
       },
     ]);

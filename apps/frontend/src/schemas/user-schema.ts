@@ -13,6 +13,6 @@ export const createUserSchema = z.object({
   fullName: z.string().min(1, "Họ tên là bắt buộc"),
   email: z.email("Email không hợp lệ"),
   phoneNumber: z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự"),
-  role: z.enum(["USER", "STAFF", "ADMIN", "SOS"]),
+  role: z.enum(["USER", "STAFF", "ADMIN"]),
 });
 export type CreateUserFormData = z.infer<typeof createUserSchema>;

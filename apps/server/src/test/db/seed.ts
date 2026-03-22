@@ -8,7 +8,7 @@ import { authEvents, rentals, stations, users } from "../fixtures/users-stats.se
 
 export async function seed(db: Kysely<DB>) {
   if (users.length > 0) {
-    await db.insertInto("User").values(users).execute();
+    await db.insertInto("users").values(users).execute();
   }
 
   if (stations.length > 0) {

@@ -65,7 +65,7 @@ export const getRatingReasonsRoute = createRoute({
   request: {
     query: z.object({
       type: z.enum(["ISSUE", "COMPLIMENT"]).optional(),
-      appliesTo: z.enum(["bike", "station", "app"]).optional(),
+      appliesTo: z.enum(["bike", "station"]).optional(),
     }),
   },
   responses: {

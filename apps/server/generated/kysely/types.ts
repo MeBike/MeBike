@@ -153,8 +153,7 @@ export const RatingReasonType = {
 export type RatingReasonType = (typeof RatingReasonType)[keyof typeof RatingReasonType];
 export const AppliesToEnum = {
     bike: "bike",
-    station: "station",
-    app: "app"
+    station: "station"
 } as const;
 export type AppliesToEnum = (typeof AppliesToEnum)[keyof typeof AppliesToEnum];
 export const RedistributionStatus = {
@@ -242,8 +241,7 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 export const UserVerifyStatus = {
     UNVERIFIED: "UNVERIFIED",
-    VERIFIED: "VERIFIED",
-    BANNED: "BANNED"
+    VERIFIED: "VERIFIED"
 } as const;
 export type UserVerifyStatus = (typeof UserVerifyStatus)[keyof typeof UserVerifyStatus];
 export const WalletHoldStatus = {
@@ -505,22 +503,29 @@ export type Rating = {
     id: string;
     user_id: string;
     rental_id: string;
-    rating: number;
+    bike_id: string | null;
+    station_id: string | null;
+    bike_score: number;
+    station_score: number;
     comment: string | null;
     created_at: Generated<Timestamp>;
-    updated_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+    edited_at: Timestamp | null;
 };
 export type RatingReason = {
     id: string;
     type: RatingReasonType;
     applies_to: AppliesToEnum;
-    messages: string;
+    message: string;
+    is_default: Generated<boolean>;
+    is_active: Generated<boolean>;
     created_at: Generated<Timestamp>;
-    updated_at: Generated<Timestamp>;
+    updated_at: Timestamp;
 };
 export type RatingReasonLink = {
     rating_id: string;
     reason_id: string;
+    target: AppliesToEnum;
 };
 export type RedistributionRequest = {
     id: string;
@@ -663,16 +668,17 @@ export type TechnicianTeam = {
 };
 export type User = {
     id: string;
-    fullname: string;
+    full_name: string;
     email: string;
     phone_number: string | null;
     username: string | null;
     password_hash: string;
-    avatar: string | null;
-    location: string | null;
+    avatar_url: string | null;
+    location_text: string | null;
     nfc_card_uid: string | null;
     role: Generated<UserRole>;
-    verify: Generated<UserVerifyStatus>;
+    account_status: Generated<AccountStatus>;
+    verify_status: Generated<UserVerifyStatus>;
     stripe_connected_account_id: string | null;
     stripe_payouts_enabled: boolean | null;
     created_at: Generated<Timestamp>;
@@ -769,9 +775,9 @@ export type DB = {
     payments: Payment;
     pricing_policies: PricingPolicy;
     push_tokens: PushToken;
-    Rating: Rating;
-    RatingReason: RatingReason;
-    RatingReasonLink: RatingReasonLink;
+    rating_reason_links: RatingReasonLink;
+    rating_reasons: RatingReason;
+    ratings: Rating;
     redistribution_request_items: RedistributionRequestItem;
     redistribution_requests: RedistributionRequest;
     Rental: Rental;
@@ -784,9 +790,9 @@ export type DB = {
     Supplier: Supplier;
     technician_assignments: TechnicianAssignment;
     TechnicianTeam: TechnicianTeam;
-    User: User;
     user_coupons: UserCoupon;
     UserOrgAssignment: UserOrgAssignment;
+    users: User;
     wallet_holds: WalletHold;
     wallet_transactions: WalletTransaction;
     wallet_withdrawals: WalletWithdrawal;

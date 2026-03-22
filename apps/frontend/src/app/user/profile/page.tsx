@@ -156,7 +156,7 @@ export default function ProfilePage() {
       }
     } else if (formData.avatar !== user.avatar && !avatarPreview.startsWith("data:")) {
       // Avatar đã thay đổi và đã là URL Firebase
-      updatedData.avatar = formData.avatar;
+      updatedData.avatar = formData.avatar ?? undefined;
     }
 
     // Nếu có field nào thay đổi mới gọi API
