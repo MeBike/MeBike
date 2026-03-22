@@ -6,17 +6,17 @@ import { expectLeftTag, expectRight } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
-import { makeReservationUseCaseRunners, makeReservationUseCaseTestLayer } from "./reservation-test-kit";
+import { makeReservationRunners, makeReservationTestLayer } from "./reservation-test-kit";
 
 describe("reservation use-cases integration", () => {
   const fixture = setupPrismaIntFixture();
-  let runReserve: ReturnType<typeof makeReservationUseCaseRunners>["reserve"];
-  let runConfirm: ReturnType<typeof makeReservationUseCaseRunners>["confirm"];
-  let runCancel: ReturnType<typeof makeReservationUseCaseRunners>["cancel"];
+  let runReserve: ReturnType<typeof makeReservationRunners>["reserve"];
+  let runConfirm: ReturnType<typeof makeReservationRunners>["confirm"];
+  let runCancel: ReturnType<typeof makeReservationRunners>["cancel"];
 
   beforeAll(() => {
-    const runners = makeReservationUseCaseRunners(
-      makeReservationUseCaseTestLayer(fixture.prisma),
+    const runners = makeReservationRunners(
+      makeReservationTestLayer(fixture.prisma),
     );
     runReserve = runners.reserve;
     runConfirm = runners.confirm;
@@ -41,10 +41,17 @@ describe("reservation use-cases integration", () => {
     });
 
     const reservation = expectRight(result);
+    const activePricingPolicy = await fixture.prisma.pricingPolicy.findFirst({
+      where: { status: "ACTIVE" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    });
+
     expect(reservation.status).toBe("PENDING");
     expect(reservation.userId).toBe(user.id);
     expect(reservation.bikeId).toBe(bike.id);
     expect(reservation.stationId).toBe(station.id);
+    expect(reservation.pricingPolicyId).toBe(activePricingPolicy?.id ?? null);
+    expect(reservation.prepaid.toString()).toBe(activePricingPolicy?.reservationFee.toString());
 
     const rental = await fixture.prisma.rental.findFirst({ where: { reservationId: reservation.id } });
     expect(rental).toBeNull();
@@ -112,6 +119,7 @@ describe("reservation use-cases integration", () => {
     expect(rental?.status).toBe("RENTED");
     expect(rental?.reservationId).toBe(reservation.id);
     expect(rental?.bikeId).toBe(bike.id);
+    expect(rental?.pricingPolicyId).toBe(reservation.pricingPolicyId);
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("BOOKED");

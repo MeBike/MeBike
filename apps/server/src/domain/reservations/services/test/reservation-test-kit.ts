@@ -11,13 +11,13 @@ import type { PrismaClient } from "generated/prisma/client";
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import {
-  cancelReservationUseCase,
-  confirmReservationUseCase,
+  cancelReservation,
+  confirmReservation,
   makeReservationRepository,
   ReservationHoldServiceLive,
   ReservationRepository,
   ReservationServiceLive,
-  reserveBikeUseCase,
+  reserveBike,
 } from "@/domain/reservations";
 import { makeStationRepository, StationRepository } from "@/domain/stations";
 import { SubscriptionRepository } from "@/domain/subscriptions";
@@ -43,7 +43,7 @@ export type ReservationDeps
     | SubscriptionServiceTag
     | RentalRepository;
 
-export function makeReservationUseCaseTestLayer(client: PrismaClient) {
+export function makeReservationTestLayer(client: PrismaClient) {
   const reservationRepo = makeReservationRepository(client);
   const bikeRepo = makeBikeRepository(client);
   const stationRepo = makeStationRepository(client);
@@ -85,7 +85,7 @@ export function makeReservationUseCaseTestLayer(client: PrismaClient) {
   );
 }
 
-export function makeReservationUseCaseRunners(layer: Layer.Layer<ReservationDeps>) {
+export function makeReservationRunners(layer: Layer.Layer<ReservationDeps>) {
   return {
     reserve(args: {
       userId: string;
@@ -97,7 +97,7 @@ export function makeReservationUseCaseRunners(layer: Layer.Layer<ReservationDeps
       subscriptionId?: string | null;
     }) {
       return runEffectEitherWithLayer(
-        reserveBikeUseCase({
+        reserveBike({
           userId: args.userId,
           bikeId: args.bikeId,
           stationId: args.stationId,
@@ -111,13 +111,13 @@ export function makeReservationUseCaseRunners(layer: Layer.Layer<ReservationDeps
     },
     confirm(args: { reservationId: string; userId: string; now: Date }) {
       return runEffectEitherWithLayer(
-        confirmReservationUseCase(args),
+        confirmReservation(args),
         layer,
       );
     },
     cancel(args: { reservationId: string; userId: string; now: Date }) {
       return runEffectEitherWithLayer(
-        cancelReservationUseCase(args),
+        cancelReservation(args),
         layer,
       );
     },

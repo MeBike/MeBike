@@ -6,17 +6,17 @@ import { expectLeftTag, expectRight } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenPendingReservation, givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
-import { makeReservationUseCaseRunners, makeReservationUseCaseTestLayer } from "./reservation-test-kit";
+import { makeReservationRunners, makeReservationTestLayer } from "./reservation-test-kit";
 
 describe("reservation use-cases unhappy paths", () => {
   const fixture = setupPrismaIntFixture();
-  let runReserve: ReturnType<typeof makeReservationUseCaseRunners>["reserve"];
-  let runConfirm: ReturnType<typeof makeReservationUseCaseRunners>["confirm"];
-  let runCancel: ReturnType<typeof makeReservationUseCaseRunners>["cancel"];
+  let runReserve: ReturnType<typeof makeReservationRunners>["reserve"];
+  let runConfirm: ReturnType<typeof makeReservationRunners>["confirm"];
+  let runCancel: ReturnType<typeof makeReservationRunners>["cancel"];
 
   beforeAll(() => {
-    const runners = makeReservationUseCaseRunners(
-      makeReservationUseCaseTestLayer(fixture.prisma),
+    const runners = makeReservationRunners(
+      makeReservationTestLayer(fixture.prisma),
     );
     runReserve = runners.reserve;
     runConfirm = runners.confirm;
@@ -274,6 +274,29 @@ describe("reservation use-cases unhappy paths", () => {
 
     const result = await runConfirm({ reservationId: reservation.id, userId: user.id, now: new Date() });
     expectLeftTag(result, "ReservationConfirmBlockedByActiveRental");
+  });
+
+  it("confirmReservationUseCase fails when wallet balance falls below the required deposit threshold", async () => {
+    const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 3000n } });
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
+
+    const now = new Date();
+    const reserveResult = await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: now,
+      now,
+    });
+    const reservation = expectRight(reserveResult);
+
+    const result = await runConfirm({
+      reservationId: reservation.id,
+      userId: user.id,
+      now,
+    });
+
+    expectLeftTag(result, "InsufficientWalletBalance");
   });
 
   it("cancelReservationUseCase fails with ReservationNotOwned", async () => {

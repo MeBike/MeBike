@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { SubscriptionServiceTag } from "@/domain/subscriptions";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { makeRentalRepository, RentalRepository, startRentalUseCase } from "@/domain/rentals";
+import { makeRentalRepository, RentalRepository, startRental } from "@/domain/rentals";
 import {
   makeSubscriptionRepository,
   SubscriptionRepository,
@@ -51,7 +51,7 @@ describe("startRentalUseCase Integration", () => {
     bikeId: string;
     startStationId: string;
   }) => runEffectEitherWithLayer(
-    startRentalUseCase({
+    startRental({
       userId: args.userId,
       bikeId: args.bikeId,
       startStationId: args.startStationId,
@@ -73,9 +73,15 @@ describe("startRentalUseCase Integration", () => {
     });
 
     const rental = expectRight(result);
+    const activePricingPolicy = await fixture.prisma.pricingPolicy.findFirst({
+      where: { status: "ACTIVE" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    });
+
     expect(rental.status).toBe("RENTED");
     expect(rental.userId).toBe(user.id);
     expect(rental.bikeId).toBe(bike.id);
+    expect(rental.pricingPolicyId).toBe(activePricingPolicy?.id ?? null);
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("BOOKED");
