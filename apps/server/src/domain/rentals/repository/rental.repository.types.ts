@@ -29,11 +29,17 @@ import type {
 export type CreateRentalInput = {
   userId: string;
   bikeId: string;
+  depositHoldId?: string | null;
   pricingPolicyId?: string | null;
   startStationId: string;
   startTime: Date;
   subscriptionId?: string | null;
   reservationId?: string | null;
+};
+
+export type UpdateRentalDepositHoldInput = {
+  rentalId: string;
+  depositHoldId: string;
 };
 
 export type UpdateRentalOnEndInput = {
@@ -81,6 +87,10 @@ export type RentalRepo = {
   createRental: (
     data: CreateRentalInput,
   ) => Effect.Effect<RentalRow, RentalRepoError>;
+
+  updateRentalDepositHold: (
+    data: UpdateRentalDepositHoldInput,
+  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
 
   updateRentalOnEnd: (
     data: UpdateRentalOnEndInput,

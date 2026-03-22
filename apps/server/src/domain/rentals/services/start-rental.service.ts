@@ -3,7 +3,6 @@ import { Effect, Option } from "effect";
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
-import { makeWalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -22,6 +21,7 @@ import {
 } from "../domain-errors";
 import { startRentalFailureFromBikeStatus } from "../guards/bike-status";
 import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
+import { createRentalDepositHoldInTx } from "./rental-deposit-hold.service";
 import { rentalUniqueViolationToFailure } from "./unique-violation-mapper";
 
 export function startRental(
@@ -83,29 +83,13 @@ export function startRental(
             return yield* Effect.fail(bikeStatusFailure.value);
           }
 
-          const walletOpt = yield* makeWalletRepository(tx).findByUserId(userId).pipe(
-            Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-          );
-          if (Option.isNone(walletOpt)) {
-            return yield* Effect.fail(new UserWalletNotFound({ userId }));
-          }
-          const wallet = walletOpt.value;
           const pricingPolicy = yield* txPricingPolicyRepo.getActive().pipe(
             Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
           );
 
-          const currentBalance = wallet.balance;
           const requiredBalance = getDepositRequiredMinor(pricingPolicy);
-          if (currentBalance < requiredBalance) {
-            return yield* Effect.fail(new InsufficientBalanceToRent({
-              userId,
-              requiredBalance: Number(requiredBalance),
-              currentBalance: Number(currentBalance),
-            }));
-          }
-
           if (subscriptionId) {
             yield* subscriptionService.useOneInTx(tx, {
               subscriptionId,
@@ -164,7 +148,33 @@ export function startRental(
             Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
           );
 
-          return created;
+          yield* createRentalDepositHoldInTx({
+            tx,
+            rentalId: created.id,
+            userId,
+            amount: requiredBalance,
+          }).pipe(
+            Effect.catchTag("WalletNotFound", () =>
+              Effect.fail(new UserWalletNotFound({ userId }))),
+            Effect.catchTag("InsufficientWalletBalance", ({ balance, attemptedDebit }) =>
+              Effect.fail(new InsufficientBalanceToRent({
+                userId,
+                requiredBalance: Number(attemptedDebit),
+                currentBalance: Number(balance),
+              }))),
+            Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+            Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
+            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          );
+
+          const rentalWithDepositHoldOpt = yield* txRentalRepo.findById(created.id).pipe(
+            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          );
+          if (Option.isNone(rentalWithDepositHoldOpt)) {
+            return yield* Effect.die(new Error(`Expected rental ${created.id} after deposit hold creation`));
+          }
+
+          return rentalWithDepositHoldOpt.value;
         }),
     ).pipe(
       Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),

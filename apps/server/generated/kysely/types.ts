@@ -257,7 +257,8 @@ export const WalletHoldStatus = {
 } as const;
 export type WalletHoldStatus = (typeof WalletHoldStatus)[keyof typeof WalletHoldStatus];
 export const WalletHoldReason = {
-    WITHDRAWAL: "WITHDRAWAL"
+    WITHDRAWAL: "WITHDRAWAL",
+    RENTAL_DEPOSIT: "RENTAL_DEPOSIT"
 } as const;
 export type WalletHoldReason = (typeof WalletHoldReason)[keyof typeof WalletHoldReason];
 export const WalletStatus = {
@@ -560,6 +561,7 @@ export type Rental = {
     user_id: string;
     reservation_id: string | null;
     bike_id: string | null;
+    deposit_hold_id: string | null;
     pricing_policy_id: string | null;
     start_station: string;
     end_station: string | null;
@@ -735,12 +737,14 @@ export type Wallet = {
 export type WalletHold = {
     id: string;
     wallet_id: string;
-    withdrawal_id: string;
+    withdrawal_id: string | null;
+    rental_id: string | null;
     amount: string;
     status: Generated<WalletHoldStatus>;
     reason: Generated<WalletHoldReason>;
     released_at: Timestamp | null;
     settled_at: Timestamp | null;
+    forfeited_at: Timestamp | null;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };

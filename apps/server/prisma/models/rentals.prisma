@@ -9,6 +9,7 @@ model Rental {
   userId          String       @map("user_id") @db.Uuid
   reservationId   String?      @unique @map("reservation_id") @db.Uuid
   bikeId          String?      @map("bike_id") @db.Uuid
+  depositHoldId   String?      @unique @map("deposit_hold_id") @db.Uuid
   pricingPolicyId String?      @map("pricing_policy_id") @db.Uuid
   startStationId  String       @map("start_station") @db.Uuid
   endStationId    String?      @map("end_station") @db.Uuid
@@ -24,6 +25,7 @@ model Rental {
   user                    User                     @relation(fields: [userId], references: [id])
   reservation             Reservation?             @relation(fields: [reservationId], references: [id])
   bike                    Bike?                    @relation(fields: [bikeId], references: [id])
+  depositHold             WalletHold?              @relation("RentalDepositHold", fields: [depositHoldId], references: [id])
   pricingPolicy           PricingPolicy?           @relation(fields: [pricingPolicyId], references: [id])
   startStation            Station                  @relation("RentalStartStation", fields: [startStationId], references: [id])
   endStation              Station?                 @relation("RentalEndStation", fields: [endStationId], references: [id])
@@ -35,6 +37,7 @@ model Rental {
   returnSlotReservations  ReturnSlotReservation[]
   rentalBillingRecord     RentalBillingRecord?
   rentalPenalties         RentalPenalty[]
+  walletHolds             WalletHold[]             @relation("WalletHoldRental")
   incidentReports         IncidentReport[]
   environmentalImpactStat EnvironmentalImpactStat?
   // Partial unique index for active rentals per bike cannot be expressed in Prisma:
@@ -44,6 +47,7 @@ model Rental {
 
   @@index([userId], name: "idx_rentals_user")
   @@index([bikeId], name: "idx_rentals_bike")
+  @@index([depositHoldId], name: "idx_rentals_deposit_hold")
   @@index([pricingPolicyId], name: "idx_rentals_pricing_policy")
   @@index([status], name: "idx_rentals_status")
   @@index([startTime], name: "idx_rentals_start_time")

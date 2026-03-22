@@ -58,19 +58,22 @@ export type DecreaseBalanceInput = {
 export type WalletHoldRow = {
   readonly id: string;
   readonly walletId: string;
-  readonly withdrawalId: string;
+  readonly withdrawalId: string | null;
+  readonly rentalId: string | null;
   readonly amount: bigint;
   readonly status: WalletHoldStatus;
   readonly reason: WalletHoldReason;
   readonly releasedAt: Date | null;
   readonly settledAt: Date | null;
+  readonly forfeitedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };
 
 export type CreateWalletHoldInput = {
   readonly walletId: string;
-  readonly withdrawalId: string;
+  readonly withdrawalId?: string | null;
+  readonly rentalId?: string | null;
   readonly amount: bigint;
   readonly reason?: WalletHoldReason;
 };

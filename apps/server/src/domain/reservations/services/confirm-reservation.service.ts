@@ -8,10 +8,9 @@ import {
   makeRentalRepository,
   RentalRepository,
 } from "@/domain/rentals";
+import { createRentalDepositHoldInTx } from "@/domain/rentals/services/rental-deposit-hold.service";
 import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/unique-violation-mapper";
 import { toMinorUnit } from "@/domain/shared/money";
-import { makeWalletRepository } from "@/domain/wallets";
-import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -49,7 +48,6 @@ export function confirmReservation(
         const txRentalRepo = makeRentalRepository(tx);
         const bikeRepo = makeBikeRepository(tx);
         const txPricingPolicyRepo = makePricingPolicyRepository(tx);
-        const txWalletRepo = makeWalletRepository(tx);
         const { reservation, bikeId } = yield* reservationService.validatePendingForConfirmationInTx(
           tx,
           {
@@ -87,24 +85,8 @@ export function confirmReservation(
           Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
         );
 
-        const walletOpt = yield* txWalletRepo.findByUserId(input.userId).pipe(
-          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-        );
-        if (Option.isNone(walletOpt)) {
-          return yield* Effect.fail(new WalletNotFound({ userId: input.userId }));
-        }
-
         const requiredBalance = toMinorUnit(pricingPolicy.depositRequired);
-        if (walletOpt.value.balance < requiredBalance) {
-          return yield* Effect.fail(new InsufficientWalletBalance({
-            walletId: walletOpt.value.id,
-            userId: input.userId,
-            balance: walletOpt.value.balance,
-            attemptedDebit: requiredBalance,
-          }));
-        }
-
-        yield* txRentalRepo.createRental({
+        const createdRental = yield* txRentalRepo.createRental({
           userId: input.userId,
           reservationId: reservation.id,
           bikeId,
@@ -134,6 +116,19 @@ export function confirmReservation(
               `Invariant violated: bike ${bikeId} should not be concurrently rented while confirming reservation ${reservation.id}`,
             ));
           }),
+          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+        );
+
+        yield* createRentalDepositHoldInTx({
+          tx,
+          rentalId: createdRental.id,
+          userId: input.userId,
+          amount: requiredBalance,
+        }).pipe(
+          Effect.catchTag("WalletNotFound", err => Effect.fail(err)),
+          Effect.catchTag("InsufficientWalletBalance", err => Effect.fail(err)),
+          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+          Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
           Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
         );
 
