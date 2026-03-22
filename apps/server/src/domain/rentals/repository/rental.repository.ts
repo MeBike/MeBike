@@ -68,6 +68,7 @@ export function makeRentalRepository(
             userId: data.userId,
             reservationId: data.reservationId ?? null,
             bikeId: data.bikeId,
+            pricingPolicyId: data.pricingPolicyId ?? null,
             startStationId: data.startStationId,
             startTime: data.startTime,
             subscriptionId: data.subscriptionId ?? null,
@@ -383,6 +384,7 @@ export function makeRentalRepository(
               status: "RENTED",
             },
             data: {
+              pricingPolicyId: data.pricingPolicyId ?? undefined,
               endStationId: data.endStationId,
               endTime: data.endTime,
               duration: data.durationMinutes,

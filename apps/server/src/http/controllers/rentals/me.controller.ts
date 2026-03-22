@@ -4,11 +4,11 @@ import type { RentalsContracts } from "@mebike/shared";
 import { Effect, Match, Option } from "effect";
 
 import {
-  cancelReturnSlotUseCase,
-  createReturnSlotUseCase,
-  getCurrentReturnSlotUseCase,
+  cancelReturnSlot,
+  createReturnSlot,
+  getCurrentReturnSlot,
   RentalServiceTag,
-  startRentalUseCase,
+  startRental,
 } from "@/domain/rentals";
 import { withLoggedCause } from "@/domain/shared";
 import {
@@ -31,7 +31,7 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    startRentalUseCase({
+    startRental({
       userId,
       bikeId: body.bikeId,
       startStationId: body.startStationId,
@@ -334,7 +334,7 @@ const createMyReturnSlot: RouteHandler<RentalsRoutes["createMyReturnSlot"]> = as
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    createReturnSlotUseCase({
+    createReturnSlot({
       rentalId,
       userId,
       stationId: body.stationId,
@@ -402,7 +402,7 @@ const getMyCurrentReturnSlot: RouteHandler<RentalsRoutes["getMyCurrentReturnSlot
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    getCurrentReturnSlotUseCase({
+    getCurrentReturnSlot({
       rentalId,
       userId,
     }),
@@ -461,7 +461,7 @@ const cancelMyReturnSlot: RouteHandler<RentalsRoutes["cancelMyReturnSlot"]> = as
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    cancelReturnSlotUseCase({
+    cancelReturnSlot({
       rentalId,
       userId,
       now: new Date(),

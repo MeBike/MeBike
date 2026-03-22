@@ -6,7 +6,7 @@ import type { QueueJob } from "@/infrastructure/jobs/ports";
 import { BikeRepositoryLive } from "@/domain/bikes";
 import { RentalRepositoryLive } from "@/domain/rentals";
 import {
-  assignFixedSlotReservationsUseCase,
+  assignFixedSlotReservations,
   parseSlotDateKey,
   ReservationRepositoryLive,
 } from "@/domain/reservations";
@@ -32,7 +32,7 @@ export async function handleFixedSlotAssign(
   );
 
   const summary = await Effect.runPromise(
-    assignFixedSlotReservationsUseCase({
+    assignFixedSlotReservations({
       slotDate,
       assignmentTime: new Date(),
     }).pipe(

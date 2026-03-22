@@ -4,9 +4,9 @@ import type { RentalsContracts } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import {
-  adminGetChangeBikeDetailUseCase,
-  adminGetRentalDetailUseCase,
-  confirmRentalReturnByOperatorUseCase,
+  adminGetChangeBikeDetail,
+  adminGetRentalDetail,
+  confirmRentalReturnByOperator,
   RentalRepository,
   RentalStatsServiceTag,
 } from "@/domain/rentals";
@@ -152,7 +152,7 @@ const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    adminGetRentalDetailUseCase(rentalId),
+    adminGetRentalDetail(rentalId),
     "GET /v1/admin/rentals/{rentalId}",
   );
 
@@ -212,14 +212,14 @@ const getActiveRentalsByPhone: RouteHandler<
   return c.json<RentalsContracts.RentalListResponse, 200>(response, 200);
 };
 
-const confirmRentalReturnByOperator: RouteHandler<
+const confirmRentalReturnByOperatorHandler: RouteHandler<
   RentalsRoutes["confirmRentalReturnByOperator"]
 > = async (c) => {
   const { rentalId } = c.req.valid("param");
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    confirmRentalReturnByOperatorUseCase({
+    confirmRentalReturnByOperator({
       rentalId,
       stationId: body.stationId,
       confirmedByUserId: c.var.currentUser!.userId,
@@ -244,7 +244,7 @@ const confirmRentalReturnByOperator: RouteHandler<
       }
 
       const detailEff = withLoggedCause(
-        adminGetRentalDetailUseCase(rentalId),
+        adminGetRentalDetail(rentalId),
         "GET /v1/admin/rentals/{rentalId}",
       );
 
@@ -352,7 +352,7 @@ const adminGetBikeSwapRequests: RouteHandler<
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    adminGetChangeBikeDetailUseCase(bikeSwapRequestId),
+    adminGetChangeBikeDetail(bikeSwapRequestId),
     "GET /v1/admin/bike-swap-requests/{bikeSwapRequestId}",
   );
 
@@ -431,7 +431,7 @@ export const RentalAdminController = {
   adminListRentals,
   adminGetRental,
   adminGetBikeSwapRequests,
-  confirmRentalReturnByOperator,
+  confirmRentalReturnByOperator: confirmRentalReturnByOperatorHandler,
   getActiveRentalsByPhone,
   getDashboardSummary,
   getRentalRevenue,

@@ -4,9 +4,13 @@ import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
-import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
+import {
+  calculateUsageChargeMinor,
+  makePricingPolicyRepository,
+} from "@/domain/pricing";
 import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
+import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
 import {
   SubscriptionNotFound,
@@ -43,6 +47,7 @@ export function finalizeRentalReturnInTx(
     const { tx, rental, bikeId, endStationId, endTime } = input;
     const txBikeRepo = makeBikeRepository(tx);
     const txRentalRepo = makeRentalRepository(tx);
+    const txPricingPolicyRepo = makePricingPolicyRepository(tx);
     const txReturnSlotRepo = makeReturnSlotRepository(tx);
 
     const durationMinutes = Math.max(
@@ -50,10 +55,25 @@ export function finalizeRentalReturnInTx(
       Math.floor((endTime.getTime() - new Date(rental.startTime).getTime()) / 60000),
     );
 
-    let basePrice = Math.ceil(durationMinutes / 30) * env.PRICE_PER_30_MINS;
-    const durationHours = durationMinutes / 60;
+    const pricingPolicy = rental.pricingPolicyId
+      ? (yield* txPricingPolicyRepo.getById(rental.pricingPolicyId).pipe(
+          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+          Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
+        ))
+      : (yield* txPricingPolicyRepo.getActive().pipe(
+          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+          Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
+          Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
+        ));
+
+    const fullBaseAmountMinor = calculateUsageChargeMinor({
+      durationMinutes,
+      policy: pricingPolicy,
+    });
+    let basePriceMinor = fullBaseAmountMinor;
     let usageToAdd = 0;
     let prepaidMinor = 0n;
+    let subscriptionDiscountMinor = 0n;
 
     const txReservationRepo = makeReservationRepository(tx);
     const reservationOpt = rental.reservationId
@@ -81,10 +101,12 @@ export function finalizeRentalReturnInTx(
       const subscription = subscriptionOpt.value;
       const coverage = yield* computeSubscriptionCoverage({
         durationMinutes,
+        pricingPolicy,
         subscription,
         userId: rental.userId,
       });
-      basePrice = coverage.basePrice;
+      basePriceMinor = coverage.basePriceMinor;
+      subscriptionDiscountMinor = coverage.subscriptionDiscountMinor;
       usageToAdd = coverage.usageToAdd;
 
       if (usageToAdd > 0) {
@@ -107,18 +129,14 @@ export function finalizeRentalReturnInTx(
       }
     }
 
-    const penaltyAmount = durationHours > env.RENTAL_PENALTY_HOURS
-      ? env.RENTAL_PENALTY_AMOUNT
-      : 0;
-    const totalPrice = Math.max(
-      0,
-      basePrice + penaltyAmount - Number(prepaidMinor),
-    );
+    const totalPriceMinor = basePriceMinor > prepaidMinor
+      ? basePriceMinor - prepaidMinor
+      : 0n;
 
-    if (totalPrice > 0) {
+    if (totalPriceMinor > 0n) {
       yield* debitWallet(makeWalletRepository(tx), {
         userId: rental.userId,
-        amount: BigInt(totalPrice),
+        amount: totalPriceMinor,
         description: `Rental ${rental.id}`,
         hash: `rental:${rental.id}`,
         type: "DEBIT",
@@ -153,10 +171,11 @@ export function finalizeRentalReturnInTx(
 
     const updatedRental = yield* txRentalRepo.updateRentalOnEnd({
       rentalId: rental.id,
+      pricingPolicyId: pricingPolicy.id,
       endStationId,
       endTime,
       durationMinutes,
-      totalPrice,
+      totalPrice: Number(totalPriceMinor),
       newStatus: "COMPLETED",
     }).pipe(
       Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
@@ -167,6 +186,27 @@ export function finalizeRentalReturnInTx(
         `Expected rental ${rental.id} to remain completable during return finalization`,
       ));
     }
+
+    yield* Effect.tryPromise({
+      try: () =>
+        tx.rentalBillingRecord.create({
+          data: {
+            rentalId: rental.id,
+            pricingPolicyId: pricingPolicy.id,
+            totalDurationMinutes: durationMinutes,
+            estimatedDistanceKm: null,
+            baseAmount: toPrismaDecimal(fullBaseAmountMinor.toString()),
+            overtimeAmount: toPrismaDecimal("0"),
+            couponDiscountAmount: toPrismaDecimal("0"),
+            subscriptionDiscountAmount: toPrismaDecimal(subscriptionDiscountMinor.toString()),
+            depositForfeited: false,
+            totalAmount: toPrismaDecimal(totalPriceMinor.toString()),
+          },
+        }),
+      catch: err => err,
+    }).pipe(
+      Effect.catchAll(err => Effect.die(err)),
+    );
 
     return updatedRental.value;
   });

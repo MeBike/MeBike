@@ -42,7 +42,7 @@ function availableReturnSlots(capacity: number, totalBikes: number, activeReturn
   return capacity - totalBikes - activeReturnSlots;
 }
 
-export function createReturnSlotUseCase(
+export function createReturnSlot(
   input: ReturnSlotInput,
 ): Effect.Effect<
   ReturnSlotRow,
@@ -145,7 +145,7 @@ export function createReturnSlotUseCase(
   });
 }
 
-export function getCurrentReturnSlotUseCase(
+export function getCurrentReturnSlot(
   input: RentalScopedInput,
 ): Effect.Effect<
   Option.Option<ReturnSlotRow>,
@@ -181,7 +181,7 @@ export function getCurrentReturnSlotUseCase(
   });
 }
 
-export function cancelReturnSlotUseCase(
+export function cancelReturnSlot(
   input: RentalScopedInput,
 ): Effect.Effect<
   ReturnSlotRow,

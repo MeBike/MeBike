@@ -5,6 +5,7 @@ import { uuidv7 } from "uuidv7";
 
 import { AppliesToEnum, PrismaClient, RatingReasonType } from "../generated/prisma/client";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
+import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
 
@@ -73,6 +74,7 @@ async function main() {
   const prisma = new PrismaClient({ adapter });
 
   await upsertVietnamBoundary(prisma);
+  await seedDefaultPricingPolicy(prisma);
 
   // Use the actual table name as it exists in the DB ("Station")
   await prisma.$executeRaw`TRUNCATE TABLE "Station" RESTART IDENTITY CASCADE`;

@@ -29,6 +29,7 @@ import type {
 export type CreateRentalInput = {
   userId: string;
   bikeId: string;
+  pricingPolicyId?: string | null;
   startStationId: string;
   startTime: Date;
   subscriptionId?: string | null;
@@ -37,6 +38,7 @@ export type CreateRentalInput = {
 
 export type UpdateRentalOnEndInput = {
   rentalId: string;
+  pricingPolicyId?: string | null;
   endStationId: string;
   endTime: Date;
   durationMinutes: number;

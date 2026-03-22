@@ -1,6 +1,10 @@
 import { Data } from "effect";
 
 import type { WithGenericError } from "@/domain/shared";
+import type {
+  InsufficientWalletBalance,
+  WalletNotFound,
+} from "@/domain/wallets/domain-errors";
 
 export class ReservationRepositoryError extends Data.TaggedError("ReservationRepositoryError")<
   WithGenericError
@@ -125,4 +129,6 @@ export type ReservationServiceFailure
     | ReservationNotOwned
     | ReservationMissingBike
     | InvalidReservationTransition
-    | SubscriptionRequired;
+    | SubscriptionRequired
+    | WalletNotFound
+    | InsufficientWalletBalance;

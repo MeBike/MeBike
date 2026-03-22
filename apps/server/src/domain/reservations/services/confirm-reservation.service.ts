@@ -3,11 +3,15 @@ import { Effect, Option } from "effect";
 import type { BikeRepository } from "@/domain/bikes";
 
 import { makeBikeRepository } from "@/domain/bikes";
+import { makePricingPolicyRepository } from "@/domain/pricing";
 import {
   makeRentalRepository,
   RentalRepository,
 } from "@/domain/rentals";
 import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/unique-violation-mapper";
+import { toMinorUnit } from "@/domain/shared/money";
+import { makeWalletRepository } from "@/domain/wallets";
+import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -27,7 +31,7 @@ export type ConfirmReservationInput = {
   readonly now?: Date;
 };
 
-export function confirmReservationUseCase(
+export function confirmReservation(
   input: ConfirmReservationInput,
 ): Effect.Effect<
   ReservationRow,
@@ -44,6 +48,8 @@ export function confirmReservationUseCase(
       Effect.gen(function* () {
         const txRentalRepo = makeRentalRepository(tx);
         const bikeRepo = makeBikeRepository(tx);
+        const txPricingPolicyRepo = makePricingPolicyRepository(tx);
+        const txWalletRepo = makeWalletRepository(tx);
         const { reservation, bikeId } = yield* reservationService.validatePendingForConfirmationInTx(
           tx,
           {
@@ -69,10 +75,40 @@ export function confirmReservationUseCase(
           }));
         }
 
+        const pricingPolicyId = reservation.pricingPolicyId
+          ?? (yield* txPricingPolicyRepo.getActive().pipe(
+            Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+            Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
+            Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
+            Effect.map(policy => policy.id),
+          ));
+        const pricingPolicy = yield* txPricingPolicyRepo.getById(pricingPolicyId).pipe(
+          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+          Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
+        );
+
+        const walletOpt = yield* txWalletRepo.findByUserId(input.userId).pipe(
+          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(walletOpt)) {
+          return yield* Effect.fail(new WalletNotFound({ userId: input.userId }));
+        }
+
+        const requiredBalance = toMinorUnit(pricingPolicy.depositRequired);
+        if (walletOpt.value.balance < requiredBalance) {
+          return yield* Effect.fail(new InsufficientWalletBalance({
+            walletId: walletOpt.value.id,
+            userId: input.userId,
+            balance: walletOpt.value.balance,
+            attemptedDebit: requiredBalance,
+          }));
+        }
+
         yield* txRentalRepo.createRental({
           userId: input.userId,
           reservationId: reservation.id,
           bikeId,
+          pricingPolicyId,
           startStationId: reservation.stationId,
           startTime: now,
           subscriptionId: reservation.subscriptionId ?? null,
