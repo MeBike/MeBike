@@ -12,8 +12,8 @@ export const walletService = {
     page?: number;
     pageSize?: number;
     id: string;
-  }): Promise<AxiosResponse<ApiResponse<UserWallet>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<UserWallet>>(
+  }): Promise<AxiosResponse<UserWallet>> => {
+    const response = await fetchHttpClient.get<UserWallet>(
       ENDPOINT.WALLET.BASE(id),
       {
         page: page,

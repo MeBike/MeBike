@@ -8,10 +8,7 @@ import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@radix-ui/react-label";
-import {
-  CreateUserFormData,
-  createUserSchema,
-} from "@/schemas/user-schema";
+import { CreateUserFormData, createUserSchema } from "@/schemas/user-schema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
@@ -78,7 +75,7 @@ export default function CustomersClient() {
   ]);
   useEffect(() => {
     setCurrentPage(1);
-  },[roleFilter])
+  }, [roleFilter]);
   const handleReset = () => {
     setSearchQuery("");
     setVerifyFilter("all");
@@ -109,6 +106,9 @@ export default function CustomersClient() {
   const handleDetailUser = (id: string) => {
     router.push(`/admin/customers/detail/${id}`);
   };
+  const handleWalletUser = (id: string) => {
+    router.push(`/admin/customers/wallet/${id}`);
+  };
   return (
     <div>
       <div className="space-y-6">
@@ -133,9 +133,7 @@ export default function CustomersClient() {
           </div>
         </div>
 
-        {dashboardStatsData && (
-          <CustomerStats stats={dashboardStatsData} />
-        )}
+        {dashboardStatsData && <CustomerStats stats={dashboardStatsData} />}
 
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
@@ -193,6 +191,9 @@ export default function CustomersClient() {
             columns={userColumns({
               onView: (user) => {
                 handleDetailUser(String(user.id));
+              },
+              onViewWallet: (user) => {
+                handleWalletUser(String(user.id));
               },
             })}
             data={users || []}

@@ -48,8 +48,10 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 
 export const userColumns = ({
   onView,
+  onViewWallet,
 }: {
   onView?: ({ id }: { id: string }) => void;
+  onViewWallet?: ({id} : {id:string}) => void;
 }): ColumnDef<DetailUser>[] => [
   {
     accessorKey: "fullName",
@@ -184,7 +186,7 @@ export const userColumns = ({
                   className="shrink-0"
                   aria-label="Xem chi tiết"
                   onClick={() => {
-                    onView?.({ id: row.original.id });
+                    onViewWallet?.({ id: row.original.id });
                   }}
                 >
                   <Wallet className="text-muted-foreground" />
