@@ -6,7 +6,7 @@ import { Effect, Match } from "effect";
 import {
   adminGetChangeBikeDetailUseCase,
   adminGetRentalDetailUseCase,
-  endRentalByAdminUseCase,
+  confirmRentalReturnByOperatorUseCase,
   RentalRepository,
   RentalStatsServiceTag,
 } from "@/domain/rentals";
@@ -212,17 +212,19 @@ const getActiveRentalsByPhone: RouteHandler<
   return c.json<RentalsContracts.RentalListResponse, 200>(response, 200);
 };
 
-const endRentalByAdmin: RouteHandler<
-  RentalsRoutes["endRentalByAdmin"]
+const confirmRentalReturnByOperator: RouteHandler<
+  RentalsRoutes["confirmRentalReturnByOperator"]
 > = async (c) => {
   const { rentalId } = c.req.valid("param");
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    endRentalByAdminUseCase({
+    confirmRentalReturnByOperatorUseCase({
       rentalId,
-      endStationId: body.endStation,
-      endTime: body.endTime ? new Date(body.endTime) : new Date(),
+      stationId: body.stationId,
+      confirmedByUserId: c.var.currentUser!.userId,
+      confirmationMethod: body.confirmationMethod ?? "MANUAL",
+      confirmedAt: body.confirmedAt ? new Date(body.confirmedAt) : new Date(),
     }),
     "PUT /v1/rentals/{rentalId}/end",
   );
@@ -270,7 +272,7 @@ const endRentalByAdmin: RouteHandler<
               details: {
                 code: RentalErrorCodeSchema.enum.RETURN_SLOT_REQUIRED_FOR_RETURN,
                 rentalId,
-                endStationId: body.endStation,
+                endStationId: body.stationId,
               },
             },
             400,
@@ -284,6 +286,17 @@ const endRentalByAdmin: RouteHandler<
                 rentalId,
                 returnSlotStationId,
                 endStationId: attemptedEndStationId,
+              },
+            },
+            400,
+          )),
+        Match.tag("ReturnAlreadyConfirmed", () =>
+          c.json(
+            {
+              error: rentalErrorMessages.RETURN_ALREADY_CONFIRMED,
+              details: {
+                code: RentalErrorCodeSchema.enum.RETURN_ALREADY_CONFIRMED,
+                rentalId,
               },
             },
             400,
@@ -418,7 +431,7 @@ export const RentalAdminController = {
   adminListRentals,
   adminGetRental,
   adminGetBikeSwapRequests,
-  endRentalByAdmin,
+  confirmRentalReturnByOperator,
   getActiveRentalsByPhone,
   getDashboardSummary,
   getRentalRevenue,

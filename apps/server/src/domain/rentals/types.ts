@@ -1,6 +1,6 @@
 import type { PageRequest } from "@/domain/shared/pagination";
 
-import type { RentalStatus } from "../../../generated/prisma/enums";
+import type { ConfirmationMethod, RentalStatus } from "../../../generated/prisma/enums";
 import type { MyRentalFilter, RentalSortField } from "./models";
 
 export type ListMyRentalsInput = {
@@ -23,4 +23,12 @@ export type EndRentalInput = {
   endStationId: string;
   endTime: Date;
   nextStatus?: RentalStatus; // optional override if needed later
+};
+
+export type ConfirmRentalReturnInput = {
+  rentalId: string;
+  stationId: string;
+  confirmedByUserId: string;
+  confirmationMethod: ConfirmationMethod;
+  confirmedAt: Date;
 };

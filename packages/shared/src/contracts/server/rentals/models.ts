@@ -22,6 +22,11 @@ export const ReturnSlotStatusSchema = z.enum([
   "CANCELLED",
 ]);
 
+export const ConfirmationMethodSchema = z.enum([
+  "QR_CODE",
+  "MANUAL",
+]);
+
 export const RentalIsoDateTimeSchema = z.iso.datetime();
 
 export const RentalSchema = z.object({
@@ -241,9 +246,9 @@ export const CardTapRentalRequestSchema = z.object({
 });
 
 export const EndRentalRequestSchema = z.object({
-  endStation: z.uuidv7(),
-  endTime: z.iso.datetime().optional(),
-  reason: z.string(),
+  stationId: z.uuidv7(),
+  confirmedAt: z.iso.datetime().optional(),
+  confirmationMethod: ConfirmationMethodSchema.optional(),
 });
 
 export const UpdateRentalRequestSchema = z.object({
@@ -413,6 +418,7 @@ export type AdminRentalsListResponse = z.infer<
 export type MyRentalListResponse = z.infer<typeof MyRentalListResponseSchema>;
 export type BikeSwapStatus = z.infer<typeof BikeSwapStatusSchema>;
 export type ReturnSlotStatus = z.infer<typeof ReturnSlotStatusSchema>;
+export type ConfirmationMethod = z.infer<typeof ConfirmationMethodSchema>;
 export type ReturnSlotReservation = z.infer<typeof ReturnSlotReservationSchema>;
 export type BikeSwapRequest = z.infer<typeof BikeSwapRequestSchema>;
 export type BikeSwapRequestDetail = z.infer<typeof BikeSwapRequestDetailSchema>;

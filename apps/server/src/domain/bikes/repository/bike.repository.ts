@@ -40,6 +40,12 @@ export type BikeRepo = {
     status: BikeStatus,
     updatedAt: Date,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  updateStatusAndStationAt: (
+    bikeId: string,
+    status: BikeStatus,
+    stationId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
   bookBikeIfAvailable: (
     bikeId: string,
     updatedAt: Date,
@@ -266,6 +272,39 @@ export function makeBikeRepository(
               operation: "updateStatusAt.findUnique",
               cause: e,
               message: "Failed to fetch bike after status update",
+            }),
+        });
+
+        return Option.fromNullable(row);
+      }),
+
+    updateStatusAndStationAt: (bikeId, status, stationId, updatedAt) =>
+      Effect.gen(function* () {
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            client.bike.updateMany({
+              where: { id: bikeId },
+              data: { status, stationId, updatedAt },
+            }),
+          catch: e =>
+            new BikeRepositoryError({
+              operation: "updateStatusAndStationAt.updateMany",
+              cause: e,
+              message: "Failed to update bike status and station",
+            }),
+        });
+
+        if (updated.count === 0) {
+          return Option.none<BikeRow>();
+        }
+
+        const row = yield* Effect.tryPromise({
+          try: () => findById(client, bikeId),
+          catch: e =>
+            new BikeRepositoryError({
+              operation: "updateStatusAndStationAt.findUnique",
+              cause: e,
+              message: "Failed to fetch bike after status and station update",
             }),
         });
 

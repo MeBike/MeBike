@@ -1,6 +1,8 @@
 import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
+  ConfirmationMethod,
+  HandoverStatus,
   RentalStatus,
   ReturnSlotStatus,
   UserRole,
@@ -181,6 +183,18 @@ export type ReturnSlotStationCapacityRow = {
   capacity: number;
   totalBikes: number;
   activeReturnSlots: number;
+};
+
+export type ReturnConfirmationRow = {
+  id: string;
+  rentalId: string;
+  stationId: string | null;
+  agencyId: string | null;
+  confirmedByUserId: string;
+  confirmationMethod: ConfirmationMethod;
+  handoverStatus: HandoverStatus;
+  confirmedAt: Date;
+  createdAt: Date;
 };
 
 export type DashboardTrend = "UP" | "DOWN" | "STABLE";

@@ -59,6 +59,7 @@ export const rentalErrorCodes = [
   "RETURN_SLOT_NOT_FOUND",
   "RETURN_SLOT_REQUIRES_ACTIVE_RENTAL",
   "RETURN_SLOT_CAPACITY_EXCEEDED",
+  "RETURN_ALREADY_CONFIRMED",
 
   // Card Tap Rental Errors
   "CARD_RENTAL_ACTIVE_EXISTS",
@@ -216,6 +217,7 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   RETURN_SLOT_NOT_FOUND: "Return slot not found",
   RETURN_SLOT_REQUIRES_ACTIVE_RENTAL: "Return slot requires an active rental",
   RETURN_SLOT_CAPACITY_EXCEEDED: "Station does not have enough capacity for another return slot",
+  RETURN_ALREADY_CONFIRMED: "Rental return has already been confirmed",
 
   CARD_RENTAL_ACTIVE_EXISTS: "Active rental already exists for this card",
 

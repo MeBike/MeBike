@@ -8,12 +8,14 @@ import type { Prisma } from "@/infrastructure/prisma";
 import { BikeRepository as BikeRepositoryTag, makeBikeRepository } from "@/domain/bikes";
 import {
   cancelReturnSlotUseCase,
+  confirmRentalReturnByOperatorUseCase,
   createReturnSlotUseCase,
-  endRentalUseCase,
   getCurrentReturnSlotUseCase,
   makeRentalRepository,
+  makeReturnConfirmationRepository,
   makeReturnSlotRepository,
   RentalRepository,
+  ReturnConfirmationRepository,
   ReturnSlotRepository,
 } from "@/domain/rentals";
 import { makeSubscriptionRepository, SubscriptionRepository as SubscriptionRepositoryTag } from "@/domain/subscriptions";
@@ -26,7 +28,12 @@ import { givenActiveRental, givenStationWithAvailableBike, givenUserWithWallet }
 describe("return slot integration", () => {
   const fixture = setupPrismaIntFixture();
   let depsLayer: Layer.Layer<
-    Prisma | RentalRepository | ReturnSlotRepository | BikeRepository | SubscriptionRepository
+    | Prisma
+    | RentalRepository
+    | ReturnSlotRepository
+    | ReturnConfirmationRepository
+    | BikeRepository
+    | SubscriptionRepository
   >;
 
   beforeAll(() => {
@@ -34,6 +41,10 @@ describe("return slot integration", () => {
       Layer.succeed(PrismaTag, PrismaTag.make({ client: fixture.prisma })),
       Layer.succeed(RentalRepository, RentalRepository.make(makeRentalRepository(fixture.prisma))),
       Layer.succeed(ReturnSlotRepository, ReturnSlotRepository.make(makeReturnSlotRepository(fixture.prisma))),
+      Layer.succeed(
+        ReturnConfirmationRepository,
+        ReturnConfirmationRepository.make(makeReturnConfirmationRepository(fixture.prisma)),
+      ),
       Layer.succeed(BikeRepositoryTag, BikeRepositoryTag.make(makeBikeRepository(fixture.prisma))),
       Layer.succeed(SubscriptionRepositoryTag, makeSubscriptionRepository(fixture.prisma)),
     );
@@ -293,10 +304,11 @@ describe("return slot integration", () => {
     expectLeftTag(result, "ReturnSlotRequiresActiveRental");
   });
 
-  it("cancels the active return slot when the rental ends", async () => {
+  it("finalizes the active return slot when an operator confirms the return", async () => {
     const { user, station, bike, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
     });
+    const operator = await fixture.factories.user({ role: "STAFF" });
 
     expectRight(await runEffectEitherWithLayer(
       createReturnSlotUseCase({ rentalId: rental.id, userId: user.id, stationId: station.id }),
@@ -304,11 +316,12 @@ describe("return slot integration", () => {
     ));
 
     const ended = expectRight(await runEffectEitherWithLayer(
-      endRentalUseCase({
+      confirmRentalReturnByOperatorUseCase({
         rentalId: rental.id,
-        userId: user.id,
-        endStationId: station.id,
-        endTime: new Date(Date.now() + 30 * 60 * 1000),
+        stationId: station.id,
+        confirmedByUserId: operator.id,
+        confirmationMethod: "MANUAL",
+        confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
       }),
       depsLayer,
     ));
@@ -321,21 +334,30 @@ describe("return slot integration", () => {
     });
     expect(current?.status).toBe("USED");
 
+    const confirmation = await fixture.prisma.returnConfirmation.findUnique({
+      where: { rentalId: rental.id },
+    });
+    expect(confirmation?.confirmedByUserId).toBe(operator.id);
+    expect(confirmation?.handoverStatus).toBe("CONFIRMED");
+
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("AVAILABLE");
+    expect(updatedBike?.stationId).toBe(station.id);
   });
 
-  it("fails to end a rental without an active return slot", async () => {
-    const { user, station, rental } = await givenActiveRental(fixture, {
+  it("fails to confirm a rental return without an active return slot", async () => {
+    const { station, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
     });
+    const operator = await fixture.factories.user({ role: "STAFF" });
 
     const result = await runEffectEitherWithLayer(
-      endRentalUseCase({
+      confirmRentalReturnByOperatorUseCase({
         rentalId: rental.id,
-        userId: user.id,
-        endStationId: station.id,
-        endTime: new Date(Date.now() + 30 * 60 * 1000),
+        stationId: station.id,
+        confirmedByUserId: operator.id,
+        confirmationMethod: "MANUAL",
+        confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
       }),
       depsLayer,
     );
@@ -343,10 +365,11 @@ describe("return slot integration", () => {
     expectLeftTag(result, "ReturnSlotRequiredForReturn");
   });
 
-  it("fails to end a rental at a different station than the active return slot", async () => {
+  it("fails to confirm a rental return at a different station than the active return slot", async () => {
     const { user, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
     });
+    const operator = await fixture.factories.user({ role: "STAFF" });
     const reservedStation = await fixture.factories.station({ capacity: 2 });
     const attemptedStation = await fixture.factories.station({ capacity: 2 });
 
@@ -360,15 +383,57 @@ describe("return slot integration", () => {
     ));
 
     const result = await runEffectEitherWithLayer(
-      endRentalUseCase({
+      confirmRentalReturnByOperatorUseCase({
         rentalId: rental.id,
-        userId: user.id,
-        endStationId: attemptedStation.id,
-        endTime: new Date(Date.now() + 30 * 60 * 1000),
+        stationId: attemptedStation.id,
+        confirmedByUserId: operator.id,
+        confirmationMethod: "MANUAL",
+        confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
       }),
       depsLayer,
     );
 
     expectLeftTag(result, "ReturnSlotStationMismatch");
+  });
+
+  it("fails when the rental return is already confirmed", async () => {
+    const { rental } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    const station = await fixture.factories.station({ capacity: 2 });
+
+    await fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: rental.id,
+        userId: rental.userId,
+        stationId: station.id,
+        reservedFrom: new Date("2026-03-21T12:00:00.000Z"),
+      },
+    });
+
+    await fixture.prisma.returnConfirmation.create({
+      data: {
+        rentalId: rental.id,
+        stationId: station.id,
+        confirmedByUserId: operator.id,
+        confirmationMethod: "MANUAL",
+        handoverStatus: "CONFIRMED",
+        confirmedAt: new Date("2026-03-21T12:30:00.000Z"),
+      },
+    });
+
+    const result = await runEffectEitherWithLayer(
+      confirmRentalReturnByOperatorUseCase({
+        rentalId: rental.id,
+        stationId: station.id,
+        confirmedByUserId: operator.id,
+        confirmationMethod: "MANUAL",
+        confirmedAt: new Date("2026-03-21T12:35:00.000Z"),
+      }),
+      depsLayer,
+    );
+
+    expectLeftTag(result, "ReturnAlreadyConfirmed");
   });
 });
