@@ -183,6 +183,8 @@ export type ReturnSlotRow = {
 export type ReturnSlotStationCapacityRow = {
   stationId: string;
   capacity: number;
+  totalCapacity: number;
+  returnSlotLimit: number;
   totalBikes: number;
   activeReturnSlots: number;
 };

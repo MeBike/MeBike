@@ -261,6 +261,22 @@ export function makeReservationRepository(
         ),
       ),
 
+    countPendingByStationId: stationId =>
+      Effect.tryPromise({
+        try: () =>
+          client.reservation.count({
+            where: {
+              stationId,
+              status: ReservationStatus.PENDING,
+            },
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "countPendingByStationId",
+            cause: err,
+          }),
+      }),
+
     findActiveByUserId: userId =>
       Effect.tryPromise({
         try: () =>

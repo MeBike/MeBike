@@ -20,6 +20,8 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
       name: body.name,
       address: body.address,
       capacity: body.capacity,
+      pickupSlotLimit: body.pickupSlotLimit,
+      returnSlotLimit: body.returnSlotLimit,
       latitude: body.latitude,
       longitude: body.longitude,
     }));
@@ -42,6 +44,13 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
             error: stationErrorMessages.CAPACITY_LIMIT_EXCEEDED,
             details: {
               code: StationErrorCodeSchema.enum.CAPACITY_LIMIT_EXCEEDED,
+            },
+          }, 400)),
+        Match.tag("StationCapacitySplitInvalid", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.CAPACITY_SPLIT_INVALID,
+            details: {
+              code: StationErrorCodeSchema.enum.CAPACITY_SPLIT_INVALID,
             },
           }, 400)),
         Match.tag("StationOutsideSupportedArea", () =>
@@ -92,6 +101,13 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
             error: stationErrorMessages.CAPACITY_LIMIT_EXCEEDED,
             details: {
               code: StationErrorCodeSchema.enum.CAPACITY_LIMIT_EXCEEDED,
+            },
+          }, 400)),
+        Match.tag("StationCapacitySplitInvalid", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.CAPACITY_SPLIT_INVALID,
+            details: {
+              code: StationErrorCodeSchema.enum.CAPACITY_SPLIT_INVALID,
             },
           }, 400)),
         Match.tag("StationOutsideSupportedArea", () =>

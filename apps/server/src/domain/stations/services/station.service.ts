@@ -6,6 +6,7 @@ import { env } from "@/config/env";
 
 import type {
   StationCapacityLimitExceeded,
+  StationCapacitySplitInvalid,
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
 } from "../errors";
@@ -20,7 +21,11 @@ import type {
 } from "../models";
 import type { StationRepo } from "../repository/station.repository";
 
-import { StationCapacityLimitExceeded as StationCapacityLimitExceededError, StationNotFound } from "../errors";
+import {
+  StationCapacityLimitExceeded as StationCapacityLimitExceededError,
+  StationCapacitySplitInvalid as StationCapacitySplitInvalidError,
+  StationNotFound,
+} from "../errors";
 import { StationRepository } from "../repository/station.repository";
 
 export type StationService = {
@@ -28,7 +33,10 @@ export type StationService = {
     input: CreateStationInput,
   ) => Effect.Effect<
     StationRow,
-    StationNameAlreadyExists | StationOutsideSupportedArea | StationCapacityLimitExceeded
+    | StationNameAlreadyExists
+    | StationOutsideSupportedArea
+    | StationCapacityLimitExceeded
+    | StationCapacitySplitInvalid
   >;
   updateStation: (
     id: string,
@@ -39,6 +47,7 @@ export type StationService = {
     | StationNameAlreadyExists
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
+    | StationCapacitySplitInvalid
   >;
   listStations: (
     filter: StationFilter,
@@ -53,6 +62,29 @@ export type StationService = {
 };
 
 function makeStationService(repo: StationRepo): StationService {
+  function resolveCapacitySplit(input: {
+    capacity: number;
+    pickupSlotLimit?: number;
+    returnSlotLimit?: number;
+  }) {
+    return {
+      totalCapacity: input.capacity,
+      pickupSlotLimit: input.pickupSlotLimit ?? input.capacity,
+      returnSlotLimit: input.returnSlotLimit ?? input.capacity,
+    };
+  }
+
+  function validateCapacitySplit(args: {
+    totalCapacity: number;
+    pickupSlotLimit: number;
+    returnSlotLimit: number;
+  }) {
+    return args.totalCapacity > 0
+      && args.pickupSlotLimit >= 0
+      && args.returnSlotLimit >= 0
+      && args.pickupSlotLimit + args.returnSlotLimit <= args.totalCapacity;
+  }
+
   return {
     createStation: input =>
       Effect.gen(function* () {
@@ -62,21 +94,45 @@ function makeStationService(repo: StationRepo): StationService {
             maxCapacity: env.STATION_CAPACITY_LIMIT,
           }));
         }
+
+        const split = resolveCapacitySplit(input);
+        if (!validateCapacitySplit(split)) {
+          return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
+        }
+
         return yield* repo.create(input).pipe(
           Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
         );
       }),
     updateStation: (id, input) =>
       Effect.gen(function* () {
+        const currentOpt = yield* repo.getById(id).pipe(
+          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(currentOpt)) {
+          return yield* Effect.fail(new StationNotFound({ id }));
+        }
+
+        const current = currentOpt.value;
+        const nextCapacity = input.capacity ?? current.totalCapacity;
         if (
-          input.capacity != null
-          && input.capacity > env.STATION_CAPACITY_LIMIT
+          nextCapacity > env.STATION_CAPACITY_LIMIT
         ) {
           return yield* Effect.fail(new StationCapacityLimitExceededError({
-            capacity: input.capacity,
+            capacity: nextCapacity,
             maxCapacity: env.STATION_CAPACITY_LIMIT,
           }));
         }
+
+        const split = {
+          totalCapacity: nextCapacity,
+          pickupSlotLimit: input.pickupSlotLimit ?? current.pickupSlotLimit,
+          returnSlotLimit: input.returnSlotLimit ?? current.returnSlotLimit,
+        };
+        if (!validateCapacitySplit(split)) {
+          return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
+        }
+
         const updatedOpt = yield* repo.update(id, input).pipe(
           Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
         );

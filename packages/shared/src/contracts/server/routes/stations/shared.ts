@@ -150,6 +150,22 @@ export const CreateStationBodySchema = z.object({
     .min(1, {
       message: "capacity must be greater than or equal to 1",
     }),
+  pickupSlotLimit: z.number()
+    .int({
+      message: "pickupSlotLimit must be an integer",
+    })
+    .min(0, {
+      message: "pickupSlotLimit must be greater than or equal to 0",
+    })
+    .optional(),
+  returnSlotLimit: z.number()
+    .int({
+      message: "returnSlotLimit must be an integer",
+    })
+    .min(0, {
+      message: "returnSlotLimit must be greater than or equal to 0",
+    })
+    .optional(),
   latitude: LatitudeSchema,
   longitude: LongitudeSchema,
 }).openapi("CreateStationBody");
@@ -163,6 +179,22 @@ export const UpdateStationBodySchema = z.object({
     })
     .min(1, {
       message: "capacity must be greater than or equal to 1",
+    })
+    .optional(),
+  pickupSlotLimit: z.number()
+    .int({
+      message: "pickupSlotLimit must be an integer",
+    })
+    .min(0, {
+      message: "pickupSlotLimit must be greater than or equal to 0",
+    })
+    .optional(),
+  returnSlotLimit: z.number()
+    .int({
+      message: "returnSlotLimit must be an integer",
+    })
+    .min(0, {
+      message: "returnSlotLimit must be greater than or equal to 0",
     })
     .optional(),
   latitude: LatitudeSchema.optional(),
@@ -211,6 +243,9 @@ export const StationListResponseSchema = z
           name: "Central Station",
           address: "123 Main St",
           capacity: 20,
+          totalCapacity: 20,
+          pickupSlotLimit: 10,
+          returnSlotLimit: 10,
           latitude: 10.762622,
           longitude: 106.660172,
           createdAt: "2026-01-01T00:00:00.000Z",
