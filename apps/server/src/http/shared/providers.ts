@@ -16,6 +16,10 @@ import {
   BikeStatsServiceLive,
 } from "@/domain/bikes";
 import {
+  IncidentRepositoryLive,
+  IncidentServiceLive,
+} from "@/domain/incident";
+import {
   PushNotificationServiceLive,
   PushTokenRepositoryLive,
 } from "@/domain/notifications";
@@ -199,6 +203,24 @@ export const SupplierDepsLive = Layer.mergeAll(
 
 export function withSupplierDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(Effect.provide(SupplierDepsLive));
+}
+
+const IncidentReposLive = IncidentRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const IncidentServiceLayer = IncidentServiceLive.pipe(
+  Layer.provide(IncidentReposLive),
+);
+
+export const IncidentDepsLive = Layer.mergeAll(
+  IncidentReposLive,
+  IncidentServiceLayer,
+  PrismaLive,
+);
+
+export function withIncidentDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(Effect.provide(IncidentDepsLive));
 }
 
 const PushTokenReposLive = PushTokenRepositoryLive.pipe(
@@ -441,6 +463,7 @@ export const HttpDepsLive = Layer.mergeAll(
   UserStatsDepsLive,
   WalletDepsLive,
   WithdrawalDepsLive,
+  IncidentDepsLive,
 ).pipe(
   Layer.provide(PrismaLive),
   Layer.provide(RedisLive),

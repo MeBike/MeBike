@@ -31,6 +31,7 @@ import { registerSubscriptionRoutes } from "./routes/subscriptions";
 import { registerSupplierRoutes } from "./routes/suppliers";
 import { registerUserRoutes } from "./routes/users";
 import { registerWalletRoutes } from "./routes/wallets";
+import { registerIncidentRoutes } from "./routes/incident";
 
 export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   const app = new OpenAPIHono({
@@ -40,9 +41,10 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
       }
 
       const issues = result.error.issues.map((issue) => {
-        const path = Array.isArray(issue.path) && issue.path.length
-          ? issue.path.join(".")
-          : "body";
+        const path =
+          Array.isArray(issue.path) && issue.path.length
+            ? issue.path.join(".")
+            : "body";
         return {
           path,
           message: issue.message,
@@ -65,7 +67,10 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
     },
   });
   app.use("*", cors());
-  app.use("*", honoLogger(message => logger.info(message)));
+  app.use(
+    "*",
+    honoLogger((message) => logger.info(message)),
+  );
   app.use("*", async (c, next) => {
     c.set("runPromise", runPromise);
     await next();
@@ -83,10 +88,14 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/suppliers/*", requireAdminMiddleware);
   app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
   app.use("/v1/users/manage-users/create", requireAdminMiddleware);
-  app.use("/v1/users/manage-users/admin-reset-password/*", requireAdminMiddleware);
+  app.use(
+    "/v1/users/manage-users/admin-reset-password/*",
+    requireAdminMiddleware,
+  );
   app.use("/v1/admin/rentals", requireAdminMiddleware);
   app.use("/v1/admin/rentals/*", requireAdminMiddleware);
   app.use("/events", requireAuthMiddleware);
+  app.use("/v1/incidents/*", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
@@ -114,6 +123,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerRatingRoutes(app);
   registerWalletRoutes(app);
   registerSubscriptionRoutes(app);
+  registerIncidentRoutes(app);
 
   app.onError((err, c) => {
     const isProd = env.NODE_ENV === "production";
@@ -127,12 +137,13 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
           details: {
             message: err?.message ?? String(err),
             stack: err instanceof Error ? err.stack : undefined,
-            cause: (err as { cause?: unknown })?.cause instanceof Error
-              ? {
-                  message: (err as { cause: Error }).cause.message,
-                  stack: (err as { cause: Error }).cause.stack,
-                }
-              : (err as { cause?: unknown })?.cause,
+            cause:
+              (err as { cause?: unknown })?.cause instanceof Error
+                ? {
+                    message: (err as { cause: Error }).cause.message,
+                    stack: (err as { cause: Error }).cause.stack,
+                  }
+                : (err as { cause?: unknown })?.cause,
           },
         };
 
