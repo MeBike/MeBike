@@ -170,4 +170,88 @@ describe("rental pricing lifecycle integration", () => {
     });
     expect(walletAfterReturn?.reservedBalance.toString()).toBe("0");
   });
+
+  it("forfeits the deposit when return confirmation happens after the late cutoff", async () => {
+    await fixture.prisma.pricingPolicy.updateMany({
+      data: { status: "INACTIVE" },
+    });
+
+    const policy = await fixture.factories.pricingPolicy({
+      name: "Late Cutoff Policy",
+      baseRate: "4000",
+      reservationFee: "3000",
+      depositRequired: "2000",
+      status: "ACTIVE",
+      lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
+    });
+
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 50_000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const operator = await fixture.factories.user({ role: "STAFF" });
+
+    const reserveNow = new Date("2026-03-22T15:00:00.000Z");
+    const reservation = expectRight(await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: reserveNow,
+      now: reserveNow,
+    }));
+
+    const confirmNow = new Date("2026-03-22T15:05:00.000Z");
+    expectRight(await runConfirm({
+      reservationId: reservation.id,
+      userId: user.id,
+      now: confirmNow,
+    }));
+
+    const rental = await fixture.prisma.rental.findFirst({
+      where: { reservationId: reservation.id },
+    });
+    expect(rental?.pricingPolicyId).toBe(policy.id);
+    expect(rental?.depositHoldId).not.toBeNull();
+
+    expectRight(await runEffectEitherWithLayer(
+      createReturnSlot({
+        rentalId: rental!.id,
+        userId: user.id,
+        stationId: station.id,
+        now: confirmNow,
+      }),
+      rentalFlowLayer,
+    ));
+
+    const lateConfirmedAt = new Date("2026-03-22T16:30:01.000Z");
+    const completedRental = expectRight(await runEffectEitherWithLayer(
+      confirmRentalReturnByOperator({
+        rentalId: rental!.id,
+        stationId: station.id,
+        confirmedByUserId: operator.id,
+        confirmationMethod: "MANUAL",
+        confirmedAt: lateConfirmedAt,
+      }),
+      rentalFlowLayer,
+    ));
+
+    expect(completedRental.status).toBe("COMPLETED");
+
+    const billingRecord = await fixture.prisma.rentalBillingRecord.findUnique({
+      where: { rentalId: rental!.id },
+    });
+    expect(billingRecord?.depositForfeited).toBe(true);
+
+    const forfeitedHold = await fixture.prisma.walletHold.findUnique({
+      where: { id: rental!.depositHoldId! },
+    });
+    expect(forfeitedHold?.status).toBe("SETTLED");
+    expect(forfeitedHold?.forfeitedAt?.toISOString()).toBe(lateConfirmedAt.toISOString());
+
+    const walletAfterReturn = await fixture.prisma.wallet.findUnique({
+      where: { userId: user.id },
+    });
+    expect(walletAfterReturn?.reservedBalance.toString()).toBe("0");
+    expect(walletAfterReturn?.balance.toString()).toBe("36000");
+  });
 });

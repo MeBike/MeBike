@@ -88,7 +88,7 @@ describe("reservation use-cases integration", () => {
 
   it("confirmReservationUseCase fulfills reservation, creates rental, and books bike", async () => {
     const { user } = await givenUserWithWallet(fixture, {
-      wallet: { balance: 50000n },
+      wallet: { balance: 600000n },
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture);
 
