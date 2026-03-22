@@ -12,24 +12,19 @@ import { stations } from "./seed/stations.data";
 const ratingReasonsSeed: ReadonlyArray<{
   readonly type: RatingReasonType;
   readonly appliesTo: AppliesToEnum;
-  readonly messages: string;
+  readonly message: string;
 }> = [
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, messages: "Xe chạy êm, vận hành tốt" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, messages: "Xe sạch sẽ" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, messages: "Xe còn nhiều pin" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, messages: "Phanh chưa tốt" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, messages: "Xe bẩn hoặc có mùi" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, messages: "Pin yếu" },
+  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe chạy êm, vận hành tốt" },
+  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe sạch sẽ" },
+  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe còn nhiều pin" },
+  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Phanh chưa tốt" },
+  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Xe bẩn hoặc có mùi" },
+  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Pin yếu" },
 
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, messages: "Trạm dễ tìm" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, messages: "Trạm gọn gàng, an toàn" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, messages: "Trạm khó tìm" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, messages: "Trạm đông, khó trả xe" },
-
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.app, messages: "Ứng dụng dễ sử dụng" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.app, messages: "Định vị và chỉ đường chính xác" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.app, messages: "Ứng dụng chậm hoặc lag" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.app, messages: "Lỗi trong quá trình thuê/trả xe" },
+  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm dễ tìm" },
+  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm gọn gàng, an toàn" },
+  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, message: "Trạm khó tìm" },
+  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, message: "Trạm đông, khó trả xe" },
 ];
 
 async function seedRatingReasons(prisma: PrismaClient) {
@@ -37,14 +32,14 @@ async function seedRatingReasons(prisma: PrismaClient) {
     select: {
       type: true,
       appliesTo: true,
-      messages: true,
+      message: true,
     },
   });
 
-  const existingKeys = new Set(existing.map(item => `${item.type}|${item.appliesTo}|${item.messages}`));
+  const existingKeys = new Set(existing.map(item => `${item.type}|${item.appliesTo}|${item.message}`));
 
   for (const reason of ratingReasonsSeed) {
-    const key = `${reason.type}|${reason.appliesTo}|${reason.messages}`;
+    const key = `${reason.type}|${reason.appliesTo}|${reason.message}`;
     if (existingKeys.has(key)) {
       continue;
     }
@@ -54,7 +49,7 @@ async function seedRatingReasons(prisma: PrismaClient) {
         id: uuidv7(),
         type: reason.type,
         appliesTo: reason.appliesTo,
-        messages: reason.messages,
+        message: reason.message,
       },
     });
   }
@@ -87,7 +82,9 @@ async function main() {
         "id",
         "name",
         "address",
-        "capacity",
+        "total_capacity",
+        "pickup_slot_limit",
+        "return_slot_limit",
         "latitude",
         "longitude",
         "position",
@@ -97,6 +94,8 @@ async function main() {
         ${stationId}::uuid,
         ${station.name},
         ${station.address},
+        ${station.capacity},
+        ${station.capacity},
         ${station.capacity},
         ${station.latitude},
         ${station.longitude},
