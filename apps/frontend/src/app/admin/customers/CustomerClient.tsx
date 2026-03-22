@@ -189,6 +189,7 @@ export default function CustomersClient() {
           </p>
           <DataTable
             title="Danh sách người dùng"
+            tableClassName="table-fixed"
             columns={userColumns({
               onView: (user) => {
                 handleDetailUser(String(user.id));

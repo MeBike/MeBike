@@ -1,10 +1,17 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye , Wallet} from "lucide-react";
+import { Eye, Wallet } from "lucide-react";
 import type { UserRole } from "@/types";
 import type { DetailUser } from "@/types";
-import { formatToVNTime } from "@/lib/formatVNDate";
-
-const getUserDisplayStatus = (user: { verify: string; accountStatus?: string }) => {
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+const getUserDisplayStatus = (user: {
+  verify: string;
+  accountStatus?: string;
+}) => {
   return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
 };
 
@@ -47,20 +54,42 @@ export const userColumns = ({
   {
     accessorKey: "fullName",
     header: "Họ tên",
+    meta: {
+      thClassName: "w-[17%]",
+      tdClassName: "max-w-0",
+    },
     cell: ({ row }) => {
-      return row.original.fullName || "Không có";
+      const name = row.original.fullName || "Không có";
+      return (
+        <div className="truncate" title={name}>
+          {name}
+        </div>
+      );
     },
   },
   {
     accessorKey: "email",
     header: "Email",
+    meta: {
+      thClassName: "w-[30%]",
+      tdClassName: "max-w-0",
+    },
     cell: ({ row }) => {
-      return row.original.email || "Không có";
+      const email = row.original.email || "Không có";
+      return (
+        <div className="truncate" title={email}>
+          {email}
+        </div>
+      );
     },
   },
   {
     accessorKey: "phoneNumber",
     header: "Số điện thoại",
+    meta: {
+      thClassName: "w-[15%]",
+      tdClassName: "max-w-0 whitespace-nowrap",
+    },
     cell: ({ row }) => {
       return row.original.phoneNumber || "Không có";
     },
@@ -68,10 +97,14 @@ export const userColumns = ({
   {
     accessorKey: "role",
     header: "Vai trò",
+    meta: {
+      thClassName: "w-[12%]",
+      tdClassName: "whitespace-nowrap",
+    },
     cell: ({ row }) => (
       <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(
-          row.original.role
+        className={`inline-flex px-1 py-1 rounded-full text-xxs font-medium ${getRoleColor(
+          row.original.role,
         )}`}
       >
         {row.original.role}
@@ -80,65 +113,88 @@ export const userColumns = ({
   },
   {
     accessorKey: "verify",
-    header: "Trạng thái xác thực",
+    header: "Trạng thái",
+    meta: {
+      thClassName: "w-[14%]",
+      tdClassName: "whitespace-nowrap",
+    },
     cell: ({ row }) => {
       const displayStatus = getUserDisplayStatus(row.original);
-
       return (
-        <div className="flex justify-center items-center">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
-              displayStatus
-            )}`}
-          >
-            {displayStatus}
-          </span>
-        </div>
+        <span
+          className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
+            displayStatus,
+          )}`}
+        >
+          {displayStatus}
+        </span>
       );
     },
   },
-  {
-    accessorKey: "created_at",
-    header: "Ngày tạo",
-    cell: ({ row }) => {
-      return formatToVNTime(row.original.createdAt);
-    },
-  },
-  {
-    accessorKey: "updated_at",
-    header: "Ngày cập nhật",
-    cell: ({ row }) => {
-      return formatToVNTime(row.original.updatedAt);
-    },
-  },
+  // {
+  //   accessorKey: "created_at",
+  //   header: "Ngày tạo",
+  //   cell: ({ row }) => {
+  //     return formatToVNTime(row.original.createdAt);
+  //   },
+  // },
+  // {
+  //   accessorKey: "updated_at",
+  //   header: "Ngày cập nhật",
+  //   cell: ({ row }) => {
+  //     return formatToVNTime(row.original.updatedAt);
+  //   },
+  // },
   {
     id: "actions",
     header: "Hành động",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original.id });
-            }
-          }}
-        >
-          <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết giao dịch người dùng"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original.id });
-            }
-          }}
-        >
-          <Wallet className="w-4 h-4 text-muted-foreground" />
-        </button>
-      </div>
-    ),
+    meta: {
+      thClassName: "w-[12%]",
+      tdClassName: "whitespace-nowrap",
+    },
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center gap-0">
+          <div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  aria-label="Xem chi tiết"
+                  onClick={() => {
+                    onView?.({ id: row.original.id });
+                  }}
+                >
+                  <Eye className="text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Xem chi tiết</TooltipContent>
+            </Tooltip>
+          </div>
+          <div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  aria-label="Xem chi tiết"
+                  onClick={() => {
+                    onView?.({ id: row.original.id });
+                  }}
+                >
+                  <Wallet className="text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Lịch sử giao dịch</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+      );
+    },
   },
 ];

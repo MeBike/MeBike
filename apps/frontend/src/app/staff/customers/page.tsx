@@ -145,6 +145,7 @@ export default function CustomersPage() {
           </p>
           <DataTable
             title="Danh sách người dùng"
+            tableClassName="table-fixed"
             columns={userColumns({
               onView: (user) => {
                 setSelectedUserId(user.id);
