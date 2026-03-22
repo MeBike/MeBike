@@ -16,6 +16,11 @@ const defaults = {
 export function createRentalFactory(ctx: FactoryContext) {
   return async (overrides: RentalOverrides): Promise<CreatedRental> => {
     const id = overrides.id ?? uuidv7();
+    const activePricingPolicy = await ctx.prisma.pricingPolicy.findFirst({
+      where: { status: "ACTIVE" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: { id: true },
+    });
 
     if (!overrides.userId) {
       throw new Error("userId is required for createRental");
@@ -30,6 +35,7 @@ export function createRentalFactory(ctx: FactoryContext) {
         userId: overrides.userId,
         reservationId: overrides.reservationId ?? null,
         bikeId: overrides.bikeId ?? defaults.bikeId,
+        pricingPolicyId: overrides.pricingPolicyId ?? activePricingPolicy?.id ?? null,
         startStationId: overrides.startStationId,
         endStationId: overrides.endStationId ?? defaults.endStationId,
         startTime: overrides.startTime ?? defaults.startTime,
