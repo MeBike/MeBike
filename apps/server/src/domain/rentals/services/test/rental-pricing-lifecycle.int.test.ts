@@ -114,6 +114,18 @@ describe("rental pricing lifecycle integration", () => {
       where: { reservationId: reservation.id },
     });
     expect(rental?.pricingPolicyId).toBe(policyA.id);
+    expect(rental?.depositHoldId).not.toBeNull();
+
+    const activeHold = await fixture.prisma.walletHold.findUnique({
+      where: { id: rental!.depositHoldId! },
+    });
+    expect(activeHold?.reason).toBe("RENTAL_DEPOSIT");
+    expect(activeHold?.status).toBe("ACTIVE");
+
+    const walletBeforeReturn = await fixture.prisma.wallet.findUnique({
+      where: { userId: user.id },
+    });
+    expect(walletBeforeReturn?.reservedBalance.toString()).toBe("2000");
 
     expectRight(await runEffectEitherWithLayer(
       createReturnSlot({
@@ -146,5 +158,16 @@ describe("rental pricing lifecycle integration", () => {
     expect(billingRecord?.pricingPolicyId).toBe(policyA.id);
     expect(billingRecord?.baseAmount.toString()).toBe("8000");
     expect(billingRecord?.totalAmount.toString()).toBe("5000");
+
+    const releasedHold = await fixture.prisma.walletHold.findUnique({
+      where: { id: rental!.depositHoldId! },
+    });
+    expect(releasedHold?.status).toBe("RELEASED");
+    expect(releasedHold?.releasedAt?.toISOString()).toBe(returnConfirmedAt.toISOString());
+
+    const walletAfterReturn = await fixture.prisma.wallet.findUnique({
+      where: { userId: user.id },
+    });
+    expect(walletAfterReturn?.reservedBalance.toString()).toBe("0");
   });
 });

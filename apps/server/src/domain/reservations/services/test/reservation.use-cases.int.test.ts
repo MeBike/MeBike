@@ -112,6 +112,11 @@ describe("reservation use-cases integration", () => {
 
     expectRight(confirmResult);
 
+    const activePricingPolicy = await fixture.prisma.pricingPolicy.findFirst({
+      where: { status: "ACTIVE" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    });
+
     const updatedReservation = await fixture.prisma.reservation.findUnique({ where: { id: reservation.id } });
     expect(updatedReservation?.status).toBe("FULFILLED");
 
@@ -120,6 +125,16 @@ describe("reservation use-cases integration", () => {
     expect(rental?.reservationId).toBe(reservation.id);
     expect(rental?.bikeId).toBe(bike.id);
     expect(rental?.pricingPolicyId).toBe(reservation.pricingPolicyId);
+    expect(rental?.depositHoldId).not.toBeNull();
+
+    const depositHold = await fixture.prisma.walletHold.findUnique({
+      where: { id: rental!.depositHoldId! },
+    });
+    expect(depositHold?.reason).toBe("RENTAL_DEPOSIT");
+    expect(depositHold?.rentalId).toBe(rental?.id);
+
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    expect(wallet?.reservedBalance.toString()).toBe(activePricingPolicy?.depositRequired.toString());
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("BOOKED");

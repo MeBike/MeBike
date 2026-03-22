@@ -82,6 +82,19 @@ describe("startRentalUseCase Integration", () => {
     expect(rental.userId).toBe(user.id);
     expect(rental.bikeId).toBe(bike.id);
     expect(rental.pricingPolicyId).toBe(activePricingPolicy?.id ?? null);
+    expect(rental.depositHoldId).not.toBeNull();
+
+    const hold = await fixture.prisma.walletHold.findUnique({
+      where: { id: rental.depositHoldId! },
+    });
+    expect(hold?.reason).toBe("RENTAL_DEPOSIT");
+    expect(hold?.rentalId).toBe(rental.id);
+    expect(hold?.status).toBe("ACTIVE");
+
+    const wallet = await fixture.prisma.wallet.findUnique({
+      where: { userId: user.id },
+    });
+    expect(wallet?.reservedBalance.toString()).toBe(activePricingPolicy?.depositRequired.toString());
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("BOOKED");
