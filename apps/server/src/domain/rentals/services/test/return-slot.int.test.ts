@@ -171,7 +171,11 @@ describe("return slot integration", () => {
   it("fails when logical return capacity is exhausted by another active return slot", async () => {
     const first = await givenActiveRental(fixture);
     const second = await givenActiveRental(fixture);
-    const station = await fixture.factories.station({ capacity: 2 });
+    const station = await fixture.factories.station({
+      capacity: 10,
+      pickupSlotLimit: 10,
+      returnSlotLimit: 1,
+    });
     await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     expectRight(await runEffectEitherWithLayer(
