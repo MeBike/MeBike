@@ -35,13 +35,15 @@ export function toReservationOrderBy(
 }
 
 /**
- * EN: "Pending or Active" reservations. This is NOT time-aware and can match future fixed-slot rows.
+ * EN: "Pending or compatibility ACTIVE" reservations. This is NOT time-aware and can match future fixed-slot rows.
+ * One-time reservation flow should prefer `pendingHoldWhere(now)` or explicit status checks.
  * Use `pendingHoldWhere(now)` when you need the current hold window.
  *
- * VI: Reservation ở trạng thái "PENDING hoặc ACTIVE". Không xét theo thời gian và có thể match cả
- * các reservation FIXED_SLOT trong tương lai. Nếu cần "hold hiện tại" hãy dùng `pendingHoldWhere(now)`.
+ * VI: Reservation ở trạng thái "PENDING hoặc ACTIVE (compatibility)". Không xét theo thời gian và có thể
+ * match cả các reservation FIXED_SLOT trong tương lai. Với flow giữ xe một lần hiện tại, hãy ưu tiên
+ * `pendingHoldWhere(now)` hoặc check trạng thái tường minh.
  */
-export function activeStatusWhere(): PrismaTypes.ReservationWhereInput {
+export function pendingOrLegacyActiveStatusWhere(): PrismaTypes.ReservationWhereInput {
   return {
     status: { in: [STATUS_PENDING, STATUS_ACTIVE] },
   };

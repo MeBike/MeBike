@@ -182,7 +182,7 @@ function makeReservationService(
           return yield* Effect.fail(new InvalidReservationTransition({
             reservationId: reservation.id,
             from: reservation.status,
-            to: "ACTIVE",
+            to: "FULFILLED",
           }));
         }
 
@@ -190,7 +190,7 @@ function makeReservationService(
           return yield* Effect.fail(new InvalidReservationTransition({
             reservationId: reservation.id,
             from: reservation.status,
-            to: "ACTIVE",
+            to: "FULFILLED",
           }));
         }
 

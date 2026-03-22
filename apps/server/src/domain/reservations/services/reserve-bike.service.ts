@@ -220,7 +220,7 @@ export function reserveBikeUseCase(
           });
         }
 
-        // Confirmation email (legacy: "success-reservation").
+        // Confirmation email uses the older "success-reservation" template name.
         // TODO(env): Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.
         // TODO(iot): send reservation "reserve" command once IoT integration is ready.
         {

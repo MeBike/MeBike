@@ -26,8 +26,8 @@ import {
   toReservationRow,
 } from "./reservation.mappers";
 import {
-  activeStatusWhere,
   pendingHoldWhere,
+  pendingOrLegacyActiveStatusWhere,
   toReservationOrderBy,
   toReservationWhereForAdmin,
   toReservationWhereForUser,
@@ -178,7 +178,7 @@ export function makeReservationRepository(
           client.reservation.findFirst({
             where: {
               userId,
-              ...activeStatusWhere(),
+              ...pendingOrLegacyActiveStatusWhere(),
             },
             orderBy: { updatedAt: "desc" },
             select: selectReservationRow,
@@ -200,7 +200,7 @@ export function makeReservationRepository(
           client.reservation.findFirst({
             where: {
               bikeId,
-              ...activeStatusWhere(),
+              ...pendingOrLegacyActiveStatusWhere(),
             },
             orderBy: { updatedAt: "desc" },
             select: selectReservationRow,
