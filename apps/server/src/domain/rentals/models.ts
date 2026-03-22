@@ -14,6 +14,7 @@ export type RentalRow = {
   userId: string;
   reservationId: string | null;
   bikeId: string | null;
+  depositHoldId: string | null;
   pricingPolicyId: string | null;
   startStationId: string;
   endStationId: string | null;

@@ -31,6 +31,7 @@ import {
 import { computeSubscriptionCoverage } from "../pricing";
 import { makeRentalRepository } from "../repository/rental.repository";
 import { makeReturnSlotRepository } from "../repository/return-slot.repository";
+import { releaseRentalDepositHoldInTx } from "./rental-deposit-hold.service";
 
 type FinalizeRentalReturnInput = {
   tx: PrismaTypes.TransactionClient;
@@ -132,6 +133,23 @@ export function finalizeRentalReturnInTx(
     const totalPriceMinor = basePriceMinor > prepaidMinor
       ? basePriceMinor - prepaidMinor
       : 0n;
+
+    if (rental.depositHoldId) {
+      const depositReleased = yield* releaseRentalDepositHoldInTx({
+        tx,
+        holdId: rental.depositHoldId,
+        releasedAt: endTime,
+      }).pipe(
+        Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+        Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
+      );
+
+      if (!depositReleased) {
+        return yield* Effect.die(new Error(
+          `Expected rental ${rental.id} deposit hold ${rental.depositHoldId} to release during return finalization`,
+        ));
+      }
+    }
 
     if (totalPriceMinor > 0n) {
       yield* debitWallet(makeWalletRepository(tx), {

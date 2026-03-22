@@ -12,11 +12,13 @@ const selectWalletHoldRow = {
   id: true,
   walletId: true,
   withdrawalId: true,
+  rentalId: true,
   amount: true,
   status: true,
   reason: true,
   releasedAt: true,
   settledAt: true,
+  forfeitedAt: true,
   createdAt: true,
   updatedAt: true,
 } satisfies PrismaTypes.WalletHoldSelect;
@@ -28,11 +30,13 @@ function toWalletHoldRow(
     id: row.id,
     walletId: row.walletId,
     withdrawalId: row.withdrawalId,
+    rentalId: row.rentalId,
     amount: row.amount,
     status: row.status,
     reason: row.reason,
     releasedAt: row.releasedAt,
     settledAt: row.settledAt,
+    forfeitedAt: row.forfeitedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -42,15 +46,29 @@ export type WalletHoldRepo = {
   create: (
     input: CreateWalletHoldInput,
   ) => Effect.Effect<WalletHoldRow, WalletHoldRepositoryError>;
+  findById: (
+    holdId: string,
+  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
   findByWithdrawalId: (
     withdrawalId: string,
+  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  findActiveByRentalId: (
+    rentalId: string,
   ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
   sumActiveAmountByWallet: (
     walletId: string,
   ) => Effect.Effect<bigint, WalletHoldRepositoryError>;
+  releaseById: (
+    holdId: string,
+    releasedAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
   releaseByWithdrawalId: (
     withdrawalId: string,
     releasedAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  settleById: (
+    holdId: string,
+    settledAt: Date,
   ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
   settleByWithdrawalId: (
     withdrawalId: string,
@@ -73,7 +91,8 @@ export function makeWalletHoldRepository(
           const row = await client.walletHold.create({
             data: {
               walletId: input.walletId,
-              withdrawalId: input.withdrawalId,
+              withdrawalId: input.withdrawalId ?? null,
+              rentalId: input.rentalId ?? null,
               amount: input.amount,
               status: "ACTIVE",
               reason: input.reason ?? "WITHDRAWAL",
@@ -85,6 +104,22 @@ export function makeWalletHoldRepository(
         catch: err =>
           new WalletHoldRepositoryError({
             operation: "create",
+            cause: err,
+          }),
+      }),
+
+    findById: holdId =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.walletHold.findUnique({
+            where: { id: holdId },
+            select: selectWalletHoldRow,
+          });
+          return Option.fromNullable(row).pipe(Option.map(toWalletHoldRow));
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "findById",
             cause: err,
           }),
       }),
@@ -101,6 +136,27 @@ export function makeWalletHoldRepository(
         catch: err =>
           new WalletHoldRepositoryError({
             operation: "findByWithdrawalId",
+            cause: err,
+          }),
+      }),
+
+    findActiveByRentalId: rentalId =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.walletHold.findFirst({
+            where: {
+              rentalId,
+              status: "ACTIVE",
+              reason: "RENTAL_DEPOSIT",
+            },
+            orderBy: { createdAt: "desc" },
+            select: selectWalletHoldRow,
+          });
+          return Option.fromNullable(row).pipe(Option.map(toWalletHoldRow));
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "findActiveByRentalId",
             cause: err,
           }),
       }),
@@ -140,6 +196,25 @@ export function makeWalletHoldRepository(
           }),
       }),
 
+    releaseById: (holdId, releasedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.walletHold.updateMany({
+            where: { id: holdId, status: "ACTIVE" },
+            data: {
+              status: "RELEASED",
+              releasedAt,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "releaseById",
+            cause: err,
+          }),
+      }),
+
     settleByWithdrawalId: (withdrawalId, settledAt) =>
       Effect.tryPromise({
         try: async () => {
@@ -155,6 +230,25 @@ export function makeWalletHoldRepository(
         catch: err =>
           new WalletHoldRepositoryError({
             operation: "settleByWithdrawalId",
+            cause: err,
+          }),
+      }),
+
+    settleById: (holdId, settledAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.walletHold.updateMany({
+            where: { id: holdId, status: "ACTIVE" },
+            data: {
+              status: "SETTLED",
+              settledAt,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "settleById",
             cause: err,
           }),
       }),

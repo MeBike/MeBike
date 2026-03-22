@@ -68,6 +68,7 @@ export function makeRentalRepository(
             userId: data.userId,
             reservationId: data.reservationId ?? null,
             bikeId: data.bikeId,
+            depositHoldId: data.depositHoldId ?? null,
             pricingPolicyId: data.pricingPolicyId ?? null,
             startStationId: data.startStationId,
             startTime: data.startTime,
@@ -373,6 +374,40 @@ export function makeRentalRepository(
 
     createRental(data) {
       return createRentalWithClient(client, data);
+    },
+
+    updateRentalDepositHold(data) {
+      return Effect.tryPromise({
+        try: async () => {
+          const updated = await client.rental.updateMany({
+            where: {
+              id: data.rentalId,
+              depositHoldId: null,
+            },
+            data: {
+              depositHoldId: data.depositHoldId,
+            },
+          });
+
+          if (updated.count === 0) {
+            return null;
+          }
+
+          return await client.rental.findUnique({
+            where: { id: data.rentalId },
+            select,
+          });
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "updateRentalDepositHold",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
+        ),
+      );
     },
 
     updateRentalOnEnd(data) {
