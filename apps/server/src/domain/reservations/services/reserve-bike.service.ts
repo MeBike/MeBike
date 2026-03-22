@@ -13,8 +13,8 @@ import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
+import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
-import { toMinorUnit } from "@/domain/shared/money";
 import { makeStationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserRepository } from "@/domain/users";
@@ -60,7 +60,6 @@ export type ReserveBikeFailure
     | InsufficientWalletBalance;
 
 const HOLD_MINUTES = env.RESERVATION_HOLD_MINUTES;
-const PREPAID_AMOUNT = env.RESERVATION_PREPAID_AMOUNT;
 const RESERVATION_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
 function computeEndTime(startTime: Date, holdMinutes = HOLD_MINUTES): Date {
@@ -71,7 +70,7 @@ function formatReservationDateTime(value: Date): string {
   return value.toLocaleString("vi-VN", { timeZone: RESERVATION_TIME_ZONE });
 }
 
-export function reserveBikeUseCase(
+export function reserveBike(
   input: ReserveBikeInput,
 ): Effect.Effect<
   ReservationRow,
@@ -147,8 +146,14 @@ export function reserveBikeUseCase(
         }
 
         const subscriptionId: string | null = input.subscriptionId ?? null;
-        let prepaid = toPrismaDecimal(PREPAID_AMOUNT);
-        let prepaidMinor = toMinorUnit(prepaid);
+        const pricingPolicy = yield* makePricingPolicyRepository(tx).getActive().pipe(
+          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+          Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
+          Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
+        );
+
+        let prepaidMinor = getReservationFeeMinor(pricingPolicy);
+        let prepaid = toPrismaDecimal(prepaidMinor.toString());
 
         if (input.reservationOption === "SUBSCRIPTION") {
           if (!subscriptionId) {
@@ -184,6 +189,7 @@ export function reserveBikeUseCase(
           startTime: input.startTime,
           endTime,
           prepaid,
+          pricingPolicyId: pricingPolicy.id,
         });
 
         const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now).pipe(

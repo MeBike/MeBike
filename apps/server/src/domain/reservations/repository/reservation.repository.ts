@@ -107,6 +107,7 @@ export function makeReservationRepository(
             userId: input.userId,
             bikeId: input.bikeId ?? null,
             stationId: input.stationId,
+            pricingPolicyId: input.pricingPolicyId ?? null,
             reservationOption: input.reservationOption,
             fixedSlotTemplateId: input.fixedSlotTemplateId ?? null,
             subscriptionId: input.subscriptionId ?? null,

@@ -560,6 +560,7 @@ export type Rental = {
     user_id: string;
     reservation_id: string | null;
     bike_id: string | null;
+    pricing_policy_id: string | null;
     start_station: string;
     end_station: string | null;
     created_at: Generated<Timestamp>;
@@ -599,6 +600,7 @@ export type Reservation = {
     user_id: string;
     bike_id: string | null;
     station_id: string;
+    pricing_policy_id: string | null;
     reservation_option: ReservationOption;
     fixed_slot_template_id: string | null;
     subscription_id: string | null;

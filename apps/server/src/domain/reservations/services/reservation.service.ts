@@ -117,6 +117,7 @@ export type ReservationService = {
       readonly userId: string;
       readonly bikeId: string;
       readonly stationId: string;
+      readonly pricingPolicyId: string | null;
       readonly reservationOption: ReservationRow["reservationOption"];
       readonly subscriptionId: string | null;
       readonly startTime: Date;
@@ -244,6 +245,7 @@ function makeReservationService(
         userId: input.userId,
         bikeId: input.bikeId,
         stationId: input.stationId,
+        pricingPolicyId: input.pricingPolicyId,
         reservationOption: input.reservationOption,
         subscriptionId: input.subscriptionId,
         startTime: input.startTime,

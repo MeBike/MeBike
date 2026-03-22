@@ -22,7 +22,7 @@ export type CancelReservationInput = {
   readonly now?: Date;
 };
 
-export function cancelReservationUseCase(
+export function cancelReservation(
   input: CancelReservationInput,
 ): Effect.Effect<
   ReservationRow,

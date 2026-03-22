@@ -23,7 +23,7 @@ export class StaffBikeRequestNotFound extends Data.TaggedError(
   }
 }
 
-export function staffGetChangeBikeDetailUseCase(
+export function staffGetChangeBikeDetail(
   bikeSwapRequestId: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,
@@ -45,7 +45,7 @@ export function staffGetChangeBikeDetailUseCase(
   });
 }
 
-export function staffApproveBikeSwapRequestUseCase(
+export function staffApproveBikeSwapRequest(
   bikeSwapRequestId: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,
@@ -75,7 +75,7 @@ export function staffApproveBikeSwapRequestUseCase(
   });
 }
 
-export function staffRejectBikeSwapRequestUseCase(
+export function staffRejectBikeSwapRequest(
   bikeSwapRequestId: string,
   reason: string,
 ): Effect.Effect<

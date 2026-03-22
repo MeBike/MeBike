@@ -97,7 +97,7 @@ async function enqueueEmailIdempotent(
   }
 }
 
-export function assignFixedSlotReservationsUseCase(args: {
+export function assignFixedSlotReservations(args: {
   readonly slotDate?: Date;
   readonly assignmentTime?: Date;
   readonly now?: Date;

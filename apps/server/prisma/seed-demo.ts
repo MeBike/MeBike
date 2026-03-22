@@ -21,6 +21,7 @@ import {
 } from "../generated/prisma/client";
 import logger from "../src/lib/logger";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
+import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
 
@@ -416,6 +417,7 @@ async function main() {
     const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
     await upsertVietnamBoundary(prisma);
+    await seedDefaultPricingPolicy(prisma);
     await seedStations(prisma);
     await seedRatingReasons(prisma);
 

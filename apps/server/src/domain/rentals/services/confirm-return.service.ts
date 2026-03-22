@@ -1,7 +1,5 @@
 import { Effect, Option } from "effect";
 
-import type { RentalStatus } from "generated/prisma/enums";
-
 import { BikeRepository } from "@/domain/bikes";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -26,7 +24,7 @@ import {
 import { makeReturnSlotRepository, ReturnSlotRepository } from "../repository/return-slot.repository";
 import { finalizeRentalReturnInTx } from "./finalize-rental-return";
 
-export function confirmRentalReturnByOperatorUseCase(
+export function confirmRentalReturnByOperator(
   input: ConfirmRentalReturnInput,
 ): Effect.Effect<
   RentalRow,

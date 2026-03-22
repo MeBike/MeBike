@@ -5,6 +5,7 @@ export const selectReservationRow = {
   userId: true,
   bikeId: true,
   stationId: true,
+  pricingPolicyId: true,
   reservationOption: true,
   fixedSlotTemplateId: true,
   subscriptionId: true,
@@ -52,6 +53,7 @@ export function toReservationRow(row: {
   userId: string;
   bikeId: string | null;
   stationId: string;
+  pricingPolicyId: string | null;
   reservationOption: string;
   fixedSlotTemplateId: string | null;
   subscriptionId: string | null;
@@ -67,6 +69,7 @@ export function toReservationRow(row: {
     userId: row.userId,
     bikeId: row.bikeId,
     stationId: row.stationId,
+    pricingPolicyId: row.pricingPolicyId,
     reservationOption: row.reservationOption as ReservationRow["reservationOption"],
     fixedSlotTemplateId: row.fixedSlotTemplateId,
     subscriptionId: row.subscriptionId,
@@ -84,6 +87,7 @@ export function toReservationExpandedDetailRow(row: {
   userId: string;
   bikeId: string | null;
   stationId: string;
+  pricingPolicyId: string | null;
   reservationOption: string;
   fixedSlotTemplateId: string | null;
   subscriptionId: string | null;

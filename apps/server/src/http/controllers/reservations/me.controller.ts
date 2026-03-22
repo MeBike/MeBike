@@ -3,11 +3,11 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Match, Option } from "effect";
 
 import {
-  cancelReservationUseCase,
-  confirmReservationUseCase,
+  cancelReservation,
+  confirmReservation,
   ReservationRepository,
   ReservationServiceTag,
-  reserveBikeUseCase,
+  reserveBike,
 } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
 import {
@@ -28,14 +28,14 @@ import {
   reservationErrorMessages,
 } from "./shared";
 
-const reserveBike: RouteHandler<ReservationsRoutes["reserveBike"]> = async (c) => {
+const reserveBikeHandler: RouteHandler<ReservationsRoutes["reserveBike"]> = async (c) => {
   const userId = c.var.currentUser!.userId;
   const body = c.req.valid("json");
   const now = new Date();
   const startTime = body.startTime ? new Date(body.startTime) : now;
 
   const eff = withLoggedCause(
-    reserveBikeUseCase({
+    reserveBike({
       userId,
       bikeId: body.bikeId,
       stationId: body.stationId,
@@ -168,13 +168,13 @@ const reserveBike: RouteHandler<ReservationsRoutes["reserveBike"]> = async (c) =
   );
 };
 
-const confirmReservation: RouteHandler<ReservationsRoutes["confirmReservation"]> = async (c) => {
+const confirmReservationHandler: RouteHandler<ReservationsRoutes["confirmReservation"]> = async (c) => {
   const userId = c.var.currentUser!.userId;
   const { reservationId } = c.req.valid("param");
   const now = new Date();
 
   const eff = withLoggedCause(
-    confirmReservationUseCase({
+    confirmReservation({
       reservationId,
       userId,
       now,
@@ -249,6 +249,24 @@ const confirmReservation: RouteHandler<ReservationsRoutes["confirmReservation"]>
               status,
             },
           }, 400)),
+        Match.tag("WalletNotFound", ({ userId: missingUserId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.WALLET_NOT_FOUND,
+            details: {
+              code: ReservationErrorCodeSchema.enum.WALLET_NOT_FOUND,
+              userId: missingUserId,
+            },
+          }, 400)),
+        Match.tag("InsufficientWalletBalance", ({ userId: walletUserId, balance, attemptedDebit }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.INSUFFICIENT_WALLET_BALANCE,
+            details: {
+              code: ReservationErrorCodeSchema.enum.INSUFFICIENT_WALLET_BALANCE,
+              userId: walletUserId,
+              balance: Number(balance),
+              attemptedDebit: Number(attemptedDebit),
+            },
+          }, 400)),
         Match.orElse(() => {
           throw left;
         }),
@@ -259,13 +277,13 @@ const confirmReservation: RouteHandler<ReservationsRoutes["confirmReservation"]>
   );
 };
 
-const cancelReservation: RouteHandler<ReservationsRoutes["cancelReservation"]> = async (c) => {
+const cancelReservationHandler: RouteHandler<ReservationsRoutes["cancelReservation"]> = async (c) => {
   const userId = c.var.currentUser!.userId;
   const { reservationId } = c.req.valid("param");
   const now = new Date();
 
   const eff = withLoggedCause(
-    cancelReservationUseCase({
+    cancelReservation({
       reservationId,
       userId,
       now,
@@ -422,9 +440,9 @@ const getMyReservation: RouteHandler<ReservationsRoutes["getMyReservation"]> = a
 };
 
 export const ReservationMeController = {
-  reserveBike,
-  confirmReservation,
-  cancelReservation,
+  reserveBike: reserveBikeHandler,
+  confirmReservation: confirmReservationHandler,
+  cancelReservation: cancelReservationHandler,
   listMyReservations,
   getMyReservation,
 } as const;

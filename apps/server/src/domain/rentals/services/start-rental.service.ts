@@ -1,7 +1,7 @@
 import { Effect, Option } from "effect";
 
-import { env } from "@/config/env";
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
+import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeWalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
@@ -24,7 +24,7 @@ import { startRentalFailureFromBikeStatus } from "../guards/bike-status";
 import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
 import { rentalUniqueViolationToFailure } from "./unique-violation-mapper";
 
-export function startRentalUseCase(
+export function startRental(
   input: StartRentalInput,
 ): Effect.Effect<
   RentalRow,
@@ -44,6 +44,7 @@ export function startRentalUseCase(
         Effect.gen(function* () {
           const txBikeRepo = makeBikeRepository(tx);
           const txRentalRepo = makeRentalRepository(tx);
+          const txPricingPolicyRepo = makePricingPolicyRepository(tx);
 
           const existingByUser = yield* txRentalRepo.findActiveByUserId(userId).pipe(
             Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
@@ -89,14 +90,19 @@ export function startRentalUseCase(
             return yield* Effect.fail(new UserWalletNotFound({ userId }));
           }
           const wallet = walletOpt.value;
+          const pricingPolicy = yield* txPricingPolicyRepo.getActive().pipe(
+            Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+            Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
+            Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
+          );
 
-          const currentBalance = Number(wallet.balance.toString());
-          const requiredBalance = env.MIN_WALLET_BALANCE_TO_RENT;
-          if (Number.isNaN(currentBalance) || currentBalance < requiredBalance) {
+          const currentBalance = wallet.balance;
+          const requiredBalance = getDepositRequiredMinor(pricingPolicy);
+          if (currentBalance < requiredBalance) {
             return yield* Effect.fail(new InsufficientBalanceToRent({
               userId,
-              requiredBalance,
-              currentBalance: Number.isNaN(currentBalance) ? 0 : currentBalance,
+              requiredBalance: Number(requiredBalance),
+              currentBalance: Number(currentBalance),
             }));
           }
 
@@ -133,6 +139,7 @@ export function startRentalUseCase(
           const created = yield* txRentalRepo.createRental({
             userId,
             bikeId,
+            pricingPolicyId: pricingPolicy.id,
             startStationId,
             startTime,
             subscriptionId: subscriptionId ?? null,
