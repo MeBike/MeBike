@@ -9,5 +9,4 @@ export * from "./SOS/index";
 export * from "./Station/index";
 export * from "./Supplier/index";
 export * from "./User/index";
-export * from "./Wallet/index";
 export * from "./Withdrawal/index";

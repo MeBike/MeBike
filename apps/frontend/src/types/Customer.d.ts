@@ -1,7 +1,20 @@
 export type UserRole = "ADMIN" | "STAFF" | "USER" | "SOS";
 export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "";
 export type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
-
+export interface OrgAssigment {
+  station : {
+    id : string;
+    name : string;
+  }
+  agency : {
+    id : string;
+    name : string;
+  }
+  technicianTeam : {
+    id : string;
+    name : string;
+  }
+}
 export interface DetailUser {
   id: string;
   fullName: string;
@@ -14,6 +27,7 @@ export interface DetailUser {
   avatar: string | null;
   role: UserRole;
   nfcCardUid: string | null;
+  orgAssignment : OrgAssigment;
   createdAt: string;
   updatedAt: string;
 }
