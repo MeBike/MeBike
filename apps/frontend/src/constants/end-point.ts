@@ -61,6 +61,10 @@ export const ENDPOINT = {
         BASE : "/admin/rentals",
         ID : (rentalId : string) => `/admin/rentals/${rentalId}`,
         GET_SUMMARY : "/rentals/stats/summary",
+    },
+    WALLET : {
+        BASE : (userId : string) => `/admin/users/${userId}/wallet`,
+        TRANSACTION : (userId : string) => `/admin/users/${userId}/wallet/transactions`,
     }
 
 } as const;

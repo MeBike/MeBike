@@ -8,7 +8,14 @@ export interface WalletTransaction {
   createdAt : string;
   fee : string;
 }
-
+export interface WallerInfor {
+  id : string;
+  name : string;
+}
+export interface Transaction {
+  user : WallerInfor;
+  items : WalletTransaction[];
+}
 export interface UserWallet {
   id: string;
   userId: string;
