@@ -123,8 +123,10 @@ export const ListMyWalletTransactionsResponseSchema = z.object({
 }).openapi("ListMyWalletTransactionsResponse");
 
 export const AdminListUserWalletTransactionsResponseSchema = z.object({
-  user: WalletTransactionUserSchema,
-  data: WalletTransactionDetailSchema.array(),
+  data: z.object({
+    user: WalletTransactionUserSchema,
+    items: WalletTransactionDetailSchema.array(),
+  }),
   pagination: PaginationSchema,
 }).openapi("AdminListUserWalletTransactionsResponse");
 

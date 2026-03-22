@@ -66,8 +66,10 @@ const adminListUserWalletTransactions: RouteHandler<
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
       c.json<WalletsContracts.AdminListUserWalletTransactionsResponse, 200>({
-        user: toWalletTransactionUser(right.user),
-        data: right.transactions.items.map(toWalletTransactionDetail),
+        data: {
+          user: toWalletTransactionUser(right.user),
+          items: right.transactions.items.map(toWalletTransactionDetail),
+        },
         pagination: toContractPage(right.transactions),
       }, 200)),
     Match.tag("Left", ({ left }) =>
