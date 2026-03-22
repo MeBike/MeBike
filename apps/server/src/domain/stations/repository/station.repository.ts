@@ -83,7 +83,7 @@ export function toStationOrderBy(
   const sortDir = req.sortDir ?? "asc";
   switch (sortBy) {
     case "capacity":
-      return { capacity: sortDir };
+      return { totalCapacity: sortDir };
     case "updatedAt":
       return { updatedAt: sortDir };
     case "name":
@@ -135,13 +135,17 @@ export function makeStationRepository(
         }
 
         const stationId = uuidv7();
+        const pickupSlotLimit = input.pickupSlotLimit ?? input.capacity;
+        const returnSlotLimit = input.returnSlotLimit ?? input.capacity;
         const rows = yield* Effect.tryPromise({
           try: () =>
             client.$queryRaw<{
               id: string;
               name: string;
               address: string;
-              capacity: number;
+              totalCapacity: number;
+              pickupSlotLimit: number;
+              returnSlotLimit: number;
               latitude: number;
               longitude: number;
               createdAt: Date;
@@ -151,7 +155,9 @@ export function makeStationRepository(
                 "id",
                 "name",
                 "address",
-                "capacity",
+                "total_capacity",
+                "pickup_slot_limit",
+                "return_slot_limit",
                 "latitude",
                 "longitude",
                 "position",
@@ -161,6 +167,8 @@ export function makeStationRepository(
                 ${input.name},
                 ${input.address},
                 ${input.capacity},
+                ${pickupSlotLimit},
+                ${returnSlotLimit},
                 ${input.latitude},
                 ${input.longitude},
                 ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography,
@@ -170,7 +178,9 @@ export function makeStationRepository(
                 "id",
                 "name",
                 "address",
-                "capacity",
+                "total_capacity" AS "totalCapacity",
+                "pickup_slot_limit" AS "pickupSlotLimit",
+                "return_slot_limit" AS "returnSlotLimit",
                 "latitude",
                 "longitude",
                 "created_at" AS "createdAt",
@@ -207,7 +217,9 @@ export function makeStationRepository(
               id: string;
               name: string;
               address: string;
-              capacity: number;
+              totalCapacity: number;
+              pickupSlotLimit: number;
+              returnSlotLimit: number;
               latitude: number;
               longitude: number;
               createdAt: Date;
@@ -223,7 +235,9 @@ export function makeStationRepository(
               SET
                 "name" = COALESCE(${input.name}, "Station"."name"),
                 "address" = COALESCE(${input.address}, "Station"."address"),
-                "capacity" = COALESCE(${input.capacity}, "Station"."capacity"),
+                "total_capacity" = COALESCE(${input.capacity}, "Station"."total_capacity"),
+                "pickup_slot_limit" = COALESCE(${input.pickupSlotLimit}, "Station"."pickup_slot_limit"),
+                "return_slot_limit" = COALESCE(${input.returnSlotLimit}, "Station"."return_slot_limit"),
                 "latitude" = COALESCE(${input.latitude}, "Station"."latitude"),
                 "longitude" = COALESCE(${input.longitude}, "Station"."longitude"),
                 "position" = ST_SetSRID(
@@ -250,7 +264,9 @@ export function makeStationRepository(
                 "id",
                 "name",
                 "address",
-                "capacity",
+                "total_capacity" AS "totalCapacity",
+                "pickup_slot_limit" AS "pickupSlotLimit",
+                "return_slot_limit" AS "returnSlotLimit",
                 "latitude",
                 "longitude",
                 "created_at" AS "createdAt",
@@ -359,7 +375,7 @@ export function makeStationRepository(
         ...(filter.address && {
           address: { contains: filter.address, mode: "insensitive" },
         }),
-        ...(filter.capacity != null && { capacity: filter.capacity }),
+        ...(filter.capacity != null && { totalCapacity: filter.capacity }),
       };
 
       const orderBy = toStationOrderBy(pageReq);
@@ -449,7 +465,9 @@ export function makeStationRepository(
                     id,
                     name,
                     address,
-                    capacity,
+                    total_capacity AS "totalCapacity",
+                    pickup_slot_limit AS "pickupSlotLimit",
+                    return_slot_limit AS "returnSlotLimit",
                     latitude,
                     longitude,
                     "created_at" AS "createdAt",
@@ -483,7 +501,9 @@ export function makeStationRepository(
                     id,
                     name,
                     address,
-                    capacity,
+                    total_capacity AS "totalCapacity",
+                    pickup_slot_limit AS "pickupSlotLimit",
+                    return_slot_limit AS "returnSlotLimit",
                     latitude,
                     longitude,
                     "created_at" AS "createdAt",

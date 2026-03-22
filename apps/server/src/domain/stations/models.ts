@@ -7,6 +7,9 @@ export type StationRow = {
   name: string;
   address: string;
   capacity: number;
+  totalCapacity: number;
+  pickupSlotLimit: number;
+  returnSlotLimit: number;
   latitude: number;
   longitude: number;
   createdAt: string;
@@ -25,6 +28,8 @@ export type CreateStationInput = {
   name: string;
   address: string;
   capacity: number;
+  pickupSlotLimit?: number;
+  returnSlotLimit?: number;
   latitude: number;
   longitude: number;
 };
@@ -33,6 +38,8 @@ export type UpdateStationInput = {
   name?: string;
   address?: string;
   capacity?: number;
+  pickupSlotLimit?: number;
+  returnSlotLimit?: number;
   latitude?: number;
   longitude?: number;
 };

@@ -35,8 +35,10 @@ import {
   BikeNotFound,
   BikeNotFoundInStation,
   ReservationOptionNotSupported,
+  StationPickupSlotLimitExceeded,
   SubscriptionRequired,
 } from "../domain-errors";
+import { makeReservationRepository } from "../repository/reservation.repository";
 import { ReservationHoldServiceTag } from "../services/reservation-hold.service";
 import { ReservationServiceTag } from "../services/reservation.service";
 
@@ -145,6 +147,28 @@ export function reserveBike(
           }));
         }
 
+        const txStationRepo = makeStationRepository(tx);
+        const txReservationRepo = makeReservationRepository(tx);
+        const stationOpt = yield* txStationRepo.getById(input.stationId).pipe(
+          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(stationOpt)) {
+          return yield* Effect.die(new Error(
+            `Invariant violated: bike ${input.bikeId} references missing station ${input.stationId}`,
+          ));
+        }
+
+        const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId).pipe(
+          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        );
+        if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
+          return yield* Effect.fail(new StationPickupSlotLimitExceeded({
+            stationId: input.stationId,
+            pickupSlotLimit: stationOpt.value.pickupSlotLimit,
+            pendingReservations,
+          }));
+        }
+
         const subscriptionId: string | null = input.subscriptionId ?? null;
         const pricingPolicy = yield* makePricingPolicyRepository(tx).getActive().pipe(
           Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
@@ -231,7 +255,6 @@ export function reserveBike(
         // TODO(iot): send reservation "reserve" command once IoT integration is ready.
         {
           const txUserRepo = makeUserRepository(tx);
-          const txStationRepo = makeStationRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
             txUserRepo.findById(reservation.userId).pipe(
               Effect.catchTag("UserRepositoryError", err => Effect.die(err)),

@@ -38,8 +38,15 @@ type RentalScopedInput = {
   now?: Date;
 };
 
-function availableReturnSlots(capacity: number, totalBikes: number, activeReturnSlots: number) {
-  return capacity - totalBikes - activeReturnSlots;
+function availableReturnSlots(
+  totalCapacity: number,
+  totalBikes: number,
+  activeReturnSlots: number,
+  returnSlotLimit: number,
+) {
+  const physicalRemaining = totalCapacity - totalBikes - activeReturnSlots;
+  const operationalRemaining = returnSlotLimit - activeReturnSlots;
+  return Math.min(physicalRemaining, operationalRemaining);
 }
 
 export function createReturnSlot(
@@ -97,9 +104,10 @@ export function createReturnSlot(
 
         const stationSnapshot = stationSnapshotOpt.value;
         if (availableReturnSlots(
-          stationSnapshot.capacity,
+          stationSnapshot.totalCapacity,
           stationSnapshot.totalBikes,
           stationSnapshot.activeReturnSlots,
+          stationSnapshot.returnSlotLimit,
         ) <= 0) {
           return yield* Effect.fail(new ReturnSlotCapacityExceeded({
             stationId: input.stationId,

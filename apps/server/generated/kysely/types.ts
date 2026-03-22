@@ -638,7 +638,9 @@ export type Station = {
     id: string;
     name: string;
     address: string;
-    capacity: number;
+    total_capacity: number;
+    pickup_slot_limit: Generated<number>;
+    return_slot_limit: Generated<number>;
     latitude: number;
     longitude: number;
     created_at: Generated<Timestamp>;

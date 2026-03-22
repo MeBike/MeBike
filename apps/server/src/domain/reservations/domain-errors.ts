@@ -66,6 +66,12 @@ export class BikeNotAvailable extends Data.TaggedError("BikeNotAvailable")<{
   readonly status: string;
 }> {}
 
+export class StationPickupSlotLimitExceeded extends Data.TaggedError("StationPickupSlotLimitExceeded")<{
+  readonly stationId: string;
+  readonly pickupSlotLimit: number;
+  readonly pendingReservations: number;
+}> {}
+
 /**
  * EN: Reservation does not belong to the current user.
  * VI: Reservation không thuộc về user hiện tại.
@@ -124,6 +130,7 @@ export type ReservationServiceFailure
     | BikeNotFound
     | BikeNotFoundInStation
     | BikeNotAvailable
+    | StationPickupSlotLimitExceeded
     | ReservationOptionNotSupported
     | ReservationNotFound
     | ReservationNotOwned

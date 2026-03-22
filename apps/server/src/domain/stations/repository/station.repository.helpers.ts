@@ -13,7 +13,9 @@ export const stationSelect = {
   id: true,
   name: true,
   address: true,
-  capacity: true,
+  totalCapacity: true,
+  pickupSlotLimit: true,
+  returnSlotLimit: true,
   latitude: true,
   longitude: true,
   createdAt: true,
@@ -69,11 +71,19 @@ export function applyCounts(
       : new Date(station.updatedAt).toISOString();
 
   return {
-    ...station,
+    id: station.id,
+    name: station.name,
+    address: station.address,
+    capacity: station.totalCapacity,
+    totalCapacity: station.totalCapacity,
+    pickupSlotLimit: station.pickupSlotLimit,
+    returnSlotLimit: station.returnSlotLimit,
+    latitude: station.latitude,
+    longitude: station.longitude,
     ...resolved,
     createdAt,
     updatedAt,
-    emptySlots: Math.max(0, station.capacity - resolved.totalBikes),
+    emptySlots: Math.max(0, station.totalCapacity - resolved.totalBikes),
   };
 }
 

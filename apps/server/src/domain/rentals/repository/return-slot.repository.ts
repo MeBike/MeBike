@@ -222,7 +222,8 @@ export function makeReturnSlotRepository(
               where: { id: stationId },
               select: {
                 id: true,
-                capacity: true,
+                totalCapacity: true,
+                returnSlotLimit: true,
               },
             }),
           catch: cause =>
@@ -260,7 +261,9 @@ export function makeReturnSlotRepository(
 
         return Option.some({
           stationId: station.id,
-          capacity: station.capacity,
+          capacity: station.totalCapacity,
+          totalCapacity: station.totalCapacity,
+          returnSlotLimit: station.returnSlotLimit,
           totalBikes,
           activeReturnSlots,
         });

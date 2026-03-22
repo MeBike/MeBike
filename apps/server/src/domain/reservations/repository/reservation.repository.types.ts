@@ -81,6 +81,10 @@ export type ReservationRepo = {
     now: Date,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
+  countPendingByStationId: (
+    stationId: string,
+  ) => Effect.Effect<number, ReservationRepositoryError>;
+
   /**
    * EN: Find ACTIVE reservation by user id.
    * VI: Tìm reservation ACTIVE theo user id.
