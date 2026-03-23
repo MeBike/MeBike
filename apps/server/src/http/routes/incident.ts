@@ -1,4 +1,5 @@
 import { serverRoutes } from "@mebike/shared";
+
 import { IncidentPublicController } from "../controllers/incidents";
 
 export function registerIncidentRoutes(

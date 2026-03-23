@@ -12,7 +12,6 @@ import {
   IncidentErrorCodeSchema,
   IncidentErrorResponseSchema,
 } from "../../incident/errors";
-import { RentalErrorResponseSchema } from "../../rentals/errors";
 
 export const createIncident = createRoute({
   method: "post",
@@ -45,7 +44,7 @@ export const createIncident = createRoute({
       description: "Rental not found",
       content: {
         "application/json": {
-          schema: RentalErrorResponseSchema,
+          schema: IncidentErrorResponseSchema,
           examples: {
             RentalNotFound: {
               value: {
@@ -71,6 +70,16 @@ export const createIncident = createRoute({
                 details: {
                   code: IncidentErrorCodeSchema.enum.STATION_NOT_FOUND,
                   stationId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+            NoNearestStationFound: {
+              value: {
+                error: "No nearest station found",
+                details: {
+                  code: IncidentErrorCodeSchema.enum.NO_NEAREST_STATION_FOUND,
+                  latitude: 10.8231,
+                  longitude: 106.6297,
                 },
               },
             },

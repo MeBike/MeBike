@@ -1,5 +1,6 @@
-import { IncidentRow } from "@/domain/incident";
-import { IncidentsContracts } from "@mebike/shared";
+import type { IncidentsContracts } from "@mebike/shared";
+
+import type { IncidentRow } from "@/domain/incident";
 
 export function toIncidentSummary(
   row: IncidentRow,

@@ -1,17 +1,17 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type {
-  PrismaClient,
-  Prisma as PrismaTypes,
-} from "generated/prisma/client";
-import { IncidentStatus } from "generated/prisma/enums";
+import type { IncidentSeverity, IncidentSource } from "generated/kysely/types";
+import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
+import type { IncidentStatus } from "generated/prisma/enums";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
+import { stationRepositoryFactory } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
-import { IncidentRepositoryError } from "../domain-errors";
-
+import type {
+  NoNearestStationFound,
+} from "../domain-errors";
 import type {
   CreateIncidentInput,
   IncidentFilter,
@@ -19,8 +19,10 @@ import type {
   IncidentSortField,
   UpdateIncidentInput,
 } from "../models";
-import { IncidentSeverity, IncidentSource } from "generated/kysely/types";
-import { AdminRentalNotFound } from "@/domain/rentals";
+
+import {
+  IncidentRepositoryError,
+} from "../domain-errors";
 
 export type IncidentRepo = {
   listWithOffset: (
@@ -32,7 +34,10 @@ export type IncidentRepo = {
 
   create: (
     data: CreateIncidentInput,
-  ) => Effect.Effect<IncidentRow, IncidentRepositoryError>;
+  ) => Effect.Effect<
+    IncidentRow,
+    IncidentRepositoryError | NoNearestStationFound
+  >;
 
   update: (
     id: string,
@@ -61,7 +66,124 @@ function toIncidentOrderBy(
   }
 }
 
-export function makeIncidentRepository(client: PrismaClient): IncidentRepo {
+function createIncidentWithClient(tx: PrismaClient | PrismaTypes.TransactionClient, data: CreateIncidentInput) {
+  return Effect.tryPromise({
+    try: async () => {
+      const select = {
+        id: true,
+        reporterUserId: true,
+        rentalId: true,
+        bikeId: true,
+        stationId: true,
+        source: true,
+        incidentType: true,
+        severity: true,
+        description: true,
+        latitude: true,
+        longitude: true,
+        bikeLocked: true,
+        status: true,
+        reportedAt: true,
+        resolvedAt: true,
+        closedAt: true,
+      } as const;
+
+      let foundTechnician:
+        | { userId: string; technicianTeamId: string }
+        | undefined;
+
+      if (data.latitude && data.longitude) {
+        const stationRepo = stationRepositoryFactory(tx);
+        const nearestStation = await Effect.runPromise(
+          stationRepo.listNearest({
+            latitude: Number(data.latitude),
+            longitude: Number(data.longitude),
+            maxDistanceMeters: 5000,
+            pageSize: 10,
+          }),
+        );
+
+        for (const station of nearestStation.items) {
+          const technician = await tx.userOrgAssignment.findFirst({
+            where: {
+              stationId: station.id,
+              technicianTeam: { availabilityStatus: "AVAILABLE" },
+            },
+            select: { userId: true, technicianTeamId: true },
+          });
+
+          if (technician && technician.technicianTeamId) {
+            foundTechnician = {
+              userId: technician.userId,
+              technicianTeamId: technician.technicianTeamId,
+            };
+            break;
+          }
+        }
+      }
+      else if (data.stationId) {
+        const technician = await tx.userOrgAssignment.findFirst({
+          where: {
+            stationId: data.stationId!,
+            technicianTeam: { availabilityStatus: "AVAILABLE" },
+          },
+          select: { userId: true, technicianTeamId: true },
+        });
+
+        if (technician && technician.technicianTeamId) {
+          foundTechnician = {
+            userId: technician.userId,
+            technicianTeamId: technician.technicianTeamId,
+          };
+        }
+      }
+
+      const incident = await tx.incidentReport.create({
+        data: {
+          reporterUserId: data.reporterUserId,
+          rentalId: data.rentalId,
+          bikeId: data.bikeId,
+          stationId: data.stationId,
+          source: data.source as IncidentSource,
+          incidentType: data.incidentType,
+          severity: data.severity as IncidentSeverity,
+          description: data.description,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          bikeLocked: data.bikeLocked,
+          status: (foundTechnician ? "ASSIGNED" : "OPEN") as IncidentStatus,
+          attachments: {
+            create: data.fileUrls.map(url => ({ fileUrl: url })),
+          },
+        },
+        select,
+      });
+
+      if (foundTechnician) {
+        await tx.technicianAssignment.create({
+          data: {
+            incidentReportId: incident.id,
+            technicianTeamId: foundTechnician.technicianTeamId,
+            technicianUserId: foundTechnician.userId,
+          },
+        });
+      }
+
+      return incident as IncidentRow;
+    },
+    catch: e =>
+      new IncidentRepositoryError({
+        operation: "createIncidentWithClient",
+        cause: e,
+      }),
+  });
+}
+
+export function makeIncidentRepository(
+  db: PrismaClient | PrismaTypes.TransactionClient,
+): IncidentRepo {
+  const client = db;
+
   const select = {
     id: true,
     reporterUserId: true,
@@ -114,40 +236,12 @@ export function makeIncidentRepository(client: PrismaClient): IncidentRepo {
       return Effect.promise(() =>
         client.incidentReport.findUnique({ where: { id }, select }),
       ).pipe(
-        Effect.map((val) => Option.fromNullable(val as IncidentRow | null)),
+        Effect.map(val => Option.fromNullable(val as IncidentRow | null)),
       );
     },
 
-    create(data) {
-      return Effect.tryPromise({
-        try: () =>
-          client.incidentReport.create({
-            data: {
-              reporterUserId: data.reporterUserId,
-              rentalId: data.rentalId,
-              bikeId: data.bikeId || "",
-              stationId: data.stationId,
-              source: data.source as IncidentSource,
-              incidentType: data.incidentType,
-              severity: data.severity as IncidentSeverity,
-              description: data.description,
-              latitude: data.latitude,
-              longitude: data.longitude,
-              bikeLocked: data.bikeLocked,
-              status: IncidentStatus.OPEN,
-              attachments: {
-                create: data.fileUrls.map((url) => ({ fileUrl: url })),
-              },
-            },
-            select,
-          }),
-        catch: (err: any) =>
-          new IncidentRepositoryError({
-            operation: "create",
-            cause: err,
-            message: "Failed to create incident",
-          }),
-      });
+    create(data: CreateIncidentInput) {
+      return createIncidentWithClient(client, data);
     },
 
     update(id, patch) {
@@ -214,7 +308,7 @@ export function makeIncidentRepository(client: PrismaClient): IncidentRepo {
               data: { status },
               select,
             })
-            .then((val) => val as IncidentRow)
+            .then(val => val as IncidentRow)
             .then(Option.some),
         catch: (err: any) => new IncidentRepositoryError(err),
       });

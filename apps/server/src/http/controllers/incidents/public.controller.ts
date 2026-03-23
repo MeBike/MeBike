@@ -1,18 +1,25 @@
-import { RouteHandler } from "@hono/zod-openapi";
-import {
-  IncidentErrorCodeSchema,
-  incidentErrorMessages,
+import type { RouteHandler } from "@hono/zod-openapi";
+import type { IncidentListResponse } from "@mebike/shared";
+
+import { Effect, Match } from "effect";
+
+import type { IncidentStatus } from "generated/kysely/types";
+
+import { IncidentServiceTag } from "@/domain/incident";
+import { withLoggedCause } from "@/domain/shared";
+import { toIncidentSummary } from "@/http/presenters/incidents.presenter";
+import { Prisma } from "generated/prisma/client";
+
+import type {
   IncidentNotFoundResponse,
   IncidentRoutes,
   IncidentSummary,
 } from "./shared";
-import { withLoggedCause } from "@/domain/shared";
-import { Effect, Match, Option } from "effect";
-import { IncidentServiceTag } from "@/domain/incident";
-import { IncidentStatus } from "generated/kysely/types";
-import { IncidentListResponse } from "@mebike/shared";
-import { toIncidentSummary } from "@/http/presenters/incidents.presenter";
-import { Prisma } from "generated/prisma/client";
+
+import {
+  IncidentErrorCodeSchema,
+  incidentErrorMessages,
+} from "./shared";
 
 const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   c,
@@ -64,8 +71,7 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<IncidentSummary, 200>(toIncidentSummary(right), 200),
-    ),
+      c.json<IncidentSummary, 200>(toIncidentSummary(right), 200)),
     Match.tag("Left", () =>
       c.json<IncidentNotFoundResponse, 404>(
         {
@@ -75,8 +81,7 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
           },
         },
         404,
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
@@ -110,8 +115,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<IncidentSummary, 201>(toIncidentSummary(right), 201),
-    ),
+      c.json<IncidentSummary, 201>(toIncidentSummary(right), 201)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("AdminRentalNotFound", () =>
@@ -124,8 +128,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("BikeNotFound", ({ id }) =>
           c.json(
             {
@@ -136,8 +139,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("StationNotFound", ({ id }) =>
           c.json(
             {
@@ -148,13 +150,23 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
+        Match.tag("NoNearestStationFound", ({ latitude, longitude }) =>
+          c.json(
+            {
+              error: incidentErrorMessages.NO_NEAREST_STATION_FOUND,
+              details: {
+                code: IncidentErrorCodeSchema.enum.NO_NEAREST_STATION_FOUND,
+                latitude,
+                longitude,
+              },
+            },
+            404,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };

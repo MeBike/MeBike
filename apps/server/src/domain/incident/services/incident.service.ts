@@ -1,35 +1,38 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { BikeStatus, SupplierStatus } from "generated/prisma/client";
+import type {
+  IncidentStatus,
+} from "generated/kysely/types";
 
+import { BikeNotFound, BikeRepository } from "@/domain/bikes";
 import {
-  CreateIncidentInput,
+  AdminRentalNotFound,
+  RentalRepository,
+} from "@/domain/rentals";
+import { StationNotFound, StationRepository } from "@/domain/stations";
+import {
+  IncidentSeverity,
+  IncidentSource,
+} from "generated/kysely/types";
+
+import type {
+  IncidentRepositoryError,
+  NoNearestStationFound,
+} from "../domain-errors";
+import type {
   CreateIncidentRequest,
   IncidentFilter,
   IncidentRow,
   IncidentSortField,
   UpdateIncidentInput,
 } from "../models";
-import { SupplierRepository, SupplierService } from "@/domain/suppliers";
+
 import {
   IncidentNotFound,
-  IncidentRepositoryError,
   InvalidIncidentStatus,
 } from "../domain-errors";
-import {
-  IncidentSeverity,
-  IncidentSource,
-  IncidentStatus,
-} from "generated/kysely/types";
 import { IncidentRepository } from "../repository/incident.repository";
-import {
-  AdminRentalNotFound,
-  RentalNotFound,
-  RentalRepository,
-} from "@/domain/rentals";
-import { BikeNotFound, BikeRepository } from "@/domain/bikes";
-import { StationNotFound, StationRepository } from "@/domain/stations";
 
 export type IncidentService = {
   listIncidents: (
@@ -49,6 +52,7 @@ export type IncidentService = {
     | AdminRentalNotFound
     | BikeNotFound
     | StationNotFound
+    | NoNearestStationFound
   >;
 
   updateIncident: (
@@ -107,7 +111,7 @@ export const IncidentServiceLive = Layer.effect(
         repo
           .getById(incidentId)
           .pipe(
-            Effect.flatMap((opt) =>
+            Effect.flatMap(opt =>
               Option.isSome(opt)
                 ? Effect.succeed(opt.value)
                 : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -125,15 +129,17 @@ export const IncidentServiceLive = Layer.effect(
             }
 
             if (
-              rental.value.status === "RENTED" &&
-              data.reporterRole === "USER"
-            )
+              rental.value.status === "RENTED"
+              && data.reporterRole === "USER"
+            ) {
               finalSource = IncidentSource.DURING_RENTAL;
+            }
             else if (
-              rental.value.status === "COMPLETED" &&
-              data.reporterRole === "USER"
-            )
+              rental.value.status === "COMPLETED"
+              && data.reporterRole === "USER"
+            ) {
               finalSource = IncidentSource.POST_RETURN;
+            }
           }
 
           let bikeLocked: boolean;
@@ -185,31 +191,28 @@ export const IncidentServiceLive = Layer.effect(
             stationId: data.stationId,
             source: finalSource,
             incidentType: data.incidentType,
-            severity: severity,
+            severity,
             description: data.description,
             latitude: data.latitude,
             longitude: data.longitude,
-            bikeLocked: bikeLocked,
+            bikeLocked,
             fileUrls: data.fileUrls,
           });
         }).pipe(
-          Effect.catchTag("IncidentRepositoryError", (error) =>
-            Effect.die(error),
-          ),
-          Effect.catchTag("RentalRepositoryError", (error) =>
-            Effect.die(error),
-          ),
-          Effect.catchTag("StationRepositoryError", (error) =>
-            Effect.die(error),
-          ),
-          Effect.catchTag("BikeRepositoryError", (error) => Effect.die(error)),
+          Effect.catchTag("IncidentRepositoryError", error =>
+            Effect.die(error)),
+          Effect.catchTag("RentalRepositoryError", error =>
+            Effect.die(error)),
+          Effect.catchTag("StationRepositoryError", error =>
+            Effect.die(error)),
+          Effect.catchTag("BikeRepositoryError", error => Effect.die(error)),
         ),
 
       updateIncident: (incidentId: string, patch: UpdateIncidentInput) =>
         repo
           .update(incidentId, patch)
           .pipe(
-            Effect.flatMap((opt) =>
+            Effect.flatMap(opt =>
               Option.isSome(opt)
                 ? Effect.succeed(opt.value)
                 : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -219,7 +222,7 @@ export const IncidentServiceLive = Layer.effect(
       updateIncidentStatus: (incidentId: string, status: IncidentStatus) =>
         ensureValidStatus(status).pipe(
           Effect.flatMap(() => repo.updateStatus(incidentId, status)),
-          Effect.flatMap((opt) =>
+          Effect.flatMap(opt =>
             Option.isSome(opt)
               ? Effect.succeed(opt.value)
               : Effect.fail(new IncidentNotFound({ id: incidentId })),
