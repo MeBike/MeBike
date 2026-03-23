@@ -10,10 +10,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
-import type { Bike } from "@/types/BikeTypes";
+import type { BikeSummary } from "@/contracts/server";
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Reservation } from "@/types/reservation-types";
 
+import { isBikeAvailable as isBikeAvailableStatus } from "@/utils/bike";
 import { parseDecimal } from "@/utils/money";
 
 import type { BikeDetailRouteParams, PaymentMode } from "../types";
@@ -41,7 +42,7 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
   });
 
   const subscriptionsQuery = useGetSubscriptionsQuery({ status: "ACTIVE" }, hasToken);
-  const bikeDetailQuery = useGetBikeByIDAllQuery(bike._id);
+  const bikeDetailQuery = useGetBikeByIDAllQuery(bike.id);
 
   useEffect(() => {
     if (hasToken) {
@@ -64,8 +65,8 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
   );
 
   const canUseSubscription = activeSubscriptions.length > 0;
-  const currentBike: Bike = bikeDetailQuery.data ?? bike;
-  const isBikeAvailable = currentBike.status === "CÓ SẴN";
+  const currentBike: BikeSummary = bikeDetailQuery.data ?? bike;
+  const isBikeAvailable = isBikeAvailableStatus(currentBike.status);
 
   useEffect(() => {
     if (!canUseSubscription) {
@@ -87,8 +88,8 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
     : null;
 
   const currentReservation: Reservation | undefined = useMemo(
-    () => pendingReservations.find(r => r.bikeId === currentBike._id),
-    [pendingReservations, currentBike._id],
+    () => pendingReservations.find(r => r.bikeId === currentBike.id),
+    [pendingReservations, currentBike.id],
   );
 
   const ensureAuthenticated = useCallback(() => {
@@ -125,16 +126,16 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
   );
 
   const handleReserve = useCallback(() => {
-    if (currentBike.status !== "CÓ SẴN") {
+    if (!isBikeAvailableStatus(currentBike.status)) {
       Alert.alert("Xe không khả dụng", "Vui lòng chọn một xe khác.");
       return;
     }
     if (!ensureAuthenticated())
       return;
 
-    const bikeLabel = currentBike.chip_id
-      ? `Chip #${currentBike.chip_id}`
-      : `#${currentBike._id.slice(-4)}`;
+    const bikeLabel = currentBike.chipId
+      ? `Chip #${currentBike.chipId}`
+      : `#${currentBike.id.slice(-4)}`;
 
     const reservationMode: ReservationMode = paymentMode === "subscription" ? "GÓI THÁNG" : "MỘT LẦN";
     const subscriptionForReservation = paymentMode === "subscription"
@@ -145,7 +146,7 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
       stationId: station.id,
       stationName: station.name,
       stationAddress: station.address,
-      bikeId: currentBike._id,
+      bikeId: currentBike.id,
       bikeName: bikeLabel,
       initialMode: reservationMode,
       initialSubscriptionId: subscriptionForReservation,
@@ -162,7 +163,7 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
   ]);
 
   const handleBookNow = useCallback(() => {
-    if (currentBike.status !== "CÓ SẴN") {
+    if (!isBikeAvailableStatus(currentBike.status)) {
       Alert.alert("Xe không khả dụng", "Vui lòng chọn xe khác.");
       return;
     }
@@ -189,7 +190,7 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
       startStationId: string;
       subscriptionId?: string;
     } = {
-      bikeId: currentBike._id,
+      bikeId: currentBike.id,
       startStationId: station.id,
     };
 

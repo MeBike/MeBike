@@ -90,7 +90,7 @@ export default function StaffPhoneLookupScreen() {
     if (!stationData)
       return new Map<string, string>();
     return new Map<string, string>(
-      stationData.map(station => [station._id, station.name]),
+      stationData.map(station => [station.id, station.name]),
     );
   }, [stationData]);
 

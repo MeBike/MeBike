@@ -1,11 +1,11 @@
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import type { RouteProp } from "@react-navigation/native";
 // Common navigation hook types
 import type { StackNavigationProp } from "@react-navigation/stack";
 
+import type { BikeSummary } from "@/contracts/server";
 import type { ResolveSOSSchema } from "@/schema/sosSchema";
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 
-import type { Bike } from "./BikeTypes";
 // Navigation Types for React Navigation
 import type { Reservation } from "./reservation-types";
 
@@ -26,7 +26,7 @@ export type RootStackParamList = {
   "Wallet": undefined;
   "BookingHistoryDetail": { bookingId: string };
   "BikeDetail": {
-    bike: Bike;
+    bike: BikeSummary;
     station: {
       id: string;
       name: string;

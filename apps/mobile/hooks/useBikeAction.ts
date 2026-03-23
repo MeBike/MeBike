@@ -1,3 +1,5 @@
+import type { GetAllBikesQueryParams } from "@services/bike.service";
+
 import { useCallback } from "react";
 
 import { useGetAllBikeQuery } from "./query/Bike/use-get-all-bike-query";
@@ -5,12 +7,13 @@ import { useGetBikeByIDAllQuery } from "./query/Bike/use-get-bike-by-id-query";
 
 type BikeActionsProps = {
   hasToken: boolean;
-  bike_id?: string;
-  station_id?: string;
+  bikeId?: string;
+  stationId?: string;
   page?: number;
   limit?: number;
+  status?: GetAllBikesQueryParams["status"];
 };
-export function useBikeActions({ hasToken, bike_id, station_id, page, limit }: BikeActionsProps) {
+export function useBikeActions({ hasToken, bikeId, stationId, page, limit, status }: BikeActionsProps) {
   const {
     refetch: useGetBikes,
     data: allBikesResponse,
@@ -18,7 +21,8 @@ export function useBikeActions({ hasToken, bike_id, station_id, page, limit }: B
   } = useGetAllBikeQuery({
     page: page || 1,
     pageSize: limit || 20,
-    stationId: station_id,
+    stationId,
+    status,
   });
 
   const allBikes = allBikesResponse?.data || [];
@@ -27,7 +31,7 @@ export function useBikeActions({ hasToken, bike_id, station_id, page, limit }: B
     refetch: useGetDetailBike,
     data: detailBike,
     isFetching: isFetchingBikeDetail,
-  } = useGetBikeByIDAllQuery(bike_id || "");
+  } = useGetBikeByIDAllQuery(bikeId || "");
   const getBikes = useCallback(() => {
     if (!hasToken) {
       return;

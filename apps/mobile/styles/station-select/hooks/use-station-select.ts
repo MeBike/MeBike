@@ -69,7 +69,7 @@ export function useStationSelect() {
   const selectedStation = React.useMemo(() => {
     if (!selectedStationId)
       return null;
-    return stations.find(s => s._id === selectedStationId) ?? null;
+    return stations.find(s => s.id === selectedStationId) ?? null;
   }, [selectedStationId, stations]);
 
   const destination = React.useMemo(() => {
@@ -77,8 +77,8 @@ export function useStationSelect() {
       return null;
 
     return {
-      latitude: Number.parseFloat(selectedStation.latitude),
-      longitude: Number.parseFloat(selectedStation.longitude),
+      latitude: selectedStation.location.latitude,
+      longitude: selectedStation.location.longitude,
     };
   }, [selectedStation]);
 
@@ -93,7 +93,7 @@ export function useStationSelect() {
   const isRouting = routeQuery.isFetching;
 
   const handleSelectStationForRoute = async (stationId: string) => {
-    const station = stations.find(s => s._id === stationId);
+    const station = stations.find(s => s.id === stationId);
     if (!station)
       return;
 

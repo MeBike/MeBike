@@ -1,4 +1,6 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -8,15 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { Ionicons } from "@expo/vector-icons";
 
-import type { StationType } from "../../../types/StationType";
+import type { StationReadSummary } from "@/contracts/server";
 import type { RentalDetail } from "@/types/rental-types";
 
 type Props = {
   booking: RentalDetail;
-  stations: StationType[];
+  stations: StationReadSummary[];
   isSubmitting: boolean;
   onSubmit: (payload: { endStation: string; reason: string }) => void;
 };
@@ -29,17 +29,17 @@ function StaffEndRentalCard({ booking, stations, isSubmitting, onSubmit }: Props
 
   useEffect(() => {
     if (!selectedStation) {
-      const fallbackStation =
-        booking.endStation?.id || booking.startStation.id || stations[0]?._id || "";
+      const fallbackStation
+        = booking.endStation?.id || booking.startStation.id || stations[0]?.id || "";
       setSelectedStation(fallbackStation);
     }
   }, [booking, stations, selectedStation]);
 
   const stationOptions = useMemo(
     () =>
-      stations.map((station) => ({
+      stations.map(station => ({
         label: station.name,
-        value: station._id,
+        value: station.id,
       })),
     [stations],
   );
@@ -70,10 +70,10 @@ function StaffEndRentalCard({ booking, stations, isSubmitting, onSubmit }: Props
         <View style={styles.pickerWrapper}>
           <Picker
             selectedValue={selectedStation}
-            onValueChange={(value) => setSelectedStation(value)}
+            onValueChange={value => setSelectedStation(value)}
           >
             <Picker.Item label="Chọn trạm..." value="" enabled={false} />
-            {stationOptions.map((option) => (
+            {stationOptions.map(option => (
               <Picker.Item
                 key={option.value}
                 label={option.label}
@@ -100,14 +100,16 @@ function StaffEndRentalCard({ booking, stations, isSubmitting, onSubmit }: Props
         onPress={handleConfirm}
         disabled={isSubmitting}
       >
-        {isSubmitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <>
-            <Ionicons name="checkmark-circle" size={18} color="#fff" />
-            <Text style={styles.submitText}>Xác nhận kết thúc phiên</Text>
-          </>
-        )}
+        {isSubmitting
+          ? (
+              <ActivityIndicator color="#fff" />
+            )
+          : (
+              <>
+                <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                <Text style={styles.submitText}>Xác nhận kết thúc phiên</Text>
+              </>
+            )}
       </TouchableOpacity>
     </View>
   );

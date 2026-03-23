@@ -2,21 +2,6 @@ import { StyleSheet } from "react-native";
 
 import { BikeColors } from "@constants/BikeColors";
 
-import type { Bike } from "@/types/BikeTypes";
-
-const BIKE_STATUS_COLORS: Record<Bike["status"], string> = {
-  "CÓ SẴN": "#4CAF50",
-  "ĐANG ĐƯỢC THUÊ": "#FF9800",
-  "BỊ HỎNG": "#F44336",
-  "ĐÃ ĐẶT TRƯỚC": "#FF9800",
-  "ĐANG BẢO TRÌ": "#F44336",
-  "KHÔNG CÓ SẴN": "#999999",
-};
-
-export function getBikeStatusColor(status: Bike["status"]) {
-  return BIKE_STATUS_COLORS[status] ?? "#999999";
-}
-
 export const styles = StyleSheet.create({
   container: {
     flex: 1,

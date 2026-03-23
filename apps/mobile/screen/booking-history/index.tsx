@@ -33,7 +33,7 @@ function BookingHistoryScreen() {
   const stationNameById = useMemo(() => {
     const map = new Map<string, string>();
     for (const station of stations) {
-      map.set(station._id, station.name);
+      map.set(station.id, station.name);
     }
     return map;
   }, [stations]);
@@ -44,7 +44,7 @@ function BookingHistoryScreen() {
         bookingId,
       });
     },
-    [navigator]
+    [navigator],
   );
 
   if (isLoading) {

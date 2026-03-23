@@ -49,3 +49,12 @@ export const gradients = {
   brandSoft: ["#EEF6FF", colors.backgroundStrong] as const,
   accentSoft: ["#F5FBFF", colors.backgroundStrong] as const,
 } as const;
+
+export const bikeStatusColors = {
+  AVAILABLE: colors.success,
+  BOOKED: colors.warning,
+  BROKEN: colors.error,
+  RESERVED: colors.warning,
+  MAINTAINED: colors.error,
+  UNAVAILABLE: colors.textMuted,
+} as const;

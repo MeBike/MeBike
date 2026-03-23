@@ -1,5 +1,3 @@
-import { BikeColors } from "@constants/BikeColors";
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import React from "react";
 import { ScrollView, StatusBar, View } from "react-native";
@@ -7,15 +5,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 
-import BookingDetailHeader from "../booking-history-detail/components/BookingDetailHeader";
+import { getBikeStatusColor } from "@/utils/bike";
+import { BikeColors } from "@constants/BikeColors";
+import { useAuthNext } from "@providers/auth-provider-next";
 
+import type { BikeDetailRouteParams } from "./types";
+
+import BookingDetailHeader from "../booking-history-detail/components/BookingDetailHeader";
 import { BikeSummaryCard } from "./components/bike-summary-card";
 import { FooterActions } from "./components/footer-actions";
 import { PaymentMethodCard } from "./components/payment-method-card";
 import { ReservationBanner } from "./components/reservation-banner";
 import { useBikeDetail } from "./hooks/use-bike-detail";
-import { getBikeStatusColor, styles } from "./styles";
-import type { BikeDetailRouteParams } from "./types";
+import { styles } from "./styles";
 
 export default function BikeDetailScreen() {
   const navigation = useNavigation<BikeDetailNavigationProp>();
@@ -78,7 +80,7 @@ export default function BikeDetailScreen() {
           activeSubscriptions={activeSubscriptions}
           selectedSubscriptionId={selectedSubscriptionId}
           onSelectPaymentMode={handleSelectPaymentMode}
-          onSelectSubscription={(id) => setSelectedSubscriptionId(id)}
+          onSelectSubscription={id => setSelectedSubscriptionId(id)}
           navigation={navigation}
         />
       </ScrollView>

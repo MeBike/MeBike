@@ -65,7 +65,7 @@ function BookingHistoryDetail() {
   const stationsById = useMemo(() => {
     const map = new Map<string, typeof stations[number]>();
     for (const s of stations ?? []) {
-      map.set(s._id, s);
+      map.set(s.id, s);
     }
     return map;
   }, [stations]);

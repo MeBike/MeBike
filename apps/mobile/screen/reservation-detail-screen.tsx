@@ -89,7 +89,7 @@ function ReservationDetailScreen() {
     }
     if (stationLookup) {
       return {
-        id: stationLookup._id,
+        id: stationLookup.id,
         name: stationLookup.name,
         address: stationLookup.address,
       };
