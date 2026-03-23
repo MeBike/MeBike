@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import type { BikeRow } from "@/domain/bikes";
 
 import { RatingRepository } from "@/domain/ratings";
+import { SupplierRepository } from "@/domain/suppliers";
 import { toBikeSummary } from "@/http/presenters/bikes.presenter";
 
 export type BikesRoutes = typeof import("@mebike/shared")["serverRoutes"]["bikes"];
@@ -38,25 +39,46 @@ export type BikeListResponse = {
 
 export const { BikeErrorCodeSchema, bikeErrorMessages } = BikesContracts;
 
+function mapSuppliersById(rows: readonly { id: string; name: string }[]) {
+  return Object.fromEntries(rows.map(row => [row.id, row]));
+}
+
 export function loadBikeSummary(row: BikeRow) {
   return Effect.gen(function* () {
     const ratingRepo = yield* RatingRepository;
+    const supplierRepo = yield* SupplierRepository;
     const rating = yield* ratingRepo.findBikeAggregates([row.id]).pipe(
       Effect.catchTag("RatingRepositoryError", err => Effect.die(err)),
       Effect.map(map => map[row.id]),
     );
 
-    return toBikeSummary(row, rating);
+    const supplier = row.supplierId
+      ? yield* supplierRepo.findIdNameByIds([row.supplierId]).pipe(
+        Effect.map(rows => rows[0] ?? null),
+      )
+      : null;
+
+    return toBikeSummary(row, rating, supplier);
   });
 }
 
 export function loadBikeSummaries(rows: readonly BikeRow[]) {
   return Effect.gen(function* () {
     const ratingRepo = yield* RatingRepository;
+    const supplierRepo = yield* SupplierRepository;
     const ratingsByBikeId = yield* ratingRepo.findBikeAggregates(rows.map(row => row.id)).pipe(
       Effect.catchTag("RatingRepositoryError", err => Effect.die(err)),
     );
 
-    return rows.map(row => toBikeSummary(row, ratingsByBikeId[row.id]));
+    const supplierIds = [...new Set(rows.flatMap(row => (row.supplierId ? [row.supplierId] : [])))];
+    const suppliersById = supplierIds.length === 0
+      ? {}
+      : mapSuppliersById(yield* supplierRepo.findIdNameByIds(supplierIds));
+
+    return rows.map(row => toBikeSummary(
+      row,
+      ratingsByBikeId[row.id],
+      row.supplierId ? suppliersById[row.supplierId] ?? null : null,
+    ));
   });
 }

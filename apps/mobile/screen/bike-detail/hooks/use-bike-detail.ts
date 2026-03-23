@@ -35,7 +35,11 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
 
   const { myWallet, getMyWallet } = useWalletActions(hasToken);
-  const { pendingReservations } = useReservationActions({
+  const {
+    pendingReservations,
+    fetchPendingReservations,
+    isPendingReservationsFetching,
+  } = useReservationActions({
     hasToken,
     autoFetch: hasToken,
     pendingLimit: 5,
@@ -91,6 +95,18 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
     () => pendingReservations.find(r => r.bikeId === currentBike.id),
     [pendingReservations, currentBike.id],
   );
+
+  const handleRefresh = useCallback(async () => {
+    const tasks: Array<Promise<unknown> | undefined> = [bikeDetailQuery.refetch()];
+
+    if (hasToken) {
+      tasks.push(subscriptionsQuery.refetch());
+      tasks.push(getMyWallet());
+      tasks.push(fetchPendingReservations());
+    }
+
+    await Promise.allSettled(tasks.filter((task): task is Promise<unknown> => Boolean(task)));
+  }, [bikeDetailQuery, fetchPendingReservations, getMyWallet, hasToken, subscriptionsQuery]);
 
   const ensureAuthenticated = useCallback(() => {
     if (!hasToken) {
@@ -256,6 +272,10 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
     currentBike,
     isBikeAvailable,
     isFetchingBikeDetail: bikeDetailQuery.isFetching,
+    isRefreshing:
+      bikeDetailQuery.isRefetching
+      || subscriptionsQuery.isRefetching
+      || isPendingReservationsFetching,
     currentReservation,
 
     paymentMode,
@@ -266,6 +286,7 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
     setSelectedSubscriptionId,
 
     isBookingNow: createRentalMutation.isPending,
+    handleRefresh,
     handleSelectPaymentMode,
     handleReserve,
     handleBookNow,

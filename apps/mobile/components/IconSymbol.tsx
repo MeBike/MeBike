@@ -44,6 +44,7 @@ const MAPPING = {
   "plus": "add",
   "minus": "remove",
   "xmark": "close",
+  "ellipsis": "more-horiz",
   "checkmark": "check",
   "checkmark.circle.fill": "check-circle",
   "checkmark.circle": "check-circle",
@@ -99,6 +100,9 @@ const MAPPING = {
   // Technology & Code
   "chevron.left.forwardslash.chevron.right": "code",
   "qrcode.viewfinder": "qr-code",
+  "cpu": "memory",
+  "number": "confirmation-number",
+  "wallet.pass.fill": "account-balance-wallet",
   "wifi": "wifi",
   "antenna.radiowaves.left.and.right": "signal-cellular-alt",
   "battery.100": "battery-full",

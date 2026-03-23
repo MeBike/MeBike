@@ -1,11 +1,11 @@
 import { colors } from "@theme/colors";
-import { radii, spacing } from "@theme/metrics";
+import { borderWidths, radii, spacing } from "@theme/metrics";
 import { styled, YStack } from "tamagui";
 
 export const AppCard = styled(YStack, {
   backgroundColor: "$surface",
   borderRadius: radii.lg,
-  borderWidth: 1,
+  borderWidth: borderWidths.subtle,
   borderColor: "$borderSubtle",
   padding: spacing.xxl,
   shadowColor: colors.shadowColor,

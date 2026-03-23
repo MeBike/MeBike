@@ -1,6 +1,11 @@
 import { z } from "../../../zod";
 import { BikeStatusSchema } from "./schemas";
 
+export const BikeSupplierSchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+});
+
 export const BikeRatingSchema = z.object({
   averageRating: z.number(),
   totalRatings: z.number().int().nonnegative(),
@@ -10,7 +15,7 @@ export const BikeSummarySchema = z.object({
   id: z.uuidv7(),
   chipId: z.string(),
   stationId: z.uuidv7().nullable(),
-  supplierId: z.uuidv7().nullable(),
+  supplier: BikeSupplierSchema.nullable(),
   status: BikeStatusSchema,
   rating: BikeRatingSchema,
   createdAt: z.iso.datetime(),
@@ -89,6 +94,7 @@ export const HighestRevenueBikeSchema = z.object({
 });
 
 export type BikeSummary = z.infer<typeof BikeSummarySchema>;
+export type BikeSupplier = z.infer<typeof BikeSupplierSchema>;
 export type BikeRating = z.infer<typeof BikeRatingSchema>;
 export type BikeRentalHistoryItem = z.infer<typeof BikeRentalHistoryItemSchema>;
 export type BikeActivityStats = z.infer<typeof BikeActivityStatsSchema>;

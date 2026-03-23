@@ -13,7 +13,7 @@ type AppHeroHeaderSize = "default" | "compact";
 
 type AppHeroHeaderProps = {
   title: string;
-  subtitle: ReactNode;
+  subtitle?: ReactNode;
   accessory?: ReactNode;
   onBack?: () => void;
   size?: AppHeroHeaderSize;
@@ -86,7 +86,7 @@ export function AppHeroHeader({
                     {subtitle}
                   </AppText>
                 )
-              : subtitle}
+              : subtitle ?? null}
           </YStack>
         </XStack>
 
