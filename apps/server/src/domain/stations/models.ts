@@ -1,12 +1,11 @@
 import type { PageRequest } from "@/domain/shared/pagination";
 
-export type StationSortField = "name" | "capacity" | "updatedAt";
+export type StationSortField = "name" | "totalCapacity" | "updatedAt";
 
 export type StationRow = {
   id: string;
   name: string;
   address: string;
-  capacity: number;
   totalCapacity: number;
   pickupSlotLimit: number;
   returnSlotLimit: number;
@@ -21,13 +20,15 @@ export type StationRow = {
   reservedBikes: number;
   maintainedBikes: number;
   unavailableBikes: number;
+  activeReturnSlots: number;
+  availableReturnSlots: number;
   emptySlots: number;
 };
 
 export type CreateStationInput = {
   name: string;
   address: string;
-  capacity: number;
+  totalCapacity: number;
   pickupSlotLimit?: number;
   returnSlotLimit?: number;
   latitude: number;
@@ -37,7 +38,7 @@ export type CreateStationInput = {
 export type UpdateStationInput = {
   name?: string;
   address?: string;
-  capacity?: number;
+  totalCapacity?: number;
   pickupSlotLimit?: number;
   returnSlotLimit?: number;
   latitude?: number;
@@ -47,7 +48,7 @@ export type UpdateStationInput = {
 export type StationFilter = {
   name?: string;
   address?: string;
-  capacity?: number;
+  totalCapacity?: number;
 };
 
 export type NearestStationRow = StationRow & {

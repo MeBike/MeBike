@@ -4,7 +4,6 @@ export const StationSummarySchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
-  capacity: z.number(),
   totalCapacity: z.number(),
   pickupSlotLimit: z.number(),
   returnSlotLimit: z.number(),
@@ -20,6 +19,45 @@ export const StationSummarySchema = z.object({
   maintainedBikes: z.number(),
   unavailableBikes: z.number(),
   emptySlots: z.number(),
+});
+
+export const StationLocationSchema = z.object({
+  latitude: z.number(),
+  longitude: z.number(),
+});
+
+export const StationCapacitySchema = z.object({
+  total: z.number(),
+  pickupSlotLimit: z.number(),
+  returnSlotLimit: z.number(),
+  emptyPhysicalSlots: z.number(),
+});
+
+export const StationBikesSchema = z.object({
+  total: z.number(),
+  available: z.number(),
+  booked: z.number(),
+  broken: z.number(),
+  reserved: z.number(),
+  maintained: z.number(),
+  unavailable: z.number(),
+});
+
+export const StationReturnSlotsSchema = z.object({
+  active: z.number(),
+  available: z.number(),
+});
+
+export const StationReadSummarySchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+  address: z.string(),
+  location: StationLocationSchema,
+  capacity: StationCapacitySchema,
+  bikes: StationBikesSchema,
+  returnSlots: StationReturnSlotsSchema,
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
 });
 
 export const StationStatsCurrentBikesSchema = z.object({
@@ -45,7 +83,7 @@ export const StationStatsUtilizationSchema = z.object({
 });
 
 export const StationStatsResponseSchema = z.object({
-  station: StationSummarySchema,
+  station: StationReadSummarySchema,
   period: z.object({
     from: z.string(),
     to: z.string(),
@@ -150,7 +188,7 @@ export const HighestRevenueStationSchema = z.object({
   message: z.string().optional(),
 });
 
-export const NearbyStationSchema = StationSummarySchema.extend({
+export const NearbyStationSchema = StationReadSummarySchema.extend({
   distanceMeters: z.number().optional(),
   distanceKm: z.number().optional(),
 });
@@ -170,7 +208,7 @@ const AlertItemBaseSchema = z.object({
   _id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
-  capacity: z.number(),
+  totalCapacity: z.number(),
   totalBikes: z.number(),
 });
 
@@ -219,6 +257,8 @@ export const StationAlertsResponseSchema = z.object({
 });
 
 export type StationSummary = z.infer<typeof StationSummarySchema>;
+export type StationReadSummary = z.infer<typeof StationReadSummarySchema>;
+export type NearbyStation = z.infer<typeof NearbyStationSchema>;
 export type StationStatsResponse = z.infer<typeof StationStatsResponseSchema>;
 export type StationRevenueResponse = z.infer<typeof StationRevenueResponseSchema>;
 export type BikeRevenueResponse = z.infer<typeof BikeRevenueResponseSchema>;

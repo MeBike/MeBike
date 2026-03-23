@@ -113,7 +113,8 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   requestedBikeStatus: z.string().optional(),
   usageCount: z.number().optional(),
   maxUsages: z.number().nullable().optional(),
-  capacity: z.number().optional(),
+  totalCapacity: z.number().optional(),
+  returnSlotLimit: z.number().optional(),
   totalBikes: z.number().optional(),
   activeReturnSlots: z.number().optional(),
 }).openapi({

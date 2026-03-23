@@ -79,7 +79,7 @@ export const RentalStationSchema = z.object({
   address: z.string(),
   latitude: z.number(),
   longitude: z.number(),
-  capacity: z.number(),
+  totalCapacity: z.number(),
   updatedAt: z.iso.datetime(),
   locationGeo: z
     .object({

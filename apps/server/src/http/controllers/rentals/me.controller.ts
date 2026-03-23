@@ -378,13 +378,14 @@ const createMyReturnSlot: RouteHandler<RentalsRoutes["createMyReturnSlot"]> = as
               status,
             },
           }, 400)),
-        Match.tag("ReturnSlotCapacityExceeded", ({ stationId, capacity, totalBikes, activeReturnSlots }) =>
+        Match.tag("ReturnSlotCapacityExceeded", ({ stationId, totalCapacity, returnSlotLimit, totalBikes, activeReturnSlots }) =>
           c.json({
             error: rentalErrorMessages.RETURN_SLOT_CAPACITY_EXCEEDED,
             details: {
               code: RentalErrorCodeSchema.enum.RETURN_SLOT_CAPACITY_EXCEEDED,
               stationId,
-              capacity,
+              totalCapacity,
+              returnSlotLimit,
               totalBikes,
               activeReturnSlots,
             },

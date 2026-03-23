@@ -136,7 +136,8 @@ export class ReturnSlotCapacityExceeded extends Data.TaggedError(
   "ReturnSlotCapacityExceeded",
 )<{
     readonly stationId: string;
-    readonly capacity: number;
+    readonly totalCapacity: number;
+    readonly returnSlotLimit: number;
     readonly totalBikes: number;
     readonly activeReturnSlots: number;
   }> {}

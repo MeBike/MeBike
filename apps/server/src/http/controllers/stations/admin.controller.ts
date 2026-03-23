@@ -19,7 +19,7 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
     service.createStation({
       name: body.name,
       address: body.address,
-      capacity: body.capacity,
+      totalCapacity: body.totalCapacity,
       pickupSlotLimit: body.pickupSlotLimit,
       returnSlotLimit: body.returnSlotLimit,
       latitude: body.latitude,

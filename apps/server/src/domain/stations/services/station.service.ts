@@ -63,14 +63,34 @@ export type StationService = {
 
 function makeStationService(repo: StationRepo): StationService {
   function resolveCapacitySplit(input: {
-    capacity: number;
+    totalCapacity: number;
     pickupSlotLimit?: number;
     returnSlotLimit?: number;
   }) {
     return {
-      totalCapacity: input.capacity,
-      pickupSlotLimit: input.pickupSlotLimit ?? input.capacity,
-      returnSlotLimit: input.returnSlotLimit ?? input.capacity,
+      totalCapacity: input.totalCapacity,
+      pickupSlotLimit: input.pickupSlotLimit ?? input.totalCapacity,
+      returnSlotLimit: input.returnSlotLimit ?? input.totalCapacity,
+    };
+  }
+
+  function resolveUpdatedCapacitySplit(current: StationRow, input: UpdateStationInput) {
+    const totalCapacity = input.totalCapacity ?? current.totalCapacity;
+
+    const pickupSlotLimit = input.pickupSlotLimit
+      ?? (input.totalCapacity != null && current.pickupSlotLimit === current.totalCapacity
+        ? input.totalCapacity
+        : current.pickupSlotLimit);
+
+    const returnSlotLimit = input.returnSlotLimit
+      ?? (input.totalCapacity != null && current.returnSlotLimit === current.totalCapacity
+        ? input.totalCapacity
+        : current.returnSlotLimit);
+
+    return {
+      totalCapacity,
+      pickupSlotLimit,
+      returnSlotLimit,
     };
   }
 
@@ -82,15 +102,16 @@ function makeStationService(repo: StationRepo): StationService {
     return args.totalCapacity > 0
       && args.pickupSlotLimit >= 0
       && args.returnSlotLimit >= 0
-      && args.pickupSlotLimit + args.returnSlotLimit <= args.totalCapacity;
+      && args.pickupSlotLimit <= args.totalCapacity
+      && args.returnSlotLimit <= args.totalCapacity;
   }
 
   return {
     createStation: input =>
       Effect.gen(function* () {
-        if (input.capacity > env.STATION_CAPACITY_LIMIT) {
+        if (input.totalCapacity > env.STATION_CAPACITY_LIMIT) {
           return yield* Effect.fail(new StationCapacityLimitExceededError({
-            capacity: input.capacity,
+            totalCapacity: input.totalCapacity,
             maxCapacity: env.STATION_CAPACITY_LIMIT,
           }));
         }
@@ -114,21 +135,17 @@ function makeStationService(repo: StationRepo): StationService {
         }
 
         const current = currentOpt.value;
-        const nextCapacity = input.capacity ?? current.totalCapacity;
+        const nextCapacity = input.totalCapacity ?? current.totalCapacity;
         if (
           nextCapacity > env.STATION_CAPACITY_LIMIT
         ) {
           return yield* Effect.fail(new StationCapacityLimitExceededError({
-            capacity: nextCapacity,
+            totalCapacity: nextCapacity,
             maxCapacity: env.STATION_CAPACITY_LIMIT,
           }));
         }
 
-        const split = {
-          totalCapacity: nextCapacity,
-          pickupSlotLimit: input.pickupSlotLimit ?? current.pickupSlotLimit,
-          returnSlotLimit: input.returnSlotLimit ?? current.returnSlotLimit,
-        };
+        const split = resolveUpdatedCapacitySplit(current, input);
         if (!validateCapacitySplit(split)) {
           return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
         }

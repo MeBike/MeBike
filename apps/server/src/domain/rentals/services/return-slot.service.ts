@@ -111,7 +111,8 @@ export function createReturnSlot(
         ) <= 0) {
           return yield* Effect.fail(new ReturnSlotCapacityExceeded({
             stationId: input.stationId,
-            capacity: stationSnapshot.capacity,
+            totalCapacity: stationSnapshot.totalCapacity,
+            returnSlotLimit: stationSnapshot.returnSlotLimit,
             totalBikes: stationSnapshot.totalBikes,
             activeReturnSlots: stationSnapshot.activeReturnSlots,
           }));

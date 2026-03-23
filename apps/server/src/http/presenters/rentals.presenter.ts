@@ -123,7 +123,7 @@ export function toContractAdminRentalDetail(
       address: detail.startStation.address,
       latitude: detail.startStation.latitude,
       longitude: detail.startStation.longitude,
-      capacity: detail.startStation.capacity,
+      totalCapacity: detail.startStation.totalCapacity,
       updatedAt: detail.startStation.updatedAt.toISOString(),
     },
     endStation: detail.endStation
@@ -133,7 +133,7 @@ export function toContractAdminRentalDetail(
           address: detail.endStation.address,
           latitude: detail.endStation.latitude,
           longitude: detail.endStation.longitude,
-          capacity: detail.endStation.capacity,
+          totalCapacity: detail.endStation.totalCapacity,
           updatedAt: detail.endStation.updatedAt.toISOString(),
         }
       : null,

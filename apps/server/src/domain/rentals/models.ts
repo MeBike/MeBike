@@ -103,7 +103,7 @@ export type AdminRentalDetail = {
     address: string;
     latitude: number;
     longitude: number;
-    capacity: number;
+    totalCapacity: number;
     updatedAt: Date;
   };
   endStation: {
@@ -112,7 +112,7 @@ export type AdminRentalDetail = {
     address: string;
     latitude: number;
     longitude: number;
-    capacity: number;
+    totalCapacity: number;
     updatedAt: Date;
   } | null;
   startTime: Date;
@@ -182,7 +182,6 @@ export type ReturnSlotRow = {
 
 export type ReturnSlotStationCapacityRow = {
   stationId: string;
-  capacity: number;
   totalCapacity: number;
   returnSlotLimit: number;
   totalBikes: number;

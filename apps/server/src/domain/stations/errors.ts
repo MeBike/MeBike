@@ -20,7 +20,7 @@ export class StationOutsideSupportedArea extends Data.TaggedError("StationOutsid
 }> {}
 
 export class StationCapacityLimitExceeded extends Data.TaggedError("StationCapacityLimitExceeded")<{
-  readonly capacity: number;
+  readonly totalCapacity: number;
   readonly maxCapacity: number;
 }> {}
 

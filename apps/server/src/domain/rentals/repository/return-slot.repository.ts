@@ -261,7 +261,6 @@ export function makeReturnSlotRepository(
 
         return Option.some({
           stationId: station.id,
-          capacity: station.totalCapacity,
           totalCapacity: station.totalCapacity,
           returnSlotLimit: station.returnSlotLimit,
           totalBikes,

@@ -39,6 +39,8 @@ export type BikeCounts = Pick<
   | "reservedBikes"
   | "maintainedBikes"
   | "unavailableBikes"
+  | "activeReturnSlots"
+  | "availableReturnSlots"
   | "emptySlots"
 >;
 
@@ -51,8 +53,20 @@ function baseCounts(): BikeCounts {
     reservedBikes: 0,
     maintainedBikes: 0,
     unavailableBikes: 0,
+    activeReturnSlots: 0,
+    availableReturnSlots: 0,
     emptySlots: 0,
   };
+}
+
+function computeAvailableReturnSlots(station: StationBaseRow, counts: BikeCounts) {
+  return Math.max(
+    0,
+    Math.min(
+      station.totalCapacity - counts.totalBikes - counts.activeReturnSlots,
+      station.returnSlotLimit - counts.activeReturnSlots,
+    ),
+  );
 }
 
 export function applyCounts(
@@ -74,7 +88,6 @@ export function applyCounts(
     id: station.id,
     name: station.name,
     address: station.address,
-    capacity: station.totalCapacity,
     totalCapacity: station.totalCapacity,
     pickupSlotLimit: station.pickupSlotLimit,
     returnSlotLimit: station.returnSlotLimit,
@@ -83,8 +96,53 @@ export function applyCounts(
     ...resolved,
     createdAt,
     updatedAt,
+    activeReturnSlots: resolved.activeReturnSlots,
+    availableReturnSlots: computeAvailableReturnSlots(station, resolved),
     emptySlots: Math.max(0, station.totalCapacity - resolved.totalBikes),
   };
+}
+
+export function getActiveReturnSlotCounts(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+  stationIds: string[],
+): Effect.Effect<Map<string, number>, StationRepositoryError> {
+  if (stationIds.length === 0) {
+    return Effect.succeed(new Map());
+  }
+
+  return Effect.tryPromise({
+    try: () =>
+      client.returnSlotReservation.groupBy({
+        by: ["stationId"],
+        where: {
+          stationId: { in: stationIds },
+          status: "ACTIVE",
+        },
+        _count: { _all: true },
+      }),
+    catch: e =>
+      new StationRepositoryError({
+        operation: "getActiveReturnSlotCounts.groupBy",
+        cause: e,
+      }),
+  }).pipe(
+    Effect.map((rows) => {
+      const countsMap = new Map<string, number>();
+      for (const stationId of stationIds) {
+        countsMap.set(stationId, 0);
+      }
+
+      for (const row of rows) {
+        if (!row.stationId) {
+          continue;
+        }
+
+        countsMap.set(row.stationId, row._count._all);
+      }
+
+      return countsMap;
+    }),
+  );
 }
 
 export function getBikeCounts(
