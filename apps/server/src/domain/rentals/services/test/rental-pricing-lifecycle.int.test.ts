@@ -1,59 +1,24 @@
-import { Layer } from "effect";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { RentalRepository } from "@/domain/rentals";
-
-import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import {
-  confirmRentalReturnByOperator,
-  createReturnSlot,
-  makeReturnConfirmationRepository,
-  makeReturnSlotRepository,
-  ReturnConfirmationRepository,
-  ReturnSlotRepository,
-} from "@/domain/rentals";
-import {
-  makeReservationRunners,
-  makeReservationTestLayer,
-} from "@/domain/reservations/services/test/reservation-test-kit";
-import { Prisma } from "@/infrastructure/prisma";
 import { expectRight } from "@/test/effect/assertions";
-import { runEffectEitherWithLayer } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
+import { makeReservationRentalFlowTestKit } from "./reservation-rental-flow-test-kit";
+
 describe("rental pricing lifecycle integration", () => {
   const fixture = setupPrismaIntFixture();
-  let reservationLayer: ReturnType<typeof makeReservationTestLayer>;
-  let rentalFlowLayer: Layer.Layer<
-    | Prisma
-    | BikeRepository
-    | RentalRepository
-    | ReturnSlotRepository
-    | ReturnConfirmationRepository
-  >;
-  let runReserve: ReturnType<typeof makeReservationRunners>["reserve"];
-  let runConfirm: ReturnType<typeof makeReservationRunners>["confirm"];
+  let runReserve: ReturnType<typeof makeReservationRentalFlowTestKit>["reserve"];
+  let runConfirm: ReturnType<typeof makeReservationRentalFlowTestKit>["confirm"];
+  let runCreateReturnSlot: ReturnType<typeof makeReservationRentalFlowTestKit>["createReturnSlot"];
+  let runConfirmReturn: ReturnType<typeof makeReservationRentalFlowTestKit>["confirmReturn"];
 
   beforeAll(() => {
-    reservationLayer = makeReservationTestLayer(fixture.prisma);
-    rentalFlowLayer = Layer.mergeAll(
-      reservationLayer,
-      Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma })),
-      Layer.succeed(BikeRepository, BikeRepository.make(makeBikeRepository(fixture.prisma))),
-      Layer.succeed(
-        ReturnSlotRepository,
-        ReturnSlotRepository.make(makeReturnSlotRepository(fixture.prisma)),
-      ),
-      Layer.succeed(
-        ReturnConfirmationRepository,
-        ReturnConfirmationRepository.make(makeReturnConfirmationRepository(fixture.prisma)),
-      ),
-    );
-
-    const runners = makeReservationRunners(reservationLayer);
-    runReserve = runners.reserve;
-    runConfirm = runners.confirm;
+    const flow = makeReservationRentalFlowTestKit(fixture.prisma);
+    runReserve = flow.reserve;
+    runConfirm = flow.confirm;
+    runCreateReturnSlot = flow.createReturnSlot;
+    runConfirmReturn = flow.confirmReturn;
   });
 
   it("keeps reservation pricing policy snapshot even after the active policy changes", async () => {
@@ -127,27 +92,21 @@ describe("rental pricing lifecycle integration", () => {
     });
     expect(walletBeforeReturn?.reservedBalance.toString()).toBe("2000");
 
-    expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: rental!.id,
-        userId: user.id,
-        stationId: station.id,
-        now: confirmNow,
-      }),
-      rentalFlowLayer,
-    ));
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental!.id,
+      userId: user.id,
+      stationId: station.id,
+      now: confirmNow,
+    }));
 
     const returnConfirmedAt = new Date("2026-03-22T09:45:00.000Z");
-    const completedRental = expectRight(await runEffectEitherWithLayer(
-      confirmRentalReturnByOperator({
-        rentalId: rental!.id,
-        stationId: station.id,
-        confirmedByUserId: operator.id,
-        confirmationMethod: "MANUAL",
-        confirmedAt: returnConfirmedAt,
-      }),
-      rentalFlowLayer,
-    ));
+    const completedRental = expectRight(await runConfirmReturn({
+      rentalId: rental!.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: returnConfirmedAt,
+    }));
 
     expect(completedRental.pricingPolicyId).toBe(policyA.id);
     expect(completedRental.totalPrice).toBe(5000);
@@ -213,27 +172,21 @@ describe("rental pricing lifecycle integration", () => {
     expect(rental?.pricingPolicyId).toBe(policy.id);
     expect(rental?.depositHoldId).not.toBeNull();
 
-    expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: rental!.id,
-        userId: user.id,
-        stationId: station.id,
-        now: confirmNow,
-      }),
-      rentalFlowLayer,
-    ));
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental!.id,
+      userId: user.id,
+      stationId: station.id,
+      now: confirmNow,
+    }));
 
     const lateConfirmedAt = new Date("2026-03-22T16:30:01.000Z");
-    const completedRental = expectRight(await runEffectEitherWithLayer(
-      confirmRentalReturnByOperator({
-        rentalId: rental!.id,
-        stationId: station.id,
-        confirmedByUserId: operator.id,
-        confirmationMethod: "MANUAL",
-        confirmedAt: lateConfirmedAt,
-      }),
-      rentalFlowLayer,
-    ));
+    const completedRental = expectRight(await runConfirmReturn({
+      rentalId: rental!.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: lateConfirmedAt,
+    }));
 
     expect(completedRental.status).toBe("COMPLETED");
 
