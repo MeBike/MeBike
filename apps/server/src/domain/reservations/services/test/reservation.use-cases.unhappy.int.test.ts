@@ -94,13 +94,13 @@ describe("reservation use-cases unhappy paths", () => {
       pickupSlotLimit: 1,
       returnSlotLimit: 10,
     });
-    const bikeA = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const bikeB = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date();
     await fixture.factories.reservation({
       userId: other.user.id,
-      bikeId: bikeA.id,
+      bikeId: null,
       stationId: station.id,
       status: "PENDING",
       startTime: new Date(now.getTime() - 1000),

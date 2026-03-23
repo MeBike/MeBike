@@ -64,7 +64,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name: "Create Station",
         address: "456 Create St",
-        capacity: 24,
+        totalCapacity: 24,
         latitude: vietnamCoords.latitude,
         longitude: vietnamCoords.longitude,
       }),
@@ -73,7 +73,6 @@ describe("stationRepository Integration", () => {
     expect(created.id).toBeTruthy();
     expect(created.name).toBe("Create Station");
     expect(created.address).toBe("456 Create St");
-    expect(created.capacity).toBe(24);
     expect(created.totalCapacity).toBe(24);
     expect(created.pickupSlotLimit).toBe(24);
     expect(created.returnSlotLimit).toBe(24);
@@ -89,7 +88,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name,
         address: "123 Dup St",
-        capacity: 10,
+        totalCapacity: 10,
         latitude: 10.0,
         longitude: 106.0,
       }),
@@ -99,7 +98,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name,
         address: "123 Dup St",
-        capacity: 10,
+        totalCapacity: 10,
         latitude: 10.0,
         longitude: 106.0,
       }).pipe(Effect.either),
@@ -117,7 +116,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name: `Update Me ${Date.now()}`,
         address: "Old Address",
-        capacity: 10,
+        totalCapacity: 10,
         latitude: vietnamCoords.latitude,
         longitude: vietnamCoords.longitude,
       }),
@@ -127,7 +126,7 @@ describe("stationRepository Integration", () => {
       repo.update(created.id, {
         name: "Updated Station Name",
         address: "New Address",
-        capacity: 12,
+        totalCapacity: 12,
         latitude: 21.3749,
         longitude: 104.8411,
       }),
@@ -140,7 +139,6 @@ describe("stationRepository Integration", () => {
     const updated = updatedOpt.value;
     expect(updated.name).toBe("Updated Station Name");
     expect(updated.address).toBe("New Address");
-    expect(updated.capacity).toBe(12);
     expect(updated.totalCapacity).toBe(12);
     expect(updated.pickupSlotLimit).toBe(12);
     expect(updated.returnSlotLimit).toBe(12);
@@ -165,7 +163,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name: firstName,
         address: "Addr 1",
-        capacity: 10,
+        totalCapacity: 10,
         latitude: vietnamCoords.latitude,
         longitude: vietnamCoords.longitude,
       }),
@@ -174,7 +172,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name: secondName,
         address: "Addr 2",
-        capacity: 10,
+        totalCapacity: 10,
         latitude: vietnamCoords.latitude,
         longitude: vietnamCoords.longitude,
       }),
@@ -248,7 +246,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name: `Outside Area ${Date.now()}`,
         address: "Outside",
-        capacity: 10,
+        totalCapacity: 10,
         latitude: australiaCoords.latitude,
         longitude: australiaCoords.longitude,
       }).pipe(Effect.either),
@@ -265,7 +263,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name: `Update Outside ${Date.now()}`,
         address: "Inside",
-        capacity: 10,
+        totalCapacity: 10,
         latitude: vietnamCoords.latitude,
         longitude: vietnamCoords.longitude,
       }),
@@ -289,7 +287,7 @@ describe("stationRepository Integration", () => {
       repo.create({
         name: `Capacity Split ${Date.now()}`,
         address: "Split Address",
-        capacity: 30,
+        totalCapacity: 30,
         pickupSlotLimit: 12,
         returnSlotLimit: 8,
         latitude: vietnamCoords.latitude,
