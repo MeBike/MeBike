@@ -1,32 +1,24 @@
-import { Effect, Layer } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { BikeRepository } from "@/domain/bikes/repository/bike.repository";
-import { Prisma } from "@/infrastructure/prisma";
-import { expectLeftTag, expectRight } from "@/test/effect/assertions";
-import { runEffectEitherWithLayer, runEffectWithLayer } from "@/test/effect/run";
+import { expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { bikeRepositoryFactory } from "../../repository/bike.repository";
-import { BikeServiceLive, BikeServiceTag } from "../bike.service";
+import { makeBikeRunners, makeBikeTestLayer } from "./bike-test-kit";
 
 describe("bikeService Integration", () => {
   const fixture = setupPrismaIntFixture();
-  let depsLayer: Layer.Layer<BikeServiceTag | BikeRepository | Prisma>;
+  let runCreateBike: ReturnType<typeof makeBikeRunners>["createBike"];
+  let runCreateBikeEither: ReturnType<typeof makeBikeRunners>["createBikeEither"];
+  let runAdminUpdateBike: ReturnType<typeof makeBikeRunners>["adminUpdateBike"];
+  let runAdminUpdateBikeEither: ReturnType<typeof makeBikeRunners>["adminUpdateBikeEither"];
 
   beforeAll(() => {
-    const prismaLayer = Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma }));
-    const bikeRepoLayer = Layer.succeed(
-      BikeRepository,
-      BikeRepository.make(bikeRepositoryFactory(fixture.prisma)),
-    );
-    const bikeServiceLayer = BikeServiceLive.pipe(
-      Layer.provide(bikeRepoLayer),
-      Layer.provide(prismaLayer),
-    );
-
-    depsLayer = Layer.mergeAll(prismaLayer, bikeRepoLayer, bikeServiceLayer);
+    const runners = makeBikeRunners(makeBikeTestLayer(fixture.prisma));
+    runCreateBike = runners.createBike;
+    runCreateBikeEither = runners.createBikeEither;
+    runAdminUpdateBike = runners.adminUpdateBike;
+    runAdminUpdateBikeEither = runners.adminUpdateBikeEither;
   });
 
   const createBike = (args: { stationId: string; supplierId: string; chipId?: string }) =>
@@ -36,35 +28,6 @@ describe("bikeService Integration", () => {
       chipId: args.chipId,
       status: "AVAILABLE",
     });
-
-  const runCreateBike = (input: {
-    chipId: string;
-    stationId: string;
-    supplierId: string;
-    status: "AVAILABLE";
-  }) => runEffectWithLayer(
-    Effect.flatMap(BikeServiceTag, service => service.createBike(input)),
-    depsLayer,
-  );
-
-  const runCreateBikeEither = (input: {
-    chipId: string;
-    stationId: string;
-    supplierId: string;
-    status: "AVAILABLE";
-  }) => runEffectEitherWithLayer(
-    Effect.flatMap(BikeServiceTag, service => service.createBike(input)),
-    depsLayer,
-  );
-
-  const runAdminUpdateBikeEither = (bikeId: string, input: {
-    stationId?: string;
-    supplierId?: string;
-    chipId?: string;
-  }) => runEffectEitherWithLayer(
-    Effect.flatMap(BikeServiceTag, service => service.adminUpdateBike(bikeId, input)),
-    depsLayer,
-  );
 
   it("fails with BikeStationNotFound when station does not exist", async () => {
     const supplier = await fixture.factories.supplier();
@@ -152,19 +115,15 @@ describe("bikeService Integration", () => {
     const nextSupplier = await fixture.factories.supplier();
     const bike = await createBike({ stationId: originalStation.id, supplierId: originalSupplier.id });
 
-    const result = await runEffectEitherWithLayer(
-      Effect.flatMap(BikeServiceTag, service => service.adminUpdateBike(bike.id, {
-        stationId: nextStation.id,
-        supplierId: nextSupplier.id,
-      })),
-      depsLayer,
-    );
+    const result = await runAdminUpdateBike(bike.id, {
+      stationId: nextStation.id,
+      supplierId: nextSupplier.id,
+    });
 
-    const updated = expectRight(result);
-    expect(updated._tag).toBe("Some");
-    if (updated._tag === "Some") {
-      expect(updated.value.stationId).toBe(nextStation.id);
-      expect(updated.value.supplierId).toBe(nextSupplier.id);
+    expect(result._tag).toBe("Some");
+    if (result._tag === "Some") {
+      expect(result.value.stationId).toBe(nextStation.id);
+      expect(result.value.supplierId).toBe(nextSupplier.id);
     }
   });
 });
