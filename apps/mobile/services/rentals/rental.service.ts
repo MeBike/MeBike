@@ -47,7 +47,7 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.createRental.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));
@@ -132,31 +132,6 @@ export const rentalServiceV1 = {
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
         return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
-      }
-
-      return err(await parseRentalError(response));
-    }
-    catch (error) {
-      return asNetworkError(error);
-    }
-  },
-
-  endMyRental: async (args: { rentalId: string; endStation: string }): Promise<Result<Rental, RentalError>> => {
-    try {
-      const path = routePath(ServerRoutes.rentals.endMyRental)
-        .replace("{rentalId}", args.rentalId)
-        .replace(":rentalId", args.rentalId);
-
-      const response = await kyClient.put(path, {
-        json: { endStation: args.endStation },
-        throwHttpErrors: false,
-      });
-
-      if (response.status === StatusCodes.OK) {
-        const okSchema = ServerRoutes.rentals.endMyRental.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));

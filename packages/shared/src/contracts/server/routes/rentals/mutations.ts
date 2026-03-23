@@ -47,10 +47,7 @@ export const createRental = createRoute({
       description: "Rental created successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalWithPriceSchemaOpenApi,
-            "Create rental response",
-          ),
+          schema: RentalWithPriceSchemaOpenApi,
         },
       },
     },

@@ -45,11 +45,8 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<RentalsContracts.CreateRentalResponse, 200>(
-        {
-          message: "Rental created successfully",
-          result: toContractRentalWithPrice(right),
-        },
+      c.json<RentalsContracts.RentalWithPrice, 200>(
+        toContractRentalWithPrice(right),
         200,
       )),
     Match.tag("Left", ({ left }) =>
