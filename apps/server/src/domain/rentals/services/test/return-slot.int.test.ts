@@ -1,53 +1,26 @@
-import { Layer } from "effect";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { BikeRepository } from "@/domain/bikes";
-import type { SubscriptionRepository } from "@/domain/subscriptions";
-import type { Prisma } from "@/infrastructure/prisma";
-
-import { BikeRepository as BikeRepositoryTag, makeBikeRepository } from "@/domain/bikes";
-import {
-  cancelReturnSlot,
-  confirmRentalReturnByOperator,
-  createReturnSlot,
-  getCurrentReturnSlot,
-  makeRentalRepository,
-  makeReturnConfirmationRepository,
-  makeReturnSlotRepository,
-  RentalRepository,
-  ReturnConfirmationRepository,
-  ReturnSlotRepository,
-} from "@/domain/rentals";
-import { makeSubscriptionRepository, SubscriptionRepository as SubscriptionRepositoryTag } from "@/domain/subscriptions";
-import { Prisma as PrismaTag } from "@/infrastructure/prisma";
 import { expectLeftTag, expectRight } from "@/test/effect/assertions";
-import { runEffectEitherWithLayer, runEffectWithLayer } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenActiveRental, givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
+import { makeRentalRunners, makeRentalTestLayer } from "./rental-test-kit";
+
 describe("return slot integration", () => {
   const fixture = setupPrismaIntFixture();
-  let depsLayer: Layer.Layer<
-    | Prisma
-    | RentalRepository
-    | ReturnSlotRepository
-    | ReturnConfirmationRepository
-    | BikeRepository
-    | SubscriptionRepository
-  >;
+  let runCreateReturnSlot: ReturnType<typeof makeRentalRunners>["createReturnSlot"];
+  let runGetCurrentReturnSlot: ReturnType<typeof makeRentalRunners>["getCurrentReturnSlot"];
+  let runGetCurrentReturnSlotEither: ReturnType<typeof makeRentalRunners>["getCurrentReturnSlotEither"];
+  let runCancelReturnSlot: ReturnType<typeof makeRentalRunners>["cancelReturnSlot"];
+  let runConfirmReturn: ReturnType<typeof makeRentalRunners>["confirmReturn"];
 
   beforeAll(() => {
-    depsLayer = Layer.mergeAll(
-      Layer.succeed(PrismaTag, PrismaTag.make({ client: fixture.prisma })),
-      Layer.succeed(RentalRepository, RentalRepository.make(makeRentalRepository(fixture.prisma))),
-      Layer.succeed(ReturnSlotRepository, ReturnSlotRepository.make(makeReturnSlotRepository(fixture.prisma))),
-      Layer.succeed(
-        ReturnConfirmationRepository,
-        ReturnConfirmationRepository.make(makeReturnConfirmationRepository(fixture.prisma)),
-      ),
-      Layer.succeed(BikeRepositoryTag, BikeRepositoryTag.make(makeBikeRepository(fixture.prisma))),
-      Layer.succeed(SubscriptionRepositoryTag, makeSubscriptionRepository(fixture.prisma)),
-    );
+    const runners = makeRentalRunners(makeRentalTestLayer(fixture.prisma));
+    runCreateReturnSlot = runners.createReturnSlot;
+    runGetCurrentReturnSlot = runners.getCurrentReturnSlot;
+    runGetCurrentReturnSlotEither = runners.getCurrentReturnSlotEither;
+    runCancelReturnSlot = runners.cancelReturnSlot;
+    runConfirmReturn = runners.confirmReturn;
   });
 
   it("creates and fetches an active return slot for an active rental", async () => {
@@ -55,15 +28,12 @@ describe("return slot integration", () => {
     const targetStation = await fixture.factories.station({ capacity: 2 });
     await fixture.factories.bike({ stationId: targetStation.id, status: "AVAILABLE" });
 
-    const createdResult = await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: rental.id,
-        userId: user.id,
-        stationId: targetStation.id,
-        now: new Date("2026-03-21T12:00:00.000Z"),
-      }),
-      depsLayer,
-    );
+    const createdResult = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+      now: new Date("2026-03-21T12:00:00.000Z"),
+    });
 
     const created = expectRight(createdResult);
     expect(created.status).toBe("ACTIVE");
@@ -71,10 +41,7 @@ describe("return slot integration", () => {
     expect(created.userId).toBe(user.id);
     expect(created.stationId).toBe(targetStation.id);
 
-    const current = await runEffectWithLayer(
-      getCurrentReturnSlot({ rentalId: rental.id, userId: user.id }),
-      depsLayer,
-    );
+    const current = await runGetCurrentReturnSlot({ rentalId: rental.id, userId: user.id });
 
     expect(current._tag).toBe("Some");
     if (current._tag === "Some") {
@@ -87,15 +54,17 @@ describe("return slot integration", () => {
     const { user, rental } = await givenActiveRental(fixture);
     const targetStation = await fixture.factories.station({ capacity: 2 });
 
-    const first = expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({ rentalId: rental.id, userId: user.id, stationId: targetStation.id }),
-      depsLayer,
-    ));
+    const first = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    }));
 
-    const second = expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({ rentalId: rental.id, userId: user.id, stationId: targetStation.id }),
-      depsLayer,
-    ));
+    const second = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    }));
 
     expect(second.id).toBe(first.id);
 
@@ -108,15 +77,17 @@ describe("return slot integration", () => {
     const firstStation = await fixture.factories.station({ capacity: 2 });
     const secondStation = await fixture.factories.station({ capacity: 2 });
 
-    const first = expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({ rentalId: rental.id, userId: user.id, stationId: firstStation.id }),
-      depsLayer,
-    ));
+    const first = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: firstStation.id,
+    }));
 
-    const second = expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({ rentalId: rental.id, userId: user.id, stationId: secondStation.id }),
-      depsLayer,
-    ));
+    const second = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: secondStation.id,
+    }));
 
     expect(second.id).not.toBe(first.id);
     expect(second.stationId).toBe(secondStation.id);
@@ -135,22 +106,20 @@ describe("return slot integration", () => {
     const { user, rental } = await givenActiveRental(fixture);
     const targetStation = await fixture.factories.station({ capacity: 2 });
 
-    expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({ rentalId: rental.id, userId: user.id, stationId: targetStation.id }),
-      depsLayer,
-    ));
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    }));
 
-    const cancelled = expectRight(await runEffectEitherWithLayer(
-      cancelReturnSlot({ rentalId: rental.id, userId: user.id }),
-      depsLayer,
-    ));
+    const cancelled = expectRight(await runCancelReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+    }));
 
     expect(cancelled.status).toBe("CANCELLED");
 
-    const current = await runEffectWithLayer(
-      getCurrentReturnSlot({ rentalId: rental.id, userId: user.id }),
-      depsLayer,
-    );
+    const current = await runGetCurrentReturnSlot({ rentalId: rental.id, userId: user.id });
 
     expect(current._tag).toBe("None");
   });
@@ -160,10 +129,11 @@ describe("return slot integration", () => {
     const fullStation = await fixture.factories.station({ capacity: 1 });
     await fixture.factories.bike({ stationId: fullStation.id, status: "AVAILABLE" });
 
-    const result = await runEffectEitherWithLayer(
-      createReturnSlot({ rentalId: rental.id, userId: user.id, stationId: fullStation.id }),
-      depsLayer,
-    );
+    const result = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: fullStation.id,
+    });
 
     expectLeftTag(result, "ReturnSlotCapacityExceeded");
   });
@@ -178,23 +148,17 @@ describe("return slot integration", () => {
     });
     await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
-    expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: first.rental.id,
-        userId: first.user.id,
-        stationId: station.id,
-      }),
-      depsLayer,
-    ));
+    expectRight(await runCreateReturnSlot({
+      rentalId: first.rental.id,
+      userId: first.user.id,
+      stationId: station.id,
+    }));
 
-    const result = await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: second.rental.id,
-        userId: second.user.id,
-        stationId: station.id,
-      }),
-      depsLayer,
-    );
+    const result = await runCreateReturnSlot({
+      rentalId: second.rental.id,
+      userId: second.user.id,
+      stationId: station.id,
+    });
 
     expectLeftTag(result, "ReturnSlotCapacityExceeded");
   });
@@ -202,14 +166,11 @@ describe("return slot integration", () => {
   it("fails when the target station does not exist", async () => {
     const { user, rental } = await givenActiveRental(fixture);
 
-    const result = await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: rental.id,
-        userId: user.id,
-        stationId: "0195d86e-0861-7d56-b743-5a2264f0f999",
-      }),
-      depsLayer,
-    );
+    const result = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: "0195d86e-0861-7d56-b743-5a2264f0f999",
+    });
 
     expectLeftTag(result, "StationNotFound");
   });
@@ -219,14 +180,11 @@ describe("return slot integration", () => {
     const otherUser = await givenUserWithWallet(fixture);
     const targetStation = await fixture.factories.station({ capacity: 2 });
 
-    const result = await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: owner.rental.id,
-        userId: otherUser.user.id,
-        stationId: targetStation.id,
-      }),
-      depsLayer,
-    );
+    const result = await runCreateReturnSlot({
+      rentalId: owner.rental.id,
+      userId: otherUser.user.id,
+      stationId: targetStation.id,
+    });
 
     expectLeftTag(result, "RentalNotFound");
   });
@@ -236,22 +194,16 @@ describe("return slot integration", () => {
     const otherUser = await givenUserWithWallet(fixture);
     const targetStation = await fixture.factories.station({ capacity: 2 });
 
-    expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: owner.rental.id,
-        userId: owner.user.id,
-        stationId: targetStation.id,
-      }),
-      depsLayer,
-    ));
+    expectRight(await runCreateReturnSlot({
+      rentalId: owner.rental.id,
+      userId: owner.user.id,
+      stationId: targetStation.id,
+    }));
 
-    const result = await runEffectEitherWithLayer(
-      getCurrentReturnSlot({
-        rentalId: owner.rental.id,
-        userId: otherUser.user.id,
-      }),
-      depsLayer,
-    );
+    const result = await runGetCurrentReturnSlotEither({
+      rentalId: owner.rental.id,
+      userId: otherUser.user.id,
+    });
 
     expectLeftTag(result, "RentalNotFound");
   });
@@ -269,10 +221,11 @@ describe("return slot integration", () => {
     });
     const targetStation = await fixture.factories.station({ capacity: 2 });
 
-    const result = await runEffectEitherWithLayer(
-      createReturnSlot({ rentalId: rental.id, userId: user.id, stationId: targetStation.id }),
-      depsLayer,
-    );
+    const result = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    });
 
     expectLeftTag(result, "ReturnSlotRequiresActiveRental");
   });
@@ -280,10 +233,10 @@ describe("return slot integration", () => {
   it("fails to cancel when no active return slot exists", async () => {
     const { user, rental } = await givenActiveRental(fixture);
 
-    const result = await runEffectEitherWithLayer(
-      cancelReturnSlot({ rentalId: rental.id, userId: user.id }),
-      depsLayer,
-    );
+    const result = await runCancelReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+    });
 
     expectLeftTag(result, "ReturnSlotNotFound");
   });
@@ -300,10 +253,7 @@ describe("return slot integration", () => {
       endTime: new Date(),
     });
 
-    const result = await runEffectEitherWithLayer(
-      getCurrentReturnSlot({ rentalId: rental.id, userId: user.id }),
-      depsLayer,
-    );
+    const result = await runGetCurrentReturnSlotEither({ rentalId: rental.id, userId: user.id });
 
     expectLeftTag(result, "ReturnSlotRequiresActiveRental");
   });
@@ -314,21 +264,19 @@ describe("return slot integration", () => {
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
 
-    expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({ rentalId: rental.id, userId: user.id, stationId: station.id }),
-      depsLayer,
-    ));
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: station.id,
+    }));
 
-    const ended = expectRight(await runEffectEitherWithLayer(
-      confirmRentalReturnByOperator({
-        rentalId: rental.id,
-        stationId: station.id,
-        confirmedByUserId: operator.id,
-        confirmationMethod: "MANUAL",
-        confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
-      }),
-      depsLayer,
-    ));
+    const ended = expectRight(await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    }));
 
     expect(ended.status).toBe("COMPLETED");
 
@@ -355,16 +303,13 @@ describe("return slot integration", () => {
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
 
-    const result = await runEffectEitherWithLayer(
-      confirmRentalReturnByOperator({
-        rentalId: rental.id,
-        stationId: station.id,
-        confirmedByUserId: operator.id,
-        confirmationMethod: "MANUAL",
-        confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
-      }),
-      depsLayer,
-    );
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
 
     expectLeftTag(result, "ReturnSlotRequiredForReturn");
   });
@@ -377,25 +322,19 @@ describe("return slot integration", () => {
     const reservedStation = await fixture.factories.station({ capacity: 2 });
     const attemptedStation = await fixture.factories.station({ capacity: 2 });
 
-    expectRight(await runEffectEitherWithLayer(
-      createReturnSlot({
-        rentalId: rental.id,
-        userId: user.id,
-        stationId: reservedStation.id,
-      }),
-      depsLayer,
-    ));
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: reservedStation.id,
+    }));
 
-    const result = await runEffectEitherWithLayer(
-      confirmRentalReturnByOperator({
-        rentalId: rental.id,
-        stationId: attemptedStation.id,
-        confirmedByUserId: operator.id,
-        confirmationMethod: "MANUAL",
-        confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
-      }),
-      depsLayer,
-    );
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: attemptedStation.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
 
     expectLeftTag(result, "ReturnSlotStationMismatch");
   });
@@ -427,16 +366,13 @@ describe("return slot integration", () => {
       },
     });
 
-    const result = await runEffectEitherWithLayer(
-      confirmRentalReturnByOperator({
-        rentalId: rental.id,
-        stationId: station.id,
-        confirmedByUserId: operator.id,
-        confirmationMethod: "MANUAL",
-        confirmedAt: new Date("2026-03-21T12:35:00.000Z"),
-      }),
-      depsLayer,
-    );
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date("2026-03-21T12:35:00.000Z"),
+    });
 
     expectLeftTag(result, "ReturnAlreadyConfirmed");
   });
