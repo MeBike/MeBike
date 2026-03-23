@@ -211,6 +211,9 @@ const IncidentReposLive = IncidentRepositoryLive.pipe(
 
 const IncidentServiceLayer = IncidentServiceLive.pipe(
   Layer.provide(IncidentReposLive),
+  Layer.provide(RentalReposLive),
+  Layer.provide(BikeReposLive),
+  Layer.provide(StationReposLive),
 );
 
 export const IncidentDepsLive = Layer.mergeAll(

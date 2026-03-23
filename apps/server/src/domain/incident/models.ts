@@ -48,4 +48,17 @@ export type CreateIncidentInput = {
   fileUrls: string[];
 };
 
+export type CreateIncidentRequest = {
+  reporterUserId: string;
+  reporterRole: string;
+  rentalId: string | null;
+  bikeId: string;
+  stationId: string | null;
+  incidentType: string;
+  description: string | null;
+  latitude: IncidentDecimal | null;
+  longitude: IncidentDecimal | null;
+  fileUrls: string[];
+};
+
 export type UpdateIncidentInput = Partial<CreateIncidentInput>;

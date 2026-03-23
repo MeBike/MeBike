@@ -20,6 +20,7 @@ import type {
   UpdateIncidentInput,
 } from "../models";
 import { IncidentSeverity, IncidentSource } from "generated/kysely/types";
+import { AdminRentalNotFound } from "@/domain/rentals";
 
 export type IncidentRepo = {
   listWithOffset: (
@@ -134,6 +135,9 @@ export function makeIncidentRepository(client: PrismaClient): IncidentRepo {
               longitude: data.longitude,
               bikeLocked: data.bikeLocked,
               status: IncidentStatus.OPEN,
+              attachments: {
+                create: data.fileUrls.map((url) => ({ fileUrl: url })),
+              },
             },
             select,
           }),

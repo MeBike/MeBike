@@ -5,6 +5,9 @@ export const incidentErrorCodes = [
   "INCIDENT_NOT_FOUND",
   "INVALID_INCIDENT_STATUS",
   "INVALID_QUERY_PARAMS",
+  "RENTAL_NOT_FOUND",
+  "BIKE_NOT_FOUND",
+  "STATION_NOT_FOUND",
 ] as const;
 
 export const IncidentErrorCodeSchema = z.enum(incidentErrorCodes);
@@ -44,7 +47,9 @@ export const IncidentNotFoundResponseSchema = ServerErrorResponseSchema.extend({
   },
 });
 
-export type IncidentNotFoundResponse = z.infer<typeof IncidentNotFoundResponseSchema>;
+export type IncidentNotFoundResponse = z.infer<
+  typeof IncidentNotFoundResponseSchema
+>;
 
 export const IncidentErrorResponseSchema = ServerErrorResponseSchema.extend({
   details: IncidentErrorDetailSchema.optional(),
@@ -56,4 +61,7 @@ export const incidentErrorMessages: Record<IncidentErrorCode, string> = {
   INCIDENT_NOT_FOUND: "Incident not found",
   INVALID_INCIDENT_STATUS: "Invalid incident status",
   INVALID_QUERY_PARAMS: "Invalid query parameters",
+  RENTAL_NOT_FOUND: "Rental not found",
+  BIKE_NOT_FOUND: "Bike not found",
+  STATION_NOT_FOUND: "Station not found",
 };

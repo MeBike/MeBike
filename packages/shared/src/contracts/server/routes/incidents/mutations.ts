@@ -8,7 +8,11 @@ import {
   IncidentSummarySchema,
   IncidentUpdateBodySchema,
 } from "./shared";
-import { IncidentErrorResponseSchema } from "../../incident/errors";
+import {
+  IncidentErrorCodeSchema,
+  IncidentErrorResponseSchema,
+} from "../../incident/errors";
+import { RentalErrorResponseSchema } from "../../rentals/errors";
 
 export const createIncident = createRoute({
   method: "post",
@@ -34,6 +38,43 @@ export const createIncident = createRoute({
       content: {
         "application/json": {
           schema: IncidentErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+          examples: {
+            RentalNotFound: {
+              value: {
+                error: "Rental not found",
+                details: {
+                  code: IncidentErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+            BikeNotFound: {
+              value: {
+                error: "Bike not found",
+                details: {
+                  code: IncidentErrorCodeSchema.enum.BIKE_NOT_FOUND,
+                  bikeId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+            StationNotFound: {
+              value: {
+                error: "Station not found",
+                details: {
+                  code: IncidentErrorCodeSchema.enum.STATION_NOT_FOUND,
+                  stationId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
         },
       },
     },

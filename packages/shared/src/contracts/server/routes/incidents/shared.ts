@@ -23,7 +23,7 @@ export const IncidentIdParamSchema = z
 
 export const IncidentListQuerySchema = z
   .object({
-    stationId: z.uuidv7(),
+    stationId: z.uuidv7().optional(),
     status: IncidentStatusSchema.optional(),
     ...paginationQueryFields,
     sortBy: IncidentSortFieldSchema.optional().openapi({
@@ -42,6 +42,8 @@ export const IncidentListQuerySchema = z
 export const IncidentCreateBodySchema = z
   .object({
     bikeId: z.uuidv7(),
+    stationId: z.uuidv7().optional(),
+    rentalId: z.uuidv7().optional(),
     incidentType: z.string().max(250),
     description: z.string().max(250).optional(),
     latitude: z.number().min(-90).max(90).openapi({
@@ -52,7 +54,6 @@ export const IncidentCreateBodySchema = z
       description: "Longitude of the incident",
       example: 106.7009,
     }),
-    rentalId: z.uuidv7().optional(),
     fileUrls: z.array(z.url()).optional(),
   })
   .openapi("IncidentCreateBody", {
