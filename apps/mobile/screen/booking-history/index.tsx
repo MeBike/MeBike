@@ -1,24 +1,15 @@
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useStationActions } from "@hooks/useStationAction";
 import { useNavigation } from "@react-navigation/native";
+import { Screen } from "@ui/primitives/screen";
 import { useCallback, useMemo } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "react-native";
 
-import BookingHistoryHeader from "./components/booking-history-header";
 import BookingHistoryList from "./components/booking-history-list";
 import { useBookingHistory } from "./hooks/use-booking-history";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F3F5F9",
-  },
-});
-
 function BookingHistoryScreen() {
   const navigator = useNavigation();
-  const insets = useSafeAreaInsets();
 
   const {
     bookings,
@@ -52,9 +43,8 @@ function BookingHistoryScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <Screen>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-      <BookingHistoryHeader topInset={insets.top} />
       <BookingHistoryList
         bookings={bookings}
         stationNameById={stationNameById}
@@ -64,7 +54,7 @@ function BookingHistoryScreen() {
         isLoadingMore={isFetchingNextPage}
         onSelectBooking={handleOpenBooking}
       />
-    </View>
+    </Screen>
   );
 }
 

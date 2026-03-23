@@ -1,6 +1,16 @@
+import { useEffect } from "react";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { XStack } from "tamagui";
+
 import { colors } from "@theme/colors";
 import { AppText } from "@ui/primitives/app-text";
-import { XStack } from "tamagui";
 
 type StatusBadgeTone = "success" | "warning" | "danger" | "neutral" | "inverted" | "overlaySuccess";
 type StatusBadgeSize = "default" | "compact";
@@ -10,6 +20,7 @@ type StatusBadgeProps = {
   tone?: StatusBadgeTone;
   size?: StatusBadgeSize;
   withDot?: boolean;
+  pulseDot?: boolean;
 };
 
 const toneStyles: Record<StatusBadgeTone, { bg: string; textTone: "success" | "warning" | "danger" | "muted" | "inverted"; dot: string }> = {
@@ -47,9 +58,44 @@ export function StatusBadge({
   tone = "neutral",
   size = "default",
   withDot = true,
+  pulseDot = false,
 }: StatusBadgeProps) {
   const style = toneStyles[tone];
   const sizeStyle = sizeStyles[size];
+  const dotScale = useSharedValue(1);
+  const dotOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (!pulseDot || !withDot) {
+      dotScale.value = 1;
+      dotOpacity.value = 1;
+      return;
+    }
+
+    dotScale.value
+      = withRepeat(
+        withSequence(
+          withTiming(1.18, { duration: 700, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 700, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+        false,
+      );
+    dotOpacity.value
+      = withRepeat(
+        withSequence(
+          withTiming(0.65, { duration: 700, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 700, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+        false,
+      );
+  }, [dotOpacity, dotScale, pulseDot, withDot]);
+
+  const animatedDotStyle = useAnimatedStyle(() => ({
+    opacity: dotOpacity.value,
+    transform: [{ scale: dotScale.value }],
+  }));
 
   return (
     <XStack
@@ -63,12 +109,16 @@ export function StatusBadge({
     >
       {withDot
         ? (
-            <XStack
-              backgroundColor={style.dot}
-              borderRadius="$round"
-              height={sizeStyle.dotSize}
-              width={sizeStyle.dotSize}
-            />
+            <Animated.View
+              style={animatedDotStyle}
+            >
+              <XStack
+                backgroundColor={style.dot}
+                borderRadius="$round"
+                height={sizeStyle.dotSize}
+                width={sizeStyle.dotSize}
+              />
+            </Animated.View>
           )
         : null}
       <AppText style={sizeStyle.textStyle} tone={style.textTone} variant="caption">

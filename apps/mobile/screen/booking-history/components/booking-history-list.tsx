@@ -1,14 +1,17 @@
+import { colors } from "@theme/colors";
+import { spacing } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  StyleSheet,
-  Text,
   View,
 } from "react-native";
 
 import type { Rental } from "@/types/rental-types";
+
 import BookingCard from "./booking-card";
+import BookingHistoryHeader from "./booking-history-header";
 import EmptyBookingState from "./empty-booking-state";
 
 type BookingHistoryListProps = {
@@ -21,27 +24,6 @@ type BookingHistoryListProps = {
   onSelectBooking: (bookingId: string) => void;
 };
 
-const styles = StyleSheet.create({
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 26,
-  },
-  emptyContent: {
-    flex: 1,
-  },
-  loadingMoreContainer: {
-    paddingVertical: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingMoreText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#666",
-  },
-});
-
 function BookingHistoryList({
   bookings,
   stationNameById,
@@ -51,40 +33,51 @@ function BookingHistoryList({
   isLoadingMore,
   onSelectBooking,
 }: BookingHistoryListProps) {
-  const footer = isLoadingMore ? (
-    <View style={styles.loadingMoreContainer}>
-      <ActivityIndicator size="small" color="#0066FF" />
-      <Text style={styles.loadingMoreText}>Đang tải thêm...</Text>
-    </View>
-  ) : null;
+  const footer = isLoadingMore
+    ? (
+        <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: spacing.xl }}>
+          <ActivityIndicator size="small" color={colors.brandPrimary} />
+          <AppText marginTop="$2" tone="muted" variant="bodySmall">
+            Đang tải thêm...
+          </AppText>
+        </View>
+      )
+    : null;
 
   return (
     <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       data={bookings}
       renderItem={({ item }) => (
-        <BookingCard
-          booking={item}
-          stationNameById={stationNameById}
-          onPress={onSelectBooking}
-        />
+        <View style={{ paddingHorizontal: spacing.xl }}>
+          <BookingCard
+            booking={item}
+            stationNameById={stationNameById}
+            onPress={onSelectBooking}
+          />
+        </View>
       )}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={[
-        styles.listContent,
-        bookings.length === 0 && styles.emptyContent,
-      ]}
-      refreshControl={
+      keyExtractor={item => item.id}
+      contentContainerStyle={{
+        flexGrow: bookings.length === 0 ? 1 : undefined,
+        paddingBottom: spacing.xxxxl,
+      }}
+      refreshControl={(
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={["#0066FF"]}
-          tintColor="#0066FF"
+          colors={[colors.brandPrimary]}
+          tintColor={colors.brandPrimary}
         />
-      }
+      )}
       onEndReached={onLoadMore}
       onEndReachedThreshold={0.4}
+      ItemSeparatorComponent={() => <View style={{ height: spacing.lg }} />}
+      ListHeaderComponent={<BookingHistoryHeader />}
+      ListHeaderComponentStyle={{ marginBottom: -spacing.xxl }}
       ListFooterComponent={footer}
       ListEmptyComponent={<EmptyBookingState />}
+      showsVerticalScrollIndicator={false}
     />
   );
 }

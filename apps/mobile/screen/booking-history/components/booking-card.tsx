@@ -1,111 +1,17 @@
-import { Ionicons } from "@expo/vector-icons";
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { radii } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { StatusBadge } from "@ui/primitives/status-badge";
 import { formatVietnamDateTime } from "@utils/date";
 import { formatDurationMinutes } from "@utils/duration";
 import { formatSupportCode } from "@utils/id";
 import { memo, useMemo } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable } from "react-native";
+import { Separator, XStack, YStack } from "tamagui";
 
 import type { Rental, RentalStatus } from "@/types/rental-types";
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#E3E8F2",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 10,
-    gap: 10,
-  },
-  leftWrap: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    flex: 1,
-    gap: 10,
-  },
-  bikeIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#EDF4FF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 1,
-  },
-  bikeName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1F2937",
-    marginBottom: 2,
-  },
-  bookingCode: {
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  rightWrap: {
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  priceText: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1D4ED8",
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  routeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    gap: 8,
-  },
-  routeText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#374151",
-    fontWeight: "500",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#EEF2F7",
-    marginBottom: 10,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flex: 1,
-  },
-  metaText: {
-    fontSize: 13,
-    color: "#6B7280",
-    fontWeight: "500",
-  },
-});
 
 type BookingCardProps = {
   booking: Rental;
@@ -119,96 +25,198 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
     return `${total.toLocaleString("vi-VN")} đ`;
   }, [booking.totalPrice]);
 
-  const routeText = useMemo(() => {
-    const startLabel = stationNameById.get(booking.startStation)
-      ?? formatSupportCode(booking.startStation);
-    const endLabel = booking.endStation
-      ? (stationNameById.get(booking.endStation) ?? formatSupportCode(booking.endStation))
-      : "Đang thuê";
-    return `${startLabel} → ${endLabel}`;
-  }, [booking.endStation, booking.startStation, stationNameById]);
+  const originLabel = useMemo(
+    () => stationNameById.get(booking.startStation) ?? formatSupportCode(booking.startStation),
+    [booking.startStation, stationNameById],
+  );
+  const destinationLabel = useMemo(() => {
+    if (!booking.endStation) {
+      return "Đang di chuyển...";
+    }
 
-  const status = getStatusStyle(booking.status);
+    return stationNameById.get(booking.endStation) ?? formatSupportCode(booking.endStation);
+  }, [booking.endStation, stationNameById]);
+
+  const status = getStatusMeta(booking.status);
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      style={styles.card}
+    <Pressable
       onPress={() => onPress(booking.id)}
+      style={({ pressed }) => ({ opacity: pressed ? 0.98 : 1 })}
     >
-      <View style={styles.topRow}>
-        <View style={styles.leftWrap}>
-          <View style={styles.bikeIconWrap}>
-            <Ionicons name="bicycle" size={20} color="#2563EB" />
-          </View>
-          <View>
-            <Text style={styles.bikeName}>Xe đạp</Text>
-            <Text style={styles.bookingCode}>{formatSupportCode(booking.id)}</Text>
-          </View>
-        </View>
+      <AppCard borderRadius={radii.xl} gap="$4" padding="$4">
+        <XStack alignItems="flex-start" justifyContent="space-between" gap="$3">
+          <XStack flex={1} gap="$3">
+            <YStack
+              alignItems="center"
+              backgroundColor={colors.surfaceMuted}
+              borderRadius="$round"
+              height={44}
+              justifyContent="center"
+              width={44}
+            >
+              <IconSymbol color={colors.textSecondary} name="bicycle.circle.fill" size={20} />
+            </YStack>
+            <YStack flex={1} gap="$1">
+              <AppText style={{ fontSize: 17, fontWeight: "700", lineHeight: 22 }}>
+                Xe đạp
+              </AppText>
+              <AppText tone="subtle" variant="bodySmall">
+                {formatSupportCode(booking.id)}
+              </AppText>
+            </YStack>
+          </XStack>
 
-        <View style={styles.rightWrap}>
-          <Text style={styles.priceText}>{priceText}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: status.backgroundColor }]}>
-            <Text style={[styles.statusText, { color: status.textColor }]}>{status.text}</Text>
-          </View>
-        </View>
-      </View>
+          <YStack alignItems="flex-end" gap="$2">
+            <AppText style={{ color: colors.brandPrimary, fontSize: 19, fontWeight: "800", lineHeight: 24 }}>
+              {priceText}
+            </AppText>
+            <StatusBadge
+              label={status.label}
+              pulseDot={status.pulseDot}
+              size="compact"
+              tone={status.tone}
+              withDot={status.withDot}
+            />
+          </YStack>
+        </XStack>
 
-      <View style={styles.routeRow}>
-        <Ionicons name="git-network-outline" size={16} color="#64748B" />
-        <Text style={styles.routeText} numberOfLines={1}>{routeText}</Text>
-      </View>
+        <Separator borderColor="$divider" />
 
-      <View style={styles.divider} />
+        <XStack alignItems="stretch" gap="$3" paddingHorizontal="$1">
+          <YStack
+            alignItems="center"
+            alignSelf="stretch"
+            justifyContent="space-between"
+            paddingVertical={2}
+            width={20}
+          >
+            <YStack
+              alignItems="center"
+              backgroundColor={colors.surface}
+              borderColor={colors.textMuted}
+              borderRadius="$round"
+              borderWidth={1.5}
+              height={18}
+              justifyContent="center"
+              width={18}
+            >
+              <YStack backgroundColor={colors.textMuted} borderRadius="$round" height={4} width={4} />
+            </YStack>
 
-      <View style={styles.metaRow}>
-        <View style={styles.metaItem}>
-          <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
-          <Text style={styles.metaText}>{formatVietnamDateTime(booking.startTime)}</Text>
-        </View>
-        <View style={styles.metaItem}>
-          <Ionicons name="time-outline" size={16} color="#9CA3AF" />
-          <Text style={styles.metaText}>
-            {formatDurationMinutes(booking.duration, { hasEnded: Boolean(booking.endTime) })}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+            <YStack
+              backgroundColor={colors.borderSubtle}
+              borderRadius="$round"
+              flex={1}
+              marginVertical={4}
+              width={2}
+            />
+
+            <YStack
+              alignItems="center"
+              backgroundColor={colors.surface}
+              borderColor={status.routeAccentColor}
+              borderRadius="$round"
+              borderWidth={1.5}
+              height={18}
+              justifyContent="center"
+              width={18}
+            >
+              <YStack
+                backgroundColor={status.routeAccentColor}
+                borderRadius="$round"
+                height={6}
+                width={6}
+              />
+            </YStack>
+          </YStack>
+
+          <YStack flex={1} justifyContent="space-between" minHeight={56} paddingVertical={2}>
+            <XStack alignItems="center" minHeight={18}>
+              <AppText flex={1} numberOfLines={1} style={{ fontSize: 15, fontWeight: "700", lineHeight: 18 }}>
+                {originLabel}
+              </AppText>
+            </XStack>
+
+            <XStack alignItems="center" minHeight={18}>
+              <AppText
+                flex={1}
+                numberOfLines={1}
+                style={{ fontSize: 15, fontWeight: "700", lineHeight: 18 }}
+                tone={status.destinationTone}
+              >
+                {destinationLabel}
+              </AppText>
+            </XStack>
+          </YStack>
+        </XStack>
+
+        <XStack alignItems="center" gap="$3" paddingHorizontal="$1">
+          <XStack alignItems="center" gap="$1.5" flex={1}>
+            <IconSymbol color={colors.textMuted} name="calendar" size={14} />
+            <AppText tone="muted" variant="bodySmall">
+              {formatVietnamDateTime(booking.startTime)}
+            </AppText>
+          </XStack>
+          <Separator alignSelf="stretch" borderColor="$divider" vertical />
+          <XStack alignItems="center" gap="$1.5" flex={1}>
+            <IconSymbol color={colors.textMuted} name="clock" size={14} />
+            <AppText tone="muted" variant="bodySmall">
+              {formatDurationMinutes(booking.duration, { hasEnded: Boolean(booking.endTime) })}
+            </AppText>
+          </XStack>
+        </XStack>
+      </AppCard>
+    </Pressable>
   );
 });
 
-function getStatusStyle(status: RentalStatus) {
+function getStatusMeta(status: RentalStatus) {
   switch (status) {
     case "COMPLETED":
       return {
-        text: "Hoàn thành",
-        backgroundColor: "#E8F5E9",
-        textColor: "#2E7D32",
+        label: "HOÀN THÀNH",
+        tone: "success" as const,
+        pulseDot: false,
+        withDot: false,
+        destinationTone: "default" as const,
+        routeAccentColor: colors.brandPrimary,
       };
     case "RENTED":
       return {
-        text: "Đang thuê",
-        backgroundColor: "#FFF4E5",
-        textColor: "#B45309",
+        label: "ĐANG THUÊ",
+        tone: "warning" as const,
+        pulseDot: true,
+        withDot: true,
+        destinationTone: "warning" as const,
+        routeAccentColor: colors.warning,
       };
     case "CANCELLED":
       return {
-        text: "Đã hủy",
-        backgroundColor: "#FDECEC",
-        textColor: "#B91C1C",
+        label: "ĐÃ HỦY",
+        tone: "danger" as const,
+        pulseDot: false,
+        withDot: false,
+        destinationTone: "danger" as const,
+        routeAccentColor: colors.error,
       };
     case "RESERVED":
       return {
-        text: "Đã đặt",
-        backgroundColor: "#EEF2FF",
-        textColor: "#3730A3",
+        label: "ĐÃ ĐẶT",
+        tone: "neutral" as const,
+        pulseDot: false,
+        withDot: false,
+        destinationTone: "default" as const,
+        routeAccentColor: colors.brandPrimary,
       };
     default:
       return {
-        text: status,
-        backgroundColor: "#F3F4F6",
-        textColor: "#4B5563",
+        label: status,
+        tone: "neutral" as const,
+        pulseDot: false,
+        withDot: false,
+        destinationTone: "default" as const,
+        routeAccentColor: colors.textSecondary,
       };
   }
 }
