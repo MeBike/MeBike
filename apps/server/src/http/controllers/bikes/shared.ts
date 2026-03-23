@@ -1,4 +1,10 @@
 import { BikesContracts } from "@mebike/shared";
+import { Effect } from "effect";
+
+import type { BikeRow } from "@/domain/bikes";
+
+import { RatingRepository } from "@/domain/ratings";
+import { toBikeSummary } from "@/http/presenters/bikes.presenter";
 
 export type BikesRoutes = typeof import("@mebike/shared")["serverRoutes"]["bikes"];
 
@@ -31,3 +37,26 @@ export type BikeListResponse = {
 };
 
 export const { BikeErrorCodeSchema, bikeErrorMessages } = BikesContracts;
+
+export function loadBikeSummary(row: BikeRow) {
+  return Effect.gen(function* () {
+    const ratingRepo = yield* RatingRepository;
+    const rating = yield* ratingRepo.findBikeAggregates([row.id]).pipe(
+      Effect.catchTag("RatingRepositoryError", err => Effect.die(err)),
+      Effect.map(map => map[row.id]),
+    );
+
+    return toBikeSummary(row, rating);
+  });
+}
+
+export function loadBikeSummaries(rows: readonly BikeRow[]) {
+  return Effect.gen(function* () {
+    const ratingRepo = yield* RatingRepository;
+    const ratingsByBikeId = yield* ratingRepo.findBikeAggregates(rows.map(row => row.id)).pipe(
+      Effect.catchTag("RatingRepositoryError", err => Effect.die(err)),
+    );
+
+    return rows.map(row => toBikeSummary(row, ratingsByBikeId[row.id]));
+  });
+}

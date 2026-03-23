@@ -10,13 +10,24 @@ import type {
   HighestRevenueBike,
 } from "@/domain/bikes";
 
-export function toBikeSummary(row: BikeRow): BikesContracts.BikeSummary {
+type BikeRating = BikesContracts.BikeSummary["rating"];
+
+const defaultBikeRating: BikeRating = {
+  averageRating: 0,
+  totalRatings: 0,
+};
+
+export function toBikeSummary(
+  row: BikeRow,
+  rating: BikeRating = defaultBikeRating,
+): BikesContracts.BikeSummary {
   return {
     id: row.id,
     chipId: row.chipId,
     stationId: row.stationId,
     supplierId: row.supplierId,
     status: row.status,
+    rating,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

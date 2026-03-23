@@ -8,7 +8,12 @@ import type {
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
-import type { CreateRatingInput, RatingRow, RatingSummary } from "../models";
+import type {
+  CreateRatingInput,
+  RatingAggregate,
+  RatingRow,
+  RatingSummary,
+} from "../models";
 
 import { RatingAlreadyExists, RatingRepositoryError } from "../domain-errors";
 import { selectRatingRow, toRatingRow } from "./rating.mappers";
@@ -23,6 +28,9 @@ export type RatingRepo = {
   readonly findBikeSummary: (
     bikeId: string,
   ) => Effect.Effect<RatingSummary, RatingRepositoryError>;
+  readonly findBikeAggregates: (
+    bikeIds: readonly string[],
+  ) => Effect.Effect<Record<string, RatingAggregate>, RatingRepositoryError>;
   readonly findStationSummary: (
     stationId: string,
   ) => Effect.Effect<RatingSummary, RatingRepositoryError>;
@@ -146,6 +154,50 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
         "bikeScore",
         "findBikeSummary",
       ),
+
+    findBikeAggregates: bikeIds => {
+      if (bikeIds.length === 0) {
+        return Effect.succeed({});
+      }
+
+      return Effect.tryPromise({
+        try: async () => {
+          const rows = await client.rating.groupBy({
+            by: ["bikeId"],
+            where: {
+              bikeId: { in: [...bikeIds] },
+            },
+            _avg: {
+              bikeScore: true,
+            },
+            _count: {
+              bikeScore: true,
+            },
+          });
+
+          return Object.fromEntries(
+            rows.flatMap((row) => {
+              if (!row.bikeId) {
+                return [];
+              }
+
+              return [[
+                row.bikeId,
+                {
+                  averageRating: Number(((row._avg.bikeScore ?? 0)).toFixed(2)),
+                  totalRatings: row._count.bikeScore,
+                } satisfies RatingAggregate,
+              ]];
+            }),
+          );
+        },
+        catch: err =>
+          new RatingRepositoryError({
+            operation: "findBikeAggregates",
+            cause: err,
+          }),
+      });
+    },
 
     findStationSummary: stationId =>
       findSummaryByWhere(
