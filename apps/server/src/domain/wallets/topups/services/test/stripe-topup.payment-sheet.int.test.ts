@@ -1,24 +1,22 @@
 import type Stripe from "stripe";
 
-import { Effect, Layer } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
-import { Prisma } from "@/infrastructure/prisma";
-import { StripeClient } from "@/infrastructure/stripe";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { WalletRepositoryLive } from "../../../repository/wallet.repository";
-import { WalletServiceLive } from "../../../services/wallet.service";
-import { PaymentAttemptRepositoryLive } from "../../repository/payment-attempt.repository";
-import {
-  createStripePaymentSheetUseCase,
-  handleStripePaymentIntentWebhookEventUseCase,
-} from "../stripe-topup.handlers";
-import { StripeTopupServiceLive } from "../stripe-topup.service";
+import { makeStripeTopupTestKit } from "./stripe-topup-test-kit";
 
 describe("stripe topup PaymentSheet integration", () => {
   const fixture = setupPrismaIntFixture();
   const createPaymentIntent = vi.fn();
+  let topup: ReturnType<typeof makeStripeTopupTestKit>;
+
+  beforeAll(() => {
+    topup = makeStripeTopupTestKit({
+      prisma: fixture.prisma,
+      createPaymentIntent,
+    });
+  });
 
   afterEach(async () => {
     createPaymentIntent.mockReset();
@@ -32,30 +30,6 @@ describe("stripe topup PaymentSheet integration", () => {
     return { userId: user.id, walletId: wallet.id };
   };
 
-  const makeDepsLayer = () => {
-    const prismaLayer = Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma }));
-    const stripeLayer = Layer.succeed(StripeClient, StripeClient.make({
-      client: {
-        paymentIntents: {
-          create: createPaymentIntent,
-        },
-      } as unknown as Stripe,
-    }));
-
-    const paymentAttemptRepoLayer = PaymentAttemptRepositoryLive.pipe(Layer.provide(prismaLayer));
-    const walletRepoLayer = WalletRepositoryLive.pipe(Layer.provide(prismaLayer));
-    const walletServiceLayer = WalletServiceLive.pipe(Layer.provide(walletRepoLayer));
-    const stripeTopupLayer = StripeTopupServiceLive.pipe(
-      Layer.provide(Layer.mergeAll(stripeLayer, paymentAttemptRepoLayer)),
-    );
-
-    return {
-      prismaLayer,
-      createUseCaseLayer: Layer.mergeAll(stripeTopupLayer, walletServiceLayer),
-      webhookLayer: Layer.mergeAll(stripeTopupLayer, prismaLayer),
-    };
-  };
-
   it("creates a PaymentIntent-backed topup attempt", async () => {
     const { userId } = await createUserAndWallet();
     createPaymentIntent.mockResolvedValue({
@@ -63,13 +37,10 @@ describe("stripe topup PaymentSheet integration", () => {
       client_secret: "pi_test_payment_sheet_secret_123",
     });
 
-    const { createUseCaseLayer } = makeDepsLayer();
-    const result = await Effect.runPromise(
-      createStripePaymentSheetUseCase({
-        userId,
-        amountMinor: 10000,
-      }).pipe(Effect.provide(createUseCaseLayer)),
-    );
+    const result = await topup.createPaymentSheet({
+      userId,
+      amountMinor: 10000,
+    });
 
     expect(result.paymentIntentClientSecret).toBe("pi_test_payment_sheet_secret_123");
 
@@ -86,13 +57,10 @@ describe("stripe topup PaymentSheet integration", () => {
       client_secret: "pi_test_success_secret_123",
     });
 
-    const layers = makeDepsLayer();
-    const created = await Effect.runPromise(
-      createStripePaymentSheetUseCase({
-        userId,
-        amountMinor: 12000,
-      }).pipe(Effect.provide(layers.createUseCaseLayer)),
-    );
+    const created = await topup.createPaymentSheet({
+      userId,
+      amountMinor: 12000,
+    });
 
     const event = {
       type: "payment_intent.succeeded",
@@ -108,9 +76,7 @@ describe("stripe topup PaymentSheet integration", () => {
       },
     } as unknown as Stripe.Event;
 
-    const outcome = await Effect.runPromise(
-      handleStripePaymentIntentWebhookEventUseCase(event).pipe(Effect.provide(layers.webhookLayer)),
-    );
+    const outcome = await topup.handleWebhook(event);
 
     expect(outcome).toEqual({
       status: "succeeded",
@@ -149,9 +115,7 @@ describe("stripe topup PaymentSheet integration", () => {
       },
     });
 
-    const repeated = await Effect.runPromise(
-      handleStripePaymentIntentWebhookEventUseCase(event).pipe(Effect.provide(layers.webhookLayer)),
-    );
+    const repeated = await topup.handleWebhook(event);
     expect(repeated).toEqual({ status: "ignored", reason: "already_succeeded" });
 
     const repeatedOutboxRows = await fixture.prisma.jobOutbox.findMany();
@@ -165,13 +129,10 @@ describe("stripe topup PaymentSheet integration", () => {
       client_secret: "pi_test_failed_secret_123",
     });
 
-    const layers = makeDepsLayer();
-    const created = await Effect.runPromise(
-      createStripePaymentSheetUseCase({
-        userId,
-        amountMinor: 9000,
-      }).pipe(Effect.provide(layers.createUseCaseLayer)),
-    );
+    const created = await topup.createPaymentSheet({
+      userId,
+      amountMinor: 9000,
+    });
 
     const event = {
       type: "payment_intent.payment_failed",
@@ -189,9 +150,7 @@ describe("stripe topup PaymentSheet integration", () => {
       },
     } as unknown as Stripe.Event;
 
-    const outcome = await Effect.runPromise(
-      handleStripePaymentIntentWebhookEventUseCase(event).pipe(Effect.provide(layers.webhookLayer)),
-    );
+    const outcome = await topup.handleWebhook(event);
 
     expect(outcome).toEqual({
       status: "failed",
