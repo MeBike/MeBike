@@ -1,6 +1,9 @@
 import { Layer } from "effect";
 
 import type { ConfirmRentalReturnInput, StartRentalInput } from "@/domain/rentals/types";
+import type {
+  SubscriptionServiceTag,
+} from "@/domain/subscriptions";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
@@ -21,19 +24,18 @@ import {
   makeSubscriptionRepository,
   SubscriptionRepository,
   SubscriptionServiceLive,
-  SubscriptionServiceTag,
 } from "@/domain/subscriptions";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectEitherWithLayer, runEffectWithLayer } from "@/test/effect/run";
 
-export type RentalDeps =
-  | Prisma
-  | RentalRepository
-  | ReturnSlotRepository
-  | ReturnConfirmationRepository
-  | BikeRepository
-  | SubscriptionRepository
-  | SubscriptionServiceTag;
+export type RentalDeps
+  = | Prisma
+    | RentalRepository
+    | ReturnSlotRepository
+    | ReturnConfirmationRepository
+    | BikeRepository
+    | SubscriptionRepository
+    | SubscriptionServiceTag;
 
 export function makeRentalTestLayer(client: PrismaClient) {
   const rentalRepo = makeRentalRepository(client);

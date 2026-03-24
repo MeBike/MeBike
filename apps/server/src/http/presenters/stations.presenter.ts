@@ -1,4 +1,4 @@
-import { StationsContracts } from "@mebike/shared";
+import type { StationsContracts } from "@mebike/shared";
 
 import type { NearestStationRow, StationRow } from "@/domain/stations";
 

@@ -6,7 +6,9 @@ import { makeSubscriptionRepository, SubscriptionRepository } from "@/domain/sub
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";
 
-import { SubscriptionServiceLive, SubscriptionServiceTag } from "../subscription.service";
+import type { SubscriptionServiceTag } from "../subscription.service";
+
+import { SubscriptionServiceLive } from "../subscription.service";
 
 export type SubscriptionDeps = Prisma | SubscriptionRepository | SubscriptionServiceTag;
 

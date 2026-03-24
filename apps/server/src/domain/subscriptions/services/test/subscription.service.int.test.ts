@@ -6,7 +6,6 @@ import { expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { SubscriptionServiceTag } from "../subscription.service";
-
 import { makeSubscriptionRunners, makeSubscriptionTestLayer } from "./subscription-test-kit";
 
 describe("subscriptionService Integration", () => {

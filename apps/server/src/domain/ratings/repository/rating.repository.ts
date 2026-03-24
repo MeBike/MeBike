@@ -155,7 +155,7 @@ export function makeRatingRepository(client: PrismaClient): RatingRepo {
         "findBikeSummary",
       ),
 
-    findBikeAggregates: bikeIds => {
+    findBikeAggregates: (bikeIds) => {
       if (bikeIds.length === 0) {
         return Effect.succeed({});
       }

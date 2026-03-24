@@ -1,8 +1,9 @@
+import type Redis from "ioredis";
+
 import bcrypt from "bcrypt";
 import { Effect, Layer } from "effect";
 import { uuidv7 } from "uuidv7";
 
-import type Redis from "ioredis";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { env } from "@/config/env";

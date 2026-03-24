@@ -11,7 +11,6 @@ import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { setupRedisIntFixture } from "@/test/redis/redis-int-fixture";
 
 import { OTP_MAX_ATTEMPTS } from "../../config";
-
 import { makeAuthTestKit } from "./auth-test-kit";
 
 function expectInvalidOtp(result: Either.Either<unknown, { _tag: string; retriable?: boolean }>) {
