@@ -146,8 +146,8 @@ export default function ReservationsPage() {
                 console.log("[v0] View reservation:", id);
               },
               onEdit: ({ data }) => {
-                setSelectedReservationId(data._id);
-                console.log("[v0] Edit reservation:", data._id);
+                setSelectedReservationId(data.id);
+                console.log("[v0] Edit reservation:", data.id);
               },
               stations: stations,
             })}

@@ -69,16 +69,13 @@ function mapRecordToTxRow(t: Record<string, unknown>): WalletTxRow | null {
         ? String((idRaw as { $oid: string }).$oid)
         : String(idRaw ?? "");
   if (!id) return null;
-
   const createdAt =
     (typeof t.createdAt === "string" && t.createdAt) ||
     (typeof t.created_at === "string" && t.created_at) ||
     "";
-
   const type = typeof t.type === "string" ? t.type : "";
   const status = typeof t.status === "string" ? t.status : "";
   const description = typeof t.description === "string" ? t.description : "";
-
   return {
     id,
     type,

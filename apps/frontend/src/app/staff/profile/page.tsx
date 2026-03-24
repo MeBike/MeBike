@@ -19,7 +19,6 @@ import { uploadImageToFirebase } from "@/lib/firebase";
 
 type FormDataWithAvatar = DetailUser & { avatarFile?: File };
 
-// Compress image function
 const compressImage = async (file: File): Promise<File> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -31,11 +30,8 @@ const compressImage = async (file: File): Promise<File> => {
         const canvas = document.createElement("canvas");
         let width = imgElement.naturalWidth;
         let height = imgElement.naturalHeight;
-
-        // Max dimensions
         const maxWidth = 800;
         const maxHeight = 800;
-
         if (width > height) {
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
