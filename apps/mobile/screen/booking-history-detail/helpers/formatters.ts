@@ -90,7 +90,7 @@ export function getPaymentLabel(subscriptionId?: string) {
 export function getDepositStatusLabel(status?: string) {
   switch (status) {
     case "HELD": {
-      return "Đang tạm giữ";
+      return "Đang tạm giữ ";
     }
     case "RELEASED": {
       return "Đã hoàn";

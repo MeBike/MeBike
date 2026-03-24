@@ -77,17 +77,20 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
       <AppCard borderRadius="$5" elevated={false} overflow="hidden" padding="$0">
         <XStack
           alignItems="center"
+          backgroundColor="$surfaceMuted"
           borderBottomWidth={1}
           borderColor="$divider"
           justifyContent="space-between"
-          padding="$5"
+          paddingHorizontal="$5"
+          paddingVertical="$4"
         >
           <StatusBadge
             label={status.label}
+            size="compact"
             pulseDot={status.pulseDot}
             tone={status.tone}
           />
-          <AppText tone="muted" variant="value">
+          <AppText tone="muted" variant="meta">
             {formatDateOnly(rental.startTime)}
           </AppText>
         </XStack>
