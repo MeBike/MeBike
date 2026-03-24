@@ -101,15 +101,12 @@ export function ReservationCard({
                   <YStack flex={1} gap="$1" justifyContent="center" minWidth={0} paddingRight="$2">
                     <AppText
                       numberOfLines={titleLineCount}
-                      style={{ fontSize: 18, fontWeight: "800", letterSpacing: -0.3, lineHeight: 21 }}
+                      variant="sectionTitle"
+                      style={{ fontWeight: "800", letterSpacing: -0.3, lineHeight: 21 }}
                     >
                       {cardTitle}
                     </AppText>
-                    <AppText
-                      numberOfLines={1}
-                      tone="subtle"
-                      style={{ fontSize: 12, fontWeight: "500", lineHeight: 16 }}
-                    >
+                    <AppText numberOfLines={1} tone="subtle" variant="meta">
                       {createdAtLabel}
                     </AppText>
                   </YStack>
@@ -135,11 +132,7 @@ export function ReservationCard({
               >
                 <XStack alignItems="center" gap="$3">
                   <IconSymbol color={colors.textMuted} name="location" size={20} />
-                  <AppText
-                    flex={1}
-                    numberOfLines={2}
-                    style={{ fontSize: 16, fontWeight: "700", lineHeight: 22 }}
-                  >
+                  <AppText flex={1} numberOfLines={2} variant="bodyStrong" style={{ fontWeight: "700", lineHeight: 22 }}>
                     {stationLabel}
                   </AppText>
                 </XStack>
@@ -147,10 +140,10 @@ export function ReservationCard({
                 <XStack alignItems="flex-start" gap="$3">
                   <IconSymbol color={colors.textMuted} name="clock" size={20} style={{ marginTop: 1 }} />
                   <YStack flex={1} gap="$1">
-                    <AppText style={{ fontSize: 16, fontWeight: "700", lineHeight: 22 }}>
+                    <AppText variant="bodyStrong" style={{ fontWeight: "700", lineHeight: 22 }}>
                       {timeRangeLabel}
                     </AppText>
-                    <AppText tone="subtle" style={{ fontSize: 13, fontWeight: "500", lineHeight: 18 }}>
+                    <AppText tone="subtle" variant="meta">
                       {startTime.date}
                     </AppText>
                   </YStack>
@@ -158,17 +151,17 @@ export function ReservationCard({
 
                 <XStack alignItems="center" gap="$3">
                   <IconSymbol color={colors.textMuted} name="tag" size={20} />
-                  <AppText tone="muted" style={{ fontSize: 15, fontWeight: "500", lineHeight: 22 }}>
+                  <AppText tone="muted" variant="bodySmall">
                     {getReservationOptionLabel(reservation.reservationOption)}
                   </AppText>
                 </XStack>
 
                 <XStack alignItems="center" gap="$3">
                   <IconSymbol color={colors.brandPrimary} name="wallet.pass.fill" size={20} />
-                  <AppText tone="muted" style={{ fontSize: 15, fontWeight: "500", lineHeight: 22 }}>
+                  <AppText tone="muted" variant="bodySmall">
                     Đã thanh toán:
                     {" "}
-                    <AppText tone="brand" style={{ fontSize: 15, fontWeight: "700", lineHeight: 22 }}>
+                    <AppText tone="brand" variant="bodyStrong">
                       {formatCurrency(reservation.prepaid)}
                     </AppText>
                   </AppText>

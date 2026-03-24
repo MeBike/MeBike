@@ -1,3 +1,5 @@
+import { colors } from "@theme/colors";
+import { fontSizes, fontWeights, letterSpacing, lineHeights } from "@theme/typography";
 import { StyleSheet } from "react-native";
 
 const walletBalanceStyles = StyleSheet.create({
@@ -12,9 +14,10 @@ const walletBalanceStyles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.18)",
   },
   title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#fff",
+    fontSize: fontSizes.xl,
+    fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.xl,
+    color: colors.textOnBrand,
     marginBottom: 10,
     letterSpacing: 0.3,
   },
@@ -25,15 +28,17 @@ const walletBalanceStyles = StyleSheet.create({
     marginBottom: 10,
   },
   balanceLabel: {
-    fontSize: 14,
+    fontSize: fontSizes.sm,
+    lineHeight: lineHeights.sm,
     color: "#e0eaff",
     marginBottom: 8,
-    fontWeight: "500",
+    fontWeight: fontWeights.medium,
   },
   balanceAmount: {
     fontSize: 44,
-    fontWeight: "800",
-    color: "#fff",
+    fontWeight: fontWeights.heavy,
+    color: colors.textOnBrand,
+    letterSpacing: letterSpacing.display,
   },
   statusBadge: {
     flexDirection: "row",
@@ -51,9 +56,10 @@ const walletBalanceStyles = StyleSheet.create({
     marginRight: 6,
   },
   statusText: {
-    fontSize: 13,
-    color: "#fff",
-    fontWeight: "600",
+    fontSize: fontSizes.ssm,
+    lineHeight: lineHeights.ssm,
+    color: colors.textOnBrand,
+    fontWeight: fontWeights.semibold,
   },
   walletIcon: {
     marginLeft: 12,

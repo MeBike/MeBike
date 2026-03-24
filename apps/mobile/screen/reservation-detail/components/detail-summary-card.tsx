@@ -85,7 +85,7 @@ export function DetailSummaryCard({
                   <AppText
                     flex={1}
                     numberOfLines={2}
-                    style={{ fontSize: 20, fontWeight: "800", letterSpacing: -0.3, lineHeight: 26 }}
+                    variant="headline"
                   >
                     {title}
                   </AppText>
@@ -103,7 +103,7 @@ export function DetailSummaryCard({
                 </XStack>
 
                 <XStack alignItems="center" gap="$2" paddingRight="$2">
-                  <AppText tone="muted" style={{ fontSize: 15, fontWeight: "600", lineHeight: 22 }}>
+                  <AppText tone="muted" variant="bodySmall">
                     Mã đặt:
                     {" "}
                     {shortReservationId}
@@ -141,6 +141,7 @@ export function DetailSummaryCard({
             <DetailRow
               iconName="calendar"
               label="Tạo lúc"
+              secondaryValue={updatedAt}
               value={createdAt}
             />
           </YStack>

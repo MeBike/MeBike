@@ -18,6 +18,7 @@ export function DetailRow({
   iconName,
   label,
   value,
+  secondaryValue,
   highlightValue = false,
 }: DetailRowProps) {
   return (
@@ -27,32 +28,26 @@ export function DetailRow({
       </YStack>
 
       <YStack flex={1} gap="$1.5">
-        <AppText
-          tone="subtle"
-          variant="caption"
-          style={{
-            fontSize: 13,
-            fontWeight: "800",
-            letterSpacing: 0.8,
-            lineHeight: 18,
-            textTransform: "uppercase",
-          }}
-        >
+        <AppText tone="subtle" variant="eyebrow">
           {label}
         </AppText>
 
         <AppText
+          variant="value"
           style={{
             color: highlightValue ? colors.brandPrimary : colors.textPrimary,
-            fontSize: 17,
-            fontWeight: "700",
-            letterSpacing: -0.2,
-            lineHeight: 24,
           }}
         >
           {value}
         </AppText>
 
+        {secondaryValue
+          ? (
+              <AppText tone="muted" variant="bodySmall">
+                {secondaryValue}
+              </AppText>
+            )
+          : null}
       </YStack>
     </XStack>
   );

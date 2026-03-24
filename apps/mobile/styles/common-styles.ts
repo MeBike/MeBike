@@ -37,10 +37,12 @@ export const borderRadius = {
 export const typography = {
   h1: textStyles.hero,
   h2: textStyles.title,
-  h3: textStyles.bodyStrong,
+  h3: textStyles.sectionTitle,
   body: textStyles.body,
-  bodySmall: textStyles.label,
+  bodySmall: textStyles.bodySmall,
+  meta: textStyles.meta,
   caption: textStyles.caption,
+  eyebrow: textStyles.eyebrow,
 };
 
 export const shadows = {
