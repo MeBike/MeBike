@@ -1,15 +1,15 @@
-import { ActivityIndicator, Pressable } from "react-native";
-import { XStack, YStack } from "tamagui";
-
-import type { BikeSummary } from "@/contracts/server";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { colors } from "@theme/colors";
 import { AppButton } from "@ui/primitives/app-button";
+import { AppListRow } from "@ui/primitives/app-list-row";
 import { AppText } from "@ui/primitives/app-text";
 import { RatingSummary } from "@ui/primitives/rating-summary";
 import { StatusBadge } from "@ui/primitives/status-badge";
 import { getBikeChipDisplay, getBikeStatusLabel, isBikeAvailable } from "@utils/bike";
+import { ActivityIndicator } from "react-native";
+import { XStack, YStack } from "tamagui";
+
+import type { BikeSummary } from "@/contracts/server";
 
 type BikeListProps = {
   bikes: BikeSummary[];
@@ -32,49 +32,43 @@ function BikeListRow({
   const chipDisplay = getBikeChipDisplay(bike);
 
   return (
-    <YStack>
-      <Pressable
-        onPress={() => onPress(bike)}
-        style={({ pressed }) => ({ opacity: pressed ? 0.97 : 1 })}
-      >
-        <XStack alignItems="center" gap="$3" justifyContent="space-between" paddingHorizontal="$4" paddingVertical="$4">
-          <XStack alignItems="center" flex={1} gap="$3">
-            <XStack
-              alignItems="center"
-              backgroundColor={colors.surfaceMuted}
-              borderRadius="$round"
-              height={40}
-              justifyContent="center"
-              width={40}
-            >
-              <IconSymbol name="bicycle.circle.fill" size={20} color={colors.textSecondary} />
-            </XStack>
-            <YStack flex={1} gap="$0.5">
-              <AppText
-                selectable
-                style={{ fontSize: 18, fontVariant: ["tabular-nums"], fontWeight: "700", lineHeight: 24 }}
-              >
-                {chipDisplay}
-              </AppText>
-              <RatingSummary
-                averageRating={bike.rating.averageRating}
-                size="compact"
-                totalRatings={bike.rating.totalRatings}
-              />
-            </YStack>
-          </XStack>
-
-          <XStack alignItems="center" gap="$2">
-            <StatusBadge label={getBikeStatusLabel(bike.status)} tone="success" />
-            <IconSymbol name="chevron.right" size={18} color={colors.borderSubtle} />
-          </XStack>
+    <AppListRow
+      leading={(
+        <XStack
+          alignItems="center"
+          backgroundColor={colors.surfaceMuted}
+          borderRadius="$round"
+          height={40}
+          justifyContent="center"
+          width={40}
+        >
+          <IconSymbol name="bicycle.circle.fill" size={20} color={colors.textSecondary} />
         </XStack>
-      </Pressable>
-
-      {showDivider
-        ? <XStack backgroundColor="$borderSubtle" height={1} />
-        : null}
-    </YStack>
+      )}
+      onPress={() => onPress(bike)}
+      primary={(
+        <AppText
+          selectable
+          style={{ fontSize: 18, fontVariant: ["tabular-nums"], fontWeight: "700", lineHeight: 24 }}
+        >
+          {chipDisplay}
+        </AppText>
+      )}
+      secondary={(
+        <RatingSummary
+          averageRating={bike.rating.averageRating}
+          size="compact"
+          totalRatings={bike.rating.totalRatings}
+        />
+      )}
+      showDivider={showDivider}
+      trailing={(
+        <XStack alignItems="center" gap="$2">
+          <StatusBadge label={getBikeStatusLabel(bike.status)} tone="success" />
+          <IconSymbol name="chevron.right" size={18} color={colors.borderSubtle} />
+        </XStack>
+      )}
+    />
   );
 }
 

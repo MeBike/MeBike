@@ -93,13 +93,13 @@ export function getDepositStatusLabel(status?: string) {
       return "Đang tạm giữ ";
     }
     case "RELEASED": {
-      return "Đã hoàn";
+      return "Đã hoàn ";
     }
     case "FORFEITED": {
-      return "Đã khấu trừ";
+      return "Đã khấu trừ ";
     }
     default: {
-      return "Không áp dụng";
+      return "Không áp dụng ";
     }
   }
 }
