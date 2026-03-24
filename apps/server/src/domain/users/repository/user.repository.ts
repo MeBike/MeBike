@@ -92,6 +92,10 @@ export type UserRepo = {
   readonly searchByQuery: (
     query: string,
   ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
+  readonly listTechnicianSummaries: () => Effect.Effect<
+    readonly Pick<UserRow, "id" | "fullname">[],
+    UserRepositoryError
+  >;
 };
 
 const makeUserRepositoryEffect = Effect.gen(function* () {
@@ -675,6 +679,33 @@ export function makeUserRepository(
             cause: err,
           }),
       }).pipe(Effect.map(rows => rows.map(toUserRow))),
+
+    listTechnicianSummaries: () =>
+      Effect.tryPromise({
+        try: () =>
+          client.user.findMany({
+            where: {
+              role: UserRole.TECHNICIAN,
+            },
+            orderBy: {
+              fullName: "asc",
+            },
+            select: {
+              id: true,
+              fullName: true,
+            },
+          }),
+        catch: err =>
+          new UserRepositoryError({
+            operation: "listTechnicianSummaries",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(rows => rows.map(row => ({
+          id: row.id,
+          fullname: row.fullName,
+        }))),
+      ),
   };
 }
 

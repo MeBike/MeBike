@@ -17,6 +17,7 @@ import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   ActiveUsersQuerySchema,
   ActiveUsersSeriesResponseSchema,
+  AdminTechnicianListResponseSchema,
   AdminUserDetailResponseSchema,
   AdminUserListResponseSchema,
   AdminUserSearchResponseSchema,
@@ -112,6 +113,41 @@ export const adminSearchUsersRoute = createRoute({
       content: {
         "application/json": {
           schema: AdminUserSearchResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
+export const adminTechnicianListRoute = createRoute({
+  method: "get",
+  path: "/v1/users/manage-users/technicians",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "Admin list of technicians with id and full name",
+      content: {
+        "application/json": {
+          schema: AdminTechnicianListResponseSchema,
+          examples: {
+            Technicians: {
+              value: {
+                data: [
+                  {
+                    id: "019d1b13-eacb-76f4-adbc-bc02662d4fdf",
+                    fullName: "Tran Technician",
+                  },
+                  {
+                    id: "019d1b15-0f9a-73e7-9800-4af1e9887d72",
+                    fullName: "Le Field Technician",
+                  },
+                ],
+              },
+            },
+          },
         },
       },
     },

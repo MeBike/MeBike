@@ -221,6 +221,31 @@ describe("manage-users org assignment e2e", () => {
     expect(list.data.some(user => user.id === created.id)).toBe(true);
   });
 
+  it("returns technician summaries with only id and fullName", async () => {
+    const technician = await fixture.factories.user({
+      fullname: "Alpha Technician",
+      email: "alpha-technician@example.com",
+      role: "TECHNICIAN",
+    });
+    await fixture.factories.user({
+      fullname: "Regular User",
+      email: "regular-user@example.com",
+      role: "USER",
+    });
+
+    const response = await fixture.app.request("http://test/v1/users/manage-users/technicians", {
+      method: "GET",
+      headers: adminAuthHeader(),
+    });
+
+    const body = await response.json() as UsersContracts.AdminTechnicianListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data.some(user => user.id === technician.id && user.fullName === "Alpha Technician")).toBe(true);
+    expect(body.data.every(user => Object.keys(user).sort().join(",") === "fullName,id")).toBe(true);
+    expect(body.data.some(user => user.fullName === "Regular User")).toBe(false);
+  });
+
   it("replaces org assignment and can clear it on update", async () => {
     const station = await fixture.factories.station({ name: "Station Team Base" });
     const team = await fixture.prisma.technicianTeam.create({

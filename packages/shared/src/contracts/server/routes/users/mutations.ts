@@ -323,6 +323,42 @@ export const adminCreateUserRoute = createRoute({
       content: {
         "application/json": {
           schema: AdminCreateUserRequestSchema,
+          examples: {
+            BasicUser: {
+              value: {
+                fullname: "Nguyen Van A",
+                email: "nguyen.van.a@example.com",
+                password: "password123",
+                phoneNumber: "0987654321",
+                username: "nguyenvana",
+                avatar: "https://example.com/avatars/nguyen-van-a.jpg",
+                location: "Thu Duc, TP.HCM",
+                role: "USER",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+                orgAssignment: null,
+                nfcCardUid: null,
+              },
+            },
+            TechnicianWithTeam: {
+              value: {
+                fullname: "Tran Technician",
+                email: "tran.technician@example.com",
+                password: "password123",
+                phoneNumber: "0912345678",
+                username: "trantech",
+                avatar: null,
+                location: "Quan 9, TP.HCM",
+                role: "TECHNICIAN",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+                orgAssignment: {
+                  technicianTeamId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2211",
+                },
+                nfcCardUid: null,
+              },
+            },
+          },
         },
       },
     },
