@@ -235,12 +235,53 @@ export const adminUpdateUserRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
-      userId: z.uuidv7(),
+      userId: z.uuidv7().openapi({
+        example: "019d1b13-eacb-76f4-adbc-bc02662d4fdf",
+      }),
     }),
     body: {
       content: {
         "application/json": {
           schema: AdminUpdateUserRequestSchema,
+          examples: {
+            AssignStaffToStation: {
+              value: {
+                role: "STAFF",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+                orgAssignment: {
+                  stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                },
+              },
+            },
+            AssignTechnicianTeam: {
+              value: {
+                role: "TECHNICIAN",
+                orgAssignment: {
+                  technicianTeamId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2211",
+                },
+              },
+            },
+            UpdateBasicFields: {
+              value: {
+                fullname: "Nguyen Van B",
+                email: "nguyen.van.b@example.com",
+                phoneNumber: "0901123456",
+                username: "nguyenvanb",
+                avatar: "https://example.com/avatars/nguyen-van-b.jpg",
+                location: "Binh Thanh, TP.HCM",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+              },
+            },
+            ClearOrgAssignment: {
+              value: {
+                role: "MANAGER",
+                orgAssignment: null,
+                nfcCardUid: null,
+              },
+            },
+          },
         },
       },
     },
@@ -323,6 +364,76 @@ export const adminCreateUserRoute = createRoute({
       content: {
         "application/json": {
           schema: AdminCreateUserRequestSchema,
+          examples: {
+            BasicUser: {
+              value: {
+                fullname: "Nguyen Van A",
+                email: "nguyen.van.a@example.com",
+                password: "password123",
+                phoneNumber: "0987654321",
+                username: "nguyenvana",
+                avatar: "https://example.com/avatars/nguyen-van-a.jpg",
+                location: "Thu Duc, TP.HCM",
+                role: "USER",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+                orgAssignment: null,
+                nfcCardUid: null,
+              },
+            },
+            StaffWithStation: {
+              value: {
+                fullname: "Tran Staff",
+                email: "tran.staff@example.com",
+                password: "password123",
+                phoneNumber: "0912345678",
+                username: "transtaff",
+                avatar: null,
+                location: "Thu Duc, TP.HCM",
+                role: "STAFF",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+                orgAssignment: {
+                  stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                },
+                nfcCardUid: null,
+              },
+            },
+            TechnicianWithTeam: {
+              value: {
+                fullname: "Tran Technician",
+                email: "tran.technician@example.com",
+                password: "password123",
+                phoneNumber: "0912345678",
+                username: "trantech",
+                avatar: null,
+                location: "Quan 9, TP.HCM",
+                role: "TECHNICIAN",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+                orgAssignment: {
+                  technicianTeamId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2211",
+                },
+                nfcCardUid: null,
+              },
+            },
+            AdminOperator: {
+              value: {
+                fullname: "Le Admin",
+                email: "le.admin@example.com",
+                password: "password123",
+                phoneNumber: "0934567890",
+                username: "leadmin",
+                avatar: null,
+                location: "District 1, TP.HCM",
+                role: "ADMIN",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+                orgAssignment: null,
+                nfcCardUid: null,
+              },
+            },
+          },
         },
       },
     },

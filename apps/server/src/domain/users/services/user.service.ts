@@ -93,6 +93,10 @@ export type UserService = {
   searchByQuery: (
     query: string,
   ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
+  listTechnicianSummaries: () => Effect.Effect<
+    readonly Pick<UserRow, "id" | "fullname">[],
+    UserRepositoryError
+  >;
 };
 
 function normalizeOrgAssignment(
@@ -267,6 +271,9 @@ function makeUserService(repo: UserRepo): UserService {
 
     searchByQuery: query =>
       repo.searchByQuery(query),
+
+    listTechnicianSummaries: () =>
+      repo.listTechnicianSummaries(),
   };
 }
 

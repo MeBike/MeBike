@@ -6,6 +6,7 @@ import {
   paginationQueryFields,
   PaginationSchema,
 } from "../../schemas";
+import { UserSummarySchema } from "../../users/models";
 import {
   AccountStatusSchema,
   ActiveUsersSeriesRowSchema,
@@ -78,6 +79,10 @@ export const AdminUserSearchResponseSchema = z.object({
   data: z.array(UserDetailSchema),
 }).openapi("AdminUserSearchResponse");
 
+export const AdminTechnicianListResponseSchema = z.object({
+  data: z.array(UserSummarySchema),
+}).openapi("AdminTechnicianListResponse");
+
 export const AdminUserDetailResponseSchema = UserDetailSchema.openapi("AdminUserDetailResponse");
 
 const AdminUserOrgAssignmentInputSchema = z
@@ -110,21 +115,47 @@ export const AdminCreateUserRequestSchema = z.object({
   verify: VerifyStatusSchema.optional(),
   orgAssignment: AdminUserOrgAssignmentInputSchema.optional().nullable(),
   nfcCardUid: z.string().optional().nullable(),
-}).openapi("AdminCreateUserRequest");
+}).openapi("AdminCreateUserRequest", {
+  example: {
+    fullname: "Tran Staff",
+    email: "tran.staff@example.com",
+    password: "password123",
+    phoneNumber: "0912345678",
+    username: "transtaff",
+    avatar: null,
+    location: "Thu Duc, TP.HCM",
+    role: "STAFF",
+    accountStatus: "ACTIVE",
+    verify: "VERIFIED",
+    orgAssignment: {
+      stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+    },
+    nfcCardUid: null,
+  },
+});
 
 export const AdminUpdateUserRequestSchema = z.object({
   fullname: z.string().min(1).optional(),
   email: z.string().email().optional(),
   phoneNumber: OptionalPhoneNumberNullableSchema,
   username: z.string().optional().nullable(),
-  avatar: z.url().optional().nullable(),
+  avatar: z.string().url().optional().nullable(),
   location: z.string().optional().nullable(),
   role: AdminManageableUserRoleSchema.optional(),
   accountStatus: AccountStatusSchema.optional(),
   verify: VerifyStatusSchema.optional(),
   orgAssignment: AdminUserOrgAssignmentInputSchema.optional().nullable(),
   nfcCardUid: z.string().optional().nullable(),
-}).openapi("AdminUpdateUserRequest");
+}).openapi("AdminUpdateUserRequest", {
+  example: {
+    role: "STAFF",
+    accountStatus: "ACTIVE",
+    verify: "VERIFIED",
+    orgAssignment: {
+      stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+    },
+  },
+});
 
 export const AdminResetPasswordRequestSchema = z.object({
   newPassword: z.string().min(8),
@@ -208,6 +239,7 @@ export type UnregisterPushTokenRequest = z.infer<typeof UnregisterPushTokenReque
 export type PushTokenSummary = z.infer<typeof PushTokenSummarySchema>;
 export type AdminUserListResponse = z.infer<typeof AdminUserListResponseSchema>;
 export type AdminUserSearchResponse = z.infer<typeof AdminUserSearchResponseSchema>;
+export type AdminTechnicianListResponse = z.infer<typeof AdminTechnicianListResponseSchema>;
 export type AdminUserDetailResponse = z.infer<typeof AdminUserDetailResponseSchema>;
 export type AdminCreateUserRequest = z.infer<typeof AdminCreateUserRequestSchema>;
 export type AdminUpdateUserRequest = z.infer<typeof AdminUpdateUserRequestSchema>;

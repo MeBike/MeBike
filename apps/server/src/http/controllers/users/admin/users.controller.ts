@@ -14,7 +14,7 @@ import {
 } from "@/domain/users";
 import { routeContext } from "@/http/shared/route-context";
 
-import { mapUserDetail, pickDefined } from "../shared";
+import { mapUserDetail, mapUserSummary, pickDefined } from "../shared";
 
 type UsersRoutes = typeof import("@mebike/shared")["serverRoutes"]["users"];
 const users = serverRoutes.users;
@@ -69,6 +69,19 @@ const adminSearch: RouteHandler<UsersRoutes["adminSearch"]> = async (c) => {
 
   const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.AdminUserSearchResponse, 200>({ data: data.map(mapUserDetail) }, 200);
+};
+
+const adminTechnicians: RouteHandler<UsersRoutes["adminTechnicians"]> = async (c) => {
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* UserServiceTag;
+      return yield* service.listTechnicianSummaries();
+    }),
+    routeContext(users.adminTechnicians),
+  );
+
+  const data = await c.var.runPromise(eff);
+  return c.json<UsersContracts.AdminTechnicianListResponse, 200>({ data: data.map(mapUserSummary) }, 200);
 };
 
 const adminDetail: RouteHandler<UsersRoutes["adminDetail"]> = async (c) => {
@@ -235,6 +248,7 @@ const adminResetPassword: RouteHandler<UsersRoutes["adminResetPassword"]> = asyn
 export const AdminUsersController = {
   adminList,
   adminSearch,
+  adminTechnicians,
   adminDetail,
   adminUpdate,
   adminCreate,

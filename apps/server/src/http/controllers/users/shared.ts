@@ -46,6 +46,15 @@ export function mapUserDetail(
   };
 }
 
+export function mapUserSummary(
+  row: Pick<import("@/domain/users").UserRow, "id" | "fullname">,
+): import("@mebike/shared").UsersContracts.UserSummary {
+  return {
+    id: row.id,
+    fullName: row.fullname,
+  };
+}
+
 function maskPushToken(token: string): string {
   if (token.length <= 10) {
     return "**********";
