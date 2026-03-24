@@ -3,6 +3,14 @@ import type { ServerContracts } from "@mebike/shared";
 export type BikeSummary = ServerContracts.BikesContracts.BikeSummary;
 export type StationReadSummary = ServerContracts.StationsContracts.StationReadSummary;
 export type StationListResponse = ServerContracts.StationsContracts.StationListResponse;
+
+export type ReservationDetail = ServerContracts.ReservationsContracts.ReservationDetail;
+export type ReservationExpandedDetail = ServerContracts.ReservationsContracts.ReservationExpandedDetail;
+export type CreateReservationPayload = ServerContracts.ReservationsContracts.CreateReservationRequest;
+export type PaginatedReservations = ServerContracts.ReservationsContracts.ListMyReservationsResponse;
+export type ReservationStatus = ReservationDetail["status"];
+export type ReservationOption = ReservationDetail["reservationOption"];
+
 export type RentalStatus = ServerContracts.RentalsContracts.RentalStatus;
 export type Rental = ServerContracts.RentalsContracts.Rental;
 export type RentalWithPrice = ServerContracts.RentalsContracts.RentalWithPrice;

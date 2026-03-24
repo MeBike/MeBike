@@ -15,6 +15,7 @@ type AppHeroHeaderProps = {
   title: string;
   subtitle?: ReactNode;
   accessory?: ReactNode;
+  footer?: ReactNode;
   onBack?: () => void;
   size?: AppHeroHeaderSize;
 };
@@ -37,11 +38,13 @@ export function AppHeroHeader({
   title,
   subtitle,
   accessory,
+  footer,
   onBack,
   size = "default",
 }: AppHeroHeaderProps) {
   const insets = useSafeAreaInsets();
   const sizeStyle = sizeStyles[size];
+  const bottomPadding = footer ? spacing.xl : sizeStyle.bottomPadding;
 
   return (
     <LinearGradient
@@ -51,7 +54,7 @@ export function AppHeroHeader({
       style={{
         paddingTop: insets.top + spacing.lg,
         paddingHorizontal: spacing.xl,
-        paddingBottom: sizeStyle.bottomPadding,
+        paddingBottom: bottomPadding,
         borderBottomLeftRadius: 28,
         borderBottomRightRadius: 28,
       }}
@@ -92,6 +95,14 @@ export function AppHeroHeader({
 
         {accessory ?? null}
       </XStack>
+
+      {footer
+        ? (
+            <YStack paddingTop="$5">
+              {footer}
+            </YStack>
+          )
+        : null}
     </LinearGradient>
   );
 }

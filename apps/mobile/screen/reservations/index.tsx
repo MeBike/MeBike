@@ -1,11 +1,14 @@
 import { useAuthNext } from "@providers/auth-provider-next";
+import { colors } from "@theme/colors";
+import { spacing } from "@theme/metrics";
+import { Screen } from "@ui/primitives/screen";
 import React, { useMemo } from "react";
-import { View } from "react-native";
+import { StatusBar, View } from "react-native";
+import { YStack } from "tamagui";
 
+import { useReservationNavigation } from "../../hooks/use-reservation-navigation";
 import { ReservationHeader } from "./components/reservation-header";
 import { ReservationInlineLoader, ReservationLoadingState } from "./components/reservation-loading-state";
-import { useReservationNavigation } from "../../hooks/use-reservation-navigation";
-import { ReservationsFilter } from "./components/reservations-filter";
 import { ReservationsList } from "./components/reservations-list";
 import { useReservations } from "./hooks/use-reservations";
 
@@ -32,18 +35,42 @@ function ReservationsScreen() {
   const { handleNavigateToDetail, canGoBack, goBack } = useReservationNavigation(stationMap);
 
   const listHeaderComponent = useMemo(() => (
-    <View>
-      <ReservationsFilter filters={filters} activeFilter={activeFilter} onChange={setActiveFilter} />
-      {isFetching && !refreshing && !isLoadingMoreHistory && <ReservationInlineLoader />}
-    </View>
-  ), [activeFilter, filters, isFetching, isLoadingMoreHistory, refreshing, setActiveFilter]);
+    <YStack>
+      <ReservationHeader
+        activeFilter={activeFilter}
+        canGoBack={canGoBack()}
+        filters={filters}
+        onChangeFilter={setActiveFilter}
+        onGoBack={goBack}
+      />
+      {isFetching && !refreshing && !isLoadingMoreHistory
+        ? (
+            <View style={{ paddingTop: spacing.lg }}>
+              <ReservationInlineLoader />
+            </View>
+          )
+        : null}
+      <View style={{ height: spacing.xl }} />
+    </YStack>
+  ), [activeFilter, canGoBack, filters, goBack, isFetching, isLoadingMoreHistory, refreshing, setActiveFilter]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F5F6FA" }}>
-      <ReservationHeader canGoBack={canGoBack()} onGoBack={goBack} />
+    <Screen>
+      <StatusBar barStyle="light-content" backgroundColor={colors.brandPrimary} />
 
       {isLoading
-        ? <ReservationLoadingState />
+        ? (
+            <YStack flex={1}>
+              <ReservationHeader
+                activeFilter={activeFilter}
+                canGoBack={canGoBack()}
+                filters={filters}
+                onChangeFilter={setActiveFilter}
+                onGoBack={goBack}
+              />
+              <ReservationLoadingState />
+            </YStack>
+          )
         : (
             <ReservationsList
               reservations={reservations}
@@ -57,7 +84,7 @@ function ReservationsScreen() {
               ListHeaderComponent={listHeaderComponent}
             />
           )}
-    </View>
+    </Screen>
   );
 }
 

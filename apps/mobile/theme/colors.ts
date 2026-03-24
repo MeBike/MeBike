@@ -41,7 +41,7 @@ export const colors = {
   successSoft: "rgba(16, 185, 129, 0.16)",
   warningSoft: "rgba(245, 158, 11, 0.16)",
   errorSoft: "rgba(239, 68, 68, 0.16)",
-  neutralSoft: "rgba(255, 255, 255, 0.18)",
+  neutralSoft: palette.slate100,
 } as const;
 
 export const gradients = {
@@ -57,4 +57,12 @@ export const bikeStatusColors = {
   RESERVED: colors.warning,
   MAINTAINED: colors.error,
   UNAVAILABLE: colors.textMuted,
+} as const;
+
+export const reservationStatusColors = {
+  PENDING: colors.warning,
+  ACTIVE: colors.success,
+  FULFILLED: colors.info,
+  CANCELLED: colors.error,
+  EXPIRED: colors.textMuted,
 } as const;

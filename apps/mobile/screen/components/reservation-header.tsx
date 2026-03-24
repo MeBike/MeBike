@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 import type { Reservation } from "../../types/reservation-types";
 
-import { statusColorMap } from "../utils/reservation-detail-utils";
+import { getReservationStatusLabel, statusColorMap } from "../utils/reservation-detail-utils";
 
 type ReservationHeaderProps = {
   onGoBack: () => void;
@@ -71,7 +71,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
           textTransform: "uppercase",
         }}
       >
-        {status}
+        {getReservationStatusLabel(status)}
       </Text>
     </View>
   );

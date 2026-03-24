@@ -96,6 +96,7 @@ const MAPPING = {
   "star": "star",
   "bookmark.fill": "bookmark",
   "bookmark": "bookmark",
+  "tag": "local-offer",
 
   // Technology & Code
   "chevron.left.forwardslash.chevron.right": "code",

@@ -1,3 +1,8 @@
+import type { IconSymbolName } from "@components/IconSymbol";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { AppText } from "@ui/primitives/app-text";
 import { useEffect } from "react";
 import Animated, {
   Easing,
@@ -9,9 +14,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { XStack } from "tamagui";
 
-import { colors } from "@theme/colors";
-import { AppText } from "@ui/primitives/app-text";
-
 type StatusBadgeTone = "success" | "warning" | "danger" | "neutral" | "inverted" | "overlaySuccess";
 type StatusBadgeSize = "default" | "compact";
 
@@ -21,14 +23,15 @@ type StatusBadgeProps = {
   size?: StatusBadgeSize;
   withDot?: boolean;
   pulseDot?: boolean;
+  iconName?: IconSymbolName;
 };
 
 const toneStyles: Record<StatusBadgeTone, { bg: string; textTone: "success" | "warning" | "danger" | "muted" | "inverted"; dot: string }> = {
-  success: { bg: colors.successSoft, textTone: "success", dot: "$success" },
-  warning: { bg: colors.warningSoft, textTone: "warning", dot: "$warning" },
-  danger: { bg: colors.errorSoft, textTone: "danger", dot: "$error" },
-  neutral: { bg: colors.neutralSoft, textTone: "muted", dot: "$textMuted" },
-  inverted: { bg: colors.overlayLight, textTone: "inverted", dot: "$textOnBrand" },
+  success: { bg: colors.successSoft, textTone: "success", dot: colors.success },
+  warning: { bg: colors.warningSoft, textTone: "warning", dot: colors.warning },
+  danger: { bg: colors.errorSoft, textTone: "danger", dot: colors.error },
+  neutral: { bg: colors.neutralSoft, textTone: "muted", dot: colors.textMuted },
+  inverted: { bg: colors.overlayLight, textTone: "inverted", dot: colors.textOnBrand },
   overlaySuccess: { bg: colors.overlayLight, textTone: "inverted", dot: "#6EE7B7" },
 };
 
@@ -59,6 +62,7 @@ export function StatusBadge({
   size = "default",
   withDot = true,
   pulseDot = false,
+  iconName,
 }: StatusBadgeProps) {
   const style = toneStyles[tone];
   const sizeStyle = sizeStyles[size];
@@ -107,7 +111,10 @@ export function StatusBadge({
       paddingVertical={sizeStyle.py}
       width="auto"
     >
-      {withDot
+      {iconName
+        ? <IconSymbol color={style.dot} name={iconName} size={size === "compact" ? 14 : 16} />
+        : null}
+      {withDot && !iconName
         ? (
             <Animated.View
               style={animatedDotStyle}

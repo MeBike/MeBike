@@ -10,7 +10,7 @@ export type ReservationFilter = "pending" | "history";
 
 export const RESERVATION_FILTERS: Array<{ key: ReservationFilter; label: string }> = [
   { key: "pending", label: "Đang chờ" },
-  { key: "history", label: "Lịch sử đặt trước" },
+  { key: "history", label: "Lịch sử" },
 ];
 
 const PENDING_EMPTY_TEXT = "Bạn chưa có lượt đặt trước nào.";

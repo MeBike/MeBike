@@ -1,11 +1,12 @@
 import type { Reservation } from "../types/reservation-types";
 
-export const statusColorMap: Record<Reservation["status"], string> = {
-  "ĐANG CHỜ XỬ LÍ": "#FFB020",
-  "ĐANG HOẠT ĐỘNG": "#4CAF50",
-  "ĐÃ HUỶ": "#F44336",
-  "ĐÃ HẾT HẠN": "#9E9E9E",
-};
+import {
+  getReservationStatusLabel,
+  reservationStatusColors,
+} from "./reservation";
+
+export const statusColorMap: Record<Reservation["status"], string> = reservationStatusColors;
+export { getReservationStatusLabel };
 
 export function formatDateTime(value?: string | null): string {
   if (!value) {

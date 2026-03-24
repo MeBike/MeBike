@@ -162,7 +162,7 @@ function ReservationDetailScreen() {
     return <ErrorState onGoBack={handleGoBack} />;
   }
 
-  const isPending = reservation.status === "ĐANG CHỜ XỬ LÍ";
+  const isPending = reservation.status === "PENDING";
 
   return (
     <View style={styles.container}>
