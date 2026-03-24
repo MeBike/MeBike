@@ -19,7 +19,7 @@ export function DetailErrorState({
   return (
     <YStack alignItems="center" flex={1} gap="$3" justifyContent="center" padding="$7">
       <IconSymbol color={colors.error} name="exclamationmark.triangle" size={44} />
-      <AppText align="center" style={{ fontSize: 20, fontWeight: "700", lineHeight: 28 }}>
+      <AppText align="center" variant="xlTitle">
         {title}
       </AppText>
       <AppText align="center" tone="muted" variant="bodySmall">

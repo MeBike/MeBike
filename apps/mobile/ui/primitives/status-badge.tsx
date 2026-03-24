@@ -35,24 +35,20 @@ const toneStyles: Record<StatusBadgeTone, { bg: string; textTone: "success" | "w
   overlaySuccess: { bg: colors.overlayLight, textTone: "inverted", dot: "#6EE7B7" },
 };
 
-const sizeStyles: Record<StatusBadgeSize, { dotSize: number; gap: "$1" | "$2"; px: "$3"; py: "$2"; textStyle?: { fontSize: number; fontWeight: "700"; letterSpacing: number; lineHeight: number } }> = {
+const sizeStyles: Record<StatusBadgeSize, { dotSize: number; gap: "$1" | "$2"; px: "$3"; py: "$2"; textVariant: "caption" | "badgeLabel" }> = {
   default: {
     dotSize: 8,
     gap: "$2",
     px: "$3",
     py: "$2",
+    textVariant: "caption",
   },
   compact: {
     dotSize: 6,
     gap: "$1",
     px: "$3",
     py: "$2",
-    textStyle: {
-      fontSize: 10,
-      fontWeight: "700",
-      letterSpacing: 0.8,
-      lineHeight: 12,
-    },
+    textVariant: "badgeLabel",
   },
 };
 
@@ -128,7 +124,7 @@ export function StatusBadge({
             </Animated.View>
           )
         : null}
-      <AppText style={sizeStyle.textStyle} tone={style.textTone} variant="caption">
+      <AppText tone={style.textTone} variant={sizeStyle.textVariant}>
         {label}
       </AppText>
     </XStack>

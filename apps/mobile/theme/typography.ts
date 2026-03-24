@@ -100,6 +100,16 @@ export const textStyles = {
     lineHeight: lineHeights.md,
     fontWeight: fontWeights.semibold,
   }),
+  subhead: defineTextStyle({
+    fontSize: fontSizes.md,
+    lineHeight: 22,
+    fontWeight: fontWeights.bold,
+  }),
+  actionLabel: defineTextStyle({
+    fontSize: fontSizes.md,
+    lineHeight: lineHeights.md,
+    fontWeight: fontWeights.bold,
+  }),
   value: defineTextStyle({
     fontSize: 17,
     lineHeight: lineHeights.md,
@@ -111,11 +121,29 @@ export const textStyles = {
     lineHeight: lineHeights.lg,
     fontWeight: fontWeights.bold,
   }),
+  cardTitle: defineTextStyle({
+    fontSize: fontSizes.lg,
+    lineHeight: 21,
+    fontWeight: fontWeights.heavy,
+    letterSpacing: -0.3,
+  }),
+  tabLabel: defineTextStyle({
+    fontSize: fontSizes.md,
+    lineHeight: 20,
+    fontWeight: fontWeights.bold,
+  }),
   headline: defineTextStyle({
     fontSize: fontSizes.xl,
     lineHeight: 26,
     fontWeight: fontWeights.heavy,
     letterSpacing: -0.3,
+  }),
+  badgeLabel: defineTextStyle({
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: fontWeights.bold,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   }),
   xlTitle: defineTextStyle({
     fontSize: fontSizes.xl,

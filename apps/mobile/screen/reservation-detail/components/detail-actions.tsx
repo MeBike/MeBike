@@ -52,11 +52,7 @@ export function DetailActions({
           {isCancelling
             ? <Spinner color={colors.error} />
             : <IconSymbol color={colors.error} name="xmark" size={20} />}
-          <AppText
-            tone="danger"
-            variant="bodyStrong"
-            style={{ fontSize: 16, fontWeight: "700", lineHeight: 24 }}
-          >
+          <AppText tone="danger" variant="actionLabel">
             Hủy đặt trước
           </AppText>
         </XStack>
@@ -67,11 +63,7 @@ export function DetailActions({
           {isConfirming
             ? <Spinner color={colors.textOnBrand} />
             : <IconSymbol color={colors.textOnBrand} name="play.fill" size={20} />}
-          <AppText
-            tone="inverted"
-            variant="bodyStrong"
-            style={{ fontSize: 16, fontWeight: "700", lineHeight: 24 }}
-          >
+          <AppText tone="inverted" variant="actionLabel">
             Xác nhận & bắt đầu
           </AppText>
         </XStack>

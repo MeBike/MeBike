@@ -57,11 +57,8 @@ export function ReservationsFilter({ filters, activeFilter, onChange }: Reservat
                 <AppText
                   numberOfLines={1}
                   tone={isActive ? "brand" : "inverted"}
-                  variant="bodyStrong"
+                  variant="tabLabel"
                   style={{
-                    fontSize: 16,
-                    fontWeight: "700",
-                    lineHeight: 20,
                     opacity: isActive ? 1 : 0.86,
                   }}
                 >

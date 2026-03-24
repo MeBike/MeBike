@@ -99,11 +99,7 @@ export function ReservationCard({
                   </XStack>
 
                   <YStack flex={1} gap="$1" justifyContent="center" minWidth={0} paddingRight="$2">
-                    <AppText
-                      numberOfLines={titleLineCount}
-                      variant="sectionTitle"
-                      style={{ fontWeight: "800", letterSpacing: -0.3, lineHeight: 21 }}
-                    >
+                    <AppText numberOfLines={titleLineCount} variant="cardTitle">
                       {cardTitle}
                     </AppText>
                     <AppText numberOfLines={1} tone="subtle" variant="meta">
@@ -132,7 +128,7 @@ export function ReservationCard({
               >
                 <XStack alignItems="center" gap="$3">
                   <IconSymbol color={colors.textMuted} name="location" size={20} />
-                  <AppText flex={1} numberOfLines={2} variant="bodyStrong" style={{ fontWeight: "700", lineHeight: 22 }}>
+                  <AppText flex={1} numberOfLines={2} variant="subhead">
                     {stationLabel}
                   </AppText>
                 </XStack>
@@ -140,7 +136,7 @@ export function ReservationCard({
                 <XStack alignItems="flex-start" gap="$3">
                   <IconSymbol color={colors.textMuted} name="clock" size={20} style={{ marginTop: 1 }} />
                   <YStack flex={1} gap="$1">
-                    <AppText variant="bodyStrong" style={{ fontWeight: "700", lineHeight: 22 }}>
+                    <AppText variant="subhead">
                       {timeRangeLabel}
                     </AppText>
                     <AppText tone="subtle" variant="meta">
