@@ -3,6 +3,7 @@ import { createRoute } from "@hono/zod-openapi";
 import { ServerErrorResponseSchema } from "../../schemas";
 import { unauthorizedResponse } from "../helpers";
 import {
+  IncidentDetailSchema,
   IncidentIdParamSchema,
   IncidentListQuerySchema,
   IncidentListResponseSchema,
@@ -66,7 +67,7 @@ export const getIncident = createRoute({
     200: {
       description: "Get incident details",
       content: {
-        "application/json": { schema: IncidentSummarySchema },
+        "application/json": { schema: IncidentDetailSchema },
       },
     },
     400: {

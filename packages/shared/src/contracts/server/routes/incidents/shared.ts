@@ -6,7 +6,7 @@ import {
   SortDirectionSchema,
 } from "../../schemas";
 import { IncidentStatusSchema } from "../../incident/schemas";
-import { IncidentSummarySchema } from "../../incident/models";
+import { IncidentDetailSchema, IncidentSummarySchema } from "../../incident/models";
 
 export const IncidentSortFieldSchema = z.enum(["status", "resolvedAt"]);
 
@@ -75,13 +75,18 @@ export const IncidentStatusPatchSchema = z
 
 export const IncidentListResponseSchema = z
   .object({
-    data: IncidentSummarySchema.array(),
+    data: IncidentDetailSchema.array(),
     pagination: PaginationSchema,
   })
   .openapi("IncidentListResponse", {
     description: "Paginated incident listing",
   });
 
-export { PaginationSchema, ServerErrorResponseSchema, IncidentSummarySchema };
+export {
+  IncidentDetailSchema,
+  IncidentSummarySchema,
+  PaginationSchema,
+  ServerErrorResponseSchema,
+};
 
 export type IncidentListResponse = z.infer<typeof IncidentListResponseSchema>;

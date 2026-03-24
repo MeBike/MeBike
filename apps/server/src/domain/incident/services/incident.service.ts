@@ -22,6 +22,7 @@ import type {
 } from "../domain-errors";
 import type {
   CreateIncidentRequest,
+  IncidentDetail,
   IncidentFilter,
   IncidentRow,
   IncidentSortField,
@@ -38,11 +39,11 @@ export type IncidentService = {
   listIncidents: (
     filter: IncidentFilter,
     pageReq: PageRequest<IncidentSortField>,
-  ) => Effect.Effect<PageResult<IncidentRow>>;
+  ) => Effect.Effect<PageResult<IncidentDetail>>;
 
   getIncidentById: (
     incidentId: string,
-  ) => Effect.Effect<IncidentRow, IncidentNotFound>;
+  ) => Effect.Effect<IncidentDetail, IncidentNotFound>;
 
   createIncident: (
     data: CreateIncidentRequest,
@@ -58,13 +59,13 @@ export type IncidentService = {
   updateIncident: (
     incidentId: string,
     patch: UpdateIncidentInput,
-  ) => Effect.Effect<IncidentRow, IncidentNotFound | IncidentRepositoryError>;
+  ) => Effect.Effect<IncidentDetail, IncidentNotFound | IncidentRepositoryError>;
 
   updateIncidentStatus: (
     incidentId: string,
     status: IncidentStatus,
   ) => Effect.Effect<
-    IncidentRow,
+    IncidentDetail,
     IncidentNotFound | InvalidIncidentStatus | IncidentRepositoryError
   >;
 };

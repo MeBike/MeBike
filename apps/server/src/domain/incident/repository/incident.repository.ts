@@ -1,36 +1,43 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { IncidentSeverity, IncidentSource } from "generated/kysely/types";
-import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
-import type { IncidentStatus } from "generated/prisma/enums";
+import type {
+  IncidentSeverity,
+  IncidentSource,
+  IncidentStatus,
+} from "generated/kysely/types";
+import type {
+  PrismaClient,
+  Prisma as PrismaTypes,
+} from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { stationRepositoryFactory } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type {
-  NoNearestStationFound,
-} from "../domain-errors";
+import type { NoNearestStationFound } from "../domain-errors";
 import type {
   CreateIncidentInput,
+  IncidentDetail,
   IncidentFilter,
   IncidentRow,
   IncidentSortField,
   UpdateIncidentInput,
 } from "../models";
 
+import { IncidentRepositoryError } from "../domain-errors";
 import {
-  IncidentRepositoryError,
-} from "../domain-errors";
+  incidentDetailSelect,
+  mapToIncidentDetail,
+} from "./incident.repository.query";
 
 export type IncidentRepo = {
   listWithOffset: (
     filter: IncidentFilter,
     pageReq: PageRequest<IncidentSortField>,
-  ) => Effect.Effect<PageResult<IncidentRow>>;
+  ) => Effect.Effect<PageResult<IncidentDetail>>;
 
-  getById: (id: string) => Effect.Effect<Option.Option<IncidentRow>>;
+  getById: (id: string) => Effect.Effect<Option.Option<IncidentDetail>>;
 
   create: (
     data: CreateIncidentInput,
@@ -42,12 +49,12 @@ export type IncidentRepo = {
   update: (
     id: string,
     patch: UpdateIncidentInput,
-  ) => Effect.Effect<Option.Option<IncidentRow>, IncidentRepositoryError>;
+  ) => Effect.Effect<Option.Option<IncidentDetail>, IncidentRepositoryError>;
 
   updateStatus: (
     id: string,
     status: IncidentStatus,
-  ) => Effect.Effect<Option.Option<IncidentRow>, IncidentRepositoryError>;
+  ) => Effect.Effect<Option.Option<IncidentDetail>, IncidentRepositoryError>;
 };
 
 function toIncidentOrderBy(
@@ -69,25 +76,6 @@ function toIncidentOrderBy(
 function createIncidentWithClient(tx: PrismaClient | PrismaTypes.TransactionClient, data: CreateIncidentInput) {
   return Effect.tryPromise({
     try: async () => {
-      const select = {
-        id: true,
-        reporterUserId: true,
-        rentalId: true,
-        bikeId: true,
-        stationId: true,
-        source: true,
-        incidentType: true,
-        severity: true,
-        description: true,
-        latitude: true,
-        longitude: true,
-        bikeLocked: true,
-        status: true,
-        reportedAt: true,
-        resolvedAt: true,
-        closedAt: true,
-      } as const;
-
       let foundTechnician:
         | { userId: string; technicianTeamId: string }
         | undefined;
@@ -142,7 +130,7 @@ function createIncidentWithClient(tx: PrismaClient | PrismaTypes.TransactionClie
         data: {
           reporterUserId: data.reporterUserId,
           rentalId: data.rentalId,
-          bikeId: data.bikeId,
+          bikeId: data.bikeId || "",
           stationId: data.stationId,
           source: data.source as IncidentSource,
           incidentType: data.incidentType,
@@ -151,20 +139,19 @@ function createIncidentWithClient(tx: PrismaClient | PrismaTypes.TransactionClie
           latitude: data.latitude,
           longitude: data.longitude,
           bikeLocked: data.bikeLocked,
-          status: (foundTechnician ? "ASSIGNED" : "OPEN") as IncidentStatus,
+          status: (foundTechnician ? "ASSIGNED" : "OPEN") as any,
           attachments: {
             create: data.fileUrls.map(url => ({ fileUrl: url })),
           },
         },
-        select,
       });
 
       if (foundTechnician) {
         await tx.technicianAssignment.create({
           data: {
             incidentReportId: incident.id,
-            technicianTeamId: foundTechnician.technicianTeamId,
-            technicianUserId: foundTechnician.userId,
+            technicianTeamId: foundTechnician!.technicianTeamId,
+            technicianUserId: foundTechnician!.userId,
           },
         });
       }
@@ -183,25 +170,6 @@ export function makeIncidentRepository(
   db: PrismaClient | PrismaTypes.TransactionClient,
 ): IncidentRepo {
   const client = db;
-
-  const select = {
-    id: true,
-    reporterUserId: true,
-    rentalId: true,
-    bikeId: true,
-    stationId: true,
-    source: true,
-    incidentType: true,
-    severity: true,
-    description: true,
-    latitude: true,
-    longitude: true,
-    bikeLocked: true,
-    status: true,
-    reportedAt: true,
-    resolvedAt: true,
-    closedAt: true,
-  } as const;
 
   return {
     listWithOffset(filter, pageReq) {
@@ -223,20 +191,30 @@ export function makeIncidentRepository(
               skip,
               take,
               orderBy,
-              select,
+              select: incidentDetailSelect,
             }),
           ),
         ]);
 
-        return makePageResult(items as IncidentRow[], total, page, pageSize);
+        return makePageResult(
+          (items as any[]).map(mapToIncidentDetail),
+          total,
+          page,
+          pageSize,
+        );
       });
     },
 
     getById(id) {
       return Effect.promise(() =>
-        client.incidentReport.findUnique({ where: { id }, select }),
+        client.incidentReport.findUnique({
+          where: { id },
+          select: incidentDetailSelect,
+        }),
       ).pipe(
-        Effect.map(val => Option.fromNullable(val as IncidentRow | null)),
+        Effect.map(val =>
+          Option.fromNullable(val).pipe(Option.map(mapToIncidentDetail)),
+        ),
       );
     },
 
@@ -246,13 +224,6 @@ export function makeIncidentRepository(
 
     update(id, patch) {
       return Effect.gen(function* () {
-        const existing = yield* Effect.promise(() =>
-          client.incidentReport.findUnique({ where: { id }, select }),
-        );
-        if (!existing) {
-          return Option.none<IncidentRow>();
-        }
-
         const updated = yield* Effect.tryPromise({
           try: () =>
             client.incidentReport.update({
@@ -281,36 +252,37 @@ export function makeIncidentRepository(
                 ...(patch.bikeLocked !== undefined
                   ? { bikeLocked: patch.bikeLocked }
                   : {}),
-                ...(patch.bikeLocked !== undefined
-                  ? { bikeLocked: patch.bikeLocked }
-                  : {}),
-              } as PrismaTypes.IncidentReportUncheckedUpdateInput,
-              select,
+              },
+              select: incidentDetailSelect,
             }),
-          catch: (err: any) =>
+          catch: e =>
             new IncidentRepositoryError({
-              operation: "update",
-              cause: err,
-              message: "Failed to update incident",
+              operation: "updateIncident.update",
+              cause: e,
             }),
         });
 
-        return Option.some(updated);
+        return Option.some(mapToIncidentDetail(updated as any));
       });
     },
 
     updateStatus(id, status) {
-      return Effect.tryPromise({
-        try: () =>
-          client.incidentReport
-            .update({
+      return Effect.gen(function* () {
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            client.incidentReport.update({
               where: { id },
               data: { status },
-              select,
-            })
-            .then(val => val as IncidentRow)
-            .then(Option.some),
-        catch: (err: any) => new IncidentRepositoryError(err),
+              select: incidentDetailSelect,
+            }),
+          catch: e =>
+            new IncidentRepositoryError({
+              operation: "updateStatus",
+              cause: e,
+            }),
+        });
+
+        return Option.some(mapToIncidentDetail(updated as any));
       });
     },
   };
