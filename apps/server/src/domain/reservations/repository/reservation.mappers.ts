@@ -22,7 +22,7 @@ export const selectReservationExpandedDetailRow = {
   user: {
     select: {
       id: true,
-      fullname: true,
+      fullName: true,
       username: true,
       email: true,
       phoneNumber: true,
@@ -99,7 +99,7 @@ export function toReservationExpandedDetailRow(row: {
   updatedAt: Date;
   user: {
     id: string;
-    fullname: string;
+    fullName: string;
     username: string | null;
     email: string;
     phoneNumber: string | null;
@@ -123,7 +123,7 @@ export function toReservationExpandedDetailRow(row: {
     ...toReservationRow(row),
     user: {
       id: row.user.id,
-      fullName: row.user.fullname,
+      fullName: row.user.fullName,
       username: row.user.username,
       email: row.user.email,
       phoneNumber: row.user.phoneNumber,
