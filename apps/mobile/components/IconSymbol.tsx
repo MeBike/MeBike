@@ -62,6 +62,7 @@ const MAPPING = {
   "folder": "folder-open",
   "doc.fill": "insert-drive-file",
   "doc": "insert-drive-file",
+  "doc.on.doc": "content-copy",
 
   // Media & Content
   "photo.fill": "image",

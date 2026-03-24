@@ -32,7 +32,7 @@ function ReservationsScreen() {
     isLoadingMoreHistory,
   } = useReservations(hasToken);
 
-  const { handleNavigateToDetail, canGoBack, goBack } = useReservationNavigation(stationMap);
+  const { handleNavigateToDetail, canGoBack, goBack } = useReservationNavigation();
 
   const listHeaderComponent = useMemo(() => (
     <YStack>

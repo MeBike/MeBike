@@ -2,10 +2,14 @@ import { useGetStationLookupQuery } from "@hooks/query/reservation/use-get-stati
 import { useReservationActions } from "@hooks/use-reservation-actions";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useEffect, useMemo } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { colors } from "@theme/colors";
+import { spacing } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
+import { useCallback, useMemo } from "react";
+import { Alert, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { YStack } from "tamagui";
 
 import type {
   ReservationDetailNavigationProp,
@@ -13,36 +17,10 @@ import type {
 } from "../types/navigation";
 import type { Reservation } from "../types/reservation-types";
 
-import { ActionButtons } from "./components/action-buttons";
-import { ErrorState } from "./components/error-state";
-import { LoadingState } from "./components/loading-state";
-import { ReservationHeader, ReservationSummary } from "./components/reservation-header";
-import { ReservationInfo } from "./components/reservation-info";
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F6FA",
-  },
-  header: {
-    paddingTop: 0,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 32,
-    gap: 24,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-});
+import { DetailActions } from "./reservation-detail/components/detail-actions";
+import { DetailErrorState } from "./reservation-detail/components/detail-error-state";
+import { DetailLoadingState } from "./reservation-detail/components/detail-loading-state";
+import { DetailSummaryCard } from "./reservation-detail/components/detail-summary-card";
 
 function ReservationDetailScreen() {
   const navigation = useNavigation<ReservationDetailNavigationProp>();
@@ -65,7 +43,7 @@ function ReservationDetailScreen() {
   } = useReservationActions({
     hasToken,
     reservationId,
-    enableDetailQuery: !initialReservation,
+    enableDetailQuery: hasToken && Boolean(reservationId),
   });
 
   const stationIdForLookup
@@ -96,12 +74,6 @@ function ReservationDetailScreen() {
     }
     return undefined;
   }, [reservation, stationLookup]);
-
-  useEffect(() => {
-    if (!initialReservation) {
-      fetchReservationDetail();
-    }
-  }, [fetchReservationDetail, initialReservation]);
 
   const handleGoBack = useCallback(() => {
     navigation.goBack();
@@ -155,50 +127,71 @@ function ReservationDetailScreen() {
   }, [cancelReservation, fetchReservationDetail, reservation, reservationId, navigation]);
 
   if (!reservation && isReservationDetailLoading) {
-    return <LoadingState message="Đang tải chi tiết đặt trước..." />;
+    return (
+      <Screen>
+        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+        <DetailLoadingState />
+      </Screen>
+    );
   }
 
   if (!reservation) {
-    return <ErrorState onGoBack={handleGoBack} />;
+    return (
+      <Screen>
+        <DetailErrorState onGoBack={handleGoBack} />
+      </Screen>
+    );
   }
 
   const isPending = reservation.status === "PENDING";
+  const actionBarHeight = isPending ? 168 + Math.max(insets.bottom, spacing.lg) : spacing.xxxxl;
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={["#0066FF", "#00B4D8"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + 16 }]}
+    <Screen>
+      <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: actionBarHeight,
+        }}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
       >
-        <ReservationHeader onGoBack={handleGoBack} />
-      </LinearGradient>
+        <YStack>
+          <AppHeroHeader onBack={handleGoBack} title="Chi tiết đặt trước" />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.card}>
-          <ReservationSummary
-            status={reservation.status}
-            bikeId={reservation.bikeId}
-            reservationId={reservation.id}
-          />
-
-          <ReservationInfo
-            reservation={reservation}
-            stationName={resolvedStation?.name}
-            stationAddress={resolvedStation?.address}
-          />
-        </View>
-
-        <ActionButtons
-          isPending={isPending}
-          isConfirming={isConfirmingReservation}
-          isCancelling={isCancellingReservation}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
+          <YStack marginTop={-spacing.xxxl} paddingHorizontal="$5">
+            <DetailSummaryCard
+              reservation={reservation}
+              stationAddress={resolvedStation?.address}
+              stationName={resolvedStation?.name}
+            />
+          </YStack>
+        </YStack>
       </ScrollView>
-    </View>
+
+      {isPending
+        ? (
+            <View
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+              }}
+            >
+              <DetailActions
+                bottomInset={insets.bottom}
+                isCancelling={isCancellingReservation}
+                isConfirming={isConfirmingReservation}
+                isPending={isPending}
+                onCancel={handleCancel}
+                onConfirm={handleConfirm}
+              />
+            </View>
+          )
+        : null}
+    </Screen>
   );
 }
 
