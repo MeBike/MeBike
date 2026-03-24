@@ -1,13 +1,21 @@
-import type { RouteProp } from "@react-navigation/native";
 // Common navigation hook types
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
+import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
 import type { BikeSummary } from "@/contracts/server";
 import type { ResolveSOSSchema } from "@/schema/sosSchema";
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 
 // Navigation Types for React Navigation
 import type { Reservation } from "./reservation-types";
+
+export type StationSelectionMode = "rental-return-slot";
+
+export type StationSelectionContext = {
+  selectionMode: StationSelectionMode;
+  rentalId: string;
+  currentReturnStationId?: string;
+};
 
 export type RootStackParamList = {
   "Booking": undefined;
@@ -18,8 +26,8 @@ export type RootStackParamList = {
   "Intro": undefined;
   "Register": undefined;
   "EmailVerification": { email: string };
-  "StationDetail": { stationId: string };
-  "Trạm": undefined;
+  "StationDetail": { stationId: string } & Partial<StationSelectionContext>;
+  "Trạm": Partial<StationSelectionContext> | undefined;
   "Modal": undefined;
   "FormSheet": undefined;
   "TransparentModal": undefined;
@@ -149,6 +157,7 @@ export type SubscriptionsNavigationProp = StackNavigationProp<
   "Subscriptions"
 >;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, "StationDetail">;
+export type StationSelectRouteProp = RouteProp<RootStackParamList, "Trạm">;
 export type ReservationsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Reservations"

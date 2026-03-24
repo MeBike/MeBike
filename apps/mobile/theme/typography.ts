@@ -143,6 +143,12 @@ export const textStyles = {
     fontWeight: fontWeights.heavy,
     letterSpacing: -0.3,
   }),
+  metricValue: defineTextStyle({
+    fontSize: 52,
+    lineHeight: 54,
+    fontWeight: fontWeights.heavy,
+    letterSpacing: -1,
+  }),
   priceValue: defineTextStyle({
     fontSize: 19,
     lineHeight: lineHeights.md,

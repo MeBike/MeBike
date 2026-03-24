@@ -3,16 +3,20 @@ import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
 import { useStationRouteQuery } from "@hooks/query/Station/use-station-route-query";
 import { useStationActions } from "@hooks/useStationAction";
 import { log } from "@lib/log";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useCurrentLocation } from "@/providers/location-provider";
 
-import type { StationDetailScreenNavigationProp } from "../../../types/navigation";
+import type {
+  StationDetailScreenNavigationProp,
+  StationSelectRouteProp,
+} from "../../../types/navigation";
 
 export function useStationSelect() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
+  const stationSelectRoute = useRoute<StationSelectRouteProp>();
   const insets = useSafeAreaInsets();
   const [showingNearby, setShowingNearby] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
@@ -42,7 +46,16 @@ export function useStationSelect() {
   }, [showingNearby, currentLocation, getNearbyStations]);
 
   const handleSelectStation = (stationId: string) => {
-    navigation.navigate("StationDetail", { stationId });
+    navigation.navigate("StationDetail", {
+      stationId,
+      ...(stationSelectRoute.params?.selectionMode
+        ? {
+            selectionMode: stationSelectRoute.params.selectionMode,
+            rentalId: stationSelectRoute.params.rentalId,
+            currentReturnStationId: stationSelectRoute.params.currentReturnStationId,
+          }
+        : {}),
+    });
   };
 
   const handleFindNearbyStations = async () => {

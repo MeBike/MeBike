@@ -1,0 +1,79 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { spacing } from "@theme/metrics";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppText } from "@ui/primitives/app-text";
+import { XStack, YStack } from "tamagui";
+
+type RentalActionBarProps = {
+  rentalId: string;
+  currentReturnStationId?: string;
+  returnStationName?: string | null;
+  bottomInset: number;
+  onChooseReturnStation: () => void;
+  onOpenReturnQr: () => void;
+};
+
+export function RentalActionBar({
+  rentalId,
+  currentReturnStationId,
+  returnStationName,
+  bottomInset,
+  onChooseReturnStation,
+  onOpenReturnQr,
+}: RentalActionBarProps) {
+  const hasReturnSlot = Boolean(currentReturnStationId);
+
+  return (
+    <YStack
+      backgroundColor={colors.surface}
+      borderColor={colors.borderSubtle}
+      borderTopWidth={1}
+      gap="$3"
+      paddingHorizontal="$5"
+      paddingTop="$5"
+      paddingBottom={Math.max(bottomInset, spacing.lg)}
+    >
+      <AppText align="center" tone={hasReturnSlot ? "muted" : "danger"} variant="bodySmall">
+        {hasReturnSlot
+          ? `Vui lòng đưa mã QR cho nhân viên tại ${returnStationName ?? "bãi trả đã chọn"} để trả xe.`
+          : "Bạn cần đặt bãi trả xe trước khi kết thúc hành trình."}
+      </AppText>
+
+      {hasReturnSlot
+        ? (
+            <XStack gap="$3">
+              <AppButton flex={1} onPress={onChooseReturnStation} tone="outline">
+                Đổi bãi
+              </AppButton>
+              <AppButton flex={2} onPress={onOpenReturnQr} tone="primary">
+                <XStack alignItems="center" gap="$2">
+                  <IconSymbol color={colors.textOnBrand} name="qrcode.viewfinder" size={20} />
+                  <AppText tone="inverted" variant="actionLabel">
+                    Mã QR trả xe
+                  </AppText>
+                </XStack>
+              </AppButton>
+            </XStack>
+          )
+        : (
+            <AppButton onPress={onChooseReturnStation} tone="primary">
+              <XStack alignItems="center" gap="$2">
+                <IconSymbol color={colors.textOnBrand} name="location.fill" size={20} />
+                <AppText tone="inverted" variant="actionLabel">
+                  Chọn bãi trả xe
+                </AppText>
+              </XStack>
+            </AppButton>
+          )}
+
+      <AppText align="center" tone="subtle" variant="meta">
+        Mã thuê:
+        {" "}
+        {
+          rentalId.slice(0, 8).toUpperCase()
+        }
+      </AppText>
+    </YStack>
+  );
+}

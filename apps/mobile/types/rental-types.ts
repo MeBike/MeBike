@@ -1,5 +1,7 @@
 import type {
+  BikeSummary,
   CreateRentalPayload,
+  CreateReturnSlotPayload,
   MyRentalListResponse,
   Rental,
   RentalCounts,
@@ -10,10 +12,13 @@ import type {
   RentalStatus,
   RentalWithPrice,
   RentalWithPricing,
+  ReturnSlotReservation,
+  StationReadSummary,
 } from "@/contracts/server";
 
 export type {
   CreateRentalPayload,
+  CreateReturnSlotPayload,
   MyRentalListResponse,
   Rental,
   RentalCounts,
@@ -24,6 +29,16 @@ export type {
   RentalStatus,
   RentalWithPrice,
   RentalWithPricing,
+  ReturnSlotReservation,
+};
+
+export type MyRentalResolvedDetail = {
+  rental: Rental;
+  bike: BikeSummary | null;
+  startStation: StationReadSummary | null;
+  endStation: StationReadSummary | null;
+  returnSlot: ReturnSlotReservation | null;
+  returnStation: StationReadSummary | null;
 };
 
 export type RentalListParams = {

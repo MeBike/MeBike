@@ -15,7 +15,12 @@ const PAGE_SIZE = 20;
 export function useStationDetail() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   const route = useRoute<StationDetailRouteProp>();
-  const { stationId } = route.params;
+  const {
+    stationId,
+    selectionMode,
+    rentalId,
+    currentReturnStationId,
+  } = route.params;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [loadedBikes, setLoadedBikes] = useState<BikeSummary[]>([]);
@@ -109,5 +114,8 @@ export function useStationDetail() {
     handleRefresh,
     handleLoadMore,
     navigation,
+    selectionMode,
+    rentalId,
+    currentReturnStationId,
   };
 }

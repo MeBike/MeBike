@@ -1,58 +1,41 @@
-import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/use-get-bike-by-id-query";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import React, { useMemo } from "react";
-import {
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  View,
-} from "react-native";
+import { colors } from "@theme/colors";
+import { spacing } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
+import { useCallback } from "react";
+import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { YStack } from "tamagui";
 
 import type { Rental } from "@/types/rental-types";
 
-import BookingDetailHeader from "./components/BookingDetailHeader";
-import ErrorState from "./components/ErrorState";
-import LoadingState from "./components/LoadingState";
-import RatingSection from "./components/RatingSection";
-import { useBookingRating } from "./hooks/use-booking-rating";
+import DetailErrorState from "./components/detail-error-state";
+import DetailLoadingState from "./components/detail-loading-state";
+import { RentalActionBar } from "./components/rental-action-bar";
+import { RentalHeroCard } from "./components/rental-hero-card";
+import { RentalIdPill } from "./components/rental-id-pill";
+import { RentalJourneyCard } from "./components/rental-journey-card";
+import { RentalMetaCard } from "./components/rental-meta-card";
 import { useRentalDetailData } from "./hooks/use-rental-detail-data";
 import { useRentalStatusWatcher } from "./hooks/use-rental-status-watcher";
-import { RentalActionButtons } from "./v1/action-buttons";
-import { RentalBikeInfoCard } from "./v1/bike-info-card";
-import { RentalBookingIdCard } from "./v1/booking-id-card";
-import { RentalPaymentInfoCard } from "./v1/payment-info-card";
-import { RentalStatusCard } from "./v1/status-card";
-import { RentalTimeInfoCard } from "./v1/time-info-card";
 
 type RouteParams = {
   bookingId: string;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F3F5F9",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 14,
-  },
-});
-
-function BookingHistoryDetail() {
+function BookingHistoryDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
+  const insets = useSafeAreaInsets();
   const { bookingId } = route.params as RouteParams;
   const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
 
   const {
+    detail,
     booking,
-    stations,
     isInitialLoading,
     isError,
     isRefreshing,
@@ -62,113 +45,102 @@ function BookingHistoryDetail() {
     onRentalEnd: undefined,
   });
 
-  const stationsById = useMemo(() => {
-    const map = new Map<string, typeof stations[number]>();
-    for (const s of stations ?? []) {
-      map.set(s.id, s);
-    }
-    return map;
-  }, [stations]);
-
-  const bikeId = booking?.bikeId ?? "";
-  const bikeQuery = useGetBikeByIDAllQuery(bikeId);
-
-  const { ratingState } = useBookingRating({
-    bookingId,
-    booking,
-  });
-
   useRentalStatusWatcher({
     booking: booking as Rental | undefined,
     hasToken,
     refetchDetail,
   });
 
-  if (isInitialLoading) {
+  const isOngoing = booking?.status === "RENTED";
+  const actionBarHeight = isOngoing ? 164 + Math.max(insets.bottom, spacing.lg) : spacing.xxxxl;
+
+  const handleChooseReturnStation = useCallback(() => {
+    if (!detail) {
+      return;
+    }
+
+    (navigation as any).navigate("Trạm", {
+      selectionMode: "rental-return-slot",
+      rentalId: detail.rental.id,
+      currentReturnStationId: detail.returnSlot?.stationId,
+    });
+  }, [detail, navigation]);
+
+  const handleOpenReturnQr = useCallback(() => {
+    (navigation as any).navigate("RentalQr", { bookingId });
+  }, [bookingId, navigation]);
+
+  if (isInitialLoading && !detail) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-        <BookingDetailHeader
-          title="Chi tiết thuê xe"
-          onBackPress={() => navigation.goBack()}
-        />
-        <LoadingState />
-      </SafeAreaView>
+      <Screen>
+        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+        <AppHeroHeader onBack={() => navigation.goBack()} size="compact" title="Chi tiết thuê xe" />
+        <DetailLoadingState />
+      </Screen>
     );
   }
 
-  if (isError || !booking) {
+  if (isError || !detail || !booking) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-        <BookingDetailHeader
-          title="Chi tiết thuê xe"
-          onBackPress={() => navigation.goBack()}
-        />
-        <ErrorState onRetry={refetchDetail} />
-      </SafeAreaView>
+      <Screen>
+        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+        <AppHeroHeader onBack={() => navigation.goBack()} size="compact" title="Chi tiết thuê xe" />
+        <DetailErrorState onRetry={refetchDetail} />
+      </Screen>
     );
   }
-
-  const resolvedBooking = booking as Rental;
-  const bike = bikeQuery.data;
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-      <BookingDetailHeader
-        title="Chi tiết thuê xe"
-        onBackPress={() => navigation.goBack()}
-      />
+    <Screen>
+      <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
 
       <ScrollView
-        style={styles.content}
+        contentContainerStyle={{
+          paddingBottom: actionBarHeight,
+        }}
+        contentInsetAdjustmentBehavior="automatic"
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-        }
       >
-        <RentalStatusCard
-          status={resolvedBooking.status}
-          startTime={resolvedBooking.startTime}
-          duration={resolvedBooking.duration}
-          totalPrice={resolvedBooking.totalPrice}
-        />
-        <RentalTimeInfoCard rental={resolvedBooking} />
-        <RentalBikeInfoCard rental={resolvedBooking} stationsById={stationsById} bike={bike} />
-        <RentalPaymentInfoCard rental={resolvedBooking} />
-        <RentalBookingIdCard rentalId={resolvedBooking.id} />
-        <RatingSection
-          booking={resolvedBooking}
-          hasRated={ratingState.hasRated}
-          existingRating={ratingState.existingRating ?? undefined}
-          canOpenRatingForm={ratingState.canOpenRatingForm}
-          ratingWindowExpired={ratingState.ratingWindowExpired}
-          showRatingForm={ratingState.showRatingForm}
-          ratingValue={ratingState.ratingValue}
-          selectedReasons={ratingState.selectedReasons}
-          ratingComment={ratingState.ratingComment}
-          ratingError={ratingState.ratingError}
-          showAllReasons={ratingState.showAllReasons}
-          ratingReasons={ratingState.ratingReasons}
-          isRatingReasonsLoading={ratingState.isRatingReasonsLoading}
-          isSubmittingRating={ratingState.isSubmittingRating}
-          displayReasons={ratingState.displayReasons}
-          filteredReasons={ratingState.filteredReasons}
-          setRatingValue={ratingState.setRatingValue}
-          setRatingError={ratingState.setRatingError}
-          setShowAllReasons={ratingState.setShowAllReasons}
-          handleToggleReason={ratingState.handleToggleReason}
-          setRatingComment={ratingState.setRatingComment}
-          handleCancelRating={ratingState.handleCancelRating}
-          handleSubmitRating={ratingState.handleSubmitRating}
-          handleOpenRatingForm={ratingState.handleOpenRatingForm}
-          getAppliesTo={ratingState.getAppliesTo}
-        />
-        <RentalActionButtons rental={resolvedBooking} />
+        <YStack>
+          <AppHeroHeader
+            onBack={() => navigation.goBack()}
+            size="compact"
+            title="Chi tiết thuê xe"
+          />
+
+          <YStack gap="$5" marginTop={-spacing.xl} paddingHorizontal="$5">
+            <RentalHeroCard rental={booking} />
+            <RentalJourneyCard detail={detail} />
+            <RentalMetaCard detail={detail} />
+            <RentalIdPill rentalId={booking.id} />
+          </YStack>
+        </YStack>
       </ScrollView>
-    </View>
+
+      {isOngoing
+        ? (
+            <View
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+              }}
+            >
+              <RentalActionBar
+                bottomInset={insets.bottom}
+                currentReturnStationId={detail.returnSlot?.stationId}
+                onChooseReturnStation={handleChooseReturnStation}
+                onOpenReturnQr={handleOpenReturnQr}
+                rentalId={booking.id}
+                returnStationName={detail.returnStation?.name}
+              />
+            </View>
+          )
+        : null}
+    </Screen>
   );
 }
 
-export default BookingHistoryDetail;
+export default BookingHistoryDetailScreen;

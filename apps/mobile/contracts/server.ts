@@ -22,3 +22,5 @@ export type RentalListItem = ServerContracts.RentalsContracts.RentalListItem;
 export type RentalListResponse = ServerContracts.RentalsContracts.RentalListResponse;
 export type MyRentalListResponse = ServerContracts.RentalsContracts.MyRentalListResponse;
 export type CreateRentalPayload = ServerContracts.RentalsContracts.CreateRentalRequest;
+export type CreateReturnSlotPayload = ServerContracts.RentalsContracts.CreateReturnSlotRequest;
+export type ReturnSlotReservation = ServerContracts.RentalsContracts.ReturnSlotReservation;

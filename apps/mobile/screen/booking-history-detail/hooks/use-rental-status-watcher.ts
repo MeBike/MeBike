@@ -32,6 +32,7 @@ export function useRentalStatusWatcher({
         queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
         queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
         queryClient.invalidateQueries({ queryKey: ["rentals", "me", "detail", booking?.id] });
+        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "resolved-detail", booking?.id] });
       }
     },
     [bikeId, booking?.id, queryClient, refetchDetail],

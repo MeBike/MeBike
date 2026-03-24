@@ -25,6 +25,7 @@ export const AppText = styled(Text, {
       cardTitle: textStyles.cardTitle,
       tabLabel: textStyles.tabLabel,
       headline: textStyles.headline,
+      metricValue: textStyles.metricValue,
       priceValue: textStyles.priceValue,
       badgeLabel: textStyles.badgeLabel,
       xlTitle: textStyles.xlTitle,

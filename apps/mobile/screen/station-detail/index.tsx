@@ -1,7 +1,14 @@
+import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
+import { useCreateMyReturnSlotMutation } from "@hooks/mutations/rentals/use-create-my-return-slot-mutation";
+import { rentalErrorMessage } from "@services/rentals";
+import { useQueryClient } from "@tanstack/react-query";
 import { colors } from "@theme/colors";
 import { spacing } from "@theme/metrics";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { Alert, RefreshControl, ScrollView, Text, View } from "react-native";
 import { YStack } from "tamagui";
 
 import { BikeList } from "./components/bike-list";
@@ -11,6 +18,8 @@ import { StationStats } from "./components/station-stats";
 import { useStationDetail } from "./hooks/use-station-detail";
 
 export default function StationDetailScreen() {
+  const queryClient = useQueryClient();
+  const returnSlotMutation = useCreateMyReturnSlotMutation();
   const {
     station,
     isLoading,
@@ -23,7 +32,46 @@ export default function StationDetailScreen() {
     handleRefresh,
     handleLoadMore,
     navigation,
+    selectionMode,
+    rentalId,
+    currentReturnStationId,
   } = useStationDetail();
+
+  const isReturnSlotSelection = selectionMode === "rental-return-slot" && Boolean(rentalId);
+  const isCurrentReturnStation = currentReturnStationId === station?.id;
+
+  const handleSelectReturnStation = () => {
+    if (!station || !rentalId) {
+      return;
+    }
+
+    returnSlotMutation.mutate(
+      { rentalId, stationId: station.id },
+      {
+        onSuccess: async () => {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["rentals", "me"] }),
+            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "detail", rentalId] }),
+            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "resolved-detail", rentalId] }),
+            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] }),
+            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] }),
+          ]);
+
+          Alert.alert("Đã cập nhật bãi trả xe", `Bạn đã giữ chỗ trả xe tại ${station.name}.`, [
+            {
+              text: "Xem chi tiết thuê xe",
+              onPress: () => {
+                (navigation as any).pop(2);
+              },
+            },
+          ]);
+        },
+        onError: (error) => {
+          Alert.alert("Không thể giữ chỗ", rentalErrorMessage(error));
+        },
+      },
+    );
+  };
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -75,6 +123,41 @@ export default function StationDetailScreen() {
           <StationStats station={station} />
         </View>
         <YStack gap="$5" padding="$5" paddingTop="$5">
+          {isReturnSlotSelection
+            ? (
+                <AppCard borderRadius="$5" gap="$4" padding="$5">
+                  <YStack gap="$2">
+                    <AppText tone="subtle" variant="eyebrow">
+                      Chọn bãi trả xe
+                    </AppText>
+                    <AppText variant="cardTitle">
+                      {station.name}
+                    </AppText>
+                    <AppText tone="muted" variant="bodySmall">
+                      {isCurrentReturnStation
+                        ? "Đây đang là bãi trả xe đã giữ chỗ cho phiên thuê của bạn."
+                        : "Xác nhận bãi này để cập nhật điểm trả xe cho phiên thuê đang diễn ra."}
+                    </AppText>
+                  </YStack>
+
+                  <AppButton
+                    disabled={returnSlotMutation.isPending || isCurrentReturnStation}
+                    loading={returnSlotMutation.isPending}
+                    onPress={handleSelectReturnStation}
+                    tone={isCurrentReturnStation ? "outline" : "primary"}
+                  >
+                    {isCurrentReturnStation ? "Đang là bãi trả hiện tại" : "Chọn bãi này để trả xe"}
+                  </AppButton>
+
+                  <YStack alignItems="center" flexDirection="row" gap="$2">
+                    <IconSymbol color={colors.textMuted} name="info.circle" size={16} />
+                    <AppText flex={1} tone="muted" variant="meta">
+                      Sau khi giữ chỗ, quay lại chi tiết thuê xe để mở mã QR trả xe cho nhân viên.
+                    </AppText>
+                  </YStack>
+                </AppCard>
+              )
+            : null}
           <FixedSlotBanner
             onPress={() => navigation.navigate("FixedSlotTemplates", {
               stationId: station.id,
