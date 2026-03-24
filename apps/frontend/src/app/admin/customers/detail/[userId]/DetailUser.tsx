@@ -7,6 +7,7 @@ import {
   User,
   CheckCircle,
   Clock,
+  Edit
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +30,7 @@ const statusConfig: Record<UserDisplayStatus, StatusConfig> = {
   VERIFIED: { label: "Đã xác thực", variant: "success" },
   UNVERIFIED: { label: "Chưa xác thực", variant: "muted" },
   BANNED: { label: "Bị khóa", variant: "destructive" },
-    "": { label: "Không xác định", variant: "muted" },
+  "": { label: "Không xác định", variant: "muted" },
 };
 
 const roleConfig = {
@@ -40,7 +41,7 @@ const roleConfig = {
 };
 
 interface UserDetailProps {
-    user : Me;
+  user: Me;
 }
 
 const getUserDisplayStatus = (user: {
@@ -50,10 +51,10 @@ const getUserDisplayStatus = (user: {
   return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
 };
 
-export default function DetailUser({user}: UserDetailProps) {
-   const displayStatus = getUserDisplayStatus(user);
-   const status = statusConfig[displayStatus] || statusConfig.UNVERIFIED;
-   const role = roleConfig[user.role] || roleConfig.USER;
+export default function DetailUser({ user }: UserDetailProps) {
+  const displayStatus = getUserDisplayStatus(user);
+  const status = statusConfig[displayStatus] || statusConfig.UNVERIFIED;
+  const role = roleConfig[user.role] || roleConfig.USER;
   if (!user) {
     return (
       <div>
@@ -64,8 +65,8 @@ export default function DetailUser({user}: UserDetailProps) {
     );
   }
 
-//   const status = statusConfig[user.status] || statusConfig.Inactive;
-//   const role = roleConfig[user.role] || roleConfig.USER;
+  //   const status = statusConfig[user.status] || statusConfig.Inactive;
+  //   const role = roleConfig[user.role] || roleConfig.USER;
 
   const getInitials = (name: string) => {
     return name
@@ -78,18 +79,29 @@ export default function DetailUser({user}: UserDetailProps) {
 
   return (
     <div>
-     
       <PageHeader
         title="Thông tin người dùng"
         description={`Người dùng: ${user.fullName}`}
         backLink="/admin/customers"
         actions={
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/admin/customers/wallet/${user.id}`}>
-              <User className="h-4 w-4 mr-2" />
-              User wallet
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/admin/customers/wallet/${user.id}`}>
+                <User className="h-4 w-4 mr-2" />
+                Ví người dùng
+              </Link>
+            </Button>
+            </div>
+            <div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/admin/customers/wallet/${user.id}`}>
+                <Edit className="h-4 w-4 mr-2" />
+                Chỉnh sửa thông tin 
+              </Link>
+            </Button>
+            </div>
+          </div>
         }
       />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -98,17 +110,20 @@ export default function DetailUser({user}: UserDetailProps) {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={user.avatar ?? undefined} alt={user.fullName} />
+                <AvatarImage
+                  src={user.avatar ?? undefined}
+                  alt={user.fullName}
+                />
                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
                   {getInitials(user.fullName)}
                 </AvatarFallback>
               </Avatar>
 
-              <h2 className="text-xl font-bold text-foreground">{user.fullName}</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                {user.fullName}
+              </h2>
               {user.email && (
-                <p className="text-sm text-muted-foreground">
-                  {user.email}
-                </p>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
               )}
 
               <div className="flex gap-2 mt-3">
@@ -116,7 +131,7 @@ export default function DetailUser({user}: UserDetailProps) {
                   <Shield className="h-3 w-3 mr-1" />
                   {role.label}
                 </Badge>
-                <Badge >{status.label}</Badge>
+                <Badge>{status.label}</Badge>
               </div>
 
               {displayStatus === "VERIFIED" && (
@@ -137,7 +152,9 @@ export default function DetailUser({user}: UserDetailProps) {
               {user.phoneNumber && (
                 <div className="flex items-center gap-3 text-sm">
                   <Phone className="h-4 w-4 text-primary" />
-                  <span className="text-muted-foreground">{user.phoneNumber}</span>
+                  <span className="text-muted-foreground">
+                    {user.phoneNumber}
+                  </span>
                 </div>
               )}
               {user.location && (
@@ -267,7 +284,9 @@ export default function DetailUser({user}: UserDetailProps) {
                 <Label>Verification Status</Label>
                 <p className="text-sm text-muted-foreground">
                   <Badge
-                    variant={displayStatus === "VERIFIED" ? "success" : "warning"}
+                    variant={
+                      displayStatus === "VERIFIED" ? "success" : "warning"
+                    }
                   >
                     {displayStatus === "VERIFIED"
                       ? "Verified"

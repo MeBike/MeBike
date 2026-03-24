@@ -121,19 +121,15 @@ export default function ProfilePage() {
 
     const updatedData = fields.reduce((acc, field) => {
       const newValue = formData[field];
-      const oldValue = user[field as keyof DetailUser] ?? "";
-
+      const oldValue = user[field] ?? "";
       if (newValue !== oldValue) {
         acc[field] = newValue || "";
       }
       return acc;
     }, {} as UpdateProfileSchemaFormData);
-
-    // Upload ảnh lên Firebase khi Save (nếu có file mới)
     if (formData.avatarFile) {
       try {
         setIsUploadingAvatar(true);
-        // Compress ảnh trước khi upload
         const compressedFile = await compressImage(formData.avatarFile);
         const imageUrl = await uploadImageToFirebase(compressedFile, "avatars");
         updatedData.avatar = imageUrl;
