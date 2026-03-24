@@ -1,10 +1,9 @@
+import { useGetStationById } from "@hooks/query/Station/use-get-station-by-id-query";
+import { useBikeActions } from "@hooks/useBikeAction";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useCallback, useEffect, useState } from "react";
 
 import type { BikeSummary } from "@/contracts/server";
-
-import { useGetStationById } from "@hooks/query/Station/use-get-station-by-id-query";
-import { useBikeActions } from "@hooks/useBikeAction";
 
 import type {
   StationDetailRouteProp,

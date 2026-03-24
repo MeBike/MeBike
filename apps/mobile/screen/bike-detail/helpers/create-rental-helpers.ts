@@ -1,9 +1,9 @@
 import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
+import type { QueryClient } from "@tanstack/react-query";
 
 import type { BikeSummary } from "@/contracts/server";
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
-import type { QueryClient } from "@tanstack/react-query";
 
 import type { PaymentMode } from "../types";
 
