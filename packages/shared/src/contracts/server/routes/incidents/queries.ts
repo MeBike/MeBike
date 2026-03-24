@@ -7,9 +7,11 @@ import {
   IncidentIdParamSchema,
   IncidentListQuerySchema,
   IncidentListResponseSchema,
-  IncidentSummarySchema,
 } from "./shared";
-import { IncidentErrorCodeSchema, IncidentErrorResponseSchema } from "../../incident/errors";
+import {
+  IncidentErrorCodeSchema,
+  IncidentErrorResponseSchema,
+} from "../../incident/errors";
 
 export const listIncidents = createRoute({
   method: "get",

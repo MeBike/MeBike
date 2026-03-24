@@ -9,6 +9,7 @@ export const incidentErrorCodes = [
   "BIKE_NOT_FOUND",
   "STATION_NOT_FOUND",
   "NO_NEAREST_STATION_FOUND",
+  "BIKE_NOT_AVAILABLE",
 ] as const;
 
 export const IncidentErrorCodeSchema = z.enum(incidentErrorCodes);
@@ -66,4 +67,5 @@ export const incidentErrorMessages: Record<IncidentErrorCode, string> = {
   BIKE_NOT_FOUND: "Bike not found",
   STATION_NOT_FOUND: "Station not found",
   NO_NEAREST_STATION_FOUND: "No nearest station found",
+  BIKE_NOT_AVAILABLE: "Bike not available",
 };

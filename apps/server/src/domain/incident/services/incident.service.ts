@@ -1,20 +1,13 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type {
-  IncidentStatus,
-} from "generated/kysely/types";
+import type { IncidentStatus } from "generated/kysely/types";
 
 import { BikeNotFound, BikeRepository } from "@/domain/bikes";
-import {
-  AdminRentalNotFound,
-  RentalRepository,
-} from "@/domain/rentals";
+import { AdminRentalNotFound, RentalRepository } from "@/domain/rentals";
+import { BikeNotAvailable } from "@/domain/reservations";
 import { StationNotFound, StationRepository } from "@/domain/stations";
-import {
-  IncidentSeverity,
-  IncidentSource,
-} from "generated/kysely/types";
+import { IncidentSeverity, IncidentSource } from "generated/kysely/types";
 
 import type {
   IncidentRepositoryError,
@@ -29,10 +22,7 @@ import type {
   UpdateIncidentInput,
 } from "../models";
 
-import {
-  IncidentNotFound,
-  InvalidIncidentStatus,
-} from "../domain-errors";
+import { IncidentNotFound, InvalidIncidentStatus } from "../domain-errors";
 import { IncidentRepository } from "../repository/incident.repository";
 
 export type IncidentService = {
@@ -54,12 +44,16 @@ export type IncidentService = {
     | BikeNotFound
     | StationNotFound
     | NoNearestStationFound
+    | BikeNotAvailable
   >;
 
   updateIncident: (
     incidentId: string,
     patch: UpdateIncidentInput,
-  ) => Effect.Effect<IncidentDetail, IncidentNotFound | IncidentRepositoryError>;
+  ) => Effect.Effect<
+    IncidentDetail,
+    IncidentNotFound | IncidentRepositoryError
+  >;
 
   updateIncidentStatus: (
     incidentId: string,
@@ -141,6 +135,8 @@ export const IncidentServiceLive = Layer.effect(
             ) {
               finalSource = IncidentSource.POST_RETURN;
             }
+
+            rental.value.bike && (data.bikeId = rental.value.bike.id);
           }
 
           let bikeLocked: boolean;
@@ -160,7 +156,7 @@ export const IncidentServiceLive = Layer.effect(
               severity = IncidentSeverity.HIGH;
               break;
             default:
-              bikeLocked = true;
+              bikeLocked = false;
               severity = IncidentSeverity.LOW;
               break;
           }
@@ -171,6 +167,19 @@ export const IncidentServiceLive = Layer.effect(
 
             if (Option.isNone(bike)) {
               return yield* Effect.fail(new BikeNotFound({ id: data.bikeId }));
+            }
+
+            if (bike.value.status === "UNAVAILABLE") {
+              return yield* Effect.fail(
+                new BikeNotAvailable({
+                  bikeId: data.bikeId,
+                  status: "UNAVAILABLE",
+                }),
+              );
+            }
+
+            if (bike.value.stationId && finalSource !== "DURING_RENTAL") {
+              data.stationId = bike.value.stationId;
             }
           }
 

@@ -6,7 +6,10 @@ import {
   SortDirectionSchema,
 } from "../../schemas";
 import { IncidentStatusSchema } from "../../incident/schemas";
-import { IncidentDetailSchema, IncidentSummarySchema } from "../../incident/models";
+import {
+  IncidentDetailSchema,
+  IncidentSummarySchema,
+} from "../../incident/models";
 
 export const IncidentSortFieldSchema = z.enum(["status", "resolvedAt"]);
 

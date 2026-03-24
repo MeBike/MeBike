@@ -80,5 +80,15 @@ export const IncidentDetailSchema = z.object({
   closedAt: z.coerce.date().nullable(),
 });
 
+export type IncidentDetailResponse = {
+  message: string;
+  result: IncidentDetail;
+};
+
+export type IncidentSummaryResponse = {
+  message: string;
+  result: IncidentSummary;
+};
+
 export type IncidentDetail = z.infer<typeof IncidentDetailSchema>;
 export type IncidentSummary = z.infer<typeof IncidentSummarySchema>;

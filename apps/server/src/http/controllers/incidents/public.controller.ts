@@ -1,5 +1,5 @@
 import type { RouteHandler } from "@hono/zod-openapi";
-import type { IncidentListResponse } from "@mebike/shared";
+import type { IncidentsContracts } from "@mebike/shared";
 
 import { Effect, Match } from "effect";
 
@@ -16,10 +16,7 @@ import type {
   IncidentSummary,
 } from "./shared";
 
-import {
-  IncidentErrorCodeSchema,
-  incidentErrorMessages,
-} from "./shared";
+import { IncidentErrorCodeSchema, incidentErrorMessages } from "./shared";
 
 const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   c,
@@ -46,9 +43,9 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   );
 
   const value = await c.var.runPromise(eff);
-  return c.json<IncidentListResponse, 200>(
+  return c.json<IncidentsContracts.IncidentListResponse, 200>(
     {
-      data: value.items.map(toIncidentSummary),
+      data: value.items,
       pagination: {
         page: value.page,
         pageSize: value.pageSize,
@@ -63,15 +60,17 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
 const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
   const { incidentId } = c.req.valid("param");
 
-  const eff = Effect.gen(function* () {
-    const service = yield* IncidentServiceTag;
-    return yield* service.getIncidentById(incidentId);
-  });
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* IncidentServiceTag;
+      return yield* service.getIncidentById(incidentId);
+    }),
+    "GET /v1/incidents/:incidentId",
+  );
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) =>
-      c.json<IncidentSummary, 200>(toIncidentSummary(right), 200)),
+    Match.tag("Right", ({ right }) => c.json(right, 200)),
     Match.tag("Left", () =>
       c.json<IncidentNotFoundResponse, 404>(
         {
@@ -159,6 +158,18 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
                 code: IncidentErrorCodeSchema.enum.NO_NEAREST_STATION_FOUND,
                 latitude,
                 longitude,
+              },
+            },
+            404,
+          )),
+        Match.tag("BikeNotAvailable", ({ bikeId, status }) =>
+          c.json(
+            {
+              error: incidentErrorMessages.BIKE_NOT_AVAILABLE,
+              details: {
+                code: IncidentErrorCodeSchema.enum.BIKE_NOT_AVAILABLE,
+                bikeId,
+                status,
               },
             },
             404,

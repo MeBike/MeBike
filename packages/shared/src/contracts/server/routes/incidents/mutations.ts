@@ -37,6 +37,18 @@ export const createIncident = createRoute({
       content: {
         "application/json": {
           schema: IncidentErrorResponseSchema,
+          examples: {
+            BikeNotAvailable: {
+              value: {
+                error: "Bike not available",
+                details: {
+                  code: IncidentErrorCodeSchema.enum.BIKE_NOT_AVAILABLE,
+                  bikeId: "665fd6e36b7e5d53f8f3d2c9",
+                  status: "UNAVAILABLE",
+                },
+              },
+            },
+          },
         },
       },
     },
