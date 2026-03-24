@@ -6,6 +6,7 @@ import {
   paginationQueryFields,
   PaginationSchema,
 } from "../../schemas";
+import { UserSummarySchema } from "../../users/models";
 import {
   AccountStatusSchema,
   ActiveUsersSeriesRowSchema,
@@ -77,6 +78,10 @@ export const AdminUserListResponseSchema = z.object({
 export const AdminUserSearchResponseSchema = z.object({
   data: z.array(UserDetailSchema),
 }).openapi("AdminUserSearchResponse");
+
+export const AdminTechnicianListResponseSchema = z.object({
+  data: z.array(UserSummarySchema),
+}).openapi("AdminTechnicianListResponse");
 
 export const AdminUserDetailResponseSchema = UserDetailSchema.openapi("AdminUserDetailResponse");
 
@@ -208,6 +213,7 @@ export type UnregisterPushTokenRequest = z.infer<typeof UnregisterPushTokenReque
 export type PushTokenSummary = z.infer<typeof PushTokenSummarySchema>;
 export type AdminUserListResponse = z.infer<typeof AdminUserListResponseSchema>;
 export type AdminUserSearchResponse = z.infer<typeof AdminUserSearchResponseSchema>;
+export type AdminTechnicianListResponse = z.infer<typeof AdminTechnicianListResponseSchema>;
 export type AdminUserDetailResponse = z.infer<typeof AdminUserDetailResponseSchema>;
 export type AdminCreateUserRequest = z.infer<typeof AdminCreateUserRequestSchema>;
 export type AdminUpdateUserRequest = z.infer<typeof AdminUpdateUserRequestSchema>;
