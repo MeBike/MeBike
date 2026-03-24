@@ -11,21 +11,21 @@ type RentalIdPillProps = {
 
 export function RentalIdPill({ rentalId }: RentalIdPillProps) {
   return (
-    <XStack justifyContent="center" paddingTop="$2">
+    <XStack justifyContent="center" paddingTop="$1">
       <XStack
         alignItems="center"
-        backgroundColor="$surfaceMuted"
+        backgroundColor="$surfaceAccent"
         borderRadius="$round"
         gap="$2"
-        paddingHorizontal="$5"
+        paddingHorizontal="$6"
         paddingVertical="$3"
       >
-        <AppText tone="muted" variant="eyebrow">
+        <AppText tone="muted" variant="value">
           Mã thuê:
           {" "}
           {getRentalCodeLabel(rentalId)}
         </AppText>
-        <IconSymbol color={colors.textMuted} name="doc.on.doc" size={16} />
+        <IconSymbol color={colors.textSecondary} name="doc.on.doc" size={18} />
       </XStack>
     </XStack>
   );

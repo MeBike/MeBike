@@ -111,6 +111,7 @@ const MAPPING = {
   "battery.25": "battery-2-bar",
   "lock": "lock",
   "lock.fill": "lock",
+  "lock.shield.fill": "shield",
   "lock.open.fill": "lock-open",
   "bicycle.circle.fill": "directions-bike",
   "bicycle.circle": "directions-bike",

@@ -8,14 +8,21 @@ import { styles } from "./styles";
 
 type WalletBalanceProps = {
   balance: string;
+  availableBalance: string;
+  reservedBalance: string;
   status: string;
 };
 
-export function WalletBalance({ balance, status }: WalletBalanceProps) {
+export function WalletBalance({
+  balance,
+  availableBalance,
+  reservedBalance,
+  status,
+}: WalletBalanceProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Ví của tôi</Text>
-      <Text style={styles.balanceLabel}>Số dư hiện tại</Text>
+      <Text style={styles.balanceLabel}>Số dư tổng</Text>
 
       <View style={styles.balanceRow}>
         <Text style={styles.balanceAmount}>
@@ -44,6 +51,26 @@ export function WalletBalance({ balance, status }: WalletBalanceProps) {
           ]}
         />
         <Text style={styles.statusText}>{formatWalletStatus(status)}</Text>
+      </View>
+
+      <View style={styles.summaryRow}>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Khả dụng</Text>
+          <Text style={styles.summaryValue}>
+            {formatBalance(availableBalance)}
+            {" "}
+            đ
+          </Text>
+        </View>
+
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Đang tạm giữ</Text>
+          <Text style={styles.summaryValue}>
+            {formatBalance(reservedBalance)}
+            {" "}
+            đ
+          </Text>
+        </View>
       </View>
     </View>
   );

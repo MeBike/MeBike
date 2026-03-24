@@ -58,6 +58,8 @@ function MyWalletScreen() {
       >
         <WalletBalance
           balance={wallet.myWallet?.balance || "0"}
+          availableBalance={wallet.myWallet?.availableBalance || "0"}
+          reservedBalance={wallet.myWallet?.reservedBalance || "0"}
           status={wallet.myWallet?.status || ""}
         />
       </LinearGradient>
@@ -98,7 +100,7 @@ function MyWalletScreen() {
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    const type: "transaction" = "transaction";
+    const type = "transaction" as const;
 
     return (
       <TransactionItem

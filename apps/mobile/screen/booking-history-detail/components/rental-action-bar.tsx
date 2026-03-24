@@ -29,12 +29,12 @@ export function RentalActionBar({
       backgroundColor={colors.surface}
       borderColor={colors.borderSubtle}
       borderTopWidth={1}
-      gap="$3"
+      gap="$4"
       paddingHorizontal="$5"
       paddingTop="$5"
       paddingBottom={Math.max(bottomInset, spacing.lg)}
     >
-      <AppText align="center" tone={hasReturnSlot ? "muted" : "danger"} variant="bodySmall">
+      <AppText align="center" tone={hasReturnSlot ? "muted" : "danger"} variant="body">
         {hasReturnSlot
           ? `Vui lòng đưa mã QR cho nhân viên tại ${returnStationName ?? "bãi trả đã chọn"} để trả xe.`
           : "Bạn cần đặt bãi trả xe trước khi kết thúc hành trình."}
@@ -57,10 +57,10 @@ export function RentalActionBar({
             </XStack>
           )
         : (
-            <AppButton onPress={onChooseReturnStation} tone="primary">
+            <AppButton height={60} onPress={onChooseReturnStation} tone="primary">
               <XStack alignItems="center" gap="$2">
                 <IconSymbol color={colors.textOnBrand} name="location.fill" size={20} />
-                <AppText tone="inverted" variant="actionLabel">
+                <AppText tone="inverted" variant="headline">
                   Chọn bãi trả xe
                 </AppText>
               </XStack>

@@ -17,68 +17,87 @@ type RentalJourneyCardProps = {
 type JourneyPointProps = {
   label: string;
   value: string;
-  timeText: string;
+  timeText?: string;
+  helperText?: string;
   iconName: "location" | "location.fill";
   iconColor: string;
   iconBackground: string;
   valueTone?: "default" | "warning" | "danger";
   isLast?: boolean;
   lineColor?: string;
+  timeTone?: "muted" | "warning" | "danger";
 };
 
 function JourneyPoint({
   label,
   value,
   timeText,
+  helperText,
   iconName,
   iconColor,
   iconBackground,
   valueTone = "default",
   isLast = false,
   lineColor = colors.warning,
+  timeTone = "muted",
 }: JourneyPointProps) {
   return (
     <XStack gap="$4">
-      <YStack alignItems="center" width={44}>
+      <YStack alignItems="center" width={56}>
         <YStack
           alignItems="center"
           backgroundColor={iconBackground}
           borderRadius="$round"
-          height={40}
+          height={56}
           justifyContent="center"
-          width={40}
+          shadowColor="$shadowColor"
+          shadowOffset={{ width: 0, height: 4 }}
+          shadowOpacity={0.06}
+          shadowRadius={10}
+          width={56}
         >
-          <IconSymbol color={iconColor} name={iconName} size={18} />
+          <IconSymbol color={iconColor} name={iconName} size={22} />
         </YStack>
         {isLast
           ? null
           : (
               <View
                 style={{
-                  width: 2,
+                  width: 3,
                   flex: 1,
-                  marginTop: 6,
-                  marginBottom: 6,
+                  marginTop: 8,
+                  marginBottom: 8,
                   backgroundColor: lineColor,
-                  opacity: 0.3,
+                  opacity: 0.22,
                 }}
               />
             )}
       </YStack>
 
-      <YStack flex={1} gap="$1" paddingTop="$1">
+      <YStack flex={1} gap="$1.5" paddingTop="$1">
         <AppText tone="subtle" variant="eyebrow">
           {label}
         </AppText>
         <AppText tone={valueTone} variant="headline">
           {value}
         </AppText>
-        <XStack alignItems="center" gap="$2">
-          <IconSymbol color={colors.textSecondary} name="clock" size={14} />
-          <AppText tone={valueTone === "warning" ? "warning" : "muted"} variant="bodySmall">
-            {timeText}
-          </AppText>
-        </XStack>
+        {timeText
+          ? (
+              <XStack alignItems="center" gap="$2">
+                <IconSymbol color={colors.textSecondary} name="clock" size={14} />
+                <AppText tone={timeTone} variant="bodySmall">
+                  {timeText}
+                </AppText>
+              </XStack>
+            )
+          : null}
+        {helperText
+          ? (
+              <AppText marginTop="$1" tone="muted" variant="bodySmall">
+                {helperText}
+              </AppText>
+            )
+          : null}
       </YStack>
     </XStack>
   );
@@ -99,7 +118,7 @@ export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
   const endTimeLabel = isOngoing
     ? hasReturnSlot
       ? `Giữ chỗ từ ${formatTimeOnly(returnSlot?.reservedFrom)}`
-      : "Bạn cần chọn bãi trả trước khi kết thúc hành trình"
+      : undefined
     : formatTimeOnly(rental.endTime);
 
   return (
@@ -118,7 +137,7 @@ export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
             iconColor={colors.success}
             iconName="location.fill"
             label="Trạm bắt đầu"
-            lineColor={hasReturnSlot ? colors.warning : colors.brandPrimary}
+            lineColor={hasReturnSlot ? colors.warning : colors.info}
             timeText={formatTimeOnly(rental.startTime)}
             value={startStationLabel}
           />
@@ -127,9 +146,11 @@ export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
             iconBackground={hasReturnSlot ? colors.warningSoft : colors.surfaceAccent}
             iconColor={hasReturnSlot ? colors.warning : colors.brandPrimary}
             iconName="location"
+            helperText={isOngoing && !hasReturnSlot ? "Bạn cần chọn bãi trả trước khi kết thúc hành trình" : undefined}
             isLast
             label={hasReturnSlot ? "Trạm trả xe (đã đặt)" : "Trạm kết thúc"}
             timeText={endTimeLabel}
+            timeTone={hasReturnSlot ? "warning" : isOngoing ? "muted" : "muted"}
             value={endStationLabel}
             valueTone={hasReturnSlot ? "warning" : isOngoing ? "danger" : "default"}
           />

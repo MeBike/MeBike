@@ -1,5 +1,9 @@
 import type { ReservationError } from "@services/reservations";
 
+import {
+  reservationErrorMessage,
+} from "@services/reservations";
+
 export function isApiReservationError(
   error: ReservationError,
 ): error is Extract<ReservationError, { _tag: "ApiError" }> {
@@ -14,13 +18,5 @@ export function getReservationErrorCode(error: ReservationError): string | null 
 }
 
 export function getReservationErrorMessage(error: ReservationError, fallback: string): string {
-  if (isApiReservationError(error)) {
-    return error.message ?? fallback;
-  }
-
-  if (error._tag === "NetworkError" || error._tag === "UnknownError") {
-    return error.message ?? fallback;
-  }
-
-  return fallback;
+  return reservationErrorMessage(error, fallback);
 }

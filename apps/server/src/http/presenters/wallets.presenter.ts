@@ -4,10 +4,14 @@ import type { WalletRow, WalletTransactionRow } from "@/domain/wallets";
 import type { WalletWithdrawalRow } from "@/domain/wallets/withdrawals";
 
 export function toWalletDetail(row: WalletRow): WalletsContracts.WalletDetail {
+  const availableBalance = row.balance - row.reservedBalance;
+
   return {
     id: row.id,
     userId: row.userId,
     balance: row.balance.toString(),
+    availableBalance: availableBalance.toString(),
+    reservedBalance: row.reservedBalance.toString(),
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

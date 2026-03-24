@@ -15,6 +15,11 @@ export type RentalRow = {
   reservationId: string | null;
   bikeId: string | null;
   depositHoldId: string | null;
+  depositAmount: number | null;
+  depositStatus: "NONE" | "HELD" | "RELEASED" | "FORFEITED";
+  depositHeldAt: Date | null;
+  depositReleasedAt: Date | null;
+  depositForfeitedAt: Date | null;
   pricingPolicyId: string | null;
   startStationId: string;
   endStationId: string | null;

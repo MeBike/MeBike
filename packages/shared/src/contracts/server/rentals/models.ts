@@ -27,6 +27,13 @@ export const ConfirmationMethodSchema = z.enum([
   "MANUAL",
 ]);
 
+export const RentalDepositStatusSchema = z.enum([
+  "NONE",
+  "HELD",
+  "RELEASED",
+  "FORFEITED",
+]);
+
 export const RentalIsoDateTimeSchema = z.iso.datetime();
 
 export const RentalSchema = z.object({
@@ -40,6 +47,11 @@ export const RentalSchema = z.object({
   duration: z.number(),
   totalPrice: z.number().optional(),
   subscriptionId: z.uuidv7().optional(),
+  depositAmount: z.number().optional(),
+  depositStatus: RentalDepositStatusSchema.optional(),
+  depositHeldAt: z.iso.datetime().optional(),
+  depositReleasedAt: z.iso.datetime().optional(),
+  depositForfeitedAt: z.iso.datetime().optional(),
   status: RentalStatusSchema,
   updatedAt: z.iso.datetime(),
 });
@@ -415,6 +427,7 @@ export type MyRentalListResponse = z.infer<typeof MyRentalListResponseSchema>;
 export type BikeSwapStatus = z.infer<typeof BikeSwapStatusSchema>;
 export type ReturnSlotStatus = z.infer<typeof ReturnSlotStatusSchema>;
 export type ConfirmationMethod = z.infer<typeof ConfirmationMethodSchema>;
+export type RentalDepositStatus = z.infer<typeof RentalDepositStatusSchema>;
 export type ReturnSlotReservation = z.infer<typeof ReturnSlotReservationSchema>;
 export type BikeSwapRequest = z.infer<typeof BikeSwapRequestSchema>;
 export type BikeSwapRequestDetail = z.infer<typeof BikeSwapRequestDetailSchema>;

@@ -52,7 +52,7 @@ function BookingHistoryDetailScreen() {
   });
 
   const isOngoing = booking?.status === "RENTED";
-  const actionBarHeight = isOngoing ? 164 + Math.max(insets.bottom, spacing.lg) : spacing.xxxxl;
+  const actionBarHeight = isOngoing ? 188 + Math.max(insets.bottom, spacing.lg) : spacing.xxxxl;
 
   const handleChooseReturnStation = useCallback(() => {
     if (!detail) {

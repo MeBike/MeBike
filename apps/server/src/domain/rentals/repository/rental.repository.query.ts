@@ -87,6 +87,15 @@ export const rentalSelect = {
   reservationId: true,
   bikeId: true,
   depositHoldId: true,
+  depositHold: {
+    select: {
+      amount: true,
+      status: true,
+      createdAt: true,
+      releasedAt: true,
+      forfeitedAt: true,
+    },
+  },
   pricingPolicyId: true,
   startStationId: true,
   endStationId: true,
@@ -104,12 +113,25 @@ type RentalSelectRow = PrismaTypes.RentalGetPayload<{
 }>;
 
 export function mapToRentalRow(raw: RentalSelectRow): RentalRow {
+  const depositStatus = !raw.depositHold
+    ? "NONE"
+    : raw.depositHold.forfeitedAt
+      ? "FORFEITED"
+      : raw.depositHold.status === "ACTIVE"
+        ? "HELD"
+        : "RELEASED";
+
   return {
     id: raw.id,
     userId: raw.userId,
     reservationId: raw.reservationId,
     bikeId: raw.bikeId,
     depositHoldId: raw.depositHoldId,
+    depositAmount: raw.depositHold ? Number(raw.depositHold.amount) : null,
+    depositStatus,
+    depositHeldAt: raw.depositHold?.createdAt ?? null,
+    depositReleasedAt: raw.depositHold?.releasedAt ?? null,
+    depositForfeitedAt: raw.depositHold?.forfeitedAt ?? null,
     pricingPolicyId: raw.pricingPolicyId,
     startStationId: raw.startStationId,
     endStationId: raw.endStationId,

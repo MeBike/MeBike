@@ -61,6 +61,33 @@ const walletBalanceStyles = StyleSheet.create({
     color: colors.textOnBrand,
     fontWeight: fontWeights.semibold,
   },
+  summaryRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  summaryLabel: {
+    fontSize: fontSizes.ssm,
+    lineHeight: lineHeights.ssm,
+    color: "#dbeafe",
+    fontWeight: fontWeights.medium,
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: fontSizes.md,
+    lineHeight: lineHeights.md,
+    color: colors.textOnBrand,
+    fontWeight: fontWeights.bold,
+  },
   walletIcon: {
     marginLeft: 12,
   },

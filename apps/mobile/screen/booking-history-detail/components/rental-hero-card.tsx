@@ -3,6 +3,7 @@ import { colors } from "@theme/colors";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { XStack, YStack } from "tamagui";
 
@@ -12,6 +13,7 @@ import { softCardShadowStyle } from "../card-shadow";
 import {
   formatCurrencyText,
   formatDateOnly,
+  getDisplayDurationMinutes,
   getDurationParts,
 } from "../helpers/formatters";
 
@@ -44,8 +46,31 @@ function getRentalStatusMeta(status: Rental["status"]) {
 }
 
 export function RentalHeroCard({ rental }: RentalHeroCardProps) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (rental.status !== "RENTED") {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 30000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [rental.status]);
+
   const status = getRentalStatusMeta(rental.status);
-  const duration = getDurationParts(rental.duration);
+  const duration = getDurationParts(
+    getDisplayDurationMinutes({
+      status: rental.status,
+      startTime: rental.startTime,
+      duration: rental.duration,
+      now,
+    }),
+  );
 
   return (
     <View style={softCardShadowStyle}>

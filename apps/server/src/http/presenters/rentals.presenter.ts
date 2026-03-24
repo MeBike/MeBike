@@ -9,6 +9,16 @@ import type {
   StaffBikeSwapRequestRow,
 } from "@/domain/rentals";
 
+function toContractRentalDeposit(row: RentalRow) {
+  return {
+    depositAmount: row.depositAmount ?? undefined,
+    depositStatus: row.depositStatus,
+    depositHeldAt: row.depositHeldAt?.toISOString(),
+    depositReleasedAt: row.depositReleasedAt?.toISOString() ?? undefined,
+    depositForfeitedAt: row.depositForfeitedAt?.toISOString() ?? undefined,
+  } as const;
+}
+
 export function toContractRental(
   row: RentalRow,
 ): RentalsContracts.MyRentalListResponse["data"][number] {
@@ -23,6 +33,7 @@ export function toContractRental(
     duration: row.durationMinutes ?? 0,
     totalPrice: row.totalPrice ?? undefined,
     subscriptionId: row.subscriptionId ?? undefined,
+    ...toContractRentalDeposit(row),
     status: row.status,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -42,6 +53,7 @@ export function toContractRentalWithPrice(
     duration: row.durationMinutes ?? 0,
     totalPrice: row.totalPrice ?? 0,
     subscriptionId: row.subscriptionId ?? undefined,
+    ...toContractRentalDeposit(row),
     status: row.status,
     updatedAt: row.updatedAt.toISOString(),
   };
