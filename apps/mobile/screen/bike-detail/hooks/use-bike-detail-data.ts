@@ -35,6 +35,8 @@ export function useBikeDetailData({ routeParams, hasToken }: UseBikeDetailDataAr
 
   const subscriptionsQuery = useGetSubscriptionsQuery({ status: "ACTIVE" }, hasToken);
   const bikeDetailQuery = useGetBikeByIDAllQuery(bike.id);
+  const refetchBikeDetail = bikeDetailQuery.refetch;
+  const refetchSubscriptions = subscriptionsQuery.refetch;
 
   useEffect(() => {
     if (hasToken) {
@@ -44,11 +46,11 @@ export function useBikeDetailData({ routeParams, hasToken }: UseBikeDetailDataAr
 
   useFocusEffect(
     useCallback(() => {
-      bikeDetailQuery.refetch();
+      refetchBikeDetail();
       if (hasToken) {
-        subscriptionsQuery.refetch();
+        refetchSubscriptions();
       }
-    }, [bikeDetailQuery, hasToken, subscriptionsQuery]),
+    }, [hasToken, refetchBikeDetail, refetchSubscriptions]),
   );
 
   const activeSubscriptions: Subscription[] = useMemo(
@@ -67,16 +69,16 @@ export function useBikeDetailData({ routeParams, hasToken }: UseBikeDetailDataAr
   );
 
   const handleRefresh = useCallback(async () => {
-    const tasks: Array<Promise<unknown> | undefined> = [bikeDetailQuery.refetch()];
+    const tasks: Array<Promise<unknown> | undefined> = [refetchBikeDetail()];
 
     if (hasToken) {
-      tasks.push(subscriptionsQuery.refetch());
+      tasks.push(refetchSubscriptions());
       tasks.push(getMyWallet());
       tasks.push(fetchPendingReservations());
     }
 
     await Promise.allSettled(tasks.filter((task): task is Promise<unknown> => Boolean(task)));
-  }, [bikeDetailQuery, fetchPendingReservations, getMyWallet, hasToken, subscriptionsQuery]);
+  }, [fetchPendingReservations, getMyWallet, hasToken, refetchBikeDetail, refetchSubscriptions]);
 
   return {
     station,
@@ -92,7 +94,7 @@ export function useBikeDetailData({ routeParams, hasToken }: UseBikeDetailDataAr
     canUseSubscription,
     walletBalance,
     handleRefresh,
-    refetchBikeDetail: bikeDetailQuery.refetch,
+    refetchBikeDetail,
     refreshWallet: getMyWallet,
   };
 }
