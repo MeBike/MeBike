@@ -58,17 +58,17 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
               <IconSymbol color={colors.textSecondary} name="bicycle.circle.fill" size={20} />
             </YStack>
             <YStack flex={1} gap="$1">
-              <AppText style={{ fontSize: 17, fontWeight: "700", lineHeight: 22 }}>
+              <AppText variant="subhead">
                 Xe đạp
               </AppText>
-              <AppText tone="subtle" variant="bodySmall">
+              <AppText tone="subtle" variant="meta">
                 {formatSupportCode(booking.id)}
               </AppText>
             </YStack>
           </XStack>
 
           <YStack alignItems="flex-end" gap="$2">
-            <AppText style={{ color: colors.brandPrimary, fontSize: 19, fontWeight: "800", lineHeight: 24 }}>
+            <AppText tone="brand" variant="priceValue">
               {priceText}
             </AppText>
             <StatusBadge
@@ -133,7 +133,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
 
           <YStack flex={1} justifyContent="space-between" minHeight={56} paddingVertical={2}>
             <XStack alignItems="center" minHeight={18}>
-              <AppText flex={1} numberOfLines={1} style={{ fontSize: 15, fontWeight: "700", lineHeight: 18 }}>
+              <AppText flex={1} numberOfLines={1} variant="compactStrong">
                 {originLabel}
               </AppText>
             </XStack>
@@ -142,8 +142,8 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
               <AppText
                 flex={1}
                 numberOfLines={1}
-                style={{ fontSize: 15, fontWeight: "700", lineHeight: 18 }}
                 tone={status.destinationTone}
+                variant="compactStrong"
               >
                 {destinationLabel}
               </AppText>
@@ -199,15 +199,6 @@ function getStatusMeta(status: RentalStatus) {
         withDot: false,
         destinationTone: "danger" as const,
         routeAccentColor: colors.error,
-      };
-    case "RESERVED":
-      return {
-        label: "ĐÃ ĐẶT",
-        tone: "neutral" as const,
-        pulseDot: false,
-        withDot: false,
-        destinationTone: "default" as const,
-        routeAccentColor: colors.brandPrimary,
       };
     default:
       return {

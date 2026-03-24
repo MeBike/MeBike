@@ -100,6 +100,11 @@ export const textStyles = {
     lineHeight: lineHeights.md,
     fontWeight: fontWeights.semibold,
   }),
+  compactStrong: defineTextStyle({
+    fontSize: fontSizes.base,
+    lineHeight: 18,
+    fontWeight: fontWeights.bold,
+  }),
   subhead: defineTextStyle({
     fontSize: fontSizes.md,
     lineHeight: 22,
@@ -137,6 +142,11 @@ export const textStyles = {
     lineHeight: 26,
     fontWeight: fontWeights.heavy,
     letterSpacing: -0.3,
+  }),
+  priceValue: defineTextStyle({
+    fontSize: 19,
+    lineHeight: lineHeights.md,
+    fontWeight: fontWeights.heavy,
   }),
   badgeLabel: defineTextStyle({
     fontSize: 10,
