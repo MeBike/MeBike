@@ -24,34 +24,41 @@ export class IncidentNotFound extends Data.TaggedError("IncidentNotFound")<{
 export class InvalidIncidentStatus extends Data.TaggedError(
   "InvalidIncidentStatus",
 )<{
-    readonly status: string;
-    readonly allowed: readonly IncidentStatus[];
-  }> {}
+  readonly status: string;
+  readonly allowed: readonly IncidentStatus[];
+}> {}
 
 export class InvalidIncidentSeverity extends Data.TaggedError(
   "InvalidIncidentSeverity",
 )<{
-    readonly severity: string;
-    readonly allowed: readonly IncidentSeverity[];
-  }> {}
+  readonly severity: string;
+  readonly allowed: readonly IncidentSeverity[];
+}> {}
 
 export class InvalidIncidentSource extends Data.TaggedError(
   "InvalidIncidentSource",
 )<{
-    readonly source: string;
-    readonly allowed: readonly IncidentSource[];
-  }> {}
+  readonly source: string;
+  readonly allowed: readonly IncidentSource[];
+}> {}
 
 export class NoNearestStationFound extends Data.TaggedError(
   "NoNearestStationFound",
 )<{
-    readonly latitude: number;
-    readonly longitude: number;
-  }> {}
+  readonly latitude: number;
+  readonly longitude: number;
+}> {}
 
 export class NoAvailableTechnicianFound extends Data.TaggedError(
   "NoAvailableTechnicianFound",
 )<{
-    readonly latitude: number;
-    readonly longitude: number;
-  }> {}
+  readonly latitude: number;
+  readonly longitude: number;
+}> {}
+
+export class UnauthorizedIncidentAccess extends Data.TaggedError(
+  "UnauthorizedIncidentAccess",
+)<{
+  readonly incidentId: string;
+  readonly userId: string;
+}> {}

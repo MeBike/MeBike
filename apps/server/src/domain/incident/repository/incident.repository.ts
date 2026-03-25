@@ -15,6 +15,11 @@ import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { stationRepositoryFactory } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
+import {
+  InvalidIncidentStatus,
+  NoAvailableTechnicianFound,
+  NoNearestStationFound,
+} from "../domain-errors";
 import type {
   CreateIncidentInput,
   IncidentDetail,
@@ -24,11 +29,7 @@ import type {
   UpdateIncidentInput,
 } from "../models";
 
-import {
-  IncidentRepositoryError,
-  NoAvailableTechnicianFound,
-  NoNearestStationFound,
-} from "../domain-errors";
+import { IncidentRepositoryError } from "../domain-errors";
 import {
   incidentDetailSelect,
   mapToIncidentDetail,
@@ -57,7 +58,10 @@ export type IncidentRepo = {
   updateStatus: (
     id: string,
     status: IncidentStatus,
-  ) => Effect.Effect<Option.Option<IncidentDetail>, IncidentRepositoryError>;
+  ) => Effect.Effect<
+    Option.Option<IncidentDetail>,
+    IncidentRepositoryError | InvalidIncidentStatus
+  >;
 };
 
 function toIncidentOrderBy(
@@ -96,7 +100,7 @@ function createIncidentWithClient(
         })
         .pipe(
           Effect.mapError(
-            e =>
+            (e) =>
               new IncidentRepositoryError({
                 operation: "createIncidentWithClient.listNearest",
                 cause: e,
@@ -156,8 +160,7 @@ function createIncidentWithClient(
           }),
         );
       }
-    }
-    else if (data.stationId) {
+    } else if (data.stationId) {
       const technician = yield* Effect.promise(() =>
         tx.userOrgAssignment.findFirst({
           where: {
@@ -193,11 +196,11 @@ function createIncidentWithClient(
             bikeLocked: data.bikeLocked,
             status: (foundTechnician ? "ASSIGNED" : "OPEN") as any,
             attachments: {
-              create: data.fileUrls.map(url => ({ fileUrl: url })),
+              create: data.fileUrls.map((url) => ({ fileUrl: url })),
             },
           },
         }),
-      catch: e =>
+      catch: (e) =>
         new IncidentRepositoryError({
           operation: "createIncidentWithClient",
           cause: e,
@@ -214,7 +217,7 @@ function createIncidentWithClient(
               technicianUserId: foundTechnician!.userId,
             },
           }),
-        catch: e =>
+        catch: (e) =>
           new IncidentRepositoryError({
             operation: "createIncidentWithClient.assignTechnician",
             cause: e,
@@ -272,7 +275,7 @@ export function makeIncidentRepository(
           select: incidentDetailSelect,
         }),
       ).pipe(
-        Effect.map(val =>
+        Effect.map((val) =>
           Option.fromNullable(val).pipe(Option.map(mapToIncidentDetail)),
         ),
       );
@@ -289,10 +292,6 @@ export function makeIncidentRepository(
             client.incidentReport.update({
               where: { id },
               data: {
-                ...(patch.bikeId !== undefined ? { bikeId: patch.bikeId } : {}),
-                ...(patch.stationId !== undefined
-                  ? { stationId: patch.stationId }
-                  : {}),
                 ...(patch.source !== undefined ? { source: patch.source } : {}),
                 ...(patch.incidentType !== undefined
                   ? { incidentType: patch.incidentType }
@@ -315,14 +314,14 @@ export function makeIncidentRepository(
               },
               select: incidentDetailSelect,
             }),
-          catch: e =>
+          catch: (e) =>
             new IncidentRepositoryError({
               operation: "updateIncident.update",
               cause: e,
             }),
         });
 
-        return Option.some(mapToIncidentDetail(updated as any));
+        return Option.some(mapToIncidentDetail(updated));
       });
     },
 
@@ -335,14 +334,14 @@ export function makeIncidentRepository(
               data: { status },
               select: incidentDetailSelect,
             }),
-          catch: e =>
+          catch: (e) =>
             new IncidentRepositoryError({
               operation: "updateStatus",
               cause: e,
             }),
         });
 
-        return Option.some(mapToIncidentDetail(updated as any));
+        return Option.some(mapToIncidentDetail(updated));
       });
     },
   };

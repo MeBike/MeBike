@@ -13,7 +13,7 @@ export function registerIncidentRoutes(
     incidents.createIncident,
     IncidentPublicController.createIncident,
   );
-  // app.openapi(incidents.updateIncident, IncidentPublicController.updateIncident);
+  app.openapi(incidents.updateIncident, IncidentPublicController.updateIncident);
   // app.openapi(
   //   incidents.updateIncidentStatus,
   //   IncidentPublicController.updateIncidentStatus,

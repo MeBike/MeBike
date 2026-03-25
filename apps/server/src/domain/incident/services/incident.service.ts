@@ -23,7 +23,11 @@ import type {
   UpdateIncidentInput,
 } from "../models";
 
-import { IncidentNotFound, InvalidIncidentStatus } from "../domain-errors";
+import {
+  IncidentNotFound,
+  InvalidIncidentStatus,
+  UnauthorizedIncidentAccess,
+} from "../domain-errors";
 import { IncidentRepository } from "../repository/incident.repository";
 
 export type IncidentService = {
@@ -50,19 +54,24 @@ export type IncidentService = {
   >;
 
   updateIncident: (
+    userId: string,
     incidentId: string,
     patch: UpdateIncidentInput,
   ) => Effect.Effect<
     IncidentDetail,
-    IncidentNotFound | IncidentRepositoryError
+    IncidentNotFound | IncidentRepositoryError | UnauthorizedIncidentAccess
   >;
 
   updateIncidentStatus: (
+    userId: string,
     incidentId: string,
     status: IncidentStatus,
   ) => Effect.Effect<
     IncidentDetail,
-    IncidentNotFound | InvalidIncidentStatus | IncidentRepositoryError
+    | IncidentNotFound
+    | InvalidIncidentStatus
+    | IncidentRepositoryError
+    | UnauthorizedIncidentAccess
   >;
 };
 
@@ -108,7 +117,7 @@ export const IncidentServiceLive = Layer.effect(
         repo
           .getById(incidentId)
           .pipe(
-            Effect.flatMap(opt =>
+            Effect.flatMap((opt) =>
               Option.isSome(opt)
                 ? Effect.succeed(opt.value)
                 : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -126,14 +135,13 @@ export const IncidentServiceLive = Layer.effect(
             }
 
             if (
-              rental.value.status === "RENTED"
-              && data.reporterRole === "USER"
+              rental.value.status === "RENTED" &&
+              data.reporterRole === "USER"
             ) {
               finalSource = IncidentSource.DURING_RENTAL;
-            }
-            else if (
-              rental.value.status === "COMPLETED"
-              && data.reporterRole === "USER"
+            } else if (
+              rental.value.status === "COMPLETED" &&
+              data.reporterRole === "USER"
             ) {
               finalSource = IncidentSource.POST_RETURN;
             }
@@ -205,43 +213,82 @@ export const IncidentServiceLive = Layer.effect(
             incidentType: data.incidentType,
             severity,
             description: data.description,
-            latitude: data.latitude,
-            longitude: data.longitude,
+            latitude: Number(data.latitude),
+            longitude: Number(data.longitude),
             bikeLocked,
             fileUrls: data.fileUrls,
           });
         }).pipe(
-          Effect.catchTag("IncidentRepositoryError", error =>
-            Effect.die(error)),
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
-          Effect.catchTag("StationRepositoryError", error =>
-            Effect.die(error)),
-          Effect.catchTag("BikeRepositoryError", error => Effect.die(error)),
+          Effect.catchTag("IncidentRepositoryError", (error) =>
+            Effect.die(error),
+          ),
+          Effect.catchTag("RentalRepositoryError", (error) =>
+            Effect.die(error),
+          ),
+          Effect.catchTag("StationRepositoryError", (error) =>
+            Effect.die(error),
+          ),
+          Effect.catchTag("BikeRepositoryError", (error) => Effect.die(error)),
         ),
 
-      updateIncident: (incidentId: string, patch: UpdateIncidentInput) =>
-        repo
-          .update(incidentId, patch)
-          .pipe(
-            Effect.flatMap(opt =>
+      updateIncident: (
+        userId: string,
+        incidentId: string,
+        patch: UpdateIncidentInput,
+      ) =>
+        Effect.gen(function* () {
+          const incident = yield* repo.getById(incidentId);
+          if (Option.isNone(incident)) {
+            return yield* Effect.fail(new IncidentNotFound({ id: incidentId }));
+          }
+
+          if (incident.value.reporterUser.id !== userId) {
+            return yield* Effect.fail(
+              new UnauthorizedIncidentAccess({ incidentId, userId }),
+            );
+          }
+
+          return yield* repo
+            .update(incidentId, patch)
+            .pipe(
+              Effect.flatMap((opt) =>
+                Option.isSome(opt)
+                  ? Effect.succeed(opt.value)
+                  : Effect.fail(new IncidentNotFound({ id: incidentId })),
+              ),
+            );
+        }),
+
+      updateIncidentStatus: (
+        userId: string,
+        incidentId: string,
+        status: IncidentStatus,
+      ) =>
+        Effect.gen(function* () {
+          const incident = yield* repo.getById(incidentId);
+          if (Option.isNone(incident)) {
+            return yield* Effect.fail(new IncidentNotFound({ id: incidentId }));
+          }
+
+          if (
+            incident.value.assignments?.technician?.id !== userId ||
+            incident.value.assignments?.status === "CANCELLED"
+          ) {
+            return yield* Effect.fail(
+              new UnauthorizedIncidentAccess({ incidentId, userId }),
+            );
+          }
+
+          return yield* ensureValidStatus(status).pipe(
+            Effect.flatMap(() => repo.updateStatus(incidentId, status)),
+            Effect.flatMap((opt) =>
               Option.isSome(opt)
                 ? Effect.succeed(opt.value)
                 : Effect.fail(new IncidentNotFound({ id: incidentId })),
             ),
-          ),
-
-      updateIncidentStatus: (incidentId: string, status: IncidentStatus) =>
-        ensureValidStatus(status).pipe(
-          Effect.flatMap(() => repo.updateStatus(incidentId, status)),
-          Effect.flatMap(opt =>
-            Option.isSome(opt)
-              ? Effect.succeed(opt.value)
-              : Effect.fail(new IncidentNotFound({ id: incidentId })),
-          ),
-        ),
+          );
+        }),
     };
-
     return service;
   }),
 );

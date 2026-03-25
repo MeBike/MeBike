@@ -63,8 +63,13 @@ export const IncidentCreateBodySchema = z
     description: "Payload for creating an incident",
   });
 
-export const IncidentUpdateBodySchema =
-  IncidentCreateBodySchema.partial().openapi("IncidentUpdateBody", {
+export const IncidentUpdateBodySchema = IncidentCreateBodySchema.omit({
+  bikeId: true,
+  rentalId: true,
+  stationId: true,
+})
+  .partial()
+  .openapi("IncidentUpdateBody", {
     description: "Payload for updating an incident",
   });
 

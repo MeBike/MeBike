@@ -11,6 +11,7 @@ export const incidentErrorCodes = [
   "NO_NEAREST_STATION_FOUND",
   "BIKE_NOT_AVAILABLE",
   "NO_AVAILABLE_TECHNICIAN_FOUND",
+  "UNAUTHORIZED_INCIDENT_ACCESS",
 ] as const;
 
 export const IncidentErrorCodeSchema = z.enum(incidentErrorCodes);
@@ -70,4 +71,5 @@ export const incidentErrorMessages: Record<IncidentErrorCode, string> = {
   NO_NEAREST_STATION_FOUND: "No nearest station found",
   BIKE_NOT_AVAILABLE: "Bike not available",
   NO_AVAILABLE_TECHNICIAN_FOUND: "No available technician found",
+  UNAUTHORIZED_INCIDENT_ACCESS: "Unauthorized incident access",
 };

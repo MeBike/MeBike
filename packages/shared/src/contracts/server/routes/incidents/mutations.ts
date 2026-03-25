@@ -3,6 +3,7 @@ import { createRoute } from "@hono/zod-openapi";
 import { unauthorizedResponse } from "../helpers";
 import {
   IncidentCreateBodySchema,
+  IncidentDetailSchema,
   IncidentIdParamSchema,
   IncidentStatusPatchSchema,
   IncidentSummarySchema,
@@ -99,7 +100,8 @@ export const createIncident = createRoute({
               value: {
                 error: "No available technician found",
                 details: {
-                  code: IncidentErrorCodeSchema.enum.NO_AVAILABLE_TECHNICIAN_FOUND,
+                  code: IncidentErrorCodeSchema.enum
+                    .NO_AVAILABLE_TECHNICIAN_FOUND,
                   latitude: 10.8231,
                   longitude: 106.6297,
                 },
@@ -130,7 +132,7 @@ export const updateIncident = createRoute({
     200: {
       description: "Incident updated",
       content: {
-        "application/json": { schema: IncidentSummarySchema },
+        "application/json": { schema: IncidentDetailSchema },
       },
     },
     400: {
@@ -138,6 +140,27 @@ export const updateIncident = createRoute({
       content: {
         "application/json": {
           schema: IncidentErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Unauthorized incident access",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            UnauthorizedIncidentAccess: {
+              value: {
+                error: "Unauthorized incident access",
+                details: {
+                  code: IncidentErrorCodeSchema.enum
+                    .UNAUTHORIZED_INCIDENT_ACCESS,
+                  incidentId: "665fd6e36b7e5d53f8f3d2c9",
+                  userId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -170,7 +193,7 @@ export const updateIncidentStatus = createRoute({
     200: {
       description: "Supplier status updated",
       content: {
-        "application/json": { schema: IncidentSummarySchema },
+        "application/json": { schema: IncidentDetailSchema },
       },
     },
     400: {
@@ -186,6 +209,27 @@ export const updateIncidentStatus = createRoute({
       content: {
         "application/json": {
           schema: IncidentErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Unauthorized incident access",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            UnauthorizedIncidentAccess: {
+              value: {
+                error: "Unauthorized incident access",
+                details: {
+                  code: IncidentErrorCodeSchema.enum
+                    .UNAUTHORIZED_INCIDENT_ACCESS,
+                  incidentId: "665fd6e36b7e5d53f8f3d2c9",
+                  userId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
         },
       },
     },

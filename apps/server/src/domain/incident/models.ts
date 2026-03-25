@@ -88,8 +88,8 @@ export type CreateIncidentInput = {
   incidentType: string;
   severity: IncidentSeverity;
   description: string | null;
-  latitude: IncidentDecimal | null;
-  longitude: IncidentDecimal | null;
+  latitude: number | null;
+  longitude: number | null;
   bikeLocked: boolean;
   fileUrls: string[];
 };
@@ -107,4 +107,7 @@ export type CreateIncidentRequest = {
   fileUrls: string[];
 };
 
-export type UpdateIncidentInput = Partial<CreateIncidentInput>;
+export type UpdateIncidentInput = Omit<
+  Partial<CreateIncidentInput>,
+  "bikeId" | "rentalId" | "stationId"
+>;
