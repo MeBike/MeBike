@@ -246,61 +246,9 @@ const updateIncident: RouteHandler<IncidentRoutes["updateIncident"]> = async (
   );
 };
 
-const updateIncidentStatus: RouteHandler<
-  IncidentRoutes["updateIncidentStatus"]
-> = async (c) => {
-  const userId = c.var.currentUser!.userId;
-  const { incidentId } = c.req.valid("param");
-  const body = c.req.valid("json");
-
-  const eff = withLoggedCause(
-    Effect.gen(function* () {
-      const service = yield* IncidentServiceTag;
-      return yield* service.updateIncidentStatus(userId, incidentId, body.status);
-    }),
-    "PATCH /v1/incidents/:incidentId",
-  );
-
-  const result = await c.var.runPromise(eff.pipe(Effect.either));
-  return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) => c.json(right, 200)),
-    Match.tag("Left", ({ left }) =>
-      Match.value(left).pipe(
-        Match.tag("IncidentNotFound", () =>
-          c.json(
-            {
-              error: incidentErrorMessages.INCIDENT_NOT_FOUND,
-              details: {
-                code: IncidentErrorCodeSchema.enum.INCIDENT_NOT_FOUND,
-                incidentId,
-              },
-            },
-            404,
-          )),
-        Match.tag("UnauthorizedIncidentAccess", ({ incidentId, userId }) =>
-          c.json(
-            {
-              error: incidentErrorMessages.UNAUTHORIZED_INCIDENT_ACCESS,
-              details: {
-                code: IncidentErrorCodeSchema.enum.UNAUTHORIZED_INCIDENT_ACCESS,
-                incidentId,
-                userId,
-              },
-            },
-            403,
-          )),
-        Match.orElse((err) => {
-          throw err;
-        }),
-      )),
-    Match.exhaustive,
-  );
-};
-
 export const IncidentPublicController = {
   listIncidents,
   getIncident,
   createIncident,
   updateIncident,
-  updateIncidentStatus,
 } as const;
