@@ -1,6 +1,10 @@
 import { Context, Effect, Layer, Option } from "effect";
 
+import type { BikeRepositoryError } from "@/domain/bikes";
+import type { NoAvailableBike, RentalRepositoryError } from "@/domain/rentals";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { StationRepositoryError } from "@/domain/stations";
+import type { Prisma } from "@/infrastructure/prisma";
 import type { IncidentStatus } from "generated/kysely/types";
 
 import { BikeNotFound, BikeRepository } from "@/domain/bikes";
@@ -30,6 +34,8 @@ import {
   UnauthorizedIncidentAccess,
 } from "../domain-errors";
 import { IncidentRepository } from "../repository/incident.repository";
+import { resolveIncidentUseCase } from "./resolve-incident.service";
+import { startIncidentUseCase } from "./start-incident.service";
 
 export type IncidentService = {
   listIncidents: (
@@ -93,6 +99,37 @@ export type IncidentService = {
     | UnauthorizedIncidentAccess
     | NoNearestStationFound
     | NoAvailableTechnicianFound
+  >;
+
+  startIncident: (
+    userId: string,
+    incidentId: string,
+  ) => Effect.Effect<
+    IncidentDetail,
+    | IncidentNotFound
+    | IncidentRepositoryError
+    | UnauthorizedIncidentAccess
+    | NoAvailableBike
+    | RentalRepositoryError
+    | BikeRepositoryError
+    | StationRepositoryError
+    | AdminRentalNotFound
+    | StationNotFound
+    | InvalidIncidentStatus,
+    Prisma | IncidentRepository | RentalRepository | BikeRepository
+  >;
+
+  resolveIncident: (
+    userId: string,
+    incidentId: string,
+  ) => Effect.Effect<
+    IncidentDetail,
+    | IncidentNotFound
+    | IncidentRepositoryError
+    | UnauthorizedIncidentAccess
+    | InvalidIncidentStatus
+    | BikeRepositoryError,
+    Prisma | IncidentRepository | BikeRepository
   >;
 };
 
@@ -361,6 +398,12 @@ export const IncidentServiceLive = Layer.effect(
               ),
             );
         }),
+
+      startIncident: (userId: string, incidentId: string) =>
+        startIncidentUseCase(userId, incidentId),
+
+      resolveIncident: (userId: string, incidentId: string) =>
+        resolveIncidentUseCase(userId, incidentId),
     };
     return service;
   }),

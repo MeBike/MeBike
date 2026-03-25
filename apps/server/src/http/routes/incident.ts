@@ -35,8 +35,18 @@ export function registerIncidentRoutes(
   } satisfies RouteConfig;
 
   app.openapi(rejectIncidentRoute, IncidentTechnicianController.rejectIncident);
-  // app.openapi(
-  //   incidents.updateIncidentStatus,
-  //   IncidentPublicController.updateIncidentStatus,
-  // );
+
+  const startIncidentRoute = {
+    ...incidents.startIncident,
+    middleware: [requireTechnicianMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(startIncidentRoute, IncidentTechnicianController.startIncident);
+
+  const resolveIncidentRoute = {
+    ...incidents.resolveIncident,
+    middleware: [requireTechnicianMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(resolveIncidentRoute, IncidentTechnicianController.resolveIncident);
 }

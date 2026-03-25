@@ -306,32 +306,19 @@ export const rejectIncident = createRoute({
   },
 });
 
-export const updateIncidentStatus = createRoute({
+export const startIncident = createRoute({
   method: "patch",
-  path: "/v1/incidents/{incidentId}",
+  path: "/v1/incidents/{incidentId}/start",
   tags: ["Incidents"],
   security: [{ bearerAuth: [] }],
   request: {
     params: IncidentIdParamSchema,
-    body: {
-      content: {
-        "application/json": { schema: IncidentStatusPatchSchema },
-      },
-    },
   },
   responses: {
     200: {
       description: "Supplier status updated",
       content: {
         "application/json": { schema: IncidentDetailSchema },
-      },
-    },
-    400: {
-      description: "Invalid status",
-      content: {
-        "application/json": {
-          schema: IncidentErrorResponseSchema,
-        },
       },
     },
     404: {
@@ -363,6 +350,70 @@ export const updateIncidentStatus = createRoute({
         },
       },
     },
+    400: {
+      description: "Invalid request or bike not available",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+  },
+});
+
+export const resolveIncident = createRoute({
+  method: "patch",
+  path: "/v1/incidents/{incidentId}/resolve",
+  tags: ["Incidents"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: IncidentIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Supplier status updated",
+      content: {
+        "application/json": { schema: IncidentDetailSchema },
+      },
+    },
+    404: {
+      description: "Incident not found",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Unauthorized incident access",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            UnauthorizedIncidentAccess: {
+              value: {
+                error: "Unauthorized incident access",
+                details: {
+                  code: IncidentErrorCodeSchema.enum
+                    .UNAUTHORIZED_INCIDENT_ACCESS,
+                  incidentId: "665fd6e36b7e5d53f8f3d2c9",
+                  userId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Invalid request or bike not available",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+        },
+      },
+    },
     401: unauthorizedResponse(),
   },
 });
@@ -372,5 +423,6 @@ export const incidentsMutations = {
   updateIncident,
   acceptIncident,
   rejectIncident,
-  updateIncidentStatus,
+  startIncident,
+  resolveIncident,
 } as const;

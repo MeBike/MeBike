@@ -2,6 +2,7 @@ import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
+  AssignmentStatus,
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
@@ -14,6 +15,7 @@ import type {
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { stationRepositoryFactory } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type {
   IncidentNotFound,
@@ -86,6 +88,11 @@ export type IncidentRepo = {
     | NoNearestStationFound
     | NoAvailableTechnicianFound
   >;
+
+  updateAssignmentStatus: (
+    incidentId: string,
+    status: AssignmentStatus,
+  ) => Effect.Effect<void, IncidentRepositoryError>;
 };
 
 function toIncidentOrderBy(
@@ -160,8 +167,10 @@ function createIncidentWithClient(
         const technician = yield* Effect.promise(() =>
           tx.userOrgAssignment.findFirst({
             where: {
-              stationId: station.id,
-              technicianTeam: { availabilityStatus: "AVAILABLE" },
+              technicianTeam: {
+                availabilityStatus: "AVAILABLE",
+                stationId: station.id,
+              },
             },
             select: { userId: true, technicianTeamId: true },
           }),
@@ -435,7 +444,16 @@ export function makeIncidentRepository(
     },
 
     create(data: CreateIncidentInput) {
-      return createIncidentWithClient(client, data);
+      return runPrismaTransaction(client as PrismaClient, tx =>
+        createIncidentWithClient(tx, data)).pipe(
+        Effect.catchTag("PrismaTransactionError", e =>
+          Effect.fail(
+            new IncidentRepositoryError({
+              operation: "create.transaction",
+              cause: e.cause,
+            }),
+          )),
+      );
     },
 
     update(id, patch) {
@@ -484,7 +502,11 @@ export function makeIncidentRepository(
           try: () =>
             client.incidentReport.update({
               where: { id },
-              data: { status },
+              data: {
+                status,
+                ...(status === "RESOLVED" ? { resolvedAt: new Date() } : {}),
+                ...(status === "CLOSED" ? { closedAt: new Date() } : {}),
+              },
               select: incidentDetailSelect,
             }),
           catch: e =>
@@ -515,7 +537,7 @@ export function makeIncidentRepository(
           try: () =>
             client.technicianAssignment.update({
               where: { id: assignment.id },
-              data: { status: "IN_PROGRESS", acceptedAt: new Date() },
+              data: { status: "ACCEPTED", acceptedAt: new Date() },
               select: technicianAssignmentDetailSelect,
             }),
           catch: e =>
@@ -530,7 +552,54 @@ export function makeIncidentRepository(
     },
 
     rejectIncident(id) {
-      return rejectIncidentWithClient(client, id);
+      return runPrismaTransaction(client as PrismaClient, tx =>
+        rejectIncidentWithClient(tx, id)).pipe(
+        Effect.map(opt =>
+          Option.map(opt, a => a as TechnicianAssignmentRow),
+        ),
+        Effect.catchTag("PrismaTransactionError", e =>
+          Effect.fail(
+            new IncidentRepositoryError({
+              operation: "rejectIncident.transaction",
+              cause: e.cause,
+            }),
+          )),
+      );
+    },
+
+    updateAssignmentStatus(incidentId, status) {
+      return Effect.gen(function* () {
+        const assignment = yield* Effect.promise(() =>
+          client.technicianAssignment.findFirst({
+            where: {
+              incidentReportId: incidentId,
+              status: { not: "CANCELLED" },
+            },
+            select: { id: true },
+          }),
+        );
+
+        if (!assignment) {
+          return;
+        }
+
+        yield* Effect.tryPromise({
+          try: () =>
+            client.technicianAssignment.update({
+              where: { id: assignment.id },
+              data: {
+                status,
+                ...(status === "IN_PROGRESS" ? { startedAt: new Date() } : {}),
+                ...(status === "RESOLVED" ? { resolvedAt: new Date() } : {}),
+              },
+            }),
+          catch: e =>
+            new IncidentRepositoryError({
+              operation: "updateAssignmentStatus",
+              cause: e,
+            }),
+        });
+      });
     },
   };
 }
