@@ -20,6 +20,7 @@ import type {
   IncidentFilter,
   IncidentRow,
   IncidentSortField,
+  TechnicianAssignmentRow,
   UpdateIncidentInput,
 } from "../models";
 
@@ -73,6 +74,26 @@ export type IncidentService = {
     | IncidentRepositoryError
     | UnauthorizedIncidentAccess
   >;
+
+  acceptIncident: (
+    userId: string,
+    incidentId: string,
+  ) => Effect.Effect<
+    TechnicianAssignmentRow,
+    IncidentNotFound | IncidentRepositoryError | UnauthorizedIncidentAccess
+  >;
+
+  rejectIncident: (
+    userId: string,
+    incidentId: string,
+  ) => Effect.Effect<
+    TechnicianAssignmentRow,
+    | IncidentNotFound
+    | IncidentRepositoryError
+    | UnauthorizedIncidentAccess
+    | NoNearestStationFound
+    | NoAvailableTechnicianFound
+  >;
 };
 
 export class IncidentServiceTag extends Context.Tag("IncidentService")<
@@ -117,7 +138,7 @@ export const IncidentServiceLive = Layer.effect(
         repo
           .getById(incidentId)
           .pipe(
-            Effect.flatMap((opt) =>
+            Effect.flatMap(opt =>
               Option.isSome(opt)
                 ? Effect.succeed(opt.value)
                 : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -135,13 +156,14 @@ export const IncidentServiceLive = Layer.effect(
             }
 
             if (
-              rental.value.status === "RENTED" &&
-              data.reporterRole === "USER"
+              rental.value.status === "RENTED"
+              && data.reporterRole === "USER"
             ) {
               finalSource = IncidentSource.DURING_RENTAL;
-            } else if (
-              rental.value.status === "COMPLETED" &&
-              data.reporterRole === "USER"
+            }
+            else if (
+              rental.value.status === "COMPLETED"
+              && data.reporterRole === "USER"
             ) {
               finalSource = IncidentSource.POST_RETURN;
             }
@@ -219,16 +241,13 @@ export const IncidentServiceLive = Layer.effect(
             fileUrls: data.fileUrls,
           });
         }).pipe(
-          Effect.catchTag("IncidentRepositoryError", (error) =>
-            Effect.die(error),
-          ),
-          Effect.catchTag("RentalRepositoryError", (error) =>
-            Effect.die(error),
-          ),
-          Effect.catchTag("StationRepositoryError", (error) =>
-            Effect.die(error),
-          ),
-          Effect.catchTag("BikeRepositoryError", (error) => Effect.die(error)),
+          Effect.catchTag("IncidentRepositoryError", error =>
+            Effect.die(error)),
+          Effect.catchTag("RentalRepositoryError", error =>
+            Effect.die(error)),
+          Effect.catchTag("StationRepositoryError", error =>
+            Effect.die(error)),
+          Effect.catchTag("BikeRepositoryError", error => Effect.die(error)),
         ),
 
       updateIncident: (
@@ -251,7 +270,7 @@ export const IncidentServiceLive = Layer.effect(
           return yield* repo
             .update(incidentId, patch)
             .pipe(
-              Effect.flatMap((opt) =>
+              Effect.flatMap(opt =>
                 Option.isSome(opt)
                   ? Effect.succeed(opt.value)
                   : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -271,8 +290,8 @@ export const IncidentServiceLive = Layer.effect(
           }
 
           if (
-            incident.value.assignments?.technician?.id !== userId ||
-            incident.value.assignments?.status === "CANCELLED"
+            incident.value.assignments?.technician?.id !== userId
+            || incident.value.assignments?.status === "CANCELLED"
           ) {
             return yield* Effect.fail(
               new UnauthorizedIncidentAccess({ incidentId, userId }),
@@ -281,12 +300,66 @@ export const IncidentServiceLive = Layer.effect(
 
           return yield* ensureValidStatus(status).pipe(
             Effect.flatMap(() => repo.updateStatus(incidentId, status)),
-            Effect.flatMap((opt) =>
+            Effect.flatMap(opt =>
               Option.isSome(opt)
                 ? Effect.succeed(opt.value)
                 : Effect.fail(new IncidentNotFound({ id: incidentId })),
             ),
           );
+        }),
+
+      acceptIncident: (userId: string, incidentId: string) =>
+        Effect.gen(function* () {
+          const incident = yield* repo.getById(incidentId);
+          if (Option.isNone(incident)) {
+            return yield* Effect.fail(new IncidentNotFound({ id: incidentId }));
+          }
+
+          if (
+            incident.value.assignments?.technician?.id !== userId
+            || incident.value.assignments?.status !== "ASSIGNED"
+          ) {
+            return yield* Effect.fail(
+              new UnauthorizedIncidentAccess({ incidentId, userId }),
+            );
+          }
+
+          return yield* repo
+            .acceptIncident(incidentId)
+            .pipe(
+              Effect.flatMap(opt =>
+                Option.isSome(opt)
+                  ? Effect.succeed(opt.value)
+                  : Effect.fail(new IncidentNotFound({ id: incidentId })),
+              ),
+            );
+        }),
+
+      rejectIncident: (userId: string, incidentId: string) =>
+        Effect.gen(function* () {
+          const incident = yield* repo.getById(incidentId);
+          if (Option.isNone(incident)) {
+            return yield* Effect.fail(new IncidentNotFound({ id: incidentId }));
+          }
+
+          if (
+            incident.value.assignments?.technician?.id !== userId
+            || incident.value.assignments?.status === "CANCELLED"
+          ) {
+            return yield* Effect.fail(
+              new UnauthorizedIncidentAccess({ incidentId, userId }),
+            );
+          }
+
+          return yield* repo
+            .rejectIncident(incidentId)
+            .pipe(
+              Effect.flatMap(opt =>
+                Option.isSome(opt)
+                  ? Effect.succeed(opt.value)
+                  : Effect.fail(new IncidentNotFound({ id: incidentId })),
+              ),
+            );
         }),
     };
     return service;

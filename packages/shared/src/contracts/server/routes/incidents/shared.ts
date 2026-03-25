@@ -5,7 +5,10 @@ import {
   ServerErrorResponseSchema,
   SortDirectionSchema,
 } from "../../schemas";
-import { IncidentStatusSchema } from "../../incident/schemas";
+import {
+  AssignmentStatusSchema,
+  IncidentStatusSchema,
+} from "../../incident/schemas";
 import {
   IncidentDetailSchema,
   IncidentSummarySchema,
@@ -88,6 +91,14 @@ export const IncidentListResponseSchema = z
   })
   .openapi("IncidentListResponse", {
     description: "Paginated incident listing",
+  });
+
+export const IncidentAssignmentStatusPatchSchema = z
+  .object({
+    status: AssignmentStatusSchema,
+  })
+  .openapi("IncidentAssignmentStatusPatch", {
+    description: "Payload for changing incident assignment status",
   });
 
 export {

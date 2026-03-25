@@ -1,4 +1,5 @@
 import type {
+  AssignmentStatus,
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
@@ -111,3 +112,16 @@ export type UpdateIncidentInput = Omit<
   Partial<CreateIncidentInput>,
   "bikeId" | "rentalId" | "stationId"
 >;
+
+export type TechnicianAssignmentRow = {
+  id: string;
+  incidentReportId: string;
+  technicianTeamId: string | null;
+  technicianUserId: string | null;
+  assignedByUserId: string | null;
+  assignedAt: Date;
+  acceptedAt: Date | null;
+  startedAt: Date | null;
+  resolvedAt: Date | null;
+  status: AssignmentStatus;
+};

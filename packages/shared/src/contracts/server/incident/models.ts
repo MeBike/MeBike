@@ -1,16 +1,17 @@
 import { z } from "../../../zod";
 import {
+  AssignmentStatusSchema,
   IncidentSeveritySchema,
   IncidentSourceSchema,
   IncidentStatusSchema,
 } from "./schemas";
 
 export const IncidentSummarySchema = z.object({
-  id: z.uuidv7(),
-  reporterUserId: z.uuidv7(),
-  rentalId: z.uuidv7().nullable(),
-  bikeId: z.uuidv7(),
-  stationId: z.uuidv7().nullable(),
+  id: z.string().uuid(),
+  reporterUserId: z.string().uuid(),
+  rentalId: z.string().uuid().nullable(),
+  bikeId: z.string().uuid(),
+  stationId: z.string().uuid().nullable(),
   source: IncidentSourceSchema,
   incidentType: z.string(),
   severity: IncidentSeveritySchema,
@@ -19,9 +20,9 @@ export const IncidentSummarySchema = z.object({
   longitude: z.number().nullable(),
   bikeLocked: z.boolean(),
   status: IncidentStatusSchema,
-  reportedAt: z.iso.date(),
-  resolvedAt: z.iso.date().nullable(),
-  closedAt: z.iso.date().nullable(),
+  reportedAt: z.string().datetime(),
+  resolvedAt: z.string().datetime().nullable(),
+  closedAt: z.string().datetime().nullable(),
 });
 
 export const IncidentDetailSchema = z.object({
@@ -80,6 +81,19 @@ export const IncidentDetailSchema = z.object({
   closedAt: z.coerce.date().nullable(),
 });
 
+export const TechnicianAssignmentSummarySchema = z.object({
+  id: z.string().uuid(),
+  incidentReportId: z.string().uuid().nullable(),
+  technicianTeamId: z.string().uuid().nullable(),
+  technicianUserId: z.string().uuid().nullable(),
+  assignedByUserId: z.string().uuid().nullable(),
+  assignedAt: z.string().datetime(),
+  acceptedAt: z.string().datetime().nullable(),
+  startedAt: z.string().datetime().nullable(),
+  resolvedAt: z.string().datetime().nullable(),
+  status: AssignmentStatusSchema,
+});
+
 export type IncidentDetailResponse = {
   message: string;
   result: IncidentDetail;
@@ -92,3 +106,6 @@ export type IncidentSummaryResponse = {
 
 export type IncidentDetail = z.infer<typeof IncidentDetailSchema>;
 export type IncidentSummary = z.infer<typeof IncidentSummarySchema>;
+export type TechnicianAssignmentSummary = z.infer<
+  typeof TechnicianAssignmentSummarySchema
+>;

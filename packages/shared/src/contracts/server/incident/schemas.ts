@@ -22,6 +22,15 @@ export const IncidentSourceSchema = z.enum([
   "STAFF_INSPECTION",
 ]);
 
+export const AssignmentStatusSchema = z.enum([
+  "ASSIGNED",
+  "ACCEPTED",
+  "IN_PROGRESS",
+  "RESOLVED",
+  "CANCELLED",
+]);
+
 export type IncidentStatus = z.infer<typeof IncidentStatusSchema>;
 export type IncidentSeverity = z.infer<typeof IncidentSeveritySchema>;
 export type IncidentSource = z.infer<typeof IncidentSourceSchema>;
+export type AssignmentStatus = z.infer<typeof AssignmentStatusSchema>;

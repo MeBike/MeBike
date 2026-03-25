@@ -2,6 +2,7 @@ import { createRoute } from "@hono/zod-openapi";
 
 import { unauthorizedResponse } from "../helpers";
 import {
+  IncidentAssignmentStatusPatchSchema,
   IncidentCreateBodySchema,
   IncidentDetailSchema,
   IncidentIdParamSchema,
@@ -12,7 +13,9 @@ import {
 import {
   IncidentErrorCodeSchema,
   IncidentErrorResponseSchema,
+  incidentErrorMessages,
 } from "../../incident/errors";
+import { TechnicianAssignmentSummarySchema } from "../../incident";
 
 export const createIncident = createRoute({
   method: "post",
@@ -176,6 +179,133 @@ export const updateIncident = createRoute({
   },
 });
 
+export const acceptIncident = createRoute({
+  method: "patch",
+  path: "/v1/incidents/{incidentId}/accept",
+  tags: ["Incidents"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: IncidentIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Incident accepted",
+      content: {
+        "application/json": { schema: TechnicianAssignmentSummarySchema },
+      },
+    },
+    404: {
+      description: "Incident not found",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Unauthorized incident access",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            UnauthorizedIncidentAccess: {
+              value: {
+                error: "Unauthorized incident access",
+                details: {
+                  code: IncidentErrorCodeSchema.enum
+                    .UNAUTHORIZED_INCIDENT_ACCESS,
+                  incidentId: "665fd6e36b7e5d53f8f3d2c9",
+                  userId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+  },
+});
+
+export const rejectIncident = createRoute({
+  method: "patch",
+  path: "/v1/incidents/{incidentId}/reject",
+  tags: ["Incidents"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: IncidentIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Incident rejected",
+      content: {
+        "application/json": { schema: TechnicianAssignmentSummarySchema },
+      },
+    },
+    404: {
+      description: "Incident not found or no technician available",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            IncidentNotFound: {
+              value: {
+                error: incidentErrorMessages.INCIDENT_NOT_FOUND,
+                details: {
+                  code: IncidentErrorCodeSchema.enum.INCIDENT_NOT_FOUND,
+                  incidentId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+            NoNearestStationFound: {
+              value: {
+                error: incidentErrorMessages.NO_NEAREST_STATION_FOUND,
+                details: {
+                  code: IncidentErrorCodeSchema.enum.NO_NEAREST_STATION_FOUND,
+                  latitude: 10.8231,
+                  longitude: 106.6297,
+                },
+              },
+            },
+            NoAvailableTechnicianFound: {
+              value: {
+                error: incidentErrorMessages.NO_AVAILABLE_TECHNICIAN_FOUND,
+                details: {
+                  code: IncidentErrorCodeSchema.enum.NO_AVAILABLE_TECHNICIAN_FOUND,
+                  latitude: 10.8231,
+                  longitude: 106.6297,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Unauthorized incident access",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            UnauthorizedIncidentAccess: {
+              value: {
+                error: "Unauthorized incident access",
+                details: {
+                  code: IncidentErrorCodeSchema.enum
+                    .UNAUTHORIZED_INCIDENT_ACCESS,
+                  incidentId: "665fd6e36b7e5d53f8f3d2c9",
+                  userId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+  },
+});
+
 export const updateIncidentStatus = createRoute({
   method: "patch",
   path: "/v1/incidents/{incidentId}",
@@ -240,5 +370,7 @@ export const updateIncidentStatus = createRoute({
 export const incidentsMutations = {
   createIncident,
   updateIncident,
+  acceptIncident,
+  rejectIncident,
   updateIncidentStatus,
 } as const;

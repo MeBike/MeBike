@@ -65,6 +65,19 @@ export const incidentDetailSelect = {
   closedAt: true,
 } as const;
 
+export const technicianAssignmentDetailSelect = {
+  id: true,
+  incidentReportId: true,
+  technicianTeamId: true,
+  technicianUserId: true,
+  assignedByUserId: true,
+  assignedAt: true,
+  acceptedAt: true,
+  startedAt: true,
+  resolvedAt: true,
+  status: true,
+} as const;
+
 type IncidentDetailSelect = PrismaTypes.IncidentReportGetPayload<{
   select: typeof incidentDetailSelect;
 }>;

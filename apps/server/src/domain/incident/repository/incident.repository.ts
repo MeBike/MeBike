@@ -15,10 +15,10 @@ import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { stationRepositoryFactory } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
-import {
+import type {
+  IncidentNotFound,
   InvalidIncidentStatus,
-  NoAvailableTechnicianFound,
-  NoNearestStationFound,
+  UnauthorizedIncidentAccess,
 } from "../domain-errors";
 import type {
   CreateIncidentInput,
@@ -26,13 +26,19 @@ import type {
   IncidentFilter,
   IncidentRow,
   IncidentSortField,
+  TechnicianAssignmentRow,
   UpdateIncidentInput,
 } from "../models";
 
-import { IncidentRepositoryError } from "../domain-errors";
+import {
+  IncidentRepositoryError,
+  NoAvailableTechnicianFound,
+  NoNearestStationFound,
+} from "../domain-errors";
 import {
   incidentDetailSelect,
   mapToIncidentDetail,
+  technicianAssignmentDetailSelect,
 } from "./incident.repository.query";
 
 export type IncidentRepo = {
@@ -61,6 +67,24 @@ export type IncidentRepo = {
   ) => Effect.Effect<
     Option.Option<IncidentDetail>,
     IncidentRepositoryError | InvalidIncidentStatus
+  >;
+
+  acceptIncident: (
+    id: string,
+  ) => Effect.Effect<
+    Option.Option<TechnicianAssignmentRow>,
+    IncidentNotFound | IncidentRepositoryError | UnauthorizedIncidentAccess
+  >;
+
+  rejectIncident: (
+    id: string,
+  ) => Effect.Effect<
+    Option.Option<TechnicianAssignmentRow>,
+    | IncidentNotFound
+    | IncidentRepositoryError
+    | UnauthorizedIncidentAccess
+    | NoNearestStationFound
+    | NoAvailableTechnicianFound
   >;
 };
 
@@ -100,7 +124,7 @@ function createIncidentWithClient(
         })
         .pipe(
           Effect.mapError(
-            (e) =>
+            e =>
               new IncidentRepositoryError({
                 operation: "createIncidentWithClient.listNearest",
                 cause: e,
@@ -160,7 +184,8 @@ function createIncidentWithClient(
           }),
         );
       }
-    } else if (data.stationId) {
+    }
+    else if (data.stationId) {
       const technician = yield* Effect.promise(() =>
         tx.userOrgAssignment.findFirst({
           where: {
@@ -196,11 +221,11 @@ function createIncidentWithClient(
             bikeLocked: data.bikeLocked,
             status: (foundTechnician ? "ASSIGNED" : "OPEN") as any,
             attachments: {
-              create: data.fileUrls.map((url) => ({ fileUrl: url })),
+              create: data.fileUrls.map(url => ({ fileUrl: url })),
             },
           },
         }),
-      catch: (e) =>
+      catch: e =>
         new IncidentRepositoryError({
           operation: "createIncidentWithClient",
           cause: e,
@@ -217,7 +242,7 @@ function createIncidentWithClient(
               technicianUserId: foundTechnician!.userId,
             },
           }),
-        catch: (e) =>
+        catch: e =>
           new IncidentRepositoryError({
             operation: "createIncidentWithClient.assignTechnician",
             cause: e,
@@ -226,6 +251,134 @@ function createIncidentWithClient(
     }
 
     return incident as IncidentRow;
+  });
+}
+
+function rejectIncidentWithClient(
+  tx: PrismaClient | PrismaTypes.TransactionClient,
+  id: string,
+) {
+  return Effect.gen(function* () {
+    const assignment = yield* Effect.promise(() =>
+      tx.technicianAssignment.findFirst({
+        where: { incidentReportId: id, status: "ASSIGNED" },
+        select: { id: true, incidentReportId: true, technicianUserId: true },
+      }),
+    );
+    const foundIncident = yield* Effect.promise(() =>
+      tx.incidentReport.findFirst({
+        where: { id: assignment?.incidentReportId },
+      }),
+    );
+
+    if (!assignment || !foundIncident) {
+      return Option.none();
+    }
+
+    const stationRepo = stationRepositoryFactory(tx);
+    let foundTechnician:
+      | { userId: string; technicianTeamId: string }
+      | undefined;
+
+    const nearestStation = yield* stationRepo
+      .listNearest({
+        latitude: Number(foundIncident.latitude),
+        longitude: Number(foundIncident.longitude),
+        maxDistanceMeters: 5000,
+        pageSize: 10,
+      })
+      .pipe(
+        Effect.mapError(
+          e =>
+            new IncidentRepositoryError({
+              operation: "createIncidentWithClient.listNearest",
+              cause: e,
+            }),
+        ),
+      );
+
+    if (nearestStation.total === 0) {
+      return yield* Effect.fail(
+        new NoNearestStationFound({
+          latitude: Number(foundIncident.latitude),
+          longitude: Number(foundIncident.longitude),
+        }),
+      );
+    }
+
+    for (const station of nearestStation.items) {
+      // Count Available Bikes of this station
+      const countAvailableBikes = yield* Effect.promise(() =>
+        tx.bike.count({
+          where: {
+            stationId: station.id,
+            status: "AVAILABLE",
+          },
+        }),
+      );
+
+      if (countAvailableBikes === 0) {
+        continue;
+      }
+
+      // Find Available Technician of this station
+      const technician = yield* Effect.promise(() =>
+        tx.userOrgAssignment.findFirst({
+          where: {
+            stationId: station.id,
+            technicianTeam: { availabilityStatus: "AVAILABLE" },
+            userId: {
+              not: assignment.technicianUserId!,
+            },
+          },
+          select: { userId: true, technicianTeamId: true },
+        }),
+      );
+
+      if (technician && technician.technicianTeamId) {
+        foundTechnician = {
+          userId: technician.userId,
+          technicianTeamId: technician.technicianTeamId,
+        };
+        break;
+      }
+    }
+
+    if (!foundTechnician) {
+      return yield* Effect.fail(
+        new NoAvailableTechnicianFound({
+          latitude: Number(foundIncident.latitude),
+          longitude: Number(foundIncident.longitude),
+        }),
+      );
+    }
+
+    yield* Effect.tryPromise({
+      try: () =>
+        tx.technicianAssignment.update({
+          where: { id: assignment.id },
+          data: {
+            status: "CANCELLED",
+          },
+        }),
+      catch: e =>
+        new IncidentRepositoryError({
+          operation: "rejectIncidentWithClient",
+          cause: e,
+        }),
+    });
+
+    const newAssignment = yield* Effect.promise(() =>
+      tx.technicianAssignment.create({
+        data: {
+          incidentReportId: assignment.incidentReportId,
+          technicianTeamId: foundTechnician!.technicianTeamId,
+          technicianUserId: foundTechnician!.userId,
+        },
+      }),
+    );
+
+    return Option.some(newAssignment);
   });
 }
 
@@ -275,7 +428,7 @@ export function makeIncidentRepository(
           select: incidentDetailSelect,
         }),
       ).pipe(
-        Effect.map((val) =>
+        Effect.map(val =>
           Option.fromNullable(val).pipe(Option.map(mapToIncidentDetail)),
         ),
       );
@@ -314,7 +467,7 @@ export function makeIncidentRepository(
               },
               select: incidentDetailSelect,
             }),
-          catch: (e) =>
+          catch: e =>
             new IncidentRepositoryError({
               operation: "updateIncident.update",
               cause: e,
@@ -334,7 +487,7 @@ export function makeIncidentRepository(
               data: { status },
               select: incidentDetailSelect,
             }),
-          catch: (e) =>
+          catch: e =>
             new IncidentRepositoryError({
               operation: "updateStatus",
               cause: e,
@@ -343,6 +496,41 @@ export function makeIncidentRepository(
 
         return Option.some(mapToIncidentDetail(updated));
       });
+    },
+
+    acceptIncident(id) {
+      return Effect.gen(function* () {
+        const assignment = yield* Effect.promise(() =>
+          client.technicianAssignment.findFirst({
+            where: { incidentReportId: id, status: "ASSIGNED" },
+            select: { id: true },
+          }),
+        );
+
+        if (!assignment) {
+          return Option.none();
+        }
+
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            client.technicianAssignment.update({
+              where: { id: assignment.id },
+              data: { status: "IN_PROGRESS", acceptedAt: new Date() },
+              select: technicianAssignmentDetailSelect,
+            }),
+          catch: e =>
+            new IncidentRepositoryError({
+              operation: "acceptIncident",
+              cause: e,
+            }),
+        });
+
+        return Option.some(updated);
+      });
+    },
+
+    rejectIncident(id) {
+      return rejectIncidentWithClient(client, id);
     },
   };
 }

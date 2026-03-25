@@ -1,6 +1,10 @@
+import type { RouteConfig } from "@hono/zod-openapi";
+
 import { serverRoutes } from "@mebike/shared";
 
 import { IncidentPublicController } from "../controllers/incidents";
+import { IncidentTechnicianController } from "../controllers/incidents/technican.controller";
+import { requireTechnicianMiddleware } from "../middlewares/auth";
 
 export function registerIncidentRoutes(
   app: import("@hono/zod-openapi").OpenAPIHono,
@@ -13,7 +17,24 @@ export function registerIncidentRoutes(
     incidents.createIncident,
     IncidentPublicController.createIncident,
   );
-  app.openapi(incidents.updateIncident, IncidentPublicController.updateIncident);
+  app.openapi(
+    incidents.updateIncident,
+    IncidentPublicController.updateIncident,
+  );
+
+  const acceptIncidentRoute = {
+    ...incidents.acceptIncident,
+    middleware: [requireTechnicianMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(acceptIncidentRoute, IncidentTechnicianController.acceptIncident);
+
+  const rejectIncidentRoute = {
+    ...incidents.rejectIncident,
+    middleware: [requireTechnicianMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(rejectIncidentRoute, IncidentTechnicianController.rejectIncident);
   // app.openapi(
   //   incidents.updateIncidentStatus,
   //   IncidentPublicController.updateIncidentStatus,
