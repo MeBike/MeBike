@@ -32,6 +32,7 @@ import {
 } from "../errors";
 import {
   applyCounts,
+  getActiveReturnSlotCounts,
   getBikeCounts,
 
   stationSelect,
@@ -82,8 +83,8 @@ export function toStationOrderBy(
   const sortBy: StationSortField = req.sortBy ?? "name";
   const sortDir = req.sortDir ?? "asc";
   switch (sortBy) {
-    case "capacity":
-      return { capacity: sortDir };
+    case "totalCapacity":
+      return { totalCapacity: sortDir };
     case "updatedAt":
       return { updatedAt: sortDir };
     case "name":
@@ -135,13 +136,17 @@ export function makeStationRepository(
         }
 
         const stationId = uuidv7();
+        const pickupSlotLimit = input.pickupSlotLimit ?? input.totalCapacity;
+        const returnSlotLimit = input.returnSlotLimit ?? input.totalCapacity;
         const rows = yield* Effect.tryPromise({
           try: () =>
             client.$queryRaw<{
               id: string;
               name: string;
               address: string;
-              capacity: number;
+              totalCapacity: number;
+              pickupSlotLimit: number;
+              returnSlotLimit: number;
               latitude: number;
               longitude: number;
               createdAt: Date;
@@ -151,7 +156,9 @@ export function makeStationRepository(
                 "id",
                 "name",
                 "address",
-                "capacity",
+                "total_capacity",
+                "pickup_slot_limit",
+                "return_slot_limit",
                 "latitude",
                 "longitude",
                 "position",
@@ -160,7 +167,9 @@ export function makeStationRepository(
                 ${stationId},
                 ${input.name},
                 ${input.address},
-                ${input.capacity},
+                ${input.totalCapacity},
+                ${pickupSlotLimit},
+                ${returnSlotLimit},
                 ${input.latitude},
                 ${input.longitude},
                 ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography,
@@ -170,7 +179,9 @@ export function makeStationRepository(
                 "id",
                 "name",
                 "address",
-                "capacity",
+                "total_capacity" AS "totalCapacity",
+                "pickup_slot_limit" AS "pickupSlotLimit",
+                "return_slot_limit" AS "returnSlotLimit",
                 "latitude",
                 "longitude",
                 "created_at" AS "createdAt",
@@ -201,56 +212,107 @@ export function makeStationRepository(
 
     update(id: string, input: UpdateStationInput) {
       return Effect.gen(function* () {
+        const existing = yield* Effect.tryPromise({
+          try: () =>
+            client.station.findUnique({
+              where: { id },
+              select: stationSelect,
+            }),
+          catch: e =>
+            new StationRepositoryError({
+              operation: "update.findExisting",
+              cause: e,
+            }),
+        });
+
+        if (!existing) {
+          return Option.none();
+        }
+
+        const nextLatitude = input.latitude ?? existing.latitude;
+        const nextLongitude = input.longitude ?? existing.longitude;
+        const nextCapacity = input.totalCapacity ?? existing.totalCapacity;
+        const nextPickupSlotLimit = input.pickupSlotLimit
+          ?? (input.totalCapacity != null && existing.pickupSlotLimit === existing.totalCapacity
+            ? input.totalCapacity
+            : existing.pickupSlotLimit);
+        const nextReturnSlotLimit = input.returnSlotLimit
+          ?? (input.totalCapacity != null && existing.returnSlotLimit === existing.totalCapacity
+            ? input.totalCapacity
+            : existing.returnSlotLimit);
+
+        const supportedAreaRows = yield* Effect.tryPromise({
+          try: () =>
+            client.$queryRaw<{ inside: boolean }[]>`
+              SELECT ST_Covers(
+                "geom",
+                ST_SetSRID(ST_MakePoint(${nextLongitude}, ${nextLatitude}), 4326)::geometry
+              ) AS "inside"
+              FROM "GeoBoundary"
+              WHERE "code" = 'VN'
+              LIMIT 1
+            `,
+          catch: e =>
+            new StationRepositoryError({
+              operation: "update.checkSupportedArea",
+              cause: e,
+            }),
+        });
+
+        const supportedArea = supportedAreaRows[0];
+        if (!supportedArea) {
+          return yield* Effect.fail(
+            new StationRepositoryError({
+              operation: "update.checkSupportedArea.missingBoundary",
+              cause: new Error("Missing GeoBoundary row for code VN"),
+            }),
+          );
+        }
+        if (!supportedArea.inside) {
+          return yield* Effect.fail(
+            new StationOutsideSupportedArea({
+              latitude: nextLatitude,
+              longitude: nextLongitude,
+            }),
+          );
+        }
+
         const rows = yield* Effect.tryPromise({
           try: () =>
             client.$queryRaw<{
               id: string;
               name: string;
               address: string;
-              capacity: number;
+              totalCapacity: number;
+              pickupSlotLimit: number;
+              returnSlotLimit: number;
               latitude: number;
               longitude: number;
               createdAt: Date;
               updatedAt: Date;
             }[]>`
-              WITH boundary AS (
-                SELECT "geom"
-                FROM "GeoBoundary"
-                WHERE "code" = 'VN'
-                LIMIT 1
-              )
               UPDATE "Station"
               SET
-                "name" = COALESCE(${input.name}, "Station"."name"),
-                "address" = COALESCE(${input.address}, "Station"."address"),
-                "capacity" = COALESCE(${input.capacity}, "Station"."capacity"),
-                "latitude" = COALESCE(${input.latitude}, "Station"."latitude"),
-                "longitude" = COALESCE(${input.longitude}, "Station"."longitude"),
+                "name" = ${input.name ?? existing.name},
+                "address" = ${input.address ?? existing.address},
+                "total_capacity" = ${nextCapacity},
+                "pickup_slot_limit" = ${nextPickupSlotLimit},
+                "return_slot_limit" = ${nextReturnSlotLimit},
+                "latitude" = ${nextLatitude},
+                "longitude" = ${nextLongitude},
                 "position" = ST_SetSRID(
-                  ST_MakePoint(
-                    COALESCE(${input.longitude}, "Station"."longitude"),
-                    COALESCE(${input.latitude}, "Station"."latitude")
-                  ),
+                  ST_MakePoint(${nextLongitude}, ${nextLatitude}),
                   4326
                 )::geography,
                 "updated_at" = now()
-              FROM boundary
               WHERE "Station"."id" = ${id}
-                AND ST_Covers(
-                  boundary."geom",
-                  ST_SetSRID(
-                    ST_MakePoint(
-                      COALESCE(${input.longitude}, "Station"."longitude"),
-                      COALESCE(${input.latitude}, "Station"."latitude")
-                    ),
-                    4326
-                  )::geometry
-                )
               RETURNING
                 "id",
                 "name",
                 "address",
-                "capacity",
+                "total_capacity" AS "totalCapacity",
+                "pickup_slot_limit" AS "pickupSlotLimit",
+                "return_slot_limit" AS "returnSlotLimit",
                 "latitude",
                 "longitude",
                 "created_at" AS "createdAt",
@@ -267,80 +329,15 @@ export function makeStationRepository(
 
         const updated = rows[0];
         if (updated) {
-          const countsMap = yield* getBikeCounts(client, [updated.id]);
-          return Option.some(applyCounts(updated, countsMap.get(updated.id)));
-        }
-
-        const probeRows = yield* Effect.tryPromise({
-          try: () =>
-            client.$queryRaw<{
-              exists: boolean;
-              hasBoundary: boolean;
-              inside: boolean;
-              latitude: number | null;
-              longitude: number | null;
-            }[]>`
-              WITH target AS (
-                SELECT "latitude", "longitude"
-                FROM "Station"
-                WHERE "id" = ${id}
-                LIMIT 1
-              ),
-              boundary AS (
-                SELECT "geom"
-                FROM "GeoBoundary"
-                WHERE "code" = 'VN'
-                LIMIT 1
-              )
-              SELECT
-                EXISTS(SELECT 1 FROM target) AS "exists",
-                EXISTS(SELECT 1 FROM boundary) AS "hasBoundary",
-                COALESCE((
-                  SELECT ST_Covers(
-                    b."geom",
-                    ST_SetSRID(
-                      ST_MakePoint(
-                        COALESCE(${input.longitude}, t."longitude"),
-                        COALESCE(${input.latitude}, t."latitude")
-                      ),
-                      4326
-                    )::geometry
-                  )
-                  FROM target t
-                  CROSS JOIN boundary b
-                ), false) AS "inside",
-                (SELECT COALESCE(${input.latitude}, t."latitude") FROM target t LIMIT 1) AS "latitude",
-                (SELECT COALESCE(${input.longitude}, t."longitude") FROM target t LIMIT 1) AS "longitude"
-            `,
-          catch: e =>
-            new StationRepositoryError({
-              operation: "update.probe",
-              cause: e,
-            }),
-        });
-
-        const probe = probeRows[0];
-        if (!probe) {
-          return Option.none();
-        }
-        if (!probe.hasBoundary) {
-          return yield* Effect.fail(
-            new StationRepositoryError({
-              operation: "update.probe.missingBoundary",
-              cause: new Error("Missing GeoBoundary row for code VN"),
-            }),
-          );
-        }
-        if (!probe.exists) {
-          return Option.none();
-        }
-        if (!probe.inside) {
-          return yield* Effect.fail(
-            new StationOutsideSupportedArea({
-              latitude: probe.latitude ?? input.latitude ?? 0,
-              longitude: probe.longitude ?? input.longitude ?? 0,
-            }),
-          );
+          const [countsMap, returnSlotCountsMap] = yield* Effect.all([
+            getBikeCounts(client, [updated.id]),
+            getActiveReturnSlotCounts(client, [updated.id]),
+          ]);
+          const counts = countsMap.get(updated.id);
+          if (counts) {
+            counts.activeReturnSlots = returnSlotCountsMap.get(updated.id) ?? 0;
+          }
+          return Option.some(applyCounts(updated, counts));
         }
         return Option.none();
       });
@@ -359,7 +356,7 @@ export function makeStationRepository(
         ...(filter.address && {
           address: { contains: filter.address, mode: "insensitive" },
         }),
-        ...(filter.capacity != null && { capacity: filter.capacity }),
+        ...(filter.totalCapacity != null && { totalCapacity: filter.totalCapacity }),
       };
 
       const orderBy = toStationOrderBy(pageReq);
@@ -392,9 +389,15 @@ export function makeStationRepository(
         ]);
 
         const stationIds = items.map(item => item.id);
-        const countsMap = yield* getBikeCounts(client, stationIds);
+        const [countsMap, returnSlotCountsMap] = yield* Effect.all([
+          getBikeCounts(client, stationIds),
+          getActiveReturnSlotCounts(client, stationIds),
+        ]);
         const mappedItems = items.map(item =>
-          applyCounts(item, countsMap.get(item.id)),
+          applyCounts(item, {
+            ...countsMap.get(item.id)!,
+            activeReturnSlots: returnSlotCountsMap.get(item.id) ?? 0,
+          }),
         );
 
         return makePageResult(mappedItems, total, page, pageSize);
@@ -418,8 +421,14 @@ export function makeStationRepository(
         if (!row) {
           return Option.none();
         }
-        const countsMap = yield* getBikeCounts(client, [row.id]);
-        return Option.some(applyCounts(row, countsMap.get(row.id)));
+        const [countsMap, returnSlotCountsMap] = yield* Effect.all([
+          getBikeCounts(client, [row.id]),
+          getActiveReturnSlotCounts(client, [row.id]),
+        ]);
+        return Option.some(applyCounts(row, {
+          ...countsMap.get(row.id)!,
+          activeReturnSlots: returnSlotCountsMap.get(row.id) ?? 0,
+        }));
       });
     },
 
@@ -449,7 +458,9 @@ export function makeStationRepository(
                     id,
                     name,
                     address,
-                    capacity,
+                    total_capacity AS "totalCapacity",
+                    pickup_slot_limit AS "pickupSlotLimit",
+                    return_slot_limit AS "returnSlotLimit",
                     latitude,
                     longitude,
                     "created_at" AS "createdAt",
@@ -483,7 +494,9 @@ export function makeStationRepository(
                     id,
                     name,
                     address,
-                    capacity,
+                    total_capacity AS "totalCapacity",
+                    pickup_slot_limit AS "pickupSlotLimit",
+                    return_slot_limit AS "returnSlotLimit",
                     latitude,
                     longitude,
                     "created_at" AS "createdAt",
@@ -559,11 +572,17 @@ export function makeStationRepository(
 
         const [items, total] = yield* Effect.all([whereRadius, countEffect]);
         const stationIds = items.map(item => item.id);
-        const countsMap = yield* getBikeCounts(client, stationIds);
+        const [countsMap, returnSlotCountsMap] = yield* Effect.all([
+          getBikeCounts(client, stationIds),
+          getActiveReturnSlotCounts(client, stationIds),
+        ]);
         const mappedItems: NearestStationRow[] = items.map((item) => {
           const stationWithCounts = applyCounts(
             item,
-            countsMap.get(item.id),
+            {
+              ...countsMap.get(item.id)!,
+              activeReturnSlots: returnSlotCountsMap.get(item.id) ?? 0,
+            },
           );
           return {
             ...stationWithCounts,

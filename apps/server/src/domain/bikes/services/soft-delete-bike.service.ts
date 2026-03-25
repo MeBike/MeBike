@@ -30,7 +30,7 @@ export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
     const activeRental = yield* Effect.tryPromise({
       try: () =>
         client.rental.findFirst({
-          where: { bikeId, status: { in: ["RENTED", "RESERVED"] } },
+          where: { bikeId, status: "RENTED" },
           select: { id: true },
         }),
       catch: cause => cause,

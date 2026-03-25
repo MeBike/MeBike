@@ -47,7 +47,6 @@ import {
 
 export type {
   CreateRentalInput,
-  CreateReservedRentalInput,
   RentalRepo,
   UpdateRentalOnEndInput,
 } from "./rental.repository.types";
@@ -67,7 +66,10 @@ export function makeRentalRepository(
         tx.rental.create({
           data: {
             userId: data.userId,
+            reservationId: data.reservationId ?? null,
             bikeId: data.bikeId,
+            depositHoldId: data.depositHoldId ?? null,
+            pricingPolicyId: data.pricingPolicyId ?? null,
             startStationId: data.startStationId,
             startTime: data.startTime,
             subscriptionId: data.subscriptionId ?? null,
@@ -374,41 +376,38 @@ export function makeRentalRepository(
       return createRentalWithClient(client, data);
     },
 
-    createReservedRentalForReservation(data) {
+    updateRentalDepositHold(data) {
       return Effect.tryPromise({
-        try: () =>
-          client.rental.create({
-            data: {
-              id: data.reservationId,
-              userId: data.userId,
-              bikeId: data.bikeId,
-              startStationId: data.startStationId,
-              startTime: data.startTime,
-              status: "RESERVED",
-              subscriptionId: data.subscriptionId ?? null,
+        try: async () => {
+          const updated = await client.rental.updateMany({
+            where: {
+              id: data.rentalId,
+              depositHoldId: null,
             },
+            data: {
+              depositHoldId: data.depositHoldId,
+            },
+          });
+
+          if (updated.count === 0) {
+            return null;
+          }
+
+          return await client.rental.findUnique({
+            where: { id: data.rentalId },
             select,
+          });
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "updateRentalDepositHold",
+            cause: e,
           }),
-        catch: error =>
-          Match.value(error).pipe(
-            Match.when(
-              isPrismaUniqueViolation,
-              e =>
-                new RentalUniqueViolation({
-                  operation: "createReservedRentalForReservation",
-                  constraint: uniqueTargets(e),
-                  cause: e,
-                }),
-            ),
-            Match.orElse(
-              e =>
-                new RentalRepositoryError({
-                  operation: "createReservedRentalForReservation",
-                  cause: e,
-                }),
-            ),
-          ),
-      }).pipe(Effect.map(mapToRentalRow));
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
+        ),
+      );
     },
 
     updateRentalOnEnd(data) {
@@ -420,6 +419,7 @@ export function makeRentalRepository(
               status: "RENTED",
             },
             data: {
+              pricingPolicyId: data.pricingPolicyId ?? undefined,
               endStationId: data.endStationId,
               endTime: data.endTime,
               duration: data.durationMinutes,
@@ -467,92 +467,6 @@ export function makeRentalRepository(
           Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
         ),
       );
-    },
-
-    assignBikeToReservedRental(rentalId, bikeId, updatedAt) {
-      return Effect.tryPromise({
-        try: async () => {
-          const updated = await client.rental.updateMany({
-            where: {
-              id: rentalId,
-              bikeId: null,
-              status: "RESERVED",
-            },
-            data: {
-              bikeId,
-              updatedAt,
-            },
-          });
-          return updated.count > 0;
-        },
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "assignBikeToReservedRental",
-            cause: e,
-          }),
-      });
-    },
-
-    startReservedRental(rentalId, startTime, updatedAt, subscriptionId) {
-      return Effect.tryPromise({
-        try: async () => {
-          const updated = await client.rental.updateMany({
-            where: {
-              id: rentalId,
-              status: "RESERVED",
-            },
-            data: {
-              status: "RENTED",
-              startTime,
-              updatedAt,
-              subscriptionId,
-            },
-          });
-          return updated.count > 0;
-        },
-        catch: error =>
-          Match.value(error).pipe(
-            Match.when(
-              isPrismaUniqueViolation,
-              e =>
-                new RentalUniqueViolation({
-                  operation: "startReservedRental",
-                  constraint: uniqueTargets(e),
-                  cause: e,
-                }),
-            ),
-            Match.orElse(
-              e =>
-                new RentalRepositoryError({
-                  operation: "startReservedRental",
-                  cause: e,
-                }),
-            ),
-          ),
-      });
-    },
-
-    cancelReservedRental(rentalId, updatedAt) {
-      return Effect.tryPromise({
-        try: async () => {
-          const updated = await client.rental.updateMany({
-            where: {
-              id: rentalId,
-              status: "RESERVED",
-            },
-            data: {
-              status: "CANCELLED",
-              updatedAt,
-            },
-          });
-          return updated.count > 0;
-        },
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "cancelReservedRental",
-            cause: e,
-          }),
-      });
     },
 
     adminListRentals(filter, pageReq) {

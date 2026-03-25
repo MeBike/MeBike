@@ -10,6 +10,7 @@ import type { DB } from "generated/kysely/types";
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
 import { resetTestData } from "@/test/db/reset";
 import { seed } from "@/test/db/seed";
+import { seedDefaultPricingPolicy } from "@/test/db/seed-pricing-policy";
 import { getTestDatabase } from "@/test/db/test-database";
 import { createTestFactories } from "@/test/factories";
 import { makeAccessToken, makeAuthHeader } from "@/test/http/auth";
@@ -71,6 +72,7 @@ export function setupHttpE2eFixture(options: E2eFixtureOptions) {
 
   beforeEach(async () => {
     await resetTestData(prisma);
+    await seedDefaultPricingPolicy(prisma);
 
     if (options.seedBase ?? true) {
       await seed(testDb);

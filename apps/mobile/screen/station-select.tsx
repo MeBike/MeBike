@@ -107,18 +107,6 @@ export default function StationSelectScreen() {
       console.error("Error getting location:", error);
     }
   };
-  // React.useEffect(() => {
-  //   const fetchStations = async () => {
-  //     await getAllStations();
-  //     const stationsQuery = require("@hooks/query/Station/useGetAllStationQuery").useGetAllStation();
-  //     const response = stationsQuery.data;
-  //     if (response) {
-  //       setData(response as StationType[]);
-  //     }
-  //   };
-  //   fetchStations();
-  // }, [getAllStations]);
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
@@ -147,7 +135,7 @@ export default function StationSelectScreen() {
         ? (
             <StationMap
               stations={nearbyStations || []}
-              onStationPress={station => handleSelectStation(station._id)}
+              onStationPress={station => handleSelectStation(station.id)}
               userLocation={userLocation || undefined}
             />
           )
@@ -161,11 +149,11 @@ export default function StationSelectScreen() {
               : (
                   <FlatList
                     data={stations}
-                    keyExtractor={item => item._id}
+                    keyExtractor={item => item.id}
                     renderItem={({ item }) => (
                       <StationCard
                         station={item}
-                        onPress={() => handleSelectStation(item._id)}
+                        onPress={() => handleSelectStation(item.id)}
                       />
                     )}
                     contentContainerStyle={styles.list}

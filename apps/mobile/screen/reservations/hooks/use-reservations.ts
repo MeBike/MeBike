@@ -10,7 +10,7 @@ export type ReservationFilter = "pending" | "history";
 
 export const RESERVATION_FILTERS: Array<{ key: ReservationFilter; label: string }> = [
   { key: "pending", label: "Đang chờ" },
-  { key: "history", label: "Lịch sử đặt trước" },
+  { key: "history", label: "Lịch sử" },
 ];
 
 const PENDING_EMPTY_TEXT = "Bạn chưa có lượt đặt trước nào.";
@@ -89,7 +89,7 @@ export function useReservations(hasToken: boolean) {
   const stationMap = useMemo(() => {
     const map = new Map<string, { name: string; address?: string }>();
     (stations || []).forEach((station) => {
-      map.set(station._id, { name: station.name, address: station.address });
+      map.set(station.id, { name: station.name, address: station.address });
     });
     return map;
   }, [stations]);

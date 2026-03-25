@@ -44,6 +44,7 @@ const MAPPING = {
   "plus": "add",
   "minus": "remove",
   "xmark": "close",
+  "ellipsis": "more-horiz",
   "checkmark": "check",
   "checkmark.circle.fill": "check-circle",
   "checkmark.circle": "check-circle",
@@ -61,6 +62,7 @@ const MAPPING = {
   "folder": "folder-open",
   "doc.fill": "insert-drive-file",
   "doc": "insert-drive-file",
+  "doc.on.doc": "content-copy",
 
   // Media & Content
   "photo.fill": "image",
@@ -95,16 +97,21 @@ const MAPPING = {
   "star": "star",
   "bookmark.fill": "bookmark",
   "bookmark": "bookmark",
+  "tag": "local-offer",
 
   // Technology & Code
   "chevron.left.forwardslash.chevron.right": "code",
   "qrcode.viewfinder": "qr-code",
+  "cpu": "memory",
+  "number": "confirmation-number",
+  "wallet.pass.fill": "account-balance-wallet",
   "wifi": "wifi",
   "antenna.radiowaves.left.and.right": "signal-cellular-alt",
   "battery.100": "battery-full",
   "battery.25": "battery-2-bar",
   "lock": "lock",
   "lock.fill": "lock",
+  "lock.shield.fill": "shield",
   "lock.open.fill": "lock-open",
   "bicycle.circle.fill": "directions-bike",
   "bicycle.circle": "directions-bike",

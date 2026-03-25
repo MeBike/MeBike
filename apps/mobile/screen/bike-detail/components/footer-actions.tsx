@@ -1,7 +1,10 @@
 import React from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { YStack } from "tamagui";
 
-import { styles } from "../styles";
+import { colors } from "@theme/colors";
+import { borderWidths, spacing } from "@theme/metrics";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppText } from "@ui/primitives/app-text";
 
 export function FooterActions({
   bottomInset,
@@ -21,30 +24,55 @@ export function FooterActions({
   onReserve: () => void;
 }) {
   return (
-    <View style={[styles.footer, { paddingBottom: bottomInset + 16 }]}>
-      {!isBikeAvailable && (
-        <Text style={[styles.helperText, { textAlign: "center" }]}>
-          Xe đang bận, vui lòng chọn xe khác hoặc thử lại sau.
-        </Text>
-      )}
+    <YStack
+      backgroundColor="$surface"
+      borderTopColor="$borderSubtle"
+      borderTopWidth={borderWidths.subtle}
+      bottom={0}
+      left={0}
+      paddingBottom={bottomInset + spacing.lg}
+      paddingHorizontal="$5"
+      paddingTop="$4"
+      position="absolute"
+      right={0}
+      shadowColor={colors.shadowColor}
+      shadowOffset={{ width: 0, height: -10 }}
+      shadowOpacity={0.06}
+      shadowRadius={18}
+      elevation={8}
+    >
+      <YStack gap="$3">
+        {!isBikeAvailable
+          ? (
+              <AppText align="center" tone="muted" variant="bodySmall">
+                Xe hiện không khả dụng. Vui lòng chọn xe khác hoặc thử lại sau.
+              </AppText>
+            )
+          : null}
 
-      <TouchableOpacity
-        style={[styles.primaryButton, isPrimaryDisabled && styles.primaryButtonDisabled]}
-        onPress={onBookNow}
-        disabled={isPrimaryDisabled}
-      >
-        {isBookingNow
-          ? <ActivityIndicator color="#fff" />
-          : <Text style={styles.primaryButtonText}>Thuê ngay</Text>}
-      </TouchableOpacity>
+        <YStack flexDirection="row" gap="$3">
+          <AppButton
+            disabled={isReserveDisabled}
+            flex={1}
+            height={56}
+            tone="outline"
+            onPress={onReserve}
+          >
+            Đặt trước
+          </AppButton>
 
-      <TouchableOpacity
-        style={[styles.secondaryButton, isReserveDisabled && styles.primaryButtonDisabled]}
-        onPress={onReserve}
-        disabled={isReserveDisabled}
-      >
-        <Text style={styles.secondaryButtonText}>Đặt trước</Text>
-      </TouchableOpacity>
-    </View>
+          <AppButton
+            disabled={isPrimaryDisabled}
+            flex={2}
+            height={56}
+            loading={isBookingNow}
+            tone="primary"
+            onPress={onBookNow}
+          >
+            Thuê ngay
+          </AppButton>
+        </YStack>
+      </YStack>
+    </YStack>
   );
 }

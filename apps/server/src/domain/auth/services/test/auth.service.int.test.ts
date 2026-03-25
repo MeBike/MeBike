@@ -1,22 +1,17 @@
 import type { Either } from "effect";
 
 import bcrypt from "bcrypt";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Option } from "effect";
 import jwt from "jsonwebtoken";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { env } from "@/config/env";
-import { makeUserRepository } from "@/domain/users/repository/user.repository";
 import { expectLeftTag } from "@/test/effect/assertions";
-import { runEffectWithLayer } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { setupRedisIntFixture } from "@/test/redis/redis-int-fixture";
 
 import { OTP_MAX_ATTEMPTS } from "../../config";
-import { makeAuthEventRepository } from "../../repository/auth-event.repository";
-import { authRepositoryFactory } from "../../repository/auth.repository";
-import { AuthServiceTag, makeAuthService } from "../auth.service";
+import { makeAuthTestKit } from "./auth-test-kit";
 
 function expectInvalidOtp(result: Either.Either<unknown, { _tag: string; retriable?: boolean }>) {
   const error = expectLeftTag(result, "InvalidOtp") as { _tag: "InvalidOtp"; retriable: boolean };
@@ -39,52 +34,45 @@ function decodeSessionId(refreshToken: string) {
 describe("authService Integration", () => {
   const fixture = setupPrismaIntFixture();
   const redis = setupRedisIntFixture();
-  let depsLayer: Layer.Layer<AuthServiceTag>;
-
-  let authRepo: ReturnType<typeof authRepositoryFactory>;
-  let userRepo: ReturnType<typeof makeUserRepository>;
+  let auth: ReturnType<typeof makeAuthTestKit>;
 
   beforeAll(async () => {
-    authRepo = authRepositoryFactory(redis.client);
-    userRepo = makeUserRepository(fixture.prisma);
-
-    const authService = makeAuthService({
-      authRepo,
-      authEventRepo: makeAuthEventRepository(fixture.prisma),
-      userRepo,
-      client: fixture.prisma,
+    auth = makeAuthTestKit({
+      prisma: fixture.prisma,
+      redisClient: redis.client,
     });
-
-    depsLayer = Layer.succeed(AuthServiceTag, AuthServiceTag.make(authService));
   }, 60000);
 
-  const runWithService = <A, E>(
-    eff: Effect.Effect<A, E, AuthServiceTag>,
-  ) => runEffectWithLayer(eff, depsLayer);
-
-  const createUser = async (args: {
+  const createUser = (args: {
     email: string;
     password: string;
     verify?: "UNVERIFIED" | "VERIFIED";
     accountStatus?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
-  }) => {
-    const id = uuidv7();
-    const passwordHash = await bcrypt.hash(args.password, env.BCRYPT_SALT_ROUNDS);
-
-    await fixture.prisma.user.create({
-      data: {
-        id,
-        fullName: "Auth User",
-        email: args.email,
-        passwordHash,
-        role: "USER",
-        accountStatus: args.accountStatus ?? "ACTIVE",
-        verifyStatus: args.verify ?? "UNVERIFIED",
-      },
-    });
-
-    return { id, email: args.email, passwordHash };
-  };
+  }) => auth.createUser(args);
+  const loginWithPassword = (args: { email: string; password: string }) =>
+    auth.run(service => service.loginWithPassword(args));
+  const loginWithPasswordEither = (args: { email: string; password: string }) =>
+    auth.runEither(service => service.loginWithPassword(args));
+  const refreshTokens = (args: { refreshToken: string }) =>
+    auth.run(service => service.refreshTokens(args));
+  const refreshTokensEither = (args: { refreshToken: string }) =>
+    auth.runEither(service => service.refreshTokens(args));
+  const logout = (args: { refreshToken: string }) =>
+    auth.run(service => service.logout(args));
+  const logoutAll = (args: { userId: string }) =>
+    auth.run(service => service.logoutAll(args));
+  const verifyEmailOtp = (args: { userId: string; otp: string }) =>
+    auth.run(service => service.verifyEmailOtp(args));
+  const verifyEmailOtpEither = (args: { userId: string; otp: string }) =>
+    auth.runEither(service => service.verifyEmailOtp(args));
+  const verifyResetPasswordOtp = (args: { email: string; otp: string }) =>
+    auth.run(service => service.verifyResetPasswordOtp(args));
+  const verifyResetPasswordOtpEither = (args: { email: string; otp: string }) =>
+    auth.runEither(service => service.verifyResetPasswordOtp(args));
+  const resetPassword = (args: { resetToken: string; newPassword: string }) =>
+    auth.run(service => service.resetPassword(args));
+  const resetPasswordEither = (args: { resetToken: string; newPassword: string }) =>
+    auth.runEither(service => service.resetPassword(args));
 
   it("loginWithPassword creates tokens and session", async () => {
     const { email } = await createUser({
@@ -92,18 +80,13 @@ describe("authService Integration", () => {
       password: "Password123!",
     });
 
-    const tokens = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.loginWithPassword({
-          email,
-          password: "Password123!",
-        });
-      }),
-    );
+    const tokens = await loginWithPassword({
+      email,
+      password: "Password123!",
+    });
 
     const sessionId = decodeSessionId(tokens.refreshToken);
-    const sessionOpt = await Effect.runPromise(authRepo.getSession(sessionId));
+    const sessionOpt = await Effect.runPromise(auth.authRepo.getSession(sessionId));
 
     expect(Option.isSome(sessionOpt)).toBe(true);
   });
@@ -114,14 +97,7 @@ describe("authService Integration", () => {
       password: "Password123!",
     });
 
-    const result = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service
-          .loginWithPassword({ email, password: "wrong" })
-          .pipe(Effect.either);
-      }),
-    );
+    const result = await loginWithPasswordEither({ email, password: "wrong" });
 
     expectLeftTag(result, "InvalidCredentials");
   });
@@ -133,14 +109,10 @@ describe("authService Integration", () => {
       accountStatus: "BANNED",
     });
 
-    const result = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service
-          .loginWithPassword({ email, password: "Password123!" })
-          .pipe(Effect.either);
-      }),
-    );
+    const result = await loginWithPasswordEither({
+      email,
+      password: "Password123!",
+    });
 
     expectLeftTag(result, "InvalidCredentials");
   });
@@ -151,44 +123,29 @@ describe("authService Integration", () => {
       password: "Password123!",
     });
 
-    const initialTokens = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.loginWithPassword({
-          email,
-          password: "Password123!",
-        });
-      }),
-    );
+    const initialTokens = await loginWithPassword({
+      email,
+      password: "Password123!",
+    });
 
     const oldSessionId = decodeSessionId(initialTokens.refreshToken);
 
-    const refreshedTokens = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.refreshTokens({
-          refreshToken: initialTokens.refreshToken,
-        });
-      }),
-    );
+    const refreshedTokens = await refreshTokens({
+      refreshToken: initialTokens.refreshToken,
+    });
 
     expect(refreshedTokens.refreshToken).not.toBe(initialTokens.refreshToken);
 
-    const oldSession = await Effect.runPromise(authRepo.getSession(oldSessionId));
+    const oldSession = await Effect.runPromise(auth.authRepo.getSession(oldSessionId));
     expect(Option.isNone(oldSession)).toBe(true);
 
     const newSessionId = decodeSessionId(refreshedTokens.refreshToken);
-    const newSession = await Effect.runPromise(authRepo.getSession(newSessionId));
+    const newSession = await Effect.runPromise(auth.authRepo.getSession(newSessionId));
     expect(Option.isSome(newSession)).toBe(true);
   });
 
   it("refreshTokens rejects invalid token", async () => {
-    const result = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.refreshTokens({ refreshToken: "bad-token" }).pipe(Effect.either);
-      }),
-    );
+    const result = await refreshTokensEither({ refreshToken: "bad-token" });
 
     expectLeftTag(result, "InvalidRefreshToken");
   });
@@ -199,26 +156,16 @@ describe("authService Integration", () => {
       password: "Password123!",
     });
 
-    const tokens = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.loginWithPassword({
-          email,
-          password: "Password123!",
-        });
-      }),
-    );
+    const tokens = await loginWithPassword({
+      email,
+      password: "Password123!",
+    });
 
     const sessionId = decodeSessionId(tokens.refreshToken);
 
-    await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.logout({ refreshToken: tokens.refreshToken });
-      }),
-    );
+    await logout({ refreshToken: tokens.refreshToken });
 
-    const sessionOpt = await Effect.runPromise(authRepo.getSession(sessionId));
+    const sessionOpt = await Effect.runPromise(auth.authRepo.getSession(sessionId));
     expect(Option.isNone(sessionOpt)).toBe(true);
   });
 
@@ -228,38 +175,23 @@ describe("authService Integration", () => {
       password: "Password123!",
     });
 
-    const tokensA = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.loginWithPassword({
-          email,
-          password: "Password123!",
-        });
-      }),
-    );
+    const tokensA = await loginWithPassword({
+      email,
+      password: "Password123!",
+    });
 
-    const tokensB = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.loginWithPassword({
-          email,
-          password: "Password123!",
-        });
-      }),
-    );
+    const tokensB = await loginWithPassword({
+      email,
+      password: "Password123!",
+    });
 
     const sessionA = decodeSessionId(tokensA.refreshToken);
     const sessionB = decodeSessionId(tokensB.refreshToken);
 
-    await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.logoutAll({ userId });
-      }),
-    );
+    await logoutAll({ userId });
 
-    expect(Option.isNone(await Effect.runPromise(authRepo.getSession(sessionA)))).toBe(true);
-    expect(Option.isNone(await Effect.runPromise(authRepo.getSession(sessionB)))).toBe(true);
+    expect(Option.isNone(await Effect.runPromise(auth.authRepo.getSession(sessionA)))).toBe(true);
+    expect(Option.isNone(await Effect.runPromise(auth.authRepo.getSession(sessionB)))).toBe(true);
   });
 
   it("verifyEmailOtp marks user verified", async () => {
@@ -270,7 +202,7 @@ describe("authService Integration", () => {
     });
 
     await Effect.runPromise(
-      authRepo.saveEmailOtp({
+      auth.authRepo.saveEmailOtp({
         userId,
         email: "verify@example.com",
         kind: "verify-email",
@@ -279,14 +211,9 @@ describe("authService Integration", () => {
       }),
     );
 
-    await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyEmailOtp({ userId, otp: "123456" });
-      }),
-    );
+    await verifyEmailOtp({ userId, otp: "123456" });
 
-    const updated = await Effect.runPromise(userRepo.findById(userId));
+    const updated = await Effect.runPromise(auth.userRepo.findById(userId));
     if (Option.isNone(updated)) {
       throw new Error("Expected user to exist");
     }
@@ -301,7 +228,7 @@ describe("authService Integration", () => {
     });
 
     await Effect.runPromise(
-      authRepo.saveEmailOtp({
+      auth.authRepo.saveEmailOtp({
         userId,
         email: "verify-invalid@example.com",
         kind: "verify-email",
@@ -310,12 +237,7 @@ describe("authService Integration", () => {
       }),
     );
 
-    const result = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyEmailOtp({ userId, otp: "000000" }).pipe(Effect.either);
-      }),
-    );
+    const result = await verifyEmailOtpEither({ userId, otp: "000000" });
 
     const err = expectInvalidOtp(result);
     expect(err.retriable).toBe(true);
@@ -329,7 +251,7 @@ describe("authService Integration", () => {
     });
 
     await Effect.runPromise(
-      authRepo.saveEmailOtp({
+      auth.authRepo.saveEmailOtp({
         userId,
         email: "verify-retry@example.com",
         kind: "verify-email",
@@ -338,23 +260,13 @@ describe("authService Integration", () => {
       }),
     );
 
-    const firstResult = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyEmailOtp({ userId, otp: "000000" }).pipe(Effect.either);
-      }),
-    );
+    const firstResult = await verifyEmailOtpEither({ userId, otp: "000000" });
     const firstErr = expectInvalidOtp(firstResult);
     expect(firstErr.retriable).toBe(true);
 
-    await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyEmailOtp({ userId, otp: "123456" });
-      }),
-    );
+    await verifyEmailOtp({ userId, otp: "123456" });
 
-    const updated = await Effect.runPromise(userRepo.findById(userId));
+    const updated = await Effect.runPromise(auth.userRepo.findById(userId));
     if (Option.isNone(updated)) {
       throw new Error("Expected user to exist");
     }
@@ -367,19 +279,14 @@ describe("authService Integration", () => {
       password: "Password123!",
     });
 
-    const beforeResetTokens = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.loginWithPassword({
-          email,
-          password: "Password123!",
-        });
-      }),
-    );
+    const beforeResetTokens = await loginWithPassword({
+      email,
+      password: "Password123!",
+    });
     const beforeResetSessionId = decodeSessionId(beforeResetTokens.refreshToken);
 
     await Effect.runPromise(
-      authRepo.saveEmailOtp({
+      auth.authRepo.saveEmailOtp({
         userId,
         email,
         kind: "reset-password",
@@ -388,30 +295,20 @@ describe("authService Integration", () => {
       }),
     );
 
-    const verified = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyResetPasswordOtp({
-          email,
-          otp: "654321",
-        });
-      }),
-    );
+    const verified = await verifyResetPasswordOtp({
+      email,
+      otp: "654321",
+    });
 
-    await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
-          resetToken: verified.resetToken,
-          newPassword: "NewPassword123!",
-        });
-      }),
-    );
+    await resetPassword({
+      resetToken: verified.resetToken,
+      newPassword: "NewPassword123!",
+    });
 
-    const oldSession = await Effect.runPromise(authRepo.getSession(beforeResetSessionId));
+    const oldSession = await Effect.runPromise(auth.authRepo.getSession(beforeResetSessionId));
     expect(Option.isNone(oldSession)).toBe(true);
 
-    const updated = await Effect.runPromise(userRepo.findById(userId));
+    const updated = await Effect.runPromise(auth.userRepo.findById(userId));
     if (Option.isNone(updated)) {
       throw new Error("Expected user to exist");
     }
@@ -426,7 +323,7 @@ describe("authService Integration", () => {
     });
 
     await Effect.runPromise(
-      authRepo.saveEmailOtp({
+      auth.authRepo.saveEmailOtp({
         userId,
         email,
         kind: "reset-password",
@@ -435,15 +332,10 @@ describe("authService Integration", () => {
       }),
     );
 
-    const result = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyResetPasswordOtp({
-          email,
-          otp: "000000",
-        }).pipe(Effect.either);
-      }),
-    );
+    const result = await verifyResetPasswordOtpEither({
+      email,
+      otp: "000000",
+    });
 
     const err = expectInvalidOtp(result);
     expect(err.retriable).toBe(true);
@@ -456,7 +348,7 @@ describe("authService Integration", () => {
     });
 
     await Effect.runPromise(
-      authRepo.saveEmailOtp({
+      auth.authRepo.saveEmailOtp({
         userId,
         email,
         kind: "reset-password",
@@ -465,39 +357,24 @@ describe("authService Integration", () => {
       }),
     );
 
-    const firstResult = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyResetPasswordOtp({
-          email,
-          otp: "000000",
-        }).pipe(Effect.either);
-      }),
-    );
+    const firstResult = await verifyResetPasswordOtpEither({
+      email,
+      otp: "000000",
+    });
     const firstErr = expectInvalidOtp(firstResult);
     expect(firstErr.retriable).toBe(true);
 
-    const verified = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyResetPasswordOtp({
-          email,
-          otp: "111111",
-        });
-      }),
-    );
+    const verified = await verifyResetPasswordOtp({
+      email,
+      otp: "111111",
+    });
 
-    await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
-          resetToken: verified.resetToken,
-          newPassword: "NewPassword123!",
-        });
-      }),
-    );
+    await resetPassword({
+      resetToken: verified.resetToken,
+      newPassword: "NewPassword123!",
+    });
 
-    const updated = await Effect.runPromise(userRepo.findById(userId));
+    const updated = await Effect.runPromise(auth.userRepo.findById(userId));
     if (Option.isNone(updated)) {
       throw new Error("Expected user to exist");
     }
@@ -512,7 +389,7 @@ describe("authService Integration", () => {
     });
 
     await Effect.runPromise(
-      authRepo.saveEmailOtp({
+      auth.authRepo.saveEmailOtp({
         userId,
         email,
         kind: "reset-password",
@@ -522,43 +399,28 @@ describe("authService Integration", () => {
     );
 
     for (let i = 0; i < OTP_MAX_ATTEMPTS; i += 1) {
-      const result = await runWithService(
-        Effect.gen(function* () {
-          const service = yield* AuthServiceTag;
-          return yield* service.verifyResetPasswordOtp({
-            email,
-            otp: "000000",
-          }).pipe(Effect.either);
-        }),
-      );
+      const result = await verifyResetPasswordOtpEither({
+        email,
+        otp: "000000",
+      });
 
       const err = expectInvalidOtp(result);
       expect(err.retriable).toBe(i < OTP_MAX_ATTEMPTS - 1);
     }
 
-    const finalResult = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyResetPasswordOtp({
-          email,
-          otp: "111111",
-        }).pipe(Effect.either);
-      }),
-    );
+    const finalResult = await verifyResetPasswordOtpEither({
+      email,
+      otp: "111111",
+    });
     const finalErr = expectInvalidOtp(finalResult);
     expect(finalErr.retriable).toBe(false);
   });
 
   it("resetPassword rejects invalid reset token", async () => {
-    const result = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
-          resetToken: "invalid-token",
-          newPassword: "NewPassword123!",
-        }).pipe(Effect.either);
-      }),
-    );
+    const result = await resetPasswordEither({
+      resetToken: "invalid-token",
+      newPassword: "NewPassword123!",
+    });
 
     expectInvalidResetToken(result);
   });
@@ -570,7 +432,7 @@ describe("authService Integration", () => {
     });
 
     await Effect.runPromise(
-      authRepo.saveEmailOtp({
+      auth.authRepo.saveEmailOtp({
         userId,
         email,
         kind: "reset-password",
@@ -579,57 +441,37 @@ describe("authService Integration", () => {
       }),
     );
 
-    const verified = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.verifyResetPasswordOtp({
-          email,
-          otp: "654321",
-        });
-      }),
-    );
+    const verified = await verifyResetPasswordOtp({
+      email,
+      otp: "654321",
+    });
 
-    await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
-          resetToken: verified.resetToken,
-          newPassword: "NewPassword123!",
-        });
-      }),
-    );
+    await resetPassword({
+      resetToken: verified.resetToken,
+      newPassword: "NewPassword123!",
+    });
 
-    const secondUse = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
-          resetToken: verified.resetToken,
-          newPassword: "AnotherPassword123!",
-        }).pipe(Effect.either);
-      }),
-    );
+    const secondUse = await resetPasswordEither({
+      resetToken: verified.resetToken,
+      newPassword: "AnotherPassword123!",
+    });
 
     expectInvalidResetToken(secondUse);
   });
 
   it("resetPassword returns InvalidResetToken when token user does not exist", async () => {
     const resetToken = "token-missing-user";
-    await Effect.runPromise(authRepo.saveResetPasswordToken({
+    await Effect.runPromise(auth.authRepo.saveResetPasswordToken({
       token: resetToken,
       userId: uuidv7(),
       email: "missing-user@example.com",
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     }));
 
-    const result = await runWithService(
-      Effect.gen(function* () {
-        const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
-          resetToken,
-          newPassword: "NewPassword123!",
-        }).pipe(Effect.either);
-      }),
-    );
+    const result = await resetPasswordEither({
+      resetToken,
+      newPassword: "NewPassword123!",
+    });
 
     expectInvalidResetToken(result);
   });

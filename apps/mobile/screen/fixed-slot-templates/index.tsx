@@ -1,12 +1,12 @@
 import { BikeColors } from "@constants/BikeColors";
 import { useCancelFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useCancelFixedSlotTemplateMutation";
+import { useFixedSlotTemplatesQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplatesQuery";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@utils/error";
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { FixedSlotStatus } from "@/types/fixed-slot-types";
 import type {
@@ -17,7 +17,6 @@ import type {
 import { FixedSlotFilterBar } from "./components/filter-bar";
 import { FixedSlotTemplatesHeader } from "./components/header";
 import { FixedSlotTemplatesList } from "./components/templates-list";
-import { useFixedSlotTemplatesQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplatesQuery";
 
 const styles = StyleSheet.create({
   container: {
@@ -39,7 +38,6 @@ export default function FixedSlotTemplatesScreen() {
   const navigation = useNavigation<FixedSlotTemplatesNavigationProp>();
   const route = useRoute<FixedSlotTemplatesRouteProp>();
   const { stationId, stationName } = route.params ?? {};
-  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
@@ -133,7 +131,6 @@ export default function FixedSlotTemplatesScreen() {
   return (
     <View style={styles.container}>
       <FixedSlotTemplatesHeader
-        topInset={insets.top}
         title={headerTitle}
         onBack={() => navigation.goBack()}
       />

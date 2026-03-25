@@ -4,7 +4,6 @@ import type { BikeRepository } from "@/domain/bikes";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
-import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import { toMinorUnit } from "@/domain/shared/money";
 import { WalletServiceTag } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
@@ -23,24 +22,22 @@ export type CancelReservationInput = {
   readonly now?: Date;
 };
 
-export function cancelReservationUseCase(
+export function cancelReservation(
   input: CancelReservationInput,
 ): Effect.Effect<
   ReservationRow,
   ReservationServiceFailure,
-  Prisma | ReservationServiceTag | BikeRepository | RentalRepository | WalletServiceTag
+  Prisma | ReservationServiceTag | BikeRepository | WalletServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const reservationService = yield* ReservationServiceTag;
-    yield* RentalRepository;
     const walletService = yield* WalletServiceTag;
     const now = input.now ?? new Date();
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
         const bikeRepo = makeBikeRepository(tx);
-        const txRentalRepo = makeRentalRepository(tx);
         const updatedReservation = yield* reservationService.cancelPendingInTx(
           tx,
           {
@@ -48,10 +45,6 @@ export function cancelReservationUseCase(
             userId: input.userId,
             now,
           },
-        );
-
-        yield* txRentalRepo.cancelReservedRental(updatedReservation.id, now).pipe(
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
         );
 
         const bikeId = updatedReservation.bikeId;

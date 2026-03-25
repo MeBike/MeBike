@@ -1,163 +1,172 @@
-import { Ionicons } from "@expo/vector-icons";
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { radii } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { StatusBadge } from "@ui/primitives/status-badge";
+import { formatVietnamDateTime } from "@utils/date";
+import {
+  getReservationOptionLabel,
+  getReservationStatusLabel,
+  getReservationStatusTone,
+} from "@utils/reservation";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { XStack, YStack } from "tamagui";
 
-import type { Reservation } from "../../../types/reservation-types";
+import type { Reservation } from "@/types/reservation-types";
 
-import { formatCurrency, formatDateTime, statusColorMap } from "../../../utils/reservation-screen-utils";
+import { formatCurrency } from "../../../utils/reservation-screen-utils";
 
 type ReservationCardProps = {
   reservation: Reservation;
   stationName?: string;
-  stationId: string;
   onPress: () => void;
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  cardHeader: {
-    flexDirection: "column",
-    marginBottom: 12,
-  },
-  cardTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  cardTitleContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#263238",
-  },
-  cardSubtitle: {
-    fontSize: 13,
-    color: "#607D8B",
-    marginTop: 2,
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    maxWidth: "70%",
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#fff",
-    textTransform: "uppercase",
-  },
-  cardBody: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#ECEFF1",
-    paddingTop: 12,
-    gap: 8,
-  },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  detailText: {
-    fontSize: 14,
-    color: "#455A64",
-  },
-  detailHighlight: {
-    fontWeight: "600",
-    color: "#0066FF",
-  },
-  cardFooter: {
-    marginTop: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 6,
-  },
-  footerText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#0066FF",
-  },
-});
+function splitFormattedDateTime(value?: string | null) {
+  const formatted = value ? formatVietnamDateTime(value) : "--";
+  const [date = formatted, time] = formatted.split(" ");
+  return {
+    date,
+    time: time ?? undefined,
+  };
+}
+
+function getReservationTitle(reservation: Reservation) {
+  if (reservation.bikeId) {
+    return `Xe #${String(reservation.bikeId).slice(-4)}`;
+  }
+
+  return "Chỗ trống tại trạm";
+}
+
+function getReservationStatusIcon(status: Reservation["status"]) {
+  if (status === "ACTIVE") {
+    return "checkmark.circle" as const;
+  }
+
+  return undefined;
+}
 
 export function ReservationCard({
   reservation,
   stationName,
-  stationId,
   onPress,
 }: ReservationCardProps) {
+  const createdAt = splitFormattedDateTime(reservation.createdAt);
+  const startTime = splitFormattedDateTime(reservation.startTime);
+  const endTime = splitFormattedDateTime(reservation.endTime);
+  const statusTone = getReservationStatusTone(reservation.status);
+  const isPending = reservation.status === "PENDING";
+  const statusIcon = getReservationStatusIcon(reservation.status);
+  const cardTitle = getReservationTitle(reservation);
+  const createdAtLabel = createdAt.time ? `${createdAt.time} ${createdAt.date}` : createdAt.date;
+  const timeRangeLabel = `${startTime.time ?? startTime.date} đến ${endTime.time ?? "--:--"}`;
+  const stationLabel = stationName ?? reservation.station?.name ?? "Không xác định";
+  const titleLineCount = reservation.bikeId ? 1 : 2;
+
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={onPress}>
-      <View style={styles.cardHeader}>
-        <View style={styles.cardTitleRow}>
-          <View style={styles.cardTitleContent}>
-            <Ionicons name="bicycle" size={22} color="#0066FF" />
-            <Text style={styles.cardTitle}>
-              Xe #
-              {String(reservation.bikeId ?? "").slice(-4) || reservation.bikeId}
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: statusColorMap[reservation.status] ?? "#0066FF" },
-            ]}
-          >
-            <Text style={styles.statusText}>{reservation.status}</Text>
-          </View>
-        </View>
-        <Text style={styles.cardSubtitle}>
-          Bắt đầu:
-          {" "}
-          {formatDateTime(reservation.startTime)}
-        </Text>
-      </View>
+    <Pressable onPress={onPress}>
+      {({ pressed }) => (
+        <View
+          style={{
+            opacity: pressed ? 0.98 : 1,
+            shadowColor: colors.shadowColor,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.08,
+            shadowRadius: 20,
+            elevation: 4,
+          }}
+        >
+          <AppCard borderRadius={radii.xxl} elevated={false} overflow="hidden" padding="$0">
+            <YStack>
+              <XStack alignItems="flex-start" gap="$3" justifyContent="space-between" padding="$4" paddingBottom="$3">
+                <XStack alignItems="center" flex={1} gap="$3">
+                  <XStack
+                    alignItems="center"
+                    backgroundColor="$surfaceAccent"
+                    borderRadius="$round"
+                    height={56}
+                    justifyContent="center"
+                    width={56}
+                  >
+                    <IconSymbol
+                      color={colors.brandPrimary}
+                      name={reservation.bikeId ? "bicycle" : "location"}
+                      size={24}
+                    />
+                  </XStack>
 
-      <View style={styles.cardBody}>
-        <View style={styles.detailRow}>
-          <Ionicons name="navigate" size={18} color="#666" />
-          <Text style={styles.detailText}>
-            Trạm:
-            {" "}
-            {stationName ?? reservation.station?.name ?? `Mã ${String(stationId ?? "").slice(-6)}`}
-          </Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Ionicons name="time" size={18} color="#666" />
-          <Text style={styles.detailText}>
-            Giữ chỗ đến:
-            {" "}
-            {formatDateTime(reservation.endTime)}
-          </Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Ionicons name="wallet" size={18} color="#0066FF" />
-          <Text style={[styles.detailText, styles.detailHighlight]}>
-            Đã thanh toán:
-            {" "}
-            {formatCurrency(reservation.prepaid)}
-          </Text>
-        </View>
-      </View>
+                  <YStack flex={1} gap="$1" justifyContent="center" minWidth={0} paddingRight="$2">
+                    <AppText numberOfLines={titleLineCount} variant="cardTitle">
+                      {cardTitle}
+                    </AppText>
+                    <AppText numberOfLines={1} tone="subtle" variant="meta">
+                      {createdAtLabel}
+                    </AppText>
+                  </YStack>
+                </XStack>
 
-      <View style={styles.cardFooter}>
-        <Text style={styles.footerText}>Xem chi tiết</Text>
-        <Ionicons name="chevron-forward" size={18} color="#0066FF" />
-      </View>
-    </TouchableOpacity>
+                <XStack alignSelf="flex-start" flexShrink={0}>
+                  <StatusBadge
+                    iconName={statusIcon}
+                    label={getReservationStatusLabel(reservation.status)}
+                    pulseDot={isPending}
+                    size="compact"
+                    tone={statusTone}
+                    withDot={reservation.status !== "FULFILLED" && reservation.status !== "EXPIRED"}
+                  />
+                </XStack>
+              </XStack>
+
+              <YStack
+                backgroundColor={colors.surfaceMuted}
+                gap="$4"
+                paddingHorizontal="$5"
+                paddingVertical="$4"
+              >
+                <XStack alignItems="center" gap="$3">
+                  <IconSymbol color={colors.textMuted} name="location" size={20} />
+                  <AppText flex={1} numberOfLines={2} variant="subhead">
+                    {stationLabel}
+                  </AppText>
+                </XStack>
+
+                <XStack alignItems="flex-start" gap="$3">
+                  <IconSymbol color={colors.textMuted} name="clock" size={20} style={{ marginTop: 1 }} />
+                  <YStack flex={1} gap="$1">
+                    <AppText variant="subhead">
+                      {timeRangeLabel}
+                    </AppText>
+                    <AppText tone="subtle" variant="meta">
+                      {startTime.date}
+                    </AppText>
+                  </YStack>
+                </XStack>
+
+                <XStack alignItems="center" gap="$3">
+                  <IconSymbol color={colors.textMuted} name="tag" size={20} />
+                  <AppText tone="muted" variant="bodySmall">
+                    {getReservationOptionLabel(reservation.reservationOption)}
+                  </AppText>
+                </XStack>
+
+                <XStack alignItems="center" gap="$3">
+                  <IconSymbol color={colors.brandPrimary} name="wallet.pass.fill" size={20} />
+                  <AppText tone="muted" variant="bodySmall">
+                    Đã thanh toán:
+                    {" "}
+                    <AppText tone="brand" variant="bodyStrong">
+                      {formatCurrency(reservation.prepaid)}
+                    </AppText>
+                  </AppText>
+                </XStack>
+              </YStack>
+            </YStack>
+          </AppCard>
+        </View>
+      )}
+    </Pressable>
   );
 }

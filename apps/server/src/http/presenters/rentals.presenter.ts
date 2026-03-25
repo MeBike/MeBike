@@ -5,8 +5,19 @@ import type {
   AdminRentalListItem,
   BikeSwapRequestRow,
   RentalRow,
+  ReturnSlotRow,
   StaffBikeSwapRequestRow,
 } from "@/domain/rentals";
+
+function toContractRentalDeposit(row: RentalRow) {
+  return {
+    depositAmount: row.depositAmount ?? undefined,
+    depositStatus: row.depositStatus,
+    depositHeldAt: row.depositHeldAt?.toISOString(),
+    depositReleasedAt: row.depositReleasedAt?.toISOString() ?? undefined,
+    depositForfeitedAt: row.depositForfeitedAt?.toISOString() ?? undefined,
+  } as const;
+}
 
 export function toContractRental(
   row: RentalRow,
@@ -22,6 +33,7 @@ export function toContractRental(
     duration: row.durationMinutes ?? 0,
     totalPrice: row.totalPrice ?? undefined,
     subscriptionId: row.subscriptionId ?? undefined,
+    ...toContractRentalDeposit(row),
     status: row.status,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -41,6 +53,7 @@ export function toContractRentalWithPrice(
     duration: row.durationMinutes ?? 0,
     totalPrice: row.totalPrice ?? 0,
     subscriptionId: row.subscriptionId ?? undefined,
+    ...toContractRentalDeposit(row),
     status: row.status,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -122,7 +135,7 @@ export function toContractAdminRentalDetail(
       address: detail.startStation.address,
       latitude: detail.startStation.latitude,
       longitude: detail.startStation.longitude,
-      capacity: detail.startStation.capacity,
+      totalCapacity: detail.startStation.totalCapacity,
       updatedAt: detail.startStation.updatedAt.toISOString(),
     },
     endStation: detail.endStation
@@ -132,7 +145,7 @@ export function toContractAdminRentalDetail(
           address: detail.endStation.address,
           latitude: detail.endStation.latitude,
           longitude: detail.endStation.longitude,
-          capacity: detail.endStation.capacity,
+          totalCapacity: detail.endStation.totalCapacity,
           updatedAt: detail.endStation.updatedAt.toISOString(),
         }
       : null,
@@ -209,6 +222,21 @@ export function toContractBikeSwapRequestDetail(
         }
       : null,
     reason: row.reason || null,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toContractReturnSlot(
+  row: ReturnSlotRow,
+): RentalsContracts.ReturnSlotReservation {
+  return {
+    id: row.id,
+    rentalId: row.rentalId,
+    userId: row.userId,
+    stationId: row.stationId,
+    reservedFrom: row.reservedFrom.toISOString(),
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

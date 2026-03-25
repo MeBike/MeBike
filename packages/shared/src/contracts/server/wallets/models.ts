@@ -14,6 +14,8 @@ export const WalletDetailSchema = z.object({
   id: z.uuidv7(),
   userId: z.uuidv7(),
   balance: z.string().openapi({ example: "100000" }),
+  availableBalance: z.string().openapi({ example: "80000" }),
+  reservedBalance: z.string().openapi({ example: "20000" }),
   status: WalletStatusSchema,
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),

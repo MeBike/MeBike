@@ -5,13 +5,13 @@ import Mapbox from "@rnmapbox/maps";
 import React, { useEffect, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import type { StationType } from "../types/StationType";
+import type { StationReadSummary } from "@/contracts/server";
 
 import { StationMapMarker } from "./station-map-marker";
 
 type StationMapProps = {
-  stations: StationType[];
-  onStationPress?: (station: StationType) => void;
+  stations: StationReadSummary[];
+  onStationPress?: (station: StationReadSummary) => void;
   onMapPress?: () => void;
   route?: MapboxRouteLine | null;
   selectedStationId?: string | null;
@@ -76,7 +76,7 @@ export default function StationMap({
       return [userLocation.longitude, userLocation.latitude];
     const first = stations[0];
     if (first)
-      return [Number.parseFloat(first.longitude), Number.parseFloat(first.latitude)];
+      return [first.location.longitude, first.location.latitude];
     return [106.660172, 10.762622];
   }, [stations, userLocation]);
 
@@ -110,11 +110,11 @@ export default function StationMap({
 
         {stations.map(station => (
           <Mapbox.MarkerView
-            key={station._id}
-            id={station._id}
+            key={station.id}
+            id={station.id}
             coordinate={[
-              Number.parseFloat(station.longitude),
-              Number.parseFloat(station.latitude),
+              station.location.longitude,
+              station.location.latitude,
             ]}
           >
             <Pressable
@@ -130,7 +130,7 @@ export default function StationMap({
                 onStationPress?.(station);
               }}
             >
-              <StationMapMarker count={station.availableBikes} isSelected={station._id === selectedStationId} />
+              <StationMapMarker count={station.bikes.available} isSelected={station.id === selectedStationId} />
             </Pressable>
           </Mapbox.MarkerView>
         ))}

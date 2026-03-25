@@ -1,32 +1,120 @@
-import { BikeColors } from "@constants/BikeColors";
-import { Ionicons } from "@expo/vector-icons";
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { borderWidths } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable } from "react-native";
+import { XStack, YStack } from "tamagui";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
 
 import type { PaymentMode } from "../types";
 
-import { styles } from "../styles";
+import { bikeDetailTextStyles } from "../text-styles";
 
-const localStyles = StyleSheet.create({
-  subscriptionTextCol: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  subscriptionTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#111827",
-    letterSpacing: 0.3,
-  },
-  subscriptionMeta: {
-    marginTop: 2,
-    fontSize: 13,
-    color: "#6B7280",
-  },
-});
+function PaymentOption({
+  title,
+  subtitle,
+  icon,
+  isActive,
+  onPress,
+}: {
+  title: string;
+  subtitle: string;
+  icon: React.ComponentProps<typeof IconSymbol>["name"];
+  isActive: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={{ flex: 1 }}>
+      {({ pressed }) => (
+        <YStack
+          backgroundColor={isActive ? "$surfaceAccent" : "$surface"}
+          borderColor={isActive ? "$brandPrimary" : "$borderSubtle"}
+          borderRadius="$3"
+          borderWidth={borderWidths.strong}
+          opacity={pressed ? 0.9 : 1}
+          padding="$3"
+        >
+          <YStack gap="$2">
+            <XStack alignItems="center" gap="$2" justifyContent="space-between">
+              <XStack alignItems="center" flex={1} gap="$2">
+                <IconSymbol color={isActive ? colors.brandPrimary : colors.textMuted} name={icon} size={20} />
+                <AppText style={[bikeDetailTextStyles.optionTitle, isActive ? bikeDetailTextStyles.optionTitleActive : null]}>
+                  {title}
+                </AppText>
+              </XStack>
+
+              {isActive
+                ? <IconSymbol color={colors.brandPrimary} name="checkmark.circle.fill" size={18} />
+                : null}
+            </XStack>
+
+            <AppText style={[bikeDetailTextStyles.optionSubtitle, isActive ? bikeDetailTextStyles.optionSubtitleActive : null]}>
+              {subtitle}
+            </AppText>
+          </YStack>
+        </YStack>
+      )}
+    </Pressable>
+  );
+}
+
+function SubscriptionSelector({
+  activeSubscriptions,
+  selectedSubscriptionId,
+  onSelectSubscription,
+}: {
+  activeSubscriptions: Subscription[];
+  selectedSubscriptionId: string | null;
+  onSelectSubscription: (subscriptionId: string) => void;
+}) {
+  return (
+    <YStack gap="$2">
+      {activeSubscriptions.map((subscription) => {
+        const remaining = subscription.maxUsages != null
+          ? Math.max(0, subscription.maxUsages - subscription.usageCount)
+          : null;
+        const isActive = subscription.id === selectedSubscriptionId;
+
+        return (
+          <Pressable key={subscription.id} onPress={() => onSelectSubscription(subscription.id)}>
+            {({ pressed }) => (
+              <XStack
+                alignItems="center"
+                backgroundColor={isActive ? "$surfaceAccent" : "$surfaceMuted"}
+                borderColor={isActive ? "$brandPrimary" : "$borderSubtle"}
+                borderRadius="$3"
+                borderWidth={borderWidths.subtle}
+                justifyContent="space-between"
+                opacity={pressed ? 0.9 : 1}
+                paddingHorizontal="$3"
+                paddingVertical="$3"
+              >
+                <YStack flex={1} gap="$1" paddingRight="$2">
+                  <AppText numberOfLines={1} style={bikeDetailTextStyles.subscriptionTitle}>
+                    {subscription.packageName}
+                  </AppText>
+                  <AppText style={bikeDetailTextStyles.subscriptionMeta}>
+                    {remaining != null ? `${remaining} / ${subscription.maxUsages} lượt còn lại` : "Không giới hạn lượt"}
+                  </AppText>
+                </YStack>
+
+                <IconSymbol
+                  color={isActive ? colors.brandPrimary : colors.textMuted}
+                  name={isActive ? "checkmark.circle.fill" : "circle"}
+                  size={20}
+                />
+              </XStack>
+            )}
+          </Pressable>
+        );
+      })}
+    </YStack>
+  );
+}
 
 export function PaymentMethodCard({
   paymentMode,
@@ -48,104 +136,73 @@ export function PaymentMethodCard({
   navigation: BikeDetailNavigationProp;
 }) {
   return (
-    <View style={styles.card}>
-      <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
-      <View style={styles.paymentToggle}>
-        <TouchableOpacity
-          style={[
-            styles.paymentButton,
-            paymentMode === "wallet" && styles.paymentButtonActive,
-          ]}
-          onPress={() => onSelectPaymentMode("wallet")}
-          activeOpacity={0.9}
-        >
-          <Text style={styles.paymentButtonLabel}>Ví MeBike</Text>
-          <Text style={styles.paymentButtonHint}>Thanh toán bằng số dư hiện có</Text>
-        </TouchableOpacity>
+    <AppCard borderRadius="$5" padding="$4">
+      <YStack gap="$3">
+        <XStack gap="$3">
+          <PaymentOption
+            icon="wallet.pass.fill"
+            isActive={paymentMode === "wallet"}
+            onPress={() => onSelectPaymentMode("wallet")}
+            subtitle="Số dư hiện có"
+            title="Ví MeBike"
+          />
+          <PaymentOption
+            icon="creditcard.fill"
+            isActive={paymentMode === "subscription"}
+            onPress={() => onSelectPaymentMode("subscription")}
+            subtitle={canUseSubscription ? "Gói đã đăng ký" : "Chưa có gói hoạt động"}
+            title="Gói tháng"
+          />
+        </XStack>
 
-        <TouchableOpacity
-          style={[
-            styles.paymentButton,
-            paymentMode === "subscription" && styles.paymentButtonActive,
-            !canUseSubscription && styles.paymentButtonDisabled,
-          ]}
-          onPress={() => onSelectPaymentMode("subscription")}
-          disabled={!canUseSubscription}
-          activeOpacity={0.9}
-        >
-          <Text style={styles.paymentButtonLabel}>Gói tháng</Text>
-          <Text style={styles.paymentButtonHint}>
-            {canUseSubscription ? "Sử dụng gói đã đăng ký" : "Chưa có gói hoạt động"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        {paymentMode === "wallet"
+          ? (
+              <XStack
+                alignItems="center"
+                backgroundColor="$surfaceMuted"
+                borderColor="$borderSubtle"
+                borderRadius="$3"
+                borderWidth={borderWidths.subtle}
+                justifyContent="space-between"
+                paddingHorizontal="$4"
+                paddingVertical="$3"
+              >
+                <AppText style={bikeDetailTextStyles.balanceLabel}>Số dư khả dụng</AppText>
+                <AppText style={bikeDetailTextStyles.balanceValue}>
+                  {walletBalance != null ? `${walletBalance.toLocaleString("vi-VN")} đ` : "--"}
+                </AppText>
+              </XStack>
+            )
+          : null}
 
-      {paymentMode === "wallet" && (
-        <View style={{ marginTop: 16 }}>
-          <Text style={styles.helperText}>Số dư khả dụng</Text>
-          <Text style={styles.walletBalance}>
-            {walletBalance != null ? `${walletBalance.toLocaleString("vi-VN")} đ` : "--"}
-          </Text>
-        </View>
-      )}
+        {paymentMode === "subscription" && activeSubscriptions.length > 0
+          ? <SubscriptionSelector activeSubscriptions={activeSubscriptions} onSelectSubscription={onSelectSubscription} selectedSubscriptionId={selectedSubscriptionId} />
+          : null}
 
-      {paymentMode === "subscription" && (
-        <View style={{ marginTop: 16, gap: 12 }}>
-          {activeSubscriptions.length === 0
-            ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.helperText}>
-                    Bạn chưa có gói tháng hoạt động.
-                    {" "}
-                    <Text
-                      style={styles.linkText}
-                      onPress={() => navigation.navigate("Subscriptions")}
-                    >
-                      Đăng ký ngay
-                    </Text>
-                  </Text>
-                </View>
-              )
-            : (
-                <View style={styles.subscriptionList}>
-                  {activeSubscriptions.map((subscription) => {
-                    const maxUsages = subscription.maxUsages;
-                    const remaining = maxUsages != null
-                      ? Math.max(0, maxUsages - subscription.usageCount)
-                      : null;
-                    const isActive = subscription.id === selectedSubscriptionId;
-                    return (
-                      <TouchableOpacity
-                        key={subscription.id}
-                        style={[
-                          styles.subscriptionCard,
-                          isActive && styles.subscriptionCardActive,
-                        ]}
-                        onPress={() => onSelectSubscription(subscription.id)}
-                        activeOpacity={0.9}
-                      >
-                        <View style={localStyles.subscriptionTextCol}>
-                          <Text style={localStyles.subscriptionTitle} numberOfLines={1}>
-                            {subscription.packageName.toUpperCase()}
-                          </Text>
-                          <Text style={localStyles.subscriptionMeta}>
-                            {maxUsages != null
-                              ? `${remaining} / ${maxUsages} còn lại`
-                              : "Không giới hạn"}
-                          </Text>
-                        </View>
-                        <Ionicons
-                          name={isActive ? "checkmark-circle" : "ellipse-outline"}
-                          size={22}
-                          color={BikeColors.primary}
-                        />
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-        </View>
-      )}
-    </View>
+        {paymentMode === "subscription" && activeSubscriptions.length === 0
+          ? (
+              <XStack
+                alignItems="center"
+                backgroundColor="$surfaceMuted"
+                borderColor="$borderSubtle"
+                borderRadius="$3"
+                borderWidth={borderWidths.subtle}
+                justifyContent="space-between"
+                paddingHorizontal="$4"
+                paddingVertical="$3"
+              >
+                <AppText flex={1} style={bikeDetailTextStyles.balanceLabel}>Bạn chưa có gói tháng hoạt động</AppText>
+                <Pressable onPress={() => navigation.navigate("Subscriptions")}>
+                  {({ pressed }) => (
+                    <AppText opacity={pressed ? 0.8 : 1} style={bikeDetailTextStyles.linkText}>
+                      Xem gói tháng
+                    </AppText>
+                  )}
+                </Pressable>
+              </XStack>
+            )
+          : null}
+      </YStack>
+    </AppCard>
   );
 }

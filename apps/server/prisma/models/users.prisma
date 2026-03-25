@@ -33,28 +33,29 @@ model User {
   createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt                DateTime         @updatedAt @map("updated_at") @db.Timestamptz
 
-  authEvents       AuthEvent[]
-  subscriptions    Subscription[]
-  fixedSlots       FixedSlotTemplate[]
-  reservations     Reservation[]
-  rentals          Rental[]
-  ratings          Rating[]
-  wallet           Wallet?
-  payments         Payment[]
-  paymentAttempts  PaymentAttempt[]
-  withdrawals      WalletWithdrawal[]
-  bikeSwapRequests BikeSwapRequest[]
-  pushTokens      PushToken[]
-  orgAssignment   UserOrgAssignment?
-  userCoupons     UserCoupon[]
-  returnConfirmations ReturnConfirmation[]
-  reportedIncidents IncidentReport[]
-  technicianAssignments TechnicianAssignment[] @relation("TechnicianAssignmentTechnicianUser")
-  assignedTechnicianAssignments TechnicianAssignment[] @relation("TechnicianAssignmentAssignedByUser")
-  bikeMaintenanceLogs BikeMaintenanceLog[]
-  requestedRedistributionRequests RedistributionRequest[] @relation("RedistributionRequestRequestedByUser")
-  approvedRedistributionRequests RedistributionRequest[] @relation("RedistributionRequestApprovedByUser")
-  environmentalImpactStats EnvironmentalImpactStat[]
+  authEvents                      AuthEvent[]
+  subscriptions                   Subscription[]
+  fixedSlots                      FixedSlotTemplate[]
+  reservations                    Reservation[]
+  rentals                         Rental[]
+  ratings                         Rating[]
+  wallet                          Wallet?
+  payments                        Payment[]
+  paymentAttempts                 PaymentAttempt[]
+  withdrawals                     WalletWithdrawal[]
+  bikeSwapRequests                BikeSwapRequest[]
+  pushTokens                      PushToken[]
+  orgAssignment                   UserOrgAssignment?
+  userCoupons                     UserCoupon[]
+  returnConfirmations             ReturnConfirmation[]
+  returnSlotReservations          ReturnSlotReservation[]
+  reportedIncidents               IncidentReport[]
+  technicianAssignments           TechnicianAssignment[]    @relation("TechnicianAssignmentTechnicianUser")
+  assignedTechnicianAssignments   TechnicianAssignment[]    @relation("TechnicianAssignmentAssignedByUser")
+  bikeMaintenanceLogs             BikeMaintenanceLog[]
+  requestedRedistributionRequests RedistributionRequest[]   @relation("RedistributionRequestRequestedByUser")
+  approvedRedistributionRequests  RedistributionRequest[]   @relation("RedistributionRequestApprovedByUser")
+  environmentalImpactStats        EnvironmentalImpactStat[]
 
   submittedAgencyRequests   AgencyRequest[] @relation("AgencyRequestRequester")
   reviewedAgencyRequests    AgencyRequest[] @relation("AgencyRequestReviewer")

@@ -3,10 +3,12 @@ import * as queries from "./queries";
 
 export {
   approveBikeSwapRequest,
+  cancelMyReturnSlot,
   cancelRental,
+  confirmRentalReturnByOperator,
+  createMyReturnSlot,
   createRental,
   createRentalFromSOS,
-  endMyRental,
   endRentalByAdmin,
   processCardTapRental,
   rejectBikeSwapRequest,
@@ -24,6 +26,7 @@ export {
   getAllRentals,
   getDashboardSummary,
   getMyCurrentRentals,
+  getMyCurrentReturnSlot,
   getMyRental,
   getMyRentalCounts,
   getMyRentals,

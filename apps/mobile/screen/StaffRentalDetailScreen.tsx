@@ -1,4 +1,8 @@
+import { useStaffEndRentalMutation } from "@hooks/mutations/rentals/use-staff-end-rental-mutation";
+import { useStaffRentalDetailQuery } from "@hooks/query/rentals/use-staff-rental-detail-query";
+import { useStationActions } from "@hooks/useStationAction";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { rentalErrorMessage } from "@services/rentals";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -12,9 +16,11 @@ import {
   View,
 } from "react-native";
 
+import type { RentalDetail } from "@/types/rental-types";
+
 import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
-import LoadingState from "./booking-history-detail/components/LoadingState";
 import ErrorState from "./booking-history-detail/components/ErrorState";
+import LoadingState from "./booking-history-detail/components/LoadingState";
 import StaffEndRentalCard from "./booking-history-detail/components/StaffEndRentalCard";
 import { AdminBikeInfoCard } from "./booking-history-detail/v1/admin-bike-info-card";
 import { AdminUserInfoCard } from "./booking-history-detail/v1/admin-user-info-card";
@@ -22,12 +28,6 @@ import { RentalBookingIdCard } from "./booking-history-detail/v1/booking-id-card
 import { RentalPaymentInfoCard } from "./booking-history-detail/v1/payment-info-card";
 import { RentalStatusCard } from "./booking-history-detail/v1/status-card";
 import { RentalTimeInfoCard } from "./booking-history-detail/v1/time-info-card";
-import { useStationActions } from "@hooks/useStationAction";
-import { useStaffEndRentalMutation } from "@hooks/mutations/rentals/use-staff-end-rental-mutation";
-import { useStaffRentalDetailQuery } from "@hooks/query/rentals/use-staff-rental-detail-query";
-import { rentalErrorMessage } from "@services/rentals";
-import type { RentalDetail } from "@/types/rental-types";
-import type { StationType } from "../types/StationType";
 
 type RouteParams = {
   rentalId: string;
@@ -58,7 +58,7 @@ function StaffRentalDetailScreen() {
     isLoadingGetAllStations,
     refetch: refetchStations,
   } = useStationActions(true);
-  const [stations, setStations] = useState<StationType[]>(stationData || []);
+  const [stations, setStations] = useState(stationData || []);
 
   const {
     data: rentalDetailData,
@@ -77,7 +77,8 @@ function StaffRentalDetailScreen() {
     setIsRefreshing(true);
     try {
       await Promise.all([refetchRental(), refetchStations()]);
-    } finally {
+    }
+    finally {
       setIsRefreshing(false);
     }
   }, [refetchRental, refetchStations]);

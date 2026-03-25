@@ -18,6 +18,11 @@ const defaults = {
 export function createReservationFactory(ctx: FactoryContext) {
   return async (overrides: ReservationOverrides): Promise<CreatedReservation> => {
     const id = overrides.id ?? uuidv7();
+    const activePricingPolicy = await ctx.prisma.pricingPolicy.findFirst({
+      where: { status: "ACTIVE" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      select: { id: true },
+    });
 
     if (!overrides.userId) {
       throw new Error("userId is required for createReservation");
@@ -32,6 +37,7 @@ export function createReservationFactory(ctx: FactoryContext) {
         userId: overrides.userId,
         bikeId: overrides.bikeId ?? defaults.bikeId,
         stationId: overrides.stationId,
+        pricingPolicyId: overrides.pricingPolicyId ?? activePricingPolicy?.id ?? null,
         reservationOption: overrides.reservationOption ?? defaults.reservationOption,
         fixedSlotTemplateId: overrides.fixedSlotTemplateId ?? defaults.fixedSlotTemplateId,
         subscriptionId: overrides.subscriptionId ?? defaults.subscriptionId,

@@ -25,7 +25,7 @@ export class AdminBikeRequestNotFound extends Data.TaggedError(
   }
 }
 
-export function adminGetRentalDetailUseCase(
+export function adminGetRentalDetail(
   rentalId: string,
 ): Effect.Effect<
   AdminRentalDetail,
@@ -45,7 +45,7 @@ export function adminGetRentalDetailUseCase(
   });
 }
 
-export function adminGetChangeBikeDetailUseCase(
+export function adminGetChangeBikeDetail(
   bikeSwapRequestId: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,

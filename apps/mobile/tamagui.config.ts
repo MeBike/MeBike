@@ -1,11 +1,11 @@
 import { shorthands } from "@tamagui/shorthands";
 import { colors } from "@theme/colors";
 import { radii, spacing } from "@theme/metrics";
-import { fontSizes, fontWeights, letterSpacing, lineHeights } from "@theme/typography";
+import { fontFamily, fontSizes, fontWeights, letterSpacing, lineHeights } from "@theme/typography";
 import { createFont, createTamagui, createTokens, isWeb } from "tamagui";
 
 const appFont = createFont({
-  family: isWeb ? "System" : "System",
+  family: isWeb ? fontFamily : fontFamily,
   size: {
     1: fontSizes.xs,
     2: fontSizes.sm,
@@ -151,6 +151,7 @@ export const appTamaguiConfig = createTamagui({
 export type AppTamaguiConfig = typeof appTamaguiConfig;
 
 declare module "tamagui" {
+  // eslint-disable-next-line ts/consistent-type-definitions
   interface TamaguiCustomConfig extends AppTamaguiConfig {}
 }
 

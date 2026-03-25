@@ -1,10 +1,14 @@
 import { Effect } from "effect";
 
+import type { PricingPolicyRow } from "@/domain/pricing";
+
 import { env } from "@/config/env";
+import { calculateUsageChargeMinor } from "@/domain/pricing";
 import { SubscriptionNotUsable } from "@/domain/subscriptions/domain-errors";
 
 export type SubscriptionCoverageInput = {
   readonly durationMinutes: number;
+  readonly pricingPolicy: PricingPolicyRow;
   readonly subscription: {
     readonly id: string;
     readonly userId: string;
@@ -16,12 +20,14 @@ export type SubscriptionCoverageInput = {
 };
 
 export type SubscriptionCoverageResult = {
-  readonly basePrice: number;
+  readonly basePriceMinor: bigint;
+  readonly subscriptionDiscountMinor: bigint;
   readonly usageToAdd: number;
 };
 
 export function computeSubscriptionCoverage({
   durationMinutes,
+  pricingPolicy,
   subscription,
   userId,
 }: SubscriptionCoverageInput): Effect.Effect<
@@ -51,7 +57,11 @@ export function computeSubscriptionCoverage({
 
     if (subscription.maxUsages === null) {
       return {
-        basePrice: 0,
+        basePriceMinor: 0n,
+        subscriptionDiscountMinor: calculateUsageChargeMinor({
+          durationMinutes,
+          policy: pricingPolicy,
+        }),
         usageToAdd: Math.max(0, requiredUsages - 1),
       };
     }
@@ -65,14 +75,25 @@ export function computeSubscriptionCoverage({
       availableUsages * env.SUB_HOURS_PER_USED * 60,
     );
     const extraMinutes = Math.max(0, durationMinutes - coverMinutes);
-    const basePrice = extraMinutes > 0
-      ? Math.ceil(extraMinutes / 30) * env.PRICE_PER_30_MINS
-      : 0;
+    const fullAmountMinor = calculateUsageChargeMinor({
+      durationMinutes,
+      policy: pricingPolicy,
+    });
+    const basePriceMinor = extraMinutes > 0
+      ? calculateUsageChargeMinor({
+          durationMinutes: extraMinutes,
+          policy: pricingPolicy,
+        })
+      : 0n;
     const usageToAdd = Math.max(
       0,
       Math.min(availableUsages - 1, requiredUsages - 1),
     );
 
-    return { basePrice, usageToAdd };
+    return {
+      basePriceMinor,
+      subscriptionDiscountMinor: fullAmountMinor - basePriceMinor,
+      usageToAdd,
+    };
   });
 }

@@ -1,53 +1,28 @@
-import { Effect, Layer, Option } from "effect";
+import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { Prisma as PrismaNS } from "generated/prisma/client";
-
-import { Prisma } from "@/infrastructure/prisma";
 import { expectLeftTag } from "@/test/effect/assertions";
-import { runEffectWithLayer } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { makeSubscriptionRepository, SubscriptionRepository } from "../..";
-import { SubscriptionServiceLive, SubscriptionServiceTag } from "../subscription.service";
+import { SubscriptionServiceTag } from "../subscription.service";
+import { makeSubscriptionRunners, makeSubscriptionTestLayer } from "./subscription-test-kit";
 
 describe("subscriptionService Integration", () => {
   const fixture = setupPrismaIntFixture();
-  let depsLayer: Layer.Layer<SubscriptionServiceTag | SubscriptionRepository | Prisma, never, never>;
+  let runWithService: ReturnType<typeof makeSubscriptionRunners>["runWithService"];
+  let runInTxWithService: ReturnType<typeof makeSubscriptionRunners>["runInTxWithService"];
 
   beforeAll(() => {
-    const subscriptionRepoLayer = Layer.succeed(
-      SubscriptionRepository,
-      makeSubscriptionRepository(fixture.prisma),
-    );
-    const subscriptionServiceLayer = SubscriptionServiceLive.pipe(
-      Layer.provide(subscriptionRepoLayer),
-    );
-
-    depsLayer = Layer.mergeAll(
-      Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma })),
-      subscriptionRepoLayer,
-      subscriptionServiceLayer,
-    );
+    const runners = makeSubscriptionRunners(makeSubscriptionTestLayer(fixture.prisma));
+    runWithService = runners.runWithService;
+    runInTxWithService = runners.runInTxWithService;
   });
 
   const createUser = async () => {
     const user = await fixture.factories.user({ fullname: "Subscription User" });
     return { id: user.id };
   };
-
-  const runWithService = <A, E>(
-    eff: Effect.Effect<A, E, SubscriptionServiceTag>,
-  ) =>
-    runEffectWithLayer(eff, depsLayer);
-
-  const runInTxWithService = async <A, E>(
-    f: (tx: PrismaNS.TransactionClient) => Effect.Effect<A, E, SubscriptionServiceTag>,
-  ) =>
-    fixture.prisma.$transaction(async tx =>
-      Effect.runPromise(f(tx).pipe(Effect.provide(depsLayer))),
-    );
 
   it("createPending + findById returns subscription", async () => {
     const { id: userId } = await createUser();
@@ -120,6 +95,7 @@ describe("subscriptionService Integration", () => {
     );
 
     const used = await runInTxWithService(
+      fixture.prisma,
       tx =>
         Effect.flatMap(SubscriptionServiceTag, service =>
           service.useOneInTx(tx, { subscriptionId: created.id, userId })),
@@ -135,6 +111,7 @@ describe("subscriptionService Integration", () => {
     const { id: userId } = await createUser();
 
     const result = await runInTxWithService(
+      fixture.prisma,
       tx =>
         Effect.flatMap(SubscriptionServiceTag, service =>
           service.useOneInTx(tx, { subscriptionId: uuidv7(), userId }).pipe(Effect.either)),
@@ -158,6 +135,7 @@ describe("subscriptionService Integration", () => {
     );
 
     const result = await runInTxWithService(
+      fixture.prisma,
       tx =>
         Effect.flatMap(SubscriptionServiceTag, service =>
           service.useOneInTx(tx, { subscriptionId: created.id, userId: userB }).pipe(Effect.either)),
@@ -180,12 +158,14 @@ describe("subscriptionService Integration", () => {
     );
 
     await runInTxWithService(
+      fixture.prisma,
       tx =>
         Effect.flatMap(SubscriptionServiceTag, service =>
           service.useOneInTx(tx, { subscriptionId: created.id, userId })),
     );
 
     const result = await runInTxWithService(
+      fixture.prisma,
       tx =>
         Effect.flatMap(SubscriptionServiceTag, service =>
           service.useOneInTx(tx, { subscriptionId: created.id, userId }).pipe(Effect.either)),

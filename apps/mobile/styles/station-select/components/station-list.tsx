@@ -1,6 +1,6 @@
 import { FlatList, RefreshControl, StyleSheet } from "react-native";
 
-import type { StationType } from "@/types/StationType";
+import type { StationReadSummary } from "@/contracts/server";
 
 import { StationCard } from "@/components/StationCard";
 
@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
 });
 
 type StationListProps = {
-  stations: StationType[];
+  stations: StationReadSummary[];
   refreshing: boolean;
   onRefresh: () => void;
   onSelectStation: (stationId: string) => void;
@@ -27,11 +27,11 @@ export function StationList({
   return (
     <FlatList
       data={stations}
-      keyExtractor={item => item._id}
+      keyExtractor={item => item.id}
       renderItem={({ item }) => (
         <StationCard
           station={item}
-          onPress={() => onSelectStation(item._id)}
+          onPress={() => onSelectStation(item.id)}
         />
       )}
       contentContainerStyle={styles.list}

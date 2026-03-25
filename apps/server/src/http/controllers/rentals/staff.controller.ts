@@ -3,11 +3,11 @@ import type { RentalsContracts } from "@mebike/shared";
 
 import { Effect, Match } from "effect";
 
-import { adminGetRentalDetailUseCase, RentalRepository } from "@/domain/rentals";
+import { adminGetRentalDetail, RentalRepository } from "@/domain/rentals";
 import {
-  staffApproveBikeSwapRequestUseCase,
-  staffGetChangeBikeDetailUseCase,
-  staffRejectBikeSwapRequestUseCase,
+  staffApproveBikeSwapRequest,
+  staffGetChangeBikeDetail,
+  staffRejectBikeSwapRequest,
 } from "@/domain/rentals/services/staff-rental.service";
 import { withLoggedCause } from "@/domain/shared";
 import {
@@ -68,7 +68,7 @@ const staffGetRental: RouteHandler<RentalsRoutes["staffGetRental"]> = async (
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    adminGetRentalDetailUseCase(rentalId),
+    adminGetRentalDetail(rentalId),
     "GET /v1/staff/rentals/{rentalId}",
   );
 
@@ -139,7 +139,7 @@ const staffGetBikeSwapRequests: RouteHandler<
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    staffGetChangeBikeDetailUseCase(bikeSwapRequestId),
+    staffGetChangeBikeDetail(bikeSwapRequestId),
     "GET /v1/staff/bike-swap-requests/{bikeSwapRequestId}",
   );
 
@@ -186,13 +186,13 @@ const staffGetBikeSwapRequests: RouteHandler<
   );
 };
 
-const staffApproveBikeSwapRequest: RouteHandler<
+const staffApproveBikeSwapRequestHandler: RouteHandler<
   RentalsRoutes["approveBikeSwapRequest"]
 > = async (c) => {
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    staffApproveBikeSwapRequestUseCase(bikeSwapRequestId),
+    staffApproveBikeSwapRequest(bikeSwapRequestId),
     "POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/approve",
   );
 
@@ -281,14 +281,14 @@ const staffApproveBikeSwapRequest: RouteHandler<
   );
 };
 
-const staffRejectBikeSwapRequest: RouteHandler<
+const staffRejectBikeSwapRequestHandler: RouteHandler<
   RentalsRoutes["rejectBikeSwapRequest"]
 > = async (c) => {
   const { bikeSwapRequestId } = c.req.valid("param");
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    staffRejectBikeSwapRequestUseCase(bikeSwapRequestId, body.reason),
+    staffRejectBikeSwapRequest(bikeSwapRequestId, body.reason),
     "POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/reject",
   );
 
@@ -365,6 +365,6 @@ export const RentalStaffController = {
   staffGetRental,
   staffListBikeSwapRequests,
   staffGetBikeSwapRequests,
-  staffApproveBikeSwapRequest,
-  staffRejectBikeSwapRequest,
+  staffApproveBikeSwapRequest: staffApproveBikeSwapRequestHandler,
+  staffRejectBikeSwapRequest: staffRejectBikeSwapRequestHandler,
 } as const;

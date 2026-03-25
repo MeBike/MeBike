@@ -1,19 +1,20 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import type { Station, StationType } from "../types/StationType";
+import type { StationReadSummary } from "@/contracts/server";
 
 import { BikeColors } from "../constants/BikeColors";
 import { IconSymbol } from "./IconSymbol";
 
 type StationCardProps = {
-  station: Station | StationType;
+  station: StationReadSummary;
   onPress: () => void;
 };
 
 export function StationCard({ station, onPress }: StationCardProps) {
-  const capacity = parseInt(station.capacity) || 1;
-  const availabilityPercentage = (station.availableBikes / capacity) * 100;
+  const capacity = station.capacity.total || 1;
+  const availableBikes = station.bikes.available;
+  const availabilityPercentage = (availableBikes / capacity) * 100;
 
   const getAvailabilityColor = (availableBikes: number, percentage: number) => {
     if (availableBikes <= 0)
@@ -25,7 +26,7 @@ export function StationCard({ station, onPress }: StationCardProps) {
     return "#F59E0B";
   };
 
-  const availabilityColor = getAvailabilityColor(station.availableBikes, availabilityPercentage);
+  const availabilityColor = getAvailabilityColor(availableBikes, availabilityPercentage);
 
   return (
     <Pressable style={styles.container} onPress={onPress}>
@@ -50,23 +51,11 @@ export function StationCard({ station, onPress }: StationCardProps) {
           </Text>
         </View>
 
-        {(station as any).total_ratings !== undefined && (
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>
-              {(station as any).total_ratings > 0 ? (
-                <>⭐ {(station as any).average_rating?.toFixed(1)} ({(station as any).total_ratings})</>
-              ) : (
-                <>Chưa có đánh giá</>
-              )}
-            </Text>
-          </View>
-        )}
-
         <View style={styles.availabilityContainer}>
           <View style={styles.availabilityInfo}>
             <Text style={styles.availabilityLabel}>Tổng xe có sẵn:</Text>
-            <Text style={[styles.availabilityCount, { color: availabilityColor }]}> 
-              {station.availableBikes}
+            <Text style={[styles.availabilityCount, { color: availabilityColor }]}>
+              {availableBikes}
               /
               {capacity}
             </Text>
@@ -143,15 +132,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: BikeColors.onSurfaceVariant,
     lineHeight: 20,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: BikeColors.onSurfaceVariant,
   },
   availabilityContainer: {
     gap: 8,

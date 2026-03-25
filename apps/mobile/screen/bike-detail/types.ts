@@ -1,7 +1,7 @@
-import type { Bike } from "@/types/BikeTypes";
+import type { BikeSummary } from "@/contracts/server";
 
 export type BikeDetailRouteParams = {
-  bike: Bike;
+  bike: BikeSummary;
   station: {
     id: string;
     name: string;

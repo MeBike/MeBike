@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
@@ -53,106 +53,34 @@ describe("rentalRepository Integration", () => {
     expect(list.items).toHaveLength(1);
   });
 
-  it("createReservedRentalForReservationInTx stores a reserved rental with reservationId", async () => {
+  it("createRental stores reservationId when linked to a reservation", async () => {
     const user = await createUser();
     const { station, bike } = await createBikeGraph();
-    const reservationId = uuidv7();
-    const startTime = new Date();
-
-    const reserved = await fixture.prisma.$transaction(async (tx) => {
-      const txRepo = makeRentalRepository(tx);
-      return runEffect(txRepo.createReservedRentalForReservation({
-        reservationId,
-        userId: user.id,
-        bikeId: bike.id,
-        startStationId: station.id,
-        startTime,
-        subscriptionId: null,
-      }));
+    const reservation = await fixture.factories.reservation({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      status: "FULFILLED",
     });
-
-    expect(reserved.id).toBe(reservationId);
-    expect(reserved.status).toBe("RESERVED");
-
-    const found = await runEffect(repo.findById(reservationId));
-    if (Option.isNone(found)) {
-      throw new Error("Expected reserved rental to exist");
-    }
-    expect(found.value.status).toBe("RESERVED");
-  });
-
-  it("startReservedRentalInTx marks reserved rental as rented", async () => {
-    const user = await createUser();
-    const { station, bike } = await createBikeGraph();
-    const reservationId = uuidv7();
-    const reservedAt = new Date();
     const startTime = new Date();
 
-    const started = await fixture.prisma.$transaction(async tx =>
-      runEffect(
-        Effect.gen(function* () {
-          const txRepo = makeRentalRepository(tx);
+    const rental = await runEffect(repo.createRental({
+      userId: user.id,
+      reservationId: reservation.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime,
+      subscriptionId: null,
+    }));
 
-          yield* txRepo.createReservedRentalForReservation({
-            reservationId,
-            userId: user.id,
-            bikeId: bike.id,
-            startStationId: station.id,
-            startTime: reservedAt,
-            subscriptionId: null,
-          });
+    expect(rental.status).toBe("RENTED");
+    expect(rental.reservationId).toBe(reservation.id);
 
-          return yield* txRepo.startReservedRental(
-            reservationId,
-            startTime,
-            startTime,
-            null,
-          );
-        }),
-      ));
-
-    expect(started).toBe(true);
-
-    const found = await runEffect(repo.findById(reservationId));
+    const found = await runEffect(repo.findById(rental.id));
     if (Option.isNone(found)) {
       throw new Error("Expected rental to exist");
     }
-    expect(found.value.status).toBe("RENTED");
-    expect(found.value.startTime.getTime()).toBe(startTime.getTime());
-  });
-
-  it("cancelReservedRentalInTx marks reserved rental as cancelled", async () => {
-    const user = await createUser();
-    const { station, bike } = await createBikeGraph();
-    const reservationId = uuidv7();
-    const reservedAt = new Date();
-    const cancelledAt = new Date();
-
-    const cancelled = await fixture.prisma.$transaction(async tx =>
-      runEffect(
-        Effect.gen(function* () {
-          const txRepo = makeRentalRepository(tx);
-
-          yield* txRepo.createReservedRentalForReservation({
-            reservationId,
-            userId: user.id,
-            bikeId: bike.id,
-            startStationId: station.id,
-            startTime: reservedAt,
-            subscriptionId: null,
-          });
-
-          return yield* txRepo.cancelReservedRental(reservationId, cancelledAt);
-        }),
-      ));
-
-    expect(cancelled).toBe(true);
-
-    const found = await runEffect(repo.findById(reservationId));
-    if (Option.isNone(found)) {
-      throw new Error("Expected rental to exist");
-    }
-    expect(found.value.status).toBe("CANCELLED");
+    expect(found.value.reservationId).toBe(reservation.id);
   });
 
   it("updateRentalOnEnd marks rental completed", async () => {

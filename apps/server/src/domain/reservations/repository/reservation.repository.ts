@@ -26,8 +26,8 @@ import {
   toReservationRow,
 } from "./reservation.mappers";
 import {
-  activeStatusWhere,
   pendingHoldWhere,
+  pendingOrLegacyActiveStatusWhere,
   toReservationOrderBy,
   toReservationWhereForAdmin,
   toReservationWhereForUser,
@@ -107,6 +107,7 @@ export function makeReservationRepository(
             userId: input.userId,
             bikeId: input.bikeId ?? null,
             stationId: input.stationId,
+            pricingPolicyId: input.pricingPolicyId ?? null,
             reservationOption: input.reservationOption,
             fixedSlotTemplateId: input.fixedSlotTemplateId ?? null,
             subscriptionId: input.subscriptionId ?? null,
@@ -178,7 +179,7 @@ export function makeReservationRepository(
           client.reservation.findFirst({
             where: {
               userId,
-              ...activeStatusWhere(),
+              ...pendingOrLegacyActiveStatusWhere(),
             },
             orderBy: { updatedAt: "desc" },
             select: selectReservationRow,
@@ -200,7 +201,7 @@ export function makeReservationRepository(
           client.reservation.findFirst({
             where: {
               bikeId,
-              ...activeStatusWhere(),
+              ...pendingOrLegacyActiveStatusWhere(),
             },
             orderBy: { updatedAt: "desc" },
             select: selectReservationRow,
@@ -259,6 +260,22 @@ export function makeReservationRepository(
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
         ),
       ),
+
+    countPendingByStationId: stationId =>
+      Effect.tryPromise({
+        try: () =>
+          client.reservation.count({
+            where: {
+              stationId,
+              status: ReservationStatus.PENDING,
+            },
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "countPendingByStationId",
+            cause: err,
+          }),
+      }),
 
     findActiveByUserId: userId =>
       Effect.tryPromise({

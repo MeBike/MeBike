@@ -48,3 +48,8 @@ export type RatingSummary = {
   readonly totalRatings: number;
   readonly breakdown: RatingSummaryBreakdown;
 };
+
+export type RatingAggregate = {
+  readonly averageRating: number;
+  readonly totalRatings: number;
+};

@@ -1,9 +1,5 @@
-import { useMyRentalQuery } from "@hooks/query/rentals/use-my-rental-query";
-import { useStationActions } from "@hooks/useStationAction";
-import { useWalletActions } from "@hooks/useWalletAction";
+import { useMyRentalResolvedDetailQuery } from "@hooks/query/rentals/use-my-rental-resolved-detail-query";
 import { useCallback, useEffect, useState } from "react";
-
-import type { Rental } from "@/types/rental-types";
 
 type Options = {
   onRentalEnd?: () => void;
@@ -11,46 +7,30 @@ type Options = {
 
 export function useRentalDetailData(bookingId: string, options?: Options) {
   const { onRentalEnd } = options || {};
-  const { getMyWallet } = useWalletActions(true);
-  const { stations, isLoadingGetAllStations, refetch: refetchStations }
-    = useStationActions(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const rentalQuery = useMyRentalQuery(bookingId, true);
+  const rentalQuery = useMyRentalResolvedDetailQuery(bookingId, true);
 
   const refreshAll = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([
-        rentalQuery.refetch(),
-        getMyWallet(),
-        refetchStations(),
-      ]);
+      await rentalQuery.refetch();
     }
     finally {
       setIsRefreshing(false);
     }
-  }, [getMyWallet, refetchStations, rentalQuery]);
+  }, [rentalQuery]);
 
   useEffect(() => {
-    getMyWallet();
-    refetchStations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookingId]);
-
-  const booking = rentalQuery.data as Rental | undefined;
-  const isInitialLoading = rentalQuery.isLoading || isLoadingGetAllStations;
-
-  useEffect(() => {
-    if (booking?.status === "COMPLETED") {
+    if (rentalQuery.data?.rental.status === "COMPLETED") {
       onRentalEnd?.();
     }
-  }, [booking?.status, onRentalEnd]);
+  }, [onRentalEnd, rentalQuery.data?.rental.status]);
 
   return {
-    booking,
-    stations,
-    isInitialLoading,
+    detail: rentalQuery.data,
+    booking: rentalQuery.data?.rental,
+    isInitialLoading: rentalQuery.isLoading,
     isError: rentalQuery.isError,
     isRefreshing,
     onRefresh: refreshAll,

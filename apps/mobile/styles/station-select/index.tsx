@@ -47,7 +47,7 @@ export default function StationSelectScreen() {
   } = useStationSelect();
 
   const selectedStation = React.useMemo(
-    () => stations.find(station => station._id === selectedStationId) ?? null,
+    () => stations.find(station => station.id === selectedStationId) ?? null,
     [selectedStationId, stations],
   );
 
@@ -73,7 +73,7 @@ export default function StationSelectScreen() {
       <StationMap
         stations={stations}
         route={route}
-        onStationPress={station => handleSelectStationForRoute(station._id)}
+        onStationPress={station => handleSelectStationForRoute(station.id)}
         onMapPress={deselectStation}
         userLocation={currentLocation ?? undefined}
         selectedStationId={selectedStationId}
@@ -86,7 +86,7 @@ export default function StationSelectScreen() {
           ? selectedStation.name
           : "Chọn một trạm trên bản đồ"}
         selectedStationAddress={selectedStation?.address ?? null}
-        selectedStationAvailableBikes={selectedStation?.availableBikes ?? null}
+        selectedStationAvailableBikes={selectedStation?.bikes.available ?? null}
         routeProfile={routeProfile}
         routeDistanceMeters={route?.properties.distanceMeters ?? null}
         routeDurationSeconds={route?.properties.durationSeconds ?? null}

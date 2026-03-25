@@ -15,7 +15,6 @@ describe("aggregateRentalStatusCounts", () => {
       RENTED: 2,
       COMPLETED: 5,
       CANCELLED: 0,
-      RESERVED: 0,
     });
   });
 
@@ -30,7 +29,6 @@ describe("aggregateRentalStatusCounts", () => {
       RENTED: 3,
       COMPLETED: 0,
       CANCELLED: 4,
-      RESERVED: 0,
     });
   });
 });
