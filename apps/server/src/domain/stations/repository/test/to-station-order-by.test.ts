@@ -25,16 +25,16 @@ describe("toStationOrderBy", () => {
     expect(result).toEqual({ name: "desc" });
   });
 
-  it("should sort by capacity with asc direction", () => {
-    const req: PageRequest<StationSortField> = { page: 1, pageSize: 10, sortBy: "capacity", sortDir: "asc" };
+  it("should sort by totalCapacity with asc direction", () => {
+    const req: PageRequest<StationSortField> = { page: 1, pageSize: 10, sortBy: "totalCapacity", sortDir: "asc" };
     const result = toStationOrderBy(req);
-    expect(result).toEqual({ capacity: "asc" });
+    expect(result).toEqual({ totalCapacity: "asc" });
   });
 
-  it("should sort by capacity with desc direction", () => {
-    const req: PageRequest<StationSortField> = { page: 1, pageSize: 10, sortBy: "capacity", sortDir: "desc" };
+  it("should sort by totalCapacity with desc direction", () => {
+    const req: PageRequest<StationSortField> = { page: 1, pageSize: 10, sortBy: "totalCapacity", sortDir: "desc" };
     const result = toStationOrderBy(req);
-    expect(result).toEqual({ capacity: "desc" });
+    expect(result).toEqual({ totalCapacity: "desc" });
   });
 
   it("should sort by updatedAt with asc direction", () => {
@@ -50,9 +50,9 @@ describe("toStationOrderBy", () => {
   });
 
   it("should default to asc when only sortBy is provided", () => {
-    const req: PageRequest<StationSortField> = { page: 1, pageSize: 10, sortBy: "capacity" };
+    const req: PageRequest<StationSortField> = { page: 1, pageSize: 10, sortBy: "totalCapacity" };
     const result = toStationOrderBy(req);
-    expect(result).toEqual({ capacity: "asc" });
+    expect(result).toEqual({ totalCapacity: "asc" });
   });
 
   it("should default to name when only sortDir is provided", () => {

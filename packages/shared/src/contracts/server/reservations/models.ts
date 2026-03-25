@@ -3,7 +3,7 @@ import { BikeStatusSchema } from "../bikes";
 import { UserRoleSchema } from "../users";
 
 export const ReservationStatusSchema = z
-  .enum(["PENDING", "ACTIVE", "CANCELLED", "EXPIRED"])
+  .enum(["PENDING", "ACTIVE", "FULFILLED", "CANCELLED", "EXPIRED"])
   .openapi("ReservationStatus");
 
 export const ReservationOptionSchema = z

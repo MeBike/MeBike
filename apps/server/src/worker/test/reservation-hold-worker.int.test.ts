@@ -134,15 +134,6 @@ describe("reservation hold worker integration", () => {
         status: "PENDING",
       },
     });
-    await fixture.factories.rental({
-      id: reservation.id,
-      userId: user.id,
-      bikeId: bike.id,
-      startStationId: station.id,
-      startTime: reservation.startTime,
-      status: "RESERVED",
-    });
-
     const { producer, send } = makeBossMock();
     await handleReservationExpireHold(
       makeReservationJob(reservation.id),
@@ -173,8 +164,8 @@ describe("reservation hold worker integration", () => {
         where: { id: reservation.id },
         select: { status: true },
       }),
-      fixture.prisma.rental.findUnique({
-        where: { id: reservation.id },
+      fixture.prisma.rental.findFirst({
+        where: { reservationId: reservation.id },
         select: { status: true },
       }),
       fixture.prisma.bike.findUnique({
@@ -184,7 +175,7 @@ describe("reservation hold worker integration", () => {
     ]);
 
     expect(reservationAfter?.status).toBe("EXPIRED");
-    expect(rentalAfter?.status).toBe("CANCELLED");
+    expect(rentalAfter).toBeNull();
     expect(bikeAfter?.status).toBe("AVAILABLE");
   });
 });

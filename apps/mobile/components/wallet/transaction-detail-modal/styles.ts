@@ -1,92 +1,128 @@
+import { colors } from "@theme/colors";
+import { borderWidths, elevations, radii, spacing } from "@theme/metrics";
+import { fontSizes, fontWeights, lineHeights } from "@theme/typography";
 import { StyleSheet } from "react-native";
 
 const transactionDetailModalStyles = StyleSheet.create({
-  overlay: {
+  overlayShell: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  content: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    width: "90%",
-    maxWidth: 400,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-  },
-  closeButton: {
-    padding: 4,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 12,
-    paddingVertical: 4,
-  },
-  label: {
-    fontSize: 14,
-    color: "#666",
-    fontWeight: "500",
-    width: 108,
-  },
-  idValueContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "flex-end",
   },
-  copyButton: {
-    marginLeft: 8,
-    padding: 4,
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(15, 23, 42, 0.34)",
+  },
+  backdropPressable: {
+    flex: 1,
+  },
+  sheetHost: {
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: spacing.xxl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxxl,
+    ...elevations.medium,
+  },
+  sheetHandle: {
+    width: 44,
+    height: 5,
+    borderRadius: radii.round,
+    backgroundColor: colors.divider,
+    alignSelf: "center",
+    marginBottom: spacing.xl,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  closeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.round,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  closeButtonPressed: {
+    opacity: 0.88,
+  },
+  block: {
+    gap: spacing.md,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginVertical: spacing.xs,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.lg,
+  },
+  label: {
+    width: 102,
+    fontSize: fontSizes.md,
+    lineHeight: lineHeights.md,
+    color: colors.textSecondary,
+    fontWeight: fontWeights.medium,
+  },
+  valueGroup: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "flex-start",
+    gap: spacing.sm,
   },
   value: {
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "400",
     flex: 1,
+    fontSize: 17,
+    lineHeight: 26,
+    color: colors.textPrimary,
     textAlign: "right",
+    fontWeight: fontWeights.regular,
   },
-  amount: {
-    fontSize: 16,
-    fontWeight: "600",
-    flex: 1,
-    textAlign: "right",
+  valueStrong: {
+    fontWeight: fontWeights.bold,
   },
-  amountOut: {
-    color: "#F59E0B",
+  valueSuccess: {
+    color: colors.success,
   },
-  amountIn: {
-    color: "#10B981",
+  valueWarning: {
+    color: colors.warning,
   },
-  status: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#10B981",
-    flex: 1,
-    textAlign: "right",
+  valueDanger: {
+    color: colors.error,
   },
-  descriptionContainer: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
+  copyButton: {
+    width: 22,
+    height: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
   },
-  description: {
-    fontSize: 14,
-    color: "#333",
-    marginTop: 8,
-    lineHeight: 20,
+  copyButtonPressed: {
+    opacity: 0.72,
+  },
+  fullReferenceCard: {
+    backgroundColor: colors.surfaceMuted,
+    borderWidth: borderWidths.subtle,
+    borderColor: colors.divider,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+  },
+  fullReferenceText: {
+    fontSize: fontSizes.base,
+    lineHeight: lineHeights.base,
+    color: colors.textPrimary,
+    fontWeight: fontWeights.medium,
   },
 });
 

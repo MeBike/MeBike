@@ -6,6 +6,7 @@ import { env } from "@/config/env";
 
 import type {
   StationCapacityLimitExceeded,
+  StationCapacitySplitInvalid,
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
 } from "../errors";
@@ -20,7 +21,11 @@ import type {
 } from "../models";
 import type { StationRepo } from "../repository/station.repository";
 
-import { StationCapacityLimitExceeded as StationCapacityLimitExceededError, StationNotFound } from "../errors";
+import {
+  StationCapacityLimitExceeded as StationCapacityLimitExceededError,
+  StationCapacitySplitInvalid as StationCapacitySplitInvalidError,
+  StationNotFound,
+} from "../errors";
 import { StationRepository } from "../repository/station.repository";
 
 export type StationService = {
@@ -28,7 +33,10 @@ export type StationService = {
     input: CreateStationInput,
   ) => Effect.Effect<
     StationRow,
-    StationNameAlreadyExists | StationOutsideSupportedArea | StationCapacityLimitExceeded
+    | StationNameAlreadyExists
+    | StationOutsideSupportedArea
+    | StationCapacityLimitExceeded
+    | StationCapacitySplitInvalid
   >;
   updateStation: (
     id: string,
@@ -39,6 +47,7 @@ export type StationService = {
     | StationNameAlreadyExists
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
+    | StationCapacitySplitInvalid
   >;
   listStations: (
     filter: StationFilter,
@@ -53,30 +62,94 @@ export type StationService = {
 };
 
 function makeStationService(repo: StationRepo): StationService {
+  function resolveCapacitySplit(input: {
+    totalCapacity: number;
+    pickupSlotLimit?: number;
+    returnSlotLimit?: number;
+  }) {
+    return {
+      totalCapacity: input.totalCapacity,
+      pickupSlotLimit: input.pickupSlotLimit ?? input.totalCapacity,
+      returnSlotLimit: input.returnSlotLimit ?? input.totalCapacity,
+    };
+  }
+
+  function resolveUpdatedCapacitySplit(current: StationRow, input: UpdateStationInput) {
+    const totalCapacity = input.totalCapacity ?? current.totalCapacity;
+
+    const pickupSlotLimit = input.pickupSlotLimit
+      ?? (input.totalCapacity != null && current.pickupSlotLimit === current.totalCapacity
+        ? input.totalCapacity
+        : current.pickupSlotLimit);
+
+    const returnSlotLimit = input.returnSlotLimit
+      ?? (input.totalCapacity != null && current.returnSlotLimit === current.totalCapacity
+        ? input.totalCapacity
+        : current.returnSlotLimit);
+
+    return {
+      totalCapacity,
+      pickupSlotLimit,
+      returnSlotLimit,
+    };
+  }
+
+  function validateCapacitySplit(args: {
+    totalCapacity: number;
+    pickupSlotLimit: number;
+    returnSlotLimit: number;
+  }) {
+    return args.totalCapacity > 0
+      && args.pickupSlotLimit >= 0
+      && args.returnSlotLimit >= 0
+      && args.pickupSlotLimit <= args.totalCapacity
+      && args.returnSlotLimit <= args.totalCapacity;
+  }
+
   return {
     createStation: input =>
       Effect.gen(function* () {
-        if (input.capacity > env.STATION_CAPACITY_LIMIT) {
+        if (input.totalCapacity > env.STATION_CAPACITY_LIMIT) {
           return yield* Effect.fail(new StationCapacityLimitExceededError({
-            capacity: input.capacity,
+            totalCapacity: input.totalCapacity,
             maxCapacity: env.STATION_CAPACITY_LIMIT,
           }));
         }
+
+        const split = resolveCapacitySplit(input);
+        if (!validateCapacitySplit(split)) {
+          return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
+        }
+
         return yield* repo.create(input).pipe(
           Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
         );
       }),
     updateStation: (id, input) =>
       Effect.gen(function* () {
+        const currentOpt = yield* repo.getById(id).pipe(
+          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(currentOpt)) {
+          return yield* Effect.fail(new StationNotFound({ id }));
+        }
+
+        const current = currentOpt.value;
+        const nextCapacity = input.totalCapacity ?? current.totalCapacity;
         if (
-          input.capacity != null
-          && input.capacity > env.STATION_CAPACITY_LIMIT
+          nextCapacity > env.STATION_CAPACITY_LIMIT
         ) {
           return yield* Effect.fail(new StationCapacityLimitExceededError({
-            capacity: input.capacity,
+            totalCapacity: nextCapacity,
             maxCapacity: env.STATION_CAPACITY_LIMIT,
           }));
         }
+
+        const split = resolveUpdatedCapacitySplit(current, input);
+        if (!validateCapacitySplit(split)) {
+          return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
+        }
+
         const updatedOpt = yield* repo.update(id, input).pipe(
           Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
         );

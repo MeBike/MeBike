@@ -3,7 +3,14 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
-import { BikeStatus, PrismaClient, SupplierStatus } from "../generated/prisma/client";
+import {
+  BikeStatus,
+  PrismaClient,
+  RentalStatus,
+  SupplierStatus,
+  UserRole,
+  UserVerifyStatus,
+} from "../generated/prisma/client";
 import logger from "../src/lib/logger";
 import bikes from "./seed/bike.json";
 import { STATION_IDS } from "./seed/station-ids";
@@ -25,6 +32,20 @@ const stationNameMap: Record<string, string> = {
 };
 
 const DEFAULT_SUPPLIER_NAME = "YADEA Ho Chi Minh";
+const SEED_BIKES_USER_EMAIL = "seed-bikes@mebike.local";
+const SEED_BIKES_USER_PHONE = "0900000999";
+const SEED_BIKES_PASSWORD_HASH = "seed-bikes-not-for-login";
+
+const bikeRatingPresets: ReadonlyArray<{
+  readonly bikeScore: number;
+  readonly stationScore: number;
+  readonly comment: string;
+}> = [
+  { bikeScore: 5, stationScore: 5, comment: "Xe chay em va giu toc do tot." },
+  { bikeScore: 4, stationScore: 5, comment: "Xe on dinh, tram lay xe de dang." },
+  { bikeScore: 5, stationScore: 4, comment: "Xe sach se, pin con tot." },
+  { bikeScore: 4, stationScore: 4, comment: "Trai nghiem tot cho chuyen di ngan." },
+] as const;
 
 const statusMap: Record<string, BikeStatus> = {
   "CÓ SẴN": BikeStatus.AVAILABLE,
@@ -43,12 +64,55 @@ function getConnectionString() {
   return url;
 }
 
+function pickBikeRatings(index: number) {
+  return bikeRatingPresets[index % bikeRatingPresets.length];
+}
+
 async function main() {
   const connectionString = getConnectionString();
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
 
   try {
+    const seedUser = await prisma.user.upsert({
+      where: { email: SEED_BIKES_USER_EMAIL },
+      create: {
+        id: uuidv7(),
+        fullName: "Seed Bikes Demo User",
+        email: SEED_BIKES_USER_EMAIL,
+        phoneNumber: SEED_BIKES_USER_PHONE,
+        passwordHash: SEED_BIKES_PASSWORD_HASH,
+        role: UserRole.USER,
+        verifyStatus: UserVerifyStatus.VERIFIED,
+      },
+      update: {
+        fullName: "Seed Bikes Demo User",
+        phoneNumber: SEED_BIKES_USER_PHONE,
+        passwordHash: SEED_BIKES_PASSWORD_HASH,
+        role: UserRole.USER,
+        verifyStatus: UserVerifyStatus.VERIFIED,
+        updatedAt: new Date(),
+      },
+    });
+
+    await prisma.ratingReasonLink.deleteMany({
+      where: {
+        rating: {
+          userId: seedUser.id,
+        },
+      },
+    });
+    await prisma.rating.deleteMany({
+      where: {
+        userId: seedUser.id,
+      },
+    });
+    await prisma.rental.deleteMany({
+      where: {
+        userId: seedUser.id,
+      },
+    });
+
     let supplier = await prisma.supplier.findFirst({
       where: { name: DEFAULT_SUPPLIER_NAME },
     });
@@ -95,7 +159,87 @@ async function main() {
       });
     }
 
+    const seededAvailableBikes = await prisma.bike.findMany({
+      where: {
+        status: BikeStatus.AVAILABLE,
+      },
+      select: {
+        id: true,
+        stationId: true,
+      },
+      orderBy: [
+        { stationId: "asc" },
+        { chipId: "asc" },
+      ],
+    });
+
+    const bikesByStation = new Map<string, Array<{ id: string; stationId: string }>>();
+    for (const bike of seededAvailableBikes) {
+      if (!bike.stationId) {
+        continue;
+      }
+
+      const current = bikesByStation.get(bike.stationId) ?? [];
+      if (current.length < 4) {
+        current.push({ id: bike.id, stationId: bike.stationId });
+        bikesByStation.set(bike.stationId, current);
+      }
+    }
+
+    const bikesToRate = Array.from(bikesByStation.values()).flat();
+
+    const now = Date.now();
+    const rentalsToCreate = bikesToRate.flatMap((bike, bikeIndex) => {
+      return Array.from({ length: 2 }, (_, ratingIndex) => {
+        const hoursAgo = bikeIndex * 6 + ratingIndex * 18 + 24;
+        const startTime = new Date(now - hoursAgo * 60 * 60 * 1000);
+        const endTime = new Date(startTime.getTime() + 22 * 60 * 1000);
+        const preset = pickBikeRatings(bikeIndex + ratingIndex);
+
+        return {
+          rental: {
+            id: uuidv7(),
+            userId: seedUser.id,
+            bikeId: bike.id,
+            startStationId: bike.stationId,
+            endStationId: bike.stationId,
+            startTime,
+            endTime,
+            duration: 22,
+            totalPrice: 12000,
+            status: RentalStatus.COMPLETED,
+            createdAt: new Date(startTime.getTime() - 5 * 60 * 1000),
+            updatedAt: endTime,
+          },
+          rating: {
+            id: uuidv7(),
+            userId: seedUser.id,
+            bikeId: bike.id,
+            stationId: bike.stationId,
+            bikeScore: preset.bikeScore,
+            stationScore: preset.stationScore,
+            comment: preset.comment,
+            updatedAt: endTime,
+          },
+        };
+      });
+    });
+
+    if (rentalsToCreate.length > 0) {
+      await prisma.rental.createMany({
+        data: rentalsToCreate.map(item => item.rental),
+      });
+
+      await prisma.rating.createMany({
+        data: rentalsToCreate.map(item => ({
+          ...item.rating,
+          rentalId: item.rental.id,
+        })),
+      });
+    }
+
     logger.info({ count: (bikes as any[]).length }, "Successfully inserted bikes");
+    logger.info({ ratedBikes: bikesToRate.length, ratings: rentalsToCreate.length }, "Seeded demo bike ratings");
   }
   catch (error) {
     logger.error({ err: error }, "Error during seeding");

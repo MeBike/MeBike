@@ -1,37 +1,32 @@
-import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { YStack } from "tamagui";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#475569",
-    marginTop: 16,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#94A3B8",
-    textAlign: "center",
-  },
-});
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
 
 function EmptyBookingState() {
   return (
-    <View style={styles.container}>
-      <Ionicons name="document-text-outline" size={64} color="#ccc" />
-      <Text style={styles.title}>Chưa có lịch sử thuê xe</Text>
-      <Text style={styles.subtitle}>
-        Khi bạn thuê xe, lịch sử sẽ hiển thị ở đây
-      </Text>
-    </View>
+    <YStack alignItems="center" flex={1} justifyContent="center" padding="$6">
+      <AppCard alignItems="center" gap="$3" maxWidth={360} padding="$5" width="100%">
+        <YStack
+          alignItems="center"
+          backgroundColor={colors.surfaceMuted}
+          borderRadius="$round"
+          height={64}
+          justifyContent="center"
+          width={64}
+        >
+          <IconSymbol color={colors.textMuted} name="doc.text" size={28} />
+        </YStack>
+        <AppText align="center" variant="xlTitle">
+          Chưa có lịch sử thuê xe
+        </AppText>
+        <AppText align="center" tone="muted" variant="bodySmall">
+          Khi bạn thuê xe, lịch sử sẽ hiển thị ở đây
+        </AppText>
+      </AppCard>
+    </YStack>
   );
 }
 

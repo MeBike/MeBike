@@ -1,11 +1,10 @@
+import { useGetStationById } from "@hooks/query/Station/use-get-station-by-id-query";
+import { useBikeActions } from "@hooks/useBikeAction";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useCallback, useEffect, useState } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useBikeActions } from "@hooks/useBikeAction";
-import { useGetStationById } from "@hooks/query/Station/use-get-station-by-id-query";
+import type { BikeSummary } from "@/contracts/server";
 
-import type { Bike } from "../../../types/BikeTypes";
 import type {
   StationDetailRouteProp,
   StationDetailScreenNavigationProp,
@@ -16,14 +15,18 @@ const PAGE_SIZE = 20;
 export function useStationDetail() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   const route = useRoute<StationDetailRouteProp>();
-  const insets = useSafeAreaInsets();
-  const { stationId } = route.params;
+  const {
+    stationId,
+    selectionMode,
+    rentalId,
+    currentReturnStationId,
+  } = route.params;
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [loadedBikes, setLoadedBikes] = useState<Bike[]>([]);
+  const [loadedBikes, setLoadedBikes] = useState<BikeSummary[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [focusedBike, setFocusedBike] = useState<Bike | null>(null);
+  const [focusedBike, setFocusedBike] = useState<BikeSummary | null>(null);
 
   const stationQuery = useGetStationById(stationId);
 
@@ -34,9 +37,10 @@ export function useStationDetail() {
     totalRecords,
   } = useBikeActions({
     hasToken: true,
-    station_id: stationId,
+    stationId,
     page: currentPage,
     limit: PAGE_SIZE,
+    status: "AVAILABLE",
   });
 
   useEffect(() => {
@@ -66,7 +70,7 @@ export function useStationDetail() {
   const isLoading = stationQuery.isLoading || isFetchingAllBikes;
 
   const handleBikePress = useCallback(
-    (bike: Bike) => {
+    (bike: BikeSummary) => {
       if (!station)
         return;
       setFocusedBike(bike);
@@ -110,6 +114,8 @@ export function useStationDetail() {
     handleRefresh,
     handleLoadMore,
     navigation,
-    insets,
+    selectionMode,
+    rentalId,
+    currentReturnStationId,
   };
 }

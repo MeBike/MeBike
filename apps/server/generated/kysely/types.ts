@@ -189,13 +189,13 @@ export type RentalPenaltyType = (typeof RentalPenaltyType)[keyof typeof RentalPe
 export const RentalStatus = {
     RENTED: "RENTED",
     COMPLETED: "COMPLETED",
-    CANCELLED: "CANCELLED",
-    RESERVED: "RESERVED"
+    CANCELLED: "CANCELLED"
 } as const;
 export type RentalStatus = (typeof RentalStatus)[keyof typeof RentalStatus];
 export const ReservationStatus = {
     PENDING: "PENDING",
     ACTIVE: "ACTIVE",
+    FULFILLED: "FULFILLED",
     CANCELLED: "CANCELLED",
     EXPIRED: "EXPIRED"
 } as const;
@@ -206,6 +206,12 @@ export const ReservationOption = {
     SUBSCRIPTION: "SUBSCRIPTION"
 } as const;
 export type ReservationOption = (typeof ReservationOption)[keyof typeof ReservationOption];
+export const ReturnSlotStatus = {
+    ACTIVE: "ACTIVE",
+    USED: "USED",
+    CANCELLED: "CANCELLED"
+} as const;
+export type ReturnSlotStatus = (typeof ReturnSlotStatus)[keyof typeof ReturnSlotStatus];
 export const SubscriptionStatus = {
     PENDING: "PENDING",
     ACTIVE: "ACTIVE",
@@ -251,7 +257,8 @@ export const WalletHoldStatus = {
 } as const;
 export type WalletHoldStatus = (typeof WalletHoldStatus)[keyof typeof WalletHoldStatus];
 export const WalletHoldReason = {
-    WITHDRAWAL: "WITHDRAWAL"
+    WITHDRAWAL: "WITHDRAWAL",
+    RENTAL_DEPOSIT: "RENTAL_DEPOSIT"
 } as const;
 export type WalletHoldReason = (typeof WalletHoldReason)[keyof typeof WalletHoldReason];
 export const WalletStatus = {
@@ -552,7 +559,10 @@ export type RedistributionRequestItem = {
 export type Rental = {
     id: string;
     user_id: string;
+    reservation_id: string | null;
     bike_id: string | null;
+    deposit_hold_id: string | null;
+    pricing_policy_id: string | null;
     start_station: string;
     end_station: string | null;
     created_at: Generated<Timestamp>;
@@ -592,6 +602,7 @@ export type Reservation = {
     user_id: string;
     bike_id: string | null;
     station_id: string;
+    pricing_policy_id: string | null;
     reservation_option: ReservationOption;
     fixed_slot_template_id: string | null;
     subscription_id: string | null;
@@ -613,11 +624,23 @@ export type ReturnConfirmation = {
     confirmed_at: Timestamp;
     created_at: Generated<Timestamp>;
 };
+export type ReturnSlotReservation = {
+    id: string;
+    rental_id: string;
+    user_id: string;
+    station_id: string;
+    reserved_from: Timestamp;
+    status: Generated<ReturnSlotStatus>;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
 export type Station = {
     id: string;
     name: string;
     address: string;
-    capacity: number;
+    total_capacity: number;
+    pickup_slot_limit: Generated<number>;
+    return_slot_limit: Generated<number>;
     latitude: number;
     longitude: number;
     created_at: Generated<Timestamp>;
@@ -716,12 +739,14 @@ export type Wallet = {
 export type WalletHold = {
     id: string;
     wallet_id: string;
-    withdrawal_id: string;
+    withdrawal_id: string | null;
+    rental_id: string | null;
     amount: string;
     status: Generated<WalletHoldStatus>;
     reason: Generated<WalletHoldReason>;
     released_at: Timestamp | null;
     settled_at: Timestamp | null;
+    forfeited_at: Timestamp | null;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
@@ -785,6 +810,7 @@ export type DB = {
     rental_penalties: RentalPenalty;
     Reservation: Reservation;
     return_confirmations: ReturnConfirmation;
+    return_slot_reservations: ReturnSlotReservation;
     Station: Station;
     Subscription: Subscription;
     Supplier: Supplier;

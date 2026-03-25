@@ -4,7 +4,6 @@ import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -98,19 +97,18 @@ async function enqueueEmailIdempotent(
   }
 }
 
-export function assignFixedSlotReservationsUseCase(args: {
+export function assignFixedSlotReservations(args: {
   readonly slotDate?: Date;
   readonly assignmentTime?: Date;
   readonly now?: Date;
 }): Effect.Effect<
   FixedSlotAssignmentSummary,
   never,
-  Prisma | BikeRepository | RentalRepository
+  Prisma | BikeRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     yield* BikeRepository;
-    yield* RentalRepository;
     const assignmentTime = args.assignmentTime ?? new Date();
     const slotDate = args.slotDate ?? normalizeSlotDate(assignmentTime);
     const slotDateKey = toSlotDateKey(slotDate);
@@ -151,7 +149,6 @@ export function assignFixedSlotReservationsUseCase(args: {
           client.$transaction(async tx =>
             Effect.runPromise(Effect.gen(function* () {
               const bikeRepo = makeBikeRepository(tx);
-              const txRentalRepo = makeRentalRepository(tx);
               const txReservationRepo = makeReservationRepository(tx);
               const reservationOpt = yield* txReservationRepo.findPendingFixedSlotByTemplateAndStart(
                 template.id,
@@ -204,17 +201,6 @@ export function assignFixedSlotReservationsUseCase(args: {
                 Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
               );
               if (!reservationAssigned) {
-                return "CONFLICT" as const;
-              }
-
-              const rentalAssigned = yield* txRentalRepo.assignBikeToReservedRental(
-                reservation.id,
-                bike.id,
-                now,
-              ).pipe(
-                Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-              );
-              if (!rentalAssigned) {
                 return "CONFLICT" as const;
               }
 

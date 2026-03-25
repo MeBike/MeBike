@@ -1,0 +1,379 @@
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { expectLeftTag, expectRight } from "@/test/effect/assertions";
+import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
+import { givenActiveRental, givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
+
+import { makeRentalRunners, makeRentalTestLayer } from "./rental-test-kit";
+
+describe("return slot integration", () => {
+  const fixture = setupPrismaIntFixture();
+  let runCreateReturnSlot: ReturnType<typeof makeRentalRunners>["createReturnSlot"];
+  let runGetCurrentReturnSlot: ReturnType<typeof makeRentalRunners>["getCurrentReturnSlot"];
+  let runGetCurrentReturnSlotEither: ReturnType<typeof makeRentalRunners>["getCurrentReturnSlotEither"];
+  let runCancelReturnSlot: ReturnType<typeof makeRentalRunners>["cancelReturnSlot"];
+  let runConfirmReturn: ReturnType<typeof makeRentalRunners>["confirmReturn"];
+
+  beforeAll(() => {
+    const runners = makeRentalRunners(makeRentalTestLayer(fixture.prisma));
+    runCreateReturnSlot = runners.createReturnSlot;
+    runGetCurrentReturnSlot = runners.getCurrentReturnSlot;
+    runGetCurrentReturnSlotEither = runners.getCurrentReturnSlotEither;
+    runCancelReturnSlot = runners.cancelReturnSlot;
+    runConfirmReturn = runners.confirmReturn;
+  });
+
+  it("creates and fetches an active return slot for an active rental", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+    const targetStation = await fixture.factories.station({ capacity: 2 });
+    await fixture.factories.bike({ stationId: targetStation.id, status: "AVAILABLE" });
+
+    const createdResult = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+      now: new Date("2026-03-21T12:00:00.000Z"),
+    });
+
+    const created = expectRight(createdResult);
+    expect(created.status).toBe("ACTIVE");
+    expect(created.rentalId).toBe(rental.id);
+    expect(created.userId).toBe(user.id);
+    expect(created.stationId).toBe(targetStation.id);
+
+    const current = await runGetCurrentReturnSlot({ rentalId: rental.id, userId: user.id });
+
+    expect(current._tag).toBe("Some");
+    if (current._tag === "Some") {
+      expect(current.value.id).toBe(created.id);
+      expect(current.value.stationId).toBe(targetStation.id);
+    }
+  });
+
+  it("reuses the existing active return slot when the station does not change", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+    const targetStation = await fixture.factories.station({ capacity: 2 });
+
+    const first = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    }));
+
+    const second = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    }));
+
+    expect(second.id).toBe(first.id);
+
+    const slots = await fixture.prisma.returnSlotReservation.findMany({ where: { rentalId: rental.id } });
+    expect(slots).toHaveLength(1);
+  });
+
+  it("replaces the active return slot when the destination station changes", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+    const firstStation = await fixture.factories.station({ capacity: 2 });
+    const secondStation = await fixture.factories.station({ capacity: 2 });
+
+    const first = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: firstStation.id,
+    }));
+
+    const second = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: secondStation.id,
+    }));
+
+    expect(second.id).not.toBe(first.id);
+    expect(second.stationId).toBe(secondStation.id);
+
+    const rows = await fixture.prisma.returnSlotReservation.findMany({
+      where: { rentalId: rental.id },
+      orderBy: { createdAt: "asc" },
+    });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.status).toBe("CANCELLED");
+    expect(rows[1]?.status).toBe("ACTIVE");
+  });
+
+  it("cancels the active return slot", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+    const targetStation = await fixture.factories.station({ capacity: 2 });
+
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    }));
+
+    const cancelled = expectRight(await runCancelReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+    }));
+
+    expect(cancelled.status).toBe("CANCELLED");
+
+    const current = await runGetCurrentReturnSlot({ rentalId: rental.id, userId: user.id });
+
+    expect(current._tag).toBe("None");
+  });
+
+  it("fails when the destination station has no remaining logical return capacity", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+    const fullStation = await fixture.factories.station({ capacity: 1 });
+    await fixture.factories.bike({ stationId: fullStation.id, status: "AVAILABLE" });
+
+    const result = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: fullStation.id,
+    });
+
+    expectLeftTag(result, "ReturnSlotCapacityExceeded");
+  });
+
+  it("fails when logical return capacity is exhausted by another active return slot", async () => {
+    const first = await givenActiveRental(fixture);
+    const second = await givenActiveRental(fixture);
+    const station = await fixture.factories.station({
+      capacity: 10,
+      pickupSlotLimit: 10,
+      returnSlotLimit: 1,
+    });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    expectRight(await runCreateReturnSlot({
+      rentalId: first.rental.id,
+      userId: first.user.id,
+      stationId: station.id,
+    }));
+
+    const result = await runCreateReturnSlot({
+      rentalId: second.rental.id,
+      userId: second.user.id,
+      stationId: station.id,
+    });
+
+    expectLeftTag(result, "ReturnSlotCapacityExceeded");
+  });
+
+  it("fails when the target station does not exist", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+
+    const result = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: "0195d86e-0861-7d56-b743-5a2264f0f999",
+    });
+
+    expectLeftTag(result, "StationNotFound");
+  });
+
+  it("fails when creating a return slot for another user's rental", async () => {
+    const owner = await givenActiveRental(fixture);
+    const otherUser = await givenUserWithWallet(fixture);
+    const targetStation = await fixture.factories.station({ capacity: 2 });
+
+    const result = await runCreateReturnSlot({
+      rentalId: owner.rental.id,
+      userId: otherUser.user.id,
+      stationId: targetStation.id,
+    });
+
+    expectLeftTag(result, "RentalNotFound");
+  });
+
+  it("fails to get a return slot for another user's rental", async () => {
+    const owner = await givenActiveRental(fixture);
+    const otherUser = await givenUserWithWallet(fixture);
+    const targetStation = await fixture.factories.station({ capacity: 2 });
+
+    expectRight(await runCreateReturnSlot({
+      rentalId: owner.rental.id,
+      userId: owner.user.id,
+      stationId: targetStation.id,
+    }));
+
+    const result = await runGetCurrentReturnSlotEither({
+      rentalId: owner.rental.id,
+      userId: otherUser.user.id,
+    });
+
+    expectLeftTag(result, "RentalNotFound");
+  });
+
+  it("fails when the rental is not active", async () => {
+    const { user } = await givenUserWithWallet(fixture);
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const rental = await fixture.factories.rental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      status: "COMPLETED",
+      endStationId: station.id,
+      endTime: new Date(),
+    });
+    const targetStation = await fixture.factories.station({ capacity: 2 });
+
+    const result = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    });
+
+    expectLeftTag(result, "ReturnSlotRequiresActiveRental");
+  });
+
+  it("fails to cancel when no active return slot exists", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+
+    const result = await runCancelReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+    });
+
+    expectLeftTag(result, "ReturnSlotNotFound");
+  });
+
+  it("fails to get the current return slot when the rental is not active", async () => {
+    const { user } = await givenUserWithWallet(fixture);
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const rental = await fixture.factories.rental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      status: "COMPLETED",
+      endStationId: station.id,
+      endTime: new Date(),
+    });
+
+    const result = await runGetCurrentReturnSlotEither({ rentalId: rental.id, userId: user.id });
+
+    expectLeftTag(result, "ReturnSlotRequiresActiveRental");
+  });
+
+  it("finalizes the active return slot when an operator confirms the return", async () => {
+    const { user, station, bike, rental } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: station.id,
+    }));
+
+    const ended = expectRight(await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    }));
+
+    expect(ended.status).toBe("COMPLETED");
+
+    const current = await fixture.prisma.returnSlotReservation.findFirst({
+      where: { rentalId: rental.id },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(current?.status).toBe("USED");
+
+    const confirmation = await fixture.prisma.returnConfirmation.findUnique({
+      where: { rentalId: rental.id },
+    });
+    expect(confirmation?.confirmedByUserId).toBe(operator.id);
+    expect(confirmation?.handoverStatus).toBe("CONFIRMED");
+
+    const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
+    expect(updatedBike?.status).toBe("AVAILABLE");
+    expect(updatedBike?.stationId).toBe(station.id);
+  });
+
+  it("fails to confirm a rental return without an active return slot", async () => {
+    const { station, rental } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    expectLeftTag(result, "ReturnSlotRequiredForReturn");
+  });
+
+  it("fails to confirm a rental return at a different station than the active return slot", async () => {
+    const { user, rental } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    const reservedStation = await fixture.factories.station({ capacity: 2 });
+    const attemptedStation = await fixture.factories.station({ capacity: 2 });
+
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: reservedStation.id,
+    }));
+
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: attemptedStation.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    expectLeftTag(result, "ReturnSlotStationMismatch");
+  });
+
+  it("fails when the rental return is already confirmed", async () => {
+    const { rental } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    const station = await fixture.factories.station({ capacity: 2 });
+
+    await fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: rental.id,
+        userId: rental.userId,
+        stationId: station.id,
+        reservedFrom: new Date("2026-03-21T12:00:00.000Z"),
+      },
+    });
+
+    await fixture.prisma.returnConfirmation.create({
+      data: {
+        rentalId: rental.id,
+        stationId: station.id,
+        confirmedByUserId: operator.id,
+        confirmationMethod: "MANUAL",
+        handoverStatus: "CONFIRMED",
+        confirmedAt: new Date("2026-03-21T12:30:00.000Z"),
+      },
+    });
+
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date("2026-03-21T12:35:00.000Z"),
+    });
+
+    expectLeftTag(result, "ReturnAlreadyConfirmed");
+  });
+});

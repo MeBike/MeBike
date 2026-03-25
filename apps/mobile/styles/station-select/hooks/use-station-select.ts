@@ -3,16 +3,20 @@ import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
 import { useStationRouteQuery } from "@hooks/query/Station/use-station-route-query";
 import { useStationActions } from "@hooks/useStationAction";
 import { log } from "@lib/log";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useCurrentLocation } from "@/providers/location-provider";
 
-import type { StationDetailScreenNavigationProp } from "../../../types/navigation";
+import type {
+  StationDetailScreenNavigationProp,
+  StationSelectRouteProp,
+} from "../../../types/navigation";
 
 export function useStationSelect() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
+  const stationSelectRoute = useRoute<StationSelectRouteProp>();
   const insets = useSafeAreaInsets();
   const [showingNearby, setShowingNearby] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
@@ -42,7 +46,16 @@ export function useStationSelect() {
   }, [showingNearby, currentLocation, getNearbyStations]);
 
   const handleSelectStation = (stationId: string) => {
-    navigation.navigate("StationDetail", { stationId });
+    navigation.navigate("StationDetail", {
+      stationId,
+      ...(stationSelectRoute.params?.selectionMode
+        ? {
+            selectionMode: stationSelectRoute.params.selectionMode,
+            rentalId: stationSelectRoute.params.rentalId,
+            currentReturnStationId: stationSelectRoute.params.currentReturnStationId,
+          }
+        : {}),
+    });
   };
 
   const handleFindNearbyStations = async () => {
@@ -69,7 +82,7 @@ export function useStationSelect() {
   const selectedStation = React.useMemo(() => {
     if (!selectedStationId)
       return null;
-    return stations.find(s => s._id === selectedStationId) ?? null;
+    return stations.find(s => s.id === selectedStationId) ?? null;
   }, [selectedStationId, stations]);
 
   const destination = React.useMemo(() => {
@@ -77,8 +90,8 @@ export function useStationSelect() {
       return null;
 
     return {
-      latitude: Number.parseFloat(selectedStation.latitude),
-      longitude: Number.parseFloat(selectedStation.longitude),
+      latitude: selectedStation.location.latitude,
+      longitude: selectedStation.location.longitude,
     };
   }, [selectedStation]);
 
@@ -93,7 +106,7 @@ export function useStationSelect() {
   const isRouting = routeQuery.isFetching;
 
   const handleSelectStationForRoute = async (stationId: string) => {
-    const station = stations.find(s => s._id === stationId);
+    const station = stations.find(s => s.id === stationId);
     if (!station)
       return;
 

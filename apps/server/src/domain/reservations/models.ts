@@ -13,6 +13,7 @@ export type ReservationRow = {
   readonly userId: string;
   readonly bikeId: string | null;
   readonly stationId: string;
+  readonly pricingPolicyId: string | null;
   readonly reservationOption: ReservationOption;
   readonly fixedSlotTemplateId: string | null;
   readonly subscriptionId: string | null;

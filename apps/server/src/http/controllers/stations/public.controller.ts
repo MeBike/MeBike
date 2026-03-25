@@ -4,12 +4,16 @@ import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import { StationServiceTag } from "@/domain/stations";
+import {
+  toContractNearbyStation,
+  toContractStationReadSummary,
+} from "@/http/presenters/stations.presenter";
 
 import type {
   StationErrorResponse,
   StationListResponse,
+  StationReadSummary,
   StationsRoutes,
-  StationSummary,
 } from "./shared";
 
 import { StationErrorCodeSchema, stationErrorMessages } from "./shared";
@@ -23,7 +27,7 @@ const listStations: RouteHandler<StationsRoutes["listStations"]> = async (c) => 
         {
           name: query.name,
           address: query.address,
-          capacity: query.capacity,
+          totalCapacity: query.totalCapacity,
         },
         {
           page: query.page ?? 1,
@@ -40,7 +44,7 @@ const listStations: RouteHandler<StationsRoutes["listStations"]> = async (c) => 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
       c.json<StationListResponse, 200>({
-        data: right.items,
+        data: right.items.map(toContractStationReadSummary),
         pagination: {
           page: right.page,
           pageSize: right.pageSize,
@@ -84,7 +88,7 @@ const getNearbyStations: RouteHandler<StationsRoutes["getNearbyStations"]> = asy
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
       c.json<StationListResponse, 200>({
-        data: right.items,
+        data: right.items.map(toContractNearbyStation),
         pagination: {
           page: right.page,
           pageSize: right.pageSize,
@@ -110,7 +114,7 @@ const getStation: RouteHandler<StationsRoutes["getStation"]> = async (c) => {
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) => c.json<StationSummary, 200>(right, 200)),
+    Match.tag("Right", ({ right }) => c.json<StationReadSummary, 200>(toContractStationReadSummary(right), 200)),
     Match.tag("Left", ({ left }) =>
       left._tag === "StationNotFound"
         ? c.json<StationErrorResponse, 404>({

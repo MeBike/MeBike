@@ -13,9 +13,8 @@ import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
-import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
+import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
-import { toMinorUnit } from "@/domain/shared/money";
 import { makeStationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserRepository } from "@/domain/users";
@@ -36,8 +35,10 @@ import {
   BikeNotFound,
   BikeNotFoundInStation,
   ReservationOptionNotSupported,
+  StationPickupSlotLimitExceeded,
   SubscriptionRequired,
 } from "../domain-errors";
+import { makeReservationRepository } from "../repository/reservation.repository";
 import { ReservationHoldServiceTag } from "../services/reservation-hold.service";
 import { ReservationServiceTag } from "../services/reservation.service";
 
@@ -61,7 +62,6 @@ export type ReserveBikeFailure
     | InsufficientWalletBalance;
 
 const HOLD_MINUTES = env.RESERVATION_HOLD_MINUTES;
-const PREPAID_AMOUNT = env.RESERVATION_PREPAID_AMOUNT;
 const RESERVATION_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
 function computeEndTime(startTime: Date, holdMinutes = HOLD_MINUTES): Date {
@@ -72,7 +72,7 @@ function formatReservationDateTime(value: Date): string {
   return value.toLocaleString("vi-VN", { timeZone: RESERVATION_TIME_ZONE });
 }
 
-export function reserveBikeUseCase(
+export function reserveBike(
   input: ReserveBikeInput,
 ): Effect.Effect<
   ReservationRow,
@@ -82,20 +82,17 @@ export function reserveBikeUseCase(
   | ReservationHoldServiceTag
   | BikeRepository
   | SubscriptionServiceTag
-  | RentalRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const reservationService = yield* ReservationServiceTag;
     const reservationHoldService = yield* ReservationHoldServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
-    yield* RentalRepository;
     const now = input.now ?? new Date();
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
         const bikeRepo = makeBikeRepository(tx);
-        const txRentalRepo = makeRentalRepository(tx);
         if (input.reservationOption === "FIXED_SLOT") {
           return yield* Effect.fail(
             new ReservationOptionNotSupported({ option: input.reservationOption }),
@@ -150,9 +147,37 @@ export function reserveBikeUseCase(
           }));
         }
 
+        const txStationRepo = makeStationRepository(tx);
+        const txReservationRepo = makeReservationRepository(tx);
+        const stationOpt = yield* txStationRepo.getById(input.stationId).pipe(
+          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(stationOpt)) {
+          return yield* Effect.die(new Error(
+            `Invariant violated: bike ${input.bikeId} references missing station ${input.stationId}`,
+          ));
+        }
+
+        const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId).pipe(
+          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        );
+        if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
+          return yield* Effect.fail(new StationPickupSlotLimitExceeded({
+            stationId: input.stationId,
+            pickupSlotLimit: stationOpt.value.pickupSlotLimit,
+            pendingReservations,
+          }));
+        }
+
         const subscriptionId: string | null = input.subscriptionId ?? null;
-        let prepaid = toPrismaDecimal(PREPAID_AMOUNT);
-        let prepaidMinor = toMinorUnit(prepaid);
+        const pricingPolicy = yield* makePricingPolicyRepository(tx).getActive().pipe(
+          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+          Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
+          Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
+        );
+
+        let prepaidMinor = getReservationFeeMinor(pricingPolicy);
+        let prepaid = toPrismaDecimal(prepaidMinor.toString());
 
         if (input.reservationOption === "SUBSCRIPTION") {
           if (!subscriptionId) {
@@ -188,19 +213,8 @@ export function reserveBikeUseCase(
           startTime: input.startTime,
           endTime,
           prepaid,
+          pricingPolicyId: pricingPolicy.id,
         });
-
-        yield* txRentalRepo.createReservedRentalForReservation({
-          reservationId: reservation.id,
-          userId: reservation.userId,
-          bikeId: reservation.bikeId ?? input.bikeId,
-          startStationId: reservation.stationId,
-          startTime: reservation.startTime,
-          subscriptionId: reservation.subscriptionId ?? null,
-        }).pipe(
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-          Effect.catchTag("RentalUniqueViolation", err => Effect.die(err)),
-        );
 
         const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now).pipe(
           Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
@@ -236,12 +250,11 @@ export function reserveBikeUseCase(
           });
         }
 
-        // Confirmation email (legacy: "success-reservation").
+        // Confirmation email uses the older "success-reservation" template name.
         // TODO(env): Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.
         // TODO(iot): send reservation "reserve" command once IoT integration is ready.
         {
           const txUserRepo = makeUserRepository(tx);
-          const txStationRepo = makeStationRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
             txUserRepo.findById(reservation.userId).pipe(
               Effect.catchTag("UserRepositoryError", err => Effect.die(err)),

@@ -4,7 +4,7 @@ import process from "node:process";
 import { BikeRepositoryLive } from "@/domain/bikes";
 import { RentalRepositoryLive } from "@/domain/rentals";
 import {
-  assignFixedSlotReservationsUseCase,
+  assignFixedSlotReservations,
   parseSlotDateKey,
   ReservationRepositoryLive,
 } from "@/domain/reservations";
@@ -23,7 +23,7 @@ async function main() {
   );
 
   const summary = await Effect.runPromise(
-    assignFixedSlotReservationsUseCase({
+    assignFixedSlotReservations({
       slotDate,
       assignmentTime: new Date(),
     }).pipe(

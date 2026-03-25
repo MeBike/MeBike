@@ -1,13 +1,9 @@
-import type { ServerContracts } from "@mebike/shared";
 import type { z } from "zod";
+
+import type { StationListResponse, StationReadSummary } from "@/contracts/server";
 
 import { kyClient } from "@lib/ky-client";
 import { routePath, ServerRoutes } from "@lib/server-routes";
-
-import type { StationType } from "../types/StationType";
-
-type StationSummary = ServerContracts.StationsContracts.StationSummary;
-type StationListResponse = ServerContracts.StationsContracts.StationListResponse;
 
 type StationListQuery = z.infer<
   typeof ServerRoutes.stations.listStations.request.query
@@ -30,52 +26,30 @@ function toSearchParams(
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
-function toStationType(summary: StationSummary): StationType {
-  return {
-    _id: summary.id,
-    name: summary.name,
-    address: summary.address,
-    latitude: String(summary.latitude),
-    longitude: String(summary.longitude),
-    capacity: String(summary.capacity),
-    created_at: "",
-    updated_at: "",
-    totalBikes: summary.totalBikes,
-    availableBikes: summary.availableBikes,
-    bookedBikes: summary.bookedBikes,
-    brokenBikes: summary.brokenBikes,
-    reservedBikes: summary.reservedBikes,
-    maintainedBikes: summary.maintainedBikes,
-    emptySlots: summary.emptySlots,
-    average_rating: undefined,
-    total_ratings: undefined,
-  };
-}
-
 export const stationService = {
-  getAllStations: async (params?: StationListQuery): Promise<StationType[]> => {
+  getAllStations: async (params?: StationListQuery): Promise<StationReadSummary[]> => {
     const response = await kyClient
       .get(routePath(ServerRoutes.stations.listStations), {
         searchParams: toSearchParams(params),
       })
       .json<StationListResponse>();
 
-    return response.data.map(toStationType);
+    return response.data;
   },
-  getStationById: async (stationId: string): Promise<StationType> => {
+  getStationById: async (stationId: string): Promise<StationReadSummary> => {
     const path = routePath(ServerRoutes.stations.getStation)
       .replace(":stationId", stationId);
     const response = await kyClient
       .get(path)
-      .json<StationSummary>();
+      .json<StationReadSummary>();
 
-    return toStationType(response);
+    return response;
   },
   getNearMe: async (
     latitude: number,
     longitude: number,
     options?: NearbyStationsOptions,
-  ): Promise<StationType[]> => {
+  ): Promise<StationReadSummary[]> => {
     const response = await kyClient
       .get(routePath(ServerRoutes.stations.getNearbyStations), {
         searchParams: toSearchParams({
@@ -86,6 +60,6 @@ export const stationService = {
       })
       .json<StationListResponse>();
 
-    return response.data.map(toStationType);
+    return response.data;
   },
 };

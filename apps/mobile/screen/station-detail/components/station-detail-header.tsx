@@ -1,48 +1,55 @@
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { XStack } from "tamagui";
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-});
+import type { StationReadSummary } from "@/contracts/server";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { AppText } from "@ui/primitives/app-text";
+import { StatusBadge } from "@ui/primitives/status-badge";
 
 type StationDetailHeaderProps = {
-  insets: { top: number };
   onBack: () => void;
+  station: StationReadSummary;
 };
 
 export function StationDetailHeader({
-  insets,
   onBack,
+  station,
 }: StationDetailHeaderProps) {
   return (
-    <LinearGradient
-      colors={["#0066FF", "#00B4D8"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.header, { paddingTop: insets.top + 16 }]}
-    >
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={onBack}
-      >
-        <Ionicons name="chevron-back" size={24} color="#fff" />
-      </TouchableOpacity>
-      <Text style={styles.headerTitle}>Chi tiết thuê xe</Text>
-    </LinearGradient>
+    <AppHeroHeader
+      accessory={<StatusBadge label="HOẠT ĐỘNG" size="compact" tone="overlaySuccess" />}
+      onBack={onBack}
+      size="default"
+      subtitle={(
+        <XStack alignItems="center" gap="$1.5">
+          <IconSymbol name="location.fill" size={14} color={colors.textOnBrand} />
+          <AppText
+            selectable
+            flexShrink={1}
+            numberOfLines={1}
+            opacity={0.9}
+            tone="inverted"
+            variant="bodySmall"
+          >
+            {station.address}
+          </AppText>
+          <XStack
+            backgroundColor={colors.textOnBrand}
+            borderRadius="$round"
+            height={4}
+            opacity={0.45}
+            width={4}
+          />
+          <AppText selectable opacity={0.9} tone="inverted" variant="bodySmall">
+            {station.capacity.total}
+            {" "}
+            chỗ
+          </AppText>
+        </XStack>
+      )}
+      title={station.name}
+    />
   );
 }

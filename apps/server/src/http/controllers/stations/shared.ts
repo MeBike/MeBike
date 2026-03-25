@@ -5,5 +5,6 @@ export type StationsRoutes = typeof import("@mebike/shared")["serverRoutes"]["st
 export const { StationErrorCodeSchema, stationErrorMessages } = StationsContracts;
 
 export type StationSummary = StationsContracts.StationSummary;
+export type StationReadSummary = StationsContracts.StationReadSummary;
 export type StationErrorResponse = StationsContracts.StationErrorResponse;
 export type StationListResponse = StationsContracts.StationListResponse;

@@ -1,55 +1,53 @@
-import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-import { BikeColors } from "../../../constants/BikeColors";
-
-const styles = StyleSheet.create({
-  fixedSlotBanner: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 18,
-    padding: 16,
-    backgroundColor: BikeColors.primary,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  fixedSlotTitle: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  fixedSlotSubtitle: {
-    color: "rgba(255,255,255,0.85)",
-    marginTop: 4,
-    fontSize: 13,
-  },
-});
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { AppText } from "@ui/primitives/app-text";
+import { Pressable } from "react-native";
+import { XStack, YStack } from "tamagui";
 
 type FixedSlotBannerProps = {
-  _stationId: string;
-  _stationName: string;
   onPress: () => void;
 };
 
-export function FixedSlotBanner({
-  _stationId,
-  _stationName,
-  onPress,
-}: FixedSlotBannerProps) {
+export function FixedSlotBanner({ onPress }: FixedSlotBannerProps) {
   return (
-    <TouchableOpacity
-      style={styles.fixedSlotBanner}
+    <Pressable
       onPress={onPress}
-      activeOpacity={0.85}
+      style={({ pressed }) => ({
+        borderRadius: 20,
+        opacity: pressed ? 0.96 : 1,
+      })}
     >
-      <View style={{ flex: 1 }}>
-        <Text style={styles.fixedSlotTitle}>Khung giờ cố định</Text>
-        <Text style={styles.fixedSlotSubtitle}>
-          Tạo hoặc quản lý khung giờ để giữ xe nhanh hơn.
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color="#fff" />
-    </TouchableOpacity>
+      <XStack
+        alignItems="center"
+        backgroundColor={colors.surface}
+        borderColor={colors.borderSubtle}
+        borderRadius={20}
+        borderWidth={1}
+        gap="$3"
+        justifyContent="space-between"
+        paddingHorizontal="$4"
+        paddingVertical="$4"
+      >
+        <XStack alignItems="center" flex={1} gap="$3">
+          <XStack
+            alignItems="center"
+            backgroundColor={colors.surfaceAccent}
+            borderRadius="$round"
+            height={40}
+            justifyContent="center"
+            width={40}
+          >
+            <IconSymbol name="clock.fill" size={20} color={colors.brandPrimary} />
+          </XStack>
+          <YStack flex={1} gap="$1">
+            <AppText variant="bodyStrong">Khung giờ cố định</AppText>
+            <AppText tone="muted" variant="caption">
+              Tạo lịch giữ xe nhanh hơn tại trạm này.
+            </AppText>
+          </YStack>
+        </XStack>
+        <IconSymbol name="chevron.right" size={20} color={colors.textMuted} />
+      </XStack>
+    </Pressable>
   );
 }

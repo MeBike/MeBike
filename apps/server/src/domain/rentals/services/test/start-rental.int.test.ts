@@ -1,68 +1,26 @@
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import type { SubscriptionServiceTag } from "@/domain/subscriptions";
-
-import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { makeRentalRepository, RentalRepository, startRentalUseCase } from "@/domain/rentals";
-import {
-  makeSubscriptionRepository,
-  SubscriptionRepository,
-  SubscriptionServiceLive,
-} from "@/domain/subscriptions";
-import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
-import { Prisma } from "@/infrastructure/prisma";
+import { makeRentalRepository } from "@/domain/rentals";
 import { expectLeftTag, expectRight } from "@/test/effect/assertions";
-import { runEffectEither, runEffectEitherWithLayer } from "@/test/effect/run";
+import { runEffectEither } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenActiveRental, givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
+import { makeRentalRunners, makeRentalTestLayer } from "./rental-test-kit";
+
 describe("startRentalUseCase Integration", () => {
   const fixture = setupPrismaIntFixture();
-  let depsLayer: Layer.Layer<
-    Prisma | RentalRepository | BikeRepository | WalletRepository | SubscriptionServiceTag
-  >;
+  let runStartRental: ReturnType<typeof makeRentalRunners>["start"];
 
   beforeAll(() => {
-    const rentalRepo = makeRentalRepository(fixture.prisma);
-    const bikeRepo = makeBikeRepository(fixture.prisma);
-    const walletRepo = makeWalletRepository(fixture.prisma);
-    const subscriptionRepoLayer = Layer.succeed(
-      SubscriptionRepository,
-      makeSubscriptionRepository(fixture.prisma),
-    );
-    const subscriptionServiceLayer = SubscriptionServiceLive.pipe(
-      Layer.provide(subscriptionRepoLayer),
-    );
-
-    depsLayer = Layer.mergeAll(
-      Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma })),
-      Layer.succeed(RentalRepository, RentalRepository.make(rentalRepo)),
-      Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
-      Layer.succeed(WalletRepository, walletRepo),
-      subscriptionRepoLayer,
-      subscriptionServiceLayer,
-    );
+    runStartRental = makeRentalRunners(makeRentalTestLayer(fixture.prisma)).start;
   });
-
-  const runStartRental = (args: {
-    userId: string;
-    bikeId: string;
-    startStationId: string;
-  }) => runEffectEitherWithLayer(
-    startRentalUseCase({
-      userId: args.userId,
-      bikeId: args.bikeId,
-      startStationId: args.startStationId,
-      startTime: new Date(),
-    }),
-    depsLayer,
-  );
 
   it("creates a rental and books the bike", async () => {
     const { user } = await givenUserWithWallet(fixture, {
-      wallet: { balance: 5000n },
+      wallet: { balance: 600000n },
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture);
 
@@ -70,12 +28,32 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: station.id,
+      startTime: new Date(),
     });
 
     const rental = expectRight(result);
+    const activePricingPolicy = await fixture.prisma.pricingPolicy.findFirst({
+      where: { status: "ACTIVE" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    });
+
     expect(rental.status).toBe("RENTED");
     expect(rental.userId).toBe(user.id);
     expect(rental.bikeId).toBe(bike.id);
+    expect(rental.pricingPolicyId).toBe(activePricingPolicy?.id ?? null);
+    expect(rental.depositHoldId).not.toBeNull();
+
+    const hold = await fixture.prisma.walletHold.findUnique({
+      where: { id: rental.depositHoldId! },
+    });
+    expect(hold?.reason).toBe("RENTAL_DEPOSIT");
+    expect(hold?.rentalId).toBe(rental.id);
+    expect(hold?.status).toBe("ACTIVE");
+
+    const wallet = await fixture.prisma.wallet.findUnique({
+      where: { userId: user.id },
+    });
+    expect(wallet?.reservedBalance.toString()).toBe(activePricingPolicy?.depositRequired.toString());
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("BOOKED");
@@ -90,6 +68,7 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: station.id,
+      startTime: new Date(),
     });
 
     expectLeftTag(result, "ActiveRentalExists");
@@ -107,6 +86,7 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: activeRental.bike.id,
       startStationId: activeRental.station.id,
+      startTime: new Date(),
     });
 
     expectLeftTag(result, "BikeAlreadyRented");
@@ -122,6 +102,7 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: uuidv7(),
       startStationId: station.id,
+      startTime: new Date(),
     });
 
     expectLeftTag(result, "BikeNotFound");
@@ -138,6 +119,7 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: station.id,
+      startTime: new Date(),
     });
 
     expectLeftTag(result, "BikeMissingStation");
@@ -155,6 +137,7 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: startStation.id,
+      startTime: new Date(),
     });
 
     expectLeftTag(result, "BikeNotFoundInStation");
@@ -177,6 +160,7 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: station.id,
+      startTime: new Date(),
     });
 
     expectLeftTag(result, tag);
@@ -190,6 +174,7 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: station.id,
+      startTime: new Date(),
     });
 
     expectLeftTag(result, "UserWalletNotFound");
@@ -205,6 +190,7 @@ describe("startRentalUseCase Integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: station.id,
+      startTime: new Date(),
     });
 
     expectLeftTag(result, "InsufficientBalanceToRent");

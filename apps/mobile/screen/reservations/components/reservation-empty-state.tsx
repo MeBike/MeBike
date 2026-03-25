@@ -1,35 +1,20 @@
-import { Ionicons } from "@expo/vector-icons";
+import { IconSymbol } from "@components/IconSymbol";
+import { colors } from "@theme/colors";
+import { AppText } from "@ui/primitives/app-text";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { YStack } from "tamagui";
 
 type ReservationEmptyStateProps = {
   message: string;
 };
-const styles = StyleSheet.create({
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 32,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  emptyText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#90A4AE",
-    textAlign: "center",
-  },
-});
+
 export function ReservationEmptyState({ message }: ReservationEmptyStateProps) {
   return (
-    <View style={styles.emptyState}>
-      <Ionicons name="document-text-outline" size={40} color="#B0BEC5" />
-      <Text style={styles.emptyText}>{message}</Text>
-    </View>
+    <YStack alignItems="center" flex={1} gap="$3" justifyContent="center" paddingVertical="$7">
+      <IconSymbol color={colors.textMuted} name="clock" size={44} />
+      <AppText align="center" tone="muted" variant="bodySmall">
+        {message}
+      </AppText>
+    </YStack>
   );
 }

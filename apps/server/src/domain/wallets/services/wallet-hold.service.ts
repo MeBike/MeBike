@@ -12,18 +12,41 @@ export type WalletHoldService = {
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     input: CreateWalletHoldInput,
   ) => Effect.Effect<WalletHoldRow, WalletHoldRepositoryError>;
+  findByIdInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    holdId: string,
+  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
   findByWithdrawalIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     withdrawalId: string,
+  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  findActiveByRentalIdInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    rentalId: string,
   ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
   sumActiveAmountByWalletInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     walletId: string,
   ) => Effect.Effect<bigint, WalletHoldRepositoryError>;
+  releaseByIdInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    holdId: string,
+    releasedAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
   releaseByWithdrawalIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     withdrawalId: string,
     releasedAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  settleByIdInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    holdId: string,
+    settledAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  forfeitByIdInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    holdId: string,
+    forfeitedAt: Date,
   ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
   settleByWithdrawalIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
@@ -42,10 +65,18 @@ function makeWalletHoldService(
 ): WalletHoldService {
   return {
     createInTx: (tx, input) => makeWalletHoldRepository(tx).create(input),
+    findByIdInTx: (tx, holdId) => makeWalletHoldRepository(tx).findById(holdId),
     findByWithdrawalIdInTx: (tx, withdrawalId) => makeWalletHoldRepository(tx).findByWithdrawalId(withdrawalId),
+    findActiveByRentalIdInTx: (tx, rentalId) => makeWalletHoldRepository(tx).findActiveByRentalId(rentalId),
     sumActiveAmountByWalletInTx: (tx, walletId) => makeWalletHoldRepository(tx).sumActiveAmountByWallet(walletId),
+    releaseByIdInTx: (tx, holdId, releasedAt) =>
+      makeWalletHoldRepository(tx).releaseById(holdId, releasedAt),
     releaseByWithdrawalIdInTx: (tx, withdrawalId, releasedAt) =>
       makeWalletHoldRepository(tx).releaseByWithdrawalId(withdrawalId, releasedAt),
+    settleByIdInTx: (tx, holdId, settledAt) =>
+      makeWalletHoldRepository(tx).settleById(holdId, settledAt),
+    forfeitByIdInTx: (tx, holdId, forfeitedAt) =>
+      makeWalletHoldRepository(tx).forfeitById(holdId, forfeitedAt),
     settleByWithdrawalIdInTx: (tx, withdrawalId, settledAt) =>
       makeWalletHoldRepository(tx).settleByWithdrawalId(withdrawalId, settledAt),
   };

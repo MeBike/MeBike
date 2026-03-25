@@ -6,11 +6,17 @@ import {
   BikeSwapRequestErrorResponseSchema,
   BikeSwapRequestListResponseSchema,
   BikeSwapStatusSchema,
+  ReturnSlotReservationSchema,
 } from "../../rentals";
 import {
   paginationQueryFields,
   SortDirectionSchema,
 } from "../../schemas";
+import {
+  forbiddenResponse,
+  paginatedResponse,
+  unauthorizedResponse,
+} from "../helpers";
 import {
   BikeSwapRequestDetailSchemaOpenApi,
   BikeSwapRequestIdParamSchema,
@@ -34,11 +40,6 @@ import {
   StationActivityResponseSchema,
   UserIdParamSchema,
 } from "./shared";
-import {
-  forbiddenResponse,
-  paginatedResponse,
-  unauthorizedResponse,
-} from "../helpers";
 
 export const getMyRentals = createRoute({
   method: "get",
@@ -148,6 +149,46 @@ export const getMyRental = createRoute({
               },
             },
           },
+        },
+      },
+    },
+  },
+});
+
+export const getMyCurrentReturnSlot = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/{rentalId}/return-slot",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get the active return slot for a rental",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            ReturnSlotReservationSchema.openapi("CurrentReturnSlotReservation"),
+            "Current return slot response",
+          ),
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    400: {
+      description: "Rental is not active",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Rental or return slot not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
         },
       },
     },
@@ -496,7 +537,7 @@ export const adminGetRental = createRoute({
                   address: "District 1, Ho Chi Minh City",
                   latitude: 10.772,
                   longitude: 106.698,
-                  capacity: 30,
+                  totalCapacity: 30,
                   updatedAt: "2026-03-10T08:00:00.000Z",
                 },
                 endStation: {
@@ -505,7 +546,7 @@ export const adminGetRental = createRoute({
                   address: "District 1, Ho Chi Minh City",
                   latitude: 10.776,
                   longitude: 106.691,
-                  capacity: 25,
+                  totalCapacity: 25,
                   updatedAt: "2026-03-10T08:00:00.000Z",
                 },
                 startTime: "2026-03-10T09:10:00.000Z",
@@ -578,7 +619,7 @@ export const staffGetRental = createRoute({
                   address: "District 1, Ho Chi Minh City",
                   latitude: 10.772,
                   longitude: 106.698,
-                  capacity: 30,
+                  totalCapacity: 30,
                   updatedAt: "2026-03-10T08:00:00.000Z",
                 },
                 endStation: {
@@ -587,7 +628,7 @@ export const staffGetRental = createRoute({
                   address: "District 1, Ho Chi Minh City",
                   latitude: 10.776,
                   longitude: 106.691,
-                  capacity: 25,
+                  totalCapacity: 25,
                   updatedAt: "2026-03-10T08:00:00.000Z",
                 },
                 startTime: "2026-03-10T09:10:00.000Z",

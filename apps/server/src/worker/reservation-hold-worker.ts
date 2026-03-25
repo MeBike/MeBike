@@ -5,11 +5,6 @@ import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
 import {
-  makeRentalRepository,
-  RentalRepository,
-  RentalRepositoryLive,
-} from "@/domain/rentals";
-import {
   makeReservationRepository,
   ReservationRepository,
   ReservationRepositoryLive,
@@ -33,7 +28,6 @@ import logger from "@/lib/logger";
 type ReservationWorkerDeps
   = | ReservationRepository
     | BikeRepository
-    | RentalRepository
     | UserRepository
     | StationRepository
     | Prisma;
@@ -45,7 +39,6 @@ function runReservationEffect<A, E>(
     eff.pipe(
       Effect.provide(ReservationRepositoryLive),
       Effect.provide(BikeRepositoryLive),
-      Effect.provide(RentalRepositoryLive),
       Effect.provide(UserRepositoryLive),
       Effect.provide(StationRepositoryLive),
       Effect.provide(PrismaLive),
@@ -198,7 +191,6 @@ export async function handleReservationExpireHold(
   const result = await runReservationEffect(
     Effect.gen(function* () {
       yield* BikeRepository;
-      yield* RentalRepository;
       const userRepo = yield* UserRepository;
       const stationRepo = yield* StationRepository;
       const { client } = yield* Prisma;
@@ -208,7 +200,6 @@ export async function handleReservationExpireHold(
         try: async () => {
           return await client.$transaction(async (tx) => {
             const txBikeRepo = makeBikeRepository(tx);
-            const txRentalRepo = makeRentalRepository(tx);
             const txReservationRepo = makeReservationRepository(tx);
             const reservationOpt = await Effect.runPromise(
               txReservationRepo.findById(payload.reservationId).pipe(
@@ -239,12 +230,6 @@ export async function handleReservationExpireHold(
             if (!expired) {
               return { outcome: "SKIPPED" as const, reason: "ALREADY_HANDLED" as const };
             }
-
-            await Effect.runPromise(
-              txRentalRepo.cancelReservedRental(reservation.id, now).pipe(
-                Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-              ),
-            );
 
             await Effect.runPromise(
               txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now).pipe(

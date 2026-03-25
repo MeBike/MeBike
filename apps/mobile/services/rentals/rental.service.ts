@@ -8,7 +8,9 @@ import { StatusCodes } from "http-status-codes";
 
 import type {
   CreateRentalPayload,
+  CreateReturnSlotPayload,
   MyRentalListResponse,
+  MyRentalResolvedDetail,
   Rental,
   RentalCounts,
   RentalDetail,
@@ -16,7 +18,11 @@ import type {
   RentalListResponse,
   RentalWithPrice,
   RentalWithPricing,
+  ReturnSlotReservation,
 } from "@/types/rental-types";
+
+import { bikeService } from "@/services/bike.service";
+import { stationService } from "@/services/station.service";
 
 import type { RentalError } from "./rental-error";
 
@@ -35,6 +41,59 @@ function toSearchParams(
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
+async function tryGetBikeSummary(bikeId?: string): Promise<MyRentalResolvedDetail["bike"]> {
+  if (!bikeId) {
+    return null;
+  }
+
+  try {
+    return await bikeService.getBikeByIdForAll(bikeId);
+  }
+  catch {
+    return null;
+  }
+}
+
+async function tryGetStationSummary(stationId?: string): Promise<MyRentalResolvedDetail["startStation"]> {
+  if (!stationId) {
+    return null;
+  }
+
+  try {
+    return await stationService.getStationById(stationId);
+  }
+  catch {
+    return null;
+  }
+}
+
+async function tryGetCurrentReturnSlot(rentalId: string): Promise<ReturnSlotReservation | null> {
+  try {
+    const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot)
+      .replace("{rentalId}", rentalId)
+      .replace(":rentalId", rentalId);
+
+    const response = await kyClient.get(path, { throwHttpErrors: false });
+    if (response.status === StatusCodes.OK) {
+      const okSchema = ServerRoutes.rentals.getMyCurrentReturnSlot.responses[200].content["application/json"].schema;
+      const data = await readJson(response);
+      const parsed = decodeWithSchema(okSchema, data);
+      return parsed.ok ? parsed.value.result : null;
+    }
+
+    const error = await parseRentalError(response);
+
+    if (error._tag === "ApiError" && error.code === "RETURN_SLOT_NOT_FOUND") {
+      return null;
+    }
+
+    throw error;
+  }
+  catch {
+    return null;
+  }
+}
+
 export const rentalServiceV1 = {
   createRental: async (payload: CreateRentalPayload): Promise<Result<RentalWithPrice, RentalError>> => {
     try {
@@ -47,7 +106,7 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.createRental.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));
@@ -120,15 +179,52 @@ export const rentalServiceV1 = {
     }
   },
 
-  getMyRentalCounts: async (status?: Rental["status"]): Promise<Result<RentalCounts, RentalError>> => {
-    try {
-      const response = await kyClient.get(routePath(ServerRoutes.rentals.getMyRentalCounts), {
-        searchParams: toSearchParams(status ? { status } : undefined),
-        throwHttpErrors: false,
-      });
+  getMyRentalResolvedDetail: async (rentalId: string): Promise<Result<MyRentalResolvedDetail, RentalError>> => {
+    const rentalResult = await rentalServiceV1.getMyRental(rentalId);
 
+    if (!rentalResult.ok) {
+      return rentalResult;
+    }
+
+    const rental = rentalResult.value;
+
+    let returnSlot: ReturnSlotReservation | null = null;
+
+    if (rental.status === "RENTED") {
+      try {
+        returnSlot = await tryGetCurrentReturnSlot(rentalId);
+      }
+      catch {
+        returnSlot = null;
+      }
+    }
+
+    const [bike, startStation, endStation, returnStation] = await Promise.all([
+      tryGetBikeSummary(rental.bikeId),
+      tryGetStationSummary(rental.startStation),
+      tryGetStationSummary(rental.endStation),
+      tryGetStationSummary(returnSlot?.stationId),
+    ]);
+
+    return ok({
+      rental,
+      bike,
+      startStation,
+      endStation,
+      returnSlot,
+      returnStation,
+    });
+  },
+
+  getMyCurrentReturnSlot: async (rentalId: string): Promise<Result<ReturnSlotReservation, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot)
+        .replace("{rentalId}", rentalId)
+        .replace(":rentalId", rentalId);
+
+      const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
-        const okSchema = ServerRoutes.rentals.getMyRentalCounts.responses[200].content["application/json"].schema;
+        const okSchema = ServerRoutes.rentals.getMyCurrentReturnSlot.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
         return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
@@ -141,22 +237,45 @@ export const rentalServiceV1 = {
     }
   },
 
-  endMyRental: async (args: { rentalId: string; endStation: string }): Promise<Result<Rental, RentalError>> => {
+  createMyReturnSlot: async (
+    rentalId: string,
+    payload: CreateReturnSlotPayload,
+  ): Promise<Result<ReturnSlotReservation, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.endMyRental)
-        .replace("{rentalId}", args.rentalId)
-        .replace(":rentalId", args.rentalId);
+      const path = routePath(ServerRoutes.rentals.createMyReturnSlot)
+        .replace("{rentalId}", rentalId)
+        .replace(":rentalId", rentalId);
 
-      const response = await kyClient.put(path, {
-        json: { endStation: args.endStation },
+      const response = await kyClient.post(path, {
+        json: payload,
+        throwHttpErrors: false,
+      });
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.createMyReturnSlot.responses[200].content["application/json"].schema;
+        const data = await readJson(response);
+        const parsed = decodeWithSchema(okSchema, data);
+        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+      }
+
+      return err(await parseRentalError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  getMyRentalCounts: async (status?: Rental["status"]): Promise<Result<RentalCounts, RentalError>> => {
+    try {
+      const response = await kyClient.get(routePath(ServerRoutes.rentals.getMyRentalCounts), {
+        searchParams: toSearchParams(status ? { status } : undefined),
         throwHttpErrors: false,
       });
 
       if (response.status === StatusCodes.OK) {
-        const okSchema = ServerRoutes.rentals.endMyRental.responses[200].content["application/json"].schema;
+        const okSchema = ServerRoutes.rentals.getMyRentalCounts.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));

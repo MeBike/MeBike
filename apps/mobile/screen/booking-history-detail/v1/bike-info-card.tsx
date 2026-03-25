@@ -1,9 +1,9 @@
 import React from "react";
-import { formatSupportCode, shortenId } from "@utils/id";
 
-import type { Bike } from "@/types/BikeTypes";
+import type { BikeSummary, StationReadSummary } from "@/contracts/server";
 import type { Rental } from "@/types/rental-types";
-import type { StationType } from "@/types/StationType";
+
+import { formatSupportCode, shortenId } from "@utils/id";
 
 import InfoCard from "../components/InfoCard";
 import InfoRow from "../components/InfoRow";
@@ -14,8 +14,8 @@ export function RentalBikeInfoCard({
   bike,
 }: {
   rental: Rental;
-  stationsById: Map<string, StationType>;
-  bike?: Bike;
+  stationsById: Map<string, StationReadSummary>;
+  bike?: BikeSummary;
 }) {
   const startStation = stationsById.get(rental.startStation);
   const endStation = rental.endStation ? stationsById.get(rental.endStation) : undefined;
@@ -23,8 +23,8 @@ export function RentalBikeInfoCard({
   const bikeDisplayId = rental.bikeId
     ? formatSupportCode(rental.bikeId)
     : "Không có dữ liệu";
-  const chipDisplayId = bike?.chip_id
-    ? `#${shortenId(bike.chip_id, { head: 6, tail: 5 })}`
+  const chipDisplayId = bike?.chipId
+    ? `#${shortenId(bike.chipId, { head: 6, tail: 5 })}`
     : "Chưa có";
   const startStationLabel = startStation?.name ?? formatSupportCode(rental.startStation);
   const endStationLabel = rental.endStation

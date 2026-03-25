@@ -1,5 +1,4 @@
 import type { Result } from "@lib/result";
-import type { ServerContracts } from "@mebike/shared";
 
 import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
@@ -7,33 +6,29 @@ import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
 import { StatusCodes } from "http-status-codes";
 
-import type { Reservation, ReservationStatus } from "@/types/reservation-types";
-
-import type { PaginatedReservations } from "../../types/reservation-types";
+import type {
+  CreateReservationPayload,
+  PaginatedReservations,
+  Reservation,
+  ReservationDetail,
+  ReservationExpandedDetail,
+  ReservationOption,
+  ReservationStatus,
+} from "@/types/reservation-types";
 import type { ReservationError } from "./reservation-error";
 
 import { asNetworkError, parseReservationError } from "./reservation-error";
 
-type ReservationDetail = ServerContracts.ReservationsContracts.ReservationDetail;
-type ReservationListResponse = ServerContracts.ReservationsContracts.ListMyReservationsResponse;
-export type ReservationStatusV1 = "PENDING" | "ACTIVE" | "CANCELLED" | "EXPIRED";
-export type ReservationOptionV1 = "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION";
-export type CreateReservationPayload = ServerContracts.ReservationsContracts.CreateReservationRequest;
-
 type ReservationListParams = {
   page?: number;
   pageSize?: number;
-  status?: ReservationStatusV1;
+  status?: ReservationStatus;
   stationId?: string;
-  reservationOption?: ReservationOptionV1;
+  reservationOption?: ReservationOption;
 };
 
-const statusLabelMap: Record<ReservationStatusV1, ReservationStatus> = {
-  PENDING: "ĐANG CHỜ XỬ LÍ",
-  ACTIVE: "ĐANG HOẠT ĐỘNG",
-  CANCELLED: "ĐÃ HUỶ",
-  EXPIRED: "ĐÃ HẾT HẠN",
-};
+const CURRENT_RESERVATION_STATUSES: ReservationStatus[] = ["PENDING", "ACTIVE"];
+const RESERVATION_HISTORY_STATUSES: ReservationStatus[] = ["FULFILLED", "CANCELLED", "EXPIRED"];
 
 function toSearchParams(
   params: Record<string, unknown> | undefined,
@@ -49,29 +44,16 @@ function toSearchParams(
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
-function toNumber(value: string): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function mapReservation(detail: ReservationDetail): Reservation {
+function mapReservation(detail: ReservationDetail | ReservationExpandedDetail): Reservation {
   return {
-    id: detail.id,
-    userId: detail.userId,
-    bikeId: detail.bikeId ?? "",
-    stationId: detail.stationId,
-    station: undefined,
-    startTime: detail.startTime,
-    endTime: detail.endTime ?? null,
-    prepaid: toNumber(detail.prepaid),
-    status: statusLabelMap[detail.status],
-    createdAt: detail.createdAt,
-    updatedAt: detail.updatedAt,
+    ...detail,
+    station: "station" in detail ? detail.station : undefined,
+    bike: "bike" in detail ? detail.bike : undefined,
   };
 }
 
 function mapPagination(
-  pagination: ReservationListResponse["pagination"],
+  pagination: PaginatedReservations["pagination"],
 ): PaginatedReservations["pagination"] {
   return {
     pageSize: pagination.pageSize,
@@ -79,6 +61,14 @@ function mapPagination(
     totalPages: pagination.totalPages,
     total: pagination.total,
   };
+}
+
+function filterReservations(
+  reservations: Reservation[],
+  statuses: ReservationStatus[],
+) {
+  const statusSet = new Set(statuses);
+  return reservations.filter(item => statusSet.has(item.status));
 }
 
 export const reservationService = {
@@ -145,7 +135,21 @@ export const reservationService = {
     }
 
     return ok({
-      data: result.value.data.filter(item => item.status !== "ĐANG CHỜ XỬ LÍ"),
+      data: filterReservations(result.value.data, RESERVATION_HISTORY_STATUSES),
+      pagination: result.value.pagination,
+    });
+  },
+
+  getCurrentReservations: async (
+    params: Omit<ReservationListParams, "status"> = {},
+  ): Promise<Result<PaginatedReservations, ReservationError>> => {
+    const result = await reservationService.getMyReservations(params);
+    if (!result.ok) {
+      return result;
+    }
+
+    return ok({
+      data: filterReservations(result.value.data, CURRENT_RESERVATION_STATUSES),
       pagination: result.value.pagination,
     });
   },
