@@ -48,3 +48,10 @@ export class NoNearestStationFound extends Data.TaggedError(
     readonly latitude: number;
     readonly longitude: number;
   }> {}
+
+export class NoAvailableTechnicianFound extends Data.TaggedError(
+  "NoAvailableTechnicianFound",
+)<{
+    readonly latitude: number;
+    readonly longitude: number;
+  }> {}

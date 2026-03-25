@@ -11,6 +11,7 @@ import { IncidentSeverity, IncidentSource } from "generated/kysely/types";
 
 import type {
   IncidentRepositoryError,
+  NoAvailableTechnicianFound,
   NoNearestStationFound,
 } from "../domain-errors";
 import type {
@@ -45,6 +46,7 @@ export type IncidentService = {
     | StationNotFound
     | NoNearestStationFound
     | BikeNotAvailable
+    | NoAvailableTechnicianFound
   >;
 
   updateIncident: (
@@ -216,6 +218,10 @@ export const IncidentServiceLive = Layer.effect(
           Effect.catchTag("StationRepositoryError", error =>
             Effect.die(error)),
           Effect.catchTag("BikeRepositoryError", error => Effect.die(error)),
+          Effect.catchTag("NoAvailableTechnicianFound", error =>
+            Effect.die(error)),
+          Effect.catchTag("NoNearestStationFound", error =>
+            Effect.die(error)),
         ),
 
       updateIncident: (incidentId: string, patch: UpdateIncidentInput) =>

@@ -174,6 +174,19 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
             },
             404,
           )),
+        Match.tag("NoAvailableTechnicianFound", ({ latitude, longitude }) =>
+          c.json(
+            {
+              error: incidentErrorMessages.NO_AVAILABLE_TECHNICIAN_FOUND,
+              details: {
+                code: IncidentErrorCodeSchema.enum
+                  .NO_AVAILABLE_TECHNICIAN_FOUND,
+                latitude,
+                longitude,
+              },
+            },
+            404,
+          )),
         Match.orElse((err) => {
           throw err;
         }),

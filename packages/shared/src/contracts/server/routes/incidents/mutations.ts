@@ -95,6 +95,16 @@ export const createIncident = createRoute({
                 },
               },
             },
+            NoAvailableTechnicianFound: {
+              value: {
+                error: "No available technician found",
+                details: {
+                  code: IncidentErrorCodeSchema.enum.NO_AVAILABLE_TECHNICIAN_FOUND,
+                  latitude: 10.8231,
+                  longitude: 106.6297,
+                },
+              },
+            },
           },
         },
       },

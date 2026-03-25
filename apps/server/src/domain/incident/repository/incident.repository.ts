@@ -15,7 +15,6 @@ import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { stationRepositoryFactory } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { NoNearestStationFound } from "../domain-errors";
 import type {
   CreateIncidentInput,
   IncidentDetail,
@@ -25,7 +24,11 @@ import type {
   UpdateIncidentInput,
 } from "../models";
 
-import { IncidentRepositoryError } from "../domain-errors";
+import {
+  IncidentRepositoryError,
+  NoAvailableTechnicianFound,
+  NoNearestStationFound,
+} from "../domain-errors";
 import {
   incidentDetailSelect,
   mapToIncidentDetail,
@@ -43,7 +46,7 @@ export type IncidentRepo = {
     data: CreateIncidentInput,
   ) => Effect.Effect<
     IncidentRow,
-    IncidentRepositoryError | NoNearestStationFound
+    IncidentRepositoryError | NoNearestStationFound | NoAvailableTechnicianFound
   >;
 
   update: (
@@ -73,96 +76,153 @@ function toIncidentOrderBy(
   }
 }
 
-function createIncidentWithClient(tx: PrismaClient | PrismaTypes.TransactionClient, data: CreateIncidentInput) {
-  return Effect.tryPromise({
-    try: async () => {
-      let foundTechnician:
-        | { userId: string; technicianTeamId: string }
-        | undefined;
+function createIncidentWithClient(
+  tx: PrismaClient | PrismaTypes.TransactionClient,
+  data: CreateIncidentInput,
+) {
+  return Effect.gen(function* () {
+    let foundTechnician:
+      | { userId: string; technicianTeamId: string }
+      | undefined;
 
-      if (data.latitude && data.longitude) {
-        const stationRepo = stationRepositoryFactory(tx);
-        const nearestStation = await Effect.runPromise(
-          stationRepo.listNearest({
+    if (data.latitude && data.longitude) {
+      const stationRepo = stationRepositoryFactory(tx);
+      const nearestStation = yield* stationRepo
+        .listNearest({
+          latitude: Number(data.latitude),
+          longitude: Number(data.longitude),
+          maxDistanceMeters: 5000,
+          pageSize: 10,
+        })
+        .pipe(
+          Effect.mapError(
+            e =>
+              new IncidentRepositoryError({
+                operation: "createIncidentWithClient.listNearest",
+                cause: e,
+              }),
+          ),
+        );
+
+      if (nearestStation.total === 0) {
+        return yield* Effect.fail(
+          new NoNearestStationFound({
             latitude: Number(data.latitude),
             longitude: Number(data.longitude),
-            maxDistanceMeters: 5000,
-            pageSize: 10,
+          }),
+        );
+      }
+
+      for (const station of nearestStation.items) {
+        // Count Available Bikes of this station
+        const countAvailableBikes = yield* Effect.promise(() =>
+          tx.bike.count({
+            where: {
+              stationId: station.id,
+              status: "AVAILABLE",
+            },
           }),
         );
 
-        for (const station of nearestStation.items) {
-          const technician = await tx.userOrgAssignment.findFirst({
+        if (countAvailableBikes === 0) {
+          continue;
+        }
+
+        // Find Available Technician of this station
+        const technician = yield* Effect.promise(() =>
+          tx.userOrgAssignment.findFirst({
             where: {
               stationId: station.id,
               technicianTeam: { availabilityStatus: "AVAILABLE" },
             },
             select: { userId: true, technicianTeamId: true },
-          });
-
-          if (technician && technician.technicianTeamId) {
-            foundTechnician = {
-              userId: technician.userId,
-              technicianTeamId: technician.technicianTeamId,
-            };
-            break;
-          }
-        }
-      }
-      else if (data.stationId) {
-        const technician = await tx.userOrgAssignment.findFirst({
-          where: {
-            stationId: data.stationId!,
-            technicianTeam: { availabilityStatus: "AVAILABLE" },
-          },
-          select: { userId: true, technicianTeamId: true },
-        });
+          }),
+        );
 
         if (technician && technician.technicianTeamId) {
           foundTechnician = {
             userId: technician.userId,
             technicianTeamId: technician.technicianTeamId,
           };
+          break;
         }
       }
 
-      const incident = await tx.incidentReport.create({
-        data: {
-          reporterUserId: data.reporterUserId,
-          rentalId: data.rentalId,
-          bikeId: data.bikeId || "",
-          stationId: data.stationId,
-          source: data.source as IncidentSource,
-          incidentType: data.incidentType,
-          severity: data.severity as IncidentSeverity,
-          description: data.description,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          bikeLocked: data.bikeLocked,
-          status: (foundTechnician ? "ASSIGNED" : "OPEN") as any,
-          attachments: {
-            create: data.fileUrls.map(url => ({ fileUrl: url })),
-          },
-        },
-      });
-
-      if (foundTechnician) {
-        await tx.technicianAssignment.create({
-          data: {
-            incidentReportId: incident.id,
-            technicianTeamId: foundTechnician!.technicianTeamId,
-            technicianUserId: foundTechnician!.userId,
-          },
-        });
+      if (!foundTechnician) {
+        return yield* Effect.fail(
+          new NoAvailableTechnicianFound({
+            latitude: Number(data.latitude),
+            longitude: Number(data.longitude),
+          }),
+        );
       }
+    }
+    else if (data.stationId) {
+      const technician = yield* Effect.promise(() =>
+        tx.userOrgAssignment.findFirst({
+          where: {
+            stationId: data.stationId!,
+            technicianTeam: { availabilityStatus: "AVAILABLE" },
+          },
+          select: { userId: true, technicianTeamId: true },
+        }),
+      );
 
-      return incident as IncidentRow;
-    },
-    catch: e =>
-      new IncidentRepositoryError({
-        operation: "createIncidentWithClient",
-        cause: e,
-      }),
+      if (technician && technician.technicianTeamId) {
+        foundTechnician = {
+          userId: technician.userId,
+          technicianTeamId: technician.technicianTeamId,
+        };
+      }
+    }
+
+    const incident = yield* Effect.tryPromise({
+      try: () =>
+        tx.incidentReport.create({
+          data: {
+            reporterUserId: data.reporterUserId,
+            rentalId: data.rentalId,
+            bikeId: data.bikeId || "",
+            stationId: data.stationId,
+            source: data.source as IncidentSource,
+            incidentType: data.incidentType,
+            severity: data.severity as IncidentSeverity,
+            description: data.description,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            bikeLocked: data.bikeLocked,
+            status: (foundTechnician ? "ASSIGNED" : "OPEN") as any,
+            attachments: {
+              create: data.fileUrls.map(url => ({ fileUrl: url })),
+            },
+          },
+        }),
+      catch: e =>
+        new IncidentRepositoryError({
+          operation: "createIncidentWithClient",
+          cause: e,
+        }),
+    });
+
+    if (foundTechnician) {
+      yield* Effect.tryPromise({
+        try: () =>
+          tx.technicianAssignment.create({
+            data: {
+              incidentReportId: incident.id,
+              technicianTeamId: foundTechnician!.technicianTeamId,
+              technicianUserId: foundTechnician!.userId,
+            },
+          }),
+        catch: e =>
+          new IncidentRepositoryError({
+            operation: "createIncidentWithClient.assignTechnician",
+            cause: e,
+          }),
+      });
+    }
+
+    return incident as IncidentRow;
   });
 }
 
