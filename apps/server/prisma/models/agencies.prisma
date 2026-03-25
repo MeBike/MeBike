@@ -14,8 +14,8 @@ model Agency {
   createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
-  userAssignments UserOrgAssignment[]
-  approvedRequests AgencyRequest[]    @relation("AgencyRequestApprovedAgency")
-  returnConfirmations ReturnConfirmation[]
+  userAssignments              UserOrgAssignment[]
+  approvedRequests             AgencyRequest[]         @relation("AgencyRequestApprovedAgency")
+  returnConfirmations          ReturnConfirmation[]
   targetRedistributionRequests RedistributionRequest[] @relation("RedistributionRequestTargetAgency")
 }

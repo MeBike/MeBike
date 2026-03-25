@@ -64,12 +64,12 @@ model IncidentReport {
   resolvedAt     DateTime?        @map("resolved_at") @db.Timestamptz
   closedAt       DateTime?        @map("closed_at") @db.Timestamptz
 
-  reporterUser User                  @relation(fields: [reporterUserId], references: [id])
-  rental       Rental?               @relation(fields: [rentalId], references: [id])
-  bike         Bike                  @relation(fields: [bikeId], references: [id])
-  station      Station?              @relation(fields: [stationId], references: [id])
-  attachments  IncidentAttachment[]
-  assignments  TechnicianAssignment[]
+  reporterUser    User                   @relation(fields: [reporterUserId], references: [id])
+  rental          Rental?                @relation(fields: [rentalId], references: [id])
+  bike            Bike                   @relation(fields: [bikeId], references: [id])
+  station         Station?               @relation(fields: [stationId], references: [id])
+  attachments     IncidentAttachment[]
+  assignments     TechnicianAssignment[]
   maintenanceLogs BikeMaintenanceLog[]
 
   @@index([reporterUserId], name: "idx_incident_reports_reporter")
@@ -116,13 +116,13 @@ model TechnicianAssignment {
 }
 
 model BikeMaintenanceLog {
-  id               String             @id @default(uuid(7)) @db.Uuid
-  bikeId           String             @map("bike_id") @db.Uuid
-  incidentReportId String?            @map("incident_report_id") @db.Uuid
-  technicianUserId String?            @map("technician_user_id") @db.Uuid
+  id               String            @id @default(uuid(7)) @db.Uuid
+  bikeId           String            @map("bike_id") @db.Uuid
+  incidentReportId String?           @map("incident_report_id") @db.Uuid
+  technicianUserId String?           @map("technician_user_id") @db.Uuid
   result           MaintenanceResult
   notes            String?
-  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz
 
   bike           Bike            @relation(fields: [bikeId], references: [id])
   incidentReport IncidentReport? @relation(fields: [incidentReportId], references: [id])

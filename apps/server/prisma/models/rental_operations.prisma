@@ -35,7 +35,7 @@ model ReturnConfirmation {
   confirmedAt        DateTime           @map("confirmed_at") @db.Timestamptz
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz
 
-  rental          Rental  @relation(fields: [rentalId], references: [id])
+  rental          Rental   @relation(fields: [rentalId], references: [id])
   station         Station? @relation("ReturnConfirmationStation", fields: [stationId], references: [id])
   agency          Agency?  @relation(fields: [agencyId], references: [id])
   confirmedByUser User     @relation(fields: [confirmedByUserId], references: [id])
@@ -47,18 +47,18 @@ model ReturnConfirmation {
 }
 
 model RentalBillingRecord {
-  id                         String        @id @default(uuid(7)) @db.Uuid
-  rentalId                   String        @unique @map("rental_id") @db.Uuid
-  pricingPolicyId            String        @map("pricing_policy_id") @db.Uuid
-  totalDurationMinutes       Int           @map("total_duration_minutes")
-  estimatedDistanceKm        Decimal?      @map("estimated_distance_km") @db.Decimal(8, 2)
-  baseAmount                 Decimal       @default(0) @map("base_amount") @db.Decimal(12, 2)
-  overtimeAmount             Decimal       @default(0) @map("overtime_amount") @db.Decimal(12, 2)
-  couponDiscountAmount       Decimal       @default(0) @map("coupon_discount_amount") @db.Decimal(12, 2)
-  subscriptionDiscountAmount Decimal       @default(0) @map("subscription_discount_amount") @db.Decimal(12, 2)
-  depositForfeited           Boolean       @default(false) @map("deposit_forfeited")
-  totalAmount                Decimal       @map("total_amount") @db.Decimal(12, 2)
-  createdAt                  DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  id                         String   @id @default(uuid(7)) @db.Uuid
+  rentalId                   String   @unique @map("rental_id") @db.Uuid
+  pricingPolicyId            String   @map("pricing_policy_id") @db.Uuid
+  totalDurationMinutes       Int      @map("total_duration_minutes")
+  estimatedDistanceKm        Decimal? @map("estimated_distance_km") @db.Decimal(8, 2)
+  baseAmount                 Decimal  @default(0) @map("base_amount") @db.Decimal(12, 2)
+  overtimeAmount             Decimal  @default(0) @map("overtime_amount") @db.Decimal(12, 2)
+  couponDiscountAmount       Decimal  @default(0) @map("coupon_discount_amount") @db.Decimal(12, 2)
+  subscriptionDiscountAmount Decimal  @default(0) @map("subscription_discount_amount") @db.Decimal(12, 2)
+  depositForfeited           Boolean  @default(false) @map("deposit_forfeited")
+  totalAmount                Decimal  @map("total_amount") @db.Decimal(12, 2)
+  createdAt                  DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   rental        Rental        @relation(fields: [rentalId], references: [id])
   pricingPolicy PricingPolicy @relation(fields: [pricingPolicyId], references: [id])
@@ -68,15 +68,15 @@ model RentalBillingRecord {
 }
 
 model RentalPenalty {
-  id          String            @id @default(uuid(7)) @db.Uuid
-  rentalId    String            @map("rental_id") @db.Uuid
-  walletHoldId String?          @map("wallet_hold_id") @db.Uuid
-  penaltyType RentalPenaltyType @map("penalty_type")
-  amount      Decimal           @db.Decimal(12, 2)
-  description String?
-  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  id           String            @id @default(uuid(7)) @db.Uuid
+  rentalId     String            @map("rental_id") @db.Uuid
+  walletHoldId String?           @map("wallet_hold_id") @db.Uuid
+  penaltyType  RentalPenaltyType @map("penalty_type")
+  amount       Decimal           @db.Decimal(12, 2)
+  description  String?
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz
 
-  rental     Rental     @relation(fields: [rentalId], references: [id])
+  rental     Rental      @relation(fields: [rentalId], references: [id])
   walletHold WalletHold? @relation(fields: [walletHoldId], references: [id])
 
   @@index([rentalId], name: "idx_rental_penalties_rental")
