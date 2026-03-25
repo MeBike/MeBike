@@ -15,12 +15,13 @@ import {
 import {
   useCreateUserMutation,
   useResetPasswordUserMutation,
-  useUpdateProfileUserMutation,
+  useUpdateProfileStaffMutation,
 } from "@mutations";
 import {
   UserProfile,
   CreateUserFormData,
   ResetPasswordSchemaFormData,
+  UpdateStaffFormData,
 } from "@schemas";
 import { HTTP_STATUS } from "@constants";
 import {
@@ -199,7 +200,7 @@ export const useUserActions = ({
     ],
   );
   const useResetPassword = useResetPasswordUserMutation();
-  const useUpdateProfile = useUpdateProfileUserMutation();
+  const useUpdateProfile = useUpdateProfileStaffMutation();
   const resetPassword = useCallback(
     async (userData: ResetPasswordSchemaFormData) => {
       if (!hasToken) {
@@ -226,8 +227,8 @@ export const useUserActions = ({
     },
     [hasToken, router, useResetPassword, id],
   );
-  const updateProfileUser = useCallback(
-    async (userData: UserProfile) => {
+  const updateProfileStaff = useCallback(
+    async (userData: UpdateStaffFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -237,11 +238,7 @@ export const useUserActions = ({
           id: id || "",
           data: userData,
         });
-        if (result.status === HTTP_STATUS.OK) {
-          toast.success(
-            result.data?.message || "Cập nhật thông tin thành công",
-          );
-        }
+        
         queryClient.invalidateQueries({
           queryKey: ["user", "all"],
         });
@@ -304,7 +301,7 @@ export const useUserActions = ({
     isLoadingDetailUser,
     dashboardStatsData,
     resetPassword,
-    updateProfileUser,
+    updateProfileStaff,
     getRefetchDashboardStats,
   };
 };

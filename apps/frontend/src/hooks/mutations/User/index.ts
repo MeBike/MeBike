@@ -1,3 +1,3 @@
 export * from "./useCreateUserMutation";
 export * from "./useResetPasswordMutation";
-export * from "./useUpdateProfileUserMutation";
+export * from "./useUpdateProfileStaffMutation";

@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import {
   Mail,
   Phone,
@@ -7,7 +9,7 @@ import {
   User,
   CheckCircle,
   Clock,
-  Edit
+  Edit,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +19,34 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatToVNTime } from "@lib/formatVNDate";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import type { DetailUser as Me, VerifyStatus } from "@/types";
+import type { DetailUser as Me, Station, VerifyStatus } from "@/types";
+import * as React from "react";
+import { toast } from "sonner";
+import type { UseMutationResult } from "@tanstack/react-query";
+import type { AxiosResponse } from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  updateStaffSchema,
+  type UpdateStaffFormData,
+} from "@/schemas/user-schema";
 
 type StatusConfig = {
   label: string;
@@ -39,9 +68,17 @@ const roleConfig = {
   USER: { label: "User", variant: "secondary" as const },
   SOS: { label: "SOS", variant: "secondary" as const },
 };
+type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
 
 interface UserDetailProps {
   user: Me;
+  updateProfileStaffMutation: UseMutationResult<
+    AxiosResponse<Me>,
+    unknown,
+    { id: string; data: UpdateStaffFormData },
+    unknown
+  >;
+  stations: Station[];
 }
 
 const getUserDisplayStatus = (user: {
@@ -51,10 +88,32 @@ const getUserDisplayStatus = (user: {
   return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
 };
 
-export default function DetailUser({ user }: UserDetailProps) {
+export default function DetailUser({
+  user,
+  updateProfileStaffMutation,
+  stations,
+}: UserDetailProps) {
   const displayStatus = getUserDisplayStatus(user);
   const status = statusConfig[displayStatus] || statusConfig.UNVERIFIED;
   const role = roleConfig[user.role] || roleConfig.USER;
+
+  const [open, setOpen] = React.useState(false);
+  const [editRole, setEditRole] = React.useState<"STAFF" | "TECHNICIAN">(
+    "STAFF",
+  );
+  const [verify, setVerify] = React.useState<
+    "VERIFIED" | "UNVERIFIED"
+  >(displayStatus === "VERIFIED" ? "VERIFIED" : "UNVERIFIED");
+  const [accountStatus, setAccountStatus] = useState<
+    "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED"
+  >(user.accountStatus as AccountStatus);
+  const [stationId, setStationId] = React.useState(user.orgAssignment.station.id);
+  const [technicianTeamId, setTechnicianTeamId] = React.useState("");
+  const mutationState = updateProfileStaffMutation as unknown as {
+    isPending?: boolean;
+    isLoading?: boolean;
+  };
+  const isSaving = Boolean(mutationState.isPending ?? mutationState.isLoading);
   if (!user) {
     return (
       <div>
@@ -77,6 +136,40 @@ export default function DetailUser({ user }: UserDetailProps) {
       .slice(0, 2);
   };
 
+  const handleSave = async () => {
+    const raw =
+      editRole === "STAFF"
+        ? ({
+            role: "STAFF",
+            accountStatus,
+            verify,
+            orgAssignment: { stationId: stationId.trim() },
+          } satisfies UpdateStaffFormData)
+        : ({
+            role: "TECHNICIAN",
+            accountStatus,
+            verify,
+            orgAssignment: { technicianTeamId: technicianTeamId.trim() },
+          } satisfies UpdateStaffFormData);
+
+    const parsed = updateStaffSchema.safeParse(raw);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues?.[0]?.message || "Dữ liệu không hợp lệ");
+      return;
+    }
+
+    try {
+      await updateProfileStaffMutation.mutateAsync({
+        id: user.id,
+        data: parsed.data,
+      });
+      toast.success("Cập nhật thành công");
+      setOpen(false);
+    } catch {
+      toast.error("Cập nhật thất bại");
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -86,20 +179,139 @@ export default function DetailUser({ user }: UserDetailProps) {
         actions={
           <div className="flex gap-2">
             <div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/admin/customers/wallet/${user.id}`}>
-                <User className="h-4 w-4 mr-2" />
-                Ví người dùng
-              </Link>
-            </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/admin/customers/wallet/${user.id}`}>
+                  <User className="h-4 w-4 mr-2" />
+                  Ví người dùng
+                </Link>
+              </Button>
             </div>
             <div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/admin/customers/wallet/${user.id}`}>
-                <Edit className="h-4 w-4 mr-2" />
-                Chỉnh sửa thông tin 
-              </Link>
-            </Button>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Chỉnh sửa thông tin
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Chỉnh sửa (Admin)</DialogTitle>
+                    <DialogDescription>
+                      Cập nhật role + trạng thái + phân công (station/team).
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Role</Label>
+                      <Select
+                        value={editRole}
+                        onValueChange={(v) =>
+                          setEditRole(
+                            v === "TECHNICIAN" ? "TECHNICIAN" : "STAFF",
+                          )
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Chọn role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="STAFF">STAFF</SelectItem>
+                          <SelectItem value="TECHNICIAN">TECHNICIAN</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Verify status</Label>
+                      <Select
+                        value={verify}
+                        onValueChange={(v) =>
+                          setVerify(
+                            v === "VERIFIED" ? "VERIFIED" : "UNVERIFIED",
+                          )
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Chọn trạng thái" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="VERIFIED">VERIFIED</SelectItem>
+                          <SelectItem value="UNVERIFIED">UNVERIFIED</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Account status</Label>
+                      <Select
+                        value={accountStatus}
+                        onValueChange={(v: AccountStatus) =>
+                          setAccountStatus(v)
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Chọn trạng thái" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                          <SelectItem value="INACTIVE">INACTIVE</SelectItem>
+                          <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
+                          <SelectItem value="BANNED">BANNED</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {editRole === "STAFF" ? (
+                      <div className="space-y-2">
+                        <Label>Station ID</Label>
+                        <Select value={stationId} onValueChange={setStationId}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Chọn trạm" />
+                          </SelectTrigger>
+
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            <SelectScrollUpButton />
+                            {stations.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                {s.name} - {s.address}
+                              </SelectItem>
+                            ))}
+                            <SelectScrollDownButton />
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label>Technician Team ID</Label>
+                        <Input
+                          value={technicianTeamId}
+                          onChange={(e) => setTechnicianTeamId(e.target.value)}
+                          placeholder="UUID technicianTeamId"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpen(false)}
+                      disabled={isSaving}
+                      type="button"
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      type="button"
+                    >
+                      Lưu
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         }
@@ -323,4 +535,4 @@ export default function DetailUser({ user }: UserDetailProps) {
       </div>
     </div>
   );
-}
+} 

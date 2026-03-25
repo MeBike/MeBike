@@ -17,16 +17,23 @@ export const createUserSchema = z.object({
   role: z.enum(["USER", "STAFF", "ADMIN"]),
 });
 export type CreateUserFormData = z.infer<typeof createUserSchema>;
-export const updateStaffSchema = z.object({
-  role: z.enum(["STAFF", "AGENCY", "MANAGER"]),
-  accountStatus: z.enum(["VERIFIED", "UNVERIFIED"]),
-  orgAssignment: z.object({
-    stationId: z.string().refine(isValidUUID, {
-      message: "Mã trạm phải là một UUID hợp lệ",
-    }),
-    technicianTeamId: z.string().refine(isValidUUID, {
-      message: "Mã technician phải là một UUID hợp lệ",
-    }),
+
+export const updateStaffSchema = z.discriminatedUnion("role",[
+  z.object({
+    role : z.literal("STAFF"),
+    accountStatus : z.enum(["ACTIVE","INACTIVE","SUSPENDED","BANNED",""]),
+    verify : z.enum(["VERIFIED","UNVERIFIED"]),
+    orgAssignment : z.object({
+      stationId : z.string().refine(isValidUUID),
+    })
   }),
-});
+  z.object({
+    role : z.literal("TECHNICIAN"),
+    accountStatus : z.enum(["ACTIVE","INACTIVE","SUSPENDED","BANNED",""]),
+    verify : z.enum(["VERIFIED","UNVERIFIED"]),
+    orgAssignment : z.object({
+      technicianTeamId : z.string().refine(isValidUUID),
+    })
+  })
+])
 export type UpdateStaffFormData = z.infer<typeof updateStaffSchema>
