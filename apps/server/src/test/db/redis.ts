@@ -1,5 +1,5 @@
-import { GenericContainer, Wait } from "testcontainers";
 import process from "node:process";
+import { GenericContainer, Wait } from "testcontainers";
 
 import logger from "@/lib/logger";
 
