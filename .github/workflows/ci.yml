@@ -42,7 +42,7 @@ jobs:
             server:
               - 'apps/server/**'
 
-  lint-and-build:
+  static-checks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
