@@ -11,7 +11,6 @@ import { toIncidentSummary } from "@/http/presenters/incidents.presenter";
 import { Prisma } from "generated/prisma/client";
 
 import type {
-  IncidentNotFoundResponse,
   IncidentRoutes,
   IncidentSummary,
 } from "./shared";
@@ -21,15 +20,18 @@ import { IncidentErrorCodeSchema, incidentErrorMessages } from "./shared";
 const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   c,
 ) => {
+  const user = c.var.currentUser;
   const query = c.req.valid("query");
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const service = yield* IncidentServiceTag;
       return yield* service.listIncidents(
+        user!.role,
         {
           stationId: query.stationId,
           status: query.status as IncidentStatus,
+          userId: user?.role === "ADMIN" ? undefined : user?.userId,
         },
         {
           page: query.page ?? 1,
@@ -58,12 +60,17 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
 };
 
 const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
+  const user = c.var.currentUser;
   const { incidentId } = c.req.valid("param");
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const service = yield* IncidentServiceTag;
-      return yield* service.getIncidentById(incidentId);
+      return yield* service.getIncidentById(
+        incidentId,
+        user?.userId,
+        user?.role,
+      );
     }),
     "GET /v1/incidents/:incidentId",
   );
@@ -71,17 +78,50 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => c.json(right, 200)),
-    Match.tag("Left", () =>
-      c.json<IncidentNotFoundResponse, 404>(
-        {
-          error: incidentErrorMessages.INCIDENT_NOT_FOUND,
-          details: {
-            code: IncidentErrorCodeSchema.enum.INCIDENT_NOT_FOUND,
-          },
-        },
-        404,
-      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("IncidentNotFound", () =>
+          c.json(
+            {
+              error: incidentErrorMessages.INCIDENT_NOT_FOUND,
+              details: {
+                code: IncidentErrorCodeSchema.enum.INCIDENT_NOT_FOUND,
+                incidentId,
+              },
+            },
+            404,
+          ),
+        ),
+        Match.tag("UnauthorizedIncidentAccess", ({ incidentId, userId }) =>
+          c.json(
+            {
+              error: incidentErrorMessages.UNAUTHORIZED_INCIDENT_ACCESS,
+              details: {
+                code: IncidentErrorCodeSchema.enum.UNAUTHORIZED_INCIDENT_ACCESS,
+                incidentId,
+                userId,
+              },
+            },
+            403,
+          ),
+        ),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      ),
+    ),
     Match.exhaustive,
+    // Match.tag("Left", () =>
+    //   c.json<IncidentNotFoundResponse, 404>(
+    //     {
+    //       error: incidentErrorMessages.INCIDENT_NOT_FOUND,
+    //       details: {
+    //         code: IncidentErrorCodeSchema.enum.INCIDENT_NOT_FOUND,
+    //       },
+    //     },
+    //     404,
+    //   )),
+    // Match.exhaustive,
   );
 };
 
@@ -114,7 +154,8 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<IncidentSummary, 201>(toIncidentSummary(right), 201)),
+      c.json<IncidentSummary, 201>(toIncidentSummary(right), 201),
+    ),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("AdminRentalNotFound", () =>
@@ -127,7 +168,8 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          )),
+          ),
+        ),
         Match.tag("BikeNotFound", ({ id }) =>
           c.json(
             {
@@ -138,7 +180,8 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          )),
+          ),
+        ),
         Match.tag("StationNotFound", ({ id }) =>
           c.json(
             {
@@ -149,7 +192,8 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          )),
+          ),
+        ),
         Match.tag("NoNearestStationFound", ({ latitude, longitude }) =>
           c.json(
             {
@@ -161,7 +205,8 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          )),
+          ),
+        ),
         Match.tag("BikeNotAvailable", ({ bikeId, status }) =>
           c.json(
             {
@@ -173,7 +218,8 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          )),
+          ),
+        ),
         Match.tag("NoAvailableTechnicianFound", ({ latitude, longitude }) =>
           c.json(
             {
@@ -186,11 +232,13 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          )),
+          ),
+        ),
         Match.orElse((err) => {
           throw err;
         }),
-      )),
+      ),
+    ),
     Match.exhaustive,
   );
 };
@@ -225,7 +273,8 @@ const updateIncident: RouteHandler<IncidentRoutes["updateIncident"]> = async (
               },
             },
             404,
-          )),
+          ),
+        ),
         Match.tag("UnauthorizedIncidentAccess", ({ incidentId, userId }) =>
           c.json(
             {
@@ -237,11 +286,13 @@ const updateIncident: RouteHandler<IncidentRoutes["updateIncident"]> = async (
               },
             },
             403,
-          )),
+          ),
+        ),
         Match.orElse((err) => {
           throw err;
         }),
-      )),
+      ),
+    ),
     Match.exhaustive,
   );
 };

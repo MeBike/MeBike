@@ -6,6 +6,7 @@ import type {
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
+  UserRole,
 } from "generated/kysely/types";
 import type {
   PrismaClient,
@@ -45,6 +46,7 @@ import {
 
 export type IncidentRepo = {
   listWithOffset: (
+    role: UserRole,
     filter: IncidentFilter,
     pageReq: PageRequest<IncidentSortField>,
   ) => Effect.Effect<PageResult<IncidentDetail>>;
@@ -93,6 +95,10 @@ export type IncidentRepo = {
     incidentId: string,
     status: AssignmentStatus,
   ) => Effect.Effect<void, IncidentRepositoryError>;
+
+  getStationIdByTechnicianId: (
+    userId: string,
+  ) => Effect.Effect<string | undefined, IncidentRepositoryError>;
 };
 
 function toIncidentOrderBy(
@@ -131,7 +137,7 @@ function createIncidentWithClient(
         })
         .pipe(
           Effect.mapError(
-            e =>
+            (e) =>
               new IncidentRepositoryError({
                 operation: "createIncidentWithClient.listNearest",
                 cause: e,
@@ -193,8 +199,7 @@ function createIncidentWithClient(
           }),
         );
       }
-    }
-    else if (data.stationId) {
+    } else if (data.stationId) {
       const technician = yield* Effect.promise(() =>
         tx.userOrgAssignment.findFirst({
           where: {
@@ -230,11 +235,11 @@ function createIncidentWithClient(
             bikeLocked: data.bikeLocked,
             status: (foundTechnician ? "ASSIGNED" : "OPEN") as any,
             attachments: {
-              create: data.fileUrls.map(url => ({ fileUrl: url })),
+              create: data.fileUrls.map((url) => ({ fileUrl: url })),
             },
           },
         }),
-      catch: e =>
+      catch: (e) =>
         new IncidentRepositoryError({
           operation: "createIncidentWithClient",
           cause: e,
@@ -251,7 +256,7 @@ function createIncidentWithClient(
               technicianUserId: foundTechnician!.userId,
             },
           }),
-        catch: e =>
+        catch: (e) =>
           new IncidentRepositoryError({
             operation: "createIncidentWithClient.assignTechnician",
             cause: e,
@@ -298,7 +303,7 @@ function rejectIncidentWithClient(
       })
       .pipe(
         Effect.mapError(
-          e =>
+          (e) =>
             new IncidentRepositoryError({
               operation: "createIncidentWithClient.listNearest",
               cause: e,
@@ -370,7 +375,7 @@ function rejectIncidentWithClient(
             status: "CANCELLED",
           },
         }),
-      catch: e =>
+      catch: (e) =>
         new IncidentRepositoryError({
           operation: "rejectIncidentWithClient",
           cause: e,
@@ -397,13 +402,24 @@ export function makeIncidentRepository(
   const client = db;
 
   return {
-    listWithOffset(filter, pageReq) {
+    listWithOffset(role, filter, pageReq) {
       return Effect.gen(function* () {
         const { page, pageSize, skip, take } = normalizedPage(pageReq);
 
         const where: PrismaTypes.IncidentReportWhereInput = {
           ...(filter.stationId && { stationId: filter.stationId }),
           ...(filter.status && { status: filter.status }),
+          ...(filter.userId &&
+            role === "TECHNICIAN" && {
+              assignments: {
+                some: {
+                  technicianUserId: filter.userId,
+                },
+              },
+            }),
+          ...(filter.userId && {
+            reporterUserId: filter.userId,
+          }),
         };
 
         const orderBy = toIncidentOrderBy(pageReq);
@@ -437,22 +453,24 @@ export function makeIncidentRepository(
           select: incidentDetailSelect,
         }),
       ).pipe(
-        Effect.map(val =>
+        Effect.map((val) =>
           Option.fromNullable(val).pipe(Option.map(mapToIncidentDetail)),
         ),
       );
     },
 
     create(data: CreateIncidentInput) {
-      return runPrismaTransaction(client as PrismaClient, tx =>
-        createIncidentWithClient(tx, data)).pipe(
-        Effect.catchTag("PrismaTransactionError", e =>
+      return runPrismaTransaction(client as PrismaClient, (tx) =>
+        createIncidentWithClient(tx, data),
+      ).pipe(
+        Effect.catchTag("PrismaTransactionError", (e) =>
           Effect.fail(
             new IncidentRepositoryError({
               operation: "create.transaction",
               cause: e.cause,
             }),
-          )),
+          ),
+        ),
       );
     },
 
@@ -485,7 +503,7 @@ export function makeIncidentRepository(
               },
               select: incidentDetailSelect,
             }),
-          catch: e =>
+          catch: (e) =>
             new IncidentRepositoryError({
               operation: "updateIncident.update",
               cause: e,
@@ -509,7 +527,7 @@ export function makeIncidentRepository(
               },
               select: incidentDetailSelect,
             }),
-          catch: e =>
+          catch: (e) =>
             new IncidentRepositoryError({
               operation: "updateStatus",
               cause: e,
@@ -540,7 +558,7 @@ export function makeIncidentRepository(
               data: { status: "ACCEPTED", acceptedAt: new Date() },
               select: technicianAssignmentDetailSelect,
             }),
-          catch: e =>
+          catch: (e) =>
             new IncidentRepositoryError({
               operation: "acceptIncident",
               cause: e,
@@ -552,18 +570,20 @@ export function makeIncidentRepository(
     },
 
     rejectIncident(id) {
-      return runPrismaTransaction(client as PrismaClient, tx =>
-        rejectIncidentWithClient(tx, id)).pipe(
-        Effect.map(opt =>
-          Option.map(opt, a => a as TechnicianAssignmentRow),
+      return runPrismaTransaction(client as PrismaClient, (tx) =>
+        rejectIncidentWithClient(tx, id),
+      ).pipe(
+        Effect.map((opt) =>
+          Option.map(opt, (a) => a as TechnicianAssignmentRow),
         ),
-        Effect.catchTag("PrismaTransactionError", e =>
+        Effect.catchTag("PrismaTransactionError", (e) =>
           Effect.fail(
             new IncidentRepositoryError({
               operation: "rejectIncident.transaction",
               cause: e.cause,
             }),
-          )),
+          ),
+        ),
       );
     },
 
@@ -593,7 +613,7 @@ export function makeIncidentRepository(
                 ...(status === "RESOLVED" ? { resolvedAt: new Date() } : {}),
               },
             }),
-          catch: e =>
+          catch: (e) =>
             new IncidentRepositoryError({
               operation: "updateAssignmentStatus",
               cause: e,
@@ -601,6 +621,26 @@ export function makeIncidentRepository(
         });
       });
     },
+
+    getStationIdByTechnicianId: (userId: string) =>
+      Effect.gen(function* () {
+        const assignment = yield* Effect.tryPromise({
+          try: () =>
+            client.userOrgAssignment.findFirst({
+              where: {
+                userId,
+                technicianTeam: { availabilityStatus: "AVAILABLE" },
+              },
+              select: { technicianTeam: { select: { stationId: true } } },
+            }),
+          catch: (e) =>
+            new IncidentRepositoryError({
+              operation: "getStationIdByTechnicianId",
+              cause: e,
+            }),
+        });
+        return assignment?.technicianTeam?.stationId;
+      }),
   };
 }
 

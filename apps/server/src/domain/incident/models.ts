@@ -3,6 +3,7 @@ import type {
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
+  UserRole,
 } from "generated/kysely/types";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
@@ -76,6 +77,7 @@ export type IncidentDetail = {
 export type IncidentFilter = {
   stationId?: string;
   status?: IncidentStatus;
+  userId?: string;
 };
 
 export type IncidentSortField = "status" | "resolvedAt";
