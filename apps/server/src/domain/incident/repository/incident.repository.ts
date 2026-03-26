@@ -230,7 +230,7 @@ function createIncidentWithClient(
           data: {
             reporterUserId: data.reporterUserId,
             rentalId: data.rentalId,
-            bikeId: data.bikeId || "",
+            bikeId: data.bikeId,
             stationId: data.stationId,
             source: data.source as IncidentSource,
             incidentType: data.incidentType,

@@ -1,49 +1,64 @@
-# Suppliers Domain – Notes & Checklist
+# Incidents Domain – Notes & Checklist
 
-## Intent (Legacy parity)
+## Intent
 
-Suppliers are an admin/staff-managed domain:
+The Incident domain handles reporting, tracking, and resolving issues related to bikes, stations, and rentals. It facilitates communication between users who report problems and technicians who resolve them.
 
-- Manage supplier records (name, contact, contract fee, status).
-- Associate bikes with suppliers and produce supplier-level bike status stats.
+## Core Operations
 
-## Admin/Staff TODOs (Rewrite Gaps)
+### 1. Incident Reporting
 
-- [x] Admin/staff authz for supplier endpoints (role guard + contract `security`).
-- [ ] Supplier CRUD completeness:
-  - [x] Create supplier.
-  - [x] Update supplier.
-  - [x] Status update (ACTIVE/INACTIVE/TERMINATED).
-  - [ ] Clarify “delete” semantics (soft delete is currently `TERMINATED`; confirm legacy expectations).
-- [ ] Supplier uniqueness/invariants:
-  - [ ] Confirm which fields are unique (name only today) and align contract + DB indexes.
-  - [ ] Decide behavior when re-activating a TERMINATED supplier.
-- [ ] Supplier analytics:
-  - [x] Supplier bike counts by status (implemented).
-  - [ ] Supplier performance analytics (legacy-equivalent if needed): rentals/revenue per supplier, broken rate, maintenance counts.
-- [ ] Supplier ↔ bikes admin ops:
-  - [ ] Endpoints for listing bikes by supplier, and reassignment flows.
-  - [ ] Guardrails for reassignment (e.g., cannot reassign booked/rented bikes).
+- **User Reports**: Users can report incidents during or after a rental (`DURING_RENTAL`, `POST_RETURN`).
+- **Staff/Staff Inspection**: Maintenance or field staff can report issues discovered during manual checks (`STAFF_INSPECTION`).
+- **Source Determination**:
+  - `DURING_RENTAL`: High severity, critical impact (e.g., bike breakage), often locks the bike.
+  - `POST_RETURN`: Medium severity (minor damage discovered after a ride).
+  - `STAFF_INSPECTION`: High severity, locks the bike immediately.
 
-## Rewrite Progress Checklist (Suppliers)
+### 2. Automated Technician Assignment
 
-### 1. Domain (`apps/server/src/domain/suppliers`)
+When an incident is reported, the system automatically attempts to assign a technician:
 
-- [x] Domain model (`SupplierRow`, filter/sort, stats).
-- [x] Repository (Prisma) for list/get/create/update/status + stats groupBy.
-- [x] Service validates allowed status values.
-- [x] Use-cases wrap service calls.
+- Searches for the nearest station based on coordinates or provided `stationId`.
+- Looks for an `AVAILABLE` technician team assigned to that station.
+- If a technician is found, the status is set to `ASSIGNED` immediately; otherwise, it remains `OPEN`.
 
-### 2. Contracts (`packages/shared/src/contracts/server/suppliers/*`)
+### 3. Technician Workflow
 
-- [x] Define supplier error codes (not found, duplicate name, invalid status).
-- [x] Define supplier models + pagination schemas.
-- [x] Define routes:
-  - [x] List / detail.
-  - [x] Create / update / status update / delete.
-  - [x] Stats endpoints.
+- **Assignment Acceptance**: Technicians must `ACCEPT` an assignment to move the status to `ACCEPTED`.
+- **Assignment Rejection**: If `REJECTED`, the system automatically looks for the NEXT nearest available technician to re-assign.
+- **Progress Tracking**: Once accepted, the technician can change the status to `IN_PROGRESS` and eventually `RESOLVED`.
 
-### 3. HTTP (`apps/server/src/http/routes/suppliers.ts`)
+## Business Rules & Invariants
 
-- [x] Ensure admin/staff middleware is enforced consistently.
-- [x] Map domain errors → shared supplier error codes (no ad-hoc strings).
+### Duplicate Prevention
+
+- **Constraint**: A bike or rental cannot have more than one "active" incident at a time.
+- **Active Statuses**: `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `ACCEPTED`.
+- **Implementation**: Enforced by a **Partial Unique Index** on `bikeId` (and optionally `rentalId`) where status is active, caught as `ActiveIncidentAlreadyExists` in the application layer.
+
+### Permissions
+
+- **User Role**: Can only see incidents they reported.
+- **Technician Role**: Can only see incidents currently assigned to them.
+- **Admin/Staff Role**: Full access to all incidents for monitoring and oversight.
+
+## Domain Structure Checklist
+
+### 1. Domain Types (`apps/server/src/domain/incident`)
+
+- [x] Domain model (`IncidentRow`, `IncidentDetail`, `TechnicianAssignmentRow`).
+- [x] Repository interfaces (offset pagination, search by coordinate, status updates).
+- [x] Service layer for assignment logic, transition validation, and error mapping.
+
+### 2. Infrastructure (`apps/server/src/domain/incident/repository`)
+
+- [x] Prisma repository implementation with transaction support (`runPrismaTransaction`).
+- [x] Specialized queries for detail fetching with relations.
+- [x] Handling of Prisma errors (e.g., mapping `P2002` to `ActiveIncidentAlreadyExists`).
+
+### 3. Shared Contracts (`packages/shared/src/contracts/server/incident`)
+
+- [x] Consistent error codes (`ACTIVE_INCIDENT_EXISTS`, `INCIDENT_NOT_FOUND`, etc.).
+- [x] Zod schemas for request/response payloads.
+- [x] Route definitions in `queries.ts` and `mutations.ts`.

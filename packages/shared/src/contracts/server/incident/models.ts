@@ -94,16 +94,6 @@ export const TechnicianAssignmentSummarySchema = z.object({
   status: AssignmentStatusSchema,
 });
 
-export type IncidentDetailResponse = {
-  message: string;
-  result: IncidentDetail;
-};
-
-export type IncidentSummaryResponse = {
-  message: string;
-  result: IncidentSummary;
-};
-
 export type IncidentDetail = z.infer<typeof IncidentDetailSchema>;
 export type IncidentSummary = z.infer<typeof IncidentSummarySchema>;
 export type TechnicianAssignmentSummary = z.infer<

@@ -296,8 +296,8 @@ export const IncidentServiceLive = Layer.effect(
             incidentType: data.incidentType,
             severity,
             description: data.description,
-            latitude: Number(data.latitude),
-            longitude: Number(data.longitude),
+            latitude: data.latitude ? Number(data.latitude) : null,
+            longitude: data.longitude ? Number(data.longitude) : null,
             bikeLocked,
             fileUrls: data.fileUrls,
           });
