@@ -2,11 +2,9 @@ import { createRoute } from "@hono/zod-openapi";
 
 import { unauthorizedResponse } from "../helpers";
 import {
-  IncidentAssignmentStatusPatchSchema,
   IncidentCreateBodySchema,
   IncidentDetailSchema,
   IncidentIdParamSchema,
-  IncidentStatusPatchSchema,
   IncidentSummarySchema,
   IncidentUpdateBodySchema,
 } from "./shared";
