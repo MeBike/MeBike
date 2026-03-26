@@ -1,9 +1,9 @@
-import { colors } from "@theme/colors";
-import { radii } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 import React from "react";
 import { Pressable, View } from "react-native";
-import { XStack } from "tamagui";
+import { useTheme, XStack } from "tamagui";
+
+import { radii } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 
 import type { ReservationFilter } from "../hooks/use-reservations";
 
@@ -19,9 +19,11 @@ type ReservationsFilterProps = {
 };
 
 export function ReservationsFilter({ filters, activeFilter, onChange }: ReservationsFilterProps) {
+  const theme = useTheme();
+
   return (
     <XStack
-      backgroundColor="rgba(255, 255, 255, 0.2)"
+      backgroundColor="$overlayGlass"
       borderRadius={radii.round}
       gap="$1"
       overflow="hidden"
@@ -51,7 +53,7 @@ export function ReservationsFilter({ filters, activeFilter, onChange }: Reservat
                   borderRadius: radii.round,
                   overflow: "hidden",
                   opacity: pressed ? 0.9 : 1,
-                  backgroundColor: isActive ? colors.surface : "transparent",
+                  backgroundColor: isActive ? theme.surfaceDefault.val : "transparent",
                 }}
               >
                 <AppText

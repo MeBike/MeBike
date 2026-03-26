@@ -1,20 +1,21 @@
-import { colors } from "@theme/colors";
-import { radii, spacing as themeSpacing } from "@theme/metrics";
-import { textStyles } from "@theme/typography";
 import { StyleSheet } from "react-native";
 
+import { lightThemeColors } from "@theme/colors";
+import { radii, spacing as themeSpacing } from "@theme/metrics";
+import { textStyles } from "@theme/typography";
+
 export const commonColors = {
-  primary: colors.brandPrimary,
-  background: colors.backgroundStrong,
-  surface: colors.surface,
-  text: colors.textPrimary,
-  textSecondary: colors.textSecondary,
-  accent: colors.brandAccent,
-  success: colors.success,
-  warning: colors.warning,
-  error: colors.error,
-  divider: colors.divider,
-  shadow: colors.shadowColor,
+  primary: lightThemeColors.actionPrimary,
+  background: lightThemeColors.backgroundRaised,
+  surface: lightThemeColors.surfaceDefault,
+  text: lightThemeColors.textPrimary,
+  textSecondary: lightThemeColors.textSecondary,
+  accent: lightThemeColors.actionAccent,
+  success: lightThemeColors.statusSuccess,
+  warning: lightThemeColors.statusWarning,
+  error: lightThemeColors.statusDanger,
+  divider: lightThemeColors.borderDefault,
+  shadow: lightThemeColors.shadowColor,
 };
 
 export const spacing = {
