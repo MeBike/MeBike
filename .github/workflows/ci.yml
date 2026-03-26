@@ -1,5 +1,12 @@
 name: CI
 
+permissions:
+  contents: read
+  packages: read
+
+env:
+  DOTENV_CONFIG_QUIET: true
+
 on:
   push:
     branches: [main]
@@ -19,7 +26,23 @@ on:
       - '.github/workflows/ci.yml'
 
 jobs:
-  lint-and-build:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect server changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            server:
+              - 'apps/server/**'
+
+  static-checks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -56,3 +79,164 @@ jobs:
 
       - name: Build all
         run: pnpm turbo build --filter=!backend
+
+  migrate-check:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: ghcr.io/mebike/custom-postgres:pg18-postgis3-vector0.8.1
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_DB: mebike_ci
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d mebike_ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma migrations (server)
+        working-directory: apps/server
+        env:
+          DATABASE_URL: postgresql://postgres@localhost:5432/mebike_ci
+        run: pnpm prisma migrate deploy
+
+  server-int:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: ghcr.io/mebike/custom-postgres:pg18-postgis3-vector0.8.1
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_DB: mebike_ci
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d mebike_ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client (server)
+        working-directory: apps/server
+        env:
+          DATABASE_URL: postgresql://placeholder.test
+        run: pnpm prisma generate
+
+      - name: Run integration tests (server)
+        working-directory: apps/server
+        env:
+          TEST_DATABASE_URL: postgresql://postgres@localhost:5432/mebike_ci
+          TEST_REDIS_URL: redis://localhost:6379
+        run: pnpm test:int:core
+
+  server-e2e:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: ghcr.io/mebike/custom-postgres:pg18-postgis3-vector0.8.1
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_DB: mebike_ci
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d mebike_ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client (server)
+        working-directory: apps/server
+        env:
+          DATABASE_URL: postgresql://placeholder.test
+        run: pnpm prisma generate
+
+      - name: Run HTTP e2e tests (server)
+        working-directory: apps/server
+        env:
+          TEST_DATABASE_URL: postgresql://postgres@localhost:5432/mebike_ci
+          TEST_REDIS_URL: redis://localhost:6379
+        run: pnpm test:e2e
