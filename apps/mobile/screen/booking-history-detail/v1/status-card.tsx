@@ -21,8 +21,6 @@ function statusColor(status: RentalStatus) {
       return "#B45309";
     case "CANCELLED":
       return "#DC2626";
-    case "RESERVED":
-      return "#FFB020";
     default:
       return "#6B7280";
   }
@@ -36,12 +34,10 @@ function statusSoftBackground(status: RentalStatus) {
       return "#FFF7ED";
     case "CANCELLED":
       return "#FEF2F2";
-    case "RESERVED":
-      return "#EEF2FF";
     default:
       return "#F3F4F6";
   }
-} 
+}
 
 function statusText(status: RentalStatus) {
   switch (status) {
@@ -51,8 +47,6 @@ function statusText(status: RentalStatus) {
       return "Đang thuê";
     case "CANCELLED":
       return "Đã hủy";
-    case "RESERVED":
-      return "Đã đặt trước";
     default:
       return status;
   }
@@ -66,8 +60,6 @@ function statusIcon(status: RentalStatus) {
       return "time";
     case "CANCELLED":
       return "close-circle";
-    case "RESERVED":
-      return "bookmark";
     default:
       return "help-circle";
   }

@@ -22,6 +22,7 @@ export const ReservationErrorCodeSchema = z
     "BIKE_NOT_FOUND",
     "BIKE_NOT_FOUND_IN_STATION",
     "BIKE_NOT_AVAILABLE",
+    "STATION_PICKUP_SLOT_LIMIT_EXCEEDED",
     "RESERVATION_OPTION_NOT_SUPPORTED",
     "SUBSCRIPTION_REQUIRED",
     "SUBSCRIPTION_NOT_FOUND",
@@ -33,7 +34,6 @@ export const ReservationErrorCodeSchema = z
     "RESERVATION_NOT_OWNED",
     "RESERVATION_MISSING_BIKE",
     "INVALID_RESERVATION_TRANSITION",
-    "RESERVED_RENTAL_NOT_FOUND",
   ])
   .openapi("ReservationErrorCode");
 
@@ -45,6 +45,7 @@ export const reservationErrorMessages = {
   BIKE_NOT_FOUND: "Bike not found",
   BIKE_NOT_FOUND_IN_STATION: "Bike not found in station",
   BIKE_NOT_AVAILABLE: "Bike is not available",
+  STATION_PICKUP_SLOT_LIMIT_EXCEEDED: "Station pickup slot limit has been reached",
   RESERVATION_OPTION_NOT_SUPPORTED: "Reservation option not supported",
   SUBSCRIPTION_REQUIRED: "Subscription is required",
   SUBSCRIPTION_NOT_FOUND: "Subscription not found",
@@ -56,7 +57,6 @@ export const reservationErrorMessages = {
   RESERVATION_NOT_OWNED: "Reservation does not belong to user",
   RESERVATION_MISSING_BIKE: "Reservation missing bike assignment",
   INVALID_RESERVATION_TRANSITION: "Invalid reservation status transition",
-  RESERVED_RENTAL_NOT_FOUND: "Reserved rental not found",
 } as const;
 
 export const ReservationErrorDetailSchema = z.object({

@@ -1,0 +1,114 @@
+import { Effect, Option } from "effect";
+import { describe, expect, it, vi } from "vitest";
+
+import type { PrismaClient } from "generated/prisma/client";
+
+import { toPrismaDecimal } from "@/domain/shared/decimal";
+
+import { makePricingPolicyRepository } from "../repository/pricing-policy.repository";
+
+function makePolicy(id: string) {
+  return {
+    id,
+    name: `Policy ${id}`,
+    baseRate: toPrismaDecimal("2000"),
+    billingUnitMinutes: 30,
+    overtimeRate: null,
+    reservationFee: toPrismaDecimal("3000"),
+    depositRequired: toPrismaDecimal("500000"),
+    lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
+    status: "ACTIVE" as const,
+    activeFrom: null,
+    activeTo: null,
+    createdAt: new Date("2026-03-22T00:00:00.000Z"),
+    updatedAt: new Date("2026-03-22T00:00:00.000Z"),
+  };
+}
+
+function makeDb() {
+  return {
+    pricingPolicy: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+    },
+  } as unknown as PrismaClient;
+}
+
+describe("pricing policy repository", () => {
+  it("finds a policy by id", async () => {
+    const db = makeDb();
+    const policy = makePolicy("policy-a");
+    vi.mocked(db.pricingPolicy.findUnique).mockResolvedValue(policy);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(repo.findById(policy.id));
+
+    expect(Option.isSome(result)).toBe(true);
+    if (Option.isSome(result)) {
+      expect(result.value.id).toBe(policy.id);
+    }
+  });
+
+  it("returns none when policy id does not exist", async () => {
+    const db = makeDb();
+    vi.mocked(db.pricingPolicy.findUnique).mockResolvedValue(null);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(repo.findById("missing"));
+
+    expect(Option.isNone(result)).toBe(true);
+  });
+
+  it("fails getById when policy is missing", async () => {
+    const db = makeDb();
+    vi.mocked(db.pricingPolicy.findUnique).mockResolvedValue(null);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(Effect.either(repo.getById("missing")));
+
+    expect(result._tag).toBe("Left");
+    if (result._tag === "Left") {
+      expect(result.left._tag).toBe("PricingPolicyNotFound");
+    }
+  });
+
+  it("returns the single active policy", async () => {
+    const db = makeDb();
+    const policy = makePolicy("policy-a");
+    vi.mocked(db.pricingPolicy.findMany).mockResolvedValue([policy]);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(repo.getActive());
+
+    expect(result.id).toBe(policy.id);
+  });
+
+  it("fails when there is no active policy", async () => {
+    const db = makeDb();
+    vi.mocked(db.pricingPolicy.findMany).mockResolvedValue([]);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(Effect.either(repo.getActive()));
+
+    expect(result._tag).toBe("Left");
+    if (result._tag === "Left") {
+      expect(result.left._tag).toBe("ActivePricingPolicyNotFound");
+    }
+  });
+
+  it("fails when multiple active policies exist", async () => {
+    const db = makeDb();
+    vi.mocked(db.pricingPolicy.findMany).mockResolvedValue([
+      makePolicy("policy-a"),
+      makePolicy("policy-b"),
+    ]);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(Effect.either(repo.getActive()));
+
+    expect(result._tag).toBe("Left");
+    if (result._tag === "Left" && result.left._tag === "ActivePricingPolicyAmbiguous") {
+      expect(result.left.pricingPolicyIds).toEqual(["policy-a", "policy-b"]);
+    }
+  });
+});

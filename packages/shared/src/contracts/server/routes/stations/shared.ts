@@ -13,6 +13,7 @@ import {
   StationDateRangeQuerySchema,
   StationErrorCodeSchema,
   StationErrorDetailSchema,
+  StationReadSummarySchema,
   StationRevenueResponseSchema,
   StationStatsResponseSchema,
   StationSummarySchema,
@@ -26,7 +27,7 @@ export {
   StationErrorCodeSchema,
 };
 
-export const StationSortFieldSchema = z.enum(["name", "capacity", "updatedAt"]);
+export const StationSortFieldSchema = z.enum(["name", "totalCapacity", "updatedAt"]);
 
 const LatitudeSchema = z.number()
   .refine(Number.isFinite, { message: "latitude must be a number" })
@@ -37,15 +38,6 @@ const LongitudeSchema = z.number()
   .refine(Number.isFinite, { message: "longitude must be a number" })
   .min(-180, { message: "longitude must be greater than or equal to -180" })
   .max(180, { message: "longitude must be less than or equal to 180" });
-
-function requiredNumberQuery(field: string, example?: number) {
-  return z.preprocess(
-    value => (typeof value === "string" ? Number(value) : value),
-    z
-      .number()
-      .refine(Number.isFinite, { message: `${field} must be a number` }),
-  ).openapi({ example });
-}
 
 function optionalNumberQuery(field: string, example?: number) {
   return z
@@ -134,7 +126,7 @@ export const StationListQuerySchema = z
     address: z.string().optional(),
     latitude: optionalLatitudeQuery(),
     longitude: optionalLongitudeQuery(),
-    capacity: optionalNumberQuery("capacity", 20),
+    totalCapacity: optionalNumberQuery("totalCapacity", 20),
     ...paginationQueryFields,
     sortBy: StationSortFieldSchema.optional().openapi({
       description: "Sort field",
@@ -152,13 +144,29 @@ export const StationListQuerySchema = z
 export const CreateStationBodySchema = z.object({
   name: z.string().min(1),
   address: z.string().min(1),
-  capacity: z.number()
+  totalCapacity: z.number()
     .int({
-      message: "capacity must be an integer",
+      message: "totalCapacity must be an integer",
     })
     .min(1, {
-      message: "capacity must be greater than or equal to 1",
+      message: "totalCapacity must be greater than or equal to 1",
     }),
+  pickupSlotLimit: z.number()
+    .int({
+      message: "pickupSlotLimit must be an integer",
+    })
+    .min(0, {
+      message: "pickupSlotLimit must be greater than or equal to 0",
+    })
+    .optional(),
+  returnSlotLimit: z.number()
+    .int({
+      message: "returnSlotLimit must be an integer",
+    })
+    .min(0, {
+      message: "returnSlotLimit must be greater than or equal to 0",
+    })
+    .optional(),
   latitude: LatitudeSchema,
   longitude: LongitudeSchema,
 }).openapi("CreateStationBody");
@@ -166,12 +174,28 @@ export const CreateStationBodySchema = z.object({
 export const UpdateStationBodySchema = z.object({
   name: z.string().min(1).optional(),
   address: z.string().min(1).optional(),
-  capacity: z.number()
+  totalCapacity: z.number()
     .int({
-      message: "capacity must be an integer",
+      message: "totalCapacity must be an integer",
     })
     .min(1, {
-      message: "capacity must be greater than or equal to 1",
+      message: "totalCapacity must be greater than or equal to 1",
+    })
+    .optional(),
+  pickupSlotLimit: z.number()
+    .int({
+      message: "pickupSlotLimit must be an integer",
+    })
+    .min(0, {
+      message: "pickupSlotLimit must be greater than or equal to 0",
+    })
+    .optional(),
+  returnSlotLimit: z.number()
+    .int({
+      message: "returnSlotLimit must be an integer",
+    })
+    .min(0, {
+      message: "returnSlotLimit must be greater than or equal to 0",
     })
     .optional(),
   latitude: LatitudeSchema.optional(),
@@ -206,9 +230,16 @@ export const StationSummarySchemaOpenApi = StationSummarySchema.openapi(
   },
 );
 
+export const StationReadSummarySchemaOpenApi = StationReadSummarySchema.openapi(
+  "StationReadSummary",
+  {
+    description: "Nested station info for read endpoints",
+  },
+);
+
 export const StationListResponseSchema = z
   .object({
-    data: StationSummarySchema.array(),
+    data: StationReadSummarySchema.array(),
     pagination: PaginationSchema,
   })
   .openapi("StationListResponse", {
@@ -219,19 +250,31 @@ export const StationListResponseSchema = z
           id: "665fd6e36b7e5d53f8f3d2c9",
           name: "Central Station",
           address: "123 Main St",
-          capacity: 20,
-          latitude: 10.762622,
-          longitude: 106.660172,
+          location: {
+            latitude: 10.762622,
+            longitude: 106.660172,
+          },
+          capacity: {
+            total: 20,
+            pickupSlotLimit: 10,
+            returnSlotLimit: 10,
+            emptyPhysicalSlots: 2,
+          },
+          bikes: {
+            total: 18,
+            available: 10,
+            booked: 3,
+            broken: 1,
+            reserved: 2,
+            maintained: 1,
+            unavailable: 1,
+          },
+          returnSlots: {
+            active: 0,
+            available: 2,
+          },
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-02T00:00:00.000Z",
-          totalBikes: 18,
-          availableBikes: 10,
-          bookedBikes: 3,
-          brokenBikes: 1,
-          reservedBikes: 2,
-          maintainedBikes: 1,
-          unavailableBikes: 1,
-          emptySlots: 2,
         },
       ],
       pagination: {

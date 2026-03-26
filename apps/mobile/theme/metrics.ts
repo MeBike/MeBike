@@ -21,6 +21,13 @@ export const radii = {
   round: 999,
 } as const;
 
+export const borderWidths = {
+  none: 0,
+  subtle: 1,
+  strong: 2,
+  heavy: 3,
+} as const;
+
 export const iconSizes = {
   sm: 16,
   md: 20,

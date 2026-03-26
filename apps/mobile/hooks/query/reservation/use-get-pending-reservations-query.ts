@@ -13,10 +13,9 @@ export function useGetPendingReservationsQuery(
     queryKey: ["reservations", "pending", page, pageSize],
     enabled,
     queryFn: async () => {
-      const result = await reservationService.getMyReservations({
+      const result = await reservationService.getCurrentReservations({
         page,
         pageSize,
-        status: "PENDING",
       });
       if (!result.ok) {
         throw result.error;

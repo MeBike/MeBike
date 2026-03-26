@@ -1,7 +1,10 @@
 import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
+  ConfirmationMethod,
+  HandoverStatus,
   RentalStatus,
+  ReturnSlotStatus,
   UserRole,
   UserVerifyStatus,
 } from "generated/prisma/enums";
@@ -9,7 +12,15 @@ import type {
 export type RentalRow = {
   id: string;
   userId: string;
+  reservationId: string | null;
   bikeId: string | null;
+  depositHoldId: string | null;
+  depositAmount: number | null;
+  depositStatus: "NONE" | "HELD" | "RELEASED" | "FORFEITED";
+  depositHeldAt: Date | null;
+  depositReleasedAt: Date | null;
+  depositForfeitedAt: Date | null;
+  pricingPolicyId: string | null;
   startStationId: string;
   endStationId: string | null;
   startTime: Date;
@@ -97,7 +108,7 @@ export type AdminRentalDetail = {
     address: string;
     latitude: number;
     longitude: number;
-    capacity: number;
+    totalCapacity: number;
     updatedAt: Date;
   };
   endStation: {
@@ -106,7 +117,7 @@ export type AdminRentalDetail = {
     address: string;
     latitude: number;
     longitude: number;
-    capacity: number;
+    totalCapacity: number;
     updatedAt: Date;
   } | null;
   startTime: Date;
@@ -127,7 +138,6 @@ export type RentalStatusCounts = {
   RENTED: number;
   COMPLETED: number;
   CANCELLED: number;
-  RESERVED: number;
 };
 
 export type RentalRevenueGroupBy = "DAY" | "MONTH" | "YEAR";
@@ -159,10 +169,40 @@ export type RentalSummaryStats = {
     Rented: number;
     Completed: number;
     Cancelled: number;
-    Reserved: number;
   };
   dailyRevenue: RevenueDelta;
   monthlyRevenue: RevenueDelta;
+};
+
+export type ReturnSlotRow = {
+  id: string;
+  rentalId: string;
+  userId: string;
+  stationId: string;
+  reservedFrom: Date;
+  status: ReturnSlotStatus;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ReturnSlotStationCapacityRow = {
+  stationId: string;
+  totalCapacity: number;
+  returnSlotLimit: number;
+  totalBikes: number;
+  activeReturnSlots: number;
+};
+
+export type ReturnConfirmationRow = {
+  id: string;
+  rentalId: string;
+  stationId: string | null;
+  agencyId: string | null;
+  confirmedByUserId: string;
+  confirmationMethod: ConfirmationMethod;
+  handoverStatus: HandoverStatus;
+  confirmedAt: Date;
+  createdAt: Date;
 };
 
 export type DashboardTrend = "UP" | "DOWN" | "STABLE";

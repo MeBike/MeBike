@@ -12,10 +12,10 @@ import {
   StationIdParamSchema,
   StationListQuerySchema,
   StationListResponseSchema,
+  StationReadSummarySchemaOpenApi,
   StationRevenueQuerySchema,
   StationRevenueResponseSchemaOpenApi,
   StationStatsResponseSchemaOpenApi,
-  StationSummarySchemaOpenApi,
 } from "./shared";
 
 export const listStations = createRoute({
@@ -39,14 +39,14 @@ export const listStations = createRoute({
         "application/json": {
           schema: StationErrorResponseSchema,
           examples: {
-            InvalidCapacity: {
+            InvalidTotalCapacity: {
               value: {
                 error: "Invalid query parameters",
                 details: {
                   code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
                   issues: [
                     {
-                      path: "query.capacity",
+                      path: "query.totalCapacity",
                       message: "Expected number, received string",
                       code: "invalid_type",
                     },
@@ -87,7 +87,7 @@ export const getStation = createRoute({
     200: {
       description: "Get station details",
       content: {
-        "application/json": { schema: StationSummarySchemaOpenApi },
+        "application/json": { schema: StationReadSummarySchemaOpenApi },
       },
     },
     400: {

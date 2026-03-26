@@ -7,7 +7,6 @@ export const RentalStatusSchema = z.enum([
   "RENTED",
   "COMPLETED",
   "CANCELLED",
-  "RESERVED",
 ]);
 
 export const BikeSwapStatusSchema = z.enum([
@@ -15,6 +14,24 @@ export const BikeSwapStatusSchema = z.enum([
   "CONFIRMED",
   "REJECTED",
   "CANCELLED",
+]);
+
+export const ReturnSlotStatusSchema = z.enum([
+  "ACTIVE",
+  "USED",
+  "CANCELLED",
+]);
+
+export const ConfirmationMethodSchema = z.enum([
+  "QR_CODE",
+  "MANUAL",
+]);
+
+export const RentalDepositStatusSchema = z.enum([
+  "NONE",
+  "HELD",
+  "RELEASED",
+  "FORFEITED",
 ]);
 
 export const RentalIsoDateTimeSchema = z.iso.datetime();
@@ -30,6 +47,11 @@ export const RentalSchema = z.object({
   duration: z.number(),
   totalPrice: z.number().optional(),
   subscriptionId: z.uuidv7().optional(),
+  depositAmount: z.number().optional(),
+  depositStatus: RentalDepositStatusSchema.optional(),
+  depositHeldAt: z.iso.datetime().optional(),
+  depositReleasedAt: z.iso.datetime().optional(),
+  depositForfeitedAt: z.iso.datetime().optional(),
   status: RentalStatusSchema,
   updatedAt: z.iso.datetime(),
 });
@@ -69,7 +91,7 @@ export const RentalStationSchema = z.object({
   address: z.string(),
   latitude: z.number(),
   longitude: z.number(),
-  capacity: z.number(),
+  totalCapacity: z.number(),
   updatedAt: z.iso.datetime(),
   locationGeo: z
     .object({
@@ -194,7 +216,6 @@ export const RentalStatusCountsSchema = z.object({
   RENTED: z.number(),
   COMPLETED: z.number(),
   CANCELLED: z.number(),
-  RESERVED: z.number(),
 });
 
 export const RentalCountsResponseSchema = z.object({
@@ -214,7 +235,6 @@ export const RentalSummaryStatsSchema = z.object({
     Rented: z.number(),
     Completed: z.number(),
     Cancelled: z.number(),
-    Reserved: z.number(),
   }),
   dailyRevenue: RevenueDeltaSchema,
   monthlyRevenue: RevenueDeltaSchema,
@@ -238,9 +258,9 @@ export const CardTapRentalRequestSchema = z.object({
 });
 
 export const EndRentalRequestSchema = z.object({
-  endStation: z.uuidv7(),
-  endTime: z.iso.datetime().optional(),
-  reason: z.string(),
+  stationId: z.uuidv7(),
+  confirmedAt: z.iso.datetime().optional(),
+  confirmationMethod: ConfirmationMethodSchema.optional(),
 });
 
 export const UpdateRentalRequestSchema = z.object({
@@ -258,6 +278,21 @@ export const CancelRentalRequestSchema = z.object({
 
 export const RequestBikeSwapRequestSchema = z.object({
   stationId: z.uuidv7(),
+});
+
+export const CreateReturnSlotRequestSchema = z.object({
+  stationId: z.uuidv7(),
+});
+
+export const ReturnSlotReservationSchema = z.object({
+  id: z.uuidv7(),
+  rentalId: z.uuidv7(),
+  userId: z.uuidv7(),
+  stationId: z.uuidv7(),
+  reservedFrom: z.iso.datetime(),
+  status: ReturnSlotStatusSchema,
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
 export const ApproveBikeSwapRequestSchema = z.object({
@@ -362,10 +397,6 @@ export const MyRentalListResponseSchema = z.object({
 export type RentalStatus = z.infer<typeof RentalStatusSchema>;
 export type Rental = z.infer<typeof RentalSchema>;
 export type RentalWithPrice = z.infer<typeof RentalWithPriceSchema>;
-export type CreateRentalResponse = {
-  message: string;
-  result: RentalWithPrice;
-};
 export type RentalListItem = z.infer<typeof RentalListItemSchema>;
 export type RentalDetail = z.infer<typeof RentalDetailSchema>;
 export type RentalWithPricing = z.infer<typeof RentalWithPricingSchema>;
@@ -387,12 +418,17 @@ export type CardTapRentalRequest = z.infer<typeof CardTapRentalRequestSchema>;
 export type EndRentalRequest = z.infer<typeof EndRentalRequestSchema>;
 export type UpdateRentalRequest = z.infer<typeof UpdateRentalRequestSchema>;
 export type CancelRentalRequest = z.infer<typeof CancelRentalRequestSchema>;
+export type CreateReturnSlotRequest = z.infer<typeof CreateReturnSlotRequestSchema>;
 export type RentalListResponse = z.infer<typeof RentalListResponseSchema>;
 export type AdminRentalsListResponse = z.infer<
   typeof AdminRentalsListResponseSchema
 >;
 export type MyRentalListResponse = z.infer<typeof MyRentalListResponseSchema>;
 export type BikeSwapStatus = z.infer<typeof BikeSwapStatusSchema>;
+export type ReturnSlotStatus = z.infer<typeof ReturnSlotStatusSchema>;
+export type ConfirmationMethod = z.infer<typeof ConfirmationMethodSchema>;
+export type RentalDepositStatus = z.infer<typeof RentalDepositStatusSchema>;
+export type ReturnSlotReservation = z.infer<typeof ReturnSlotReservationSchema>;
 export type BikeSwapRequest = z.infer<typeof BikeSwapRequestSchema>;
 export type BikeSwapRequestDetail = z.infer<typeof BikeSwapRequestDetailSchema>;
 export type BikeSwapRequestListResponse = z.infer<

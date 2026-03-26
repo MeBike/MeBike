@@ -1,21 +1,44 @@
-import type { ServerContracts } from "@mebike/shared";
+import type {
+  BikeSummary,
+  CreateRentalPayload,
+  CreateReturnSlotPayload,
+  MyRentalListResponse,
+  Rental,
+  RentalCounts,
+  RentalCountsResponse,
+  RentalDetail,
+  RentalListItem,
+  RentalListResponse,
+  RentalStatus,
+  RentalWithPrice,
+  RentalWithPricing,
+  ReturnSlotReservation,
+  StationReadSummary,
+} from "@/contracts/server";
 
-export type RentalStatus = ServerContracts.RentalsContracts.RentalStatus;
-export type Rental = ServerContracts.RentalsContracts.Rental;
-export type RentalWithPrice = ServerContracts.RentalsContracts.RentalWithPrice;
-export type RentalDetail = ServerContracts.RentalsContracts.RentalDetail;
-export type RentalWithPricing = ServerContracts.RentalsContracts.RentalWithPricing;
-export type RentalCounts = ServerContracts.RentalsContracts.RentalStatusCounts;
-export type RentalListItem = ServerContracts.RentalsContracts.RentalListItem;
-export type RentalListResponse = ServerContracts.RentalsContracts.RentalListResponse;
-export type MyRentalListResponse = {
-  data: Rental[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
+export type {
+  CreateRentalPayload,
+  CreateReturnSlotPayload,
+  MyRentalListResponse,
+  Rental,
+  RentalCounts,
+  RentalCountsResponse,
+  RentalDetail,
+  RentalListItem,
+  RentalListResponse,
+  RentalStatus,
+  RentalWithPrice,
+  RentalWithPricing,
+  ReturnSlotReservation,
+};
+
+export type MyRentalResolvedDetail = {
+  rental: Rental;
+  bike: BikeSummary | null;
+  startStation: StationReadSummary | null;
+  endStation: StationReadSummary | null;
+  returnSlot: ReturnSlotReservation | null;
+  returnStation: StationReadSummary | null;
 };
 
 export type RentalListParams = {
@@ -24,10 +47,4 @@ export type RentalListParams = {
   status?: RentalStatus;
   startStation?: string;
   endStation?: string;
-};
-
-export type CreateRentalPayload = {
-  bikeId: string;
-  startStationId: string;
-  subscriptionId?: string;
 };

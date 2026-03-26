@@ -1,5 +1,9 @@
+import { colors } from "@theme/colors";
+import { radii } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { XStack } from "tamagui";
 
 import type { ReservationFilter } from "../hooks/use-reservations";
 
@@ -14,69 +18,57 @@ type ReservationsFilterProps = {
   onChange: (filter: ReservationFilter) => void;
 };
 
-const styles = StyleSheet.create({
-  wrapper: {
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    padding: 6,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    shadowColor: "#1B2340",
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  badge: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F1F4FB",
-  },
-  badgeActive: {
-    backgroundColor: "#0066FF",
-  },
-  badgeText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#5C6E8C",
-  },
-  badgeTextActive: {
-    color: "#FFFFFF",
-  },
-});
-
 export function ReservationsFilter({ filters, activeFilter, onChange }: ReservationsFilterProps) {
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.container}>
-        {filters.map((filter) => {
-          const isActive = filter.key === activeFilter;
-          return (
-            <TouchableOpacity
-              key={filter.key}
-              style={[styles.badge, isActive && styles.badgeActive]}
-              onPress={() => {
-                if (!isActive) {
-                  onChange(filter.key);
-                }
-              }}
-              activeOpacity={0.9}
-            >
-              <Text style={[styles.badgeText, isActive && styles.badgeTextActive]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
+    <XStack
+      backgroundColor="rgba(255, 255, 255, 0.2)"
+      borderRadius={radii.round}
+      gap="$1"
+      overflow="hidden"
+      padding="$1"
+      width="100%"
+    >
+      {filters.map((filter) => {
+        const isActive = filter.key === activeFilter;
+
+        return (
+          <Pressable
+            key={filter.key}
+            onPress={() => {
+              if (!isActive) {
+                onChange(filter.key);
+              }
+            }}
+            style={{ flex: 1 }}
+          >
+            {({ pressed }) => (
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: 44,
+                  paddingHorizontal: 20,
+                  borderRadius: radii.round,
+                  overflow: "hidden",
+                  opacity: pressed ? 0.9 : 1,
+                  backgroundColor: isActive ? colors.surface : "transparent",
+                }}
+              >
+                <AppText
+                  numberOfLines={1}
+                  tone={isActive ? "brand" : "inverted"}
+                  variant="tabLabel"
+                  style={{
+                    opacity: isActive ? 1 : 0.86,
+                  }}
+                >
+                  {filter.label}
+                </AppText>
+              </View>
+            )}
+          </Pressable>
+        );
+      })}
+    </XStack>
   );
 }

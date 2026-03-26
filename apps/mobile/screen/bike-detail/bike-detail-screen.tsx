@@ -1,21 +1,25 @@
-import { BikeColors } from "@constants/BikeColors";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { colors } from "@theme/colors";
+import { spacing } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { AppText } from "@ui/primitives/app-text";
+import { Screen } from "@ui/primitives/screen";
 import React from "react";
-import { ScrollView, StatusBar, View } from "react-native";
+import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { YStack } from "tamagui";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 
-import BookingDetailHeader from "../booking-history-detail/components/BookingDetailHeader";
+import type { BikeDetailRouteParams } from "./types";
 
 import { BikeSummaryCard } from "./components/bike-summary-card";
 import { FooterActions } from "./components/footer-actions";
 import { PaymentMethodCard } from "./components/payment-method-card";
 import { ReservationBanner } from "./components/reservation-banner";
 import { useBikeDetail } from "./hooks/use-bike-detail";
-import { getBikeStatusColor, styles } from "./styles";
-import type { BikeDetailRouteParams } from "./types";
+import { bikeDetailTextStyles } from "./text-styles";
 
 export default function BikeDetailScreen() {
   const navigation = useNavigation<BikeDetailNavigationProp>();
@@ -28,7 +32,7 @@ export default function BikeDetailScreen() {
     station,
     currentBike,
     isBikeAvailable,
-    isFetchingBikeDetail,
+    isRefreshing,
     currentReservation,
     paymentMode,
     canUseSubscription,
@@ -37,6 +41,7 @@ export default function BikeDetailScreen() {
     selectedSubscriptionId,
     setSelectedSubscriptionId,
     isBookingNow,
+    handleRefresh,
     handleSelectPaymentMode,
     handleReserve,
     handleBookNow,
@@ -47,51 +52,71 @@ export default function BikeDetailScreen() {
     navigation,
   });
 
-  const statusColor = getBikeStatusColor(currentBike.status);
-  const isPrimaryDisabled = isBookingNow || !isBikeAvailable;
-  const isReserveDisabled = !isBikeAvailable;
-
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={BikeColors.primary} />
-      <BookingDetailHeader title="Chi tiết xe" onBackPress={() => navigation.goBack()} />
+    <Screen>
+      <StatusBar barStyle="light-content" backgroundColor={colors.brandPrimary} />
 
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+        contentInsetAdjustmentBehavior="never"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 148 }}
+        refreshControl={(
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.brandPrimary]}
+            tintColor={colors.brandPrimary}
+          />
+        )}
         showsVerticalScrollIndicator={false}
       >
-        <BikeSummaryCard
-          bike={currentBike}
-          stationName={station.name}
-          statusColor={statusColor}
-          isRefreshing={isFetchingBikeDetail}
+        <AppHeroHeader
+          onBack={() => navigation.goBack()}
+          size="default"
+          title="Chi tiết xe"
         />
 
-        {currentReservation && (
-          <ReservationBanner reservation={currentReservation} navigation={navigation} />
-        )}
+        <View
+          style={{
+            marginTop: -spacing.xxl,
+            paddingHorizontal: spacing.xl,
+            zIndex: 10,
+          }}
+        >
+          <BikeSummaryCard bike={currentBike} stationName={station.name} />
+        </View>
 
-        <PaymentMethodCard
-          paymentMode={paymentMode}
-          canUseSubscription={canUseSubscription}
-          walletBalance={walletBalance}
-          activeSubscriptions={activeSubscriptions}
-          selectedSubscriptionId={selectedSubscriptionId}
-          onSelectPaymentMode={handleSelectPaymentMode}
-          onSelectSubscription={(id) => setSelectedSubscriptionId(id)}
-          navigation={navigation}
-        />
+        <YStack gap="$4" padding="$5" paddingTop="$4">
+          {currentReservation
+            ? <ReservationBanner reservation={currentReservation} navigation={navigation} />
+            : null}
+
+          <YStack gap="$3">
+            <AppText style={bikeDetailTextStyles.sectionTitle}>
+              Phương thức thanh toán
+            </AppText>
+            <PaymentMethodCard
+              paymentMode={paymentMode}
+              canUseSubscription={canUseSubscription}
+              walletBalance={walletBalance}
+              activeSubscriptions={activeSubscriptions}
+              selectedSubscriptionId={selectedSubscriptionId}
+              onSelectPaymentMode={handleSelectPaymentMode}
+              onSelectSubscription={id => setSelectedSubscriptionId(id)}
+              navigation={navigation}
+            />
+          </YStack>
+        </YStack>
       </ScrollView>
 
       <FooterActions
         bottomInset={insets.bottom}
         isBikeAvailable={isBikeAvailable}
-        isPrimaryDisabled={isPrimaryDisabled}
-        isReserveDisabled={isReserveDisabled}
+        isPrimaryDisabled={isBookingNow || !isBikeAvailable}
+        isReserveDisabled={!isBikeAvailable}
         isBookingNow={isBookingNow}
         onBookNow={handleBookNow}
         onReserve={handleReserve}
       />
-    </View>
+    </Screen>
   );
 }

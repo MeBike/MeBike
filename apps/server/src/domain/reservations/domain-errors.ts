@@ -1,6 +1,10 @@
 import { Data } from "effect";
 
 import type { WithGenericError } from "@/domain/shared";
+import type {
+  InsufficientWalletBalance,
+  WalletNotFound,
+} from "@/domain/wallets/domain-errors";
 
 export class ReservationRepositoryError extends Data.TaggedError("ReservationRepositoryError")<
   WithGenericError
@@ -62,6 +66,12 @@ export class BikeNotAvailable extends Data.TaggedError("BikeNotAvailable")<{
   readonly status: string;
 }> {}
 
+export class StationPickupSlotLimitExceeded extends Data.TaggedError("StationPickupSlotLimitExceeded")<{
+  readonly stationId: string;
+  readonly pickupSlotLimit: number;
+  readonly pendingReservations: number;
+}> {}
+
 /**
  * EN: Reservation does not belong to the current user.
  * VI: Reservation không thuộc về user hiện tại.
@@ -87,14 +97,6 @@ export class InvalidReservationTransition extends Data.TaggedError("InvalidReser
   readonly reservationId: string;
   readonly from: string;
   readonly to: string;
-}> {}
-
-/**
- * EN: Reserved rental row not found (reservation-rental pair broken).
- * VI: Không tìm thấy rental RESERVED tương ứng với reservation.
- */
-export class ReservedRentalNotFound extends Data.TaggedError("ReservedRentalNotFound")<{
-  readonly reservationId: string;
 }> {}
 
 /**
@@ -128,10 +130,12 @@ export type ReservationServiceFailure
     | BikeNotFound
     | BikeNotFoundInStation
     | BikeNotAvailable
+    | StationPickupSlotLimitExceeded
     | ReservationOptionNotSupported
     | ReservationNotFound
     | ReservationNotOwned
     | ReservationMissingBike
     | InvalidReservationTransition
-    | ReservedRentalNotFound
-    | SubscriptionRequired;
+    | SubscriptionRequired
+    | WalletNotFound
+    | InsufficientWalletBalance;

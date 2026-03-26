@@ -1,12 +1,14 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { afterAll, afterEach, beforeAll } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 
 import { migrate } from "@/test/db/migrate";
 import { startPostgres } from "@/test/db/postgres";
 import { resetTestData } from "@/test/db/reset";
+import { seedDefaultPricingPolicy } from "@/test/db/seed-pricing-policy";
 import { PrismaClient } from "generated/prisma/client";
 
 import type { BikeFactory } from "./bike.factory";
+import type { PricingPolicyFactory } from "./pricing-policy.factory";
 import type { PushTokenFactory } from "./push-token.factory";
 import type { RentalFactory } from "./rental.factory";
 import type { ReservationFactory } from "./reservation.factory";
@@ -16,6 +18,7 @@ import type { SupplierFactory } from "./supplier.factory";
 import type { TechnicianTeamFactory } from "./technician-team.factory";
 import type {
   CreatedBike,
+  CreatedPricingPolicy,
   CreatedPushToken,
   CreatedRental,
   CreatedReservation,
@@ -33,6 +36,7 @@ import type { UserFactory } from "./user.factory";
 import type { WalletFactory } from "./wallet.factory";
 
 import { createBikeFactory } from "./bike.factory";
+import { createPricingPolicyFactory } from "./pricing-policy.factory";
 import { createPushTokenFactory } from "./push-token.factory";
 import { createRentalFactory } from "./rental.factory";
 import { createReservationFactory } from "./reservation.factory";
@@ -46,6 +50,7 @@ import { createWalletFactory } from "./wallet.factory";
 
 export type {
   CreatedBike,
+  CreatedPricingPolicy,
   CreatedPushToken,
   CreatedRental,
   CreatedReservation,
@@ -59,6 +64,7 @@ export type {
 };
 export type {
   BikeOverrides,
+  PricingPolicyOverrides,
   PushTokenOverrides,
   RentalOverrides,
   ReservationOverrides,
@@ -81,6 +87,7 @@ export type TestFactories = {
   subscription: SubscriptionFactory;
   technicianTeam: TechnicianTeamFactory;
   userOrgAssignment: UserOrgAssignmentFactory;
+  pricingPolicy: PricingPolicyFactory;
   pushToken: PushTokenFactory;
   wallet: WalletFactory;
 };
@@ -103,6 +110,7 @@ export function createTestFactories(ctx: FactoryContext): TestFactories {
     technicianTeam: createTechnicianTeamFactory(ctx),
     userOrgAssignment: createUserOrgAssignmentFactory(ctx),
     pushToken: createPushTokenFactory(ctx),
+    pricingPolicy: createPricingPolicyFactory(ctx),
     wallet: createWalletFactory(ctx),
   };
 }
@@ -121,6 +129,11 @@ export function setupFactories(): FactorySetup {
 
     factories = createTestFactories({ prisma });
   }, 60000);
+
+  beforeEach(async () => {
+    await resetTestData(prisma);
+    await seedDefaultPricingPolicy(prisma);
+  });
 
   afterEach(async () => {
     await resetTestData(prisma);

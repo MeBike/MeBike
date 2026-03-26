@@ -71,10 +71,10 @@ export type ReservationService = {
   ) => Effect.Effect<ReservationRow, ReservationNotFound>;
 
   /**
-   * EN: Confirm a PENDING reservation owned by the user (reservation-only update).
-   * VI: Xác nhận reservation PENDING của user (chỉ update reservation).
+   * EN: Validate a PENDING reservation owned by the user and return the assigned bike.
+   * VI: Kiểm tra reservation PENDING của user và trả về bike đã được gán.
    */
-  confirmPendingInTx: (
+  validatePendingForConfirmationInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     input: {
       readonly reservationId: string;
@@ -117,6 +117,7 @@ export type ReservationService = {
       readonly userId: string;
       readonly bikeId: string;
       readonly stationId: string;
+      readonly pricingPolicyId: string | null;
       readonly reservationOption: ReservationRow["reservationOption"];
       readonly subscriptionId: string | null;
       readonly startTime: Date;
@@ -160,7 +161,7 @@ function makeReservationService(
         Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
       ),
 
-    confirmPendingInTx: (tx, input) =>
+    validatePendingForConfirmationInTx: (tx, input) =>
       Effect.gen(function* () {
         const txRepo = makeReservationRepository(tx);
         const reservationOpt = yield* txRepo.findById(input.reservationId).pipe(
@@ -182,7 +183,7 @@ function makeReservationService(
           return yield* Effect.fail(new InvalidReservationTransition({
             reservationId: reservation.id,
             from: reservation.status,
-            to: "ACTIVE",
+            to: "FULFILLED",
           }));
         }
 
@@ -190,7 +191,7 @@ function makeReservationService(
           return yield* Effect.fail(new InvalidReservationTransition({
             reservationId: reservation.id,
             from: reservation.status,
-            to: "ACTIVE",
+            to: "FULFILLED",
           }));
         }
 
@@ -198,16 +199,8 @@ function makeReservationService(
           return yield* Effect.fail(new ReservationMissingBike({ reservationId: reservation.id }));
         }
 
-        const updatedReservation = yield* txRepo.updateStatus({
-          reservationId: reservation.id,
-          status: "ACTIVE",
-          updatedAt: input.now,
-        }).pipe(
-          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-        );
-
         return {
-          reservation: updatedReservation,
+          reservation,
           bikeId: reservation.bikeId,
         };
       }),
@@ -252,6 +245,7 @@ function makeReservationService(
         userId: input.userId,
         bikeId: input.bikeId,
         stationId: input.stationId,
+        pricingPolicyId: input.pricingPolicyId,
         reservationOption: input.reservationOption,
         subscriptionId: input.subscriptionId,
         startTime: input.startTime,

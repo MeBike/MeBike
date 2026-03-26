@@ -24,6 +24,8 @@ export type StationOverrides = {
   name?: string;
   address?: string;
   capacity?: number;
+  pickupSlotLimit?: number;
+  returnSlotLimit?: number;
   latitude?: number;
   longitude?: number;
 };
@@ -48,7 +50,9 @@ export type SupplierOverrides = {
 export type RentalOverrides = {
   id?: string;
   userId?: string;
+  reservationId?: string | null;
   bikeId?: string | null;
+  pricingPolicyId?: string | null;
   startStationId?: string;
   endStationId?: string | null;
   startTime?: Date;
@@ -56,7 +60,7 @@ export type RentalOverrides = {
   duration?: number | null;
   totalPrice?: string | null;
   subscriptionId?: string | null;
-  status?: "RENTED" | "COMPLETED" | "CANCELLED" | "RESERVED";
+  status?: "RENTED" | "COMPLETED" | "CANCELLED";
 };
 
 export type ReservationOverrides = {
@@ -64,13 +68,14 @@ export type ReservationOverrides = {
   userId?: string;
   bikeId?: string | null;
   stationId?: string;
+  pricingPolicyId?: string | null;
   reservationOption?: "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION";
   fixedSlotTemplateId?: string | null;
   subscriptionId?: string | null;
   startTime?: Date;
   endTime?: Date | null;
   prepaid?: string;
-  status?: "PENDING" | "ACTIVE" | "CANCELLED" | "EXPIRED";
+  status?: "PENDING" | "ACTIVE" | "FULFILLED" | "CANCELLED" | "EXPIRED";
 };
 
 export type SubscriptionOverrides = {
@@ -83,6 +88,20 @@ export type SubscriptionOverrides = {
   activatedAt?: Date | null;
   expiresAt?: Date | null;
   price?: bigint;
+};
+
+export type PricingPolicyOverrides = {
+  id?: string;
+  name?: string;
+  baseRate?: string;
+  billingUnitMinutes?: number;
+  overtimeRate?: string | null;
+  reservationFee?: string;
+  depositRequired?: string;
+  lateReturnCutoff?: Date;
+  status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
+  activeFrom?: Date | null;
+  activeTo?: Date | null;
 };
 
 export type TechnicianTeamOverrides = {
@@ -153,6 +172,11 @@ export type CreatedReservation = {
 export type CreatedSubscription = {
   id: string;
   userId: string;
+};
+
+export type CreatedPricingPolicy = {
+  id: string;
+  name: string;
 };
 
 export type CreatedTechnicianTeam = {

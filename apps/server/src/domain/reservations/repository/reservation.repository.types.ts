@@ -43,16 +43,16 @@ export type ReservationRepo = {
   ) => Effect.Effect<Option.Option<ReservationExpandedDetailRow>, ReservationRepositoryError>;
 
   /**
-   * Returns the most recently updated reservation with status in (PENDING, ACTIVE).
-   * This is intentionally NOT "current hold"; use `findPendingHoldBy*Now` for that.
+   * Returns the most recently updated reservation with status in (PENDING, compatibility ACTIVE).
+   * This is intentionally NOT "current hold"; use `findPendingHoldBy*Now` for the current one-time hold flow.
    */
   findLatestPendingOrActiveByUserId: (
     userId: string,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
   /**
-   * Returns the most recently updated reservation with status in (PENDING, ACTIVE).
-   * This is intentionally NOT "current hold"; use `findPendingHoldBy*Now` for that.
+   * Returns the most recently updated reservation with status in (PENDING, compatibility ACTIVE).
+   * This is intentionally NOT "current hold"; use `findPendingHoldBy*Now` for the current one-time hold flow.
    */
   findLatestPendingOrActiveByBikeId: (
     bikeId: string,
@@ -80,6 +80,10 @@ export type ReservationRepo = {
     bikeId: string,
     now: Date,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+
+  countPendingByStationId: (
+    stationId: string,
+  ) => Effect.Effect<number, ReservationRepositoryError>;
 
   /**
    * EN: Find ACTIVE reservation by user id.

@@ -48,6 +48,10 @@ export type SupplierRepo = {
     readonly { id: string; name: string }[]
   >;
 
+  findIdNameByIds: (
+    ids: readonly string[],
+  ) => Effect.Effect<readonly { id: string; name: string }[]>;
+
   groupBikeCountsBySupplier: () => Effect.Effect<
     readonly {
       supplierId: string | null;
@@ -221,6 +225,15 @@ export function makeSupplierRepository(client: PrismaClient): SupplierRepo {
     listIdName() {
       return Effect.promise(() =>
         client.supplier.findMany({ select: { id: true, name: true } }),
+      );
+    },
+
+    findIdNameByIds(ids) {
+      return Effect.promise(() =>
+        client.supplier.findMany({
+          where: { id: { in: [...ids] } },
+          select: { id: true, name: true },
+        }),
       );
     },
 

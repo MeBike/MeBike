@@ -1,6 +1,6 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 
-import { Effect, Match } from "effect";
+import { Effect, Match, Option } from "effect";
 
 import {
   BikeServiceTag,
@@ -8,13 +8,13 @@ import {
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
 import { pickDefined } from "@/domain/shared/pick-defined";
-import { toBikeSummary } from "@/http/presenters/bikes.presenter";
 
 import type { BikeNotFoundResponse, BikesRoutes, BikeSummary, BikeUpdateConflictResponse } from "./shared";
 
 import {
   BikeErrorCodeSchema,
   bikeErrorMessages,
+  loadBikeSummary,
 
 } from "./shared";
 
@@ -24,12 +24,14 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const service = yield* BikeServiceTag;
-      return yield* service.createBike({
+      const bike = yield* service.createBike({
         chipId: body.chipId,
         stationId: body.stationId,
         supplierId: body.supplierId,
         status: body.status,
       });
+
+      return yield* loadBikeSummary(bike);
     }),
     "POST /v1/bikes",
   );
@@ -37,7 +39,7 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<BikeSummary, 201>(toBikeSummary(right), 201)),
+      c.json<BikeSummary, 201>(right, 201)),
     Match.tag("Left", ({ left }) => Match.value(left).pipe(
       Match.tag("DuplicateChipId", () =>
         c.json<BikeUpdateConflictResponse, 400>({
@@ -74,14 +76,21 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
 
   const eff = Effect.gen(function* () {
     const service = yield* BikeServiceTag;
-    return yield* service.adminUpdateBike(id, pickDefined(body));
+    const bike = yield* service.adminUpdateBike(id, pickDefined(body));
+
+    if (Option.isNone(bike)) {
+      return Option.none<BikeSummary>();
+    }
+
+    const summary = yield* loadBikeSummary(bike.value);
+    return Option.some(summary);
   });
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
       right._tag === "Some"
-        ? c.json<BikeSummary, 200>(toBikeSummary(right.value), 200)
+        ? c.json<BikeSummary, 200>(right.value, 200)
         : c.json<BikeNotFoundResponse, 404>({
             error: bikeErrorMessages.BIKE_NOT_FOUND,
             details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },

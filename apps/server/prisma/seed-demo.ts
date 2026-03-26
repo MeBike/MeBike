@@ -10,6 +10,8 @@ import {
   PrismaClient,
   RatingReasonType,
   RentalStatus,
+  ReservationOption,
+  ReservationStatus,
   SubscriptionPackage,
   SubscriptionStatus,
   SupplierStatus,
@@ -19,6 +21,7 @@ import {
 } from "../generated/prisma/client";
 import logger from "../src/lib/logger";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
+import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
 
@@ -76,6 +79,21 @@ type DemoRental = {
   updatedAt: Date;
 };
 
+type DemoReservation = {
+  id: string;
+  userId: string;
+  bikeId: string;
+  stationId: string;
+  reservationOption: ReservationOption;
+  subscriptionId: string | null;
+  startTime: Date;
+  endTime: Date;
+  prepaid: number;
+  status: ReservationStatus;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 function getConnectionString() {
   const url = process.env.DATABASE_URL;
   if (!url) {
@@ -114,7 +132,9 @@ async function seedStations(prisma: PrismaClient) {
         "id",
         "name",
         "address",
-        "capacity",
+        "total_capacity",
+        "pickup_slot_limit",
+        "return_slot_limit",
         "latitude",
         "longitude",
         "position",
@@ -125,6 +145,8 @@ async function seedStations(prisma: PrismaClient) {
         ${station.name},
         ${station.address},
         ${station.capacity},
+        ${station.capacity},
+        ${station.capacity},
         ${station.latitude},
         ${station.longitude},
         ST_GeogFromText(${`SRID=4326;POINT(${station.longitude} ${station.latitude})`} ),
@@ -133,7 +155,9 @@ async function seedStations(prisma: PrismaClient) {
       ON CONFLICT ("name") DO UPDATE
       SET
         "address" = EXCLUDED."address",
-        "capacity" = EXCLUDED."capacity",
+        "total_capacity" = EXCLUDED."total_capacity",
+        "pickup_slot_limit" = EXCLUDED."pickup_slot_limit",
+        "return_slot_limit" = EXCLUDED."return_slot_limit",
         "latitude" = EXCLUDED."latitude",
         "longitude" = EXCLUDED."longitude",
         "position" = EXCLUDED."position",
@@ -334,27 +358,6 @@ function buildRentals(params: {
     });
   }
 
-  for (let i = 0; i < 10; i++) {
-    const idx = 500 + i;
-    const user = pick(normalUsers, idx);
-    const futureStart = toUtcDate(1 + (i % 10), 7 + (i % 9), (i * 6) % 60);
-    rentals.push({
-      id: uuidv7(),
-      userId: user.id,
-      bikeId: i % 2 === 0 ? pick(bikes, idx).id : null,
-      startStationId: pick(stationIds, idx),
-      endStationId: null,
-      createdAt: new Date(futureStart.getTime() - 30 * 60 * 1000),
-      startTime: futureStart,
-      endTime: null,
-      duration: null,
-      totalPrice: null,
-      subscriptionId: i % 3 === 0 ? (subscriptionIdsByUserId.get(user.id) ?? null) : null,
-      status: RentalStatus.RESERVED,
-      updatedAt: new Date(futureStart.getTime() - 20 * 60 * 1000),
-    });
-  }
-
   const rentedUsers = normalUsers.slice(0, 8);
   const rentedBikes = bikes.slice(0, 8);
   for (let i = 0; i < 8; i++) {
@@ -379,6 +382,38 @@ function buildRentals(params: {
   return rentals.slice(0, RENTALS_TARGET);
 }
 
+function buildReservations(params: {
+  users: readonly DemoUser[];
+  bikes: readonly { id: string; stationId: string | null }[];
+  subscriptionIdsByUserId: ReadonlyMap<string, string>;
+}): DemoReservation[] {
+  const { users, bikes, subscriptionIdsByUserId } = params;
+  const normalUsers = users.filter(u => u.role === UserRole.USER).slice(8, 18);
+  const reservationBikes = bikes.slice(8, 18);
+
+  return reservationBikes.map((bike, idx) => {
+    const user = normalUsers[idx]!;
+    const startTime = toUtcDate(1 + (idx % 10), 7 + (idx % 8), (idx * 6) % 60);
+    const endTime = new Date(startTime.getTime() + 30 * 60 * 1000);
+    const subscriptionId = idx % 3 === 0 ? (subscriptionIdsByUserId.get(user.id) ?? null) : null;
+
+    return {
+      id: uuidv7(),
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: bike.stationId!,
+      reservationOption: subscriptionId ? ReservationOption.SUBSCRIPTION : ReservationOption.ONE_TIME,
+      subscriptionId,
+      startTime,
+      endTime,
+      prepaid: subscriptionId ? 0 : 5000,
+      status: ReservationStatus.PENDING,
+      createdAt: new Date(startTime.getTime() - 30 * 60 * 1000),
+      updatedAt: new Date(startTime.getTime() - 20 * 60 * 1000),
+    };
+  });
+}
+
 async function main() {
   const connectionString = getConnectionString();
   const adapter = new PrismaPg({ connectionString });
@@ -388,6 +423,7 @@ async function main() {
     const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
     await upsertVietnamBoundary(prisma);
+    await seedDefaultPricingPolicy(prisma);
     await seedStations(prisma);
     await seedRatingReasons(prisma);
 
@@ -463,7 +499,25 @@ async function main() {
         },
       },
     });
+    await prisma.returnSlotReservation.deleteMany({
+      where: {
+        user: {
+          email: {
+            in: userEmails,
+          },
+        },
+      },
+    });
     await prisma.rental.deleteMany({
+      where: {
+        user: {
+          email: {
+            in: userEmails,
+          },
+        },
+      },
+    });
+    await prisma.reservation.deleteMany({
       where: {
         user: {
           email: {
@@ -691,6 +745,11 @@ async function main() {
       stationIds,
       subscriptionIdsByUserId,
     });
+    const reservations = buildReservations({
+      users,
+      bikes: bikesToCreate.map(b => ({ id: b.id, stationId: b.stationId })),
+      subscriptionIdsByUserId,
+    });
 
     await prisma.rental.createMany({
       data: rentals.map(r => ({
@@ -710,6 +769,23 @@ async function main() {
       })),
     });
 
+    await prisma.reservation.createMany({
+      data: reservations.map(r => ({
+        id: r.id,
+        userId: r.userId,
+        bikeId: r.bikeId,
+        stationId: r.stationId,
+        reservationOption: r.reservationOption,
+        subscriptionId: r.subscriptionId,
+        startTime: r.startTime,
+        endTime: r.endTime,
+        prepaid: r.prepaid,
+        status: r.status,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      })),
+    });
+
     const rentedBikeIds = rentals
       .filter(r => r.status === RentalStatus.RENTED)
       .map(r => r.bikeId)
@@ -724,6 +800,21 @@ async function main() {
         },
         data: {
           status: BikeStatus.BOOKED,
+          updatedAt: new Date(),
+        },
+      });
+    }
+
+    const reservedBikeIds = reservations.map(r => r.bikeId);
+    if (reservedBikeIds.length > 0) {
+      await prisma.bike.updateMany({
+        where: {
+          id: {
+            in: reservedBikeIds,
+          },
+        },
+        data: {
+          status: BikeStatus.RESERVED,
           updatedAt: new Date(),
         },
       });
@@ -784,8 +875,8 @@ async function main() {
       "Cancelled rentals seeded",
     );
     logger.info(
-      { reserved: rentals.filter(r => r.status === RentalStatus.RESERVED).length },
-      "Reserved rentals seeded",
+      { pending: reservations.filter(r => r.status === ReservationStatus.PENDING).length },
+      "Pending reservations seeded",
     );
     logger.info(
       { rented: rentals.filter(r => r.status === RentalStatus.RENTED).length },

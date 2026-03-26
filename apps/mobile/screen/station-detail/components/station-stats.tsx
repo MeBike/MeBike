@@ -1,74 +1,59 @@
-import { StyleSheet, Text, View } from "react-native";
+import { XStack, YStack } from "tamagui";
 
-import type { StationType } from "../../../types/StationType";
+import type { StationReadSummary } from "@/contracts/server";
 
-import { IconSymbol } from "../../../components/IconSymbol";
-import { BikeColors } from "../../../constants/BikeColors";
-
-const styles = StyleSheet.create({
-  statsContainer: {
-    flexDirection: "row",
-    marginHorizontal: 16,
-    marginBottom: 16,
-    gap: 8,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: BikeColors.surface,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: "center",
-    shadowColor: BikeColors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statNumber: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: BikeColors.onSurface,
-    marginTop: 4,
-  },
-  statLabel: {
-    fontSize: 10,
-    color: BikeColors.onSurfaceVariant,
-    marginTop: 2,
-    textAlign: "center",
-  },
-});
+import { colors } from "@theme/colors";
+import { AppText } from "@ui/primitives/app-text";
 
 type StationStatsProps = {
-  station: StationType;
+  station: StationReadSummary;
 };
+
+function StatColumn({
+  value,
+  label,
+  dotColor,
+}: {
+  value: number;
+  label: string;
+  dotColor: string;
+}) {
+  return (
+    <YStack alignItems="center" flex={1} gap="$1.5" paddingHorizontal="$3" paddingVertical="$2">
+      <AppText selectable style={{ fontVariant: ["tabular-nums"] }} variant="hero">
+        {value}
+      </AppText>
+      <XStack alignItems="center" gap="$2">
+        <XStack backgroundColor={dotColor} borderRadius="$round" height={8} width={8} />
+        <AppText tone="muted" variant="caption">
+          {label}
+        </AppText>
+      </XStack>
+    </YStack>
+  );
+}
 
 export function StationStats({ station }: StationStatsProps) {
   return (
-    <View style={styles.statsContainer}>
-      <View style={styles.statCard}>
-        <IconSymbol name="bicycle.circle.fill" size={24} color={BikeColors.primary} />
-        <Text style={styles.statNumber}>{station.totalBikes}</Text>
-        <Text style={styles.statLabel}>Tổng số Xe</Text>
-      </View>
-      <View style={styles.statCard}>
-        <IconSymbol
-          name="bicycle.circle.fill"
-          size={24}
-          color={BikeColors.success}
-        />
-        <Text style={styles.statNumber}>{station.availableBikes}</Text>
-        <Text style={styles.statLabel}>Xe có sẵn</Text>
-      </View>
-      <View style={styles.statCard}>
-        <IconSymbol name="person.fill" size={24} color={BikeColors.error} />
-        <Text style={styles.statNumber}>{station.bookedBikes}</Text>
-        <Text style={styles.statLabel}>Xe đang thuê</Text>
-      </View>
-      <View style={styles.statCard}>
-        <IconSymbol name="gear" size={24} color={BikeColors.primary} />
-        <Text style={styles.statNumber}>{station.reservedBikes}</Text>
-        <Text style={styles.statLabel}>Xe đã được đặt trước</Text>
-      </View>
-    </View>
+    <XStack
+      alignItems="stretch"
+      backgroundColor="$surface"
+      borderColor="$borderSubtle"
+      borderRadius={20}
+      borderWidth={1}
+      paddingHorizontal="$5"
+      paddingVertical="$4"
+      style={{
+        shadowColor: colors.shadowColor,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 24,
+        elevation: 6,
+      }}
+    >
+      <StatColumn dotColor={colors.brandPrimary} label="Xe có sẵn" value={station.bikes.available} />
+      <XStack alignSelf="stretch" backgroundColor="$borderSubtle" marginVertical="$2" width={1} />
+      <StatColumn dotColor={colors.textPrimary} label="Chỗ trả xe" value={station.returnSlots.available} />
+    </XStack>
   );
 }

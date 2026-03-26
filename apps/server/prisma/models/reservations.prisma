@@ -2,6 +2,7 @@
 enum ReservationStatus {
   PENDING
   ACTIVE
+  FULFILLED
   CANCELLED
   EXPIRED
 }
@@ -19,6 +20,7 @@ model Reservation {
   userId              String            @map("user_id") @db.Uuid
   bikeId              String?           @map("bike_id") @db.Uuid
   stationId           String            @map("station_id") @db.Uuid
+  pricingPolicyId     String?           @map("pricing_policy_id") @db.Uuid
   reservationOption   ReservationOption @map("reservation_option")
   fixedSlotTemplateId String?           @map("fixed_slot_template_id") @db.Uuid
   subscriptionId      String?           @map("subscription_id") @db.Uuid
@@ -32,8 +34,10 @@ model Reservation {
   user              User               @relation(fields: [userId], references: [id])
   bike              Bike?              @relation(fields: [bikeId], references: [id])
   station           Station            @relation(fields: [stationId], references: [id])
+  pricingPolicy     PricingPolicy?     @relation(fields: [pricingPolicyId], references: [id])
   fixedSlotTemplate FixedSlotTemplate? @relation(fields: [fixedSlotTemplateId], references: [id])
   subscription      Subscription?      @relation(fields: [subscriptionId], references: [id])
+  rental            Rental?
   payments          Payment[]
   // Partial unique index (active reservations per bike) cannot be expressed in Prisma; add manually:
   // CREATE UNIQUE INDEX idx_reservations_active_bike ON reservations(bike_id) WHERE status IN ('PENDING','ACTIVE') AND bike_id IS NOT NULL;
@@ -47,5 +51,6 @@ model Reservation {
   @@index([userId], name: "idx_reservations_user")
   @@index([bikeId], name: "idx_reservations_bike")
   @@index([stationId], name: "idx_reservations_station")
+  @@index([pricingPolicyId], name: "idx_reservations_pricing_policy")
   @@index([status], name: "idx_reservations_status")
 }

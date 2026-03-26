@@ -8,6 +8,7 @@ import type { DB } from "generated/kysely/types";
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
 import { resetTestData } from "@/test/db/reset";
 import { seed } from "@/test/db/seed";
+import { seedDefaultPricingPolicy } from "@/test/db/seed-pricing-policy";
 import { getTestDatabase } from "@/test/db/test-database";
 import { createTestFactories } from "@/test/factories";
 import { PrismaClient } from "generated/prisma/client";
@@ -48,6 +49,7 @@ export function setupPrismaIntFixture(options: PrismaIntFixtureOptions = {}) {
 
   beforeEach(async () => {
     await resetTestData(prisma);
+    await seedDefaultPricingPolicy(prisma);
 
     if (options.seedBase) {
       await seed(db);

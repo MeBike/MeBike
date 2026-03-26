@@ -1,33 +1,56 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
-import { FlatList, RefreshControl, StatusBar, Text, View } from "react-native";
+import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
-import { LoadingSpinner } from "../components/wallet/loading-spinner";
+import { useFocusEffect } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
+import { colors } from "@theme/colors";
+import { spacing } from "@theme/metrics";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { Screen } from "@ui/primitives/screen";
+import { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Spinner, YStack } from "tamagui";
+
 import { QRModal } from "../components/wallet/qr-modal";
 import { TransactionDetailModal } from "../components/wallet/transaction-detail-modal";
-import { TransactionItem } from "../components/wallet/transaction-item";
-import { WalletActions } from "../components/wallet/wallet-actions";
-import { WalletBalance } from "../components/wallet/wallet-balance";
 import { useWallet } from "../hooks/wallet/use-wallet";
-import { myWalletScreenStyles as styles } from "../styles/wallet/my-wallet-screen";
+import { WalletHeroCard } from "./my-wallet/components/wallet-hero-card";
+import { WalletTopUpCta } from "./my-wallet/components/wallet-top-up-cta";
+import { WalletTransactionRow } from "./my-wallet/components/wallet-transaction-row";
 
 function MyWalletScreen() {
+  const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const [showQR, setShowQR] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<WalletTransactionDetail | null>(null);
 
   const wallet = useWallet();
 
-  useEffect(() => {
-    wallet.getMyWallet();
-    wallet.getMyTransaction();
-  }, []);
+  const refreshWalletData = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["my-wallet"] }),
+      queryClient.invalidateQueries({ queryKey: ["myTransactions"] }),
+    ]);
+
+    await Promise.all([
+      wallet.getMyWallet(),
+      wallet.getMyTransaction(),
+    ]);
+  }, [queryClient, wallet]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshWalletData();
+    }, [refreshWalletData]),
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await wallet.getMyWallet();
-    await wallet.getMyTransaction();
+    await refreshWalletData();
     setRefreshing(false);
   };
 
@@ -35,163 +58,110 @@ function MyWalletScreen() {
     setShowQR(true);
   };
 
+  const handleTransactionPress = (transaction: WalletTransactionDetail) => {
+    setSelectedTransaction(transaction);
+    setShowTransactionDetail(true);
+  };
+
   if (wallet.isLoadingWallet || wallet.isLoadingTransactions) {
-    return <LoadingSpinner message={wallet.isLoadingWallet ? "Đang tải ví..." : "Đang tải giao dịch..."} />;
+    return (
+      <Screen alignItems="center" justifyContent="center" padding="$6">
+        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+        <Spinner color="$brandPrimary" size="large" />
+        <AppText align="center" marginTop="$4" tone="muted" variant="bodySmall">
+          {wallet.isLoadingWallet ? "Đang tải ví của bạn..." : "Đang tải giao dịch gần đây..."}
+        </AppText>
+      </Screen>
+    );
   }
 
   if (!wallet.myWallet) {
     return (
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-        <Text style={styles.emptyStateText}>Chưa có ví nào</Text>
-      </View>
+      <Screen alignItems="center" justifyContent="center" padding="$6">
+        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+        <AppText align="center" variant="sectionTitle">
+          Chưa có ví nào
+        </AppText>
+        <AppText align="center" marginTop="$2" tone="muted" variant="bodySmall">
+          Hãy thử làm mới hoặc đăng nhập lại để tải thông tin ví.
+        </AppText>
+      </Screen>
     );
   }
 
-  const renderListHeader = () => (
-    <>
-      <LinearGradient
-        style={styles.gradient}
-        colors={["#0066FF", "#00B4D8"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <WalletBalance
-          balance={wallet.myWallet?.balance || "0"}
-          status={wallet.myWallet?.status || ""}
-        />
-      </LinearGradient>
+  const transactions = wallet.transactions ?? [];
 
-      <WalletActions
-        onTopUp={handleTopUp}
-      />
-
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Giao dịch gần đây</Text>
-      </View>
-    </>
-  );
-
-  const getCurrentData = () => {
-    return wallet.transactions || [];
-  };
-
-  const getCurrentTabTitle = () => {
-    return "giao dịch";
-  };
-
-  const getCurrentLoadMore = () => {
-    return wallet.loadMoreTransactions;
-  };
-
-  const getCurrentHasNextPage = () => {
-    return wallet.hasNextPageTransactions;
-  };
-
-  const getCurrentIsFetching = () => {
-    return wallet.isFetchingNextPageTransactions;
-  };
-
-  const handleItemPress = (item: any) => {
-    setSelectedTransaction(item);
-    setShowTransactionDetail(true);
-  };
-
-  const renderItem = ({ item }: { item: any }) => {
-    const type: "transaction" = "transaction";
-
-    return (
-      <TransactionItem
-        type={type}
-        item={item}
-        onPress={() => handleItemPress(item)}
-      />
-    );
-  };
-
-  const renderEmptyState = () => {
-    const _currentData = getCurrentData();
-    const title = getCurrentTabTitle();
-
-    return (
-      <View style={styles.emptyState}>
-        <Text style={styles.emptyStateText}>
-          Chưa có
-          {title}
-          {" "}
-          nào
-        </Text>
-      </View>
-    );
-  };
-
-  const renderFooter = () => {
-    if (!getCurrentIsFetching())
-      return null;
-    return (
-      <View style={styles.loadingFooter}>
-        <LoadingSpinner message="Đang tải thêm..." />
-      </View>
-    );
-  };
-
-  const currentData = getCurrentData();
-  if (currentData.length === 0) {
-    return (
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-        {renderListHeader()}
-        {renderEmptyState()}
-        <QRModal
-          visible={showQR}
-          onClose={() => setShowQR(false)}
-          onSuccess={onRefresh}
-        />
-        <TransactionDetailModal
-          visible={showTransactionDetail}
-          onClose={() => setShowTransactionDetail(false)}
-          transaction={selectedTransaction}
-        />
-      </View>
-    );
-  }
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-      <FlatList
-        data={currentData}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        ListHeaderComponent={renderListHeader}
-        ListFooterComponent={renderFooter}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.listContainer]}
-        onEndReached={() => {
-          if (getCurrentHasNextPage() && !getCurrentIsFetching()) {
-            getCurrentLoadMore()();
-          }
+    <Screen>
+      <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: Math.max(insets.bottom + spacing.xxxxl, 112),
         }}
-        onEndReachedThreshold={0.3}
-        refreshControl={(
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#0066FF"]}
-            tintColor="#0066FF"
-          />
-        )}
-      />
+        refreshControl={<RefreshControl colors={[colors.brandPrimary]} onRefresh={onRefresh} refreshing={refreshing} tintColor={colors.brandPrimary} />}
+        showsVerticalScrollIndicator={false}
+      >
+        <WalletHeroCard topInset={insets.top} wallet={wallet.myWallet} />
+
+        <View style={{ marginTop: -spacing.xxl, paddingHorizontal: spacing.xl }}>
+          <WalletTopUpCta onPress={handleTopUp} />
+        </View>
+
+        <YStack gap="$4" paddingHorizontal="$5" paddingTop="$6">
+          <AppText variant="title">
+            Giao dịch gần đây
+          </AppText>
+
+          {transactions.length > 0
+            ? (
+                <AppCard borderRadius="$5" elevated={false} overflow="hidden" padding="$0">
+                  {transactions.map((transaction, index) => (
+                    <WalletTransactionRow
+                      key={transaction.id}
+                      item={transaction}
+                      onPress={() => handleTransactionPress(transaction)}
+                      showDivider={index < transactions.length - 1}
+                    />
+                  ))}
+                </AppCard>
+              )
+            : (
+                <AppCard borderRadius="$5" elevated={false} gap="$2" padding="$5">
+                  <AppText variant="bodyStrong">Chưa có giao dịch nào</AppText>
+                  <AppText tone="muted" variant="bodySmall">
+                    Khi ví của bạn có phát sinh nạp tiền, thanh toán hoặc hoàn tiền, danh sách sẽ hiển thị tại đây.
+                  </AppText>
+                </AppCard>
+              )}
+
+          {wallet.hasNextPageTransactions
+            ? (
+                <AppButton
+                  alignSelf="center"
+                  loading={wallet.isFetchingNextPageTransactions}
+                  onPress={wallet.loadMoreTransactions}
+                  tone="ghost"
+                >
+                  {wallet.isFetchingNextPageTransactions ? "Đang tải thêm giao dịch" : "Tải thêm giao dịch"}
+                </AppButton>
+              )
+            : null}
+        </YStack>
+      </ScrollView>
+
       <QRModal
-        visible={showQR}
         onClose={() => setShowQR(false)}
         onSuccess={onRefresh}
+        visible={showQR}
       />
+
       <TransactionDetailModal
-        visible={showTransactionDetail}
         onClose={() => setShowTransactionDetail(false)}
         transaction={selectedTransaction}
+        visible={showTransactionDetail}
       />
-    </View>
+    </Screen>
   );
 }
 

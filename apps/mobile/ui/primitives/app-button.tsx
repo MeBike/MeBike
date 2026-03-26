@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import type { GetProps } from "tamagui";
 
-import { radii } from "@theme/metrics";
+import { borderWidths, radii } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
 import { Button, Spinner } from "tamagui";
 
-type AppButtonTone = "primary" | "secondary" | "soft" | "ghost";
+type AppButtonTone = "primary" | "secondary" | "soft" | "ghost" | "outline";
 
 type AppButtonProps = Omit<GetProps<typeof Button>, "children"> & {
   children: ReactNode;
@@ -34,6 +34,11 @@ const buttonToneStyles: Record<AppButtonTone, { bg: string; borderColor: string;
     borderColor: "transparent",
     textTone: "brand",
   },
+  outline: {
+    bg: "$surface",
+    borderColor: "$brandPrimary",
+    textTone: "brand",
+  },
 };
 
 export function AppButton({
@@ -50,7 +55,7 @@ export function AppButton({
       backgroundColor={style.bg}
       borderColor={style.borderColor}
       borderRadius={radii.lg}
-      borderWidth={tone === "ghost" ? 0 : 1}
+      borderWidth={tone === "ghost" ? borderWidths.none : tone === "outline" ? borderWidths.strong : borderWidths.subtle}
       disabled={disabled || loading}
       disabledStyle={{ opacity: 0.58 }}
       height={52}

@@ -20,8 +20,14 @@ export class StationOutsideSupportedArea extends Data.TaggedError("StationOutsid
 }> {}
 
 export class StationCapacityLimitExceeded extends Data.TaggedError("StationCapacityLimitExceeded")<{
-  readonly capacity: number;
+  readonly totalCapacity: number;
   readonly maxCapacity: number;
+}> {}
+
+export class StationCapacitySplitInvalid extends Data.TaggedError("StationCapacitySplitInvalid")<{
+  readonly totalCapacity: number;
+  readonly pickupSlotLimit: number;
+  readonly returnSlotLimit: number;
 }> {}
 
 export class StationHasBikes extends Data.TaggedError("StationHasBikes")<{

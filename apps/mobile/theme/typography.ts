@@ -45,45 +45,140 @@ export const letterSpacing = {
   display: -0.8,
 } as const;
 
+type AppTextStyle = {
+  fontSize: number;
+  lineHeight: number;
+  fontWeight: (typeof fontWeights)[keyof typeof fontWeights];
+  letterSpacing?: number;
+  textTransform?: "uppercase";
+};
+
+function defineTextStyle(style: AppTextStyle) {
+  return style;
+}
+
 export const textStyles = {
-  caption: {
+  caption: defineTextStyle({
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
     fontWeight: fontWeights.medium,
-  },
-  fieldLabel: {
+  }),
+  meta: defineTextStyle({
+    fontSize: fontSizes.ssm,
+    lineHeight: lineHeights.ssm,
+    fontWeight: fontWeights.medium,
+  }),
+  eyebrow: defineTextStyle({
+    fontSize: fontSizes.ssm,
+    lineHeight: lineHeights.ssm,
+    fontWeight: fontWeights.heavy,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  }),
+  fieldLabel: defineTextStyle({
     fontSize: fontSizes.ssm,
     lineHeight: lineHeights.ssm,
     fontWeight: fontWeights.bold,
-  },
-  label: {
+  }),
+  label: defineTextStyle({
     fontSize: fontSizes.sm,
     lineHeight: lineHeights.sm,
     fontWeight: fontWeights.semibold,
-  },
-  bodySmall: {
+  }),
+  bodySmall: defineTextStyle({
     fontSize: fontSizes.base,
     lineHeight: lineHeights.base,
     fontWeight: fontWeights.medium,
-  },
-  body: {
+  }),
+  body: defineTextStyle({
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
     fontWeight: fontWeights.regular,
-  },
-  bodyStrong: {
+  }),
+  bodyStrong: defineTextStyle({
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
     fontWeight: fontWeights.semibold,
-  },
-  title: {
+  }),
+  compactStrong: defineTextStyle({
+    fontSize: fontSizes.base,
+    lineHeight: 18,
+    fontWeight: fontWeights.bold,
+  }),
+  subhead: defineTextStyle({
+    fontSize: fontSizes.md,
+    lineHeight: 22,
+    fontWeight: fontWeights.bold,
+  }),
+  actionLabel: defineTextStyle({
+    fontSize: fontSizes.md,
+    lineHeight: lineHeights.md,
+    fontWeight: fontWeights.bold,
+  }),
+  value: defineTextStyle({
+    fontSize: 17,
+    lineHeight: lineHeights.md,
+    fontWeight: fontWeights.bold,
+    letterSpacing: -0.2,
+  }),
+  sectionTitle: defineTextStyle({
+    fontSize: fontSizes.lg,
+    lineHeight: lineHeights.lg,
+    fontWeight: fontWeights.bold,
+  }),
+  cardTitle: defineTextStyle({
+    fontSize: fontSizes.lg,
+    lineHeight: 21,
+    fontWeight: fontWeights.heavy,
+    letterSpacing: -0.3,
+  }),
+  tabLabel: defineTextStyle({
+    fontSize: fontSizes.md,
+    lineHeight: 20,
+    fontWeight: fontWeights.bold,
+  }),
+  headline: defineTextStyle({
+    fontSize: fontSizes.xl,
+    lineHeight: 26,
+    fontWeight: fontWeights.heavy,
+    letterSpacing: -0.3,
+  }),
+  metricValue: defineTextStyle({
+    fontSize: 52,
+    lineHeight: 54,
+    fontWeight: fontWeights.heavy,
+    letterSpacing: -1,
+  }),
+  priceValue: defineTextStyle({
+    fontSize: 19,
+    lineHeight: lineHeights.md,
+    fontWeight: fontWeights.heavy,
+  }),
+  badgeLabel: defineTextStyle({
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: fontWeights.bold,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  }),
+  xlTitle: defineTextStyle({
+    fontSize: fontSizes.xl,
+    lineHeight: lineHeights.xl,
+    fontWeight: fontWeights.bold,
+    letterSpacing: letterSpacing.xl,
+  }),
+  title: defineTextStyle({
     fontSize: fontSizes.xxl,
     lineHeight: lineHeights.xxl,
     fontWeight: fontWeights.bold,
-  },
-  hero: {
+    letterSpacing: letterSpacing.xxl,
+  }),
+  hero: defineTextStyle({
     fontSize: fontSizes.display,
     lineHeight: lineHeights.display,
     fontWeight: fontWeights.heavy,
-  },
+    letterSpacing: letterSpacing.xxxl,
+  }),
 } as const;
+
+export type AppTextVariant = keyof typeof textStyles;

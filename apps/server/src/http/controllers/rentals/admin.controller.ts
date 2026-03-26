@@ -4,9 +4,9 @@ import type { RentalsContracts } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import {
-  adminGetChangeBikeDetailUseCase,
-  adminGetRentalDetailUseCase,
-  endRentalByAdminUseCase,
+  adminGetChangeBikeDetail,
+  adminGetRentalDetail,
+  confirmRentalReturnByOperator,
   RentalRepository,
   RentalStatsServiceTag,
 } from "@/domain/rentals";
@@ -152,7 +152,7 @@ const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    adminGetRentalDetailUseCase(rentalId),
+    adminGetRentalDetail(rentalId),
     "GET /v1/admin/rentals/{rentalId}",
   );
 
@@ -212,17 +212,19 @@ const getActiveRentalsByPhone: RouteHandler<
   return c.json<RentalsContracts.RentalListResponse, 200>(response, 200);
 };
 
-const endRentalByAdmin: RouteHandler<
-  RentalsRoutes["endRentalByAdmin"]
+const confirmRentalReturnByOperatorHandler: RouteHandler<
+  RentalsRoutes["confirmRentalReturnByOperator"]
 > = async (c) => {
   const { rentalId } = c.req.valid("param");
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    endRentalByAdminUseCase({
+    confirmRentalReturnByOperator({
       rentalId,
-      endStationId: body.endStation,
-      endTime: body.endTime ? new Date(body.endTime) : new Date(),
+      stationId: body.stationId,
+      confirmedByUserId: c.var.currentUser!.userId,
+      confirmationMethod: body.confirmationMethod ?? "MANUAL",
+      confirmedAt: body.confirmedAt ? new Date(body.confirmedAt) : new Date(),
     }),
     "PUT /v1/rentals/{rentalId}/end",
   );
@@ -242,7 +244,7 @@ const endRentalByAdmin: RouteHandler<
       }
 
       const detailEff = withLoggedCause(
-        adminGetRentalDetailUseCase(rentalId),
+        adminGetRentalDetail(rentalId),
         "GET /v1/admin/rentals/{rentalId}",
       );
 
@@ -263,12 +265,37 @@ const endRentalByAdmin: RouteHandler<
             },
             400,
           )),
-        Match.tag("EndStationMismatch", () =>
+        Match.tag("ReturnSlotRequiredForReturn", () =>
           c.json(
             {
-              error: rentalErrorMessages.MUST_END_AT_START_STATION,
+              error: rentalErrorMessages.RETURN_SLOT_REQUIRED_FOR_RETURN,
               details: {
-                code: RentalErrorCodeSchema.enum.MUST_END_AT_START_STATION,
+                code: RentalErrorCodeSchema.enum.RETURN_SLOT_REQUIRED_FOR_RETURN,
+                rentalId,
+                endStationId: body.stationId,
+              },
+            },
+            400,
+          )),
+        Match.tag("ReturnSlotStationMismatch", ({ returnSlotStationId, attemptedEndStationId }) =>
+          c.json(
+            {
+              error: rentalErrorMessages.RETURN_SLOT_STATION_MISMATCH,
+              details: {
+                code: RentalErrorCodeSchema.enum.RETURN_SLOT_STATION_MISMATCH,
+                rentalId,
+                returnSlotStationId,
+                endStationId: attemptedEndStationId,
+              },
+            },
+            400,
+          )),
+        Match.tag("ReturnAlreadyConfirmed", () =>
+          c.json(
+            {
+              error: rentalErrorMessages.RETURN_ALREADY_CONFIRMED,
+              details: {
+                code: RentalErrorCodeSchema.enum.RETURN_ALREADY_CONFIRMED,
                 rentalId,
               },
             },
@@ -325,7 +352,7 @@ const adminGetBikeSwapRequests: RouteHandler<
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    adminGetChangeBikeDetailUseCase(bikeSwapRequestId),
+    adminGetChangeBikeDetail(bikeSwapRequestId),
     "GET /v1/admin/bike-swap-requests/{bikeSwapRequestId}",
   );
 
@@ -404,7 +431,7 @@ export const RentalAdminController = {
   adminListRentals,
   adminGetRental,
   adminGetBikeSwapRequests,
-  endRentalByAdmin,
+  confirmRentalReturnByOperator: confirmRentalReturnByOperatorHandler,
   getActiveRentalsByPhone,
   getDashboardSummary,
   getRentalRevenue,
