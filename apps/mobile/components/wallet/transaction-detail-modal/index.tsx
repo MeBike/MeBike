@@ -1,3 +1,11 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { AppText } from "@ui/primitives/app-text";
+import {
+  formatCurrency,
+  formatDate,
+  formatTransactionStatus,
+  formatTransactionType,
+} from "@utils/wallet/formatters";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import Animated, {
@@ -7,15 +15,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useTheme } from "tamagui";
-
-import { IconSymbol } from "@components/IconSymbol";
-import { AppText } from "@ui/primitives/app-text";
-import {
-  formatCurrency,
-  formatDate,
-  formatTransactionStatus,
-  formatTransactionType,
-} from "@utils/wallet/formatters";
 
 import { createTransactionDetailModalStyles } from "./styles";
 
@@ -71,6 +70,8 @@ function DetailRow({
   strong = false,
   showToggle = false,
   onToggle,
+  styles,
+  copyIconColor,
 }: {
   label: string;
   value: string;
@@ -78,10 +79,9 @@ function DetailRow({
   strong?: boolean;
   showToggle?: boolean;
   onToggle?: () => void;
+  styles: ReturnType<typeof createTransactionDetailModalStyles>;
+  copyIconColor: string;
 }) {
-  const theme = useTheme();
-  const styles = useMemo(() => createTransactionDetailModalStyles(theme as any), [theme]);
-
   return (
     <View style={styles.row}>
       <AppText style={styles.label} variant="body">
@@ -105,7 +105,7 @@ function DetailRow({
         {showToggle && onToggle
           ? (
               <Pressable onPress={onToggle} style={({ pressed }) => [styles.copyButton, pressed ? styles.copyButtonPressed : null]}>
-                <IconSymbol color={theme.textTertiary.val} name="doc.on.doc" size={16} />
+                <IconSymbol color={copyIconColor} name="doc.on.doc" size={16} />
               </Pressable>
             )
           : null}
@@ -120,7 +120,30 @@ export function TransactionDetailModal({
   transaction,
 }: TransactionDetailModalProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createTransactionDetailModalStyles(theme as any), [theme]);
+  const themePalette = useMemo(() => ({
+    overlayScrim: theme.overlayScrim.val,
+    surfaceDefault: theme.surfaceDefault.val,
+    shadowColor: theme.shadowColor.val,
+    borderDefault: theme.borderDefault.val,
+    surfaceMuted: theme.surfaceMuted.val,
+    textSecondary: theme.textSecondary.val,
+    textPrimary: theme.textPrimary.val,
+    statusSuccess: theme.statusSuccess.val,
+    statusWarning: theme.statusWarning.val,
+    statusDanger: theme.statusDanger.val,
+  }), [
+    theme.borderDefault.val,
+    theme.overlayScrim.val,
+    theme.shadowColor.val,
+    theme.statusDanger.val,
+    theme.statusSuccess.val,
+    theme.statusWarning.val,
+    theme.surfaceDefault.val,
+    theme.surfaceMuted.val,
+    theme.textPrimary.val,
+    theme.textSecondary.val,
+  ]);
+  const styles = useMemo(() => createTransactionDetailModalStyles(themePalette), [themePalette]);
   const [showFullReference, setShowFullReference] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -213,9 +236,11 @@ export function TransactionDetailModal({
 
           <View style={styles.block}>
             <DetailRow
+              copyIconColor={theme.textTertiary.val}
               label="Mã tham chiếu:"
               onToggle={() => setShowFullReference(value => !value)}
               showToggle
+              styles={styles}
               value={shortReference}
             />
 
@@ -231,21 +256,25 @@ export function TransactionDetailModal({
 
             <View style={styles.divider} />
 
-            <DetailRow label="Loại:" value={formatTransactionType(transaction.type)} />
+            <DetailRow copyIconColor={theme.textTertiary.val} label="Loại:" styles={styles} value={formatTransactionType(transaction.type)} />
             <DetailRow
+              copyIconColor={theme.textTertiary.val}
               label="Số tiền:"
+              styles={styles}
               strong
               value={`${amountPrefix}${formatCurrency(transaction.amount)}`}
               valueTone={isMoneyOut ? "default" : "success"}
             />
             <DetailRow
+              copyIconColor={theme.textTertiary.val}
               label="Trạng thái:"
+              styles={styles}
               strong
               value={formatTransactionStatus(transaction.status)}
               valueTone={statusTone}
             />
-            <DetailRow label="Thời gian:" value={formatDate(transaction.createdAt)} />
-            <DetailRow label="Mô tả:" value={transaction.description || "--"} />
+            <DetailRow copyIconColor={theme.textTertiary.val} label="Thời gian:" styles={styles} value={formatDate(transaction.createdAt)} />
+            <DetailRow copyIconColor={theme.textTertiary.val} label="Mô tả:" styles={styles} value={transaction.description || "--"} />
           </View>
         </Animated.View>
       </View>

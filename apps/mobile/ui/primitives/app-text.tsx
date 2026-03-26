@@ -1,6 +1,5 @@
-import { styled, Text } from "tamagui";
-
 import { textStyles, typographyTokens } from "@theme/typography";
+import { styled, Text } from "tamagui";
 
 export type AppTextTone
   = | "default"

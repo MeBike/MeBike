@@ -1,8 +1,11 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { walletTopupErrorMessage, walletTopupService } from "@services/wallet-topup.service";
 import {
   initPaymentSheet,
   PaymentSheetError,
   presentPaymentSheet,
 } from "@stripe/stripe-react-native";
+import { AppText } from "@ui/primitives/app-text";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -22,10 +25,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTheme } from "tamagui";
 
-import { IconSymbol } from "@components/IconSymbol";
-import { walletTopupErrorMessage, walletTopupService } from "@services/wallet-topup.service";
-import { AppText } from "@ui/primitives/app-text";
-
 import { hasStripePublishableKey, STRIPE_RETURN_URL } from "../../../lib/stripe";
 import { createQrModalStyles } from "./styles";
 
@@ -41,7 +40,28 @@ const SHEET_CLOSE_DURATION = 220;
 
 export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createQrModalStyles(theme as any), [theme]);
+  const themePalette = useMemo(() => ({
+    overlayScrim: theme.overlayScrim.val,
+    surfaceDefault: theme.surfaceDefault.val,
+    borderDefault: theme.borderDefault.val,
+    surfaceMuted: theme.surfaceMuted.val,
+    actionPrimary: theme.actionPrimary.val,
+    surfaceAccent: theme.surfaceAccent.val,
+    textPrimary: theme.textPrimary.val,
+    shadowColor: theme.shadowColor.val,
+    onActionPrimary: theme.onActionPrimary.val,
+  }), [
+    theme.actionPrimary.val,
+    theme.borderDefault.val,
+    theme.onActionPrimary.val,
+    theme.overlayScrim.val,
+    theme.shadowColor.val,
+    theme.surfaceAccent.val,
+    theme.surfaceDefault.val,
+    theme.surfaceMuted.val,
+    theme.textPrimary.val,
+  ]);
+  const styles = useMemo(() => createQrModalStyles(themePalette), [themePalette]);
   const [amount, setAmount] = useState("50000");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

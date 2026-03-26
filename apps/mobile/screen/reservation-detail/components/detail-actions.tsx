@@ -1,10 +1,9 @@
-import React from "react";
-import { Spinner, useTheme, XStack, YStack } from "tamagui";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
+import React from "react";
+import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 type DetailActionsProps = {
   isPending: boolean;

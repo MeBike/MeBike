@@ -1,9 +1,3 @@
-import { memo, useMemo } from "react";
-import { Pressable } from "react-native";
-import { Separator, useTheme, XStack, YStack } from "tamagui";
-
-import type { Rental, RentalStatus } from "@/types/rental-types";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
@@ -12,6 +6,11 @@ import { StatusBadge } from "@ui/primitives/status-badge";
 import { formatVietnamDateTime } from "@utils/date";
 import { formatDurationMinutes } from "@utils/duration";
 import { formatSupportCode } from "@utils/id";
+import { memo, useMemo } from "react";
+import { Pressable } from "react-native";
+import { Separator, useTheme, XStack, YStack } from "tamagui";
+
+import type { Rental, RentalStatus } from "@/types/rental-types";
 
 type BookingCardProps = {
   booking: Rental;

@@ -1,13 +1,21 @@
-import { StyleSheet } from "react-native";
-
 import { borderWidths, elevations, radii, spaceScale } from "@theme/metrics";
 import { fontSizes, fontWeights, lineHeights } from "@theme/typography";
+import { StyleSheet } from "react-native";
 
-type ThemeLike = Record<string, { val?: string } | undefined>;
+export type TransactionDetailModalThemePalette = {
+  overlayScrim: string;
+  surfaceDefault: string;
+  shadowColor: string;
+  borderDefault: string;
+  surfaceMuted: string;
+  textSecondary: string;
+  textPrimary: string;
+  statusSuccess: string;
+  statusWarning: string;
+  statusDanger: string;
+};
 
-export function createTransactionDetailModalStyles(theme: ThemeLike) {
-  const get = (key: string) => theme[key]?.val ?? "";
-
+export function createTransactionDetailModalStyles(theme: TransactionDetailModalThemePalette) {
   return StyleSheet.create({
     overlayShell: {
       flex: 1,
@@ -15,7 +23,7 @@ export function createTransactionDetailModalStyles(theme: ThemeLike) {
     },
     backdrop: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: get("overlayScrim"),
+      backgroundColor: theme.overlayScrim,
     },
     backdropPressable: {
       flex: 1,
@@ -24,20 +32,20 @@ export function createTransactionDetailModalStyles(theme: ThemeLike) {
       justifyContent: "flex-end",
     },
     sheet: {
-      backgroundColor: get("surfaceDefault"),
+      backgroundColor: theme.surfaceDefault,
       borderTopLeftRadius: 32,
       borderTopRightRadius: 32,
       paddingHorizontal: spaceScale[6],
       paddingTop: spaceScale[3],
       paddingBottom: spaceScale[7],
       ...elevations.medium,
-      shadowColor: get("shadowColor"),
+      shadowColor: theme.shadowColor,
     },
     sheetHandle: {
       width: 44,
       height: 5,
       borderRadius: radii.round,
-      backgroundColor: get("borderDefault"),
+      backgroundColor: theme.borderDefault,
       alignSelf: "center",
       marginBottom: spaceScale[5],
     },
@@ -52,7 +60,7 @@ export function createTransactionDetailModalStyles(theme: ThemeLike) {
       width: 44,
       height: 44,
       borderRadius: radii.round,
-      backgroundColor: get("surfaceMuted"),
+      backgroundColor: theme.surfaceMuted,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -64,7 +72,7 @@ export function createTransactionDetailModalStyles(theme: ThemeLike) {
     },
     divider: {
       height: 1,
-      backgroundColor: get("borderDefault"),
+      backgroundColor: theme.borderDefault,
       marginVertical: spaceScale[1],
     },
     row: {
@@ -77,7 +85,7 @@ export function createTransactionDetailModalStyles(theme: ThemeLike) {
       width: 102,
       fontSize: fontSizes.md,
       lineHeight: lineHeights.md,
-      color: get("textSecondary"),
+      color: theme.textSecondary,
       fontWeight: fontWeights.medium,
     },
     valueGroup: {
@@ -91,7 +99,7 @@ export function createTransactionDetailModalStyles(theme: ThemeLike) {
       flex: 1,
       fontSize: 17,
       lineHeight: 26,
-      color: get("textPrimary"),
+      color: theme.textPrimary,
       textAlign: "right",
       fontWeight: fontWeights.regular,
     },
@@ -99,13 +107,13 @@ export function createTransactionDetailModalStyles(theme: ThemeLike) {
       fontWeight: fontWeights.bold,
     },
     valueSuccess: {
-      color: get("statusSuccess"),
+      color: theme.statusSuccess,
     },
     valueWarning: {
-      color: get("statusWarning"),
+      color: theme.statusWarning,
     },
     valueDanger: {
-      color: get("statusDanger"),
+      color: theme.statusDanger,
     },
     copyButton: {
       width: 22,
@@ -118,16 +126,16 @@ export function createTransactionDetailModalStyles(theme: ThemeLike) {
       opacity: 0.72,
     },
     fullReferenceCard: {
-      backgroundColor: get("surfaceMuted"),
+      backgroundColor: theme.surfaceMuted,
       borderWidth: borderWidths.subtle,
-      borderColor: get("borderDefault"),
+      borderColor: theme.borderDefault,
       borderRadius: radii.lg,
       padding: spaceScale[4],
     },
     fullReferenceText: {
       fontSize: fontSizes.base,
       lineHeight: lineHeights.base,
-      color: get("textPrimary"),
+      color: theme.textPrimary,
       fontWeight: fontWeights.medium,
     },
   });

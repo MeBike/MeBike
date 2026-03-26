@@ -1,13 +1,20 @@
-import { StyleSheet } from "react-native";
-
 import { borderWidths, elevations, radii, spaceScale } from "@theme/metrics";
 import { fontSizes, fontWeights, lineHeights } from "@theme/typography";
+import { StyleSheet } from "react-native";
 
-type ThemeLike = Record<string, { val?: string } | undefined>;
+export type QrModalThemePalette = {
+  overlayScrim: string;
+  surfaceDefault: string;
+  borderDefault: string;
+  surfaceMuted: string;
+  actionPrimary: string;
+  surfaceAccent: string;
+  textPrimary: string;
+  shadowColor: string;
+  onActionPrimary: string;
+};
 
-export function createQrModalStyles(theme: ThemeLike) {
-  const get = (key: string) => theme[key]?.val ?? "";
-
+export function createQrModalStyles(theme: QrModalThemePalette) {
   return StyleSheet.create({
     overlayShell: {
       flex: 1,
@@ -15,7 +22,7 @@ export function createQrModalStyles(theme: ThemeLike) {
     },
     backdrop: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: get("overlayScrim"),
+      backgroundColor: theme.overlayScrim,
     },
     backdropPressable: {
       flex: 1,
@@ -24,20 +31,20 @@ export function createQrModalStyles(theme: ThemeLike) {
       justifyContent: "flex-end",
     },
     sheet: {
-      backgroundColor: get("surfaceDefault"),
+      backgroundColor: theme.surfaceDefault,
       borderTopLeftRadius: 32,
       borderTopRightRadius: 32,
       paddingHorizontal: spaceScale[6],
       paddingTop: spaceScale[3],
       paddingBottom: spaceScale[7],
       ...elevations.medium,
-      shadowColor: get("shadowColor"),
+      shadowColor: theme.shadowColor,
     },
     sheetHandle: {
       width: 44,
       height: 5,
       borderRadius: radii.round,
-      backgroundColor: get("borderDefault"),
+      backgroundColor: theme.borderDefault,
       alignSelf: "center",
       marginBottom: spaceScale[5],
     },
@@ -51,7 +58,7 @@ export function createQrModalStyles(theme: ThemeLike) {
       width: 44,
       height: 44,
       borderRadius: radii.round,
-      backgroundColor: get("surfaceMuted"),
+      backgroundColor: theme.surfaceMuted,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -66,9 +73,9 @@ export function createQrModalStyles(theme: ThemeLike) {
     amountField: {
       minHeight: 92,
       borderWidth: borderWidths.strong,
-      borderColor: get("actionPrimary"),
+      borderColor: theme.actionPrimary,
       borderRadius: radii.xl,
-      backgroundColor: get("surfaceAccent"),
+      backgroundColor: theme.surfaceAccent,
       paddingHorizontal: spaceScale[5],
       flexDirection: "row",
       alignItems: "center",
@@ -79,7 +86,7 @@ export function createQrModalStyles(theme: ThemeLike) {
       fontSize: 28,
       lineHeight: 34,
       fontWeight: fontWeights.heavy,
-      color: get("textPrimary"),
+      color: theme.textPrimary,
       paddingVertical: spaceScale[4],
     },
     quickAmountsRow: {
@@ -93,14 +100,14 @@ export function createQrModalStyles(theme: ThemeLike) {
       minHeight: 58,
       borderRadius: radii.xl,
       borderWidth: borderWidths.subtle,
-      borderColor: get("borderDefault"),
-      backgroundColor: get("surfaceDefault"),
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.surfaceDefault,
       alignItems: "center",
       justifyContent: "center",
     },
     quickAmountChipActive: {
-      backgroundColor: get("actionPrimary"),
-      borderColor: get("actionPrimary"),
+      backgroundColor: theme.actionPrimary,
+      borderColor: theme.actionPrimary,
     },
     quickAmountChipPressed: {
       opacity: 0.92,
@@ -108,11 +115,11 @@ export function createQrModalStyles(theme: ThemeLike) {
     primaryButton: {
       minHeight: 84,
       borderRadius: radii.xxl,
-      backgroundColor: get("actionPrimary"),
+      backgroundColor: theme.actionPrimary,
       alignItems: "center",
       justifyContent: "center",
       ...elevations.medium,
-      shadowColor: get("shadowColor"),
+      shadowColor: theme.shadowColor,
     },
     primaryButtonPressed: {
       opacity: 0.95,
@@ -121,7 +128,7 @@ export function createQrModalStyles(theme: ThemeLike) {
       opacity: 0.7,
     },
     primaryText: {
-      color: get("onActionPrimary"),
+      color: theme.onActionPrimary,
       fontSize: fontSizes.xl,
       lineHeight: lineHeights.xl,
       fontWeight: fontWeights.bold,
