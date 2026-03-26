@@ -34,6 +34,7 @@ import type {
 } from "../models";
 
 import {
+  ActiveIncidentAlreadyExists,
   IncidentRepositoryError,
   NoAvailableTechnicianFound,
   NoNearestStationFound,
@@ -43,6 +44,7 @@ import {
   mapToIncidentDetail,
   technicianAssignmentDetailSelect,
 } from "./incident.repository.query";
+import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 export type IncidentRepo = {
   listWithOffset: (
@@ -57,7 +59,10 @@ export type IncidentRepo = {
     data: CreateIncidentInput,
   ) => Effect.Effect<
     IncidentRow,
-    IncidentRepositoryError | NoNearestStationFound | NoAvailableTechnicianFound
+    | IncidentRepositoryError
+    | NoNearestStationFound
+    | NoAvailableTechnicianFound
+    | ActiveIncidentAlreadyExists
   >;
 
   update: (
@@ -239,11 +244,20 @@ function createIncidentWithClient(
             },
           },
         }),
-      catch: (e) =>
-        new IncidentRepositoryError({
+      catch: (e) => {
+        if (isPrismaUniqueViolation(e)) {
+          return new ActiveIncidentAlreadyExists({
+            bikeId: data.bikeId,
+            rentalId: data.rentalId ?? undefined,
+            stationId: data.stationId ?? undefined,
+          });
+        }
+
+        return new IncidentRepositoryError({
           operation: "createIncidentWithClient",
           cause: e,
-        }),
+        });
+      },
     });
 
     if (foundTechnician) {
@@ -409,16 +423,21 @@ export function makeIncidentRepository(
         const where: PrismaTypes.IncidentReportWhereInput = {
           ...(filter.stationId && { stationId: filter.stationId }),
           ...(filter.status && { status: filter.status }),
-          ...(filter.userId &&
-            role === "TECHNICIAN" && {
-              assignments: {
-                some: {
-                  technicianUserId: filter.userId,
-                },
-              },
-            }),
           ...(filter.userId && {
-            reporterUserId: filter.userId,
+            OR: [
+              { reporterUserId: filter.userId },
+              ...(role === "TECHNICIAN"
+                ? [
+                    {
+                      assignments: {
+                        some: {
+                          technicianUserId: filter.userId,
+                        },
+                      },
+                    },
+                  ]
+                : []),
+            ],
           }),
         };
 

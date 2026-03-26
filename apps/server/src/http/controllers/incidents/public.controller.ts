@@ -10,10 +10,7 @@ import { withLoggedCause } from "@/domain/shared";
 import { toIncidentSummary } from "@/http/presenters/incidents.presenter";
 import { Prisma } from "generated/prisma/client";
 
-import type {
-  IncidentRoutes,
-  IncidentSummary,
-} from "./shared";
+import type { IncidentRoutes, IncidentSummary } from "./shared";
 
 import { IncidentErrorCodeSchema, incidentErrorMessages } from "./shared";
 
@@ -111,17 +108,6 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
       ),
     ),
     Match.exhaustive,
-    // Match.tag("Left", () =>
-    //   c.json<IncidentNotFoundResponse, 404>(
-    //     {
-    //       error: incidentErrorMessages.INCIDENT_NOT_FOUND,
-    //       details: {
-    //         code: IncidentErrorCodeSchema.enum.INCIDENT_NOT_FOUND,
-    //       },
-    //     },
-    //     404,
-    //   )),
-    // Match.exhaustive,
   );
 };
 
@@ -232,6 +218,20 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
+          ),
+        ),
+        Match.tag("ActiveIncidentAlreadyExists", () =>
+          c.json(
+            {
+              error: incidentErrorMessages.ACTIVE_INCIDENT_ALREADY_EXISTS,
+              details: {
+                code: IncidentErrorCodeSchema.enum.ACTIVE_INCIDENT_ALREADY_EXISTS,
+                rentalId: body.rentalId,
+                bikeId: body.bikeId,
+                stationId: body.stationId,
+              },
+            },
+            400,
           ),
         ),
         Match.orElse((err) => {

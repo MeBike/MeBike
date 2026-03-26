@@ -29,6 +29,7 @@ import type {
 } from "../models";
 
 import {
+  ActiveIncidentAlreadyExists,
   IncidentNotFound,
   InvalidIncidentStatus,
   UnauthorizedIncidentAccess,
@@ -64,6 +65,7 @@ export type IncidentService = {
     | NoNearestStationFound
     | BikeNotAvailable
     | NoAvailableTechnicianFound
+    | ActiveIncidentAlreadyExists
   >;
 
   updateIncident: (
@@ -299,6 +301,15 @@ export const IncidentServiceLive = Layer.effect(
             fileUrls: data.fileUrls,
           });
         }).pipe(
+          Effect.catchTag("ActiveIncidentAlreadyExists", () =>
+            Effect.fail(
+              new ActiveIncidentAlreadyExists({
+                bikeId: data.bikeId,
+                rentalId: data.rentalId ?? undefined,
+                stationId: data.stationId ?? undefined,
+              }),
+            ),
+          ),
           Effect.catchTag("IncidentRepositoryError", (error) =>
             Effect.die(error),
           ),

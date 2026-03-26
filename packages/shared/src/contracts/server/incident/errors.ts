@@ -12,6 +12,7 @@ export const incidentErrorCodes = [
   "BIKE_NOT_AVAILABLE",
   "NO_AVAILABLE_TECHNICIAN_FOUND",
   "UNAUTHORIZED_INCIDENT_ACCESS",
+  "ACTIVE_INCIDENT_ALREADY_EXISTS",
 ] as const;
 
 export const IncidentErrorCodeSchema = z.enum(incidentErrorCodes);
@@ -72,4 +73,5 @@ export const incidentErrorMessages: Record<IncidentErrorCode, string> = {
   BIKE_NOT_AVAILABLE: "Bike not available",
   NO_AVAILABLE_TECHNICIAN_FOUND: "No available technician found",
   UNAUTHORIZED_INCIDENT_ACCESS: "Unauthorized incident access",
+  ACTIVE_INCIDENT_ALREADY_EXISTS: "An active incident already exists for this bike, rental, or station",
 };

@@ -62,3 +62,11 @@ export class UnauthorizedIncidentAccess extends Data.TaggedError(
     readonly incidentId: string;
     readonly userId: string;
   }> {}
+
+export class ActiveIncidentAlreadyExists extends Data.TaggedError(
+  "ActiveIncidentAlreadyExists",
+)<{
+    readonly bikeId?: string;
+    readonly rentalId?: string;
+    readonly stationId?: string;
+  }> {}

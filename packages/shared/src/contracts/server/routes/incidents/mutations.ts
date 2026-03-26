@@ -52,6 +52,17 @@ export const createIncident = createRoute({
                 },
               },
             },
+            ActiveIncidentAlreadyExists: {
+              value: {
+                error: "Active incident already exists",
+                details: {
+                  code: IncidentErrorCodeSchema.enum.ACTIVE_INCIDENT_ALREADY_EXISTS,
+                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                  bikeId: "665fd6e36b7e5d53f8f3d2c9",
+                  stationId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
           },
         },
       },

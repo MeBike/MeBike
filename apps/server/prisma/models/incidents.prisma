@@ -74,6 +74,7 @@ model IncidentReport {
 
   @@index([reporterUserId], name: "idx_incident_reports_reporter")
   @@index([rentalId], name: "idx_incident_reports_rental")
+  @@index([bikeId], name: "idx_incident_reports_bike")
   @@index([bikeId, status], name: "idx_incident_reports_bike_status")
   @@index([stationId], name: "idx_incident_reports_station")
   @@map("incident_reports")
