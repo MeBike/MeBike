@@ -1,6 +1,6 @@
 import type { BikeSummary } from "@/contracts/server";
 
-import { bikeStatusColors } from "@theme/colors";
+import { bikeStatusColors } from "@theme/index";
 
 const BIKE_STATUS_LABELS: Record<BikeSummary["status"], string> = {
   AVAILABLE: "Có sẵn",

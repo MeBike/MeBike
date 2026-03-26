@@ -1,12 +1,12 @@
+import { LinearGradient } from "expo-linear-gradient";
+import { useTheme, XStack, YStack } from "tamagui";
+
 import type { WalletDetail } from "@services/wallets/wallet.service";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { gradients } from "@theme/colors";
-import { borderWidths, radii, spacing } from "@theme/metrics";
+import { borderWidths, radii, spacingRules } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
 import { formatBalance, formatWalletStatus } from "@utils/wallet/formatters";
-import { LinearGradient } from "expo-linear-gradient";
-import { XStack, YStack } from "tamagui";
 
 type WalletHeroCardProps = {
   wallet: WalletDetail;
@@ -14,14 +14,15 @@ type WalletHeroCardProps = {
 };
 
 function WalletStatusPill({ status }: { status: WalletDetail["status"] }) {
+  const theme = useTheme();
   const isActive = status === "ACTIVE";
 
   return (
     <XStack
       alignItems="center"
       alignSelf="flex-start"
-      backgroundColor="rgba(255,255,255,0.14)"
-      borderColor="rgba(255,255,255,0.18)"
+      backgroundColor="$overlayGlass"
+      borderColor="$overlayGlassMuted"
       borderRadius={radii.round}
       borderWidth={borderWidths.subtle}
       gap="$2"
@@ -29,7 +30,7 @@ function WalletStatusPill({ status }: { status: WalletDetail["status"] }) {
       paddingVertical="$2"
     >
       <XStack
-        backgroundColor={isActive ? "#6EE7B7" : "$error"}
+        backgroundColor={isActive ? theme.statusSuccess.val : theme.statusDanger.val}
         borderRadius="$round"
         height={8}
         width={8}
@@ -50,8 +51,8 @@ function WalletBalanceSplit({
 }) {
   return (
     <YStack
-      backgroundColor="rgba(255,255,255,0.12)"
-      borderColor="rgba(255,255,255,0.14)"
+      backgroundColor="$overlayGlassMuted"
+      borderColor="$overlayGlassMuted"
       borderRadius={radii.xl}
       borderWidth={borderWidths.subtle}
       flex={1}
@@ -71,16 +72,18 @@ function WalletBalanceSplit({
 }
 
 export function WalletHeroCard({ wallet, topInset }: WalletHeroCardProps) {
+  const theme = useTheme();
+
   return (
     <LinearGradient
-      colors={[...gradients.brandHero]}
+      colors={[theme.actionPrimary.val, theme.actionSecondary.val]}
       end={{ x: 1, y: 1 }}
       start={{ x: 0, y: 0 }}
       style={{
         borderBottomLeftRadius: 36,
         borderBottomRightRadius: 36,
-        paddingTop: topInset + spacing.xxxl,
-        paddingBottom: spacing.xxxxl + spacing.md,
+        paddingTop: topInset + spacingRules.hero.paddingTop,
+        paddingBottom: spacingRules.hero.paddingBottomDefault + spacingRules.list.sectionGap,
       }}
     >
       <YStack

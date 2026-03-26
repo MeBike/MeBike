@@ -1,13 +1,4 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { AppText } from "@ui/primitives/app-text";
-import {
-  formatCurrency,
-  formatDate,
-  formatTransactionStatus,
-  formatTransactionType,
-} from "@utils/wallet/formatters";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import Animated, {
   Easing,
@@ -15,8 +6,18 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useTheme } from "tamagui";
 
-import { styles } from "./styles";
+import { IconSymbol } from "@components/IconSymbol";
+import { AppText } from "@ui/primitives/app-text";
+import {
+  formatCurrency,
+  formatDate,
+  formatTransactionStatus,
+  formatTransactionType,
+} from "@utils/wallet/formatters";
+
+import { createTransactionDetailModalStyles } from "./styles";
 
 type Transaction = {
   id: string;
@@ -78,6 +79,9 @@ function DetailRow({
   showToggle?: boolean;
   onToggle?: () => void;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => createTransactionDetailModalStyles(theme as any), [theme]);
+
   return (
     <View style={styles.row}>
       <AppText style={styles.label} variant="body">
@@ -101,7 +105,7 @@ function DetailRow({
         {showToggle && onToggle
           ? (
               <Pressable onPress={onToggle} style={({ pressed }) => [styles.copyButton, pressed ? styles.copyButtonPressed : null]}>
-                <IconSymbol color={colors.textMuted} name="doc.on.doc" size={16} />
+                <IconSymbol color={theme.textTertiary.val} name="doc.on.doc" size={16} />
               </Pressable>
             )
           : null}
@@ -115,6 +119,8 @@ export function TransactionDetailModal({
   onClose,
   transaction,
 }: TransactionDetailModalProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createTransactionDetailModalStyles(theme as any), [theme]);
   const [showFullReference, setShowFullReference] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -201,7 +207,7 @@ export function TransactionDetailModal({
             <AppText variant="title">Chi tiết giao dịch</AppText>
 
             <Pressable onPress={closeWithAnimation} style={({ pressed }) => [styles.closeButton, pressed ? styles.closeButtonPressed : null]}>
-              <IconSymbol color={colors.textSecondary} name="xmark" size={18} />
+              <IconSymbol color={theme.textSecondary.val} name="xmark" size={18} />
             </Pressable>
           </View>
 

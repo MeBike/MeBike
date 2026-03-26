@@ -2,14 +2,13 @@ import { useGetStationLookupQuery } from "@hooks/query/reservation/use-get-stati
 import { useReservationActions } from "@hooks/use-reservation-actions";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
+import { spaceScale } from "@theme/metrics";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { Screen } from "@ui/primitives/screen";
 import { useCallback, useMemo } from "react";
 import { Alert, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { YStack } from "tamagui";
+import { useTheme, YStack } from "tamagui";
 
 import type {
   ReservationDetailNavigationProp,
@@ -26,6 +25,7 @@ function ReservationDetailScreen() {
   const navigation = useNavigation<ReservationDetailNavigationProp>();
   const route = useRoute<ReservationDetailRouteProp>();
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const { isAuthenticated } = useAuthNext();
 
   const hasToken = isAuthenticated;
@@ -129,7 +129,7 @@ function ReservationDetailScreen() {
   if (!reservation && isReservationDetailLoading) {
     return (
       <Screen>
-        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+        <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
         <DetailLoadingState />
       </Screen>
     );
@@ -144,11 +144,11 @@ function ReservationDetailScreen() {
   }
 
   const isPending = reservation.status === "PENDING";
-  const actionBarHeight = isPending ? 168 + Math.max(insets.bottom, spacing.lg) : spacing.xxxxl;
+  const actionBarHeight = isPending ? 168 + Math.max(insets.bottom, spaceScale[4]) : spaceScale[9];
 
   return (
     <Screen>
-      <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
 
       <ScrollView
         contentContainerStyle={{
@@ -160,7 +160,7 @@ function ReservationDetailScreen() {
         <YStack>
           <AppHeroHeader onBack={handleGoBack} title="Chi tiết đặt trước" />
 
-          <YStack marginTop={-spacing.xxxl} paddingHorizontal="$5">
+          <YStack marginTop={-spaceScale[7]} paddingHorizontal="$5">
             <DetailSummaryCard
               reservation={reservation}
               stationAddress={resolvedStation?.address}

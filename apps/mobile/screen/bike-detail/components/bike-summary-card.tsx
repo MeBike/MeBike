@@ -1,16 +1,14 @@
 import React from "react";
-import { StyleSheet } from "react-native";
-import { XStack, YStack } from "tamagui";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import type { BikeSummary } from "@/contracts/server";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
 
-import { bikeDetailTextStyles } from "../text-styles";
+import { createBikeDetailTextStyles } from "../text-styles";
 
 function shortId(value: string, options?: { head?: number; tail?: number }) {
   const head = options?.head ?? 8;
@@ -72,18 +70,21 @@ function DetailRow({
   label: string;
   value: string;
 }) {
+  const theme = useTheme();
+  const bikeDetailTextStyles = createBikeDetailTextStyles(theme);
+
   return (
     <XStack alignItems="center" gap="$3" justifyContent="space-between">
       <XStack alignItems="center" flex={1} gap="$2">
-        <IconSymbol color={colors.textMuted} name={icon} size={17} />
-        <AppText style={styles.detailLabel}>{label}</AppText>
+        <IconSymbol color={theme.textTertiary.val} name={icon} size={17} />
+        <AppText style={{ flex: 1, ...bikeDetailTextStyles.detailLabel }}>{label}</AppText>
       </XStack>
 
       <AppText
         flexShrink={1}
         maxWidth="54%"
         numberOfLines={1}
-        style={styles.detailValue}
+        style={bikeDetailTextStyles.detailValue}
       >
         {value}
       </AppText>
@@ -98,6 +99,8 @@ export function BikeSummaryCard({
   bike: BikeSummary;
   stationName: string;
 }) {
+  const theme = useTheme();
+  const bikeDetailTextStyles = createBikeDetailTextStyles(theme);
   const hasRatings = bike.rating.totalRatings > 0;
 
   return (
@@ -112,14 +115,17 @@ export function BikeSummaryCard({
             justifyContent="center"
             width={64}
           >
-            <IconSymbol color={colors.brandPrimary} name="bicycle" size={30} />
+            <IconSymbol color={theme.actionPrimary.val} name="bicycle" size={30} />
           </XStack>
 
           <YStack flex={1} gap="$2">
             <XStack alignItems="flex-start" gap="$3" justifyContent="space-between">
               <YStack flex={1} gap="$1">
                 <AppText style={bikeDetailTextStyles.cardTitle}>Xe đạp</AppText>
-                <AppText style={bikeDetailTextStyles.cardSubtitle}>#{shortId(bike.id)}</AppText>
+                <AppText style={bikeDetailTextStyles.cardSubtitle}>
+                  #
+                  {shortId(bike.id)}
+                </AppText>
               </YStack>
 
               <StatusBadge
@@ -131,12 +137,17 @@ export function BikeSummaryCard({
             </XStack>
 
             <XStack alignItems="center" gap="$1">
-              <IconSymbol color={colors.warning} name="star.fill" size={15} />
+              <IconSymbol color={theme.statusWarning.val} name="star.fill" size={15} />
               {hasRatings
                 ? (
                     <>
                       <AppText style={bikeDetailTextStyles.ratingValue}>{bike.rating.averageRating.toFixed(1)}</AppText>
-                      <AppText style={bikeDetailTextStyles.ratingMeta}>({bike.rating.totalRatings} đánh giá)</AppText>
+                      <AppText style={bikeDetailTextStyles.ratingMeta}>
+                        (
+                        {bike.rating.totalRatings}
+                        {" "}
+                        đánh giá)
+                      </AppText>
                     </>
                   )
                 : <AppText style={bikeDetailTextStyles.ratingMeta}>Mới</AppText>}
@@ -155,13 +166,3 @@ export function BikeSummaryCard({
     </AppCard>
   );
 }
-
-const styles = StyleSheet.create({
-  detailLabel: {
-    flex: 1,
-    ...bikeDetailTextStyles.detailLabel,
-  },
-  detailValue: {
-    ...bikeDetailTextStyles.detailValue,
-  },
-});

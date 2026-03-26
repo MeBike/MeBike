@@ -1,16 +1,16 @@
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
-import { AppText } from "@ui/primitives/app-text";
-import { Screen } from "@ui/primitives/screen";
 import React from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { YStack } from "tamagui";
+import { useTheme, YStack } from "tamagui";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
+
+import { useAuthNext } from "@providers/auth-provider-next";
+import { spaceScale } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { AppText } from "@ui/primitives/app-text";
+import { Screen } from "@ui/primitives/screen";
 
 import type { BikeDetailRouteParams } from "./types";
 
@@ -19,12 +19,14 @@ import { FooterActions } from "./components/footer-actions";
 import { PaymentMethodCard } from "./components/payment-method-card";
 import { ReservationBanner } from "./components/reservation-banner";
 import { useBikeDetail } from "./hooks/use-bike-detail";
-import { bikeDetailTextStyles } from "./text-styles";
+import { createBikeDetailTextStyles } from "./text-styles";
 
 export default function BikeDetailScreen() {
   const navigation = useNavigation<BikeDetailNavigationProp>();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const bikeDetailTextStyles = createBikeDetailTextStyles(theme);
   const { user, isAuthenticated } = useAuthNext();
   const routeParams = route.params as BikeDetailRouteParams;
 
@@ -54,7 +56,7 @@ export default function BikeDetailScreen() {
 
   return (
     <Screen>
-      <StatusBar barStyle="light-content" backgroundColor={colors.brandPrimary} />
+      <StatusBar barStyle="light-content" backgroundColor={theme.actionPrimary.val} />
 
       <ScrollView
         contentInsetAdjustmentBehavior="never"
@@ -63,8 +65,8 @@ export default function BikeDetailScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            colors={[colors.brandPrimary]}
-            tintColor={colors.brandPrimary}
+            colors={[theme.actionPrimary.val]}
+            tintColor={theme.actionPrimary.val}
           />
         )}
         showsVerticalScrollIndicator={false}
@@ -77,8 +79,8 @@ export default function BikeDetailScreen() {
 
         <View
           style={{
-            marginTop: -spacing.xxl,
-            paddingHorizontal: spacing.xl,
+            marginTop: -spaceScale[6],
+            paddingHorizontal: spaceScale[5],
             zIndex: 10,
           }}
         >
