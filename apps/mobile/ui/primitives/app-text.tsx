@@ -1,10 +1,22 @@
-import { textStyles } from "@theme/typography";
+import { textStyles, typographyTokens } from "@theme/typography";
 import { styled, Text } from "tamagui";
 
+export type AppTextTone
+  = | "default"
+    | "muted"
+    | "subtle"
+    | "disabled"
+    | "brand"
+    | "inverted"
+    | "success"
+    | "warning"
+    | "danger";
+
 export const AppText = styled(Text, {
+  name: "AppText",
   color: "$textPrimary",
   fontFamily: "$body",
-  fontSize: textStyles.body.fontSize,
+  fontSize: typographyTokens.body,
   lineHeight: textStyles.body.lineHeight,
   fontWeight: textStyles.body.fontWeight,
   variants: {
@@ -40,22 +52,25 @@ export const AppText = styled(Text, {
         color: "$textSecondary",
       },
       subtle: {
-        color: "$textMuted",
+        color: "$textTertiary",
+      },
+      disabled: {
+        color: "$textDisabled",
       },
       brand: {
-        color: "$brandPrimary",
+        color: "$textBrand",
       },
       inverted: {
-        color: "$textOnBrand",
+        color: "$textInverse",
       },
       success: {
-        color: "$success",
+        color: "$textSuccess",
       },
       warning: {
-        color: "$warning",
+        color: "$textWarning",
       },
       danger: {
-        color: "$error",
+        color: "$textDanger",
       },
     },
     align: {

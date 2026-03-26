@@ -1,5 +1,4 @@
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
@@ -9,7 +8,7 @@ import { formatDurationMinutes } from "@utils/duration";
 import { formatSupportCode } from "@utils/id";
 import { memo, useMemo } from "react";
 import { Pressable } from "react-native";
-import { Separator, XStack, YStack } from "tamagui";
+import { Separator, useTheme, XStack, YStack } from "tamagui";
 
 import type { Rental, RentalStatus } from "@/types/rental-types";
 
@@ -20,6 +19,7 @@ type BookingCardProps = {
 };
 
 const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProps) => {
+  const theme = useTheme();
   const priceText = useMemo(() => {
     const total = booking.totalPrice ?? 0;
     return `${total.toLocaleString("vi-VN")} đ`;
@@ -37,7 +37,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
     return stationNameById.get(booking.endStation) ?? formatSupportCode(booking.endStation);
   }, [booking.endStation, stationNameById]);
 
-  const status = getStatusMeta(booking.status);
+  const status = getStatusMeta(booking.status, theme);
 
   return (
     <Pressable
@@ -49,13 +49,13 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
           <XStack flex={1} gap="$3">
             <YStack
               alignItems="center"
-              backgroundColor={colors.surfaceMuted}
+              backgroundColor="$surfaceMuted"
               borderRadius="$round"
               height={44}
               justifyContent="center"
               width={44}
             >
-              <IconSymbol color={colors.textSecondary} name="bicycle.circle.fill" size={20} />
+              <IconSymbol color={theme.textSecondary.val} name="bicycle.circle.fill" size={20} />
             </YStack>
             <YStack flex={1} gap="$1">
               <AppText variant="subhead">
@@ -81,7 +81,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
           </YStack>
         </XStack>
 
-        <Separator borderColor="$divider" />
+        <Separator borderColor="$borderDefault" />
 
         <XStack alignItems="stretch" gap="$3" paddingHorizontal="$1">
           <YStack
@@ -93,19 +93,19 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
           >
             <YStack
               alignItems="center"
-              backgroundColor={colors.surface}
-              borderColor={colors.textMuted}
+              backgroundColor={theme.surfaceDefault.val}
+              borderColor={theme.textTertiary.val}
               borderRadius="$round"
               borderWidth={1.5}
               height={18}
               justifyContent="center"
               width={18}
             >
-              <YStack backgroundColor={colors.textMuted} borderRadius="$round" height={4} width={4} />
+              <YStack backgroundColor={theme.textTertiary.val} borderRadius="$round" height={4} width={4} />
             </YStack>
 
             <YStack
-              backgroundColor={colors.borderSubtle}
+              backgroundColor={theme.borderSubtle.val}
               borderRadius="$round"
               flex={1}
               marginVertical={4}
@@ -114,7 +114,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
 
             <YStack
               alignItems="center"
-              backgroundColor={colors.surface}
+              backgroundColor={theme.surfaceDefault.val}
               borderColor={status.routeAccentColor}
               borderRadius="$round"
               borderWidth={1.5}
@@ -152,15 +152,15 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
         </XStack>
 
         <XStack alignItems="center" gap="$3" paddingHorizontal="$1">
-          <XStack alignItems="center" gap="$1.5" flex={1}>
-            <IconSymbol color={colors.textMuted} name="calendar" size={14} />
+          <XStack alignItems="center" gap="$2" flex={1}>
+            <IconSymbol color={theme.textTertiary.val} name="calendar" size={14} />
             <AppText tone="muted" variant="bodySmall">
               {formatVietnamDateTime(booking.startTime)}
             </AppText>
           </XStack>
-          <Separator alignSelf="stretch" borderColor="$divider" vertical />
-          <XStack alignItems="center" gap="$1.5" flex={1}>
-            <IconSymbol color={colors.textMuted} name="clock" size={14} />
+          <Separator alignSelf="stretch" borderColor="$borderDefault" vertical />
+          <XStack alignItems="center" gap="$2" flex={1}>
+            <IconSymbol color={theme.textTertiary.val} name="clock" size={14} />
             <AppText tone="muted" variant="bodySmall">
               {formatDurationMinutes(booking.duration, { hasEnded: Boolean(booking.endTime) })}
             </AppText>
@@ -171,7 +171,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
   );
 });
 
-function getStatusMeta(status: RentalStatus) {
+function getStatusMeta(status: RentalStatus, theme: ReturnType<typeof useTheme>) {
   switch (status) {
     case "COMPLETED":
       return {
@@ -180,7 +180,7 @@ function getStatusMeta(status: RentalStatus) {
         pulseDot: false,
         withDot: false,
         destinationTone: "default" as const,
-        routeAccentColor: colors.brandPrimary,
+        routeAccentColor: theme.actionPrimary.val,
       };
     case "RENTED":
       return {
@@ -189,7 +189,7 @@ function getStatusMeta(status: RentalStatus) {
         pulseDot: true,
         withDot: true,
         destinationTone: "warning" as const,
-        routeAccentColor: colors.warning,
+        routeAccentColor: theme.statusWarning.val,
       };
     case "CANCELLED":
       return {
@@ -198,7 +198,7 @@ function getStatusMeta(status: RentalStatus) {
         pulseDot: false,
         withDot: false,
         destinationTone: "danger" as const,
-        routeAccentColor: colors.error,
+        routeAccentColor: theme.statusDanger.val,
       };
     default:
       return {
@@ -207,7 +207,7 @@ function getStatusMeta(status: RentalStatus) {
         pulseDot: false,
         withDot: false,
         destinationTone: "default" as const,
-        routeAccentColor: colors.textSecondary,
+        routeAccentColor: theme.textSecondary.val,
       };
   }
 }

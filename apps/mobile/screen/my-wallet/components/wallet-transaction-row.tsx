@@ -1,7 +1,8 @@
+import { useTheme, XStack, YStack } from "tamagui";
+
 import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppListRow } from "@ui/primitives/app-list-row";
 import { AppText } from "@ui/primitives/app-text";
 import {
@@ -10,7 +11,6 @@ import {
   formatTransactionStatus,
   formatTransactionType,
 } from "@utils/wallet/formatters";
-import { XStack, YStack } from "tamagui";
 
 type WalletTransactionRowProps = {
   item: WalletTransactionDetail;
@@ -22,37 +22,37 @@ type TransactionVisual = {
   iconName: "arrow.down" | "arrow.up" | "arrow.clockwise" | "slider.horizontal.3";
   iconColor: string;
   iconBackground: string;
-  amountColor: string;
+  amountTone: "success" | "brand" | "warning" | "default";
   amountPrefix: "+" | "-";
   fallbackLabel: string;
 };
 
-function getTransactionVisual(item: WalletTransactionDetail): TransactionVisual {
+function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<typeof useTheme>): TransactionVisual {
   switch (item.type) {
     case "DEPOSIT":
       return {
         iconName: "arrow.down",
-        iconColor: colors.success,
-        iconBackground: colors.successSoft,
-        amountColor: colors.success,
+        iconColor: theme.statusSuccess.val,
+        iconBackground: theme.surfaceSuccess.val,
+        amountTone: "success",
         amountPrefix: "+",
         fallbackLabel: "Nạp tiền",
       };
     case "REFUND":
       return {
         iconName: "arrow.clockwise",
-        iconColor: colors.brandPrimary,
-        iconBackground: colors.surfaceAccent,
-        amountColor: colors.brandPrimary,
+        iconColor: theme.actionPrimary.val,
+        iconBackground: theme.surfaceAccent.val,
+        amountTone: "brand",
         amountPrefix: "+",
         fallbackLabel: "Hoàn tiền",
       };
     case "ADJUSTMENT":
       return {
         iconName: "slider.horizontal.3",
-        iconColor: colors.warning,
-        iconBackground: colors.warningSoft,
-        amountColor: colors.warning,
+        iconColor: theme.statusWarning.val,
+        iconBackground: theme.surfaceWarning.val,
+        amountTone: "warning",
         amountPrefix: "+",
         fallbackLabel: "Điều chỉnh",
       };
@@ -60,9 +60,9 @@ function getTransactionVisual(item: WalletTransactionDetail): TransactionVisual 
     default:
       return {
         iconName: "arrow.up",
-        iconColor: colors.textPrimary,
-        iconBackground: colors.surfaceMuted,
-        amountColor: colors.textPrimary,
+        iconColor: theme.textPrimary.val,
+        iconBackground: theme.surfaceMuted.val,
+        amountTone: "default",
         amountPrefix: "-",
         fallbackLabel: "Thanh toán",
       };
@@ -70,7 +70,8 @@ function getTransactionVisual(item: WalletTransactionDetail): TransactionVisual 
 }
 
 export function WalletTransactionRow({ item, onPress, showDivider }: WalletTransactionRowProps) {
-  const visual = getTransactionVisual(item);
+  const theme = useTheme();
+  const visual = getTransactionVisual(item, theme);
   const status = item.status.toUpperCase();
   const title = item.description?.trim() || visual.fallbackLabel;
   const hint = formatTransactionType(item.type);
@@ -104,7 +105,7 @@ export function WalletTransactionRow({ item, onPress, showDivider }: WalletTrans
       showDivider={showDivider}
       trailing={(
         <YStack alignItems="flex-end" gap="$2">
-          <AppText color={visual.amountColor} variant="headline">
+          <AppText tone={visual.amountTone} variant="headline">
             {visual.amountPrefix}
             {" "}
             {formatCurrency(item.amount)}
@@ -119,7 +120,7 @@ export function WalletTransactionRow({ item, onPress, showDivider }: WalletTrans
             : (
                 <XStack alignItems="center" gap="$1">
                   <IconSymbol
-                    color={status === "FAILED" ? colors.error : colors.warning}
+                    color={status === "FAILED" ? theme.statusDanger.val : theme.statusWarning.val}
                     name={status === "FAILED" ? "exclamationmark.triangle" : "clock"}
                     size={12}
                   />

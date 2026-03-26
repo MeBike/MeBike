@@ -1,15 +1,15 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
-import { StatusBadge } from "@ui/primitives/status-badge";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { XStack, YStack } from "tamagui";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import type { Rental } from "@/types/rental-types";
 
-import { softCardShadowStyle } from "../card-shadow";
+import { IconSymbol } from "@components/IconSymbol";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { StatusBadge } from "@ui/primitives/status-badge";
+
+import { getSoftCardShadowStyle } from "../card-shadow";
 import {
   formatCurrencyText,
   formatDateOnly,
@@ -46,6 +46,8 @@ function getRentalStatusMeta(status: Rental["status"]) {
 }
 
 export function RentalHeroCard({ rental }: RentalHeroCardProps) {
+  const theme = useTheme();
+  const softCardShadowStyle = getSoftCardShadowStyle(theme.shadowColor.val);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -79,7 +81,7 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
           alignItems="center"
           backgroundColor="$surfaceMuted"
           borderBottomWidth={1}
-          borderColor="$divider"
+          borderColor="$borderDefault"
           justifyContent="space-between"
           paddingHorizontal="$5"
           paddingVertical="$4"
@@ -104,7 +106,7 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
               opacity: 0.05,
             }}
           >
-            <IconSymbol color={colors.textSecondary} name="clock" size={144} />
+            <IconSymbol color={theme.textSecondary.val} name="clock" size={144} />
           </View>
 
           <AppText tone="subtle" variant="eyebrow">
@@ -112,7 +114,7 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
           </AppText>
 
           <XStack alignItems="flex-end" gap="$2" paddingTop="$4">
-            <XStack alignItems="flex-end" gap="$1.5">
+            <XStack alignItems="flex-end" gap="$2">
               <AppText tone="brand" variant="metricValue">
                 {duration.hours}
               </AppText>
@@ -121,7 +123,7 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
               </AppText>
             </XStack>
 
-            <XStack alignItems="flex-end" gap="$1.5">
+            <XStack alignItems="flex-end" gap="$2">
               <AppText tone="brand" variant="metricValue">
                 {duration.minutes}
               </AppText>

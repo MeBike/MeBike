@@ -1,8 +1,9 @@
-import { colors } from "@theme/colors";
-import { radii, spacing } from "@theme/metrics";
-import { fontSizes, fontWeights } from "@theme/typography";
 import { useRef, useState } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { TextInput, View } from "react-native";
+import { useTheme } from "tamagui";
+
+import { radii, spaceScale } from "@theme/metrics";
+import { fontSizes, fontWeights } from "@theme/typography";
 
 type OtpCodeInputProps = {
   otp: string[];
@@ -10,35 +11,13 @@ type OtpCodeInputProps = {
   onChangeDigit: (index: number, value: string) => void;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  input: {
-    flex: 1,
-    height: 56,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: radii.md,
-    textAlign: "center",
-    fontSize: fontSizes.lg,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    backgroundColor: colors.backgroundStrong,
-  },
-  inputDisabled: {
-    opacity: 0.6,
-  },
-});
-
 export function OtpCodeInput({ otp, disabled = false, onChangeDigit }: OtpCodeInputProps) {
+  const theme = useTheme();
   const refs = useRef<Array<TextInput | null>>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(0);
 
   return (
-    <View style={styles.container}>
+    <View style={{ flexDirection: "row", justifyContent: "space-between", gap: spaceScale[2] }}>
       {otp.map((value, index) => (
         <TextInput
           key={index}
@@ -61,14 +40,25 @@ export function OtpCodeInput({ otp, disabled = false, onChangeDigit }: OtpCodeIn
             setFocusedIndex(index);
           }}
           style={[
-            styles.input,
+            {
+              flex: 1,
+              height: 56,
+              borderWidth: 1,
+              borderColor: theme.borderSubtle.val,
+              borderRadius: radii.md,
+              textAlign: "center",
+              fontSize: fontSizes.lg,
+              fontWeight: fontWeights.semibold,
+              color: theme.textPrimary.val,
+              backgroundColor: theme.backgroundRaised.val,
+            },
             (focusedIndex === index || value) && !disabled
               ? {
-                  borderColor: colors.brandPrimary,
+                  borderColor: theme.actionPrimary.val,
                   borderWidth: 2,
                 }
               : null,
-            disabled && styles.inputDisabled,
+            disabled && { opacity: 0.6 },
           ]}
           value={value}
         />

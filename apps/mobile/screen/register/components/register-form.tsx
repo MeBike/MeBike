@@ -1,14 +1,14 @@
 import type { Control, FieldErrors } from "react-hook-form";
 
+import { Controller } from "react-hook-form";
+import { Pressable } from "react-native";
+import { useTheme, YStack } from "tamagui";
+
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
 import { Field } from "@ui/primitives/field";
-import { Controller } from "react-hook-form";
-import { Pressable } from "react-native";
-import { YStack } from "tamagui";
 
 import type { RegisterFormValues } from "../hooks/use-register";
 
@@ -35,6 +35,8 @@ function RegisterForm({
   onGoToLogin,
   isSubmitting,
 }: RegisterFormProps) {
+  const theme = useTheme();
+
   return (
     <YStack gap="$6">
 
@@ -46,7 +48,7 @@ function RegisterForm({
             <AppInput
               autoCapitalize="words"
               invalid={Boolean(errors.fullname?.message)}
-              leadingIcon={<IconSymbol name="person" size={18} color={colors.textSecondary} />}
+              leadingIcon={<IconSymbol name="person" size={18} color={theme.textSecondary.val} />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Nhập họ và tên"
@@ -66,7 +68,7 @@ function RegisterForm({
               autoCorrect={false}
               invalid={Boolean(errors.email?.message)}
               keyboardType="email-address"
-              leadingIcon={<IconSymbol name="envelope" size={18} color={colors.textSecondary} />}
+              leadingIcon={<IconSymbol name="envelope" size={18} color={theme.textSecondary.val} />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Nhập email"
@@ -84,7 +86,7 @@ function RegisterForm({
             <AppInput
               invalid={Boolean(errors.phoneNumber?.message)}
               keyboardType="phone-pad"
-              leadingIcon={<IconSymbol name="phone" size={18} color={colors.textSecondary} />}
+              leadingIcon={<IconSymbol name="phone" size={18} color={theme.textSecondary.val} />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Nhập số điện thoại"
@@ -102,7 +104,7 @@ function RegisterForm({
             <AppInput
               autoCapitalize="none"
               invalid={Boolean(errors.password?.message)}
-              leadingIcon={<IconSymbol name="lock" size={18} color={colors.textSecondary} />}
+              leadingIcon={<IconSymbol name="lock" size={18} color={theme.textSecondary.val} />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Nhập mật khẩu"
@@ -112,7 +114,7 @@ function RegisterForm({
                   <IconSymbol
                     name={showPassword ? "eye.slash" : "eye"}
                     size={18}
-                    color={colors.textSecondary}
+                    color={theme.textSecondary.val}
                   />
                 </Pressable>
               )}
@@ -130,7 +132,7 @@ function RegisterForm({
             <AppInput
               autoCapitalize="none"
               invalid={Boolean(errors.confirmPassword?.message)}
-              leadingIcon={<IconSymbol name="lock" size={18} color={colors.textSecondary} />}
+              leadingIcon={<IconSymbol name="lock" size={18} color={theme.textSecondary.val} />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Xác nhận mật khẩu"
@@ -140,7 +142,7 @@ function RegisterForm({
                   <IconSymbol
                     name={showConfirmPassword ? "eye.slash" : "eye"}
                     size={18}
-                    color={colors.textSecondary}
+                    color={theme.textSecondary.val}
                   />
                 </Pressable>
               )}

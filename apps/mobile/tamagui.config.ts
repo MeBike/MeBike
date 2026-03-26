@@ -1,31 +1,20 @@
 import { shorthands } from "@tamagui/shorthands";
-import { colors } from "@theme/colors";
-import { radii, spacing } from "@theme/metrics";
-import { fontFamily, fontSizes, fontWeights, letterSpacing, lineHeights } from "@theme/typography";
 import { createFont, createTamagui, createTokens, isWeb } from "tamagui";
+
+import { colorRampTokens, lightTheme } from "@theme/colors";
+import { radii, spaceScale } from "@theme/metrics";
+import { fontFaces, fontFamily, fontTokenScale, fontWeights } from "@theme/typography";
+
+function mapFontScale<K extends keyof typeof fontTokenScale>(key: "fontSize" | "lineHeight" | "letterSpacing") {
+  return Object.fromEntries(
+    Object.entries(fontTokenScale).map(([scale, values]) => [scale, values[key]]),
+  ) as Record<K, (typeof fontTokenScale)[K][typeof key]>;
+}
 
 const appFont = createFont({
   family: isWeb ? fontFamily : fontFamily,
-  size: {
-    1: fontSizes.xs,
-    2: fontSizes.sm,
-    3: fontSizes.md,
-    4: fontSizes.lg,
-    5: fontSizes.xl,
-    6: fontSizes.xxl,
-    7: fontSizes.xxxl,
-    8: fontSizes.display,
-  },
-  lineHeight: {
-    1: lineHeights.xs,
-    2: lineHeights.sm,
-    3: lineHeights.md,
-    4: lineHeights.lg,
-    5: lineHeights.xl,
-    6: lineHeights.xxl,
-    7: lineHeights.xxxl,
-    8: lineHeights.display,
-  },
+  size: mapFontScale("fontSize"),
+  lineHeight: mapFontScale("lineHeight"),
   weight: {
     4: fontWeights.regular,
     5: fontWeights.medium,
@@ -33,50 +22,33 @@ const appFont = createFont({
     7: fontWeights.bold,
     8: fontWeights.heavy,
   },
-  letterSpacing: {
-    1: letterSpacing.xs,
-    2: letterSpacing.sm,
-    3: letterSpacing.md,
-    4: letterSpacing.lg,
-    5: letterSpacing.xl,
-    6: letterSpacing.xxl,
-    7: letterSpacing.xxxl,
-    8: letterSpacing.display,
+  letterSpacing: mapFontScale("letterSpacing"),
+  face: {
+    400: { normal: fontFaces.regular },
+    500: { normal: fontFaces.medium },
+    600: { normal: fontFaces.semibold },
+    700: { normal: fontFaces.bold },
+    800: { normal: fontFaces.heavy },
   },
 });
 
 const tokens = createTokens({
   color: {
-    brandPrimary: colors.brandPrimary,
-    brandSecondary: colors.brandSecondary,
-    brandAccent: colors.brandAccent,
-    background: colors.background,
-    backgroundStrong: colors.backgroundStrong,
-    surface: colors.surface,
-    surfaceMuted: colors.surfaceMuted,
-    surfaceAccent: colors.surfaceAccent,
-    textPrimary: colors.textPrimary,
-    textSecondary: colors.textSecondary,
-    textMuted: colors.textMuted,
-    textOnBrand: colors.textOnBrand,
-    borderSubtle: colors.borderSubtle,
-    divider: colors.divider,
-    success: colors.success,
-    warning: colors.warning,
-    error: colors.error,
-    info: colors.info,
-    shadowColor: colors.shadowColor,
+    ...colorRampTokens,
   },
   space: {
-    0: spacing.none,
-    1: spacing.xs,
-    2: spacing.sm,
-    3: spacing.md,
-    4: spacing.lg,
-    true: spacing.lg,
-    5: spacing.xl,
-    6: spacing.xxl,
-    7: spacing.xxxl,
+    0: spaceScale[0],
+    1: spaceScale[1],
+    2: spaceScale[2],
+    3: spaceScale[3],
+    4: spaceScale[4],
+    true: spaceScale[4],
+    5: spaceScale[5],
+    6: spaceScale[6],
+    7: spaceScale[7],
+    8: spaceScale[8],
+    9: spaceScale[9],
+    10: spaceScale[10],
   },
   size: {
     0: 0,
@@ -115,28 +87,7 @@ export const appTamaguiConfig = createTamagui({
   },
   tokens,
   themes: {
-    light: {
-      background: colors.background,
-      backgroundStrong: colors.backgroundStrong,
-      surface: colors.surface,
-      surfaceMuted: colors.surfaceMuted,
-      surfaceAccent: colors.surfaceAccent,
-      color: colors.textPrimary,
-      textPrimary: colors.textPrimary,
-      textSecondary: colors.textSecondary,
-      textMuted: colors.textMuted,
-      textOnBrand: colors.textOnBrand,
-      borderSubtle: colors.borderSubtle,
-      divider: colors.divider,
-      brandPrimary: colors.brandPrimary,
-      brandSecondary: colors.brandSecondary,
-      brandAccent: colors.brandAccent,
-      success: colors.success,
-      warning: colors.warning,
-      error: colors.error,
-      info: colors.info,
-      shadowColor: colors.shadowColor,
-    },
+    light: lightTheme,
   },
   media: {
     short: { maxHeight: 780 },

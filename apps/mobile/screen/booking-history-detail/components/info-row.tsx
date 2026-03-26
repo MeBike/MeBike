@@ -1,6 +1,6 @@
-import { colors } from "@theme/colors";
-import { AppText } from "@ui/primitives/app-text";
 import { Separator, XStack, YStack } from "tamagui";
+
+import { AppText } from "@ui/primitives/app-text";
 
 type InfoRowProps = {
   label: string;
@@ -18,7 +18,7 @@ export default function InfoRow({ label, value }: InfoRowProps) {
           {value && value.trim().length > 0 ? value : "--"}
         </AppText>
       </XStack>
-      <Separator borderColor={colors.borderSubtle} />
+      <Separator borderColor="$borderSubtle" />
     </YStack>
   );
 }

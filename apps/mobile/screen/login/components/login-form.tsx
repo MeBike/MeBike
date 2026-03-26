@@ -1,15 +1,16 @@
-import type { LoginSchemaFormData } from "@schemas/authSchema";
 import type { Control, FieldErrors } from "react-hook-form";
 
+import { Controller } from "react-hook-form";
+import { Pressable } from "react-native";
+import { useTheme, YStack } from "tamagui";
+
+import type { LoginSchemaFormData } from "@schemas/authSchema";
+
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
 import { Field } from "@ui/primitives/field";
-import { Controller } from "react-hook-form";
-import { Pressable } from "react-native";
-import { YStack } from "tamagui";
 
 type LoginFormProps = {
   control: Control<LoginSchemaFormData>;
@@ -32,6 +33,8 @@ function LoginForm({
   onRegister,
   isSubmitting,
 }: LoginFormProps) {
+  const theme = useTheme();
+
   return (
     <YStack gap="$5">
 
@@ -45,7 +48,7 @@ function LoginForm({
               autoCorrect={false}
               invalid={Boolean(errors.email?.message)}
               keyboardType="email-address"
-              leadingIcon={<IconSymbol name="envelope" size={18} color={colors.textSecondary} />}
+              leadingIcon={<IconSymbol name="envelope" size={18} color={theme.textSecondary.val} />}
               onChangeText={onChange}
               placeholder="Nhập email của bạn"
               value={value}
@@ -63,7 +66,7 @@ function LoginForm({
               autoCapitalize="none"
               autoCorrect={false}
               invalid={Boolean(errors.password?.message)}
-              leadingIcon={<IconSymbol name="lock" size={18} color={colors.textSecondary} />}
+              leadingIcon={<IconSymbol name="lock" size={18} color={theme.textSecondary.val} />}
               onChangeText={onChange}
               placeholder="Nhập mật khẩu"
               secureTextEntry={!showPassword}
@@ -72,7 +75,7 @@ function LoginForm({
                   <IconSymbol
                     name={showPassword ? "eye.slash" : "eye"}
                     size={18}
-                    color={colors.textSecondary}
+                    color={theme.textSecondary.val}
                   />
                 </Pressable>
               )}

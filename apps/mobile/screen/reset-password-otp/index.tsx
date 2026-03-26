@@ -1,37 +1,13 @@
-import { spacing } from "@theme/metrics";
+import { Pressable, View } from "react-native";
+
+import { spaceScale } from "@theme/metrics";
 import { AuthScreen } from "@ui/patterns/auth-screen";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
 import { OtpCodeInput } from "@ui/primitives/otp-code-input";
-import { Pressable, StyleSheet, View } from "react-native";
 
 import { ResetPasswordOtpHeader } from "./components/reset-password-otp-header";
 import { useResetPasswordOtp } from "./hooks/use-reset-password-otp";
-
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.xxxl,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  timerRow: {
-    alignItems: "center",
-  },
-  actions: {
-    gap: spacing.xxl,
-  },
-  resendBlock: {
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  resendButton: {
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-  },
-});
 
 export default function ResetPasswordOTPScreen() {
   const {
@@ -54,13 +30,13 @@ export default function ResetPasswordOTPScreen() {
 
   return (
     <AuthScreen header={<ResetPasswordOtpHeader email={email} onBack={goBack} />}>
-      <View style={styles.content}>
-        <View style={styles.section}>
+      <View style={{ paddingHorizontal: spaceScale[6], paddingBottom: spaceScale[7], gap: spaceScale[7] }}>
+        <View style={{ gap: spaceScale[2] }}>
           <AppText variant="fieldLabel">Nhập mã OTP (6 chữ số)</AppText>
           <OtpCodeInput disabled={timeLeft <= 0} otp={otp} onChangeDigit={setOtpDigit} />
         </View>
 
-        <View style={styles.timerRow}>
+        <View style={{ alignItems: "center" }}>
           <AppText align="center" tone="muted" variant="bodySmall">
             Mã OTP sẽ hết hạn trong
             {" "}
@@ -68,24 +44,21 @@ export default function ResetPasswordOTPScreen() {
           </AppText>
         </View>
 
-        <View style={styles.actions}>
+        <View style={{ gap: spaceScale[6] }}>
           <AppButton
-            backgroundColor={isActive ? "$brandPrimary" : "$divider"}
-            borderColor={isActive ? "$brandPrimary" : "$divider"}
             disabled={!isActive}
             loading={isVerifying}
             onPress={verify}
+            tone={isActive ? "primary" : "outline"}
           >
-            <AppText align="center" tone={isActive ? "inverted" : "muted"} variant="bodySmall">
-              Tiếp tục
-            </AppText>
+            Tiếp tục
           </AppButton>
 
-          <View style={styles.resendBlock}>
+          <View style={{ alignItems: "center", gap: spaceScale[2] }}>
             <AppText align="center" tone="muted" variant="bodySmall">
               Không nhận được mã OTP?
             </AppText>
-            <Pressable disabled={!canResend} onPress={resend} style={styles.resendButton}>
+            <Pressable disabled={!canResend} onPress={resend} style={{ alignItems: "center", paddingVertical: spaceScale[2] }}>
               <AppText tone={canResend ? "brand" : "muted"} variant="label">
                 {isResending
                   ? "Đang gửi lại..."

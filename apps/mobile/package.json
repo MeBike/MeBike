@@ -14,9 +14,11 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "compose:dev": "docker compose -f docker-compose.dev.yml up",
-    "compose:prod": "docker compose -f docker-compose.yml up"
+    "compose:prod": "docker compose -f docker-compose.yml up",
+    "guard:design-system": "node ./scripts/check-design-system-usage.mjs"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",
     "@hookform/resolvers": "^5.2.2",
     "@mebike/shared": "workspace:*",
@@ -37,6 +39,7 @@
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.15",
     "expo-device": "~8.0.10",
+    "expo-font": "~14.0.11",
     "expo-image-picker": "^17.0.8",
     "expo-linear-gradient": "^15.0.7",
     "expo-location": "^19.0.7",

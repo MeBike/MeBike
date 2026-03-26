@@ -1,10 +1,9 @@
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
+import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
 import React from "react";
-import { Spinner, XStack, YStack } from "tamagui";
+import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 type DetailActionsProps = {
   isPending: boolean;
@@ -23,46 +22,43 @@ export function DetailActions({
   onCancel,
   bottomInset,
 }: DetailActionsProps) {
+  const theme = useTheme();
+
   if (!isPending) {
     return null;
   }
 
   return (
     <YStack
-      backgroundColor={colors.surface}
-      borderColor={colors.borderSubtle}
+      backgroundColor="$surfaceDefault"
+      borderColor="$borderSubtle"
       borderTopWidth={1}
       gap="$3"
       paddingHorizontal="$5"
       paddingTop="$5"
-      paddingBottom={Math.max(bottomInset, spacing.lg)}
+      paddingBottom={Math.max(bottomInset, spaceScale[4])}
     >
       <AppButton
-        backgroundColor={colors.errorSoft}
-        borderColor="rgba(239, 68, 68, 0.2)"
         disabled={isCancelling || isConfirming}
-        elevation={0}
         height={56}
         onPress={onCancel}
-        shadowOpacity={0}
-        shadowRadius={0}
-        tone="outline"
+        tone="danger"
       >
-        <XStack alignItems="center" gap="$2.5">
+        <XStack alignItems="center" gap="$3">
           {isCancelling
-            ? <Spinner color={colors.error} />
-            : <IconSymbol color={colors.error} name="xmark" size={20} />}
-          <AppText tone="danger" variant="actionLabel">
+            ? <Spinner color="$onActionDanger" />
+            : <IconSymbol color={theme.onActionDanger.val} name="xmark" size={20} />}
+          <AppText tone="inverted" variant="actionLabel">
             Hủy đặt trước
           </AppText>
         </XStack>
       </AppButton>
 
       <AppButton disabled={isCancelling || isConfirming} height={56} onPress={onConfirm} tone="primary">
-        <XStack alignItems="center" gap="$2.5">
+        <XStack alignItems="center" gap="$3">
           {isConfirming
-            ? <Spinner color={colors.textOnBrand} />
-            : <IconSymbol color={colors.textOnBrand} name="play.fill" size={20} />}
+            ? <Spinner color="$onActionPrimary" />
+            : <IconSymbol color={theme.onActionPrimary.val} name="play.fill" size={20} />}
           <AppText tone="inverted" variant="actionLabel">
             Xác nhận & bắt đầu
           </AppText>

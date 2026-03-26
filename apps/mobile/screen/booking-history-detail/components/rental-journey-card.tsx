@@ -1,13 +1,13 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
 import { View } from "react-native";
-import { XStack, YStack } from "tamagui";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
-import { softCardShadowStyle } from "../card-shadow";
+import { IconSymbol } from "@components/IconSymbol";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+
+import { getSoftCardShadowStyle } from "../card-shadow";
 import { formatTimeOnly } from "../helpers/formatters";
 
 type RentalJourneyCardProps = {
@@ -26,6 +26,7 @@ type JourneyPointProps = {
   isLast?: boolean;
   lineColor?: string;
   timeTone?: "muted" | "warning" | "danger";
+  clockColor: string;
 };
 
 function JourneyPoint({
@@ -38,8 +39,9 @@ function JourneyPoint({
   iconBackground,
   valueTone = "default",
   isLast = false,
-  lineColor = colors.warning,
+  lineColor,
   timeTone = "muted",
+  clockColor,
 }: JourneyPointProps) {
   return (
     <XStack gap="$4">
@@ -74,7 +76,7 @@ function JourneyPoint({
             )}
       </YStack>
 
-      <YStack flex={1} gap="$1.5" paddingTop="$1">
+      <YStack flex={1} gap="$2" paddingTop="$1">
         <AppText tone="subtle" variant="eyebrow">
           {label}
         </AppText>
@@ -84,7 +86,7 @@ function JourneyPoint({
         {timeText
           ? (
               <XStack alignItems="center" gap="$2">
-                <IconSymbol color={colors.textSecondary} name="clock" size={14} />
+                <IconSymbol color={clockColor} name="clock" size={14} />
                 <AppText tone={timeTone} variant="bodySmall">
                   {timeText}
                 </AppText>
@@ -104,6 +106,8 @@ function JourneyPoint({
 }
 
 export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
+  const theme = useTheme();
+  const softCardShadowStyle = getSoftCardShadowStyle(theme.shadowColor.val);
   const { rental, startStation, endStation, returnSlot, returnStation } = detail;
   const isOngoing = rental.status === "RENTED";
   const hasReturnSlot = isOngoing && Boolean(returnSlot);
@@ -124,7 +128,7 @@ export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
   return (
     <YStack gap="$3">
       <XStack alignItems="center" gap="$2">
-        <IconSymbol color={colors.textSecondary} name="map" size={18} />
+        <IconSymbol color={theme.textSecondary.val} name="map" size={18} />
         <AppText variant="sectionTitle">
           Hành trình
         </AppText>
@@ -133,18 +137,20 @@ export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
       <View style={softCardShadowStyle}>
         <AppCard borderRadius="$5" elevated={false} gap="$5" padding="$5">
           <JourneyPoint
-            iconBackground={colors.successSoft}
-            iconColor={colors.success}
+            clockColor={theme.textSecondary.val}
+            iconBackground={theme.surfaceSuccess.val}
+            iconColor={theme.statusSuccess.val}
             iconName="location.fill"
             label="Trạm bắt đầu"
-            lineColor={hasReturnSlot ? colors.warning : colors.info}
+            lineColor={hasReturnSlot ? theme.statusWarning.val : theme.statusInfo.val}
             timeText={formatTimeOnly(rental.startTime)}
             value={startStationLabel}
           />
 
           <JourneyPoint
-            iconBackground={hasReturnSlot ? colors.warningSoft : colors.surfaceAccent}
-            iconColor={hasReturnSlot ? colors.warning : colors.brandPrimary}
+            clockColor={theme.textSecondary.val}
+            iconBackground={hasReturnSlot ? theme.surfaceWarning.val : theme.surfaceAccent.val}
+            iconColor={hasReturnSlot ? theme.statusWarning.val : theme.actionPrimary.val}
             iconName="location"
             helperText={isOngoing && !hasReturnSlot ? "Bạn cần chọn bãi trả trước khi kết thúc hành trình" : undefined}
             isLast

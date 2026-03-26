@@ -1,45 +1,162 @@
 import type { ReactNode } from "react";
 import type { GetProps } from "tamagui";
 
-import { borderWidths, radii } from "@theme/metrics";
+import { Button, Spinner, styled } from "tamagui";
+
+import type { AppTextTone } from "@ui/primitives/app-text";
+
+import { borderWidths } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
-import { Button, Spinner } from "tamagui";
 
-type AppButtonTone = "primary" | "secondary" | "soft" | "ghost" | "outline";
+export type AppButtonTone = "primary" | "secondary" | "soft" | "ghost" | "outline" | "danger";
+export type AppButtonSize = "compact" | "default" | "large";
 
-type AppButtonProps = Omit<GetProps<typeof Button>, "children"> & {
+const AppButtonFrame = styled(Button, {
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: "$3",
+  borderWidth: borderWidths.subtle,
+  paddingHorizontal: "$4",
+  gap: "$2",
+  height: "$6",
+  backgroundColor: "$actionPrimary",
+  borderColor: "$actionPrimary",
+  shadowColor: "$shadowColor",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.12,
+  shadowRadius: 12,
+  elevation: 3,
+  disabledStyle: { opacity: 0.58 },
+  variants: {
+    tone: {
+      primary: {
+        backgroundColor: "$actionPrimary",
+        borderColor: "$actionPrimary",
+        pressStyle: {
+          backgroundColor: "$actionPrimaryPress",
+          borderColor: "$actionPrimaryPress",
+          opacity: 1,
+          scale: 0.985,
+        },
+      },
+      secondary: {
+        backgroundColor: "$actionSecondary",
+        borderColor: "$actionSecondary",
+        pressStyle: {
+          backgroundColor: "$actionSecondaryPress",
+          borderColor: "$actionSecondaryPress",
+          opacity: 1,
+          scale: 0.985,
+        },
+      },
+      soft: {
+        backgroundColor: "$surfaceAccent",
+        borderColor: "$surfaceAccent",
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        elevation: 0,
+        pressStyle: {
+          backgroundColor: "$surfaceAccentPress",
+          borderColor: "$surfaceAccentPress",
+          opacity: 1,
+          scale: 0.985,
+        },
+      },
+      ghost: {
+        backgroundColor: "$actionGhost",
+        borderColor: "$actionGhost",
+        borderWidth: borderWidths.none,
+        shadowColor: "transparent",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        elevation: 0,
+        pressStyle: {
+          backgroundColor: "$actionGhostPress",
+          borderColor: "$actionGhostPress",
+          opacity: 1,
+          scale: 0.985,
+        },
+      },
+      outline: {
+        backgroundColor: "$surfaceDefault",
+        borderColor: "$borderFocus",
+        borderWidth: borderWidths.strong,
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        elevation: 0,
+        pressStyle: {
+          backgroundColor: "$surfaceAccent",
+          borderColor: "$borderFocus",
+          opacity: 1,
+          scale: 0.985,
+        },
+      },
+      danger: {
+        backgroundColor: "$actionDanger",
+        borderColor: "$actionDanger",
+        pressStyle: {
+          backgroundColor: "$actionDangerPress",
+          borderColor: "$actionDangerPress",
+          opacity: 1,
+          scale: 0.985,
+        },
+      },
+    },
+    size: {
+      compact: {
+        height: "$5",
+        paddingHorizontal: "$3",
+      },
+      default: {
+        height: "$6",
+        paddingHorizontal: "$4",
+      },
+      large: {
+        height: "$7",
+        paddingHorizontal: "$5",
+      },
+    },
+  } as const,
+  defaultVariants: {
+    tone: "primary",
+    size: "default",
+  },
+});
+
+type AppButtonProps = Omit<GetProps<typeof AppButtonFrame>, "children"> & {
   children: ReactNode;
   loading?: boolean;
-  tone?: AppButtonTone;
 };
 
-const buttonToneStyles: Record<AppButtonTone, { bg: string; borderColor: string; textTone: "inverted" | "brand" | "muted" }> = {
-  primary: {
-    bg: "$brandPrimary",
-    borderColor: "$brandPrimary",
-    textTone: "inverted",
-  },
-  secondary: {
-    bg: "$brandSecondary",
-    borderColor: "$brandSecondary",
-    textTone: "inverted",
-  },
-  soft: {
-    bg: "$surfaceAccent",
-    borderColor: "$surfaceAccent",
-    textTone: "brand",
-  },
-  ghost: {
-    bg: "transparent",
-    borderColor: "transparent",
-    textTone: "brand",
-  },
-  outline: {
-    bg: "$surface",
-    borderColor: "$brandPrimary",
-    textTone: "brand",
-  },
-};
+function getTextTone(tone: AppButtonTone): AppTextTone {
+  switch (tone) {
+    case "primary":
+    case "secondary":
+      return "inverted";
+    case "danger":
+      return "inverted";
+    case "soft":
+    case "ghost":
+    case "outline":
+      return "brand";
+  }
+}
+
+function getSpinnerColor(tone: AppButtonTone) {
+  switch (tone) {
+    case "primary":
+      return "$onActionPrimary" as const;
+    case "secondary":
+      return "$onActionSecondary" as const;
+    case "danger":
+      return "$onActionDanger" as const;
+    case "soft":
+    case "ghost":
+    case "outline":
+      return "$textBrand" as const;
+  }
+}
 
 export function AppButton({
   children,
@@ -48,34 +165,22 @@ export function AppButton({
   disabled,
   ...props
 }: AppButtonProps) {
-  const style = buttonToneStyles[tone];
+  const textTone = getTextTone(tone);
 
   return (
-    <Button
-      backgroundColor={style.bg}
-      borderColor={style.borderColor}
-      borderRadius={radii.lg}
-      borderWidth={tone === "ghost" ? borderWidths.none : tone === "outline" ? borderWidths.strong : borderWidths.subtle}
+    <AppButtonFrame
       disabled={disabled || loading}
-      disabledStyle={{ opacity: 0.58 }}
-      height={52}
-      justifyContent="center"
-      shadowColor={tone === "ghost" ? "transparent" : "$shadowColor"}
-      shadowOffset={tone === "ghost" ? undefined : { width: 0, height: 5 }}
-      shadowOpacity={tone === "ghost" ? 0 : 0.15}
-      shadowRadius={tone === "ghost" ? 0 : 15}
-      elevation={tone === "ghost" ? 0 : 3}
-      pressStyle={{ opacity: 0.92, scale: 0.985 }}
+      tone={tone}
       {...props}
     >
-      {loading ? <Spinner color={style.textTone === "inverted" ? "$textOnBrand" : "$brandPrimary"} /> : null}
+      {loading ? <Spinner color={getSpinnerColor(tone)} /> : null}
       {typeof children === "string"
         ? (
-            <AppText align="center" tone={style.textTone} variant="bodySmall">
+            <AppText align="center" tone={textTone} variant="bodySmall">
               {children}
             </AppText>
           )
         : children}
-    </Button>
+    </AppButtonFrame>
   );
 }
