@@ -1,68 +1,35 @@
-export const palette = {
-  white: "#FFFFFF",
-  slate50: "#F8FAFC",
-  slate100: "#F1F5F9",
-  slate200: "#E2E8F0",
-  slate300: "#CBD5E1",
-  slate400: "#94A3B8",
-  slate500: "#64748B",
-  slate700: "#334155",
-  slate900: "#0F172A",
-  blue600: "#2563EB",
-  blue700: "#1D4ED8",
-  cyan500: "#06B6D4",
-  amber500: "#F59E0B",
-  emerald500: "#10B981",
-  red500: "#EF4444",
-} as const;
+import {
+  colorHierarchy,
+  colorRamps,
+  colorRampTokens,
+  colorRoleRecipes,
+  lightThemeColors,
+  lightThemeDefinition,
+} from "./color-system";
 
-export const colors = {
-  brandPrimary: palette.blue600,
-  brandSecondary: palette.cyan500,
-  brandAccent: palette.amber500,
-  background: "#F4F8FC",
-  backgroundStrong: palette.white,
-  surface: palette.white,
-  surfaceMuted: palette.slate50,
-  surfaceAccent: "#EFF6FF",
-  textPrimary: palette.slate900,
-  textSecondary: palette.slate500,
-  textMuted: palette.slate400,
-  textOnBrand: palette.white,
-  borderSubtle: "#D9E2EC",
-  divider: palette.slate200,
-  success: palette.emerald500,
-  warning: palette.amber500,
-  error: palette.red500,
-  info: palette.blue600,
-  shadowColor: palette.slate900,
-  overlayLight: "rgba(255, 255, 255, 0.16)",
-  overlayLightMuted: "rgba(255, 255, 255, 0.12)",
-  successSoft: "rgba(16, 185, 129, 0.16)",
-  warningSoft: "rgba(245, 158, 11, 0.16)",
-  errorSoft: "rgba(239, 68, 68, 0.16)",
-  neutralSoft: palette.slate100,
-} as const;
+export const palette = colorRamps;
 
 export const gradients = {
-  brandHero: [colors.brandPrimary, colors.brandSecondary] as const,
-  brandSoft: ["#EEF6FF", colors.backgroundStrong] as const,
-  accentSoft: ["#F5FBFF", colors.backgroundStrong] as const,
+  brandHero: [lightThemeColors.actionPrimary, lightThemeColors.actionSecondary] as const,
+  brandSoft: [colorRamps.primary[2], lightThemeColors.backgroundRaised] as const,
+  accentSoft: [colorRamps.secondary[1], lightThemeColors.backgroundRaised] as const,
 } as const;
 
 export const bikeStatusColors = {
-  AVAILABLE: colors.success,
-  BOOKED: colors.warning,
-  BROKEN: colors.error,
-  RESERVED: colors.warning,
-  MAINTAINED: colors.error,
-  UNAVAILABLE: colors.textMuted,
+  AVAILABLE: lightThemeColors.statusSuccess,
+  BOOKED: lightThemeColors.statusWarning,
+  BROKEN: lightThemeColors.statusDanger,
+  RESERVED: lightThemeColors.statusWarning,
+  MAINTAINED: lightThemeColors.statusDanger,
+  UNAVAILABLE: lightThemeColors.textDisabled,
 } as const;
 
 export const reservationStatusColors = {
-  PENDING: colors.warning,
-  ACTIVE: colors.success,
-  FULFILLED: colors.info,
-  CANCELLED: colors.error,
-  EXPIRED: colors.textMuted,
+  PENDING: lightThemeColors.statusWarning,
+  ACTIVE: lightThemeColors.statusSuccess,
+  FULFILLED: lightThemeColors.statusInfo,
+  CANCELLED: lightThemeColors.statusDanger,
+  EXPIRED: lightThemeColors.textDisabled,
 } as const;
+
+export { colorHierarchy, colorRamps, colorRampTokens, colorRoleRecipes, lightThemeColors, lightThemeDefinition };
