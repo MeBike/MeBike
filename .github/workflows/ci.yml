@@ -26,10 +26,7 @@ jobs:
   lint-and-build:
     runs-on: ubuntu-latest
     env:
-      CI_POSTGRES_DB: mebike_ci
-      CI_POSTGRES_USER: postgres
-      CI_POSTGRES_PASSWORD: ${{ format('ci-pg-{0}', github.run_id) }}
-      CI_DATABASE_URL: ${{ format('postgresql://postgres:{0}@localhost:5432/mebike_ci', github.run_id) }}
+      CI_DATABASE_URL: postgresql://postgres@localhost:5432/mebike_ci
       CI_REDIS_URL: redis://localhost:6379
     services:
       postgres:
@@ -38,13 +35,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
         env:
-          POSTGRES_DB: ${{ env.CI_POSTGRES_DB }}
-          POSTGRES_USER: ${{ env.CI_POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.CI_POSTGRES_PASSWORD }}
+          POSTGRES_DB: mebike_ci
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U ${{ env.CI_POSTGRES_USER }} -d ${{ env.CI_POSTGRES_DB }}"
+          --health-cmd="pg_isready -U postgres -d mebike_ci"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
