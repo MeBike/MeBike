@@ -6,7 +6,7 @@ export {
   colorRoleRecipes,
   gradients,
   lightThemeColors,
-  lightThemeDefinition,
+  lightTheme,
   palette,
   reservationStatusColors,
 } from "./colors";

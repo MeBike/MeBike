@@ -222,30 +222,13 @@ export const lightThemeColors = {
   shadowColor: colorRamps.neutral[11],
 } as const;
 
-export const legacyThemeColors = {
+const tamaguiBaseThemeAliases = {
   background: lightThemeColors.backgroundCanvas,
-  backgroundStrong: lightThemeColors.backgroundRaised,
-  surface: lightThemeColors.surfaceDefault,
-  surfaceMuted: lightThemeColors.surfaceMuted,
-  surfaceAccent: lightThemeColors.surfaceAccent,
   color: lightThemeColors.textPrimary,
-  textPrimary: lightThemeColors.textPrimary,
-  textSecondary: lightThemeColors.textSecondary,
-  textMuted: lightThemeColors.textTertiary,
-  textOnBrand: lightThemeColors.onActionPrimary,
-  borderSubtle: lightThemeColors.borderSubtle,
-  divider: lightThemeColors.borderDefault,
-  brandPrimary: lightThemeColors.actionPrimary,
-  brandSecondary: lightThemeColors.actionSecondary,
-  brandAccent: lightThemeColors.actionAccent,
-  success: lightThemeColors.statusSuccess,
-  warning: lightThemeColors.statusWarning,
-  error: lightThemeColors.statusDanger,
-  info: lightThemeColors.statusInfo,
 } as const;
 
-export const lightThemeDefinition = {
-  ...legacyThemeColors,
+export const lightTheme = {
+  ...tamaguiBaseThemeAliases,
   ...lightThemeColors,
 } as const;
 

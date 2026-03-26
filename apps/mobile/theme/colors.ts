@@ -3,8 +3,8 @@ import {
   colorRamps,
   colorRampTokens,
   colorRoleRecipes,
+  lightTheme,
   lightThemeColors,
-  lightThemeDefinition,
 } from "./color-system";
 
 export const palette = colorRamps;
@@ -32,4 +32,4 @@ export const reservationStatusColors = {
   EXPIRED: lightThemeColors.textDisabled,
 } as const;
 
-export { colorHierarchy, colorRamps, colorRampTokens, colorRoleRecipes, lightThemeColors, lightThemeDefinition };
+export { colorHierarchy, colorRamps, colorRampTokens, colorRoleRecipes, lightTheme, lightThemeColors };

@@ -1,7 +1,7 @@
 import { shorthands } from "@tamagui/shorthands";
 import { createFont, createTamagui, createTokens, isWeb } from "tamagui";
 
-import { colorRampTokens, lightThemeDefinition } from "@theme/colors";
+import { colorRampTokens, lightTheme } from "@theme/colors";
 import { radii, spaceScale } from "@theme/metrics";
 import { fontFaces, fontFamily, fontTokenScale, fontWeights } from "@theme/typography";
 
@@ -87,7 +87,7 @@ export const appTamaguiConfig = createTamagui({
   },
   tokens,
   themes: {
-    light: lightThemeDefinition,
+    light: lightTheme,
   },
   media: {
     short: { maxHeight: 780 },
