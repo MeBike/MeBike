@@ -15,10 +15,6 @@ import { BottomTabBar } from "./bottom-tab-bar";
 
 const Tab = createBottomTabNavigator<RootStackParamList>();
 
-const baseScreenOptions = {
-  headerShown: false,
-} as const;
-
 function MainTabNavigator() {
   const { isAuthenticated, isStaff, isSOS } = useAuthNext();
 
@@ -33,29 +29,29 @@ function MainTabNavigator() {
       {isSOS
         ? (
             <>
-              <Tab.Screen name="SOS Dashboard" component={SOSAgentDashboardScreen} options={baseScreenOptions} />
-              <Tab.Screen name="Tôi" component={ProfileScreen} options={baseScreenOptions} />
+              <Tab.Screen name="SOS Dashboard" component={SOSAgentDashboardScreen} />
+              <Tab.Screen name="Tôi" component={ProfileScreen} />
             </>
           )
         : isStaff
           ? (
               <>
-                <Tab.Screen name="Công cụ" component={StaffDashboardScreen} options={baseScreenOptions} />
-                <Tab.Screen name="Tôi" component={ProfileScreen} options={baseScreenOptions} />
+                <Tab.Screen name="Công cụ" component={StaffDashboardScreen} />
+                <Tab.Screen name="Tôi" component={ProfileScreen} />
               </>
             )
           : (
               <>
-                <Tab.Screen name="Nhà" component={HomeScreen} options={baseScreenOptions} />
-                <Tab.Screen name="Trạm" component={StationSelectScreen} options={baseScreenOptions} />
+                <Tab.Screen name="Nhà" component={HomeScreen} />
+                <Tab.Screen name="Trạm" component={StationSelectScreen} />
                 {isAuthenticated
-                  ? <Tab.Screen name="Booking" component={BookingHistoryScreen} options={baseScreenOptions} />
+                  ? <Tab.Screen name="Booking" component={BookingHistoryScreen} />
                   : null}
                 {isAuthenticated
-                  ? <Tab.Screen name="Ví" component={MyWalletScreen} options={baseScreenOptions} />
+                  ? <Tab.Screen name="Ví" component={MyWalletScreen} />
                   : null}
                 {isAuthenticated
-                  ? <Tab.Screen name="Tôi" component={ProfileScreen} options={baseScreenOptions} />
+                  ? <Tab.Screen name="Tôi" component={ProfileScreen} />
                   : null}
               </>
             )}
