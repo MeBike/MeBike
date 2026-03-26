@@ -44,7 +44,7 @@ export function AppListRow({
       </XStack>
 
       {showDivider
-        ? <Separator borderColor="$divider" marginHorizontal={dividerInset} />
+        ? <Separator borderColor="$borderDefault" marginHorizontal={dividerInset} />
         : null}
     </YStack>
   );

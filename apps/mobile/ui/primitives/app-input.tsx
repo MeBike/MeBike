@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import type { GetProps } from "tamagui";
 
-import { colors } from "@theme/colors";
-import { fontSizes, fontWeights } from "@theme/typography";
+import { borderWidths } from "@theme/metrics";
+import { typographyTokens } from "@theme/typography";
 import { useState } from "react";
 import { View } from "react-native";
 import { Input, XStack } from "tamagui";
@@ -13,55 +13,57 @@ type AppInputProps = GetProps<typeof Input> & {
   invalid?: boolean;
 };
 
+const iconSlotStyle = {
+  width: 24,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+};
+
 export function AppInput({
   leadingIcon,
   trailingIcon,
   invalid = false,
   onBlur,
   onFocus,
-  placeholderTextColor = "$textSecondary",
-  selectionColor = "$brandPrimary",
+  placeholderTextColor,
+  selectionColor,
   ...props
 }: AppInputProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const borderColor = invalid ? "$error" : isFocused ? "$brandPrimary" : "$borderSubtle";
+
+  const borderColor = invalid ? "$borderDanger" : isFocused ? "$borderFocus" : "$borderDefault";
+  const shadowColor = invalid ? "$borderDanger" : isFocused ? "$actionPrimary" : "transparent";
 
   return (
     <XStack
       alignItems="center"
-      backgroundColor="$backgroundStrong"
+      backgroundColor="$surfaceDefault"
       borderColor={borderColor}
       borderRadius="$3"
-      borderWidth={isFocused || invalid ? 2 : 1}
+      borderWidth={isFocused || invalid ? borderWidths.strong : borderWidths.subtle}
       gap="$3"
-      minHeight={52}
-      paddingLeft={16}
-      paddingRight={14}
-      shadowColor={isFocused && !invalid ? colors.brandPrimary : "transparent"}
-      shadowOffset={isFocused && !invalid ? { width: 0, height: 0 } : undefined}
-      shadowOpacity={isFocused && !invalid ? 0.16 : 0}
-      shadowRadius={isFocused && !invalid ? 10 : 0}
+      minHeight="$6"
+      paddingHorizontal="$4"
+      shadowColor={shadowColor}
+      shadowOffset={isFocused || invalid ? { width: 0, height: 0 } : { width: 0, height: 0 }}
+      shadowOpacity={isFocused || invalid ? 0.14 : 0}
+      shadowRadius={isFocused || invalid ? 10 : 0}
     >
       {leadingIcon
         ? (
-            <View
-              style={{
-                width: 24,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <View style={iconSlotStyle}>
               {leadingIcon}
             </View>
           )
         : null}
+
       <Input
         unstyled
         color="$textPrimary"
         flex={1}
         fontFamily="$body"
-        fontSize={fontSizes.base}
-        fontWeight={fontWeights.medium}
+        fontSize={typographyTokens.bodySmall}
+        fontWeight="$5"
         onBlur={(event) => {
           setIsFocused(false);
           onBlur?.(event);
@@ -70,20 +72,15 @@ export function AppInput({
           setIsFocused(true);
           onFocus?.(event);
         }}
-        paddingVertical={0}
-        placeholderTextColor={placeholderTextColor as any}
-        selectionColor={selectionColor as any}
+        paddingVertical="$0"
+        placeholderTextColor={(placeholderTextColor as any) ?? "$textTertiary"}
+        selectionColor={(selectionColor as any) ?? "$actionPrimary"}
         {...props}
       />
+
       {trailingIcon
         ? (
-            <View
-              style={{
-                width: 24,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <View style={iconSlotStyle}>
               {trailingIcon}
             </View>
           )
