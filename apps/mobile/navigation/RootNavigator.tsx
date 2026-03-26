@@ -38,7 +38,7 @@ import SupportScreen from "../screen/SupportScreen";
 import UpdateProfileScreen from "../screen/UpdateProfileScreen";
 import WithdrawScreen from "../screen/withdraw-screen";
 import StationSelectScreen from "../styles/StationSelect";
-import MainTabNavigator from "./MainTabNavigator";
+import MainTabNavigator from "./main-tab-navigator";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
