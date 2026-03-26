@@ -3,7 +3,6 @@ import type {
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
-  UserRole,
 } from "generated/kysely/types";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 

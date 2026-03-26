@@ -87,8 +87,7 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("UnauthorizedIncidentAccess", ({ incidentId, userId }) =>
           c.json(
             {
@@ -100,13 +99,11 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
               },
             },
             403,
-          ),
-        ),
+          )),
         Match.orElse((err) => {
           throw err;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
@@ -140,8 +137,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<IncidentSummary, 201>(toIncidentSummary(right), 201),
-    ),
+      c.json<IncidentSummary, 201>(toIncidentSummary(right), 201)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("AdminRentalNotFound", () =>
@@ -154,8 +150,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("BikeNotFound", ({ id }) =>
           c.json(
             {
@@ -166,8 +161,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("StationNotFound", ({ id }) =>
           c.json(
             {
@@ -178,8 +172,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("NoNearestStationFound", ({ latitude, longitude }) =>
           c.json(
             {
@@ -191,8 +184,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("BikeNotAvailable", ({ bikeId, status }) =>
           c.json(
             {
@@ -204,8 +196,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("NoAvailableTechnicianFound", ({ latitude, longitude }) =>
           c.json(
             {
@@ -218,8 +209,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("ActiveIncidentAlreadyExists", () =>
           c.json(
             {
@@ -232,13 +222,11 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
               },
             },
             400,
-          ),
-        ),
+          )),
         Match.orElse((err) => {
           throw err;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
@@ -273,8 +261,7 @@ const updateIncident: RouteHandler<IncidentRoutes["updateIncident"]> = async (
               },
             },
             404,
-          ),
-        ),
+          )),
         Match.tag("UnauthorizedIncidentAccess", ({ incidentId, userId }) =>
           c.json(
             {
@@ -286,13 +273,11 @@ const updateIncident: RouteHandler<IncidentRoutes["updateIncident"]> = async (
               },
             },
             403,
-          ),
-        ),
+          )),
         Match.orElse((err) => {
           throw err;
         }),
-      ),
-    ),
+      )),
     Match.exhaustive,
   );
 };
