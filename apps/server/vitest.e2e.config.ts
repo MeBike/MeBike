@@ -19,7 +19,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(rootDir, "src"),
-      generated: resolve(rootDir, "generated"),
+      "generated": resolve(rootDir, "generated"),
     },
   },
 });
