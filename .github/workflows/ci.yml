@@ -1,5 +1,9 @@
 name: CI
 
+permissions:
+  contents: read
+  packages: read
+
 on:
   push:
     branches: [main]
@@ -21,6 +25,38 @@ on:
 jobs:
   lint-and-build:
     runs-on: ubuntu-latest
+    env:
+      CI_POSTGRES_DB: mebike_ci
+      CI_POSTGRES_USER: postgres
+      CI_POSTGRES_PASSWORD: ${{ format('ci-pg-{0}', github.run_id) }}
+      CI_DATABASE_URL: ${{ format('postgresql://postgres:{0}@localhost:5432/mebike_ci', github.run_id) }}
+      CI_REDIS_URL: redis://localhost:6379
+    services:
+      postgres:
+        image: ghcr.io/mebike/custom-postgres:pg18-postgis3-vector0.8.1
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_DB: ${{ env.CI_POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.CI_POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.CI_POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ${{ env.CI_POSTGRES_USER }} -d ${{ env.CI_POSTGRES_DB }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,6 +86,19 @@ jobs:
         env:
           DATABASE_URL: postgresql://placeholder.test
         run: pnpm prisma generate
+
+      - name: Validate Prisma migrations (server)
+        working-directory: apps/server
+        env:
+          DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+        run: pnpm prisma migrate deploy
+
+      - name: Run integration tests (server)
+        working-directory: apps/server
+        env:
+          TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+          TEST_REDIS_URL: ${{ env.CI_REDIS_URL }}
+        run: pnpm test:int
 
       - name: Lint code
         run: pnpm turbo lint

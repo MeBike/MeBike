@@ -1,8 +1,18 @@
 import { GenericContainer, Wait } from "testcontainers";
+import process from "node:process";
 
 import logger from "@/lib/logger";
 
 export async function startRedis() {
+  const urlFromEnv = process.env.TEST_REDIS_URL;
+  if (urlFromEnv) {
+    logger.info({ url: urlFromEnv }, "Using TEST_REDIS_URL for integration tests");
+    return {
+      url: urlFromEnv,
+      stop: async () => {},
+    };
+  }
+
   logger.info("Starting Redis container...");
 
   const container = await new GenericContainer("redis:7-alpine")
