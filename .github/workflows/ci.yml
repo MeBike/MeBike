@@ -26,7 +26,23 @@ on:
       - '.github/workflows/ci.yml'
 
 jobs:
-  static-checks:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect server changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            server:
+              - 'apps/server/**'
+
+  lint-and-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -65,6 +81,8 @@ jobs:
         run: pnpm turbo build --filter=!backend
 
   migrate-check:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -106,6 +124,8 @@ jobs:
         run: pnpm prisma migrate deploy
 
   server-int:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -163,6 +183,8 @@ jobs:
         run: pnpm test:int:core
 
   server-e2e:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
