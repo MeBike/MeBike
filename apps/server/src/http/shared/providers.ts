@@ -71,6 +71,7 @@ export {
   withSupplierDeps,
 } from "./features/supplier.layers";
 export {
+  AvatarUploadServiceLayer,
   UserCommandReposLive,
   UserCommandServiceLayer,
   UserDepsLive,
@@ -102,6 +103,7 @@ export {
   AppInfraLive,
   EmailLive,
   ExternalInfraLive,
+  FirebaseStorageLive,
   PersistenceInfraLive,
   PrismaLive,
   RedisLive,
