@@ -1,0 +1,26 @@
+import { Effect, Layer } from "effect";
+
+import {
+  SupplierRepositoryLive,
+  SupplierServiceLive,
+} from "@/domain/suppliers";
+
+import { PrismaLive } from "../infra.layers";
+
+export const SupplierReposLive = SupplierRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+export const SupplierServiceLayer = SupplierServiceLive.pipe(
+  Layer.provide(SupplierReposLive),
+);
+
+export const SupplierDepsLive = Layer.mergeAll(
+  SupplierReposLive,
+  SupplierServiceLayer,
+  PrismaLive,
+);
+
+export function withSupplierDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(Effect.provide(SupplierDepsLive));
+}
