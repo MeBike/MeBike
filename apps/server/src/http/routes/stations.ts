@@ -16,11 +16,16 @@ export function registerStationRoutes(
     ...stations.createStation,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const adminListStationsRoute = {
+    ...stations.adminListStations,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
   const updateStationRoute = {
     ...stations.updateStation,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
 
+  app.openapi(adminListStationsRoute, StationAdminController.listStations);
   app.openapi(createStationRoute, StationAdminController.createStation);
   app.openapi(updateStationRoute, StationAdminController.updateStation);
 

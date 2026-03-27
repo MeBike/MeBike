@@ -49,6 +49,7 @@ export type StationFilter = {
   name?: string;
   address?: string;
   totalCapacity?: number;
+  excludeAssignedStaff?: boolean;
 };
 
 export type NearestStationRow = StationRow & {

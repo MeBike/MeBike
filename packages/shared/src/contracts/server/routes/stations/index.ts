@@ -8,6 +8,7 @@ export {
 } from "./mutations";
 
 export {
+  adminListStations,
   getAllStationsRevenue,
   getBikeRevenueByStation,
   getHighestRevenueStation,
