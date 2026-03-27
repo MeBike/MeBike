@@ -4,6 +4,7 @@ export * from "./repository/user-command.repository";
 export * from "./repository/user-query.repository";
 export * from "./repository/user-stats.repository";
 export * from "./services/admin-create-user.service";
+export * from "./services/avatar-upload.service";
 export * from "./services/user-command.service";
 export * from "./services/user-query.service";
 export * from "./services/user-stats.service";
