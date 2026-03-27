@@ -13,10 +13,3 @@ export default async function setup(project: TestProject) {
     await container.stop();
   };
 }
-
-declare module "vitest" {
-  // eslint-disable-next-line ts/consistent-type-definitions
-  export interface ProvidedContext {
-    testDatabaseUrl: string;
-  }
-}

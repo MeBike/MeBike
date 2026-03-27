@@ -26,7 +26,7 @@ export const selectReservationExpandedDetailRow = {
       username: true,
       email: true,
       phoneNumber: true,
-      avatar: true,
+      avatarUrl: true,
       role: true,
     },
   },
@@ -103,7 +103,7 @@ export function toReservationExpandedDetailRow(row: {
     username: string | null;
     email: string;
     phoneNumber: string | null;
-    avatar: string | null;
+    avatarUrl: string | null;
     role: string;
   };
   bike: {
@@ -127,7 +127,7 @@ export function toReservationExpandedDetailRow(row: {
       username: row.user.username,
       email: row.user.email,
       phoneNumber: row.user.phoneNumber,
-      avatar: row.user.avatar,
+      avatar: row.user.avatarUrl,
       role: row.user.role as ReservationExpandedDetailRow["user"]["role"],
     },
     bike: row.bike
