@@ -61,8 +61,5 @@ export const RentalDepsLive = Layer.mergeAll(
 );
 
 export function withRentalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(RentalDepsLive),
-    Effect.provide(PrismaLive),
-  );
+  return eff.pipe(Effect.provide(RentalDepsLive));
 }

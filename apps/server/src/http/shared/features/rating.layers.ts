@@ -33,8 +33,5 @@ export const RatingDepsLive = Layer.mergeAll(
 );
 
 export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(RatingDepsLive),
-    Effect.provide(PrismaLive),
-  );
+  return eff.pipe(Effect.provide(RatingDepsLive));
 }
