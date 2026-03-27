@@ -5,7 +5,11 @@ import {
   AuthRepositoryLive,
   AuthServiceLive,
 } from "@/domain/auth";
-import { UserRepositoryLive, UserServiceLive } from "@/domain/users";
+import {
+  UserCommandRepositoryLive,
+  UserQueryRepositoryLive,
+  UserQueryServiceLive,
+} from "@/domain/users";
 import { WalletRepositoryLive } from "@/domain/wallets";
 
 import { EmailLive, PrismaLive, RedisLive } from "../infra.layers";
@@ -13,7 +17,8 @@ import { EmailLive, PrismaLive, RedisLive } from "../infra.layers";
 export const AuthReposLive = Layer.mergeAll(
   AuthRepositoryLive,
   AuthEventRepositoryLive,
-  UserRepositoryLive,
+  UserQueryRepositoryLive,
+  UserCommandRepositoryLive,
   WalletRepositoryLive,
 ).pipe(
   Layer.provide(PrismaLive),
@@ -26,14 +31,14 @@ export const AuthServiceLayer = AuthServiceLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-export const AuthUserServiceLayer = UserServiceLive.pipe(
+export const AuthUserQueryServiceLayer = UserQueryServiceLive.pipe(
   Layer.provide(AuthReposLive),
 );
 
 export const AuthDepsLive = Layer.mergeAll(
   AuthReposLive,
   AuthServiceLayer,
-  AuthUserServiceLayer,
+  AuthUserQueryServiceLayer,
   EmailLive,
   RedisLive,
   PrismaLive,

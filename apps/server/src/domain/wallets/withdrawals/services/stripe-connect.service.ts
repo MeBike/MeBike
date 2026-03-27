@@ -4,7 +4,8 @@ import { Effect, Match } from "effect";
 
 import type { UserRepositoryError } from "@/domain/users/domain-errors";
 
-import { UserServiceTag } from "@/domain/users/services/user.service";
+import { UserCommandServiceTag } from "@/domain/users/services/user-command.service";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
 
 import type {
   StripeConnectNotEnabled,
@@ -39,7 +40,7 @@ export function startStripeConnectOnboardingUseCase(
   StartStripeConnectOnboardingResult,
   StripeConnectNotEnabled | WithdrawalProviderError | WithdrawalUserNotFound | InvalidWithdrawalRequest
   | UserRepositoryError,
-  StripeWithdrawalServiceTag | UserServiceTag
+  StripeWithdrawalServiceTag | UserQueryServiceTag | UserCommandServiceTag
 > {
   return Effect.gen(function* () {
     if (!input.returnUrl || !input.refreshUrl) {
@@ -48,10 +49,11 @@ export function startStripeConnectOnboardingUseCase(
       }));
     }
 
-    const userService = yield* UserServiceTag;
+    const userQueryService = yield* UserQueryServiceTag;
+    const userCommandService = yield* UserCommandServiceTag;
     const stripeService = yield* StripeWithdrawalServiceTag;
 
-    const userOpt = yield* userService.getById(input.userId);
+    const userOpt = yield* userQueryService.getById(input.userId);
     const user = yield* Match.value(userOpt).pipe(
       Match.tag("Some", ({ value }) => Effect.succeed(value)),
       Match.tag("None", () => Effect.fail(new WithdrawalUserNotFound({ userId: input.userId }))),
@@ -65,7 +67,7 @@ export function startStripeConnectOnboardingUseCase(
         email: user.email,
       });
 
-      const updatedOpt = yield* userService.setStripeConnectedAccountIdIfNull(user.id, account.id);
+      const updatedOpt = yield* userCommandService.setStripeConnectedAccountIdIfNull(user.id, account.id);
       const updated = yield* Match.value(updatedOpt).pipe(
         Match.tag("Some", ({ value }) => Effect.succeed(value)),
         Match.tag("None", () => Effect.succeed(null)),
@@ -76,7 +78,7 @@ export function startStripeConnectOnboardingUseCase(
         accountId = updated.stripeConnectedAccountId;
       }
       else {
-        const racedUserOpt = yield* userService.getById(user.id);
+        const racedUserOpt = yield* userQueryService.getById(user.id);
         const racedUser = yield* Match.value(racedUserOpt).pipe(
           Match.tag("Some", ({ value }) => Effect.succeed(value)),
           Match.tag("None", () => Effect.fail(new WithdrawalUserNotFound({ userId: user.id }))),
@@ -108,7 +110,7 @@ export function handleStripeAccountUpdatedUseCase(
 ): Effect.Effect<
   StripeAccountUpdatedOutcome,
   UserRepositoryError,
-  UserServiceTag
+  UserCommandServiceTag
 > {
   return Effect.gen(function* () {
     if (event.type !== "account.updated") {
@@ -119,7 +121,7 @@ export function handleStripeAccountUpdatedUseCase(
     const accountId = account.id;
     const payoutsEnabled = account.payouts_enabled === true;
 
-    const userService = yield* UserServiceTag;
+    const userService = yield* UserCommandServiceTag;
     const updated = yield* userService.setStripePayoutsEnabledByAccountId(
       accountId,
       payoutsEnabled,

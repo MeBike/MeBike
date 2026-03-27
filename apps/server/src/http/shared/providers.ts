@@ -8,7 +8,7 @@ export {
   AuthDepsLive,
   AuthReposLive,
   AuthServiceLayer,
-  AuthUserServiceLayer,
+  AuthUserQueryServiceLayer,
   withAuthDeps,
 } from "./features/auth.layers";
 export {

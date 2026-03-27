@@ -11,7 +11,7 @@ import type {
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 
 import { env } from "@/config/env";
-import { UserServiceTag } from "@/domain/users/services/user.service";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
 import {
   InsufficientWalletBalance,
   WalletNotFound,
@@ -77,12 +77,12 @@ export function sweepWithdrawalsUseCase(
   | UserRepositoryError,
   Prisma
   | WithdrawalRepository
-  | UserServiceTag
+  | UserQueryServiceTag
   | StripeWithdrawalServiceTag
 > {
   return Effect.gen(function* () {
     const withdrawalRepo = yield* WithdrawalRepository;
-    const userService = yield* UserServiceTag;
+    const userService = yield* UserQueryServiceTag;
     const stripeService = yield* StripeWithdrawalServiceTag;
     const { client } = yield* Prisma;
 
