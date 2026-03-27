@@ -9,6 +9,7 @@ import type {
 } from "../domain-errors";
 import type {
   CreateUserInput,
+  TechnicianTeamAvailableOption,
   UpdateUserAdminPatch,
   UpdateUserProfilePatch,
   UserFilter,
@@ -86,6 +87,9 @@ export type UserRepo = {
     readonly Pick<UserRow, "id" | "fullname">[],
     UserRepositoryError
   >;
+  readonly listAvailableTechnicianTeams: (args?: {
+    readonly stationId?: string;
+  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[], UserRepositoryError>;
   readonly countTechnicianTeamMembers: (
     technicianTeamId: string,
     options?: { readonly excludeUserId?: string },

@@ -11,6 +11,7 @@ import type {
 } from "../domain-errors";
 import type {
   CreateUserInput,
+  TechnicianTeamAvailableOption,
   UserFilter,
   UserRow,
   UserSortField,
@@ -95,4 +96,7 @@ export type UserService = {
     readonly Pick<UserRow, "id" | "fullname">[],
     UserRepositoryError
   >;
+  listAvailableTechnicianTeams: (args?: {
+    stationId?: string;
+  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[], UserRepositoryError>;
 };

@@ -5,6 +5,12 @@ export type OrgUnitRef = {
   readonly name: string;
 };
 
+export type TechnicianTeamAvailableOption = {
+  readonly id: string;
+  readonly name: string;
+  readonly stationId: string;
+};
+
 export type UserOrgAssignment = {
   readonly station: OrgUnitRef | null;
   readonly agency: OrgUnitRef | null;

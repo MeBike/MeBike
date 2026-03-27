@@ -9,6 +9,7 @@ export type UserQueryService = Pick<
   | "listWithOffset"
   | "searchByQuery"
   | "listTechnicianSummaries"
+  | "listAvailableTechnicianTeams"
 >;
 
 export function makeUserQueryService(repo: UserRepo): UserQueryService {
@@ -19,5 +20,6 @@ export function makeUserQueryService(repo: UserRepo): UserQueryService {
     listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
     searchByQuery: query => repo.searchByQuery(query),
     listTechnicianSummaries: () => repo.listTechnicianSummaries(),
+    listAvailableTechnicianTeams: args => repo.listAvailableTechnicianTeams(args),
   };
 }

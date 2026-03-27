@@ -17,6 +17,7 @@ import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   ActiveUsersQuerySchema,
   ActiveUsersSeriesResponseSchema,
+  AdminAvailableTechnicianTeamListResponseSchema,
   AdminTechnicianListResponseSchema,
   AdminUserDetailResponseSchema,
   AdminUserListResponseSchema,
@@ -169,6 +170,43 @@ export const adminTechnicianListRoute = createRoute({
                   {
                     id: "019d1b15-0f9a-73e7-9800-4af1e9887d72",
                     fullName: "Le Field Technician",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
+export const adminAvailableTechnicianTeamsRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/technician-teams/available",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z.object({
+      stationId: z.uuidv7().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Admin list of available technician teams for assignment",
+      content: {
+        "application/json": {
+          schema: AdminAvailableTechnicianTeamListResponseSchema,
+          examples: {
+            AvailableTeams: {
+              value: {
+                data: [
+                  {
+                    id: "019d1b15-0f9a-73e7-9800-4af1e9887d72",
+                    name: "Team A",
+                    stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
                   },
                 ],
               },

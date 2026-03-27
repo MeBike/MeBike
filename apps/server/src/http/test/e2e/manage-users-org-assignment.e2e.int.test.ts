@@ -265,6 +265,66 @@ describe("manage-users org assignment e2e", () => {
     expect(body.details.code).toBe("TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED");
   });
 
+  it("lists available technician teams and omits full teams", async () => {
+    const station = await fixture.factories.station({ name: "Available Teams Station" });
+    const otherStation = await fixture.factories.station({ name: "Other Teams Station" });
+
+    const availableTeam = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Available Team",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+    const fullTeam = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Full Team",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+    const otherStationTeam = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Other Station Team",
+        stationId: otherStation.id,
+      },
+      select: { id: true },
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const user = await fixture.factories.user({
+        fullname: `Full Team Member ${i}`,
+        email: `full-team-member-${i}@example.com`,
+        role: "TECHNICIAN",
+      });
+
+      await fixture.factories.userOrgAssignment({
+        userId: user.id,
+        technicianTeamId: fullTeam.id,
+      });
+    }
+
+    const response = await fixture.app.request(
+      `http://test/v1/admin/technician-teams/available?stationId=${station.id}`,
+      {
+        method: "GET",
+        headers: adminAuthHeader(),
+      },
+    );
+
+    const body = await response.json() as {
+      data: Array<{ id: string; name: string; stationId: string }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.map(item => item.id)).toContain(availableTeam.id);
+    expect(body.data.map(item => item.id)).not.toContain(fullTeam.id);
+    expect(body.data.map(item => item.id)).not.toContain(otherStationTeam.id);
+  });
+
   it("filters multiple roles in a single admin list request", async () => {
     const staff = await fixture.factories.user({
       fullname: "Staff Multi Role",
