@@ -177,6 +177,11 @@ export function makeUserRepository(
       agencyId: filter.agencyId,
       technicianTeamId: filter.technicianTeamId,
     });
+    const roles = filter.roles?.length
+      ? [...new Set(filter.roles)]
+      : filter.role
+        ? [filter.role]
+        : undefined;
 
     return {
       ...(filter.fullname
@@ -187,7 +192,13 @@ export function makeUserRepository(
         : {}),
       ...(filter.accountStatus ? { accountStatus: filter.accountStatus } : {}),
       ...(filter.verify ? { verifyStatus: filter.verify } : {}),
-      ...(filter.role ? { role: filter.role } : {}),
+      ...(roles?.length
+        ? {
+            role: roles.length === 1
+              ? roles[0]
+              : { in: roles },
+          }
+        : {}),
       ...(Object.keys(orgAssignment).length
         ? {
             orgAssignment: {

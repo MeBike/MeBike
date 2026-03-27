@@ -10,12 +10,17 @@ import { uniqueEmail } from "@/test/scenarios";
 
 import { makeUserRepository } from "../user.repository";
 
-function createUserInput(overrides?: Partial<{ email: string; phoneNumber: string | null }>) {
+function createUserInput(overrides?: Partial<{
+  email: string;
+  phoneNumber: string | null;
+  role: "USER" | "STAFF" | "TECHNICIAN" | "MANAGER" | "ADMIN" | "AGENCY";
+}>) {
   return {
     fullname: "Test User",
     email: overrides?.email ?? uniqueEmail("user"),
     passwordHash: "hash",
     phoneNumber: overrides?.phoneNumber ?? null,
+    role: overrides?.role,
   };
 }
 
@@ -78,6 +83,24 @@ describe("userRepository Integration", () => {
 
     const result = await runEffectEither(repo.updateAdminById(second.id, { email: first.email }));
     expectLeftTag(result, "DuplicateUserEmail");
+  });
+
+  it("listWithOffset filters by multiple roles", async () => {
+    const staff = await runEffect(repo.createUser(createUserInput({ role: "STAFF" })));
+    const technician = await runEffect(repo.createUser(createUserInput({ role: "TECHNICIAN" })));
+    const agency = await runEffect(repo.createUser(createUserInput({ role: "AGENCY" })));
+    const user = await runEffect(repo.createUser(createUserInput({ role: "USER" })));
+
+    const page = await runEffect(repo.listWithOffset(
+      { roles: ["STAFF", "TECHNICIAN", "AGENCY"] },
+      { page: 1, pageSize: 20 },
+    ));
+
+    const ids = page.items.map(item => item.id);
+    expect(ids).toContain(staff.id);
+    expect(ids).toContain(technician.id);
+    expect(ids).toContain(agency.id);
+    expect(ids).not.toContain(user.id);
   });
 
   it("returns UserRepositoryError when database is unreachable", async () => {

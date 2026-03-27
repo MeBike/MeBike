@@ -221,6 +221,46 @@ describe("manage-users org assignment e2e", () => {
     expect(list.data.some(user => user.id === created.id)).toBe(true);
   });
 
+  it("filters multiple roles in a single admin list request", async () => {
+    const staff = await fixture.factories.user({
+      fullname: "Staff Multi Role",
+      email: "staff-multi-role@example.com",
+      role: "STAFF",
+    });
+    const technician = await fixture.factories.user({
+      fullname: "Technician Multi Role",
+      email: "technician-multi-role@example.com",
+      role: "TECHNICIAN",
+    });
+    const agency = await fixture.factories.user({
+      fullname: "Agency Multi Role",
+      email: "agency-multi-role@example.com",
+      role: "AGENCY",
+    });
+    const plainUser = await fixture.factories.user({
+      fullname: "User Multi Role",
+      email: "user-multi-role@example.com",
+      role: "USER",
+    });
+
+    const response = await fixture.app.request(
+      "http://test/v1/users/manage-users/get-all?page=1&pageSize=20&roles=STAFF,TECHNICIAN,AGENCY",
+      {
+        method: "GET",
+        headers: adminAuthHeader(),
+      },
+    );
+
+    const body = await response.json() as UsersContracts.AdminUserListResponse;
+    const returnedIds = body.data.map(user => user.id);
+
+    expect(response.status).toBe(200);
+    expect(returnedIds).toContain(staff.id);
+    expect(returnedIds).toContain(technician.id);
+    expect(returnedIds).toContain(agency.id);
+    expect(returnedIds).not.toContain(plainUser.id);
+  });
+
   it("returns technician summaries with only id and fullName", async () => {
     const technician = await fixture.factories.user({
       fullname: "Alpha Technician",
