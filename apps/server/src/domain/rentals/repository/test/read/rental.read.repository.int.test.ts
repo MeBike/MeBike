@@ -28,8 +28,9 @@ describe("rentalRepository read integration", () => {
       bikeId: bike.id,
       startStationId: station.id,
       startTime: new Date(),
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
@@ -38,8 +39,9 @@ describe("rentalRepository read integration", () => {
       bikeId: otherBike.id,
       startStationId: station.id,
       startTime: new Date(),
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
@@ -48,8 +50,9 @@ describe("rentalRepository read integration", () => {
       pageSize: 10,
       sortBy: "startTime",
       sortDir: "desc",
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
@@ -66,13 +69,15 @@ describe("rentalRepository read integration", () => {
       bikeId: bike.id,
       startStationId: station.id,
       startTime: new Date(),
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
-    const detailOpt = await repo.adminGetRentalById(rental.id).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    const detailOpt = await repo.adminGetRentalById(rental.id).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
@@ -101,8 +106,9 @@ describe("rentalRepository read integration", () => {
       bikeId: bike.id,
       startStationId: station.id,
       startTime: new Date(),
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
@@ -113,8 +119,9 @@ describe("rentalRepository read integration", () => {
       durationMinutes: 10,
       totalPrice: 500,
       newStatus: "COMPLETED",
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
@@ -123,8 +130,9 @@ describe("rentalRepository read integration", () => {
       bikeId: bikeTwo.id,
       startStationId: station.id,
       startTime: new Date(),
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
@@ -133,8 +141,9 @@ describe("rentalRepository read integration", () => {
       bikeId: otherBike.id,
       startStationId: station.id,
       startTime: new Date(),
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 
@@ -143,8 +152,9 @@ describe("rentalRepository read integration", () => {
       pageSize: 10,
       sortBy: "startTime",
       sortDir: "desc",
-    }).pipe(runEffectEither).then(result => {
-      if (result._tag === "Left") throw result.left;
+    }).pipe(runEffectEither).then((result) => {
+      if (result._tag === "Left")
+        throw result.left;
       return result.right;
     });
 

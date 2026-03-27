@@ -87,7 +87,7 @@ export function makeRatingReadRepository(
         "findBikeSummary",
       ),
 
-    findBikeAggregates: bikeIds => {
+    findBikeAggregates: (bikeIds) => {
       if (bikeIds.length === 0) {
         return Effect.succeed({});
       }
@@ -108,7 +108,7 @@ export function makeRatingReadRepository(
           });
 
           return Object.fromEntries(
-            rows.flatMap(row => {
+            rows.flatMap((row) => {
               if (!row.bikeId) {
                 return [];
               }

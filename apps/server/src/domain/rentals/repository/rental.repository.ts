@@ -9,6 +9,7 @@ import type {
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+
 import type { RentalRepo } from "./rental.repository.types";
 
 import {
@@ -173,7 +174,7 @@ export function makeRentalRepository(
               },
               select: bikeSwapRequestSelect,
             }),
-          catch: e => {
+          catch: (e) => {
             if (isPrismaUniqueViolation(e)) {
               return new BikeSwapRequestExisted({ rentalId });
             }

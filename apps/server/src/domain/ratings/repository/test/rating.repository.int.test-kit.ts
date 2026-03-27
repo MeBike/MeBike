@@ -1,9 +1,9 @@
+import { uuidv7 } from "uuidv7";
+
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
-
-import { uuidv7 } from "uuidv7";
 
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 

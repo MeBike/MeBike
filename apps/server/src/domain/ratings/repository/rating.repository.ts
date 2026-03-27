@@ -5,6 +5,7 @@ import type {
 } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
+
 import type { RatingRepo } from "./rating.repository.types";
 
 import { makeRatingReadRepository } from "./read/rating.read.repository";

@@ -1,16 +1,15 @@
 import type { Effect, Option } from "effect";
 
 import type {
+  RatingAlreadyExists,
+  RatingRepositoryError,
+} from "../domain-errors";
+import type {
   CreateRatingInput,
   RatingAggregate,
   RatingRow,
   RatingSummary,
 } from "../models";
-
-import type {
-  RatingAlreadyExists,
-  RatingRepositoryError,
-} from "../domain-errors";
 
 export type RatingRepo = {
   readonly createRating: (

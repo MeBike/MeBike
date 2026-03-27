@@ -48,7 +48,7 @@ export function makeRatingWriteRepository(
               select: selectRatingRow,
             });
           }),
-        catch: err => {
+        catch: (err) => {
           if (isPrismaUniqueViolation(err)) {
             return new RatingAlreadyExists({ rentalId: input.rentalId });
           }

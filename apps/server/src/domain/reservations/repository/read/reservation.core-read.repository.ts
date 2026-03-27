@@ -5,6 +5,8 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { ReservationStatus } from "generated/prisma/client";
+
 import type { ReservationRepo } from "../reservation.repository.types";
 
 import { ReservationRepositoryError } from "../../domain-errors";
@@ -14,7 +16,6 @@ import {
   toReservationExpandedDetailRow,
   toReservationRow,
 } from "../reservation.mappers";
-import { ReservationStatus } from "generated/prisma/client";
 
 export type ReservationCoreReadRepo = Pick<
   ReservationRepo,
