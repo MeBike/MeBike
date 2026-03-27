@@ -5,17 +5,11 @@ import {
   UserCommandServiceLive,
   UserQueryRepositoryLive,
   UserQueryServiceLive,
-  UserRepositoryLive,
-  UserServiceLive,
   UserStatsRepositoryLive,
   UserStatsServiceLive,
 } from "@/domain/users";
 
 import { PrismaLive } from "../infra.layers";
-
-export const UserReposLive = UserRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
 
 export const UserQueryReposLive = UserQueryRepositoryLive.pipe(
   Layer.provide(PrismaLive),
@@ -34,17 +28,11 @@ export const UserCommandServiceLayer = UserCommandServiceLive.pipe(
   Layer.provide(UserCommandReposLive),
 );
 
-export const UserServiceLayer = UserServiceLive.pipe(
-  Layer.provide(UserReposLive),
-);
-
 export const UserDepsLive = Layer.mergeAll(
-  UserReposLive,
   UserQueryReposLive,
   UserCommandReposLive,
   UserQueryServiceLayer,
   UserCommandServiceLayer,
-  UserServiceLayer,
   PrismaLive,
 );
 

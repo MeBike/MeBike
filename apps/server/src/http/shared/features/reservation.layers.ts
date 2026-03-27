@@ -14,7 +14,6 @@ import {
   SubscriptionReposLive,
   SubscriptionServiceLayer,
 } from "./subscription.layers";
-import { UserReposLive } from "./user.layers";
 import { WalletDepsLive } from "./wallet.layers";
 
 export const ReservationReposLive = ReservationRepositoryLive.pipe(
@@ -35,7 +34,6 @@ export const ReservationDepsLive = Layer.mergeAll(
   ReservationHoldServiceLayer,
   BikeReposLive,
   StationReposLive,
-  UserReposLive,
   RentalReposLive,
   WalletDepsLive,
   SubscriptionReposLive,
