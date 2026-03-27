@@ -14,7 +14,12 @@ import {
 } from "@/domain/users";
 import { routeContext } from "@/http/shared/route-context";
 
-import { mapUserDetail, mapUserSummary, pickDefined } from "../shared";
+import {
+  mapAvailableTechnicianTeam,
+  mapUserDetail,
+  mapUserSummary,
+  pickDefined,
+} from "../shared";
 
 type UsersRoutes = typeof import("@mebike/shared")["serverRoutes"]["users"];
 const users = serverRoutes.users;
@@ -83,6 +88,24 @@ const adminTechnicians: RouteHandler<UsersRoutes["adminTechnicians"]> = async (c
 
   const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.AdminTechnicianListResponse, 200>({ data: data.map(mapUserSummary) }, 200);
+};
+
+const adminAvailableTechnicianTeams: RouteHandler<UsersRoutes["adminAvailableTechnicianTeams"]> = async (c) => {
+  const query = c.req.valid("query");
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* UserServiceTag;
+      return yield* service.listAvailableTechnicianTeams({
+        stationId: query.stationId,
+      });
+    }),
+    routeContext(users.adminAvailableTechnicianTeams),
+  );
+
+  const data = await c.var.runPromise(eff);
+  return c.json<UsersContracts.AdminAvailableTechnicianTeamListResponse, 200>({
+    data: data.map(mapAvailableTechnicianTeam),
+  }, 200);
 };
 
 const adminDetail: RouteHandler<UsersRoutes["adminDetail"]> = async (c) => {
@@ -167,6 +190,16 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
             },
             400,
           )),
+        Match.tag("TechnicianTeamMemberLimitExceeded", () =>
+          c.json<UsersContracts.UserErrorResponse, 409>(
+            {
+              error: UsersContracts.userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              },
+            },
+            409,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
@@ -213,6 +246,16 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
             },
             400,
           )),
+        Match.tag("TechnicianTeamMemberLimitExceeded", () =>
+          c.json<UsersContracts.UserErrorResponse, 409>(
+            {
+              error: UsersContracts.userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              },
+            },
+            409,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
@@ -250,6 +293,7 @@ export const AdminUsersController = {
   adminList,
   adminSearch,
   adminTechnicians,
+  adminAvailableTechnicianTeams,
   adminDetail,
   adminUpdate,
   adminCreate,

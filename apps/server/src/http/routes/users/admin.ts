@@ -7,6 +7,7 @@ export function registerAdminUserRoutes(app: import("@hono/zod-openapi").OpenAPI
   app.openapi(users.adminList, AdminUsersController.adminList);
   app.openapi(users.adminSearch, AdminUsersController.adminSearch);
   app.openapi(users.adminTechnicians, AdminUsersController.adminTechnicians);
+  app.openapi(users.adminAvailableTechnicianTeams, AdminUsersController.adminAvailableTechnicianTeams);
   app.openapi(users.adminDetail, AdminUsersController.adminDetail);
   app.openapi(users.adminUpdate, AdminUsersController.adminUpdate);
   app.openapi(users.adminCreate, AdminUsersController.adminCreate);
