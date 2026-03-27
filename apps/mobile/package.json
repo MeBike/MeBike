@@ -15,7 +15,8 @@
     "web": "expo start --web",
     "compose:dev": "docker compose -f docker-compose.dev.yml up",
     "compose:prod": "docker compose -f docker-compose.yml up",
-    "guard:design-system": "node ./scripts/check-design-system-usage.mjs"
+    "guard:design-system": "node ./scripts/check-design-system-usage.mjs",
+    "knip": "pnpm -C ../.. dlx knip --workspace apps/mobile --include files,dependencies"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
