@@ -3,6 +3,7 @@ import { Layer } from "effect";
 import { AgencyRequestDepsLive } from "./features/agency-request.layers";
 import { AuthDepsLive } from "./features/auth.layers";
 import { BikeDepsLive } from "./features/bike.layers";
+import { IncidentDepsLive } from "./features/incident.layers";
 import { NotificationDepsLive } from "./features/notification.layers";
 import { RatingDepsLive } from "./features/rating.layers";
 import { RentalDepsLive } from "./features/rental.layers";
@@ -36,6 +37,7 @@ export const HttpDepsLive = Layer.mergeAll(
   UserStatsDepsLive,
   WalletDepsLive,
   WithdrawalDepsLive,
+  IncidentDepsLive,
 ).pipe(
   Layer.provide(AppInfraLive),
 );
