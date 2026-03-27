@@ -10,7 +10,7 @@ import type { AccessTokenPayload } from "@/domain/auth";
 import type { RunPromise } from "@/http/shared/runtime";
 
 import { requireJwtSecret } from "@/domain/auth";
-import { UserServiceTag } from "@/domain/users";
+import { UserQueryServiceTag } from "@/domain/users";
 
 const unauthorizedBody = {
   error: unauthorizedErrorMessages.UNAUTHORIZED,
@@ -46,7 +46,7 @@ function verifyAccessToken(token: string): AccessTokenPayload | null {
 async function loadUser(runPromise: RunPromise, userId: string) {
   return await runPromise(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserQueryServiceTag;
       return yield* service.getById(userId);
     }),
   );

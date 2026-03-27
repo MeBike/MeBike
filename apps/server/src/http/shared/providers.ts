@@ -8,7 +8,7 @@ export {
   AuthDepsLive,
   AuthReposLive,
   AuthServiceLayer,
-  AuthUserServiceLayer,
+  AuthUserQueryServiceLayer,
   withAuthDeps,
 } from "./features/auth.layers";
 export {
@@ -77,9 +77,11 @@ export {
   withSupplierDeps,
 } from "./features/supplier.layers";
 export {
+  UserCommandReposLive,
+  UserCommandServiceLayer,
   UserDepsLive,
-  UserReposLive,
-  UserServiceLayer,
+  UserQueryReposLive,
+  UserQueryServiceLayer,
   UserStatsDepsLive,
   UserStatsServiceLayer,
   withUserDeps,

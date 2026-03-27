@@ -5,6 +5,12 @@ export type OrgUnitRef = {
   readonly name: string;
 };
 
+export type TechnicianTeamAvailableOption = {
+  readonly id: string;
+  readonly name: string;
+  readonly stationId: string;
+};
+
 export type UserOrgAssignment = {
   readonly station: OrgUnitRef | null;
   readonly agency: OrgUnitRef | null;
@@ -84,6 +90,7 @@ export type UserFilter = {
   readonly accountStatus?: AccountStatus;
   readonly verify?: UserVerifyStatus;
   readonly role?: UserRole;
+  readonly roles?: readonly UserRole[];
   readonly stationId?: string;
   readonly agencyId?: string;
   readonly technicianTeamId?: string;

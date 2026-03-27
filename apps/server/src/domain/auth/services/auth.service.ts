@@ -5,11 +5,13 @@ import crypto from "node:crypto";
 import { uuidv7 } from "uuidv7";
 
 import type { UserRow } from "@/domain/users";
-import type { UserRepo } from "@/domain/users/repository/user.repository";
+import type { UserCommandRepo } from "@/domain/users/repository/user-command.repository";
+import type { UserQueryRepo } from "@/domain/users/repository/user-query.repository";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { env } from "@/config/env";
-import { UserRepository } from "@/domain/users/repository/user.repository";
+import { UserCommandRepository } from "@/domain/users/repository/user-command.repository";
+import { UserQueryRepository } from "@/domain/users/repository/user-query.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -138,14 +140,16 @@ function verifyRefreshToken(token: string): Effect.Effect<
 type AuthServiceDeps = {
   authRepo: AuthRepo;
   authEventRepo: AuthEventRepo;
-  userRepo: UserRepo;
+  userQueryRepo: UserQueryRepo;
+  userCommandRepo: UserCommandRepo;
   client: PrismaClient;
 };
 
 export function makeAuthService({
   authRepo,
   authEventRepo,
-  userRepo,
+  userQueryRepo,
+  userCommandRepo,
   client,
 }: AuthServiceDeps): AuthService {
   const sendVerifyEmail: AuthService["sendVerifyEmail"] = ({ userId, email: addr, fullName }) =>
@@ -183,7 +187,7 @@ export function makeAuthService({
 
   const loginWithPassword: AuthService["loginWithPassword"] = ({ email: addr, password }) =>
     Effect.gen(function* () {
-      const userOpt = yield* userRepo.findByEmail(addr).pipe(
+      const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(userOpt)) {
@@ -234,7 +238,7 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidRefreshToken({}));
       }
 
-      const userOpt = yield* userRepo.findById(session.userId).pipe(
+      const userOpt = yield* userQueryRepo.findById(session.userId).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(userOpt)) {
@@ -300,7 +304,7 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidOtp({ retriable: verification === "invalidRetryable" }));
       }
 
-      const updated = yield* userRepo.markVerified(userId).pipe(
+      const updated = yield* userCommandRepo.markVerified(userId).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(updated)) {
@@ -310,7 +314,7 @@ export function makeAuthService({
 
   const sendResetPassword: AuthService["sendResetPassword"] = ({ email: addr }) =>
     Effect.gen(function* () {
-      const userOpt = yield* userRepo.findByEmail(addr).pipe(
+      const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(userOpt)) {
@@ -352,7 +356,7 @@ export function makeAuthService({
 
   const verifyResetPasswordOtp: AuthService["verifyResetPasswordOtp"] = ({ email: addr, otp }) =>
     Effect.gen(function* () {
-      const userOpt = yield* userRepo.findByEmail(addr).pipe(
+      const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(userOpt)) {
@@ -397,7 +401,7 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidResetToken({}));
       }
 
-      const userOpt = yield* userRepo.findById(tokenRecord.userId).pipe(
+      const userOpt = yield* userQueryRepo.findById(tokenRecord.userId).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(userOpt) || userOpt.value.email !== tokenRecord.email) {
@@ -405,7 +409,7 @@ export function makeAuthService({
       }
 
       const hash = yield* Effect.promise(() => bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS));
-      const updated = yield* userRepo.updatePassword(tokenRecord.userId, hash).pipe(
+      const updated = yield* userCommandRepo.updatePassword(tokenRecord.userId, hash).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(updated)) {
@@ -433,12 +437,14 @@ export function makeAuthService({
 const makeAuthServiceEffect = Effect.gen(function* () {
   const authRepo = yield* AuthRepository;
   const authEventRepo = yield* AuthEventRepository;
-  const userRepo = yield* UserRepository;
+  const userQueryRepo = yield* UserQueryRepository;
+  const userCommandRepo = yield* UserCommandRepository;
   const { client } = yield* Prisma;
   return makeAuthService({
     authRepo,
     authEventRepo,
-    userRepo,
+    userQueryRepo,
+    userCommandRepo,
     client,
   });
 });

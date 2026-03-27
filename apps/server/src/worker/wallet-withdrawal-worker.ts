@@ -6,8 +6,8 @@ import { Effect, Layer, Match } from "effect";
 import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import {
-  UserRepositoryLive,
-  UserServiceLive,
+  UserQueryRepositoryLive,
+  UserQueryServiceLive,
 } from "@/domain/users";
 import {
   WalletHoldRepositoryLive,
@@ -27,12 +27,12 @@ import { PrismaLive } from "@/infrastructure/prisma";
 import { StripeLive } from "@/infrastructure/stripe";
 import logger from "@/lib/logger";
 
-const UserReposLive = UserRepositoryLive.pipe(
+const UserQueryReposLive = UserQueryRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-const UserServiceLayer = UserServiceLive.pipe(
-  Layer.provide(UserReposLive),
+const UserQueryServiceLayer = UserQueryServiceLive.pipe(
+  Layer.provide(UserQueryReposLive),
 );
 
 const WalletReposLive = WalletRepositoryLive.pipe(
@@ -64,8 +64,8 @@ const StripeWithdrawalServiceLayer = StripeWithdrawalServiceLive.pipe(
 );
 
 const WithdrawalWorkerLive = Layer.mergeAll(
-  UserReposLive,
-  UserServiceLayer,
+  UserQueryReposLive,
+  UserQueryServiceLayer,
   WalletReposLive,
   WalletServiceLayer,
   WalletHoldReposLive,

@@ -9,19 +9,15 @@ describe("agency requests routing", () => {
     buildLayer: async () => {
       const { Layer } = await import("effect");
       const { PrismaLive } = await import("@/infrastructure/prisma");
-      const { UserRepositoryLive } = await import("@/domain/users/repository/user.repository");
-      const { UserServiceLive } = await import("@/domain/users/services/user.service");
       const { AgencyRequestRepositoryLive } = await import("@/domain/agency-requests/repository/agency-request.repository");
       const { AgencyRequestServiceLive } = await import("@/domain/agency-requests/services/agency-request.service");
+      const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
-      const userRepoLayer = UserRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const userServiceLayer = UserServiceLive.pipe(Layer.provide(userRepoLayer));
       const agencyRequestRepoLayer = AgencyRequestRepositoryLive.pipe(Layer.provide(PrismaLive));
       const agencyRequestServiceLayer = AgencyRequestServiceLive.pipe(Layer.provide(agencyRequestRepoLayer));
 
       return Layer.mergeAll(
-        userRepoLayer,
-        userServiceLayer,
+        UserDepsLive,
         agencyRequestRepoLayer,
         agencyRequestServiceLayer,
         PrismaLive,

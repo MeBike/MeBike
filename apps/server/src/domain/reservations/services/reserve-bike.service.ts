@@ -17,7 +17,7 @@ import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pr
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
-import { makeUserRepository } from "@/domain/users";
+import { makeUserQueryRepository } from "@/domain/users";
 import { makeWalletRepository } from "@/domain/wallets";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
@@ -254,7 +254,7 @@ export function reserveBike(
         // TODO(env): Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.
         // TODO(iot): send reservation "reserve" command once IoT integration is ready.
         {
-          const txUserRepo = makeUserRepository(tx);
+          const txUserRepo = makeUserQueryRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
             txUserRepo.findById(reservation.userId).pipe(
               Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
