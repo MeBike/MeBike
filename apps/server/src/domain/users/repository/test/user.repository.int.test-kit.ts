@@ -4,8 +4,10 @@ import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { uniqueEmail } from "@/test/scenarios";
 
 import type { CreateUserInput } from "../../models";
+import type { UserRepo } from "../user.repository.types";
 
-import { makeUserRepository } from "../user.repository";
+import { makeUserCommandRepository } from "../user-command.repository";
+import { makeUserQueryRepository } from "../user-query.repository";
 
 type UserRepoClient = PrismaClient | PrismaTypes.TransactionClient;
 
@@ -31,6 +33,9 @@ export function setupUserRepositoryIntTestKit() {
 
   return {
     fixture,
-    makeRepo: (client: UserRepoClient = fixture.prisma) => makeUserRepository(client),
+    makeRepo: (client: UserRepoClient = fixture.prisma): UserRepo => ({
+      ...makeUserQueryRepository(client),
+      ...makeUserCommandRepository(client),
+    }),
   };
 }

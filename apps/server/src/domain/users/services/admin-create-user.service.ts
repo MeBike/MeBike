@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { UserRow } from "../models";
 
 import { hashPassword } from "../../auth/services/auth.service";
-import { UserServiceTag } from "./user.service";
+import { UserCommandServiceTag } from "./user-command.service";
 
 export function adminCreateUserUseCase(args: {
   fullname: string;
@@ -25,10 +25,10 @@ export function adminCreateUserUseCase(args: {
     | import("../domain-errors").DuplicateUserPhoneNumber
     | import("../domain-errors").InvalidOrgAssignment
     | import("../domain-errors").TechnicianTeamMemberLimitExceeded,
-  UserServiceTag
+  UserCommandServiceTag
 > {
   return Effect.gen(function* () {
-    const service = yield* UserServiceTag;
+    const service = yield* UserCommandServiceTag;
     const { password, ...rest } = args;
     const passwordHash = yield* hashPassword(password);
     return yield* service.create({ ...rest, passwordHash });

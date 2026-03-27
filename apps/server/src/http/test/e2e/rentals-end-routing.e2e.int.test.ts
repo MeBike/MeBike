@@ -9,16 +9,13 @@ describe("rentals end routing e2e", () => {
     buildLayer: async () => {
       const { Layer } = await import("effect");
       const { PrismaLive } = await import("@/infrastructure/prisma");
-      const { UserRepositoryLive } = await import("@/domain/users/repository/user.repository");
-      const { UserServiceLive } = await import("@/domain/users/services/user.service");
       const { RentalRepositoryLive } = await import("@/domain/rentals/repository/rental.repository");
       const { ReturnConfirmationRepositoryLive } = await import("@/domain/rentals/repository/return-confirmation.repository");
       const { ReturnSlotRepositoryLive } = await import("@/domain/rentals/repository/return-slot.repository");
       const { BikeRepositoryLive } = await import("@/domain/bikes/repository/bike.repository");
       const { SubscriptionRepositoryLive } = await import("@/domain/subscriptions/repository/subscription.repository");
+      const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
-      const userRepoLayer = UserRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const userServiceLayer = UserServiceLive.pipe(Layer.provide(userRepoLayer));
       const rentalRepoLayer = RentalRepositoryLive.pipe(Layer.provide(PrismaLive));
       const returnConfirmationRepoLayer = ReturnConfirmationRepositoryLive.pipe(Layer.provide(PrismaLive));
       const returnSlotRepoLayer = ReturnSlotRepositoryLive.pipe(Layer.provide(PrismaLive));
@@ -27,8 +24,7 @@ describe("rentals end routing e2e", () => {
 
       return Layer.mergeAll(
         PrismaLive,
-        userRepoLayer,
-        userServiceLayer,
+        UserDepsLive,
         rentalRepoLayer,
         returnConfirmationRepoLayer,
         returnSlotRepoLayer,

@@ -1,25 +1,38 @@
 import { Effect, Layer } from "effect";
 
 import {
-  UserRepositoryLive,
-  UserServiceLive,
+  UserCommandRepositoryLive,
+  UserCommandServiceLive,
+  UserQueryRepositoryLive,
+  UserQueryServiceLive,
   UserStatsRepositoryLive,
   UserStatsServiceLive,
 } from "@/domain/users";
 
 import { PrismaLive } from "../infra.layers";
 
-export const UserReposLive = UserRepositoryLive.pipe(
+export const UserQueryReposLive = UserQueryRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-export const UserServiceLayer = UserServiceLive.pipe(
-  Layer.provide(UserReposLive),
+export const UserCommandReposLive = UserCommandRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+export const UserQueryServiceLayer = UserQueryServiceLive.pipe(
+  Layer.provide(UserQueryReposLive),
+);
+
+export const UserCommandServiceLayer = UserCommandServiceLive.pipe(
+  Layer.provide(UserQueryReposLive),
+  Layer.provide(UserCommandReposLive),
 );
 
 export const UserDepsLive = Layer.mergeAll(
-  UserReposLive,
-  UserServiceLayer,
+  UserQueryReposLive,
+  UserCommandReposLive,
+  UserQueryServiceLayer,
+  UserCommandServiceLayer,
   PrismaLive,
 );
 

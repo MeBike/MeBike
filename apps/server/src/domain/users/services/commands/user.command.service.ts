@@ -4,8 +4,9 @@ import { Effect, Option } from "effect";
 import { env } from "@/config/env";
 
 import type { UpdateUserAdminPatch, UserRow } from "../../models";
-import type { UserRepo } from "../../repository/user.repository";
-import type { UserService } from "../user.service.types";
+import type { UserCommandRepo } from "../../repository/user-command.repository";
+import type { UserQueryRepo } from "../../repository/user-query.repository";
+import type { UserCommandService } from "../user.service.types";
 
 import { InvalidCurrentPassword as InvalidCurrentPasswordError } from "../../domain-errors";
 import {
@@ -15,22 +16,12 @@ import {
   validateOrgAssignmentForRole,
 } from "../user.policies";
 
-export type UserCommandService = Pick<
-  UserService,
-  | "create"
-  | "updateProfile"
-  | "updateAdminById"
-  | "updatePassword"
-  | "changePassword"
-  | "markVerified"
-  | "setStripeConnectedAccountId"
-  | "setStripeConnectedAccountIdIfNull"
-  | "setStripePayoutsEnabled"
-  | "setStripePayoutsEnabledByAccountId"
->;
-
-export function makeUserCommandService(repo: UserRepo): UserCommandService {
-  const validateTechnicianTeamCapacity = makeValidateTechnicianTeamCapacity(repo);
+export function makeUserCommandService(args: {
+  commandRepo: UserCommandRepo;
+  queryRepo: UserQueryRepo;
+}): UserCommandService {
+  const { commandRepo, queryRepo } = args;
+  const validateTechnicianTeamCapacity = makeValidateTechnicianTeamCapacity(queryRepo);
 
   return {
     create: input =>
@@ -43,18 +34,18 @@ export function makeUserCommandService(repo: UserRepo): UserCommandService {
           technicianTeamId: orgAssignment?.technicianTeamId ?? null,
         });
 
-        return yield* repo.createUser({
+        return yield* commandRepo.createUser({
           ...input,
           role,
           orgAssignment,
         });
       }),
 
-    updateProfile: (id, patch) => repo.updateProfile(id, patch),
+    updateProfile: (id, patch) => commandRepo.updateProfile(id, patch),
 
     updateAdminById: (id, patch) =>
       Effect.gen(function* () {
-        const existingOpt = yield* repo.findById(id);
+        const existingOpt = yield* queryRepo.findById(id);
         if (Option.isNone(existingOpt)) {
           return Option.none<UserRow>();
         }
@@ -76,14 +67,14 @@ export function makeUserCommandService(repo: UserRepo): UserCommandService {
           ...(patch.orgAssignment === undefined ? {} : { orgAssignment: nextOrgAssignment }),
         };
 
-        return yield* repo.updateAdminById(id, nextPatch);
+        return yield* commandRepo.updateAdminById(id, nextPatch);
       }),
 
-    updatePassword: (id, passwordHash) => repo.updatePassword(id, passwordHash),
+    updatePassword: (id, passwordHash) => commandRepo.updatePassword(id, passwordHash),
 
     changePassword: ({ id, currentPassword, newPassword }) =>
       Effect.gen(function* () {
-        const userOpt = yield* repo.findById(id);
+        const userOpt = yield* queryRepo.findById(id);
         if (Option.isNone(userOpt)) {
           return userOpt;
         }
@@ -101,14 +92,14 @@ export function makeUserCommandService(repo: UserRepo): UserCommandService {
           bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS),
         );
 
-        return yield* repo.updatePassword(id, nextPasswordHash);
+        return yield* commandRepo.updatePassword(id, nextPasswordHash);
       }),
 
-    markVerified: id => repo.markVerified(id),
-    setStripeConnectedAccountId: (id, accountId) => repo.setStripeConnectedAccountId(id, accountId),
-    setStripeConnectedAccountIdIfNull: (id, accountId) => repo.setStripeConnectedAccountIdIfNull(id, accountId),
-    setStripePayoutsEnabled: (id, enabled) => repo.setStripePayoutsEnabled(id, enabled),
+    markVerified: id => commandRepo.markVerified(id),
+    setStripeConnectedAccountId: (id, accountId) => commandRepo.setStripeConnectedAccountId(id, accountId),
+    setStripeConnectedAccountIdIfNull: (id, accountId) => commandRepo.setStripeConnectedAccountIdIfNull(id, accountId),
+    setStripePayoutsEnabled: (id, enabled) => commandRepo.setStripePayoutsEnabled(id, enabled),
     setStripePayoutsEnabledByAccountId: (accountId, enabled) =>
-      repo.setStripePayoutsEnabledByAccountId(accountId, enabled),
+      commandRepo.setStripePayoutsEnabledByAccountId(accountId, enabled),
   };
 }

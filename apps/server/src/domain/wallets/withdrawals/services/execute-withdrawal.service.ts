@@ -7,7 +7,7 @@ import type {
 } from "@/domain/wallets/domain-errors";
 
 import { env } from "@/config/env";
-import { UserServiceTag } from "@/domain/users/services/user.service";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
@@ -85,11 +85,11 @@ export function executeWithdrawalUseCase(
   | WalletHoldRepositoryError
   | WalletRepositoryError
   | UserRepositoryError,
-  Prisma | WithdrawalRepository | UserServiceTag | StripeWithdrawalServiceTag
+  Prisma | WithdrawalRepository | UserQueryServiceTag | StripeWithdrawalServiceTag
 > {
   return Effect.gen(function* () {
     const withdrawalRepo = yield* WithdrawalRepository;
-    const userService = yield* UserServiceTag;
+    const userService = yield* UserQueryServiceTag;
     const stripeService = yield* StripeWithdrawalServiceTag;
     const { client } = yield* Prisma;
     const now = new Date();

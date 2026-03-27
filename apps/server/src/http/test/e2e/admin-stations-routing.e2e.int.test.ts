@@ -13,17 +13,13 @@ describe("admin stations routing e2e", () => {
       const { PrismaLive } = await import("@/infrastructure/prisma");
       const { StationRepositoryLive } = await import("@/domain/stations/repository/station.repository");
       const { StationServiceLive } = await import("@/domain/stations/services/station.service");
-      const { UserRepositoryLive } = await import("@/domain/users/repository/user.repository");
-      const { UserServiceLive } = await import("@/domain/users/services/user.service");
+      const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
-      const userRepoLayer = UserRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const userServiceLayer = UserServiceLive.pipe(Layer.provide(userRepoLayer));
       const stationRepoLayer = StationRepositoryLive.pipe(Layer.provide(PrismaLive));
       const stationServiceLayer = StationServiceLive.pipe(Layer.provide(stationRepoLayer));
 
       return Layer.mergeAll(
-        userRepoLayer,
-        userServiceLayer,
+        UserDepsLive,
         stationRepoLayer,
         stationServiceLayer,
         PrismaLive,

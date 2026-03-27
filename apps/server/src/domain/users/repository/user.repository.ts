@@ -6,8 +6,8 @@ import { Prisma } from "@/infrastructure/prisma";
 
 import type { UserRepo } from "./user.repository.types";
 
-import { makeUserReadRepository } from "./read/user.read.repository";
-import { makeUserWriteRepository } from "./write/user.write.repository";
+import { makeUserCommandRepository } from "./user-command.repository";
+import { makeUserQueryRepository } from "./user-query.repository";
 
 export type { UserRepo } from "./user.repository.types";
 
@@ -27,8 +27,8 @@ export function makeUserRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): UserRepo {
   return {
-    ...makeUserReadRepository(client),
-    ...makeUserWriteRepository(client),
+    ...makeUserQueryRepository(client),
+    ...makeUserCommandRepository(client),
   };
 }
 
