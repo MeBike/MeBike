@@ -1,11 +1,14 @@
 import { Effect } from "effect";
 
+import type { PageRequest } from "@/domain/shared/pagination";
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
-import type { StationRow } from "../models";
+import { pickDefined } from "@/domain/shared/pick-defined";
+
+import type { StationFilter, StationRow, StationSortField } from "../models";
 
 import { StationRepositoryError } from "../errors";
 
@@ -44,7 +47,7 @@ export type BikeCounts = Pick<
   | "emptySlots"
 >;
 
-function baseCounts(): BikeCounts {
+export function createEmptyBikeCounts(): BikeCounts {
   return {
     totalBikes: 0,
     availableBikes: 0,
@@ -73,7 +76,7 @@ export function applyCounts(
   station: StationBaseRow,
   counts: BikeCounts | undefined,
 ): StationRow {
-  const resolved = counts ?? baseCounts();
+  const resolved = counts ?? createEmptyBikeCounts();
 
   const createdAt
     = station.createdAt instanceof Date
@@ -99,6 +102,58 @@ export function applyCounts(
     activeReturnSlots: resolved.activeReturnSlots,
     availableReturnSlots: computeAvailableReturnSlots(station, resolved),
     emptySlots: Math.max(0, station.totalCapacity - resolved.totalBikes),
+  };
+}
+
+export function resolveStationCounts(args: {
+  countsMap: Map<string, BikeCounts>;
+  returnSlotCountsMap: Map<string, number>;
+  stationId: string;
+}): BikeCounts {
+  const counts = args.countsMap.get(args.stationId) ?? createEmptyBikeCounts();
+
+  return {
+    ...counts,
+    activeReturnSlots: args.returnSlotCountsMap.get(args.stationId) ?? 0,
+  };
+}
+
+export function toStationOrderBy(
+  req: PageRequest<StationSortField>,
+): PrismaTypes.StationOrderByWithRelationInput {
+  const sortBy: StationSortField = req.sortBy ?? "name";
+  const sortDir = req.sortDir ?? "asc";
+  switch (sortBy) {
+    case "totalCapacity":
+      return { totalCapacity: sortDir };
+    case "updatedAt":
+      return { updatedAt: sortDir };
+    case "name":
+    default:
+      return { name: sortDir };
+  }
+}
+
+export function toStationWhere(filter: StationFilter): PrismaTypes.StationWhereInput {
+  return {
+    ...pickDefined({
+      name: filter.name
+        ? { contains: filter.name, mode: "insensitive" }
+        : undefined,
+      address: filter.address
+        ? { contains: filter.address, mode: "insensitive" }
+        : undefined,
+      totalCapacity: filter.totalCapacity,
+    }),
+    ...(filter.excludeAssignedStaff && {
+      userAssignments: {
+        none: {
+          user: {
+            role: "STAFF",
+          },
+        },
+      },
+    }),
   };
 }
 
@@ -171,7 +226,7 @@ export function getBikeCounts(
     Effect.map((rows) => {
       const countsMap = new Map<string, BikeCounts>();
       for (const stationId of stationIds) {
-        countsMap.set(stationId, baseCounts());
+        countsMap.set(stationId, createEmptyBikeCounts());
       }
 
       for (const row of rows) {
@@ -179,7 +234,7 @@ export function getBikeCounts(
         if (!stationId) {
           continue;
         }
-        const counts = countsMap.get(stationId) ?? baseCounts();
+        const counts = countsMap.get(stationId) ?? createEmptyBikeCounts();
         const inc = row._count._all;
         counts.totalBikes += inc;
         switch (row.status) {
