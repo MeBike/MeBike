@@ -2,6 +2,8 @@ import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import type { UserRole } from "generated/prisma/client";
+
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { expectLeftTag } from "@/test/effect/assertions";
 import { runEffect, runEffectEither } from "@/test/effect/run";
@@ -13,7 +15,7 @@ import { makeUserRepository } from "../user.repository";
 function createUserInput(overrides?: Partial<{
   email: string;
   phoneNumber: string | null;
-  role: "USER" | "STAFF" | "TECHNICIAN" | "MANAGER" | "ADMIN" | "AGENCY";
+  role: UserRole;
 }>) {
   return {
     fullname: "Test User",
