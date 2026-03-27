@@ -176,37 +176,34 @@ export function makeUserRepository(
       stationId: filter.stationId,
       agencyId: filter.agencyId,
       technicianTeamId: filter.technicianTeamId,
-    });
+    }, { returnUndefinedIfEmpty: true });
     const roles = filter.roles?.length
       ? [...new Set(filter.roles)]
       : filter.role
         ? [filter.role]
         : undefined;
+    const role = roles?.length
+      ? roles.length === 1
+        ? roles[0]
+        : { in: roles }
+      : undefined;
 
-    return {
-      ...(filter.fullname
-        ? { fullName: { contains: filter.fullname, mode: "insensitive" as const } }
-        : {}),
-      ...(filter.email
-        ? { email: { contains: filter.email, mode: "insensitive" as const } }
-        : {}),
-      ...(filter.accountStatus ? { accountStatus: filter.accountStatus } : {}),
-      ...(filter.verify ? { verifyStatus: filter.verify } : {}),
-      ...(roles?.length
+    return pickDefined({
+      fullName: filter.fullname
+        ? { contains: filter.fullname, mode: "insensitive" as const }
+        : undefined,
+      email: filter.email
+        ? { contains: filter.email, mode: "insensitive" as const }
+        : undefined,
+      accountStatus: filter.accountStatus,
+      verifyStatus: filter.verify,
+      role,
+      orgAssignment: orgAssignment
         ? {
-            role: roles.length === 1
-              ? roles[0]
-              : { in: roles },
+            is: orgAssignment,
           }
-        : {}),
-      ...(Object.keys(orgAssignment).length
-        ? {
-            orgAssignment: {
-              is: orgAssignment,
-            },
-          }
-        : {}),
-    };
+        : undefined,
+    });
   };
 
   return {
