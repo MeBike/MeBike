@@ -1,18 +1,7 @@
-import type { UserRepo } from "../../repository/user.repository";
-import type { UserService } from "../user.service.types";
+import type { UserQueryRepo } from "../../repository/user-query.repository";
+import type { UserQueryService } from "../user.service.types";
 
-export type UserQueryService = Pick<
-  UserService,
-  | "getById"
-  | "getByEmail"
-  | "findByStripeConnectedAccountId"
-  | "listWithOffset"
-  | "searchByQuery"
-  | "listTechnicianSummaries"
-  | "listAvailableTechnicianTeams"
->;
-
-export function makeUserQueryService(repo: UserRepo): UserQueryService {
+export function makeUserQueryService(repo: UserQueryRepo): UserQueryService {
   return {
     getById: id => repo.findById(id),
     getByEmail: email => repo.findByEmail(email),

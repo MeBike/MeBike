@@ -3,9 +3,10 @@ import { Effect } from "effect";
 import type {
   InvalidOrgAssignment,
   TechnicianTeamMemberLimitExceeded,
+  UserRepositoryError,
 } from "../domain-errors";
 import type { UserOrgAssignmentPatch, UserRow } from "../models";
-import type { UserRepo } from "../repository/user.repository";
+import type { UserQueryRepo } from "../repository/user-query.repository";
 
 import {
   InvalidOrgAssignment as InvalidOrgAssignmentError,
@@ -86,13 +87,13 @@ export function validateOrgAssignmentForRole(
   }
 }
 
-export function makeValidateTechnicianTeamCapacity(repo: UserRepo) {
+export function makeValidateTechnicianTeamCapacity(repo: Pick<UserQueryRepo, "countTechnicianTeamMembers">) {
   const technicianTeamMemberLimit = 3;
 
   return (args: {
     technicianTeamId: string | null;
     excludeUserId?: string;
-  }): Effect.Effect<void, TechnicianTeamMemberLimitExceeded | import("../domain-errors").UserRepositoryError> =>
+  }): Effect.Effect<void, TechnicianTeamMemberLimitExceeded | UserRepositoryError> =>
     Effect.gen(function* () {
       if (!args.technicianTeamId) {
         return;

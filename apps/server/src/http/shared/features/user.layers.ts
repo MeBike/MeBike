@@ -1,6 +1,10 @@
 import { Effect, Layer } from "effect";
 
 import {
+  UserCommandRepositoryLive,
+  UserCommandServiceLive,
+  UserQueryRepositoryLive,
+  UserQueryServiceLive,
   UserRepositoryLive,
   UserServiceLive,
   UserStatsRepositoryLive,
@@ -13,12 +17,33 @@ export const UserReposLive = UserRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
+export const UserQueryReposLive = UserQueryRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+export const UserCommandReposLive = UserCommandRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+export const UserQueryServiceLayer = UserQueryServiceLive.pipe(
+  Layer.provide(UserQueryReposLive),
+);
+
+export const UserCommandServiceLayer = UserCommandServiceLive.pipe(
+  Layer.provide(UserQueryReposLive),
+  Layer.provide(UserCommandReposLive),
+);
+
 export const UserServiceLayer = UserServiceLive.pipe(
   Layer.provide(UserReposLive),
 );
 
 export const UserDepsLive = Layer.mergeAll(
   UserReposLive,
+  UserQueryReposLive,
+  UserCommandReposLive,
+  UserQueryServiceLayer,
+  UserCommandServiceLayer,
   UserServiceLayer,
   PrismaLive,
 );

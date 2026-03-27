@@ -11,7 +11,10 @@ export type { UserService } from "./user.service.types";
 function makeUserService(repo: UserRepo): import("./user.service.types").UserService {
   return {
     ...makeUserQueryService(repo),
-    ...makeUserCommandService(repo),
+    ...makeUserCommandService({
+      commandRepo: repo,
+      queryRepo: repo,
+    }),
   };
 }
 

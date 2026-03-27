@@ -17,13 +17,37 @@ import type {
   UserSortField,
 } from "../models";
 
-export type UserRepo = {
+export type UserQueryRepo = {
   readonly findById: (
     id: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
   readonly findByEmail: (
     email: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly findByStripeConnectedAccountId: (
+    accountId: string,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly listWithOffset: (
+    filter: UserFilter,
+    pageReq: PageRequest<UserSortField>,
+  ) => Effect.Effect<PageResult<UserRow>, UserRepositoryError>;
+  readonly searchByQuery: (
+    query: string,
+  ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
+  readonly listTechnicianSummaries: () => Effect.Effect<
+    readonly Pick<UserRow, "id" | "fullname">[],
+    UserRepositoryError
+  >;
+  readonly listAvailableTechnicianTeams: (args?: {
+    readonly stationId?: string;
+  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[], UserRepositoryError>;
+  readonly countTechnicianTeamMembers: (
+    technicianTeamId: string,
+    options?: { readonly excludeUserId?: string },
+  ) => Effect.Effect<number, UserRepositoryError>;
+};
+
+export type UserCommandRepo = {
   readonly createUser: (
     data: CreateUserInput,
   ) => Effect.Effect<
@@ -57,9 +81,6 @@ export type UserRepo = {
   readonly markVerified: (
     id: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
-  readonly findByStripeConnectedAccountId: (
-    accountId: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
   readonly setStripeConnectedAccountId: (
     id: string,
     accountId: string,
@@ -76,22 +97,6 @@ export type UserRepo = {
     accountId: string,
     enabled: boolean,
   ) => Effect.Effect<boolean, UserRepositoryError>;
-  readonly listWithOffset: (
-    filter: UserFilter,
-    pageReq: PageRequest<UserSortField>,
-  ) => Effect.Effect<PageResult<UserRow>, UserRepositoryError>;
-  readonly searchByQuery: (
-    query: string,
-  ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
-  readonly listTechnicianSummaries: () => Effect.Effect<
-    readonly Pick<UserRow, "id" | "fullname">[],
-    UserRepositoryError
-  >;
-  readonly listAvailableTechnicianTeams: (args?: {
-    readonly stationId?: string;
-  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[], UserRepositoryError>;
-  readonly countTechnicianTeamMembers: (
-    technicianTeamId: string,
-    options?: { readonly excludeUserId?: string },
-  ) => Effect.Effect<number, UserRepositoryError>;
 };
+
+export type UserRepo = UserQueryRepo & UserCommandRepo;
