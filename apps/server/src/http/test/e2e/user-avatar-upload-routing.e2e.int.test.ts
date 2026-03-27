@@ -133,7 +133,7 @@ describe("user avatar upload route e2e", () => {
     const response = await fixture.app.request("http://test/v1/users/me/avatar", {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Length": String(6 * 1024 * 1024 + 1),
       },
       body: form,
