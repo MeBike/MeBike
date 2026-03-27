@@ -10,7 +10,8 @@ import { hashPassword } from "@/domain/auth/services/auth.service";
 import { withLoggedCause } from "@/domain/shared";
 import {
   adminCreateUserUseCase,
-  UserServiceTag,
+  UserCommandServiceTag,
+  UserQueryServiceTag,
 } from "@/domain/users";
 import { routeContext } from "@/http/shared/route-context";
 
@@ -28,7 +29,7 @@ const adminList: RouteHandler<UsersRoutes["adminList"]> = async (c) => {
   const query = c.req.valid("query");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserQueryServiceTag;
       return yield* service.listWithOffset({
         fullname: query.fullName,
         accountStatus: query.accountStatus,
@@ -67,7 +68,7 @@ const adminSearch: RouteHandler<UsersRoutes["adminSearch"]> = async (c) => {
   const query = c.req.valid("query");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserQueryServiceTag;
       return yield* service.searchByQuery(query.q);
     }),
     routeContext(users.adminSearch),
@@ -80,7 +81,7 @@ const adminSearch: RouteHandler<UsersRoutes["adminSearch"]> = async (c) => {
 const adminTechnicians: RouteHandler<UsersRoutes["adminTechnicians"]> = async (c) => {
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserQueryServiceTag;
       return yield* service.listTechnicianSummaries();
     }),
     routeContext(users.adminTechnicians),
@@ -94,7 +95,7 @@ const adminAvailableTechnicianTeams: RouteHandler<UsersRoutes["adminAvailableTec
   const query = c.req.valid("query");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserQueryServiceTag;
       return yield* service.listAvailableTechnicianTeams({
         stationId: query.stationId,
       });
@@ -112,7 +113,7 @@ const adminDetail: RouteHandler<UsersRoutes["adminDetail"]> = async (c) => {
   const { userId } = c.req.valid("param");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserQueryServiceTag;
       return yield* service.getById(userId);
     }),
     routeContext(users.adminDetail),
@@ -137,7 +138,7 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserCommandServiceTag;
       return yield* service.updateAdminById(userId, pickDefined(body));
     }),
     routeContext(users.adminUpdate),
@@ -269,7 +270,7 @@ const adminResetPassword: RouteHandler<UsersRoutes["adminResetPassword"]> = asyn
   const body = c.req.valid("json");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserCommandServiceTag;
       const passwordHash = yield* hashPassword(body.newPassword);
       return yield* service.updatePassword(userId, passwordHash);
     }),

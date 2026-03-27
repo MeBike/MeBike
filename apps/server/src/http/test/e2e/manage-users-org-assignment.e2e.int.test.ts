@@ -11,22 +11,16 @@ describe("manage-users org assignment e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
       const { Layer } = await import("effect");
-      const { PrismaLive } = await import("@/infrastructure/prisma");
-      const { UserRepositoryLive } = await import("@/domain/users/repository/user.repository");
+      const { UserDepsLive } = await import("@/http/shared/features/user.layers");
       const { UserStatsRepositoryLive } = await import("@/domain/users/repository/user-stats.repository");
-      const { UserServiceLive } = await import("@/domain/users/services/user.service");
       const { UserStatsServiceLive } = await import("@/domain/users/services/user-stats.service");
 
-      const userRepoLayer = UserRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const userServiceLayer = UserServiceLive.pipe(Layer.provide(userRepoLayer));
       const userStatsServiceLayer = UserStatsServiceLive.pipe(Layer.provide(UserStatsRepositoryLive));
 
       return Layer.mergeAll(
-        userRepoLayer,
-        userServiceLayer,
+        UserDepsLive,
         UserStatsRepositoryLive,
         userStatsServiceLayer,
-        PrismaLive,
       );
     },
     seedData: async (_db, prisma) => {
