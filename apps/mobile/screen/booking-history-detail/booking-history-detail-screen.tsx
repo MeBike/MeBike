@@ -1,15 +1,15 @@
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
-import { Screen } from "@ui/primitives/screen";
 import { useCallback } from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { YStack } from "tamagui";
+import { useTheme, YStack } from "tamagui";
 
 import type { Rental } from "@/types/rental-types";
+
+import { useAuthNext } from "@providers/auth-provider-next";
+import { spaceScale } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
 
 import DetailErrorState from "./components/detail-error-state";
 import DetailLoadingState from "./components/detail-loading-state";
@@ -29,6 +29,7 @@ function BookingHistoryDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const { bookingId } = route.params as RouteParams;
   const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
@@ -52,7 +53,7 @@ function BookingHistoryDetailScreen() {
   });
 
   const isOngoing = booking?.status === "RENTED";
-  const actionBarHeight = isOngoing ? 188 + Math.max(insets.bottom, spacing.lg) : spacing.xxxxl;
+  const actionBarHeight = isOngoing ? 188 + Math.max(insets.bottom, spaceScale[4]) : spaceScale[9];
 
   const handleChooseReturnStation = useCallback(() => {
     if (!detail) {
@@ -73,7 +74,7 @@ function BookingHistoryDetailScreen() {
   if (isInitialLoading && !detail) {
     return (
       <Screen>
-        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+        <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
         <AppHeroHeader onBack={() => navigation.goBack()} size="compact" title="Chi tiết thuê xe" />
         <DetailLoadingState />
       </Screen>
@@ -83,7 +84,7 @@ function BookingHistoryDetailScreen() {
   if (isError || !detail || !booking) {
     return (
       <Screen>
-        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+        <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
         <AppHeroHeader onBack={() => navigation.goBack()} size="compact" title="Chi tiết thuê xe" />
         <DetailErrorState onRetry={refetchDetail} />
       </Screen>
@@ -92,7 +93,7 @@ function BookingHistoryDetailScreen() {
 
   return (
     <Screen>
-      <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
 
       <ScrollView
         contentContainerStyle={{
@@ -109,7 +110,7 @@ function BookingHistoryDetailScreen() {
             title="Chi tiết thuê xe"
           />
 
-          <YStack gap="$5" marginTop={-spacing.xl} paddingHorizontal="$5">
+          <YStack gap="$5" marginTop={-spaceScale[5]} paddingHorizontal="$5">
             <RentalHeroCard rental={booking} />
             <RentalJourneyCard detail={detail} />
             <RentalMetaCard detail={detail} />

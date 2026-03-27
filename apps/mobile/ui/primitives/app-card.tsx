@@ -1,22 +1,22 @@
-import { colors } from "@theme/colors";
-import { borderWidths, radii, spacing } from "@theme/metrics";
 import { styled, YStack } from "tamagui";
 
+import { borderWidths, elevations } from "@theme/metrics";
+
 export const AppCard = styled(YStack, {
-  backgroundColor: "$surface",
-  borderRadius: radii.lg,
+  backgroundColor: "$surfaceDefault",
+  borderRadius: "$3",
   borderWidth: borderWidths.subtle,
   borderColor: "$borderSubtle",
-  padding: spacing.xxl,
-  shadowColor: colors.shadowColor,
-  shadowOffset: { width: 0, height: 8 },
-  shadowOpacity: 0.08,
-  shadowRadius: 20,
-  elevation: 5,
+  padding: "$5",
+  shadowColor: "$shadowColor",
+  shadowOffset: elevations.medium.shadowOffset,
+  shadowOpacity: elevations.medium.shadowOpacity,
+  shadowRadius: elevations.medium.shadowRadius,
+  elevation: elevations.medium.elevation,
   variants: {
     tone: {
       default: {
-        backgroundColor: "$surface",
+        backgroundColor: "$surfaceDefault",
       },
       muted: {
         backgroundColor: "$surfaceMuted",
@@ -24,9 +24,35 @@ export const AppCard = styled(YStack, {
       accent: {
         backgroundColor: "$surfaceAccent",
       },
+      success: {
+        backgroundColor: "$surfaceSuccess",
+      },
+      warning: {
+        backgroundColor: "$surfaceWarning",
+      },
+      danger: {
+        backgroundColor: "$surfaceDanger",
+      },
+      inverse: {
+        backgroundColor: "$surfaceInverse",
+        borderColor: "$surfaceInverse",
+      },
+    },
+    size: {
+      compact: {
+        padding: "$4",
+      },
+      default: {
+        padding: "$5",
+      },
+      spacious: {
+        padding: "$6",
+      },
     },
     elevated: {
       false: {
+        shadowColor: "transparent",
+        shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0,
         shadowRadius: 0,
         elevation: 0,
@@ -35,5 +61,6 @@ export const AppCard = styled(YStack, {
   } as const,
   defaultVariants: {
     tone: "default",
+    size: "default",
   },
 });

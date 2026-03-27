@@ -1,13 +1,14 @@
-import type { ForgotPasswordSchemaFormData } from "@schemas/authSchema";
 import type { Control, FieldErrors } from "react-hook-form";
 
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@theme/colors";
+import { Controller } from "react-hook-form";
+import { useTheme, YStack } from "tamagui";
+
+import type { ForgotPasswordSchemaFormData } from "@schemas/authSchema";
+
 import { AppButton } from "@ui/primitives/app-button";
 import { AppInput } from "@ui/primitives/app-input";
 import { Field } from "@ui/primitives/field";
-import { Controller } from "react-hook-form";
-import { YStack } from "tamagui";
 
 type ForgotPasswordFormProps = {
   control: Control<ForgotPasswordSchemaFormData>;
@@ -22,6 +23,8 @@ export function ForgotPasswordForm({
   onSubmit,
   isSubmitting,
 }: ForgotPasswordFormProps) {
+  const theme = useTheme();
+
   return (
     <YStack gap="$4">
       <Field error={errors.email?.message} label="Email">
@@ -34,7 +37,7 @@ export function ForgotPasswordForm({
               autoCorrect={false}
               invalid={Boolean(errors.email?.message)}
               keyboardType="email-address"
-              leadingIcon={<Ionicons name="mail" size={18} color={colors.textSecondary} />}
+              leadingIcon={<Ionicons name="mail" size={18} color={theme.textSecondary.val} />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Nhập email"

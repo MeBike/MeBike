@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 
-import { IconSymbol } from "@components/IconSymbol";
-import { colors, gradients } from "@theme/colors";
-import { spacing } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { XStack, YStack } from "tamagui";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { radii, spacingRules } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 
 type AppHeroHeaderSize = "default" | "compact";
 
@@ -25,11 +25,11 @@ const sizeStyles: Record<AppHeroHeaderSize, {
   titleVariant: "title" | "xlTitle";
 }> = {
   default: {
-    bottomPadding: spacing.xxxxl,
+    bottomPadding: spacingRules.hero.paddingBottomDefault,
     titleVariant: "title",
   },
   compact: {
-    bottomPadding: spacing.xxxl,
+    bottomPadding: spacingRules.hero.paddingBottomCompact,
     titleVariant: "xlTitle",
   },
 };
@@ -43,20 +43,21 @@ export function AppHeroHeader({
   size = "default",
 }: AppHeroHeaderProps) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const sizeStyle = sizeStyles[size];
-  const bottomPadding = footer ? spacing.xl : sizeStyle.bottomPadding;
+  const bottomPadding = footer ? spacingRules.page.sectionGap : sizeStyle.bottomPadding;
 
   return (
     <LinearGradient
-      colors={gradients.brandHero}
+      colors={[theme.actionPrimary.val, theme.actionSecondary.val]}
       end={{ x: 1, y: 1 }}
       start={{ x: 0, y: 0 }}
       style={{
-        paddingTop: insets.top + spacing.lg,
-        paddingHorizontal: spacing.xl,
+        paddingTop: insets.top + spacingRules.hero.paddingTop,
+        paddingHorizontal: spacingRules.hero.paddingX,
         paddingBottom: bottomPadding,
-        borderBottomLeftRadius: 28,
-        borderBottomRightRadius: 28,
+        borderBottomLeftRadius: radii.xxl,
+        borderBottomRightRadius: radii.xxl,
       }}
     >
       <XStack alignItems="center" gap="$3" justifyContent="space-between">
@@ -68,13 +69,13 @@ export function AppHeroHeader({
                   style={{
                     width: 40,
                     height: 40,
-                    borderRadius: 999,
+                    borderRadius: radii.round,
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: colors.overlayLight,
+                    backgroundColor: theme.overlayGlass.val,
                   }}
                 >
-                  <IconSymbol name="arrow.left" size={20} color={colors.textOnBrand} />
+                  <IconSymbol name="arrow.left" size={20} color={theme.onSurfaceBrand.val} />
                 </Pressable>
               )
             : null}

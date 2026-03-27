@@ -1,18 +1,18 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { borderWidths } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
 import React from "react";
 import { Pressable } from "react-native";
-import { XStack, YStack } from "tamagui";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
 
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+
 import type { PaymentMode } from "../types";
 
-import { bikeDetailTextStyles } from "../text-styles";
+import { createBikeDetailTextStyles } from "../text-styles";
 
 function PaymentOption({
   title,
@@ -27,12 +27,15 @@ function PaymentOption({
   isActive: boolean;
   onPress: () => void;
 }) {
+  const theme = useTheme();
+  const bikeDetailTextStyles = createBikeDetailTextStyles(theme);
+
   return (
     <Pressable onPress={onPress} style={{ flex: 1 }}>
       {({ pressed }) => (
         <YStack
-          backgroundColor={isActive ? "$surfaceAccent" : "$surface"}
-          borderColor={isActive ? "$brandPrimary" : "$borderSubtle"}
+          backgroundColor={isActive ? "$surfaceAccent" : "$surfaceDefault"}
+          borderColor={isActive ? "$actionPrimary" : "$borderSubtle"}
           borderRadius="$3"
           borderWidth={borderWidths.strong}
           opacity={pressed ? 0.9 : 1}
@@ -41,14 +44,14 @@ function PaymentOption({
           <YStack gap="$2">
             <XStack alignItems="center" gap="$2" justifyContent="space-between">
               <XStack alignItems="center" flex={1} gap="$2">
-                <IconSymbol color={isActive ? colors.brandPrimary : colors.textMuted} name={icon} size={20} />
+                <IconSymbol color={isActive ? theme.actionPrimary.val : theme.textTertiary.val} name={icon} size={20} />
                 <AppText style={[bikeDetailTextStyles.optionTitle, isActive ? bikeDetailTextStyles.optionTitleActive : null]}>
                   {title}
                 </AppText>
               </XStack>
 
               {isActive
-                ? <IconSymbol color={colors.brandPrimary} name="checkmark.circle.fill" size={18} />
+                ? <IconSymbol color={theme.actionPrimary.val} name="checkmark.circle.fill" size={18} />
                 : null}
             </XStack>
 
@@ -71,6 +74,9 @@ function SubscriptionSelector({
   selectedSubscriptionId: string | null;
   onSelectSubscription: (subscriptionId: string) => void;
 }) {
+  const theme = useTheme();
+  const bikeDetailTextStyles = createBikeDetailTextStyles(theme);
+
   return (
     <YStack gap="$2">
       {activeSubscriptions.map((subscription) => {
@@ -85,7 +91,7 @@ function SubscriptionSelector({
               <XStack
                 alignItems="center"
                 backgroundColor={isActive ? "$surfaceAccent" : "$surfaceMuted"}
-                borderColor={isActive ? "$brandPrimary" : "$borderSubtle"}
+                borderColor={isActive ? "$actionPrimary" : "$borderSubtle"}
                 borderRadius="$3"
                 borderWidth={borderWidths.subtle}
                 justifyContent="space-between"
@@ -103,7 +109,7 @@ function SubscriptionSelector({
                 </YStack>
 
                 <IconSymbol
-                  color={isActive ? colors.brandPrimary : colors.textMuted}
+                  color={isActive ? theme.actionPrimary.val : theme.textTertiary.val}
                   name={isActive ? "checkmark.circle.fill" : "circle"}
                   size={20}
                 />
@@ -135,6 +141,9 @@ export function PaymentMethodCard({
   onSelectSubscription: (subscriptionId: string) => void;
   navigation: BikeDetailNavigationProp;
 }) {
+  const theme = useTheme();
+  const bikeDetailTextStyles = createBikeDetailTextStyles(theme);
+
   return (
     <AppCard borderRadius="$5" padding="$4">
       <YStack gap="$3">

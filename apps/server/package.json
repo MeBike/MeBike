@@ -13,6 +13,8 @@
     "test:int:coverage": "vitest run --config vitest.int.config.ts --mode test --coverage",
     "test:watch": "vitest",
     "test:int": "vitest run --config vitest.int.config.ts --mode test",
+    "test:int:core": "vitest run --config vitest.int.config.ts --mode test --exclude 'src/http/test/e2e/**/*.int.test.ts'",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts --mode test",
     "unit:test": "pnpm test:unit",
     "int:test": "pnpm test:int",
     "dev:test": "vitest --watch",

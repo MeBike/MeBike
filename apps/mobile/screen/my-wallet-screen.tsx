@@ -1,17 +1,17 @@
-import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
-
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
+import { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Spinner, useTheme, YStack } from "tamagui";
+
+import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
+
+import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
-import { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Spinner, YStack } from "tamagui";
 
 import { QRModal } from "../components/wallet/qr-modal";
 import { TransactionDetailModal } from "../components/wallet/transaction-detail-modal";
@@ -22,6 +22,7 @@ import { WalletTransactionRow } from "./my-wallet/components/wallet-transaction-
 
 function MyWalletScreen() {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const queryClient = useQueryClient();
   const [showQR, setShowQR] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -65,9 +66,9 @@ function MyWalletScreen() {
 
   if (wallet.isLoadingWallet || wallet.isLoadingTransactions) {
     return (
-      <Screen alignItems="center" justifyContent="center" padding="$6">
-        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
-        <Spinner color="$brandPrimary" size="large" />
+      <Screen alignItems="center" inset="wide" justifyContent="center">
+        <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
+        <Spinner color="$actionPrimary" size="large" />
         <AppText align="center" marginTop="$4" tone="muted" variant="bodySmall">
           {wallet.isLoadingWallet ? "Đang tải ví của bạn..." : "Đang tải giao dịch gần đây..."}
         </AppText>
@@ -77,8 +78,8 @@ function MyWalletScreen() {
 
   if (!wallet.myWallet) {
     return (
-      <Screen alignItems="center" justifyContent="center" padding="$6">
-        <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+      <Screen alignItems="center" inset="wide" justifyContent="center">
+        <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
         <AppText align="center" variant="sectionTitle">
           Chưa có ví nào
         </AppText>
@@ -93,18 +94,18 @@ function MyWalletScreen() {
 
   return (
     <Screen>
-      <StatusBar backgroundColor={colors.brandPrimary} barStyle="light-content" />
+      <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
 
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom + spacing.xxxxl, 112),
+          paddingBottom: Math.max(insets.bottom + spaceScale[9], 112),
         }}
-        refreshControl={<RefreshControl colors={[colors.brandPrimary]} onRefresh={onRefresh} refreshing={refreshing} tintColor={colors.brandPrimary} />}
+        refreshControl={<RefreshControl colors={[theme.actionPrimary.val]} onRefresh={onRefresh} refreshing={refreshing} tintColor={theme.actionPrimary.val} />}
         showsVerticalScrollIndicator={false}
       >
         <WalletHeroCard topInset={insets.top} wallet={wallet.myWallet} />
 
-        <View style={{ marginTop: -spacing.xxl, paddingHorizontal: spacing.xl }}>
+        <View style={{ marginTop: -spaceScale[6], paddingHorizontal: spaceScale[5] }}>
           <WalletTopUpCta onPress={handleTopUp} />
         </View>
 

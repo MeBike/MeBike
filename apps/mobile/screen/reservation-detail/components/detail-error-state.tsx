@@ -1,9 +1,9 @@
+import React from "react";
+import { useTheme, YStack } from "tamagui";
+
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
-import React from "react";
-import { YStack } from "tamagui";
 
 type DetailErrorStateProps = {
   onGoBack: () => void;
@@ -16,9 +16,11 @@ export function DetailErrorState({
   title = "Không tìm thấy dữ liệu",
   message = "Dữ liệu có thể đã bị xóa hoặc không còn tồn tại.",
 }: DetailErrorStateProps) {
+  const theme = useTheme();
+
   return (
     <YStack alignItems="center" flex={1} gap="$3" justifyContent="center" padding="$7">
-      <IconSymbol color={colors.error} name="exclamationmark.triangle" size={44} />
+      <IconSymbol color={theme.statusDanger.val} name="exclamationmark.triangle" size={44} />
       <AppText align="center" variant="xlTitle">
         {title}
       </AppText>

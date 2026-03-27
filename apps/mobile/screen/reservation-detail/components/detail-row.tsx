@@ -1,10 +1,10 @@
+import React from "react";
+import { useTheme, XStack, YStack } from "tamagui";
+
 import type { IconSymbolName } from "@components/IconSymbol";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppText } from "@ui/primitives/app-text";
-import React from "react";
-import { XStack, YStack } from "tamagui";
 
 type DetailRowProps = {
   iconName: IconSymbolName;
@@ -21,23 +21,20 @@ export function DetailRow({
   secondaryValue,
   highlightValue = false,
 }: DetailRowProps) {
+  const theme = useTheme();
+
   return (
     <XStack alignItems="flex-start" gap="$4">
       <YStack paddingTop="$1">
-        <IconSymbol color={colors.textMuted} name={iconName} size={20} />
+        <IconSymbol color={theme.textTertiary.val} name={iconName} size={20} />
       </YStack>
 
-      <YStack flex={1} gap="$1.5">
+      <YStack flex={1} gap="$2">
         <AppText tone="subtle" variant="eyebrow">
           {label}
         </AppText>
 
-        <AppText
-          variant="value"
-          style={{
-            color: highlightValue ? colors.brandPrimary : colors.textPrimary,
-          }}
-        >
+        <AppText tone={highlightValue ? "brand" : "default"} variant="value">
           {value}
         </AppText>
 
