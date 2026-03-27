@@ -167,6 +167,16 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
             },
             400,
           )),
+        Match.tag("TechnicianTeamMemberLimitExceeded", () =>
+          c.json<UsersContracts.UserErrorResponse, 409>(
+            {
+              error: UsersContracts.userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              },
+            },
+            409,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
@@ -212,6 +222,16 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
               },
             },
             400,
+          )),
+        Match.tag("TechnicianTeamMemberLimitExceeded", () =>
+          c.json<UsersContracts.UserErrorResponse, 409>(
+            {
+              error: UsersContracts.userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              },
+            },
+            409,
           )),
         Match.orElse((err) => {
           throw err;

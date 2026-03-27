@@ -221,6 +221,50 @@ describe("manage-users org assignment e2e", () => {
     expect(list.data.some(user => user.id === created.id)).toBe(true);
   });
 
+  it("returns team member limit error when creating a fourth technician in a team", async () => {
+    const station = await fixture.factories.station({ name: "Station Team Limit Create" });
+    const team = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Team Limit Create",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const user = await fixture.factories.user({
+        fullname: `Existing Tech ${i}`,
+        email: `existing-tech-${i}@example.com`,
+        role: "TECHNICIAN",
+      });
+
+      await fixture.factories.userOrgAssignment({
+        userId: user.id,
+        technicianTeamId: team.id,
+      });
+    }
+
+    const response = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Tech Overflow Create",
+        email: "tech-overflow-create@example.com",
+        password: "password123",
+        role: "TECHNICIAN",
+        orgAssignment: {
+          technicianTeamId: team.id,
+        },
+      }),
+    });
+
+    const body = await response.json() as UsersContracts.UserErrorResponse;
+
+    expect(response.status).toBe(409);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED");
+  });
+
   it("filters multiple roles in a single admin list request", async () => {
     const staff = await fixture.factories.user({
       fullname: "Staff Multi Role",
@@ -348,6 +392,55 @@ describe("manage-users org assignment e2e", () => {
     expect(clearResponse.status).toBe(200);
     expect(cleared.role).toBe("MANAGER");
     expect(cleared.orgAssignment).toBeNull();
+  });
+
+  it("returns team member limit error when updating a user into a full technician team", async () => {
+    const station = await fixture.factories.station({ name: "Station Team Limit Update" });
+    const team = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Team Limit Update",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const user = await fixture.factories.user({
+        fullname: `Update Existing Tech ${i}`,
+        email: `update-existing-tech-${i}@example.com`,
+        role: "TECHNICIAN",
+      });
+
+      await fixture.factories.userOrgAssignment({
+        userId: user.id,
+        technicianTeamId: team.id,
+      });
+    }
+
+    const targetUser = await fixture.factories.user({
+      role: "TECHNICIAN",
+      email: "tech-overflow-update@example.com",
+    });
+
+    const response = await fixture.app.request(
+      `http://test/v1/users/manage-users/${targetUser.id}`,
+      {
+        method: "PATCH",
+        headers: adminAuthHeader(),
+        body: JSON.stringify({
+          role: "TECHNICIAN",
+          orgAssignment: {
+            technicianTeamId: team.id,
+          },
+        }),
+      },
+    );
+
+    const body = await response.json() as UsersContracts.UserErrorResponse;
+
+    expect(response.status).toBe(409);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED");
   });
 
   it("preserves existing org assignment when update omits orgAssignment", async () => {

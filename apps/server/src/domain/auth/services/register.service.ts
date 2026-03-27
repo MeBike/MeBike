@@ -51,6 +51,7 @@ export function registerUseCase(args: {
             cause: err.cause,
           }),
         )),
+      Effect.catchTag("TechnicianTeamMemberLimitExceeded", err => Effect.die(err)),
       Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
       Effect.catchTag("WalletUniqueViolation", err => Effect.die(err)),

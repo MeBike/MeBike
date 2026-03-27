@@ -24,6 +24,7 @@ import type { UserRepo } from "../repository/user.repository";
 import {
   InvalidCurrentPassword as InvalidCurrentPasswordError,
   InvalidOrgAssignment as InvalidOrgAssignmentError,
+  TechnicianTeamMemberLimitExceeded,
 } from "../domain-errors";
 import { UserRepository } from "../repository/user.repository";
 
@@ -36,7 +37,11 @@ export type UserService = {
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
   create: (input: CreateUserInput) => Effect.Effect<
     UserRow,
-    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber | InvalidOrgAssignment
+    | UserRepositoryError
+    | DuplicateUserEmail
+    | DuplicateUserPhoneNumber
+    | InvalidOrgAssignment
+    | TechnicianTeamMemberLimitExceeded
   >;
   updateProfile: (
     id: string,
@@ -50,7 +55,11 @@ export type UserService = {
     patch: Parameters<UserRepo["updateAdminById"]>[1],
   ) => Effect.Effect<
     Option.Option<UserRow>,
-    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber | InvalidOrgAssignment
+    | UserRepositoryError
+    | DuplicateUserEmail
+    | DuplicateUserPhoneNumber
+    | InvalidOrgAssignment
+    | TechnicianTeamMemberLimitExceeded
   >;
   updatePassword: (
     id: string,
@@ -174,6 +183,29 @@ function validateOrgAssignmentForRole(
 }
 
 function makeUserService(repo: UserRepo): UserService {
+  const technicianTeamMemberLimit = 3;
+
+  const validateTechnicianTeamCapacity = (args: {
+    technicianTeamId: string | null;
+    excludeUserId?: string;
+  }) =>
+    Effect.gen(function* () {
+      if (!args.technicianTeamId) {
+        return;
+      }
+
+      const memberCount = yield* repo.countTechnicianTeamMembers(args.technicianTeamId, {
+        excludeUserId: args.excludeUserId,
+      });
+
+      if (memberCount >= technicianTeamMemberLimit) {
+        return yield* Effect.fail(new TechnicianTeamMemberLimitExceeded({
+          technicianTeamId: args.technicianTeamId,
+          memberLimit: technicianTeamMemberLimit,
+        }));
+      }
+    });
+
   return {
     getById: id =>
       repo.findById(id),
@@ -187,6 +219,9 @@ function makeUserService(repo: UserRepo): UserService {
         const orgAssignment = normalizeOrgAssignment(input.orgAssignment) ?? null;
 
         yield* validateOrgAssignmentForRole(role, orgAssignment);
+        yield* validateTechnicianTeamCapacity({
+          technicianTeamId: orgAssignment?.technicianTeamId ?? null,
+        });
 
         return yield* repo.createUser({
           ...input,
@@ -214,6 +249,10 @@ function makeUserService(repo: UserRepo): UserService {
           : (normalizeOrgAssignment(patch.orgAssignment) ?? null);
 
         yield* validateOrgAssignmentForRole(nextRole, nextOrgAssignment);
+        yield* validateTechnicianTeamCapacity({
+          technicianTeamId: nextOrgAssignment?.technicianTeamId ?? null,
+          excludeUserId: id,
+        });
 
         const nextPatch: UpdateUserAdminPatch = {
           ...patch,

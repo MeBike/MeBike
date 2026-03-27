@@ -23,7 +23,8 @@ export function adminCreateUserUseCase(args: {
   import("../domain-errors").UserRepositoryError
     | import("../domain-errors").DuplicateUserEmail
     | import("../domain-errors").DuplicateUserPhoneNumber
-    | import("../domain-errors").InvalidOrgAssignment,
+    | import("../domain-errors").InvalidOrgAssignment
+    | import("../domain-errors").TechnicianTeamMemberLimitExceeded,
   UserServiceTag
 > {
   return Effect.gen(function* () {
