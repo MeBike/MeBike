@@ -13,6 +13,7 @@
     "openapi:generate": "pnpm --filter iot-service openapi:generate",
     "orval": "orval --config orval.config.ts --tsconfig packages/shared/tsconfig.json",
     "client:generate": "pnpm openapi:generate && pnpm orval",
+    "knip:mobile": "pnpm dlx knip --workspace apps/mobile --include files,dependencies",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
     "build": "turbo run build",

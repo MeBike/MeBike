@@ -7,7 +7,6 @@ const mobileDir = path.join(rootDir, "apps/mobile");
 
 const allowedThemeColorImports = new Set([
   "apps/mobile/constants/BikeColors.ts",
-  "apps/mobile/styles/common-styles.ts",
   "apps/mobile/tamagui.config.ts",
   "apps/mobile/theme/metrics.ts",
 ]);
