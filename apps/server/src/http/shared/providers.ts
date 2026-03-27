@@ -1,3 +1,18 @@
+export { HttpDepsLive } from "./app.layers";
+export {
+  AgencyRequestDepsLive,
+  AgencyRequestReposLive,
+  AgencyRequestServiceLayer,
+} from "./features/agency-request.layers";
+export {
+  AuthDepsLive,
+  AuthReposLive,
+  AuthServiceLayer,
+  AuthUserServiceLayer,
+  withAuthDeps,
+} from "./features/auth.layers";
+export {
+  BikeDepsLive,
 import { Effect, Layer } from "effect";
 
 import {
@@ -109,105 +124,58 @@ const BikeStatsServiceLayer = BikeStatsServiceLive.pipe(
 
 export const BikeDepsLive = Layer.mergeAll(
   BikeReposLive,
-  BikeStatsRepositoryLive,
   BikeServiceLayer,
   BikeStatsServiceLayer,
-  PrismaLive,
-);
-
-export function withBikeDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(BikeDepsLive));
-}
-
-const RentalReposLive = RentalRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const ReturnSlotReposLive = ReturnSlotRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const ReturnConfirmationReposLive = ReturnConfirmationRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const RentalAnalyticsReposLive = RentalAnalyticsRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const RentalServiceLayer = RentalServiceLive.pipe(
-  Layer.provide(RentalReposLive),
-  Layer.provide(BikeReposLive),
-  Layer.provide(StationReposLive),
-);
-
-const RentalStatsServiceLayer = RentalStatsServiceLive.pipe(
-  Layer.provide(RentalAnalyticsReposLive),
-);
-
-const WalletReposLive = WalletRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const WalletHoldReposLive = WalletHoldRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const WalletServiceLayer = WalletServiceLive.pipe(
-  Layer.provide(WalletReposLive),
-);
-
-const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
-  Layer.provide(WalletHoldReposLive),
-);
-
-const SubscriptionReposLive = SubscriptionRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const SubscriptionServiceLayer = SubscriptionServiceLive.pipe(
-  Layer.provide(SubscriptionReposLive),
-);
-
-export const WalletDepsLive = Layer.mergeAll(
-  WalletReposLive,
-  WalletServiceLayer,
-  WalletHoldReposLive,
-  WalletHoldServiceLayer,
-  PrismaLive,
-);
-
-export const RentalDepsLive = Layer.mergeAll(
-  RentalReposLive,
-  ReturnSlotReposLive,
-  ReturnConfirmationReposLive,
+  withBikeDeps,
+} from "./features/bike.layers";
+export {
+  NotificationDepsLive,
+  PushNotificationServiceLayer,
+  PushTokenReposLive,
+} from "./features/notification.layers";
+export {
+  RatingDepsLive,
+  RatingReposLive,
+  RatingServiceLayer,
+  withRatingDeps,
+} from "./features/rating.layers";
+export {
   RentalAnalyticsReposLive,
+  RentalDepsLive,
+  RentalReposLive,
   RentalServiceLayer,
   RentalStatsServiceLayer,
-  BikeDepsLive,
-  WalletDepsLive,
+  ReturnConfirmationReposLive,
+  ReturnSlotReposLive,
+  withRentalDeps,
+} from "./features/rental.layers";
+export {
+  ReservationDepsLive,
+  ReservationHoldServiceLayer,
+  ReservationReposLive,
+  ReservationServiceLayer,
+  withReservationDeps,
+} from "./features/reservation.layers";
+export {
+  StationDepsLive,
+  StationReposLive,
+  StationServiceLayer,
+  withStationDeps,
+} from "./features/station.layers";
+export {
+  PaymentAttemptReposLive,
+  StripeTopupDepsLive,
+  StripeTopupServiceLayer,
+  withStripeTopupDeps,
+} from "./features/stripe-topup.layers";
+export {
+  SubscriptionDepsLive,
   SubscriptionReposLive,
   SubscriptionServiceLayer,
-  ReservationRepositoryLive,
-  PrismaLive,
-);
-
-export function withRentalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(RentalDepsLive),
-    Effect.provide(PrismaLive),
-  );
-}
-
-const SupplierReposLive = SupplierRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const SupplierServiceLayer = SupplierServiceLive.pipe(
-  Layer.provide(SupplierReposLive),
-);
-
-export const SupplierDepsLive = Layer.mergeAll(
+  withSubscriptionDeps,
+} from "./features/subscription.layers";
+export {
+  SupplierDepsLive,
   SupplierReposLive,
   SupplierServiceLayer,
   PrismaLive,
@@ -302,129 +270,43 @@ const AgencyRequestServiceLayer = AgencyRequestServiceLive.pipe(
 );
 
 export const UserDepsLive = Layer.mergeAll(
+  withSupplierDeps,
+} from "./features/supplier.layers";
+export {
+  UserDepsLive,
   UserReposLive,
   UserServiceLayer,
-  PrismaLive,
-);
-
-export const AgencyRequestDepsLive = Layer.mergeAll(
-  AgencyRequestReposLive,
-  AgencyRequestServiceLayer,
-  PrismaLive,
-);
-
-export function withUserDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(UserDepsLive));
-}
-
-const UserStatsServiceLayer = UserStatsServiceLive.pipe(
-  Layer.provide(UserStatsRepositoryLive),
-);
-
-export const UserStatsDepsLive = Layer.mergeAll(
-  UserStatsRepositoryLive,
+  UserStatsDepsLive,
   UserStatsServiceLayer,
-);
-
-export function withUserStatsDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(UserStatsDepsLive));
-}
-
-const RatingReposLive = Layer.mergeAll(
-  RatingRepositoryLive,
-  RatingReasonRepositoryLive,
-).pipe(
-  Layer.provide(PrismaLive),
-);
-
-const RatingServiceLayer = RatingServiceLive.pipe(
-  Layer.provide(RatingReposLive),
-  Layer.provide(BikeReposLive),
-  Layer.provide(StationReposLive),
-);
-
-export const RatingDepsLive = Layer.mergeAll(
-  RatingReposLive,
-  RatingServiceLayer,
-  RentalReposLive,
-  RentalServiceLayer,
-  PrismaLive,
-);
-
-export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(RatingDepsLive),
-    Effect.provide(PrismaLive),
-  );
-}
-
-export function withWalletDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(WalletDepsLive));
-}
-
-const PaymentAttemptReposLive = PaymentAttemptRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const StripeTopupServiceLayer = StripeTopupServiceLive.pipe(
-  Layer.provide(PaymentAttemptReposLive),
-  Layer.provide(StripeLive),
-);
-
-export const StripeTopupDepsLive = Layer.mergeAll(
-  PaymentAttemptReposLive,
+  withUserDeps,
+  withUserStatsDeps,
+} from "./features/user.layers";
+export {
   WalletDepsLive,
-  StripeTopupServiceLayer,
-  StripeLive,
-  PrismaLive,
-);
-
-export function withStripeTopupDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(StripeTopupDepsLive));
-}
-
-const WithdrawalReposLive = WithdrawalRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const WithdrawalServiceLayer = WithdrawalServiceLive.pipe(
-  Layer.provide(WithdrawalReposLive),
-);
-
-const StripeWithdrawalServiceLayer = StripeWithdrawalServiceLive.pipe(
-  Layer.provide(StripeLive),
-);
-
-export const WithdrawalDepsLive = Layer.mergeAll(
+  WalletHoldReposLive,
+  WalletHoldServiceLayer,
+  WalletReposLive,
+  WalletServiceLayer,
+  withWalletDeps,
+} from "./features/wallet.layers";
+export {
+  StripeWebhookDepsLive,
+  StripeWithdrawalServiceLayer,
+  WithdrawalDepsLive,
   WithdrawalReposLive,
   WithdrawalServiceLayer,
-  StripeWithdrawalServiceLayer,
-  WalletDepsLive,
-  UserDepsLive,
-  StripeLive,
-  PrismaLive,
-);
-
-export function withWithdrawalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(WithdrawalDepsLive));
-}
-
-export const StripeWebhookDepsLive = Layer.mergeAll(
-  StripeTopupDepsLive,
-  WithdrawalDepsLive,
-);
-
-export function withStripeWebhookDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(StripeWebhookDepsLive));
-}
-
-export const SubscriptionDepsLive = Layer.mergeAll(
-  SubscriptionReposLive,
-  SubscriptionServiceLayer,
-  WalletDepsLive,
-  UserDepsLive,
+  withStripeWebhookDeps,
+  withWithdrawalDeps,
+} from "./features/withdrawal.layers";
+export {
+  AppInfraLive,
   EmailLive,
+  ExternalInfraLive,
+  PersistenceInfraLive,
   PrismaLive,
+  RedisLive,
+  StripeLive,
+} from "./infra.layers";
 );
 
 export function withSubscriptionDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
