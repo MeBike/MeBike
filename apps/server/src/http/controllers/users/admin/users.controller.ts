@@ -28,6 +28,7 @@ const adminList: RouteHandler<UsersRoutes["adminList"]> = async (c) => {
         fullname: query.fullName,
         accountStatus: query.accountStatus,
         role: query.role,
+        roles: query.roles,
         verify: query.verify,
         agencyId: query.agencyId,
         stationId: query.stationId,

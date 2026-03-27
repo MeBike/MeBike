@@ -30,6 +30,31 @@ import {
   UserErrorResponseSchema,
 } from "./shared";
 
+const AdminUserRolesQuerySchema = z
+  .preprocess((value) => {
+    if (value === undefined || value === null || value === "") {
+      return undefined;
+    }
+
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map(role => role.trim())
+        .filter(Boolean);
+    }
+
+    return value;
+  }, z.array(UserRoleSchema).min(1))
+  .optional()
+  .openapi({
+    example: ["STAFF", "TECHNICIAN", "AGENCY"],
+    description: "Filter by multiple roles using repeated query params or a comma-separated string.",
+  });
+
 export const meRoute = createRoute({
   method: "get",
   path: "/v1/users/me",
@@ -74,6 +99,7 @@ export const adminListUsersRoute = createRoute({
       ...StatsPaginationQuerySchema.shape,
       fullName: z.string().optional(),
       role: UserRoleSchema.optional(),
+      roles: AdminUserRolesQuerySchema,
       accountStatus: AccountStatusSchema.optional(),
       verify: VerifyStatusSchema.optional(),
       agencyId: z.uuidv7().optional(),

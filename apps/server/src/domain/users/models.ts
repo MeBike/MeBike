@@ -84,6 +84,7 @@ export type UserFilter = {
   readonly accountStatus?: AccountStatus;
   readonly verify?: UserVerifyStatus;
   readonly role?: UserRole;
+  readonly roles?: readonly UserRole[];
   readonly stationId?: string;
   readonly agencyId?: string;
   readonly technicianTeamId?: string;
