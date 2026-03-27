@@ -1,7 +1,7 @@
+import { useTheme, XStack } from "tamagui";
+
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppText } from "@ui/primitives/app-text";
-import { XStack } from "tamagui";
 
 import { getRentalCodeLabel } from "../helpers/formatters";
 
@@ -10,6 +10,8 @@ type RentalIdPillProps = {
 };
 
 export function RentalIdPill({ rentalId }: RentalIdPillProps) {
+  const theme = useTheme();
+
   return (
     <XStack justifyContent="center" paddingTop="$1">
       <XStack
@@ -25,7 +27,7 @@ export function RentalIdPill({ rentalId }: RentalIdPillProps) {
           {" "}
           {getRentalCodeLabel(rentalId)}
         </AppText>
-        <IconSymbol color={colors.textSecondary} name="doc.on.doc" size={18} />
+        <IconSymbol color={theme.textSecondary.val} name="doc.on.doc" size={18} />
       </XStack>
     </XStack>
   );

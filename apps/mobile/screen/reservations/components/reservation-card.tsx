@@ -1,5 +1,10 @@
+import React from "react";
+import { Pressable, View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { Reservation } from "@/types/reservation-types";
+
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
@@ -10,11 +15,6 @@ import {
   getReservationStatusLabel,
   getReservationStatusTone,
 } from "@utils/reservation";
-import React from "react";
-import { Pressable, View } from "react-native";
-import { XStack, YStack } from "tamagui";
-
-import type { Reservation } from "@/types/reservation-types";
 
 import { formatCurrency } from "../../../utils/reservation-screen-utils";
 
@@ -54,6 +54,7 @@ export function ReservationCard({
   stationName,
   onPress,
 }: ReservationCardProps) {
+  const theme = useTheme();
   const createdAt = splitFormattedDateTime(reservation.createdAt);
   const startTime = splitFormattedDateTime(reservation.startTime);
   const endTime = splitFormattedDateTime(reservation.endTime);
@@ -72,7 +73,7 @@ export function ReservationCard({
         <View
           style={{
             opacity: pressed ? 0.98 : 1,
-            shadowColor: colors.shadowColor,
+            shadowColor: theme.shadowColor.val,
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.08,
             shadowRadius: 20,
@@ -92,7 +93,7 @@ export function ReservationCard({
                     width={56}
                   >
                     <IconSymbol
-                      color={colors.brandPrimary}
+                      color={theme.actionPrimary.val}
                       name={reservation.bikeId ? "bicycle" : "location"}
                       size={24}
                     />
@@ -121,20 +122,20 @@ export function ReservationCard({
               </XStack>
 
               <YStack
-                backgroundColor={colors.surfaceMuted}
+                backgroundColor={theme.surfaceMuted.val}
                 gap="$4"
                 paddingHorizontal="$5"
                 paddingVertical="$4"
               >
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={colors.textMuted} name="location" size={20} />
+                  <IconSymbol color={theme.textTertiary.val} name="location" size={20} />
                   <AppText flex={1} numberOfLines={2} variant="subhead">
                     {stationLabel}
                   </AppText>
                 </XStack>
 
                 <XStack alignItems="flex-start" gap="$3">
-                  <IconSymbol color={colors.textMuted} name="clock" size={20} style={{ marginTop: 1 }} />
+                  <IconSymbol color={theme.textTertiary.val} name="clock" size={20} style={{ marginTop: 1 }} />
                   <YStack flex={1} gap="$1">
                     <AppText variant="subhead">
                       {timeRangeLabel}
@@ -146,14 +147,14 @@ export function ReservationCard({
                 </XStack>
 
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={colors.textMuted} name="tag" size={20} />
+                  <IconSymbol color={theme.textTertiary.val} name="tag" size={20} />
                   <AppText tone="muted" variant="bodySmall">
                     {getReservationOptionLabel(reservation.reservationOption)}
                   </AppText>
                 </XStack>
 
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={colors.brandPrimary} name="wallet.pass.fill" size={20} />
+                  <IconSymbol color={theme.actionPrimary.val} name="wallet.pass.fill" size={20} />
                   <AppText tone="muted" variant="bodySmall">
                     Đã thanh toán:
                     {" "}

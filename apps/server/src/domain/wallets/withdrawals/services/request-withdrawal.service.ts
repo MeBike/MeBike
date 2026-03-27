@@ -9,7 +9,7 @@ import type {
 } from "@/domain/wallets/domain-errors";
 
 import { env } from "@/config/env";
-import { UserServiceTag } from "@/domain/users/services/user.service";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
@@ -74,7 +74,7 @@ export function requestWithdrawalUseCase(
   | UserRepositoryError
   | WithdrawalRepositoryError
   | WithdrawalUserNotFound,
-  Prisma | UserServiceTag
+  Prisma | UserQueryServiceTag
 > {
   return Effect.gen(function* () {
     const minAmount = BigInt(env.MIN_WITHDRAWAL_AMOUNT);
@@ -84,7 +84,7 @@ export function requestWithdrawalUseCase(
       }));
     }
 
-    const userService = yield* UserServiceTag;
+    const userService = yield* UserQueryServiceTag;
     const { client } = yield* Prisma;
 
     const userOpt = yield* userService.getById(input.userId);

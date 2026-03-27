@@ -7,7 +7,8 @@ import { uuidv7 } from "uuidv7";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { env } from "@/config/env";
-import { makeUserRepository } from "@/domain/users/repository/user.repository";
+import { makeUserCommandRepository } from "@/domain/users/repository/user-command.repository";
+import { makeUserQueryRepository } from "@/domain/users/repository/user-query.repository";
 import { runEffectWithLayer } from "@/test/effect/run";
 
 import { makeAuthEventRepository } from "../../repository/auth-event.repository";
@@ -19,12 +20,14 @@ export function makeAuthTestKit(args: {
   redisClient: Redis;
 }) {
   const authRepo = authRepositoryFactory(args.redisClient);
-  const userRepo = makeUserRepository(args.prisma);
+  const userQueryRepo = makeUserQueryRepository(args.prisma);
+  const userCommandRepo = makeUserCommandRepository(args.prisma);
 
   const authService = makeAuthService({
     authRepo,
     authEventRepo: makeAuthEventRepository(args.prisma),
-    userRepo,
+    userQueryRepo,
+    userCommandRepo,
     client: args.prisma,
   });
 
@@ -32,7 +35,8 @@ export function makeAuthTestKit(args: {
 
   return {
     authRepo,
-    userRepo,
+    userQueryRepo,
+    userCommandRepo,
     runWithService<A, E>(eff: Effect.Effect<A, E, AuthServiceTag>) {
       return runEffectWithLayer(eff, layer);
     },

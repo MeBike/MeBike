@@ -1,9 +1,9 @@
+import { useTheme, XStack, YStack } from "tamagui";
+
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
+import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
-import { XStack, YStack } from "tamagui";
 
 type RentalActionBarProps = {
   rentalId: string;
@@ -22,17 +22,18 @@ export function RentalActionBar({
   onChooseReturnStation,
   onOpenReturnQr,
 }: RentalActionBarProps) {
+  const theme = useTheme();
   const hasReturnSlot = Boolean(currentReturnStationId);
 
   return (
     <YStack
-      backgroundColor={colors.surface}
-      borderColor={colors.borderSubtle}
+      backgroundColor="$surfaceDefault"
+      borderColor="$borderSubtle"
       borderTopWidth={1}
       gap="$4"
       paddingHorizontal="$5"
       paddingTop="$5"
-      paddingBottom={Math.max(bottomInset, spacing.lg)}
+      paddingBottom={Math.max(bottomInset, spaceScale[4])}
     >
       <AppText align="center" tone={hasReturnSlot ? "muted" : "danger"} variant="body">
         {hasReturnSlot
@@ -48,7 +49,7 @@ export function RentalActionBar({
               </AppButton>
               <AppButton flex={2} onPress={onOpenReturnQr} tone="primary">
                 <XStack alignItems="center" gap="$2">
-                  <IconSymbol color={colors.textOnBrand} name="qrcode.viewfinder" size={20} />
+                  <IconSymbol color={theme.onActionPrimary.val} name="qrcode.viewfinder" size={20} />
                   <AppText tone="inverted" variant="actionLabel">
                     Mã QR trả xe
                   </AppText>
@@ -59,7 +60,7 @@ export function RentalActionBar({
         : (
             <AppButton height={60} onPress={onChooseReturnStation} tone="primary">
               <XStack alignItems="center" gap="$2">
-                <IconSymbol color={colors.textOnBrand} name="location.fill" size={20} />
+                <IconSymbol color={theme.onActionPrimary.val} name="location.fill" size={20} />
                 <AppText tone="inverted" variant="headline">
                   Chọn bãi trả xe
                 </AppText>

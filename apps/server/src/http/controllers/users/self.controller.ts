@@ -10,7 +10,7 @@ import { Effect, Match } from "effect";
 
 import { PushNotificationServiceTag } from "@/domain/notifications";
 import { withLoggedCause } from "@/domain/shared";
-import { UserServiceTag } from "@/domain/users";
+import { UserCommandServiceTag, UserQueryServiceTag } from "@/domain/users";
 import { routeContext } from "@/http/shared/route-context";
 
 import { mapPushTokenSummary, mapUserDetail, pickDefined } from "./shared";
@@ -32,7 +32,7 @@ const me: RouteHandler<UsersRoutes["me"]> = async (c) => {
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserQueryServiceTag;
       return yield* service.getById(userId);
     }),
     routeContext(users.me),
@@ -67,7 +67,7 @@ const updateMe: RouteHandler<UsersRoutes["updateMe"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserCommandServiceTag;
       return yield* service.updateProfile(userId, pickDefined(body));
     }),
     routeContext(users.updateMe),
@@ -131,7 +131,7 @@ const changePassword: RouteHandler<UsersRoutes["changePassword"]> = async (c) =>
   const body = c.req.valid("json");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserCommandServiceTag;
       return yield* service.changePassword({
         id: userId,
         currentPassword: body.currentPassword,

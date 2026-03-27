@@ -1,8 +1,3 @@
-import type { IconSymbolName } from "@components/IconSymbol";
-
-import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { AppText } from "@ui/primitives/app-text";
 import { useEffect } from "react";
 import Animated, {
   Easing,
@@ -12,7 +7,13 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { XStack } from "tamagui";
+import { useTheme, XStack } from "tamagui";
+
+import type { IconSymbolName } from "@components/IconSymbol";
+import type { AppTextTone } from "@ui/primitives/app-text";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { AppText } from "@ui/primitives/app-text";
 
 type StatusBadgeTone = "success" | "warning" | "danger" | "neutral" | "inverted" | "overlaySuccess";
 type StatusBadgeSize = "default" | "compact";
@@ -26,13 +27,20 @@ type StatusBadgeProps = {
   iconName?: IconSymbolName;
 };
 
-const toneStyles: Record<StatusBadgeTone, { bg: string; textTone: "success" | "warning" | "danger" | "muted" | "inverted"; dot: string }> = {
-  success: { bg: colors.successSoft, textTone: "success", dot: colors.success },
-  warning: { bg: colors.warningSoft, textTone: "warning", dot: colors.warning },
-  danger: { bg: colors.errorSoft, textTone: "danger", dot: colors.error },
-  neutral: { bg: colors.neutralSoft, textTone: "muted", dot: colors.textMuted },
-  inverted: { bg: colors.overlayLight, textTone: "inverted", dot: colors.textOnBrand },
-  overlaySuccess: { bg: colors.overlayLight, textTone: "inverted", dot: "#6EE7B7" },
+type ThemeColorKey
+  = | "statusSuccess"
+    | "statusWarning"
+    | "statusDanger"
+    | "textTertiary"
+    | "onSurfaceBrand";
+
+const toneStyles: Record<StatusBadgeTone, { bg: `$${string}`; textTone: AppTextTone; dotKey: ThemeColorKey }> = {
+  success: { bg: "$surfaceSuccess", textTone: "success", dotKey: "statusSuccess" },
+  warning: { bg: "$surfaceWarning", textTone: "warning", dotKey: "statusWarning" },
+  danger: { bg: "$surfaceDanger", textTone: "danger", dotKey: "statusDanger" },
+  neutral: { bg: "$surfaceMuted", textTone: "muted", dotKey: "textTertiary" },
+  inverted: { bg: "$overlayGlass", textTone: "inverted", dotKey: "onSurfaceBrand" },
+  overlaySuccess: { bg: "$overlayGlass", textTone: "inverted", dotKey: "statusSuccess" },
 };
 
 const sizeStyles: Record<StatusBadgeSize, { dotSize: number; gap: "$1" | "$2"; px: "$3"; py: "$2"; textVariant: "caption" | "badgeLabel" }> = {
@@ -60,10 +68,12 @@ export function StatusBadge({
   pulseDot = false,
   iconName,
 }: StatusBadgeProps) {
+  const theme = useTheme();
   const style = toneStyles[tone];
   const sizeStyle = sizeStyles[size];
   const dotScale = useSharedValue(1);
   const dotOpacity = useSharedValue(1);
+  const dotColor = (theme as Record<string, { val?: string }>)[style.dotKey]?.val ?? theme.textPrimary.val;
 
   useEffect(() => {
     if (!pulseDot || !withDot) {
@@ -108,7 +118,7 @@ export function StatusBadge({
       width="auto"
     >
       {iconName
-        ? <IconSymbol color={style.dot} name={iconName} size={size === "compact" ? 14 : 16} />
+        ? <IconSymbol color={dotColor} name={iconName} size={size === "compact" ? 14 : 16} />
         : null}
       {withDot && !iconName
         ? (
@@ -116,7 +126,7 @@ export function StatusBadge({
               style={animatedDotStyle}
             >
               <XStack
-                backgroundColor={style.dot}
+                backgroundColor={dotColor}
                 borderRadius="$round"
                 height={sizeStyle.dotSize}
                 width={sizeStyle.dotSize}

@@ -1,0 +1,326 @@
+const coreColors = {
+  white: "#FFFFFF",
+  black: "#000000",
+  transparent: "transparent",
+} as const;
+
+type RampStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
+type ColorRamp = Record<RampStep, string>;
+
+function defineRamp(ramp: ColorRamp) {
+  return ramp;
+}
+
+export const colorRamps = {
+  neutral: defineRamp({
+    1: coreColors.white,
+    2: "#F4F8FC",
+    3: "#F1F5F9",
+    4: "#E2E8F0",
+    5: "#CBD5E1",
+    6: "#94A3B8",
+    7: "#64748B",
+    8: "#475569",
+    9: "#334155",
+    10: "#1E293B",
+    11: "#0F172A",
+    12: "#020617",
+  }),
+  primary: defineRamp({
+    1: "#F7FBFF",
+    2: "#EFF6FF",
+    3: "#DBEAFE",
+    4: "#BFDBFE",
+    5: "#93C5FD",
+    6: "#60A5FA",
+    7: "#3B82F6",
+    8: "#2563EB",
+    9: "#1D4ED8",
+    10: "#1E40AF",
+    11: "#1E3A8A",
+    12: "#172554",
+  }),
+  secondary: defineRamp({
+    1: "#ECFEFF",
+    2: "#CFFAFE",
+    3: "#A5F3FC",
+    4: "#67E8F9",
+    5: "#22D3EE",
+    6: "#06B6D4",
+    7: "#0891B2",
+    8: "#0E7490",
+    9: "#155E75",
+    10: "#164E63",
+    11: "#083344",
+    12: "#042F2E",
+  }),
+  accent: defineRamp({
+    1: "#FFFBEB",
+    2: "#FEF3C7",
+    3: "#FDE68A",
+    4: "#FCD34D",
+    5: "#FBBF24",
+    6: "#F59E0B",
+    7: "#D97706",
+    8: "#B45309",
+    9: "#92400E",
+    10: "#78350F",
+    11: "#451A03",
+    12: "#2C1203",
+  }),
+  success: defineRamp({
+    1: "#ECFDF5",
+    2: "#D1FAE5",
+    3: "#A7F3D0",
+    4: "#6EE7B7",
+    5: "#34D399",
+    6: "#10B981",
+    7: "#059669",
+    8: "#047857",
+    9: "#065F46",
+    10: "#064E3B",
+    11: "#022C22",
+    12: "#021915",
+  }),
+  warning: defineRamp({
+    1: "#FFFBEB",
+    2: "#FEF3C7",
+    3: "#FDE68A",
+    4: "#FCD34D",
+    5: "#FBBF24",
+    6: "#F59E0B",
+    7: "#D97706",
+    8: "#B45309",
+    9: "#92400E",
+    10: "#78350F",
+    11: "#451A03",
+    12: "#2C1203",
+  }),
+  danger: defineRamp({
+    1: "#FEF2F2",
+    2: "#FEE2E2",
+    3: "#FECACA",
+    4: "#FCA5A5",
+    5: "#F87171",
+    6: "#EF4444",
+    7: "#DC2626",
+    8: "#B91C1C",
+    9: "#991B1B",
+    10: "#7F1D1D",
+    11: "#450A0A",
+    12: "#2A0707",
+  }),
+  info: defineRamp({
+    1: "#F7FBFF",
+    2: "#EFF6FF",
+    3: "#DBEAFE",
+    4: "#BFDBFE",
+    5: "#93C5FD",
+    6: "#60A5FA",
+    7: "#3B82F6",
+    8: "#2563EB",
+    9: "#1D4ED8",
+    10: "#1E40AF",
+    11: "#1E3A8A",
+    12: "#172554",
+  }),
+} as const;
+
+function createRampTokenMap(name: keyof typeof colorRamps, ramp: ColorRamp) {
+  return Object.fromEntries(
+    Object.entries(ramp).map(([step, value]) => [`${name}${step}`, value]),
+  );
+}
+
+export const colorRampTokens = {
+  ...createRampTokenMap("neutral", colorRamps.neutral),
+  ...createRampTokenMap("primary", colorRamps.primary),
+  ...createRampTokenMap("secondary", colorRamps.secondary),
+  ...createRampTokenMap("accent", colorRamps.accent),
+  ...createRampTokenMap("success", colorRamps.success),
+  ...createRampTokenMap("warning", colorRamps.warning),
+  ...createRampTokenMap("danger", colorRamps.danger),
+  ...createRampTokenMap("info", colorRamps.info),
+  white: coreColors.white,
+  black: coreColors.black,
+  transparent: coreColors.transparent,
+} as const;
+
+export const lightThemeColors = {
+  backgroundCanvas: colorRamps.neutral[2],
+  backgroundSubtle: colorRamps.neutral[3],
+  backgroundRaised: colorRamps.neutral[1],
+  backgroundBrand: colorRamps.primary[8],
+
+  surfaceDefault: colorRamps.neutral[1],
+  surfaceMuted: colorRamps.neutral[3],
+  surfaceAccent: colorRamps.primary[2],
+  surfaceSuccess: colorRamps.success[2],
+  surfaceWarning: colorRamps.warning[2],
+  surfaceDanger: colorRamps.danger[2],
+  surfaceInverse: colorRamps.neutral[11],
+
+  textPrimary: colorRamps.neutral[11],
+  textSecondary: colorRamps.neutral[7],
+  textTertiary: colorRamps.neutral[6],
+  textDisabled: colorRamps.neutral[6],
+  textBrand: colorRamps.primary[10],
+  textSuccess: colorRamps.success[8],
+  textWarning: colorRamps.warning[8],
+  textDanger: colorRamps.danger[8],
+  textInverse: coreColors.white,
+
+  borderSubtle: colorRamps.neutral[4],
+  borderDefault: colorRamps.neutral[5],
+  borderStrong: colorRamps.neutral[6],
+  borderFocus: colorRamps.primary[8],
+  borderDanger: colorRamps.danger[6],
+
+  actionPrimary: colorRamps.primary[8],
+  actionPrimaryHover: colorRamps.primary[9],
+  actionPrimaryPress: colorRamps.primary[10],
+  actionSecondary: colorRamps.secondary[6],
+  actionSecondaryHover: colorRamps.secondary[7],
+  actionSecondaryPress: colorRamps.secondary[8],
+  actionAccent: colorRamps.accent[6],
+  actionAccentPress: colorRamps.accent[7],
+  actionDanger: colorRamps.danger[6],
+  actionDangerHover: colorRamps.danger[7],
+  actionDangerPress: colorRamps.danger[8],
+  actionGhost: coreColors.transparent,
+  actionGhostHover: colorRamps.primary[2],
+  actionGhostPress: colorRamps.primary[3],
+
+  surfaceAccentHover: colorRamps.primary[3],
+  surfaceAccentPress: colorRamps.primary[4],
+
+  statusSuccess: colorRamps.success[6],
+  statusWarning: colorRamps.warning[6],
+  statusDanger: colorRamps.danger[6],
+  statusInfo: colorRamps.info[8],
+
+  successSoft: colorRamps.success[2],
+  warningSoft: colorRamps.warning[2],
+  danger: colorRamps.danger[6],
+  dangerSoft: colorRamps.danger[2],
+  infoSoft: colorRamps.info[2],
+
+  onActionPrimary: coreColors.white,
+  onActionSecondary: coreColors.white,
+  onActionDanger: coreColors.white,
+  onSurfaceInverse: coreColors.white,
+  onSurfaceBrand: coreColors.white,
+  onStatusSuccess: coreColors.white,
+  onStatusWarning: colorRamps.neutral[11],
+  onStatusDanger: coreColors.white,
+  onStatusInfo: coreColors.white,
+
+  overlayGlass: "rgba(255, 255, 255, 0.16)",
+  overlayGlassMuted: "rgba(255, 255, 255, 0.12)",
+  overlayScrim: "rgba(15, 23, 42, 0.24)",
+  shadowColor: colorRamps.neutral[11],
+} as const;
+
+const tamaguiBaseThemeAliases = {
+  background: lightThemeColors.backgroundCanvas,
+  color: lightThemeColors.textPrimary,
+} as const;
+
+export const lightTheme = {
+  ...tamaguiBaseThemeAliases,
+  ...lightThemeColors,
+} as const;
+
+export const colorHierarchy = {
+  background: {
+    backgroundCanvas: "Whole-screen background.",
+    backgroundSubtle: "Grouped section background or alternate band.",
+    backgroundRaised: "High-emphasis container background.",
+    backgroundBrand: "Brand-colored hero or highlighted background.",
+  },
+  surface: {
+    surfaceDefault: "Cards, sheets, and default containers.",
+    surfaceMuted: "Secondary cards and quiet support panels.",
+    surfaceAccent: "Highlighted but non-destructive containers.",
+    surfaceSuccess: "Positive feedback surfaces.",
+    surfaceWarning: "Warning/supporting attention surfaces.",
+    surfaceDanger: "Destructive or critical alert surfaces.",
+    surfaceInverse: "Dark or inverse-emphasis surfaces.",
+  },
+  text: {
+    textPrimary: "Headlines and key body content.",
+    textSecondary: "Supporting copy and descriptions.",
+    textTertiary: "Metadata and helper text.",
+    textDisabled: "Disabled or unavailable content.",
+    textBrand: "Brand-emphasis inline text.",
+    textSuccess: "Positive semantic text.",
+    textWarning: "Warning semantic text.",
+    textDanger: "Danger semantic text.",
+    textInverse: "Text on dark or brand-filled surfaces.",
+  },
+  border: {
+    borderSubtle: "Default low-emphasis card boundaries.",
+    borderDefault: "Interactive inputs and standard separators.",
+    borderStrong: "Higher-emphasis grouping boundaries.",
+    borderFocus: "Focus ring or active state boundary.",
+    borderDanger: "Destructive boundary state.",
+  },
+  action: {
+    actionPrimary: "Primary filled action background.",
+    actionPrimaryHover: "Pressed or hovered primary action background.",
+    actionPrimaryPress: "Primary action pressed background.",
+    actionSecondary: "Secondary filled action background.",
+    actionSecondaryHover: "Pressed or hovered secondary action background.",
+    actionSecondaryPress: "Secondary action pressed background.",
+    actionAccent: "Accent action background.",
+    actionAccentPress: "Accent action pressed background.",
+    actionDanger: "Destructive action background.",
+    actionDangerHover: "Destructive action hovered background.",
+    actionDangerPress: "Destructive action pressed background.",
+    actionGhost: "Ghost action background.",
+    actionGhostHover: "Ghost action hovered background.",
+    actionGhostPress: "Ghost action pressed background.",
+  },
+  status: {
+    statusSuccess: "Success badge or status fill.",
+    statusWarning: "Warning badge or status fill.",
+    statusDanger: "Danger badge or status fill.",
+    statusInfo: "Informational badge or status fill.",
+  },
+} as const;
+
+export const colorRoleRecipes = {
+  background: {
+    screen: "backgroundCanvas",
+    groupedSection: "backgroundSubtle",
+    raisedContainer: "backgroundRaised",
+    brandHero: "backgroundBrand",
+  },
+  surface: {
+    defaultCard: "surfaceDefault",
+    quietCard: "surfaceMuted",
+    highlightedCard: "surfaceAccent",
+    positiveCard: "surfaceSuccess",
+    cautionCard: "surfaceWarning",
+    destructiveCard: "surfaceDanger",
+    inverseBlock: "surfaceInverse",
+  },
+  border: {
+    defaultCard: "borderSubtle",
+    input: "borderDefault",
+    emphasizedGroup: "borderStrong",
+    focus: "borderFocus",
+    destructive: "borderDanger",
+  },
+  text: {
+    heading: "textPrimary",
+    body: "textSecondary",
+    meta: "textTertiary",
+    disabled: "textDisabled",
+    inverse: "textInverse",
+  },
+} as const;
+
+export type ColorRampName = keyof typeof colorRamps;
+export type LightThemeColorName = keyof typeof lightThemeColors;

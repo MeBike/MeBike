@@ -1,13 +1,13 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
 import { View } from "react-native";
-import { Separator, XStack, YStack } from "tamagui";
+import { Separator, useTheme, XStack, YStack } from "tamagui";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
-import { softCardShadowStyle } from "../card-shadow";
+import { IconSymbol } from "@components/IconSymbol";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+
+import { getSoftCardShadowStyle } from "../card-shadow";
 import {
   formatCurrencyText,
   getDepositDescription,
@@ -21,6 +21,8 @@ type RentalMetaCardProps = {
 };
 
 export function RentalMetaCard({ detail }: RentalMetaCardProps) {
+  const theme = useTheme();
+  const softCardShadowStyle = getSoftCardShadowStyle(theme.shadowColor.val);
   const { rental } = detail;
   const depositStatusTone = getDepositStatusTone(rental.depositStatus);
 
@@ -37,7 +39,7 @@ export function RentalMetaCard({ detail }: RentalMetaCardProps) {
               justifyContent="center"
               width={44}
             >
-              <IconSymbol color={colors.textSecondary} name="wallet.pass.fill" size={20} />
+              <IconSymbol color={theme.textSecondary.val} name="wallet.pass.fill" size={20} />
             </YStack>
             <AppText variant="cardTitle">
               Thanh toán
@@ -49,7 +51,7 @@ export function RentalMetaCard({ detail }: RentalMetaCardProps) {
           </AppText>
         </XStack>
 
-        <Separator borderColor="$divider" />
+        <Separator borderColor="$borderDefault" />
 
         <YStack gap="$3">
           <XStack alignItems="center" justifyContent="space-between">
@@ -62,7 +64,7 @@ export function RentalMetaCard({ detail }: RentalMetaCardProps) {
                 justifyContent="center"
                 width={44}
               >
-                <IconSymbol color={colors.textSecondary} name="lock.shield.fill" size={20} />
+                <IconSymbol color={theme.textSecondary.val} name="lock.shield.fill" size={20} />
               </YStack>
               <YStack gap="$1">
                 <AppText variant="cardTitle">

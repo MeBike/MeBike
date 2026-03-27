@@ -6,7 +6,7 @@ import { Data, Effect, Match, Option } from "effect";
 import { withLoggedCause } from "@/domain/shared";
 import { activateSubscriptionUseCase, createSubscriptionUseCase } from "@/domain/subscriptions";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
-import { UserServiceTag } from "@/domain/users";
+import { UserQueryServiceTag } from "@/domain/users";
 import { toSubscriptionDetail } from "@/http/presenters/subscriptions.presenter";
 
 import type { SubscriptionsRoutes } from "./shared";
@@ -104,7 +104,7 @@ const createSubscription: RouteHandler<SubscriptionsRoutes["createSubscription"]
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserServiceTag;
+      const service = yield* UserQueryServiceTag;
       const userOpt = yield* service.getById(userId);
       if (Option.isNone(userOpt)) {
         return yield* Effect.fail(new AuthenticatedUserMissing({}));

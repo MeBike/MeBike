@@ -1,18 +1,11 @@
-import { spacing } from "@theme/metrics";
+import { View } from "react-native";
+
+import { spaceScale } from "@theme/metrics";
 import { AuthScreen } from "@ui/patterns/auth-screen";
-import { StyleSheet, View } from "react-native";
 
 import LoginForm from "./components/login-form";
 import LoginHeader from "./components/login-header";
 import { useLogin } from "./hooks/use-login";
-
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-  },
-});
 
 function LoginScreen() {
   const {
@@ -30,7 +23,7 @@ function LoginScreen() {
 
   return (
     <AuthScreen header={<LoginHeader backendStatus={backendStatus} onBack={goBack} />}>
-      <View style={styles.content}>
+      <View style={{ paddingHorizontal: spaceScale[6], paddingTop: spaceScale[4], paddingBottom: spaceScale[7] }}>
         <LoginForm
           control={control}
           errors={errors}

@@ -1,43 +1,13 @@
-import { spacing } from "@theme/metrics";
+import { Pressable, View } from "react-native";
+
+import { spaceScale } from "@theme/metrics";
 import { AuthScreen } from "@ui/patterns/auth-screen";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
 import { OtpCodeInput } from "@ui/primitives/otp-code-input";
-import { Pressable, StyleSheet, View } from "react-native";
 
 import { EmailVerificationHeader } from "./components/email-verification-header";
 import { useEmailVerification } from "./hooks/use-email-verification";
-
-const styles = StyleSheet.create({
-  formContainer: {
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.xxxl,
-  },
-  content: {
-    gap: spacing.xxxl,
-  },
-  timerContainer: {
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  helperBlock: {
-    gap: spacing.sm,
-  },
-  actions: {
-    gap: spacing.xxl,
-  },
-  resendButton: {
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-  },
-  skipContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: spacing.sm,
-    gap: spacing.xs,
-  },
-});
 
 export default function EmailVerificationScreen() {
   const {
@@ -59,14 +29,14 @@ export default function EmailVerificationScreen() {
 
   return (
     <AuthScreen header={<EmailVerificationHeader email={email} onBack={goBack} />}>
-      <View style={styles.formContainer}>
-        <View style={styles.content}>
-          <View style={styles.helperBlock}>
+      <View style={{ paddingHorizontal: spaceScale[6], paddingBottom: spaceScale[7] }}>
+        <View style={{ gap: spaceScale[7] }}>
+          <View style={{ gap: spaceScale[2] }}>
             <AppText variant="fieldLabel">Nhập mã OTP (6 chữ số)</AppText>
             <OtpCodeInput disabled={timeLeft <= 0} otp={otp} onChangeDigit={setOtpDigit} />
           </View>
 
-          <View style={styles.timerContainer}>
+          <View style={{ alignItems: "center", gap: spaceScale[2] }}>
             <AppText align="center" tone="muted" variant="bodySmall">
               Mã OTP sẽ hết hạn trong
               {" "}
@@ -74,28 +44,21 @@ export default function EmailVerificationScreen() {
             </AppText>
           </View>
 
-          <View style={styles.actions}>
+          <View style={{ gap: spaceScale[6] }}>
             <AppButton
-              backgroundColor={canSubmit && timeLeft > 0 ? "$brandPrimary" : "$divider"}
-              borderColor={canSubmit && timeLeft > 0 ? "$brandPrimary" : "$divider"}
               disabled={!canSubmit || timeLeft <= 0}
               loading={isVerifying}
               onPress={verify}
+              tone={canSubmit && timeLeft > 0 ? "primary" : "outline"}
             >
-              <AppText
-                align="center"
-                tone={canSubmit && timeLeft > 0 ? "inverted" : "muted"}
-                variant="bodySmall"
-              >
-                Xác nhận
-              </AppText>
+              Xác nhận
             </AppButton>
 
-            <View style={styles.timerContainer}>
+            <View style={{ alignItems: "center", gap: spaceScale[2] }}>
               <AppText align="center" tone="muted" variant="bodySmall">
                 Không nhận được mã OTP?
               </AppText>
-              <Pressable style={styles.resendButton} onPress={resend} disabled={!canResend}>
+              <Pressable style={{ alignItems: "center", paddingVertical: spaceScale[2] }} onPress={resend} disabled={!canResend}>
                 <AppText tone={canResend ? "brand" : "muted"} variant="label">
                   {isResending
                     ? "Đang gửi lại..."
@@ -106,7 +69,7 @@ export default function EmailVerificationScreen() {
               </Pressable>
             </View>
 
-            <View style={styles.skipContainer}>
+            <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: spaceScale[2], gap: spaceScale[1] }}>
               <AppText tone="muted" variant="bodySmall">Muốn bỏ qua?</AppText>
               <Pressable onPress={skip}>
                 <AppText tone="brand" variant="label">Tiếp tục sau</AppText>

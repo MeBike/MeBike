@@ -1,20 +1,22 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
-import { elevations, radii } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable } from "react-native";
-import { XStack } from "tamagui";
+import { useTheme, XStack } from "tamagui";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { elevations, radii } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 
 type WalletTopUpCtaProps = {
   onPress: () => void;
 };
 
 export function WalletTopUpCta({ onPress }: WalletTopUpCtaProps) {
+  const theme = useTheme();
+
   return (
     <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.96 : 1 })}>
       <LinearGradient
-        colors={[colors.success, "#059669"]}
+        colors={[theme.statusSuccess.val, theme.textSuccess.val]}
         end={{ x: 1, y: 0.5 }}
         start={{ x: 0, y: 0.5 }}
         style={{
@@ -23,7 +25,7 @@ export function WalletTopUpCta({ onPress }: WalletTopUpCtaProps) {
           justifyContent: "center",
           paddingHorizontal: 24,
           ...elevations.medium,
-          shadowColor: colors.success,
+          shadowColor: theme.statusSuccess.val,
         }}
       >
         <XStack alignItems="center" gap="$3" justifyContent="center">
@@ -36,7 +38,7 @@ export function WalletTopUpCta({ onPress }: WalletTopUpCtaProps) {
             justifyContent="center"
             width={30}
           >
-            <IconSymbol color={colors.textOnBrand} name="plus" size={18} />
+            <IconSymbol color={theme.onStatusSuccess.val} name="plus" size={18} />
           </XStack>
           <AppText tone="inverted" variant="headline">
             Nạp tiền

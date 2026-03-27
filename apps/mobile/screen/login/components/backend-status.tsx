@@ -1,7 +1,8 @@
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 import { StyleSheet, View } from "react-native";
+import { useTheme } from "tamagui";
+
+import { spaceScale } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 
 import type { BackendStatus } from "../hooks/use-login";
 
@@ -13,13 +14,11 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    gap: spaceScale[2],
+    paddingHorizontal: spaceScale[2],
+    paddingVertical: spaceScale[1],
     borderRadius: 999,
-    backgroundColor: colors.neutralSoft,
     borderWidth: 1,
-    borderColor: colors.overlayLightMuted,
   },
   dot: {
     width: 8,
@@ -29,6 +28,7 @@ const styles = StyleSheet.create({
 });
 
 function BackendStatusIndicator({ backendStatus }: BackendStatusProps) {
+  const theme = useTheme();
   const statusText = backendStatus === "online"
     ? "Máy chủ hoạt động"
     : backendStatus === "offline"
@@ -36,13 +36,13 @@ function BackendStatusIndicator({ backendStatus }: BackendStatusProps) {
       : "Đang kiểm tra máy chủ";
 
   const dotColor = backendStatus === "online"
-    ? colors.success
+    ? theme.statusSuccess.val
     : backendStatus === "offline"
-      ? colors.error
-      : colors.brandAccent;
+      ? theme.statusDanger.val
+      : theme.actionAccent.val;
 
   return (
-    <View style={styles.badge}>
+    <View style={[styles.badge, { backgroundColor: theme.surfaceMuted.val, borderColor: theme.overlayGlassMuted.val }]}>
       <View style={[styles.dot, { backgroundColor: dotColor }]} />
       <AppText tone="inverted" variant="caption">{statusText}</AppText>
     </View>

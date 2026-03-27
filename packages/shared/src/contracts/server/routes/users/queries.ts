@@ -17,6 +17,7 @@ import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   ActiveUsersQuerySchema,
   ActiveUsersSeriesResponseSchema,
+  AdminAvailableTechnicianTeamListResponseSchema,
   AdminTechnicianListResponseSchema,
   AdminUserDetailResponseSchema,
   AdminUserListResponseSchema,
@@ -29,6 +30,31 @@ import {
   TopRentersResponseSchema,
   UserErrorResponseSchema,
 } from "./shared";
+
+const AdminUserRolesQuerySchema = z
+  .preprocess((value) => {
+    if (value === undefined || value === null || value === "") {
+      return undefined;
+    }
+
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map(role => role.trim())
+        .filter(Boolean);
+    }
+
+    return value;
+  }, z.array(UserRoleSchema).min(1))
+  .optional()
+  .openapi({
+    example: ["STAFF", "TECHNICIAN", "AGENCY"],
+    description: "Filter by multiple roles using repeated query params or a comma-separated string.",
+  });
 
 export const meRoute = createRoute({
   method: "get",
@@ -74,6 +100,7 @@ export const adminListUsersRoute = createRoute({
       ...StatsPaginationQuerySchema.shape,
       fullName: z.string().optional(),
       role: UserRoleSchema.optional(),
+      roles: AdminUserRolesQuerySchema,
       accountStatus: AccountStatusSchema.optional(),
       verify: VerifyStatusSchema.optional(),
       agencyId: z.uuidv7().optional(),
@@ -143,6 +170,43 @@ export const adminTechnicianListRoute = createRoute({
                   {
                     id: "019d1b15-0f9a-73e7-9800-4af1e9887d72",
                     fullName: "Le Field Technician",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
+export const adminAvailableTechnicianTeamsRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/technician-teams/available",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z.object({
+      stationId: z.uuidv7().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Admin list of available technician teams for assignment",
+      content: {
+        "application/json": {
+          schema: AdminAvailableTechnicianTeamListResponseSchema,
+          examples: {
+            AvailableTeams: {
+              value: {
+                data: [
+                  {
+                    id: "019d1b15-0f9a-73e7-9800-4af1e9887d72",
+                    name: "Team A",
+                    stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
                   },
                 ],
               },

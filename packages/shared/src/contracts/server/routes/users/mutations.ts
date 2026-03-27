@@ -114,7 +114,7 @@ export const updateMeRoute = createRoute({
       },
     },
     409: {
-      description: "Duplicate email or phone number",
+      description: "Duplicate email, phone number, or technician team capacity conflict",
       content: {
         "application/json": {
           schema: UserErrorResponseSchema,
@@ -129,6 +129,14 @@ export const updateMeRoute = createRoute({
               value: {
                 error: userErrorMessages.DUPLICATE_PHONE_NUMBER,
                 details: { code: UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
+              },
+            },
+            TechnicianTeamFull: {
+              value: {
+                error: userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                },
               },
             },
           },
@@ -330,7 +338,7 @@ export const adminUpdateUserRoute = createRoute({
       },
     },
     409: {
-      description: "Duplicate email or phone number",
+      description: "Duplicate email, phone number, or technician team capacity conflict",
       content: {
         "application/json": {
           schema: UserErrorResponseSchema,
@@ -345,6 +353,14 @@ export const adminUpdateUserRoute = createRoute({
               value: {
                 error: userErrorMessages.DUPLICATE_PHONE_NUMBER,
                 details: { code: UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
+              },
+            },
+            TechnicianTeamFull: {
+              value: {
+                error: userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                },
               },
             },
           },

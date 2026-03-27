@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { spacingRules } from "@theme/metrics";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { useTheme } from "tamagui";
 
 type AuthScreenVariant = "sheet" | "plain";
 
@@ -14,42 +14,34 @@ type AuthScreenProps = {
   bodyStyle?: StyleProp<ViewStyle>;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  body: {
-    flex: 1,
-    backgroundColor: colors.backgroundStrong,
-  },
-  sheet: {
-    backgroundColor: colors.backgroundStrong,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxxl,
-  },
-  plain: {
-    backgroundColor: colors.background,
-    paddingBottom: spacing.xxxl,
-  },
-});
-
 export function AuthScreen({ children, header, variant = "sheet", bodyStyle }: AuthScreenProps) {
+  const theme = useTheme();
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+      style={{
+        flex: 1,
+        backgroundColor: theme.backgroundCanvas.val,
+      }}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {header}
-        <View style={[styles.body, variant === "sheet" ? styles.sheet : styles.plain, bodyStyle]}>
+        <View
+          style={[
+            {
+              flex: 1,
+              backgroundColor: variant === "sheet" ? theme.backgroundRaised.val : theme.backgroundCanvas.val,
+              paddingTop: variant === "sheet" ? spacingRules.card.paddingDefault : 0,
+              paddingBottom: spacingRules.hero.paddingBottomCompact,
+            },
+            bodyStyle,
+          ]}
+        >
           {children}
         </View>
       </ScrollView>

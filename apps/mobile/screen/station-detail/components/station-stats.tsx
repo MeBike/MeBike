@@ -1,8 +1,7 @@
-import { XStack, YStack } from "tamagui";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import type { StationReadSummary } from "@/contracts/server";
 
-import { colors } from "@theme/colors";
 import { AppText } from "@ui/primitives/app-text";
 
 type StationStatsProps = {
@@ -19,7 +18,7 @@ function StatColumn({
   dotColor: string;
 }) {
   return (
-    <YStack alignItems="center" flex={1} gap="$1.5" paddingHorizontal="$3" paddingVertical="$2">
+    <YStack alignItems="center" flex={1} gap="$2" paddingHorizontal="$3" paddingVertical="$2">
       <AppText selectable style={{ fontVariant: ["tabular-nums"] }} variant="hero">
         {value}
       </AppText>
@@ -34,26 +33,28 @@ function StatColumn({
 }
 
 export function StationStats({ station }: StationStatsProps) {
+  const theme = useTheme();
+
   return (
     <XStack
       alignItems="stretch"
-      backgroundColor="$surface"
+      backgroundColor="$surfaceDefault"
       borderColor="$borderSubtle"
       borderRadius={20}
       borderWidth={1}
       paddingHorizontal="$5"
       paddingVertical="$4"
       style={{
-        shadowColor: colors.shadowColor,
+        shadowColor: theme.shadowColor.val,
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.1,
         shadowRadius: 24,
         elevation: 6,
       }}
     >
-      <StatColumn dotColor={colors.brandPrimary} label="Xe có sẵn" value={station.bikes.available} />
+      <StatColumn dotColor={theme.actionPrimary.val} label="Xe có sẵn" value={station.bikes.available} />
       <XStack alignSelf="stretch" backgroundColor="$borderSubtle" marginVertical="$2" width={1} />
-      <StatColumn dotColor={colors.textPrimary} label="Chỗ trả xe" value={station.returnSlots.available} />
+      <StatColumn dotColor={theme.textPrimary.val} label="Chỗ trả xe" value={station.returnSlots.available} />
     </XStack>
   );
 }

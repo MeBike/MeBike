@@ -12,15 +12,10 @@ describe("stats summary e2e", () => {
     buildLayer: async () => {
       const { Layer } = await import("effect");
       const { PrismaLive } = await import("@/infrastructure/prisma");
-      const { UserRepositoryLive } = await import("@/domain/users/repository/user.repository");
-      const { UserServiceLive } = await import("@/domain/users/services/user.service");
-
-      const userRepoLayer = UserRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const userServiceLayer = UserServiceLive.pipe(Layer.provide(userRepoLayer));
+      const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
       return Layer.mergeAll(
-        userRepoLayer,
-        userServiceLayer,
+        UserDepsLive,
         PrismaLive,
       );
     },

@@ -1,15 +1,16 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { useTheme, YStack } from "tamagui";
+
 import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useCreateMyReturnSlotMutation } from "@hooks/mutations/rentals/use-create-my-return-slot-mutation";
 import { rentalErrorMessage } from "@services/rentals";
-import { useQueryClient } from "@tanstack/react-query";
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
+import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
-import { Alert, RefreshControl, ScrollView, Text, View } from "react-native";
-import { YStack } from "tamagui";
+import { Screen } from "@ui/primitives/screen";
 
 import { BikeList } from "./components/bike-list";
 import { FixedSlotBanner } from "./components/fixed-slot-banner";
@@ -19,6 +20,7 @@ import { useStationDetail } from "./hooks/use-station-detail";
 
 export default function StationDetailScreen() {
   const queryClient = useQueryClient();
+  const theme = useTheme();
   const returnSlotMutation = useCreateMyReturnSlotMutation();
   const {
     station,
@@ -79,33 +81,28 @@ export default function StationDetailScreen() {
 
   if (!station) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colors.background,
-        }}
-      >
-        <Text style={{ fontSize: 18, color: colors.error }}>Không tìm thấy trạm</Text>
-      </View>
+      <Screen alignItems="center" justifyContent="center">
+        <AppText tone="danger" variant="sectionTitle">
+          Không tìm thấy trạm
+        </AppText>
+      </Screen>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <Screen>
       <ScrollView
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{
-          paddingBottom: spacing.xxxxl,
+          paddingBottom: spaceScale[9],
         }}
         showsVerticalScrollIndicator={false}
         refreshControl={(
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[colors.brandPrimary]}
-            tintColor={colors.brandPrimary}
+            colors={[theme.actionPrimary.val]}
+            tintColor={theme.actionPrimary.val}
           />
         )}
       >
@@ -115,8 +112,8 @@ export default function StationDetailScreen() {
         />
         <View
           style={{
-            marginTop: -spacing.xxl,
-            paddingHorizontal: spacing.xl,
+            marginTop: -spaceScale[6],
+            paddingHorizontal: spaceScale[5],
             zIndex: 10,
           }}
         >
@@ -150,7 +147,7 @@ export default function StationDetailScreen() {
                   </AppButton>
 
                   <YStack alignItems="center" flexDirection="row" gap="$2">
-                    <IconSymbol color={colors.textMuted} name="info.circle" size={16} />
+                    <IconSymbol color={theme.textTertiary.val} name="info.circle" size={16} />
                     <AppText flex={1} tone="muted" variant="meta">
                       Sau khi giữ chỗ, quay lại chi tiết thuê xe để mở mã QR trả xe cho nhân viên.
                     </AppText>
@@ -174,6 +171,6 @@ export default function StationDetailScreen() {
           />
         </YStack>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }
