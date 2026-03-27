@@ -1,21 +1,15 @@
-import { Effect, Layer, Match, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { BikeStatus, BikeSwapStatus } from "generated/kysely/types";
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
-  RentalStatus,
 } from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
-import {
-  isPrismaUniqueViolation,
-} from "@/infrastructure/prisma-errors";
-import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
-
-import type { AdminRentalListItem, StaffBikeSwapRequestRow } from "../models";
-import type { CreateRentalInput, RentalRepo } from "./rental.repository.types";
+import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+import type { RentalRepo } from "./rental.repository.types";
 
 import {
   BikeSwapRequestExisted,
@@ -23,27 +17,17 @@ import {
   InvalidBikeSwapRequestStatus,
   NoAvailableBike,
   RentalRepositoryError,
-  RentalUniqueViolation,
 } from "../domain-errors";
-import {
-  adminRentalDetailSelect,
-  adminRentalListSelect,
-  mapToAdminRentalDetail,
-  mapToAdminRentalListItem,
-} from "./rental.repository.admin.query";
+import { makeRentalReadRepository } from "./read/rental.read.repository";
 import {
   bikeSwapRequestSelect,
   mapToBikeSwapRequestRow,
-  mapToRentalRow,
   mapToStaffBikeSwapRequestRow,
-  rentalSelect,
   staffBikeSwapRequestSelect,
-  toAdminRentalsWhere,
-  toMyRentalsWhere,
-  toRentalOrderBy,
   toStaffBikeSwapRequestsOrderBy,
   toStaffBikeSwapRequestsWhere,
 } from "./rental.repository.query";
+import { makeRentalWriteRepository } from "./write/rental.write.repository";
 
 export type {
   CreateRentalInput,
@@ -54,50 +38,6 @@ export type {
 export function makeRentalRepository(
   db: PrismaClient | PrismaTypes.TransactionClient,
 ): RentalRepo {
-  const client = db;
-  const select = rentalSelect;
-
-  const createRentalWithClient = (
-    tx: PrismaClient | PrismaTypes.TransactionClient,
-    data: CreateRentalInput,
-  ) =>
-    Effect.tryPromise({
-      try: () =>
-        tx.rental.create({
-          data: {
-            userId: data.userId,
-            reservationId: data.reservationId ?? null,
-            bikeId: data.bikeId,
-            depositHoldId: data.depositHoldId ?? null,
-            pricingPolicyId: data.pricingPolicyId ?? null,
-            startStationId: data.startStationId,
-            startTime: data.startTime,
-            subscriptionId: data.subscriptionId ?? null,
-            status: "RENTED" as RentalStatus,
-          },
-          select,
-        }),
-      catch: error =>
-        Match.value(error).pipe(
-          Match.when(
-            isPrismaUniqueViolation,
-            e =>
-              new RentalUniqueViolation({
-                operation: "createRental",
-                constraint: uniqueTargets(e),
-                cause: e,
-              }),
-          ),
-          Match.orElse(
-            e =>
-              new RentalRepositoryError({
-                operation: "createRental",
-                cause: e,
-              }),
-          ),
-        ),
-    }).pipe(Effect.map(mapToRentalRow));
-
   const approveBikeSwapRequestWithClient = (
     tx: PrismaClient | PrismaTypes.TransactionClient,
     bikeSwapRequestId: string,
@@ -216,372 +156,14 @@ export function makeRentalRepository(
     });
 
   return {
-    listMyRentals(userId, filter, pageReq) {
-      return Effect.gen(function* () {
-        const { page, pageSize, skip, take } = normalizedPage(pageReq);
-
-        const where = toMyRentalsWhere(userId, filter);
-        const orderBy = toRentalOrderBy(pageReq);
-
-        const [total, items] = yield* Effect.all([
-          Effect.tryPromise({
-            try: () => client.rental.count({ where }),
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "listMyRentals.count",
-                cause: e,
-              }),
-          }),
-          Effect.tryPromise({
-            try: () =>
-              client.rental.findMany({
-                where,
-                skip,
-                take,
-                orderBy,
-                select,
-              }),
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "listMyRentals.findMany",
-                cause: e,
-              }),
-          }),
-        ]);
-
-        const mappedItems = items.map(mapToRentalRow);
-
-        return makePageResult(mappedItems, total, page, pageSize);
-      });
-    },
-
-    listMyCurrentRentals(userId, pageReq) {
-      return Effect.gen(function* () {
-        const { page, pageSize, skip, take } = normalizedPage(pageReq);
-
-        const where = toMyRentalsWhere(userId, { status: "RENTED" });
-        const orderBy = toRentalOrderBy(pageReq);
-
-        const [total, items] = yield* Effect.all([
-          Effect.tryPromise({
-            try: () => client.rental.count({ where }),
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "listMyCurrentRentals.count",
-                cause: e,
-              }),
-          }),
-          Effect.tryPromise({
-            try: () =>
-              client.rental.findMany({
-                where,
-                skip,
-                take,
-                orderBy,
-                select,
-              }),
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "listMyCurrentRentals.findMany",
-                cause: e,
-              }),
-          }),
-        ]);
-
-        const mappedItems = items.map(mapToRentalRow);
-
-        return makePageResult(mappedItems, total, page, pageSize);
-      });
-    },
-
-    getMyRentalById(userId, rentalId) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            client.rental.findFirst({
-              where: { id: rentalId, userId },
-              select,
-            }),
-          catch: e =>
-            new RentalRepositoryError({
-              operation: "getMyRentalById",
-              cause: e,
-            }),
-        });
-
-        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
-      });
-    },
-
-    getMyRentalCounts(userId) {
-      return Effect.tryPromise({
-        try: async () => {
-          const rows = await client.rental.groupBy({
-            by: ["status"],
-            _count: { _all: true },
-            where: { userId },
-          });
-          return rows.map(row => ({
-            status: row.status,
-            count: row._count._all,
-          }));
-        },
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "getMyRentalCounts",
-            cause: e,
-          }),
-      });
-    },
-
-    findActiveByBikeId(bikeId) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            client.rental.findFirst({
-              where: { bikeId, status: "RENTED" as RentalStatus },
-              select,
-            }),
-          catch: e =>
-            new RentalRepositoryError({
-              operation: "findActiveByBikeId",
-              cause: e,
-            }),
-        });
-
-        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
-      });
-    },
-
-    findActiveByUserId(userId) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            client.rental.findFirst({
-              where: { userId, status: "RENTED" as RentalStatus },
-              select,
-            }),
-          catch: e =>
-            new RentalRepositoryError({
-              operation: "findActiveByUserId",
-              cause: e,
-            }),
-        });
-
-        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
-      });
-    },
-
-    createRental(data) {
-      return createRentalWithClient(client, data);
-    },
-
-    updateRentalDepositHold(data) {
-      return Effect.tryPromise({
-        try: async () => {
-          const updated = await client.rental.updateMany({
-            where: {
-              id: data.rentalId,
-              depositHoldId: null,
-            },
-            data: {
-              depositHoldId: data.depositHoldId,
-            },
-          });
-
-          if (updated.count === 0) {
-            return null;
-          }
-
-          return await client.rental.findUnique({
-            where: { id: data.rentalId },
-            select,
-          });
-        },
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "updateRentalDepositHold",
-            cause: e,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
-        ),
-      );
-    },
-
-    updateRentalOnEnd(data) {
-      return Effect.tryPromise({
-        try: async () => {
-          const updated = await client.rental.updateMany({
-            where: {
-              id: data.rentalId,
-              status: "RENTED",
-            },
-            data: {
-              pricingPolicyId: data.pricingPolicyId ?? undefined,
-              endStationId: data.endStationId,
-              endTime: data.endTime,
-              duration: data.durationMinutes,
-              totalPrice:
-                data.totalPrice === null ? null : String(data.totalPrice),
-              status: data.newStatus,
-            },
-          });
-
-          if (updated.count === 0) {
-            return null;
-          }
-
-          return await client.rental.findUnique({
-            where: { id: data.rentalId },
-            select,
-          });
-        },
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "updateRentalOnEnd",
-            cause: e,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
-        ),
-      );
-    },
-
-    findById(rentalId) {
-      return Effect.tryPromise({
-        try: () =>
-          client.rental.findUnique({
-            where: { id: rentalId },
-            select,
-          }),
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "findById",
-            cause: e,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
-        ),
-      );
-    },
-
-    adminListRentals(filter, pageReq) {
-      return Effect.gen(function* () {
-        const { page, pageSize, skip, take } = normalizedPage(pageReq);
-
-        const where = toAdminRentalsWhere(filter);
-        const orderBy = toRentalOrderBy(pageReq);
-
-        const [total, items] = yield* Effect.all([
-          Effect.tryPromise({
-            try: () => client.rental.count({ where }),
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "adminListRentals.count",
-                cause: e,
-              }),
-          }),
-          Effect.tryPromise({
-            try: () =>
-              client.rental.findMany({
-                where,
-                skip,
-                take,
-                orderBy,
-                select: adminRentalListSelect,
-              }),
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "adminListRentals.findMany",
-                cause: e,
-              }),
-          }),
-        ]);
-
-        const mappedItems: AdminRentalListItem[] = items.map(
-          mapToAdminRentalListItem,
-        );
-
-        return makePageResult(mappedItems, total, page, pageSize);
-      });
-    },
-
-    adminGetRentalById(rentalId) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            client.rental.findUnique({
-              where: { id: rentalId },
-              select: adminRentalDetailSelect,
-            }),
-          catch: e =>
-            new RentalRepositoryError({
-              operation: "adminGetRentalById",
-              cause: e,
-            }),
-        });
-
-        if (!raw) {
-          return Option.none();
-        }
-        return Option.some(mapToAdminRentalDetail(raw));
-      });
-    },
-
-    listActiveRentalsByPhone(phoneNumber, pageReq) {
-      return Effect.gen(function* () {
-        const { page, pageSize, skip, take } = normalizedPage(pageReq);
-        const orderBy = toRentalOrderBy(pageReq);
-
-        const where = {
-          status: "RENTED",
-          bikeId: { not: null },
-          user: { phoneNumber },
-        } satisfies PrismaTypes.RentalWhereInput;
-
-        const [total, items] = yield* Effect.all([
-          Effect.tryPromise({
-            try: () => client.rental.count({ where }),
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "listActiveRentalsByPhone.count",
-                cause: e,
-              }),
-          }),
-          Effect.tryPromise({
-            try: () =>
-              client.rental.findMany({
-                where,
-                skip,
-                take,
-                orderBy,
-                select: adminRentalListSelect,
-              }),
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "listActiveRentalsByPhone.findMany",
-                cause: e,
-              }),
-          }),
-        ]);
-
-        const mappedItems: AdminRentalListItem[] = items.map(
-          mapToAdminRentalListItem,
-        );
-
-        return makePageResult(mappedItems, total, page, pageSize);
-      });
-    },
+    ...makeRentalReadRepository(db),
+    ...makeRentalWriteRepository(db),
 
     requestBikeSwap(rentalId, userId, oldBikeId, stationId) {
       return Effect.gen(function* () {
         const raw = yield* Effect.tryPromise({
           try: () =>
-            client.bikeSwapRequest.create({
+            db.bikeSwapRequest.create({
               data: {
                 rentalId,
                 userId,
@@ -591,7 +173,7 @@ export function makeRentalRepository(
               },
               select: bikeSwapRequestSelect,
             }),
-          catch: (e) => {
+          catch: e => {
             if (isPrismaUniqueViolation(e)) {
               return new BikeSwapRequestExisted({ rentalId });
             }
@@ -611,12 +193,11 @@ export function makeRentalRepository(
       return Effect.gen(function* () {
         const { page, pageSize, skip, take } = normalizedPage(pageReq);
         const orderBy = toStaffBikeSwapRequestsOrderBy(pageReq);
-
         const where = toStaffBikeSwapRequestsWhere(filter);
 
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
-            try: () => client.bikeSwapRequest.count({ where }),
+            try: () => db.bikeSwapRequest.count({ where }),
             catch: e =>
               new RentalRepositoryError({
                 operation: "staffListBikeSwapRequests.count",
@@ -625,7 +206,7 @@ export function makeRentalRepository(
           }),
           Effect.tryPromise({
             try: () =>
-              client.bikeSwapRequest.findMany({
+              db.bikeSwapRequest.findMany({
                 where,
                 skip,
                 take,
@@ -640,11 +221,7 @@ export function makeRentalRepository(
           }),
         ]);
 
-        const mappedItems: StaffBikeSwapRequestRow[] = items.map(
-          mapToStaffBikeSwapRequestRow,
-        );
-
-        return makePageResult(mappedItems, total, page, pageSize);
+        return makePageResult(items.map(mapToStaffBikeSwapRequestRow), total, page, pageSize);
       });
     },
 
@@ -652,7 +229,7 @@ export function makeRentalRepository(
       return Effect.gen(function* () {
         const raw = yield* Effect.tryPromise({
           try: () =>
-            client.bikeSwapRequest.findUnique({
+            db.bikeSwapRequest.findUnique({
               where: { id: bikeSwapRequestId },
               select: staffBikeSwapRequestSelect,
             }),
@@ -674,12 +251,11 @@ export function makeRentalRepository(
       return Effect.gen(function* () {
         const { page, pageSize, skip, take } = normalizedPage(pageReq);
         const orderBy = toStaffBikeSwapRequestsOrderBy(pageReq);
-
         const where = toStaffBikeSwapRequestsWhere(filter);
 
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
-            try: () => client.bikeSwapRequest.count({ where }),
+            try: () => db.bikeSwapRequest.count({ where }),
             catch: e =>
               new RentalRepositoryError({
                 operation: "adminListBikeSwapRequests.count",
@@ -688,7 +264,7 @@ export function makeRentalRepository(
           }),
           Effect.tryPromise({
             try: () =>
-              client.bikeSwapRequest.findMany({
+              db.bikeSwapRequest.findMany({
                 where,
                 skip,
                 take,
@@ -703,23 +279,19 @@ export function makeRentalRepository(
           }),
         ]);
 
-        const mappedItems: StaffBikeSwapRequestRow[] = items.map(
-          mapToStaffBikeSwapRequestRow,
-        );
-
-        return makePageResult(mappedItems, total, page, pageSize);
+        return makePageResult(items.map(mapToStaffBikeSwapRequestRow), total, page, pageSize);
       });
     },
 
     staffApproveBikeSwapRequests(bikeSwapRequestId: string) {
-      return approveBikeSwapRequestWithClient(client, bikeSwapRequestId);
+      return approveBikeSwapRequestWithClient(db, bikeSwapRequestId);
     },
 
     staffRejectBikeSwapRequests(bikeSwapRequestId: string, reason: string) {
       return Effect.gen(function* () {
         const current = yield* Effect.tryPromise({
           try: () =>
-            client.bikeSwapRequest.findUnique({
+            db.bikeSwapRequest.findUnique({
               where: { id: bikeSwapRequestId },
               select: { status: true },
             }),
@@ -744,7 +316,7 @@ export function makeRentalRepository(
 
         const raw = yield* Effect.tryPromise({
           try: () =>
-            client.bikeSwapRequest.update({
+            db.bikeSwapRequest.update({
               where: { id: bikeSwapRequestId },
               data: {
                 status: "REJECTED" as BikeSwapStatus,
