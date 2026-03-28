@@ -154,7 +154,6 @@ export const RedistributionRequestListResponseSchema = z.object({
 
 export const CreateRedistributionRequestSchema = z.object({
   requestedByUserId: z.uuidv7(),
-  approvedByUserId: z.uuidv7().optional(),
   sourceStationId: z.uuidv7(),
   targetStationId: z.uuidv7().optional(),
   targetAgencyId: z.uuidv7().optional(),
