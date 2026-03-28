@@ -40,6 +40,13 @@ export const UpdateMeRequestSchema = z.object({
   location: z.string().optional().nullable(),
 }).openapi("UpdateMeRequest");
 
+export const UploadAvatarRequestSchema = z.object({
+  avatar: z.any().openapi({
+    type: "string",
+    format: "binary",
+  }),
+}).openapi("UploadAvatarRequest");
+
 export const UpdateMeResponseSchema = MeResponseSchema;
 
 export const ChangePasswordRequestSchema = z.object({
