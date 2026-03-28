@@ -542,6 +542,7 @@ export type RedistributionRequest = {
     target_station_id: string | null;
     target_agency_id: string | null;
     reason: string | null;
+    requested_quantity: number | null;
     status: Generated<RedistributionStatus>;
     started_at: Timestamp | null;
     completed_at: Timestamp | null;
@@ -552,7 +553,6 @@ export type RedistributionRequestItem = {
     id: string;
     redistribution_request_id: string;
     bike_id: string | null;
-    requested_quantity: number | null;
     delivered_at: Timestamp | null;
     created_at: Generated<Timestamp>;
 };
