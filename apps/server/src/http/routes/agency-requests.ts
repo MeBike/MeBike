@@ -14,7 +14,12 @@ export function registerAgencyRequestRoutes(app: import("@hono/zod-openapi").Ope
     ...agencyRequests.adminList,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const adminGetAgencyRequestRoute = {
+    ...agencyRequests.adminGet,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
 
   app.openapi(adminListAgencyRequestsRoute, AgencyRequestsAdminController.listAgencyRequests);
+  app.openapi(adminGetAgencyRequestRoute, AgencyRequestsAdminController.getAgencyRequestById);
   app.openapi(agencyRequests.submit, AgencyRequestsPublicController.submit);
 }

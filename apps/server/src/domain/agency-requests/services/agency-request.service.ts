@@ -1,6 +1,4 @@
-import type { Option } from "effect";
-
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { PageResult } from "@/domain/shared/pagination";
 
@@ -19,10 +17,14 @@ import type {
 } from "../models";
 import type { AgencyRequestRepo } from "../repository/agency-request.repository";
 
+import { AgencyRequestNotFound as AgencyRequestNotFoundError } from "../domain-errors";
 import { AgencyRequestRepository } from "../repository/agency-request.repository";
 
 export type AgencyRequestService = {
   getById: (id: string) => Effect.Effect<Option.Option<AgencyRequestRow>, AgencyRequestRepositoryError>;
+  getByIdOrFail: (
+    id: string,
+  ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound>;
   list: (filter?: AgencyRequestFilter) => Effect.Effect<readonly AgencyRequestRow[], AgencyRequestRepositoryError>;
   listWithOffset: (
     filter: AgencyRequestFilter,
@@ -46,6 +48,14 @@ export type AgencyRequestService = {
 function makeAgencyRequestService(repo: AgencyRequestRepo): AgencyRequestService {
   return {
     getById: id => repo.findById(id),
+    getByIdOrFail: id =>
+      Effect.gen(function* () {
+        const found = yield* repo.findById(id);
+        if (Option.isNone(found)) {
+          return yield* Effect.fail(new AgencyRequestNotFoundError({ agencyRequestId: id }));
+        }
+        return found.value;
+      }),
     list: filter => repo.list(filter),
     listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
     submit: input => repo.submit(input),

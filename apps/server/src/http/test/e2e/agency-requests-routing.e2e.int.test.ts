@@ -71,6 +71,18 @@ describe("agency requests routing", () => {
     });
   }
 
+  async function getAgencyRequestById(
+    agencyRequestId: string,
+    init?: { token?: string },
+  ) {
+    return fixture.app.request(`http://test/v1/admin/agency-requests/${agencyRequestId}`, {
+      method: "GET",
+      headers: init?.token
+        ? { Authorization: `Bearer ${init.token}` }
+        : undefined,
+    });
+  }
+
   it("submits an agency request without authentication", async () => {
     const response = await submitAgencyRequest({
       requesterEmail: "guest-agency@example.com",
@@ -313,6 +325,116 @@ describe("agency requests routing", () => {
     expect(body.data[0]?.id).toBe(newer.id);
   });
 
+  it("admin can get agency request details by id", async () => {
+    const requester = await fixture.factories.user({
+      email: "agency-request-detail-user@example.com",
+      role: "USER",
+    });
+
+    const reviewedByUser = await fixture.prisma.user.create({
+      data: {
+        id: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd305",
+        fullName: "Reviewer Admin",
+        email: "reviewer-admin@example.com",
+        passwordHash: "hash123",
+        phoneNumber: null,
+        username: null,
+        avatarUrl: null,
+        locationText: null,
+        nfcCardUid: null,
+        role: "ADMIN",
+        accountStatus: "ACTIVE",
+        verifyStatus: "VERIFIED",
+      },
+    });
+
+    const approvedAgency = await fixture.prisma.agency.create({
+      data: {
+        id: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd306",
+        name: "Detail Approved Agency",
+        address: "1 Detail Street",
+        contactPhone: "0900000001",
+      },
+    });
+
+    const createdAgencyUser = await fixture.prisma.user.create({
+      data: {
+        id: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd307",
+        fullName: "Agency Owner",
+        email: "agency-owner@example.com",
+        passwordHash: "hash123",
+        phoneNumber: null,
+        username: null,
+        avatarUrl: null,
+        locationText: null,
+        nfcCardUid: null,
+        role: "AGENCY",
+        accountStatus: "ACTIVE",
+        verifyStatus: "VERIFIED",
+      },
+    });
+
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterUserId: requester.id,
+        requesterEmail: "detail-request@example.com",
+        requesterPhone: "0912222222",
+        agencyName: "Detail Agency",
+        agencyAddress: "99 Detail Avenue",
+        agencyContactPhone: "0988888888",
+        status: "APPROVED",
+        description: "Approved after full review",
+        reviewedByUserId: reviewedByUser.id,
+        reviewedAt: new Date("2026-03-26T09:00:00.000Z"),
+        approvedAgencyId: approvedAgency.id,
+        createdAgencyUserId: createdAgencyUser.id,
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await getAgencyRequestById(agencyRequest.id, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestDetailResponse;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: agencyRequest.id,
+      requesterEmail: "detail-request@example.com",
+      agencyName: "Detail Agency",
+      status: "APPROVED",
+      requesterUser: {
+        id: requester.id,
+        email: requester.email,
+      },
+      reviewedByUser: {
+        id: reviewedByUser.id,
+        email: reviewedByUser.email,
+      },
+      approvedAgency: {
+        id: approvedAgency.id,
+        name: approvedAgency.name,
+      },
+      createdAgencyUser: {
+        id: createdAgencyUser.id,
+        email: createdAgencyUser.email,
+      },
+    });
+  });
+
+  it("returns 404 when admin gets an unknown agency request", async () => {
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await getAgencyRequestById("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd399", { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({
+      error: "Agency request not found",
+      details: {
+        code: "AGENCY_REQUEST_NOT_FOUND",
+        agencyRequestId: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd399",
+      },
+    });
+  });
+
   it("rejects admin list for non-admin users", async () => {
     const user = await fixture.factories.user({
       email: "agency-request-plain-user@example.com",
@@ -331,6 +453,24 @@ describe("agency requests routing", () => {
     expect(response.status).toBe(401);
   });
 
+  it("requires authentication for admin get detail", async () => {
+    const response = await getAgencyRequestById("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd301");
+
+    expect(response.status).toBe(401);
+  });
+
+  it("rejects admin get detail for non-admin users", async () => {
+    const user = await fixture.factories.user({
+      email: "agency-request-detail-plain-user@example.com",
+      role: "USER",
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    const response = await getAgencyRequestById("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd301", { token });
+
+    expect(response.status).toBe(403);
+  });
+
   it("rejects invalid admin list query", async () => {
     const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
     const response = await listAgencyRequests("?page=0&status=UNKNOWN", { token });
@@ -344,5 +484,22 @@ describe("agency requests routing", () => {
     expect(response.status).toBe(400);
     expect(body.error).toBe("Invalid request payload");
     expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("rejects invalid agency request id param", async () => {
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await getAgencyRequestById("not-a-uuid", { token });
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+        issues?: Array<{ path?: string; message: string }>;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+    expect(body.details?.issues?.some(issue => issue.path?.includes("id"))).toBe(true);
   });
 });

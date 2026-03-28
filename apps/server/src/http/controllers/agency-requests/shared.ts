@@ -3,4 +3,6 @@ import { AgencyRequestsContracts } from "@mebike/shared";
 export type AgencyRequestsRoutes = typeof import("@mebike/shared")["serverRoutes"]["agencyRequests"];
 
 export type AgencyRequest = AgencyRequestsContracts.AgencyRequest;
+export type AgencyRequestDetailResponse = AgencyRequestsContracts.AgencyRequestDetailResponse;
+export type AgencyRequestErrorResponse = AgencyRequestsContracts.AgencyRequestErrorResponse;
 export type AgencyRequestListResponse = AgencyRequestsContracts.AgencyRequestListResponse;
