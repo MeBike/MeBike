@@ -1,29 +1,61 @@
-export type UserError = ApiUserError | NetworkUserError | DecodeUserError | UnknownUserError;
+import type { Result } from "@lib/result";
+import type { z } from "zod";
 
-export type UserErrorCode
-  = | "UNAUTHORIZED"
-    | "USER_NOT_FOUND"
-    | "DUPLICATE_EMAIL"
-    | "DUPLICATE_PHONE_NUMBER"
-    | "INVALID_PUSH_TOKEN"
-    | "UNKNOWN";
+import { readJson } from "@lib/api-decode";
+import { ServerContracts } from "@mebike/shared";
 
-export type ApiUserError = {
-  _tag: "ApiError";
-  code: UserErrorCode;
-  message?: string;
-};
+import {
+  asNetworkError as asSharedNetworkError,
+  isUnauthorizedStatus,
+  parseErrorFromSchema,
+  parseUnauthorizedError,
+} from "@services/shared/service-error";
 
-export type NetworkUserError = {
-  _tag: "NetworkError";
-  message?: string;
-};
+type ContractUserErrorCode = z.infer<typeof ServerContracts.UsersContracts.UserErrorCodeSchema>;
 
-export type DecodeUserError = {
-  _tag: "DecodeError";
-};
+export type UserErrorCode = ContractUserErrorCode | "UNAUTHORIZED" | "UNKNOWN";
 
-export type UnknownUserError = {
-  _tag: "UnknownError";
-  message?: string;
-};
+export type UserError
+  = | { _tag: "ApiError"; code: UserErrorCode; message?: string; details?: Record<string, unknown> }
+    | { _tag: "NetworkError"; message?: string }
+    | { _tag: "DecodeError" }
+    | { _tag: "UnknownError"; message?: string };
+
+export async function parseUserError(response: Response): Promise<UserError> {
+  try {
+    const data = await readJson(response);
+
+    if (isUnauthorizedStatus(response.status, true)) {
+      const unauthorized = parseUnauthorizedError(data);
+      if (unauthorized) {
+        return {
+          _tag: "ApiError",
+          code: unauthorized.code as UserErrorCode,
+          message: unauthorized.message,
+          details: unauthorized.details,
+        };
+      }
+
+      return { _tag: "DecodeError" };
+    }
+
+    const parsed = parseErrorFromSchema(ServerContracts.UsersContracts.UserErrorResponseSchema, data);
+    if (parsed) {
+      return {
+        _tag: "ApiError",
+        code: parsed.code as UserErrorCode,
+        message: parsed.message,
+        details: parsed.details,
+      };
+    }
+
+    return { _tag: "DecodeError" };
+  }
+  catch {
+    return { _tag: "DecodeError" };
+  }
+}
+
+export function asNetworkError(error: unknown): Result<never, Extract<UserError, { _tag: "NetworkError" }>> {
+  return asSharedNetworkError<Extract<UserError, { _tag: "NetworkError" }>>(error);
+}

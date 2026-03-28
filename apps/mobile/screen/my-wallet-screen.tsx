@@ -1,9 +1,9 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Spinner, useTheme, YStack } from "tamagui";
+import { useTheme, YStack } from "tamagui";
 
 import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
@@ -68,7 +68,7 @@ function MyWalletScreen() {
     return (
       <Screen alignItems="center" inset="wide" justifyContent="center">
         <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
-        <Spinner color="$actionPrimary" size="large" />
+        <ActivityIndicator color={theme.actionPrimary.val} size="large" />
         <AppText align="center" marginTop="$4" tone="muted" variant="bodySmall">
           {wallet.isLoadingWallet ? "Đang tải ví của bạn..." : "Đang tải giao dịch gần đây..."}
         </AppText>
