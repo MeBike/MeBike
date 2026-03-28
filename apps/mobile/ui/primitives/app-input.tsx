@@ -11,6 +11,7 @@ type AppInputProps = GetProps<typeof Input> & {
   leadingIcon?: ReactNode;
   trailingIcon?: ReactNode;
   invalid?: boolean;
+  readOnly?: boolean;
 };
 
 const iconSlotStyle = {
@@ -23,6 +24,7 @@ export function AppInput({
   leadingIcon,
   trailingIcon,
   invalid = false,
+  readOnly = false,
   onBlur,
   onFocus,
   placeholderTextColor,
@@ -30,24 +32,31 @@ export function AppInput({
   ...props
 }: AppInputProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const isReadOnly = readOnly || props.disabled === true;
 
-  const borderColor = invalid ? "$borderDanger" : isFocused ? "$borderFocus" : "$borderDefault";
-  const shadowColor = invalid ? "$borderDanger" : isFocused ? "$actionPrimary" : "transparent";
+  const borderColor = invalid
+    ? "$borderDanger"
+    : isFocused && !isReadOnly
+      ? "$borderFocus"
+      : isReadOnly
+        ? "$borderSubtle"
+        : "$borderDefault";
+  const shadowColor = invalid ? "$borderDanger" : isFocused && !isReadOnly ? "$actionPrimary" : "transparent";
 
   return (
     <XStack
       alignItems="center"
-      backgroundColor="$surfaceDefault"
+      backgroundColor={isReadOnly ? "$surfaceMuted" : "$surfaceDefault"}
       borderColor={borderColor}
       borderRadius="$3"
-      borderWidth={isFocused || invalid ? borderWidths.strong : borderWidths.subtle}
+      borderWidth={isFocused && !isReadOnly || invalid ? borderWidths.strong : borderWidths.subtle}
       gap="$3"
       minHeight="$6"
       paddingHorizontal="$4"
       shadowColor={shadowColor}
-      shadowOffset={isFocused || invalid ? { width: 0, height: 0 } : { width: 0, height: 0 }}
-      shadowOpacity={isFocused || invalid ? 0.14 : 0}
-      shadowRadius={isFocused || invalid ? 10 : 0}
+      shadowOffset={isFocused && !isReadOnly || invalid ? { width: 0, height: 0 } : { width: 0, height: 0 }}
+      shadowOpacity={isFocused && !isReadOnly || invalid ? 0.14 : 0}
+      shadowRadius={isFocused && !isReadOnly || invalid ? 10 : 0}
     >
       {leadingIcon
         ? (
@@ -59,11 +68,12 @@ export function AppInput({
 
       <Input
         unstyled
-        color="$textPrimary"
+        color={isReadOnly ? "$textSecondary" : "$textPrimary"}
         flex={1}
         fontFamily="$body"
         fontSize={typographyTokens.bodySmall}
         fontWeight="$5"
+        readOnly={isReadOnly}
         onBlur={(event) => {
           setIsFocused(false);
           onBlur?.(event);
