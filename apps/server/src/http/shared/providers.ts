@@ -19,6 +19,12 @@ export {
   withBikeDeps,
 } from "./features/bike.layers";
 export {
+  IncidentDepsLive,
+  IncidentReposLive,
+  IncidentServiceLayer,
+  withIncidentDeps,
+} from "./features/incident.layers";
+export {
   NotificationDepsLive,
   PushNotificationServiceLayer,
   PushTokenReposLive,
