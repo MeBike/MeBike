@@ -1,8 +1,7 @@
 import React from "react";
-import { YStack } from "tamagui";
+import { useTheme, YStack } from "tamagui";
 
-import { colors } from "@theme/colors";
-import { borderWidths, spacing } from "@theme/metrics";
+import { borderWidths, spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
 
@@ -23,19 +22,21 @@ export function FooterActions({
   onBookNow: () => void;
   onReserve: () => void;
 }) {
+  const theme = useTheme();
+
   return (
     <YStack
-      backgroundColor="$surface"
+      backgroundColor="$surfaceDefault"
       borderTopColor="$borderSubtle"
       borderTopWidth={borderWidths.subtle}
       bottom={0}
       left={0}
-      paddingBottom={bottomInset + spacing.lg}
+      paddingBottom={bottomInset + spaceScale[4]}
       paddingHorizontal="$5"
       paddingTop="$4"
       position="absolute"
       right={0}
-      shadowColor={colors.shadowColor}
+      shadowColor={theme.shadowColor.val}
       shadowOffset={{ width: 0, height: -10 }}
       shadowOpacity={0.06}
       shadowRadius={18}

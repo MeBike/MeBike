@@ -1,15 +1,15 @@
+import React from "react";
+import { Pressable } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { BikeDetailNavigationProp } from "@/types/navigation";
+import type { Reservation } from "@/types/reservation-types";
+
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { borderWidths } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { formatVietnamDateTime } from "@utils/date";
-import React from "react";
-import { Pressable, StyleSheet } from "react-native";
-import { XStack, YStack } from "tamagui";
-
-import type { BikeDetailNavigationProp } from "@/types/navigation";
-import type { Reservation } from "@/types/reservation-types";
 
 export function ReservationBanner({
   reservation,
@@ -18,6 +18,8 @@ export function ReservationBanner({
   reservation: Reservation;
   navigation: BikeDetailNavigationProp;
 }) {
+  const theme = useTheme();
+
   return (
     <AppCard elevated={false} style={{ borderRadius: 24 }} tone="accent">
       <YStack gap="$3">
@@ -33,7 +35,7 @@ export function ReservationBanner({
             </AppText>
           </YStack>
 
-          <IconSymbol color={colors.brandPrimary} name="calendar" size={20} />
+          <IconSymbol color={theme.actionPrimary.val} name="calendar" size={20} />
         </XStack>
 
         <Pressable
@@ -43,31 +45,25 @@ export function ReservationBanner({
               reservationId: reservation.id,
               reservation,
             })}
-          style={({ pressed }) => [styles.actionButton, pressed ? styles.actionButtonPressed : null]}
+          style={({ pressed }) => ({
+            alignSelf: "flex-start",
+            borderWidth: borderWidths.subtle,
+            borderColor: theme.borderSubtle.val,
+            borderRadius: 999,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            backgroundColor: theme.surfaceDefault.val,
+            opacity: pressed ? 0.88 : 1,
+          })}
         >
           <XStack alignItems="center" gap="$2">
             <AppText tone="brand" variant="bodyStrong">
               Xem chi tiết giữ xe
             </AppText>
-            <IconSymbol color={colors.brandPrimary} name="arrow.right" size={16} />
+            <IconSymbol color={theme.actionPrimary.val} name="arrow.right" size={16} />
           </XStack>
         </Pressable>
       </YStack>
     </AppCard>
   );
 }
-
-const styles = StyleSheet.create({
-  actionButton: {
-    alignSelf: "flex-start",
-    borderWidth: borderWidths.subtle,
-    borderColor: colors.borderSubtle,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: colors.surface,
-  },
-  actionButtonPressed: {
-    opacity: 0.88,
-  },
-});

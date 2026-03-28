@@ -5,7 +5,6 @@ import {
   PaymentSheetError,
   presentPaymentSheet,
 } from "@stripe/stripe-react-native";
-import { colors } from "@theme/colors";
 import { AppText } from "@ui/primitives/app-text";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -24,9 +23,10 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useTheme } from "tamagui";
 
 import { hasStripePublishableKey, STRIPE_RETURN_URL } from "../../../lib/stripe";
-import { styles } from "./styles";
+import { createQrModalStyles } from "./styles";
 
 type QRModalProps = {
   visible: boolean;
@@ -39,6 +39,29 @@ const SHEET_OPEN_DURATION = 260;
 const SHEET_CLOSE_DURATION = 220;
 
 export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
+  const theme = useTheme();
+  const themePalette = useMemo(() => ({
+    overlayScrim: theme.overlayScrim.val,
+    surfaceDefault: theme.surfaceDefault.val,
+    borderDefault: theme.borderDefault.val,
+    surfaceMuted: theme.surfaceMuted.val,
+    actionPrimary: theme.actionPrimary.val,
+    surfaceAccent: theme.surfaceAccent.val,
+    textPrimary: theme.textPrimary.val,
+    shadowColor: theme.shadowColor.val,
+    onActionPrimary: theme.onActionPrimary.val,
+  }), [
+    theme.actionPrimary.val,
+    theme.borderDefault.val,
+    theme.onActionPrimary.val,
+    theme.overlayScrim.val,
+    theme.shadowColor.val,
+    theme.surfaceAccent.val,
+    theme.surfaceDefault.val,
+    theme.surfaceMuted.val,
+    theme.textPrimary.val,
+  ]);
+  const styles = useMemo(() => createQrModalStyles(themePalette), [themePalette]);
   const [amount, setAmount] = useState("50000");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -192,7 +215,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
               <AppText variant="title">Nạp tiền vào ví</AppText>
 
               <Pressable onPress={closeWithAnimation} style={({ pressed }) => [styles.closeButton, pressed ? styles.closeButtonPressed : null]}>
-                <IconSymbol color={colors.textSecondary} name="xmark" size={18} />
+                <IconSymbol color={theme.textSecondary.val} name="xmark" size={18} />
               </Pressable>
             </View>
 
@@ -205,7 +228,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
                 keyboardType="number-pad"
                 onChangeText={setAmount}
                 placeholder="0"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={theme.textTertiary.val}
                 style={styles.amountInput}
                 value={amount}
               />
@@ -244,7 +267,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
               ]}
             >
               {isSubmitting
-                ? <ActivityIndicator color={colors.textOnBrand} />
+                ? <ActivityIndicator color={theme.onActionPrimary.val} />
                 : <AppText tone="inverted" variant="headline">Mở Stripe PaymentSheet</AppText>}
             </Pressable>
           </Animated.View>

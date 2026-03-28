@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 
+import { useTheme, XStack, YStack } from "tamagui";
+
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
-import { XStack, YStack } from "tamagui";
 
 type InfoCardProps = {
   title: string;
@@ -13,6 +13,8 @@ type InfoCardProps = {
 };
 
 export default function InfoCard({ title, icon, children }: InfoCardProps) {
+  const theme = useTheme();
+
   return (
     <AppCard borderRadius="$5" gap="$4" padding="$5">
       <XStack alignItems="center" gap="$3">
@@ -24,7 +26,7 @@ export default function InfoCard({ title, icon, children }: InfoCardProps) {
           justifyContent="center"
           width={40}
         >
-          <IconSymbol color={colors.brandPrimary} name={icon as any} size={18} />
+          <IconSymbol color={theme.actionPrimary.val} name={icon as any} size={18} />
         </YStack>
         <AppText variant="sectionTitle">{title}</AppText>
       </XStack>

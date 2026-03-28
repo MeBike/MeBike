@@ -17,6 +17,12 @@ export const UserSummarySchema = z.object({
   fullName: z.string(),
 });
 
+export const TechnicianTeamAvailableOptionSchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+  stationId: z.uuidv7(),
+});
+
 export const UserDetailSchema = z.object({
   id: z.uuidv7(),
   fullName: z.string(),
@@ -35,6 +41,7 @@ export const UserDetailSchema = z.object({
 });
 
 export type UserSummary = z.infer<typeof UserSummarySchema>;
+export type TechnicianTeamAvailableOption = z.infer<typeof TechnicianTeamAvailableOptionSchema>;
 export type UserDetail = z.infer<typeof UserDetailSchema>;
 export type UserOrgAssignment = z.infer<typeof UserOrgAssignmentSchema>;
 

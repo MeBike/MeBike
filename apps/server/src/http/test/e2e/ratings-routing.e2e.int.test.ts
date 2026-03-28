@@ -11,16 +11,13 @@ describe("ratings routing e2e", () => {
     buildLayer: async () => {
       const { Layer } = await import("effect");
       const { PrismaLive } = await import("@/infrastructure/prisma");
-      const { UserRepositoryLive } = await import("@/domain/users/repository/user.repository");
-      const { UserServiceLive } = await import("@/domain/users/services/user.service");
       const { BikeRepositoryLive } = await import("@/domain/bikes/repository/bike.repository");
       const { StationRepositoryLive } = await import("@/domain/stations/repository/station.repository");
       const { RatingRepositoryLive } = await import("@/domain/ratings/repository/rating.repository");
       const { RatingReasonRepositoryLive } = await import("@/domain/ratings/repository/rating-reason.repository");
       const { RatingServiceLive } = await import("@/domain/ratings/services/rating.service");
+      const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
-      const userRepoLayer = UserRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const userServiceLayer = UserServiceLive.pipe(Layer.provide(userRepoLayer));
       const bikeRepoLayer = BikeRepositoryLive.pipe(Layer.provide(PrismaLive));
       const stationRepoLayer = StationRepositoryLive.pipe(Layer.provide(PrismaLive));
       const ratingReposLayer = Layer.mergeAll(
@@ -34,8 +31,7 @@ describe("ratings routing e2e", () => {
       );
 
       return Layer.mergeAll(
-        userRepoLayer,
-        userServiceLayer,
+        UserDepsLive,
         bikeRepoLayer,
         stationRepoLayer,
         ratingReposLayer,

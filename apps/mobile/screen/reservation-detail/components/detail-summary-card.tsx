@@ -1,17 +1,16 @@
+import React from "react";
+import { View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { Reservation } from "@/types/reservation-types";
+
+import { formatCurrency } from "@/utils/reservation-screen-utils";
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
 import { getReservationStatusLabel, getReservationStatusTone } from "@utils/reservation";
-import React from "react";
-import { View } from "react-native";
-import { XStack, YStack } from "tamagui";
-
-import type { Reservation } from "@/types/reservation-types";
-
-import { formatCurrency } from "@/utils/reservation-screen-utils";
 
 import {
   formatReservationDateTime,
@@ -40,6 +39,7 @@ export function DetailSummaryCard({
   stationName,
   stationAddress,
 }: DetailSummaryCardProps) {
+  const theme = useTheme();
   const isPending = reservation.status === "PENDING";
   const statusIcon = getStatusIcon(reservation.status);
   const title = getReservationIdentityTitle(reservation);
@@ -54,7 +54,7 @@ export function DetailSummaryCard({
   return (
     <View
       style={{
-        shadowColor: colors.shadowColor,
+        shadowColor: theme.shadowColor.val,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.08,
         shadowRadius: 20,
@@ -74,13 +74,13 @@ export function DetailSummaryCard({
                 width={60}
               >
                 <IconSymbol
-                  color={colors.brandPrimary}
+                  color={theme.actionPrimary.val}
                   name={getReservationIdentityIcon(reservation)}
                   size={26}
                 />
               </XStack>
 
-              <YStack flex={1} gap="$2.5" paddingTop="$1">
+              <YStack flex={1} gap="$3" paddingTop="$1">
                 <XStack alignItems="flex-start" gap="$3" justifyContent="space-between">
                   <AppText
                     flex={1}
@@ -90,7 +90,7 @@ export function DetailSummaryCard({
                     {title}
                   </AppText>
 
-                  <YStack paddingTop="$0.5">
+                  <YStack paddingTop="$1">
                     <StatusBadge
                       iconName={statusIcon}
                       label={getReservationStatusLabel(reservation.status).toUpperCase()}
@@ -108,13 +108,13 @@ export function DetailSummaryCard({
                     {" "}
                     {shortReservationId}
                   </AppText>
-                  <IconSymbol color={colors.textMuted} name="doc.on.doc" size={14} />
+                  <IconSymbol color={theme.textTertiary.val} name="doc.on.doc" size={14} />
                 </XStack>
               </YStack>
             </XStack>
           </XStack>
 
-          <View style={{ height: 1, backgroundColor: colors.surfaceMuted }} />
+          <View style={{ height: 1, backgroundColor: theme.surfaceMuted.val }} />
 
           <YStack gap="$7" padding="$6">
             <DetailRow

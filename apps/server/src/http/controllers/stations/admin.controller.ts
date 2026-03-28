@@ -3,14 +3,57 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Match } from "effect";
 
 import { StationServiceTag } from "@/domain/stations";
+import { toContractStationReadSummary } from "@/http/presenters/stations.presenter";
 
 import type {
   StationErrorResponse,
+  StationListResponse,
   StationsRoutes,
   StationSummary,
 } from "./shared";
 
 import { StationErrorCodeSchema, stationErrorMessages } from "./shared";
+
+const listStations: RouteHandler<StationsRoutes["adminListStations"]> = async (c) => {
+  const query = c.req.valid("query");
+
+  const eff = Effect.flatMap(StationServiceTag, service =>
+    service.listStations(
+      {
+        name: query.name,
+        address: query.address,
+        totalCapacity: query.totalCapacity,
+        excludeAssignedStaff: true,
+      },
+      {
+        page: query.page ?? 1,
+        pageSize: query.pageSize ?? 50,
+        sortBy: query.sortBy ?? "name",
+        sortDir: query.sortDir ?? "asc",
+      },
+    ));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<StationListResponse, 200>({
+        data: right.items.map(toContractStationReadSummary),
+        pagination: {
+          page: right.page,
+          pageSize: right.pageSize,
+          total: right.total,
+          totalPages: right.totalPages,
+        },
+      }, 200)),
+    Match.tag("Left", () =>
+      c.json<StationErrorResponse, 400>({
+        error: stationErrorMessages.INVALID_QUERY_PARAMS,
+        details: { code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS },
+      }, 400)),
+    Match.exhaustive,
+  );
+};
 
 const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) => {
   const body = c.req.valid("json");
@@ -126,6 +169,7 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
 };
 
 export const StationAdminController = {
+  listStations,
   createStation,
   updateStation,
 } as const;

@@ -15,6 +15,7 @@ import {
   ChangePasswordRequestSchema,
   PushTokenSummarySchema,
   RegisterPushTokenRequestSchema,
+  UploadAvatarRequestSchema,
   UnregisterPushTokenRequestSchema,
   UpdateMeRequestSchema,
   UpdateMeResponseSchema,
@@ -114,7 +115,7 @@ export const updateMeRoute = createRoute({
       },
     },
     409: {
-      description: "Duplicate email or phone number",
+      description: "Duplicate email, phone number, or technician team capacity conflict",
       content: {
         "application/json": {
           schema: UserErrorResponseSchema,
@@ -129,6 +130,119 @@ export const updateMeRoute = createRoute({
               value: {
                 error: userErrorMessages.DUPLICATE_PHONE_NUMBER,
                 details: { code: UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
+              },
+            },
+            TechnicianTeamFull: {
+              value: {
+                error: userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const uploadMyAvatarRoute = createRoute({
+  method: "put",
+  path: "/v1/users/me/avatar",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": {
+          schema: UploadAvatarRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Updated avatar",
+      content: {
+        "application/json": {
+          schema: UpdateMeResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid avatar image",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            AvatarTooLarge: {
+              value: {
+                error: userErrorMessages.AVATAR_IMAGE_TOO_LARGE,
+                details: { code: UserErrorCodeSchema.enum.AVATAR_IMAGE_TOO_LARGE },
+              },
+            },
+            InvalidAvatar: {
+              value: {
+                error: userErrorMessages.INVALID_AVATAR_IMAGE,
+                details: { code: UserErrorCodeSchema.enum.INVALID_AVATAR_IMAGE },
+              },
+            },
+            AvatarDimensionsTooLarge: {
+              value: {
+                error: userErrorMessages.AVATAR_IMAGE_DIMENSIONS_TOO_LARGE,
+                details: {
+                  code: UserErrorCodeSchema.enum.AVATAR_IMAGE_DIMENSIONS_TOO_LARGE,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    413: {
+      description: "Avatar image exceeds request size limit",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            AvatarTooLarge: {
+              value: {
+                error: userErrorMessages.AVATAR_IMAGE_TOO_LARGE,
+                details: { code: UserErrorCodeSchema.enum.AVATAR_IMAGE_TOO_LARGE },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: userErrorMessages.USER_NOT_FOUND,
+                details: { code: UserErrorCodeSchema.enum.USER_NOT_FOUND },
+              },
+            },
+          },
+        },
+      },
+    },
+    503: {
+      description: "Avatar upload storage is unavailable",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            AvatarUploadUnavailable: {
+              value: {
+                error: userErrorMessages.AVATAR_UPLOAD_UNAVAILABLE,
+                details: { code: UserErrorCodeSchema.enum.AVATAR_UPLOAD_UNAVAILABLE },
               },
             },
           },
@@ -330,7 +444,7 @@ export const adminUpdateUserRoute = createRoute({
       },
     },
     409: {
-      description: "Duplicate email or phone number",
+      description: "Duplicate email, phone number, or technician team capacity conflict",
       content: {
         "application/json": {
           schema: UserErrorResponseSchema,
@@ -345,6 +459,14 @@ export const adminUpdateUserRoute = createRoute({
               value: {
                 error: userErrorMessages.DUPLICATE_PHONE_NUMBER,
                 details: { code: UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
+              },
+            },
+            TechnicianTeamFull: {
+              value: {
+                error: userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                },
               },
             },
           },

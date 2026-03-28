@@ -11,22 +11,16 @@ describe("manage-users org assignment e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
       const { Layer } = await import("effect");
-      const { PrismaLive } = await import("@/infrastructure/prisma");
-      const { UserRepositoryLive } = await import("@/domain/users/repository/user.repository");
+      const { UserDepsLive } = await import("@/http/shared/features/user.layers");
       const { UserStatsRepositoryLive } = await import("@/domain/users/repository/user-stats.repository");
-      const { UserServiceLive } = await import("@/domain/users/services/user.service");
       const { UserStatsServiceLive } = await import("@/domain/users/services/user-stats.service");
 
-      const userRepoLayer = UserRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const userServiceLayer = UserServiceLive.pipe(Layer.provide(userRepoLayer));
       const userStatsServiceLayer = UserStatsServiceLive.pipe(Layer.provide(UserStatsRepositoryLive));
 
       return Layer.mergeAll(
-        userRepoLayer,
-        userServiceLayer,
+        UserDepsLive,
         UserStatsRepositoryLive,
         userStatsServiceLayer,
-        PrismaLive,
       );
     },
     seedData: async (_db, prisma) => {
@@ -221,6 +215,150 @@ describe("manage-users org assignment e2e", () => {
     expect(list.data.some(user => user.id === created.id)).toBe(true);
   });
 
+  it("returns team member limit error when creating a fourth technician in a team", async () => {
+    const station = await fixture.factories.station({ name: "Station Team Limit Create" });
+    const team = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Team Limit Create",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const user = await fixture.factories.user({
+        fullname: `Existing Tech ${i}`,
+        email: `existing-tech-${i}@example.com`,
+        role: "TECHNICIAN",
+      });
+
+      await fixture.factories.userOrgAssignment({
+        userId: user.id,
+        technicianTeamId: team.id,
+      });
+    }
+
+    const response = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Tech Overflow Create",
+        email: "tech-overflow-create@example.com",
+        password: "password123",
+        role: "TECHNICIAN",
+        orgAssignment: {
+          technicianTeamId: team.id,
+        },
+      }),
+    });
+
+    const body = await response.json() as UsersContracts.UserErrorResponse;
+
+    expect(response.status).toBe(409);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED");
+  });
+
+  it("lists available technician teams and omits full teams", async () => {
+    const station = await fixture.factories.station({ name: "Available Teams Station" });
+    const otherStation = await fixture.factories.station({ name: "Other Teams Station" });
+
+    const availableTeam = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Available Team",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+    const fullTeam = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Full Team",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+    const otherStationTeam = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Other Station Team",
+        stationId: otherStation.id,
+      },
+      select: { id: true },
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const user = await fixture.factories.user({
+        fullname: `Full Team Member ${i}`,
+        email: `full-team-member-${i}@example.com`,
+        role: "TECHNICIAN",
+      });
+
+      await fixture.factories.userOrgAssignment({
+        userId: user.id,
+        technicianTeamId: fullTeam.id,
+      });
+    }
+
+    const response = await fixture.app.request(
+      `http://test/v1/admin/technician-teams/available?stationId=${station.id}`,
+      {
+        method: "GET",
+        headers: adminAuthHeader(),
+      },
+    );
+
+    const body = await response.json() as {
+      data: Array<{ id: string; name: string; stationId: string }>;
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.data.map(item => item.id)).toContain(availableTeam.id);
+    expect(body.data.map(item => item.id)).not.toContain(fullTeam.id);
+    expect(body.data.map(item => item.id)).not.toContain(otherStationTeam.id);
+  });
+
+  it("filters multiple roles in a single admin list request", async () => {
+    const staff = await fixture.factories.user({
+      fullname: "Staff Multi Role",
+      email: "staff-multi-role@example.com",
+      role: "STAFF",
+    });
+    const technician = await fixture.factories.user({
+      fullname: "Technician Multi Role",
+      email: "technician-multi-role@example.com",
+      role: "TECHNICIAN",
+    });
+    const agency = await fixture.factories.user({
+      fullname: "Agency Multi Role",
+      email: "agency-multi-role@example.com",
+      role: "AGENCY",
+    });
+    const plainUser = await fixture.factories.user({
+      fullname: "User Multi Role",
+      email: "user-multi-role@example.com",
+      role: "USER",
+    });
+
+    const response = await fixture.app.request(
+      "http://test/v1/users/manage-users/get-all?page=1&pageSize=20&roles=STAFF,TECHNICIAN,AGENCY",
+      {
+        method: "GET",
+        headers: adminAuthHeader(),
+      },
+    );
+
+    const body = await response.json() as UsersContracts.AdminUserListResponse;
+    const returnedIds = body.data.map(user => user.id);
+
+    expect(response.status).toBe(200);
+    expect(returnedIds).toContain(staff.id);
+    expect(returnedIds).toContain(technician.id);
+    expect(returnedIds).toContain(agency.id);
+    expect(returnedIds).not.toContain(plainUser.id);
+  });
+
   it("returns technician summaries with only id and fullName", async () => {
     const technician = await fixture.factories.user({
       fullname: "Alpha Technician",
@@ -308,6 +446,55 @@ describe("manage-users org assignment e2e", () => {
     expect(clearResponse.status).toBe(200);
     expect(cleared.role).toBe("MANAGER");
     expect(cleared.orgAssignment).toBeNull();
+  });
+
+  it("returns team member limit error when updating a user into a full technician team", async () => {
+    const station = await fixture.factories.station({ name: "Station Team Limit Update" });
+    const team = await fixture.prisma.technicianTeam.create({
+      data: {
+        id: uuidv7(),
+        name: "Team Limit Update",
+        stationId: station.id,
+      },
+      select: { id: true },
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const user = await fixture.factories.user({
+        fullname: `Update Existing Tech ${i}`,
+        email: `update-existing-tech-${i}@example.com`,
+        role: "TECHNICIAN",
+      });
+
+      await fixture.factories.userOrgAssignment({
+        userId: user.id,
+        technicianTeamId: team.id,
+      });
+    }
+
+    const targetUser = await fixture.factories.user({
+      role: "TECHNICIAN",
+      email: "tech-overflow-update@example.com",
+    });
+
+    const response = await fixture.app.request(
+      `http://test/v1/users/manage-users/${targetUser.id}`,
+      {
+        method: "PATCH",
+        headers: adminAuthHeader(),
+        body: JSON.stringify({
+          role: "TECHNICIAN",
+          orgAssignment: {
+            technicianTeamId: team.id,
+          },
+        }),
+      },
+    );
+
+    const body = await response.json() as UsersContracts.UserErrorResponse;
+
+    expect(response.status).toBe(409);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED");
   });
 
   it("preserves existing org assignment when update omits orgAssignment", async () => {

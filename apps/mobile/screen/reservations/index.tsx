@@ -1,10 +1,10 @@
-import { useAuthNext } from "@providers/auth-provider-next";
-import { colors } from "@theme/colors";
-import { spacing } from "@theme/metrics";
-import { Screen } from "@ui/primitives/screen";
 import React, { useMemo } from "react";
 import { StatusBar, View } from "react-native";
-import { YStack } from "tamagui";
+import { useTheme, YStack } from "tamagui";
+
+import { useAuthNext } from "@providers/auth-provider-next";
+import { spaceScale } from "@theme/metrics";
+import { Screen } from "@ui/primitives/screen";
 
 import { useReservationNavigation } from "../../hooks/use-reservation-navigation";
 import { ReservationHeader } from "./components/reservation-header";
@@ -13,6 +13,7 @@ import { ReservationsList } from "./components/reservations-list";
 import { useReservations } from "./hooks/use-reservations";
 
 function ReservationsScreen() {
+  const theme = useTheme();
   const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
 
@@ -45,18 +46,18 @@ function ReservationsScreen() {
       />
       {isFetching && !refreshing && !isLoadingMoreHistory
         ? (
-            <View style={{ paddingTop: spacing.lg }}>
+            <View style={{ paddingTop: spaceScale[4] }}>
               <ReservationInlineLoader />
             </View>
           )
         : null}
-      <View style={{ height: spacing.xl }} />
+      <View style={{ height: spaceScale[5] }} />
     </YStack>
   ), [activeFilter, canGoBack, filters, goBack, isFetching, isLoadingMoreHistory, refreshing, setActiveFilter]);
 
   return (
     <Screen>
-      <StatusBar barStyle="light-content" backgroundColor={colors.brandPrimary} />
+      <StatusBar barStyle="light-content" backgroundColor={theme.actionPrimary.val} />
 
       {isLoading
         ? (

@@ -213,7 +213,7 @@ describe("authService Integration", () => {
 
     await verifyEmailOtp({ userId, otp: "123456" });
 
-    const updated = await Effect.runPromise(auth.userRepo.findById(userId));
+    const updated = await Effect.runPromise(auth.userQueryRepo.findById(userId));
     if (Option.isNone(updated)) {
       throw new Error("Expected user to exist");
     }
@@ -266,7 +266,7 @@ describe("authService Integration", () => {
 
     await verifyEmailOtp({ userId, otp: "123456" });
 
-    const updated = await Effect.runPromise(auth.userRepo.findById(userId));
+    const updated = await Effect.runPromise(auth.userQueryRepo.findById(userId));
     if (Option.isNone(updated)) {
       throw new Error("Expected user to exist");
     }
@@ -308,7 +308,7 @@ describe("authService Integration", () => {
     const oldSession = await Effect.runPromise(auth.authRepo.getSession(beforeResetSessionId));
     expect(Option.isNone(oldSession)).toBe(true);
 
-    const updated = await Effect.runPromise(auth.userRepo.findById(userId));
+    const updated = await Effect.runPromise(auth.userQueryRepo.findById(userId));
     if (Option.isNone(updated)) {
       throw new Error("Expected user to exist");
     }
@@ -374,7 +374,7 @@ describe("authService Integration", () => {
       newPassword: "NewPassword123!",
     });
 
-    const updated = await Effect.runPromise(auth.userRepo.findById(userId));
+    const updated = await Effect.runPromise(auth.userQueryRepo.findById(userId));
     if (Option.isNone(updated)) {
       throw new Error("Expected user to exist");
     }

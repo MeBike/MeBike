@@ -1,5 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import { forbiddenResponse, unauthorizedResponse } from "../helpers";
+
 import {
   BikeRevenueResponseSchemaOpenApi,
   HighestRevenueStationSchemaOpenApi,
@@ -73,6 +75,66 @@ export const listStations = createRoute({
         },
       },
     },
+  },
+});
+
+export const adminListStations = createRoute({
+  method: "get",
+  path: "/v1/admin/stations",
+  tags: ["Admin", "Stations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: StationListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "List stations available for staff assignment",
+      content: {
+        "application/json": { schema: StationListResponseSchema },
+      },
+    },
+    400: {
+      description: "Invalid query",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+          examples: {
+            InvalidTotalCapacity: {
+              value: {
+                error: "Invalid query parameters",
+                details: {
+                  code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
+                  issues: [
+                    {
+                      path: "query.totalCapacity",
+                      message: "Expected number, received string",
+                      code: "invalid_type",
+                    },
+                  ],
+                },
+              },
+            },
+            InvalidPage: {
+              value: {
+                error: "Invalid query parameters",
+                details: {
+                  code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
+                  issues: [
+                    {
+                      path: "query.page",
+                      message: "Number must be greater than 0",
+                      code: "too_small",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 

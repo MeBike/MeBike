@@ -29,18 +29,28 @@ export const UserErrorCodeSchema = z.enum([
   "USER_NOT_FOUND",
   "DUPLICATE_EMAIL",
   "DUPLICATE_PHONE_NUMBER",
+  "AVATAR_IMAGE_TOO_LARGE",
+  "INVALID_AVATAR_IMAGE",
+  "AVATAR_IMAGE_DIMENSIONS_TOO_LARGE",
+  "AVATAR_UPLOAD_UNAVAILABLE",
   "INVALID_CURRENT_PASSWORD",
   "INVALID_PUSH_TOKEN",
   "INVALID_ORG_ASSIGNMENT",
+  "TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED",
 ]).openapi("UserErrorCode");
 
 export const userErrorMessages = {
   USER_NOT_FOUND: "User not found",
   DUPLICATE_EMAIL: "Email already in use",
   DUPLICATE_PHONE_NUMBER: "Phone number already in use",
+  AVATAR_IMAGE_TOO_LARGE: "Avatar image is too large",
+  INVALID_AVATAR_IMAGE: "Avatar image is invalid or unsupported",
+  AVATAR_IMAGE_DIMENSIONS_TOO_LARGE: "Avatar image dimensions are too large",
+  AVATAR_UPLOAD_UNAVAILABLE: "Avatar upload is temporarily unavailable",
   INVALID_CURRENT_PASSWORD: "Current password is incorrect",
   INVALID_PUSH_TOKEN: "Invalid push token",
   INVALID_ORG_ASSIGNMENT: "Invalid org assignment for role",
+  TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED: "Technician team already has maximum members",
 } as const;
 
 export const UserStatsErrorCodeSchema = z.enum([

@@ -1,5 +1,4 @@
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppText } from "@ui/primitives/app-text";
 import {
   formatCurrency,
@@ -7,7 +6,7 @@ import {
   formatTransactionStatus,
   formatTransactionType,
 } from "@utils/wallet/formatters";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import Animated, {
   Easing,
@@ -15,8 +14,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useTheme } from "tamagui";
 
-import { styles } from "./styles";
+import { createTransactionDetailModalStyles } from "./styles";
 
 type Transaction = {
   id: string;
@@ -70,6 +70,8 @@ function DetailRow({
   strong = false,
   showToggle = false,
   onToggle,
+  styles,
+  copyIconColor,
 }: {
   label: string;
   value: string;
@@ -77,6 +79,8 @@ function DetailRow({
   strong?: boolean;
   showToggle?: boolean;
   onToggle?: () => void;
+  styles: ReturnType<typeof createTransactionDetailModalStyles>;
+  copyIconColor: string;
 }) {
   return (
     <View style={styles.row}>
@@ -101,7 +105,7 @@ function DetailRow({
         {showToggle && onToggle
           ? (
               <Pressable onPress={onToggle} style={({ pressed }) => [styles.copyButton, pressed ? styles.copyButtonPressed : null]}>
-                <IconSymbol color={colors.textMuted} name="doc.on.doc" size={16} />
+                <IconSymbol color={copyIconColor} name="doc.on.doc" size={16} />
               </Pressable>
             )
           : null}
@@ -115,6 +119,31 @@ export function TransactionDetailModal({
   onClose,
   transaction,
 }: TransactionDetailModalProps) {
+  const theme = useTheme();
+  const themePalette = useMemo(() => ({
+    overlayScrim: theme.overlayScrim.val,
+    surfaceDefault: theme.surfaceDefault.val,
+    shadowColor: theme.shadowColor.val,
+    borderDefault: theme.borderDefault.val,
+    surfaceMuted: theme.surfaceMuted.val,
+    textSecondary: theme.textSecondary.val,
+    textPrimary: theme.textPrimary.val,
+    statusSuccess: theme.statusSuccess.val,
+    statusWarning: theme.statusWarning.val,
+    statusDanger: theme.statusDanger.val,
+  }), [
+    theme.borderDefault.val,
+    theme.overlayScrim.val,
+    theme.shadowColor.val,
+    theme.statusDanger.val,
+    theme.statusSuccess.val,
+    theme.statusWarning.val,
+    theme.surfaceDefault.val,
+    theme.surfaceMuted.val,
+    theme.textPrimary.val,
+    theme.textSecondary.val,
+  ]);
+  const styles = useMemo(() => createTransactionDetailModalStyles(themePalette), [themePalette]);
   const [showFullReference, setShowFullReference] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -201,15 +230,17 @@ export function TransactionDetailModal({
             <AppText variant="title">Chi tiết giao dịch</AppText>
 
             <Pressable onPress={closeWithAnimation} style={({ pressed }) => [styles.closeButton, pressed ? styles.closeButtonPressed : null]}>
-              <IconSymbol color={colors.textSecondary} name="xmark" size={18} />
+              <IconSymbol color={theme.textSecondary.val} name="xmark" size={18} />
             </Pressable>
           </View>
 
           <View style={styles.block}>
             <DetailRow
+              copyIconColor={theme.textTertiary.val}
               label="Mã tham chiếu:"
               onToggle={() => setShowFullReference(value => !value)}
               showToggle
+              styles={styles}
               value={shortReference}
             />
 
@@ -225,21 +256,25 @@ export function TransactionDetailModal({
 
             <View style={styles.divider} />
 
-            <DetailRow label="Loại:" value={formatTransactionType(transaction.type)} />
+            <DetailRow copyIconColor={theme.textTertiary.val} label="Loại:" styles={styles} value={formatTransactionType(transaction.type)} />
             <DetailRow
+              copyIconColor={theme.textTertiary.val}
               label="Số tiền:"
+              styles={styles}
               strong
               value={`${amountPrefix}${formatCurrency(transaction.amount)}`}
               valueTone={isMoneyOut ? "default" : "success"}
             />
             <DetailRow
+              copyIconColor={theme.textTertiary.val}
               label="Trạng thái:"
+              styles={styles}
               strong
               value={formatTransactionStatus(transaction.status)}
               valueTone={statusTone}
             />
-            <DetailRow label="Thời gian:" value={formatDate(transaction.createdAt)} />
-            <DetailRow label="Mô tả:" value={transaction.description || "--"} />
+            <DetailRow copyIconColor={theme.textTertiary.val} label="Thời gian:" styles={styles} value={formatDate(transaction.createdAt)} />
+            <DetailRow copyIconColor={theme.textTertiary.val} label="Mô tả:" styles={styles} value={transaction.description || "--"} />
           </View>
         </Animated.View>
       </View>

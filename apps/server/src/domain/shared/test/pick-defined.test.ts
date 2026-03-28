@@ -25,4 +25,22 @@ describe("pickDefined", () => {
     expect(input).toEqual({ a: 1, b: undefined });
     expect(out).toEqual({ a: 1 });
   });
+
+  it("can return undefined when all values are undefined", () => {
+    const out = pickDefined(
+      { a: undefined, b: undefined },
+      { returnUndefinedIfEmpty: true },
+    );
+
+    expect(out).toBeUndefined();
+  });
+
+  it("still returns values when returnUndefinedIfEmpty is enabled", () => {
+    const out = pickDefined(
+      { a: 1, b: undefined, c: false },
+      { returnUndefinedIfEmpty: true },
+    );
+
+    expect(out).toEqual({ a: 1, c: false });
+  });
 });

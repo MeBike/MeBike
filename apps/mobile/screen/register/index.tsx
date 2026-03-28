@@ -1,18 +1,10 @@
-import { spacing } from "@theme/metrics";
+import { spaceScale } from "@theme/metrics";
 import { AuthScreen } from "@ui/patterns/auth-screen";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
 import RegisterForm from "./components/register-form";
 import RegisterHeader from "./components/register-header";
 import { useRegister } from "./hooks/use-register";
-
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xxxl,
-  },
-});
 
 function RegisterScreen() {
   const {
@@ -29,7 +21,7 @@ function RegisterScreen() {
 
   return (
     <AuthScreen header={<RegisterHeader onBack={goBack} />}>
-      <View style={styles.content}>
+      <View style={{ paddingHorizontal: spaceScale[6], paddingTop: spaceScale[3], paddingBottom: spaceScale[7] }}>
         <RegisterForm
           control={control}
           errors={errors}

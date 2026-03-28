@@ -27,6 +27,11 @@ export class InvalidOrgAssignment extends Data.TaggedError("InvalidOrgAssignment
   readonly technicianTeamId: string | null;
 }> {}
 
+export class TechnicianTeamMemberLimitExceeded extends Data.TaggedError("TechnicianTeamMemberLimitExceeded")<{
+  readonly technicianTeamId: string;
+  readonly memberLimit: number;
+}> {}
+
 export class UserStatsServiceError extends Data.TaggedError("UserStatsServiceError")<{
   readonly message: string;
   readonly cause?: unknown;

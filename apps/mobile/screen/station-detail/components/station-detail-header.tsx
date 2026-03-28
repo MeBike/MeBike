@@ -1,12 +1,10 @@
-import { XStack } from "tamagui";
-
-import type { StationReadSummary } from "@/contracts/server";
-
 import { IconSymbol } from "@components/IconSymbol";
-import { colors } from "@theme/colors";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
+import { useTheme, XStack } from "tamagui";
+
+import type { StationReadSummary } from "@/contracts/server";
 
 type StationDetailHeaderProps = {
   onBack: () => void;
@@ -17,36 +15,29 @@ export function StationDetailHeader({
   onBack,
   station,
 }: StationDetailHeaderProps) {
+  const theme = useTheme();
+
   return (
     <AppHeroHeader
       accessory={<StatusBadge label="HOẠT ĐỘNG" size="compact" tone="overlaySuccess" />}
       onBack={onBack}
       size="default"
       subtitle={(
-        <XStack alignItems="center" gap="$1.5">
-          <IconSymbol name="location.fill" size={14} color={colors.textOnBrand} />
-          <AppText
-            selectable
-            flexShrink={1}
-            numberOfLines={1}
-            opacity={0.9}
-            tone="inverted"
-            variant="bodySmall"
-          >
-            {station.address}
-          </AppText>
-          <XStack
-            backgroundColor={colors.textOnBrand}
-            borderRadius="$round"
-            height={4}
-            opacity={0.45}
-            width={4}
-          />
-          <AppText selectable opacity={0.9} tone="inverted" variant="bodySmall">
-            {station.capacity.total}
-            {" "}
-            chỗ
-          </AppText>
+        <XStack alignItems="center" gap="$2">
+          <XStack alignItems="center" flex={1} gap="$2" minWidth={0}>
+            <IconSymbol name="location.fill" size={14} color={theme.onSurfaceBrand.val} />
+            <AppText
+              ellipsizeMode="tail"
+              flex={1}
+              minWidth={0}
+              numberOfLines={1}
+              opacity={0.9}
+              tone="inverted"
+              variant="bodySmall"
+            >
+              {station.address}
+            </AppText>
+          </XStack>
         </XStack>
       )}
       title={station.name}
