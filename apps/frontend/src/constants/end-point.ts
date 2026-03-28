@@ -22,6 +22,8 @@ export const ENDPOINT = {
         STATION_REVENUE: () => "/stations/revenue",
         STATION_NEAREST_AVAILABLE_BIKE: () =>
             "/stations/nearest-available-bike",
+        SELECT_STATION :  
+            "/admin/stations",
     },
     SUPPLIER : {
         BASE : "/suppliers",

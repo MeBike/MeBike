@@ -101,3 +101,8 @@ export interface StationActionProps {
   name?: string;
   longitude?: number;
 }
+export interface SelectStation {
+  id : string;
+  name : string;
+  stationId : string; 
+}
