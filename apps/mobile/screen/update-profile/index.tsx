@@ -13,6 +13,15 @@ import { UpdateProfileForm } from "./components/update-profile-form";
 import { UpdateProfileHeader } from "./components/update-profile-header";
 import { useUpdateProfile } from "./hooks/use-update-profile";
 
+const profileActionBarPaddingTop = spaceScale[4];
+const profileActionBarGap = spaceScale[3];
+const profileActionButtonHeight = spaceScale[7];
+const profileActionBarMinBottomPadding = spaceScale[5];
+const profileContentBottomInset = spaceScale[7];
+const profileContentMinBottomPadding = spaceScale[9];
+const profileActionBarReservedHeight
+  = profileActionBarPaddingTop + profileActionBarGap + profileActionButtonHeight * 2;
+
 export default function UpdateProfileScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
@@ -35,6 +44,10 @@ export default function UpdateProfileScreen() {
     selectSuggestion,
     setLocation,
   } = useUpdateProfile();
+
+  const contentBottomPadding = isEditing
+    ? profileActionBarReservedHeight + Math.max(insets.bottom, profileActionBarMinBottomPadding)
+    : Math.max(insets.bottom + profileContentBottomInset, profileContentMinBottomPadding);
 
   if (isLoading && !user) {
     return (
@@ -66,7 +79,7 @@ export default function UpdateProfileScreen() {
             onStartEdit={startEdit}
           />
 
-          <YStack flex={1} marginTop={-spaceScale[5]}  position="relative">
+          <YStack flex={1} marginTop={-spaceScale[5]} position="relative">
             <AppCard
               borderBottomLeftRadius="$0"
               borderBottomRightRadius="$0"
@@ -77,25 +90,25 @@ export default function UpdateProfileScreen() {
               overflow="hidden"
               padding="$0"
             >
-            <ScrollView
-              contentContainerStyle={{
-                paddingTop: spaceScale[7],
-                paddingHorizontal: spaceScale[6],
-                paddingBottom: isEditing ? Math.max(insets.bottom + 140, 172) : Math.max(insets.bottom + 32, 48),
-              }}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
-              <UpdateProfileForm
-                control={control}
-                email={user?.email ?? ""}
-                errors={errors}
-                isEditing={isEditing}
-                locationSuggestions={addressSuggestions}
-                onLocationChange={setLocation}
-                onSelectLocationSuggestion={selectSuggestion}
-              />
-            </ScrollView>
+              <ScrollView
+                contentContainerStyle={{
+                  paddingTop: spaceScale[7],
+                  paddingHorizontal: spaceScale[6],
+                  paddingBottom: contentBottomPadding,
+                }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+              >
+                <UpdateProfileForm
+                  control={control}
+                  email={user?.email ?? ""}
+                  errors={errors}
+                  isEditing={isEditing}
+                  locationSuggestions={addressSuggestions}
+                  onLocationChange={setLocation}
+                  onSelectLocationSuggestion={selectSuggestion}
+                />
+              </ScrollView>
             </AppCard>
 
             {isEditing

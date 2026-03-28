@@ -66,16 +66,16 @@ function getUserErrorMessage(error: UserError, fallback = "Đã có lỗi xảy 
       case userErrorCodes.INVALID_AVATAR_IMAGE:
         return "Ảnh đại diện không hợp lệ. Hãy chọn ảnh JPG, PNG hoặc WEBP.";
       case userErrorCodes.AVATAR_IMAGE_DIMENSIONS_TOO_LARGE:
-        return "Kich thuoc anh qua lon. Vui long chon anh nho hon de tiep tuc.";
+        return "Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn để tiếp tục.";
       case userErrorCodes.AVATAR_UPLOAD_UNAVAILABLE:
-        return "Dich vu tai anh tam thoi khong kha dung. Vui long thu lai sau.";
+        return "Dịch vụ tải ảnh tạm thời không khả dụng. Vui lòng thử lại sau.";
       default:
         return error.message ?? fallback;
     }
   }
 
   if (error._tag === "NetworkError") {
-    return "Khong the ket noi toi may chu.";
+    return "Không thể kết nối tới máy chủ.";
   }
 
   return fallback;
@@ -149,7 +149,7 @@ export function useUpdateProfile() {
     try {
       setIsPickingAvatar(true);
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -162,10 +162,10 @@ export function useUpdateProfile() {
       const asset = result.assets[0];
       setPendingAvatar(createAvatarUploadPayload(asset));
       setPendingAvatarPreview(asset.uri);
-      Alert.alert("Da chon anh moi", "Anh dai dien se duoc cap nhat khi ban luu thay doi.");
+      Alert.alert("Đã chọn ảnh mới", "Ảnh đại diện sẽ được cập nhật khi bạn lưu thay đổi.");
     }
     catch {
-      Alert.alert("Loi", "Khong the mo thu vien anh. Vui long thu lai.");
+      Alert.alert("Lỗi", "Không thể mở thư viện ảnh. Vui lòng thử lại.");
     }
     finally {
       setIsPickingAvatar(false);
@@ -201,7 +201,7 @@ export function useUpdateProfile() {
 
   const submit = handleSubmit(async (data) => {
     if (!user) {
-      Alert.alert("Loi", "Khong tim thay thong tin tai khoan.");
+      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản.");
       return;
     }
 
@@ -210,7 +210,7 @@ export function useUpdateProfile() {
     const hasAvatarChange = pendingAvatar !== null;
 
     if (!hasProfileChanges && !hasAvatarChange) {
-      Alert.alert("Khong co thay doi", "Ban chua thay doi thong tin nao.");
+      Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
       setIsEditing(false);
       return;
     }
@@ -221,7 +221,7 @@ export function useUpdateProfile() {
       if (hasProfileChanges) {
         const profileResult = await userService.updateMe(changedData);
         if (!profileResult.ok) {
-          Alert.alert("Loi", getUserErrorMessage(profileResult.error, "Khong the cap nhat thong tin."));
+          Alert.alert("Lỗi", getUserErrorMessage(profileResult.error, "Không thể cập nhật thông tin."));
           return;
         }
       }
@@ -234,10 +234,10 @@ export function useUpdateProfile() {
           }
 
           Alert.alert(
-            "Loi",
+            "Lỗi",
             hasProfileChanges
-              ? `Da luu thong tin ho so, nhung chua the cap nhat anh dai dien. ${getUserErrorMessage(avatarResult.error)}`
-              : getUserErrorMessage(avatarResult.error, "Khong the cap nhat anh dai dien."),
+              ? `Đã lưu thông tin hồ sơ, nhưng chưa thể cập nhật ảnh đại diện. ${getUserErrorMessage(avatarResult.error)}`
+              : getUserErrorMessage(avatarResult.error, "Không thể cập nhật ảnh đại diện."),
           );
           return;
         }
@@ -249,12 +249,12 @@ export function useUpdateProfile() {
       setIsEditing(false);
 
       Alert.alert(
-        "Thanh cong",
+        "Thành công",
         hasProfileChanges && hasAvatarChange
-          ? "Da cap nhat ho so va anh dai dien."
+          ? "Đã cập nhật hồ sơ và ảnh đại diện."
           : hasAvatarChange
-            ? "Da cap nhat anh dai dien."
-            : "Da cap nhat thong tin ho so.",
+            ? "Đã cập nhật ảnh đại diện."
+            : "Đã cập nhật thông tin hồ sơ.",
       );
     }
     finally {

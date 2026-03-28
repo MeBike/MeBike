@@ -2,9 +2,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { ActivityIndicator, Image } from "react-native";
 import { Button, View, YStack, useTheme } from "tamagui";
 
+import { borderWidths, spaceScale } from "@theme/metrics";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
-import { spaceScale } from "@theme/metrics";
 import { StatusBadge } from "@ui/primitives/status-badge";
+
+const avatarFrameSize = spaceScale[10] + spaceScale[9] + spaceScale[6];
+const avatarImageSize = avatarFrameSize - spaceScale[3];
+const avatarActionButtonSize = spaceScale[8] - borderWidths.strong;
 
 type UpdateProfileHeaderProps = {
   onBack: () => void;
@@ -55,26 +59,26 @@ export function UpdateProfileHeader({
             </Button>
           )}
       footer={(
-        <YStack alignItems="center"  marginBottom={"$4"} >
+        <YStack alignItems="center" marginBottom="$4">
           <View
             alignItems="center"
-            height={136}
+            height={avatarFrameSize}
             justifyContent="center"
             overflow="visible"
             position="relative"
-            width={136}
+            width={avatarFrameSize}
           >
             <View
               alignItems="center"
               backgroundColor="$overlayGlassMuted"
               borderColor="$overlayGlass"
               borderRadius="$round"
-              borderWidth={"$1"}
+              borderWidth={borderWidths.subtle}
               justifyContent="center"
               overflow="hidden"
             >
               {avatarUrl
-                ? <Image source={{ uri: avatarUrl }} style={{ width: 124, height: 124 }} />
+                ? <Image source={{ uri: avatarUrl }} style={{ width: avatarImageSize, height: avatarImageSize }} />
                 : <MaterialIcons color={theme.onSurfaceBrand.val} name="account-circle" size={56} />}
             </View>
 
@@ -82,11 +86,11 @@ export function UpdateProfileHeader({
               backgroundColor="$surfaceDefault"
               borderColor="$borderSubtle"
               borderRadius="$round"
-              borderWidth={1}
+              borderWidth={borderWidths.subtle}
               bottom={-spaceScale[0]}
               chromeless
               disabled={isBusy || isPickingAvatar || !isEditing}
-              height={38}
+              height={avatarActionButtonSize}
               onPress={onPickAvatar}
               position="absolute"
               pressStyle={{ opacity: 0.92, scale: 0.98 }}
@@ -95,7 +99,7 @@ export function UpdateProfileHeader({
               shadowOffset={{ width: 0, height: 6 }}
               shadowOpacity={0.16}
               shadowRadius={14}
-              width={38}
+              width={avatarActionButtonSize}
               padding={0}
             >
               {isPickingAvatar

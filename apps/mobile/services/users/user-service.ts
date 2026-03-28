@@ -112,7 +112,7 @@ export const userService = {
         case StatusCodes.BAD_REQUEST:
         case StatusCodes.UNAUTHORIZED:
         case StatusCodes.NOT_FOUND:
-        case 413:
+        case StatusCodes.REQUEST_TOO_LONG:
         case StatusCodes.SERVICE_UNAVAILABLE:
           return err(await parseUserError(response));
         default:
