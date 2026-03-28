@@ -2,6 +2,8 @@ import type { Option } from "effect";
 
 import { Effect, Layer } from "effect";
 
+import type { PageResult } from "@/domain/shared/pagination";
+
 import type {
   AgencyRequestNotFound,
   AgencyRequestRepositoryError,
@@ -9,6 +11,7 @@ import type {
 } from "../domain-errors";
 import type {
   AgencyRequestFilter,
+  AgencyRequestPageRequest,
   AgencyRequestRow,
   ApproveAgencyRequestInput,
   ReviewAgencyRequestInput,
@@ -21,6 +24,10 @@ import { AgencyRequestRepository } from "../repository/agency-request.repository
 export type AgencyRequestService = {
   getById: (id: string) => Effect.Effect<Option.Option<AgencyRequestRow>, AgencyRequestRepositoryError>;
   list: (filter?: AgencyRequestFilter) => Effect.Effect<readonly AgencyRequestRow[], AgencyRequestRepositoryError>;
+  listWithOffset: (
+    filter: AgencyRequestFilter,
+    pageReq: AgencyRequestPageRequest,
+  ) => Effect.Effect<PageResult<AgencyRequestRow>, AgencyRequestRepositoryError>;
   submit: (input: SubmitAgencyRequestInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError>;
   approve: (
     agencyRequestId: string,
@@ -40,6 +47,7 @@ function makeAgencyRequestService(repo: AgencyRequestRepo): AgencyRequestService
   return {
     getById: id => repo.findById(id),
     list: filter => repo.list(filter),
+    listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
     submit: input => repo.submit(input),
     approve: (agencyRequestId, input) => repo.approve(agencyRequestId, input),
     reject: (agencyRequestId, input) => repo.reject(agencyRequestId, input),

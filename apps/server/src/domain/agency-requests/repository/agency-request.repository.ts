@@ -1,7 +1,9 @@
 import { Effect, Layer, Option } from "effect";
 
+import type { PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { AgencyRequestStatus } from "generated/prisma/client";
 
@@ -10,7 +12,9 @@ import type {
 } from "../domain-errors";
 import type {
   AgencyRequestFilter,
+  AgencyRequestPageRequest,
   AgencyRequestRow,
+  AgencyRequestSortField,
   ApproveAgencyRequestInput,
   ReviewAgencyRequestInput,
   SubmitAgencyRequestInput,
@@ -26,6 +30,10 @@ import { selectAgencyRequestRow, toAgencyRequestRow } from "./agency-request.map
 export type AgencyRequestRepo = {
   readonly findById: (id: string) => Effect.Effect<Option.Option<AgencyRequestRow>, AgencyRequestRepositoryError>;
   readonly list: (filter?: AgencyRequestFilter) => Effect.Effect<readonly AgencyRequestRow[], AgencyRequestRepositoryError>;
+  readonly listWithOffset: (
+    filter: AgencyRequestFilter,
+    pageReq: AgencyRequestPageRequest,
+  ) => Effect.Effect<PageResult<AgencyRequestRow>, AgencyRequestRepositoryError>;
   readonly submit: (input: SubmitAgencyRequestInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError>;
   readonly approve: (agencyRequestId: string, input: ApproveAgencyRequestInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
   readonly reject: (agencyRequestId: string, input: ReviewAgencyRequestInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
@@ -48,6 +56,40 @@ export function makeAgencyRequestRepository(
   db: PrismaClient | PrismaTypes.TransactionClient,
 ): AgencyRequestRepo {
   const client = db;
+
+  function toAgencyRequestWhere(filter: AgencyRequestFilter): PrismaTypes.AgencyRequestWhereInput {
+    return {
+      ...(filter.requesterUserId ? { requesterUserId: filter.requesterUserId } : {}),
+      ...(filter.requesterEmail
+        ? { requesterEmail: { contains: filter.requesterEmail, mode: "insensitive" as const } }
+        : {}),
+      ...(filter.agencyName
+        ? { agencyName: { contains: filter.agencyName, mode: "insensitive" as const } }
+        : {}),
+      ...(filter.status ? { status: filter.status } : {}),
+    };
+  }
+
+  function toAgencyRequestOrderBy(
+    pageReq: AgencyRequestPageRequest,
+  ): PrismaTypes.AgencyRequestOrderByWithRelationInput {
+    const sortBy: AgencyRequestSortField = pageReq.sortBy ?? "createdAt";
+    const sortDir = pageReq.sortDir ?? (pageReq.sortBy ? "asc" : "desc");
+
+    switch (sortBy) {
+      case "updatedAt":
+        return { updatedAt: sortDir };
+      case "status":
+        return { status: sortDir };
+      case "requesterEmail":
+        return { requesterEmail: sortDir };
+      case "agencyName":
+        return { agencyName: sortDir };
+      case "createdAt":
+      default:
+        return { createdAt: sortDir };
+    }
+  }
 
   const runInTransaction = <T>(
     execute: (tx: PrismaTypes.TransactionClient) => Promise<T>,
@@ -130,18 +172,40 @@ export function makeAgencyRequestRepository(
     list: (filter = {}) =>
       Effect.tryPromise({
         try: () => client.agencyRequest.findMany({
-          where: {
-            ...(filter.requesterUserId ? { requesterUserId: filter.requesterUserId } : {}),
-            ...(filter.requesterEmail
-              ? { requesterEmail: { contains: filter.requesterEmail, mode: "insensitive" as const } }
-              : {}),
-            ...(filter.status ? { status: filter.status } : {}),
-          },
+          where: toAgencyRequestWhere(filter),
           orderBy: { createdAt: "desc" },
           select: selectAgencyRequestRow,
         }),
         catch: cause => new AgencyRequestRepositoryError({ operation: "list", cause }),
       }).pipe(Effect.map(rows => rows.map(toAgencyRequestRow))),
+
+    listWithOffset: (filter, pageReq) =>
+      Effect.tryPromise({
+        try: async () => {
+          const { page, pageSize, skip, take } = normalizedPage(pageReq);
+          const where = toAgencyRequestWhere(filter);
+          const orderBy = toAgencyRequestOrderBy(pageReq);
+
+          const [total, items] = await Promise.all([
+            client.agencyRequest.count({ where }),
+            client.agencyRequest.findMany({
+              where,
+              skip,
+              take,
+              orderBy,
+              select: selectAgencyRequestRow,
+            }),
+          ]);
+
+          return makePageResult(
+            items.map(toAgencyRequestRow),
+            total,
+            page,
+            pageSize,
+          );
+        },
+        catch: cause => new AgencyRequestRepositoryError({ operation: "listWithOffset", cause }),
+      }),
 
     submit: input =>
       Effect.tryPromise({

@@ -1,4 +1,5 @@
 import type { RouteHandler } from "@hono/zod-openapi";
+
 import type { AgencyRequestsContracts } from "@mebike/shared";
 
 import { serverRoutes } from "@mebike/shared";
@@ -9,7 +10,7 @@ import { withLoggedCause } from "@/domain/shared";
 import { toAgencyRequest } from "@/http/presenters/agency-requests.presenter";
 import { routeContext } from "@/http/shared/route-context";
 
-type AgencyRequestsRoutes = typeof import("@mebike/shared")["serverRoutes"]["agencyRequests"];
+import type { AgencyRequestsRoutes } from "./shared";
 
 const agencyRequests = serverRoutes.agencyRequests;
 
@@ -40,6 +41,6 @@ const submit: RouteHandler<AgencyRequestsRoutes["submit"]> = async (c) => {
   );
 };
 
-export const AgencyRequestsController = {
+export const AgencyRequestsPublicController = {
   submit,
 } as const;

@@ -1,5 +1,7 @@
 import type { AgencyRequestStatus } from "generated/prisma/client";
 
+import type { PageRequest } from "@/domain/shared/pagination";
+
 export type AgencyRequestActorRef = {
   readonly id: string;
   readonly fullName: string;
@@ -56,5 +58,15 @@ export type ApproveAgencyRequestInput = ReviewAgencyRequestInput & {
 export type AgencyRequestFilter = {
   readonly requesterUserId?: string;
   readonly requesterEmail?: string;
+  readonly agencyName?: string;
   readonly status?: AgencyRequestStatus;
 };
+
+export type AgencyRequestSortField
+  = "createdAt"
+    | "updatedAt"
+    | "status"
+    | "requesterEmail"
+    | "agencyName";
+
+export type AgencyRequestPageRequest = PageRequest<AgencyRequestSortField>;

@@ -5,7 +5,7 @@ import {
   OptionalTrimmedNullableStringSchema,
   ServerErrorResponseSchema,
 } from "../../schemas";
-import { AgencyRequestSchema } from "../../agency-requests";
+import { AgencyRequestSchema } from "../../agency-requests/models";
 
 const SubmitAgencyRequestRequestSchema = z.object({
   requesterEmail: z.string().email(),

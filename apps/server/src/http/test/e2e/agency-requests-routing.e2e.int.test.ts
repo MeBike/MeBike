@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
+const ADMIN_USER_ID = "018d4529-6880-77a8-8e6f-4d2c88d22311";
+
 describe("agency requests routing", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
@@ -23,6 +25,24 @@ describe("agency requests routing", () => {
         PrismaLive,
       );
     },
+    seedData: async (_db, prisma) => {
+      await prisma.user.create({
+        data: {
+          id: ADMIN_USER_ID,
+          fullName: "Agency Admin",
+          email: "agency-admin@example.com",
+          passwordHash: "hash123",
+          phoneNumber: null,
+          username: null,
+          avatarUrl: null,
+          locationText: null,
+          nfcCardUid: null,
+          role: "ADMIN",
+          accountStatus: "ACTIVE",
+          verifyStatus: "VERIFIED",
+        },
+      });
+    },
   });
 
   async function submitAgencyRequest(
@@ -36,6 +56,18 @@ describe("agency requests routing", () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+    });
+  }
+
+  async function listAgencyRequests(
+    query = "",
+    init?: { token?: string },
+  ) {
+    return fixture.app.request(`http://test/v1/admin/agency-requests${query}`, {
+      method: "GET",
+      headers: init?.token
+        ? { Authorization: `Bearer ${init.token}` }
+        : undefined,
     });
   }
 
@@ -200,5 +232,117 @@ describe("agency requests routing", () => {
     expect(body.details?.code).toBe("VALIDATION_ERROR");
     expect(body.details?.issues?.some(issue => issue.path?.includes("requesterPhone"))).toBe(true);
     expect(await fixture.prisma.agencyRequest.count()).toBe(beforeCount);
+  });
+
+  it("admin can list agency requests with filters and pagination", async () => {
+    const requester = await fixture.factories.user({
+      email: "agency-request-filter-user@example.com",
+      role: "USER",
+    });
+
+    await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterUserId: requester.id,
+        requesterEmail: "matched-agency@example.com",
+        agencyName: "Matched Agency",
+        requesterPhone: "0912345678",
+        status: "PENDING",
+        createdAt: new Date("2026-03-20T00:00:00.000Z"),
+      },
+    });
+
+    await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "other-agency@example.com",
+        agencyName: "Other Agency",
+        status: "APPROVED",
+        reviewedByUserId: ADMIN_USER_ID,
+        reviewedAt: new Date("2026-03-21T00:00:00.000Z"),
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await listAgencyRequests("?page=1&pageSize=10&status=PENDING&requesterEmail=matched", {
+      token,
+    });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.pagination).toEqual({
+      page: 1,
+      pageSize: 10,
+      total: 1,
+      totalPages: 1,
+    });
+    expect(body.data[0]).toMatchObject({
+      requesterEmail: "matched-agency@example.com",
+      agencyName: "Matched Agency",
+      status: "PENDING",
+      requesterUser: {
+        id: requester.id,
+        email: requester.email,
+      },
+    });
+  });
+
+  it("admin list defaults to newest requests first", async () => {
+    await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "older-agency@example.com",
+        agencyName: "Older Agency",
+        status: "PENDING",
+        createdAt: new Date("2026-03-10T00:00:00.000Z"),
+      },
+    });
+
+    const newer = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "newer-agency@example.com",
+        agencyName: "Newer Agency",
+        status: "PENDING",
+        createdAt: new Date("2026-03-25T00:00:00.000Z"),
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await listAgencyRequests("?page=1&pageSize=10", { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data[0]?.id).toBe(newer.id);
+  });
+
+  it("rejects admin list for non-admin users", async () => {
+    const user = await fixture.factories.user({
+      email: "agency-request-plain-user@example.com",
+      role: "USER",
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    const response = await listAgencyRequests("?page=1&pageSize=10", { token });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("requires authentication for admin list", async () => {
+    const response = await listAgencyRequests("?page=1&pageSize=10");
+
+    expect(response.status).toBe(401);
+  });
+
+  it("rejects invalid admin list query", async () => {
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await listAgencyRequests("?page=0&status=UNKNOWN", { token });
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
   });
 });

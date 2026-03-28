@@ -23,3 +23,38 @@ export function toAgencyRequest(
     updatedAt: row.updatedAt.toISOString(),
   };
 }
+
+export function toAgencyRequestAdminListItem(
+  row: AgencyRequestRow,
+): AgencyRequestsContracts.AdminAgencyRequestListItem {
+  return {
+    ...toAgencyRequest(row),
+    requesterUser: row.requesterUser
+      ? {
+          id: row.requesterUser.id,
+          fullName: row.requesterUser.fullName,
+          email: row.requesterUser.email,
+        }
+      : null,
+    reviewedByUser: row.reviewedByUser
+      ? {
+          id: row.reviewedByUser.id,
+          fullName: row.reviewedByUser.fullName,
+          email: row.reviewedByUser.email,
+        }
+      : null,
+    approvedAgency: row.approvedAgency
+      ? {
+          id: row.approvedAgency.id,
+          name: row.approvedAgency.name,
+        }
+      : null,
+    createdAgencyUser: row.createdAgencyUser
+      ? {
+          id: row.createdAgencyUser.id,
+          fullName: row.createdAgencyUser.fullName,
+          email: row.createdAgencyUser.email,
+        }
+      : null,
+  };
+}
