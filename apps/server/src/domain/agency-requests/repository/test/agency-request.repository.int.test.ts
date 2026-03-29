@@ -104,4 +104,39 @@ describe("agencyRequestRepository Integration", () => {
 
     expectLeftTag(result, "AgencyRequestNotFound");
   });
+
+  it("cancels a pending request without clearing its existing description", async () => {
+    const requester = await createUser("USER");
+    const request = await fixture.prisma.agencyRequest.create({
+      data: {
+        id: uuidv7(),
+        requesterUserId: requester.id,
+        requesterEmail: `cancel-${requester.id}@example.com`,
+        agencyName: "Cancelable Agency Request",
+        description: "Keep this description",
+        status: "PENDING",
+      },
+      select: { id: true },
+    });
+
+    const result = await Effect.runPromise(repo.cancel(request.id).pipe(Effect.either));
+
+    const cancelled = expectRight(result);
+    expect(cancelled.status).toBe("CANCELLED");
+    expect(cancelled.description).toBe("Keep this description");
+  });
+
+  it("returns InvalidAgencyRequestStatusTransition when cancelling a non-pending request", async () => {
+    const request = await createAgencyRequest("REJECTED");
+
+    const result = await Effect.runPromise(repo.cancel(request.id).pipe(Effect.either));
+
+    const error = Either.isLeft(result) ? result.left : null;
+    expectLeftTag(result, "InvalidAgencyRequestStatusTransition");
+    if (!error || error._tag !== "InvalidAgencyRequestStatusTransition") {
+      throw new Error("Expected InvalidAgencyRequestStatusTransition");
+    }
+    expect(error.currentStatus).toBe("REJECTED");
+    expect(error.nextStatus).toBe("CANCELLED");
+  });
 });

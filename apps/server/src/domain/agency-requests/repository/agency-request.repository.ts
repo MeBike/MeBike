@@ -259,7 +259,7 @@ export function makeAgencyRequestRepository(
         operation: "cancel",
         data: {
           status: AgencyRequestStatus.CANCELLED,
-          description: description ?? null,
+          ...(description !== undefined ? { description: description ?? null } : {}),
         },
       }),
   };

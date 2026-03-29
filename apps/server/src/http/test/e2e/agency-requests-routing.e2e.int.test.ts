@@ -83,6 +83,18 @@ describe("agency requests routing", () => {
     });
   }
 
+  async function cancelAgencyRequest(
+    agencyRequestId: string,
+    init?: { token?: string },
+  ) {
+    return fixture.app.request(`http://test/v1/agency-requests/${agencyRequestId}/cancel`, {
+      method: "POST",
+      headers: init?.token
+        ? { Authorization: `Bearer ${init.token}` }
+        : undefined,
+    });
+  }
+
   it("submits an agency request without authentication", async () => {
     const response = await submitAgencyRequest({
       requesterEmail: "guest-agency@example.com",
@@ -420,6 +432,136 @@ describe("agency requests routing", () => {
     });
   });
 
+  it("requester can cancel their own pending agency request", async () => {
+    const requester = await fixture.factories.user({
+      email: "agency-request-cancel-owner@example.com",
+      role: "USER",
+    });
+
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterUserId: requester.id,
+        requesterEmail: requester.email,
+        agencyName: "Cancelable Agency",
+        status: "PENDING",
+        description: "Original request description",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: requester.id, role: "USER" });
+    const response = await cancelAgencyRequest(agencyRequest.id, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequest;
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("CANCELLED");
+    expect(body.description).toBe("Original request description");
+
+    const saved = await fixture.prisma.agencyRequest.findUnique({
+      where: { id: agencyRequest.id },
+      select: {
+        status: true,
+        description: true,
+      },
+    });
+
+    expect(saved).toEqual({
+      status: "CANCELLED",
+      description: "Original request description",
+    });
+  });
+
+  it("rejects cancel when agency request belongs to another user", async () => {
+    const requester = await fixture.factories.user({
+      email: "agency-request-real-owner@example.com",
+      role: "USER",
+    });
+    const otherUser = await fixture.factories.user({
+      email: "agency-request-other-user@example.com",
+      role: "USER",
+    });
+
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterUserId: requester.id,
+        requesterEmail: requester.email,
+        agencyName: "Owned By Someone Else",
+        status: "PENDING",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: otherUser.id, role: "USER" });
+    const response = await cancelAgencyRequest(agencyRequest.id, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Agency request does not belong to user",
+      details: {
+        code: "AGENCY_REQUEST_NOT_OWNED",
+        agencyRequestId: agencyRequest.id,
+        userId: otherUser.id,
+      },
+    });
+
+    const saved = await fixture.prisma.agencyRequest.findUnique({
+      where: { id: agencyRequest.id },
+      select: { status: true },
+    });
+
+    expect(saved?.status).toBe("PENDING");
+  });
+
+  it("returns 404 when requester cancels an unknown agency request", async () => {
+    const requester = await fixture.factories.user({
+      email: "agency-request-cancel-not-found@example.com",
+      role: "USER",
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: requester.id, role: "USER" });
+    const response = await cancelAgencyRequest("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd355", { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({
+      error: "Agency request not found",
+      details: {
+        code: "AGENCY_REQUEST_NOT_FOUND",
+        agencyRequestId: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd355",
+      },
+    });
+  });
+
+  it("rejects cancel when agency request is no longer pending", async () => {
+    const requester = await fixture.factories.user({
+      email: "agency-request-cancel-transition@example.com",
+      role: "USER",
+    });
+
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterUserId: requester.id,
+        requesterEmail: requester.email,
+        agencyName: "Already Approved Agency",
+        status: "APPROVED",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: requester.id, role: "USER" });
+    const response = await cancelAgencyRequest(agencyRequest.id, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Invalid agency request status transition",
+      details: {
+        code: "INVALID_AGENCY_REQUEST_STATUS_TRANSITION",
+        agencyRequestId: agencyRequest.id,
+        currentStatus: "APPROVED",
+        nextStatus: "CANCELLED",
+      },
+    });
+  });
+
   it("returns 404 when admin gets an unknown agency request", async () => {
     const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
     const response = await getAgencyRequestById("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd399", { token });
@@ -459,6 +601,20 @@ describe("agency requests routing", () => {
     expect(response.status).toBe(401);
   });
 
+  it("requires authentication for requester cancel", async () => {
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "agency-request-cancel-auth@example.com",
+        agencyName: "Auth Required Agency",
+        status: "PENDING",
+      },
+    });
+
+    const response = await cancelAgencyRequest(agencyRequest.id);
+
+    expect(response.status).toBe(401);
+  });
+
   it("rejects admin get detail for non-admin users", async () => {
     const user = await fixture.factories.user({
       email: "agency-request-detail-plain-user@example.com",
@@ -489,6 +645,28 @@ describe("agency requests routing", () => {
   it("rejects invalid agency request id param", async () => {
     const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
     const response = await getAgencyRequestById("not-a-uuid", { token });
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+        issues?: Array<{ path?: string; message: string }>;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+    expect(body.details?.issues?.some(issue => issue.path?.includes("id"))).toBe(true);
+  });
+
+  it("rejects invalid cancel agency request id param", async () => {
+    const requester = await fixture.factories.user({
+      email: "agency-request-cancel-invalid-id@example.com",
+      role: "USER",
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: requester.id, role: "USER" });
+    const response = await cancelAgencyRequest("not-a-uuid", { token });
     const body = await response.json() as {
       error: string;
       details?: {

@@ -19,7 +19,7 @@
     "int:test": "pnpm test:int",
     "dev:test": "vitest --watch",
     "lint": "eslint .",
-    "dev": "tsx --watch src/http/server.ts",
+    "dev": "pnpm --dir ../../packages/shared build && tsx --watch src/http/server.ts",
     "worker": "tsx src/worker/index.ts",
     "worker:dispatch-once": "tsx src/worker/commands/dispatch-outbox-once.ts",
     "worker:email-once": "tsx src/worker/commands/process-email-once.ts",

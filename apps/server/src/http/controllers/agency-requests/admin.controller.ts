@@ -1,6 +1,6 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 
-import { AgencyRequestErrorCodeSchema, agencyRequestErrorMessages, serverRoutes } from "@mebike/shared";
+import { serverRoutes } from "@mebike/shared";
 import { Effect } from "effect";
 
 import { AgencyRequestServiceTag } from "@/domain/agency-requests";
@@ -14,6 +14,8 @@ import type {
   AgencyRequestListResponse,
   AgencyRequestsRoutes,
 } from "./shared";
+
+import { AgencyRequestErrorCodeSchema, agencyRequestErrorMessages } from "./shared";
 
 const agencyRequests = serverRoutes.agencyRequests;
 

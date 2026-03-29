@@ -9,6 +9,11 @@ export class AgencyRequestNotFound extends Data.TaggedError("AgencyRequestNotFou
   readonly agencyRequestId: string;
 }> {}
 
+export class AgencyRequestNotOwned extends Data.TaggedError("AgencyRequestNotOwned")<{
+  readonly agencyRequestId: string;
+  readonly userId: string;
+}> {}
+
 export class InvalidAgencyRequestStatusTransition extends Data.TaggedError("InvalidAgencyRequestStatusTransition")<{
   readonly agencyRequestId: string;
   readonly currentStatus: string;

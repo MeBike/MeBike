@@ -4,6 +4,7 @@ import type { PageResult } from "@/domain/shared/pagination";
 
 import type {
   AgencyRequestNotFound,
+  AgencyRequestNotOwned,
   AgencyRequestRepositoryError,
   InvalidAgencyRequestStatusTransition,
 } from "../domain-errors";
@@ -18,6 +19,7 @@ import type {
 import type { AgencyRequestRepo } from "../repository/agency-request.repository";
 
 import { AgencyRequestNotFound as AgencyRequestNotFoundError } from "../domain-errors";
+import { AgencyRequestNotOwned as AgencyRequestNotOwnedError } from "../domain-errors";
 import { AgencyRequestRepository } from "../repository/agency-request.repository";
 
 export type AgencyRequestService = {
@@ -43,6 +45,16 @@ export type AgencyRequestService = {
     agencyRequestId: string,
     description?: string | null,
   ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
+  cancelAsRequester: (
+    agencyRequestId: string,
+    requesterUserId: string,
+  ) => Effect.Effect<
+    AgencyRequestRow,
+    | AgencyRequestRepositoryError
+    | AgencyRequestNotFound
+    | AgencyRequestNotOwned
+    | InvalidAgencyRequestStatusTransition
+  >;
 };
 
 function makeAgencyRequestService(repo: AgencyRequestRepo): AgencyRequestService {
@@ -62,6 +74,24 @@ function makeAgencyRequestService(repo: AgencyRequestRepo): AgencyRequestService
     approve: (agencyRequestId, input) => repo.approve(agencyRequestId, input),
     reject: (agencyRequestId, input) => repo.reject(agencyRequestId, input),
     cancel: (agencyRequestId, description) => repo.cancel(agencyRequestId, description),
+    cancelAsRequester: (agencyRequestId, requesterUserId) =>
+      Effect.gen(function* () {
+        const found = yield* repo.findById(agencyRequestId);
+        if (Option.isNone(found)) {
+          return yield* Effect.fail(new AgencyRequestNotFoundError({ agencyRequestId }));
+        }
+
+        const agencyRequest = found.value;
+
+        if (agencyRequest.requesterUserId !== requesterUserId) {
+          return yield* Effect.fail(new AgencyRequestNotOwnedError({
+            agencyRequestId: agencyRequest.id,
+            userId: requesterUserId,
+          }));
+        }
+
+        return yield* repo.cancel(agencyRequest.id);
+      }),
   };
 }
 

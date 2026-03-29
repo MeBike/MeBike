@@ -67,12 +67,17 @@ export const AgencyRequestDetailResponseSchema = AdminAgencyRequestListItemSchem
 
 export const AgencyRequestErrorCodeSchema = z.enum([
   "AGENCY_REQUEST_NOT_FOUND",
+  "AGENCY_REQUEST_NOT_OWNED",
+  "INVALID_AGENCY_REQUEST_STATUS_TRANSITION",
 ]).openapi("AgencyRequestErrorCode");
 
 export const AgencyRequestErrorDetailSchema = z
   .object({
     code: AgencyRequestErrorCodeSchema,
     agencyRequestId: z.uuidv7().optional(),
+    userId: z.uuidv7().optional(),
+    currentStatus: AgencyRequestStatusSchema.optional(),
+    nextStatus: AgencyRequestStatusSchema.optional(),
   })
   .openapi("AgencyRequestErrorDetail");
 
@@ -85,6 +90,8 @@ export const AgencyRequestErrorResponseSchema = z
 
 export const agencyRequestErrorMessages = {
   AGENCY_REQUEST_NOT_FOUND: "Agency request not found",
+  AGENCY_REQUEST_NOT_OWNED: "Agency request does not belong to user",
+  INVALID_AGENCY_REQUEST_STATUS_TRANSITION: "Invalid agency request status transition",
 } as const;
 
 export {
