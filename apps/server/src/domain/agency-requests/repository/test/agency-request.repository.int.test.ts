@@ -105,6 +105,21 @@ describe("agencyRequestRepository Integration", () => {
     expectLeftTag(result, "AgencyRequestNotFound");
   });
 
+  it("rejects a pending request and stores the review description", async () => {
+    const request = await createAgencyRequest("PENDING");
+    const reviewer = await createUser("ADMIN");
+
+    const result = await Effect.runPromise(repo.reject(request.id, {
+      reviewedByUserId: reviewer.id,
+      description: "Missing agency verification documents",
+    }).pipe(Effect.either));
+
+    const rejected = expectRight(result);
+    expect(rejected.status).toBe("REJECTED");
+    expect(rejected.reviewedByUserId).toBe(reviewer.id);
+    expect(rejected.description).toBe("Missing agency verification documents");
+  });
+
   it("cancels a pending request without clearing its existing description", async () => {
     const requester = await createUser("USER");
     const request = await fixture.prisma.agencyRequest.create({

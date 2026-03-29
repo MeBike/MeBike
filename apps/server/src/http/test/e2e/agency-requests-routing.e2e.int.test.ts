@@ -113,6 +113,21 @@ describe("agency requests routing", () => {
     });
   }
 
+  async function rejectAgencyRequest(
+    agencyRequestId: string,
+    body: Record<string, unknown>,
+    init?: { token?: string },
+  ) {
+    return fixture.app.request(`http://test/v1/admin/agency-requests/${agencyRequestId}/reject`, {
+      method: "POST",
+      headers: {
+        ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
   it("submits an agency request without authentication", async () => {
     const response = await submitAgencyRequest({
       requesterEmail: "guest-agency@example.com",
@@ -608,6 +623,130 @@ describe("agency requests routing", () => {
     });
   });
 
+  it("admin can reject a pending request with reason alias", async () => {
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "rejected-agency-request@example.com",
+        requesterPhone: "0912222333",
+        agencyName: "Rejected Agency",
+        status: "PENDING",
+        description: "Initial requester note",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await rejectAgencyRequest(agencyRequest.id, {
+      reason: "Business registration documents are incomplete.",
+    }, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestDetailResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("REJECTED");
+    expect(body.reviewedByUserId).toBe(ADMIN_USER_ID);
+    expect(body.description).toBe("Business registration documents are incomplete.");
+    expect(body.approvedAgencyId).toBeNull();
+    expect(body.createdAgencyUserId).toBeNull();
+
+    const savedRequest = await fixture.prisma.agencyRequest.findUnique({
+      where: { id: agencyRequest.id },
+      select: {
+        status: true,
+        reviewedByUserId: true,
+        approvedAgencyId: true,
+        createdAgencyUserId: true,
+        description: true,
+      },
+    });
+
+    expect(savedRequest).toEqual({
+      status: "REJECTED",
+      reviewedByUserId: ADMIN_USER_ID,
+      approvedAgencyId: null,
+      createdAgencyUserId: null,
+      description: "Business registration documents are incomplete.",
+    });
+  });
+
+  it("rejects admin reject when both reason and description are missing", async () => {
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "reject-validation@example.com",
+        agencyName: "Reject Validation Agency",
+        status: "PENDING",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await rejectAgencyRequest(agencyRequest.id, {}, { token });
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+        issues?: Array<{ path?: string; message: string }>;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+    expect(body.details?.issues?.some(issue => issue.path?.includes("reason"))).toBe(true);
+    expect(body.details?.issues?.some(issue => issue.path?.includes("description"))).toBe(true);
+
+    const savedRequest = await fixture.prisma.agencyRequest.findUnique({
+      where: { id: agencyRequest.id },
+      select: { status: true, reviewedByUserId: true },
+    });
+
+    expect(savedRequest).toEqual({
+      status: "PENDING",
+      reviewedByUserId: null,
+    });
+  });
+
+  it("returns 404 when admin rejects an unknown agency request", async () => {
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await rejectAgencyRequest("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd397", {
+      reason: "Documents are incomplete",
+    }, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({
+      error: "Agency request not found",
+      details: {
+        code: "AGENCY_REQUEST_NOT_FOUND",
+        agencyRequestId: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd397",
+      },
+    });
+  });
+
+  it("rejects admin reject when agency request is no longer pending", async () => {
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "already-rejected-agency@example.com",
+        agencyName: "Already Rejected Agency",
+        status: "REJECTED",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await rejectAgencyRequest(agencyRequest.id, {
+      description: "Still rejected",
+    }, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Invalid agency request status transition",
+      details: {
+        code: "INVALID_AGENCY_REQUEST_STATUS_TRANSITION",
+        agencyRequestId: agencyRequest.id,
+        currentStatus: "REJECTED",
+        nextStatus: "REJECTED",
+      },
+    });
+  });
+
   it("requester can cancel their own pending agency request", async () => {
     const requester = await fixture.factories.user({
       email: "agency-request-cancel-owner@example.com",
@@ -783,6 +922,14 @@ describe("agency requests routing", () => {
     expect(response.status).toBe(401);
   });
 
+  it("requires authentication for admin reject", async () => {
+    const response = await rejectAgencyRequest("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd301", {
+      reason: "Missing documents",
+    });
+
+    expect(response.status).toBe(401);
+  });
+
   it("requires authentication for requester cancel", async () => {
     const agencyRequest = await fixture.prisma.agencyRequest.create({
       data: {
@@ -825,6 +972,28 @@ describe("agency requests routing", () => {
 
     const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
     const response = await approveAgencyRequest(agencyRequest.id, {}, { token });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects admin reject for non-admin users", async () => {
+    const user = await fixture.factories.user({
+      email: "agency-request-reject-plain-user@example.com",
+      role: "USER",
+    });
+
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "plain-user-reject@example.com",
+        agencyName: "Forbidden Reject Agency",
+        status: "PENDING",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    const response = await rejectAgencyRequest(agencyRequest.id, {
+      reason: "Forbidden",
+    }, { token });
 
     expect(response.status).toBe(403);
   });
@@ -886,6 +1055,25 @@ describe("agency requests routing", () => {
   it("rejects invalid admin approve agency request id param", async () => {
     const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
     const response = await approveAgencyRequest("not-a-uuid", {}, { token });
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+        issues?: Array<{ path?: string; message: string }>;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+    expect(body.details?.issues?.some(issue => issue.path?.includes("id"))).toBe(true);
+  });
+
+  it("rejects invalid admin reject agency request id param", async () => {
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await rejectAgencyRequest("not-a-uuid", {
+      reason: "Missing documents",
+    }, { token });
     const body = await response.json() as {
       error: string;
       details?: {

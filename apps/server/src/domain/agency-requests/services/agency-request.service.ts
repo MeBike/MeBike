@@ -38,7 +38,10 @@ import {
   AgencyRequestNotOwned as AgencyRequestNotOwnedError,
   AgencyRequestRepositoryError as AgencyRequestRepositoryErrorData,
 } from "../domain-errors";
-import { AgencyRequestRepository, makeAgencyRequestRepository } from "../repository/agency-request.repository";
+import {
+  AgencyRequestRepository,
+  makeAgencyRequestRepository,
+} from "../repository/agency-request.repository";
 
 type AgencyAccountCredentials = {
   readonly email: string;
@@ -49,28 +52,58 @@ type AgencyAccountCredentials = {
 };
 
 export type AgencyRequestService = {
-  getById: (id: string) => Effect.Effect<Option.Option<AgencyRequestRow>, AgencyRequestRepositoryError>;
+  getById: (
+    id: string,
+  ) => Effect.Effect<
+    Option.Option<AgencyRequestRow>,
+    AgencyRequestRepositoryError
+  >;
   getByIdOrFail: (
     id: string,
-  ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound>;
-  list: (filter?: AgencyRequestFilter) => Effect.Effect<readonly AgencyRequestRow[], AgencyRequestRepositoryError>;
+  ) => Effect.Effect<
+    AgencyRequestRow,
+    AgencyRequestRepositoryError | AgencyRequestNotFound
+  >;
+  list: (
+    filter?: AgencyRequestFilter,
+  ) => Effect.Effect<readonly AgencyRequestRow[], AgencyRequestRepositoryError>;
   listWithOffset: (
     filter: AgencyRequestFilter,
     pageReq: AgencyRequestPageRequest,
-  ) => Effect.Effect<PageResult<AgencyRequestRow>, AgencyRequestRepositoryError>;
-  submit: (input: SubmitAgencyRequestInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError>;
+  ) => Effect.Effect<
+    PageResult<AgencyRequestRow>,
+    AgencyRequestRepositoryError
+  >;
+  submit: (
+    input: SubmitAgencyRequestInput,
+  ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError>;
   approve: (
     agencyRequestId: string,
     input: ApproveAgencyRequestInput,
-  ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
+  ) => Effect.Effect<
+    AgencyRequestRow,
+    | AgencyRequestRepositoryError
+    | AgencyRequestNotFound
+    | InvalidAgencyRequestStatusTransition
+  >;
   reject: (
     agencyRequestId: string,
     input: ReviewAgencyRequestInput,
-  ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
+  ) => Effect.Effect<
+    AgencyRequestRow,
+    | AgencyRequestRepositoryError
+    | AgencyRequestNotFound
+    | InvalidAgencyRequestStatusTransition
+  >;
   cancel: (
     agencyRequestId: string,
     description?: string | null,
-  ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
+  ) => Effect.Effect<
+    AgencyRequestRow,
+    | AgencyRequestRepositoryError
+    | AgencyRequestNotFound
+    | InvalidAgencyRequestStatusTransition
+  >;
   cancelAsRequester: (
     agencyRequestId: string,
     requesterUserId: string,
@@ -88,20 +121,22 @@ function makeAgencyRequestService(
   client: PrismaClient,
 ): AgencyRequestService {
   return {
-    getById: id => repo.findById(id),
-    getByIdOrFail: id =>
+    getById: (id) => repo.findById(id),
+    getByIdOrFail: (id) =>
       Effect.gen(function* () {
         const found = yield* repo.findById(id);
         if (Option.isNone(found)) {
-          return yield* Effect.fail(new AgencyRequestNotFoundError({ agencyRequestId: id }));
+          return yield* Effect.fail(
+            new AgencyRequestNotFoundError({ agencyRequestId: id }),
+          );
         }
         return found.value;
       }),
-    list: filter => repo.list(filter),
+    list: (filter) => repo.list(filter),
     listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
-    submit: input => repo.submit(input),
+    submit: (input) => repo.submit(input),
     approve: (agencyRequestId, input) =>
-      runPrismaTransaction(client, tx =>
+      runPrismaTransaction(client, (tx) =>
         Effect.gen(function* () {
           const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
           const txAgencyService = makeAgencyService(makeAgencyRepository(tx));
@@ -112,14 +147,17 @@ function makeAgencyRequestService(
 
           const found = yield* txAgencyRequestRepo.findById(agencyRequestId);
           if (Option.isNone(found)) {
-            return yield* Effect.fail(new AgencyRequestNotFoundError({ agencyRequestId }));
+            return yield* Effect.fail(
+              new AgencyRequestNotFoundError({ agencyRequestId }),
+            );
           }
 
           const agencyRequest = found.value;
           const createdAgency = yield* txAgencyService.create({
             name: agencyRequest.agencyName,
             address: agencyRequest.agencyAddress,
-            contactPhone: agencyRequest.agencyContactPhone ?? agencyRequest.requesterPhone,
+            contactPhone:
+              agencyRequest.agencyContactPhone ?? agencyRequest.requesterPhone,
           });
 
           const credentials = yield* makeAgencyAccountCredentials({
@@ -175,58 +213,84 @@ function makeAgencyRequestService(
           return updatedAgencyRequest;
         }),
       ).pipe(
-        Effect.catchTag("AgencyRepositoryError", err =>
-          Effect.fail(new AgencyRequestRepositoryErrorData({
-            operation: "approve.createAgency",
-            cause: err,
-          }))),
-        Effect.catchTag("UserRepositoryError", err =>
-          Effect.fail(new AgencyRequestRepositoryErrorData({
-            operation: "approve.createAgencyUser",
-            cause: err,
-          }))),
-        Effect.catchTag("DuplicateUserEmail", err =>
-          Effect.fail(new AgencyRequestRepositoryErrorData({
-            operation: "approve.createAgencyUser",
-            cause: err,
-          }))),
-        Effect.catchTag("DuplicateUserPhoneNumber", err =>
-          Effect.fail(new AgencyRequestRepositoryErrorData({
-            operation: "approve.createAgencyUser",
-            cause: err,
-          }))),
-        Effect.catchTag("InvalidOrgAssignment", err =>
-          Effect.fail(new AgencyRequestRepositoryErrorData({
-            operation: "approve.createAgencyUser",
-            cause: err,
-          }))),
-        Effect.catchTag("TechnicianTeamMemberLimitExceeded", err =>
-          Effect.fail(new AgencyRequestRepositoryErrorData({
-            operation: "approve.createAgencyUser",
-            cause: err,
-          }))),
-        Effect.catchTag("PrismaTransactionError", err =>
-          Effect.fail(new AgencyRequestRepositoryErrorData({
-            operation: "approve.transaction",
-            cause: err,
-          }))),
+        Effect.catchTag("AgencyRepositoryError", (err) =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createAgency",
+              cause: err,
+            }),
+          ),
+        ),
+        Effect.catchTag("UserRepositoryError", (err) =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createAgencyUser",
+              cause: err,
+            }),
+          ),
+        ),
+        Effect.catchTag("DuplicateUserEmail", (err) =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createAgencyUser",
+              cause: err,
+            }),
+          ),
+        ),
+        Effect.catchTag("DuplicateUserPhoneNumber", (err) =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createAgencyUser",
+              cause: err,
+            }),
+          ),
+        ),
+        Effect.catchTag("InvalidOrgAssignment", (err) =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createAgencyUser",
+              cause: err,
+            }),
+          ),
+        ),
+        Effect.catchTag("TechnicianTeamMemberLimitExceeded", (err) =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createAgencyUser",
+              cause: err,
+            }),
+          ),
+        ),
+        Effect.catchTag("PrismaTransactionError", (err) =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.transaction",
+              cause: err,
+            }),
+          ),
+        ),
       ),
     reject: (agencyRequestId, input) => repo.reject(agencyRequestId, input),
-    cancel: (agencyRequestId, description) => repo.cancel(agencyRequestId, description),
+    cancel: (agencyRequestId, description) =>
+      repo.cancel(agencyRequestId, description),
     cancelAsRequester: (agencyRequestId, requesterUserId) =>
       Effect.gen(function* () {
         const found = yield* repo.findById(agencyRequestId);
         if (Option.isNone(found)) {
-          return yield* Effect.fail(new AgencyRequestNotFoundError({ agencyRequestId }));
+          return yield* Effect.fail(
+            new AgencyRequestNotFoundError({ agencyRequestId }),
+          );
         }
 
         const agencyRequest = found.value;
 
         if (agencyRequest.requesterUserId !== requesterUserId) {
-          return yield* Effect.fail(new AgencyRequestNotOwnedError({
-            agencyRequestId: agencyRequest.id,
-            userId: requesterUserId,
-          }));
+          return yield* Effect.fail(
+            new AgencyRequestNotOwnedError({
+              agencyRequestId: agencyRequest.id,
+              userId: requesterUserId,
+            }),
+          );
         }
 
         return yield* repo.cancel(agencyRequest.id);
