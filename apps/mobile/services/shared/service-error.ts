@@ -13,6 +13,10 @@ type ErrorEnvelope = {
   };
 };
 
+type ContractCodeGuard<TCode extends string> = (code: string) => code is TCode;
+
+export type CommonServiceErrorCode = "UNAUTHORIZED" | "UNKNOWN";
+
 export type ParsedServiceError = {
   code: string;
   message?: string;
@@ -45,6 +49,30 @@ export type ServiceError<TCode extends string> =
   | NetworkServiceError
   | DecodeServiceError
   | UnknownServiceError;
+
+export function normalizeServiceErrorCode<TCode extends string>(
+  code: string | undefined,
+  isContractCode: ContractCodeGuard<TCode>,
+): TCode | CommonServiceErrorCode {
+  if (!code || code === "UNKNOWN") {
+    return "UNKNOWN";
+  }
+
+  if (code === "UNAUTHORIZED" || isContractCode(code)) {
+    return code;
+  }
+
+  return "UNKNOWN";
+}
+
+export function isServiceErrorCode<TCode extends string>(
+  code: string,
+  isContractCode: ContractCodeGuard<TCode>,
+): code is TCode | CommonServiceErrorCode {
+  return code === "UNAUTHORIZED"
+    || code === "UNKNOWN"
+    || isContractCode(code);
+}
 
 type ParseServiceErrorOptions<TCode extends string, TSchema extends ErrorEnvelope> = {
   schema: z.ZodType<TSchema>;

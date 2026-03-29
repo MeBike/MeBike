@@ -6,6 +6,8 @@ import { ServerContracts } from "@mebike/shared";
 import {
   type ServiceError,
   asNetworkError as asSharedNetworkError,
+  isServiceErrorCode,
+  normalizeServiceErrorCode,
   parseServiceError,
 } from "@services/shared/service-error";
 
@@ -15,26 +17,12 @@ export type SubscriptionErrorCode = ContractSubscriptionErrorCode | "UNAUTHORIZE
 
 export type SubscriptionError = ServiceError<SubscriptionErrorCode>;
 
-function toSubscriptionErrorCode(code: string | undefined): SubscriptionErrorCode {
-  if (!code || code === "UNKNOWN") {
-    return "UNKNOWN";
-  }
-
-  if (code === "UNAUTHORIZED" || isSubscriptionContractErrorCode(code)) {
-    return code;
-  }
-
-  return "UNKNOWN";
-}
-
 export function isSubscriptionContractErrorCode(code: string): code is ContractSubscriptionErrorCode {
   return ServerContracts.SubscriptionsContracts.SubscriptionErrorCodeSchema.safeParse(code).success;
 }
 
 export function isSubscriptionErrorCode(code: string): code is SubscriptionErrorCode {
-  return code === "UNAUTHORIZED"
-    || code === "UNKNOWN"
-    || isSubscriptionContractErrorCode(code);
+  return isServiceErrorCode(code, isSubscriptionContractErrorCode);
 }
 
 export function isSubscriptionApiError(
@@ -62,7 +50,7 @@ export function isSubscriptionError(error: unknown): error is SubscriptionError 
 export async function parseSubscriptionError(response: Response): Promise<SubscriptionError> {
   return parseServiceError(response, {
     schema: ServerContracts.SubscriptionsContracts.SubscriptionErrorResponseSchema,
-    mapCode: toSubscriptionErrorCode,
+    mapCode: code => normalizeServiceErrorCode(code, isSubscriptionContractErrorCode),
     includeUnauthorized: true,
   });
 }

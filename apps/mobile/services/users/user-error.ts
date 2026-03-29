@@ -6,6 +6,8 @@ import { ServerContracts } from "@mebike/shared";
 import {
   type ServiceError,
   asNetworkError as asSharedNetworkError,
+  isServiceErrorCode,
+  normalizeServiceErrorCode,
   parseServiceError,
 } from "@services/shared/service-error";
 
@@ -15,26 +17,12 @@ export type UserErrorCode = ContractUserErrorCode | "UNAUTHORIZED" | "UNKNOWN";
 
 export type UserError = ServiceError<UserErrorCode>;
 
-function toUserErrorCode(code: string | undefined): UserErrorCode {
-  if (!code || code === "UNKNOWN") {
-    return "UNKNOWN";
-  }
-
-  if (code === "UNAUTHORIZED" || isUserContractErrorCode(code)) {
-    return code;
-  }
-
-  return "UNKNOWN";
-}
-
 export function isUserContractErrorCode(code: string): code is ContractUserErrorCode {
   return ServerContracts.UsersContracts.UserErrorCodeSchema.safeParse(code).success;
 }
 
 export function isUserErrorCode(code: string): code is UserErrorCode {
-  return code === "UNAUTHORIZED"
-    || code === "UNKNOWN"
-    || isUserContractErrorCode(code);
+  return isServiceErrorCode(code, isUserContractErrorCode);
 }
 
 export function isUserApiError(
@@ -48,7 +36,7 @@ export function isUserApiError(
 export async function parseUserError(response: Response): Promise<UserError> {
   return parseServiceError(response, {
     schema: ServerContracts.UsersContracts.UserErrorResponseSchema,
-    mapCode: toUserErrorCode,
+    mapCode: code => normalizeServiceErrorCode(code, isUserContractErrorCode),
     includeUnauthorized: true,
     includeForbidden: true,
   });

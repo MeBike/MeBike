@@ -5,6 +5,8 @@ import { ServerContracts } from "@mebike/shared";
 import {
   type ServiceError,
   asNetworkError as asSharedNetworkError,
+  isServiceErrorCode,
+  normalizeServiceErrorCode,
   parseServiceError,
 } from "@services/shared/service-error";
 
@@ -14,26 +16,12 @@ export type WalletErrorCode = ContractWalletErrorCode | "UNAUTHORIZED" | "UNKNOW
 
 export type WalletError = ServiceError<WalletErrorCode>;
 
-function toWalletErrorCode(code: string | undefined): WalletErrorCode {
-  if (!code || code === "UNKNOWN") {
-    return "UNKNOWN";
-  }
-
-  if (code === "UNAUTHORIZED" || isWalletContractErrorCode(code)) {
-    return code;
-  }
-
-  return "UNKNOWN";
-}
-
 export function isWalletContractErrorCode(code: string): code is ContractWalletErrorCode {
   return ServerContracts.WalletsContracts.WalletErrorCodeSchema.safeParse(code).success;
 }
 
 export function isWalletErrorCode(code: string): code is WalletErrorCode {
-  return code === "UNAUTHORIZED"
-    || code === "UNKNOWN"
-    || isWalletContractErrorCode(code);
+  return isServiceErrorCode(code, isWalletContractErrorCode);
 }
 
 export function isWalletApiError(
@@ -47,7 +35,7 @@ export function isWalletApiError(
 export async function parseWalletError(response: Response): Promise<WalletError> {
   return parseServiceError(response, {
     schema: ServerContracts.WalletsContracts.WalletErrorResponseSchema,
-    mapCode: toWalletErrorCode,
+    mapCode: code => normalizeServiceErrorCode(code, isWalletContractErrorCode),
     includeUnauthorized: true,
   });
 }

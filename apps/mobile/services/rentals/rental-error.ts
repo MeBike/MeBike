@@ -6,6 +6,8 @@ import { ServerContracts } from "@mebike/shared";
 import {
   type ServiceError,
   asNetworkError as asSharedNetworkError,
+  isServiceErrorCode,
+  normalizeServiceErrorCode,
   parseServiceError,
 } from "@services/shared/service-error";
 
@@ -15,26 +17,12 @@ export type RentalErrorCode = ContractRentalErrorCode | "UNAUTHORIZED" | "UNKNOW
 
 export type RentalError = ServiceError<RentalErrorCode>;
 
-function toRentalErrorCode(code: string | undefined): RentalErrorCode {
-  if (!code || code === "UNKNOWN") {
-    return "UNKNOWN";
-  }
-
-  if (code === "UNAUTHORIZED" || isRentalContractErrorCode(code)) {
-    return code;
-  }
-
-  return "UNKNOWN";
-}
-
 export function isRentalContractErrorCode(code: string): code is ContractRentalErrorCode {
   return ServerContracts.RentalsContracts.RentalErrorCodeSchema.safeParse(code).success;
 }
 
 export function isRentalErrorCode(code: string): code is RentalErrorCode {
-  return code === "UNAUTHORIZED"
-    || code === "UNKNOWN"
-    || isRentalContractErrorCode(code);
+  return isServiceErrorCode(code, isRentalContractErrorCode);
 }
 
 export function isRentalApiError(
@@ -48,7 +36,7 @@ export function isRentalApiError(
 export async function parseRentalError(response: Response): Promise<RentalError> {
   return parseServiceError(response, {
     schema: ServerContracts.RentalsContracts.RentalErrorResponseSchema,
-    mapCode: toRentalErrorCode,
+    mapCode: code => normalizeServiceErrorCode(code, isRentalContractErrorCode),
     includeUnauthorized: true,
     includeForbidden: true,
   });

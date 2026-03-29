@@ -5,6 +5,8 @@ import { ServerContracts } from "@mebike/shared";
 import {
   type ServiceError,
   asNetworkError as asSharedNetworkError,
+  isServiceErrorCode,
+  normalizeServiceErrorCode,
   parseServiceError,
 } from "@services/shared/service-error";
 
@@ -14,26 +16,12 @@ export type ReservationErrorCode = ContractReservationErrorCode | "UNAUTHORIZED"
 
 export type ReservationError = ServiceError<ReservationErrorCode>;
 
-function toReservationErrorCode(code: string | undefined): ReservationErrorCode {
-  if (!code || code === "UNKNOWN") {
-    return "UNKNOWN";
-  }
-
-  if (code === "UNAUTHORIZED" || isReservationContractErrorCode(code)) {
-    return code;
-  }
-
-  return "UNKNOWN";
-}
-
 export function isReservationContractErrorCode(code: string): code is ContractReservationErrorCode {
   return ServerContracts.ReservationsContracts.ReservationErrorCodeSchema.safeParse(code).success;
 }
 
 export function isReservationErrorCode(code: string): code is ReservationErrorCode {
-  return code === "UNAUTHORIZED"
-    || code === "UNKNOWN"
-    || isReservationContractErrorCode(code);
+  return isServiceErrorCode(code, isReservationContractErrorCode);
 }
 
 export function isReservationApiError(
@@ -61,7 +49,7 @@ export function isReservationError(error: unknown): error is ReservationError {
 export async function parseReservationError(response: Response): Promise<ReservationError> {
   return parseServiceError(response, {
     schema: ServerContracts.ReservationsContracts.ReservationErrorResponseSchema,
-    mapCode: toReservationErrorCode,
+    mapCode: code => normalizeServiceErrorCode(code, isReservationContractErrorCode),
     includeUnauthorized: true,
   });
 }
