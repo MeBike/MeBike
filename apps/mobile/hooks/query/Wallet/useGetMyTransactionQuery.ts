@@ -1,4 +1,5 @@
-import { walletErrorMessage, walletServiceV1 } from "@services/wallets/wallet.service";
+import { presentWalletError } from "@/presenters/wallets/wallet-error-presenter";
+import { walletServiceV1 } from "@services/wallets/wallet.service";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 export async function fetchMyTransactions(page: number = 1, limit: number = 5) {
@@ -6,7 +7,7 @@ export async function fetchMyTransactions(page: number = 1, limit: number = 5) {
   if (result.ok) {
     return result.value;
   }
-  throw new Error(walletErrorMessage(result.error));
+  throw new Error(presentWalletError(result.error));
 }
 export function useGetMyTransactionsQuery(limit: number = 5) {
   return useInfiniteQuery({

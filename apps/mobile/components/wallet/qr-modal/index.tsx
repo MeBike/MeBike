@@ -1,5 +1,6 @@
 import { IconSymbol } from "@components/IconSymbol";
-import { walletTopupErrorMessage, walletTopupService } from "@services/wallet-topup.service";
+import { presentWalletError } from "@/presenters/wallets/wallet-error-presenter";
+import { walletTopupService } from "@services/wallet-topup.service";
 import {
   initPaymentSheet,
   PaymentSheetError,
@@ -146,7 +147,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
 
     if (!result.ok) {
       setIsSubmitting(false);
-      Alert.alert("Không thể tạo phiên thanh toán", walletTopupErrorMessage(result.error));
+      Alert.alert("Không thể tạo phiên thanh toán", presentWalletError(result.error));
       return;
     }
 
