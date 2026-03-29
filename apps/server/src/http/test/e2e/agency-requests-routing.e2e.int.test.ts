@@ -16,7 +16,10 @@ describe("agency requests routing", () => {
       const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
       const agencyRequestRepoLayer = AgencyRequestRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const agencyRequestServiceLayer = AgencyRequestServiceLive.pipe(Layer.provide(agencyRequestRepoLayer));
+      const agencyRequestServiceLayer = AgencyRequestServiceLive.pipe(
+        Layer.provide(agencyRequestRepoLayer),
+        Layer.provide(PrismaLive),
+      );
 
       return Layer.mergeAll(
         UserDepsLive,
@@ -92,6 +95,21 @@ describe("agency requests routing", () => {
       headers: init?.token
         ? { Authorization: `Bearer ${init.token}` }
         : undefined,
+    });
+  }
+
+  async function approveAgencyRequest(
+    agencyRequestId: string,
+    body: Record<string, unknown> = {},
+    init?: { token?: string },
+  ) {
+    return fixture.app.request(`http://test/v1/admin/agency-requests/${agencyRequestId}/approve`, {
+      method: "POST",
+      headers: {
+        ...(init?.token ? { Authorization: `Bearer ${init.token}` } : {}),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     });
   }
 
@@ -432,6 +450,164 @@ describe("agency requests routing", () => {
     });
   });
 
+  it("admin can approve a pending request and provision agency account", async () => {
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "approved-agency-request@example.com",
+        requesterPhone: "0912345678",
+        agencyName: "Provisioned Agency",
+        agencyAddress: "12 Agency Street",
+        agencyContactPhone: "0987654321",
+        status: "PENDING",
+        description: "Original requester note",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await approveAgencyRequest(agencyRequest.id, {}, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestDetailResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("APPROVED");
+    expect(body.reviewedByUserId).toBe(ADMIN_USER_ID);
+    expect(body.approvedAgencyId).not.toBeNull();
+    expect(body.createdAgencyUserId).not.toBeNull();
+    expect(body.description).toBe("Original requester note");
+    expect(body.approvedAgency).toMatchObject({
+      name: "Provisioned Agency",
+    });
+    expect(body.createdAgencyUser?.email).toMatch(/^agency\+[a-f0-9]+@accounts\.mebike\.local$/);
+
+    const savedAgency = await fixture.prisma.agency.findUnique({
+      where: { id: body.approvedAgencyId! },
+    });
+
+    expect(savedAgency).toMatchObject({
+      id: body.approvedAgencyId,
+      name: "Provisioned Agency",
+      address: "12 Agency Street",
+      contactPhone: "0987654321",
+      status: "ACTIVE",
+    });
+
+    const savedAgencyUser = await fixture.prisma.user.findUnique({
+      where: { id: body.createdAgencyUserId! },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        phoneNumber: true,
+        role: true,
+        accountStatus: true,
+        verifyStatus: true,
+      },
+    });
+
+    expect(savedAgencyUser).toMatchObject({
+      id: body.createdAgencyUserId,
+      role: "AGENCY",
+      accountStatus: "ACTIVE",
+      verifyStatus: "VERIFIED",
+      phoneNumber: null,
+    });
+    expect(savedAgencyUser?.email).toMatch(/^agency\+[a-f0-9]+@accounts\.mebike\.local$/);
+    expect(savedAgencyUser?.username).toMatch(/^agency_[a-f0-9]+$/);
+
+    const savedAssignment = await fixture.prisma.userOrgAssignment.findUnique({
+      where: { userId: body.createdAgencyUserId! },
+      select: {
+        userId: true,
+        agencyId: true,
+        stationId: true,
+        technicianTeamId: true,
+      },
+    });
+
+    expect(savedAssignment).toEqual({
+      userId: body.createdAgencyUserId,
+      agencyId: body.approvedAgencyId,
+      stationId: null,
+      technicianTeamId: null,
+    });
+
+    const savedRequest = await fixture.prisma.agencyRequest.findUnique({
+      where: { id: agencyRequest.id },
+      select: {
+        status: true,
+        reviewedByUserId: true,
+        approvedAgencyId: true,
+        createdAgencyUserId: true,
+        description: true,
+      },
+    });
+
+    expect(savedRequest).toEqual({
+      status: "APPROVED",
+      reviewedByUserId: ADMIN_USER_ID,
+      approvedAgencyId: body.approvedAgencyId,
+      createdAgencyUserId: body.createdAgencyUserId,
+      description: "Original requester note",
+    });
+
+    const emailOutbox = await fixture.prisma.jobOutbox.findFirst({
+      where: { dedupeKey: `agency-request-approved:${agencyRequest.id}` },
+      select: {
+        type: true,
+        payload: true,
+        status: true,
+      },
+    });
+
+    expect(emailOutbox?.type).toBe("emails.send");
+    expect(emailOutbox?.status).toBe("PENDING");
+    expect(emailOutbox?.payload).toMatchObject({
+      version: 1,
+      kind: "raw",
+      to: "approved-agency-request@example.com",
+      subject: "MeBike phe duyet tai khoan agency",
+    });
+  });
+
+  it("returns 404 when admin approves an unknown agency request", async () => {
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await approveAgencyRequest("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd398", {}, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({
+      error: "Agency request not found",
+      details: {
+        code: "AGENCY_REQUEST_NOT_FOUND",
+        agencyRequestId: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd398",
+      },
+    });
+  });
+
+  it("rejects approving an agency request that is no longer pending", async () => {
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "already-approved-agency@example.com",
+        agencyName: "Already Approved Agency",
+        status: "APPROVED",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await approveAgencyRequest(agencyRequest.id, {}, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Invalid agency request status transition",
+      details: {
+        code: "INVALID_AGENCY_REQUEST_STATUS_TRANSITION",
+        agencyRequestId: agencyRequest.id,
+        currentStatus: "APPROVED",
+        nextStatus: "APPROVED",
+      },
+    });
+  });
+
   it("requester can cancel their own pending agency request", async () => {
     const requester = await fixture.factories.user({
       email: "agency-request-cancel-owner@example.com",
@@ -601,6 +777,12 @@ describe("agency requests routing", () => {
     expect(response.status).toBe(401);
   });
 
+  it("requires authentication for admin approve", async () => {
+    const response = await approveAgencyRequest("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd301");
+
+    expect(response.status).toBe(401);
+  });
+
   it("requires authentication for requester cancel", async () => {
     const agencyRequest = await fixture.prisma.agencyRequest.create({
       data: {
@@ -623,6 +805,26 @@ describe("agency requests routing", () => {
 
     const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
     const response = await getAgencyRequestById("0195e4f7-f7d3-7b7a-8fd8-5f2df87fd301", { token });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects admin approve for non-admin users", async () => {
+    const user = await fixture.factories.user({
+      email: "agency-request-approve-plain-user@example.com",
+      role: "USER",
+    });
+
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "plain-user-approve@example.com",
+        agencyName: "Forbidden Approve Agency",
+        status: "PENDING",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    const response = await approveAgencyRequest(agencyRequest.id, {}, { token });
 
     expect(response.status).toBe(403);
   });
@@ -667,6 +869,23 @@ describe("agency requests routing", () => {
 
     const token = fixture.auth.makeAccessToken({ userId: requester.id, role: "USER" });
     const response = await cancelAgencyRequest("not-a-uuid", { token });
+    const body = await response.json() as {
+      error: string;
+      details?: {
+        code?: string;
+        issues?: Array<{ path?: string; message: string }>;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+    expect(body.details?.issues?.some(issue => issue.path?.includes("id"))).toBe(true);
+  });
+
+  it("rejects invalid admin approve agency request id param", async () => {
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await approveAgencyRequest("not-a-uuid", {}, { token });
     const body = await response.json() as {
       error: string;
       details?: {

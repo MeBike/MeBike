@@ -50,7 +50,9 @@ export type ReviewAgencyRequestInput = {
   readonly description?: string | null;
 };
 
-export type ApproveAgencyRequestInput = ReviewAgencyRequestInput & {
+export type ApproveAgencyRequestInput = ReviewAgencyRequestInput;
+
+export type FinalizeAgencyRequestApprovalInput = ReviewAgencyRequestInput & {
   readonly approvedAgencyId: string;
   readonly createdAgencyUserId: string;
 };

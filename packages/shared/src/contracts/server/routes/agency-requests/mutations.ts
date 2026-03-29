@@ -6,8 +6,9 @@ import {
   ServerErrorResponseSchema,
 } from "../../schemas";
 import { AgencyRequestSchema } from "../../agency-requests/models";
-import { unauthorizedResponse } from "../helpers";
+import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
+  AgencyRequestDetailResponseSchema,
   AgencyRequestErrorCodeSchema,
   AgencyRequestErrorResponseSchema,
   AgencyRequestIdParamSchema,
@@ -24,6 +25,9 @@ const SubmitAgencyRequestRequestSchema = z.object({
 }).openapi("SubmitAgencyRequestRequest");
 
 const SubmitAgencyRequestResponseSchema = AgencyRequestSchema.openapi("SubmitAgencyRequestResponse");
+const ApproveAgencyRequestRequestSchema = z.object({
+  description: OptionalTrimmedNullableStringSchema,
+}).openapi("ApproveAgencyRequestRequest");
 
 export const submitAgencyRequestRoute = createRoute({
   method: "post",
@@ -129,6 +133,83 @@ export const cancelAgencyRequestRoute = createRoute({
   },
 });
 
+export const approveAgencyRequestRoute = createRoute({
+  method: "post",
+  path: "/v1/admin/agency-requests/{id}/approve",
+  tags: ["Admin", "Agency Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: AgencyRequestIdParamSchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: ApproveAgencyRequestRequestSchema,
+          examples: {
+            BasicApproval: {
+              value: {
+                description: "Approved and agency account has been provisioned.",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Agency request approved and agency account provisioned",
+      content: {
+        "application/json": {
+          schema: AgencyRequestDetailResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Cannot approve agency request",
+      content: {
+        "application/json": {
+          schema: AgencyRequestErrorResponseSchema,
+          examples: {
+            InvalidTransition: {
+              value: {
+                error: agencyRequestErrorMessages.INVALID_AGENCY_REQUEST_STATUS_TRANSITION,
+                details: {
+                  code: AgencyRequestErrorCodeSchema.enum.INVALID_AGENCY_REQUEST_STATUS_TRANSITION,
+                  agencyRequestId: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd301",
+                  currentStatus: "APPROVED",
+                  nextStatus: "APPROVED",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+    404: {
+      description: "Agency request not found",
+      content: {
+        "application/json": {
+          schema: AgencyRequestErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: agencyRequestErrorMessages.AGENCY_REQUEST_NOT_FOUND,
+                details: {
+                  code: AgencyRequestErrorCodeSchema.enum.AGENCY_REQUEST_NOT_FOUND,
+                  agencyRequestId: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd301",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
 export type SubmitAgencyRequestRequest = z.infer<typeof SubmitAgencyRequestRequestSchema>;
 export type SubmitAgencyRequestResponse = z.infer<typeof SubmitAgencyRequestResponseSchema>;
 export type CancelAgencyRequestResponse = z.infer<typeof AgencyRequestSchema>;
+export type ApproveAgencyRequestRequest = z.infer<typeof ApproveAgencyRequestRequestSchema>;

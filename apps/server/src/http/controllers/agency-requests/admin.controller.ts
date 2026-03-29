@@ -1,7 +1,7 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 
 import { serverRoutes } from "@mebike/shared";
-import { Effect } from "effect";
+import { Effect, Match } from "effect";
 
 import { AgencyRequestServiceTag } from "@/domain/agency-requests";
 import { withLoggedCause } from "@/domain/shared";
@@ -84,7 +84,57 @@ const getAgencyRequestById: RouteHandler<AgencyRequestsRoutes["adminGet"]> = asy
   throw result.left;
 };
 
+const approveAgencyRequest: RouteHandler<AgencyRequestsRoutes["adminApprove"]> = async (c) => {
+  const { id } = c.req.valid("param");
+  const body = c.req.valid("json");
+  const reviewedByUserId = c.var.currentUser!.userId;
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* AgencyRequestServiceTag;
+      return yield* service.approve(id, {
+        reviewedByUserId,
+        description: body.description ?? undefined,
+      });
+    }),
+    routeContext(agencyRequests.adminApprove),
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<AgencyRequestDetailResponse, 200>(toAgencyRequestAdminListItem(right), 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("AgencyRequestNotFound", ({ agencyRequestId }) =>
+          c.json<AgencyRequestErrorResponse, 404>({
+            error: agencyRequestErrorMessages.AGENCY_REQUEST_NOT_FOUND,
+            details: {
+              code: AgencyRequestErrorCodeSchema.enum.AGENCY_REQUEST_NOT_FOUND,
+              agencyRequestId,
+            },
+          }, 404)),
+        Match.tag("InvalidAgencyRequestStatusTransition", ({ agencyRequestId, currentStatus, nextStatus }) =>
+          c.json<AgencyRequestErrorResponse, 400>({
+            error: agencyRequestErrorMessages.INVALID_AGENCY_REQUEST_STATUS_TRANSITION,
+            details: {
+              code: AgencyRequestErrorCodeSchema.enum.INVALID_AGENCY_REQUEST_STATUS_TRANSITION,
+              agencyRequestId,
+              currentStatus,
+              nextStatus,
+            },
+          }, 400)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const AgencyRequestsAdminController = {
+  approveAgencyRequest,
   getAgencyRequestById,
   listAgencyRequests,
 } as const;

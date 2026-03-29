@@ -15,7 +15,7 @@ import type {
   AgencyRequestPageRequest,
   AgencyRequestRow,
   AgencyRequestSortField,
-  ApproveAgencyRequestInput,
+  FinalizeAgencyRequestApprovalInput,
   ReviewAgencyRequestInput,
   SubmitAgencyRequestInput,
 } from "../models";
@@ -35,7 +35,7 @@ export type AgencyRequestRepo = {
     pageReq: AgencyRequestPageRequest,
   ) => Effect.Effect<PageResult<AgencyRequestRow>, AgencyRequestRepositoryError>;
   readonly submit: (input: SubmitAgencyRequestInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError>;
-  readonly approve: (agencyRequestId: string, input: ApproveAgencyRequestInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
+  readonly approve: (agencyRequestId: string, input: FinalizeAgencyRequestApprovalInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
   readonly reject: (agencyRequestId: string, input: ReviewAgencyRequestInput) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
   readonly cancel: (agencyRequestId: string, description?: string | null) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError | AgencyRequestNotFound | InvalidAgencyRequestStatusTransition>;
 };
@@ -233,7 +233,7 @@ export function makeAgencyRequestRepository(
           status: AgencyRequestStatus.APPROVED,
           reviewedByUserId: input.reviewedByUserId,
           reviewedAt: new Date(),
-          description: input.description ?? null,
+          ...(input.description !== undefined ? { description: input.description ?? null } : {}),
           approvedAgencyId: input.approvedAgencyId,
           createdAgencyUserId: input.createdAgencyUserId,
         },
@@ -248,7 +248,7 @@ export function makeAgencyRequestRepository(
           status: AgencyRequestStatus.REJECTED,
           reviewedByUserId: input.reviewedByUserId,
           reviewedAt: new Date(),
-          description: input.description ?? null,
+          ...(input.description !== undefined ? { description: input.description ?? null } : {}),
         },
       }),
 
