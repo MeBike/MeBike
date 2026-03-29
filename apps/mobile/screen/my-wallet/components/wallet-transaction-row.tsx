@@ -1,21 +1,22 @@
+import { Pressable } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { AppListRow } from "@ui/primitives/app-list-row";
+import { borderWidths, iconSizes, spaceScale } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import {
-  formatCurrency,
+  formatBalance,
   formatDate,
-  formatTransactionStatus,
+  formatTransactionTitle,
   formatTransactionType,
 } from "@utils/wallet/formatters";
 
 type WalletTransactionRowProps = {
   item: WalletTransactionDetail;
   onPress?: () => void;
-  showDivider: boolean;
 };
 
 type TransactionVisual = {
@@ -24,8 +25,9 @@ type TransactionVisual = {
   iconBackground: string;
   amountTone: "success" | "brand" | "warning" | "default";
   amountPrefix: "+" | "-";
-  fallbackLabel: string;
 };
+
+const transactionIconShellSize = "$6";
 
 function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<typeof useTheme>): TransactionVisual {
   switch (item.type) {
@@ -36,16 +38,14 @@ function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<t
         iconBackground: theme.surfaceSuccess.val,
         amountTone: "success",
         amountPrefix: "+",
-        fallbackLabel: "Nạp tiền",
       };
     case "REFUND":
       return {
         iconName: "arrow.clockwise",
-        iconColor: theme.actionPrimary.val,
-        iconBackground: theme.surfaceAccent.val,
-        amountTone: "brand",
+        iconColor: theme.statusSuccess.val,
+        iconBackground: theme.surfaceSuccess.val,
+        amountTone: "success",
         amountPrefix: "+",
-        fallbackLabel: "Hoàn tiền",
       };
     case "ADJUSTMENT":
       return {
@@ -54,7 +54,6 @@ function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<t
         iconBackground: theme.surfaceWarning.val,
         amountTone: "warning",
         amountPrefix: "+",
-        fallbackLabel: "Điều chỉnh",
       };
     case "DEBIT":
     default:
@@ -64,73 +63,78 @@ function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<t
         iconBackground: theme.surfaceMuted.val,
         amountTone: "default",
         amountPrefix: "-",
-        fallbackLabel: "Thanh toán",
       };
   }
 }
 
-export function WalletTransactionRow({ item, onPress, showDivider }: WalletTransactionRowProps) {
+export function WalletTransactionRow({ item, onPress }: WalletTransactionRowProps) {
   const theme = useTheme();
   const visual = getTransactionVisual(item, theme);
-  const status = item.status.toUpperCase();
-  const title = item.description?.trim() || visual.fallbackLabel;
-  const hint = formatTransactionType(item.type);
+  const title = formatTransactionTitle(item.type, item.description);
+  const typeLabel = formatTransactionType(item.type);
+  const amount = Math.abs(Number(item.amount));
+  const amountText = `${visual.amountPrefix} ${formatBalance(amount)} đ`;
+  const typeTone = visual.amountTone === "success"
+    ? "success"
+    : visual.amountTone === "warning"
+      ? "warning"
+      : "muted";
 
   return (
-    <AppListRow
-      dividerInset="$4"
-      leading={(
-        <XStack
-          alignItems="center"
-          backgroundColor={visual.iconBackground}
-          borderRadius="$round"
-          height={52}
-          justifyContent="center"
-          width={52}
-        >
-          <IconSymbol color={visual.iconColor} name={visual.iconName} size={22} />
-        </XStack>
-      )}
-      onPress={onPress}
-      primary={(
-        <AppText numberOfLines={1} variant="cardTitle">
-          {title}
-        </AppText>
-      )}
-      secondary={(
-        <AppText tone="muted" variant="bodySmall">
-          {formatDate(item.createdAt)}
-        </AppText>
-      )}
-      showDivider={showDivider}
-      trailing={(
-        <YStack alignItems="flex-end" gap="$2">
-          <AppText tone={visual.amountTone} variant="headline">
-            {visual.amountPrefix}
-            {" "}
-            {formatCurrency(item.amount)}
-          </AppText>
+    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.96 : 1 })}>
+      <AppCard
+        backgroundColor="$surfaceDefault"
+        borderColor="$backgroundSubtle"
+        borderRadius="$4"
+        borderWidth={borderWidths.subtle}
+        elevated={false}
+        padding="$0"
+      >
+        <XStack alignItems="center" gap="$3" justifyContent="space-between" paddingHorizontal="$4" paddingVertical="$3">
+          <XStack alignItems="center" flex={1} gap="$3">
+            <XStack
+              alignItems="center"
+              backgroundColor={visual.iconBackground}
+              borderRadius="$round"
+              height={transactionIconShellSize}
+              justifyContent="center"
+              width={transactionIconShellSize}
+            >
+              <IconSymbol color={visual.iconColor} name={visual.iconName} size={iconSizes.md} />
+            </XStack>
 
-          {status === "SUCCESS"
-            ? (
-                <AppText tone="muted" variant="bodySmall">
-                  {hint}
-                </AppText>
-              )
-            : (
-                <XStack alignItems="center" gap="$1">
-                  <IconSymbol
-                    color={status === "FAILED" ? theme.statusDanger.val : theme.statusWarning.val}
-                    name={status === "FAILED" ? "exclamationmark.triangle" : "clock"}
-                    size={12}
-                  />
-                  <AppText tone={status === "FAILED" ? "danger" : "warning"} variant="meta">
-                    {formatTransactionStatus(item.status)}
-                  </AppText>
-                </XStack>
-              )}
-        </YStack>
-      )}
-    />
+            <YStack flex={1} gap="$1" minWidth={0}>
+              <AppText numberOfLines={1} variant="compactStrong">
+                {title}
+              </AppText>
+
+              <AppText tone="muted" variant="bodySmall">
+                {formatDate(item.createdAt)}
+              </AppText>
+            </YStack>
+          </XStack>
+
+          <YStack alignItems="flex-end" flexShrink={0} gap="$1" minWidth={spaceScale[10] + spaceScale[3]}>
+            <AppText
+              align="right"
+              style={{ fontVariant: ["tabular-nums"] }}
+              tone={visual.amountTone}
+              variant="compactStrong"
+            >
+              {amountText}
+            </AppText>
+
+            <AppText
+              align="right"
+              numberOfLines={1}
+              tone={typeTone}
+              variant="caption"
+            >
+              {typeLabel}
+            </AppText>
+          </YStack>
+        </XStack>
+      </AppCard>
+    </Pressable>
   );
 }
