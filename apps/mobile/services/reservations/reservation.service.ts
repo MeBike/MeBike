@@ -47,12 +47,6 @@ function toSearchParams(
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
-function reservationPath(template: string, reservationId: string): string {
-  return template
-    .replace("{reservationId}", reservationId)
-    .replace(":reservationId", reservationId);
-}
-
 async function decodeReservationResponse<TRaw, TValue>(
   response: Response,
   schema: z.ZodType<TRaw>,
@@ -171,7 +165,7 @@ export const reservationService = {
 
   getReservationDetails: async (reservationId: string): Promise<Result<Reservation, ReservationError>> => {
     try {
-      const path = reservationPath(routePath(ServerRoutes.reservations.getMyReservation), reservationId);
+      const path = routePath(ServerRoutes.reservations.getMyReservation, { reservationId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
 
@@ -189,7 +183,7 @@ export const reservationService = {
 
   cancelReservation: async (reservationId: string): Promise<Result<Reservation, ReservationError>> => {
     try {
-      const path = reservationPath(routePath(ServerRoutes.reservations.cancelReservation), reservationId);
+      const path = routePath(ServerRoutes.reservations.cancelReservation, { reservationId });
 
       const response = await kyClient.post(path, { throwHttpErrors: false });
 
@@ -207,7 +201,7 @@ export const reservationService = {
 
   confirmReservation: async (reservationId: string): Promise<Result<Reservation, ReservationError>> => {
     try {
-      const path = reservationPath(routePath(ServerRoutes.reservations.confirmReservation), reservationId);
+      const path = routePath(ServerRoutes.reservations.confirmReservation, { reservationId });
 
       const response = await kyClient.post(path, { throwHttpErrors: false });
 

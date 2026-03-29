@@ -62,9 +62,7 @@ export const ratingService = {
     rentalId: string,
   ): Promise<Result<RatingDetail | null, RatingError>> => {
     try {
-      const path = routePath(ServerRoutes.ratings.getByRental)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.ratings.getByRental, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
 
@@ -92,9 +90,7 @@ export const ratingService = {
     payload: CreateRatingPayload,
   ): Promise<Result<RatingDetail, RatingError>> => {
     try {
-      const path = routePath(ServerRoutes.ratings.create)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.ratings.create, { rentalId });
 
       const response = await kyClient.post(path, {
         json: payload,

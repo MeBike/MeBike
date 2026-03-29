@@ -69,9 +69,7 @@ async function tryGetStationSummary(stationId?: string): Promise<MyRentalResolve
 
 async function tryGetCurrentReturnSlot(rentalId: string): Promise<ReturnSlotReservation | null> {
   try {
-    const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot)
-      .replace("{rentalId}", rentalId)
-      .replace(":rentalId", rentalId);
+    const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot, { rentalId });
 
     const response = await kyClient.get(path, { throwHttpErrors: false });
     if (response.status === StatusCodes.OK) {
@@ -160,9 +158,7 @@ export const rentalServiceV1 = {
 
   getMyRental: async (rentalId: string): Promise<Result<Rental, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.getMyRental)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.getMyRental, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
@@ -218,9 +214,7 @@ export const rentalServiceV1 = {
 
   getMyCurrentReturnSlot: async (rentalId: string): Promise<Result<ReturnSlotReservation, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
@@ -242,9 +236,7 @@ export const rentalServiceV1 = {
     payload: CreateReturnSlotPayload,
   ): Promise<Result<ReturnSlotReservation, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.createMyReturnSlot)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.createMyReturnSlot, { rentalId });
 
       const response = await kyClient.post(path, {
         json: payload,
@@ -287,9 +279,7 @@ export const rentalServiceV1 = {
 
   getAdminRentalDetail: async (rentalId: string): Promise<Result<RentalDetail, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.adminGetRental)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.adminGetRental, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
@@ -308,9 +298,7 @@ export const rentalServiceV1 = {
 
   getStaffRentalDetail: async (rentalId: string): Promise<Result<RentalDetail, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.staffGetRental)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.staffGetRental, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
@@ -334,9 +322,7 @@ export const rentalServiceV1 = {
     endTime?: string;
   }): Promise<Result<RentalWithPricing, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.endRentalByAdmin)
-        .replace("{rentalId}", args.rentalId)
-        .replace(":rentalId", args.rentalId);
+      const path = routePath(ServerRoutes.rentals.endRentalByAdmin, { rentalId: args.rentalId });
 
       const response = await kyClient.put(path, {
         json: {
