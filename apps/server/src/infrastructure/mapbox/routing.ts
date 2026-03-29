@@ -14,6 +14,8 @@ import { Redis } from "@/infrastructure/redis";
 
 import type {
   MapboxCoordinate,
+  MapboxGeoJsonLineString,
+  MapboxGeoJsonMultiLineString,
   MapboxMatrixEntry,
   MapboxMatrixRequest,
   MapboxRouteGeometryFormat,
@@ -127,7 +129,7 @@ function getMapboxClients() {
 }
 
 function normalizeRouteResponse(
-  body: DirectionsResponse<string | GeoJSON.LineString | GeoJSON.MultiLineString>,
+  body: DirectionsResponse<string | MapboxGeoJsonLineString | MapboxGeoJsonMultiLineString>,
   geometryFormat: MapboxRouteGeometryFormat,
 ): Effect.Effect<MapboxRoutePath, MapboxRoutingResponseError> {
   const route = body.routes[0];
@@ -171,6 +173,18 @@ function normalizeMatrixResponse(body: MatrixResponse): Effect.Effect<ReadonlyAr
   return Effect.succeed(result);
 }
 
+function executeDirectionsRequest<RouteGeometry extends string | MapboxGeoJsonLineString | MapboxGeoJsonMultiLineString>(args: {
+  send: () => Promise<MapiResponse<DirectionsResponse<RouteGeometry>>>;
+  geometryFormat: MapboxRouteGeometryFormat;
+}) {
+  return Effect.tryPromise({
+    try: args.send,
+    catch: cause => mapRequestError("getRoute", cause),
+  }).pipe(
+    Effect.flatMap(response => normalizeRouteResponse(response.body, args.geometryFormat)),
+  );
+}
+
 function fetchRouteFromMapbox(args: {
   directionsClient: DirectionsClient;
   origin: MapboxCoordinate;
@@ -178,42 +192,37 @@ function fetchRouteFromMapbox(args: {
   profile: MapboxRoutingProfile;
   geometryFormat: MapboxRouteGeometryFormat;
 }) {
-  const waypoints = [
-    { coordinates: toSdkCoordinate(args.origin) },
-    { coordinates: toSdkCoordinate(args.destination) },
-  ];
-
-  if (args.geometryFormat === "geojson") {
-    const request: DirectionsRequest<"geojson"> = {
-      profile: args.profile,
-      waypoints,
-      geometries: "geojson",
-      overview: "full",
-      steps: false,
-    };
-
-    return Effect.tryPromise({
-      try: () => args.directionsClient.getDirections(request).send() as Promise<MapiResponse<DirectionsResponse<GeoJSON.LineString | GeoJSON.MultiLineString>>>,
-      catch: cause => mapRequestError("getRoute", cause),
-    }).pipe(
-      Effect.flatMap(response => normalizeRouteResponse(response.body, args.geometryFormat)),
-    );
-  }
-
-  const request: DirectionsRequest<"polyline6"> = {
+  const commonRequest = {
     profile: args.profile,
-    waypoints,
-    geometries: "polyline6",
-    overview: "full",
+    waypoints: [
+      { coordinates: toSdkCoordinate(args.origin) },
+      { coordinates: toSdkCoordinate(args.destination) },
+    ],
+    overview: "full" as const,
     steps: false,
   };
 
-  return Effect.tryPromise({
-    try: () => args.directionsClient.getDirections(request).send() as Promise<MapiResponse<DirectionsResponse<string>>>,
-    catch: cause => mapRequestError("getRoute", cause),
-  }).pipe(
-    Effect.flatMap(response => normalizeRouteResponse(response.body, args.geometryFormat)),
-  );
+  if (args.geometryFormat === "geojson") {
+    const request: DirectionsRequest<"geojson"> = {
+      ...commonRequest,
+      geometries: "geojson",
+    };
+
+    return executeDirectionsRequest({
+      send: () => args.directionsClient.getDirections(request).send() as Promise<MapiResponse<DirectionsResponse<MapboxGeoJsonLineString | MapboxGeoJsonMultiLineString>>>,
+      geometryFormat: "geojson",
+    });
+  }
+
+  const request: DirectionsRequest<"polyline6"> = {
+    ...commonRequest,
+    geometries: "polyline6",
+  };
+
+  return executeDirectionsRequest({
+    send: () => args.directionsClient.getDirections(request).send() as Promise<MapiResponse<DirectionsResponse<string>>>,
+    geometryFormat: "polyline6",
+  });
 }
 
 function fetchMatrixFromMapbox(args: {

@@ -74,6 +74,7 @@
     "@mebike/tsconfig": "workspace:*",
     "@testcontainers/postgresql": "^11.10.0",
     "@types/bcrypt": "^6.0.0",
+    "@types/geojson": "^7946.0.16",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mapbox__mapbox-sdk": "^0.16.4",
     "@types/node": "^24.10.1",

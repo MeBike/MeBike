@@ -5,6 +5,28 @@ import type * as GeoJSON from "geojson";
 import type { MapboxRoutingError } from "./errors";
 
 /**
+ * Position GeoJSON toi gian du cho route geometry.
+ *
+ * Mapbox Directions tra ve danh sach `[longitude, latitude]`.
+ * Alias rieng giup code service no ro hon thay vi phai expose truc tiep GeoJSON namespace.
+ */
+export type MapboxGeoJsonPosition = GeoJSON.Position;
+
+/**
+ * Du lieu LineString toi gian dung cho route geometry.
+ *
+ * Alias ro nghia cho LineString tra ve tu Mapbox.
+ */
+export type MapboxGeoJsonLineString = GeoJSON.LineString;
+
+/**
+ * Du lieu MultiLineString toi gian dung cho route geometry.
+ *
+ * Alias ro nghia cho MultiLineString tra ve tu Mapbox.
+ */
+export type MapboxGeoJsonMultiLineString = GeoJSON.MultiLineString;
+
+/**
  * Toa do chuan hoa ma infra Mapbox nhan vao.
  *
  * - `latitude` va `longitude` luon dung dinh dang so thap phan WGS84.
@@ -41,12 +63,12 @@ export type MapboxRouteGeometryFormat = "geojson" | "polyline6";
  *
  * Implementation chi expose 2 nhom geometry ma app can quan tam:
  * - `string` khi dung `polyline6`
- * - `GeoJSON.LineString` / `GeoJSON.MultiLineString` khi dung `geojson`
+ * - `MapboxGeoJsonLineString` / `MapboxGeoJsonMultiLineString` khi dung `geojson`
  */
 export type MapboxRouteGeometry
   = | string
-    | GeoJSON.LineString
-    | GeoJSON.MultiLineString;
+    | MapboxGeoJsonLineString
+    | MapboxGeoJsonMultiLineString;
 
 /**
  * Input cho use case lay 1 route cu the.
