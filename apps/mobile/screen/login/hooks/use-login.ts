@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthContracts } from "@mebike/shared";
+import { isAuthApiError } from "@services/auth/auth-error";
+import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
@@ -72,20 +74,11 @@ export function useLogin() {
       const { email, password } = data;
       const result = await login({ email, password });
       if (result) {
-        const message = (() => {
-          if (result._tag === "ApiError") {
-            if (result.code === "INVALID_CREDENTIALS") {
-              return "Email hoặc mật khẩu không đúng.";
-            }
-            if (result.message) {
-              return result.message;
-            }
-          }
-          if (result._tag === "NetworkError") {
-            return "Không thể kết nối tới máy chủ.";
-          }
-          return "Không thể đăng nhập. Vui lòng thử lại.";
-        })();
+        const message = isAuthApiError(result)
+          ? presentAuthError(result, "Không thể đăng nhập. Vui lòng thử lại.")
+          : result._tag === "NetworkError"
+            ? "Không thể kết nối tới máy chủ."
+            : "Không thể đăng nhập. Vui lòng thử lại.";
 
         Alert.alert("Đăng nhập thất bại", message);
         return;

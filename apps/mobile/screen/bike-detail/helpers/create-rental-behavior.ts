@@ -1,16 +1,13 @@
 import type { RentalError } from "@services/rentals";
 import type { QueryClient } from "@tanstack/react-query";
 
-import {
-  rentalErrorMessage,
-} from "@services/rentals";
 import { Alert } from "react-native";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 
+import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 import {
   showInsufficientBalanceAlert,
-  showSubscriptionRequiredAlert,
   showWalletRequiredAlert,
 } from "./create-rental-alerts";
 import { invalidateRentalRelatedQueries } from "./create-rental-helpers";
@@ -41,7 +38,7 @@ export function handleCreateRentalError(args: {
   refetchBikeDetail: () => Promise<unknown>;
 }) {
   const { error, navigation, queryClient, refetchBikeDetail } = args;
-  const message = rentalErrorMessage(error, "Không thể thuê xe. Vui lòng thử lại.");
+  const message = presentRentalError(error, "Không thể thuê xe. Vui lòng thử lại.");
 
   if (error._tag !== "ApiError") {
     Alert.alert("Lỗi", message);
@@ -105,11 +102,6 @@ export function handleCreateRentalError(args: {
       );
       refetchBikeDetail();
       invalidateRentalRelatedQueries(queryClient);
-      return;
-    }
-    case "SUBSCRIPTION_NOT_FOUND_FOR_USER":
-    case "SUBSCRIPTION_REQUIRED": {
-      showSubscriptionRequiredAlert(navigation);
       return;
     }
     default: {

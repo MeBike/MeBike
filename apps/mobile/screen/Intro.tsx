@@ -44,7 +44,7 @@ const introSlides = [
 ];
 
 export default function IntroScreen() {
-  const { isAuthenticated } = useAuthNext();
+  const { status, isAuthenticated } = useAuthNext();
   const navigation = useNavigation<IntroScreenNavigationProp>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -59,6 +59,10 @@ export default function IntroScreen() {
   }, [currentSlide]);
 
   const nextSlide = async () => {
+    if (status === "loading") {
+      return;
+    }
+
     if (currentSlide < introSlides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     }
@@ -73,6 +77,10 @@ export default function IntroScreen() {
   };
 
   const skipIntro = async () => {
+    if (status === "loading") {
+      return;
+    }
+
     if (isAuthenticated) {
       navigation.navigate("Main");
     }

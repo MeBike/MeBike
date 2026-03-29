@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { Alert } from "react-native";
 
+import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 import { authService } from "@services/auth/auth-service";
 import { forgotPasswordSchema, type ForgotPasswordSchemaFormData } from "@schemas/authSchema";
 
@@ -30,15 +31,7 @@ export function useForgotPassword() {
   const submit = handleSubmit(async (data) => {
     const result = await authService.sendResetPassword({ email: data.email });
     if (!result.ok) {
-      if (result.error._tag === "ApiError") {
-        Alert.alert("Lỗi", result.error.message ?? "Không thể gửi OTP");
-        return;
-      }
-      if (result.error._tag === "NetworkError") {
-        Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-        return;
-      }
-      Alert.alert("Lỗi", "Không thể gửi OTP");
+      Alert.alert("Lỗi", presentAuthError(result.error, "Không thể gửi OTP."));
       return;
     }
 
