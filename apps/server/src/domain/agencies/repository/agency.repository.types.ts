@@ -1,0 +1,19 @@
+import type { Effect } from "effect";
+
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+
+import type { AgencyRepositoryError } from "../domain-errors";
+import type {
+  AgencyFilter,
+  AgencyRow,
+  AgencySortField,
+  CreateAgencyInput,
+} from "../models";
+
+export type AgencyRepo = {
+  readonly create: (input: CreateAgencyInput) => Effect.Effect<AgencyRow, AgencyRepositoryError>;
+  readonly listWithOffset: (
+    filter: AgencyFilter,
+    pageReq: PageRequest<AgencySortField>,
+  ) => Effect.Effect<PageResult<AgencyRow>, AgencyRepositoryError>;
+};

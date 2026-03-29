@@ -32,6 +32,8 @@ const RENTALS_TARGET = 120;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
+const DEMO_AGENCY_NORTH_ID = "019b17bd-d130-7e7d-be69-91ceef7b9007";
+const DEMO_AGENCY_SOUTH_ID = "019b17bd-d130-7e7d-be69-91ceef7b9008";
 const DEMO_TECH_TEAM_A_ID = "019b17bd-d130-7e7d-be69-91ceef7b9005";
 const DEMO_TECH_TEAM_B_ID = "019b17bd-d130-7e7d-be69-91ceef7b9006";
 
@@ -603,11 +605,13 @@ async function main() {
           name: "Demo Agency Main",
           address: "District 1, Ho Chi Minh City",
           contactPhone: "02873000001",
+          status: "ACTIVE",
         },
         update: {
           name: "Demo Agency Main",
           address: "District 1, Ho Chi Minh City",
           contactPhone: "02873000001",
+          status: "ACTIVE",
         },
       }),
       prisma.agency.upsert({
@@ -617,11 +621,45 @@ async function main() {
           name: "Demo Agency East",
           address: "Thu Duc City, Ho Chi Minh City",
           contactPhone: "02873000002",
+          status: "ACTIVE",
         },
         update: {
           name: "Demo Agency East",
           address: "Thu Duc City, Ho Chi Minh City",
           contactPhone: "02873000002",
+          status: "ACTIVE",
+        },
+      }),
+      prisma.agency.upsert({
+        where: { id: DEMO_AGENCY_NORTH_ID },
+        create: {
+          id: DEMO_AGENCY_NORTH_ID,
+          name: "Demo Agency North",
+          address: "Go Vap, Ho Chi Minh City",
+          contactPhone: "02873000003",
+          status: "INACTIVE",
+        },
+        update: {
+          name: "Demo Agency North",
+          address: "Go Vap, Ho Chi Minh City",
+          contactPhone: "02873000003",
+          status: "INACTIVE",
+        },
+      }),
+      prisma.agency.upsert({
+        where: { id: DEMO_AGENCY_SOUTH_ID },
+        create: {
+          id: DEMO_AGENCY_SOUTH_ID,
+          name: "Demo Agency South",
+          address: "District 7, Ho Chi Minh City",
+          contactPhone: "02873000004",
+          status: "SUSPENDED",
+        },
+        update: {
+          name: "Demo Agency South",
+          address: "District 7, Ho Chi Minh City",
+          contactPhone: "02873000004",
+          status: "SUSPENDED",
         },
       }),
     ]);
