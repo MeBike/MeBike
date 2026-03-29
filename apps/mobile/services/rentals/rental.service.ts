@@ -77,7 +77,8 @@ async function tryGetStationSummary(stationId?: string): Promise<MyRentalResolve
   }
 
   try {
-    return await stationService.getStationById(stationId);
+    const result = await stationService.getStationById(stationId);
+    return result.ok ? result.value : null;
   }
   catch {
     return null;
