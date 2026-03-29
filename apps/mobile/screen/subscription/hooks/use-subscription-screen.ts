@@ -1,12 +1,11 @@
 import type { SubscriptionSectionKey } from "@components/subscription/subscription-toggle";
-import type { SubscriptionError } from "@services/subscription.service";
 
 import { useActivateSubscriptionMutation } from "@hooks/mutations/subscription/use-activate-subscription-mutation";
 import { useSubscribeMutation } from "@hooks/mutations/subscription/use-subscribe-mutation";
 import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
-import { subscriptionErrorMessage } from "@services/subscription.service";
+import { isSubscriptionError } from "@services/subscription.service";
 import { useQueryClient } from "@tanstack/react-query";
 import { toSubscriptionStatusLabel } from "@utils/subscription";
 import { useCallback, useEffect, useState } from "react";
@@ -14,18 +13,20 @@ import { Alert } from "react-native";
 
 import type { Subscription, SubscriptionPackage } from "@/types/subscription-types";
 
+import { presentSubscriptionError } from "@/presenters/subscriptions/subscription-error-presenter";
 import { loadSubscriptionSection, saveSubscriptionSection } from "../lib/section-storage";
 
 const PAGE_SIZE = 20;
 
 function messageFromError(error: unknown, fallback: string): string {
-  const sub = error as SubscriptionError;
-  if (sub && typeof sub === "object" && "_tag" in sub) {
-    return subscriptionErrorMessage(sub);
+  if (isSubscriptionError(error)) {
+    return presentSubscriptionError(error, fallback);
   }
+
   if (error instanceof Error && error.message) {
     return error.message;
   }
+
   return fallback;
 }
 
