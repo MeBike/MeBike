@@ -157,6 +157,7 @@ export const CreateRedistributionRequestSchema = z.object({
   sourceStationId: z.uuidv7(),
   targetStationId: z.uuidv7().optional(),
   targetAgencyId: z.uuidv7().optional(),
+  requestedQuantity: z.number(),
   reason: z.string(),
 }).superRefine((data, ctx) => {
   const hasTargetStation = !!data.targetStationId

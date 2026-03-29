@@ -21,6 +21,7 @@ import { registerBikeRoutes } from "./routes/bikes";
 import { registerEventRoutes } from "./routes/events";
 import { registerHealthRoutes } from "./routes/health";
 import { registerRatingRoutes } from "./routes/ratings";
+import { registerRedistributionRoutes } from "./routes/redistribution";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerReservationRoutes } from "./routes/reservations";
 import { registerStationRoutes } from "./routes/stations";
@@ -67,7 +68,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("*", cors());
   app.use("*", honoLogger(message => logger.info(message)));
   app.use("*", async (c, next) => {
-    c.set("runPromise", runPromise);
+    (c as any).set("runPromise", runPromise);
     await next();
   });
   app.use("*", currentUserMiddleware);
@@ -79,6 +80,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/reservations", requireAuthMiddleware);
   app.use("/v1/reservations/*", requireAuthMiddleware);
   app.use("/v1/stripe/*", requireAuthMiddleware);
+  app.use("/v1/redistribution/*", requireAuthMiddleware);
   app.use("/v1/suppliers", requireAdminMiddleware);
   app.use("/v1/suppliers/*", requireAdminMiddleware);
   app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
@@ -105,6 +107,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerBikeRoutes(app);
   registerEventRoutes(app);
   registerRentalRoutes(app);
+  registerRedistributionRoutes(app);
   registerReservationRoutes(app);
   registerSupplierRoutes(app);
   registerAuthRoutes(app);

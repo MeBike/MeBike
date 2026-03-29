@@ -31,7 +31,7 @@ export type RedistributionReqErrorCode = (typeof redistributionReqErrorCodes)[nu
 export type RedistributionReqErrorDetail = z.infer<typeof RedistributionReqErrorDetailSchema>;
 export type RedistributionReqErrorResponse = z.infer<typeof RedistributionReqErrorResponseSchema>
 
-export const stationErrorMessages: Record<RedistributionReqErrorCode, string> = {
+export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, string> = {
   // 404
   REDISTRIBUTION_REQUEST_NOT_FOUND: "Redistribution request not found",
   // 400
