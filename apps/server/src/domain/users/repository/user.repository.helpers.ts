@@ -14,6 +14,7 @@ import type {
 } from "../models";
 
 import { TechnicianTeamMemberLimitExceeded, UserRepositoryError } from "../domain-errors";
+import { StationRoleAssignmentLimitExceeded } from "../domain-errors";
 
 export const TECHNICIAN_TEAM_MEMBER_LIMIT = 3;
 
@@ -126,6 +127,37 @@ export function countTechnicianTeamMembersForClient(
   });
 }
 
+export function countStationRoleAssignmentsForClient(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+  stationId: string,
+  role: "STAFF" | "MANAGER",
+  options?: { readonly excludeUserId?: string },
+) {
+  return Effect.tryPromise({
+    try: () =>
+      client.userOrgAssignment.count({
+        where: {
+          stationId,
+          ...(options?.excludeUserId
+            ? {
+                userId: {
+                  not: options.excludeUserId,
+                },
+              }
+            : {}),
+          user: {
+            role,
+          },
+        },
+      }),
+    catch: err =>
+      new UserRepositoryError({
+        operation: "countStationRoleAssignments",
+        cause: err,
+      }),
+  });
+}
+
 export async function ensureTechnicianTeamCapacity(
   client: PrismaTypes.TransactionClient,
   technicianTeamId: string,
@@ -148,6 +180,37 @@ export async function ensureTechnicianTeamCapacity(
     throw new TechnicianTeamMemberLimitExceeded({
       technicianTeamId,
       memberLimit: TECHNICIAN_TEAM_MEMBER_LIMIT,
+    });
+  }
+}
+
+export async function ensureStationRoleAssignmentLimit(
+  client: PrismaTypes.TransactionClient,
+  stationId: string,
+  role: "STAFF" | "MANAGER",
+  options?: { readonly excludeUserId?: string },
+) {
+  const assignmentCount = await client.userOrgAssignment.count({
+    where: {
+      stationId,
+      ...(options?.excludeUserId
+        ? {
+            userId: {
+              not: options.excludeUserId,
+            },
+          }
+        : {}),
+      user: {
+        role,
+      },
+    },
+  });
+
+  if (assignmentCount >= 1) {
+    throw new StationRoleAssignmentLimitExceeded({
+      stationId,
+      role,
+      assignmentLimit: 1,
     });
   }
 }

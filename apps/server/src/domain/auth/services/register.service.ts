@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import type { DuplicateUserEmail, DuplicateUserPhoneNumber } from "@/domain/users";
 
 import { makeUserCommandRepository } from "@/domain/users";
+
 import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeWalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
@@ -21,7 +22,7 @@ export function registerUseCase(args: {
   phoneNumber?: string | null;
 }): Effect.Effect<
   Tokens,
-  DuplicateUserEmail | DuplicateUserPhoneNumber,
+  DuplicateUserEmail | DuplicateUserPhoneNumber | UserRepositoryError,
   AuthServiceTag | AuthRepository | AuthEventRepository | Prisma
 > {
   return Effect.gen(function* () {
@@ -35,7 +36,7 @@ export function registerUseCase(args: {
     const user = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
         const userCommandRepo = makeUserCommandRepository(tx);
-        const created = yield* userCommandRepo.createUser({
+        const created = yield* userCommandRepo.createRegisteredUser({
           fullname: args.fullname,
           email: args.email,
           passwordHash,
@@ -45,14 +46,12 @@ export function registerUseCase(args: {
         return created;
       })).pipe(
       Effect.catchTag("PrismaTransactionError", err =>
-        Effect.die(
+        Effect.fail(
           new UserRepositoryError({
             operation: "register.createUserWithWallet",
             cause: err.cause,
           }),
         )),
-      Effect.catchTag("TechnicianTeamMemberLimitExceeded", err => Effect.die(err)),
-      Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
       Effect.catchTag("WalletUniqueViolation", err => Effect.die(err)),
     );

@@ -11,6 +11,7 @@ import { makePageResult, normalizedPage } from "../../../shared/pagination";
 import { UserRepositoryError } from "../../domain-errors";
 import { selectUserRow, toUserRow } from "../user.mappers";
 import {
+  countStationRoleAssignmentsForClient,
   countTechnicianTeamMembersForClient,
   TECHNICIAN_TEAM_MEMBER_LIMIT,
   toOrderBy,
@@ -27,6 +28,7 @@ export type UserReadRepo = Pick<
   | "listTechnicianSummaries"
   | "listAvailableTechnicianTeams"
   | "countTechnicianTeamMembers"
+  | "countStationRoleAssignments"
 >;
 
 export function makeUserReadRepository(
@@ -212,5 +214,8 @@ export function makeUserReadRepository(
 
     countTechnicianTeamMembers: (technicianTeamId, options) =>
       countTechnicianTeamMembersForClient(client, technicianTeamId, options),
+
+    countStationRoleAssignments: (stationId, role, options) =>
+      countStationRoleAssignmentsForClient(client, stationId, role, options),
   };
 }
