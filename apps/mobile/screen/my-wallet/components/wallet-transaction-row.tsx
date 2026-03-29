@@ -4,7 +4,7 @@ import { useTheme, XStack, YStack } from "tamagui";
 import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { borderWidths, iconSizes, spaceScale } from "@theme/metrics";
+import { iconSizes, spaceScale } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import {
@@ -84,35 +84,46 @@ export function WalletTransactionRow({ item, onPress }: WalletTransactionRowProp
     <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.96 : 1 })}>
       <AppCard
         backgroundColor="$surfaceDefault"
-        borderColor="$backgroundSubtle"
         borderRadius="$4"
-        borderWidth={borderWidths.subtle}
-        elevated={false}
+        borderColor="transparent"
+        borderWidth={0}
+        chrome="flat"
+        elevation={0}
         padding="$0"
+        shadowColor="transparent"
+        shadowOffset={{ width: 0, height: 0 }}
+        shadowOpacity={0}
+        shadowRadius={0}
       >
-        <XStack alignItems="center" gap="$3" justifyContent="space-between" paddingHorizontal="$4" paddingVertical="$3">
+        <XStack
+          alignItems="center"
+          gap="$3"
+          justifyContent="space-between"
+          paddingHorizontal="$4"
+          paddingVertical="$3"
+        >
           <XStack alignItems="center" flex={1} gap="$3">
-            <XStack
-              alignItems="center"
-              backgroundColor={visual.iconBackground}
-              borderRadius="$round"
-              height={transactionIconShellSize}
-              justifyContent="center"
-              width={transactionIconShellSize}
-            >
-              <IconSymbol color={visual.iconColor} name={visual.iconName} size={iconSizes.md} />
-            </XStack>
-
-            <YStack flex={1} gap="$1" minWidth={0}>
-              <AppText numberOfLines={1} variant="compactStrong">
-                {title}
-              </AppText>
-
-              <AppText tone="muted" variant="bodySmall">
-                {formatDate(item.createdAt)}
-              </AppText>
-            </YStack>
+          <XStack
+            alignItems="center"
+            backgroundColor={visual.iconBackground}
+            borderRadius="$round"
+            height={transactionIconShellSize}
+            justifyContent="center"
+            width={transactionIconShellSize}
+          >
+            <IconSymbol color={visual.iconColor} name={visual.iconName} size={iconSizes.md} />
           </XStack>
+
+          <YStack flex={1} gap="$1" minWidth={0}>
+            <AppText numberOfLines={1} variant="compactStrong">
+              {title}
+            </AppText>
+
+            <AppText tone="muted" variant="bodySmall">
+              {formatDate(item.createdAt)}
+            </AppText>
+          </YStack>
+        </XStack>
 
           <YStack alignItems="flex-end" flexShrink={0} gap="$1" minWidth={spaceScale[10] + spaceScale[3]}>
             <AppText

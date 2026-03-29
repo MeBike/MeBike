@@ -58,8 +58,21 @@ export const AppCard = styled(YStack, {
         elevation: 0,
       },
     },
+    chrome: {
+      card: {},
+      flat: {
+        borderWidth: borderWidths.none,
+        borderColor: "transparent",
+        shadowColor: "transparent",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        elevation: 0,
+      },
+    },
   } as const,
   defaultVariants: {
+    chrome: "card",
     tone: "default",
     size: "default",
   },
