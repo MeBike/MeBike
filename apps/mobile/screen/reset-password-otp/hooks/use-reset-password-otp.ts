@@ -1,5 +1,6 @@
 import type { StackNavigationProp } from "@react-navigation/stack";
 
+import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { authService } from "@services/auth/auth-service";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -158,15 +159,7 @@ export function useResetPasswordOtp() {
       });
 
       if (!result.ok) {
-        if (result.error._tag === "ApiError") {
-          Alert.alert("Lỗi", result.error.message ?? "OTP không hợp lệ hoặc đã hết hạn");
-          return;
-        }
-        if (result.error._tag === "NetworkError") {
-          Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-          return;
-        }
-        Alert.alert("Lỗi", "Không thể xác thực OTP");
+        Alert.alert("Lỗi", presentAuthError(result.error, "Không thể xác thực OTP."));
         return;
       }
 
@@ -187,15 +180,7 @@ export function useResetPasswordOtp() {
     try {
       const result = await authService.sendResetPassword({ email });
       if (!result.ok) {
-        if (result.error._tag === "ApiError") {
-          Alert.alert("Lỗi", result.error.message ?? "Không thể gửi lại OTP");
-          return;
-        }
-        if (result.error._tag === "NetworkError") {
-          Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-          return;
-        }
-        Alert.alert("Lỗi", "Không thể gửi lại OTP");
+        Alert.alert("Lỗi", presentAuthError(result.error, "Không thể gửi lại OTP."));
         return;
       }
 

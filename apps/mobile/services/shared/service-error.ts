@@ -1,7 +1,7 @@
 import type { Result } from "@lib/result";
 import type { z } from "zod";
 
-import { decodeWithSchema } from "@lib/api-decode";
+import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { err } from "@lib/result";
 import { ServerContracts } from "@mebike/shared";
 import { StatusCodes } from "http-status-codes";
@@ -17,6 +17,40 @@ export type ParsedServiceError = {
   code: string;
   message?: string;
   details?: Record<string, unknown>;
+};
+
+export type ApiServiceError<TCode extends string> = {
+  _tag: "ApiError";
+  code: TCode;
+  message?: string;
+  details?: Record<string, unknown>;
+};
+
+export type NetworkServiceError = {
+  _tag: "NetworkError";
+  message?: string;
+};
+
+export type DecodeServiceError = {
+  _tag: "DecodeError";
+};
+
+export type UnknownServiceError = {
+  _tag: "UnknownError";
+  message?: string;
+};
+
+export type ServiceError<TCode extends string> =
+  | ApiServiceError<TCode>
+  | NetworkServiceError
+  | DecodeServiceError
+  | UnknownServiceError;
+
+type ParseServiceErrorOptions<TCode extends string, TSchema extends ErrorEnvelope> = {
+  schema: z.ZodType<TSchema>;
+  mapCode: (code: string | undefined) => TCode | null;
+  includeUnauthorized?: boolean;
+  includeForbidden?: boolean;
 };
 
 export function parseErrorFromSchema<T extends ErrorEnvelope>(
@@ -51,6 +85,61 @@ export function parseUnauthorizedError(data: unknown): ParsedServiceError | null
 export function isUnauthorizedStatus(status: number, includeForbidden = false): boolean {
   return status === StatusCodes.UNAUTHORIZED
     || (includeForbidden && status === StatusCodes.FORBIDDEN);
+}
+
+export async function parseServiceError<TCode extends string, TSchema extends ErrorEnvelope>(
+  response: Response,
+  options: ParseServiceErrorOptions<TCode, TSchema>,
+): Promise<ServiceError<TCode>> {
+  const {
+    schema,
+    mapCode,
+    includeUnauthorized = false,
+    includeForbidden = false,
+  } = options;
+
+  try {
+    const data = await readJson(response);
+
+    if (includeUnauthorized && isUnauthorizedStatus(response.status, includeForbidden)) {
+      const unauthorized = parseUnauthorizedError(data);
+      if (!unauthorized) {
+        return { _tag: "DecodeError" };
+      }
+
+      const code = mapCode(unauthorized.code);
+      if (!code) {
+        return { _tag: "DecodeError" };
+      }
+
+      return {
+        _tag: "ApiError",
+        code,
+        message: unauthorized.message,
+        details: unauthorized.details,
+      };
+    }
+
+    const parsed = parseErrorFromSchema(schema, data);
+    if (!parsed) {
+      return { _tag: "DecodeError" };
+    }
+
+    const code = mapCode(parsed.code);
+    if (!code) {
+      return { _tag: "DecodeError" };
+    }
+
+    return {
+      _tag: "ApiError",
+      code,
+      message: parsed.message,
+      details: parsed.details,
+    };
+  }
+  catch {
+    return { _tag: "DecodeError" };
+  }
 }
 
 export function asNetworkError<E extends { _tag: "NetworkError"; message?: string }>(
