@@ -135,19 +135,7 @@ export function countStationRoleAssignmentsForClient(
   return Effect.tryPromise({
     try: () =>
       client.userOrgAssignment.count({
-        where: {
-          stationId,
-          ...(options?.excludeUserId
-            ? {
-                userId: {
-                  not: options.excludeUserId,
-                },
-              }
-            : {}),
-          user: {
-            role,
-          },
-        },
+        where: toStationRoleAssignmentWhere(stationId, role, options),
       }),
     catch: err =>
       new UserRepositoryError({
@@ -155,6 +143,26 @@ export function countStationRoleAssignmentsForClient(
         cause: err,
       }),
   });
+}
+
+function toStationRoleAssignmentWhere(
+  stationId: string,
+  role: "STAFF" | "MANAGER",
+  options?: { readonly excludeUserId?: string },
+): PrismaTypes.UserOrgAssignmentWhereInput {
+  return {
+    stationId,
+    ...(options?.excludeUserId
+      ? {
+          userId: {
+            not: options.excludeUserId,
+          },
+        }
+      : {}),
+    user: {
+      role,
+    },
+  };
 }
 
 export async function ensureTechnicianTeamCapacity(
@@ -190,19 +198,7 @@ export async function ensureStationRoleAssignmentLimit(
   options?: { readonly excludeUserId?: string },
 ) {
   const assignmentCount = await client.userOrgAssignment.count({
-    where: {
-      stationId,
-      ...(options?.excludeUserId
-        ? {
-            userId: {
-              not: options.excludeUserId,
-            },
-          }
-        : {}),
-      user: {
-        role,
-      },
-    },
+    where: toStationRoleAssignmentWhere(stationId, role, options),
   });
 
   if (assignmentCount >= 1) {
