@@ -13,8 +13,7 @@ import type {
   UserSortField,
 } from "../models";
 
-import { TechnicianTeamMemberLimitExceeded, UserRepositoryError } from "../domain-errors";
-import { StationRoleAssignmentLimitExceeded } from "../domain-errors";
+import { StationRoleAssignmentLimitExceeded, TechnicianTeamMemberLimitExceeded, UserRepositoryError } from "../domain-errors";
 
 export const TECHNICIAN_TEAM_MEMBER_LIMIT = 3;
 

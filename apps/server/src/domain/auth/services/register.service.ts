@@ -3,7 +3,6 @@ import { Effect } from "effect";
 import type { DuplicateUserEmail, DuplicateUserPhoneNumber } from "@/domain/users";
 
 import { makeUserCommandRepository } from "@/domain/users";
-
 import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeWalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
