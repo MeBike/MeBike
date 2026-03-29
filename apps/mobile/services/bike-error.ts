@@ -38,7 +38,6 @@ export async function parseBikeError(response: Response): Promise<BikeError> {
     schema: ServerRoutes.bikes.listBikes.responses[400].content["application/json"].schema,
     mapCode: code => normalizeServiceErrorCode(code, isBikeContractErrorCode),
     includeUnauthorized: true,
-    includeForbidden: true,
   });
 }
 

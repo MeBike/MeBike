@@ -13,7 +13,7 @@ import {
 
 type ContractStationErrorCode = z.infer<typeof ServerContracts.StationsContracts.StationErrorCodeSchema>;
 
-export type StationErrorCode = ContractStationErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type StationErrorCode = ContractStationErrorCode | "UNAUTHORIZED" | "UNKNOWN" | "VALIDATION_ERROR";
 
 export type StationError = ServiceError<StationErrorCode>;
 
@@ -22,7 +22,8 @@ export function isStationContractErrorCode(code: string): code is ContractStatio
 }
 
 export function isStationErrorCode(code: string): code is StationErrorCode {
-  return isServiceErrorCode(code, isStationContractErrorCode);
+  return code === "VALIDATION_ERROR"
+    || isServiceErrorCode(code, isStationContractErrorCode);
 }
 
 export function isStationApiError(
@@ -35,8 +36,10 @@ export function isStationApiError(
 
 export async function parseStationError(response: Response): Promise<StationError> {
   return parseServiceError(response, {
-    schema: ServerRoutes.stations.listStations.responses[400].content["application/json"].schema,
-    mapCode: code => normalizeServiceErrorCode(code, isStationContractErrorCode),
+    schema: ServerRoutes.stations.getStation.responses[400].content["application/json"].schema,
+    mapCode: code => code === "VALIDATION_ERROR"
+      ? code
+      : normalizeServiceErrorCode(code, isStationContractErrorCode),
   });
 }
 
