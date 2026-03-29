@@ -60,7 +60,7 @@ export default function StationDetailPage() {
       address: station.address,
       latitude: station.latitude,
       longitude: station.longitude,
-      capacity: station.capacity,
+      capacity: station.capacity.total,
     });
     setIsEditing(true);
   };
@@ -144,12 +144,12 @@ export default function StationDetailPage() {
                 <Bike className="w-5 h-5 text-primary" /> Trạng thái vận hành
               </h3>
               <div className="space-y-4">
-                <StatusRow label="Tổng số xe" value={station.totalBikes} />
-                <StatusRow label="Sẵn sàng" value={station.availableBikes} highlightColor="text-green-600" />
-                <StatusRow label="Đang đặt" value={station.bookedBikes} highlightColor="text-blue-600" />
-                <StatusRow label="Bảo trì" value={station.maintainedBikes} highlightColor="text-orange-500" />
+                <StatusRow label="Tổng số xe" value={station.bikes.total} />
+                <StatusRow label="Sẵn sàng" value={station.bikes.available} highlightColor="text-green-600" />
+                <StatusRow label="Đang đặt" value={station.bikes.booked} highlightColor="text-blue-600" />
+                <StatusRow label="Bảo trì" value={station.bikes.maintained} highlightColor="text-orange-500" />
                 <div className="pt-4 mt-4 border-t border-primary/10">
-                    <StatusRow label="Vị trí trống" value={station.emptySlots} isBold />
+                    <StatusRow label="Vị trí trống" value={station.capacity.emptyPhysicalSlots} isBold />
                 </div>
               </div>
             </div>

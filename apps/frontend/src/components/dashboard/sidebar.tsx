@@ -34,20 +34,25 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       icon: User2,
       href: "/staff/profile",
       roles: ["STAFF"],
-    
     },
     {
       title: "Tổng quan",
       icon: LayoutDashboard,
       href: baseUrl,
       roles: ["ADMIN"],
-      exact : true,
+      exact: true,
     },
     {
       title: "Quản lý người dùng",
       icon: Users,
       href: `${baseUrl}/customers`,
       roles: ["STAFF", "ADMIN"],
+    },
+    {
+      title: "Quản lý nhân viên",
+      icon: Users,
+      href: "/admin/staff",
+      roles: ["ADMIN"],
     },
     {
       title: "Quản lý xe đạp",

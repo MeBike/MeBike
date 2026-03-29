@@ -32,7 +32,7 @@ export const stationColumns = ({
   {
     accessorKey: "capacity",
     header: "Sức chứa",
-    cell: ({ row }) => row.original.capacity,
+    cell: ({ row }) => row.original.capacity.total,
   },
   {
     accessorKey: "created_at",

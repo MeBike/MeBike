@@ -14,7 +14,7 @@ export default function Page({
     hasToken: true,
     id: userId,
   });
-  const { stations } = useStationActions({
+  const  {stations}  = useStationActions({
     hasToken: true,
     page: 1,
     limit: 200,

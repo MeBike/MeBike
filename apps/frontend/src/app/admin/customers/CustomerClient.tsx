@@ -16,7 +16,7 @@ import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-
+import { TableSkeleton } from "@/components/table-skeleton";
 type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
 export default function CustomersClient() {
@@ -85,13 +85,26 @@ export default function CustomersClient() {
   const handleFilterChange = () => {
     setCurrentPage(1);
   };
-  if (isLoading && isLoadingStatistics && isFetching) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-        <Loader2 className="animate-spin w-16 h-16 text-primary" />
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+  //       <Loader2 className="animate-spin w-16 h-16 text-primary" />
+  //     </div>
+  //   );
+  // }
+  const [isVisualLoading, setIsVisualLoading] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      setIsVisualLoading(true);
+    } else {
+      // Khi API xong, đợi thêm một chút rồi mới tắt Skeleton
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600); // 600ms là khoảng "vàng" để UI mượt mà
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
   const handleCreateUser = handleSubmit((data) => {
     createUser({
       fullName: data.fullName,
@@ -181,11 +194,7 @@ export default function CustomersClient() {
         </div>
 
         <div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Hiển thị {paginationUser?.page ?? 1} /{" "}
-            {paginationUser?.totalPages ?? 1} trang
-          </p>
-          <DataTable
+          {/* <DataTable
             title="Danh sách người dùng"
             tableClassName="table-fixed"
             columns={userColumns({
@@ -208,6 +217,40 @@ export default function CustomersClient() {
               totalPages={paginationUser?.totalPages ?? 1}
               onPageChange={setCurrentPage}
             />
+          </div> */}
+
+          <div className="min-h-[400px]">
+            {isVisualLoading ? (
+              <TableSkeleton />
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Hiển thị {paginationUser?.page ?? 1} /{" "}
+                  {paginationUser?.totalPages ?? 1} trang
+                </p>
+
+                <DataTable
+                  title="Danh sách người dùng"
+                  tableClassName="table-fixed"
+                  columns={userColumns({
+                    onView: (user) => handleDetailUser(String(user.id)),
+                    onViewWallet: (user) => handleWalletUser(String(user.id)),
+                  })}
+                  data={users || []}
+                  searchValue={searchQuery}
+                  filterPlaceholder="Tìm kiếm người dùng"
+                  onSearchChange={setSearchQuery}
+                />
+
+                <div className="pt-3">
+                  <PaginationDemo
+                    currentPage={currentPage}
+                    totalPages={paginationUser?.totalPages ?? 1}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
         {isCreateModalOpen && (

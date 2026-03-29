@@ -4,24 +4,29 @@ export interface LocationGeo {
   type: "Point";
   coordinates: [number, number]; // [longitude, latitude]
 }
-
 export interface Station {
   id: string;
   name: string;
   address: string;
   latitude: number;
   longitude: number;
-  capacity: number;
+  capacity: {
+    total : number;
+    pickupSlotLimit : number;
+    returnSlotLimit : number;
+    emptyPhysicalSlots : number;
+  };
+  bikes : {
+    total: number,
+    available: number,
+    booked: number,
+    broken: number,
+    reserved: number,
+    maintained: number,
+    unavailable: number
+  }
   createdAt: string;
   updatedAt: string;
-  totalBikes: number;
-  availableBikes: number;
-  bookedBikes: number;
-  brokenBikes: number;
-  reservedBikes: number;
-  maintainedBikes: number;
-  unavailableBikes: number;
-  emptySlots: number;
 }
 export interface StationBikeRevenue {
   period: {

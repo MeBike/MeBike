@@ -4,3 +4,4 @@ export * from "./useGetStationBikeRevenue";
 export * from "./useGetStationByIDQuery";
 export * from "./useGetStationRevenue";
 export * from "./useGetStationStatsReservation";
+export * from "./useGetSelectStationsQuery"

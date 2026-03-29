@@ -98,8 +98,8 @@ export default function DetailUser({
   const role = roleConfig[user.role] || roleConfig.USER;
 
   const [open, setOpen] = React.useState(false);
-  const [editRole, setEditRole] = React.useState<"STAFF" | "TECHNICIAN">(
-    "STAFF",
+  const [editRole, setEditRole] = React.useState<"STAFF" | "TECHNICIAN" | "SOS" | "ADMIN" | "USER">(
+    user.role
   );
   const [verify, setVerify] = React.useState<
     "VERIFIED" | "UNVERIFIED"
@@ -107,7 +107,9 @@ export default function DetailUser({
   const [accountStatus, setAccountStatus] = useState<
     "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED"
   >(user.accountStatus as AccountStatus);
-  const [stationId, setStationId] = React.useState(user.orgAssignment.station.id);
+  const [stationId, setStationId] = React.useState(
+    user.orgAssignment?.station?.id ?? ""
+  );
   const [technicianTeamId, setTechnicianTeamId] = React.useState("");
   const mutationState = updateProfileStaffMutation as unknown as {
     isPending?: boolean;

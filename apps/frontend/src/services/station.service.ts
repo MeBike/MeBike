@@ -1,6 +1,6 @@
 import fetchHttpClient from "@lib/httpClient";
 import { AxiosResponse } from "axios";
-import { Station, NearestStationResponse,SelectStation} from "@/types";
+import { Station, NearestStationResponse} from "@/types";
 import { StationSchemaFormData } from "@/schemas/station-schema";
 import type {
   StationBikeRevenue,
@@ -43,9 +43,13 @@ export const stationService = {
     );
     return response;
   },
-  getSelectStations : async () : Promise<AxiosResponse<ApiResponse<SelectStation[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<SelectStation[]>>(
+  getSelectStations : async () : Promise<AxiosResponse<ApiResponse<Station[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
       ENDPOINT.STATION.SELECT_STATION,
+      {
+        page : 1,
+        pageSize : 200,
+      }
     );
     return response;
   },

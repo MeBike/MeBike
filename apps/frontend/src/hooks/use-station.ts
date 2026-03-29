@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { QUERY_KEYS , HTTP_STATUS } from "@constants";
 import { useCreateStationMutation,useSoftDeleteStationMutation,useUpdateStationMutation} from "@mutations"
-import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationStatsReservationQuery,useGetStationByIDQuery,useGetAllStation} from "@queries";
+import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationStatsReservationQuery,useGetStationByIDQuery,useGetAllStation, useGetSelectStation} from "@queries";
 import {getAxiosErrorCodeMessage , getErrorMessageFromStationCode} from "@utils";
 import type { StationActionProps } from "@custom-types";
 export const useStationActions = ({
@@ -28,6 +28,11 @@ export const useStationActions = ({
     data: response,
     isLoading,
   } = useGetAllStation({ page: page, limit: limit, name: name });
+  const {
+    data : selectedDataStation,
+    isLoading : isLoadingGetSelectStation,
+    refetch : refetchingGetSelectStation
+  } = useGetSelectStation();
   const {
     refetch: fetchingStationID,
     data: responseStationDetail,
@@ -178,5 +183,8 @@ export const useStationActions = ({
     getStationRevenue,
     responseNearestAvailableBike,
     getNearestAvailableBike,
+    selectedDataStation : selectedDataStation?.data || [],
+    isLoadingGetSelectStation,
+    refetchingGetSelectStation
   };
 };

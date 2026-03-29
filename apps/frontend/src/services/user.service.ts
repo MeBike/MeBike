@@ -37,11 +37,11 @@ export const userService = {
       ENDPOINT.USER.BASE,
       {
         page: page,
-        pageSize: pageSize,
+        pageSize: 7,
         verify: verify,
         accountStatus: accountStatus,
         fullName: fullName,
-        role: role,
+        role: "USER",
         sortBy: sortBy,
         sortDir: sortDir,
       }
