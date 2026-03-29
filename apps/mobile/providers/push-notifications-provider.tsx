@@ -81,7 +81,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
 }
 
 export function PushNotificationsProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthNext();
+  const { status, isAuthenticated } = useAuthNext();
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [lastNotification, setLastNotification] = useState<Notifications.Notification | null>(null);
 
@@ -89,9 +89,13 @@ export function PushNotificationsProvider({ children }: { children: React.ReactN
   const responseListenerRef = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (status === "unauthenticated") {
       setExpoPushToken(null);
       void clearPushToken();
+      return;
+    }
+
+    if (status !== "authenticated") {
       return;
     }
 
@@ -116,10 +120,10 @@ export function PushNotificationsProvider({ children }: { children: React.ReactN
     return () => {
       active = false;
     };
-  }, [isAuthenticated]);
+  }, [status]);
 
   useEffect(() => {
-    if (!isAuthenticated || !expoPushToken) {
+    if (status !== "authenticated" || !isAuthenticated || !expoPushToken) {
       return;
     }
 
@@ -150,7 +154,7 @@ export function PushNotificationsProvider({ children }: { children: React.ReactN
     return () => {
       cancelled = true;
     };
-  }, [expoPushToken, isAuthenticated]);
+  }, [expoPushToken, isAuthenticated, status]);
 
   useEffect(() => {
     notificationListenerRef.current = Notifications.addNotificationReceivedListener((notification) => {

@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import React, { useState, useEffect } from "react";
+import { LoadingScreen } from "@components/LoadingScreen";
 import {
   ActivityIndicator,
   Alert,
@@ -274,6 +275,10 @@ function ReportScreen() {
   const removeImage = (index: number) => {
     setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
+
+  if (status === "loading") {
+    return <LoadingScreen />;
+  }
 
   if (!isAuthenticated) {
     return (

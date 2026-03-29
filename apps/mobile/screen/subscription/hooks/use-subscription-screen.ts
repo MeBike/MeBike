@@ -33,7 +33,7 @@ function messageFromError(error: unknown, fallback: string): string {
 export function useSubscriptionScreen() {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuthNext();
+  const { status, isAuthenticated } = useAuthNext();
 
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [activeSection, setActiveSection] = useState<SubscriptionSectionKey>("plans");
@@ -73,6 +73,10 @@ export function useSubscriptionScreen() {
   }, [navigation]);
 
   const handleSubscribe = useCallback((packageName: SubscriptionPackage) => {
+    if (status === "loading") {
+      return;
+    }
+
     if (!isAuthenticated) {
       Alert.alert("Đăng nhập trước", "Bạn cần đăng nhập để đăng ký gói tháng", [
         { text: "Hủy", style: "cancel" },
@@ -112,7 +116,7 @@ export function useSubscriptionScreen() {
         },
       ],
     );
-  }, [isAuthenticated, openLogin, queryClient, subscribeMutation]);
+  }, [isAuthenticated, openLogin, queryClient, status, subscribeMutation]);
 
   const handleActivate = useCallback(() => {
     if (!pendingSubscription) {

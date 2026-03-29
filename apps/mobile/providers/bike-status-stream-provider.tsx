@@ -18,7 +18,7 @@ type BikeStatusStreamContextValue = {
 const BikeStatusStreamContext = createContext<BikeStatusStreamContextValue | undefined>(undefined);
 
 export function BikeStatusStreamProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthNext();
+  const { status, isAuthenticated } = useAuthNext();
   const queryClient = useQueryClient();
   const subscribersRef = useRef<Set<Subscriber>>(new Set());
   const [lastUpdate, setLastUpdate] = useState<BikeStatusUpdate | null>(null);
@@ -78,13 +78,13 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (status === "unauthenticated") {
       disconnect();
     }
-    else {
+    else if (status === "authenticated" && isAuthenticated) {
       connect();
     }
-  }, [connect, disconnect, isAuthenticated]);
+  }, [connect, disconnect, isAuthenticated, status]);
 
   const subscribe = useCallback((listener: Subscriber) => {
     subscribersRef.current.add(listener);
