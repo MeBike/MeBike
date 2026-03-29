@@ -11,6 +11,7 @@
     "test:unit": "vitest run --config vitest.config.ts --mode test --exclude '**/*.int.test.ts'",
     "test:coverage": "vitest run --config vitest.config.ts --mode test --coverage",
     "test:int:coverage": "vitest run --config vitest.int.config.ts --mode test --coverage",
+    "test:int:local": "./scripts/test-int-local.sh",
     "test:watch": "vitest",
     "test:int": "vitest run --config vitest.int.config.ts --mode test",
     "test:int:core": "vitest run --config vitest.int.config.ts --mode test --exclude 'src/http/test/e2e/**/*.int.test.ts'",
