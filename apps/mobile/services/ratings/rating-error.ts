@@ -1,84 +1,56 @@
 import type { Result } from "@lib/result";
+import type { z } from "zod";
 
-import { readJson } from "@lib/api-decode";
+import { ServerContracts } from "@mebike/shared";
 
 import {
+  type ServiceError,
   asNetworkError as asSharedNetworkError,
-  isUnauthorizedStatus,
-  parseUnauthorizedError,
+  parseServiceError,
 } from "@services/shared/service-error";
 
-export type RatingErrorCode = string;
+type ContractRatingErrorCode = z.infer<typeof ServerContracts.RatingsContracts.RatingErrorCodeSchema>;
 
-export type RatingError
-  = | { _tag: "ApiError"; code: RatingErrorCode; message?: string }
-    | { _tag: "NetworkError"; message?: string }
-    | { _tag: "DecodeError" }
-    | { _tag: "UnknownError"; message?: string };
+export type RatingErrorCode = ContractRatingErrorCode | "UNAUTHORIZED" | "UNKNOWN";
 
-export function ratingErrorMessage(error: RatingError): string {
-  if (error._tag === "ApiError") {
-    switch (error.code) {
-      case "RENTAL_NOT_COMPLETED":
-        return "Chuyến đi chưa hoàn thành nên không thể đánh giá.";
-      case "RATING_EXPIRED":
-        return "Đã quá thời hạn 7 ngày để đánh giá chuyến đi này.";
-      case "RATING_ALREADY_EXISTS":
-        return "Bạn đã đánh giá chuyến đi này trước đó.";
-      case "RATING_REASON_NOT_FOUND":
-        return "Một hoặc nhiều lý do đánh giá không hợp lệ.";
-      case "UNAUTHORIZED_RENTAL_ACCESS":
-        return "Bạn không có quyền đánh giá chuyến đi này.";
-      case "RENTAL_NOT_FOUND":
-        return "Không tìm thấy thông tin đánh giá.";
-      default:
-        return error.message ?? "Yêu cầu không hợp lệ";
-    }
+export type RatingError = ServiceError<RatingErrorCode>;
+
+function toRatingErrorCode(code: string | undefined): RatingErrorCode {
+  if (!code || code === "UNKNOWN") {
+    return "UNKNOWN";
   }
 
-  if (error._tag === "NetworkError") {
-    return "Không thể kết nối tới máy chủ.";
+  if (code === "UNAUTHORIZED" || isRatingContractErrorCode(code)) {
+    return code;
   }
 
-  return "Đã có lỗi xảy ra. Vui lòng thử lại.";
+  return "UNKNOWN";
+}
+
+export function isRatingContractErrorCode(code: string): code is ContractRatingErrorCode {
+  return ServerContracts.RatingsContracts.RatingErrorCodeSchema.safeParse(code).success;
+}
+
+export function isRatingErrorCode(code: string): code is RatingErrorCode {
+  return code === "UNAUTHORIZED"
+    || code === "UNKNOWN"
+    || isRatingContractErrorCode(code);
+}
+
+export function isRatingApiError(
+  error: { _tag: string; code?: string },
+): error is Extract<RatingError, { _tag: "ApiError" }> {
+  return error._tag === "ApiError"
+    && typeof error.code === "string"
+    && isRatingErrorCode(error.code);
 }
 
 export async function parseRatingError(response: Response): Promise<RatingError> {
-  try {
-    const data = await readJson(response);
-
-    if (isUnauthorizedStatus(response.status)) {
-      const unauthorized = parseUnauthorizedError(data);
-      if (unauthorized) {
-        return {
-          _tag: "ApiError",
-          code: unauthorized.code,
-          message: unauthorized.message,
-        };
-      }
-      return { _tag: "DecodeError" };
-    }
-
-    if (
-      typeof data === "object"
-      && data !== null
-      && "error" in data
-      && "details" in data
-      && typeof (data as { error?: unknown }).error === "string"
-      && typeof (data as { details?: { code?: unknown } }).details?.code === "string"
-    ) {
-      return {
-        _tag: "ApiError",
-        code: (data as { details: { code: string } }).details.code,
-        message: (data as { error: string }).error,
-      };
-    }
-
-    return { _tag: "DecodeError" };
-  }
-  catch {
-    return { _tag: "DecodeError" };
-  }
+  return parseServiceError(response, {
+    schema: ServerContracts.RatingsContracts.RatingErrorResponseSchema,
+    mapCode: toRatingErrorCode,
+    includeUnauthorized: true,
+  });
 }
 
 export function asNetworkError(error: unknown): Result<never, RatingError> {
