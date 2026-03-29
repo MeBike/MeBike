@@ -1,3 +1,4 @@
+import { LoadingScreen } from "@components/LoadingScreen";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
@@ -16,7 +17,11 @@ import { BottomTabBar } from "./bottom-tab-bar";
 const Tab = createBottomTabNavigator<RootStackParamList>();
 
 function MainTabNavigator() {
-  const { isAuthenticated, isStaff, isSOS } = useAuthNext();
+  const { status, isAuthenticated, isStaff, isSOS } = useAuthNext();
+
+  if (status === "loading") {
+    return <LoadingScreen />;
+  }
 
   return (
     <Tab.Navigator
