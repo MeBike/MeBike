@@ -85,15 +85,8 @@ export function WalletTransactionRow({ item, onPress }: WalletTransactionRowProp
       <AppCard
         backgroundColor="$surfaceDefault"
         borderRadius="$4"
-        borderColor="transparent"
-        borderWidth={0}
         chrome="flat"
-        elevation={0}
         padding="$0"
-        shadowColor="transparent"
-        shadowOffset={{ width: 0, height: 0 }}
-        shadowOpacity={0}
-        shadowRadius={0}
       >
         <XStack
           alignItems="center"
