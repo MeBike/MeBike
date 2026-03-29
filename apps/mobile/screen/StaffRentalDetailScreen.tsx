@@ -2,7 +2,6 @@ import { useStaffEndRentalMutation } from "@hooks/mutations/rentals/use-staff-en
 import { useStaffRentalDetailQuery } from "@hooks/query/rentals/use-staff-rental-detail-query";
 import { useStationActions } from "@hooks/useStationAction";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { rentalErrorMessage } from "@services/rentals";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -18,6 +17,7 @@ import {
 
 import type { RentalDetail } from "@/types/rental-types";
 
+import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
 import ErrorState from "./booking-history-detail/components/ErrorState";
 import LoadingState from "./booking-history-detail/components/LoadingState";
@@ -97,7 +97,7 @@ function StaffRentalDetailScreen() {
             refetchRental();
           },
           onError: (error) => {
-            Alert.alert("Thất bại", rentalErrorMessage(error));
+            Alert.alert("Thất bại", presentRentalError(error));
           },
         },
       );
