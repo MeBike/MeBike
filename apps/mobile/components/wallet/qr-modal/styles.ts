@@ -1,5 +1,4 @@
 import { borderWidths, elevations, radii, spaceScale } from "@theme/metrics";
-import { fontSizes, fontWeights, lineHeights } from "@theme/typography";
 import { StyleSheet } from "react-native";
 
 export type QrModalThemePalette = {
@@ -32,10 +31,10 @@ export function createQrModalStyles(theme: QrModalThemePalette) {
     },
     sheet: {
       backgroundColor: theme.surfaceDefault,
-      borderTopLeftRadius: 32,
-      borderTopRightRadius: 32,
+      borderTopLeftRadius: radii.xxl,
+      borderTopRightRadius: radii.xxl,
       paddingHorizontal: spaceScale[6],
-      paddingTop: spaceScale[3],
+      paddingTop: spaceScale[4],
       paddingBottom: spaceScale[7],
       ...elevations.medium,
       shadowColor: theme.shadowColor,
@@ -46,7 +45,7 @@ export function createQrModalStyles(theme: QrModalThemePalette) {
       borderRadius: radii.round,
       backgroundColor: theme.borderDefault,
       alignSelf: "center",
-      marginBottom: spaceScale[5],
+      marginBottom: spaceScale[4],
     },
     headerRow: {
       flexDirection: "row",
@@ -68,37 +67,42 @@ export function createQrModalStyles(theme: QrModalThemePalette) {
     description: {
       marginTop: spaceScale[4],
       marginBottom: spaceScale[5],
-      lineHeight: 36,
     },
     amountField: {
-      minHeight: 92,
-      borderWidth: borderWidths.strong,
-      borderColor: theme.actionPrimary,
-      borderRadius: radii.xl,
-      backgroundColor: theme.surfaceAccent,
+      minHeight: 88,
+      borderWidth: borderWidths.subtle,
+      borderColor: "transparent",
+      borderRadius: radii.xxl,
+      backgroundColor: theme.surfaceMuted,
       paddingHorizontal: spaceScale[5],
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
     },
+    amountFieldFocused: {
+      borderWidth: borderWidths.strong,
+      borderColor: theme.actionPrimary,
+      backgroundColor: theme.surfaceDefault,
+    },
     amountInput: {
       flex: 1,
-      fontSize: 28,
-      lineHeight: 34,
-      fontWeight: fontWeights.heavy,
+      fontSize: 22,
+      lineHeight: 28,
+      fontWeight: "700",
+      letterSpacing: -0.4,
       color: theme.textPrimary,
       paddingVertical: spaceScale[4],
     },
     quickAmountsRow: {
       flexDirection: "row",
-      gap: spaceScale[3],
-      marginTop: spaceScale[4],
-      marginBottom: spaceScale[7],
+      gap: spaceScale[2],
+      marginTop: spaceScale[3],
+      marginBottom: spaceScale[6],
     },
     quickAmountChip: {
       flex: 1,
-      minHeight: 58,
-      borderRadius: radii.xl,
+      minHeight: 52,
+      borderRadius: radii.lg,
       borderWidth: borderWidths.subtle,
       borderColor: theme.borderDefault,
       backgroundColor: theme.surfaceDefault,
@@ -108,30 +112,26 @@ export function createQrModalStyles(theme: QrModalThemePalette) {
     quickAmountChipActive: {
       backgroundColor: theme.actionPrimary,
       borderColor: theme.actionPrimary,
+      ...elevations.soft,
+      shadowColor: theme.actionPrimary,
     },
     quickAmountChipPressed: {
       opacity: 0.92,
     },
     primaryButton: {
-      minHeight: 84,
+      minHeight: 72,
       borderRadius: radii.xxl,
       backgroundColor: theme.actionPrimary,
       alignItems: "center",
       justifyContent: "center",
-      ...elevations.medium,
-      shadowColor: theme.shadowColor,
+      ...elevations.soft,
+      shadowColor: theme.actionPrimary,
     },
     primaryButtonPressed: {
       opacity: 0.95,
     },
     primaryButtonDisabled: {
       opacity: 0.7,
-    },
-    primaryText: {
-      color: theme.onActionPrimary,
-      fontSize: fontSizes.xl,
-      lineHeight: lineHeights.xl,
-      fontWeight: fontWeights.bold,
     },
   });
 }
