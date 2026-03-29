@@ -79,6 +79,22 @@ describe("admin agencies routing e2e", () => {
     });
   }
 
+  async function updateAgencyStatus(
+    agencyId: string,
+    body: Record<string, unknown>,
+    init?: { userId?: string; role?: "ADMIN" | "STAFF" },
+  ) {
+    return fixture.app.request(`http://test/v1/admin/agencies/${agencyId}/status`, {
+      method: "PATCH",
+      headers: init?.userId && init?.role
+        ? authHeader(init.userId, init.role)
+        : {
+            "Content-Type": "application/json",
+          },
+      body: JSON.stringify(body),
+    });
+  }
+
   it("lists agencies with filters and pagination for admin", async () => {
     await fixture.prisma.agency.createMany({
       data: [
@@ -248,6 +264,47 @@ describe("admin agencies routing e2e", () => {
     });
   });
 
+  it("updates agency status for admin", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        id: "019621f8-e58d-7c57-81fc-0db054f1f127",
+        name: "Status Agency",
+        address: "District 8",
+        contactPhone: "0281010101",
+        status: "ACTIVE",
+      },
+    });
+
+    const response = await updateAgencyStatus(
+      agency.id,
+      {
+        status: "BANNED",
+      },
+      { userId: ADMIN_USER_ID, role: "ADMIN" },
+    );
+    const body = await response.json() as AgenciesContracts.AgencyUpdateStatusResponse;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: agency.id,
+      name: "Status Agency",
+      address: "District 8",
+      contactPhone: "0281010101",
+      status: "BANNED",
+    });
+
+    const saved = await fixture.prisma.agency.findUnique({
+      where: { id: agency.id },
+      select: {
+        status: true,
+      },
+    });
+
+    expect(saved).toEqual({
+      status: "BANNED",
+    });
+  });
+
   it("returns 404 when agency detail does not exist", async () => {
     const missingAgencyId = "019621f8-e58d-7c57-81fc-0db054f1f199";
 
@@ -273,6 +330,26 @@ describe("admin agencies routing e2e", () => {
     const response = await updateAgency(
       missingAgencyId,
       { name: "Unknown Agency" },
+      { userId: ADMIN_USER_ID, role: "ADMIN" },
+    );
+    const body = await response.json() as AgenciesContracts.AgencyErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({
+      error: "Agency not found",
+      details: {
+        code: "AGENCY_NOT_FOUND",
+        agencyId: missingAgencyId,
+      },
+    });
+  });
+
+  it("returns 404 when updating status of an unknown agency", async () => {
+    const missingAgencyId = "019621f8-e58d-7c57-81fc-0db054f1f197";
+
+    const response = await updateAgencyStatus(
+      missingAgencyId,
+      { status: "INACTIVE" },
       { userId: ADMIN_USER_ID, role: "ADMIN" },
     );
     const body = await response.json() as AgenciesContracts.AgencyErrorResponse;
@@ -350,6 +427,34 @@ describe("admin agencies routing e2e", () => {
     expect(body.details?.issues?.some(issue => issue.path?.includes("contactPhone"))).toBe(true);
   });
 
+  it("returns 400 for invalid status update payload", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        id: "019621f8-e58d-7c57-81fc-0db054f1f128",
+        name: "Status Validation Agency",
+        address: "District 6",
+        contactPhone: "0282020202",
+        status: "ACTIVE",
+      },
+    });
+
+    const response = await updateAgencyStatus(
+      agency.id,
+      {
+        status: "DISABLED",
+      },
+      { userId: ADMIN_USER_ID, role: "ADMIN" },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: "Invalid request payload",
+      details: {
+        code: "VALIDATION_ERROR",
+      },
+    });
+  });
+
   it("returns 400 when update payload is empty", async () => {
     const agency = await fixture.prisma.agency.create({
       data: {
@@ -405,6 +510,26 @@ describe("admin agencies routing e2e", () => {
     expect(response.status).toBe(403);
   });
 
+  it("rejects non-admin users from agency status update", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        id: "019621f8-e58d-7c57-81fc-0db054f1f129",
+        name: "Forbidden Status Agency",
+        address: "District 2",
+        contactPhone: "0283030303",
+        status: "ACTIVE",
+      },
+    });
+
+    const response = await updateAgencyStatus(
+      agency.id,
+      { status: "SUSPENDED" },
+      { userId: STAFF_USER_ID, role: "STAFF" },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
   it("rejects non-admin users from agency detail", async () => {
     const agency = await fixture.prisma.agency.create({
       data: {
@@ -436,6 +561,22 @@ describe("admin agencies routing e2e", () => {
     });
 
     const response = await updateAgency(agency.id, { name: "No Auth" });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("requires authentication for agency status update", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        id: "019621f8-e58d-7c57-81fc-0db054f1f130",
+        name: "Auth Status Agency",
+        address: "Phu Nhuan",
+        contactPhone: "0284040404",
+        status: "ACTIVE",
+      },
+    });
+
+    const response = await updateAgencyStatus(agency.id, { status: "INACTIVE" });
 
     expect(response.status).toBe(401);
   });

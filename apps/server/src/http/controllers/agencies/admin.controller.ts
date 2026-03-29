@@ -14,6 +14,7 @@ import type {
   AgencyErrorResponse,
   AgencyListResponse,
   AgencyUpdateResponse,
+  AgencyUpdateStatusResponse,
 } from "./shared";
 
 import { AgencyErrorCodeSchema, agencyErrorMessages } from "./shared";
@@ -111,8 +112,40 @@ const updateAgency: RouteHandler<AgenciesRoutes["adminUpdate"]> = async (c) => {
   );
 };
 
+const updateAgencyStatus: RouteHandler<AgenciesRoutes["adminUpdateStatus"]> = async (c) => {
+  const { id } = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  const eff = Effect.flatMap(AgencyServiceTag, service =>
+    service.updateAgencyStatus(id, {
+      status: body.status,
+    }));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<AgencyUpdateStatusResponse, 200>(toAgencyDetail(right), 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("AgencyNotFound", () =>
+          c.json<AgencyErrorResponse, 404>({
+            error: agencyErrorMessages.AGENCY_NOT_FOUND,
+            details: {
+              code: AgencyErrorCodeSchema.enum.AGENCY_NOT_FOUND,
+              agencyId: id,
+            },
+          }, 404)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const AgencyAdminController = {
   getAgencyById,
   listAgencies,
   updateAgency,
+  updateAgencyStatus,
 } as const;

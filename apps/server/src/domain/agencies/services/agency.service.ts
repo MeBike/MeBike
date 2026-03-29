@@ -8,6 +8,7 @@ import type {
   AgencyRow,
   AgencySortField,
   UpdateAgencyInput,
+  UpdateAgencyStatusInput,
 } from "../models";
 import type { AgencyRepo } from "../repository/agency.repository";
 
@@ -27,6 +28,10 @@ export type AgencyService = {
   readonly updateAgency: (
     id: string,
     input: UpdateAgencyInput,
+  ) => Effect.Effect<AgencyRow, AgencyNotFound>;
+  readonly updateAgencyStatus: (
+    id: string,
+    input: UpdateAgencyStatusInput,
   ) => Effect.Effect<AgencyRow, AgencyNotFound>;
 };
 
@@ -52,6 +57,18 @@ export function makeAgencyService(repo: AgencyRepo): AgencyService {
     updateAgency: (id, input) =>
       Effect.gen(function* () {
         const updatedOpt = yield* repo.update(id, input).pipe(
+          Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
+        );
+
+        if (Option.isNone(updatedOpt)) {
+          return yield* Effect.fail(new AgencyNotFound({ id }));
+        }
+
+        return updatedOpt.value;
+      }),
+    updateAgencyStatus: (id, input) =>
+      Effect.gen(function* () {
+        const updatedOpt = yield* repo.updateStatus(id, input).pipe(
           Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
         );
 

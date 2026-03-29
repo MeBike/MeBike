@@ -10,6 +10,7 @@ import type {
   AgencySortField,
   CreateAgencyInput,
   UpdateAgencyInput,
+  UpdateAgencyStatusInput,
 } from "../models";
 
 export type AgencyRepo = {
@@ -22,5 +23,9 @@ export type AgencyRepo = {
   readonly update: (
     id: string,
     input: UpdateAgencyInput,
+  ) => Effect.Effect<Option.Option<AgencyRow>, AgencyRepositoryError>;
+  readonly updateStatus: (
+    id: string,
+    input: UpdateAgencyStatusInput,
   ) => Effect.Effect<Option.Option<AgencyRow>, AgencyRepositoryError>;
 };

@@ -86,10 +86,28 @@ export const UpdateAgencyBodySchema = z
     },
   });
 
+export const UpdateAgencyStatusBodySchema = z
+  .object({
+    status: AccountStatusSchema,
+  })
+  .openapi("UpdateAgencyStatusBody", {
+    description: "Patch payload for updating an agency status",
+    example: {
+      status: "SUSPENDED",
+    },
+  });
+
 export const AgencyUpdateResponseSchema = AgencySummarySchema.openapi(
   "AgencyUpdateResponse",
   {
     description: "Updated agency details for admin",
+  },
+);
+
+export const AgencyUpdateStatusResponseSchema = AgencySummarySchema.openapi(
+  "AgencyUpdateStatusResponse",
+  {
+    description: "Updated agency details after status change",
   },
 );
 
@@ -118,7 +136,9 @@ export const agencyErrorMessages = {
 export type AgencyListResponse = z.infer<typeof AgencyListResponseSchema>;
 export type AgencyDetailResponse = z.infer<typeof AgencyDetailResponseSchema>;
 export type UpdateAgencyBody = z.infer<typeof UpdateAgencyBodySchema>;
+export type UpdateAgencyStatusBody = z.infer<typeof UpdateAgencyStatusBodySchema>;
 export type AgencyUpdateResponse = z.infer<typeof AgencyUpdateResponseSchema>;
+export type AgencyUpdateStatusResponse = z.infer<typeof AgencyUpdateStatusResponseSchema>;
 export type AgencyErrorResponse = z.infer<typeof AgencyErrorResponseSchema>;
 
 export {

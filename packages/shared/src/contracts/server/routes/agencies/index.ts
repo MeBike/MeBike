@@ -1,4 +1,7 @@
-import { adminUpdateAgencyRoute } from "./mutations";
+import {
+  adminUpdateAgencyRoute,
+  adminUpdateAgencyStatusRoute,
+} from "./mutations";
 import { adminGetAgencyRoute, adminListAgenciesRoute } from "./queries";
 
 export * from "./mutations";
@@ -9,4 +12,5 @@ export const agenciesRoutes = {
   adminGet: adminGetAgencyRoute,
   adminList: adminListAgenciesRoute,
   adminUpdate: adminUpdateAgencyRoute,
+  adminUpdateStatus: adminUpdateAgencyStatusRoute,
 } as const;

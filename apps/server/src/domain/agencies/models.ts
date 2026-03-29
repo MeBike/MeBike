@@ -25,6 +25,10 @@ export type UpdateAgencyInput = {
   readonly status?: AccountStatus;
 };
 
+export type UpdateAgencyStatusInput = {
+  readonly status: AccountStatus;
+};
+
 export type AgencyFilter = {
   readonly name?: string;
   readonly address?: string;
