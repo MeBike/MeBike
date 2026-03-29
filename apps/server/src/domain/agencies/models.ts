@@ -18,6 +18,13 @@ export type CreateAgencyInput = {
   readonly status?: AccountStatus;
 };
 
+export type UpdateAgencyInput = {
+  readonly name?: string;
+  readonly address?: string | null;
+  readonly contactPhone?: string | null;
+  readonly status?: AccountStatus;
+};
+
 export type AgencyFilter = {
   readonly name?: string;
   readonly address?: string;

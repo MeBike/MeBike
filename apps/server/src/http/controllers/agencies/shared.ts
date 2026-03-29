@@ -6,5 +6,6 @@ export type AgencySummary = AgenciesContracts.AgencySummary;
 export type AgencyDetailResponse = AgenciesContracts.AgencyDetailResponse;
 export type AgencyErrorResponse = AgenciesContracts.AgencyErrorResponse;
 export type AgencyListResponse = AgenciesContracts.AgencyListResponse;
+export type AgencyUpdateResponse = AgenciesContracts.AgencyUpdateResponse;
 
 export const { AgencyErrorCodeSchema, agencyErrorMessages } = AgenciesContracts;

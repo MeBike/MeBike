@@ -17,7 +17,12 @@ export function registerAgencyRoutes(
     ...agencies.adminList,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const adminUpdateAgencyRoute = {
+    ...agencies.adminUpdate,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
 
   app.openapi(adminGetAgencyRoute, AgencyAdminController.getAgencyById);
   app.openapi(adminListAgenciesRoute, AgencyAdminController.listAgencies);
+  app.openapi(adminUpdateAgencyRoute, AgencyAdminController.updateAgency);
 }

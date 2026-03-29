@@ -7,6 +7,7 @@ import type {
   AgencyFilter,
   AgencyRow,
   AgencySortField,
+  UpdateAgencyInput,
 } from "../models";
 import type { AgencyRepo } from "../repository/agency.repository";
 
@@ -23,6 +24,10 @@ export type AgencyService = {
     AgencyRow,
     import("../domain-errors").AgencyRepositoryError
   >;
+  readonly updateAgency: (
+    id: string,
+    input: UpdateAgencyInput,
+  ) => Effect.Effect<AgencyRow, AgencyNotFound>;
 };
 
 export function makeAgencyService(repo: AgencyRepo): AgencyService {
@@ -44,6 +49,18 @@ export function makeAgencyService(repo: AgencyRepo): AgencyService {
         Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
       ),
     create: input => repo.create(input),
+    updateAgency: (id, input) =>
+      Effect.gen(function* () {
+        const updatedOpt = yield* repo.update(id, input).pipe(
+          Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
+        );
+
+        if (Option.isNone(updatedOpt)) {
+          return yield* Effect.fail(new AgencyNotFound({ id }));
+        }
+
+        return updatedOpt.value;
+      }),
   };
 }
 

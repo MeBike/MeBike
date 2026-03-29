@@ -1,5 +1,7 @@
 import { z } from "../../../../zod";
 import {
+  OptionalPhoneNumberNullableSchema,
+  OptionalTrimmedNullableStringSchema,
   paginationQueryFields,
   PaginationSchema,
   ServerErrorResponseSchema,
@@ -57,6 +59,40 @@ export const AgencyDetailResponseSchema = AgencySummarySchema.openapi(
   },
 );
 
+export const UpdateAgencyBodySchema = z
+  .object({
+    name: z.string().trim().min(1).optional(),
+    address: OptionalTrimmedNullableStringSchema,
+    contactPhone: OptionalPhoneNumberNullableSchema,
+    status: AccountStatusSchema.optional(),
+  })
+  .refine(
+    value =>
+      value.name !== undefined
+      || value.address !== undefined
+      || value.contactPhone !== undefined
+      || value.status !== undefined,
+    {
+      message: "At least one field must be provided",
+    },
+  )
+  .openapi("UpdateAgencyBody", {
+    description: "Patch payload for updating an agency",
+    example: {
+      name: "Metro Agency Thu Duc",
+      address: "12 Vo Van Ngan, Thu Duc, TP.HCM",
+      contactPhone: "0912345678",
+      status: "ACTIVE",
+    },
+  });
+
+export const AgencyUpdateResponseSchema = AgencySummarySchema.openapi(
+  "AgencyUpdateResponse",
+  {
+    description: "Updated agency details for admin",
+  },
+);
+
 export const AgencyErrorCodeSchema = z.enum([
   "AGENCY_NOT_FOUND",
 ]).openapi("AgencyErrorCode");
@@ -81,6 +117,8 @@ export const agencyErrorMessages = {
 
 export type AgencyListResponse = z.infer<typeof AgencyListResponseSchema>;
 export type AgencyDetailResponse = z.infer<typeof AgencyDetailResponseSchema>;
+export type UpdateAgencyBody = z.infer<typeof UpdateAgencyBodySchema>;
+export type AgencyUpdateResponse = z.infer<typeof AgencyUpdateResponseSchema>;
 export type AgencyErrorResponse = z.infer<typeof AgencyErrorResponseSchema>;
 
 export {

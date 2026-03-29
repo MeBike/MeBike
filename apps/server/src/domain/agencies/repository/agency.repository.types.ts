@@ -9,6 +9,7 @@ import type {
   AgencyRow,
   AgencySortField,
   CreateAgencyInput,
+  UpdateAgencyInput,
 } from "../models";
 
 export type AgencyRepo = {
@@ -18,4 +19,8 @@ export type AgencyRepo = {
     filter: AgencyFilter,
     pageReq: PageRequest<AgencySortField>,
   ) => Effect.Effect<PageResult<AgencyRow>, AgencyRepositoryError>;
+  readonly update: (
+    id: string,
+    input: UpdateAgencyInput,
+  ) => Effect.Effect<Option.Option<AgencyRow>, AgencyRepositoryError>;
 };
