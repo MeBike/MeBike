@@ -101,7 +101,7 @@ function MyWalletScreen() {
 
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom + spaceScale[9], 112),
+          paddingBottom: insets.bottom + spaceScale[7],
         }}
         refreshControl={<RefreshControl colors={[theme.actionPrimary.val]} onRefresh={onRefresh} refreshing={refreshing} tintColor={theme.actionPrimary.val} />}
         showsVerticalScrollIndicator={false}

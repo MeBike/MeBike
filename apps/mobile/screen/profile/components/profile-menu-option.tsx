@@ -1,69 +1,68 @@
-import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import type { IconSymbolName } from "@components/IconSymbol";
 
-const styles = StyleSheet.create({
-  menuOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: "#f0f7ff",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  menuContent: {
-    flex: 1,
-  },
-  menuTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 2,
-  },
-  menuSubtitle: {
-    fontSize: 12,
-    color: "#999",
-  },
-});
+import { Pressable } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { AppText } from "@ui/primitives/app-text";
 
 type ProfileMenuOptionProps = {
-  icon: string;
+  icon: IconSymbolName;
   title: string;
-  subtitle: string;
+  subtitle?: string;
+  iconColor: string;
+  iconBackground: string;
   onPress: () => void;
+  destructive?: boolean;
 };
 
 function ProfileMenuOption({
   icon,
   title,
   subtitle,
+  iconColor,
+  iconBackground,
   onPress,
+  destructive = false,
 }: ProfileMenuOptionProps) {
+  const theme = useTheme();
+
   return (
-    <TouchableOpacity style={styles.menuOption} onPress={onPress}>
-      <View style={styles.menuIconContainer}>
-        <Ionicons name={icon as any} size={20} color="#0066FF" />
-      </View>
-      <View style={styles.menuContent}>
-        <Text style={styles.menuTitle}>{title}</Text>
-        <Text style={styles.menuSubtitle}>{subtitle}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color="#ccc" />
-    </TouchableOpacity>
+    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.95 : 1 })}>
+      <XStack alignItems="center" gap="$4" justifyContent="space-between" padding="$4">
+        <XStack alignItems="center" flex={1} gap="$4">
+          <XStack
+            alignItems="center"
+            backgroundColor={destructive ? theme.surfaceDanger.val : iconBackground}
+            borderRadius="$3"
+            height={44}
+            justifyContent="center"
+            width={44}
+          >
+            <IconSymbol color={destructive ? theme.textDanger.val : iconColor} name={icon} size={20} />
+          </XStack>
+
+          <YStack flex={1} gap="$1" minWidth={0}>
+            <AppText numberOfLines={1} tone={destructive ? "danger" : "default"} variant="subhead">
+              {title}
+            </AppText>
+            {subtitle
+              ? (
+                  <AppText numberOfLines={1} tone="muted" variant="bodySmall">
+                    {subtitle}
+                  </AppText>
+                )
+              : null}
+          </YStack>
+        </XStack>
+
+        <IconSymbol
+          color={destructive ? theme.surfaceDanger.val : theme.borderStrong.val}
+          name="chevron.right"
+          size={20}
+        />
+      </XStack>
+    </Pressable>
   );
 }
 

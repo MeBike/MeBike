@@ -111,6 +111,10 @@ export function useProfile() {
     navigation.navigate("Support" as never);
   };
 
+  const handleReportIssue = () => {
+    navigation.navigate("Report" as never);
+  };
+
   const handleReservations = () => {
     navigation.navigate("Reservations" as never);
   };
@@ -121,6 +125,10 @@ export function useProfile() {
 
   const handleSubscriptions = () => {
     navigation.navigate("Subscriptions" as never);
+  };
+
+  const handleNotifications = () => {
+    Alert.alert("Sắp ra mắt", "Quản lý thông báo sẽ sớm được cập nhật.");
   };
 
   const handleResendOtp = async () => {
@@ -174,10 +182,6 @@ export function useProfile() {
     setIsVerifyEmailModalOpen(false);
   };
 
-  const goBack = () => {
-    navigation.goBack();
-  };
-
   return {
     profile,
     isVerifyEmailModalOpen,
@@ -195,11 +199,12 @@ export function useProfile() {
     handleChangePassword,
     handleUpdateProfile,
     handleSupport,
+    handleReportIssue,
     handleReservations,
     handleSOS,
     handleSubscriptions,
+    handleNotifications,
     handleResendOtp,
     handleVerifyEmail,
-    goBack,
   };
 }
