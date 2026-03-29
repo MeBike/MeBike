@@ -2,7 +2,7 @@ import type { AgenciesContracts } from "@mebike/shared";
 
 import type { AgencyRow } from "@/domain/agencies";
 
-export function toAgencySummary(
+function toAgencyContract(
   row: AgencyRow,
 ): AgenciesContracts.AgencySummary {
   return {
@@ -14,4 +14,16 @@ export function toAgencySummary(
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+}
+
+export function toAgencySummary(
+  row: AgencyRow,
+): AgenciesContracts.AgencySummary {
+  return toAgencyContract(row);
+}
+
+export function toAgencyDetail(
+  row: AgencyRow,
+): AgenciesContracts.AgencyDetailResponse {
+  return toAgencyContract(row);
 }

@@ -112,8 +112,90 @@ describe("admin agencies routing e2e", () => {
     });
   });
 
+  it("gets agency detail for admin", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        id: "019621f8-e58d-7c57-81fc-0db054f1f111",
+        name: "Detail Agency",
+        address: "District 5",
+        contactPhone: "0285555555",
+        status: "SUSPENDED",
+      },
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/agencies/${agency.id}`, {
+      method: "GET",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+    });
+    const body = await response.json() as AgenciesContracts.AgencyDetailResponse;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      id: agency.id,
+      name: "Detail Agency",
+      address: "District 5",
+      contactPhone: "0285555555",
+      status: "SUSPENDED",
+      createdAt: agency.createdAt.toISOString(),
+      updatedAt: agency.updatedAt.toISOString(),
+    });
+  });
+
+  it("returns 404 when agency detail does not exist", async () => {
+    const missingAgencyId = "019621f8-e58d-7c57-81fc-0db054f1f199";
+
+    const response = await fixture.app.request(`http://test/v1/admin/agencies/${missingAgencyId}`, {
+      method: "GET",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+    });
+    const body = await response.json() as AgenciesContracts.AgencyErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({
+      error: "Agency not found",
+      details: {
+        code: "AGENCY_NOT_FOUND",
+        agencyId: missingAgencyId,
+      },
+    });
+  });
+
+  it("returns 400 for invalid agency id", async () => {
+    const response = await fixture.app.request("http://test/v1/admin/agencies/not-a-uuid", {
+      method: "GET",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: "Invalid request payload",
+      details: {
+        code: "VALIDATION_ERROR",
+      },
+    });
+  });
+
   it("rejects non-admin users", async () => {
     const response = await fixture.app.request("http://test/v1/admin/agencies", {
+      method: "GET",
+      headers: authHeader(STAFF_USER_ID, "STAFF"),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects non-admin users from agency detail", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        id: "019621f8-e58d-7c57-81fc-0db054f1f112",
+        name: "Forbidden Agency",
+        address: "District 10",
+        contactPhone: "0286666666",
+        status: "ACTIVE",
+      },
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/agencies/${agency.id}`, {
       method: "GET",
       headers: authHeader(STAFF_USER_ID, "STAFF"),
     });

@@ -4,3 +4,7 @@ export class AgencyRepositoryError extends Data.TaggedError("AgencyRepositoryErr
   readonly operation: string;
   readonly cause: unknown;
 }> {}
+
+export class AgencyNotFound extends Data.TaggedError("AgencyNotFound")<{
+  readonly id: string;
+}> {}

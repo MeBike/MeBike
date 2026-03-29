@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 import type {
   PrismaClient,
@@ -17,12 +17,30 @@ import {
   toAgencyWhere,
 } from "../agency.repository.helpers";
 
-export type AgencyReadRepo = Pick<AgencyRepo, "listWithOffset">;
+export type AgencyReadRepo = Pick<AgencyRepo, "getById" | "listWithOffset">;
 
 export function makeAgencyReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): AgencyReadRepo {
   return {
+    getById(id) {
+      return Effect.tryPromise({
+        try: () =>
+          client.agency.findUnique({
+            where: { id },
+            select: selectAgencyRow,
+          }),
+        catch: cause =>
+          new AgencyRepositoryError({
+            operation: "getById",
+            cause,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toAgencyRow))),
+      );
+    },
+
     listWithOffset(filter, pageReq) {
       const { page, pageSize, skip, take } = normalizedPage(pageReq);
       const where = toAgencyWhere(filter);

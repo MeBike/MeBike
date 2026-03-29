@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
@@ -10,9 +10,11 @@ import type {
 } from "../models";
 import type { AgencyRepo } from "../repository/agency.repository";
 
+import { AgencyNotFound } from "../domain-errors";
 import { AgencyRepository } from "../repository/agency.repository";
 
 export type AgencyService = {
+  readonly getAgencyById: (id: string) => Effect.Effect<AgencyRow, AgencyNotFound>;
   readonly listAgencies: (
     filter: AgencyFilter,
     pageReq: PageRequest<AgencySortField>,
@@ -25,6 +27,18 @@ export type AgencyService = {
 
 export function makeAgencyService(repo: AgencyRepo): AgencyService {
   return {
+    getAgencyById: id =>
+      Effect.gen(function* () {
+        const agencyOpt = yield* repo.getById(id).pipe(
+          Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
+        );
+
+        if (Option.isNone(agencyOpt)) {
+          return yield* Effect.fail(new AgencyNotFound({ id }));
+        }
+
+        return agencyOpt.value;
+      }),
     listAgencies: (filter, pageReq) =>
       repo.listWithOffset(filter, pageReq).pipe(
         Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),

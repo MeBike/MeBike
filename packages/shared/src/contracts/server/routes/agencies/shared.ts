@@ -8,6 +8,17 @@ import {
 import { AgencySummarySchema } from "../../agencies";
 import { AccountStatusSchema } from "../../users";
 
+export const AgencyIdParamSchema = z
+  .object({
+    id: z.uuidv7().openapi({
+      description: "Agency identifier",
+      example: "019b17bd-d130-7e7d-be69-91ceef7b9003",
+    }),
+  })
+  .openapi("AgencyIdParam", {
+    description: "Path params for agency id",
+  });
+
 export const AgencySortFieldSchema = z.enum(["name", "status", "createdAt", "updatedAt"]);
 
 export const AgencyListQuerySchema = z
@@ -39,7 +50,38 @@ export const AgencyListResponseSchema = z
     description: "Paginated agency listing for admin",
   });
 
+export const AgencyDetailResponseSchema = AgencySummarySchema.openapi(
+  "AgencyDetailResponse",
+  {
+    description: "Agency details for admin",
+  },
+);
+
+export const AgencyErrorCodeSchema = z.enum([
+  "AGENCY_NOT_FOUND",
+]).openapi("AgencyErrorCode");
+
+export const AgencyErrorDetailSchema = z
+  .object({
+    code: AgencyErrorCodeSchema,
+    agencyId: z.uuidv7().optional(),
+  })
+  .openapi("AgencyErrorDetail");
+
+export const AgencyErrorResponseSchema = z
+  .object({
+    error: z.string(),
+    details: AgencyErrorDetailSchema,
+  })
+  .openapi("AgencyErrorResponse");
+
+export const agencyErrorMessages = {
+  AGENCY_NOT_FOUND: "Agency not found",
+} as const;
+
 export type AgencyListResponse = z.infer<typeof AgencyListResponseSchema>;
+export type AgencyDetailResponse = z.infer<typeof AgencyDetailResponseSchema>;
+export type AgencyErrorResponse = z.infer<typeof AgencyErrorResponseSchema>;
 
 export {
   PaginationSchema,
