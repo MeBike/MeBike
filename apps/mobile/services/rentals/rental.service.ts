@@ -63,7 +63,8 @@ async function tryGetBikeSummary(bikeId?: string): Promise<MyRentalResolvedDetai
   }
 
   try {
-    return await bikeService.getBikeByIdForAll(bikeId);
+    const result = await bikeService.getBikeByIdForAll(bikeId);
+    return result.ok ? result.value : null;
   }
   catch {
     return null;
