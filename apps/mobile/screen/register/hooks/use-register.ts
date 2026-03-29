@@ -1,11 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { log } from "@lib/log";
 import { AuthContracts } from "@mebike/shared";
+import { presentAuthError, presentRegisterFieldError } from "@/presenters/auth/auth-error-presenter";
 import { useNavigation } from "@react-navigation/native";
 import { authService } from "@services/auth/auth-service";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { Alert } from "react-native";
 import * as z from "zod";
 
 import type { RegisterScreenNavigationProp } from "../../../types/navigation";
@@ -56,17 +58,14 @@ export function useRegister() {
     });
 
     if (!result.ok) {
-      if (result.error._tag === "ApiError") {
-        if (result.error.code === "DUPLICATE_EMAIL") {
-          setError("email", { message: result.error.message ?? "Email đã được sử dụng" });
-          return;
-        }
-        if (result.error.code === "DUPLICATE_PHONE_NUMBER") {
-          setError("phoneNumber", { message: result.error.message ?? "Số điện thoại đã được sử dụng" });
-          return;
-        }
+      const fieldError = presentRegisterFieldError(result.error);
+      if (fieldError) {
+        setError(fieldError.field, { message: fieldError.message });
+        return;
       }
+
       log.warn("Register failed", result.error);
+      Alert.alert("Không thể đăng ký", presentAuthError(result.error, "Không thể đăng ký. Vui lòng thử lại."));
       return;
     }
 

@@ -28,6 +28,20 @@ export type UploadAvatarPayload = {
   type?: string | null;
 };
 
+async function decodeResponse<TValue>(
+  response: Response,
+  schema: z.ZodType<TValue>,
+): Promise<Result<TValue, UserError>> {
+  try {
+    const data = await readJson(response);
+    const parsed = decodeWithSchema(schema, data);
+    return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+  }
+  catch {
+    return err({ _tag: "DecodeError" });
+  }
+}
+
 export const userService = {
   me: async (): Promise<Result<UserDetail, UserError>> => {
     try {
@@ -38,10 +52,8 @@ export const userService = {
       const status = response.status as MeStatus | number;
       switch (status) {
         case StatusCodes.OK: {
-          const data = await readJson(response);
           const okSchema = ServerRoutes.users.me.responses[200].content["application/json"].schema;
-          const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+          return decodeResponse(response, okSchema as z.ZodType<UserDetail>);
         }
         case StatusCodes.UNAUTHORIZED:
         case StatusCodes.NOT_FOUND:
@@ -67,10 +79,8 @@ export const userService = {
       const status = response.status as UpdateMeStatus | number;
       switch (status) {
         case StatusCodes.OK: {
-          const data = await readJson(response);
           const okSchema = ServerRoutes.users.updateMe.responses[200].content["application/json"].schema;
-          const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+          return decodeResponse(response, okSchema as z.ZodType<UserDetail>);
         }
         case StatusCodes.UNAUTHORIZED:
         case StatusCodes.NOT_FOUND:
@@ -104,10 +114,8 @@ export const userService = {
       const status = response.status as UploadMyAvatarStatus | number;
       switch (status) {
         case StatusCodes.OK: {
-          const data = await readJson(response);
           const okSchema = ServerRoutes.users.uploadMyAvatar.responses[200].content["application/json"].schema;
-          const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+          return decodeResponse(response, okSchema as z.ZodType<UserDetail>);
         }
         case StatusCodes.BAD_REQUEST:
         case StatusCodes.UNAUTHORIZED:
@@ -136,10 +144,8 @@ export const userService = {
       const status = response.status as RegisterPushTokenStatus | number;
       switch (status) {
         case StatusCodes.OK: {
-          const data = await readJson(response);
           const okSchema = ServerRoutes.users.registerPushToken.responses[200].content["application/json"].schema;
-          const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+          return decodeResponse(response, okSchema as z.ZodType<PushTokenSummary>);
         }
         case StatusCodes.UNAUTHORIZED:
         case StatusCodes.BAD_REQUEST:

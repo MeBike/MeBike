@@ -1,5 +1,5 @@
 import { WALLET_CONSTANTS } from "../../utils/wallet/constants";
-import { useWalletActions } from "../useWalletAction";
+import { useWalletActions } from "../use-wallet-action";
 
 export function useWallet() {
   const limit = WALLET_CONSTANTS.DEFAULT_LIMIT;

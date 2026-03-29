@@ -1,8 +1,6 @@
-import type { UserError } from "@services/users/user-error";
 import type { UpdateMeRequest, UploadAvatarPayload } from "@services/users/user-service";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ServerContracts } from "@mebike/shared";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { userService } from "@services/users/user-service";
@@ -10,6 +8,11 @@ import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Alert } from "react-native";
+
+import {
+  presentUpdateProfileFieldError,
+  presentUserError,
+} from "@/presenters/users/user-error-presenter";
 
 import type { UpdateProfileNavigationProp } from "../../../types/navigation";
 import type { TomTomAddressSuggestion } from "../lib/tomtom";
@@ -19,8 +22,6 @@ import { fetchTomTomAddressSuggest, fetchTomTomReverseGeocode } from "../lib/tom
 import { updateProfileSchema } from "../schema";
 
 const LOCATION_SUGGEST_DELAY_MS = 500;
-
-const userErrorCodes = ServerContracts.UsersContracts.UserErrorCodeSchema.enum;
 
 function buildUpdatePatch(params: {
   form: UpdateProfileFormValues;
@@ -58,29 +59,6 @@ function createAvatarUploadPayload(asset: ImagePicker.ImagePickerAsset): UploadA
   };
 }
 
-function getUserErrorMessage(error: UserError, fallback = "Đã có lỗi xảy ra. Vui lòng thử lại."): string {
-  if (error._tag === "ApiError") {
-    switch (error.code) {
-      case userErrorCodes.AVATAR_IMAGE_TOO_LARGE:
-        return "Ảnh đại diện quá lớn. Vui lòng chọn ảnh nhỏ hơn 5MB.";
-      case userErrorCodes.INVALID_AVATAR_IMAGE:
-        return "Ảnh đại diện không hợp lệ. Hãy chọn ảnh JPG, PNG hoặc WEBP.";
-      case userErrorCodes.AVATAR_IMAGE_DIMENSIONS_TOO_LARGE:
-        return "Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn để tiếp tục.";
-      case userErrorCodes.AVATAR_UPLOAD_UNAVAILABLE:
-        return "Dịch vụ tải ảnh tạm thời không khả dụng. Vui lòng thử lại sau.";
-      default:
-        return error.message ?? fallback;
-    }
-  }
-
-  if (error._tag === "NetworkError") {
-    return "Không thể kết nối tới máy chủ.";
-  }
-
-  return fallback;
-}
-
 export function useUpdateProfile() {
   const navigation = useNavigation<UpdateProfileNavigationProp>();
   const { user, hydrate, isLoading } = useAuthNext();
@@ -105,6 +83,7 @@ export function useUpdateProfile() {
     control,
     handleSubmit,
     reset,
+    setError,
     setValue,
     formState: { dirtyFields, errors },
   } = useForm<UpdateProfileFormValues>({
@@ -221,7 +200,13 @@ export function useUpdateProfile() {
       if (hasProfileChanges) {
         const profileResult = await userService.updateMe(changedData);
         if (!profileResult.ok) {
-          Alert.alert("Lỗi", getUserErrorMessage(profileResult.error, "Không thể cập nhật thông tin."));
+          const fieldError = presentUpdateProfileFieldError(profileResult.error);
+          if (fieldError) {
+            setError(fieldError.field, { message: fieldError.message });
+            return;
+          }
+
+          Alert.alert("Lỗi", presentUserError(profileResult.error, "Không thể cập nhật thông tin."));
           return;
         }
       }
@@ -236,8 +221,8 @@ export function useUpdateProfile() {
           Alert.alert(
             "Lỗi",
             hasProfileChanges
-              ? `Đã lưu thông tin hồ sơ, nhưng chưa thể cập nhật ảnh đại diện. ${getUserErrorMessage(avatarResult.error)}`
-              : getUserErrorMessage(avatarResult.error, "Không thể cập nhật ảnh đại diện."),
+              ? `Đã lưu thông tin hồ sơ, nhưng chưa thể cập nhật ảnh đại diện. ${presentUserError(avatarResult.error)}`
+              : presentUserError(avatarResult.error, "Không thể cập nhật ảnh đại diện."),
           );
           return;
         }
