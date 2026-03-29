@@ -1,10 +1,10 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useTheme, XStack, YStack } from "tamagui";
+import { View, useTheme, XStack, YStack } from "tamagui";
 
 import type { WalletDetail } from "@services/wallets/wallet.service";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { borderWidths, radii, spacingRules } from "@theme/metrics";
+import { borderWidths, iconSizes, radii, spaceScale, spacingRules } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
 import { formatBalance, formatWalletStatus } from "@utils/wallet/formatters";
 
@@ -12,6 +12,10 @@ type WalletHeroCardProps = {
   wallet: WalletDetail;
   topInset: number;
 };
+
+const walletHeroCornerRadius = radii.xxl + spaceScale[2];
+const walletHeroIconShellSize = iconSizes.xl + spaceScale[1];
+const walletStatusDotSize = spaceScale[2];
 
 function WalletStatusPill({ status }: { status: WalletDetail["status"] }) {
   const theme = useTheme();
@@ -22,18 +26,18 @@ function WalletStatusPill({ status }: { status: WalletDetail["status"] }) {
       alignItems="center"
       alignSelf="flex-start"
       backgroundColor="$overlayGlass"
-      borderColor="$overlayGlassMuted"
+      borderColor="$overlayGlass"
       borderRadius={radii.round}
       borderWidth={borderWidths.subtle}
       gap="$2"
-      paddingHorizontal="$4"
-      paddingVertical="$2"
+      paddingHorizontal="$3"
+      paddingVertical="$1"
     >
       <XStack
         backgroundColor={isActive ? theme.statusSuccess.val : theme.statusDanger.val}
         borderRadius="$round"
-        height={8}
-        width={8}
+        height={walletStatusDotSize}
+        width={walletStatusDotSize}
       />
       <AppText tone="inverted" variant="badgeLabel">
         {formatWalletStatus(status)}
@@ -51,18 +55,13 @@ function WalletBalanceSplit({
 }) {
   return (
     <YStack
-      backgroundColor="$overlayGlassMuted"
-      borderColor="$overlayGlassMuted"
-      borderRadius={radii.xl}
-      borderWidth={borderWidths.subtle}
       flex={1}
-      gap="$2"
-      padding="$4"
+      gap="$1"
     >
-      <AppText color="rgba(255,255,255,0.76)" variant="bodySmall">
+      <AppText opacity={0.72} tone="inverted" variant="meta">
         {label}
       </AppText>
-      <AppText tone="inverted" variant="headline">
+      <AppText tone="inverted" variant="sectionTitle">
         {formatBalance(value)}
         {" "}
         đ
@@ -80,52 +79,67 @@ export function WalletHeroCard({ wallet, topInset }: WalletHeroCardProps) {
       end={{ x: 1, y: 1 }}
       start={{ x: 0, y: 0 }}
       style={{
-        borderBottomLeftRadius: 36,
-        borderBottomRightRadius: 36,
+        borderBottomLeftRadius: walletHeroCornerRadius,
+        borderBottomRightRadius: walletHeroCornerRadius,
         paddingTop: topInset + spacingRules.hero.paddingTop,
-        paddingBottom: spacingRules.hero.paddingBottomDefault + spacingRules.list.sectionGap,
+        paddingBottom: spacingRules.hero.paddingBottomCompact + spacingRules.page.sectionGap,
       }}
     >
       <YStack
         gap="$5"
-        paddingHorizontal="$6"
+        paddingHorizontal="$5"
       >
         <XStack alignItems="center" justifyContent="space-between">
-          <AppText tone="inverted" variant="title">
+          <AppText tone="inverted" variant="xlTitle">
             Ví của tôi
           </AppText>
 
           <XStack
             alignItems="center"
-            backgroundColor="rgba(255,255,255,0.12)"
+            backgroundColor="$overlayGlassMuted"
+            borderColor="$overlayGlassMuted"
             borderRadius="$round"
-            height={56}
+            borderWidth={borderWidths.subtle}
+            height={walletHeroIconShellSize}
             justifyContent="center"
-            width={56}
+            width={walletHeroIconShellSize}
           >
-            <IconSymbol color="rgba(255,255,255,0.92)" name="wallet.pass.fill" size={24} />
+            <IconSymbol color={theme.onSurfaceBrand.val} name="wallet.pass.fill" size={iconSizes.lg} />
           </XStack>
         </XStack>
 
         <YStack gap="$3">
-          <AppText color="rgba(255,255,255,0.82)" variant="eyebrow">
-            Số dư tổng
-          </AppText>
+          <XStack alignItems="center" flexWrap="wrap" gap="$3">
+            <AppText opacity={0.82} tone="inverted" variant="eyebrow">
+              Số dư tổng
+            </AppText>
 
-          <XStack alignItems="flex-end" gap="$2">
+            <WalletStatusPill status={wallet.status} />
+          </XStack>
+
+          <XStack alignItems="flex-end" gap="$1">
             <AppText tone="inverted" variant="metricValue">
               {formatBalance(wallet.balance)}
             </AppText>
-            <AppText marginBottom={6} tone="inverted" variant="headline">
+            <AppText marginBottom="$1" tone="inverted" variant="sectionTitle">
               đ
             </AppText>
           </XStack>
-
-          <WalletStatusPill status={wallet.status} />
         </YStack>
 
-        <XStack gap="$3">
+        <XStack
+          alignItems="stretch"
+          backgroundColor="$overlayGlassMuted"
+          borderColor="$overlayGlass"
+          borderRadius={radii.xxl}
+          borderWidth={borderWidths.subtle}
+          gap="$3"
+          padding="$4"
+        >
           <WalletBalanceSplit label="Khả dụng" value={wallet.availableBalance} />
+
+          <View backgroundColor="$overlayGlass" borderRadius="$round" width={1} />
+
           <WalletBalanceSplit label="Đang tạm giữ" value={wallet.reservedBalance} />
         </XStack>
       </YStack>

@@ -64,6 +64,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
   ]);
   const styles = useMemo(() => createQrModalStyles(themePalette), [themePalette]);
   const [amount, setAmount] = useState("50000");
+  const [isAmountFocused, setIsAmountFocused] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -188,6 +189,14 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
     () => QUICK_AMOUNTS.map(value => ({ label: Number(value).toLocaleString("vi-VN"), value })),
     [],
   );
+  const displayAmount = useMemo(
+    () => (amount ? Number(amount).toLocaleString("vi-VN") : ""),
+    [amount],
+  );
+  const handleAmountChange = useCallback((value: string) => {
+    const digitsOnly = value.replace(/\D/g, "");
+    setAmount(digitsOnly);
+  }, []);
 
   if (!visible) {
     return null;
@@ -213,27 +222,32 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
             <View style={styles.sheetHandle} />
 
             <View style={styles.headerRow}>
-              <AppText variant="title">Nạp tiền vào ví</AppText>
+              <AppText variant="xlTitle">Nạp tiền vào ví</AppText>
 
               <Pressable onPress={closeWithAnimation} style={({ pressed }) => [styles.closeButton, pressed ? styles.closeButtonPressed : null]}>
                 <IconSymbol color={theme.textSecondary.val} name="xmark" size={18} />
               </Pressable>
             </View>
 
-            <AppText style={styles.description} tone="muted" variant="body">
-              Nhập số tiền bằng VND. Số tiền tối thiểu là 5.000đ. Sau khi thanh toán thành công, số dư ví sẽ được cập nhật trong giây lát.
+            <AppText style={styles.description} tone="muted" variant="bodySmall">
+              Nhập số tiền bằng VND. Số tiền tối thiểu là
+              {" "}
+              <AppText tone="default" variant="bodyStrong">5.000đ</AppText>
+              . Số dư ví sẽ được cập nhật ngay sau khi thanh toán thành công.
             </AppText>
 
-            <View style={styles.amountField}>
+            <View style={[styles.amountField, isAmountFocused ? styles.amountFieldFocused : null]}>
               <TextInput
                 keyboardType="number-pad"
-                onChangeText={setAmount}
+                onBlur={() => setIsAmountFocused(false)}
+                onChangeText={handleAmountChange}
+                onFocus={() => setIsAmountFocused(true)}
                 placeholder="0"
                 placeholderTextColor={theme.textTertiary.val}
                 style={styles.amountInput}
-                value={amount}
+                value={displayAmount}
               />
-              <AppText variant="headline">VND</AppText>
+              <AppText tone="muted" variant="sectionTitle">VND</AppText>
             </View>
 
             <View style={styles.quickAmountsRow}>
@@ -250,7 +264,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
                       pressed ? styles.quickAmountChipPressed : null,
                     ]}
                   >
-                    <AppText tone={isActive ? "inverted" : "muted"} variant="subhead">
+                    <AppText tone={isActive ? "inverted" : "muted"} variant="bodyStrong">
                       {quickAmount.label}
                     </AppText>
                   </Pressable>
@@ -266,10 +280,10 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
                 pressed ? styles.primaryButtonPressed : null,
                 isSubmitting ? styles.primaryButtonDisabled : null,
               ]}
-            >
+              >
               {isSubmitting
                 ? <ActivityIndicator color={theme.onActionPrimary.val} />
-                : <AppText tone="inverted" variant="headline">Mở Stripe PaymentSheet</AppText>}
+                : <AppText tone="inverted" variant="sectionTitle">Mở Stripe PaymentSheet</AppText>}
             </Pressable>
           </Animated.View>
         </KeyboardAvoidingView>

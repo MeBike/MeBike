@@ -8,6 +8,11 @@ export function formatCurrency(amount: string | number): string {
   return `${numAmount.toLocaleString("vi-VN")} đ`;
 }
 
+export function formatAbsoluteCurrency(amount: string | number): string {
+  const numAmount = typeof amount === "string" ? Number(amount) : amount;
+  return `${Math.abs(numAmount).toLocaleString("vi-VN")} đ`;
+}
+
 export function formatWalletStatus(status: string): string {
   if (status === "ACTIVE") {
     return "ĐANG HOẠT ĐỘNG";
@@ -43,6 +48,57 @@ export function formatTransactionStatus(status: string): string {
       return "Thất bại";
     default:
       return status;
+  }
+}
+
+const generatedDescriptionPatterns = [
+  /^rental\s/i,
+  /^transaction\s/i,
+  /^payment\s/i,
+  /^[0-9a-f]{8,}/i,
+] as const;
+
+export function formatTransactionTitle(type: string, description?: string | null): string {
+  const trimmedDescription = description?.trim();
+
+  if (trimmedDescription) {
+    const normalizedDescription = trimmedDescription.toLowerCase();
+
+    if (normalizedDescription.includes("reservation prepaid") || normalizedDescription.includes("reservation")) {
+      return "Thanh toán đặt trước";
+    }
+
+    if (normalizedDescription.includes("rental") || normalizedDescription.includes("trip payment")) {
+      return "Thanh toán chuyến đi";
+    }
+
+    if (normalizedDescription.includes("deposit") || normalizedDescription.includes("top up") || normalizedDescription.includes("topup")) {
+      return "Nạp tiền vào ví";
+    }
+
+    if (normalizedDescription.includes("refund")) {
+      return "Hoàn tiền về ví";
+    }
+
+    if (normalizedDescription.includes("adjust")) {
+      return "Điều chỉnh số dư";
+    }
+  }
+
+  if (trimmedDescription && !generatedDescriptionPatterns.some(pattern => pattern.test(trimmedDescription))) {
+    return trimmedDescription;
+  }
+
+  switch (type) {
+    case "DEPOSIT":
+      return "Nạp tiền vào ví";
+    case "REFUND":
+      return "Hoàn tiền về ví";
+    case "ADJUSTMENT":
+      return "Điều chỉnh số dư";
+    case "DEBIT":
+    default:
+      return "Thanh toán chuyến đi";
   }
 }
 

@@ -88,6 +88,13 @@ export const iconSizes = {
 } as const;
 
 export const elevations = {
+  whisper: {
+    shadowColor: lightThemeColors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.035,
+    shadowRadius: 8,
+    elevation: 1,
+  },
   soft: {
     shadowColor: lightThemeColors.shadowColor,
     shadowOffset: { width: 0, height: 4 },
