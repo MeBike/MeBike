@@ -18,7 +18,7 @@ export * as SubscriptionsContracts from "./subscriptions";
 export * as SuppliersContracts from "./suppliers";
 export * as UsersContracts from "./users";
 export * as WalletsContracts from "./wallets";
-export * as IncidentsContracts from "./incident";
+export * as IncidentsContracts from "./incidents";
 
 export const serverOpenApi = {
   info: {

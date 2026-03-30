@@ -3,7 +3,7 @@ import { Effect, Layer } from "effect";
 import {
   IncidentRepositoryLive,
   IncidentServiceLive,
-} from "@/domain/incident";
+} from "@/domain/incidents";
 
 import { PrismaLive } from "../infra.layers";
 import { BikeReposLive } from "./bike.layers";

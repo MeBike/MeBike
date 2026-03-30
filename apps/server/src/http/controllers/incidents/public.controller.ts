@@ -5,7 +5,7 @@ import { Effect, Match } from "effect";
 
 import type { IncidentStatus } from "generated/kysely/types";
 
-import { IncidentServiceTag } from "@/domain/incident";
+import { IncidentServiceTag } from "@/domain/incidents";
 import { withLoggedCause } from "@/domain/shared";
 import { toIncidentSummary } from "@/http/presenters/incidents.presenter";
 import { Prisma } from "generated/prisma/client";

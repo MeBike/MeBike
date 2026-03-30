@@ -12,8 +12,8 @@ import {
   IncidentErrorCodeSchema,
   IncidentErrorResponseSchema,
   incidentErrorMessages,
-} from "../../incident/errors";
-import { TechnicianAssignmentSummarySchema } from "../../incident";
+} from "../../incidents/errors";
+import { TechnicianAssignmentSummarySchema } from "../../incidents";
 
 export const createIncident = createRoute({
   method: "post",

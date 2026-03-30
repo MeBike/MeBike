@@ -11,7 +11,7 @@ import {
 import {
   IncidentErrorCodeSchema,
   IncidentErrorResponseSchema,
-} from "../../incident/errors";
+} from "../../incidents/errors";
 
 export const listIncidents = createRoute({
   method: "get",

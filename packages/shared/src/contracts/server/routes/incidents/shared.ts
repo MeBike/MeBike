@@ -8,11 +8,11 @@ import {
 import {
   AssignmentStatusSchema,
   IncidentStatusSchema,
-} from "../../incident/schemas";
+} from "../../incidents/schemas";
 import {
   IncidentDetailSchema,
   IncidentSummarySchema,
-} from "../../incident/models";
+} from "../../incidents/models";
 
 export const IncidentSortFieldSchema = z.enum(["status", "resolvedAt"]);
 

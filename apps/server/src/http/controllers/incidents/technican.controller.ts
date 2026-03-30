@@ -2,7 +2,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
-import { IncidentServiceTag } from "@/domain/incident";
+import { IncidentServiceTag } from "@/domain/incidents";
 import { withLoggedCause } from "@/domain/shared";
 
 import type { IncidentRoutes } from "./shared";
