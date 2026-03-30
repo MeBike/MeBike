@@ -20,7 +20,7 @@ import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
 import { registerEventRoutes } from "./routes/events";
 import { registerHealthRoutes } from "./routes/health";
-import { registerIncidentRoutes } from "./routes/incident";
+import { registerIncidentRoutes } from "./routes/incidents";
 import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerReservationRoutes } from "./routes/reservations";
