@@ -232,28 +232,6 @@ export const IncidentServiceLive = Layer.effect(
             rental.value.bike && (data.bikeId = rental.value.bike.id);
           }
 
-          let bikeLocked: boolean;
-          let severity: IncidentSeverity;
-
-          switch (finalSource) {
-            case IncidentSource.DURING_RENTAL:
-              bikeLocked = true;
-              severity = IncidentSeverity.CRITICAL;
-              break;
-            case IncidentSource.POST_RETURN:
-              bikeLocked = false;
-              severity = IncidentSeverity.MEDIUM;
-              break;
-            case IncidentSource.STAFF_INSPECTION:
-              bikeLocked = true;
-              severity = IncidentSeverity.HIGH;
-              break;
-            default:
-              bikeLocked = false;
-              severity = IncidentSeverity.LOW;
-              break;
-          }
-
           // Check bike exists
           if (data.bikeId) {
             const bike = yield* bikeRepo.getById(data.bikeId);
@@ -274,6 +252,28 @@ export const IncidentServiceLive = Layer.effect(
             if (bike.value.stationId && finalSource !== "DURING_RENTAL") {
               data.stationId = bike.value.stationId;
             }
+          }
+
+          let bikeLocked: boolean;
+          let severity: IncidentSeverity;
+
+          switch (finalSource) {
+            case IncidentSource.DURING_RENTAL:
+              bikeLocked = true;
+              severity = IncidentSeverity.CRITICAL;
+              break;
+            case IncidentSource.POST_RETURN:
+              bikeLocked = false;
+              severity = IncidentSeverity.MEDIUM;
+              break;
+            case IncidentSource.STAFF_INSPECTION:
+              bikeLocked = true;
+              severity = IncidentSeverity.HIGH;
+              break;
+            default:
+              bikeLocked = false;
+              severity = IncidentSeverity.LOW;
+              break;
           }
 
           // Check station exists
