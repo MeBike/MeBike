@@ -29,6 +29,9 @@ import { selectAgencyRequestRow, toAgencyRequestRow } from "./agency-request.map
 
 export type AgencyRequestRepo = {
   readonly findById: (id: string) => Effect.Effect<Option.Option<AgencyRequestRow>, AgencyRequestRepositoryError>;
+  readonly findAgencyAccountRecoveryEmail: (
+    createdAgencyUserId: string,
+  ) => Effect.Effect<Option.Option<string>, AgencyRequestRepositoryError>;
   readonly list: (filter?: AgencyRequestFilter) => Effect.Effect<readonly AgencyRequestRow[], AgencyRequestRepositoryError>;
   readonly listWithOffset: (
     filter: AgencyRequestFilter,
@@ -168,6 +171,31 @@ export function makeAgencyRequestRepository(
         try: () => client.agencyRequest.findUnique({ where: { id }, select: selectAgencyRequestRow }),
         catch: cause => new AgencyRequestRepositoryError({ operation: "findById", cause }),
       }).pipe(Effect.map(row => Option.fromNullable(row).pipe(Option.map(toAgencyRequestRow)))),
+
+    findAgencyAccountRecoveryEmail: createdAgencyUserId =>
+      Effect.tryPromise({
+        try: () =>
+          client.agencyRequest.findFirst({
+            where: {
+              createdAgencyUserId,
+              status: AgencyRequestStatus.APPROVED,
+            },
+            orderBy: [
+              { reviewedAt: "desc" },
+              { createdAt: "desc" },
+            ],
+            select: {
+              requesterEmail: true,
+            },
+          }),
+        catch: cause =>
+          new AgencyRequestRepositoryError({
+            operation: "findAgencyAccountRecoveryEmail",
+            cause,
+          }),
+      }).pipe(
+        Effect.map(row => Option.fromNullable(row?.requesterEmail)),
+      ),
 
     list: (filter = {}) =>
       Effect.tryPromise({

@@ -9,6 +9,7 @@ import type { UserCommandRepo } from "@/domain/users/repository/user-command.rep
 import type { UserQueryRepo } from "@/domain/users/repository/user-query.repository";
 import type { PrismaClient } from "generated/prisma/client";
 
+import { hasActiveAgencyAccess } from "@/domain/auth/agency-account-access";
 import { env } from "@/config/env";
 import { UserCommandRepository } from "@/domain/users/repository/user-command.repository";
 import { UserQueryRepository } from "@/domain/users/repository/user-query.repository";
@@ -45,6 +46,8 @@ import {
   requireJwtSecret,
 } from "../jwt";
 import { generateOtp } from "../otp";
+import { AgencyRequestRepository } from "../../agency-requests/repository/agency-request.repository";
+import type { AgencyRequestRepo } from "../../agency-requests/repository/agency-request.repository";
 import { AuthEventRepository } from "../repository/auth-event.repository";
 import { AuthRepository } from "../repository/auth.repository";
 
@@ -142,14 +145,30 @@ type AuthServiceDeps = {
   authEventRepo: AuthEventRepo;
   userQueryRepo: UserQueryRepo;
   userCommandRepo: UserCommandRepo;
+  agencyRequestRepo: AgencyRequestRepo;
   client: PrismaClient;
 };
+
+function resolveResetPasswordDeliveryEmail(
+  agencyRequestRepo: AgencyRequestRepo,
+  user: UserRow,
+) {
+  if (user.role !== "AGENCY") {
+    return Effect.succeed(user.email);
+  }
+
+  return agencyRequestRepo.findAgencyAccountRecoveryEmail(user.id).pipe(
+    Effect.map(recoveryEmailOpt =>
+      Option.getOrElse(recoveryEmailOpt, () => user.email)),
+  );
+}
 
 export function makeAuthService({
   authRepo,
   authEventRepo,
   userQueryRepo,
   userCommandRepo,
+  agencyRequestRepo,
   client,
 }: AuthServiceDeps): AuthService {
   const sendVerifyEmail: AuthService["sendVerifyEmail"] = ({ userId, email: addr, fullName }) =>
@@ -208,6 +227,10 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidCredentials({}));
       }
 
+      if (!hasActiveAgencyAccess(user)) {
+        return yield* Effect.fail(new InvalidCredentials({}));
+      }
+
       const sessionId = uuidv7();
       const tokens = makeTokensForUser(user, sessionId);
       const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
@@ -245,6 +268,10 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidRefreshToken({}));
       }
       const user = userOpt.value;
+
+      if (!hasActiveAgencyAccess(user)) {
+        return yield* Effect.fail(new InvalidRefreshToken({}));
+      }
 
       const newSessionId = uuidv7();
       const tokens = makeTokensForUser(user, newSessionId);
@@ -321,12 +348,18 @@ export function makeAuthService({
         return;
       }
       const user = userOpt.value;
+      const deliveryEmail = yield* resolveResetPasswordDeliveryEmail(
+        agencyRequestRepo,
+        user,
+      ).pipe(
+        Effect.catchTag("AgencyRequestRepositoryError", err => Effect.die(err)),
+      );
 
       const otp = generateOtp();
       const expiresAt = new Date(Date.now() + RESET_OTP_TTL_MS);
       const record: EmailOtpRecord = {
         userId: user.id,
-        email: addr,
+        email: deliveryEmail,
         kind: "reset-password",
         otp,
         expiresAt,
@@ -344,7 +377,7 @@ export function makeAuthService({
         type: JobTypes.EmailSend,
         payload: {
           version: 1,
-          to: addr,
+          to: deliveryEmail,
           kind: "auth.resetOtp",
           fullName: user.fullname,
           otp,
@@ -363,12 +396,18 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidOtp({ retriable: false }));
       }
       const user = userOpt.value;
+      const deliveryEmail = yield* resolveResetPasswordDeliveryEmail(
+        agencyRequestRepo,
+        user,
+      ).pipe(
+        Effect.catchTag("AgencyRequestRepositoryError", err => Effect.die(err)),
+      );
 
       const verification = yield* authRepo.verifyEmailOtpAttempt({
         userId: user.id,
         kind: "reset-password",
         otp,
-        email: addr,
+        email: deliveryEmail,
       }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
 
       if (verification !== "valid") {
@@ -439,12 +478,14 @@ const makeAuthServiceEffect = Effect.gen(function* () {
   const authEventRepo = yield* AuthEventRepository;
   const userQueryRepo = yield* UserQueryRepository;
   const userCommandRepo = yield* UserCommandRepository;
+  const agencyRequestRepo = yield* AgencyRequestRepository;
   const { client } = yield* Prisma;
   return makeAuthService({
     authRepo,
     authEventRepo,
     userQueryRepo,
     userCommandRepo,
+    agencyRequestRepo,
     client,
   });
 });

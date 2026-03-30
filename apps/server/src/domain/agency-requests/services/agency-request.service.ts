@@ -261,6 +261,14 @@ function makeAgencyRequestService(
             }),
           ),
         ),
+        Effect.catchTag("StationRoleAssignmentLimitExceeded", (err) =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createAgencyUser",
+              cause: err,
+            }),
+          ),
+        ),
         Effect.catchTag("PrismaTransactionError", (err) =>
           Effect.fail(
             new AgencyRequestRepositoryErrorData({
