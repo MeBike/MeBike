@@ -5,15 +5,35 @@ import { borderWidths, elevations } from "@theme/metrics";
 export const AppCard = styled(YStack, {
   backgroundColor: "$surfaceDefault",
   borderRadius: "$3",
-  borderWidth: borderWidths.subtle,
-  borderColor: "$borderSubtle",
+  borderWidth: borderWidths.none,
+  borderColor: "transparent",
   padding: "$5",
-  shadowColor: "$shadowColor",
-  shadowOffset: elevations.medium.shadowOffset,
-  shadowOpacity: elevations.medium.shadowOpacity,
-  shadowRadius: elevations.medium.shadowRadius,
-  elevation: elevations.medium.elevation,
+  shadowColor: "transparent",
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0,
+  shadowRadius: 0,
+  elevation: 0,
   variants: {
+    chrome: {
+      card: {
+        borderWidth: borderWidths.subtle,
+        borderColor: "$borderSubtle",
+        shadowColor: "$shadowColor",
+        shadowOffset: elevations.medium.shadowOffset,
+        shadowOpacity: elevations.medium.shadowOpacity,
+        shadowRadius: elevations.medium.shadowRadius,
+        elevation: elevations.medium.elevation,
+      },
+      flat: {
+        borderWidth: borderWidths.none,
+        borderColor: "transparent",
+        shadowColor: "transparent",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        elevation: 0,
+      },
+    },
     tone: {
       default: {
         backgroundColor: "$surfaceDefault",
@@ -60,6 +80,7 @@ export const AppCard = styled(YStack, {
     },
   } as const,
   defaultVariants: {
+    chrome: "card",
     tone: "default",
     size: "default",
   },

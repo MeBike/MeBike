@@ -1,142 +1,145 @@
 import type { UserDetail } from "@services/users/user-service";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const styles = StyleSheet.create({
-  header: {
-    paddingTop: 0,
-    paddingBottom: 38,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    marginBottom: 8,
-    alignItems: "center",
-    elevation: 8,
-  },
-  backButton: {
-    position: "absolute",
-    top: 10,
-    left: 16,
-    zIndex: 12,
-    borderRadius: 30,
-    padding: 6,
-  },
-  headerContent: {
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 6,
-  },
-  headerSubtitle: {
-    fontSize: 15,
-    color: "#e0eaff",
-    marginBottom: 18,
-    fontWeight: "500",
-  },
-  verificationBadge: {
-    position: "absolute",
-    bottom: 10,
-    right: 0,
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    padding: 2,
-  },
-});
+import { LinearGradient } from "expo-linear-gradient";
+import { Image, Pressable } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths, radii, spaceScale, spacingRules } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 
 type ProfileHeaderProps = {
   profile: UserDetail;
   completedTrips: number;
   isLoadingTrips: boolean;
   topInset: number;
-  canGoBack: boolean;
-  onBack: () => void;
+  onVerifyEmail: () => void;
   formatDate: (dateString: string) => string;
 };
+
+const avatarSize = 92;
+const verificationBadgeSize = 28;
 
 function ProfileHeader({
   profile,
   completedTrips,
   isLoadingTrips,
   topInset,
-  canGoBack,
-  onBack,
+  onVerifyEmail,
   formatDate,
 }: ProfileHeaderProps) {
+  const theme = useTheme();
+  const memberSince = formatDate(profile.createdAt || profile.updatedAt);
+  const isVerified = profile.verify === "VERIFIED";
+
   return (
     <LinearGradient
-      colors={["#0066FF", "#00B4D8"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+      colors={[theme.actionPrimary.val, theme.actionSecondary.val]}
+      end={{ x: 0.9, y: 1 }}
+      start={{ x: 0.1, y: 0 }}
       style={{
-        ...styles.header,
-        paddingTop: topInset + 32,
+        borderBottomLeftRadius: radii.xxl + spaceScale[1],
+        borderBottomRightRadius: radii.xxl + spaceScale[1],
+        paddingTop: topInset + spacingRules.hero.paddingTop,
+        paddingHorizontal: spacingRules.hero.paddingX,
+        paddingBottom: spaceScale[8],
       }}
     >
-      {canGoBack && (
-        <TouchableOpacity
-          style={[styles.backButton, { top: topInset + 10 }]}
-          onPress={onBack}
-        >
-          <Ionicons name="chevron-back" size={26} color="#fff" />
-        </TouchableOpacity>
-      )}
-      <View style={styles.headerContent}>
-        <View>
-          <Image
-            source={
-              profile.avatar
-                ? { uri: profile.avatar }
-                : require("../../../assets/avatar2.png")
-            }
-            style={{
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              borderWidth: 4,
-              borderColor: "#fff",
-              marginBottom: 14,
-              backgroundColor: "#EBF3FB",
-              shadowColor: "#000",
-              shadowOpacity: 0.14,
-              shadowRadius: 10,
-            }}
-          />
-          {profile.verify === "VERIFIED" && (
-            <View style={styles.verificationBadge}>
-              <Ionicons name="checkmark-circle" size={28} color="#10B981" />
-            </View>
-          )}
-        </View>
+      <YStack gap="$5">
+        <XStack alignItems="center" gap="$5">
+          <XStack height={avatarSize} position="relative" width={avatarSize}>
+            <Image
+              source={profile.avatar ? { uri: profile.avatar } : require("../../../assets/avatar2.png")}
+              style={{
+                width: avatarSize,
+                height: avatarSize,
+                borderRadius: avatarSize / 2,
+                borderWidth: 4,
+                borderColor: theme.surfaceDefault.val,
+                backgroundColor: theme.surfaceMuted.val,
+              }}
+            />
 
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {profile.fullName}
-        </Text>
-        <Text style={styles.headerSubtitle} numberOfLines={1}>
-          Thành viên từ
-          {" "}
-          {formatDate(profile.updatedAt)}
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 36,
-          }}
-        >
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: 17, fontWeight: "700", color: "#fff" }}>
-              {isLoadingTrips ? "—" : completedTrips}
-            </Text>
-            <Text style={{ fontSize: 13, color: "#e0eaff", marginTop: 2 }}>
-              Chuyến đi
-            </Text>
-          </View>
-        </View>
-      </View>
+            {isVerified
+              ? (
+                  <XStack
+                    alignItems="center"
+                    backgroundColor={theme.statusSuccess.val}
+                    borderColor={theme.actionPrimary.val}
+                    borderRadius="$round"
+                    borderWidth={3}
+                    bottom={0}
+                    height={verificationBadgeSize}
+                    justifyContent="center"
+                    position="absolute"
+                    right={-2}
+                    width={verificationBadgeSize}
+                  >
+                    <IconSymbol color={theme.onStatusSuccess.val} name="checkmark" size={14} />
+                  </XStack>
+                )
+              : null}
+          </XStack>
+
+          <YStack flex={1} gap="$2" minWidth={0}>
+            <AppText numberOfLines={1} tone="inverted" variant="title">
+              {profile.fullName || "Người dùng MeBike"}
+            </AppText>
+
+            <AppText
+              numberOfLines={1}
+              opacity={0.72}
+              style={{ fontStyle: "italic" }}
+              tone="inverted"
+              variant="body"
+            >
+              Thành viên từ {memberSince}
+            </AppText>
+
+            <XStack alignItems="center" flexWrap="wrap" gap="$3">
+              <XStack
+                alignItems="center"
+                backgroundColor="$overlayGlass"
+                borderColor="$overlayGlass"
+                borderRadius="$4"
+                borderWidth={borderWidths.subtle}
+                gap="$2"
+                paddingHorizontal="$4"
+                paddingVertical="$2"
+              >
+                <AppText tone="inverted" variant="headline">
+                  {isLoadingTrips ? "-" : String(completedTrips)}
+                </AppText>
+                <AppText opacity={0.82} tone="inverted" variant="eyebrow">
+                  Chuyến đi
+                </AppText>
+              </XStack>
+
+              {!isVerified
+                ? (
+                    <Pressable onPress={onVerifyEmail} style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}>
+                      <XStack
+                        alignItems="center"
+                        backgroundColor="$overlayGlass"
+                        borderColor="$overlayGlass"
+                        borderRadius="$4"
+                        borderWidth={borderWidths.subtle}
+                        gap="$2"
+                        paddingHorizontal="$4"
+                        paddingVertical="$2"
+                      >
+                        <IconSymbol color={theme.onSurfaceBrand.val} name="envelope" size={16} />
+                        <AppText tone="inverted" variant="badgeLabel">
+                          Xác thực email
+                        </AppText>
+                      </XStack>
+                    </Pressable>
+                  )
+                : null}
+            </XStack>
+          </YStack>
+        </XStack>
+      </YStack>
     </LinearGradient>
   );
 }

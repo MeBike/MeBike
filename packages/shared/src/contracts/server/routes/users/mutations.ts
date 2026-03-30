@@ -368,6 +368,14 @@ export const adminUpdateUserRoute = createRoute({
                 },
               },
             },
+            AssignManagerToStation: {
+              value: {
+                role: "MANAGER",
+                orgAssignment: {
+                  stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                },
+              },
+            },
             AssignTechnicianTeam: {
               value: {
                 role: "TECHNICIAN",
@@ -444,7 +452,7 @@ export const adminUpdateUserRoute = createRoute({
       },
     },
     409: {
-      description: "Duplicate email, phone number, or technician team capacity conflict",
+      description: "Duplicate email, phone number, station role conflict, or technician team capacity conflict",
       content: {
         "application/json": {
           schema: UserErrorResponseSchema,
@@ -466,6 +474,14 @@ export const adminUpdateUserRoute = createRoute({
                 error: userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
                 details: {
                   code: UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                },
+              },
+            },
+            StationRoleAssigned: {
+              value: {
+                error: userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
                 },
               },
             },
@@ -513,6 +529,24 @@ export const adminCreateUserRoute = createRoute({
                 avatar: null,
                 location: "Thu Duc, TP.HCM",
                 role: "STAFF",
+                accountStatus: "ACTIVE",
+                verify: "VERIFIED",
+                orgAssignment: {
+                  stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                },
+                nfcCardUid: null,
+              },
+            },
+            ManagerWithStation: {
+              value: {
+                fullname: "Tran Manager",
+                email: "tran.manager@example.com",
+                password: "password123",
+                phoneNumber: "0912345678",
+                username: "tranmanager",
+                avatar: null,
+                location: "Thu Duc, TP.HCM",
+                role: "MANAGER",
                 accountStatus: "ACTIVE",
                 verify: "VERIFIED",
                 orgAssignment: {
@@ -588,7 +622,7 @@ export const adminCreateUserRoute = createRoute({
     401: unauthorizedResponse(),
     403: forbiddenResponse("Admin"),
     409: {
-      description: "Duplicate email or phone number",
+      description: "Duplicate email, phone number, station role conflict, or technician team capacity conflict",
       content: {
         "application/json": {
           schema: UserErrorResponseSchema,
@@ -603,6 +637,22 @@ export const adminCreateUserRoute = createRoute({
               value: {
                 error: userErrorMessages.DUPLICATE_PHONE_NUMBER,
                 details: { code: UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
+              },
+            },
+            StationRoleAssigned: {
+              value: {
+                error: userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                },
+              },
+            },
+            TechnicianTeamFull: {
+              value: {
+                error: userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+                },
               },
             },
           },

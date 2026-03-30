@@ -10,6 +10,7 @@ import type { UserCommandService } from "../user.service.types";
 
 import { InvalidCurrentPassword as InvalidCurrentPasswordError } from "../../domain-errors";
 import {
+  makeValidateStationRoleAssignmentLimit,
   makeValidateTechnicianTeamCapacity,
   normalizeOrgAssignment,
   toOrgAssignmentPatch,
@@ -22,6 +23,7 @@ export function makeUserCommandService(args: {
 }): UserCommandService {
   const { commandRepo, queryRepo } = args;
   const validateTechnicianTeamCapacity = makeValidateTechnicianTeamCapacity(queryRepo);
+  const validateStationRoleAssignmentLimit = makeValidateStationRoleAssignmentLimit(queryRepo);
 
   return {
     create: input =>
@@ -30,6 +32,10 @@ export function makeUserCommandService(args: {
         const orgAssignment = normalizeOrgAssignment(input.orgAssignment) ?? null;
 
         yield* validateOrgAssignmentForRole(role, orgAssignment);
+        yield* validateStationRoleAssignmentLimit({
+          stationId: orgAssignment?.stationId ?? null,
+          role,
+        });
         yield* validateTechnicianTeamCapacity({
           technicianTeamId: orgAssignment?.technicianTeamId ?? null,
         });
@@ -57,6 +63,11 @@ export function makeUserCommandService(args: {
           : (normalizeOrgAssignment(patch.orgAssignment) ?? null);
 
         yield* validateOrgAssignmentForRole(nextRole, nextOrgAssignment);
+        yield* validateStationRoleAssignmentLimit({
+          stationId: nextOrgAssignment?.stationId ?? null,
+          role: nextRole,
+          excludeUserId: id,
+        });
         yield* validateTechnicianTeamCapacity({
           technicianTeamId: nextOrgAssignment?.technicianTeamId ?? null,
           excludeUserId: id,

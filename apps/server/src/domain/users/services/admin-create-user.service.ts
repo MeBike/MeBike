@@ -24,6 +24,7 @@ export function adminCreateUserUseCase(args: {
     | import("../domain-errors").DuplicateUserEmail
     | import("../domain-errors").DuplicateUserPhoneNumber
     | import("../domain-errors").InvalidOrgAssignment
+    | import("../domain-errors").StationRoleAssignmentLimitExceeded
     | import("../domain-errors").TechnicianTeamMemberLimitExceeded,
   UserCommandServiceTag
 > {

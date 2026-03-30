@@ -32,6 +32,12 @@ export class TechnicianTeamMemberLimitExceeded extends Data.TaggedError("Technic
   readonly memberLimit: number;
 }> {}
 
+export class StationRoleAssignmentLimitExceeded extends Data.TaggedError("StationRoleAssignmentLimitExceeded")<{
+  readonly stationId: string;
+  readonly role: "STAFF" | "MANAGER";
+  readonly assignmentLimit: number;
+}> {}
+
 export class UserStatsServiceError extends Data.TaggedError("UserStatsServiceError")<{
   readonly message: string;
   readonly cause?: unknown;

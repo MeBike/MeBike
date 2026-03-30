@@ -6,6 +6,7 @@ import type {
   DuplicateUserPhoneNumber,
   InvalidCurrentPassword,
   InvalidOrgAssignment,
+  StationRoleAssignmentLimitExceeded,
   TechnicianTeamMemberLimitExceeded,
   UserRepositoryError,
 } from "../domain-errors";
@@ -52,6 +53,7 @@ export type UserCommandService = {
     | DuplicateUserEmail
     | DuplicateUserPhoneNumber
     | InvalidOrgAssignment
+    | StationRoleAssignmentLimitExceeded
     | TechnicianTeamMemberLimitExceeded
   >;
   updateProfile: (
@@ -70,6 +72,7 @@ export type UserCommandService = {
     | DuplicateUserEmail
     | DuplicateUserPhoneNumber
     | InvalidOrgAssignment
+    | StationRoleAssignmentLimitExceeded
     | TechnicianTeamMemberLimitExceeded
   >;
   updatePassword: (
