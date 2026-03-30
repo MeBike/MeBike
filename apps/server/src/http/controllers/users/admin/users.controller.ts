@@ -201,6 +201,16 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
             },
             409,
           )),
+        Match.tag("StationRoleAssignmentLimitExceeded", () =>
+          c.json<UsersContracts.UserErrorResponse, 409>(
+            {
+              error: UsersContracts.userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+              },
+            },
+            409,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
@@ -253,6 +263,16 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
               error: UsersContracts.userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
               details: {
                 code: UsersContracts.UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              },
+            },
+            409,
+          )),
+        Match.tag("StationRoleAssignmentLimitExceeded", () =>
+          c.json<UsersContracts.UserErrorResponse, 409>(
+            {
+              error: UsersContracts.userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
               },
             },
             409,

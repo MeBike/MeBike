@@ -3,8 +3,8 @@ import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 
-import { useGetMyTransactionsQuery } from "./query/Wallet/useGetMyTransactionQuery";
-import { useGetMyWalletQuery } from "./query/Wallet/useGetMyWalletQuery";
+import { useGetMyTransactionsQuery } from "./query/wallet/use-get-my-transaction-query";
+import { useGetMyWalletQuery } from "./query/wallet/use-get-my-wallet-query";
 
 type ErrorResponse = {
   response?: {

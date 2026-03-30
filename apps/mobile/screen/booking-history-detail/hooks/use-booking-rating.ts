@@ -140,7 +140,8 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
     submitRating(
       booking.id,
       {
-        rating: ratingValue,
+        bikeScore: ratingValue,
+        stationScore: ratingValue,
         reasonIds: selectedReasons,
         comment: ratingComment.trim() ? ratingComment.trim() : undefined,
       },

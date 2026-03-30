@@ -5,12 +5,13 @@ import { useTheme, YStack } from "tamagui";
 import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useCreateMyReturnSlotMutation } from "@hooks/mutations/rentals/use-create-my-return-slot-mutation";
-import { rentalErrorMessage } from "@services/rentals";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
+
+import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 
 import { BikeList } from "./components/bike-list";
 import { FixedSlotBanner } from "./components/fixed-slot-banner";
@@ -69,7 +70,7 @@ export default function StationDetailScreen() {
           ]);
         },
         onError: (error) => {
-          Alert.alert("Không thể giữ chỗ", rentalErrorMessage(error));
+          Alert.alert("Không thể giữ chỗ", presentRentalError(error));
         },
       },
     );

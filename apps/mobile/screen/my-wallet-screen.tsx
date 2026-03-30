@@ -1,13 +1,14 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Spinner, useTheme, YStack } from "tamagui";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
-import { spaceScale } from "@theme/metrics";
+import { IconSymbol } from "@components/IconSymbol";
+import { iconSizes, spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
@@ -19,6 +20,8 @@ import { useWallet } from "../hooks/wallet/use-wallet";
 import { WalletHeroCard } from "./my-wallet/components/wallet-hero-card";
 import { WalletTopUpCta } from "./my-wallet/components/wallet-top-up-cta";
 import { WalletTransactionRow } from "./my-wallet/components/wallet-transaction-row";
+
+const walletRefreshButtonSize = spaceScale[7];
 
 function MyWalletScreen() {
   const insets = useSafeAreaInsets();
@@ -68,7 +71,7 @@ function MyWalletScreen() {
     return (
       <Screen alignItems="center" inset="wide" justifyContent="center">
         <StatusBar backgroundColor={theme.actionPrimary.val} barStyle="light-content" />
-        <Spinner color="$actionPrimary" size="large" />
+        <ActivityIndicator color={theme.actionPrimary.val} size="large" />
         <AppText align="center" marginTop="$4" tone="muted" variant="bodySmall">
           {wallet.isLoadingWallet ? "Đang tải ví của bạn..." : "Đang tải giao dịch gần đây..."}
         </AppText>
@@ -98,7 +101,7 @@ function MyWalletScreen() {
 
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom + spaceScale[9], 112),
+          paddingBottom: insets.bottom + spaceScale[7],
         }}
         refreshControl={<RefreshControl colors={[theme.actionPrimary.val]} onRefresh={onRefresh} refreshing={refreshing} tintColor={theme.actionPrimary.val} />}
         showsVerticalScrollIndicator={false}
@@ -109,23 +112,39 @@ function MyWalletScreen() {
           <WalletTopUpCta onPress={handleTopUp} />
         </View>
 
-        <YStack gap="$4" paddingHorizontal="$5" paddingTop="$6">
-          <AppText variant="title">
-            Giao dịch gần đây
-          </AppText>
+        <YStack gap="$3" paddingHorizontal="$5" paddingTop="$5">
+          <XStack alignItems="center" justifyContent="space-between">
+            <AppText variant="xlTitle">
+              Giao dịch gần đây
+            </AppText>
+
+            <Pressable onPress={() => void onRefresh()} style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}>
+              <XStack
+                alignItems="center"
+                backgroundColor="$surfaceDefault"
+                borderColor="$borderSubtle"
+                borderRadius="$round"
+                borderWidth={1}
+                height={walletRefreshButtonSize}
+                justifyContent="center"
+                width={walletRefreshButtonSize}
+              >
+                <IconSymbol color={theme.textSecondary.val} name="arrow.clockwise" size={iconSizes.md} />
+              </XStack>
+            </Pressable>
+          </XStack>
 
           {transactions.length > 0
             ? (
-                <AppCard borderRadius="$5" elevated={false} overflow="hidden" padding="$0">
-                  {transactions.map((transaction, index) => (
+                <YStack gap="$2">
+                  {transactions.map(transaction => (
                     <WalletTransactionRow
                       key={transaction.id}
                       item={transaction}
                       onPress={() => handleTransactionPress(transaction)}
-                      showDivider={index < transactions.length - 1}
                     />
                   ))}
-                </AppCard>
+                </YStack>
               )
             : (
                 <AppCard borderRadius="$5" elevated={false} gap="$2" padding="$5">
@@ -140,6 +159,7 @@ function MyWalletScreen() {
             ? (
                 <AppButton
                   alignSelf="center"
+                  borderRadius="$round"
                   loading={wallet.isFetchingNextPageTransactions}
                   onPress={wallet.loadMoreTransactions}
                   tone="ghost"

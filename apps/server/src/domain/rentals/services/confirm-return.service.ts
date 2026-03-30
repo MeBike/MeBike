@@ -9,7 +9,6 @@ import type { RentalRow } from "../models";
 import type { ConfirmRentalReturnInput } from "../types";
 
 import {
-  BikeNotFound,
   InvalidRentalState,
   RentalNotFound,
   ReturnAlreadyConfirmed,
@@ -68,10 +67,6 @@ export function confirmRentalReturnByOperator(
               from: rental.status,
               to: "COMPLETED",
             }));
-          }
-
-          if (!rental.bikeId) {
-            return yield* Effect.fail(new BikeNotFound({ bikeId: "unknown" }));
           }
 
           const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rental.id).pipe(

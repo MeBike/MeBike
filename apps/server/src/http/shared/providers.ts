@@ -104,6 +104,7 @@ export {
   EmailLive,
   ExternalInfraLive,
   FirebaseStorageLive,
+  MapboxRoutingLive,
   PersistenceInfraLive,
   PrismaLive,
   RedisLive,

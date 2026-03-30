@@ -11,7 +11,7 @@ import { ReservationRepositoryError } from "../../domain-errors";
 import { selectReservationRow, toReservationRow } from "../reservation.mappers";
 import {
   pendingHoldWhere,
-  pendingOrLegacyActiveStatusWhere,
+  pendingStatusWhere,
 } from "../reservation.queries";
 
 export type ReservationHoldReadRepo = Pick<
@@ -31,7 +31,7 @@ export function makeReservationHoldReadRepository(
           client.reservation.findFirst({
             where: {
               bikeId,
-              ...pendingOrLegacyActiveStatusWhere(),
+              ...pendingStatusWhere(),
             },
             orderBy: { updatedAt: "desc" },
             select: selectReservationRow,

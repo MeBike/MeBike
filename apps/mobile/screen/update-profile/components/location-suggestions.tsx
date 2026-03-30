@@ -1,36 +1,10 @@
-import { BikeColors } from "@constants/BikeColors";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable } from "react-native";
+import { Separator, YStack } from "tamagui";
+
+import { borderWidths } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 
 import type { TomTomAddressSuggestion } from "../lib/tomtom";
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    marginTop: 10,
-    borderColor: BikeColors.divider,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  item: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: BikeColors.divider,
-  },
-  address: {
-    color: BikeColors.textPrimary,
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  coords: {
-    marginTop: 2,
-    fontSize: 12,
-    color: BikeColors.textSecondary,
-  },
-});
 
 type LocationSuggestionsProps = {
   suggestions: TomTomAddressSuggestion[];
@@ -45,23 +19,27 @@ export function LocationSuggestions({ suggestions, onSelect }: LocationSuggestio
   const items = suggestions.slice(0, 6);
 
   return (
-    <View style={styles.container}>
-      {items.map((item, idx) => (
-        <View key={`${item.address}-${idx}`}>
-          <Pressable style={styles.item} onPress={() => onSelect(item)}>
-            <Text style={styles.address}>{item.address}</Text>
-            <Text style={styles.coords}>
-              (
-              {item.latitude}
-              ,
-              {" "}
-              {item.longitude}
-              )
-            </Text>
+    <YStack
+      backgroundColor="$surfaceDefault"
+      borderColor="$borderSubtle"
+      borderRadius="$3"
+      borderWidth={borderWidths.subtle}
+      marginTop="$2"
+      overflow="hidden"
+    >
+      {items.map((item, index) => (
+        <YStack key={`${item.address}-${index}`}>
+          <Pressable onPress={() => onSelect(item)}>
+            <YStack gap="$1" paddingHorizontal="$4" paddingVertical="$3">
+              <AppText variant="label">{item.address}</AppText>
+              <AppText tone="muted" variant="caption">
+                {`${item.latitude}, ${item.longitude}`}
+              </AppText>
+            </YStack>
           </Pressable>
-          {idx === items.length - 1 ? null : <View style={styles.divider} />}
-        </View>
+          {index === items.length - 1 ? null : <Separator borderColor="$borderSubtle" />}
+        </YStack>
       ))}
-    </View>
+    </YStack>
   );
 }

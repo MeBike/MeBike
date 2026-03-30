@@ -1,29 +1,36 @@
-export type AuthError = ApiAuthError | NetworkAuthError | DecodeAuthError | UnknownAuthError;
+import type { Result } from "@lib/result";
+import type { z } from "zod";
 
-export type AuthErrorCode
-  = | "INVALID_CREDENTIALS"
-    | "INVALID_REFRESH_TOKEN"
-    | "INVALID_OTP"
-    | "DUPLICATE_EMAIL"
-    | "DUPLICATE_PHONE_NUMBER"
-    | "UNKNOWN";
+import { AuthContracts } from "@mebike/shared";
+import {
+  type ServiceError,
+  asNetworkError as asSharedNetworkError,
+  parseServiceError,
+} from "@services/shared/service-error";
 
-export type ApiAuthError = {
-  _tag: "ApiError";
-  code: AuthErrorCode;
-  message?: string;
-};
+export type AuthErrorCode = z.infer<typeof AuthContracts.AuthErrorCodeSchema>;
 
-export type NetworkAuthError = {
-  _tag: "NetworkError";
-  message?: string;
-};
+export type AuthError = ServiceError<AuthErrorCode>;
 
-export type DecodeAuthError = {
-  _tag: "DecodeError";
-};
+export function isAuthErrorCode(code: string): code is AuthErrorCode {
+  return AuthContracts.AuthErrorCodeSchema.safeParse(code).success;
+}
 
-export type UnknownAuthError = {
-  _tag: "UnknownError";
-  message?: string;
-};
+export function isAuthApiError(
+  error: { _tag: string; code?: string },
+): error is Extract<AuthError, { _tag: "ApiError" }> {
+  return error._tag === "ApiError"
+    && typeof error.code === "string"
+    && isAuthErrorCode(error.code);
+}
+
+export async function parseAuthError(response: Response): Promise<AuthError> {
+  return parseServiceError(response, {
+    schema: AuthContracts.AuthErrorResponseSchema,
+    mapCode: code => (code && isAuthErrorCode(code) ? code : null),
+  });
+}
+
+export function asNetworkError(error: unknown): Result<never, Extract<AuthError, { _tag: "NetworkError" }>> {
+  return asSharedNetworkError<Extract<AuthError, { _tag: "NetworkError" }>>(error);
+}

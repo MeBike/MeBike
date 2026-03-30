@@ -4,6 +4,7 @@ import type { PageRequest, PageResult } from "../../shared/pagination";
 import type {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
+  StationRoleAssignmentLimitExceeded,
   TechnicianTeamMemberLimitExceeded,
   UserRepositoryError,
 } from "../domain-errors";
@@ -45,9 +46,23 @@ export type UserQueryRepo = {
     technicianTeamId: string,
     options?: { readonly excludeUserId?: string },
   ) => Effect.Effect<number, UserRepositoryError>;
+  readonly countStationRoleAssignments: (
+    stationId: string,
+    role: "STAFF" | "MANAGER",
+    options?: { readonly excludeUserId?: string },
+  ) => Effect.Effect<number, UserRepositoryError>;
 };
 
 export type UserCommandRepo = {
+  readonly createRegisteredUser: (data: {
+    readonly fullname: string;
+    readonly email: string;
+    readonly passwordHash: string;
+    readonly phoneNumber?: string | null;
+  }) => Effect.Effect<
+    UserRow,
+    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
+  >;
   readonly createUser: (
     data: CreateUserInput,
   ) => Effect.Effect<
@@ -55,6 +70,7 @@ export type UserCommandRepo = {
     UserRepositoryError
     | DuplicateUserEmail
     | DuplicateUserPhoneNumber
+    | StationRoleAssignmentLimitExceeded
     | TechnicianTeamMemberLimitExceeded
   >;
   readonly updateProfile: (
@@ -72,6 +88,7 @@ export type UserCommandRepo = {
     UserRepositoryError
     | DuplicateUserEmail
     | DuplicateUserPhoneNumber
+    | StationRoleAssignmentLimitExceeded
     | TechnicianTeamMemberLimitExceeded
   >;
   readonly updatePassword: (

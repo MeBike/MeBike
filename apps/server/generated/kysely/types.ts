@@ -194,7 +194,6 @@ export const RentalStatus = {
 export type RentalStatus = (typeof RentalStatus)[keyof typeof RentalStatus];
 export const ReservationStatus = {
     PENDING: "PENDING",
-    ACTIVE: "ACTIVE",
     FULFILLED: "FULFILLED",
     CANCELLED: "CANCELLED",
     EXPIRED: "EXPIRED"
@@ -560,7 +559,7 @@ export type Rental = {
     id: string;
     user_id: string;
     reservation_id: string | null;
-    bike_id: string | null;
+    bike_id: string;
     deposit_hold_id: string | null;
     pricing_policy_id: string | null;
     start_station: string;

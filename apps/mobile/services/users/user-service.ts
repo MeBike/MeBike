@@ -6,77 +6,40 @@ import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
+import { StatusCodes } from "http-status-codes";
 
-import type { ApiUserError, UserError } from "./user-error";
+import type { UserError } from "./user-error";
+
+import { asNetworkError, parseUserError } from "./user-error";
 
 export type UserDetail = z.output<typeof UsersContracts.UserDetailSchema>;
 type MeStatus = keyof typeof ServerRoutes.users.me.responses;
 type UpdateMeStatus = keyof typeof ServerRoutes.users.updateMe.responses;
+type UploadMyAvatarStatus = keyof typeof ServerRoutes.users.uploadMyAvatar.responses;
 type RegisterPushTokenStatus = keyof typeof ServerRoutes.users.registerPushToken.responses;
 type UnregisterPushTokenStatus = keyof typeof ServerRoutes.users.unregisterPushToken.responses;
 type UnregisterAllPushTokensStatus = keyof typeof ServerRoutes.users.unregisterAllPushTokens.responses;
 export type UpdateMeRequest = z.output<typeof UsersContracts.UpdateMeRequestSchema>;
 export type RegisterPushTokenRequest = z.output<typeof UsersContracts.RegisterPushTokenRequestSchema>;
 export type PushTokenSummary = z.output<typeof UsersContracts.PushTokenSummarySchema>;
-
-const HTTP_STATUS = {
-  OK: 200,
-  UNAUTHORIZED: 401,
-  NOT_FOUND: 404,
+export type UploadAvatarPayload = {
+  uri: string;
+  name?: string | null;
+  type?: string | null;
 };
 
-function parseUserError(data: unknown): UserError {
-  const unauthorizedSchema
-    = ServerRoutes.users.me.responses[401].content["application/json"].schema;
-  const notFoundSchema
-    = ServerRoutes.users.me.responses[404].content["application/json"].schema;
-
-  const unauthorized = decodeWithSchema(unauthorizedSchema, data);
-  if (unauthorized.ok) {
-    return {
-      _tag: "ApiError",
-      code: unauthorized.value.details.code as ApiUserError["code"],
-      message: unauthorized.value.error,
-    };
+async function decodeResponse<TValue>(
+  response: Response,
+  schema: z.ZodType<TValue>,
+): Promise<Result<TValue, UserError>> {
+  try {
+    const data = await readJson(response);
+    const parsed = decodeWithSchema(schema, data);
+    return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
   }
-
-  const notFound = decodeWithSchema(notFoundSchema, data);
-  if (notFound.ok) {
-    return {
-      _tag: "ApiError",
-      code: notFound.value.details.code as ApiUserError["code"],
-      message: notFound.value.error,
-    };
+  catch {
+    return err({ _tag: "DecodeError" });
   }
-
-  return { _tag: "DecodeError" };
-}
-
-function parsePushTokenError(data: unknown): UserError {
-  const unauthorizedSchema
-    = ServerRoutes.users.registerPushToken.responses[401].content["application/json"].schema;
-  const badRequestSchema
-    = ServerRoutes.users.registerPushToken.responses[400].content["application/json"].schema;
-
-  const unauthorized = decodeWithSchema(unauthorizedSchema, data);
-  if (unauthorized.ok) {
-    return {
-      _tag: "ApiError",
-      code: unauthorized.value.details.code as ApiUserError["code"],
-      message: unauthorized.value.error,
-    };
-  }
-
-  const badRequest = decodeWithSchema(badRequestSchema, data);
-  if (badRequest.ok) {
-    return {
-      _tag: "ApiError",
-      code: badRequest.value.details.code as ApiUserError["code"],
-      message: badRequest.value.error,
-    };
-  }
-
-  return { _tag: "DecodeError" };
 }
 
 export const userService = {
@@ -88,26 +51,19 @@ export const userService = {
 
       const status = response.status as MeStatus | number;
       switch (status) {
-        case HTTP_STATUS.OK: {
-          const data = await readJson(response);
+        case StatusCodes.OK: {
           const okSchema = ServerRoutes.users.me.responses[200].content["application/json"].schema;
-          const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+          return decodeResponse(response, okSchema as z.ZodType<UserDetail>);
         }
-        case HTTP_STATUS.UNAUTHORIZED:
-        case HTTP_STATUS.NOT_FOUND: {
-          const data = await readJson(response);
-          return err(parseUserError(data));
-        }
+        case StatusCodes.UNAUTHORIZED:
+        case StatusCodes.NOT_FOUND:
+          return err(await parseUserError(response));
         default:
           return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
       }
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -122,62 +78,57 @@ export const userService = {
 
       const status = response.status as UpdateMeStatus | number;
       switch (status) {
-        case HTTP_STATUS.OK: {
-          const data = await readJson(response);
+        case StatusCodes.OK: {
           const okSchema = ServerRoutes.users.updateMe.responses[200].content["application/json"].schema;
-          const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+          return decodeResponse(response, okSchema as z.ZodType<UserDetail>);
         }
-        case HTTP_STATUS.UNAUTHORIZED:
-        case HTTP_STATUS.NOT_FOUND:
-        case 409: {
-          const data = await readJson(response);
-
-          const unauthorizedSchema
-            = ServerRoutes.users.updateMe.responses[401].content["application/json"].schema;
-          const notFoundSchema
-            = ServerRoutes.users.updateMe.responses[404].content["application/json"].schema;
-          const conflictSchema
-            = ServerRoutes.users.updateMe.responses[409].content["application/json"].schema;
-
-          const unauthorized = decodeWithSchema(unauthorizedSchema, data);
-          if (unauthorized.ok) {
-            return err({
-              _tag: "ApiError",
-              code: unauthorized.value.details.code as ApiUserError["code"],
-              message: unauthorized.value.error,
-            });
-          }
-
-          const notFound = decodeWithSchema(notFoundSchema, data);
-          if (notFound.ok) {
-            return err({
-              _tag: "ApiError",
-              code: notFound.value.details.code as ApiUserError["code"],
-              message: notFound.value.error,
-            });
-          }
-
-          const conflict = decodeWithSchema(conflictSchema, data);
-          if (conflict.ok) {
-            return err({
-              _tag: "ApiError",
-              code: conflict.value.details.code as ApiUserError["code"],
-              message: conflict.value.error,
-            });
-          }
-
-          return err({ _tag: "DecodeError" });
-        }
+        case StatusCodes.UNAUTHORIZED:
+        case StatusCodes.NOT_FOUND:
+        case StatusCodes.CONFLICT:
+          return err(await parseUserError(response));
         default:
           return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
       }
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
+      return asNetworkError(error);
+    }
+  },
+
+  uploadMyAvatar: async (
+    payload: UploadAvatarPayload,
+  ): Promise<Result<UserDetail, UserError>> => {
+    try {
+      const formData = new FormData();
+      formData.append("avatar", {
+        uri: payload.uri,
+        name: payload.name ?? "avatar.jpg",
+        type: payload.type ?? "image/jpeg",
+      } as never);
+
+      const response = await kyClient.put(routePath(ServerRoutes.users.uploadMyAvatar), {
+        body: formData,
+        throwHttpErrors: false,
       });
+
+      const status = response.status as UploadMyAvatarStatus | number;
+      switch (status) {
+        case StatusCodes.OK: {
+          const okSchema = ServerRoutes.users.uploadMyAvatar.responses[200].content["application/json"].schema;
+          return decodeResponse(response, okSchema as z.ZodType<UserDetail>);
+        }
+        case StatusCodes.BAD_REQUEST:
+        case StatusCodes.UNAUTHORIZED:
+        case StatusCodes.NOT_FOUND:
+        case StatusCodes.REQUEST_TOO_LONG:
+        case StatusCodes.SERVICE_UNAVAILABLE:
+          return err(await parseUserError(response));
+        default:
+          return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
+      }
+    }
+    catch (error) {
+      return asNetworkError(error);
     }
   },
 
@@ -192,27 +143,19 @@ export const userService = {
 
       const status = response.status as RegisterPushTokenStatus | number;
       switch (status) {
-        case HTTP_STATUS.OK: {
-          const data = await readJson(response);
-          const okSchema = ServerRoutes.users.registerPushToken.responses[200]
-            .content["application/json"].schema;
-          const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        case StatusCodes.OK: {
+          const okSchema = ServerRoutes.users.registerPushToken.responses[200].content["application/json"].schema;
+          return decodeResponse(response, okSchema as z.ZodType<PushTokenSummary>);
         }
-        case HTTP_STATUS.UNAUTHORIZED:
-        case 400: {
-          const data = await readJson(response);
-          return err(parsePushTokenError(data));
-        }
+        case StatusCodes.UNAUTHORIZED:
+        case StatusCodes.BAD_REQUEST:
+          return err(await parseUserError(response));
         default:
           return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
       }
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -225,22 +168,17 @@ export const userService = {
 
       const status = response.status as UnregisterPushTokenStatus | number;
       switch (status) {
-        case 204:
+        case StatusCodes.NO_CONTENT:
           return ok(undefined);
-        case HTTP_STATUS.UNAUTHORIZED:
-        case 400: {
-          const data = await readJson(response);
-          return err(parsePushTokenError(data));
-        }
+        case StatusCodes.UNAUTHORIZED:
+        case StatusCodes.BAD_REQUEST:
+          return err(await parseUserError(response));
         default:
           return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
       }
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -252,21 +190,16 @@ export const userService = {
 
       const status = response.status as UnregisterAllPushTokensStatus | number;
       switch (status) {
-        case 204:
+        case StatusCodes.NO_CONTENT:
           return ok(undefined);
-        case HTTP_STATUS.UNAUTHORIZED: {
-          const data = await readJson(response);
-          return err(parsePushTokenError(data));
-        }
+        case StatusCodes.UNAUTHORIZED:
+          return err(await parseUserError(response));
         default:
           return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
       }
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 };

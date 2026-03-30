@@ -13,7 +13,7 @@ import type { ReservationRepo } from "../reservation.repository.types";
 import { ReservationRepositoryError } from "../../domain-errors";
 import { selectReservationRow, toReservationRow } from "../reservation.mappers";
 import {
-  pendingOrLegacyActiveStatusWhere,
+  pendingStatusWhere,
   toReservationOrderBy,
   toReservationWhereForUser,
 } from "../reservation.queries";
@@ -21,7 +21,6 @@ import {
 export type ReservationUserReadRepo = Pick<
   ReservationRepo,
   | "findLatestPendingOrActiveByUserId"
-  | "findActiveByUserId"
   | "findNextUpcomingByUserId"
   | "listForUser"
 >;
@@ -65,7 +64,7 @@ export function makeReservationUserReadRepository(
           client.reservation.findFirst({
             where: {
               userId,
-              ...pendingOrLegacyActiveStatusWhere(),
+              ...pendingStatusWhere(),
             },
             orderBy: { updatedAt: "desc" },
             select: selectReservationRow,
@@ -73,27 +72,6 @@ export function makeReservationUserReadRepository(
         catch: err =>
           new ReservationRepositoryError({
             operation: "findLatestPendingOrActiveByUserId",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toReservationRow)),
-        ),
-      ),
-
-    findActiveByUserId: userId =>
-      Effect.tryPromise({
-        try: () =>
-          client.reservation.findFirst({
-            where: {
-              userId,
-              status: ReservationStatus.ACTIVE,
-            },
-            select: selectReservationRow,
-          }),
-        catch: err =>
-          new ReservationRepositoryError({
-            operation: "findActiveByUserId",
             cause: err,
           }),
       }).pipe(

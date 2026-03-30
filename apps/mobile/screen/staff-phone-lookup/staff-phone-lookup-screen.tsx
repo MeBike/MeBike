@@ -3,7 +3,6 @@ import type { StackNavigationProp } from "@react-navigation/stack";
 import { useStaffActiveRentalsByPhone } from "@hooks/query/rentals/use-staff-active-rentals-by-phone";
 import { useStationActions } from "@hooks/useStationAction";
 import { useNavigation } from "@react-navigation/native";
-import { rentalErrorMessage } from "@services/rentals";
 import { formatVietnamDateTime } from "@utils/date";
 import React, { useMemo, useState } from "react";
 import {
@@ -19,6 +18,7 @@ import {
 import type { RootStackParamList } from "@/types/navigation";
 import type { RentalListItem } from "@/types/rental-types";
 
+import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 import BookingDetailHeader from "../booking-history-detail/components/BookingDetailHeader";
 import { EmptyState } from "./components/empty-state";
 import { ResultsList } from "./components/results-list";
@@ -108,7 +108,7 @@ export default function StaffPhoneLookupScreen() {
           setLastSearchedPhone(normalized);
         },
         onError: (error) => {
-          Alert.alert("Lỗi tra cứu", rentalErrorMessage(error));
+          Alert.alert("Lỗi tra cứu", presentRentalError(error));
           setSearchResults([]);
           setLastSearchedPhone(normalized);
         },

@@ -98,7 +98,6 @@ export function makeRentalAdminReadRepository(
 
         const where = {
           status: "RENTED",
-          bikeId: { not: null },
           user: { phoneNumber },
         } satisfies PrismaTypes.RentalWhereInput;
 

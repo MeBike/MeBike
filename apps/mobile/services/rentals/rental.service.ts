@@ -1,4 +1,5 @@
 import type { Result } from "@lib/result";
+import type { z } from "zod";
 
 import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
@@ -41,13 +42,29 @@ function toSearchParams(
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
+async function decodeRentalResponse<TRaw, TValue>(
+  response: Response,
+  schema: z.ZodType<TRaw>,
+  map: (value: TRaw) => TValue,
+): Promise<Result<TValue, RentalError>> {
+  try {
+    const data = await readJson(response);
+    const parsed = decodeWithSchema(schema, data);
+    return parsed.ok ? ok(map(parsed.value)) : err({ _tag: "DecodeError" });
+  }
+  catch {
+    return err({ _tag: "DecodeError" });
+  }
+}
+
 async function tryGetBikeSummary(bikeId?: string): Promise<MyRentalResolvedDetail["bike"]> {
   if (!bikeId) {
     return null;
   }
 
   try {
-    return await bikeService.getBikeByIdForAll(bikeId);
+    const result = await bikeService.getBikeByIdForAll(bikeId);
+    return result.ok ? result.value : null;
   }
   catch {
     return null;
@@ -60,7 +77,8 @@ async function tryGetStationSummary(stationId?: string): Promise<MyRentalResolve
   }
 
   try {
-    return await stationService.getStationById(stationId);
+    const result = await stationService.getStationById(stationId);
+    return result.ok ? result.value : null;
   }
   catch {
     return null;
@@ -69,16 +87,17 @@ async function tryGetStationSummary(stationId?: string): Promise<MyRentalResolve
 
 async function tryGetCurrentReturnSlot(rentalId: string): Promise<ReturnSlotReservation | null> {
   try {
-    const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot)
-      .replace("{rentalId}", rentalId)
-      .replace(":rentalId", rentalId);
+    const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot, { rentalId });
 
     const response = await kyClient.get(path, { throwHttpErrors: false });
     if (response.status === StatusCodes.OK) {
       const okSchema = ServerRoutes.rentals.getMyCurrentReturnSlot.responses[200].content["application/json"].schema;
-      const data = await readJson(response);
-      const parsed = decodeWithSchema(okSchema, data);
-      return parsed.ok ? parsed.value.result : null;
+      const result = await decodeRentalResponse(
+        response,
+        okSchema as z.ZodType<{ result: ReturnSlotReservation }>,
+        value => value.result,
+      );
+      return result.ok ? result.value : null;
     }
 
     const error = await parseRentalError(response);
@@ -104,9 +123,7 @@ export const rentalServiceV1 = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.createRental.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(response, okSchema as z.ZodType<RentalWithPrice>, value => value);
       }
 
       return err(await parseRentalError(response));
@@ -125,9 +142,7 @@ export const rentalServiceV1 = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.getMyRentals.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(response, okSchema as z.ZodType<MyRentalListResponse>, value => value);
       }
 
       return err(await parseRentalError(response));
@@ -146,9 +161,7 @@ export const rentalServiceV1 = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.getMyCurrentRentals.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(response, okSchema as z.ZodType<MyRentalListResponse>, value => value);
       }
 
       return err(await parseRentalError(response));
@@ -160,16 +173,12 @@ export const rentalServiceV1 = {
 
   getMyRental: async (rentalId: string): Promise<Result<Rental, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.getMyRental)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.getMyRental, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.getMyRental.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(response, okSchema as z.ZodType<Rental>, value => value);
       }
 
       return err(await parseRentalError(response));
@@ -218,16 +227,16 @@ export const rentalServiceV1 = {
 
   getMyCurrentReturnSlot: async (rentalId: string): Promise<Result<ReturnSlotReservation, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.getMyCurrentReturnSlot, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.getMyCurrentReturnSlot.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: ReturnSlotReservation }>,
+          value => value.result,
+        );
       }
 
       return err(await parseRentalError(response));
@@ -242,9 +251,7 @@ export const rentalServiceV1 = {
     payload: CreateReturnSlotPayload,
   ): Promise<Result<ReturnSlotReservation, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.createMyReturnSlot)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.createMyReturnSlot, { rentalId });
 
       const response = await kyClient.post(path, {
         json: payload,
@@ -252,9 +259,11 @@ export const rentalServiceV1 = {
       });
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.createMyReturnSlot.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: ReturnSlotReservation }>,
+          value => value.result,
+        );
       }
 
       return err(await parseRentalError(response));
@@ -273,9 +282,11 @@ export const rentalServiceV1 = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.getMyRentalCounts.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: RentalCounts }>,
+          value => value.result,
+        );
       }
 
       return err(await parseRentalError(response));
@@ -287,16 +298,12 @@ export const rentalServiceV1 = {
 
   getAdminRentalDetail: async (rentalId: string): Promise<Result<RentalDetail, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.adminGetRental)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.adminGetRental, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.adminGetRental.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(response, okSchema as z.ZodType<RentalDetail>, value => value);
       }
 
       return err(await parseRentalError(response));
@@ -308,16 +315,12 @@ export const rentalServiceV1 = {
 
   getStaffRentalDetail: async (rentalId: string): Promise<Result<RentalDetail, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.staffGetRental)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.rentals.staffGetRental, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.staffGetRental.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(response, okSchema as z.ZodType<RentalDetail>, value => value);
       }
 
       return err(await parseRentalError(response));
@@ -334,9 +337,7 @@ export const rentalServiceV1 = {
     endTime?: string;
   }): Promise<Result<RentalWithPricing, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.endRentalByAdmin)
-        .replace("{rentalId}", args.rentalId)
-        .replace(":rentalId", args.rentalId);
+      const path = routePath(ServerRoutes.rentals.endRentalByAdmin, { rentalId: args.rentalId });
 
       const response = await kyClient.put(path, {
         json: {
@@ -349,9 +350,7 @@ export const rentalServiceV1 = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.endRentalByAdmin.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(response, okSchema as z.ZodType<RentalWithPricing>, value => value);
       }
 
       return err(await parseRentalError(response));
@@ -367,9 +366,7 @@ export const rentalServiceV1 = {
     pageSize?: number;
   }): Promise<Result<RentalListResponse, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.getActiveRentalsByPhone)
-        .replace("{number}", args.phone)
-        .replace(":number", args.phone);
+      const path = routePath(ServerRoutes.rentals.getActiveRentalsByPhone, { number: args.phone });
 
       const response = await kyClient.get(path, {
         searchParams: toSearchParams({
@@ -381,9 +378,7 @@ export const rentalServiceV1 = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.getActiveRentalsByPhone.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeRentalResponse(response, okSchema as z.ZodType<RentalListResponse>, value => value);
       }
 
       return err(await parseRentalError(response));
