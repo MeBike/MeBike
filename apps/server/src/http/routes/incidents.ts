@@ -5,6 +5,7 @@ import { serverRoutes } from "@mebike/shared";
 import { IncidentPublicController } from "../controllers/incidents";
 import { IncidentTechnicianController } from "../controllers/incidents/technican.controller";
 import {
+  requireAuthMiddleware,
   requireTechnicianMiddleware,
   requireTechnicianOrAdminOrUserMiddleware,
 } from "../middlewares/auth";
@@ -28,14 +29,19 @@ export function registerIncidentRoutes(
 
   app.openapi(getIncidentRoute, IncidentPublicController.getIncident);
 
-  app.openapi(
-    incidents.createIncident,
-    IncidentPublicController.createIncident,
-  );
-  app.openapi(
-    incidents.updateIncident,
-    IncidentPublicController.updateIncident,
-  );
+  const createIncidentRoute = {
+    ...incidents.createIncident,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(createIncidentRoute, IncidentPublicController.createIncident);
+
+  const updateIncidentRoute = {
+    ...incidents.updateIncident,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(updateIncidentRoute, IncidentPublicController.updateIncident);
 
   const acceptIncidentRoute = {
     ...incidents.acceptIncident,
