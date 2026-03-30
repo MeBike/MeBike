@@ -1,6 +1,5 @@
-import type { AgencyRequestStatus } from "generated/prisma/client";
-
 import type { PageRequest } from "@/domain/shared/pagination";
+import type { AgencyRequestStatus } from "generated/prisma/client";
 
 export type AgencyRequestActorRef = {
   readonly id: string;

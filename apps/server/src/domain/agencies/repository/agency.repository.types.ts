@@ -1,5 +1,4 @@
-import type { Effect } from "effect";
-import type { Option } from "effect";
+import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 

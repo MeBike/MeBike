@@ -9,8 +9,8 @@ import type { UserCommandRepo } from "@/domain/users/repository/user-command.rep
 import type { UserQueryRepo } from "@/domain/users/repository/user-query.repository";
 import type { PrismaClient } from "generated/prisma/client";
 
-import { hasActiveAgencyAccess } from "@/domain/auth/agency-account-access";
 import { env } from "@/config/env";
+import { hasActiveAgencyAccess } from "@/domain/auth/agency-account-access";
 import { UserCommandRepository } from "@/domain/users/repository/user-command.repository";
 import { UserQueryRepository } from "@/domain/users/repository/user-query.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
@@ -18,6 +18,7 @@ import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
 
+import type { AgencyRequestRepo } from "../../agency-requests/repository/agency-request.repository";
 import type {
   AuthFailure,
 } from "../domain-errors";
@@ -28,6 +29,7 @@ import type { EmailOtpRecord, RefreshTokenPayload } from "../models";
 import type { AuthEventRepo } from "../repository/auth-event.repository";
 import type { AuthRepo } from "../repository/auth.repository";
 
+import { AgencyRequestRepository } from "../../agency-requests/repository/agency-request.repository";
 import {
   OTP_MAX_ATTEMPTS,
   RESET_OTP_TTL_MS,
@@ -46,8 +48,6 @@ import {
   requireJwtSecret,
 } from "../jwt";
 import { generateOtp } from "../otp";
-import { AgencyRequestRepository } from "../../agency-requests/repository/agency-request.repository";
-import type { AgencyRequestRepo } from "../../agency-requests/repository/agency-request.repository";
 import { AuthEventRepository } from "../repository/auth-event.repository";
 import { AuthRepository } from "../repository/auth.repository";
 

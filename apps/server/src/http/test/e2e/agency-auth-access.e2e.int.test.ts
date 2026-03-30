@@ -1,7 +1,10 @@
+import type {
+  UsersContracts,
+} from "@mebike/shared";
+
 import {
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
-  UsersContracts,
 } from "@mebike/shared";
 import { describe, expect, it } from "vitest";
 

@@ -1,6 +1,6 @@
-import type { AgencyRequestStatus } from "generated/prisma/client";
-
 import { Data } from "effect";
+
+import type { AgencyRequestStatus } from "generated/prisma/client";
 
 export class AgencyRequestRepositoryError extends Data.TaggedError("AgencyRequestRepositoryError")<{
   readonly operation: string;

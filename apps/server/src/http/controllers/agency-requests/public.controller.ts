@@ -1,5 +1,4 @@
 import type { RouteHandler } from "@hono/zod-openapi";
-
 import type { AgencyRequestsContracts } from "@mebike/shared";
 
 import { serverRoutes } from "@mebike/shared";

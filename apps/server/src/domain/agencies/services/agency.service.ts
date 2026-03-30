@@ -2,14 +2,7 @@ import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
-import type { CreateAgencyInput } from "../models";
-import type {
-  AgencyFilter,
-  AgencyRow,
-  AgencySortField,
-  UpdateAgencyInput,
-  UpdateAgencyStatusInput,
-} from "../models";
+import type { AgencyFilter, AgencyRow, AgencySortField, CreateAgencyInput, UpdateAgencyInput, UpdateAgencyStatusInput } from "../models";
 import type { AgencyRepo } from "../repository/agency.repository";
 
 import { AgencyNotFound } from "../domain-errors";

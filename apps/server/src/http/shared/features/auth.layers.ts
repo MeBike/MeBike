@@ -1,11 +1,11 @@
 import { Effect, Layer } from "effect";
 
+import { AgencyRequestRepositoryLive } from "@/domain/agency-requests/repository/agency-request.repository";
 import {
   AuthEventRepositoryLive,
   AuthRepositoryLive,
   AuthServiceLive,
 } from "@/domain/auth";
-import { AgencyRequestRepositoryLive } from "@/domain/agency-requests/repository/agency-request.repository";
 import {
   UserCommandRepositoryLive,
   UserQueryRepositoryLive,
