@@ -43,7 +43,7 @@ export type ReservationRepo = {
   ) => Effect.Effect<Option.Option<ReservationExpandedDetailRow>, ReservationRepositoryError>;
 
   /**
-   * Returns the most recently updated reservation with status in (PENDING, compatibility ACTIVE).
+   * Returns the most recently updated pending reservation.
    * This is intentionally NOT "current hold"; use `findPendingHoldBy*Now` for the current one-time hold flow.
    */
   findLatestPendingOrActiveByUserId: (
@@ -51,7 +51,7 @@ export type ReservationRepo = {
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
   /**
-   * Returns the most recently updated reservation with status in (PENDING, compatibility ACTIVE).
+   * Returns the most recently updated pending reservation.
    * This is intentionally NOT "current hold"; use `findPendingHoldBy*Now` for the current one-time hold flow.
    */
   findLatestPendingOrActiveByBikeId: (
@@ -84,14 +84,6 @@ export type ReservationRepo = {
   countPendingByStationId: (
     stationId: string,
   ) => Effect.Effect<number, ReservationRepositoryError>;
-
-  /**
-   * EN: Find ACTIVE reservation by user id.
-   * VI: Tìm reservation ACTIVE theo user id.
-   */
-  findActiveByUserId: (
-    userId: string,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
   /**
    * EN: Find a PENDING FIXED_SLOT reservation for a template at a specific start time (bike unassigned).
@@ -153,15 +145,6 @@ export type ReservationRepo = {
   updateStatus: (
     input: UpdateReservationStatusInput,
   ) => Effect.Effect<ReservationRow, ReservationNotFound | ReservationRepositoryError>;
-
-  /**
-   * EN: Expire an ACTIVE reservation by id (idempotent).
-   * VI: Hết hạn reservation ACTIVE theo id (idempotent).
-   */
-  expireActive: (
-    reservationId: string,
-    updatedAt: Date,
-  ) => Effect.Effect<boolean, ReservationRepositoryError>;
 
   /**
    * EN: Expire a single PENDING reservation if endTime < now (idempotent).

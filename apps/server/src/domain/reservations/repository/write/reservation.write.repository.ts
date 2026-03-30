@@ -24,7 +24,6 @@ export type ReservationWriteRepo = Pick<
   | "createReservation"
   | "assignBikeToPendingReservation"
   | "updateStatus"
-  | "expireActive"
   | "expirePendingHold"
   | "markExpiredNow"
 >;
@@ -123,25 +122,6 @@ export function makeReservationWriteRepository(
       }),
 
     updateStatus: input => updateStatusWithClient(client, input),
-
-    expireActive: (reservationId, updatedAt) =>
-      Effect.tryPromise({
-        try: async () => {
-          const result = await client.reservation.updateMany({
-            where: {
-              id: reservationId,
-              status: ReservationStatus.ACTIVE,
-            },
-            data: { status: ReservationStatus.EXPIRED, updatedAt },
-          });
-          return result.count > 0;
-        },
-        catch: err =>
-          new ReservationRepositoryError({
-            operation: "expireActive",
-            cause: err,
-          }),
-      }),
 
     expirePendingHold: (reservationId, now) =>
       Effect.tryPromise({

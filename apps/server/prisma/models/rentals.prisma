@@ -8,7 +8,7 @@ model Rental {
   id              String       @id @default(uuid(7)) @db.Uuid
   userId          String       @map("user_id") @db.Uuid
   reservationId   String?      @unique @map("reservation_id") @db.Uuid
-  bikeId          String?      @map("bike_id") @db.Uuid
+  bikeId          String       @map("bike_id") @db.Uuid
   depositHoldId   String?      @unique @map("deposit_hold_id") @db.Uuid
   pricingPolicyId String?      @map("pricing_policy_id") @db.Uuid
   startStationId  String       @map("start_station") @db.Uuid
@@ -24,7 +24,7 @@ model Rental {
 
   user                    User                     @relation(fields: [userId], references: [id])
   reservation             Reservation?             @relation(fields: [reservationId], references: [id])
-  bike                    Bike?                    @relation(fields: [bikeId], references: [id])
+  bike                    Bike                     @relation(fields: [bikeId], references: [id])
   depositHold             WalletHold?              @relation("RentalDepositHold", fields: [depositHoldId], references: [id])
   pricingPolicy           PricingPolicy?           @relation(fields: [pricingPolicyId], references: [id])
   startStation            Station                  @relation("RentalStartStation", fields: [startStationId], references: [id])

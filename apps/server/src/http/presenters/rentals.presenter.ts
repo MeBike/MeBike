@@ -25,7 +25,7 @@ export function toContractRental(
   return {
     id: row.id,
     userId: row.userId,
-    bikeId: row.bikeId ?? undefined,
+    bikeId: row.bikeId,
     startStation: row.startStationId,
     endStation: row.endStationId ?? undefined,
     startTime: row.startTime.toISOString(),
@@ -45,7 +45,7 @@ export function toContractRentalWithPrice(
   return {
     id: row.id,
     userId: row.userId,
-    bikeId: row.bikeId ?? undefined,
+    bikeId: row.bikeId,
     startStation: row.startStationId,
     endStation: row.endStationId ?? undefined,
     startTime: row.startTime.toISOString(),
@@ -65,7 +65,7 @@ export function toContractAdminRentalListItem(
   return {
     id: item.id,
     user: item.user,
-    bikeId: item.bikeId ?? undefined,
+    bikeId: item.bikeId,
     status: item.status,
     startStation: item.startStationId,
     endStation: item.endStationId ?? undefined,
@@ -82,10 +82,6 @@ export function toContractAdminRentalListItem(
 export function toContractRentalListItem(
   item: AdminRentalListItem,
 ): RentalsContracts.RentalListResponse["data"][number] {
-  if (!item.bikeId) {
-    throw new Error("bikeId is required for rental list item");
-  }
-
   return {
     id: item.id,
     user: item.user,
@@ -120,15 +116,13 @@ export function toContractAdminRentalDetail(
       nfcCardUid: detail.user.nfcCardUid ?? undefined,
       updatedAt: detail.user.updatedAt.toISOString(),
     },
-    bike: detail.bike
-      ? {
-          id: detail.bike.id,
-          chipId: detail.bike.chipId,
-          status: detail.bike.status,
-          supplierId: detail.bike.supplierId ?? undefined,
-          updatedAt: detail.bike.updatedAt.toISOString(),
-        }
-      : null,
+    bike: {
+      id: detail.bike.id,
+      chipId: detail.bike.chipId,
+      status: detail.bike.status,
+      supplierId: detail.bike.supplierId ?? undefined,
+      updatedAt: detail.bike.updatedAt.toISOString(),
+    },
     startStation: {
       id: detail.startStation.id,
       name: detail.startStation.name,

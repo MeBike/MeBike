@@ -132,15 +132,13 @@ export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRe
       nfcCardUid: raw.user.nfcCardUid,
       updatedAt: raw.user.updatedAt,
     },
-    bike: raw.bike
-      ? {
-          id: raw.bike.id,
-          chipId: raw.bike.chipId,
-          status: raw.bike.status,
-          supplierId: raw.bike.supplierId,
-          updatedAt: raw.bike.updatedAt,
-        }
-      : null,
+    bike: {
+      id: raw.bike.id,
+      chipId: raw.bike.chipId,
+      status: raw.bike.status,
+      supplierId: raw.bike.supplierId,
+      updatedAt: raw.bike.updatedAt,
+    },
     startStation: {
       id: raw.startStation.id,
       name: raw.startStation.name,
