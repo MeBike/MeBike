@@ -19,7 +19,6 @@ export type ReservationReadRepo = Pick<
   | "findPendingHoldByUserIdNow"
   | "findPendingHoldByBikeIdNow"
   | "countPendingByStationId"
-  | "findActiveByUserId"
   | "findPendingFixedSlotByTemplateAndStart"
   | "findNextUpcomingByUserId"
   | "listForUser"

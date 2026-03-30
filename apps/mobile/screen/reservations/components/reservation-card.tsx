@@ -1,9 +1,3 @@
-import React from "react";
-import { Pressable, View } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { Reservation } from "@/types/reservation-types";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
@@ -15,6 +9,11 @@ import {
   getReservationStatusLabel,
   getReservationStatusTone,
 } from "@utils/reservation";
+import React from "react";
+import { Pressable, View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { Reservation } from "@/types/reservation-types";
 
 import { formatCurrency } from "../../../utils/reservation-screen-utils";
 
@@ -42,7 +41,7 @@ function getReservationTitle(reservation: Reservation) {
 }
 
 function getReservationStatusIcon(status: Reservation["status"]) {
-  if (status === "ACTIVE") {
+  if (status === "PENDING") {
     return "checkmark.circle" as const;
   }
 

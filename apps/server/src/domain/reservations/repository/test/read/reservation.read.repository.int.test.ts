@@ -60,7 +60,7 @@ describe("reservationRepository read integration", () => {
     expect(Option.isNone(result)).toBe(true);
   });
 
-  it("findLatestPendingOrActiveByUserId returns most recently updated pending/active", async () => {
+  it("findLatestPendingOrActiveByUserId returns most recently updated pending reservation", async () => {
     const user = await kit.createUser();
     const station = await kit.createStation({ name: "Station C" });
     const bikeA = await kit.createBike({ stationId: station.id, status: "AVAILABLE" });
@@ -80,7 +80,7 @@ describe("reservationRepository read integration", () => {
       status: "CANCELLED",
     });
 
-    const active = await kit.fixture.prisma.reservation.create({
+    const pending = await kit.fixture.prisma.reservation.create({
       data: {
         id: uuidv7(),
         userId: user.id,
@@ -90,7 +90,7 @@ describe("reservationRepository read integration", () => {
         startTime: newer,
         endTime: new Date(newer.getTime() + 60 * 60 * 1000),
         prepaid: toPrismaDecimal("0"),
-        status: "ACTIVE",
+        status: "PENDING",
         updatedAt: newer,
       },
       select: { id: true },
@@ -99,7 +99,7 @@ describe("reservationRepository read integration", () => {
     const result = await Effect.runPromise(repo.findLatestPendingOrActiveByUserId(user.id));
 
     expect(Option.isSome(result)).toBe(true);
-    expect(Option.getOrThrow(result).id).toBe(active.id);
+    expect(Option.getOrThrow(result).id).toBe(pending.id);
   });
 
   it("listForAdmin supports global listing with user filters", async () => {

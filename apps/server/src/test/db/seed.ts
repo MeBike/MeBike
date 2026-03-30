@@ -4,7 +4,7 @@ import { sql } from "kysely";
 
 import type { DB } from "generated/kysely/types";
 
-import { authEvents, rentals, stations, users } from "../fixtures/users-stats.seed";
+import { authEvents, bikes, rentals, stations, users } from "../fixtures/users-stats.seed";
 
 export async function seed(db: Kysely<DB>) {
   if (users.length > 0) {
@@ -44,6 +44,10 @@ export async function seed(db: Kysely<DB>) {
         `.compile(db),
       );
     }
+  }
+
+  if (bikes.length > 0) {
+    await db.insertInto("Bike").values(bikes).execute();
   }
 
   if (rentals.length > 0) {

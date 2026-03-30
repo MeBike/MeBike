@@ -41,16 +41,16 @@ export type ReservationService = {
   ) => Effect.Effect<PageResult<ReservationRow>>;
 
   /**
-   * EN: Returns the latest pending/active reservation for a user (Option).
-   * VI: Lấy reservation pending/active mới nhất của user (Option).
+   * EN: Returns the latest pending reservation for a user (Option).
+   * VI: Lấy reservation pending mới nhất của user (Option).
    */
   getLatestPendingOrActiveForUser: (
     userId: string,
   ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   /**
-   * EN: Returns the latest pending/active reservation for a user within a transaction.
-   * VI: Lấy reservation pending/active mới nhất của user trong transaction.
+   * EN: Returns the latest pending reservation for a user within a transaction.
+   * VI: Lấy reservation pending mới nhất của user trong transaction.
    */
   getLatestPendingOrActiveForUserInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,

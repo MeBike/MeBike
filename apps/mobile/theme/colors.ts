@@ -26,7 +26,6 @@ export const bikeStatusColors = {
 
 export const reservationStatusColors = {
   PENDING: lightThemeColors.statusWarning,
-  ACTIVE: lightThemeColors.statusSuccess,
   FULFILLED: lightThemeColors.statusInfo,
   CANCELLED: lightThemeColors.statusDanger,
   EXPIRED: lightThemeColors.textDisabled,
