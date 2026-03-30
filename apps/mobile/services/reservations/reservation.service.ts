@@ -16,6 +16,7 @@ import type {
   ReservationOption,
   ReservationStatus,
 } from "@/types/reservation-types";
+
 import type { ReservationError } from "./reservation-error";
 
 import { asNetworkError, parseReservationError } from "./reservation-error";
@@ -30,7 +31,7 @@ type ReservationListParams = {
   reservationOption?: ReservationOption;
 };
 
-const CURRENT_RESERVATION_STATUSES: ReservationStatus[] = ["PENDING", "ACTIVE"];
+const CURRENT_RESERVATION_STATUSES: ReservationStatus[] = ["PENDING"];
 const RESERVATION_HISTORY_STATUSES: ReservationStatus[] = ["FULFILLED", "CANCELLED", "EXPIRED"];
 
 function toSearchParams(
