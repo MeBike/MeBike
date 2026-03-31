@@ -2,7 +2,6 @@ import type Stripe from "stripe";
 
 import { Effect, Match } from "effect";
 
-import type { UserRepositoryError } from "@/domain/users/domain-errors";
 import type {
   InsufficientWalletBalance,
   WalletHoldRepositoryError,
@@ -37,8 +36,7 @@ export function handleStripeWebhookUseCase(
   | WalletHoldRepositoryError
   | WalletNotFound
   | WalletRepositoryError
-  | InsufficientWalletBalance
-  | UserRepositoryError,
+  | InsufficientWalletBalance,
   | import("@/domain/wallets/topups/services/stripe-topup.service").StripeTopupServiceTag
   | import("@/domain/wallets/withdrawals/repository/withdrawal.repository").WithdrawalRepository
   | import("@/domain/users/services/user-command.service").UserCommandServiceTag

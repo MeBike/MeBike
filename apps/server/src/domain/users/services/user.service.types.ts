@@ -8,7 +8,6 @@ import type {
   InvalidOrgAssignment,
   StationRoleAssignmentLimitExceeded,
   TechnicianTeamMemberLimitExceeded,
-  UserRepositoryError,
 } from "../domain-errors";
 import type {
   CreateUserInput,
@@ -23,33 +22,31 @@ import type {
 export type UserQueryService = {
   getById: (
     id: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   getByEmail: (
     email: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   findByStripeConnectedAccountId: (
     accountId: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   listWithOffset: (
     filter: UserFilter,
     pageReq: PageRequest<UserSortField>,
-  ) => Effect.Effect<PageResult<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<PageResult<UserRow>>;
   searchByQuery: (
     query: string,
-  ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
+  ) => Effect.Effect<readonly UserRow[]>;
   listTechnicianSummaries: () => Effect.Effect<
-    readonly Pick<UserRow, "id" | "fullname">[],
-    UserRepositoryError
+    readonly Pick<UserRow, "id" | "fullname">[]
   >;
   listAvailableTechnicianTeams: (args?: {
     stationId?: string;
-  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[], UserRepositoryError>;
+  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[]>;
 };
 
 export type UserCommandService = {
   create: (input: CreateUserInput) => Effect.Effect<
     UserRow,
-    | UserRepositoryError
     | DuplicateUserEmail
     | DuplicateUserPhoneNumber
     | InvalidOrgAssignment
@@ -61,14 +58,13 @@ export type UserCommandService = {
     patch: UpdateUserProfilePatch,
   ) => Effect.Effect<
     Option.Option<UserRow>,
-    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
+    DuplicateUserEmail | DuplicateUserPhoneNumber
   >;
   updateAdminById: (
     id: string,
     patch: UpdateUserAdminPatch,
   ) => Effect.Effect<
     Option.Option<UserRow>,
-    | UserRepositoryError
     | DuplicateUserEmail
     | DuplicateUserPhoneNumber
     | InvalidOrgAssignment
@@ -78,34 +74,34 @@ export type UserCommandService = {
   updatePassword: (
     id: string,
     passwordHash: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   changePassword: (args: {
     id: string;
     currentPassword: string;
     newPassword: string;
   }) => Effect.Effect<
     Option.Option<UserRow>,
-    UserRepositoryError | InvalidCurrentPassword
+    InvalidCurrentPassword
   >;
   markVerified: (
     id: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   setStripeConnectedAccountId: (
     id: string,
     accountId: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   setStripeConnectedAccountIdIfNull: (
     id: string,
     accountId: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   setStripePayoutsEnabled: (
     id: string,
     enabled: boolean,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   setStripePayoutsEnabledByAccountId: (
     accountId: string,
     enabled: boolean,
-  ) => Effect.Effect<boolean, UserRepositoryError>;
+  ) => Effect.Effect<boolean>;
 };
 
 export type UserService = UserQueryService & UserCommandService;

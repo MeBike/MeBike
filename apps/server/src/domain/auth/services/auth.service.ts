@@ -13,7 +13,6 @@ import { env } from "@/config/env";
 import { AgencyRequestRepositoryError } from "@/domain/agency-requests/domain-errors";
 import { hasActiveAgencyAccess } from "@/domain/auth/agency-account-access";
 import { defectOn } from "@/domain/shared";
-import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { UserCommandRepository } from "@/domain/users/repository/user-command.repository";
 import { UserQueryRepository } from "@/domain/users/repository/user-query.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
@@ -205,9 +204,7 @@ export function makeAuthService({
 
   const loginWithPassword: AuthService["loginWithPassword"] = ({ email: addr, password }) =>
     Effect.gen(function* () {
-      const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userQueryRepo.findByEmail(addr);
       if (Option.isNone(userOpt)) {
         yield* Effect.promise(() =>
           bcrypt.compare(password, INVALID_PASSWORD_DUMMY_HASH),
@@ -256,9 +253,7 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidRefreshToken({}));
       }
 
-      const userOpt = yield* userQueryRepo.findById(session.userId).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userQueryRepo.findById(session.userId);
       if (Option.isNone(userOpt)) {
         return yield* Effect.fail(new InvalidRefreshToken({}));
       }
@@ -316,9 +311,7 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidOtp({ retriable: verification === "invalidRetryable" }));
       }
 
-      const updated = yield* userCommandRepo.markVerified(userId).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const updated = yield* userCommandRepo.markVerified(userId);
       if (Option.isNone(updated)) {
         return yield* Effect.fail(new InvalidOtp({ retriable: false }));
       }
@@ -326,9 +319,7 @@ export function makeAuthService({
 
   const sendResetPassword: AuthService["sendResetPassword"] = ({ email: addr }) =>
     Effect.gen(function* () {
-      const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userQueryRepo.findByEmail(addr);
       if (Option.isNone(userOpt)) {
         return;
       }
@@ -372,9 +363,7 @@ export function makeAuthService({
 
   const verifyResetPasswordOtp: AuthService["verifyResetPasswordOtp"] = ({ email: addr, otp }) =>
     Effect.gen(function* () {
-      const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userQueryRepo.findByEmail(addr);
       if (Option.isNone(userOpt)) {
         return yield* Effect.fail(new InvalidOtp({ retriable: false }));
       }
@@ -421,17 +410,13 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidResetToken({}));
       }
 
-      const userOpt = yield* userQueryRepo.findById(tokenRecord.userId).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userQueryRepo.findById(tokenRecord.userId);
       if (Option.isNone(userOpt) || userOpt.value.email !== tokenRecord.email) {
         return yield* Effect.fail(new InvalidResetToken({}));
       }
 
       const hash = yield* Effect.promise(() => bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS));
-      const updated = yield* userCommandRepo.updatePassword(tokenRecord.userId, hash).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const updated = yield* userCommandRepo.updatePassword(tokenRecord.userId, hash);
       if (Option.isNone(updated)) {
         return yield* Effect.fail(new InvalidResetToken({}));
       }

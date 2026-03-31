@@ -15,7 +15,6 @@ import {
   StationRepository,
   StationRepositoryLive,
 } from "@/domain/stations/repository/station.repository";
-import { UserRepositoryError } from "@/domain/users/domain-errors";
 import {
   UserQueryRepository,
   UserQueryRepositoryLive,
@@ -93,9 +92,7 @@ export async function handleReservationNotifyNearExpiry(
         return { outcome: "SKIPPED", reason: "MISSING_BIKE" as const };
       }
 
-      const userOpt = yield* userRepo.findById(reservation.userId).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userRepo.findById(reservation.userId);
       if (Option.isNone(userOpt)) {
         return { outcome: "SKIPPED", reason: "MISSING_USER" as const };
       }
@@ -255,9 +252,7 @@ export async function handleReservationExpireHold(
         return outcome;
       }
 
-      const userOpt = yield* userRepo.findById(outcome.userId).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userRepo.findById(outcome.userId);
       if (Option.isNone(userOpt)) {
         return { outcome: "SKIPPED" as const, reason: "MISSING_USER" as const };
       }

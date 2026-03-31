@@ -218,13 +218,6 @@ function makeAgencyRequestService(
               cause: err,
             }),
           )),
-        Effect.catchTag("UserRepositoryError", err =>
-          Effect.fail(
-            new AgencyRequestRepositoryErrorData({
-              operation: "approve.createAgencyUser",
-              cause: err,
-            }),
-          )),
         Effect.catchTag("DuplicateUserEmail", err =>
           Effect.fail(
             new AgencyRequestRepositoryErrorData({

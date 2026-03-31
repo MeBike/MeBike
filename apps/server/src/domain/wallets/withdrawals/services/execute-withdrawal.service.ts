@@ -1,6 +1,5 @@
 import { Effect, Match } from "effect";
 
-import type { UserRepositoryError } from "@/domain/users/domain-errors";
 import type {
   WalletHoldRepositoryError,
   WalletRepositoryError,
@@ -84,8 +83,7 @@ export function executeWithdrawalUseCase(
   | WithdrawalRepositoryError
   | WithdrawalUserNotFound
   | WalletHoldRepositoryError
-  | WalletRepositoryError
-  | UserRepositoryError,
+  | WalletRepositoryError,
   Prisma | WithdrawalRepository | UserQueryServiceTag | StripeWithdrawalServiceTag
 > {
   return Effect.gen(function* () {

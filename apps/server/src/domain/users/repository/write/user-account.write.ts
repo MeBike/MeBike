@@ -2,11 +2,13 @@ import { Effect, Option } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { pickDefined } from "@/domain/shared/pick-defined";
 import { UserVerifyStatus } from "generated/prisma/client";
 
 import type { UserRepo } from "../user.repository.types";
 
+import { UserRepositoryError } from "../../domain-errors";
 import { selectUserRow, toUserRow } from "../user.mappers";
 import {
   mapDuplicateUserWriteError,
@@ -58,7 +60,10 @@ export function makeUserAccountWriteRepository(
             email: data.email,
             phoneNumber: data.phoneNumber,
           }) ?? toUserRepositoryError("createRegisteredUser", err),
-      }).pipe(Effect.map(toUserRow)),
+      }).pipe(
+        Effect.map(toUserRow),
+        defectOn(UserRepositoryError),
+      ),
 
     updateProfile: (id, patch) =>
       Effect.gen(function* () {
@@ -92,7 +97,7 @@ export function makeUserAccountWriteRepository(
         });
 
         return Option.some(toUserRow(updated));
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
 
     updatePassword: (id, passwordHash) =>
       Effect.gen(function* () {
@@ -113,7 +118,7 @@ export function makeUserAccountWriteRepository(
         });
 
         return Option.some(toUserRow(updated));
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
 
     markVerified: id =>
       Effect.gen(function* () {
@@ -136,6 +141,6 @@ export function makeUserAccountWriteRepository(
         });
 
         return Option.some(toUserRow(updated));
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
   };
 }

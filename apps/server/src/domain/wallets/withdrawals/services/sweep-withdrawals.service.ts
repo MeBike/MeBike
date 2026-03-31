@@ -2,7 +2,6 @@ import type Stripe from "stripe";
 
 import { Effect, Match } from "effect";
 
-import type { UserRepositoryError } from "@/domain/users/domain-errors";
 import type {
   WalletBalanceConstraint,
   WalletHoldRepositoryError,
@@ -74,8 +73,7 @@ export function sweepWithdrawalsUseCase(
   | WalletNotFound
   | WalletRepositoryError
   | InsufficientWalletBalance
-  | WithdrawalProviderError
-  | UserRepositoryError,
+  | WithdrawalProviderError,
   Prisma
   | WithdrawalRepository
   | UserQueryServiceTag

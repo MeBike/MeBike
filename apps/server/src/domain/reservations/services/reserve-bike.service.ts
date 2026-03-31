@@ -18,7 +18,6 @@ import { makeStationRepository } from "@/domain/stations";
 import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserQueryRepository } from "@/domain/users";
-import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeWalletRepository } from "@/domain/wallets";
 import { InsufficientWalletBalance, WalletNotFound, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
@@ -251,9 +250,7 @@ export function reserveBike(
         {
           const txUserRepo = makeUserQueryRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
-            txUserRepo.findById(reservation.userId).pipe(
-              defectOn(UserRepositoryError),
-            ),
+            txUserRepo.findById(reservation.userId),
             txStationRepo.getById(reservation.stationId),
           ]);
 

@@ -2,7 +2,6 @@ import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Match } from "effect";
 import { uuidv7 } from "uuidv7";
 
-import type { UserRepositoryError } from "@/domain/users/domain-errors";
 import type {
   WalletHoldRepositoryError,
   WalletRepositoryError,
@@ -72,7 +71,6 @@ export function requestWithdrawalUseCase(
   | WalletNotFound
   | WalletHoldRepositoryError
   | WalletRepositoryError
-  | UserRepositoryError
   | WithdrawalRepositoryError
   | WithdrawalUserNotFound,
   Prisma | UserQueryServiceTag
