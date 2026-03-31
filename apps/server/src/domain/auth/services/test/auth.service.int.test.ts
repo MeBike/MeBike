@@ -69,6 +69,8 @@ describe("authService Integration", () => {
     auth.run(service => service.verifyResetPasswordOtp(args));
   const verifyResetPasswordOtpEither = (args: { email: string; otp: string }) =>
     auth.runEither(service => service.verifyResetPasswordOtp(args));
+  const sendResetPassword = (args: { email: string }) =>
+    auth.run(service => service.sendResetPassword(args));
   const resetPassword = (args: { resetToken: string; newPassword: string }) =>
     auth.run(service => service.resetPassword(args));
   const resetPasswordEither = (args: { resetToken: string; newPassword: string }) =>
@@ -107,6 +109,45 @@ describe("authService Integration", () => {
       email: "banned@example.com",
       password: "Password123!",
       accountStatus: "BANNED",
+    });
+
+    const result = await loginWithPasswordEither({
+      email,
+      password: "Password123!",
+    });
+
+    expectLeftTag(result, "InvalidCredentials");
+  });
+
+  it("loginWithPassword rejects agency users whose assigned agency is suspended", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        name: "Suspended Agency",
+        status: "SUSPENDED",
+      },
+    });
+    const userId = uuidv7();
+    const email = `agency+${userId}@accounts.mebike.local`;
+    const passwordHash = await bcrypt.hash("Password123!", 10);
+
+    await fixture.prisma.user.create({
+      data: {
+        id: userId,
+        fullName: "Suspended Agency Admin",
+        email,
+        passwordHash,
+        username: "agency_suspended",
+        role: "AGENCY",
+        accountStatus: "ACTIVE",
+        verifyStatus: "VERIFIED",
+      },
+    });
+    await fixture.prisma.userOrgAssignment.create({
+      data: {
+        id: uuidv7(),
+        userId,
+        agencyId: agency.id,
+      },
     });
 
     const result = await loginWithPasswordEither({
@@ -314,6 +355,77 @@ describe("authService Integration", () => {
     }
     const matches = await bcrypt.compare("NewPassword123!", updated.value.passwordHash);
     expect(matches).toBe(true);
+  });
+
+  it("sendResetPassword for agency accounts delivers otp to the approved request requester email", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        name: "Recovery Agency",
+        status: "ACTIVE",
+      },
+    });
+    const userId = uuidv7();
+    const loginEmail = `agency+${userId}@accounts.mebike.local`;
+    const passwordHash = await bcrypt.hash("Password123!", 10);
+
+    await fixture.prisma.user.create({
+      data: {
+        id: userId,
+        fullName: "Recovery Agency Admin",
+        email: loginEmail,
+        passwordHash,
+        username: "agency_recovery",
+        role: "AGENCY",
+        accountStatus: "ACTIVE",
+        verifyStatus: "VERIFIED",
+      },
+    });
+    await fixture.prisma.userOrgAssignment.create({
+      data: {
+        id: uuidv7(),
+        userId,
+        agencyId: agency.id,
+      },
+    });
+    await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "agency-owner@example.com",
+        agencyName: agency.name,
+        status: "APPROVED",
+        approvedAgencyId: agency.id,
+        createdAgencyUserId: userId,
+      },
+    });
+
+    await sendResetPassword({ email: loginEmail });
+
+    const otpOpt = await Effect.runPromise(auth.authRepo.getEmailOtp({
+      userId,
+      kind: "reset-password",
+    }));
+
+    if (Option.isNone(otpOpt)) {
+      throw new Error("Expected reset OTP to exist for agency account");
+    }
+
+    expect(otpOpt.value.email).toBe("agency-owner@example.com");
+
+    const verified = await verifyResetPasswordOtp({
+      email: loginEmail,
+      otp: otpOpt.value.otp,
+    });
+
+    await resetPassword({
+      resetToken: verified.resetToken,
+      newPassword: "AgencyNewPassword123!",
+    });
+
+    const loginResult = await loginWithPassword({
+      email: loginEmail,
+      password: "AgencyNewPassword123!",
+    });
+
+    expect(loginResult.accessToken).toBeTruthy();
   });
 
   it("verifyResetPasswordOtp rejects invalid otp", async () => {
