@@ -1,10 +1,5 @@
 import { Effect, Match } from "effect";
 
-import type {
-  WalletHoldRepositoryError,
-  WalletRepositoryError,
-} from "@/domain/wallets/domain-errors";
-
 import { env } from "@/config/env";
 import { defectOn } from "@/domain/shared";
 import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
@@ -81,9 +76,7 @@ export function executeWithdrawalUseCase(
   | WithdrawalNotFound
   | WithdrawalProviderError
   | WithdrawalRepositoryError
-  | WithdrawalUserNotFound
-  | WalletHoldRepositoryError
-  | WalletRepositoryError,
+  | WithdrawalUserNotFound,
   Prisma | WithdrawalRepository | UserQueryServiceTag | StripeWithdrawalServiceTag
 > {
   return Effect.gen(function* () {
@@ -253,8 +246,6 @@ function markFailedAndReleaseHold(
 ): Effect.Effect<
   ExecuteWithdrawalOutcome,
   | WithdrawalRepositoryError
-  | WalletHoldRepositoryError
-  | WalletRepositoryError
 > {
   return Effect.gen(function* () {
     const updated = yield* runPrismaTransaction(client, tx =>

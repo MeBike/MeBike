@@ -12,8 +12,7 @@ export type UseSubscriptionFailure
 export type CreateSubscriptionFailure
   = | SubscriptionPendingOrActiveExists
     | import("../../wallets/domain-errors").InsufficientWalletBalance
-    | import("../../wallets/domain-errors").WalletNotFound
-    | import("../../wallets/domain-errors").WalletRepositoryError;
+    | import("../../wallets/domain-errors").WalletNotFound;
 
 export type ActivateSubscriptionFailure
   = | SubscriptionNotFound

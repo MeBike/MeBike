@@ -13,7 +13,6 @@ import { createRentalDepositHoldInTx } from "@/domain/rentals/services/rental-de
 import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/unique-violation-mapper";
 import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
-import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -124,7 +123,7 @@ export function confirmReservation(
         }).pipe(
           Effect.catchTag("WalletNotFound", err => Effect.fail(err)),
           Effect.catchTag("InsufficientWalletBalance", err => Effect.fail(err)),
-          defectOn(WalletRepositoryError, WalletHoldRepositoryError, RentalRepositoryError),
+          defectOn(RentalRepositoryError),
         );
 
         const updatedReservation = yield* reservationService.updateStatus({

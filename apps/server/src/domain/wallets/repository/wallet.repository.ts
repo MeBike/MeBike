@@ -8,6 +8,7 @@ import type {
   WalletTransactionType,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -36,29 +37,29 @@ import {
 } from "./wallet.mappers";
 
 export type WalletRepo = {
-  findByUserId: (userId: string) => Effect.Effect<Option.Option<WalletRow>, WalletRepositoryError>;
+  findByUserId: (userId: string) => Effect.Effect<Option.Option<WalletRow>>;
   findTransactionListOwnerByUserId: (
     userId: string,
-  ) => Effect.Effect<Option.Option<WalletTransactionListOwnerRow>, WalletRepositoryError>;
-  createForUser: (userId: string) => Effect.Effect<WalletRow, WalletUniqueViolation | WalletRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletTransactionListOwnerRow>>;
+  createForUser: (userId: string) => Effect.Effect<WalletRow, WalletUniqueViolation>;
   increaseBalance: (
     input: IncreaseBalanceInput,
-  ) => Effect.Effect<WalletRow, WalletRecordNotFound | WalletUniqueViolation | WalletRepositoryError>;
+  ) => Effect.Effect<WalletRow, WalletRecordNotFound | WalletUniqueViolation>;
   decreaseBalance: (input: DecreaseBalanceInput) => Effect.Effect<
     WalletRow,
-    WalletRecordNotFound | WalletBalanceConstraint | WalletRepositoryError
+    WalletRecordNotFound | WalletBalanceConstraint
   >;
   reserveBalance: (
     input: { readonly walletId: string; readonly amount: bigint },
-  ) => Effect.Effect<boolean, WalletRepositoryError>;
+  ) => Effect.Effect<boolean>;
   releaseReservedBalance: (
     input: { readonly walletId: string; readonly amount: bigint },
-  ) => Effect.Effect<boolean, WalletRepositoryError>;
+  ) => Effect.Effect<boolean>;
   listTransactions: (
     walletId: string,
     pageReq: PageRequest<"createdAt">,
     filter?: { readonly status?: WalletTransactionStatus },
-  ) => Effect.Effect<PageResult<WalletTransactionRow>, WalletRepositoryError>;
+  ) => Effect.Effect<PageResult<WalletTransactionRow>>;
 };
 
 export class WalletRepository extends Context.Tag("WalletRepository")<
@@ -124,7 +125,7 @@ export function makeWalletRepository(
             operation: "findByUserId",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletRepositoryError)),
 
     findTransactionListOwnerByUserId: userId =>
       Effect.tryPromise({
@@ -140,7 +141,7 @@ export function makeWalletRepository(
             operation: "findTransactionListOwnerByUserId",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletRepositoryError)),
 
     createForUser: userId =>
       Effect.tryPromise({
@@ -159,7 +160,7 @@ export function makeWalletRepository(
           }
           return new WalletRepositoryError({ operation: "createForUser", cause: err });
         },
-      }),
+      }).pipe(defectOn(WalletRepositoryError)),
 
     increaseBalance: input =>
       Effect.tryPromise({
@@ -210,7 +211,7 @@ export function makeWalletRepository(
           }
           return new WalletRepositoryError({ operation: "increaseBalance", cause: err });
         },
-      }),
+      }).pipe(defectOn(WalletRepositoryError)),
 
     decreaseBalance: input =>
       Effect.tryPromise({
@@ -266,7 +267,7 @@ export function makeWalletRepository(
           }
           return new WalletRepositoryError({ operation: "decreaseBalance", cause: err });
         },
-      }),
+      }).pipe(defectOn(WalletRepositoryError)),
 
     reserveBalance: input =>
       Effect.tryPromise({
@@ -282,7 +283,7 @@ export function makeWalletRepository(
             operation: "reserveBalance",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletRepositoryError)),
 
     releaseReservedBalance: input =>
       Effect.tryPromise({
@@ -303,7 +304,7 @@ export function makeWalletRepository(
             operation: "releaseReservedBalance",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletRepositoryError)),
 
     listTransactions: (walletId, pageReq, filter) => {
       const { page, pageSize, skip, take } = normalizedPage(pageReq);
@@ -340,7 +341,7 @@ export function makeWalletRepository(
         ]);
 
         return makePageResult(rows.map(toWalletTransactionRow), total, page, pageSize);
-      });
+      }).pipe(defectOn(WalletRepositoryError));
     },
   };
 }

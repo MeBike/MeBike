@@ -4,8 +4,6 @@ import { Effect, Match } from "effect";
 
 import type {
   WalletBalanceConstraint,
-  WalletHoldRepositoryError,
-  WalletRepositoryError,
 } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 
@@ -51,9 +49,7 @@ export function handleStripePayoutWebhookUseCase(
 ): Effect.Effect<
   StripePayoutOutcome,
   | WithdrawalRepositoryError
-  | WalletHoldRepositoryError
   | WalletNotFound
-  | WalletRepositoryError
   | InsufficientWalletBalance,
   Prisma | WithdrawalRepository
 > {

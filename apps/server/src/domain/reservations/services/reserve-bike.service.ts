@@ -16,7 +16,7 @@ import { makeStationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserQueryRepository } from "@/domain/users";
 import { makeWalletRepository } from "@/domain/wallets";
-import { InsufficientWalletBalance, WalletNotFound, WalletRepositoryError } from "@/domain/wallets/domain-errors";
+import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -302,6 +302,5 @@ function debitWallet(
         balance: err.balance,
         attemptedDebit: err.attemptedDebit,
       }))),
-    defectOn(WalletRepositoryError),
   );
 }

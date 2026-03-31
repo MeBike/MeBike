@@ -8,7 +8,7 @@ import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WalletNotFound, WalletRepositoryError } from "../../domain-errors";
+import type { WalletNotFound } from "../../domain-errors";
 import type { IncreaseBalanceInput } from "../../models";
 import type { InvalidTopupRequest, PaymentAttemptRepositoryError, PaymentAttemptUniqueViolation } from "../domain-errors";
 import type {
@@ -65,7 +65,7 @@ export function createStripeCheckoutSessionUseCase(
   input: CreateStripeCheckoutSessionInput,
 ): Effect.Effect<
   StripeTopupSessionResult,
-  InvalidTopupRequest | TopupProviderError | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation | WalletNotFound | WalletRepositoryError,
+  InvalidTopupRequest | TopupProviderError | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation | WalletNotFound,
   StripeTopupServiceTag | WalletServiceTag
 > {
   return Effect.gen(function* () {
@@ -98,7 +98,7 @@ export function createStripePaymentSheetUseCase(
   input: CreateStripePaymentSheetInput,
 ): Effect.Effect<
   StripeTopupPaymentSheetResult,
-  InvalidTopupRequest | TopupProviderError | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation | WalletNotFound | WalletRepositoryError,
+  InvalidTopupRequest | TopupProviderError | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation | WalletNotFound,
   StripeTopupServiceTag | WalletServiceTag
 > {
   return Effect.gen(function* () {

@@ -5,7 +5,6 @@ import type { DuplicateUserEmail, DuplicateUserPhoneNumber } from "@/domain/user
 import { defectOn } from "@/domain/shared";
 import { makeUserCommandRepository } from "@/domain/users";
 import { makeWalletRepository } from "@/domain/wallets";
-import { WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -46,7 +45,6 @@ export function registerUseCase(args: {
         return created;
       })).pipe(
       defectOn(PrismaTransactionError),
-      defectOn(WalletRepositoryError),
       Effect.catchTag("WalletUniqueViolation", err => Effect.die(err)),
     );
     // hmm not transactional, but ok

@@ -1,9 +1,5 @@
 import { Effect, Option } from "effect";
 
-import type {
-  WalletHoldRepositoryError,
-  WalletRepositoryError,
-} from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput, WalletHoldRow } from "@/domain/wallets/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
@@ -35,8 +31,6 @@ export function createRentalDepositHoldInTx(
   WalletHoldRow,
   | WalletNotFound
   | InsufficientWalletBalance
-  | WalletRepositoryError
-  | WalletHoldRepositoryError
 > {
   return Effect.gen(function* () {
     const txWalletRepo = makeWalletRepository(input.tx);
@@ -85,7 +79,7 @@ export function createRentalDepositHoldInTx(
 
 export function releaseRentalDepositHoldInTx(
   input: ReleaseRentalDepositHoldInput,
-): Effect.Effect<boolean, WalletHoldRepositoryError | WalletRepositoryError> {
+): Effect.Effect<boolean> {
   return Effect.gen(function* () {
     const txWalletHoldRepo = makeWalletHoldRepository(input.tx);
     const txWalletRepo = makeWalletRepository(input.tx);
@@ -125,8 +119,6 @@ export function forfeitRentalDepositHoldInTx(
   input: ForfeitRentalDepositHoldInput,
 ): Effect.Effect<
   boolean,
-  | WalletHoldRepositoryError
-  | WalletRepositoryError
   | WalletNotFound
   | InsufficientWalletBalance
 > {

@@ -2,6 +2,9 @@ import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { WalletHoldRepositoryError } from "@/domain/wallets/domain-errors";
+import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
+import { expectDefect } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenActiveRental, givenUserWithWallet } from "@/test/scenarios";
 
@@ -105,5 +108,21 @@ describe("wallet hold repository integration", () => {
     const result = await Effect.runPromise(repo.findByWithdrawalId(uuidv7()));
 
     expect(Option.isNone(result)).toBe(true);
+  });
+
+  it("defects with WalletHoldRepositoryError when database is unreachable", async () => {
+    const broken = makeUnreachablePrisma();
+    try {
+      const brokenRepo = makeWalletHoldRepository(broken.client);
+
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        WalletHoldRepositoryError,
+        { operation: "findById" },
+      );
+    }
+    finally {
+      await broken.stop();
+    }
   });
 });

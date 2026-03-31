@@ -11,13 +11,11 @@ import {
   makePricingPolicyRepository,
 } from "@/domain/pricing";
 import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
-import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
 import { SubscriptionNotFound, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
 import { makeSubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
 import { makeWalletRepository } from "@/domain/wallets";
-import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 
 import type { RentalServiceFailure } from "../domain-errors";
 import type { RentalRow } from "../models";
@@ -143,15 +141,12 @@ export function finalizeRentalReturnInTx(
         }).pipe(
           Effect.catchTag("WalletNotFound", err => Effect.die(err)),
           Effect.catchTag("InsufficientWalletBalance", err => Effect.die(err)),
-          defectOn(WalletRepositoryError, WalletHoldRepositoryError),
         )
         : yield* releaseRentalDepositHoldInTx({
           tx,
           holdId: rental.depositHoldId,
           releasedAt: endTime,
-        }).pipe(
-          defectOn(WalletRepositoryError, WalletHoldRepositoryError),
-        );
+        });
 
       if (!depositHandled) {
         return yield* Effect.die(new Error(
@@ -246,6 +241,5 @@ function debitWallet(
         requiredBalance: Number(err.attemptedDebit),
         currentBalance: Number(err.balance),
       }))),
-    defectOn(WalletRepositoryError),
   );
 }

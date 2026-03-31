@@ -4,9 +4,7 @@ import { Effect, Match } from "effect";
 
 import type {
   InsufficientWalletBalance,
-  WalletHoldRepositoryError,
   WalletNotFound,
-  WalletRepositoryError,
 } from "@/domain/wallets/domain-errors";
 import type { PaymentAttemptRepositoryError, TopupProviderError } from "@/domain/wallets/topups/domain-errors";
 import type { StripeWebhookOutcome as StripeTopupOutcome } from "@/domain/wallets/topups/services/stripe-topup.service";
@@ -33,9 +31,7 @@ export function handleStripeWebhookUseCase(
   | TopupProviderError
   | PaymentAttemptRepositoryError
   | WithdrawalRepositoryError
-  | WalletHoldRepositoryError
   | WalletNotFound
-  | WalletRepositoryError
   | InsufficientWalletBalance,
   | import("@/domain/wallets/topups/services/stripe-topup.service").StripeTopupServiceTag
   | import("@/domain/wallets/withdrawals/repository/withdrawal.repository").WithdrawalRepository

@@ -4,7 +4,6 @@ import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { defectOn } from "@/domain/shared";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
-import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -150,7 +149,6 @@ export function startRental(
                 requiredBalance: Number(attemptedDebit),
                 currentBalance: Number(balance),
               }))),
-            defectOn(WalletRepositoryError, WalletHoldRepositoryError),
           );
 
           const rentalWithDepositHoldOpt = yield* txRentalRepo.findById(created.id);

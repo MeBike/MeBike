@@ -4,8 +4,6 @@ import { Effect, Match } from "effect";
 
 import type {
   WalletBalanceConstraint,
-  WalletHoldRepositoryError,
-  WalletRepositoryError,
 } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 
@@ -69,9 +67,7 @@ export function sweepWithdrawalsUseCase(
 ): Effect.Effect<
   WithdrawalSweepSummary,
   | WithdrawalRepositoryError
-  | WalletHoldRepositoryError
   | WalletNotFound
-  | WalletRepositoryError
   | InsufficientWalletBalance
   | WithdrawalProviderError,
   Prisma
@@ -181,7 +177,7 @@ function markSucceededAndSettle(
   withdrawal: import("../models").WalletWithdrawalRow,
   payoutId: string,
   now: Date,
-): Effect.Effect<boolean, WithdrawalRepositoryError | WalletHoldRepositoryError | WalletNotFound | WalletRepositoryError | InsufficientWalletBalance> {
+): Effect.Effect<boolean, WithdrawalRepositoryError | WalletNotFound | InsufficientWalletBalance> {
   return runPrismaTransaction(client, tx =>
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
@@ -230,7 +226,7 @@ function markFailedAndReleaseHold(
   withdrawal: import("../models").WalletWithdrawalRow,
   reason: string,
   now: Date,
-): Effect.Effect<boolean, WithdrawalRepositoryError | WalletHoldRepositoryError | WalletRepositoryError> {
+): Effect.Effect<boolean, WithdrawalRepositoryError> {
   return runPrismaTransaction(client, tx =>
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
