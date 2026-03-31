@@ -40,10 +40,11 @@ export {
   withRentalDeps,
 } from "./features/rental.layers";
 export {
+  ReservationCommandReposLive,
+  ReservationCommandServiceLayer,
   ReservationDepsLive,
-  ReservationHoldServiceLayer,
-  ReservationReposLive,
-  ReservationServiceLayer,
+  ReservationQueryReposLive,
+  ReservationQueryServiceLayer,
   withReservationDeps,
 } from "./features/reservation.layers";
 export {

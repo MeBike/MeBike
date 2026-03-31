@@ -8,7 +8,6 @@ import {
   ReturnConfirmationRepositoryLive,
   ReturnSlotRepositoryLive,
 } from "@/domain/rentals";
-import { ReservationRepositoryLive } from "@/domain/reservations";
 
 import { PrismaLive } from "../infra.layers";
 import { BikeDepsLive, BikeReposLive } from "./bike.layers";
@@ -56,7 +55,6 @@ export const RentalDepsLive = Layer.mergeAll(
   WalletDepsLive,
   SubscriptionReposLive,
   SubscriptionServiceLayer,
-  ReservationRepositoryLive,
   PrismaLive,
 );
 

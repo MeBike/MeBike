@@ -5,10 +5,11 @@ import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
 import {
-  makeReservationRepository,
-  ReservationRepository,
-  ReservationRepositoryLive,
-} from "@/domain/reservations/repository/reservation.repository";
+  makeReservationCommandRepository,
+  makeReservationQueryRepository,
+  ReservationQueryRepository,
+  ReservationQueryRepositoryLive,
+} from "@/domain/reservations";
 import {
   StationRepository,
   StationRepositoryLive,
@@ -26,7 +27,7 @@ import {
 import logger from "@/lib/logger";
 
 type ReservationWorkerDeps
-  = | ReservationRepository
+  = | ReservationQueryRepository
     | BikeRepository
     | UserQueryRepository
     | StationRepository
@@ -37,7 +38,7 @@ function runReservationEffect<A, E>(
 ): Promise<A> {
   return Effect.runPromise(
     eff.pipe(
-      Effect.provide(ReservationRepositoryLive),
+      Effect.provide(ReservationQueryRepositoryLive),
       Effect.provide(BikeRepositoryLive),
       Effect.provide(UserQueryRepositoryLive),
       Effect.provide(StationRepositoryLive),
@@ -67,7 +68,7 @@ export async function handleReservationNotifyNearExpiry(
 
   const result = await runReservationEffect(
     Effect.gen(function* () {
-      const reservationRepo = yield* ReservationRepository;
+      const reservationRepo = yield* ReservationQueryRepository;
       const userRepo = yield* UserQueryRepository;
       const stationRepo = yield* StationRepository;
       const now = new Date();
@@ -194,9 +195,10 @@ export async function handleReservationExpireHold(
         try: async () => {
           return await client.$transaction(async (tx) => {
             const txBikeRepo = makeBikeRepository(tx);
-            const txReservationRepo = makeReservationRepository(tx);
+            const txReservationQueryRepo = makeReservationQueryRepository(tx);
+            const txReservationCommandRepo = makeReservationCommandRepository(tx);
             const reservationOpt = await Effect.runPromise(
-              txReservationRepo.findById(payload.reservationId),
+              txReservationQueryRepo.findById(payload.reservationId),
             );
 
             if (Option.isNone(reservationOpt)) {
@@ -215,7 +217,7 @@ export async function handleReservationExpireHold(
             }
 
             const expired = await Effect.runPromise(
-              txReservationRepo.expirePendingHold(reservation.id, now),
+              txReservationCommandRepo.expirePendingHold(reservation.id, now),
             );
             if (!expired) {
               return { outcome: "SKIPPED" as const, reason: "ALREADY_HANDLED" as const };

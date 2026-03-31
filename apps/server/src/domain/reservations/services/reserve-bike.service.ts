@@ -35,9 +35,9 @@ import {
   StationPickupSlotLimitExceeded,
   SubscriptionRequired,
 } from "../domain-errors";
-import { makeReservationRepository } from "../repository/reservation.repository";
-import { ReservationHoldServiceTag } from "../services/reservation-hold.service";
-import { ReservationServiceTag } from "../services/reservation.service";
+import { makeReservationQueryRepository } from "../repository/reservation-query.repository";
+import { ReservationCommandServiceTag } from "./reservation-command.service";
+import { ReservationQueryServiceTag } from "./reservation-query.service";
 
 export type ReserveBikeInput = {
   readonly userId: string;
@@ -75,15 +75,15 @@ export function reserveBike(
   ReservationRow,
   ReserveBikeFailure,
   | Prisma
-  | ReservationServiceTag
-  | ReservationHoldServiceTag
+  | ReservationQueryServiceTag
+  | ReservationCommandServiceTag
   | BikeRepository
   | SubscriptionServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
-    const reservationService = yield* ReservationServiceTag;
-    const reservationHoldService = yield* ReservationHoldServiceTag;
+    const reservationQueryService = yield* ReservationQueryServiceTag;
+    const reservationCommandService = yield* ReservationCommandServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
     const now = input.now ?? new Date();
 
@@ -96,7 +96,7 @@ export function reserveBike(
           );
         }
 
-        const existingByUser = yield* reservationHoldService.getCurrentHoldForUserNowInTx(
+        const existingByUser = yield* reservationQueryService.getCurrentHoldForUserNowInTx(
           tx,
           input.userId,
           now,
@@ -105,7 +105,7 @@ export function reserveBike(
           return yield* Effect.fail(new ActiveReservationExists({ userId: input.userId }));
         }
 
-        const activeReservation = yield* reservationService.getLatestPendingOrActiveForUserInTx(
+        const activeReservation = yield* reservationQueryService.getLatestPendingOrActiveForUserInTx(
           tx,
           input.userId,
         );
@@ -113,7 +113,7 @@ export function reserveBike(
           return yield* Effect.fail(new ActiveReservationExists({ userId: input.userId }));
         }
 
-        const existingByBike = yield* reservationHoldService.getCurrentHoldForBikeNowInTx(
+        const existingByBike = yield* reservationQueryService.getCurrentHoldForBikeNowInTx(
           tx,
           input.bikeId,
           now,
@@ -143,7 +143,7 @@ export function reserveBike(
         }
 
         const txStationRepo = makeStationRepository(tx);
-        const txReservationRepo = makeReservationRepository(tx);
+        const txReservationQueryRepo = makeReservationQueryRepository(tx);
         const stationOpt = yield* txStationRepo.getById(input.stationId);
         if (Option.isNone(stationOpt)) {
           return yield* Effect.die(new Error(
@@ -151,7 +151,7 @@ export function reserveBike(
           ));
         }
 
-        const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId);
+        const pendingReservations = yield* txReservationQueryRepo.countPendingByStationId(input.stationId);
         if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
           return yield* Effect.fail(new StationPickupSlotLimitExceeded({
             stationId: input.stationId,
@@ -192,7 +192,7 @@ export function reserveBike(
 
         const endTime = input.endTime ?? computeEndTime(input.startTime);
 
-        const reservation = yield* reservationService.reserveHoldInTx(tx, {
+        const reservation = yield* reservationCommandService.reserveHoldInTx(tx, {
           userId: input.userId,
           bikeId: input.bikeId,
           stationId: input.stationId,

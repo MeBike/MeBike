@@ -1,9 +1,10 @@
 import { Effect, Layer } from "effect";
 
 import {
-  ReservationHoldServiceLive,
-  ReservationRepositoryLive,
-  ReservationServiceLive,
+  ReservationCommandRepositoryLive,
+  ReservationCommandServiceLive,
+  ReservationQueryRepositoryLive,
+  ReservationQueryServiceLive,
 } from "@/domain/reservations";
 
 import { PrismaLive } from "../infra.layers";
@@ -16,22 +17,27 @@ import {
 } from "./subscription.layers";
 import { WalletDepsLive } from "./wallet.layers";
 
-export const ReservationReposLive = ReservationRepositoryLive.pipe(
+export const ReservationQueryReposLive = ReservationQueryRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-export const ReservationServiceLayer = ReservationServiceLive.pipe(
-  Layer.provide(ReservationReposLive),
+export const ReservationCommandReposLive = ReservationCommandRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
 );
 
-export const ReservationHoldServiceLayer = ReservationHoldServiceLive.pipe(
-  Layer.provide(ReservationReposLive),
+export const ReservationQueryServiceLayer = ReservationQueryServiceLive.pipe(
+  Layer.provide(ReservationQueryReposLive),
+);
+
+export const ReservationCommandServiceLayer = ReservationCommandServiceLive.pipe(
+  Layer.provide(ReservationCommandReposLive),
 );
 
 export const ReservationDepsLive = Layer.mergeAll(
-  ReservationReposLive,
-  ReservationServiceLayer,
-  ReservationHoldServiceLayer,
+  ReservationQueryReposLive,
+  ReservationCommandReposLive,
+  ReservationQueryServiceLayer,
+  ReservationCommandServiceLayer,
   BikeReposLive,
   StationReposLive,
   RentalReposLive,
