@@ -11,7 +11,6 @@ import {
   makePricingPolicyRepository,
 } from "@/domain/pricing";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
-import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
@@ -81,9 +80,7 @@ export function finalizeRentalReturnInTx(
 
     const txReservationRepo = makeReservationRepository(tx);
     const reservationOpt = rental.reservationId
-      ? yield* txReservationRepo.findById(rental.reservationId).pipe(
-        defectOn(ReservationRepositoryError),
-      )
+      ? yield* txReservationRepo.findById(rental.reservationId)
       : Option.none();
     if (Option.isSome(reservationOpt)) {
       prepaidMinor = toMinorUnit(reservationOpt.value.prepaid);
@@ -92,8 +89,7 @@ export function finalizeRentalReturnInTx(
     if (rental.subscriptionId) {
       const txSubscriptionRepo = makeSubscriptionRepository(tx);
 
-      const subscriptionOpt = yield* txSubscriptionRepo.findById(rental.subscriptionId).pipe(
-      );
+      const subscriptionOpt = yield* txSubscriptionRepo.findById(rental.subscriptionId);
 
       if (Option.isNone(subscriptionOpt)) {
         return yield* Effect.fail(new SubscriptionNotFound({

@@ -5,6 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { isPrismaRecordNotFound, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 import { ReservationStatus } from "generated/prisma/client";
@@ -55,7 +56,10 @@ export function makeReservationWriteRepository(
               cause: error,
             })),
         ),
-    }).pipe(Effect.map(toReservationRow));
+    }).pipe(
+      Effect.map(toReservationRow),
+      defectOn(ReservationRepositoryError),
+    );
 
   const createReservationWithClient = (
     tx: PrismaClient | PrismaTypes.TransactionClient,
@@ -93,7 +97,10 @@ export function makeReservationWriteRepository(
               cause: e,
             })),
         ),
-    }).pipe(Effect.map(toReservationRow));
+    }).pipe(
+      Effect.map(toReservationRow),
+      defectOn(ReservationRepositoryError),
+    );
 
   return {
     createReservation: input => createReservationWithClient(client, input),
@@ -119,7 +126,7 @@ export function makeReservationWriteRepository(
             operation: "assignBikeToPendingReservation",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(ReservationRepositoryError)),
 
     updateStatus: input => updateStatusWithClient(client, input),
 
@@ -141,7 +148,7 @@ export function makeReservationWriteRepository(
             operation: "expirePendingHold",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(ReservationRepositoryError)),
 
     markExpiredNow: now =>
       Effect.tryPromise({
@@ -158,6 +165,10 @@ export function makeReservationWriteRepository(
             operation: "markExpiredNow",
             cause: err,
           }),
-      }).pipe(Effect.map(result => result.count)),
+      }).pipe(
+        Effect.map(result => result.count),
+        defectOn(ReservationRepositoryError),
+      ),
+
   };
 }

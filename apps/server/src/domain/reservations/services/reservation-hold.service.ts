@@ -2,9 +2,6 @@ import type { Option } from "effect";
 
 import { Effect, Layer } from "effect";
 
-import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
-import { defectOn } from "@/domain/shared";
-
 import type { ReservationRow } from "../models";
 
 import { makeReservationRepository, ReservationRepository } from "../repository/reservation.repository";
@@ -54,24 +51,16 @@ function makeReservationHoldService(
 ): ReservationHoldService {
   return {
     getCurrentHoldForUserNow: (userId, now) =>
-      repo.findPendingHoldByUserIdNow(userId, now).pipe(
-        defectOn(ReservationRepositoryError),
-      ),
+      repo.findPendingHoldByUserIdNow(userId, now),
 
     getCurrentHoldForUserNowInTx: (tx, userId, now) =>
-      makeReservationRepository(tx).findPendingHoldByUserIdNow(userId, now).pipe(
-        defectOn(ReservationRepositoryError),
-      ),
+      makeReservationRepository(tx).findPendingHoldByUserIdNow(userId, now),
 
     getCurrentHoldForBikeNow: (bikeId, now) =>
-      repo.findPendingHoldByBikeIdNow(bikeId, now).pipe(
-        defectOn(ReservationRepositoryError),
-      ),
+      repo.findPendingHoldByBikeIdNow(bikeId, now),
 
     getCurrentHoldForBikeNowInTx: (tx, bikeId, now) =>
-      makeReservationRepository(tx).findPendingHoldByBikeIdNow(bikeId, now).pipe(
-        defectOn(ReservationRepositoryError),
-      ),
+      makeReservationRepository(tx).findPendingHoldByBikeIdNow(bikeId, now),
   };
 }
 

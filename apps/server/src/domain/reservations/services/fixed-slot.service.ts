@@ -4,8 +4,6 @@ import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
-import { defectOn } from "@/domain/shared";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -155,8 +153,6 @@ export function assignFixedSlotReservations(args: {
               const reservationOpt = yield* txReservationRepo.findPendingFixedSlotByTemplateAndStart(
                 template.id,
                 slotStartAt,
-              ).pipe(
-                defectOn(ReservationRepositoryError),
               );
 
               if (Option.isNone(reservationOpt)) {
@@ -197,8 +193,6 @@ export function assignFixedSlotReservations(args: {
                 reservation.id,
                 bike.id,
                 now,
-              ).pipe(
-                defectOn(ReservationRepositoryError),
               );
               if (!reservationAssigned) {
                 return "CONFLICT" as const;

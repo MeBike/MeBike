@@ -4,13 +4,11 @@ import { Effect, Option } from "effect";
 import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
-import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import {
   makeReservationRepository,
   ReservationRepository,
   ReservationRepositoryLive,
 } from "@/domain/reservations/repository/reservation.repository";
-import { defectOn } from "@/domain/shared";
 import {
   StationRepository,
   StationRepositoryLive,
@@ -74,9 +72,7 @@ export async function handleReservationNotifyNearExpiry(
       const stationRepo = yield* StationRepository;
       const now = new Date();
 
-      const reservationOpt = yield* reservationRepo.findById(payload.reservationId).pipe(
-        defectOn(ReservationRepositoryError),
-      );
+      const reservationOpt = yield* reservationRepo.findById(payload.reservationId);
       if (Option.isNone(reservationOpt)) {
         return { outcome: "NOT_FOUND" as const };
       }
@@ -200,9 +196,7 @@ export async function handleReservationExpireHold(
             const txBikeRepo = makeBikeRepository(tx);
             const txReservationRepo = makeReservationRepository(tx);
             const reservationOpt = await Effect.runPromise(
-              txReservationRepo.findById(payload.reservationId).pipe(
-                defectOn(ReservationRepositoryError),
-              ),
+              txReservationRepo.findById(payload.reservationId),
             );
 
             if (Option.isNone(reservationOpt)) {
@@ -221,9 +215,7 @@ export async function handleReservationExpireHold(
             }
 
             const expired = await Effect.runPromise(
-              txReservationRepo.expirePendingHold(reservation.id, now).pipe(
-                defectOn(ReservationRepositoryError),
-              ),
+              txReservationRepo.expirePendingHold(reservation.id, now),
             );
             if (!expired) {
               return { outcome: "SKIPPED" as const, reason: "ALREADY_HANDLED" as const };

@@ -10,7 +10,6 @@ import type { ReservationOption } from "generated/prisma/client";
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
-import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository } from "@/domain/stations";
@@ -152,9 +151,7 @@ export function reserveBike(
           ));
         }
 
-        const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId).pipe(
-          defectOn(ReservationRepositoryError),
-        );
+        const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId);
         if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
           return yield* Effect.fail(new StationPickupSlotLimitExceeded({
             stationId: input.stationId,

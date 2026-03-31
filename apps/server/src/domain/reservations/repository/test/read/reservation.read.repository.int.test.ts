@@ -2,9 +2,10 @@ import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect } from "@/test/effect/assertions";
 
 import { setupReservationRepositoryIntTestKit } from "../reservation.repository.int.test-kit";
 
@@ -188,16 +189,16 @@ describe("reservationRepository read integration", () => {
     expect(Option.getOrThrow(found).id).toBe(reservation.id);
   });
 
-  it("returns ReservationRepositoryError when database is unreachable", async () => {
+  it("defects with ReservationRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = kit.makeRepo(broken.client);
 
-      const result = await Effect.runPromise(
-        brokenRepo.findById(uuidv7()).pipe(Effect.either),
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        ReservationRepositoryError,
+        { operation: "findById" },
       );
-
-      expectLeftTag(result, "ReservationRepositoryError");
     }
     finally {
       await broken.stop();
