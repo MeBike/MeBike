@@ -168,9 +168,7 @@ export function startRental(
                 requiredBalance: Number(attemptedDebit),
                 currentBalance: Number(balance),
               }))),
-            defectOn(WalletRepositoryError),
-            defectOn(WalletHoldRepositoryError),
-            defectOn(RentalRepositoryError),
+            defectOn(WalletRepositoryError, WalletHoldRepositoryError, RentalRepositoryError),
           );
 
           const rentalWithDepositHoldOpt = yield* txRentalRepo.findById(created.id).pipe(
