@@ -12,7 +12,7 @@ import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalRepositoryError, WithdrawalUniqueViolation } from "../domain-errors";
+import type { WithdrawalUniqueViolation } from "../domain-errors";
 import type { CreateWalletWithdrawalInput, WalletWithdrawalRow } from "../models";
 
 import {
@@ -64,7 +64,6 @@ export function requestWithdrawalUseCase(
   | DuplicateWithdrawalRequest
   | InsufficientWalletBalance
   | WalletNotFound
-  | WithdrawalRepositoryError
   | WithdrawalUserNotFound,
   Prisma | UserQueryServiceTag
 > {

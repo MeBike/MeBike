@@ -19,7 +19,7 @@ import { makeWalletRepository } from "@/domain/wallets/repository/wallet.reposit
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalProviderError, WithdrawalRepositoryError } from "../domain-errors";
+import type { WithdrawalProviderError } from "../domain-errors";
 
 import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
 import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
@@ -66,7 +66,6 @@ export function sweepWithdrawalsUseCase(
   now: Date = new Date(),
 ): Effect.Effect<
   WithdrawalSweepSummary,
-  | WithdrawalRepositoryError
   | WalletNotFound
   | InsufficientWalletBalance
   | WithdrawalProviderError,
@@ -177,7 +176,7 @@ function markSucceededAndSettle(
   withdrawal: import("../models").WalletWithdrawalRow,
   payoutId: string,
   now: Date,
-): Effect.Effect<boolean, WithdrawalRepositoryError | WalletNotFound | InsufficientWalletBalance> {
+): Effect.Effect<boolean, WalletNotFound | InsufficientWalletBalance> {
   return runPrismaTransaction(client, tx =>
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
@@ -226,7 +225,7 @@ function markFailedAndReleaseHold(
   withdrawal: import("../models").WalletWithdrawalRow,
   reason: string,
   now: Date,
-): Effect.Effect<boolean, WithdrawalRepositoryError> {
+): Effect.Effect<boolean> {
   return runPrismaTransaction(client, tx =>
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);

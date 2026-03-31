@@ -8,7 +8,6 @@ import type {
 } from "@/domain/wallets/domain-errors";
 import type { PaymentAttemptRepositoryError, TopupProviderError } from "@/domain/wallets/topups/domain-errors";
 import type { StripeWebhookOutcome as StripeTopupOutcome } from "@/domain/wallets/topups/services/stripe-topup.service";
-import type { WithdrawalRepositoryError } from "@/domain/wallets/withdrawals/domain-errors";
 import type { StripeAccountUpdatedOutcome } from "@/domain/wallets/withdrawals/services/stripe-connect.service";
 import type { StripePayoutOutcome } from "@/domain/wallets/withdrawals/services/stripe-payout.service";
 
@@ -30,7 +29,6 @@ export function handleStripeWebhookUseCase(
   StripeWebhookDispatchOutcome,
   | TopupProviderError
   | PaymentAttemptRepositoryError
-  | WithdrawalRepositoryError
   | WalletNotFound
   | InsufficientWalletBalance,
   | import("@/domain/wallets/topups/services/stripe-topup.service").StripeTopupServiceTag

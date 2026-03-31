@@ -8,7 +8,7 @@ import { makeWalletRepository } from "@/domain/wallets/repository/wallet.reposit
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalProviderError, WithdrawalRepositoryError } from "../domain-errors";
+import type { WithdrawalProviderError } from "../domain-errors";
 
 import { WithdrawalNotFound, WithdrawalUserNotFound } from "../domain-errors";
 import { convertVndToUsdMinor } from "../fx";
@@ -75,7 +75,6 @@ export function executeWithdrawalUseCase(
   ExecuteWithdrawalOutcome,
   | WithdrawalNotFound
   | WithdrawalProviderError
-  | WithdrawalRepositoryError
   | WithdrawalUserNotFound,
   Prisma | WithdrawalRepository | UserQueryServiceTag | StripeWithdrawalServiceTag
 > {
@@ -244,8 +243,7 @@ function markFailedAndReleaseHold(
   withdrawal: import("../models").WalletWithdrawalRow,
   reason: string,
 ): Effect.Effect<
-  ExecuteWithdrawalOutcome,
-  | WithdrawalRepositoryError
+  ExecuteWithdrawalOutcome
 > {
   return Effect.gen(function* () {
     const updated = yield* runPrismaTransaction(client, tx =>
