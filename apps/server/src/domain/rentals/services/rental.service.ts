@@ -7,7 +7,6 @@ import type {
 } from "@/domain/stations";
 
 import { BikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
 import {
@@ -152,10 +151,7 @@ function makeRentalService(
             defectOn(RentalRepositoryError),
           );
 
-        yield* bikeRepo.updateStatus(bikeId, "BOOKED").pipe(
-          defectOn(BikeRepositoryError),
-          Effect.ignore,
-        );
+        yield* bikeRepo.updateStatus(bikeId, "BOOKED").pipe(Effect.ignore);
 
         return created;
       });

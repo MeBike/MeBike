@@ -3,8 +3,6 @@ import { Effect, Layer, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { BikeStatus } from "generated/prisma/client";
 
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
-import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type { DuplicateChipId } from "../domain-errors";
@@ -34,7 +32,7 @@ export type BikeService = {
     },
   ) => Effect.Effect<
     BikeRow,
-    BikeRepositoryError | DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
+    DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
   >;
 
   listBikes: (
@@ -64,7 +62,6 @@ export type BikeService = {
     | DuplicateChipId
     | BikeStationNotFound
     | BikeSupplierNotFound
-    | BikeRepositoryError
   >;
 };
 
@@ -104,29 +101,17 @@ function makeBikeService(
       }),
 
     listBikes: (filter, pageReq) =>
-      repo
-        .listByStationWithOffset(filter.stationId, filter, pageReq)
-        .pipe(
-          defectOn(BikeRepositoryError),
-        ),
+      repo.listByStationWithOffset(filter.stationId, filter, pageReq),
 
     getBikeDetail: (bikeId: string) =>
-      repo.getById(bikeId).pipe(
-        defectOn(BikeRepositoryError),
-      ),
+      repo.getById(bikeId),
 
     reportBrokenBike: (bikeId: string) =>
-      repo.updateStatus(bikeId, "BROKEN").pipe(
-        defectOn(BikeRepositoryError),
-      ),
+      repo.updateStatus(bikeId, "BROKEN"),
 
     adminUpdateBike: (bikeId, patch) =>
       Effect.gen(function* () {
-        const current = yield* repo
-          .getById(bikeId)
-          .pipe(
-            defectOn(BikeRepositoryError),
-          );
+        const current = yield* repo.getById(bikeId);
         if (Option.isNone(current)) {
           return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
         }

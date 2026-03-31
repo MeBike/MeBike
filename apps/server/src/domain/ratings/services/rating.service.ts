@@ -1,6 +1,6 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { BikeNotFound, BikeRepositoryError } from "@/domain/bikes";
+import type { BikeNotFound } from "@/domain/bikes";
 import type { StationNotFound, StationRepositoryError } from "@/domain/stations";
 
 import { BikeNotFound as BikeNotFoundError, BikeRepository } from "@/domain/bikes";
@@ -35,7 +35,7 @@ export type RatingService = {
     bikeId: string,
   ) => Effect.Effect<
     RatingSummary,
-    RatingRepositoryError | BikeRepositoryError | BikeNotFound
+    RatingRepositoryError | BikeNotFound
   >;
   getStationSummary: (
     stationId: string,

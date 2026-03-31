@@ -4,7 +4,6 @@ import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
@@ -165,9 +164,7 @@ export function assignFixedSlotReservations(args: {
               }
               const reservation = reservationOpt.value;
 
-              const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId).pipe(
-                defectOn(BikeRepositoryError),
-              );
+              const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId);
 
               if (Option.isNone(bikeOpt)) {
                 const email = buildFixedSlotNoBikeEmail({
@@ -207,9 +204,7 @@ export function assignFixedSlotReservations(args: {
                 return "CONFLICT" as const;
               }
 
-              const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, now).pipe(
-                defectOn(BikeRepositoryError),
-              );
+              const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, now);
               if (!bikeReserved) {
                 return "CONFLICT" as const;
               }

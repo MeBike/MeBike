@@ -9,7 +9,6 @@ import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
@@ -128,9 +127,7 @@ export function reserveBike(
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
         }
 
-        const bikeOpt = yield* bikeRepo.getById(input.bikeId).pipe(
-          defectOn(BikeRepositoryError),
-        );
+        const bikeOpt = yield* bikeRepo.getById(input.bikeId);
         if (Option.isNone(bikeOpt)) {
           return yield* Effect.fail(new BikeNotFound({ bikeId: input.bikeId }));
         }
@@ -219,9 +216,7 @@ export function reserveBike(
           pricingPolicyId: pricingPolicy.id,
         });
 
-        const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now).pipe(
-          defectOn(BikeRepositoryError),
-        );
+        const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now);
         if (!bikeReserved) {
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
         }

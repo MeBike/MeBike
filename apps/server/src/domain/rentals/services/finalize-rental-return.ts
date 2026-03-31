@@ -5,7 +5,6 @@ import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import {
   calculateUsageChargeMinor,
   isAfterLateReturnCutoff,
@@ -187,8 +186,6 @@ export function finalizeRentalReturnInTx(
       "AVAILABLE",
       endStationId,
       endTime,
-    ).pipe(
-      defectOn(BikeRepositoryError),
     );
     if (Option.isNone(updatedBike)) {
       return yield* Effect.fail(new BikeNotFound({ bikeId }));

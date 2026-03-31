@@ -1,7 +1,6 @@
 import { Effect, Option } from "effect";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
@@ -66,9 +65,7 @@ export function startRental(
             return yield* Effect.fail(new BikeAlreadyRented({ bikeId }));
           }
 
-          const bikeOpt = yield* txBikeRepo.getById(bikeId).pipe(
-            defectOn(BikeRepositoryError),
-          );
+          const bikeOpt = yield* txBikeRepo.getById(bikeId);
           if (Option.isNone(bikeOpt)) {
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
@@ -106,13 +103,9 @@ export function startRental(
             );
           }
 
-          const booked = yield* txBikeRepo.bookBikeIfAvailable(bikeId, startTime).pipe(
-            defectOn(BikeRepositoryError),
-          );
+          const booked = yield* txBikeRepo.bookBikeIfAvailable(bikeId, startTime);
           if (!booked) {
-            const latestBike = yield* txBikeRepo.getById(bikeId).pipe(
-              defectOn(BikeRepositoryError),
-            );
+            const latestBike = yield* txBikeRepo.getById(bikeId);
             if (Option.isNone(latestBike)) {
               return yield* Effect.fail(new BikeNotFound({ bikeId }));
             }

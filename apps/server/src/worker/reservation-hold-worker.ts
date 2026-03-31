@@ -4,7 +4,6 @@ import { Effect, Option } from "effect";
 import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import {
   makeReservationRepository,
@@ -237,9 +236,7 @@ export async function handleReservationExpireHold(
             }
 
             await Effect.runPromise(
-              txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now).pipe(
-                defectOn(BikeRepositoryError),
-              ),
+              txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now),
             );
 
             return {

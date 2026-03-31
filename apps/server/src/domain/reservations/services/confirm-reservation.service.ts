@@ -3,7 +3,6 @@ import { Effect, Option } from "effect";
 import type { BikeRepository } from "@/domain/bikes";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { makePricingPolicyRepository } from "@/domain/pricing";
 import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import {
@@ -62,13 +61,9 @@ export function confirmReservation(
           },
         );
 
-        const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now).pipe(
-          defectOn(BikeRepositoryError),
-        );
+        const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now);
         if (!bikeBooked) {
-          const bikeOpt = yield* bikeRepo.getById(bikeId).pipe(
-            defectOn(BikeRepositoryError),
-          );
+          const bikeOpt = yield* bikeRepo.getById(bikeId);
           if (Option.isNone(bikeOpt)) {
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
