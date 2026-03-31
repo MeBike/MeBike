@@ -2,6 +2,9 @@ import type { Option } from "effect";
 
 import { Effect, Layer } from "effect";
 
+import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
+import { defectOn } from "@/domain/shared";
+
 import type { ReservationRow } from "../models";
 
 import { makeReservationRepository, ReservationRepository } from "../repository/reservation.repository";
@@ -52,22 +55,22 @@ function makeReservationHoldService(
   return {
     getCurrentHoldForUserNow: (userId, now) =>
       repo.findPendingHoldByUserIdNow(userId, now).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     getCurrentHoldForUserNowInTx: (tx, userId, now) =>
       makeReservationRepository(tx).findPendingHoldByUserIdNow(userId, now).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     getCurrentHoldForBikeNow: (bikeId, now) =>
       repo.findPendingHoldByBikeIdNow(bikeId, now).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     getCurrentHoldForBikeNowInTx: (tx, bikeId, now) =>
       makeReservationRepository(tx).findPendingHoldByBikeIdNow(bikeId, now).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
   };
 }

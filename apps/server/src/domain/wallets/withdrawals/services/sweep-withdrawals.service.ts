@@ -11,6 +11,7 @@ import type {
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 
 import { env } from "@/config/env";
+import { defectOn } from "@/domain/shared";
 import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
 import {
   InsufficientWalletBalance,
@@ -19,7 +20,7 @@ import {
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { WithdrawalProviderError, WithdrawalRepositoryError } from "../domain-errors";
 
@@ -222,7 +223,7 @@ function markSucceededAndSettle(
 
       return true;
     })).pipe(
-    Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+    defectOn(PrismaTransactionError),
   );
 }
 
@@ -263,6 +264,6 @@ function markFailedAndReleaseHold(
 
       return true;
     })).pipe(
-    Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+    defectOn(PrismaTransactionError),
   );
 }

@@ -9,13 +9,14 @@ import type {
 } from "@/domain/wallets/domain-errors";
 
 import { env } from "@/config/env";
+import { defectOn } from "@/domain/shared";
 import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { WithdrawalRepositoryError, WithdrawalUniqueViolation } from "../domain-errors";
 import type { CreateWalletWithdrawalInput, WalletWithdrawalRow } from "../models";
@@ -182,7 +183,7 @@ export function requestWithdrawalUseCase(
 
         return withdrawal;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
 
     return withdrawal;

@@ -2,9 +2,11 @@ import { Effect } from "effect";
 
 import type { DuplicateUserEmail, DuplicateUserPhoneNumber } from "@/domain/users";
 
+import { defectOn } from "@/domain/shared";
 import { makeUserCommandRepository } from "@/domain/users";
 import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeWalletRepository } from "@/domain/wallets";
+import { WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -51,7 +53,7 @@ export function registerUseCase(args: {
             cause: err.cause,
           }),
         )),
-      Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+      defectOn(WalletRepositoryError),
       Effect.catchTag("WalletUniqueViolation", err => Effect.die(err)),
     );
     // hmm not transactional, but ok

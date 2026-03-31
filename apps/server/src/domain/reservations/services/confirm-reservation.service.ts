@@ -3,16 +3,21 @@ import { Effect, Option } from "effect";
 import type { BikeRepository } from "@/domain/bikes";
 
 import { makeBikeRepository } from "@/domain/bikes";
+import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { makePricingPolicyRepository } from "@/domain/pricing";
+import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import {
   makeRentalRepository,
   RentalRepository,
 } from "@/domain/rentals";
+import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { createRentalDepositHoldInTx } from "@/domain/rentals/services/rental-deposit-hold.service";
 import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/unique-violation-mapper";
+import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
+import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { ReservationServiceFailure } from "../domain-errors";
 import type { ReservationRow } from "../models";
@@ -58,11 +63,11 @@ export function confirmReservation(
         );
 
         const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now).pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+          defectOn(BikeRepositoryError),
         );
         if (!bikeBooked) {
           const bikeOpt = yield* bikeRepo.getById(bikeId).pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+            defectOn(BikeRepositoryError),
           );
           if (Option.isNone(bikeOpt)) {
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
@@ -75,13 +80,13 @@ export function confirmReservation(
 
         const pricingPolicyId = reservation.pricingPolicyId
           ?? (yield* txPricingPolicyRepo.getActive().pipe(
-            Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+            defectOn(PricingPolicyRepositoryError),
             Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
             Effect.map(policy => policy.id),
           ));
         const pricingPolicy = yield* txPricingPolicyRepo.getById(pricingPolicyId).pipe(
-          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+          defectOn(PricingPolicyRepositoryError),
           Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
         );
 
@@ -116,7 +121,7 @@ export function confirmReservation(
               `Invariant violated: bike ${bikeId} should not be concurrently rented while confirming reservation ${reservation.id}`,
             ));
           }),
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          defectOn(RentalRepositoryError),
         );
 
         yield* createRentalDepositHoldInTx({
@@ -127,9 +132,7 @@ export function confirmReservation(
         }).pipe(
           Effect.catchTag("WalletNotFound", err => Effect.fail(err)),
           Effect.catchTag("InsufficientWalletBalance", err => Effect.fail(err)),
-          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-          Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          defectOn(WalletRepositoryError, WalletHoldRepositoryError, RentalRepositoryError),
         );
 
         const updatedReservation = yield* reservationService.updateStatus({
@@ -143,7 +146,7 @@ export function confirmReservation(
         // TODO(iot): send booking "claim" command once IoT integration is ready.
         return updatedReservation;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
 
     return reservation;

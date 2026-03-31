@@ -1,8 +1,10 @@
 import { Effect, Option } from "effect";
 
 import { BikeRepository } from "@/domain/bikes";
+import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { RentalServiceFailure } from "../domain-errors";
 import type { RentalRow } from "../models";
@@ -50,7 +52,7 @@ export function confirmRentalReturnByOperator(
           const txReturnConfirmationRepo = makeReturnConfirmationRepository(tx);
 
           const rentalOpt = yield* txRentalRepo.findById(input.rentalId).pipe(
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+            defectOn(RentalRepositoryError),
           );
 
           if (Option.isNone(rentalOpt)) {
@@ -70,7 +72,7 @@ export function confirmRentalReturnByOperator(
           }
 
           const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rental.id).pipe(
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+            defectOn(RentalRepositoryError),
           );
 
           if (Option.isNone(activeReturnSlotOpt)) {
@@ -90,7 +92,7 @@ export function confirmRentalReturnByOperator(
           }
 
           const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(rental.id).pipe(
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+            defectOn(RentalRepositoryError),
           );
 
           if (Option.isSome(existingConfirmationOpt)) {
@@ -109,7 +111,7 @@ export function confirmRentalReturnByOperator(
           }).pipe(
             Effect.catchTag("ReturnConfirmationUniqueViolation", () =>
               Effect.fail(new ReturnAlreadyConfirmed({ rentalId: rental.id }))),
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+            defectOn(RentalRepositoryError),
           );
 
           return yield* finalizeRentalReturnInTx({
@@ -121,7 +123,7 @@ export function confirmRentalReturnByOperator(
           });
         }),
     ).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
   });
 }

@@ -3,6 +3,8 @@ import { Effect, Layer, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import { env } from "@/config/env";
+import { defectOn } from "@/domain/shared";
+import { StationRepositoryError } from "@/domain/stations/errors";
 
 import type {
   StationCapacityLimitExceeded,
@@ -122,13 +124,13 @@ function makeStationService(repo: StationRepo): StationService {
         }
 
         return yield* repo.create(input).pipe(
-          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+          defectOn(StationRepositoryError),
         );
       }),
     updateStation: (id, input) =>
       Effect.gen(function* () {
         const currentOpt = yield* repo.getById(id).pipe(
-          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+          defectOn(StationRepositoryError),
         );
         if (Option.isNone(currentOpt)) {
           return yield* Effect.fail(new StationNotFound({ id }));
@@ -151,7 +153,7 @@ function makeStationService(repo: StationRepo): StationService {
         }
 
         const updatedOpt = yield* repo.update(id, input).pipe(
-          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+          defectOn(StationRepositoryError),
         );
         if (Option.isNone(updatedOpt)) {
           return yield* Effect.fail(new StationNotFound({ id }));
@@ -160,14 +162,14 @@ function makeStationService(repo: StationRepo): StationService {
       }),
     listStations: (filter, page) =>
       repo.listWithOffset(filter, page).pipe(
-        Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        defectOn(StationRepositoryError),
       ),
     getStationById: id =>
       Effect.gen(function* () {
         const maybe = yield* repo
           .getById(id)
           .pipe(
-            Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+            defectOn(StationRepositoryError),
           );
         if (Option.isNone(maybe)) {
           return yield* Effect.fail(new StationNotFound({ id }));
@@ -176,7 +178,7 @@ function makeStationService(repo: StationRepo): StationService {
       }),
     listNearestStations: args =>
       repo.listNearest(args).pipe(
-        Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        defectOn(StationRepositoryError),
       ),
   };
 }

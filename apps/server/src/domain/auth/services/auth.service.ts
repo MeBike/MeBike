@@ -10,7 +10,11 @@ import type { UserQueryRepo } from "@/domain/users/repository/user-query.reposit
 import type { PrismaClient } from "generated/prisma/client";
 
 import { env } from "@/config/env";
+import { AgencyRequestRepositoryError } from "@/domain/agency-requests/domain-errors";
 import { hasActiveAgencyAccess } from "@/domain/auth/agency-account-access";
+import { AuthRepositoryError } from "@/domain/auth/domain-errors";
+import { defectOn } from "@/domain/shared";
+import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { UserCommandRepository } from "@/domain/users/repository/user-command.repository";
 import { UserQueryRepository } from "@/domain/users/repository/user-query.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
@@ -113,7 +117,7 @@ export function createSessionForUser(
     const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
 
     yield* authRepo.saveSession(session).pipe(
-      Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+      defectOn(AuthRepositoryError),
     );
 
     yield* recordSessionIssued(authEventRepo, user.id);
@@ -185,7 +189,7 @@ export function makeAuthService({
       };
 
       yield* authRepo.saveEmailOtp(record).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
 
       const expiresInMinutes = Math.max(1, Math.ceil(VERIFY_OTP_TTL_MS / 60000));
@@ -207,7 +211,7 @@ export function makeAuthService({
   const loginWithPassword: AuthService["loginWithPassword"] = ({ email: addr, password }) =>
     Effect.gen(function* () {
       const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(userOpt)) {
         yield* Effect.promise(() =>
@@ -236,7 +240,7 @@ export function makeAuthService({
       const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
 
       yield* authRepo.saveSession(session).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
 
       yield* recordSessionIssued(authEventRepo, user.id);
@@ -250,7 +254,7 @@ export function makeAuthService({
       const sessionId = payload.jti ?? refreshToken;
 
       const sessionOpt = yield* authRepo.getSession(sessionId).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
       if (Option.isNone(sessionOpt)) {
         return yield* Effect.fail(new InvalidRefreshToken({}));
@@ -262,7 +266,7 @@ export function makeAuthService({
       }
 
       const userOpt = yield* userQueryRepo.findById(session.userId).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(userOpt)) {
         return yield* Effect.fail(new InvalidRefreshToken({}));
@@ -282,11 +286,11 @@ export function makeAuthService({
       );
 
       yield* authRepo.saveSession(newSession).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
       yield* recordSessionIssued(authEventRepo, user.id);
       yield* authRepo.deleteSession(sessionId).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
 
       return tokens;
@@ -298,7 +302,7 @@ export function makeAuthService({
       const sessionId = payload.jti ?? refreshToken;
 
       const sessionOpt = yield* authRepo.getSession(sessionId).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
       if (Option.isNone(sessionOpt)) {
         return yield* Effect.fail(new InvalidRefreshToken({}));
@@ -310,13 +314,13 @@ export function makeAuthService({
       }
 
       yield* authRepo.deleteSession(sessionId).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
     });
 
   const logoutAll: AuthService["logoutAll"] = ({ userId }) =>
     authRepo.deleteAllSessionsForUser(userId).pipe(
-      Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+      defectOn(AuthRepositoryError),
     );
 
   const verifyEmailOtp: AuthService["verifyEmailOtp"] = ({ userId, otp }) =>
@@ -325,14 +329,14 @@ export function makeAuthService({
         userId,
         kind: "verify-email",
         otp,
-      }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
+      }).pipe(defectOn(AuthRepositoryError));
 
       if (verification !== "valid") {
         return yield* Effect.fail(new InvalidOtp({ retriable: verification === "invalidRetryable" }));
       }
 
       const updated = yield* userCommandRepo.markVerified(userId).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(updated)) {
         return yield* Effect.fail(new InvalidOtp({ retriable: false }));
@@ -342,7 +346,7 @@ export function makeAuthService({
   const sendResetPassword: AuthService["sendResetPassword"] = ({ email: addr }) =>
     Effect.gen(function* () {
       const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(userOpt)) {
         return;
@@ -352,7 +356,7 @@ export function makeAuthService({
         agencyRequestRepo,
         user,
       ).pipe(
-        Effect.catchTag("AgencyRequestRepositoryError", err => Effect.die(err)),
+        defectOn(AgencyRequestRepositoryError),
       );
 
       const otp = generateOtp();
@@ -367,7 +371,7 @@ export function makeAuthService({
       };
 
       yield* authRepo.saveEmailOtp(record).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
 
       const expiresInMinutes = Math.max(1, Math.ceil(RESET_OTP_TTL_MS / 60000));
@@ -390,7 +394,7 @@ export function makeAuthService({
   const verifyResetPasswordOtp: AuthService["verifyResetPasswordOtp"] = ({ email: addr, otp }) =>
     Effect.gen(function* () {
       const userOpt = yield* userQueryRepo.findByEmail(addr).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(userOpt)) {
         return yield* Effect.fail(new InvalidOtp({ retriable: false }));
@@ -400,7 +404,7 @@ export function makeAuthService({
         agencyRequestRepo,
         user,
       ).pipe(
-        Effect.catchTag("AgencyRequestRepositoryError", err => Effect.die(err)),
+        defectOn(AgencyRequestRepositoryError),
       );
 
       const verification = yield* authRepo.verifyEmailOtpAttempt({
@@ -408,7 +412,7 @@ export function makeAuthService({
         kind: "reset-password",
         otp,
         email: deliveryEmail,
-      }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
+      }).pipe(defectOn(AuthRepositoryError));
 
       if (verification !== "valid") {
         return yield* Effect.fail(new InvalidOtp({ retriable: verification === "invalidRetryable" }));
@@ -421,7 +425,7 @@ export function makeAuthService({
         userId: user.id,
         email: addr,
         expiresAt,
-      }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
+      }).pipe(defectOn(AuthRepositoryError));
 
       return { resetToken };
     });
@@ -429,7 +433,7 @@ export function makeAuthService({
   const resetPassword: AuthService["resetPassword"] = ({ resetToken, newPassword }) =>
     Effect.gen(function* () {
       const tokenOpt = yield* authRepo.consumeResetPasswordToken(resetToken).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
       if (Option.isNone(tokenOpt)) {
         return yield* Effect.fail(new InvalidResetToken({}));
@@ -441,7 +445,7 @@ export function makeAuthService({
       }
 
       const userOpt = yield* userQueryRepo.findById(tokenRecord.userId).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(userOpt) || userOpt.value.email !== tokenRecord.email) {
         return yield* Effect.fail(new InvalidResetToken({}));
@@ -449,14 +453,14 @@ export function makeAuthService({
 
       const hash = yield* Effect.promise(() => bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS));
       const updated = yield* userCommandRepo.updatePassword(tokenRecord.userId, hash).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(updated)) {
         return yield* Effect.fail(new InvalidResetToken({}));
       }
 
       yield* authRepo.deleteAllSessionsForUser(tokenRecord.userId).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        defectOn(AuthRepositoryError),
       );
     });
 

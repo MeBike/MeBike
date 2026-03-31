@@ -4,15 +4,20 @@ import { Effect, Option } from "effect";
 import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
+import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
+import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import {
   makeReservationRepository,
   ReservationRepository,
   ReservationRepositoryLive,
 } from "@/domain/reservations/repository/reservation.repository";
+import { defectOn } from "@/domain/shared";
+import { StationRepositoryError } from "@/domain/stations/errors";
 import {
   StationRepository,
   StationRepositoryLive,
 } from "@/domain/stations/repository/station.repository";
+import { UserRepositoryError } from "@/domain/users/domain-errors";
 import {
   UserQueryRepository,
   UserQueryRepositoryLive,
@@ -73,7 +78,7 @@ export async function handleReservationNotifyNearExpiry(
       const now = new Date();
 
       const reservationOpt = yield* reservationRepo.findById(payload.reservationId).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       );
       if (Option.isNone(reservationOpt)) {
         return { outcome: "NOT_FOUND" as const };
@@ -91,7 +96,7 @@ export async function handleReservationNotifyNearExpiry(
       }
 
       const userOpt = yield* userRepo.findById(reservation.userId).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(userOpt)) {
         return { outcome: "SKIPPED", reason: "MISSING_USER" as const };
@@ -99,7 +104,7 @@ export async function handleReservationNotifyNearExpiry(
       const user = userOpt.value;
 
       const stationOpt = yield* stationRepo.getById(reservation.stationId).pipe(
-        Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        defectOn(StationRepositoryError),
       );
       if (Option.isNone(stationOpt)) {
         return { outcome: "SKIPPED", reason: "MISSING_STATION" as const };
@@ -203,7 +208,7 @@ export async function handleReservationExpireHold(
             const txReservationRepo = makeReservationRepository(tx);
             const reservationOpt = await Effect.runPromise(
               txReservationRepo.findById(payload.reservationId).pipe(
-                Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+                defectOn(ReservationRepositoryError),
               ),
             );
 
@@ -224,7 +229,7 @@ export async function handleReservationExpireHold(
 
             const expired = await Effect.runPromise(
               txReservationRepo.expirePendingHold(reservation.id, now).pipe(
-                Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+                defectOn(ReservationRepositoryError),
               ),
             );
             if (!expired) {
@@ -233,7 +238,7 @@ export async function handleReservationExpireHold(
 
             await Effect.runPromise(
               txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now).pipe(
-                Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+                defectOn(BikeRepositoryError),
               ),
             );
 
@@ -257,7 +262,7 @@ export async function handleReservationExpireHold(
       }
 
       const userOpt = yield* userRepo.findById(outcome.userId).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+        defectOn(UserRepositoryError),
       );
       if (Option.isNone(userOpt)) {
         return { outcome: "SKIPPED" as const, reason: "MISSING_USER" as const };
@@ -265,7 +270,7 @@ export async function handleReservationExpireHold(
       const user = userOpt.value;
 
       const stationOpt = yield* stationRepo.getById(outcome.stationId).pipe(
-        Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        defectOn(StationRepositoryError),
       );
       if (Option.isNone(stationOpt)) {
         return { outcome: "SKIPPED" as const, reason: "MISSING_STATION" as const };

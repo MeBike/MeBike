@@ -7,10 +7,14 @@ import type {
 } from "@/domain/stations";
 
 import { BikeRepository } from "@/domain/bikes";
+import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
+import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
+import { defectOn } from "@/domain/shared";
 import {
   StationNotFound,
   StationRepository,
 } from "@/domain/stations";
+import { StationRepositoryError } from "@/domain/stations/errors";
 
 import type { RentalServiceFailure } from "../domain-errors";
 import type {
@@ -106,8 +110,7 @@ function makeRentalService(
       return repo
         .listMyRentals(userId, filter, pageReq)
         .pipe(
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
+          defectOn(RentalRepositoryError),
         );
     },
 
@@ -115,8 +118,7 @@ function makeRentalService(
       return repo
         .listMyCurrentRentals(userId, pageReq)
         .pipe(
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
+          defectOn(RentalRepositoryError),
         );
     },
 
@@ -124,14 +126,13 @@ function makeRentalService(
       return repo
         .getMyRentalById(userId, rentalId)
         .pipe(
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
+          defectOn(RentalRepositoryError),
         );
     },
 
     getMyRentalCounts(userId) {
       return repo.getMyRentalCounts(userId).pipe(
-        Effect.catchTag("RentalRepositoryError", error => Effect.die(error)),
+        defectOn(RentalRepositoryError),
         Effect.map(aggregateRentalStatusCounts),
       );
     },
@@ -148,12 +149,11 @@ function makeRentalService(
           .pipe(
             Effect.catchTag("RentalUniqueViolation", () =>
               Effect.fail(new BikeAlreadyRented({ bikeId }))),
-            Effect.catchTag("RentalRepositoryError", error =>
-              Effect.die(error)),
+            defectOn(RentalRepositoryError),
           );
 
         yield* bikeRepo.updateStatus(bikeId, "BOOKED").pipe(
-          Effect.catchTag("BikeRepositoryError", error => Effect.die(error)),
+          defectOn(BikeRepositoryError),
           Effect.ignore,
         );
 
@@ -166,8 +166,7 @@ function makeRentalService(
         const rentalOpt = yield* repo
           .getMyRentalById(userId, rentalId)
           .pipe(
-            Effect.catchTag("RentalRepositoryError", error =>
-              Effect.die(error)),
+            defectOn(RentalRepositoryError),
           );
 
         if (Option.isNone(rentalOpt)) {
@@ -189,8 +188,7 @@ function makeRentalService(
         const station = yield* stationRepo
           .getById(stationId)
           .pipe(
-            Effect.catchTag("StationRepositoryError", error =>
-              Effect.die(error)),
+            defectOn(StationRepositoryError),
           );
         if (!station) {
           return yield* Effect.fail(new StationNotFound({ id: stationId }));
@@ -213,8 +211,7 @@ function makeRentalService(
         return yield* repo
           .requestBikeSwap(rentalId, userId, rental.bikeId!, stationId)
           .pipe(
-            Effect.catchTag("RentalRepositoryError", error =>
-              Effect.die(error)),
+            defectOn(RentalRepositoryError),
           );
       }),
 
@@ -222,8 +219,7 @@ function makeRentalService(
       return repo
         .staffListBikeSwapRequests(filter, pageReq)
         .pipe(
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
+          defectOn(RentalRepositoryError),
         );
     },
   };

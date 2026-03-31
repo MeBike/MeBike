@@ -2,27 +2,30 @@ import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Option } from "effect";
 
 import type { BikeRepository } from "@/domain/bikes";
-import type {
-  SubscriptionNotFound,
-  SubscriptionNotUsable,
-  SubscriptionUsageExceeded,
-} from "@/domain/subscriptions/domain-errors";
+import type { SubscriptionNotFound, SubscriptionNotUsable, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
 import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
+import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
+import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
+import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
+import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository } from "@/domain/stations";
+import { StationRepositoryError } from "@/domain/stations/errors";
+import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserQueryRepository } from "@/domain/users";
+import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeWalletRepository } from "@/domain/wallets";
-import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
+import { InsufficientWalletBalance, WalletNotFound, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import { buildReservationConfirmedEmail } from "@/lib/email-templates";
 
 import type { ReservationServiceFailure } from "../domain-errors";
@@ -126,7 +129,7 @@ export function reserveBike(
         }
 
         const bikeOpt = yield* bikeRepo.getById(input.bikeId).pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+          defectOn(BikeRepositoryError),
         );
         if (Option.isNone(bikeOpt)) {
           return yield* Effect.fail(new BikeNotFound({ bikeId: input.bikeId }));
@@ -150,7 +153,7 @@ export function reserveBike(
         const txStationRepo = makeStationRepository(tx);
         const txReservationRepo = makeReservationRepository(tx);
         const stationOpt = yield* txStationRepo.getById(input.stationId).pipe(
-          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+          defectOn(StationRepositoryError),
         );
         if (Option.isNone(stationOpt)) {
           return yield* Effect.die(new Error(
@@ -159,7 +162,7 @@ export function reserveBike(
         }
 
         const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId).pipe(
-          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+          defectOn(ReservationRepositoryError),
         );
         if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
           return yield* Effect.fail(new StationPickupSlotLimitExceeded({
@@ -171,7 +174,7 @@ export function reserveBike(
 
         const subscriptionId: string | null = input.subscriptionId ?? null;
         const pricingPolicy = yield* makePricingPolicyRepository(tx).getActive().pipe(
-          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
+          defectOn(PricingPolicyRepositoryError),
           Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
         );
@@ -188,7 +191,7 @@ export function reserveBike(
             userId: input.userId,
             now,
           }).pipe(
-            Effect.catchTag("SubscriptionRepositoryError", err => Effect.die(err)),
+            defectOn(SubscriptionRepositoryError),
           );
 
           prepaid = toPrismaDecimal("0");
@@ -217,7 +220,7 @@ export function reserveBike(
         });
 
         const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now).pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+          defectOn(BikeRepositoryError),
         );
         if (!bikeReserved) {
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
@@ -257,10 +260,10 @@ export function reserveBike(
           const txUserRepo = makeUserQueryRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
             txUserRepo.findById(reservation.userId).pipe(
-              Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+              defectOn(UserRepositoryError),
             ),
             txStationRepo.getById(reservation.stationId).pipe(
-              Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+              defectOn(StationRepositoryError),
             ),
           ]);
 
@@ -299,7 +302,7 @@ export function reserveBike(
 
         return reservation;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
 
     return reservation;
@@ -320,6 +323,6 @@ function debitWallet(
         balance: err.balance,
         attemptedDebit: err.attemptedDebit,
       }))),
-    Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+    defectOn(WalletRepositoryError),
   );
 }

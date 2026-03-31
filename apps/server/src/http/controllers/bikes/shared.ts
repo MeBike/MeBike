@@ -4,6 +4,8 @@ import { Effect } from "effect";
 import type { BikeRow } from "@/domain/bikes";
 
 import { RatingRepository } from "@/domain/ratings";
+import { RatingRepositoryError } from "@/domain/ratings/domain-errors";
+import { defectOn } from "@/domain/shared";
 import { SupplierRepository } from "@/domain/suppliers";
 import { toBikeSummary } from "@/http/presenters/bikes.presenter";
 
@@ -48,7 +50,7 @@ export function loadBikeSummary(row: BikeRow) {
     const ratingRepo = yield* RatingRepository;
     const supplierRepo = yield* SupplierRepository;
     const rating = yield* ratingRepo.findBikeAggregates([row.id]).pipe(
-      Effect.catchTag("RatingRepositoryError", err => Effect.die(err)),
+      defectOn(RatingRepositoryError),
       Effect.map(map => map[row.id]),
     );
 
@@ -67,7 +69,7 @@ export function loadBikeSummaries(rows: readonly BikeRow[]) {
     const ratingRepo = yield* RatingRepository;
     const supplierRepo = yield* SupplierRepository;
     const ratingsByBikeId = yield* ratingRepo.findBikeAggregates(rows.map(row => row.id)).pipe(
-      Effect.catchTag("RatingRepositoryError", err => Effect.die(err)),
+      defectOn(RatingRepositoryError),
     );
 
     const supplierIds = [...new Set(rows.flatMap(row => (row.supplierId ? [row.supplierId] : [])))];

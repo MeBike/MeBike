@@ -4,10 +4,12 @@ import type { BikeRepository } from "@/domain/bikes";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
+import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
+import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import { WalletServiceTag } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import logger from "@/lib/logger";
 
 import type { ReservationServiceFailure } from "../domain-errors";
@@ -50,11 +52,11 @@ export function cancelReservation(
         const bikeId = updatedReservation.bikeId;
         if (bikeId) {
           const bikeReleased = yield* bikeRepo.releaseBikeIfReserved(bikeId, now).pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+            defectOn(BikeRepositoryError),
           );
           if (!bikeReleased) {
             const bikeOpt = yield* bikeRepo.getById(bikeId).pipe(
-              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+              defectOn(BikeRepositoryError),
             );
             if (Option.isNone(bikeOpt)) {
               return yield* Effect.fail(new BikeNotFound({ bikeId }));
@@ -70,7 +72,7 @@ export function cancelReservation(
 
         return updatedReservation;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
 
     if (isRefundEligible(reservation, now)) {
