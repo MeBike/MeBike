@@ -8,48 +8,12 @@ import type {
   RefreshSession,
   ResetPasswordTokenRecord,
 } from "../models";
+import type { AuthRepo } from "./auth.repository.types";
 
 import { OTP_MAX_ATTEMPTS } from "../config";
 import { AuthRepositoryError } from "../domain-errors";
 
-export type AuthRepo = {
-  readonly saveSession: (
-    session: RefreshSession,
-  ) => Effect.Effect<void, AuthRepositoryError>;
-  readonly getSession: (
-    sessionId: string,
-  ) => Effect.Effect<Option.Option<RefreshSession>, AuthRepositoryError>;
-  readonly deleteSession: (
-    sessionId: string,
-  ) => Effect.Effect<void, AuthRepositoryError>;
-  readonly deleteAllSessionsForUser: (
-    userId: string,
-  ) => Effect.Effect<void, AuthRepositoryError>;
-
-  readonly saveEmailOtp: (
-    record: EmailOtpRecord,
-  ) => Effect.Effect<void, AuthRepositoryError>;
-  readonly getEmailOtp: (params: {
-    userId: string;
-    kind: EmailOtpKind;
-  }) => Effect.Effect<Option.Option<EmailOtpRecord>, AuthRepositoryError>;
-  readonly consumeEmailOtp: (params: {
-    userId: string;
-    kind: EmailOtpKind;
-  }) => Effect.Effect<Option.Option<EmailOtpRecord>, AuthRepositoryError>;
-  readonly verifyEmailOtpAttempt: (params: {
-    userId: string;
-    kind: EmailOtpKind;
-    otp: string;
-    email?: string;
-  }) => Effect.Effect<"valid" | "invalidRetryable" | "invalidTerminal", AuthRepositoryError>;
-  readonly saveResetPasswordToken: (
-    record: ResetPasswordTokenRecord,
-  ) => Effect.Effect<void, AuthRepositoryError>;
-  readonly consumeResetPasswordToken: (
-    token: string,
-  ) => Effect.Effect<Option.Option<ResetPasswordTokenRecord>, AuthRepositoryError>;
-};
+export type { AuthRepo } from "./auth.repository.types";
 
 const makeAuthRepositoryEffect = Effect.gen(function* () {
   const { client } = yield* Redis;
@@ -110,6 +74,9 @@ const resetPasswordTokenKey = (token: string) => `auth:reset-token:${token}`;
 const OTP_ATTEMPT_TX_MAX_RETRIES = 5;
 
 function makeAuthRepository(client: import("ioredis").default): AuthRepo {
+  const defectOnInfraFailure = <A>(effect: Effect.Effect<A, AuthRepositoryError>): Effect.Effect<A> =>
+    effect.pipe(Effect.orDieWith(error => error));
+
   return {
     saveSession: session =>
       Effect.tryPromise({
@@ -128,7 +95,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "saveSession",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     getSession: sessionId =>
       Effect.tryPromise({
@@ -142,7 +109,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "getSession",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     deleteSession: sessionId =>
       Effect.tryPromise({
@@ -155,7 +122,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "deleteSession",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     deleteAllSessionsForUser: userId =>
       Effect.tryPromise({
@@ -183,7 +150,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "deleteAllSessionsForUser",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     saveEmailOtp: record =>
       Effect.tryPromise({
@@ -200,7 +167,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "saveEmailOtp",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     getEmailOtp: ({ userId, kind }) =>
       Effect.tryPromise({
@@ -214,7 +181,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "getEmailOtp",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     consumeEmailOtp: ({ userId, kind }) =>
       Effect.tryPromise({
@@ -238,7 +205,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "consumeEmailOtp",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     verifyEmailOtpAttempt: ({ userId, kind, otp, email }) =>
       Effect.tryPromise({
@@ -312,7 +279,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "verifyEmailOtpAttempt",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     saveResetPasswordToken: record =>
       Effect.tryPromise({
@@ -326,7 +293,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "saveResetPasswordToken",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
 
     consumeResetPasswordToken: token =>
       Effect.tryPromise({
@@ -343,7 +310,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             operation: "consumeResetPasswordToken",
             cause,
           }),
-      }),
+      }).pipe(defectOnInfraFailure),
   };
 }
 
