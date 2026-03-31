@@ -1,6 +1,5 @@
 import { Effect, Option } from "effect";
 
-import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
@@ -69,9 +68,7 @@ export function createReturnSlot(
         const rentalRepo = makeRentalRepository(tx);
         const returnSlotRepo = makeReturnSlotRepository(tx);
 
-        const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId).pipe(
-          defectOn(RentalRepositoryError),
-        );
+        const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId);
 
         if (Option.isNone(rentalOpt)) {
           return yield* Effect.fail(new RentalNotFound({
@@ -88,17 +85,13 @@ export function createReturnSlot(
           }));
         }
 
-        const existing = yield* returnSlotRepo.findActiveByRentalId(input.rentalId).pipe(
-          defectOn(RentalRepositoryError),
-        );
+        const existing = yield* returnSlotRepo.findActiveByRentalId(input.rentalId);
 
         if (Option.isSome(existing) && existing.value.stationId === input.stationId) {
           return existing.value;
         }
 
-        const stationSnapshotOpt = yield* returnSlotRepo.getStationCapacitySnapshot(input.stationId).pipe(
-          defectOn(RentalRepositoryError),
-        );
+        const stationSnapshotOpt = yield* returnSlotRepo.getStationCapacitySnapshot(input.stationId);
 
         if (Option.isNone(stationSnapshotOpt)) {
           return yield* Effect.fail(new StationNotFound({ id: input.stationId }));
@@ -121,9 +114,7 @@ export function createReturnSlot(
         }
 
         if (Option.isSome(existing)) {
-          yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now);
         }
 
         return yield* returnSlotRepo.createActive({
@@ -134,7 +125,6 @@ export function createReturnSlot(
         }).pipe(
           Effect.catchTag("ReturnSlotUniqueViolation", () =>
             returnSlotRepo.findActiveByRentalId(input.rentalId).pipe(
-              defectOn(RentalRepositoryError),
               Effect.flatMap(activeOpt =>
                 Option.isSome(activeOpt)
                   ? Effect.succeed(activeOpt.value)
@@ -148,7 +138,6 @@ export function createReturnSlot(
                     )),
               ),
             )),
-          defectOn(RentalRepositoryError),
         );
       })).pipe(
       defectOn(PrismaTransactionError),
@@ -167,9 +156,7 @@ export function getCurrentReturnSlot(
     const rentalRepo = yield* RentalRepository;
     const returnSlotRepo = yield* ReturnSlotRepository;
 
-    const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId).pipe(
-      defectOn(RentalRepositoryError),
-    );
+    const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId);
 
     if (Option.isNone(rentalOpt)) {
       return yield* Effect.fail(new RentalNotFound({
@@ -186,9 +173,7 @@ export function getCurrentReturnSlot(
       }));
     }
 
-    return yield* returnSlotRepo.findActiveByRentalId(input.rentalId).pipe(
-      defectOn(RentalRepositoryError),
-    );
+    return yield* returnSlotRepo.findActiveByRentalId(input.rentalId);
   });
 }
 
@@ -210,9 +195,7 @@ export function cancelReturnSlot(
         const rentalRepo = makeRentalRepository(tx);
         const returnSlotRepo = makeReturnSlotRepository(tx);
 
-        const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId).pipe(
-          defectOn(RentalRepositoryError),
-        );
+        const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId);
 
         if (Option.isNone(rentalOpt)) {
           return yield* Effect.fail(new RentalNotFound({
@@ -229,9 +212,7 @@ export function cancelReturnSlot(
           }));
         }
 
-        const cancelled = yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now).pipe(
-          defectOn(RentalRepositoryError),
-        );
+        const cancelled = yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now);
 
         if (Option.isNone(cancelled)) {
           return yield* Effect.fail(new ReturnSlotNotFound({

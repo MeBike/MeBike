@@ -105,32 +105,19 @@ function makeRentalService(
 ): RentalService {
   const service: RentalService = {
     listMyRentals(userId, filter, pageReq) {
-      return repo
-        .listMyRentals(userId, filter, pageReq)
-        .pipe(
-          defectOn(RentalRepositoryError),
-        );
+      return repo.listMyRentals(userId, filter, pageReq);
     },
 
     listMyCurrentRentals(userId, pageReq) {
-      return repo
-        .listMyCurrentRentals(userId, pageReq)
-        .pipe(
-          defectOn(RentalRepositoryError),
-        );
+      return repo.listMyCurrentRentals(userId, pageReq);
     },
 
     getMyRentalById(userId, rentalId) {
-      return repo
-        .getMyRentalById(userId, rentalId)
-        .pipe(
-          defectOn(RentalRepositoryError),
-        );
+      return repo.getMyRentalById(userId, rentalId);
     },
 
     getMyRentalCounts(userId) {
       return repo.getMyRentalCounts(userId).pipe(
-        defectOn(RentalRepositoryError),
         Effect.map(aggregateRentalStatusCounts),
       );
     },
@@ -147,7 +134,6 @@ function makeRentalService(
           .pipe(
             Effect.catchTag("RentalUniqueViolation", () =>
               Effect.fail(new BikeAlreadyRented({ bikeId }))),
-            defectOn(RentalRepositoryError),
           );
 
         yield* bikeRepo.updateStatus(bikeId, "BOOKED").pipe(Effect.ignore);
@@ -158,11 +144,7 @@ function makeRentalService(
 
     getByIdForUser: ({ rentalId, userId }) =>
       Effect.gen(function* () {
-        const rentalOpt = yield* repo
-          .getMyRentalById(userId, rentalId)
-          .pipe(
-            defectOn(RentalRepositoryError),
-          );
+        const rentalOpt = yield* repo.getMyRentalById(userId, rentalId);
 
         if (Option.isNone(rentalOpt)) {
           return yield* Effect.fail(new RentalNotFound({ rentalId, userId }));

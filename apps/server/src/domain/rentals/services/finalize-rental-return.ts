@@ -10,7 +10,6 @@ import {
   isAfterLateReturnCutoff,
   makePricingPolicyRepository,
 } from "@/domain/pricing";
-import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
@@ -185,8 +184,6 @@ export function finalizeRentalReturnInTx(
       rental.id,
       "USED",
       endTime,
-    ).pipe(
-      defectOn(RentalRepositoryError),
     );
     if (Option.isNone(finalizedReturnSlot)) {
       return yield* Effect.fail(new ReturnSlotRequiredForReturn({
@@ -203,9 +200,7 @@ export function finalizeRentalReturnInTx(
       durationMinutes,
       totalPrice: Number(totalPriceMinor),
       newStatus: "COMPLETED",
-    }).pipe(
-      defectOn(RentalRepositoryError),
-    );
+    });
 
     if (Option.isNone(updatedRental)) {
       return yield* Effect.die(new Error(

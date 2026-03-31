@@ -2,7 +2,6 @@ import { Effect, Option } from "effect";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
-import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
@@ -49,16 +48,12 @@ export function startRental(
           const txRentalRepo = makeRentalRepository(tx);
           const txPricingPolicyRepo = makePricingPolicyRepository(tx);
 
-          const existingByUser = yield* txRentalRepo.findActiveByUserId(userId).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const existingByUser = yield* txRentalRepo.findActiveByUserId(userId);
           if (Option.isSome(existingByUser)) {
             return yield* Effect.fail(new ActiveRentalExists({ userId }));
           }
 
-          const existingByBike = yield* txRentalRepo.findActiveByBikeId(bikeId).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const existingByBike = yield* txRentalRepo.findActiveByBikeId(bikeId);
           if (Option.isSome(existingByBike)) {
             return yield* Effect.fail(new BikeAlreadyRented({ bikeId }));
           }
@@ -139,7 +134,6 @@ export function startRental(
                 ));
               },
             ),
-            defectOn(RentalRepositoryError),
           );
 
           yield* createRentalDepositHoldInTx({
@@ -156,12 +150,10 @@ export function startRental(
                 requiredBalance: Number(attemptedDebit),
                 currentBalance: Number(balance),
               }))),
-            defectOn(WalletRepositoryError, WalletHoldRepositoryError, RentalRepositoryError),
+            defectOn(WalletRepositoryError, WalletHoldRepositoryError),
           );
 
-          const rentalWithDepositHoldOpt = yield* txRentalRepo.findById(created.id).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const rentalWithDepositHoldOpt = yield* txRentalRepo.findById(created.id);
           if (Option.isNone(rentalWithDepositHoldOpt)) {
             return yield* Effect.die(new Error(`Expected rental ${created.id} after deposit hold creation`));
           }
