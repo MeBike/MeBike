@@ -1,5 +1,6 @@
 import { Effect, Layer } from "effect";
 
+import { AgencyRequestRepositoryLive } from "@/domain/agency-requests/repository/agency-request.repository";
 import {
   AuthEventRepositoryLive,
   AuthRepositoryLive,
@@ -17,6 +18,7 @@ import { EmailLive, PrismaLive, RedisLive } from "../infra.layers";
 export const AuthReposLive = Layer.mergeAll(
   AuthRepositoryLive,
   AuthEventRepositoryLive,
+  AgencyRequestRepositoryLive,
   UserQueryRepositoryLive,
   UserCommandRepositoryLive,
   WalletRepositoryLive,

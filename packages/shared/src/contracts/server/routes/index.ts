@@ -1,3 +1,4 @@
+import { agenciesRoutes } from "./agencies";
 import { agencyRequestsRoutes } from "./agency-requests";
 import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
@@ -14,6 +15,7 @@ import { usersRoutes } from "./users";
 import { walletsRoutes } from "./wallets";
 import { incidentsRoutes } from "./incidents";
 
+export * from "./agencies";
 export * from "./agency-requests";
 export * from "./auth";
 export * from "./bikes";
@@ -31,6 +33,7 @@ export * from "./wallets";
 export * from "./incidents";
 
 export const serverRoutes = {
+  agencies: agenciesRoutes,
   agencyRequests: agencyRequestsRoutes,
   auth: authRoutes,
   health: healthRoutes,

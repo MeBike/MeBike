@@ -1,5 +1,7 @@
 import { Data } from "effect";
 
+import type { AgencyRequestStatus } from "generated/prisma/client";
+
 export class AgencyRequestRepositoryError extends Data.TaggedError("AgencyRequestRepositoryError")<{
   readonly operation: string;
   readonly cause: unknown;
@@ -9,8 +11,13 @@ export class AgencyRequestNotFound extends Data.TaggedError("AgencyRequestNotFou
   readonly agencyRequestId: string;
 }> {}
 
+export class AgencyRequestNotOwned extends Data.TaggedError("AgencyRequestNotOwned")<{
+  readonly agencyRequestId: string;
+  readonly userId: string;
+}> {}
+
 export class InvalidAgencyRequestStatusTransition extends Data.TaggedError("InvalidAgencyRequestStatusTransition")<{
   readonly agencyRequestId: string;
-  readonly currentStatus: string;
-  readonly nextStatus: string;
+  readonly currentStatus: AgencyRequestStatus;
+  readonly nextStatus: AgencyRequestStatus;
 }> {}

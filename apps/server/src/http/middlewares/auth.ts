@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 import type { AccessTokenPayload } from "@/domain/auth";
 import type { RunPromise } from "@/http/shared/runtime";
 
-import { requireJwtSecret } from "@/domain/auth";
+import { hasActiveAgencyAccess, requireJwtSecret } from "@/domain/auth";
 import { UserQueryServiceTag } from "@/domain/users";
 
 const unauthorizedBody = {
@@ -58,7 +58,11 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
     const payload = verifyAccessToken(token);
     if (payload) {
       const userOpt = await loadUser(c.var.runPromise, payload.userId);
-      if (Option.isNone(userOpt) || userOpt.value.accountStatus === "BANNED") {
+      if (
+        Option.isNone(userOpt)
+        || userOpt.value.accountStatus === "BANNED"
+        || !hasActiveAgencyAccess(userOpt.value)
+      ) {
         c.set("authFailure", "forbidden");
       }
       else {
