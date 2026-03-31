@@ -14,7 +14,6 @@ import { ReservationRepositoryError } from "@/domain/reservations/domain-errors"
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository } from "@/domain/stations";
-import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserQueryRepository } from "@/domain/users";
 import { makeWalletRepository } from "@/domain/wallets";
@@ -181,9 +180,7 @@ export function reserveBike(
             subscriptionId,
             userId: input.userId,
             now,
-          }).pipe(
-            defectOn(SubscriptionRepositoryError),
-          );
+          });
 
           prepaid = toPrismaDecimal("0");
           prepaidMinor = 0n;

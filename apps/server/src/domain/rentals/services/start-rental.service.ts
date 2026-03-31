@@ -4,7 +4,6 @@ import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
-import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
@@ -96,9 +95,7 @@ export function startRental(
               subscriptionId,
               userId,
               now: startTime,
-            }).pipe(
-              defectOn(SubscriptionRepositoryError),
-            );
+            });
           }
 
           const booked = yield* txBikeRepo.bookBikeIfAvailable(bikeId, startTime);

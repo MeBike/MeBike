@@ -16,7 +16,7 @@ import { makeReservationRepository } from "@/domain/reservations/repository/rese
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
-import { SubscriptionNotFound, SubscriptionRepositoryError, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
+import { SubscriptionNotFound, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
 import { makeSubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
 import { makeWalletRepository } from "@/domain/wallets";
 import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
@@ -93,7 +93,6 @@ export function finalizeRentalReturnInTx(
       const txSubscriptionRepo = makeSubscriptionRepository(tx);
 
       const subscriptionOpt = yield* txSubscriptionRepo.findById(rental.subscriptionId).pipe(
-        defectOn(SubscriptionRepositoryError),
       );
 
       if (Option.isNone(subscriptionOpt)) {
@@ -119,8 +118,6 @@ export function finalizeRentalReturnInTx(
           subscription.usageCount,
           usageToAdd,
           ["ACTIVE", "PENDING"],
-        ).pipe(
-          defectOn(SubscriptionRepositoryError),
         );
 
         if (Option.isNone(incremented)) {

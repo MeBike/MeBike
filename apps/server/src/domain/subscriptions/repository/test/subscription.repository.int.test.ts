@@ -2,8 +2,9 @@ import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect, expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeSubscriptionRepository } from "../subscription.repository";
@@ -199,16 +200,16 @@ describe("subscriptionRepository Integration", () => {
     expectLeftTag(result, "ActiveSubscriptionExists");
   });
 
-  it("returns SubscriptionRepositoryError when database is unreachable", async () => {
+  it("defects with SubscriptionRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = makeSubscriptionRepository(broken.client);
 
-      const result = await Effect.runPromise(
-        brokenRepo.findById(uuidv7()).pipe(Effect.either),
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        SubscriptionRepositoryError,
+        { operation: "findById" },
       );
-
-      expectLeftTag(result, "SubscriptionRepositoryError");
     }
     finally {
       await broken.stop();
