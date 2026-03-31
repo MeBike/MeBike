@@ -9,14 +9,12 @@ export {
   AuthReposLive,
   AuthServiceLayer,
   AuthUserQueryServiceLayer,
-  withAuthDeps,
 } from "./features/auth.layers";
 export {
   BikeDepsLive,
   BikeReposLive,
   BikeServiceLayer,
   BikeStatsServiceLayer,
-  withBikeDeps,
 } from "./features/bike.layers";
 export {
   NotificationDepsLive,
@@ -27,7 +25,6 @@ export {
   RatingDepsLive,
   RatingReposLive,
   RatingServiceLayer,
-  withRatingDeps,
 } from "./features/rating.layers";
 export {
   RentalAnalyticsReposLive,
@@ -37,7 +34,6 @@ export {
   RentalStatsServiceLayer,
   ReturnConfirmationReposLive,
   ReturnSlotReposLive,
-  withRentalDeps,
 } from "./features/rental.layers";
 export {
   ReservationCommandReposLive,
@@ -45,31 +41,26 @@ export {
   ReservationDepsLive,
   ReservationQueryReposLive,
   ReservationQueryServiceLayer,
-  withReservationDeps,
 } from "./features/reservation.layers";
 export {
   StationDepsLive,
   StationReposLive,
   StationServiceLayer,
-  withStationDeps,
 } from "./features/station.layers";
 export {
   PaymentAttemptReposLive,
   StripeTopupDepsLive,
   StripeTopupServiceLayer,
-  withStripeTopupDeps,
 } from "./features/stripe-topup.layers";
 export {
   SubscriptionDepsLive,
   SubscriptionReposLive,
   SubscriptionServiceLayer,
-  withSubscriptionDeps,
 } from "./features/subscription.layers";
 export {
   SupplierDepsLive,
   SupplierReposLive,
   SupplierServiceLayer,
-  withSupplierDeps,
 } from "./features/supplier.layers";
 export {
   AvatarUploadServiceLayer,
@@ -80,8 +71,6 @@ export {
   UserQueryServiceLayer,
   UserStatsDepsLive,
   UserStatsServiceLayer,
-  withUserDeps,
-  withUserStatsDeps,
 } from "./features/user.layers";
 export {
   WalletDepsLive,
@@ -89,7 +78,6 @@ export {
   WalletHoldServiceLayer,
   WalletReposLive,
   WalletServiceLayer,
-  withWalletDeps,
 } from "./features/wallet.layers";
 export {
   StripeWebhookDepsLive,
@@ -97,8 +85,6 @@ export {
   WithdrawalDepsLive,
   WithdrawalReposLive,
   WithdrawalServiceLayer,
-  withStripeWebhookDeps,
-  withWithdrawalDeps,
 } from "./features/withdrawal.layers";
 export {
   AppInfraLive,

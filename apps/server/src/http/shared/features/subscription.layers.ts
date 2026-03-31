@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
   SubscriptionRepositoryLive,
@@ -25,7 +25,3 @@ export const SubscriptionDepsLive = Layer.mergeAll(
   EmailLive,
   PrismaLive,
 );
-
-export function withSubscriptionDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(SubscriptionDepsLive));
-}

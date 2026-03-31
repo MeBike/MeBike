@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
   ReservationCommandRepositoryLive,
@@ -46,7 +46,3 @@ export const ReservationDepsLive = Layer.mergeAll(
   SubscriptionServiceLayer,
   PrismaLive,
 );
-
-export function withReservationDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(ReservationDepsLive));
-}

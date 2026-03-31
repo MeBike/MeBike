@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
   AvatarUploadServiceLive,
@@ -45,10 +45,6 @@ export const UserDepsLive = Layer.mergeAll(
   PrismaLive,
 );
 
-export function withUserDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(UserDepsLive));
-}
-
 export const UserStatsServiceLayer = UserStatsServiceLive.pipe(
   Layer.provide(UserStatsRepositoryLive),
 );
@@ -57,7 +53,3 @@ export const UserStatsDepsLive = Layer.mergeAll(
   UserStatsRepositoryLive,
   UserStatsServiceLayer,
 );
-
-export function withUserStatsDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(UserStatsDepsLive));
-}
