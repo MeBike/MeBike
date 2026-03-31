@@ -3,9 +3,7 @@ import { Effect, Option } from "effect";
 import type { BikeRepository } from "@/domain/bikes";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { makePricingPolicyRepository } from "@/domain/pricing";
-import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import {
   makeRentalRepository,
   RentalRepository,
@@ -15,7 +13,6 @@ import { createRentalDepositHoldInTx } from "@/domain/rentals/services/rental-de
 import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/unique-violation-mapper";
 import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
-import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -62,13 +59,9 @@ export function confirmReservation(
           },
         );
 
-        const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now).pipe(
-          defectOn(BikeRepositoryError),
-        );
+        const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now);
         if (!bikeBooked) {
-          const bikeOpt = yield* bikeRepo.getById(bikeId).pipe(
-            defectOn(BikeRepositoryError),
-          );
+          const bikeOpt = yield* bikeRepo.getById(bikeId);
           if (Option.isNone(bikeOpt)) {
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
@@ -80,13 +73,11 @@ export function confirmReservation(
 
         const pricingPolicyId = reservation.pricingPolicyId
           ?? (yield* txPricingPolicyRepo.getActive().pipe(
-            defectOn(PricingPolicyRepositoryError),
             Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
             Effect.map(policy => policy.id),
           ));
         const pricingPolicy = yield* txPricingPolicyRepo.getById(pricingPolicyId).pipe(
-          defectOn(PricingPolicyRepositoryError),
           Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
         );
 
@@ -132,7 +123,7 @@ export function confirmReservation(
         }).pipe(
           Effect.catchTag("WalletNotFound", err => Effect.fail(err)),
           Effect.catchTag("InsufficientWalletBalance", err => Effect.fail(err)),
-          defectOn(WalletRepositoryError, WalletHoldRepositoryError, RentalRepositoryError),
+          defectOn(RentalRepositoryError),
         );
 
         const updatedReservation = yield* reservationService.updateStatus({

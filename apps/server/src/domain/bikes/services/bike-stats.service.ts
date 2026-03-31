@@ -86,9 +86,7 @@ export function makeBikeStatsService(repo: BikeStatsRepo) {
 
       getBikeStatsById: bikeId =>
         Effect.gen(function* () {
-          yield* ensureBikeExists(bikeRepo, bikeId).pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.fail(err)),
-          );
+          yield* ensureBikeExists(bikeRepo, bikeId);
 
           return yield* repo.getBikeStatsById(bikeId);
         }),
@@ -98,9 +96,7 @@ export function makeBikeStatsService(repo: BikeStatsRepo) {
 
       getBikeActivityStats: ({ bikeId, now }) =>
         Effect.gen(function* () {
-          yield* ensureBikeExists(bikeRepo, bikeId).pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.fail(err)),
-          );
+          yield* ensureBikeExists(bikeRepo, bikeId);
 
           const runtimeNow = now ?? new Date();
           const stats = yield* repo.getBikeActivityStats({
@@ -143,9 +139,7 @@ export function makeBikeStatsService(repo: BikeStatsRepo) {
 
       getBikeRentalHistory: (bikeId, pageReq) =>
         Effect.gen(function* () {
-          yield* ensureBikeExists(bikeRepo, bikeId).pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.fail(err)),
-          );
+          yield* ensureBikeExists(bikeRepo, bikeId);
 
           return yield* repo.getBikeRentalHistory(bikeId, pageReq);
         }),

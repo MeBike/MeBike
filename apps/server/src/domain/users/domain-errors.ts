@@ -38,11 +38,6 @@ export class StationRoleAssignmentLimitExceeded extends Data.TaggedError("Statio
   readonly assignmentLimit: number;
 }> {}
 
-export class UserStatsServiceError extends Data.TaggedError("UserStatsServiceError")<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
-
 export class InvalidStatsRange extends Data.TaggedError("InvalidStatsRange")<{
   readonly startDate: Date;
   readonly endDate: Date;

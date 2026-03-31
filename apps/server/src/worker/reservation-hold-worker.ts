@@ -4,20 +4,15 @@ import { Effect, Option } from "effect";
 import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
-import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import {
   makeReservationRepository,
   ReservationRepository,
   ReservationRepositoryLive,
 } from "@/domain/reservations/repository/reservation.repository";
-import { defectOn } from "@/domain/shared";
-import { StationRepositoryError } from "@/domain/stations/errors";
 import {
   StationRepository,
   StationRepositoryLive,
 } from "@/domain/stations/repository/station.repository";
-import { UserRepositoryError } from "@/domain/users/domain-errors";
 import {
   UserQueryRepository,
   UserQueryRepositoryLive,
@@ -77,9 +72,7 @@ export async function handleReservationNotifyNearExpiry(
       const stationRepo = yield* StationRepository;
       const now = new Date();
 
-      const reservationOpt = yield* reservationRepo.findById(payload.reservationId).pipe(
-        defectOn(ReservationRepositoryError),
-      );
+      const reservationOpt = yield* reservationRepo.findById(payload.reservationId);
       if (Option.isNone(reservationOpt)) {
         return { outcome: "NOT_FOUND" as const };
       }
@@ -95,17 +88,13 @@ export async function handleReservationNotifyNearExpiry(
         return { outcome: "SKIPPED", reason: "MISSING_BIKE" as const };
       }
 
-      const userOpt = yield* userRepo.findById(reservation.userId).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userRepo.findById(reservation.userId);
       if (Option.isNone(userOpt)) {
         return { outcome: "SKIPPED", reason: "MISSING_USER" as const };
       }
       const user = userOpt.value;
 
-      const stationOpt = yield* stationRepo.getById(reservation.stationId).pipe(
-        defectOn(StationRepositoryError),
-      );
+      const stationOpt = yield* stationRepo.getById(reservation.stationId);
       if (Option.isNone(stationOpt)) {
         return { outcome: "SKIPPED", reason: "MISSING_STATION" as const };
       }
@@ -207,9 +196,7 @@ export async function handleReservationExpireHold(
             const txBikeRepo = makeBikeRepository(tx);
             const txReservationRepo = makeReservationRepository(tx);
             const reservationOpt = await Effect.runPromise(
-              txReservationRepo.findById(payload.reservationId).pipe(
-                defectOn(ReservationRepositoryError),
-              ),
+              txReservationRepo.findById(payload.reservationId),
             );
 
             if (Option.isNone(reservationOpt)) {
@@ -228,18 +215,14 @@ export async function handleReservationExpireHold(
             }
 
             const expired = await Effect.runPromise(
-              txReservationRepo.expirePendingHold(reservation.id, now).pipe(
-                defectOn(ReservationRepositoryError),
-              ),
+              txReservationRepo.expirePendingHold(reservation.id, now),
             );
             if (!expired) {
               return { outcome: "SKIPPED" as const, reason: "ALREADY_HANDLED" as const };
             }
 
             await Effect.runPromise(
-              txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now).pipe(
-                defectOn(BikeRepositoryError),
-              ),
+              txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now),
             );
 
             return {
@@ -261,17 +244,13 @@ export async function handleReservationExpireHold(
         return outcome;
       }
 
-      const userOpt = yield* userRepo.findById(outcome.userId).pipe(
-        defectOn(UserRepositoryError),
-      );
+      const userOpt = yield* userRepo.findById(outcome.userId);
       if (Option.isNone(userOpt)) {
         return { outcome: "SKIPPED" as const, reason: "MISSING_USER" as const };
       }
       const user = userOpt.value;
 
-      const stationOpt = yield* stationRepo.getById(outcome.stationId).pipe(
-        defectOn(StationRepositoryError),
-      );
+      const stationOpt = yield* stationRepo.getById(outcome.stationId);
       if (Option.isNone(stationOpt)) {
         return { outcome: "SKIPPED" as const, reason: "MISSING_STATION" as const };
       }

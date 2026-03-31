@@ -2,12 +2,6 @@ import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Match } from "effect";
 import { uuidv7 } from "uuidv7";
 
-import type { UserRepositoryError } from "@/domain/users/domain-errors";
-import type {
-  WalletHoldRepositoryError,
-  WalletRepositoryError,
-} from "@/domain/wallets/domain-errors";
-
 import { env } from "@/config/env";
 import { defectOn } from "@/domain/shared";
 import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
@@ -18,7 +12,7 @@ import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalRepositoryError, WithdrawalUniqueViolation } from "../domain-errors";
+import type { WithdrawalUniqueViolation } from "../domain-errors";
 import type { CreateWalletWithdrawalInput, WalletWithdrawalRow } from "../models";
 
 import {
@@ -70,10 +64,6 @@ export function requestWithdrawalUseCase(
   | DuplicateWithdrawalRequest
   | InsufficientWalletBalance
   | WalletNotFound
-  | WalletHoldRepositoryError
-  | WalletRepositoryError
-  | UserRepositoryError
-  | WithdrawalRepositoryError
   | WithdrawalUserNotFound,
   Prisma | UserQueryServiceTag
 > {

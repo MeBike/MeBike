@@ -2,6 +2,7 @@ import { Effect, Layer, Option } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { getPrismaUniqueViolationTarget, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { WalletWithdrawalStatus } from "generated/prisma/client";
@@ -60,30 +61,30 @@ function toWithdrawalRow(
 export type WithdrawalRepositoryType = {
   createPending: (
     input: CreateWalletWithdrawalInput,
-  ) => Effect.Effect<WalletWithdrawalRow, WithdrawalRepositoryError | WithdrawalUniqueViolation>;
-  findById: (id: string) => Effect.Effect<Option.Option<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  ) => Effect.Effect<WalletWithdrawalRow, WithdrawalUniqueViolation>;
+  findById: (id: string) => Effect.Effect<Option.Option<WalletWithdrawalRow>>;
   findByStripePayoutId: (
     payoutId: string,
-  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>>;
   findProcessingBefore: (
     createdBefore: Date,
     limit: number,
-  ) => Effect.Effect<ReadonlyArray<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  ) => Effect.Effect<ReadonlyArray<WalletWithdrawalRow>>;
   findByIdempotencyKey: (
     idempotencyKey: string,
-  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>>;
   markProcessing: (
     input: MarkWithdrawalProcessingInput,
-  ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
+  ) => Effect.Effect<boolean>;
   setStripeRefs: (
     input: import("../models").UpdateWithdrawalStripeRefsInput,
-  ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
+  ) => Effect.Effect<boolean>;
   markSucceeded: (
     input: MarkWithdrawalResultInput,
-  ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
+  ) => Effect.Effect<boolean>;
   markFailed: (
     input: MarkWithdrawalResultInput,
-  ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
+  ) => Effect.Effect<boolean>;
 };
 
 const makeWithdrawalRepositoryEffect = Effect.gen(function* () {
@@ -172,7 +173,7 @@ export function makeWithdrawalRepository(
             cause: err,
           });
         },
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
 
     findById: id =>
       Effect.tryPromise({
@@ -188,7 +189,7 @@ export function makeWithdrawalRepository(
             operation: "findById",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
 
     findByStripePayoutId: payoutId =>
       Effect.tryPromise({
@@ -204,7 +205,7 @@ export function makeWithdrawalRepository(
             operation: "findByStripePayoutId",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
     findProcessingBefore: (createdBefore, limit) =>
       Effect.tryPromise({
         try: async () => {
@@ -224,7 +225,7 @@ export function makeWithdrawalRepository(
             operation: "findProcessingBefore",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
 
     findByIdempotencyKey: idempotencyKey =>
       Effect.tryPromise({
@@ -240,7 +241,7 @@ export function makeWithdrawalRepository(
             operation: "findByIdempotencyKey",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
 
     markProcessing: input =>
       Effect.tryPromise({
@@ -274,7 +275,7 @@ export function makeWithdrawalRepository(
             operation: "markProcessing",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
 
     setStripeRefs: input =>
       Effect.tryPromise({
@@ -293,7 +294,7 @@ export function makeWithdrawalRepository(
             operation: "setStripeRefs",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
 
     markSucceeded: input =>
       Effect.tryPromise({
@@ -313,7 +314,7 @@ export function makeWithdrawalRepository(
             operation: "markSucceeded",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
 
     markFailed: input =>
       Effect.tryPromise({
@@ -333,7 +334,7 @@ export function makeWithdrawalRepository(
             operation: "markFailed",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
 
   };
 }

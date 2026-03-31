@@ -4,8 +4,6 @@ import { Effect, Match } from "effect";
 
 import type {
   WalletBalanceConstraint,
-  WalletHoldRepositoryError,
-  WalletRepositoryError,
 } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 
@@ -18,8 +16,6 @@ import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hol
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
-
-import type { WithdrawalRepositoryError } from "../domain-errors";
 
 import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
 
@@ -50,10 +46,7 @@ export function handleStripePayoutWebhookUseCase(
   event: Stripe.Event,
 ): Effect.Effect<
   StripePayoutOutcome,
-  | WithdrawalRepositoryError
-  | WalletHoldRepositoryError
   | WalletNotFound
-  | WalletRepositoryError
   | InsufficientWalletBalance,
   Prisma | WithdrawalRepository
 > {

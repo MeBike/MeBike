@@ -1,7 +1,6 @@
 import { Effect, Option } from "effect";
 
 import { BikeRepository } from "@/domain/bikes";
-import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -51,9 +50,7 @@ export function confirmRentalReturnByOperator(
           const txReturnSlotRepo = makeReturnSlotRepository(tx);
           const txReturnConfirmationRepo = makeReturnConfirmationRepository(tx);
 
-          const rentalOpt = yield* txRentalRepo.findById(input.rentalId).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const rentalOpt = yield* txRentalRepo.findById(input.rentalId);
 
           if (Option.isNone(rentalOpt)) {
             return yield* Effect.fail(new RentalNotFound({
@@ -71,9 +68,7 @@ export function confirmRentalReturnByOperator(
             }));
           }
 
-          const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rental.id).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rental.id);
 
           if (Option.isNone(activeReturnSlotOpt)) {
             return yield* Effect.fail(new ReturnSlotRequiredForReturn({
@@ -91,9 +86,7 @@ export function confirmRentalReturnByOperator(
             }));
           }
 
-          const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(rental.id).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(rental.id);
 
           if (Option.isSome(existingConfirmationOpt)) {
             return yield* Effect.fail(new ReturnAlreadyConfirmed({
@@ -111,7 +104,6 @@ export function confirmRentalReturnByOperator(
           }).pipe(
             Effect.catchTag("ReturnConfirmationUniqueViolation", () =>
               Effect.fail(new ReturnAlreadyConfirmed({ rentalId: rental.id }))),
-            defectOn(RentalRepositoryError),
           );
 
           return yield* finalizeRentalReturnInTx({

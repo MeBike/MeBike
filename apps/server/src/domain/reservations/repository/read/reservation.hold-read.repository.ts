@@ -5,6 +5,8 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
+
 import type { ReservationRepo } from "../reservation.repository.types";
 
 import { ReservationRepositoryError } from "../../domain-errors";
@@ -45,6 +47,7 @@ export function makeReservationHoldReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
         ),
+        defectOn(ReservationRepositoryError),
       ),
 
     findPendingHoldByUserIdNow: (userId, now) =>
@@ -67,6 +70,7 @@ export function makeReservationHoldReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
         ),
+        defectOn(ReservationRepositoryError),
       ),
 
     findPendingHoldByBikeIdNow: (bikeId, now) =>
@@ -89,6 +93,7 @@ export function makeReservationHoldReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
         ),
+        defectOn(ReservationRepositoryError),
       ),
   };
 }

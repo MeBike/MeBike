@@ -5,6 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { ReservationStatus } from "generated/prisma/client";
 
@@ -37,7 +38,7 @@ export function makeReservationAdminReadRepository(
             operation: "countPendingByStationId",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(ReservationRepositoryError)),
 
     listForAdmin: (filter, pageReq) =>
       Effect.gen(function* () {
@@ -73,6 +74,6 @@ export function makeReservationAdminReadRepository(
 
         const rows = items.map(toReservationRow);
         return makePageResult(rows, total, page, pageSize);
-      }),
+      }).pipe(defectOn(ReservationRepositoryError)),
   };
 }

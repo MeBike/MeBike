@@ -1,7 +1,5 @@
 import { Effect, Option } from "effect";
 
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
-import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type { BikeRow } from "../models";
@@ -22,9 +20,7 @@ export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
     const repo = yield* BikeRepository;
     const { client } = yield* Prisma;
 
-    const current = yield* repo.getById(bikeId).pipe(
-      defectOn(BikeRepositoryError),
-    );
+    const current = yield* repo.getById(bikeId);
     if (Option.isNone(current)) {
       return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
     }
@@ -53,8 +49,6 @@ export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
       return yield* Effect.fail(new BikeCurrentlyReserved({ bikeId, action: "delete" }));
     }
 
-    return yield* repo.updateStatus(bikeId, "UNAVAILABLE").pipe(
-      defectOn(BikeRepositoryError),
-    );
+    return yield* repo.updateStatus(bikeId, "UNAVAILABLE");
   });
 }

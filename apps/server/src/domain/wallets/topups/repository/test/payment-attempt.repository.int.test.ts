@@ -3,9 +3,10 @@ import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect, expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
+import { PaymentAttemptRepositoryError } from "../../domain-errors";
 import { makePaymentAttemptRepository } from "../payment-attempt.repository";
 
 describe("paymentAttemptRepository Integration", () => {
@@ -331,16 +332,16 @@ describe("paymentAttemptRepository Integration", () => {
 
     expect(secondAttempt).toBe(false);
   });
-  it("returns PaymentAttemptRepositoryError when database is unreachable", async () => {
+  it("defects with PaymentAttemptRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = makePaymentAttemptRepository(broken.client);
 
-      const result = await Effect.runPromise(
-        brokenRepo.findById(uuidv7()).pipe(Effect.either),
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        PaymentAttemptRepositoryError,
+        { operation: "findById" },
       );
-
-      expectLeftTag(result, "PaymentAttemptRepositoryError");
     }
     finally {
       await broken.stop();

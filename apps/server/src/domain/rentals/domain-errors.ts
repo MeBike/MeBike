@@ -198,12 +198,8 @@ export type RentalServiceFailure
     | InvalidBikeSwapRequestStatus
     | BikeSwapRequestExisted;
 
-export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;
+export type RentalRepoError = RentalUniqueViolation;
 
-export type ReturnSlotRepoError
-  = | RentalRepositoryError
-    | ReturnSlotUniqueViolation;
+export type ReturnSlotRepoError = ReturnSlotUniqueViolation;
 
-export type ReturnConfirmationRepoError
-  = | RentalRepositoryError
-    | ReturnConfirmationUniqueViolation;
+export type ReturnConfirmationRepoError = ReturnConfirmationUniqueViolation;

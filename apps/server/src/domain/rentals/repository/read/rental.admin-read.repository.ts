@@ -5,6 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 
 import type { AdminRentalListItem } from "../../models";
@@ -66,7 +67,7 @@ export function makeRentalAdminReadRepository(
         );
 
         return makePageResult(mappedItems, total, page, pageSize);
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
 
     adminGetRentalById(rentalId) {
@@ -88,7 +89,7 @@ export function makeRentalAdminReadRepository(
           return Option.none();
         }
         return Option.some(mapToAdminRentalDetail(raw));
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
 
     listActiveRentalsByPhone(phoneNumber, pageReq) {
@@ -132,7 +133,7 @@ export function makeRentalAdminReadRepository(
         );
 
         return makePageResult(mappedItems, total, page, pageSize);
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
   };
 }

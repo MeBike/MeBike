@@ -68,10 +68,6 @@ export type UpdateUserProfilePatch = Partial<{
   username: string | null;
   avatar: string | null;
   location: string | null;
-  role: UserRole;
-  accountStatus: AccountStatus;
-  verify: UserVerifyStatus;
-  nfcCardUid: string | null;
 }>;
 
 export type UpdateUserAdminPatch = Partial<{

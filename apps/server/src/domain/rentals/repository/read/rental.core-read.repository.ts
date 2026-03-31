@@ -6,6 +6,8 @@ import type {
   RentalStatus,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
+
 import type { RentalRepo } from "../rental.repository.types";
 
 import { RentalRepositoryError } from "../../domain-errors";
@@ -38,7 +40,7 @@ export function makeRentalCoreReadRepository(
         });
 
         return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
 
     findActiveByUserId(userId) {
@@ -57,7 +59,7 @@ export function makeRentalCoreReadRepository(
         });
 
         return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
 
     findById(rentalId) {
@@ -76,6 +78,7 @@ export function makeRentalCoreReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
         ),
+        defectOn(RentalRepositoryError),
       );
     },
   };

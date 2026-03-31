@@ -9,20 +9,14 @@ import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
-import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
-import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository } from "@/domain/stations";
-import { StationRepositoryError } from "@/domain/stations/errors";
-import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserQueryRepository } from "@/domain/users";
-import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeWalletRepository } from "@/domain/wallets";
-import { InsufficientWalletBalance, WalletNotFound, WalletRepositoryError } from "@/domain/wallets/domain-errors";
+import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -128,9 +122,7 @@ export function reserveBike(
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
         }
 
-        const bikeOpt = yield* bikeRepo.getById(input.bikeId).pipe(
-          defectOn(BikeRepositoryError),
-        );
+        const bikeOpt = yield* bikeRepo.getById(input.bikeId);
         if (Option.isNone(bikeOpt)) {
           return yield* Effect.fail(new BikeNotFound({ bikeId: input.bikeId }));
         }
@@ -152,18 +144,14 @@ export function reserveBike(
 
         const txStationRepo = makeStationRepository(tx);
         const txReservationRepo = makeReservationRepository(tx);
-        const stationOpt = yield* txStationRepo.getById(input.stationId).pipe(
-          defectOn(StationRepositoryError),
-        );
+        const stationOpt = yield* txStationRepo.getById(input.stationId);
         if (Option.isNone(stationOpt)) {
           return yield* Effect.die(new Error(
             `Invariant violated: bike ${input.bikeId} references missing station ${input.stationId}`,
           ));
         }
 
-        const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId).pipe(
-          defectOn(ReservationRepositoryError),
-        );
+        const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId);
         if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
           return yield* Effect.fail(new StationPickupSlotLimitExceeded({
             stationId: input.stationId,
@@ -174,7 +162,6 @@ export function reserveBike(
 
         const subscriptionId: string | null = input.subscriptionId ?? null;
         const pricingPolicy = yield* makePricingPolicyRepository(tx).getActive().pipe(
-          defectOn(PricingPolicyRepositoryError),
           Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
         );
@@ -190,9 +177,7 @@ export function reserveBike(
             subscriptionId,
             userId: input.userId,
             now,
-          }).pipe(
-            defectOn(SubscriptionRepositoryError),
-          );
+          });
 
           prepaid = toPrismaDecimal("0");
           prepaidMinor = 0n;
@@ -219,9 +204,7 @@ export function reserveBike(
           pricingPolicyId: pricingPolicy.id,
         });
 
-        const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now).pipe(
-          defectOn(BikeRepositoryError),
-        );
+        const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now);
         if (!bikeReserved) {
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
         }
@@ -259,12 +242,8 @@ export function reserveBike(
         {
           const txUserRepo = makeUserQueryRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
-            txUserRepo.findById(reservation.userId).pipe(
-              defectOn(UserRepositoryError),
-            ),
-            txStationRepo.getById(reservation.stationId).pipe(
-              defectOn(StationRepositoryError),
-            ),
+            txUserRepo.findById(reservation.userId),
+            txStationRepo.getById(reservation.stationId),
           ]);
 
           if (Option.isNone(userOpt)) {
@@ -323,6 +302,5 @@ function debitWallet(
         balance: err.balance,
         attemptedDebit: err.attemptedDebit,
       }))),
-    defectOn(WalletRepositoryError),
   );
 }

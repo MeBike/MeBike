@@ -2,10 +2,12 @@ import { Effect, Option } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { isPrismaRecordNotFound } from "@/infrastructure/prisma-errors";
 
 import type { UserRepo } from "../user.repository.types";
 
+import { UserRepositoryError } from "../../domain-errors";
 import { selectUserRow, toUserRow } from "../user.mappers";
 import { toUserRepositoryError } from "./user-write.shared";
 
@@ -43,6 +45,7 @@ export function makeUserStripeWriteRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toUserRow)),
         ),
+        defectOn(UserRepositoryError),
       ),
 
     setStripeConnectedAccountIdIfNull: (id, accountId) =>
@@ -75,6 +78,7 @@ export function makeUserStripeWriteRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toUserRow)),
         ),
+        defectOn(UserRepositoryError),
       ),
 
     setStripePayoutsEnabled: (id, enabled) =>
@@ -99,6 +103,7 @@ export function makeUserStripeWriteRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toUserRow)),
         ),
+        defectOn(UserRepositoryError),
       ),
 
     setStripePayoutsEnabledByAccountId: (accountId, enabled) =>
@@ -112,6 +117,6 @@ export function makeUserStripeWriteRepository(
           return updated.count > 0;
         },
         catch: err => toUserRepositoryError("setStripePayoutsEnabledByAccountId", err),
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
   };
 }

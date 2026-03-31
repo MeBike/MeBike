@@ -4,7 +4,6 @@ import type { BikeRepository } from "@/domain/bikes";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import { WalletServiceTag } from "@/domain/wallets";
@@ -51,13 +50,9 @@ export function cancelReservation(
 
         const bikeId = updatedReservation.bikeId;
         if (bikeId) {
-          const bikeReleased = yield* bikeRepo.releaseBikeIfReserved(bikeId, now).pipe(
-            defectOn(BikeRepositoryError),
-          );
+          const bikeReleased = yield* bikeRepo.releaseBikeIfReserved(bikeId, now);
           if (!bikeReleased) {
-            const bikeOpt = yield* bikeRepo.getById(bikeId).pipe(
-              defectOn(BikeRepositoryError),
-            );
+            const bikeOpt = yield* bikeRepo.getById(bikeId);
             if (Option.isNone(bikeOpt)) {
               return yield* Effect.fail(new BikeNotFound({ bikeId }));
             }

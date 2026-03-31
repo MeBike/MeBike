@@ -3,6 +3,7 @@ import { uuidv7 } from "uuidv7";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { pickDefined } from "@/domain/shared/pick-defined";
 import { UserRole as PrismaUserRole, UserVerifyStatus } from "generated/prisma/client";
 
@@ -11,6 +12,7 @@ import type { UserRepo } from "../user.repository.types";
 import {
   StationRoleAssignmentLimitExceeded,
   TechnicianTeamMemberLimitExceeded,
+  UserRepositoryError,
 } from "../../domain-errors";
 import { selectUserRow, toUserRow } from "../user.mappers";
 import {
@@ -102,7 +104,10 @@ export function makeUserAdminWriteRepository(
             phoneNumber: data.phoneNumber,
           }) ?? toUserRepositoryError("createUser", err);
         },
-      }).pipe(Effect.map(toUserRow)),
+      }).pipe(
+        Effect.map(toUserRow),
+        defectOn(UserRepositoryError),
+      ),
 
     updateAdminById: (id, patch) =>
       Effect.gen(function* () {
@@ -198,6 +203,6 @@ export function makeUserAdminWriteRepository(
         }
 
         return Option.some(toUserRow(updated));
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
   };
 }
