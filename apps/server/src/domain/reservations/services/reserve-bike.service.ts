@@ -15,7 +15,6 @@ import { ReservationRepositoryError } from "@/domain/reservations/domain-errors"
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository } from "@/domain/stations";
-import { StationRepositoryError } from "@/domain/stations/errors";
 import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserQueryRepository } from "@/domain/users";
@@ -149,9 +148,7 @@ export function reserveBike(
 
         const txStationRepo = makeStationRepository(tx);
         const txReservationRepo = makeReservationRepository(tx);
-        const stationOpt = yield* txStationRepo.getById(input.stationId).pipe(
-          defectOn(StationRepositoryError),
-        );
+        const stationOpt = yield* txStationRepo.getById(input.stationId);
         if (Option.isNone(stationOpt)) {
           return yield* Effect.die(new Error(
             `Invariant violated: bike ${input.bikeId} references missing station ${input.stationId}`,
@@ -257,9 +254,7 @@ export function reserveBike(
             txUserRepo.findById(reservation.userId).pipe(
               defectOn(UserRepositoryError),
             ),
-            txStationRepo.getById(reservation.stationId).pipe(
-              defectOn(StationRepositoryError),
-            ),
+            txStationRepo.getById(reservation.stationId),
           ]);
 
           if (Option.isNone(userOpt)) {

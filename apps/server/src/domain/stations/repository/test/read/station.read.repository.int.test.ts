@@ -1,8 +1,10 @@
-import { Effect, Either, Option } from "effect";
+import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { StationRepositoryError } from "@/domain/stations/errors";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
+import { expectDefect } from "@/test/effect/assertions";
 
 import { setupStationRepositoryIntTestKit } from "../station.repository.int.test-kit";
 
@@ -92,20 +94,16 @@ describe("stationReadRepository Integration", () => {
     expect(result.items[1].id).toBe(farId);
   });
 
-  it("returns StationRepositoryError when database is unreachable", async () => {
+  it("defects with StationRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = kit.makeRepo(broken.client);
 
-      const result = await Effect.runPromise(
-        brokenRepo.listWithOffset({}, { page: 1, pageSize: 10 }).pipe(Effect.either),
+      await expectDefect(
+        brokenRepo.listWithOffset({}, { page: 1, pageSize: 10 }),
+        StationRepositoryError,
+        { operation: "listWithOffset.count" },
       );
-
-      if (Either.isRight(result)) {
-        throw new Error("Expected failure but got success");
-      }
-
-      expect(result.left._tag).toBe("StationRepositoryError");
     }
     finally {
       await broken.stop();

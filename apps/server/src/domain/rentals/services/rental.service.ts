@@ -13,7 +13,6 @@ import {
   StationNotFound,
   StationRepository,
 } from "@/domain/stations";
-import { StationRepositoryError } from "@/domain/stations/errors";
 
 import type { RentalServiceFailure } from "../domain-errors";
 import type {
@@ -181,12 +180,8 @@ function makeRentalService(
 
     requestBikeSwap: ({ rentalId, userId, stationId }) =>
       Effect.gen(function* () {
-        const station = yield* stationRepo
-          .getById(stationId)
-          .pipe(
-            defectOn(StationRepositoryError),
-          );
-        if (!station) {
+        const stationOpt = yield* stationRepo.getById(stationId);
+        if (Option.isNone(stationOpt)) {
           return yield* Effect.fail(new StationNotFound({ id: stationId }));
         }
 

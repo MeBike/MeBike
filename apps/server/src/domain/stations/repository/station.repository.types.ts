@@ -5,7 +5,6 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
-  StationRepositoryError,
 } from "../errors";
 import type {
   CreateStationInput,
@@ -22,23 +21,23 @@ export type StationRepo = {
     input: CreateStationInput,
   ) => Effect.Effect<
     StationRow,
-    StationRepositoryError | StationNameAlreadyExists | StationOutsideSupportedArea
+    StationNameAlreadyExists | StationOutsideSupportedArea
   >;
   update: (
     id: string,
     input: UpdateStationInput,
   ) => Effect.Effect<
     Option.Option<StationRow>,
-    StationRepositoryError | StationNameAlreadyExists | StationOutsideSupportedArea
+    StationNameAlreadyExists | StationOutsideSupportedArea
   >;
   listWithOffset: (
     filter: StationFilter,
     pageReq: PageRequest<StationSortField>,
-  ) => Effect.Effect<PageResult<StationRow>, StationRepositoryError>;
+  ) => Effect.Effect<PageResult<StationRow>>;
   getById: (
     id: string,
-  ) => Effect.Effect<Option.Option<StationRow>, StationRepositoryError>;
+  ) => Effect.Effect<Option.Option<StationRow>>;
   listNearest: (
     args: NearestSearchArgs,
-  ) => Effect.Effect<PageResult<NearestStationRow>, StationRepositoryError>;
+  ) => Effect.Effect<PageResult<NearestStationRow>>;
 };

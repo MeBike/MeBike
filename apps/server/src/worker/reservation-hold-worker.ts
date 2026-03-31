@@ -11,7 +11,6 @@ import {
   ReservationRepositoryLive,
 } from "@/domain/reservations/repository/reservation.repository";
 import { defectOn } from "@/domain/shared";
-import { StationRepositoryError } from "@/domain/stations/errors";
 import {
   StationRepository,
   StationRepositoryLive,
@@ -102,9 +101,7 @@ export async function handleReservationNotifyNearExpiry(
       }
       const user = userOpt.value;
 
-      const stationOpt = yield* stationRepo.getById(reservation.stationId).pipe(
-        defectOn(StationRepositoryError),
-      );
+      const stationOpt = yield* stationRepo.getById(reservation.stationId);
       if (Option.isNone(stationOpt)) {
         return { outcome: "SKIPPED", reason: "MISSING_STATION" as const };
       }
@@ -266,9 +263,7 @@ export async function handleReservationExpireHold(
       }
       const user = userOpt.value;
 
-      const stationOpt = yield* stationRepo.getById(outcome.stationId).pipe(
-        defectOn(StationRepositoryError),
-      );
+      const stationOpt = yield* stationRepo.getById(outcome.stationId);
       if (Option.isNone(stationOpt)) {
         return { outcome: "SKIPPED" as const, reason: "MISSING_STATION" as const };
       }
