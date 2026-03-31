@@ -1,10 +1,10 @@
 import { Effect, Option } from "effect";
 
 import { makeBikeRepository } from "@/domain/bikes";
+import { AdminRentalNotFound, makeRentalRepository } from "@/domain/rentals";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import { AdminRentalNotFound, makeRentalRepository } from "@/domain/rentals";
 import {
   IncidentNotFound,
   IncidentRepositoryError,
@@ -16,7 +16,7 @@ export function resolveIncidentUseCase(userId: string, incidentId: string) {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
 
-    return yield* runPrismaTransaction(client, (tx) =>
+    return yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
         const incidentRepo = makeIncidentRepository(tx);
         const bikeRepo = makeBikeRepository(tx);
@@ -30,8 +30,8 @@ export function resolveIncidentUseCase(userId: string, incidentId: string) {
         const incidentDetail = incident.value;
 
         if (
-          incidentDetail.assignments?.technician?.id !== userId ||
-          incidentDetail.assignments?.status !== "IN_PROGRESS"
+          incidentDetail.assignments?.technician?.id !== userId
+          || incidentDetail.assignments?.status !== "IN_PROGRESS"
         ) {
           return yield* Effect.fail(
             new UnauthorizedIncidentAccess({ incidentId, userId }),
@@ -54,18 +54,16 @@ export function resolveIncidentUseCase(userId: string, incidentId: string) {
         const finalIncident = yield* incidentRepo.getById(incidentId);
         return yield* Option.match(finalIncident, {
           onNone: () => Effect.fail(new IncidentNotFound({ id: incidentId })),
-          onSome: (i) => Effect.succeed(i),
+          onSome: i => Effect.succeed(i),
         });
-      }),
-    ).pipe(
-      Effect.catchTag("PrismaTransactionError", (e) =>
+      })).pipe(
+      Effect.catchTag("PrismaTransactionError", e =>
         Effect.fail(
           new IncidentRepositoryError({
             operation: "resolveIncident.transaction",
             cause: e.cause,
           }),
-        ),
-      ),
+        )),
     );
   });
 }
