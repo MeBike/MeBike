@@ -3,9 +3,10 @@ import type Stripe from "stripe";
 import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Match } from "effect";
 
+import { defectOn } from "@/domain/shared";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { WalletNotFound, WalletRepositoryError } from "../../domain-errors";
 import type { IncreaseBalanceInput } from "../../models";
@@ -241,7 +242,7 @@ function settleSuccessfulTopup(
         Match.exhaustive,
       );
     })).pipe(
-    Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+    defectOn(PrismaTransactionError),
   );
 }
 

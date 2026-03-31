@@ -11,6 +11,8 @@ import {
   PushTokenRepository,
   PushTokenRepositoryLive,
 } from "@/domain/notifications";
+import { PushTokenRepositoryError } from "@/domain/notifications/domain-errors";
+import { defectOn } from "@/domain/shared";
 import { PrismaLive } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
 
@@ -56,7 +58,7 @@ export async function handlePushSend(job: QueueJob | undefined): Promise<void> {
       const sender = yield* ExpoPushSenderServiceTag;
 
       const tokens = yield* repo.listActiveByUserId(payload.userId).pipe(
-        Effect.catchTag("PushTokenRepositoryError", err => Effect.die(err)),
+        defectOn(PushTokenRepositoryError),
       );
       if (tokens.length === 0) {
         return {
@@ -106,7 +108,7 @@ export async function handlePushSend(job: QueueJob | undefined): Promise<void> {
           }
 
           yield* repo.deactivateForUser(payload.userId, outcome.token).pipe(
-            Effect.catchTag("PushTokenRepositoryError", err => Effect.die(err)),
+            defectOn(PushTokenRepositoryError),
           );
           continue;
         }

@@ -4,6 +4,9 @@ import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
+import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
+import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
+import { defectOn } from "@/domain/shared";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -154,7 +157,7 @@ export function assignFixedSlotReservations(args: {
                 template.id,
                 slotStartAt,
               ).pipe(
-                Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+                defectOn(ReservationRepositoryError),
               );
 
               if (Option.isNone(reservationOpt)) {
@@ -163,7 +166,7 @@ export function assignFixedSlotReservations(args: {
               const reservation = reservationOpt.value;
 
               const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId).pipe(
-                Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+                defectOn(BikeRepositoryError),
               );
 
               if (Option.isNone(bikeOpt)) {
@@ -198,14 +201,14 @@ export function assignFixedSlotReservations(args: {
                 bike.id,
                 now,
               ).pipe(
-                Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+                defectOn(ReservationRepositoryError),
               );
               if (!reservationAssigned) {
                 return "CONFLICT" as const;
               }
 
               const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, now).pipe(
-                Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+                defectOn(BikeRepositoryError),
               );
               if (!bikeReserved) {
                 return "CONFLICT" as const;

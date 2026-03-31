@@ -3,12 +3,11 @@ import { Effect, Layer, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { BikeStatus } from "generated/prisma/client";
 
+import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type {
-  BikeRepositoryError,
-  DuplicateChipId,
-} from "../domain-errors";
+import type { DuplicateChipId } from "../domain-errors";
 import type {
   BikeFilter,
   BikeRow,
@@ -108,17 +107,17 @@ function makeBikeService(
       repo
         .listByStationWithOffset(filter.stationId, filter, pageReq)
         .pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+          defectOn(BikeRepositoryError),
         ),
 
     getBikeDetail: (bikeId: string) =>
       repo.getById(bikeId).pipe(
-        Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+        defectOn(BikeRepositoryError),
       ),
 
     reportBrokenBike: (bikeId: string) =>
       repo.updateStatus(bikeId, "BROKEN").pipe(
-        Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+        defectOn(BikeRepositoryError),
       ),
 
     adminUpdateBike: (bikeId, patch) =>
@@ -126,7 +125,7 @@ function makeBikeService(
         const current = yield* repo
           .getById(bikeId)
           .pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+            defectOn(BikeRepositoryError),
           );
         if (Option.isNone(current)) {
           return yield* Effect.fail(new BikeNotFound({ id: bikeId }));

@@ -2,6 +2,9 @@ import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
+import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
+import { defectOn } from "@/domain/shared";
+
 import type {
   ActiveReservationExists,
   BikeAlreadyReserved,
@@ -133,39 +136,39 @@ function makeReservationService(
   return {
     getById: reservationId =>
       repo.findById(reservationId).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     listForUser: (userId, filter, pageReq) =>
       repo.listForUser(userId, filter, pageReq).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     getLatestPendingOrActiveForUser: userId =>
       repo.findLatestPendingOrActiveByUserId(userId).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     getLatestPendingOrActiveForUserInTx: (tx, userId) =>
       makeReservationRepository(tx).findLatestPendingOrActiveByUserId(userId).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     markExpiredNow: now =>
       repo.markExpiredNow(now).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     updateStatus: input =>
       repo.updateStatus(input).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
 
     validatePendingForConfirmationInTx: (tx, input) =>
       Effect.gen(function* () {
         const txRepo = makeReservationRepository(tx);
         const reservationOpt = yield* txRepo.findById(input.reservationId).pipe(
-          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+          defectOn(ReservationRepositoryError),
         );
         if (Option.isNone(reservationOpt)) {
           return yield* Effect.fail(new ReservationNotFound({ reservationId: input.reservationId }));
@@ -209,7 +212,7 @@ function makeReservationService(
       Effect.gen(function* () {
         const txRepo = makeReservationRepository(tx);
         const reservationOpt = yield* txRepo.findById(input.reservationId).pipe(
-          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+          defectOn(ReservationRepositoryError),
         );
         if (Option.isNone(reservationOpt)) {
           return yield* Effect.fail(new ReservationNotFound({ reservationId: input.reservationId }));
@@ -236,7 +239,7 @@ function makeReservationService(
           status: "CANCELLED",
           updatedAt: input.now,
         }).pipe(
-          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+          defectOn(ReservationRepositoryError),
         );
       }),
 
@@ -267,7 +270,7 @@ function makeReservationService(
             return Effect.die(new Error(`Unhandled reservation unique constraint: ${String(constraint)}`));
           },
         ),
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
+        defectOn(ReservationRepositoryError),
       ),
   };
 }
