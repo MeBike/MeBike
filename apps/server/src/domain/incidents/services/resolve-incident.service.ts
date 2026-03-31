@@ -4,6 +4,7 @@ import { makeBikeRepository } from "@/domain/bikes";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
+import { AdminRentalNotFound, makeRentalRepository } from "@/domain/rentals";
 import {
   IncidentNotFound,
   IncidentRepositoryError,
@@ -15,10 +16,11 @@ export function resolveIncidentUseCase(userId: string, incidentId: string) {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
 
-    return yield* runPrismaTransaction(client, tx =>
+    return yield* runPrismaTransaction(client, (tx) =>
       Effect.gen(function* () {
         const incidentRepo = makeIncidentRepository(tx);
         const bikeRepo = makeBikeRepository(tx);
+        const rentalRepo = makeRentalRepository(tx);
 
         const incident = yield* incidentRepo.getById(incidentId);
         if (Option.isNone(incident)) {
@@ -28,8 +30,8 @@ export function resolveIncidentUseCase(userId: string, incidentId: string) {
         const incidentDetail = incident.value;
 
         if (
-          incidentDetail.assignments?.technician?.id !== userId
-          || incidentDetail.assignments?.status !== "IN_PROGRESS"
+          incidentDetail.assignments?.technician?.id !== userId ||
+          incidentDetail.assignments?.status !== "IN_PROGRESS"
         ) {
           return yield* Effect.fail(
             new UnauthorizedIncidentAccess({ incidentId, userId }),
@@ -38,21 +40,32 @@ export function resolveIncidentUseCase(userId: string, incidentId: string) {
 
         yield* incidentRepo.updateAssignmentStatus(incidentId, "RESOLVED");
         yield* incidentRepo.updateStatus(incidentId, "RESOLVED");
-        yield* bikeRepo.updateStatus(incidentDetail.bike.id, "BOOKED");
+
+        if (incidentDetail.rental?.id) {
+          const rental = yield* rentalRepo.findById(incidentDetail.rental.id);
+          if (Option.isNone(rental)) {
+            return yield* Effect.fail(
+              new AdminRentalNotFound(incidentDetail.rental.id),
+            );
+          }
+          yield* bikeRepo.updateStatus(rental.value.bikeId, "BOOKED");
+        }
 
         const finalIncident = yield* incidentRepo.getById(incidentId);
         return yield* Option.match(finalIncident, {
           onNone: () => Effect.fail(new IncidentNotFound({ id: incidentId })),
-          onSome: i => Effect.succeed(i),
+          onSome: (i) => Effect.succeed(i),
         });
-      })).pipe(
-      Effect.catchTag("PrismaTransactionError", e =>
+      }),
+    ).pipe(
+      Effect.catchTag("PrismaTransactionError", (e) =>
         Effect.fail(
           new IncidentRepositoryError({
             operation: "resolveIncident.transaction",
             cause: e.cause,
           }),
-        )),
+        ),
+      ),
     );
   });
 }
