@@ -132,9 +132,7 @@ export function confirmReservation(
         }).pipe(
           Effect.catchTag("WalletNotFound", err => Effect.fail(err)),
           Effect.catchTag("InsufficientWalletBalance", err => Effect.fail(err)),
-          defectOn(WalletRepositoryError),
-          defectOn(WalletHoldRepositoryError),
-          defectOn(RentalRepositoryError),
+          defectOn(WalletRepositoryError, WalletHoldRepositoryError, RentalRepositoryError),
         );
 
         const updatedReservation = yield* reservationService.updateStatus({
