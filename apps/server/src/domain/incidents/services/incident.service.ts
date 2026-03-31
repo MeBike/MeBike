@@ -124,7 +124,7 @@ export type IncidentService = {
     | AdminRentalNotFound
     | StationNotFound
     | InvalidIncidentStatus,
-    Prisma | IncidentRepository | RentalRepository | BikeRepository
+    Prisma
   >;
 
   resolveIncident: (
@@ -136,8 +136,10 @@ export type IncidentService = {
     | IncidentRepositoryError
     | UnauthorizedIncidentAccess
     | InvalidIncidentStatus
-    | BikeRepositoryError,
-    Prisma | IncidentRepository | BikeRepository
+    | BikeRepositoryError
+    | RentalRepositoryError
+    | AdminRentalNotFound,
+    Prisma
   >;
 };
 
