@@ -2,6 +2,9 @@ import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
+import { AgencyRepositoryError } from "@/domain/agencies/domain-errors";
+import { defectOn } from "@/domain/shared";
+
 import type { AgencyFilter, AgencyRow, AgencySortField, CreateAgencyInput, UpdateAgencyInput, UpdateAgencyStatusInput } from "../models";
 import type { AgencyRepo } from "../repository/agency.repository";
 
@@ -33,7 +36,7 @@ export function makeAgencyService(repo: AgencyRepo): AgencyService {
     getAgencyById: id =>
       Effect.gen(function* () {
         const agencyOpt = yield* repo.getById(id).pipe(
-          Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
+          defectOn(AgencyRepositoryError),
         );
 
         if (Option.isNone(agencyOpt)) {
@@ -44,13 +47,13 @@ export function makeAgencyService(repo: AgencyRepo): AgencyService {
       }),
     listAgencies: (filter, pageReq) =>
       repo.listWithOffset(filter, pageReq).pipe(
-        Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
+        defectOn(AgencyRepositoryError),
       ),
     create: input => repo.create(input),
     updateAgency: (id, input) =>
       Effect.gen(function* () {
         const updatedOpt = yield* repo.update(id, input).pipe(
-          Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
+          defectOn(AgencyRepositoryError),
         );
 
         if (Option.isNone(updatedOpt)) {
@@ -62,7 +65,7 @@ export function makeAgencyService(repo: AgencyRepo): AgencyService {
     updateAgencyStatus: (id, input) =>
       Effect.gen(function* () {
         const updatedOpt = yield* repo.updateStatus(id, input).pipe(
-          Effect.catchTag("AgencyRepositoryError", err => Effect.die(err)),
+          defectOn(AgencyRepositoryError),
         );
 
         if (Option.isNone(updatedOpt)) {
