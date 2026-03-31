@@ -155,8 +155,7 @@ export function finalizeRentalReturnInTx(
         }).pipe(
           Effect.catchTag("WalletNotFound", err => Effect.die(err)),
           Effect.catchTag("InsufficientWalletBalance", err => Effect.die(err)),
-          defectOn(WalletRepositoryError),
-          defectOn(WalletHoldRepositoryError),
+          defectOn(WalletRepositoryError, WalletHoldRepositoryError),
         )
         : yield* releaseRentalDepositHoldInTx({
           tx,
