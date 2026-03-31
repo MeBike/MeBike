@@ -13,6 +13,7 @@ export const AgencyRequestReposLive = AgencyRequestRepositoryLive.pipe(
 
 export const AgencyRequestServiceLayer = AgencyRequestServiceLive.pipe(
   Layer.provide(AgencyRequestReposLive),
+  Layer.provide(PrismaLive),
 );
 
 export const AgencyRequestDepsLive = Layer.mergeAll(

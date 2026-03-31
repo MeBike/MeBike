@@ -1,8 +1,44 @@
+import type { RouteConfig } from "@hono/zod-openapi";
+
 import { serverRoutes } from "@mebike/shared";
 
-import { AgencyRequestsController } from "@/http/controllers/agency-requests.controller";
+import {
+  AgencyRequestsAdminController,
+  AgencyRequestsMeController,
+  AgencyRequestsPublicController,
+} from "@/http/controllers/agency-requests";
+import {
+  requireAdminMiddleware,
+  requireAuthMiddleware,
+} from "@/http/middlewares/auth";
 
 export function registerAgencyRequestRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const agencyRequests = serverRoutes.agencyRequests;
-  app.openapi(agencyRequests.submit, AgencyRequestsController.submit);
+  const adminListAgencyRequestsRoute = {
+    ...agencyRequests.adminList,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+  const adminGetAgencyRequestRoute = {
+    ...agencyRequests.adminGet,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+  const adminApproveAgencyRequestRoute = {
+    ...agencyRequests.adminApprove,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+  const adminRejectAgencyRequestRoute = {
+    ...agencyRequests.adminReject,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+  const cancelAgencyRequestRoute = {
+    ...agencyRequests.cancel,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(adminListAgencyRequestsRoute, AgencyRequestsAdminController.listAgencyRequests);
+  app.openapi(adminGetAgencyRequestRoute, AgencyRequestsAdminController.getAgencyRequestById);
+  app.openapi(adminApproveAgencyRequestRoute, AgencyRequestsAdminController.approveAgencyRequest);
+  app.openapi(adminRejectAgencyRequestRoute, AgencyRequestsAdminController.rejectAgencyRequest);
+  app.openapi(agencyRequests.submit, AgencyRequestsPublicController.submit);
+  app.openapi(cancelAgencyRequestRoute, AgencyRequestsMeController.cancelAgencyRequest);
 }
