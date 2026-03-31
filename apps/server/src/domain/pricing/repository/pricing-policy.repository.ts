@@ -2,6 +2,8 @@ import { Effect, Match, Option } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
+
 import type { PricingPolicyRow } from "../models";
 
 import {
@@ -14,13 +16,13 @@ import {
 export type PricingPolicyRepo = {
   findById: (
     pricingPolicyId: string,
-  ) => Effect.Effect<Option.Option<PricingPolicyRow>, PricingPolicyRepositoryError>;
+  ) => Effect.Effect<Option.Option<PricingPolicyRow>>;
   getById: (
     pricingPolicyId: string,
-  ) => Effect.Effect<PricingPolicyRow, PricingPolicyRepositoryError | PricingPolicyNotFound>;
+  ) => Effect.Effect<PricingPolicyRow, PricingPolicyNotFound>;
   getActive: () => Effect.Effect<
     PricingPolicyRow,
-    PricingPolicyRepositoryError | ActivePricingPolicyNotFound | ActivePricingPolicyAmbiguous
+    ActivePricingPolicyNotFound | ActivePricingPolicyAmbiguous
   >;
 };
 
@@ -68,6 +70,7 @@ export function makePricingPolicyRepository(
           }),
       }).pipe(
         Effect.map(row => Option.fromNullable(row).pipe(Option.map(toPricingPolicyRow))),
+        defectOn(PricingPolicyRepositoryError),
       ),
 
     getById: pricingPolicyId =>
@@ -107,6 +110,7 @@ export function makePricingPolicyRepository(
           ),
           Match.orElse(value => Effect.succeed(toPricingPolicyRow(value[0]!))),
         )),
+        defectOn(PricingPolicyRepositoryError),
       ),
   };
 }

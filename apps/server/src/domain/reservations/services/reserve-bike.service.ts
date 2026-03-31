@@ -10,7 +10,6 @@ import type { ReservationOption } from "generated/prisma/client";
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
-import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
@@ -167,7 +166,6 @@ export function reserveBike(
 
         const subscriptionId: string | null = input.subscriptionId ?? null;
         const pricingPolicy = yield* makePricingPolicyRepository(tx).getActive().pipe(
-          defectOn(PricingPolicyRepositoryError),
           Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
         );

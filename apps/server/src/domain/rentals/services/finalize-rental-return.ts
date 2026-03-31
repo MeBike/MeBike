@@ -10,7 +10,6 @@ import {
   isAfterLateReturnCutoff,
   makePricingPolicyRepository,
 } from "@/domain/pricing";
-import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
@@ -64,11 +63,9 @@ export function finalizeRentalReturnInTx(
 
     const pricingPolicy = rental.pricingPolicyId
       ? (yield* txPricingPolicyRepo.getById(rental.pricingPolicyId).pipe(
-          defectOn(PricingPolicyRepositoryError),
           Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
         ))
       : (yield* txPricingPolicyRepo.getActive().pipe(
-          defectOn(PricingPolicyRepositoryError),
           Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
         ));

@@ -4,7 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { toPrismaDecimal } from "@/domain/shared/decimal";
+import { expectDefect } from "@/test/effect/assertions";
 
+import { PricingPolicyRepositoryError } from "../domain-errors";
 import { makePricingPolicyRepository } from "../repository/pricing-policy.repository";
 
 function makePolicy(id: string) {
@@ -110,5 +112,31 @@ describe("pricing policy repository", () => {
     if (result._tag === "Left" && result.left._tag === "ActivePricingPolicyAmbiguous") {
       expect(result.left.pricingPolicyIds).toEqual(["policy-a", "policy-b"]);
     }
+  });
+
+  it("defects with PricingPolicyRepositoryError when findById query rejects", async () => {
+    const db = makeDb();
+    vi.mocked(db.pricingPolicy.findUnique).mockRejectedValue(new Error("db down"));
+
+    const repo = makePricingPolicyRepository(db);
+
+    await expectDefect(
+      repo.findById("policy-a"),
+      PricingPolicyRepositoryError,
+      { operation: "pricingPolicy.findById" },
+    );
+  });
+
+  it("defects with PricingPolicyRepositoryError when getActive query rejects", async () => {
+    const db = makeDb();
+    vi.mocked(db.pricingPolicy.findMany).mockRejectedValue(new Error("db down"));
+
+    const repo = makePricingPolicyRepository(db);
+
+    await expectDefect(
+      repo.getActive(),
+      PricingPolicyRepositoryError,
+      { operation: "pricingPolicy.getActive" },
+    );
   });
 });

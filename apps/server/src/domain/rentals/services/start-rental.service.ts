@@ -2,7 +2,6 @@ import { Effect, Option } from "effect";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
-import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
@@ -87,7 +86,6 @@ export function startRental(
           }
 
           const pricingPolicy = yield* txPricingPolicyRepo.getActive().pipe(
-            defectOn(PricingPolicyRepositoryError),
             Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
           );

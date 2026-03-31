@@ -4,7 +4,6 @@ import type { BikeRepository } from "@/domain/bikes";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import { makePricingPolicyRepository } from "@/domain/pricing";
-import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
 import {
   makeRentalRepository,
   RentalRepository,
@@ -75,13 +74,11 @@ export function confirmReservation(
 
         const pricingPolicyId = reservation.pricingPolicyId
           ?? (yield* txPricingPolicyRepo.getActive().pipe(
-            defectOn(PricingPolicyRepositoryError),
             Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
             Effect.map(policy => policy.id),
           ));
         const pricingPolicy = yield* txPricingPolicyRepo.getById(pricingPolicyId).pipe(
-          defectOn(PricingPolicyRepositoryError),
           Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
         );
 
