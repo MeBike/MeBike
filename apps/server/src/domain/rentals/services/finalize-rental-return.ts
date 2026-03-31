@@ -163,8 +163,7 @@ export function finalizeRentalReturnInTx(
           holdId: rental.depositHoldId,
           releasedAt: endTime,
         }).pipe(
-          defectOn(WalletRepositoryError),
-          defectOn(WalletHoldRepositoryError),
+          defectOn(WalletRepositoryError, WalletHoldRepositoryError),
         );
 
       if (!depositHandled) {
