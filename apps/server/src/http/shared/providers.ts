@@ -63,6 +63,10 @@ export {
   SupplierServiceLayer,
 } from "./features/supplier.layers";
 export {
+  TechnicianTeamDepsLive,
+  TechnicianTeamQueryReposLive,
+} from "./features/technician-team.layers";
+export {
   AvatarUploadServiceLayer,
   UserCommandReposLive,
   UserCommandServiceLayer,

@@ -8,6 +8,7 @@ import { Effect, Match } from "effect";
 
 import { hashPassword } from "@/domain/auth/services/auth.service";
 import { withLoggedCause } from "@/domain/shared";
+import { TechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import {
   adminCreateUserUseCase,
   UserCommandServiceTag,
@@ -95,8 +96,8 @@ const adminAvailableTechnicianTeams: RouteHandler<UsersRoutes["adminAvailableTec
   const query = c.req.valid("query");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserQueryServiceTag;
-      return yield* service.listAvailableTechnicianTeams({
+      const repo = yield* TechnicianTeamQueryRepository;
+      return yield* repo.listAvailable({
         stationId: query.stationId,
       });
     }),

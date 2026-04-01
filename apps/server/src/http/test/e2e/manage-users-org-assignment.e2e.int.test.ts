@@ -236,6 +236,47 @@ describe("manage-users org assignment e2e", () => {
     expect(managerWithTeamBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
 
+  it("returns INVALID_ORG_ASSIGNMENT when create references nonexistent station or technician team", async () => {
+    const missingStationId = uuidv7();
+    const missingTechnicianTeamId = uuidv7();
+
+    const managerResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Manager Missing Station",
+        email: "manager-missing-station@example.com",
+        password: "password123",
+        role: "MANAGER",
+        orgAssignment: {
+          stationId: missingStationId,
+        },
+      }),
+    });
+
+    const technicianResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Technician Missing Team",
+        email: "technician-missing-team@example.com",
+        password: "password123",
+        role: "TECHNICIAN",
+        orgAssignment: {
+          technicianTeamId: missingTechnicianTeamId,
+        },
+      }),
+    });
+
+    const managerBody = await managerResponse.json() as UsersContracts.UserErrorResponse;
+    const technicianBody = await technicianResponse.json() as UsersContracts.UserErrorResponse;
+
+    expect(managerResponse.status).toBe(400);
+    expect(managerBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+    expect(technicianResponse.status).toBe(400);
+    expect(technicianBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+  });
+
   it("returns station role limit error when creating a second staff for the same station", async () => {
     const station = await fixture.factories.station({ name: "Station Staff Limit Create" });
 
@@ -704,6 +745,53 @@ describe("manage-users org assignment e2e", () => {
 
     expect(response.status).toBe(409);
     expect(body.details.code).toBe("STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED");
+  });
+
+  it("returns INVALID_ORG_ASSIGNMENT when update references nonexistent station or technician team", async () => {
+    const managerTarget = await fixture.factories.user({
+      role: "MANAGER",
+      email: "manager-missing-station-update@example.com",
+    });
+    const technicianTarget = await fixture.factories.user({
+      role: "TECHNICIAN",
+      email: "technician-missing-team-update@example.com",
+    });
+
+    const managerResponse = await fixture.app.request(
+      `http://test/v1/users/manage-users/${managerTarget.id}`,
+      {
+        method: "PATCH",
+        headers: adminAuthHeader(),
+        body: JSON.stringify({
+          role: "MANAGER",
+          orgAssignment: {
+            stationId: uuidv7(),
+          },
+        }),
+      },
+    );
+
+    const technicianResponse = await fixture.app.request(
+      `http://test/v1/users/manage-users/${technicianTarget.id}`,
+      {
+        method: "PATCH",
+        headers: adminAuthHeader(),
+        body: JSON.stringify({
+          role: "TECHNICIAN",
+          orgAssignment: {
+            technicianTeamId: uuidv7(),
+          },
+        }),
+      },
+    );
+
+    const managerBody = await managerResponse.json() as UsersContracts.UserErrorResponse;
+    const technicianBody = await technicianResponse.json() as UsersContracts.UserErrorResponse;
+
+    expect(managerResponse.status).toBe(400);
+    expect(managerBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+    expect(technicianResponse.status).toBe(400);
+    expect(technicianBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
 
   it("preserves existing org assignment when update omits orgAssignment", async () => {

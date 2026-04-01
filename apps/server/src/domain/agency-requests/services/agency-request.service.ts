@@ -5,6 +5,8 @@ import type { PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient, UserRole } from "generated/prisma/client";
 
 import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
+import { makeStationRepository } from "@/domain/stations";
+import { makeTechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -142,6 +144,8 @@ function makeAgencyRequestService(
           const txUserCommandService = makeUserCommandService({
             commandRepo: makeUserCommandRepository(tx),
             queryRepo: makeUserQueryRepository(tx),
+            stationRepo: makeStationRepository(tx),
+            technicianTeamQueryRepo: makeTechnicianTeamQueryRepository(tx),
           });
 
           const found = yield* txAgencyRequestRepo.findById(agencyRequestId);

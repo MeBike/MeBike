@@ -1,5 +1,6 @@
 import { Layer } from "effect";
 
+import { StationRepositoryLive } from "@/domain/stations";
 import {
   AvatarUploadServiceLive,
   UserCommandRepositoryLive,
@@ -12,6 +13,7 @@ import {
 import { FirebaseStorageLive } from "@/infrastructure/firebase";
 
 import { PrismaLive } from "../infra.layers";
+import { TechnicianTeamQueryReposLive } from "./technician-team.layers";
 
 export const UserQueryReposLive = UserQueryRepositoryLive.pipe(
   Layer.provide(PrismaLive),
@@ -26,6 +28,8 @@ export const UserQueryServiceLayer = UserQueryServiceLive.pipe(
 );
 
 export const UserCommandServiceLayer = UserCommandServiceLive.pipe(
+  Layer.provide(StationRepositoryLive.pipe(Layer.provide(PrismaLive))),
+  Layer.provide(TechnicianTeamQueryReposLive),
   Layer.provide(UserQueryReposLive),
   Layer.provide(UserCommandReposLive),
 );
@@ -36,6 +40,7 @@ export const AvatarUploadServiceLayer = AvatarUploadServiceLive.pipe(
 );
 
 export const UserDepsLive = Layer.mergeAll(
+  TechnicianTeamQueryReposLive,
   UserQueryReposLive,
   UserCommandReposLive,
   UserQueryServiceLayer,

@@ -1,17 +1,10 @@
 import { Effect } from "effect";
 
-import type {
-  InvalidOrgAssignment,
-  StationRoleAssignmentLimitExceeded,
-  TechnicianTeamMemberLimitExceeded,
-} from "../domain-errors";
+import type { InvalidOrgAssignment } from "../domain-errors";
 import type { UserOrgAssignmentPatch, UserRow } from "../models";
-import type { UserQueryRepo } from "../repository/user-query.repository";
 
 import {
   InvalidOrgAssignment as InvalidOrgAssignmentError,
-  StationRoleAssignmentLimitExceeded as StationRoleAssignmentLimitExceededError,
-  TechnicianTeamMemberLimitExceeded as TechnicianTeamMemberLimitExceededError,
 } from "../domain-errors";
 
 export function normalizeOrgAssignment(
@@ -90,58 +83,4 @@ export function validateOrgAssignmentForRole(
     default:
       return fail();
   }
-}
-
-export function makeValidateTechnicianTeamCapacity(repo: Pick<UserQueryRepo, "countTechnicianTeamMembers">) {
-  const technicianTeamMemberLimit = 3;
-
-  return (args: {
-    technicianTeamId: string | null;
-    excludeUserId?: string;
-  }): Effect.Effect<void, TechnicianTeamMemberLimitExceeded> =>
-    Effect.gen(function* () {
-      if (!args.technicianTeamId) {
-        return;
-      }
-
-      const memberCount = yield* repo.countTechnicianTeamMembers(args.technicianTeamId, {
-        excludeUserId: args.excludeUserId,
-      });
-
-      if (memberCount >= technicianTeamMemberLimit) {
-        return yield* Effect.fail(new TechnicianTeamMemberLimitExceededError({
-          technicianTeamId: args.technicianTeamId,
-          memberLimit: technicianTeamMemberLimit,
-        }));
-      }
-    });
-}
-
-export function makeValidateStationRoleAssignmentLimit(
-  repo: Pick<UserQueryRepo, "countStationRoleAssignments">,
-) {
-  const stationRoleAssignmentLimit = 1;
-
-  return (args: {
-    stationId: string | null;
-    role: UserRow["role"];
-    excludeUserId?: string;
-  }): Effect.Effect<void, StationRoleAssignmentLimitExceeded> =>
-    Effect.gen(function* () {
-      if (!args.stationId || (args.role !== "STAFF" && args.role !== "MANAGER")) {
-        return;
-      }
-
-      const assignmentCount = yield* repo.countStationRoleAssignments(args.stationId, args.role, {
-        excludeUserId: args.excludeUserId,
-      });
-
-      if (assignmentCount >= stationRoleAssignmentLimit) {
-        return yield* Effect.fail(new StationRoleAssignmentLimitExceededError({
-          stationId: args.stationId,
-          role: args.role,
-          assignmentLimit: stationRoleAssignmentLimit,
-        }));
-      }
-    });
 }

@@ -9,6 +9,5 @@ export function makeUserQueryService(repo: UserQueryRepo): UserQueryService {
     listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
     searchByQuery: query => repo.searchByQuery(query),
     listTechnicianSummaries: () => repo.listTechnicianSummaries(),
-    listAvailableTechnicianTeams: args => repo.listAvailableTechnicianTeams(args),
   };
 }

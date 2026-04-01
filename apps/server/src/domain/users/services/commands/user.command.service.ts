@@ -1,6 +1,9 @@
 import bcrypt from "bcrypt";
 import { Effect, Option } from "effect";
 
+import type { StationRepo } from "@/domain/stations";
+import type { TechnicianTeamQueryRepo } from "@/domain/technician-teams";
+
 import { env } from "@/config/env";
 
 import type { UpdateUserAdminPatch, UserRow } from "../../models";
@@ -10,8 +13,11 @@ import type { UserCommandService } from "../user.service.types";
 
 import { InvalidCurrentPassword as InvalidCurrentPasswordError } from "../../domain-errors";
 import {
+  makeValidateOrgAssignmentTargetsExist,
   makeValidateStationRoleAssignmentLimit,
   makeValidateTechnicianTeamCapacity,
+} from "../user-org-assignment.validation";
+import {
   normalizeOrgAssignment,
   toOrgAssignmentPatch,
   validateOrgAssignmentForRole,
@@ -20,9 +26,20 @@ import {
 export function makeUserCommandService(args: {
   commandRepo: UserCommandRepo;
   queryRepo: UserQueryRepo;
+  stationRepo: Pick<StationRepo, "getById">;
+  technicianTeamQueryRepo: Pick<TechnicianTeamQueryRepo, "countMembers" | "getById">;
 }): UserCommandService {
-  const { commandRepo, queryRepo } = args;
-  const validateTechnicianTeamCapacity = makeValidateTechnicianTeamCapacity(queryRepo);
+  const {
+    commandRepo,
+    queryRepo,
+    stationRepo,
+    technicianTeamQueryRepo,
+  } = args;
+  const validateOrgAssignmentTargetsExist = makeValidateOrgAssignmentTargetsExist({
+    stationRepo,
+    technicianTeamQueryRepo,
+  });
+  const validateTechnicianTeamCapacity = makeValidateTechnicianTeamCapacity(technicianTeamQueryRepo);
   const validateStationRoleAssignmentLimit = makeValidateStationRoleAssignmentLimit(queryRepo);
 
   return {
@@ -32,6 +49,12 @@ export function makeUserCommandService(args: {
         const orgAssignment = normalizeOrgAssignment(input.orgAssignment) ?? null;
 
         yield* validateOrgAssignmentForRole(role, orgAssignment);
+        yield* validateOrgAssignmentTargetsExist({
+          stationId: orgAssignment?.stationId ?? null,
+          technicianTeamId: orgAssignment?.technicianTeamId ?? null,
+          role,
+          agencyId: orgAssignment?.agencyId ?? null,
+        });
         yield* validateStationRoleAssignmentLimit({
           stationId: orgAssignment?.stationId ?? null,
           role,
@@ -63,6 +86,12 @@ export function makeUserCommandService(args: {
           : (normalizeOrgAssignment(patch.orgAssignment) ?? null);
 
         yield* validateOrgAssignmentForRole(nextRole, nextOrgAssignment);
+        yield* validateOrgAssignmentTargetsExist({
+          stationId: nextOrgAssignment?.stationId ?? null,
+          technicianTeamId: nextOrgAssignment?.technicianTeamId ?? null,
+          role: nextRole,
+          agencyId: nextOrgAssignment?.agencyId ?? null,
+        });
         yield* validateStationRoleAssignmentLimit({
           stationId: nextOrgAssignment?.stationId ?? null,
           role: nextRole,

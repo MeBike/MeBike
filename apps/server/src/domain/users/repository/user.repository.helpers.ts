@@ -15,7 +15,7 @@ import type {
 
 import { StationRoleAssignmentLimitExceeded, TechnicianTeamMemberLimitExceeded, UserRepositoryError } from "../domain-errors";
 
-export const TECHNICIAN_TEAM_MEMBER_LIMIT = 3;
+const TECHNICIAN_TEAM_MEMBER_LIMIT = 3;
 
 export function toOrgAssignmentData(
   assignment:
@@ -99,33 +99,6 @@ export function toWhere(filter: UserFilter): PrismaTypes.UserWhereInput {
   });
 }
 
-export function countTechnicianTeamMembersForClient(
-  client: PrismaClient | PrismaTypes.TransactionClient,
-  technicianTeamId: string,
-  options?: { readonly excludeUserId?: string },
-) {
-  return Effect.tryPromise({
-    try: () =>
-      client.userOrgAssignment.count({
-        where: {
-          technicianTeamId,
-          ...(options?.excludeUserId
-            ? {
-                userId: {
-                  not: options.excludeUserId,
-                },
-              }
-            : {}),
-        },
-      }),
-    catch: err =>
-      new UserRepositoryError({
-        operation: "countTechnicianTeamMembers",
-        cause: err,
-      }),
-  });
-}
-
 export function countStationRoleAssignmentsForClient(
   client: PrismaClient | PrismaTypes.TransactionClient,
   stationId: string,
@@ -137,7 +110,7 @@ export function countStationRoleAssignmentsForClient(
       client.userOrgAssignment.count({
         where: toStationRoleAssignmentWhere(stationId, role, options),
       }),
-    catch: err =>
+    catch: (err: unknown) =>
       new UserRepositoryError({
         operation: "countStationRoleAssignments",
         cause: err,

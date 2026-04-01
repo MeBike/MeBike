@@ -56,7 +56,7 @@ export function mapUserSummary(
 }
 
 export function mapAvailableTechnicianTeam(
-  row: import("@/domain/users").TechnicianTeamAvailableOption,
+  row: import("@/domain/technician-teams").TechnicianTeamAvailableOption,
 ) {
   return {
     id: row.id,
