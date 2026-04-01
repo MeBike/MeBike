@@ -402,8 +402,8 @@ function rejectIncidentWithClient(
 ) {
   return Effect.gen(function* () {
     const assignment = yield* Effect.promise(() =>
-      tx.technicianAssignment.findUnique({
-        where: { id, status: "ASSIGNED" },
+      tx.technicianAssignment.findFirst({
+        where: { incidentReportId: id, status: "ASSIGNED" },
         select: { id: true, incidentReportId: true, technicianUserId: true },
       }),
     );
