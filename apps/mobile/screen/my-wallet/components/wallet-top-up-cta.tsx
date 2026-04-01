@@ -1,50 +1,53 @@
-import { LinearGradient } from "expo-linear-gradient";
 import { Pressable } from "react-native";
-import { useTheme, XStack } from "tamagui";
+import { View, useTheme, XStack } from "tamagui";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { elevations, radii } from "@theme/metrics";
+import { elevations, iconSizes, radii, spaceScale } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
 
 type WalletTopUpCtaProps = {
   onPress: () => void;
 };
 
+const topUpCtaMinHeight = spaceScale[10];
+const topUpIconShellSize = spaceScale[7] + spaceScale[1];
+
 export function WalletTopUpCta({ onPress }: WalletTopUpCtaProps) {
   const theme = useTheme();
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.96 : 1 })}>
-      <LinearGradient
-        colors={[theme.statusSuccess.val, theme.textSuccess.val]}
-        end={{ x: 1, y: 0.5 }}
-        start={{ x: 0, y: 0.5 }}
+      <XStack
+        alignItems="center"
+        backgroundColor="$surfaceDefault"
+        borderColor="$borderSubtle"
+        borderRadius={radii.xxl}
+        borderWidth={1}
+        gap="$3"
+        justifyContent="center"
+        minHeight={topUpCtaMinHeight}
+        paddingHorizontal="$4"
         style={{
-          borderRadius: radii.xxl,
-          minHeight: 72,
-          justifyContent: "center",
-          paddingHorizontal: 24,
-          ...elevations.medium,
-          shadowColor: theme.statusSuccess.val,
+          ...elevations.soft,
+          shadowColor: theme.actionPrimary.val,
+          shadowOpacity: 0.08,
         }}
       >
-        <XStack alignItems="center" gap="$3" justifyContent="center">
-          <XStack
-            alignItems="center"
-            borderColor="rgba(255,255,255,0.28)"
-            borderRadius="$round"
-            borderWidth={1}
-            height={30}
-            justifyContent="center"
-            width={30}
-          >
-            <IconSymbol color={theme.onStatusSuccess.val} name="plus" size={18} />
-          </XStack>
-          <AppText tone="inverted" variant="headline">
-            Nạp tiền
-          </AppText>
-        </XStack>
-      </LinearGradient>
+        <View
+          alignItems="center"
+          backgroundColor="$surfaceAccent"
+          borderRadius="$round"
+          height={topUpIconShellSize}
+          justifyContent="center"
+          width={topUpIconShellSize}
+        >
+          <IconSymbol color={theme.actionPrimary.val} name="plus" size={iconSizes.md} />
+        </View>
+
+        <AppText tone="brand" variant="sectionTitle">
+          Nạp tiền vào ví
+        </AppText>
+      </XStack>
     </Pressable>
   );
 }

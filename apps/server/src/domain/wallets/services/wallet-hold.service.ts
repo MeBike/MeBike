@@ -2,7 +2,6 @@ import type { Option } from "effect";
 
 import { Context, Effect, Layer } from "effect";
 
-import type { WalletHoldRepositoryError } from "../domain-errors";
 import type { CreateWalletHoldInput, WalletHoldRow } from "../models";
 
 import { makeWalletHoldRepository, WalletHoldRepository } from "../repository/wallet-hold.repository";
@@ -11,48 +10,48 @@ export type WalletHoldService = {
   createInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     input: CreateWalletHoldInput,
-  ) => Effect.Effect<WalletHoldRow, WalletHoldRepositoryError>;
+  ) => Effect.Effect<WalletHoldRow>;
   findByIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     holdId: string,
-  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletHoldRow>>;
   findByWithdrawalIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     withdrawalId: string,
-  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletHoldRow>>;
   findActiveByRentalIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     rentalId: string,
-  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletHoldRow>>;
   sumActiveAmountByWalletInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     walletId: string,
-  ) => Effect.Effect<bigint, WalletHoldRepositoryError>;
+  ) => Effect.Effect<bigint>;
   releaseByIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     holdId: string,
     releasedAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
   releaseByWithdrawalIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     withdrawalId: string,
     releasedAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
   settleByIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     holdId: string,
     settledAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
   forfeitByIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     holdId: string,
     forfeitedAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
   settleByWithdrawalIdInTx: (
     tx: import("generated/prisma/client").Prisma.TransactionClient,
     withdrawalId: string,
     settledAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
 };
 
 export class WalletHoldServiceTag extends Context.Tag("WalletHoldService")<

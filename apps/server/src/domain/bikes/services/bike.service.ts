@@ -5,10 +5,7 @@ import type { BikeStatus } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
 
-import type {
-  BikeRepositoryError,
-  DuplicateChipId,
-} from "../domain-errors";
+import type { DuplicateChipId } from "../domain-errors";
 import type {
   BikeFilter,
   BikeRow,
@@ -35,7 +32,7 @@ export type BikeService = {
     },
   ) => Effect.Effect<
     BikeRow,
-    BikeRepositoryError | DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
+    DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
   >;
 
   listBikes: (
@@ -65,7 +62,6 @@ export type BikeService = {
     | DuplicateChipId
     | BikeStationNotFound
     | BikeSupplierNotFound
-    | BikeRepositoryError
   >;
 };
 
@@ -105,29 +101,17 @@ function makeBikeService(
       }),
 
     listBikes: (filter, pageReq) =>
-      repo
-        .listByStationWithOffset(filter.stationId, filter, pageReq)
-        .pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-        ),
+      repo.listByStationWithOffset(filter.stationId, filter, pageReq),
 
     getBikeDetail: (bikeId: string) =>
-      repo.getById(bikeId).pipe(
-        Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-      ),
+      repo.getById(bikeId),
 
     reportBrokenBike: (bikeId: string) =>
-      repo.updateStatus(bikeId, "BROKEN").pipe(
-        Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-      ),
+      repo.updateStatus(bikeId, "BROKEN"),
 
     adminUpdateBike: (bikeId, patch) =>
       Effect.gen(function* () {
-        const current = yield* repo
-          .getById(bikeId)
-          .pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-          );
+        const current = yield* repo.getById(bikeId);
         if (Option.isNone(current)) {
           return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
         }

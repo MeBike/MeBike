@@ -2,8 +2,9 @@ import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect } from "@/test/effect/assertions";
 import { runEffectEither } from "@/test/effect/run";
 
 import { setupRentalRepositoryIntTestKit } from "../rental.repository.int.test-kit";
@@ -164,14 +165,16 @@ describe("rentalRepository read integration", () => {
     expect(page.items[0].status).toBe("RENTED");
   });
 
-  it("returns RentalRepositoryError when database is unreachable", async () => {
+  it("defects with RentalRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = kit.makeRepo(broken.client);
 
-      const result = await runEffectEither(brokenRepo.findById(uuidv7()));
-
-      expectLeftTag(result, "RentalRepositoryError");
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        RentalRepositoryError,
+        { operation: "findById" },
+      );
     }
     finally {
       await broken.stop();

@@ -20,10 +20,10 @@ export function adminCreateUserUseCase(args: {
   nfcCardUid?: string | null;
 }): Effect.Effect<
   UserRow,
-  import("../domain-errors").UserRepositoryError
-    | import("../domain-errors").DuplicateUserEmail
+  import("../domain-errors").DuplicateUserEmail
     | import("../domain-errors").DuplicateUserPhoneNumber
     | import("../domain-errors").InvalidOrgAssignment
+    | import("../domain-errors").StationRoleAssignmentLimitExceeded
     | import("../domain-errors").TechnicianTeamMemberLimitExceeded,
   UserCommandServiceTag
 > {

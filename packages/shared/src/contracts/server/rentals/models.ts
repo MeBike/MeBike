@@ -39,7 +39,7 @@ export const RentalIsoDateTimeSchema = z.iso.datetime();
 export const RentalSchema = z.object({
   id: z.uuidv7(),
   userId: z.uuidv7(),
-  bikeId: z.uuidv7().optional(),
+  bikeId: z.uuidv7(),
   startStation: z.uuidv7(),
   endStation: z.uuidv7().optional(),
   startTime: z.iso.datetime(),
@@ -126,7 +126,7 @@ export const RentalListItemSchema = z.object({
 export const RentalDetailSchema = z.object({
   id: z.uuidv7(),
   user: RentalUserDetailSchema,
-  bike: RentalBikeSchema.nullable(),
+  bike: RentalBikeSchema,
   startStation: RentalStationSchema,
   endStation: RentalStationSchema.nullable(),
   startTime: z.iso.datetime(),
@@ -365,7 +365,7 @@ export type BikeSwapRequestDetailResponse = {
 export const AdminRentalListItemSchema = z.object({
   id: z.uuidv7(),
   user: RentalUserSummarySchema,
-  bikeId: z.uuidv7().optional().nullable(),
+  bikeId: z.uuidv7(),
   status: RentalStatusSchema,
   startStation: z.uuidv7(),
   endStation: z.uuidv7().optional(),

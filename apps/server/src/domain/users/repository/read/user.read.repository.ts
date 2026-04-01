@@ -2,6 +2,7 @@ import { Effect, Option } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { UserRole } from "generated/prisma/client";
 
 import type { TechnicianTeamAvailableOption } from "../../models";
@@ -11,6 +12,7 @@ import { makePageResult, normalizedPage } from "../../../shared/pagination";
 import { UserRepositoryError } from "../../domain-errors";
 import { selectUserRow, toUserRow } from "../user.mappers";
 import {
+  countStationRoleAssignmentsForClient,
   countTechnicianTeamMembersForClient,
   TECHNICIAN_TEAM_MEMBER_LIMIT,
   toOrderBy,
@@ -27,6 +29,7 @@ export type UserReadRepo = Pick<
   | "listTechnicianSummaries"
   | "listAvailableTechnicianTeams"
   | "countTechnicianTeamMembers"
+  | "countStationRoleAssignments"
 >;
 
 export function makeUserReadRepository(
@@ -49,6 +52,7 @@ export function makeUserReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toUserRow)),
         ),
+        defectOn(UserRepositoryError),
       ),
 
     findByEmail: email =>
@@ -67,6 +71,7 @@ export function makeUserReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toUserRow)),
         ),
+        defectOn(UserRepositoryError),
       ),
 
     findByStripeConnectedAccountId: accountId =>
@@ -85,6 +90,7 @@ export function makeUserReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toUserRow)),
         ),
+        defectOn(UserRepositoryError),
       ),
 
     listWithOffset: (filter, pageReq) =>
@@ -125,7 +131,7 @@ export function makeUserReadRepository(
           page,
           pageSize,
         );
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
 
     searchByQuery: query =>
       Effect.tryPromise({
@@ -144,7 +150,10 @@ export function makeUserReadRepository(
             operation: "searchByQuery",
             cause: err,
           }),
-      }).pipe(Effect.map(rows => rows.map(toUserRow))),
+      }).pipe(
+        Effect.map(rows => rows.map(toUserRow)),
+        defectOn(UserRepositoryError),
+      ),
 
     listTechnicianSummaries: () =>
       Effect.tryPromise({
@@ -171,6 +180,7 @@ export function makeUserReadRepository(
           id: row.id,
           fullname: row.fullName,
         }))),
+        defectOn(UserRepositoryError),
       ),
 
     listAvailableTechnicianTeams: args =>
@@ -208,9 +218,17 @@ export function makeUserReadRepository(
             name: row.name,
             stationId: row.stationId,
           }))),
+        defectOn(UserRepositoryError),
       ),
 
     countTechnicianTeamMembers: (technicianTeamId, options) =>
-      countTechnicianTeamMembersForClient(client, technicianTeamId, options),
+      countTechnicianTeamMembersForClient(client, technicianTeamId, options).pipe(
+        defectOn(UserRepositoryError),
+      ),
+
+    countStationRoleAssignments: (stationId, role, options) =>
+      countStationRoleAssignmentsForClient(client, stationId, role, options).pipe(
+        defectOn(UserRepositoryError),
+      ),
   };
 }

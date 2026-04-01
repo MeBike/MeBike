@@ -1,9 +1,5 @@
 import { Effect, Option } from "effect";
 
-import type {
-  WalletHoldRepositoryError,
-  WalletRepositoryError,
-} from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput, WalletHoldRow } from "@/domain/wallets/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
@@ -14,7 +10,6 @@ import {
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 
-import { RentalRepositoryError } from "../domain-errors";
 import { makeRentalRepository } from "../repository/rental.repository";
 
 type CreateRentalDepositHoldInput = {
@@ -36,9 +31,6 @@ export function createRentalDepositHoldInTx(
   WalletHoldRow,
   | WalletNotFound
   | InsufficientWalletBalance
-  | WalletRepositoryError
-  | WalletHoldRepositoryError
-  | RentalRepositoryError
 > {
   return Effect.gen(function* () {
     const txWalletRepo = makeWalletRepository(input.tx);
@@ -76,10 +68,9 @@ export function createRentalDepositHoldInTx(
       depositHoldId: hold.id,
     });
     if (Option.isNone(updatedRental)) {
-      return yield* Effect.fail(new RentalRepositoryError({
-        operation: "createRentalDepositHoldInTx.updateRentalDepositHold",
-        cause: new Error(`Rental ${input.rentalId} was not updated with deposit hold ${hold.id}`),
-      }));
+      return yield* Effect.die(new Error(
+        `Rental ${input.rentalId} was not updated with deposit hold ${hold.id}`,
+      ));
     }
 
     return hold;
@@ -88,7 +79,7 @@ export function createRentalDepositHoldInTx(
 
 export function releaseRentalDepositHoldInTx(
   input: ReleaseRentalDepositHoldInput,
-): Effect.Effect<boolean, WalletHoldRepositoryError | WalletRepositoryError> {
+): Effect.Effect<boolean> {
   return Effect.gen(function* () {
     const txWalletHoldRepo = makeWalletHoldRepository(input.tx);
     const txWalletRepo = makeWalletRepository(input.tx);
@@ -128,8 +119,6 @@ export function forfeitRentalDepositHoldInTx(
   input: ForfeitRentalDepositHoldInput,
 ): Effect.Effect<
   boolean,
-  | WalletHoldRepositoryError
-  | WalletRepositoryError
   | WalletNotFound
   | InsufficientWalletBalance
 > {

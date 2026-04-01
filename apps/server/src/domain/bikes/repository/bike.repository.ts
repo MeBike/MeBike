@@ -3,6 +3,7 @@ import { Effect, Layer, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { BikeStatus, PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { pickDefined } from "@/domain/shared/pick-defined";
 import { Prisma } from "@/infrastructure/prisma";
@@ -20,48 +21,48 @@ export type BikeRepo = {
       supplierId: string;
       status: BikeStatus;
     },
-  ) => Effect.Effect<BikeRow, BikeRepositoryError | DuplicateChipId>;
+  ) => Effect.Effect<BikeRow, DuplicateChipId>;
 
-  getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
   findAvailableByStation: (
     stationId: string,
-  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  ) => Effect.Effect<Option.Option<BikeRow>>;
   listByStationWithOffset: (
     stationId: string | undefined,
     filter: BikeFilter,
     pageReq: PageRequest<BikeSortField>,
-  ) => Effect.Effect<PageResult<BikeRow>, BikeRepositoryError>;
+  ) => Effect.Effect<PageResult<BikeRow>>;
   updateStatus: (
     bikeId: string,
     status: BikeStatus,
-  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  ) => Effect.Effect<Option.Option<BikeRow>>;
   updateStatusAt: (
     bikeId: string,
     status: BikeStatus,
     updatedAt: Date,
-  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  ) => Effect.Effect<Option.Option<BikeRow>>;
   updateStatusAndStationAt: (
     bikeId: string,
     status: BikeStatus,
     stationId: string,
     updatedAt: Date,
-  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  ) => Effect.Effect<Option.Option<BikeRow>>;
   bookBikeIfAvailable: (
     bikeId: string,
     updatedAt: Date,
-  ) => Effect.Effect<boolean, BikeRepositoryError>;
+  ) => Effect.Effect<boolean>;
   reserveBikeIfAvailable: (
     bikeId: string,
     updatedAt: Date,
-  ) => Effect.Effect<boolean, BikeRepositoryError>;
+  ) => Effect.Effect<boolean>;
   bookBikeIfReserved: (
     bikeId: string,
     updatedAt: Date,
-  ) => Effect.Effect<boolean, BikeRepositoryError>;
+  ) => Effect.Effect<boolean>;
   releaseBikeIfReserved: (
     bikeId: string,
     updatedAt: Date,
-  ) => Effect.Effect<boolean, BikeRepositoryError>;
+  ) => Effect.Effect<boolean>;
 
   updateById: (
     bikeId: string,
@@ -71,7 +72,7 @@ export type BikeRepo = {
       status: BikeStatus;
       supplierId: string | null;
     }>,
-  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError | DuplicateChipId>;
+  ) => Effect.Effect<Option.Option<BikeRow>, DuplicateChipId>;
 };
 const makeBikeRepositoryEffect = Effect.gen(function* () {
   const { client } = yield* Prisma;
@@ -143,7 +144,7 @@ export function makeBikeRepository(
             message: "Failed to create bike",
           });
         },
-      }),
+      }).pipe(defectOn(BikeRepositoryError)),
 
     getById: (bikeId: string) =>
       Effect.tryPromise({
@@ -155,7 +156,10 @@ export function makeBikeRepository(
             cause: e,
             message: "Failed to fetch bike by id",
           }),
-      }).pipe(Effect.map(Option.fromNullable)),
+      }).pipe(
+        Effect.map(Option.fromNullable),
+        defectOn(BikeRepositoryError),
+      ),
 
     findAvailableByStation: stationId =>
       Effect.tryPromise({
@@ -170,7 +174,10 @@ export function makeBikeRepository(
             cause: e,
             message: "Failed to find available bike by station",
           }),
-      }).pipe(Effect.map(Option.fromNullable)),
+      }).pipe(
+        Effect.map(Option.fromNullable),
+        defectOn(BikeRepositoryError),
+      ),
 
     listByStationWithOffset: (stationId, filter, pageReq) => {
       const { page, pageSize, skip, take } = normalizedPage(pageReq);
@@ -208,7 +215,7 @@ export function makeBikeRepository(
         ]);
 
         return makePageResult(items, total, page, pageSize);
-      });
+      }).pipe(defectOn(BikeRepositoryError));
     },
 
     updateStatus: (bikeId, status) =>
@@ -243,7 +250,7 @@ export function makeBikeRepository(
         });
 
         return Option.fromNullable(row);
-      }),
+      }).pipe(defectOn(BikeRepositoryError)),
 
     updateStatusAt: (bikeId, status, updatedAt) =>
       Effect.gen(function* () {
@@ -276,7 +283,7 @@ export function makeBikeRepository(
         });
 
         return Option.fromNullable(row);
-      }),
+      }).pipe(defectOn(BikeRepositoryError)),
 
     updateStatusAndStationAt: (bikeId, status, stationId, updatedAt) =>
       Effect.gen(function* () {
@@ -309,7 +316,7 @@ export function makeBikeRepository(
         });
 
         return Option.fromNullable(row);
-      }),
+      }).pipe(defectOn(BikeRepositoryError)),
 
     bookBikeIfAvailable: (bikeId, updatedAt) =>
       Effect.tryPromise({
@@ -326,7 +333,7 @@ export function makeBikeRepository(
             cause: e,
             message: "Failed to book available bike",
           }),
-      }),
+      }).pipe(defectOn(BikeRepositoryError)),
 
     reserveBikeIfAvailable: (bikeId, updatedAt) =>
       Effect.tryPromise({
@@ -343,7 +350,7 @@ export function makeBikeRepository(
             cause: e,
             message: "Failed to reserve available bike",
           }),
-      }),
+      }).pipe(defectOn(BikeRepositoryError)),
 
     bookBikeIfReserved: (bikeId, updatedAt) =>
       Effect.tryPromise({
@@ -360,7 +367,7 @@ export function makeBikeRepository(
             cause: e,
             message: "Failed to book reserved bike",
           }),
-      }),
+      }).pipe(defectOn(BikeRepositoryError)),
 
     releaseBikeIfReserved: (bikeId, updatedAt) =>
       Effect.tryPromise({
@@ -377,7 +384,7 @@ export function makeBikeRepository(
             cause: e,
             message: "Failed to release reserved bike",
           }),
-      }),
+      }).pipe(defectOn(BikeRepositoryError)),
 
     updateById: (bikeId, patch) =>
       Effect.tryPromise({
@@ -412,6 +419,7 @@ export function makeBikeRepository(
           }));
         }),
         Effect.map((row): Option.Option<BikeRow> => Option.fromNullable(row)),
+        defectOn(BikeRepositoryError),
       ),
   };
 }

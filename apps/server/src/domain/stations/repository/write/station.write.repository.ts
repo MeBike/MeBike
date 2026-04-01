@@ -6,6 +6,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import {
   isPrismaRawUniqueViolation,
   isPrismaUniqueViolation,
@@ -193,7 +194,7 @@ export function makeStationWriteRepository(
         }
 
         return applyCounts(created, undefined);
-      });
+      }).pipe(defectOn(StationRepositoryError));
     },
 
     update(id, input) {
@@ -289,7 +290,7 @@ export function makeStationWriteRepository(
         }
 
         return yield* loadStationWithCounts(updated.id);
-      });
+      }).pipe(defectOn(StationRepositoryError));
     },
   };
 }

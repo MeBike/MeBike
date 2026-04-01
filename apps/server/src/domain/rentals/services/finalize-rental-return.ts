@@ -10,13 +10,10 @@ import {
   isAfterLateReturnCutoff,
   makePricingPolicyRepository,
 } from "@/domain/pricing";
-import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
+import { makeReservationQueryRepository } from "@/domain/reservations/repository/reservation-query.repository";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
-import {
-  SubscriptionNotFound,
-  SubscriptionUsageExceeded,
-} from "@/domain/subscriptions/domain-errors";
+import { SubscriptionNotFound, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
 import { makeSubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
 import { makeWalletRepository } from "@/domain/wallets";
 
@@ -62,11 +59,9 @@ export function finalizeRentalReturnInTx(
 
     const pricingPolicy = rental.pricingPolicyId
       ? (yield* txPricingPolicyRepo.getById(rental.pricingPolicyId).pipe(
-          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
           Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
         ))
       : (yield* txPricingPolicyRepo.getActive().pipe(
-          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
         ));
@@ -80,11 +75,9 @@ export function finalizeRentalReturnInTx(
     let prepaidMinor = 0n;
     let subscriptionDiscountMinor = 0n;
 
-    const txReservationRepo = makeReservationRepository(tx);
+    const txReservationRepo = makeReservationQueryRepository(tx);
     const reservationOpt = rental.reservationId
-      ? yield* txReservationRepo.findById(rental.reservationId).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-      )
+      ? yield* txReservationRepo.findById(rental.reservationId)
       : Option.none();
     if (Option.isSome(reservationOpt)) {
       prepaidMinor = toMinorUnit(reservationOpt.value.prepaid);
@@ -93,9 +86,7 @@ export function finalizeRentalReturnInTx(
     if (rental.subscriptionId) {
       const txSubscriptionRepo = makeSubscriptionRepository(tx);
 
-      const subscriptionOpt = yield* txSubscriptionRepo.findById(rental.subscriptionId).pipe(
-        Effect.catchTag("SubscriptionRepositoryError", err => Effect.die(err)),
-      );
+      const subscriptionOpt = yield* txSubscriptionRepo.findById(rental.subscriptionId);
 
       if (Option.isNone(subscriptionOpt)) {
         return yield* Effect.fail(new SubscriptionNotFound({
@@ -120,8 +111,6 @@ export function finalizeRentalReturnInTx(
           subscription.usageCount,
           usageToAdd,
           ["ACTIVE", "PENDING"],
-        ).pipe(
-          Effect.catchTag("SubscriptionRepositoryError", err => Effect.die(err)),
         );
 
         if (Option.isNone(incremented)) {
@@ -152,17 +141,12 @@ export function finalizeRentalReturnInTx(
         }).pipe(
           Effect.catchTag("WalletNotFound", err => Effect.die(err)),
           Effect.catchTag("InsufficientWalletBalance", err => Effect.die(err)),
-          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-          Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
         )
         : yield* releaseRentalDepositHoldInTx({
           tx,
           holdId: rental.depositHoldId,
           releasedAt: endTime,
-        }).pipe(
-          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-          Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
-        );
+        });
 
       if (!depositHandled) {
         return yield* Effect.die(new Error(
@@ -186,8 +170,6 @@ export function finalizeRentalReturnInTx(
       "AVAILABLE",
       endStationId,
       endTime,
-    ).pipe(
-      Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
     );
     if (Option.isNone(updatedBike)) {
       return yield* Effect.fail(new BikeNotFound({ bikeId }));
@@ -197,8 +179,6 @@ export function finalizeRentalReturnInTx(
       rental.id,
       "USED",
       endTime,
-    ).pipe(
-      Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
     );
     if (Option.isNone(finalizedReturnSlot)) {
       return yield* Effect.fail(new ReturnSlotRequiredForReturn({
@@ -215,9 +195,7 @@ export function finalizeRentalReturnInTx(
       durationMinutes,
       totalPrice: Number(totalPriceMinor),
       newStatus: "COMPLETED",
-    }).pipe(
-      Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-    );
+    });
 
     if (Option.isNone(updatedRental)) {
       return yield* Effect.die(new Error(
@@ -263,6 +241,5 @@ function debitWallet(
         requiredBalance: Number(err.attemptedDebit),
         currentBalance: Number(err.balance),
       }))),
-    Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
   );
 }

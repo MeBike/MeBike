@@ -6,7 +6,6 @@ import { env } from "@/config/env";
 
 import type {
   ActiveSubscriptionExists,
-  SubscriptionRepositoryError,
 } from "../domain-errors";
 import type { SubscriptionFilter, SubscriptionRow, SubscriptionSortField } from "../models";
 import type { SubscriptionRepo } from "../repository/subscription.repository";
@@ -22,28 +21,28 @@ import { makeSubscriptionRepository, SubscriptionRepository } from "../repositor
 export type SubscriptionService = {
   createPending: (
     input: Parameters<SubscriptionRepo["createPending"]>[0],
-  ) => Effect.Effect<SubscriptionRow, SubscriptionRepositoryError>;
+  ) => Effect.Effect<SubscriptionRow>;
 
   findById: (
     subscriptionId: string,
-  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
+  ) => Effect.Effect<Option.Option<SubscriptionRow>>;
 
   findCurrentForUser: (
     userId: string,
     statuses: Parameters<SubscriptionRepo["findCurrentForUser"]>[1],
-  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
+  ) => Effect.Effect<Option.Option<SubscriptionRow>>;
 
   listForUser: (
     userId: string,
     filter: SubscriptionFilter,
     pageReq: PageRequest<SubscriptionSortField>,
-  ) => Effect.Effect<PageResult<SubscriptionRow>, SubscriptionRepositoryError>;
+  ) => Effect.Effect<PageResult<SubscriptionRow>>;
 
   activate: (
     input: Parameters<SubscriptionRepo["activate"]>[0],
   ) => Effect.Effect<
     SubscriptionRow,
-    SubscriptionRepositoryError | ActiveSubscriptionExists | SubscriptionNotFound | SubscriptionNotPending
+    ActiveSubscriptionExists | SubscriptionNotFound | SubscriptionNotPending
   >;
 
   incrementUsage: (
@@ -52,7 +51,7 @@ export type SubscriptionService = {
     amount: number,
   ) => Effect.Effect<
     SubscriptionRow,
-    SubscriptionRepositoryError | SubscriptionNotFound | SubscriptionNotUsable
+    SubscriptionNotFound | SubscriptionNotUsable
   >;
 
   useOneInTx: (
@@ -64,7 +63,6 @@ export type SubscriptionService = {
     },
   ) => Effect.Effect<
     SubscriptionRow,
-    | SubscriptionRepositoryError
     | SubscriptionNotFound
     | SubscriptionNotUsable
     | SubscriptionUsageExceeded
@@ -72,7 +70,7 @@ export type SubscriptionService = {
 
   markExpiredNow: (
     now: Date,
-  ) => Effect.Effect<number, SubscriptionRepositoryError>;
+  ) => Effect.Effect<number>;
 };
 
 export class SubscriptionServiceTag extends Context.Tag("SubscriptionService")<

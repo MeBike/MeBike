@@ -6,6 +6,7 @@ import type {
   ReturnSlotStatus,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
@@ -32,22 +33,22 @@ type CreateActiveReturnSlotInput = {
 export type ReturnSlotRepo = {
   findActiveByRentalId: (
     rentalId: string,
-  ) => Effect.Effect<Option.Option<ReturnSlotRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReturnSlotRow>>;
   createActive: (
     input: CreateActiveReturnSlotInput,
   ) => Effect.Effect<ReturnSlotRow, ReturnSlotRepoError>;
   cancelActiveByRentalId: (
     rentalId: string,
     updatedAt: Date,
-  ) => Effect.Effect<Option.Option<ReturnSlotRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReturnSlotRow>>;
   finalizeActiveByRentalId: (
     rentalId: string,
     status: Extract<ReturnSlotStatus, "USED" | "CANCELLED">,
     updatedAt: Date,
-  ) => Effect.Effect<Option.Option<ReturnSlotRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReturnSlotRow>>;
   getStationCapacitySnapshot: (
     stationId: string,
-  ) => Effect.Effect<Option.Option<ReturnSlotStationCapacityRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReturnSlotStationCapacityRow>>;
 };
 
 const returnSlotSelect = {
@@ -96,7 +97,7 @@ export function makeReturnSlotRepository(
             operation: "returnSlot.findActiveByRentalId",
             cause,
           }),
-      }),
+      }).pipe(defectOn(RentalRepositoryError)),
 
     createActive: input =>
       Effect.tryPromise({
@@ -138,7 +139,10 @@ export function makeReturnSlotRepository(
                 }),
             ),
           ),
-      }).pipe(Effect.map(mapToReturnSlotRow)),
+      }).pipe(
+        Effect.map(mapToReturnSlotRow),
+        defectOn(RentalRepositoryError),
+      ),
 
     cancelActiveByRentalId: (rentalId, updatedAt) =>
       Effect.gen(function* () {
@@ -175,7 +179,7 @@ export function makeReturnSlotRepository(
         });
 
         return Option.some(mapToReturnSlotRow(updated));
-      }),
+      }).pipe(defectOn(RentalRepositoryError)),
 
     finalizeActiveByRentalId: (rentalId, status, updatedAt) =>
       Effect.gen(function* () {
@@ -212,7 +216,7 @@ export function makeReturnSlotRepository(
         });
 
         return Option.some(mapToReturnSlotRow(updated));
-      }),
+      }).pipe(defectOn(RentalRepositoryError)),
 
     getStationCapacitySnapshot: stationId =>
       Effect.gen(function* () {
@@ -266,7 +270,7 @@ export function makeReturnSlotRepository(
           totalBikes,
           activeReturnSlots,
         });
-      }),
+      }).pipe(defectOn(RentalRepositoryError)),
   };
 }
 

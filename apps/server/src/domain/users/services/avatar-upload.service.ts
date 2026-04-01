@@ -14,7 +14,6 @@ import { FirebaseStorage } from "@/infrastructure/firebase";
 import type {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
-  UserRepositoryError,
 } from "../domain-errors";
 import type { UserRow } from "../models";
 
@@ -86,8 +85,7 @@ export type AvatarUploadError = AvatarImageError | FirebaseStorageInitError | Fi
 export type UpdateUserAvatarError
   = | AvatarUploadError
     | DuplicateUserEmail
-    | DuplicateUserPhoneNumber
-    | UserRepositoryError;
+    | DuplicateUserPhoneNumber;
 export type AvatarUploadServiceError = UpdateUserAvatarError;
 
 function isAllowedAvatarContentType(value: string): value is AllowedAvatarContentType {

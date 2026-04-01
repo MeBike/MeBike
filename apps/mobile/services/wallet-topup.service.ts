@@ -1,26 +1,17 @@
 import type { Result } from "@lib/result";
+import type { z } from "zod";
 
 import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
-import { ServerContracts } from "@mebike/shared";
 import { StatusCodes } from "http-status-codes";
 
-import {
-  asNetworkError as asSharedNetworkError,
-  isUnauthorizedStatus,
-  parseErrorFromSchema,
-  parseUnauthorizedError,
-} from "./shared/service-error";
+import { ServerContracts } from "@mebike/shared";
 
-export type WalletTopupErrorCode = string;
+import type { WalletError as WalletTopupError } from "@services/wallets/wallet-error";
 
-export type WalletTopupError
-  = | { _tag: "ApiError"; code: WalletTopupErrorCode; message?: string }
-    | { _tag: "NetworkError"; message?: string }
-    | { _tag: "DecodeError" }
-    | { _tag: "UnknownError"; message?: string };
+import { asNetworkError, parseWalletError as parseWalletTopupError } from "@services/wallets/wallet-error";
 
 export type StripeTopupSession = {
   paymentAttemptId: string;
@@ -39,45 +30,19 @@ export type CreateStripeTopupSessionInput = {
   cancelUrl: string;
 };
 
-export function walletTopupErrorMessage(error: WalletTopupError): string {
-  if (error._tag === "ApiError") {
-    return error.message ?? "Yêu cầu không hợp lệ";
-  }
-  if (error._tag === "NetworkError") {
-    return "Không thể kết nối tới máy chủ.";
-  }
-  return "Đã có lỗi xảy ra. Vui lòng thử lại.";
-}
-
-export async function parseWalletTopupError(response: Response): Promise<WalletTopupError> {
+async function decodeTopupResponse<TValue, TMapped>(
+  response: Response,
+  schema: z.ZodType<TValue>,
+  map: (value: TValue) => TMapped,
+): Promise<Result<TMapped, WalletTopupError>> {
   try {
     const data = await readJson(response);
-
-    if (isUnauthorizedStatus(response.status)) {
-      const unauthorized = parseUnauthorizedError(data);
-      if (unauthorized) {
-        return { _tag: "ApiError", code: unauthorized.code, message: unauthorized.message };
-      }
-      return { _tag: "DecodeError" };
-    }
-
-    const parsed = parseErrorFromSchema(ServerContracts.WalletsContracts.WalletErrorResponseSchema, data);
-    if (parsed) {
-      return {
-        _tag: "ApiError",
-        code: parsed.code,
-        message: parsed.message,
-      };
-    }
-    return { _tag: "DecodeError" };
+    const parsed = decodeWithSchema(schema, data);
+    return parsed.ok ? ok(map(parsed.value)) : err({ _tag: "DecodeError" });
   }
   catch {
-    return { _tag: "DecodeError" };
+    return err({ _tag: "DecodeError" });
   }
-}
-
-export function asNetworkError(error: unknown): Result<never, WalletTopupError> {
-  return asSharedNetworkError<Extract<WalletTopupError, { _tag: "NetworkError" }>>(error);
 }
 
 export const walletTopupService = {
@@ -96,14 +61,14 @@ export const walletTopupService = {
       });
 
       if (response.status === StatusCodes.OK) {
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(ServerContracts.WalletsContracts.StripeTopupSessionResponseSchema, data);
-        return parsed.ok
-          ? ok({
-              paymentAttemptId: parsed.value.data.paymentAttemptId,
-              checkoutUrl: parsed.value.data.checkoutUrl,
-            })
-          : err({ _tag: "DecodeError" });
+        return decodeTopupResponse(
+          response,
+          ServerContracts.WalletsContracts.StripeTopupSessionResponseSchema,
+          value => ({
+            paymentAttemptId: value.data.paymentAttemptId,
+            checkoutUrl: value.data.checkoutUrl,
+          }),
+        );
       }
 
       return err(await parseWalletTopupError(response));
@@ -126,14 +91,14 @@ export const walletTopupService = {
       });
 
       if (response.status === StatusCodes.OK) {
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(ServerContracts.WalletsContracts.StripeTopupPaymentSheetResponseSchema, data);
-        return parsed.ok
-          ? ok({
-              paymentAttemptId: parsed.value.data.paymentAttemptId,
-              paymentIntentClientSecret: parsed.value.data.paymentIntentClientSecret,
-            })
-          : err({ _tag: "DecodeError" });
+        return decodeTopupResponse(
+          response,
+          ServerContracts.WalletsContracts.StripeTopupPaymentSheetResponseSchema,
+          value => ({
+            paymentAttemptId: value.data.paymentAttemptId,
+            paymentIntentClientSecret: value.data.paymentIntentClientSecret,
+          }),
+        );
       }
 
       return err(await parseWalletTopupError(response));

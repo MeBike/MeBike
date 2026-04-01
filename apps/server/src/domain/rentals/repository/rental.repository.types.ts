@@ -58,30 +58,30 @@ export type RentalRepo = {
     userId: string,
     filter: MyRentalFilter,
     pageReq: PageRequest<RentalSortField>,
-  ) => Effect.Effect<PageResult<RentalRow>, RentalRepositoryError>;
+  ) => Effect.Effect<PageResult<RentalRow>>;
 
   listMyCurrentRentals: (
     userId: string,
     pageReq: PageRequest<RentalSortField>,
-  ) => Effect.Effect<PageResult<RentalRow>, RentalRepositoryError>;
+  ) => Effect.Effect<PageResult<RentalRow>>;
 
   getMyRentalById: (
     userId: string,
     rentalId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<RentalRow>>;
 
   getMyRentalCounts: (
     userId: string,
-  ) => Effect.Effect<readonly RentalCountsRow[], RentalRepositoryError>;
+  ) => Effect.Effect<readonly RentalCountsRow[]>;
 
   // Helpers for future use-cases
   findActiveByBikeId: (
     bikeId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<RentalRow>>;
 
   findActiveByUserId: (
     userId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<RentalRow>>;
 
   // Core rental operations
   createRental: (
@@ -90,30 +90,30 @@ export type RentalRepo = {
 
   updateRentalDepositHold: (
     data: UpdateRentalDepositHoldInput,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<RentalRow>>;
 
   updateRentalOnEnd: (
     data: UpdateRentalOnEndInput,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<RentalRow>>;
 
   findById: (
     rentalId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<RentalRow>>;
 
   // Admin read views
   adminListRentals: (
     filter: AdminRentalFilter,
     pageReq: PageRequest<RentalSortField>,
-  ) => Effect.Effect<PageResult<AdminRentalListItem>, RentalRepositoryError>;
+  ) => Effect.Effect<PageResult<AdminRentalListItem>>;
 
   adminGetRentalById: (
     rentalId: string,
-  ) => Effect.Effect<Option.Option<AdminRentalDetail>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<AdminRentalDetail>>;
 
   listActiveRentalsByPhone: (
     phoneNumber: string,
     pageReq: PageRequest<RentalSortField>,
-  ) => Effect.Effect<PageResult<AdminRentalListItem>, RentalRepositoryError>;
+  ) => Effect.Effect<PageResult<AdminRentalListItem>>;
 
   requestBikeSwap: (
     rentalId: string,

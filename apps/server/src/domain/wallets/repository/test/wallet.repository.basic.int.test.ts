@@ -2,8 +2,9 @@ import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect, expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeWalletRepository } from "../wallet.repository";
@@ -151,16 +152,16 @@ describe("wallet Repository - Basic Operations", () => {
     expectLeftTag(result, "WalletBalanceConstraint");
   });
 
-  it("returns WalletRepositoryError when database is unreachable", async () => {
+  it("defects with WalletRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = makeWalletRepository(broken.client);
 
-      const result = await Effect.runPromise(
-        brokenRepo.findByUserId(uuidv7()).pipe(Effect.either),
+      await expectDefect(
+        brokenRepo.findByUserId(uuidv7()),
+        WalletRepositoryError,
+        { operation: "findByUserId" },
       );
-
-      expectLeftTag(result, "WalletRepositoryError");
     }
     finally {
       await broken.stop();

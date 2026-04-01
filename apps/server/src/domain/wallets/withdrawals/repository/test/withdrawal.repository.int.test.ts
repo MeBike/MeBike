@@ -3,9 +3,10 @@ import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
+import { WithdrawalRepositoryError } from "../../domain-errors";
 import { makeWithdrawalRepository } from "../withdrawal.repository";
 
 const FX_RATE = 26000n;
@@ -381,16 +382,16 @@ describe("withdrawalRepository Integration", () => {
     expect(secondAttempt).toBe(false);
   });
 
-  it("returns WithdrawalRepositoryError when database is unreachable", async () => {
+  it("defects with WithdrawalRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = makeWithdrawalRepository(broken.client);
 
-      const result = await Effect.runPromise(
-        brokenRepo.findById(uuidv7()).pipe(Effect.either),
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        WithdrawalRepositoryError,
+        { operation: "findById" },
       );
-
-      expectLeftTag(result, "WithdrawalRepositoryError");
     }
     finally {
       await broken.stop();

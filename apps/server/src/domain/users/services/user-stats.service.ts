@@ -14,35 +14,25 @@ import type { UserStatsRepo } from "../repository/user-stats.repository";
 import {
   InvalidStatsGroupBy,
   InvalidStatsRange,
-  UserStatsServiceError,
 } from "../domain-errors";
 import { UserStatsRepository } from "../repository/user-stats.repository";
 import { computeMonthRange, computeNewUsersRanges } from "./user-stats-time";
 
 export type UserStatsService = {
-  readonly getOverviewStats: () => Effect.Effect<
-    UserStatsOverview,
-    UserStatsServiceError
-  >;
+  readonly getOverviewStats: () => Effect.Effect<UserStatsOverview>;
   readonly getActiveUsersSeries: (args: {
     readonly startDate: Date;
     readonly endDate: Date;
     readonly groupBy: "day" | "month";
   }) => Effect.Effect<
     readonly ActiveUsersSeriesRow[],
-    UserStatsServiceError | InvalidStatsRange | InvalidStatsGroupBy
+    InvalidStatsRange | InvalidStatsGroupBy
   >;
   readonly getTopRenters: (
     pageReq: PageRequest<"totalRentals">,
-  ) => Effect.Effect<PageResult<TopRenterRow>, UserStatsServiceError>;
-  readonly getNewUsersStats: (now: Date) => Effect.Effect<
-    NewUsersStats,
-    UserStatsServiceError
-  >;
-  readonly getDashboardStats: (now: Date) => Effect.Effect<
-    DashboardStats,
-    UserStatsServiceError
-  >;
+  ) => Effect.Effect<PageResult<TopRenterRow>>;
+  readonly getNewUsersStats: (now: Date) => Effect.Effect<NewUsersStats>;
+  readonly getDashboardStats: (now: Date) => Effect.Effect<DashboardStats>;
 };
 
 export class UserStatsServiceTag extends Context.Tag("UserStatsServiceTag")<
@@ -52,16 +42,7 @@ export class UserStatsServiceTag extends Context.Tag("UserStatsServiceTag")<
 
 export function makeUserStatsService(repo: UserStatsRepo): UserStatsService {
   return {
-    getOverviewStats: () =>
-      repo.getOverviewStats().pipe(
-        Effect.mapError(
-          cause =>
-            new UserStatsServiceError({
-              message: "stats.overview",
-              cause,
-            }),
-        ),
-      ),
+    getOverviewStats: () => repo.getOverviewStats(),
 
     getActiveUsersSeries: ({ startDate, endDate, groupBy }) =>
       Effect.gen(function* () {
@@ -73,47 +54,18 @@ export function makeUserStatsService(repo: UserStatsRepo): UserStatsService {
           return yield* Effect.fail(new InvalidStatsGroupBy({ groupBy }));
         }
 
-        const rows = yield* repo
-          .getActiveUsersSeries({ startDate, endDate, groupBy })
-          .pipe(
-            Effect.mapError(
-              cause =>
-                new UserStatsServiceError({
-                  message: "stats.activeUsers",
-                  cause,
-                }),
-            ),
-          );
+        const rows = yield* repo.getActiveUsersSeries({ startDate, endDate, groupBy });
 
         return rows;
       }),
 
-    getTopRenters: pageReq =>
-      repo.getTopRenters(pageReq).pipe(
-        Effect.mapError(
-          cause =>
-            new UserStatsServiceError({
-              message: "stats.topRenters",
-              cause,
-            }),
-        ),
-      ),
+    getTopRenters: pageReq => repo.getTopRenters(pageReq),
 
     getNewUsersStats: now =>
       Effect.gen(function* () {
         const ranges = computeNewUsersRanges(now);
 
-        const counts = yield* repo
-          .getNewUsersCounts(ranges)
-          .pipe(
-            Effect.mapError(
-              cause =>
-                new UserStatsServiceError({
-                  message: "stats.newUsers",
-                  cause,
-                }),
-            ),
-          );
+        const counts = yield* repo.getNewUsersCounts(ranges);
 
         const percentageChange
           = counts.lastMonth === 0
@@ -133,17 +85,7 @@ export function makeUserStatsService(repo: UserStatsRepo): UserStatsService {
       Effect.gen(function* () {
         const { monthStart, monthEnd } = computeMonthRange(now);
 
-        const raw = yield* repo
-          .getDashboardStatsRaw({ monthStart, monthEnd })
-          .pipe(
-            Effect.mapError(
-              cause =>
-                new UserStatsServiceError({
-                  message: "stats.dashboard",
-                  cause,
-                }),
-            ),
-          );
+        const raw = yield* repo.getDashboardStatsRaw({ monthStart, monthEnd });
 
         const averageSpending
           = raw.totalCustomers === 0

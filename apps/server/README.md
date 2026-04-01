@@ -9,6 +9,41 @@ Backend chinh cua MeBike.
 - Jobs: outbox table + PgBoss workers
 - Tests: Vitest (unit + integration voi Testcontainers)
 
+## Fast local integration tests
+
+Neu da co Postgres local dang chay o `localhost:5432` (vi du container `mebike_postgres`), hay tao mot template database da migrate san de tranh cold boot Testcontainers moi lan run test.
+
+Khoi tao mot lan tu `apps/server`:
+
+```bash
+docker exec mebike_postgres psql -U mebike -d postgres -c "CREATE DATABASE mebike_test_template"
+DATABASE_URL=postgresql://mebike:mebike@127.0.0.1:5432/mebike_test_template pnpm prisma migrate deploy
+```
+
+Sau do dung script local nhanh:
+
+```bash
+pnpm test:int:local
+```
+
+Hoac run 1 file cu the:
+
+```bash
+pnpm test:int:local -- src/http/test/e2e/manage-users-org-assignment.e2e.int.test.ts
+```
+
+Script nay mac dinh su dung:
+
+```bash
+TEST_DATABASE_URL=postgresql://mebike:mebike@127.0.0.1:5432/mebike_test_template
+```
+
+Neu muon doi sang template DB khac, override env khi run lenh:
+
+```bash
+TEST_DATABASE_URL=postgresql://mebike:mebike@127.0.0.1:5432/<ten_db_khac> pnpm test:int:local
+```
+
 ## Quick Start
 
 From repo root:
@@ -402,6 +437,7 @@ From `apps/server`:
 ```bash
 pnpm test:unit
 pnpm test:int
+pnpm test:int:local
 ```
 
 Integration tests:
@@ -409,6 +445,7 @@ Integration tests:
 - live in `src/**/test/**/*.int.test.ts`
 - mac dinh se dung Testcontainers Postgres
 - co the bypass Docker bang `TEST_DATABASE_URL`
+- `pnpm test:int:local` mac dinh tro toi `postgresql://mebike:mebike@127.0.0.1:5432/mebike_test_template`
 
 Luu y: `apps/server/vitest.config.ts` co `globalSetup` (`apps/server/src/test/db/global-setup.ts`) nen khi chay test, no co the build image + start container + chay migrations.
 

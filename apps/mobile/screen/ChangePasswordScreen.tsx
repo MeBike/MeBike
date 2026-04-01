@@ -30,12 +30,16 @@ function ChangePasswordScreen() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { isAuthenticated } = useAuthNext();
+  const { status, isAuthenticated } = useAuthNext();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const handleChangePassword = async () => {
+    if (status === "loading") {
+      return;
+    }
+
     if (!isAuthenticated) {
       navigation.navigate("Login");
       return;

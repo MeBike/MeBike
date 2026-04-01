@@ -1,26 +1,22 @@
 import { env } from "@/config/env";
 
-import type { ActiveSubscriptionExists, SubscriptionExpired, SubscriptionNotFound, SubscriptionNotPending, SubscriptionNotUsable, SubscriptionPendingOrActiveExists, SubscriptionRepositoryError, SubscriptionUsageExceeded } from "../domain-errors";
+import type { ActiveSubscriptionExists, SubscriptionExpired, SubscriptionNotFound, SubscriptionNotPending, SubscriptionNotUsable, SubscriptionPendingOrActiveExists, SubscriptionUsageExceeded } from "../domain-errors";
 
 export type UseSubscriptionFailure
   = | SubscriptionNotFound
     | SubscriptionNotUsable
     | SubscriptionExpired
     | SubscriptionUsageExceeded
-    | SubscriptionRepositoryError
     | ActiveSubscriptionExists;
 
 export type CreateSubscriptionFailure
   = | SubscriptionPendingOrActiveExists
-    | SubscriptionRepositoryError
     | import("../../wallets/domain-errors").InsufficientWalletBalance
-    | import("../../wallets/domain-errors").WalletNotFound
-    | import("../../wallets/domain-errors").WalletRepositoryError;
+    | import("../../wallets/domain-errors").WalletNotFound;
 
 export type ActivateSubscriptionFailure
   = | SubscriptionNotFound
     | SubscriptionNotPending
-    | SubscriptionRepositoryError
     | ActiveSubscriptionExists;
 
 const EXPIRE_AFTER_MS = env.EXPIRE_AFTER_DAYS * 24 * 60 * 60 * 1000;

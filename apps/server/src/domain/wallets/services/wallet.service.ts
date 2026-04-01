@@ -4,7 +4,6 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { WalletTransactionStatus } from "generated/prisma/client";
 
 import type {
-  WalletRepositoryError,
 } from "../domain-errors";
 import type {
   DecreaseBalanceInput,
@@ -24,37 +23,37 @@ import { WalletRepository } from "../repository/wallet.repository";
 export type WalletService = {
   getOptionalByUserId: (
     userId: string,
-  ) => Effect.Effect<Option.Option<WalletRow>, WalletRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletRow>>;
 
   getByUserId: (
     userId: string,
-  ) => Effect.Effect<WalletRow, WalletNotFound | WalletRepositoryError>;
+  ) => Effect.Effect<WalletRow, WalletNotFound>;
 
   createForUser: (
     userId: string,
-  ) => Effect.Effect<WalletRow, WalletAlreadyExists | WalletRepositoryError>;
+  ) => Effect.Effect<WalletRow, WalletAlreadyExists>;
 
   creditWallet: (
     input: IncreaseBalanceInput,
-  ) => Effect.Effect<WalletRow, WalletNotFound | WalletRepositoryError>;
+  ) => Effect.Effect<WalletRow, WalletNotFound>;
 
   debitWallet: (
     input: DecreaseBalanceInput,
   ) => Effect.Effect<
     WalletRow,
-    WalletNotFound | InsufficientWalletBalance | WalletRepositoryError
+    WalletNotFound | InsufficientWalletBalance
   >;
 
   listTransactionsForUser: (
     args: { userId: string; pageReq: PageRequest<"createdAt">; status?: WalletTransactionStatus },
-  ) => Effect.Effect<PageResult<WalletTransactionRow>, WalletNotFound | WalletRepositoryError>;
+  ) => Effect.Effect<PageResult<WalletTransactionRow>, WalletNotFound>;
 
   adminListTransactionsForUser: (
     args: { userId: string; pageReq: PageRequest<"createdAt">; status?: WalletTransactionStatus },
   ) => Effect.Effect<{
     user: WalletTransactionUserRow;
     transactions: PageResult<WalletTransactionRow>;
-  }, WalletNotFound | WalletRepositoryError>;
+  }, WalletNotFound>;
 };
 
 export class WalletServiceTag extends Context.Tag("WalletService")<

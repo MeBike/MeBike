@@ -4,17 +4,18 @@ import type { BikeRepository } from "@/domain/bikes";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
+import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import { WalletServiceTag } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import logger from "@/lib/logger";
 
 import type { ReservationServiceFailure } from "../domain-errors";
 import type { ReservationRow } from "../models";
 
 import { BikeNotAvailable, BikeNotFound } from "../domain-errors";
-import { ReservationServiceTag } from "../services/reservation.service";
+import { ReservationCommandServiceTag } from "./reservation-command.service";
 
 export type CancelReservationInput = {
   readonly reservationId: string;
@@ -27,11 +28,11 @@ export function cancelReservation(
 ): Effect.Effect<
   ReservationRow,
   ReservationServiceFailure,
-  Prisma | ReservationServiceTag | BikeRepository | WalletServiceTag
+  Prisma | ReservationCommandServiceTag | BikeRepository | WalletServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
-    const reservationService = yield* ReservationServiceTag;
+    const reservationService = yield* ReservationCommandServiceTag;
     const walletService = yield* WalletServiceTag;
     const now = input.now ?? new Date();
 
@@ -49,13 +50,9 @@ export function cancelReservation(
 
         const bikeId = updatedReservation.bikeId;
         if (bikeId) {
-          const bikeReleased = yield* bikeRepo.releaseBikeIfReserved(bikeId, now).pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-          );
+          const bikeReleased = yield* bikeRepo.releaseBikeIfReserved(bikeId, now);
           if (!bikeReleased) {
-            const bikeOpt = yield* bikeRepo.getById(bikeId).pipe(
-              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-            );
+            const bikeOpt = yield* bikeRepo.getById(bikeId);
             if (Option.isNone(bikeOpt)) {
               return yield* Effect.fail(new BikeNotFound({ bikeId }));
             }
@@ -70,7 +67,7 @@ export function cancelReservation(
 
         return updatedReservation;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
 
     if (isRefundEligible(reservation, now)) {

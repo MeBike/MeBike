@@ -3,6 +3,7 @@ import type { UserDetail } from "@services/users/user-service";
 import { useMyRentalCountsQuery } from "@hooks/query/rentals/use-my-rental-counts-query";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
+import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
@@ -19,6 +20,7 @@ export function useProfile() {
     id: user?.id ?? "",
     fullName: user?.fullName ?? "",
     email: user?.email ?? "",
+    accountStatus: user?.accountStatus ?? "ACTIVE",
     verify: user?.verify ?? "UNVERIFIED",
     location: user?.location ?? null,
     username: user?.username ?? null,
@@ -34,19 +36,6 @@ export function useProfile() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const resendOtpMutation = useResendVerifyEmailMutation();
   const verifyOtpMutation = useVerifyEmailOtpMutation();
-
-  const authErrorMessage = (error: import("@services/auth/auth-error").AuthError): string => {
-    if (error._tag === "ApiError") {
-      if (error.code === "INVALID_OTP") {
-        return "Mã OTP không đúng hoặc đã hết hạn.";
-      }
-      return error.message ?? "Yêu cầu thất bại. Vui lòng thử lại.";
-    }
-    if (error._tag === "NetworkError") {
-      return error.message ?? "Không thể kết nối máy chủ. Vui lòng thử lại.";
-    }
-    return "Yêu cầu thất bại. Vui lòng thử lại.";
-  };
 
   const { data: rentalCounts, isLoading: isRentalCountsLoading } = useMyRentalCountsQuery({ enabled: hasToken });
   const completedTrips = rentalCounts?.COMPLETED ?? 0;
@@ -67,6 +56,7 @@ export function useProfile() {
         id: user.id ?? "",
         fullName: user.fullName ?? "",
         email: user.email ?? "",
+        accountStatus: user.accountStatus ?? "ACTIVE",
         verify: user.verify ?? "UNVERIFIED",
         location: user.location ?? null,
         username: user.username ?? null,
@@ -121,6 +111,10 @@ export function useProfile() {
     navigation.navigate("Support" as never);
   };
 
+  const handleReportIssue = () => {
+    navigation.navigate("Report" as never);
+  };
+
   const handleReservations = () => {
     navigation.navigate("Reservations" as never);
   };
@@ -133,6 +127,10 @@ export function useProfile() {
     navigation.navigate("Subscriptions" as never);
   };
 
+  const handleNotifications = () => {
+    Alert.alert("Sắp ra mắt", "Quản lý thông báo sẽ sớm được cập nhật.");
+  };
+
   const handleResendOtp = async () => {
     if (profile.verify === "VERIFIED") {
       Alert.alert("Info", "Email của bạn đã được xác thực.");
@@ -140,13 +138,13 @@ export function useProfile() {
     }
 
     try {
-        const result = await resendOtpMutation.mutateAsync({
-          userId: profile.id,
-          email: profile.email,
-          fullName: profile.fullName,
-        });
+      const result = await resendOtpMutation.mutateAsync({
+        userId: profile.id,
+        email: profile.email,
+        fullName: profile.fullName,
+      });
       if (!result.ok) {
-        Alert.alert("Lỗi", authErrorMessage(result.error));
+        Alert.alert("Lỗi", presentAuthError(result.error));
         return;
       }
       Alert.alert("Success", "Mã OTP mới đã được gửi đến email của bạn!");
@@ -161,7 +159,7 @@ export function useProfile() {
     try {
       const result = await verifyOtpMutation.mutateAsync({ userId: profile.id, otp });
       if (!result.ok) {
-        Alert.alert("Lỗi", authErrorMessage(result.error));
+        Alert.alert("Lỗi", presentAuthError(result.error));
         return;
       }
       Alert.alert("Success", "Email đã được xác thực.");
@@ -184,10 +182,6 @@ export function useProfile() {
     setIsVerifyEmailModalOpen(false);
   };
 
-  const goBack = () => {
-    navigation.goBack();
-  };
-
   return {
     profile,
     isVerifyEmailModalOpen,
@@ -205,11 +199,12 @@ export function useProfile() {
     handleChangePassword,
     handleUpdateProfile,
     handleSupport,
+    handleReportIssue,
     handleReservations,
     handleSOS,
     handleSubscriptions,
+    handleNotifications,
     handleResendOtp,
     handleVerifyEmail,
-    goBack,
   };
 }

@@ -1,9 +1,11 @@
-import { Either, Option } from "effect";
+import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { runEffect, runEffectEither } from "@/test/effect/run";
+import { expectDefect } from "@/test/effect/assertions";
+import { runEffect } from "@/test/effect/run";
 
 import {
   createUserInput,
@@ -160,17 +162,16 @@ describe("userReadRepository Integration", () => {
     expect(filteredTeams.map(item => item.id)).not.toContain(fullTeam.id);
   });
 
-  it("returns UserRepositoryError when database is unreachable", async () => {
+  it("defects with UserRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = kit.makeRepo(broken.client);
-      const result = await runEffectEither(brokenRepo.findById(uuidv7()));
 
-      if (Either.isRight(result)) {
-        throw new Error("Expected failure but got success");
-      }
-
-      expect(result.left._tag).toBe("UserRepositoryError");
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        UserRepositoryError,
+        { operation: "findById" },
+      );
     }
     finally {
       await broken.stop();

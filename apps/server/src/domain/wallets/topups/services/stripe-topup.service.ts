@@ -5,7 +5,7 @@ import { Context, Effect, Layer } from "effect";
 
 import { StripeClient } from "@/infrastructure/stripe";
 
-import type { PaymentAttemptRepositoryError, PaymentAttemptUniqueViolation } from "../domain-errors";
+import type { PaymentAttemptUniqueViolation } from "../domain-errors";
 import type { PaymentAttemptRow } from "../models";
 
 import { InvalidTopupRequest, TopupProviderError } from "../domain-errors";
@@ -38,13 +38,13 @@ export type StripeTopupService = {
     input: StripeCheckoutAttemptInput,
   ) => Effect.Effect<
     { readonly attempt: PaymentAttemptRow },
-    InvalidTopupRequest | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation
+    InvalidTopupRequest | PaymentAttemptUniqueViolation
   >;
   preparePaymentSheetAttempt: (
     input: StripeCheckoutAttemptInput,
   ) => Effect.Effect<
     { readonly attempt: PaymentAttemptRow },
-    InvalidTopupRequest | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation
+    InvalidTopupRequest | PaymentAttemptUniqueViolation
   >;
   createCheckoutSession: (
     input: {
@@ -64,13 +64,13 @@ export type StripeTopupService = {
   attachProviderRef: (
     attemptId: string,
     providerRef: string,
-  ) => Effect.Effect<PaymentAttemptRow, PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation>;
+  ) => Effect.Effect<PaymentAttemptRow, PaymentAttemptUniqueViolation>;
   resolveAttemptForSession: (
     session: Stripe.Checkout.Session,
-  ) => Effect.Effect<Option.Option<PaymentAttemptRow>, PaymentAttemptRepositoryError>;
+  ) => Effect.Effect<Option.Option<PaymentAttemptRow>>;
   resolveAttemptForPaymentIntent: (
     paymentIntent: Stripe.PaymentIntent,
-  ) => Effect.Effect<Option.Option<PaymentAttemptRow>, PaymentAttemptRepositoryError>;
+  ) => Effect.Effect<Option.Option<PaymentAttemptRow>>;
 };
 
 export class StripeTopupServiceTag extends Context.Tag("StripeTopupService")<

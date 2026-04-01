@@ -1,5 +1,6 @@
 import type { StackNavigationProp } from "@react-navigation/stack";
 
+import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 import { useResendVerifyEmailMutation } from "@hooks/mutations/AuthNext/use-resend-verify-email-mutation";
 import { useVerifyEmailOtpMutation } from "@hooks/mutations/AuthNext/use-verify-email-otp-mutation";
 import { useAuthNext } from "@providers/auth-provider-next";
@@ -169,15 +170,7 @@ export function useEmailVerification() {
 
     const result = await verifyMutation.mutateAsync({ userId: user.id, otp: otpCode });
     if (!result.ok) {
-      if (result.error._tag === "ApiError") {
-        Alert.alert("Lỗi", result.error.message ?? "OTP không hợp lệ hoặc đã hết hạn");
-        return;
-      }
-      if (result.error._tag === "NetworkError") {
-        Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-        return;
-      }
-      Alert.alert("Lỗi", "Không thể xác minh email");
+      Alert.alert("Lỗi", presentAuthError(result.error, "Không thể xác minh email."));
       return;
     }
 
@@ -201,15 +194,7 @@ export function useEmailVerification() {
     });
 
     if (!result.ok) {
-      if (result.error._tag === "ApiError") {
-        Alert.alert("Lỗi", result.error.message ?? "Không thể gửi lại OTP");
-        return;
-      }
-      if (result.error._tag === "NetworkError") {
-        Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-        return;
-      }
-      Alert.alert("Lỗi", "Không thể gửi lại OTP");
+      Alert.alert("Lỗi", presentAuthError(result.error, "Không thể gửi lại OTP."));
       return;
     }
 

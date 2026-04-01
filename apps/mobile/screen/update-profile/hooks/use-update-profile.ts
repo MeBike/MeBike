@@ -1,8 +1,6 @@
-import type { UserError } from "@services/users/user-error";
-import type { UpdateMeRequest, UserDetail } from "@services/users/user-service";
+import type { UpdateMeRequest, UploadAvatarPayload } from "@services/users/user-service";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { uploadImageToFirebase } from "@lib/imageUpload";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { userService } from "@services/users/user-service";
@@ -10,6 +8,11 @@ import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Alert } from "react-native";
+
+import {
+  presentUpdateProfileFieldError,
+  presentUserError,
+} from "@/presenters/users/user-error-presenter";
 
 import type { UpdateProfileNavigationProp } from "../../../types/navigation";
 import type { TomTomAddressSuggestion } from "../lib/tomtom";
@@ -21,46 +24,39 @@ import { updateProfileSchema } from "../schema";
 const LOCATION_SUGGEST_DELAY_MS = 500;
 
 function buildUpdatePatch(params: {
-  user: UserDetail;
   form: UpdateProfileFormValues;
-  avatar: string;
+  dirtyFields: Partial<Record<keyof UpdateProfileFormValues, boolean | undefined>>;
 }): Partial<UpdateMeRequest> {
-  const { user, form, avatar } = params;
+  const { form, dirtyFields } = params;
   const patch: Partial<UpdateMeRequest> = {};
 
-  if (form.fullname !== (user.fullName ?? "")) {
+  if (dirtyFields.fullname) {
     patch.fullname = form.fullname;
   }
 
-  if ((form.username ?? "") !== (user.username ?? "")) {
+  if (dirtyFields.username) {
     patch.username = form.username ?? "";
   }
 
-  if (form.phoneNumber !== (user.phoneNumber ?? "")) {
+  if (dirtyFields.phoneNumber) {
     patch.phoneNumber = form.phoneNumber;
   }
 
-  if ((form.location ?? "") !== (user.location ?? "")) {
+  if (dirtyFields.location) {
     patch.location = form.location ?? "";
-  }
-
-  if ((avatar ?? "") !== (user.avatar ?? "")) {
-    patch.avatar = avatar ?? "";
   }
 
   return patch;
 }
 
-function alertUpdateError(error: UserError) {
-  if (error._tag === "ApiError") {
-    Alert.alert("Lỗi", error.message ?? "Không thể cập nhật thông tin");
-    return;
-  }
-  if (error._tag === "NetworkError") {
-    Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-    return;
-  }
-  Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
+function createAvatarUploadPayload(asset: ImagePicker.ImagePickerAsset): UploadAvatarPayload {
+  const extension = asset.fileName?.split(".").pop() ?? asset.mimeType?.split("/").pop() ?? "jpg";
+
+  return {
+    uri: asset.uri,
+    name: asset.fileName ?? `avatar.${extension}`,
+    type: asset.mimeType ?? "image/jpeg",
+  };
 }
 
 export function useUpdateProfile() {
@@ -69,9 +65,9 @@ export function useUpdateProfile() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
-  const [avatar, setAvatar] = useState(user?.avatar || "");
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isPickingAvatar, setIsPickingAvatar] = useState(false);
+  const [pendingAvatar, setPendingAvatar] = useState<UploadAvatarPayload | null>(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
 
   const [addressSuggestions, setAddressSuggestions] = useState<TomTomAddressSuggestion[]>([]);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -87,8 +83,9 @@ export function useUpdateProfile() {
     control,
     handleSubmit,
     reset,
+    setError,
     setValue,
-    formState: { errors },
+    formState: { dirtyFields, errors },
   } = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues,
@@ -97,8 +94,20 @@ export function useUpdateProfile() {
 
   useEffect(() => {
     reset(defaultValues);
-    setAvatar(user?.avatar ?? "");
-  }, [defaultValues, reset, user?.avatar]);
+  }, [defaultValues, reset]);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeout.current) {
+        clearTimeout(typingTimeout.current);
+      }
+    };
+  }, []);
+
+  const clearPendingAvatar = useCallback(() => {
+    setPendingAvatar(null);
+    setPendingAvatarPreview(null);
+  }, []);
 
   const goBack = useCallback(() => {
     navigation.goBack();
@@ -110,15 +119,16 @@ export function useUpdateProfile() {
 
   const cancelEdit = useCallback(() => {
     reset(defaultValues);
-    setAvatar(user?.avatar ?? "");
+    clearPendingAvatar();
     setAddressSuggestions([]);
     setIsEditing(false);
-  }, [defaultValues, reset, user?.avatar]);
+  }, [clearPendingAvatar, defaultValues, reset]);
 
   const pickAvatar = useCallback(async () => {
     try {
+      setIsPickingAvatar(true);
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -128,16 +138,16 @@ export function useUpdateProfile() {
         return;
       }
 
-      setIsUploadingAvatar(true);
-      const uploadedUrl = await uploadImageToFirebase(result.assets[0]);
-      setAvatar(uploadedUrl);
-      Alert.alert("Thành công", "Ảnh đã được upload!");
+      const asset = result.assets[0];
+      setPendingAvatar(createAvatarUploadPayload(asset));
+      setPendingAvatarPreview(asset.uri);
+      Alert.alert("Đã chọn ảnh mới", "Ảnh đại diện sẽ được cập nhật khi bạn lưu thay đổi.");
     }
     catch {
-      Alert.alert("Lỗi", "Upload ảnh thất bại. Vui lòng thử lại.");
+      Alert.alert("Lỗi", "Không thể mở thư viện ảnh. Vui lòng thử lại.");
     }
     finally {
-      setIsUploadingAvatar(false);
+      setIsPickingAvatar(false);
     }
   }, []);
 
@@ -170,29 +180,67 @@ export function useUpdateProfile() {
 
   const submit = handleSubmit(async (data) => {
     if (!user) {
-      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản");
+      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản.");
       return;
     }
 
-    const changedData = buildUpdatePatch({ user, form: data, avatar });
+    const changedData = buildUpdatePatch({ dirtyFields, form: data });
+    const hasProfileChanges = Object.keys(changedData).length > 0;
+    const hasAvatarChange = pendingAvatar !== null;
 
-    if (Object.keys(changedData).length === 0) {
+    if (!hasProfileChanges && !hasAvatarChange) {
       Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
       setIsEditing(false);
       return;
     }
 
     setIsSaving(true);
+
     try {
-      const result = await userService.updateMe(changedData);
-      if (!result.ok) {
-        alertUpdateError(result.error);
-        return;
+      if (hasProfileChanges) {
+        const profileResult = await userService.updateMe(changedData);
+        if (!profileResult.ok) {
+          const fieldError = presentUpdateProfileFieldError(profileResult.error);
+          if (fieldError) {
+            setError(fieldError.field, { message: fieldError.message });
+            return;
+          }
+
+          Alert.alert("Lỗi", presentUserError(profileResult.error, "Không thể cập nhật thông tin."));
+          return;
+        }
       }
 
+      if (pendingAvatar) {
+        const avatarResult = await userService.uploadMyAvatar(pendingAvatar);
+        if (!avatarResult.ok) {
+          if (hasProfileChanges) {
+            await hydrate();
+          }
+
+          Alert.alert(
+            "Lỗi",
+            hasProfileChanges
+              ? `Đã lưu thông tin hồ sơ, nhưng chưa thể cập nhật ảnh đại diện. ${presentUserError(avatarResult.error)}`
+              : presentUserError(avatarResult.error, "Không thể cập nhật ảnh đại diện."),
+          );
+          return;
+        }
+      }
+
+      clearPendingAvatar();
+      setAddressSuggestions([]);
       await hydrate();
       setIsEditing(false);
-      Alert.alert("Thành công", "Cập nhật thông tin thành công!");
+
+      Alert.alert(
+        "Thành công",
+        hasProfileChanges && hasAvatarChange
+          ? "Đã cập nhật hồ sơ và ảnh đại diện."
+          : hasAvatarChange
+            ? "Đã cập nhật ảnh đại diện."
+            : "Đã cập nhật thông tin hồ sơ.",
+      );
     }
     finally {
       setIsSaving(false);
@@ -212,9 +260,10 @@ export function useUpdateProfile() {
     control,
     errors,
 
-    avatar,
+    avatar: pendingAvatarPreview ?? user?.avatar ?? "",
     pickAvatar,
-    isUploadingAvatar,
+    isPickingAvatar,
+    hasPendingAvatar: pendingAvatar !== null,
 
     addressSuggestions,
     selectSuggestion,

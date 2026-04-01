@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
   RentalAnalyticsRepositoryLive,
@@ -8,7 +8,6 @@ import {
   ReturnConfirmationRepositoryLive,
   ReturnSlotRepositoryLive,
 } from "@/domain/rentals";
-import { ReservationRepositoryLive } from "@/domain/reservations";
 
 import { PrismaLive } from "../infra.layers";
 import { BikeDepsLive, BikeReposLive } from "./bike.layers";
@@ -56,10 +55,5 @@ export const RentalDepsLive = Layer.mergeAll(
   WalletDepsLive,
   SubscriptionReposLive,
   SubscriptionServiceLayer,
-  ReservationRepositoryLive,
   PrismaLive,
 );
-
-export function withRentalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(RentalDepsLive));
-}

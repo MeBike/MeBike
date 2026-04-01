@@ -1,7 +1,7 @@
 import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/use-get-bike-by-id-query";
 import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
 import { useReservationActions } from "@hooks/use-reservation-actions";
-import { useWalletActions } from "@hooks/useWalletAction";
+import { useWalletActions } from "@hooks/use-wallet-action";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo } from "react";
 

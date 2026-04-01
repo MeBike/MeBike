@@ -1,5 +1,5 @@
 import { IconSymbol } from "@components/IconSymbol";
-import { radii } from "@theme/metrics";
+import { borderWidths, radii, spaceScale } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
@@ -17,6 +17,12 @@ type BookingCardProps = {
   stationNameById: Map<string, string>;
   onPress: (bookingId: string) => void;
 };
+
+const bookingIconShellSize = spaceScale[9];
+const routeColumnWidth = spaceScale[5];
+const routeNodeSize = spaceScale[2] + spaceScale[1];
+const routeInnerDotSize = spaceScale[1];
+const routeStemWidth = borderWidths.strong;
 
 const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProps) => {
   const theme = useTheme();
@@ -51,24 +57,24 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
               alignItems="center"
               backgroundColor="$surfaceMuted"
               borderRadius="$round"
-              height={44}
+              height={bookingIconShellSize}
               justifyContent="center"
-              width={44}
+              width={bookingIconShellSize}
             >
               <IconSymbol color={theme.textSecondary.val} name="bicycle.circle.fill" size={20} />
             </YStack>
             <YStack flex={1} gap="$1">
-              <AppText variant="subhead">
+              <AppText variant="cardTitle">
                 Xe đạp
               </AppText>
-              <AppText tone="subtle" variant="meta">
-                {formatSupportCode(booking.id)}
+              <AppText tone="muted" variant="bodySmall">
+                {formatSupportCode(booking.bikeId)}
               </AppText>
             </YStack>
           </XStack>
 
           <YStack alignItems="flex-end" gap="$2">
-            <AppText tone="brand" variant="priceValue">
+            <AppText style={{ fontVariant: ["tabular-nums"] }} variant="headline">
               {priceText}
             </AppText>
             <StatusBadge
@@ -81,35 +87,33 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
           </YStack>
         </XStack>
 
-        <Separator borderColor="$borderDefault" />
-
-        <XStack alignItems="stretch" gap="$3" paddingHorizontal="$1">
+        <XStack alignItems="stretch" gap="$3" paddingTop="$1">
           <YStack
             alignItems="center"
             alignSelf="stretch"
             justifyContent="space-between"
-            paddingVertical={2}
-            width={20}
+            paddingVertical="$1"
+            width={routeColumnWidth}
           >
             <YStack
               alignItems="center"
               backgroundColor={theme.surfaceDefault.val}
-              borderColor={theme.textTertiary.val}
+               borderColor={theme.borderStrong.val}
               borderRadius="$round"
               borderWidth={1.5}
-              height={18}
+              height={routeNodeSize}
               justifyContent="center"
-              width={18}
+              width={routeNodeSize}
             >
-              <YStack backgroundColor={theme.textTertiary.val} borderRadius="$round" height={4} width={4} />
+              <YStack backgroundColor={theme.borderStrong.val} borderRadius="$round" height={routeInnerDotSize} width={routeInnerDotSize} />
             </YStack>
 
             <YStack
-              backgroundColor={theme.borderSubtle.val}
+              backgroundColor={theme.borderDefault.val}
               borderRadius="$round"
               flex={1}
-              marginVertical={4}
-              width={2}
+              marginVertical="$1"
+              width={routeStemWidth}
             />
 
             <YStack
@@ -118,32 +122,32 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
               borderColor={status.routeAccentColor}
               borderRadius="$round"
               borderWidth={1.5}
-              height={18}
+              height={routeNodeSize}
               justifyContent="center"
-              width={18}
+              width={routeNodeSize}
             >
               <YStack
                 backgroundColor={status.routeAccentColor}
                 borderRadius="$round"
-                height={6}
-                width={6}
+                height={routeInnerDotSize}
+                width={routeInnerDotSize}
               />
             </YStack>
           </YStack>
 
-          <YStack flex={1} justifyContent="space-between" minHeight={56} paddingVertical={2}>
-            <XStack alignItems="center" minHeight={18}>
-              <AppText flex={1} numberOfLines={1} variant="compactStrong">
+          <YStack flex={1} gap="$5" justifyContent="space-between" minHeight={spaceScale[10]} paddingVertical="$1">
+            <XStack alignItems="center" minHeight={routeNodeSize}>
+              <AppText flex={1} numberOfLines={1} variant="subhead">
                 {originLabel}
               </AppText>
             </XStack>
 
-            <XStack alignItems="center" minHeight={18}>
+            <XStack alignItems="center" minHeight={routeNodeSize}>
               <AppText
                 flex={1}
                 numberOfLines={1}
                 tone={status.destinationTone}
-                variant="compactStrong"
+                variant="subhead"
               >
                 {destinationLabel}
               </AppText>
@@ -151,15 +155,17 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
           </YStack>
         </XStack>
 
-        <XStack alignItems="center" gap="$3" paddingHorizontal="$1">
+        <Separator borderColor="$backgroundSubtle" />
+
+        <XStack alignItems="center" gap="$4" justifyContent="space-between">
           <XStack alignItems="center" gap="$2" flex={1}>
             <IconSymbol color={theme.textTertiary.val} name="calendar" size={14} />
             <AppText tone="muted" variant="bodySmall">
               {formatVietnamDateTime(booking.startTime)}
             </AppText>
           </XStack>
-          <Separator alignSelf="stretch" borderColor="$borderDefault" vertical />
-          <XStack alignItems="center" gap="$2" flex={1}>
+
+          <XStack alignItems="center" gap="$2" justifyContent="flex-end" flex={1}>
             <IconSymbol color={theme.textTertiary.val} name="clock" size={14} />
             <AppText tone="muted" variant="bodySmall">
               {formatDurationMinutes(booking.duration, { hasEnded: Boolean(booking.endTime) })}

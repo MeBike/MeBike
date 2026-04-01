@@ -7,6 +7,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
@@ -31,7 +32,7 @@ type CreateReturnConfirmationInput = {
 export type ReturnConfirmationRepo = {
   findByRentalId: (
     rentalId: string,
-  ) => Effect.Effect<Option.Option<ReturnConfirmationRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReturnConfirmationRow>>;
   create: (
     input: CreateReturnConfirmationInput,
   ) => Effect.Effect<ReturnConfirmationRow, ReturnConfirmationRepoError>;
@@ -83,6 +84,7 @@ export function makeReturnConfirmationRepository(
           }),
       }).pipe(
         Effect.map(row => Option.fromNullable(row).pipe(Option.map(mapToReturnConfirmationRow))),
+        defectOn(RentalRepositoryError),
       ),
 
     create: input =>
@@ -119,7 +121,10 @@ export function makeReturnConfirmationRepository(
                 }),
             ),
           ),
-      }).pipe(Effect.map(mapToReturnConfirmationRow)),
+      }).pipe(
+        Effect.map(mapToReturnConfirmationRow),
+        defectOn(RentalRepositoryError),
+      ),
   };
 }
 

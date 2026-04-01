@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
   PaymentAttemptRepositoryLive,
@@ -24,7 +24,3 @@ export const StripeTopupDepsLive = Layer.mergeAll(
   StripeLive,
   PrismaLive,
 );
-
-export function withStripeTopupDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(StripeTopupDepsLive));
-}

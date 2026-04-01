@@ -13,7 +13,7 @@ export type RentalRow = {
   id: string;
   userId: string;
   reservationId: string | null;
-  bikeId: string | null;
+  bikeId: string;
   depositHoldId: string | null;
   depositAmount: number | null;
   depositStatus: "NONE" | "HELD" | "RELEASED" | "FORFEITED";
@@ -67,7 +67,7 @@ export type AdminRentalListItem = {
     id: string;
     fullname: string;
   };
-  bikeId: string | null;
+  bikeId: string;
   status: RentalStatus;
   startStationId: string;
   endStationId: string | null;
@@ -101,7 +101,7 @@ export type AdminRentalDetail = {
     status: BikeStatus;
     supplierId: string | null;
     updatedAt: Date;
-  } | null;
+  };
   startStation: {
     id: string;
     name: string;

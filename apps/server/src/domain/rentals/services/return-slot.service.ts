@@ -1,8 +1,9 @@
 import { Effect, Option } from "effect";
 
+import { defectOn } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { ReturnSlotRow } from "../models";
 
@@ -67,9 +68,7 @@ export function createReturnSlot(
         const rentalRepo = makeRentalRepository(tx);
         const returnSlotRepo = makeReturnSlotRepository(tx);
 
-        const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId).pipe(
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-        );
+        const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId);
 
         if (Option.isNone(rentalOpt)) {
           return yield* Effect.fail(new RentalNotFound({
@@ -86,17 +85,13 @@ export function createReturnSlot(
           }));
         }
 
-        const existing = yield* returnSlotRepo.findActiveByRentalId(input.rentalId).pipe(
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-        );
+        const existing = yield* returnSlotRepo.findActiveByRentalId(input.rentalId);
 
         if (Option.isSome(existing) && existing.value.stationId === input.stationId) {
           return existing.value;
         }
 
-        const stationSnapshotOpt = yield* returnSlotRepo.getStationCapacitySnapshot(input.stationId).pipe(
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-        );
+        const stationSnapshotOpt = yield* returnSlotRepo.getStationCapacitySnapshot(input.stationId);
 
         if (Option.isNone(stationSnapshotOpt)) {
           return yield* Effect.fail(new StationNotFound({ id: input.stationId }));
@@ -119,9 +114,7 @@ export function createReturnSlot(
         }
 
         if (Option.isSome(existing)) {
-          yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now).pipe(
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-          );
+          yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now);
         }
 
         return yield* returnSlotRepo.createActive({
@@ -132,7 +125,6 @@ export function createReturnSlot(
         }).pipe(
           Effect.catchTag("ReturnSlotUniqueViolation", () =>
             returnSlotRepo.findActiveByRentalId(input.rentalId).pipe(
-              Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
               Effect.flatMap(activeOpt =>
                 Option.isSome(activeOpt)
                   ? Effect.succeed(activeOpt.value)
@@ -146,10 +138,9 @@ export function createReturnSlot(
                     )),
               ),
             )),
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
         );
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
   });
 }
@@ -165,9 +156,7 @@ export function getCurrentReturnSlot(
     const rentalRepo = yield* RentalRepository;
     const returnSlotRepo = yield* ReturnSlotRepository;
 
-    const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId).pipe(
-      Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-    );
+    const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId);
 
     if (Option.isNone(rentalOpt)) {
       return yield* Effect.fail(new RentalNotFound({
@@ -184,9 +173,7 @@ export function getCurrentReturnSlot(
       }));
     }
 
-    return yield* returnSlotRepo.findActiveByRentalId(input.rentalId).pipe(
-      Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-    );
+    return yield* returnSlotRepo.findActiveByRentalId(input.rentalId);
   });
 }
 
@@ -208,9 +195,7 @@ export function cancelReturnSlot(
         const rentalRepo = makeRentalRepository(tx);
         const returnSlotRepo = makeReturnSlotRepository(tx);
 
-        const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId).pipe(
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-        );
+        const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId);
 
         if (Option.isNone(rentalOpt)) {
           return yield* Effect.fail(new RentalNotFound({
@@ -227,9 +212,7 @@ export function cancelReturnSlot(
           }));
         }
 
-        const cancelled = yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now).pipe(
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-        );
+        const cancelled = yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now);
 
         if (Option.isNone(cancelled)) {
           return yield* Effect.fail(new ReturnSlotNotFound({
@@ -240,7 +223,7 @@ export function cancelReturnSlot(
 
         return cancelled.value;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
   });
 }

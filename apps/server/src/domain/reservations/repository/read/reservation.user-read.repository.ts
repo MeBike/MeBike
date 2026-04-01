@@ -5,6 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { ReservationStatus } from "generated/prisma/client";
 
@@ -13,7 +14,7 @@ import type { ReservationRepo } from "../reservation.repository.types";
 import { ReservationRepositoryError } from "../../domain-errors";
 import { selectReservationRow, toReservationRow } from "../reservation.mappers";
 import {
-  pendingOrLegacyActiveStatusWhere,
+  pendingStatusWhere,
   toReservationOrderBy,
   toReservationWhereForUser,
 } from "../reservation.queries";
@@ -21,7 +22,6 @@ import {
 export type ReservationUserReadRepo = Pick<
   ReservationRepo,
   | "findLatestPendingOrActiveByUserId"
-  | "findActiveByUserId"
   | "findNextUpcomingByUserId"
   | "listForUser"
 >;
@@ -56,6 +56,7 @@ export function makeReservationUserReadRepository(
         }),
     }).pipe(
       Effect.map(row => Option.fromNullable(row).pipe(Option.map(toReservationRow))),
+      defectOn(ReservationRepositoryError),
     );
 
   return {
@@ -65,7 +66,7 @@ export function makeReservationUserReadRepository(
           client.reservation.findFirst({
             where: {
               userId,
-              ...pendingOrLegacyActiveStatusWhere(),
+              ...pendingStatusWhere(),
             },
             orderBy: { updatedAt: "desc" },
             select: selectReservationRow,
@@ -79,27 +80,7 @@ export function makeReservationUserReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
         ),
-      ),
-
-    findActiveByUserId: userId =>
-      Effect.tryPromise({
-        try: () =>
-          client.reservation.findFirst({
-            where: {
-              userId,
-              status: ReservationStatus.ACTIVE,
-            },
-            select: selectReservationRow,
-          }),
-        catch: err =>
-          new ReservationRepositoryError({
-            operation: "findActiveByUserId",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toReservationRow)),
-        ),
+        defectOn(ReservationRepositoryError),
       ),
 
     findNextUpcomingByUserId: (userId, now, options) =>
@@ -139,6 +120,6 @@ export function makeReservationUserReadRepository(
 
         const rows = items.map(toReservationRow);
         return makePageResult(rows, total, page, pageSize);
-      }),
+      }).pipe(defectOn(ReservationRepositoryError)),
   };
 }

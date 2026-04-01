@@ -20,9 +20,7 @@ export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
     const repo = yield* BikeRepository;
     const { client } = yield* Prisma;
 
-    const current = yield* repo.getById(bikeId).pipe(
-      Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-    );
+    const current = yield* repo.getById(bikeId);
     if (Option.isNone(current)) {
       return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
     }
@@ -51,8 +49,6 @@ export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
       return yield* Effect.fail(new BikeCurrentlyReserved({ bikeId, action: "delete" }));
     }
 
-    return yield* repo.updateStatus(bikeId, "UNAVAILABLE").pipe(
-      Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-    );
+    return yield* repo.updateStatus(bikeId, "UNAVAILABLE");
   });
 }

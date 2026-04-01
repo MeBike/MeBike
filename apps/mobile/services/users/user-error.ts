@@ -1,29 +1,47 @@
-export type UserError = ApiUserError | NetworkUserError | DecodeUserError | UnknownUserError;
+import type { Result } from "@lib/result";
+import type { z } from "zod";
 
-export type UserErrorCode
-  = | "UNAUTHORIZED"
-    | "USER_NOT_FOUND"
-    | "DUPLICATE_EMAIL"
-    | "DUPLICATE_PHONE_NUMBER"
-    | "INVALID_PUSH_TOKEN"
-    | "UNKNOWN";
+import { ServerContracts } from "@mebike/shared";
 
-export type ApiUserError = {
-  _tag: "ApiError";
-  code: UserErrorCode;
-  message?: string;
-};
+import {
+  type ServiceError,
+  asNetworkError as asSharedNetworkError,
+  isServiceErrorCode,
+  normalizeServiceErrorCode,
+  parseServiceError,
+} from "@services/shared/service-error";
 
-export type NetworkUserError = {
-  _tag: "NetworkError";
-  message?: string;
-};
+type ContractUserErrorCode = z.infer<typeof ServerContracts.UsersContracts.UserErrorCodeSchema>;
 
-export type DecodeUserError = {
-  _tag: "DecodeError";
-};
+export type UserErrorCode = ContractUserErrorCode | "UNAUTHORIZED" | "UNKNOWN";
 
-export type UnknownUserError = {
-  _tag: "UnknownError";
-  message?: string;
-};
+export type UserError = ServiceError<UserErrorCode>;
+
+export function isUserContractErrorCode(code: string): code is ContractUserErrorCode {
+  return ServerContracts.UsersContracts.UserErrorCodeSchema.safeParse(code).success;
+}
+
+export function isUserErrorCode(code: string): code is UserErrorCode {
+  return isServiceErrorCode(code, isUserContractErrorCode);
+}
+
+export function isUserApiError(
+  error: { _tag: string; code?: string },
+): error is Extract<UserError, { _tag: "ApiError" }> {
+  return error._tag === "ApiError"
+    && typeof error.code === "string"
+    && isUserErrorCode(error.code);
+}
+
+export async function parseUserError(response: Response): Promise<UserError> {
+  return parseServiceError(response, {
+    schema: ServerContracts.UsersContracts.UserErrorResponseSchema,
+    mapCode: code => normalizeServiceErrorCode(code, isUserContractErrorCode),
+    includeUnauthorized: true,
+    includeForbidden: true,
+  });
+}
+
+export function asNetworkError(error: unknown): Result<never, Extract<UserError, { _tag: "NetworkError" }>> {
+  return asSharedNetworkError<Extract<UserError, { _tag: "NetworkError" }>>(error);
+}

@@ -1,8 +1,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeTestDb } from "@/test/db/kysely";
-import { expectLeftTag } from "@/test/effect/assertions";
-import { runEffect, runEffectEither } from "@/test/effect/run";
+import { expectDefect } from "@/test/effect/assertions";
+import { runEffect } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { makeUserStatsRepository } from "../user-stats.repository";
@@ -88,7 +89,7 @@ describe("userStatsRepository Integration", () => {
   });
 
   describe("failure Scenarios", () => {
-    it("returns UserRepositoryError when database connection is broken", async () => {
+    it("defects with UserRepositoryError when database connection is broken", async () => {
       const invalidDb = makeTestDb(
         "postgresql://invalid:invalid@localhost:54321/invalid",
         { connectionTimeoutMillis: 100 },
@@ -96,9 +97,11 @@ describe("userStatsRepository Integration", () => {
 
       const brokenRepo = makeUserStatsRepository(invalidDb);
 
-      const result = await runEffectEither(brokenRepo.getOverviewStats());
-      const error = expectLeftTag(result, "UserRepositoryError");
-      expect(error.operation).toBe("stats.totalUsers");
+      await expectDefect(
+        brokenRepo.getOverviewStats(),
+        UserRepositoryError,
+        { operation: "stats.totalUsers" },
+      );
 
       await invalidDb.destroy();
     });

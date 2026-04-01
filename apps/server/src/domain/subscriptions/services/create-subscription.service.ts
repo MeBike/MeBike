@@ -4,13 +4,14 @@ import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { SubscriptionPackage } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import { makeWalletRepository } from "@/domain/wallets";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import { buildSubscriptionCreatedEmail } from "@/lib/email-templates";
 
 import type { SubscriptionRow } from "../models";
@@ -102,7 +103,7 @@ export function createSubscriptionUseCase(args: {
 
         return pending;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
 
     return created;

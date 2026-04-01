@@ -2,6 +2,7 @@ import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 import { authService } from "@services/auth/auth-service";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
@@ -145,15 +146,7 @@ export default function ResetPasswordFormScreen() {
       });
 
       if (!result.ok) {
-        if (result.error._tag === "ApiError") {
-          Alert.alert("Lỗi", result.error.message ?? "OTP không hợp lệ hoặc đã hết hạn");
-          return;
-        }
-        if (result.error._tag === "NetworkError") {
-          Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-          return;
-        }
-        Alert.alert("Lỗi", "Không thể đặt lại mật khẩu");
+        Alert.alert("Lỗi", presentAuthError(result.error, "Không thể đặt lại mật khẩu."));
         return;
       }
 
