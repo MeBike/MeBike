@@ -20,7 +20,6 @@ export const userService = {
     pageSize,
     verify,
     accountStatus,
-    role,
     fullName,
     sortBy,
     sortDir,
@@ -29,7 +28,6 @@ export const userService = {
     pageSize?: number;
     verify?: "VERIFIED" | "UNVERIFIED" | "";
     accountStatus?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
-    role?: "ADMIN" | "USER" | "STAFF" | "";
     fullName?: string;
     sortBy?: "fullname" | "email" | "role" | "accountStatus" | "verify" | "updatedAt";
     sortDir?: "asc" | "desc";
