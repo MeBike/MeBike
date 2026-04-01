@@ -1,23 +1,13 @@
-import { Effect, Layer } from "effect";
+import type { UserQueryRepo } from "../repository/user-query.repository";
+import type { UserQueryService } from "./user.service.types";
 
-import { UserQueryRepository } from "../repository/user-query.repository";
-import { makeUserQueryService } from "./queries/user.query.service";
-
-export type { UserQueryService } from "./user.service.types";
-
-const makeUserQueryServiceEffect = Effect.gen(function* () {
-  const repo = yield* UserQueryRepository;
-  return makeUserQueryService(repo);
-});
-
-export class UserQueryServiceTag extends Effect.Service<UserQueryServiceTag>()(
-  "UserQueryService",
-  {
-    effect: makeUserQueryServiceEffect,
-  },
-) {}
-
-export const UserQueryServiceLive = Layer.effect(
-  UserQueryServiceTag,
-  makeUserQueryServiceEffect.pipe(Effect.map(UserQueryServiceTag.make)),
-);
+export function makeUserQueryService(repo: UserQueryRepo): UserQueryService {
+  return {
+    getById: id => repo.findById(id),
+    getByEmail: email => repo.findByEmail(email),
+    findByStripeConnectedAccountId: accountId => repo.findByStripeConnectedAccountId(accountId),
+    listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
+    searchByQuery: query => repo.searchByQuery(query),
+    listTechnicianSummaries: () => repo.listTechnicianSummaries(),
+  };
+}

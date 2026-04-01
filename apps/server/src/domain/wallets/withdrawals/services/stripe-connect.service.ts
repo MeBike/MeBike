@@ -2,8 +2,8 @@ import type Stripe from "stripe";
 
 import { Effect, Match } from "effect";
 
-import { UserCommandServiceTag } from "@/domain/users/services/user-command.service";
-import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
+import { UserCommandServiceTag } from "@/domain/users/services/user-command.live";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.live";
 
 import type {
   StripeConnectNotEnabled,

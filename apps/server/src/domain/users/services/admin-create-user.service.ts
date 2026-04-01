@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { UserRow } from "../models";
 
 import { hashPassword } from "../../auth/services/auth.service";
-import { UserCommandServiceTag } from "./user-command.service";
+import { UserCommandServiceTag } from "./user-command.live";
 
 export function adminCreateUserUseCase(args: {
   fullname: string;

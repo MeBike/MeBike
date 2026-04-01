@@ -33,7 +33,7 @@ import type { AgencyRequestRepo } from "../repository/agency-request.repository"
 import { hashPassword } from "../../auth/services/auth.service";
 import { makeUserCommandRepository } from "../../users/repository/user-command.repository";
 import { makeUserQueryRepository } from "../../users/repository/user-query.repository";
-import { makeUserCommandService } from "../../users/services/commands/user.command.service";
+import { makeUserCommandService } from "../../users/services/user-command.service";
 import {
   AgencyRequestNotFound as AgencyRequestNotFoundError,
   AgencyRequestNotOwned as AgencyRequestNotOwnedError,
