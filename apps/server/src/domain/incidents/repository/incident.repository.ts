@@ -323,10 +323,21 @@ function createIncidentWithClient(
       routeGeometry: string;
     } | null = null;
 
-    const destLat = data.latitude !== null ? Number(data.latitude) : selectedStation?.latitude;
-    const destLng = data.longitude !== null ? Number(data.longitude) : selectedStation?.longitude;
+    const destLat
+      = data.latitude !== null
+        ? Number(data.latitude)
+        : selectedStation?.latitude;
+    const destLng
+      = data.longitude !== null
+        ? Number(data.longitude)
+        : selectedStation?.longitude;
 
-    if (foundTechnician && selectedStation && destLat !== undefined && destLng !== undefined) {
+    if (
+      foundTechnician
+      && selectedStation
+      && destLat !== undefined
+      && destLng !== undefined
+    ) {
       const route = yield* mapbox
         .getRoute({
           origin: {
@@ -524,10 +535,16 @@ function rejectIncidentWithClient(
       routeGeometry: string;
     } | null = null;
 
-    const destLat = foundIncident.latitude !== null ? Number(foundIncident.latitude) : selectedStation?.latitude;
-    const destLng = foundIncident.longitude !== null ? Number(foundIncident.longitude) : selectedStation?.longitude;
+    const destLat
+      = foundIncident.latitude !== null
+        ? Number(foundIncident.latitude)
+        : selectedStation?.latitude;
+    const destLng
+      = foundIncident.longitude !== null
+        ? Number(foundIncident.longitude)
+        : selectedStation?.longitude;
 
-    if (foundTechnician && selectedStation && destLat !== undefined && destLng !== undefined) {
+    if (selectedStation && destLat !== undefined && destLng !== undefined) {
       const route = yield* mapbox
         .getRoute({
           origin: {
@@ -763,8 +780,9 @@ export function makeIncidentRepository(
     },
 
     rejectIncident(id) {
-      return runPrismaTransaction(client as PrismaClient, tx =>
-        rejectIncidentWithClient(tx, id, mapbox), // This already has mapError inside
+      return runPrismaTransaction(
+        client as PrismaClient,
+        tx => rejectIncidentWithClient(tx, id, mapbox), // This already has mapError inside
       ).pipe(
         Effect.map(opt =>
           Option.map(opt, a => a as TechnicianAssignmentRow),
