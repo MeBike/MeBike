@@ -118,6 +118,7 @@ export const useSupplierActions = ({hasToken,supplier_id}: SupplierActionProps) 
     useGetAllSupplierQuery,
     getAllSuppliers,
     allSupplier,
+    suppliers: allSupplier?.data || [],
     createSupplier,
     isCreatingSupplier: useCreateSupplier.isPending,
     useGetAllStatsSupplierQuery,

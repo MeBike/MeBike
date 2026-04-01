@@ -98,24 +98,12 @@ export default function CustomersClient() {
     if (isLoading) {
       setIsVisualLoading(true);
     } else {
-      // Khi API xong, đợi thêm một chút rồi mới tắt Skeleton
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600); // 600ms là khoảng "vàng" để UI mượt mà
+      }, 600); 
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
-  const handleCreateUser = handleSubmit((data) => {
-    createUser({
-      fullName: data.fullName,
-      email: data.email,
-      phoneNumber: data.phoneNumber,
-      role: data.role,
-    });
-    setIsCreateModalOpen(false);
-    console.log("[v0] Create user:", data);
-    reset();
-  });
   const handleDetailUser = (id: string) => {
     router.push(`/admin/customers/detail/${id}`);
   };
@@ -137,7 +125,7 @@ export default function CustomersClient() {
           <div className="flex items-center gap-3">
             <Button
               onClick={() => {
-                setIsCreateModalOpen(true);
+                router.push("/admin/customers/create")
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -253,109 +241,6 @@ export default function CustomersClient() {
             )}
           </div>
         </div>
-        {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-              <div className="p-6 border-b bg-muted/30">
-                <h2 className="text-xl font-bold text-foreground">
-                  Thêm người dùng mới
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Nhập thông tin chi tiết để tạo tài khoản.
-                </p>
-              </div>
-
-              <form
-                id="create-user-form"
-                onSubmit={handleCreateUser}
-                className="p-6 space-y-4"
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="name">Họ tên</Label>
-                  <Input
-                    id="name"
-                    {...register("fullName")}
-                    placeholder="Nhập họ tên"
-                  />
-                  {errors.fullName && (
-                    <p className="text-destructive text-xs font-medium">
-                      {errors.fullName.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...register("email")}
-                    placeholder="example@mail.com"
-                  />
-                  {errors.email && (
-                    <p className="text-destructive text-xs font-medium">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Số điện thoại</Label>
-                    <Input
-                      id="phoneNumber"
-                      type="tel"
-                      {...register("phoneNumber")}
-                      placeholder="09xxx"
-                    />
-                    {errors.phoneNumber && (
-                      <p className="text-destructive text-xs font-medium">
-                        {errors.phoneNumber.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Vai trò hệ thống</Label>
-                  <select
-                    {...register("role")}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="USER">Người dùng (User)</option>
-                    <option value="STAFF">Nhân viên (Staff)</option>
-                    <option value="ADMIN">Quản trị viên (Admin)</option>
-                  </select>
-                  {errors.role && (
-                    <p className="text-destructive text-xs font-medium">
-                      {errors.role.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex gap-3 mt-8">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsCreateModalOpen(false);
-                      reset();
-                    }}
-                    className="flex-1"
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 gradient-primary shadow-glow"
-                  >
-                    Tạo người dùng
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

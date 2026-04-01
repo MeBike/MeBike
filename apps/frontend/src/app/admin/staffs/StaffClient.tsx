@@ -94,16 +94,15 @@ export default function StaffClient() {
     if (isLoading) {
       setIsVisualLoading(true);
     } else {
-      // Khi API xong, đợi thêm một chút rồi mới tắt Skeleton
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600); // 600ms là khoảng "vàng" để UI mượt mà
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
   const handleCreateUser = handleSubmit((data) => {
     createUser({
-      fullName: data.fullName,
+      fullname: data.fullname,
       email: data.email,
       phoneNumber: data.phoneNumber,
       role: data.role,
@@ -133,7 +132,7 @@ export default function StaffClient() {
           <div className="flex items-center gap-3">
             <Button
               onClick={() => {
-                setIsCreateModalOpen(true);
+                router.push("/admin/staffs/create");
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -270,12 +269,12 @@ export default function StaffClient() {
                   <Label htmlFor="name">Họ tên</Label>
                   <Input
                     id="name"
-                    {...register("fullName")}
+                    {...register("fullname")}
                     placeholder="Nhập họ tên"
                   />
-                  {errors.fullName && (
+                  {errors.fullname && (
                     <p className="text-destructive text-xs font-medium">
-                      {errors.fullName.message}
+                      {errors.fullname.message}
                     </p>
                   )}
                 </div>

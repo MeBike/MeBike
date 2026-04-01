@@ -25,10 +25,11 @@ interface CreateUserProps {
 export default function CreateUser({ onSubmit }: CreateUserProps) {
   const navigate = useRouter();
   const [formData, setFormData] = useState({
-    fullName : "",
+    fullname : "",
     phoneNumber : "",
     email : "",
     role : "USER",
+    password : "",
   });
 
   const handleChange = (field: string, value: string) => {
@@ -38,10 +39,11 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const data : CreateUserFormData = { 
-        fullName: formData.fullName,
+        fullname: formData.fullname,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        role: formData.role.toUpperCase() as "USER" | "STAFF" | "ADMIN",
+        password : formData.password,
+        role : formData.role as "USER",
     }
     onSubmit({data});
   };
@@ -49,8 +51,8 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
   return (
     <div>
       <PageHeader
-        title="Add New User"
-        description="Create a new user account"
+        title="Tạo người dùng"
+        description="Tạo tài khoản người dùng"
         backLink="/admin/customers"
       />
       <Card className="max-w-3xl mx-auto">
@@ -59,20 +61,20 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" />
-                Basic Information
+                Thông tin cơ bản
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
+                  <Label htmlFor="fullname"><span className="text-red-500">*</span>Họ và tên:</Label>
                   <Input
-                    id="name"
-                    value={formData.fullName}
-                    onChange={(e) => handleChange("fullName", e.target.value)}
+                    id="fullname"
+                    value={formData.fullname}
+                    onChange={(e) => handleChange("fullname", e.target.value)}
                     placeholder="Enter full name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email"><span className="text-red-500">*</span>Email:</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -86,7 +88,7 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Phone *</Label>
+                  <Label htmlFor="phoneNumber"><span className="text-red-500">*</span>Phone</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -98,15 +100,27 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
                     />
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password"><span className="text-red-500">*</span>Mật khẩu:</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => handleChange("password", e.target.value)}
+                      placeholder="Enter password"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">
-                Role & Status
-              </h3>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
+                  <Label htmlFor="role"><span className="text-red-500">*</span>Chức vụ:</Label>
                   <Select
                     value={formData.role}
                     onValueChange={(value) => handleChange("role", value)}
@@ -125,14 +139,14 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
             {/* Actions */}
             <div className="flex gap-3 pt-4">
               <Button type="submit" className="gradient-primary shadow-glow">
-                Create User
+                Tạo người dùng
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate.push("/admin/customers")}
               >
-                Cancel
+                Hủy bỏ
               </Button>
             </div>
           </form>
