@@ -674,6 +674,9 @@ export type TechnicianAssignment = {
     technician_team_id: string | null;
     technician_user_id: string | null;
     assigned_by_user_id: string | null;
+    distance_meters: number | null;
+    duration_seconds: number | null;
+    route_geometry: string | null;
     assigned_at: Generated<Timestamp>;
     accepted_at: Timestamp | null;
     started_at: Timestamp | null;
