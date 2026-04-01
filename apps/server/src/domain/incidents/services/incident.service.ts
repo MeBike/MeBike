@@ -314,11 +314,6 @@ export const IncidentServiceLive = Layer.effect(
             )),
           Effect.catchTag("IncidentRepositoryError", error =>
             Effect.die(error)),
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
-          Effect.catchTag("StationRepositoryError", error =>
-            Effect.die(error)),
-          Effect.catchTag("BikeRepositoryError", error => Effect.die(error)),
         ),
 
       updateIncident: (
