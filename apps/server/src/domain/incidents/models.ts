@@ -58,6 +58,9 @@ export type IncidentDetail = {
       id: string;
       name: string;
     } | null;
+    distanceMeters: number | null;
+    durationSeconds: number | null;
+    routeGeometry: string | null;
     assignedAt: Date;
   } | null;
   source: IncidentSource;
@@ -100,7 +103,7 @@ export type CreateIncidentRequest = {
   reporterUserId: string;
   reporterRole: string;
   rentalId: string | null;
-  bikeId: string;
+  bikeId: string | null;
   stationId: string | null;
   incidentType: string;
   description: string | null;
@@ -125,4 +128,7 @@ export type TechnicianAssignmentRow = {
   startedAt: Date | null;
   resolvedAt: Date | null;
   status: AssignmentStatus;
+  distanceMeters: number | null;
+  durationSeconds: number | null;
+  routeGeometry: string | null;
 };

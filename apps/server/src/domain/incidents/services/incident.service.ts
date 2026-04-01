@@ -11,6 +11,7 @@ import { BikeNotFound, BikeRepository } from "@/domain/bikes";
 import { AdminRentalNotFound, RentalRepository } from "@/domain/rentals";
 import { BikeNotAvailable } from "@/domain/reservations";
 import { StationNotFound, StationRepository } from "@/domain/stations";
+import { MapboxRouting } from "@/infrastructure/mapbox";
 import { IncidentSeverity, IncidentSource } from "generated/kysely/types";
 
 import type {
@@ -66,6 +67,7 @@ export type IncidentService = {
     | BikeNotAvailable
     | NoAvailableTechnicianFound
     | ActiveIncidentAlreadyExists
+    | StationNotFound
   >;
 
   updateIncident: (
@@ -177,6 +179,7 @@ export const IncidentServiceLive = Layer.effect(
     const rentalRepo = yield* RentalRepository;
     const bikeRepo = yield* BikeRepository;
     const stationRepo = yield* StationRepository;
+    const mapbox = yield* MapboxRouting;
 
     const service: IncidentService = {
       listIncidents: (role, filter, pageReq) =>
@@ -184,15 +187,15 @@ export const IncidentServiceLive = Layer.effect(
 
       getIncidentById: (incidentId, userId, role) =>
         repo.getById(incidentId).pipe(
-          Effect.flatMap(opt =>
+          Effect.flatMap((opt) =>
             Option.isSome(opt)
               ? Effect.succeed(opt.value)
               : Effect.fail(new IncidentNotFound({ id: incidentId })),
           ),
           Effect.flatMap((incident) => {
             if (
-              role === "TECHNICIAN"
-              && incident.assignments?.technician?.id !== userId
+              role === "TECHNICIAN" &&
+              incident.assignments?.technician?.id !== userId
             ) {
               return Effect.fail(
                 new UnauthorizedIncidentAccess({ incidentId, userId: userId! }),
@@ -219,14 +222,13 @@ export const IncidentServiceLive = Layer.effect(
             }
 
             if (
-              rental.value.status === "RENTED"
-              && data.reporterRole === "USER"
+              rental.value.status === "RENTED" &&
+              data.reporterRole === "USER"
             ) {
               finalSource = IncidentSource.DURING_RENTAL;
-            }
-            else if (
-              rental.value.status === "COMPLETED"
-              && data.reporterRole === "USER"
+            } else if (
+              rental.value.status === "COMPLETED" &&
+              data.reporterRole === "USER"
             ) {
               finalSource = IncidentSource.POST_RETURN;
             }
@@ -254,6 +256,8 @@ export const IncidentServiceLive = Layer.effect(
             if (bike.value.stationId && finalSource !== "DURING_RENTAL") {
               data.stationId = bike.value.stationId;
             }
+          } else {
+            return yield* Effect.fail(new BikeNotFound({ id: "NOT_PROVIDED" }));
           }
 
           let bikeLocked: boolean;
@@ -292,7 +296,7 @@ export const IncidentServiceLive = Layer.effect(
           return yield* repo.create({
             reporterUserId: data.reporterUserId,
             rentalId: data.rentalId,
-            bikeId: data.bikeId,
+            bikeId: data.bikeId!,
             stationId: data.stationId,
             source: finalSource,
             incidentType: data.incidentType,
@@ -307,13 +311,22 @@ export const IncidentServiceLive = Layer.effect(
           Effect.catchTag("ActiveIncidentAlreadyExists", () =>
             Effect.fail(
               new ActiveIncidentAlreadyExists({
-                bikeId: data.bikeId,
+                bikeId: data.bikeId ?? undefined,
                 rentalId: data.rentalId ?? undefined,
                 stationId: data.stationId ?? undefined,
               }),
-            )),
-          Effect.catchTag("IncidentRepositoryError", error =>
-            Effect.die(error)),
+            ),
+          ),
+          Effect.catchTag("StationNotFound", () =>
+            Effect.fail(
+              new StationNotFound({
+                id: data.stationId!,
+              }),
+            ),
+          ),
+          Effect.catchTag("IncidentRepositoryError", (error) =>
+            Effect.die(error),
+          ),
         ),
 
       updateIncident: (
@@ -336,7 +349,7 @@ export const IncidentServiceLive = Layer.effect(
           return yield* repo
             .update(incidentId, patch)
             .pipe(
-              Effect.flatMap(opt =>
+              Effect.flatMap((opt) =>
                 Option.isSome(opt)
                   ? Effect.succeed(opt.value)
                   : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -356,8 +369,8 @@ export const IncidentServiceLive = Layer.effect(
           }
 
           if (
-            incident.value.assignments?.technician?.id !== userId
-            || incident.value.assignments?.status === "CANCELLED"
+            incident.value.assignments?.technician?.id !== userId ||
+            incident.value.assignments?.status === "CANCELLED"
           ) {
             return yield* Effect.fail(
               new UnauthorizedIncidentAccess({ incidentId, userId }),
@@ -366,7 +379,7 @@ export const IncidentServiceLive = Layer.effect(
 
           return yield* ensureValidStatus(status).pipe(
             Effect.flatMap(() => repo.updateStatus(incidentId, status)),
-            Effect.flatMap(opt =>
+            Effect.flatMap((opt) =>
               Option.isSome(opt)
                 ? Effect.succeed(opt.value)
                 : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -382,8 +395,8 @@ export const IncidentServiceLive = Layer.effect(
           }
 
           if (
-            incident.value.assignments?.technician?.id !== userId
-            || incident.value.assignments?.status !== "ASSIGNED"
+            incident.value.assignments?.technician?.id !== userId ||
+            incident.value.assignments?.status !== "ASSIGNED"
           ) {
             return yield* Effect.fail(
               new UnauthorizedIncidentAccess({ incidentId, userId }),
@@ -393,7 +406,7 @@ export const IncidentServiceLive = Layer.effect(
           return yield* repo
             .acceptIncident(incidentId)
             .pipe(
-              Effect.flatMap(opt =>
+              Effect.flatMap((opt) =>
                 Option.isSome(opt)
                   ? Effect.succeed(opt.value)
                   : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -409,8 +422,8 @@ export const IncidentServiceLive = Layer.effect(
           }
 
           if (
-            incident.value.assignments?.technician?.id !== userId
-            || incident.value.assignments?.status === "CANCELLED"
+            incident.value.assignments?.technician?.id !== userId ||
+            incident.value.assignments?.status === "CANCELLED"
           ) {
             return yield* Effect.fail(
               new UnauthorizedIncidentAccess({ incidentId, userId }),
@@ -420,7 +433,7 @@ export const IncidentServiceLive = Layer.effect(
           return yield* repo
             .rejectIncident(incidentId)
             .pipe(
-              Effect.flatMap(opt =>
+              Effect.flatMap((opt) =>
                 Option.isSome(opt)
                   ? Effect.succeed(opt.value)
                   : Effect.fail(new IncidentNotFound({ id: incidentId })),
@@ -429,10 +442,10 @@ export const IncidentServiceLive = Layer.effect(
         }),
 
       startIncident: (userId: string, incidentId: string) =>
-        startIncidentUseCase(userId, incidentId),
+        startIncidentUseCase(userId, incidentId, mapbox),
 
       resolveIncident: (userId: string, incidentId: string) =>
-        resolveIncidentUseCase(userId, incidentId),
+        resolveIncidentUseCase(userId, incidentId, mapbox),
     };
     return service;
   }),

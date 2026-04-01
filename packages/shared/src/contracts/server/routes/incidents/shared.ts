@@ -45,32 +45,38 @@ export const IncidentListQuerySchema = z
     description: "Optional filters for listing incidents",
   });
 
-export const IncidentCreateBodySchema = z
-  .object({
-    bikeId: z.uuidv7(),
-    stationId: z.uuidv7().optional(),
-    rentalId: z.uuidv7().optional(),
-    incidentType: z.string().max(250),
-    description: z.string().max(250).optional(),
-    latitude: z.number().min(-90).max(90).openapi({
-      description: "Latitude of the incident",
-      example: 10.7769,
-    }),
-    longitude: z.number().min(-180).max(180).openapi({
-      description: "Longitude of the incident",
-      example: 106.7009,
-    }),
-    fileUrls: z.array(z.url()).optional(),
+const incidentCreateBase = z.object({
+  bikeId: z.uuidv7().optional(),
+  stationId: z.uuidv7().optional(),
+  rentalId: z.uuidv7().optional(),
+  incidentType: z.string().max(250),
+  description: z.string().max(250).optional(),
+  latitude: z.number().min(-90).max(90).openapi({
+    description: "Latitude of the incident",
+    example: 10.7769,
+  }),
+  longitude: z.number().min(-180).max(180).openapi({
+    description: "Longitude of the incident",
+    example: 106.7009,
+  }),
+  fileUrls: z.array(z.url()).optional(),
+});
+
+export const IncidentCreateBodySchema = incidentCreateBase
+  .refine(data => data.bikeId || data.rentalId, {
+    message: "Either bikeId or rentalId must be provided",
+    path: ["bikeId"],
   })
   .openapi("IncidentCreateBody", {
     description: "Payload for creating an incident",
   });
 
-export const IncidentUpdateBodySchema = IncidentCreateBodySchema.omit({
-  bikeId: true,
-  rentalId: true,
-  stationId: true,
-})
+export const IncidentUpdateBodySchema = incidentCreateBase
+  .omit({
+    bikeId: true,
+    rentalId: true,
+    stationId: true,
+  })
   .partial()
   .openapi("IncidentUpdateBody", {
     description: "Payload for updating an incident",

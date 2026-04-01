@@ -1,5 +1,7 @@
 import { Effect, Option } from "effect";
 
+import type { MapboxRouting } from "@/infrastructure/mapbox";
+
 import { makeBikeRepository } from "@/domain/bikes";
 import { AdminRentalNotFound, makeRentalRepository } from "@/domain/rentals";
 import { Prisma } from "@/infrastructure/prisma";
@@ -12,13 +14,17 @@ import {
 } from "../domain-errors";
 import { makeIncidentRepository } from "../repository/incident.repository";
 
-export function resolveIncidentUseCase(userId: string, incidentId: string) {
+export function resolveIncidentUseCase(
+  userId: string,
+  incidentId: string,
+  mapbox: MapboxRouting,
+) {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
 
     return yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
-        const incidentRepo = makeIncidentRepository(tx);
+        const incidentRepo = makeIncidentRepository(tx, mapbox);
         const bikeRepo = makeBikeRepository(tx);
         const rentalRepo = makeRentalRepository(tx);
 

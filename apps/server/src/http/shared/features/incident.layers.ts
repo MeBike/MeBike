@@ -5,13 +5,14 @@ import {
   IncidentServiceLive,
 } from "@/domain/incidents";
 
-import { PrismaLive } from "../infra.layers";
+import { MapboxRoutingLive, PrismaLive } from "../infra.layers";
 import { BikeReposLive } from "./bike.layers";
 import { RentalReposLive } from "./rental.layers";
 import { StationReposLive } from "./station.layers";
 
 export const IncidentReposLive = IncidentRepositoryLive.pipe(
   Layer.provide(PrismaLive),
+  Layer.provide(MapboxRoutingLive),
 );
 
 export const IncidentServiceLayer = IncidentServiceLive.pipe(
@@ -19,6 +20,7 @@ export const IncidentServiceLayer = IncidentServiceLive.pipe(
   Layer.provide(RentalReposLive),
   Layer.provide(BikeReposLive),
   Layer.provide(StationReposLive),
+  Layer.provide(MapboxRoutingLive),
 );
 
 export const IncidentDepsLive = Layer.mergeAll(

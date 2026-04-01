@@ -122,7 +122,7 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
         reporterUserId: userId,
         reporterRole: currentRole,
         rentalId: body.rentalId ?? null,
-        bikeId: body.bikeId,
+        bikeId: body.bikeId ?? null,
         stationId: body.stationId ?? null,
         incidentType: body.incidentType,
         description: body.description ?? null,
@@ -215,7 +215,8 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
             {
               error: incidentErrorMessages.ACTIVE_INCIDENT_ALREADY_EXISTS,
               details: {
-                code: IncidentErrorCodeSchema.enum.ACTIVE_INCIDENT_ALREADY_EXISTS,
+                code: IncidentErrorCodeSchema.enum
+                  .ACTIVE_INCIDENT_ALREADY_EXISTS,
                 rentalId: body.rentalId,
                 bikeId: body.bikeId,
                 stationId: body.stationId,

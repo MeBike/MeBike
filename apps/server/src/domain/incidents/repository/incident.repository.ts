@@ -14,7 +14,8 @@ import type {
 } from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
-import { stationRepositoryFactory } from "@/domain/stations";
+import { StationNotFound, stationRepositoryFactory } from "@/domain/stations";
+import { MapboxRouting } from "@/infrastructure/mapbox";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -63,6 +64,7 @@ export type IncidentRepo = {
     | NoNearestStationFound
     | NoAvailableTechnicianFound
     | ActiveIncidentAlreadyExists
+    | StationNotFound
   >;
 
   update: (
@@ -125,11 +127,12 @@ function toIncidentOrderBy(
 function createIncidentWithClient(
   tx: PrismaClient | PrismaTypes.TransactionClient,
   data: CreateIncidentInput,
+  mapbox: MapboxRouting,
 ) {
   return Effect.gen(function* () {
-    let foundTechnician:
-      | { userId: string; technicianTeamId: string }
-      | undefined;
+    let selectedStation: { latitude: number; longitude: number } | null = null;
+    let foundTechnician: { userId: string; technicianTeamId: string } | null
+      = null;
 
     if (data.latitude && data.longitude) {
       const stationRepo = stationRepositoryFactory(tx);
@@ -206,6 +209,11 @@ function createIncidentWithClient(
             userId: technician.userId,
             technicianTeamId: technician.technicianTeamId,
           };
+
+          selectedStation = {
+            latitude: station.latitude,
+            longitude: station.longitude,
+          };
           break;
         }
       }
@@ -220,6 +228,26 @@ function createIncidentWithClient(
       }
     }
     else if (data.stationId) {
+      const station = yield* Effect.promise(() =>
+        tx.station.findUnique({
+          where: { id: data.stationId! },
+          select: { latitude: true, longitude: true },
+        }),
+      );
+
+      if (!station) {
+        return yield* Effect.fail(
+          new StationNotFound({
+            id: data.stationId!,
+          }),
+        );
+      }
+
+      selectedStation = {
+        latitude: station.latitude,
+        longitude: station.longitude,
+      };
+
       const technician = yield* Effect.promise(() =>
         tx.userOrgAssignment.findFirst({
           where: {
@@ -289,7 +317,48 @@ function createIncidentWithClient(
       },
     });
 
-    if (foundTechnician) {
+    let routeData: {
+      distanceMeters: number;
+      durationSeconds: number;
+      routeGeometry: string;
+    } | null = null;
+
+    const destLat = data.latitude !== null ? Number(data.latitude) : selectedStation?.latitude;
+    const destLng = data.longitude !== null ? Number(data.longitude) : selectedStation?.longitude;
+
+    if (foundTechnician && selectedStation && destLat !== undefined && destLng !== undefined) {
+      const route = yield* mapbox
+        .getRoute({
+          origin: {
+            latitude: selectedStation.latitude,
+            longitude: selectedStation.longitude,
+          },
+          destination: {
+            latitude: destLat,
+            longitude: destLng,
+          },
+          profile: "driving",
+          geometryFormat: "polyline6",
+        })
+        .pipe(
+          Effect.catchAll(() =>
+            Effect.succeed({
+              distanceMeters: 0,
+              durationSeconds: 0,
+              geometry: "",
+            }),
+          ),
+        );
+
+      routeData = {
+        distanceMeters: route.distanceMeters,
+        durationSeconds: route.durationSeconds,
+        routeGeometry:
+          typeof route.geometry === "string"
+            ? route.geometry
+            : JSON.stringify(route.geometry),
+      };
+
       yield* Effect.tryPromise({
         try: () =>
           tx.technicianAssignment.create({
@@ -297,7 +366,11 @@ function createIncidentWithClient(
               incidentReportId: incident.id,
               technicianTeamId: foundTechnician!.technicianTeamId,
               technicianUserId: foundTechnician!.userId,
+              distanceMeters: routeData?.distanceMeters,
+              durationSeconds: routeData?.durationSeconds,
+              routeGeometry: routeData?.routeGeometry,
             },
+            select: technicianAssignmentDetailSelect,
           }),
         catch: e =>
           new IncidentRepositoryError({
@@ -314,11 +387,12 @@ function createIncidentWithClient(
 function rejectIncidentWithClient(
   tx: PrismaClient | PrismaTypes.TransactionClient,
   id: string,
+  mapbox: MapboxRouting,
 ) {
   return Effect.gen(function* () {
     const assignment = yield* Effect.promise(() =>
-      tx.technicianAssignment.findFirst({
-        where: { incidentReportId: id, status: "ASSIGNED" },
+      tx.technicianAssignment.findUnique({
+        where: { id, status: "ASSIGNED" },
         select: { id: true, incidentReportId: true, technicianUserId: true },
       }),
     );
@@ -336,6 +410,7 @@ function rejectIncidentWithClient(
     let foundTechnician:
       | { userId: string; technicianTeamId: string }
       | undefined;
+    let selectedStation: { latitude: number; longitude: number } | undefined;
 
     const nearestStation = yield* stationRepo
       .listNearest({
@@ -411,6 +486,10 @@ function rejectIncidentWithClient(
           userId: technician.userId,
           technicianTeamId: technician.technicianTeamId,
         };
+        selectedStation = {
+          latitude: station.latitude,
+          longitude: station.longitude,
+        };
         break;
       }
     }
@@ -439,22 +518,76 @@ function rejectIncidentWithClient(
         }),
     });
 
-    const newAssignment = yield* Effect.promise(() =>
-      tx.technicianAssignment.create({
-        data: {
-          incidentReportId: assignment.incidentReportId,
-          technicianTeamId: foundTechnician!.technicianTeamId,
-          technicianUserId: foundTechnician!.userId,
-        },
-      }),
-    );
+    let routeData: {
+      distanceMeters: number;
+      durationSeconds: number;
+      routeGeometry: string;
+    } | null = null;
 
-    return Option.some(newAssignment);
+    const destLat = foundIncident.latitude !== null ? Number(foundIncident.latitude) : selectedStation?.latitude;
+    const destLng = foundIncident.longitude !== null ? Number(foundIncident.longitude) : selectedStation?.longitude;
+
+    if (foundTechnician && selectedStation && destLat !== undefined && destLng !== undefined) {
+      const route = yield* mapbox
+        .getRoute({
+          origin: {
+            latitude: selectedStation.latitude,
+            longitude: selectedStation.longitude,
+          },
+          destination: {
+            latitude: destLat,
+            longitude: destLng,
+          },
+          profile: "driving",
+          geometryFormat: "polyline6",
+        })
+        .pipe(
+          Effect.catchAll(() =>
+            Effect.succeed({
+              distanceMeters: 0,
+              durationSeconds: 0,
+              geometry: "",
+            }),
+          ),
+        );
+
+      routeData = {
+        distanceMeters: route.distanceMeters,
+        durationSeconds: route.durationSeconds,
+        routeGeometry:
+          typeof route.geometry === "string"
+            ? route.geometry
+            : JSON.stringify(route.geometry),
+      };
+    }
+
+    const newAssignment = yield* Effect.tryPromise({
+      try: () =>
+        tx.technicianAssignment.create({
+          data: {
+            incidentReportId: assignment.incidentReportId,
+            technicianTeamId: foundTechnician!.technicianTeamId,
+            technicianUserId: foundTechnician!.userId,
+            distanceMeters: routeData?.distanceMeters,
+            durationSeconds: routeData?.durationSeconds,
+            routeGeometry: routeData?.routeGeometry,
+          },
+          select: technicianAssignmentDetailSelect,
+        }),
+      catch: e =>
+        new IncidentRepositoryError({
+          operation: "rejectIncidentWithClient.create",
+          cause: e,
+        }),
+    });
+
+    return Option.some(newAssignment as TechnicianAssignmentRow);
   });
 }
 
 export function makeIncidentRepository(
   db: PrismaClient | PrismaTypes.TransactionClient,
+  mapbox: MapboxRouting,
 ): IncidentRepo {
   const client = db;
 
@@ -523,7 +656,7 @@ export function makeIncidentRepository(
 
     create(data: CreateIncidentInput) {
       return runPrismaTransaction(client as PrismaClient, tx =>
-        createIncidentWithClient(tx, data)).pipe(
+        createIncidentWithClient(tx, data, mapbox)).pipe(
         Effect.catchTag("PrismaTransactionError", e =>
           Effect.fail(
             new IncidentRepositoryError({
@@ -631,7 +764,8 @@ export function makeIncidentRepository(
 
     rejectIncident(id) {
       return runPrismaTransaction(client as PrismaClient, tx =>
-        rejectIncidentWithClient(tx, id)).pipe(
+        rejectIncidentWithClient(tx, id, mapbox), // This already has mapError inside
+      ).pipe(
         Effect.map(opt =>
           Option.map(opt, a => a as TechnicianAssignmentRow),
         ),
@@ -639,7 +773,7 @@ export function makeIncidentRepository(
           Effect.fail(
             new IncidentRepositoryError({
               operation: "rejectIncident.transaction",
-              cause: e.cause,
+              cause: e,
             }),
           )),
       );
@@ -711,7 +845,8 @@ export const IncidentRepositoryLive = Layer.effect(
   IncidentRepository,
   Effect.gen(function* () {
     const { client } = yield* Prisma;
-    return makeIncidentRepository(client);
+    const mapbox = yield* MapboxRouting;
+    return makeIncidentRepository(client, mapbox);
   }),
 );
 

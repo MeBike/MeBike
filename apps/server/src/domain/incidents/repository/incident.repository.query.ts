@@ -45,6 +45,9 @@ export const incidentDetailSelect = {
           name: true,
         },
       },
+      distanceMeters: true,
+      durationSeconds: true,
+      routeGeometry: true,
       assignedAt: true,
     },
     orderBy: {
@@ -76,6 +79,9 @@ export const technicianAssignmentDetailSelect = {
   startedAt: true,
   resolvedAt: true,
   status: true,
+  distanceMeters: true,
+  durationSeconds: true,
+  routeGeometry: true,
 } as const;
 
 type IncidentDetailSelect = PrismaTypes.IncidentReportGetPayload<{
@@ -97,6 +103,9 @@ export function mapToIncidentDetail(raw: IncidentDetailSelect) {
           status: latestAssignment.status,
           technician: latestAssignment.technicianUser,
           team: latestAssignment.technicianTeam,
+          distanceMeters: latestAssignment.distanceMeters,
+          durationSeconds: latestAssignment.durationSeconds,
+          routeGeometry: latestAssignment.routeGeometry,
           assignedAt: latestAssignment.assignedAt,
         }
       : null,
