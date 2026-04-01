@@ -48,7 +48,7 @@ model RedistributionRequestItem {
   deliveredAt             DateTime?             @map("delivered_at") @db.Timestamptz
   createdAt               DateTime              @default(now()) @map("created_at") @db.Timestamptz
   redistributionRequest   RedistributionRequest @relation(fields: [redistributionRequestId], references: [id], onDelete: Cascade)
-  bike                    Bike?                 @relation(fields: [bikeId], references: [id])
+  bike                    Bike                 @relation(fields: [bikeId], references: [id])
 
   @@index([redistributionRequestId], name: "idx_redistribution_request_items_request")
   @@index([bikeId], name: "idx_redistribution_request_items_bike")
