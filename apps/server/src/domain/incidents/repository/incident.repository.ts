@@ -182,6 +182,20 @@ function createIncidentWithClient(
                 availabilityStatus: "AVAILABLE",
                 stationId: station.id,
               },
+              user: {
+                technicianAssignments: {
+                  none: {
+                    status: {
+                      in: ["ASSIGNED", "IN_PROGRESS", "ACCEPTED"],
+                    },
+                  },
+                },
+                accountStatus: {
+                  not: {
+                    in: ["INACTIVE", "BANNED", "SUSPENDED"],
+                  },
+                },
+              },
             },
             select: { userId: true, technicianTeamId: true },
           }),
@@ -211,6 +225,20 @@ function createIncidentWithClient(
           where: {
             stationId: data.stationId!,
             technicianTeam: { availabilityStatus: "AVAILABLE" },
+            user: {
+              technicianAssignments: {
+                none: {
+                  status: {
+                    in: ["ASSIGNED", "IN_PROGRESS", "ACCEPTED"],
+                  },
+                },
+              },
+              accountStatus: {
+                not: {
+                  in: ["INACTIVE", "BANNED", "SUSPENDED"],
+                },
+              },
+            },
           },
           select: { userId: true, technicianTeamId: true },
         }),
@@ -358,6 +386,20 @@ function rejectIncidentWithClient(
             technicianTeam: { availabilityStatus: "AVAILABLE" },
             userId: {
               not: assignment.technicianUserId!,
+            },
+            user: {
+              technicianAssignments: {
+                none: {
+                  status: {
+                    in: ["ASSIGNED", "IN_PROGRESS", "ACCEPTED"],
+                  },
+                },
+              },
+              accountStatus: {
+                not: {
+                  in: ["INACTIVE", "BANNED", "SUSPENDED"],
+                },
+              },
             },
           },
           select: { userId: true, technicianTeamId: true },
