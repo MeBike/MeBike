@@ -308,7 +308,7 @@ describe("manage-users org assignment e2e", () => {
     const body = await response.json() as UsersContracts.UserErrorResponse;
 
     expect(response.status).toBe(409);
-    expect(body.details.code).toBe("STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED");
+    expect(body.details.code).toBe("STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED");
   });
 
   it("returns station role limit error when creating a second manager for the same station", async () => {
@@ -342,7 +342,7 @@ describe("manage-users org assignment e2e", () => {
     const body = await response.json() as UsersContracts.UserErrorResponse;
 
     expect(response.status).toBe(409);
-    expect(body.details.code).toBe("STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED");
+    expect(body.details.code).toBe("STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED");
   });
 
   it("creates technician with team assignment and returns it in filtered reads", async () => {
@@ -706,7 +706,7 @@ describe("manage-users org assignment e2e", () => {
     const body = await response.json() as UsersContracts.UserErrorResponse;
 
     expect(response.status).toBe(409);
-    expect(body.details.code).toBe("STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED");
+    expect(body.details.code).toBe("STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED");
   });
 
   it("returns station role limit error when updating a user into a station that already has manager", async () => {
@@ -744,7 +744,7 @@ describe("manage-users org assignment e2e", () => {
     const body = await response.json() as UsersContracts.UserErrorResponse;
 
     expect(response.status).toBe(409);
-    expect(body.details.code).toBe("STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED");
+    expect(body.details.code).toBe("STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED");
   });
 
   it("returns INVALID_ORG_ASSIGNMENT when update references nonexistent station or technician team", async () => {
