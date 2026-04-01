@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { pickDefined } from "@/domain/shared/pick-defined";
+import { TECHNICIAN_TEAM_MEMBER_LIMIT } from "@/domain/technician-teams";
 
 import type { PageRequest } from "../../shared/pagination";
 import type {
@@ -14,8 +15,6 @@ import type {
 } from "../models";
 
 import { StationRoleAssignmentLimitExceeded, TechnicianTeamMemberLimitExceeded, UserRepositoryError } from "../domain-errors";
-
-const TECHNICIAN_TEAM_MEMBER_LIMIT = 3;
 
 export function toOrgAssignmentData(
   assignment:
