@@ -1,5 +1,6 @@
 import { Layer } from "effect";
 
+import { AgencyRepositoryLive } from "@/domain/agencies";
 import { StationRepositoryLive } from "@/domain/stations";
 import {
   AvatarUploadServiceLive,
@@ -28,6 +29,7 @@ export const UserQueryServiceLayer = UserQueryServiceLive.pipe(
 );
 
 export const UserCommandServiceLayer = UserCommandServiceLive.pipe(
+  Layer.provide(AgencyRepositoryLive.pipe(Layer.provide(PrismaLive))),
   Layer.provide(StationRepositoryLive.pipe(Layer.provide(PrismaLive))),
   Layer.provide(TechnicianTeamQueryReposLive),
   Layer.provide(UserQueryReposLive),

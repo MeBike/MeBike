@@ -6,6 +6,9 @@ import { makeValidateOrgAssignmentTargetsExist } from "../user-org-assignment.va
 describe("makeValidateOrgAssignmentTargetsExist", () => {
   it("fails when station assignment points to a missing station", async () => {
     const validate = makeValidateOrgAssignmentTargetsExist({
+      agencyRepo: {
+        getById: () => Effect.succeed(Option.some({} as never)),
+      },
       stationRepo: {
         getById: () => Effect.succeed(Option.none()),
       },
@@ -29,6 +32,9 @@ describe("makeValidateOrgAssignmentTargetsExist", () => {
 
   it("fails when technician assignment points to a missing team", async () => {
     const validate = makeValidateOrgAssignmentTargetsExist({
+      agencyRepo: {
+        getById: () => Effect.succeed(Option.some({} as never)),
+      },
       stationRepo: {
         getById: () => Effect.succeed(Option.none()),
       },
@@ -50,8 +56,37 @@ describe("makeValidateOrgAssignmentTargetsExist", () => {
     }
   });
 
+  it("fails when agency assignment points to a missing agency", async () => {
+    const validate = makeValidateOrgAssignmentTargetsExist({
+      agencyRepo: {
+        getById: () => Effect.succeed(Option.none()),
+      },
+      stationRepo: {
+        getById: () => Effect.succeed(Option.some({} as never)),
+      },
+      technicianTeamQueryRepo: {
+        getById: () => Effect.succeed(Option.some({} as never)),
+      },
+    });
+
+    const result = await Effect.runPromise(validate({
+      role: "AGENCY",
+      stationId: null,
+      technicianTeamId: null,
+      agencyId: "019d4781-6843-75e0-a223-16279751efab",
+    }).pipe(Effect.either));
+
+    expect(result._tag).toBe("Left");
+    if (result._tag === "Left") {
+      expect(result.left._tag).toBe("InvalidOrgAssignment");
+    }
+  });
+
   it("passes when referenced org assignment targets exist", async () => {
     const validate = makeValidateOrgAssignmentTargetsExist({
+      agencyRepo: {
+        getById: () => Effect.succeed(Option.some({} as never)),
+      },
       stationRepo: {
         getById: () => Effect.succeed(Option.some({} as never)),
       },

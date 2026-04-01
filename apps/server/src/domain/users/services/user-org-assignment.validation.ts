@@ -1,8 +1,11 @@
 import { Effect, Option } from "effect";
 
+import type { AgencyRepo } from "@/domain/agencies";
 import type { StationRepo } from "@/domain/stations";
 import type { TechnicianTeamQueryRepo } from "@/domain/technician-teams";
 
+import { AgencyRepositoryError } from "@/domain/agencies/domain-errors";
+import { defectOn } from "@/domain/shared";
 import { TECHNICIAN_TEAM_MEMBER_LIMIT } from "@/domain/technician-teams";
 
 import type {
@@ -20,6 +23,7 @@ import {
 } from "../domain-errors";
 
 export function makeValidateOrgAssignmentTargetsExist(deps: {
+  agencyRepo: Pick<AgencyRepo, "getById">;
   stationRepo: Pick<StationRepo, "getById">;
   technicianTeamQueryRepo: Pick<TechnicianTeamQueryRepo, "getById">;
 }) {
@@ -37,6 +41,20 @@ export function makeValidateOrgAssignmentTargetsExist(deps: {
             role: args.role,
             stationId: args.stationId,
             agencyId: args.agencyId ?? null,
+            technicianTeamId: args.technicianTeamId,
+          }));
+        }
+      }
+
+      if (args.agencyId) {
+        const agency = yield* deps.agencyRepo.getById(args.agencyId).pipe(
+          defectOn(AgencyRepositoryError),
+        );
+        if (Option.isNone(agency)) {
+          return yield* Effect.fail(new InvalidOrgAssignmentError({
+            role: args.role,
+            stationId: args.stationId,
+            agencyId: args.agencyId,
             technicianTeamId: args.technicianTeamId,
           }));
         }

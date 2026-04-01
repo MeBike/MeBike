@@ -142,6 +142,7 @@ function makeAgencyRequestService(
           const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
           const txAgencyService = makeAgencyService(makeAgencyRepository(tx));
           const txUserCommandService = makeUserCommandService({
+            agencyRepo: makeAgencyRepository(tx),
             commandRepo: makeUserCommandRepository(tx),
             queryRepo: makeUserQueryRepository(tx),
             stationRepo: makeStationRepository(tx),
