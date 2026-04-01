@@ -19,10 +19,10 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CreateUserFormData } from "@/schemas/user-schema";
-interface CreateUserProps {
+interface CreateStaffProps {
   onSubmit: ({data}: {data: CreateUserFormData}) => void;
 }
-export default function CreateUser({ onSubmit }: CreateUserProps) {
+export default function CreateStaff({ onSubmit }: CreateStaffProps) {
   const navigate = useRouter();
   const [formData, setFormData] = useState({
     fullName : "",
@@ -114,8 +114,12 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
                     <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USER">User</SelectItem>
+                    <SelectContent>Q
+                      <SelectItem value="ADMIN">ADMIN</SelectItem>
+                      <SelectItem value="MANAGER">MANAGER</SelectItem>
+                      <SelectItem value="STAFF">STAFF</SelectItem>
+                      <SelectItem value="AGENCY">AGENCY</SelectItem>
+                      <SelectItem value="TECHNICIAN">TECHNICIAN</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -130,7 +134,7 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate.push("/admin/customers")}
+                onClick={() => navigate.push("/admin/staffs")}
               >
                 Cancel
               </Button>
