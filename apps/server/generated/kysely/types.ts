@@ -552,7 +552,7 @@ export type RedistributionRequest = {
 export type RedistributionRequestItem = {
     id: string;
     redistribution_request_id: string;
-    bike_id: string | null;
+    bike_id: string;
     delivered_at: Timestamp | null;
     created_at: Generated<Timestamp>;
 };

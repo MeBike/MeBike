@@ -44,7 +44,7 @@ model RedistributionRequest {
 model RedistributionRequestItem {
   id                      String                @id @default(uuid(7)) @db.Uuid
   redistributionRequestId String                @map("redistribution_request_id") @db.Uuid
-  bikeId                  String?               @map("bike_id") @db.Uuid
+  bikeId                  String                @map("bike_id") @db.Uuid
   deliveredAt             DateTime?             @map("delivered_at") @db.Timestamptz
   createdAt               DateTime              @default(now()) @map("created_at") @db.Timestamptz
   redistributionRequest   RedistributionRequest @relation(fields: [redistributionRequestId], references: [id], onDelete: Cascade)
