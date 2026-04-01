@@ -36,7 +36,8 @@ export const UserErrorCodeSchema = z.enum([
   "INVALID_CURRENT_PASSWORD",
   "INVALID_PUSH_TOKEN",
   "INVALID_ORG_ASSIGNMENT",
-  "STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED",
+  "STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED",
+  "STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED",
   "TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED",
 ]).openapi("UserErrorCode");
 
@@ -51,7 +52,8 @@ export const userErrorMessages = {
   INVALID_CURRENT_PASSWORD: "Current password is incorrect",
   INVALID_PUSH_TOKEN: "Invalid push token",
   INVALID_ORG_ASSIGNMENT: "Invalid org assignment for role",
-  STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED: "Station role assignment limit exceeded",
+  STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED: "Station already has a staff assigned",
+  STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED: "Station already has a manager assigned",
   TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED: "Technician team already has maximum members",
 } as const;
 

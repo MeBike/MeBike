@@ -15,10 +15,10 @@ import {
   ChangePasswordRequestSchema,
   PushTokenSummarySchema,
   RegisterPushTokenRequestSchema,
-  UploadAvatarRequestSchema,
   UnregisterPushTokenRequestSchema,
   UpdateMeRequestSchema,
   UpdateMeResponseSchema,
+  UploadAvatarRequestSchema,
   UserErrorResponseSchema,
 } from "./shared";
 
@@ -477,11 +477,19 @@ export const adminUpdateUserRoute = createRoute({
                 },
               },
             },
-            StationRoleAssigned: {
+            StationStaffRoleAssigned: {
               value: {
-                error: userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                error: userErrorMessages.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED,
                 details: {
-                  code: UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                  code: UserErrorCodeSchema.enum.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED,
+                },
+              },
+            },
+            StationManagerRoleAssigned: {
+              value: {
+                error: userErrorMessages.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
                 },
               },
             },
@@ -639,11 +647,19 @@ export const adminCreateUserRoute = createRoute({
                 details: { code: UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
               },
             },
-            StationRoleAssigned: {
+            StationStaffRoleAssigned: {
               value: {
-                error: userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                error: userErrorMessages.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED,
                 details: {
-                  code: UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                  code: UserErrorCodeSchema.enum.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED,
+                },
+              },
+            },
+            StationManagerRoleAssigned: {
+              value: {
+                error: userErrorMessages.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
+                details: {
+                  code: UserErrorCodeSchema.enum.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
                 },
               },
             },
