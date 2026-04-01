@@ -2,7 +2,7 @@ import { Effect, Match } from "effect";
 
 import { env } from "@/config/env";
 import { defectOn } from "@/domain/shared";
-import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.live";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";

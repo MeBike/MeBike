@@ -17,8 +17,8 @@ import type {
 } from "../domain-errors";
 import type { UserRow } from "../models";
 
-import { UserCommandServiceTag } from "./user-command.service";
-import { UserQueryServiceTag } from "./user-query.service";
+import { UserCommandServiceTag } from "./user-command.live";
+import { UserQueryServiceTag } from "./user-query.live";
 
 const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 const AVATAR_MAX_DIMENSION = 4096;
