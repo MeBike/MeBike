@@ -202,12 +202,16 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
             },
             409,
           )),
-        Match.tag("StationRoleAssignmentLimitExceeded", () =>
+        Match.tag("StationRoleAssignmentLimitExceeded", err =>
           c.json<UsersContracts.UserErrorResponse, 409>(
             {
-              error: UsersContracts.userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+              error: err.role === "STAFF"
+                ? UsersContracts.userErrorMessages.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED
+                : UsersContracts.userErrorMessages.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
               details: {
-                code: UsersContracts.UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                code: err.role === "STAFF"
+                  ? UsersContracts.UserErrorCodeSchema.enum.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED
+                  : UsersContracts.UserErrorCodeSchema.enum.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
               },
             },
             409,
@@ -268,12 +272,16 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
             },
             409,
           )),
-        Match.tag("StationRoleAssignmentLimitExceeded", () =>
+        Match.tag("StationRoleAssignmentLimitExceeded", err =>
           c.json<UsersContracts.UserErrorResponse, 409>(
             {
-              error: UsersContracts.userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+              error: err.role === "STAFF"
+                ? UsersContracts.userErrorMessages.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED
+                : UsersContracts.userErrorMessages.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
               details: {
-                code: UsersContracts.UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                code: err.role === "STAFF"
+                  ? UsersContracts.UserErrorCodeSchema.enum.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED
+                  : UsersContracts.UserErrorCodeSchema.enum.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
               },
             },
             409,

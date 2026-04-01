@@ -15,10 +15,10 @@ import {
   ChangePasswordRequestSchema,
   PushTokenSummarySchema,
   RegisterPushTokenRequestSchema,
-  UploadAvatarRequestSchema,
   UnregisterPushTokenRequestSchema,
   UpdateMeRequestSchema,
   UpdateMeResponseSchema,
+  UploadAvatarRequestSchema,
   UserErrorResponseSchema,
 } from "./shared";
 
@@ -479,9 +479,9 @@ export const adminUpdateUserRoute = createRoute({
             },
             StationRoleAssigned: {
               value: {
-                error: userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                error: userErrorMessages.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED,
                 details: {
-                  code: UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                  code: UserErrorCodeSchema.enum.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED,
                 },
               },
             },
@@ -641,9 +641,9 @@ export const adminCreateUserRoute = createRoute({
             },
             StationRoleAssigned: {
               value: {
-                error: userErrorMessages.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                error: userErrorMessages.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED,
                 details: {
-                  code: UserErrorCodeSchema.enum.STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED,
+                  code: UserErrorCodeSchema.enum.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED,
                 },
               },
             },
