@@ -782,7 +782,7 @@ export function makeIncidentRepository(
     rejectIncident(id) {
       return runPrismaTransaction(
         client as PrismaClient,
-        tx => rejectIncidentWithClient(tx, id, mapbox), // This already has mapError inside
+        tx => rejectIncidentWithClient(tx, id, mapbox),
       ).pipe(
         Effect.map(opt =>
           Option.map(opt, a => a as TechnicianAssignmentRow),

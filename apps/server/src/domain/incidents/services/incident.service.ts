@@ -422,7 +422,7 @@ export const IncidentServiceLive = Layer.effect(
 
           if (
             incident.value.assignments?.technician?.id !== userId
-            || incident.value.assignments?.status === "CANCELLED"
+            || incident.value.assignments?.status !== "ASSIGNED"
           ) {
             return yield* Effect.fail(
               new UnauthorizedIncidentAccess({ incidentId, userId }),
