@@ -18,7 +18,7 @@ model RedistributionRequest {
   targetStationId   String?              @map("target_station_id") @db.Uuid
   targetAgencyId    String?              @map("target_agency_id") @db.Uuid
   reason            String?
-  requestedQuantity Int?                 @map("requested_quantity")
+  requestedQuantity Int                 @map("requested_quantity")
   status            RedistributionStatus @default(PENDING_APPROVAL)
   startedAt         DateTime?            @map("started_at") @db.Timestamptz
   completedAt       DateTime?            @map("completed_at") @db.Timestamptz

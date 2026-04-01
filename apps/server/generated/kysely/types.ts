@@ -542,7 +542,7 @@ export type RedistributionRequest = {
     target_station_id: string | null;
     target_agency_id: string | null;
     reason: string | null;
-    requested_quantity: number | null;
+    requested_quantity: number;
     status: Generated<RedistributionStatus>;
     started_at: Timestamp | null;
     completed_at: Timestamp | null;
