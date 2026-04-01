@@ -5,7 +5,6 @@ import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/clien
 import { defectOn } from "@/domain/shared";
 import { UserRole } from "generated/prisma/client";
 
-import type { TechnicianTeamAvailableOption } from "../../models";
 import type { UserRepo } from "../user.repository.types";
 
 import { makePageResult, normalizedPage } from "../../../shared/pagination";
@@ -13,8 +12,6 @@ import { UserRepositoryError } from "../../domain-errors";
 import { selectUserRow, toUserRow } from "../user.mappers";
 import {
   countStationRoleAssignmentsForClient,
-  countTechnicianTeamMembersForClient,
-  TECHNICIAN_TEAM_MEMBER_LIMIT,
   toOrderBy,
   toWhere,
 } from "../user.repository.helpers";
@@ -27,8 +24,6 @@ export type UserReadRepo = Pick<
   | "listWithOffset"
   | "searchByQuery"
   | "listTechnicianSummaries"
-  | "listAvailableTechnicianTeams"
-  | "countTechnicianTeamMembers"
   | "countStationRoleAssignments"
 >;
 
@@ -180,49 +175,6 @@ export function makeUserReadRepository(
           id: row.id,
           fullname: row.fullName,
         }))),
-        defectOn(UserRepositoryError),
-      ),
-
-    listAvailableTechnicianTeams: args =>
-      Effect.tryPromise({
-        try: () =>
-          client.technicianTeam.findMany({
-            where: {
-              availabilityStatus: "AVAILABLE",
-              ...(args?.stationId ? { stationId: args.stationId } : {}),
-            },
-            orderBy: {
-              name: "asc",
-            },
-            select: {
-              id: true,
-              name: true,
-              stationId: true,
-              _count: {
-                select: {
-                  userAssignments: true,
-                },
-              },
-            },
-          }),
-        catch: err =>
-          new UserRepositoryError({
-            operation: "listAvailableTechnicianTeams",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(rows => rows
-          .filter(row => row._count.userAssignments < TECHNICIAN_TEAM_MEMBER_LIMIT)
-          .map((row): TechnicianTeamAvailableOption => ({
-            id: row.id,
-            name: row.name,
-            stationId: row.stationId,
-          }))),
-        defectOn(UserRepositoryError),
-      ),
-
-    countTechnicianTeamMembers: (technicianTeamId, options) =>
-      countTechnicianTeamMembersForClient(client, technicianTeamId, options).pipe(
         defectOn(UserRepositoryError),
       ),
 

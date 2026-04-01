@@ -4,7 +4,7 @@ import { uuidv7 } from "uuidv7";
 
 import { env } from "@/config/env";
 import { defectOn } from "@/domain/shared";
-import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.live";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";

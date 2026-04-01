@@ -9,7 +9,6 @@ import type {
 } from "../domain-errors";
 import type {
   CreateUserInput,
-  TechnicianTeamAvailableOption,
   UpdateUserAdminPatch,
   UpdateUserProfilePatch,
   UserFilter,
@@ -37,13 +36,6 @@ export type UserQueryRepo = {
   readonly listTechnicianSummaries: () => Effect.Effect<
     readonly Pick<UserRow, "id" | "fullname">[]
   >;
-  readonly listAvailableTechnicianTeams: (args?: {
-    readonly stationId?: string;
-  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[]>;
-  readonly countTechnicianTeamMembers: (
-    technicianTeamId: string,
-    options?: { readonly excludeUserId?: string },
-  ) => Effect.Effect<number>;
   readonly countStationRoleAssignments: (
     stationId: string,
     role: "STAFF" | "MANAGER",

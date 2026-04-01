@@ -9,7 +9,7 @@ import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 
 import { env } from "@/config/env";
 import { defectOn } from "@/domain/shared";
-import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.live";
 import {
   InsufficientWalletBalance,
   WalletNotFound,

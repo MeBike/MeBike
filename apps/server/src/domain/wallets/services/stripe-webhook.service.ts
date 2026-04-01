@@ -32,7 +32,7 @@ export function handleStripeWebhookUseCase(
   | InsufficientWalletBalance,
   | import("@/domain/wallets/topups/services/stripe-topup.service").StripeTopupServiceTag
   | import("@/domain/wallets/withdrawals/repository/withdrawal.repository").WithdrawalRepository
-  | import("@/domain/users/services/user-command.service").UserCommandServiceTag
+  | import("@/domain/users/services/user-command.live").UserCommandServiceTag
   | import("@/infrastructure/prisma").Prisma
 > {
   return Match.value(event.type).pipe(
