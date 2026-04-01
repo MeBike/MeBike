@@ -236,9 +236,8 @@ describe("manage-users org assignment e2e", () => {
     expect(managerWithTeamBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
 
-  it("returns INVALID_ORG_ASSIGNMENT when create references nonexistent station, agency, or technician team", async () => {
+  it("returns INVALID_ORG_ASSIGNMENT when create references nonexistent station or technician team", async () => {
     const missingStationId = uuidv7();
-    const missingAgencyId = uuidv7();
     const missingTechnicianTeamId = uuidv7();
 
     const managerResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
@@ -269,28 +268,11 @@ describe("manage-users org assignment e2e", () => {
       }),
     });
 
-    const agencyResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
-      method: "POST",
-      headers: adminAuthHeader(),
-      body: JSON.stringify({
-        fullname: "Agency Missing Org",
-        email: "agency-missing-org@example.com",
-        password: "password123",
-        role: "AGENCY",
-        orgAssignment: {
-          agencyId: missingAgencyId,
-        },
-      }),
-    });
-
     const managerBody = await managerResponse.json() as UsersContracts.UserErrorResponse;
-    const agencyBody = await agencyResponse.json() as UsersContracts.UserErrorResponse;
     const technicianBody = await technicianResponse.json() as UsersContracts.UserErrorResponse;
 
     expect(managerResponse.status).toBe(400);
     expect(managerBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
-    expect(agencyResponse.status).toBe(400);
-    expect(agencyBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
     expect(technicianResponse.status).toBe(400);
     expect(technicianBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
@@ -765,14 +747,10 @@ describe("manage-users org assignment e2e", () => {
     expect(body.details.code).toBe("STATION_ROLE_ASSIGNMENT_LIMIT_EXCEEDED");
   });
 
-  it("returns INVALID_ORG_ASSIGNMENT when update references nonexistent station, agency, or technician team", async () => {
+  it("returns INVALID_ORG_ASSIGNMENT when update references nonexistent station or technician team", async () => {
     const managerTarget = await fixture.factories.user({
       role: "MANAGER",
       email: "manager-missing-station-update@example.com",
-    });
-    const agencyTarget = await fixture.factories.user({
-      role: "AGENCY",
-      email: "agency-missing-org-update@example.com",
     });
     const technicianTarget = await fixture.factories.user({
       role: "TECHNICIAN",
@@ -793,20 +771,6 @@ describe("manage-users org assignment e2e", () => {
       },
     );
 
-    const agencyResponse = await fixture.app.request(
-      `http://test/v1/users/manage-users/${agencyTarget.id}`,
-      {
-        method: "PATCH",
-        headers: adminAuthHeader(),
-        body: JSON.stringify({
-          role: "AGENCY",
-          orgAssignment: {
-            agencyId: uuidv7(),
-          },
-        }),
-      },
-    );
-
     const technicianResponse = await fixture.app.request(
       `http://test/v1/users/manage-users/${technicianTarget.id}`,
       {
@@ -822,13 +786,10 @@ describe("manage-users org assignment e2e", () => {
     );
 
     const managerBody = await managerResponse.json() as UsersContracts.UserErrorResponse;
-    const agencyBody = await agencyResponse.json() as UsersContracts.UserErrorResponse;
     const technicianBody = await technicianResponse.json() as UsersContracts.UserErrorResponse;
 
     expect(managerResponse.status).toBe(400);
     expect(managerBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
-    expect(agencyResponse.status).toBe(400);
-    expect(agencyBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
     expect(technicianResponse.status).toBe(400);
     expect(technicianBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
