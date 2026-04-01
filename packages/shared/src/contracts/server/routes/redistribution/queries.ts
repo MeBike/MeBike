@@ -129,18 +129,18 @@ export const getRequestDetailForStaff = createRoute({
   },
 });
 
-// User paths
-export const getMyRequestList = createRoute({
+// Manager paths
+export const getRequestListForManager = createRoute({
   method: "get",
-  path: "/v1/redistribution-requests/me",
-  tags: ["RedistributionRequests"],
+  path: "/v1/manager/redistribution-requests",
+  tags: ["Manager", "RedistributionRequests"],
   security: [{ bearerAuth: [] }],
   request: {
     query: RedistributionRequestListQuerySchema,
   },
   responses: {
     200: {
-      description: "Redistribution request list (user view)",
+      description: "Redistribution request list in assigned station",
       content: {
         "application/json": {
           schema: createSuccessResponse(
@@ -151,13 +151,14 @@ export const getMyRequestList = createRoute({
       },
     },
     401: unauthorizedResponse(),
+    403: forbiddenResponse("Manager"),
   },
 });
 
-export const getMyRequestDetail = createRoute({
+export const getRequestDetailForManager = createRoute({
   method: "get",
-  path: "/v1/redistribution-requests/me/{redistributionReqId}",
-  tags: ["RedistributionRequests"],
+  path: "/v1/manager/redistribution-requests/{redistributionReqId}",
+  tags: ["Manager", "RedistributionRequests"],
   security: [{ bearerAuth: [] }],
   request: {
     params: RedistributionRequestIdParamSchema,
@@ -165,7 +166,7 @@ export const getMyRequestDetail = createRoute({
   responses: {
     200: {
       description:
-        "Detailed redistribution request with all populated data (user view)",
+        "Detailed redistribution request with all populated data (manager view)",
       content: {
         "application/json": {
           schema: createSuccessResponse(
@@ -176,6 +177,7 @@ export const getMyRequestDetail = createRoute({
       },
     },
     401: unauthorizedResponse(),
+    403: forbiddenResponse("Manager"),
     404: {
       description: "Redistribution request not found",
       content: {

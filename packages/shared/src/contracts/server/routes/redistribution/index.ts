@@ -1,17 +1,15 @@
 import * as mutations from "./mutations";
 import * as queries from "./queries";
 
-export {
-  createRedistributionRequest
-} from "./mutations";
+export { createRedistributionRequest } from "./mutations";
 
 export {
   getRequestListForAdmin,
   getRequestDetailForAdmin,
   getRequestListForStaff,
   getRequestDetailForStaff,
-  getMyRequestList,
-  getMyRequestDetail
+  getRequestListForManager,
+  getRequestDetailForManager,
 } from "./queries";
 
 export const redistributionRoutes = {

@@ -28,8 +28,8 @@ export const RedistributionRequestSchema = z.object({
   sourceStationId: z.uuidv7(),
   targetStationId: z.uuidv7().optional(),
   targetAgencyId: z.uuidv7().optional(),
-  requestedQuantity: z.number().optional(),
-  reason: z.string(),
+  requestedQuantity: z.number(),
+  reason: z.string().optional(),
   items: z.array(RedistributionRequestItemSchema),
   status: RedistributionStatusSchema,
   startedAt: z.iso.datetime().nullable(),
@@ -41,12 +41,12 @@ export const RedistributionRequestSchema = z.object({
 // User info for redistribution
 export const RedistributionUserSummarySchema = z.object({
   id: z.uuidv7(),
-  fullname: z.string(),
+  fullName: z.string(),
 });
 
 export const RedistributionUserDetailSchema = z.object({
   id: z.uuidv7(),
-  fullname: z.string(),
+  fullName: z.string(),
   email: z.string(),
   verify: VerifyStatusSchema,
   location: z.string(),
@@ -79,22 +79,17 @@ export const RedistributionAgencySchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
-  contactPhone: z.string(),
   updatedAt: z.iso.datetime(),
 });
 
 export const RedistributionStationSummarySchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
-  address: z.string(),
-  updatedAt: z.iso.datetime(),
 });
 
 export const RedistributionAgencySummarySchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
-  address: z.string(),
-  updatedAt: z.iso.datetime(),
 });
 
 // Bike info for redistribution
@@ -111,15 +106,14 @@ export const RedistributionRequestItemDetailSchema = z.object({
   id: z.uuidv7(),
   redistributionRequestId: z.uuidv7(),
   bike: RedistributionBikeSchema.nullable(),
-  requestedQuantity: z.number().optional(),
   deliveredAt: z.iso.datetime(),
   createdAt: z.iso.datetime(),
 })
 
 export const RedistributionRequestDetailBaseSchema = z.object({
   id: z.uuidv7(),
-  reason: z.string(),
-  requestedQuantity: z.number().optional(),
+  reason: z.string().nullable(),
+  requestedQuantity: z.number(),
   status: RedistributionStatusSchema,
   startedAt: z.iso.datetime().nullable(),
   completedAt: z.iso.datetime().nullable(),
@@ -158,7 +152,7 @@ export const CreateRedistributionRequestSchema = z.object({
   targetStationId: z.uuidv7().optional(),
   targetAgencyId: z.uuidv7().optional(),
   requestedQuantity: z.number(),
-  reason: z.string(),
+  reason: z.string().optional(),
 }).superRefine((data, ctx) => {
   const hasTargetStation = !!data.targetStationId
   const hasTargetAgency = !!data.targetAgencyId
