@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
   AgencyRepositoryLive,
@@ -20,7 +20,3 @@ export const AgencyDepsLive = Layer.mergeAll(
   AgencyServiceLayer,
   PrismaLive,
 );
-
-export function withAgencyDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(AgencyDepsLive));
-}

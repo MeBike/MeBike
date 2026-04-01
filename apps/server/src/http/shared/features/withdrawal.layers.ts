@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
   StripeWithdrawalServiceLive,
@@ -33,15 +33,7 @@ export const WithdrawalDepsLive = Layer.mergeAll(
   PrismaLive,
 );
 
-export function withWithdrawalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(WithdrawalDepsLive));
-}
-
 export const StripeWebhookDepsLive = Layer.mergeAll(
   StripeTopupDepsLive,
   WithdrawalDepsLive,
 );
-
-export function withStripeWebhookDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(StripeWebhookDepsLive));
-}

@@ -5,8 +5,7 @@ import { Effect, Match, Option } from "effect";
 import {
   cancelReservation,
   confirmReservation,
-  ReservationRepository,
-  ReservationServiceTag,
+  ReservationQueryServiceTag,
   reserveBike,
 } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
@@ -366,7 +365,7 @@ const listMyReservations: RouteHandler<ReservationsRoutes["listMyReservations"]>
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* ReservationServiceTag;
+      const service = yield* ReservationQueryServiceTag;
       return yield* service.listForUser(userId, {
         status: query.status,
         stationId: query.stationId,
@@ -400,8 +399,8 @@ const getMyReservation: RouteHandler<ReservationsRoutes["getMyReservation"]> = a
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const repo = yield* ReservationRepository;
-      return yield* repo.findExpandedDetailById(reservationId);
+      const service = yield* ReservationQueryServiceTag;
+      return yield* service.getExpandedDetailById(reservationId);
     }),
     "GET /v1/reservations/me/{reservationId}",
   );
