@@ -11,6 +11,7 @@ import {
   useGetTopRenterQuery,
   useGetSearchUserQuery,
   useGetDashboardStatsQuery,
+  useGetStaffOnlyQuery
 } from "@queries";
 import {
   useCreateUserMutation,
@@ -68,6 +69,10 @@ export const useUserActions = ({
     verify: verify || "",
     accountStatus: accountStatus || "",
     fullName: fullName || "",
+  });
+  const { data : staffOnly , isLoading : isLoadingStaffOnly } = useGetStaffOnlyQuery({
+    page : page,
+    pageSize : limit
   });
   const pagination = data?.pagination as
     | { total?: number; totalRecords?: number }
@@ -303,5 +308,6 @@ export const useUserActions = ({
     resetPassword,
     updateProfileStaff,
     getRefetchDashboardStats,
+    staffOnly,
   };
 };

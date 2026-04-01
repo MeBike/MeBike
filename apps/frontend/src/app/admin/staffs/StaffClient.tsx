@@ -1,0 +1,358 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Loader2, StepForward } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { DataTable } from "@/components/TableCustom";
+import { CustomerStats } from "@/components/customers/customer-stats";
+import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Label } from "@radix-ui/react-label";
+import { CreateUserFormData, createUserSchema } from "@/schemas/user-schema";
+import type { VerifyStatus, UserRole } from "@custom-types";
+import { Plus } from "lucide-react";
+import { useUserActions } from "@/hooks/use-user";
+import { userColumns } from "@/columns/user-columns";
+import { PaginationDemo } from "@/components/PaginationCustomer";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { TableSkeleton } from "@/components/table-skeleton";
+type UserStatusFilter = VerifyStatus | "BANNED" | "all";
+
+export default function StaffClient() {
+  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<CreateUserFormData>({
+    resolver: zodResolver(createUserSchema),
+  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
+  const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState<number>(7);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const verifyQuery =
+    verifyFilter === "VERIFIED" || verifyFilter === "UNVERIFIED"
+      ? verifyFilter
+      : "";
+  const accountStatusQuery = verifyFilter === "BANNED" ? "BANNED" : "";
+  const {
+    staffOnly,
+    getAllUsers,
+    isLoading,
+    getAllStatistics,
+    createUser,
+    getRefetchDashboardStats,
+  } = useUserActions({
+    hasToken: true,
+    limit: limit,
+    page: currentPage,
+    // verify: verifyFilter === "all" ? "" : verifyQuery,
+    // accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
+    // role: roleFilter === "all" ? "" : (roleFilter as UserRole),
+    fullName: searchQuery,
+  });
+  useEffect(() => {
+    getAllUsers();
+    getAllStatistics();
+    getRefetchDashboardStats();
+  }, [
+    searchQuery,
+    verifyFilter,
+    roleFilter,
+    getAllUsers,
+    getAllStatistics,
+    currentPage,
+    getRefetchDashboardStats,
+  ]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [roleFilter]);
+  const handleReset = () => {
+    setSearchQuery("");
+    setVerifyFilter("all");
+    setRoleFilter("all");
+    setCurrentPage(1);
+  };
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
+  // if (isLoading) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+  //       <Loader2 className="animate-spin w-16 h-16 text-primary" />
+  //     </div>
+  //   );
+  // }
+  const [isVisualLoading, setIsVisualLoading] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      setIsVisualLoading(true);
+    } else {
+      // Khi API xong, đợi thêm một chút rồi mới tắt Skeleton
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600); // 600ms là khoảng "vàng" để UI mượt mà
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
+  const handleCreateUser = handleSubmit((data) => {
+    createUser({
+      fullName: data.fullName,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      role: data.role,
+    });
+    setIsCreateModalOpen(false);
+    console.log("[v0] Create user:", data);
+    reset();
+  });
+  const handleDetailUser = (id: string) => {
+    router.push(`/admin/customers/detail/${id}`);
+  };
+  const handleWalletUser = (id: string) => {
+    router.push(`/admin/customers/wallet/${id}`);
+  };
+  return (
+    <div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Quản lý nhân viên
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Theo dõi và quản lý thông tin nhân viên hệ thống
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => {
+                setIsCreateModalOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Thêm nhân viên
+            </Button>
+          </div>
+        </div>
+
+        {/* {dashboardStatsData && <CustomerStats stats={dashboardStatsData} />} */}
+
+        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">Bộ lọc</h3>
+            <Button variant="ghost" size="sm" onClick={handleReset}>
+              Xóa bộ lọc
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Trạng thái xác thực</label>
+              <select
+                value={verifyFilter}
+                onChange={(e) => {
+                  setVerifyFilter(e.target.value as UserStatusFilter);
+                  handleFilterChange();
+                }}
+                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+              >
+                <option value="all">Tất cả</option>
+                <option value="VERIFIED">Đã xác thực</option>
+                <option value="UNVERIFIED">Chưa xác thực</option>
+                <option value="BANNED">Bị cấm</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Vai trò</label>
+              <select
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.target.value as UserRole | "all");
+                  handleFilterChange();
+                }}
+                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+              >
+                <option value="all">Tất cả</option>
+                <option value="ADMIN">Admin</option>
+                <option value="STAFF">Staff</option>
+                <option value="USER">User</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          {/* <DataTable
+            title="Danh sách người dùng"
+            tableClassName="table-fixed"
+            columns={userColumns({
+              onView: (user) => {
+                handleDetailUser(String(user.id));
+              },
+              onViewWallet: (user) => {
+                handleWalletUser(String(user.id));
+              },
+            })}
+            data={users || []}
+            searchValue={searchQuery}
+            filterPlaceholder="Tìm kiếm người dùng"
+            onSearchChange={setSearchQuery}
+          />
+
+          <div className="pt-3">
+            <PaginationDemo
+              currentPage={currentPage}
+              totalPages={paginationUser?.totalPages ?? 1}
+              onPageChange={setCurrentPage}
+            />
+          </div> */}
+
+          <div className="min-h-[400px]">
+            {isVisualLoading ? (
+              <TableSkeleton />
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Hiển thị {staffOnly?.pagination?.page ?? 1} /{" "}
+                  {staffOnly?.pagination?.totalPages ?? 1} trang
+                </p>
+
+                <DataTable
+                  title="Danh sách nhân viên"
+                  tableClassName="table-fixed"
+                  columns={userColumns({
+                    onView: (user) => handleDetailUser(String(user.id)),
+                    onViewWallet: (user) => handleWalletUser(String(user.id)),
+                  })}
+                  data={staffOnly?.data || []}
+                  searchValue={searchQuery}
+                  filterPlaceholder="Tìm kiếm nhân viên"
+                  onSearchChange={setSearchQuery}
+                />
+
+                <div className="pt-3">
+                  <PaginationDemo
+                    currentPage={staffOnly?.pagination?.page ?? 1}
+                    totalPages={staffOnly?.pagination?.totalPages ?? 1}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+              <div className="p-6 border-b bg-muted/30">
+                <h2 className="text-xl font-bold text-foreground">
+                  Thêm người dùng mới
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Nhập thông tin chi tiết để tạo tài khoản.
+                </p>
+              </div>
+
+              <form
+                id="create-user-form"
+                onSubmit={handleCreateUser}
+                className="p-6 space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="name">Họ tên</Label>
+                  <Input
+                    id="name"
+                    {...register("fullName")}
+                    placeholder="Nhập họ tên"
+                  />
+                  {errors.fullName && (
+                    <p className="text-destructive text-xs font-medium">
+                      {errors.fullName.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    {...register("email")}
+                    placeholder="example@mail.com"
+                  />
+                  {errors.email && (
+                    <p className="text-destructive text-xs font-medium">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Số điện thoại</Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      {...register("phoneNumber")}
+                      placeholder="09xxx"
+                    />
+                    {errors.phoneNumber && (
+                      <p className="text-destructive text-xs font-medium">
+                        {errors.phoneNumber.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Vai trò hệ thống</Label>
+                  <select
+                    {...register("role")}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="USER">Người dùng (User)</option>
+                    <option value="STAFF">Nhân viên (Staff)</option>
+                    <option value="ADMIN">Quản trị viên (Admin)</option>
+                  </select>
+                  {errors.role && (
+                    <p className="text-destructive text-xs font-medium">
+                      {errors.role.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      reset();
+                    }}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1 gradient-primary shadow-glow"
+                  >
+                    Tạo người dùng
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

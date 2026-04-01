@@ -51,7 +51,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
     {
       title: "Quản lý nhân viên",
       icon: Users,
-      href: "/admin/staff",
+      href: `${baseUrl}/staffs`,
       roles: ["ADMIN"],
     },
     {

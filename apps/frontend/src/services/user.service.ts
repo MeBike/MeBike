@@ -6,6 +6,7 @@ import { ResetPasswordSchemaFormData } from "@schemas";
 import { ApiResponse } from "@/types";
 import {ENDPOINT} from "@/constants/end-point";
 import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse } from "@/types";
+import page from "@/app/admin/bikes/page";
 interface DetailUserResponse<T> {
   message: string;
   result: T;
@@ -44,6 +45,16 @@ export const userService = {
         role: "USER",
         sortBy: sortBy,
         sortDir: sortDir,
+      }
+    );
+    return response;
+  },
+  getStaffOnly : async ({page , pageSize}: {page?: number; pageSize?: number}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
+      ENDPOINT.USER.BASE,{
+        roles : "STAFF,TECHNICIAN,ADMIN,AGENCY,MANAGER",
+        page : page || 1,
+        pageSize : pageSize || 7,
       }
     );
     return response;
