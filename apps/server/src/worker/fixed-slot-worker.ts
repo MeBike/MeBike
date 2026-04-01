@@ -4,11 +4,9 @@ import { Effect, Layer } from "effect";
 import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepositoryLive } from "@/domain/bikes";
-import { RentalRepositoryLive } from "@/domain/rentals";
 import {
   assignFixedSlotReservations,
   parseSlotDateKey,
-  ReservationRepositoryLive,
 } from "@/domain/reservations";
 import { PrismaLive } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
@@ -26,9 +24,7 @@ export async function handleFixedSlotAssign(
 
   const depsLayer = Layer.mergeAll(
     PrismaLive,
-    ReservationRepositoryLive.pipe(Layer.provide(PrismaLive)),
     BikeRepositoryLive.pipe(Layer.provide(PrismaLive)),
-    RentalRepositoryLive.pipe(Layer.provide(PrismaLive)),
   );
 
   const summary = await Effect.runPromise(

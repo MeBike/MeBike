@@ -10,7 +10,7 @@ import {
   isAfterLateReturnCutoff,
   makePricingPolicyRepository,
 } from "@/domain/pricing";
-import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
+import { makeReservationQueryRepository } from "@/domain/reservations/repository/reservation-query.repository";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
 import { SubscriptionNotFound, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
@@ -75,7 +75,7 @@ export function finalizeRentalReturnInTx(
     let prepaidMinor = 0n;
     let subscriptionDiscountMinor = 0n;
 
-    const txReservationRepo = makeReservationRepository(tx);
+    const txReservationRepo = makeReservationQueryRepository(tx);
     const reservationOpt = rental.reservationId
       ? yield* txReservationRepo.findById(rental.reservationId)
       : Option.none();

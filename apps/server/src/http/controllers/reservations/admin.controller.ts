@@ -2,7 +2,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match, Option } from "effect";
 
-import { ReservationRepository } from "@/domain/reservations";
+import { ReservationQueryServiceTag } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractReservation,
@@ -29,8 +29,8 @@ const adminListReservations: RouteHandler<
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const repo = yield* ReservationRepository;
-      return yield* repo.listForAdmin(
+      const service = yield* ReservationQueryServiceTag;
+      return yield* service.listForAdmin(
         {
           userId: query.userId,
           bikeId: query.bikeId,
@@ -66,8 +66,8 @@ const adminGetReservation: RouteHandler<
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const repo = yield* ReservationRepository;
-      return yield* repo.findExpandedDetailById(reservationId);
+      const service = yield* ReservationQueryServiceTag;
+      return yield* service.getExpandedDetailById(reservationId);
     }),
     "GET /v1/admin/reservations/{reservationId}",
   );

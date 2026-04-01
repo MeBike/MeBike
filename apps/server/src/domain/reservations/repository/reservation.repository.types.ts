@@ -16,15 +16,7 @@ import type {
 } from "../models";
 import type { CreateReservationInput, UpdateReservationStatusInput } from "../types";
 
-export type ReservationRepo = {
-  /**
-   * EN: Creates a reservation row (non-transactional).
-   * VI: Tạo reservation (không nằm trong transaction).
-   */
-  createReservation: (
-    input: CreateReservationInput,
-  ) => Effect.Effect<ReservationRow, ReservationUniqueViolation>;
-
+export type ReservationQueryRepo = {
   /**
    * EN: Finds reservation by id.
    * VI: Tìm reservation theo id.
@@ -94,16 +86,6 @@ export type ReservationRepo = {
   ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   /**
-   * EN: Assign bike to a pending reservation if it is still unassigned.
-   * VI: Gán bike cho reservation pending nếu vẫn chưa có bike.
-   */
-  assignBikeToPendingReservation: (
-    reservationId: string,
-    bikeId: string,
-    updatedAt: Date,
-  ) => Effect.Effect<boolean>;
-
-  /**
    * EN: Returns the next upcoming PENDING reservation (startTime > now). Useful for fixed-slot UX.
    * VI: Trả về reservation PENDING sắp tới (startTime > now). Hữu ích cho UX FIXED_SLOT.
    */
@@ -131,6 +113,27 @@ export type ReservationRepo = {
     filter: AdminReservationFilter,
     pageReq: PageRequest<AdminReservationSortField>,
   ) => Effect.Effect<PageResult<ReservationRow>>;
+
+};
+
+export type ReservationCommandRepo = {
+  /**
+   * EN: Creates a reservation row (non-transactional).
+   * VI: Tạo reservation (không nằm trong transaction).
+   */
+  createReservation: (
+    input: CreateReservationInput,
+  ) => Effect.Effect<ReservationRow, ReservationUniqueViolation>;
+
+  /**
+   * EN: Assign bike to a pending reservation if it is still unassigned.
+   * VI: Gán bike cho reservation pending nếu vẫn chưa có bike.
+   */
+  assignBikeToPendingReservation: (
+    reservationId: string,
+    bikeId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<boolean>;
 
   /**
    * EN: Updates reservation status (and `updatedAt`) by id, returning the updated row.
@@ -162,3 +165,5 @@ export type ReservationRepo = {
     now: Date,
   ) => Effect.Effect<number>;
 };
+
+export type ReservationRepo = ReservationQueryRepo & ReservationCommandRepo;

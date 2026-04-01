@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Effect, Layer } from "effect";
 
 import type {
   PrismaClient,
@@ -9,22 +9,29 @@ import { Prisma } from "@/infrastructure/prisma";
 
 import type { ReservationRepo } from "./reservation.repository.types";
 
-import { makeReservationReadRepository } from "./read/reservation.read.repository";
-import { makeReservationWriteRepository } from "./write/reservation.write.repository";
+import { makeReservationCommandRepository } from "./reservation-command.repository";
+import { makeReservationQueryRepository } from "./reservation-query.repository";
 
 export type { ReservationRepo } from "./reservation.repository.types";
 
-export class ReservationRepository extends Context.Tag("ReservationRepository")<
-  ReservationRepository,
-  ReservationRepo
->() {}
+const makeReservationRepositoryEffect = Effect.gen(function* () {
+  const { client } = yield* Prisma;
+  return makeReservationRepository(client);
+});
+
+export class ReservationRepository extends Effect.Service<ReservationRepository>()(
+  "ReservationRepository",
+  {
+    effect: makeReservationRepositoryEffect,
+  },
+) {}
 
 export function makeReservationRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): ReservationRepo {
   return {
-    ...makeReservationReadRepository(client),
-    ...makeReservationWriteRepository(client),
+    ...makeReservationQueryRepository(client),
+    ...makeReservationCommandRepository(client),
   };
 }
 
@@ -32,8 +39,5 @@ export const reservationRepositoryFactory = makeReservationRepository;
 
 export const ReservationRepositoryLive = Layer.effect(
   ReservationRepository,
-  Effect.gen(function* () {
-    const { client } = yield* Prisma;
-    return makeReservationRepository(client);
-  }),
+  makeReservationRepositoryEffect.pipe(Effect.map(ReservationRepository.make)),
 );

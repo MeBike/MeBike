@@ -24,7 +24,8 @@ import {
   BikeNotFound,
   ReservationConfirmBlockedByActiveRental,
 } from "../domain-errors";
-import { ReservationServiceTag } from "../services/reservation.service";
+import { makeReservationCommandRepository } from "../repository/reservation-command.repository";
+import { ReservationCommandServiceTag } from "./reservation-command.service";
 
 export type ConfirmReservationInput = {
   readonly reservationId: string;
@@ -37,11 +38,11 @@ export function confirmReservation(
 ): Effect.Effect<
   ReservationRow,
   ReservationServiceFailure,
-  Prisma | ReservationServiceTag | BikeRepository | RentalRepository
+  Prisma | ReservationCommandServiceTag | BikeRepository | RentalRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
-    const reservationService = yield* ReservationServiceTag;
+    const reservationService = yield* ReservationCommandServiceTag;
     yield* RentalRepository;
     const now = input.now ?? new Date();
 
@@ -50,6 +51,7 @@ export function confirmReservation(
         const txRentalRepo = makeRentalRepository(tx);
         const bikeRepo = makeBikeRepository(tx);
         const txPricingPolicyRepo = makePricingPolicyRepository(tx);
+        const txReservationCommandRepo = makeReservationCommandRepository(tx);
         const { reservation, bikeId } = yield* reservationService.validatePendingForConfirmationInTx(
           tx,
           {
@@ -126,7 +128,7 @@ export function confirmReservation(
           defectOn(RentalRepositoryError),
         );
 
-        const updatedReservation = yield* reservationService.updateStatus({
+        const updatedReservation = yield* txReservationCommandRepo.updateStatus({
           reservationId: reservation.id,
           status: "FULFILLED",
           updatedAt: now,
