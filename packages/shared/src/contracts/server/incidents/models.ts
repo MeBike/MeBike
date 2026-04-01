@@ -65,6 +65,9 @@ export const IncidentDetailSchema = z.object({
           name: z.string(),
         })
         .nullable(),
+      distanceMeters: z.number().nullable(),
+      durationSeconds: z.number().nullable(),
+      routeGeometry: z.string().nullable(),
       assignedAt: z.coerce.date(),
     })
     .nullable(),
@@ -87,6 +90,9 @@ export const TechnicianAssignmentSummarySchema = z.object({
   technicianTeamId: z.string().uuid().nullable(),
   technicianUserId: z.string().uuid().nullable(),
   assignedByUserId: z.string().uuid().nullable(),
+  distanceMeters: z.number().nullable(),
+  durationSeconds: z.number().nullable(),
+  routeGeometry: z.string().nullable(),
   assignedAt: z.string().datetime(),
   acceptedAt: z.string().datetime().nullable(),
   startedAt: z.string().datetime().nullable(),
