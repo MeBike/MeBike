@@ -6,6 +6,7 @@ import type {
   RentalStatus,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 
@@ -66,7 +67,10 @@ export function makeRentalRentalWriteRepository(
               }),
           ),
         ),
-    }).pipe(Effect.map(mapToRentalRow));
+    }).pipe(
+      Effect.map(mapToRentalRow),
+      defectOn(RentalRepositoryError),
+    );
 
   return {
     createRental(data) {
@@ -104,6 +108,7 @@ export function makeRentalRentalWriteRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
         ),
+        defectOn(RentalRepositoryError),
       );
     },
 
@@ -144,6 +149,7 @@ export function makeRentalRentalWriteRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
         ),
+        defectOn(RentalRepositoryError),
       );
     },
   };

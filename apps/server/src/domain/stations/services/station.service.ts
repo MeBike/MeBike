@@ -3,8 +3,6 @@ import { Effect, Layer, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import { env } from "@/config/env";
-import { defectOn } from "@/domain/shared";
-import { StationRepositoryError } from "@/domain/stations/errors";
 
 import type {
   StationCapacityLimitExceeded,
@@ -123,15 +121,11 @@ function makeStationService(repo: StationRepo): StationService {
           return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
         }
 
-        return yield* repo.create(input).pipe(
-          defectOn(StationRepositoryError),
-        );
+        return yield* repo.create(input);
       }),
     updateStation: (id, input) =>
       Effect.gen(function* () {
-        const currentOpt = yield* repo.getById(id).pipe(
-          defectOn(StationRepositoryError),
-        );
+        const currentOpt = yield* repo.getById(id);
         if (Option.isNone(currentOpt)) {
           return yield* Effect.fail(new StationNotFound({ id }));
         }
@@ -152,34 +146,24 @@ function makeStationService(repo: StationRepo): StationService {
           return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
         }
 
-        const updatedOpt = yield* repo.update(id, input).pipe(
-          defectOn(StationRepositoryError),
-        );
+        const updatedOpt = yield* repo.update(id, input);
         if (Option.isNone(updatedOpt)) {
           return yield* Effect.fail(new StationNotFound({ id }));
         }
         return updatedOpt.value;
       }),
     listStations: (filter, page) =>
-      repo.listWithOffset(filter, page).pipe(
-        defectOn(StationRepositoryError),
-      ),
+      repo.listWithOffset(filter, page),
     getStationById: id =>
       Effect.gen(function* () {
-        const maybe = yield* repo
-          .getById(id)
-          .pipe(
-            defectOn(StationRepositoryError),
-          );
+        const maybe = yield* repo.getById(id);
         if (Option.isNone(maybe)) {
           return yield* Effect.fail(new StationNotFound({ id }));
         }
         return maybe.value;
       }),
     listNearestStations: args =>
-      repo.listNearest(args).pipe(
-        defectOn(StationRepositoryError),
-      ),
+      repo.listNearest(args),
   };
 }
 

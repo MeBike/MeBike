@@ -1,14 +1,9 @@
 import { Effect, Option } from "effect";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { BikeRepositoryError } from "@/domain/bikes/domain-errors";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
-import { PricingPolicyRepositoryError } from "@/domain/pricing/domain-errors";
-import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
-import { SubscriptionRepositoryError } from "@/domain/subscriptions/domain-errors";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
-import { WalletHoldRepositoryError, WalletRepositoryError } from "@/domain/wallets/domain-errors";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -52,23 +47,17 @@ export function startRental(
           const txRentalRepo = makeRentalRepository(tx);
           const txPricingPolicyRepo = makePricingPolicyRepository(tx);
 
-          const existingByUser = yield* txRentalRepo.findActiveByUserId(userId).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const existingByUser = yield* txRentalRepo.findActiveByUserId(userId);
           if (Option.isSome(existingByUser)) {
             return yield* Effect.fail(new ActiveRentalExists({ userId }));
           }
 
-          const existingByBike = yield* txRentalRepo.findActiveByBikeId(bikeId).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const existingByBike = yield* txRentalRepo.findActiveByBikeId(bikeId);
           if (Option.isSome(existingByBike)) {
             return yield* Effect.fail(new BikeAlreadyRented({ bikeId }));
           }
 
-          const bikeOpt = yield* txBikeRepo.getById(bikeId).pipe(
-            defectOn(BikeRepositoryError),
-          );
+          const bikeOpt = yield* txBikeRepo.getById(bikeId);
           if (Option.isNone(bikeOpt)) {
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
@@ -90,7 +79,6 @@ export function startRental(
           }
 
           const pricingPolicy = yield* txPricingPolicyRepo.getActive().pipe(
-            defectOn(PricingPolicyRepositoryError),
             Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
           );
@@ -101,18 +89,12 @@ export function startRental(
               subscriptionId,
               userId,
               now: startTime,
-            }).pipe(
-              defectOn(SubscriptionRepositoryError),
-            );
+            });
           }
 
-          const booked = yield* txBikeRepo.bookBikeIfAvailable(bikeId, startTime).pipe(
-            defectOn(BikeRepositoryError),
-          );
+          const booked = yield* txBikeRepo.bookBikeIfAvailable(bikeId, startTime);
           if (!booked) {
-            const latestBike = yield* txBikeRepo.getById(bikeId).pipe(
-              defectOn(BikeRepositoryError),
-            );
+            const latestBike = yield* txBikeRepo.getById(bikeId);
             if (Option.isNone(latestBike)) {
               return yield* Effect.fail(new BikeNotFound({ bikeId }));
             }
@@ -151,7 +133,6 @@ export function startRental(
                 ));
               },
             ),
-            defectOn(RentalRepositoryError),
           );
 
           yield* createRentalDepositHoldInTx({
@@ -168,12 +149,9 @@ export function startRental(
                 requiredBalance: Number(attemptedDebit),
                 currentBalance: Number(balance),
               }))),
-            defectOn(WalletRepositoryError, WalletHoldRepositoryError, RentalRepositoryError),
           );
 
-          const rentalWithDepositHoldOpt = yield* txRentalRepo.findById(created.id).pipe(
-            defectOn(RentalRepositoryError),
-          );
+          const rentalWithDepositHoldOpt = yield* txRentalRepo.findById(created.id);
           if (Option.isNone(rentalWithDepositHoldOpt)) {
             return yield* Effect.die(new Error(`Expected rental ${created.id} after deposit hold creation`));
           }

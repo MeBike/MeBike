@@ -5,6 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 
 import type { RentalRepo } from "../rental.repository.types";
@@ -64,7 +65,7 @@ export function makeRentalMyReadRepository(
         const mappedItems = items.map(mapToRentalRow);
 
         return makePageResult(mappedItems, total, page, pageSize);
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
 
     listMyCurrentRentals(userId, pageReq) {
@@ -103,7 +104,7 @@ export function makeRentalMyReadRepository(
         const mappedItems = items.map(mapToRentalRow);
 
         return makePageResult(mappedItems, total, page, pageSize);
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
 
     getMyRentalById(userId, rentalId) {
@@ -122,7 +123,7 @@ export function makeRentalMyReadRepository(
         });
 
         return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
 
     getMyRentalCounts(userId) {
@@ -143,7 +144,7 @@ export function makeRentalMyReadRepository(
             operation: "getMyRentalCounts",
             cause: e,
           }),
-      });
+      }).pipe(defectOn(RentalRepositoryError));
     },
   };
 }

@@ -4,7 +4,6 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import type {
   ReservationNotFound,
-  ReservationRepositoryError,
   ReservationUniqueViolation,
 } from "../domain-errors";
 import type {
@@ -24,7 +23,7 @@ export type ReservationRepo = {
    */
   createReservation: (
     input: CreateReservationInput,
-  ) => Effect.Effect<ReservationRow, ReservationRepositoryError | ReservationUniqueViolation>;
+  ) => Effect.Effect<ReservationRow, ReservationUniqueViolation>;
 
   /**
    * EN: Finds reservation by id.
@@ -32,7 +31,7 @@ export type ReservationRepo = {
    */
   findById: (
     reservationId: string,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   /**
    * EN: Finds reservation detail by id with nested user / bike / station summaries.
@@ -40,7 +39,7 @@ export type ReservationRepo = {
    */
   findExpandedDetailById: (
     reservationId: string,
-  ) => Effect.Effect<Option.Option<ReservationExpandedDetailRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReservationExpandedDetailRow>>;
 
   /**
    * Returns the most recently updated pending reservation.
@@ -48,7 +47,7 @@ export type ReservationRepo = {
    */
   findLatestPendingOrActiveByUserId: (
     userId: string,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   /**
    * Returns the most recently updated pending reservation.
@@ -56,7 +55,7 @@ export type ReservationRepo = {
    */
   findLatestPendingOrActiveByBikeId: (
     bikeId: string,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   /**
    * "Hold" = PENDING reservation with a concrete bike + endTime in the future.
@@ -68,7 +67,7 @@ export type ReservationRepo = {
   findPendingHoldByUserIdNow: (
     userId: string,
     now: Date,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   /**
    * "Hold" = PENDING reservation with a concrete bike + endTime in the future.
@@ -79,11 +78,11 @@ export type ReservationRepo = {
   findPendingHoldByBikeIdNow: (
     bikeId: string,
     now: Date,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   countPendingByStationId: (
     stationId: string,
-  ) => Effect.Effect<number, ReservationRepositoryError>;
+  ) => Effect.Effect<number>;
 
   /**
    * EN: Find a PENDING FIXED_SLOT reservation for a template at a specific start time (bike unassigned).
@@ -92,7 +91,7 @@ export type ReservationRepo = {
   findPendingFixedSlotByTemplateAndStart: (
     templateId: string,
     startTime: Date,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   /**
    * EN: Assign bike to a pending reservation if it is still unassigned.
@@ -102,7 +101,7 @@ export type ReservationRepo = {
     reservationId: string,
     bikeId: string,
     updatedAt: Date,
-  ) => Effect.Effect<boolean, ReservationRepositoryError>;
+  ) => Effect.Effect<boolean>;
 
   /**
    * EN: Returns the next upcoming PENDING reservation (startTime > now). Useful for fixed-slot UX.
@@ -112,7 +111,7 @@ export type ReservationRepo = {
     userId: string,
     now: Date,
     options?: { readonly onlyFixedSlot?: boolean },
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReservationRow>>;
 
   /**
    * EN: Returns a paginated list of reservations for a user with filters + sorting.
@@ -122,7 +121,7 @@ export type ReservationRepo = {
     userId: string,
     filter: ReservationFilter,
     pageReq: PageRequest<ReservationSortField>,
-  ) => Effect.Effect<PageResult<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<PageResult<ReservationRow>>;
 
   /**
    * EN: Returns a paginated reservation list for admin (global scope).
@@ -131,20 +130,20 @@ export type ReservationRepo = {
   listForAdmin: (
     filter: AdminReservationFilter,
     pageReq: PageRequest<AdminReservationSortField>,
-  ) => Effect.Effect<PageResult<ReservationRow>, ReservationRepositoryError>;
+  ) => Effect.Effect<PageResult<ReservationRow>>;
 
   /**
    * EN: Updates reservation status (and `updatedAt`) by id, returning the updated row.
    * - Fails with `ReservationNotFound` when the id does not exist (mapped from Prisma P2025).
-   * - Fails with `ReservationRepositoryError` for other infra/DB errors.
+   * - Defects for other infra/DB errors.
    *
    * VI: Cập nhật status (và `updatedAt`) theo `reservationId`, trả về row sau khi update.
    * - Fail `ReservationNotFound` nếu id không tồn tại (map từ Prisma P2025).
-   * - Fail `ReservationRepositoryError` cho các lỗi DB/infra khác.
+   * - Die cho các lỗi DB/infra khác.
    */
   updateStatus: (
     input: UpdateReservationStatusInput,
-  ) => Effect.Effect<ReservationRow, ReservationNotFound | ReservationRepositoryError>;
+  ) => Effect.Effect<ReservationRow, ReservationNotFound>;
 
   /**
    * EN: Expire a single PENDING reservation if endTime < now (idempotent).
@@ -153,7 +152,7 @@ export type ReservationRepo = {
   expirePendingHold: (
     reservationId: string,
     now: Date,
-  ) => Effect.Effect<boolean, ReservationRepositoryError>;
+  ) => Effect.Effect<boolean>;
 
   /**
    * EN: Expires PENDING reservations with endTime < now (bulk update).
@@ -161,5 +160,5 @@ export type ReservationRepo = {
    */
   markExpiredNow: (
     now: Date,
-  ) => Effect.Effect<number, ReservationRepositoryError>;
+  ) => Effect.Effect<number>;
 };

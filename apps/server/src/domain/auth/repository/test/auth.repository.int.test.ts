@@ -1,7 +1,8 @@
-import { Effect, Either, Match, Option } from "effect";
+import { Effect, Option } from "effect";
 import Redis from "ioredis";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { expectDefect } from "@/test/effect/assertions";
 import { setupRedisIntFixture } from "@/test/redis/redis-int-fixture";
 
 import type {
@@ -11,6 +12,7 @@ import type {
 } from "../../models";
 
 import { OTP_MAX_ATTEMPTS } from "../../config";
+import { AuthRepositoryError } from "../../domain-errors";
 import { authRepositoryFactory } from "../auth.repository";
 
 describe("authRepository Integration", () => {
@@ -28,7 +30,7 @@ describe("authRepository Integration", () => {
       retryStrategy: () => null,
     });
     invalidClient.on("error", () => {
-      // Expected in failure-path tests; assertions happen on the returned Effect errors.
+      // Expected in failure-path tests; assertions happen on the resulting defects.
     });
 
     return {
@@ -351,7 +353,7 @@ describe("authRepository Integration", () => {
   });
 
   describe("failure Scenarios", () => {
-    it("saveSession: returns AuthRepositoryError when Redis connection fails", async () => {
+    it("saveSession: defects with AuthRepositoryError when Redis connection fails", async () => {
       const { invalidClient, invalidRepo } = makeBrokenRepo();
 
       const testSession: RefreshSession = {
@@ -362,23 +364,9 @@ describe("authRepository Integration", () => {
         expiresAt: new Date(Date.now() + 3600000),
       };
 
-      const result = await Effect.runPromise(
-        invalidRepo.saveSession(testSession).pipe(Effect.either),
-      );
-
-      if (Either.isLeft(result)) {
-        Match.value(result.left).pipe(
-          Match.tag("AuthRepositoryError", (error) => {
-            expect(error.operation).toBe("saveSession");
-          }),
-          Match.orElse(() => {
-            throw new Error("Expected AuthRepositoryError");
-          }),
-        );
-      }
-      else {
-        throw new Error("Expected failure but got success");
-      }
+      await expectDefect(invalidRepo.saveSession(testSession), AuthRepositoryError, {
+        operation: "saveSession",
+      });
 
       try {
         await invalidClient.quit();
@@ -388,26 +376,12 @@ describe("authRepository Integration", () => {
       }
     });
 
-    it("getSession: returns AuthRepositoryError when Redis connection fails", async () => {
+    it("getSession: defects with AuthRepositoryError when Redis connection fails", async () => {
       const { invalidClient, invalidRepo } = makeBrokenRepo();
 
-      const result = await Effect.runPromise(
-        invalidRepo.getSession("test-session").pipe(Effect.either),
-      );
-
-      if (Either.isLeft(result)) {
-        Match.value(result.left).pipe(
-          Match.tag("AuthRepositoryError", (error) => {
-            expect(error.operation).toBe("getSession");
-          }),
-          Match.orElse(() => {
-            throw new Error("Expected AuthRepositoryError");
-          }),
-        );
-      }
-      else {
-        throw new Error("Expected failure but got success");
-      }
+      await expectDefect(invalidRepo.getSession("test-session"), AuthRepositoryError, {
+        operation: "getSession",
+      });
 
       try {
         await invalidClient.quit();
@@ -417,26 +391,12 @@ describe("authRepository Integration", () => {
       }
     });
 
-    it("deleteSession: returns AuthRepositoryError when Redis connection fails", async () => {
+    it("deleteSession: defects with AuthRepositoryError when Redis connection fails", async () => {
       const { invalidClient, invalidRepo } = makeBrokenRepo();
 
-      const result = await Effect.runPromise(
-        invalidRepo.deleteSession("test-session").pipe(Effect.either),
-      );
-
-      if (Either.isLeft(result)) {
-        Match.value(result.left).pipe(
-          Match.tag("AuthRepositoryError", (error) => {
-            expect(error.operation).toBe("deleteSession");
-          }),
-          Match.orElse(() => {
-            throw new Error("Expected AuthRepositoryError");
-          }),
-        );
-      }
-      else {
-        throw new Error("Expected failure but got success");
-      }
+      await expectDefect(invalidRepo.deleteSession("test-session"), AuthRepositoryError, {
+        operation: "deleteSession",
+      });
 
       try {
         await invalidClient.quit();
@@ -446,26 +406,14 @@ describe("authRepository Integration", () => {
       }
     });
 
-    it("deleteAllSessionsForUser: returns AuthRepositoryError when Redis connection fails", async () => {
+    it("deleteAllSessionsForUser: defects with AuthRepositoryError when Redis connection fails", async () => {
       const { invalidClient, invalidRepo } = makeBrokenRepo();
 
-      const result = await Effect.runPromise(
-        invalidRepo.deleteAllSessionsForUser("test-user").pipe(Effect.either),
+      await expectDefect(
+        invalidRepo.deleteAllSessionsForUser("test-user"),
+        AuthRepositoryError,
+        { operation: "deleteAllSessionsForUser" },
       );
-
-      if (Either.isLeft(result)) {
-        Match.value(result.left).pipe(
-          Match.tag("AuthRepositoryError", (error) => {
-            expect(error.operation).toBe("deleteAllSessionsForUser");
-          }),
-          Match.orElse(() => {
-            throw new Error("Expected AuthRepositoryError");
-          }),
-        );
-      }
-      else {
-        throw new Error("Expected failure but got success");
-      }
 
       try {
         await invalidClient.quit();
@@ -475,7 +423,7 @@ describe("authRepository Integration", () => {
       }
     });
 
-    it("saveEmailOtp: returns AuthRepositoryError when Redis connection fails", async () => {
+    it("saveEmailOtp: defects with AuthRepositoryError when Redis connection fails", async () => {
       const { invalidClient, invalidRepo } = makeBrokenRepo();
 
       const testOtp: EmailOtpRecord = {
@@ -486,23 +434,9 @@ describe("authRepository Integration", () => {
         expiresAt: new Date(Date.now() + 300000),
       };
 
-      const result = await Effect.runPromise(
-        invalidRepo.saveEmailOtp(testOtp).pipe(Effect.either),
-      );
-
-      if (Either.isLeft(result)) {
-        Match.value(result.left).pipe(
-          Match.tag("AuthRepositoryError", (error) => {
-            expect(error.operation).toBe("saveEmailOtp");
-          }),
-          Match.orElse(() => {
-            throw new Error("Expected AuthRepositoryError");
-          }),
-        );
-      }
-      else {
-        throw new Error("Expected failure but got success");
-      }
+      await expectDefect(invalidRepo.saveEmailOtp(testOtp), AuthRepositoryError, {
+        operation: "saveEmailOtp",
+      });
 
       try {
         await invalidClient.quit();
@@ -512,26 +446,14 @@ describe("authRepository Integration", () => {
       }
     });
 
-    it("consumeEmailOtp: returns AuthRepositoryError when Redis connection fails", async () => {
+    it("consumeEmailOtp: defects with AuthRepositoryError when Redis connection fails", async () => {
       const { invalidClient, invalidRepo } = makeBrokenRepo();
 
-      const result = await Effect.runPromise(
-        invalidRepo.consumeEmailOtp({ userId: "test-user", kind: "verify-email" }).pipe(Effect.either),
+      await expectDefect(
+        invalidRepo.consumeEmailOtp({ userId: "test-user", kind: "verify-email" }),
+        AuthRepositoryError,
+        { operation: "consumeEmailOtp" },
       );
-
-      if (Either.isLeft(result)) {
-        Match.value(result.left).pipe(
-          Match.tag("AuthRepositoryError", (error) => {
-            expect(error.operation).toBe("consumeEmailOtp");
-          }),
-          Match.orElse(() => {
-            throw new Error("Expected AuthRepositoryError");
-          }),
-        );
-      }
-      else {
-        throw new Error("Expected failure but got success");
-      }
 
       try {
         await invalidClient.quit();

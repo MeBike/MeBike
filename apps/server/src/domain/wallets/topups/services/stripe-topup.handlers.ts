@@ -8,9 +8,9 @@ import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WalletNotFound, WalletRepositoryError } from "../../domain-errors";
+import type { WalletNotFound } from "../../domain-errors";
 import type { IncreaseBalanceInput } from "../../models";
-import type { InvalidTopupRequest, PaymentAttemptRepositoryError, PaymentAttemptUniqueViolation } from "../domain-errors";
+import type { InvalidTopupRequest, PaymentAttemptUniqueViolation } from "../domain-errors";
 import type {
   StripeCheckoutAttemptInput,
   StripeTopupPaymentSheetResult,
@@ -65,7 +65,7 @@ export function createStripeCheckoutSessionUseCase(
   input: CreateStripeCheckoutSessionInput,
 ): Effect.Effect<
   StripeTopupSessionResult,
-  InvalidTopupRequest | TopupProviderError | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation | WalletNotFound | WalletRepositoryError,
+  InvalidTopupRequest | TopupProviderError | PaymentAttemptUniqueViolation | WalletNotFound,
   StripeTopupServiceTag | WalletServiceTag
 > {
   return Effect.gen(function* () {
@@ -98,7 +98,7 @@ export function createStripePaymentSheetUseCase(
   input: CreateStripePaymentSheetInput,
 ): Effect.Effect<
   StripeTopupPaymentSheetResult,
-  InvalidTopupRequest | TopupProviderError | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation | WalletNotFound | WalletRepositoryError,
+  InvalidTopupRequest | TopupProviderError | PaymentAttemptUniqueViolation | WalletNotFound,
   StripeTopupServiceTag | WalletServiceTag
 > {
   return Effect.gen(function* () {
@@ -143,7 +143,7 @@ function creditWallet(
 }
 
 function matchAttemptOption<A>(
-  effect: Effect.Effect<{ _tag: "Some"; value: A } | { _tag: "None" }, PaymentAttemptRepositoryError>,
+  effect: Effect.Effect<{ _tag: "Some"; value: A } | { _tag: "None" }>,
 ) {
   return Effect.flatMap(effect, attemptOpt =>
     Match.value(attemptOpt).pipe(
@@ -179,7 +179,7 @@ function settleSuccessfulTopup(
     readonly hash: string;
     readonly errorOperation: string;
   },
-): Effect.Effect<StripeWebhookOutcome, TopupProviderError | PaymentAttemptRepositoryError> {
+): Effect.Effect<StripeWebhookOutcome, TopupProviderError> {
   return runPrismaTransaction(client, tx =>
     Effect.gen(function* () {
       const txPaymentAttemptRepo = makePaymentAttemptRepository(tx);
@@ -250,7 +250,7 @@ export function handleStripeTopupWebhookEventUseCase(
   event: Stripe.Event,
 ): Effect.Effect<
   StripeWebhookOutcome,
-  TopupProviderError | PaymentAttemptRepositoryError,
+  TopupProviderError,
   StripeTopupServiceTag | Prisma
 > {
   return Effect.gen(function* () {
@@ -322,7 +322,7 @@ export function handleStripePaymentIntentWebhookEventUseCase(
   event: Stripe.Event,
 ): Effect.Effect<
   StripeWebhookOutcome,
-  TopupProviderError | PaymentAttemptRepositoryError,
+  TopupProviderError,
   StripeTopupServiceTag | Prisma
 > {
   return Effect.gen(function* () {

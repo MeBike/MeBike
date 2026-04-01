@@ -6,7 +6,6 @@ import type {
   DuplicateUserPhoneNumber,
   StationRoleAssignmentLimitExceeded,
   TechnicianTeamMemberLimitExceeded,
-  UserRepositoryError,
 } from "../domain-errors";
 import type {
   CreateUserInput,
@@ -21,36 +20,35 @@ import type {
 export type UserQueryRepo = {
   readonly findById: (
     id: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly findByEmail: (
     email: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly findByStripeConnectedAccountId: (
     accountId: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly listWithOffset: (
     filter: UserFilter,
     pageReq: PageRequest<UserSortField>,
-  ) => Effect.Effect<PageResult<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<PageResult<UserRow>>;
   readonly searchByQuery: (
     query: string,
-  ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
+  ) => Effect.Effect<readonly UserRow[]>;
   readonly listTechnicianSummaries: () => Effect.Effect<
-    readonly Pick<UserRow, "id" | "fullname">[],
-    UserRepositoryError
+    readonly Pick<UserRow, "id" | "fullname">[]
   >;
   readonly listAvailableTechnicianTeams: (args?: {
     readonly stationId?: string;
-  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[], UserRepositoryError>;
+  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[]>;
   readonly countTechnicianTeamMembers: (
     technicianTeamId: string,
     options?: { readonly excludeUserId?: string },
-  ) => Effect.Effect<number, UserRepositoryError>;
+  ) => Effect.Effect<number>;
   readonly countStationRoleAssignments: (
     stationId: string,
     role: "STAFF" | "MANAGER",
     options?: { readonly excludeUserId?: string },
-  ) => Effect.Effect<number, UserRepositoryError>;
+  ) => Effect.Effect<number>;
 };
 
 export type UserCommandRepo = {
@@ -61,14 +59,13 @@ export type UserCommandRepo = {
     readonly phoneNumber?: string | null;
   }) => Effect.Effect<
     UserRow,
-    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
+    DuplicateUserEmail | DuplicateUserPhoneNumber
   >;
   readonly createUser: (
     data: CreateUserInput,
   ) => Effect.Effect<
     UserRow,
-    UserRepositoryError
-    | DuplicateUserEmail
+    DuplicateUserEmail
     | DuplicateUserPhoneNumber
     | StationRoleAssignmentLimitExceeded
     | TechnicianTeamMemberLimitExceeded
@@ -78,15 +75,14 @@ export type UserCommandRepo = {
     patch: UpdateUserProfilePatch,
   ) => Effect.Effect<
     Option.Option<UserRow>,
-    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
+    DuplicateUserEmail | DuplicateUserPhoneNumber
   >;
   readonly updateAdminById: (
     id: string,
     patch: UpdateUserAdminPatch,
   ) => Effect.Effect<
     Option.Option<UserRow>,
-    UserRepositoryError
-    | DuplicateUserEmail
+    DuplicateUserEmail
     | DuplicateUserPhoneNumber
     | StationRoleAssignmentLimitExceeded
     | TechnicianTeamMemberLimitExceeded
@@ -94,26 +90,26 @@ export type UserCommandRepo = {
   readonly updatePassword: (
     id: string,
     passwordHash: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly markVerified: (
     id: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly setStripeConnectedAccountId: (
     id: string,
     accountId: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly setStripeConnectedAccountIdIfNull: (
     id: string,
     accountId: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly setStripePayoutsEnabled: (
     id: string,
     enabled: boolean,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly setStripePayoutsEnabledByAccountId: (
     accountId: string,
     enabled: boolean,
-  ) => Effect.Effect<boolean, UserRepositoryError>;
+  ) => Effect.Effect<boolean>;
 };
 
 export type UserRepo = UserQueryRepo & UserCommandRepo;

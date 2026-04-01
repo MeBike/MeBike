@@ -5,6 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { ReservationStatus } from "generated/prisma/client";
 
@@ -55,6 +56,7 @@ export function makeReservationUserReadRepository(
         }),
     }).pipe(
       Effect.map(row => Option.fromNullable(row).pipe(Option.map(toReservationRow))),
+      defectOn(ReservationRepositoryError),
     );
 
   return {
@@ -78,6 +80,7 @@ export function makeReservationUserReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
         ),
+        defectOn(ReservationRepositoryError),
       ),
 
     findNextUpcomingByUserId: (userId, now, options) =>
@@ -117,6 +120,6 @@ export function makeReservationUserReadRepository(
 
         const rows = items.map(toReservationRow);
         return makePageResult(rows, total, page, pageSize);
-      }),
+      }).pipe(defectOn(ReservationRepositoryError)),
   };
 }

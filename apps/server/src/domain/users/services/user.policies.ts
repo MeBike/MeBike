@@ -4,7 +4,6 @@ import type {
   InvalidOrgAssignment,
   StationRoleAssignmentLimitExceeded,
   TechnicianTeamMemberLimitExceeded,
-  UserRepositoryError,
 } from "../domain-errors";
 import type { UserOrgAssignmentPatch, UserRow } from "../models";
 import type { UserQueryRepo } from "../repository/user-query.repository";
@@ -99,7 +98,7 @@ export function makeValidateTechnicianTeamCapacity(repo: Pick<UserQueryRepo, "co
   return (args: {
     technicianTeamId: string | null;
     excludeUserId?: string;
-  }): Effect.Effect<void, TechnicianTeamMemberLimitExceeded | UserRepositoryError> =>
+  }): Effect.Effect<void, TechnicianTeamMemberLimitExceeded> =>
     Effect.gen(function* () {
       if (!args.technicianTeamId) {
         return;
@@ -127,7 +126,7 @@ export function makeValidateStationRoleAssignmentLimit(
     stationId: string | null;
     role: UserRow["role"];
     excludeUserId?: string;
-  }): Effect.Effect<void, StationRoleAssignmentLimitExceeded | UserRepositoryError> =>
+  }): Effect.Effect<void, StationRoleAssignmentLimitExceeded> =>
     Effect.gen(function* () {
       if (!args.stationId || (args.role !== "STAFF" && args.role !== "MANAGER")) {
         return;

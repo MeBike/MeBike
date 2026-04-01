@@ -2,7 +2,7 @@ import type { Option } from "effect";
 
 import { Context, Effect, Layer } from "effect";
 
-import type { WithdrawalRepositoryError, WithdrawalUniqueViolation } from "../domain-errors";
+import type { WithdrawalUniqueViolation } from "../domain-errors";
 import type {
   CreateWalletWithdrawalInput,
   WalletWithdrawalRow,
@@ -14,23 +14,18 @@ import { WithdrawalRepository } from "../repository/withdrawal.repository";
 export type WithdrawalService = {
   createPending: (
     input: CreateWalletWithdrawalInput,
-  ) => Effect.Effect<
-    WalletWithdrawalRow,
-    WithdrawalRepositoryError | DuplicateWithdrawalRequest
-  >;
-  getById: (
-    withdrawalId: string,
-  ) => Effect.Effect<WalletWithdrawalRow, WithdrawalNotFound | WithdrawalRepositoryError>;
+  ) => Effect.Effect<WalletWithdrawalRow, DuplicateWithdrawalRequest>;
+  getById: (withdrawalId: string) => Effect.Effect<WalletWithdrawalRow, WithdrawalNotFound>;
   findByIdempotencyKey: (
     idempotencyKey: string,
-  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>>;
   findByStripePayoutId: (
     payoutId: string,
-  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>>;
   findProcessingBefore: (
     createdBefore: Date,
     limit: number,
-  ) => Effect.Effect<ReadonlyArray<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  ) => Effect.Effect<ReadonlyArray<WalletWithdrawalRow>>;
 };
 
 export class WithdrawalServiceTag extends Context.Tag("WithdrawalService")<

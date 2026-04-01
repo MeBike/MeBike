@@ -29,7 +29,7 @@ export function adminGetRentalDetail(
   rentalId: string,
 ): Effect.Effect<
   AdminRentalDetail,
-  RentalRepositoryError | AdminRentalNotFound,
+  AdminRentalNotFound,
   RentalRepository
 > {
   return Effect.gen(function* () {
