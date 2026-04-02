@@ -110,6 +110,7 @@ const staffListBikeSwapRequests: RouteHandler<
         {
           userId: query.userId,
           status: query.status,
+          stationId: query.stationId,
         },
         {
           page: Number(query.page ?? 1),
