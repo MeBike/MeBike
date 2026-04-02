@@ -1,17 +1,19 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { useTheme, YStack } from "tamagui";
+
+import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useCreateMyReturnSlotMutation } from "@hooks/mutations/rentals/use-create-my-return-slot-mutation";
+import { useRequestBikeSwapMutation } from "@hooks/mutations/rentals/use-request-bike-swap-mutation";
 import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
-import { useTheme, YStack } from "tamagui";
-
-import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 
 import { BikeList } from "./components/bike-list";
 import { FixedSlotBanner } from "./components/fixed-slot-banner";
@@ -23,6 +25,7 @@ export default function StationDetailScreen() {
   const queryClient = useQueryClient();
   const theme = useTheme();
   const returnSlotMutation = useCreateMyReturnSlotMutation();
+  const bikeSwapMutation = useRequestBikeSwapMutation();
   const {
     station,
     isLoading,
@@ -38,10 +41,14 @@ export default function StationDetailScreen() {
     selectionMode,
     rentalId,
     currentReturnStationId,
+    currentBikeSwapStationId,
   } = useStationDetail();
+  const { preview: bikeSwapPreview, setPendingPreview } = useMyBikeSwapPreview(rentalId ?? "");
 
   const isReturnSlotSelection = selectionMode === "rental-return-slot" && Boolean(rentalId);
+  const isBikeSwapSelection = selectionMode === "rental-bike-swap" && Boolean(rentalId);
   const isCurrentReturnStation = currentReturnStationId === station?.id;
+  const isCurrentBikeSwapStation = currentBikeSwapStationId === station?.id || bikeSwapPreview?.stationId === station?.id;
 
   const handleSelectReturnStation = () => {
     if (!station || !rentalId) {
@@ -58,13 +65,49 @@ export default function StationDetailScreen() {
             {
               text: "Xem chi tiết thuê xe",
               onPress: () => {
-                (navigation as any).pop(2);
+                navigation.pop(2);
               },
             },
           ]);
         },
         onError: (error) => {
           Alert.alert("Không thể giữ chỗ", presentRentalError(error));
+        },
+      },
+    );
+  };
+
+  const handleSelectBikeSwapStation = () => {
+    if (!station || !rentalId) {
+      return;
+    }
+
+    bikeSwapMutation.mutate(
+      {
+        rentalId,
+        payload: { stationId: station.id },
+      },
+      {
+        onSuccess: async (request) => {
+          setPendingPreview({
+            requestId: request.id,
+            oldBikeId: request.oldBikeId,
+            stationId: station.id,
+            stationName: station.name,
+          });
+          await invalidateMyRentalQueries(queryClient);
+
+          Alert.alert("Đã gửi yêu cầu đổi xe", `Yêu cầu đổi xe tại ${station.name} đang chờ xác nhận.`, [
+            {
+              text: "Xem chi tiết thuê xe",
+              onPress: () => {
+                navigation.pop(2);
+              },
+            },
+          ]);
+        },
+        onError: (error) => {
+          Alert.alert("Không thể yêu cầu đổi xe", presentRentalError(error));
         },
       },
     );
@@ -147,6 +190,34 @@ export default function StationDetailScreen() {
                       Sau khi giữ chỗ, quay lại chi tiết thuê xe để mở mã QR trả xe cho nhân viên.
                     </AppText>
                   </YStack>
+                </AppCard>
+              )
+            : null}
+          {isBikeSwapSelection
+            ? (
+                <AppCard borderRadius="$5" gap="$4" padding="$5">
+                  <YStack gap="$2">
+                    <AppText tone="subtle" variant="eyebrow">
+                      Chọn trạm đổi xe
+                    </AppText>
+                    <AppText variant="cardTitle">
+                      {station.name}
+                    </AppText>
+                    <AppText tone="muted" variant="bodySmall">
+                      {isCurrentBikeSwapStation
+                        ? "Yêu cầu đổi xe của bạn đã được gửi tới trạm này trong phiên hiện tại."
+                        : "Xác nhận trạm này để gửi yêu cầu đổi xe cho chuyến đi đang diễn ra."}
+                    </AppText>
+                  </YStack>
+
+                  <AppButton
+                    disabled={bikeSwapMutation.isPending || isCurrentBikeSwapStation}
+                    loading={bikeSwapMutation.isPending}
+                    onPress={handleSelectBikeSwapStation}
+                    tone={isCurrentBikeSwapStation ? "outline" : "primary"}
+                  >
+                    {isCurrentBikeSwapStation ? "Đã gửi yêu cầu tại trạm này" : "Yêu cầu đổi xe tại trạm này"}
+                  </AppButton>
                 </AppCard>
               )
             : null}

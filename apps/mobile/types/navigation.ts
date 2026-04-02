@@ -1,20 +1,21 @@
-// Common navigation hook types
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
 import type { BikeSummary } from "@/contracts/server";
 import type { ResolveSOSSchema } from "@/schema/sosSchema";
+// Common navigation hook types
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 
 // Navigation Types for React Navigation
 import type { Reservation } from "./reservation-types";
 
-export type StationSelectionMode = "rental-return-slot";
+export type StationSelectionMode = "rental-return-slot" | "rental-bike-swap";
 
 export type StationSelectionContext = {
   selectionMode: StationSelectionMode;
   rentalId: string;
   currentReturnStationId?: string;
+  currentBikeSwapStationId?: string;
 };
 
 export type RootStackParamList = {
