@@ -1,15 +1,15 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
-import { useTheme, YStack } from "tamagui";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useCreateMyReturnSlotMutation } from "@hooks/mutations/rentals/use-create-my-return-slot-mutation";
+import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
+import { useQueryClient } from "@tanstack/react-query";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { useTheme, YStack } from "tamagui";
 
 import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 
@@ -52,13 +52,7 @@ export default function StationDetailScreen() {
       { rentalId, stationId: station.id },
       {
         onSuccess: async () => {
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ["rentals", "me"] }),
-            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "detail", rentalId] }),
-            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "resolved-detail", rentalId] }),
-            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] }),
-            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] }),
-          ]);
+          await invalidateMyRentalQueries(queryClient);
 
           Alert.alert("Đã cập nhật bãi trả xe", `Bạn đã giữ chỗ trả xe tại ${station.name}.`, [
             {

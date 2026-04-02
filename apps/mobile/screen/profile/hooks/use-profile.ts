@@ -1,15 +1,16 @@
 import type { UserDetail } from "@services/users/user-service";
 
 import { useMyRentalCountsQuery } from "@hooks/query/rentals/use-my-rental-counts-query";
+import { invalidateMyRentalCountsQuery } from "@hooks/rentals/rental-cache";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
-import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
 import { useResendVerifyEmailMutation } from "@/hooks/mutations/AuthNext/use-resend-verify-email-mutation";
 import { useVerifyEmailOtpMutation } from "@/hooks/mutations/AuthNext/use-verify-email-otp-mutation";
+import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 
 export function useProfile() {
   const navigation = useNavigation();
@@ -44,7 +45,7 @@ export function useProfile() {
     setIsRefreshing(true);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["authNext", "me"] }),
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] }),
+      invalidateMyRentalCountsQuery(queryClient),
       hydrate(),
     ]);
     setIsRefreshing(false);

@@ -1,6 +1,8 @@
 import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import type { QueryClient } from "@tanstack/react-query";
 
+import { invalidateRentalCreationQueries } from "@hooks/rentals/rental-cache";
+
 import type { BikeSummary } from "@/contracts/server";
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
@@ -69,13 +71,7 @@ export function buildCreateRentalPayload(args: {
 }
 
 export function invalidateRentalRelatedQueries(queryClient: QueryClient) {
-  queryClient.invalidateQueries({ queryKey: ["bikes", "all"] });
-  queryClient.invalidateQueries({ queryKey: ["all-stations"] });
-  queryClient.invalidateQueries({ queryKey: ["station"] });
-  queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
-  queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
-  queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] });
-  queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+  void invalidateRentalCreationQueries(queryClient, { includeSubscriptions: true });
 }
 
 export function navigateToReservationFlow(

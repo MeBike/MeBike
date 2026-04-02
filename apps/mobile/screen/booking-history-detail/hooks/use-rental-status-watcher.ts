@@ -1,3 +1,4 @@
+import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
 import { useBikeStatusEvents } from "@hooks/useBikeStatusEvents";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -29,10 +30,7 @@ export function useRentalStatusWatcher({
 
       if (isTargetBike && isRelevantStatus) {
         refetchDetail();
-        queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
-        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
-        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "detail", booking?.id] });
-        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "resolved-detail", booking?.id] });
+        void invalidateMyRentalQueries(queryClient);
       }
     },
     [bikeId, booking?.id, queryClient, refetchDetail],
