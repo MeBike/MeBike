@@ -1,6 +1,7 @@
 import * as z from "zod";
 import type { VerifyStatus } from "@/types";
 import { isValidUUID } from "@utils";
+import { verify } from "crypto";
 export const userProfileSchema = z.object({
   fullName: z.string().min(1, "Họ tên là bắt buộc"),
   email: z.email("Email không hợp lệ"),
@@ -23,6 +24,8 @@ const baseUserSchema = z.object({
   email : z.email("Email không hợp lệ"),
   phoneNumber : z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự"),
   password : z.string().min(10,"Password phải ít nhất 10 kí tự"),
+  // accountStatus :  z.enum(["ACTIVE","INACTIVE","SUSPENDED","BANNED",""]),
+  // verify : z.enum(["VERIFIED","UNVERIFIED"]),
 });
 export const createUserSchema = z.discriminatedUnion("role",[
   baseUserSchema.extend({
@@ -56,22 +59,48 @@ export const createUserSchema = z.discriminatedUnion("role",[
     })
   }),
 ])
+const updateBaseUserSchema = z.object({
+  fullname: z.string().optional(),
+  email: z.string().email("Email không hợp lệ").optional(),
+  phoneNumber: z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự").optional(),
+  accountStatus: z.enum(["ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"]).optional(),
+  verify: z.enum(["VERIFIED", "UNVERIFIED"]).optional(),
+});
 export const updateStaffSchema = z.discriminatedUnion("role",[
-  z.object({
+  updateBaseUserSchema.extend({
+    role : z.literal("USER"),
+  }),
+  updateBaseUserSchema.extend({
+    role : z.literal("ADMIN"),
+  }),
+  updateBaseUserSchema.extend({
     role : z.literal("STAFF"),
-    accountStatus : z.enum(["ACTIVE","INACTIVE","SUSPENDED","BANNED",""]),
-    verify : z.enum(["VERIFIED","UNVERIFIED"]),
     orgAssignment : z.object({
       stationId : z.string().refine(isValidUUID),
     })
   }),
-  z.object({
+  updateBaseUserSchema.extend({
+    role : z.literal("MANAGER"),
+    orgAssignment : z.object({
+      stationId : z.string().refine(isValidUUID),
+    })
+  }),
+  updateBaseUserSchema.extend({
+    role : z.literal("AGENCY"),
+    orgAssignment : z.object({
+      stationId : z.string().refine(isValidUUID),
+    })
+  }),
+  updateBaseUserSchema.extend({
     role : z.literal("TECHNICIAN"),
-    accountStatus : z.enum(["ACTIVE","INACTIVE","SUSPENDED","BANNED",""]),
-    verify : z.enum(["VERIFIED","UNVERIFIED"]),
     orgAssignment : z.object({
       technicianTeamId : z.string().refine(isValidUUID),
     })
-  })
+  }),
 ])
+const updateUserSchema = z.object({
+  accountStatus: z.enum(["ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"]).optional(),
+  verify: z.enum(["VERIFIED", "UNVERIFIED"]).optional(),
+});
+export type UpdateUserFormData = z.infer<typeof updateUserSchema>
 export type UpdateStaffFormData = z.infer<typeof updateStaffSchema>

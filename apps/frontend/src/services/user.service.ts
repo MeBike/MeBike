@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { DetailUser } from "@/types";
-import { CreateUserFormData, UserProfile ,UpdateStaffFormData} from "@/schemas/user-schema";
+import { CreateUserFormData, UserProfile ,UpdateStaffFormData , UpdateUserFormData} from "@/schemas/user-schema";
 import { ResetPasswordSchemaFormData } from "@schemas";
 import { ApiResponse } from "@/types";
 import {ENDPOINT} from "@/constants/end-point";
@@ -161,6 +161,15 @@ export const userService = {
   updateProfileAdmin: async (
     id: string,
     data: Partial<UpdateStaffFormData>
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.patch<
+      DetailUser
+    >(ENDPOINT.USER.UPDATE(id), data);
+    return response;
+  },
+  updateProfileUser: async (
+    id: string,
+    data: Partial<UpdateUserFormData>
   ): Promise<AxiosResponse<DetailUser>> => {
     const response = await fetchHttpClient.patch<
       DetailUser

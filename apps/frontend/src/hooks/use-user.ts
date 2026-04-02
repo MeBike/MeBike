@@ -17,12 +17,14 @@ import {
   useCreateUserMutation,
   useResetPasswordUserMutation,
   useUpdateProfileStaffMutation,
+  useUpdateProfileUserMutation,
 } from "@mutations";
 import {
   UserProfile,
   CreateUserFormData,
   ResetPasswordSchemaFormData,
   UpdateStaffFormData,
+  UpdateUserFormData,
 } from "@schemas";
 import { HTTP_STATUS } from "@constants";
 import {
@@ -205,7 +207,8 @@ export const useUserActions = ({
     ],
   );
   const useResetPassword = useResetPasswordUserMutation();
-  const useUpdateProfile = useUpdateProfileStaffMutation();
+  const useUpdateStaff = useUpdateProfileStaffMutation();
+  const useUpdateUser = useUpdateProfileUserMutation();
   const resetPassword = useCallback(
     async (userData: ResetPasswordSchemaFormData) => {
       if (!hasToken) {
@@ -239,7 +242,7 @@ export const useUserActions = ({
         return;
       }
       try {
-        const result = await useUpdateProfile.mutateAsync({
+        const result = await useUpdateStaff.mutateAsync({
           id: id || "",
           data: userData,
         });
@@ -262,7 +265,49 @@ export const useUserActions = ({
     },
     [
       hasToken,
-      useUpdateProfile,
+      useUpdateStaff,
+      router,
+      queryClient,
+      id,
+      refetchDetailUser,
+      refetch,
+      page,
+      limit,
+      verify,
+      role,
+    ],
+  );
+  const updateProfileUser = useCallback(
+    async (userData: UpdateUserFormData) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useUpdateUser.mutateAsync({
+          id: id || "",
+          data: userData,
+        });
+        
+        queryClient.invalidateQueries({
+          queryKey: ["user", "all"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["user", "detail", id],
+        });
+        refetchDetailUser();
+        refetch();
+        return result;
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
+        toast.error(errorMessage);
+        throw error;
+      }
+    },
+    [
+      hasToken,
+      useUpdateUser,
       router,
       queryClient,
       id,
@@ -309,5 +354,6 @@ export const useUserActions = ({
     updateProfileStaff,
     getRefetchDashboardStats,
     staffOnly,
+    updateProfileUser
   };
 };

@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, StepForward } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { DataTable } from "@/components/TableCustom";
-import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@radix-ui/react-label";
 import { CreateUserFormData, createUserSchema } from "@/schemas/user-schema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
@@ -15,7 +12,6 @@ import { useUserActions } from "@/hooks/use-user";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/table-skeleton";
 type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
@@ -34,26 +30,16 @@ export default function StaffClient() {
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(7);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const verifyQuery =
-    verifyFilter === "VERIFIED" || verifyFilter === "UNVERIFIED"
-      ? verifyFilter
-      : "";
-  const accountStatusQuery = verifyFilter === "BANNED" ? "BANNED" : "";
   const {
     staffOnly,
     getAllUsers,
     isLoading,
     getAllStatistics,
-    createUser,
     getRefetchDashboardStats,
   } = useUserActions({
     hasToken: true,
     limit: limit,
     page: currentPage,
-    // verify: verifyFilter === "all" ? "" : verifyQuery,
-    // accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
-    // role: roleFilter === "all" ? "" : (roleFilter as UserRole),
     fullName: searchQuery,
   });
   useEffect(() => {
@@ -100,17 +86,6 @@ export default function StaffClient() {
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
-  const handleCreateUser = handleSubmit((data) => {
-    createUser({
-      fullname: data.fullname,
-      email: data.email,
-      phoneNumber: data.phoneNumber,
-      role: data.role,
-    });
-    setIsCreateModalOpen(false);
-    console.log("[v0] Create user:", data);
-    reset();
-  });
   const handleDetailUser = (id: string) => {
     router.push(`/admin/customers/detail/${id}`);
   };
@@ -248,109 +223,6 @@ export default function StaffClient() {
             )}
           </div>
         </div>
-        {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-              <div className="p-6 border-b bg-muted/30">
-                <h2 className="text-xl font-bold text-foreground">
-                  Thêm người dùng mới
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Nhập thông tin chi tiết để tạo tài khoản.
-                </p>
-              </div>
-
-              <form
-                id="create-user-form"
-                onSubmit={handleCreateUser}
-                className="p-6 space-y-4"
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="name">Họ tên</Label>
-                  <Input
-                    id="name"
-                    {...register("fullname")}
-                    placeholder="Nhập họ tên"
-                  />
-                  {errors.fullname && (
-                    <p className="text-destructive text-xs font-medium">
-                      {errors.fullname.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...register("email")}
-                    placeholder="example@mail.com"
-                  />
-                  {errors.email && (
-                    <p className="text-destructive text-xs font-medium">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Số điện thoại</Label>
-                    <Input
-                      id="phoneNumber"
-                      type="tel"
-                      {...register("phoneNumber")}
-                      placeholder="09xxx"
-                    />
-                    {errors.phoneNumber && (
-                      <p className="text-destructive text-xs font-medium">
-                        {errors.phoneNumber.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Vai trò hệ thống</Label>
-                  <select
-                    {...register("role")}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="USER">Người dùng (User)</option>
-                    <option value="STAFF">Nhân viên (Staff)</option>
-                    <option value="ADMIN">Quản trị viên (Admin)</option>
-                  </select>
-                  {errors.role && (
-                    <p className="text-destructive text-xs font-medium">
-                      {errors.role.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex gap-3 mt-8">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsCreateModalOpen(false);
-                      reset();
-                    }}
-                    className="flex-1"
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 gradient-primary shadow-glow"
-                  >
-                    Tạo người dùng
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
