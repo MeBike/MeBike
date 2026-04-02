@@ -43,12 +43,12 @@ export default function StationDetailScreen() {
     currentReturnStationId,
     currentBikeSwapStationId,
   } = useStationDetail();
-  const { setPendingPreview } = useMyBikeSwapPreview(rentalId ?? "");
+  const { preview: bikeSwapPreview, setPendingPreview } = useMyBikeSwapPreview(rentalId ?? "");
 
   const isReturnSlotSelection = selectionMode === "rental-return-slot" && Boolean(rentalId);
   const isBikeSwapSelection = selectionMode === "rental-bike-swap" && Boolean(rentalId);
   const isCurrentReturnStation = currentReturnStationId === station?.id;
-  const isCurrentBikeSwapStation = currentBikeSwapStationId === station?.id;
+  const isCurrentBikeSwapStation = currentBikeSwapStationId === station?.id || bikeSwapPreview?.stationId === station?.id;
 
   const handleSelectReturnStation = () => {
     if (!station || !rentalId) {
@@ -65,7 +65,7 @@ export default function StationDetailScreen() {
             {
               text: "Xem chi tiết thuê xe",
               onPress: () => {
-                (navigation as any).pop(2);
+                navigation.pop(2);
               },
             },
           ]);
@@ -101,7 +101,7 @@ export default function StationDetailScreen() {
             {
               text: "Xem chi tiết thuê xe",
               onPress: () => {
-                (navigation as any).pop(2);
+                navigation.pop(2);
               },
             },
           ]);

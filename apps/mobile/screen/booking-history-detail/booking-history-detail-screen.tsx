@@ -60,6 +60,7 @@ function BookingHistoryDetailScreen() {
       ? "CONFIRMED"
       : "PENDING"
     : "NONE";
+  const isBikeSwapPending = bikeSwapStatus === "PENDING";
   const actionBarHeight = isOngoing ? 188 + Math.max(insets.bottom, spaceScale[4]) : spaceScale[9];
 
   const handleChooseReturnStation = useCallback(() => {
@@ -82,9 +83,9 @@ function BookingHistoryDetailScreen() {
     (navigation as any).navigate("Trạm", {
       selectionMode: "rental-bike-swap",
       rentalId: detail.rental.id,
-      currentBikeSwapStationId: bikeSwapPreview?.stationId,
+      currentBikeSwapStationId: isBikeSwapPending ? bikeSwapPreview?.stationId : undefined,
     });
-  }, [bikeSwapPreview?.stationId, detail, navigation]);
+  }, [bikeSwapPreview?.stationId, detail, isBikeSwapPending, navigation]);
 
   const handleOpenReturnQr = useCallback(() => {
     (navigation as any).navigate("RentalQr", { bookingId });
@@ -134,7 +135,7 @@ function BookingHistoryDetailScreen() {
             <RentalJourneyCard
               bikeSwapStatus={bikeSwapStatus}
               detail={detail}
-              isRequestBikeSwapDisabled={Boolean(bikeSwapPreview)}
+              isRequestBikeSwapDisabled={isBikeSwapPending}
               onRequestBikeSwap={handleRequestBikeSwap}
             />
             <RentalMetaCard detail={detail} />

@@ -75,7 +75,7 @@ export function BikeSwapRequestCard({
           </YStack>
         </XStack>
 
-        {isPending || isConfirmed
+        {isPending
           ? null
           : (
               <AppButton
