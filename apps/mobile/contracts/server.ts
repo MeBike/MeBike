@@ -1,4 +1,5 @@
 import type { ServerContracts } from "@mebike/shared";
+import type { z } from "zod";
 
 export type BikeSummary = ServerContracts.BikesContracts.BikeSummary;
 export type StationReadSummary = ServerContracts.StationsContracts.StationReadSummary;
@@ -24,3 +25,10 @@ export type MyRentalListResponse = ServerContracts.RentalsContracts.MyRentalList
 export type CreateRentalPayload = ServerContracts.RentalsContracts.CreateRentalRequest;
 export type CreateReturnSlotPayload = ServerContracts.RentalsContracts.CreateReturnSlotRequest;
 export type ReturnSlotReservation = ServerContracts.RentalsContracts.ReturnSlotReservation;
+export type BikeSwapStatus = ServerContracts.RentalsContracts.BikeSwapStatus;
+export type BikeSwapRequest = ServerContracts.RentalsContracts.BikeSwapRequest;
+export type BikeSwapRequestDetail = ServerContracts.RentalsContracts.BikeSwapRequestDetail;
+export type BikeSwapRequestListResponse = ServerContracts.RentalsContracts.BikeSwapRequestListResponse;
+export type RequestBikeSwapPayload = z.output<
+  typeof ServerContracts.RentalsContracts.RequestBikeSwapRequestSchema
+>;
