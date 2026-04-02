@@ -1,7 +1,7 @@
+import { rentalKeys } from "@hooks/query/rentals/rental-query-keys";
+import { rentalServiceV1 } from "@services/rentals";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
-
-import { rentalServiceV1 } from "@services/rentals";
 
 import type { Rental } from "@/types/rental-types";
 
@@ -19,7 +19,7 @@ export function useBookingHistory() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const query = useInfiniteQuery({
-    queryKey: ["rentals", "me", "history", PAGE_SIZE],
+    queryKey: rentalKeys.meHistoryPage(PAGE_SIZE),
     queryFn: ({ pageParam = 1 }) =>
       fetchRentalHistory(pageParam as number),
     getNextPageParam: (lastPage) => {
@@ -55,7 +55,8 @@ export function useBookingHistory() {
     setIsRefreshing(true);
     try {
       await query.refetch();
-    } finally {
+    }
+    finally {
       setIsRefreshing(false);
     }
   }, [query]);
