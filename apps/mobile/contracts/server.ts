@@ -1,4 +1,4 @@
-import type { ServerContracts } from "@mebike/shared";
+import type { ServerContracts, serverRoutes } from "@mebike/shared";
 import type { z } from "zod";
 
 export type BikeSummary = ServerContracts.BikesContracts.BikeSummary;
@@ -31,4 +31,19 @@ export type BikeSwapRequestDetail = ServerContracts.RentalsContracts.BikeSwapReq
 export type BikeSwapRequestListResponse = ServerContracts.RentalsContracts.BikeSwapRequestListResponse;
 export type RequestBikeSwapPayload = z.output<
   typeof ServerContracts.RentalsContracts.RequestBikeSwapRequestSchema
+>;
+
+export type IncidentStatus = ServerContracts.IncidentsContracts.IncidentStatus;
+export type IncidentSeverity = ServerContracts.IncidentsContracts.IncidentSeverity;
+export type IncidentSource = ServerContracts.IncidentsContracts.IncidentSource;
+export type AssignmentStatus = ServerContracts.IncidentsContracts.AssignmentStatus;
+export type IncidentSummary = ServerContracts.IncidentsContracts.IncidentSummary;
+export type IncidentDetail = ServerContracts.IncidentsContracts.IncidentDetail;
+export type IncidentListResponse = ServerContracts.IncidentsContracts.IncidentListResponse;
+export type TechnicianAssignmentSummary = ServerContracts.IncidentsContracts.TechnicianAssignmentSummary;
+export type CreateIncidentPayload = z.output<
+  typeof serverRoutes.incidents.createIncident.request.body.content["application/json"]["schema"]
+>;
+export type UpdateIncidentPayload = z.output<
+  typeof serverRoutes.incidents.updateIncident.request.body.content["application/json"]["schema"]
 >;
