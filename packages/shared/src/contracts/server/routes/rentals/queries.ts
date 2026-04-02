@@ -700,8 +700,9 @@ export const staffListBikeSwapRequests = createRoute({
       .object({
         userId: z.uuidv7().optional(),
         status: BikeSwapStatusSchema.optional(),
+        stationId: z.uuidv7().optional(),
         ...paginationQueryFields,
-        sortBy: z.enum(["status", "updatedAt"]).optional(),
+        sortBy: z.enum(["status", "updatedAt", "createdAt"]).optional(),
         sortDir: SortDirectionSchema.optional(),
       })
       .openapi("StaffBikeSwapRequestsListQuery", {
@@ -732,8 +733,9 @@ export const adminListBikeSwapRequests = createRoute({
       .object({
         userId: z.uuidv7().optional(),
         status: BikeSwapStatusSchema.optional(),
+        stationId: z.uuidv7().optional(),
         ...paginationQueryFields,
-        sortBy: z.enum(["status", "updatedAt"]).optional(),
+        sortBy: z.enum(["status", "updatedAt", "createdAt"]).optional(),
         sortDir: SortDirectionSchema.optional(),
       })
       .openapi("AdminBikeSwapRequestsListQuery", {
