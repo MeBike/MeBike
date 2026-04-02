@@ -1,5 +1,9 @@
 import type {
   BikeSummary,
+  BikeSwapRequest,
+  BikeSwapRequestDetail,
+  BikeSwapRequestListResponse,
+  BikeSwapStatus,
   CreateRentalPayload,
   CreateReturnSlotPayload,
   MyRentalListResponse,
@@ -12,11 +16,16 @@ import type {
   RentalStatus,
   RentalWithPrice,
   RentalWithPricing,
+  RequestBikeSwapPayload,
   ReturnSlotReservation,
   StationReadSummary,
 } from "@/contracts/server";
 
 export type {
+  BikeSwapRequest,
+  BikeSwapRequestDetail,
+  BikeSwapRequestListResponse,
+  BikeSwapStatus,
   CreateRentalPayload,
   CreateReturnSlotPayload,
   MyRentalListResponse,
@@ -29,6 +38,7 @@ export type {
   RentalStatus,
   RentalWithPrice,
   RentalWithPricing,
+  RequestBikeSwapPayload,
   ReturnSlotReservation,
 };
 
@@ -47,4 +57,18 @@ export type RentalListParams = {
   status?: RentalStatus;
   startStation?: string;
   endStation?: string;
+};
+
+export type BikeSwapRequestListParams = {
+  page?: number;
+  pageSize?: number;
+  userId?: string;
+  stationId?: string;
+  status?: BikeSwapStatus;
+  sortBy?: "status" | "updatedAt" | "createdAt";
+  sortDir?: "asc" | "desc";
+};
+
+export type RejectBikeSwapRequestPayload = {
+  reason: string;
 };
