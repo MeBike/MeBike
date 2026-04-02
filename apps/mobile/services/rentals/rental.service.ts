@@ -5,6 +5,7 @@ import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
+import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
 
 import type {
@@ -38,19 +39,6 @@ import {
   parseBikeSwapRequestError,
   parseRentalError,
 } from "./rental-error";
-
-function toSearchParams(
-  params: Record<string, unknown> | undefined,
-): Record<string, string> | undefined {
-  if (!params) {
-    return undefined;
-  }
-  const entries = Object.entries(params)
-    .filter(([, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => [key, String(value)]);
-
-  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
-}
 
 async function decodeRentalResponse<TRaw, TValue>(
   response: Response,
