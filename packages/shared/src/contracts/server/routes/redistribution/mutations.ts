@@ -11,7 +11,7 @@ import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 
 export const createRedistributionRequest = createRoute({
   method: "post",
-  path: "/v1/redistribution-requests",
+  path: "/v1/staff/redistribution-requests",
   tags: ["RedistributionRequests"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -56,8 +56,8 @@ export const createRedistributionRequest = createRoute({
         },
       },
     },
-    403: forbiddenResponse("Staff"),
     401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
   },
 });
 

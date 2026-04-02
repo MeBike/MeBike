@@ -91,7 +91,8 @@ export function toRedistributionOrderBy(
 }
 
 function mapStationSummary(station: any): StationSummary | null {
-  if (!station) return null;
+  if (!station)
+    return null;
   return {
     id: station.id,
     name: station.name,
@@ -99,7 +100,8 @@ function mapStationSummary(station: any): StationSummary | null {
 }
 
 function mapStationDetail(station: any): StationDetail | null {
-  if (!station) return null;
+  if (!station)
+    return null;
   return {
     id: station.id,
     name: station.name,
@@ -112,7 +114,8 @@ function mapStationDetail(station: any): StationDetail | null {
 }
 
 function mapAgencySummary(agency: any): AgencySummary | null {
-  if (!agency) return null;
+  if (!agency)
+    return null;
   return {
     id: agency.id,
     name: agency.name,
@@ -120,7 +123,8 @@ function mapAgencySummary(agency: any): AgencySummary | null {
 }
 
 function mapAgencyDetail(agency: any): AgencyDetail | null {
-  if (!agency) return null;
+  if (!agency)
+    return null;
   return {
     id: agency.id,
     name: agency.name,
@@ -130,7 +134,8 @@ function mapAgencyDetail(agency: any): AgencyDetail | null {
 }
 
 function mapUserSummary(user: any): UserSummary | null {
-  if (!user) return null;
+  if (!user)
+    return null;
   return {
     id: user.id,
     fullName: user.fullName,
@@ -138,7 +143,8 @@ function mapUserSummary(user: any): UserSummary | null {
 }
 
 function mapUserDetail(user: any): UserDetail | null {
-  if (!user) return null;
+  if (!user)
+    return null;
   return {
     id: user.id,
     fullName: user.fullName,
@@ -315,18 +321,18 @@ export const redistributionRequestSelect = {
   updatedAt: true,
 } as const;
 
-type DetailedRedistributionRequestSelectRow =
-  PrismaTypes.RedistributionRequestGetPayload<{
+type DetailedRedistributionRequestSelectRow
+  = PrismaTypes.RedistributionRequestGetPayload<{
     select: typeof detailedRedistributionRequestSelect;
   }>;
 
-type SummaryRedistributionRequestSelectRow =
-  PrismaTypes.RedistributionRequestGetPayload<{
+type SummaryRedistributionRequestSelectRow
+  = PrismaTypes.RedistributionRequestGetPayload<{
     select: typeof summaryRedistributionRequestSelect;
   }>;
 
-type RedistributionRequestSelectRow =
-  PrismaTypes.RedistributionRequestGetPayload<{
+type RedistributionRequestSelectRow
+  = PrismaTypes.RedistributionRequestGetPayload<{
     select: typeof redistributionRequestSelect;
   }>;
 
@@ -342,7 +348,7 @@ export function mapToRedistributionRequestDetail(
     targetAgency: mapAgencyDetail(raw.targetAgency),
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
-    items: raw.items ? raw.items : [],
+    items: raw.items ?? [],
     status: raw.status,
     startedAt: raw.startedAt,
     completedAt: raw.completedAt,
@@ -364,7 +370,7 @@ export function mapToRedistributionRequestSummaryRow(
     targetAgency: mapAgencySummary(raw.targetAgency),
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
-    items: raw.items ? raw.items : [],
+    items: raw.items ?? [],
     status: raw.status,
     startedAt: raw.startedAt,
     completedAt: raw.completedAt,
@@ -385,7 +391,7 @@ export function mapToRedistributionRequestRow(
     targetAgencyId: raw.targetAgencyId ?? null,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
-    items: raw.items ? raw.items : [],
+    items: raw.items ?? [],
     status: raw.status,
     startedAt: raw.startedAt,
     completedAt: raw.completedAt,

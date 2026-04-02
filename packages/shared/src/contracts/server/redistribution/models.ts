@@ -16,7 +16,7 @@ export const RedistributionStatusSchema = z.enum([
 export const RedistributionRequestItemSchema = z.object({
   id: z.uuidv7(),
   redistributionRequestId: z.uuidv7(),
-  bikeId: z.uuidv7().optional(),
+  bikeId: z.uuidv7(),
   deliveredAt: z.iso.datetime(),
   createdAt: z.iso.datetime(),
 });
@@ -105,7 +105,7 @@ export const RedistributionBikeSchema = z.object({
 export const RedistributionRequestItemDetailSchema = z.object({
   id: z.uuidv7(),
   redistributionRequestId: z.uuidv7(),
-  bike: RedistributionBikeSchema.nullable(),
+  bike: RedistributionBikeSchema,
   deliveredAt: z.iso.datetime(),
   createdAt: z.iso.datetime(),
 })

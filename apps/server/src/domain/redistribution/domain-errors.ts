@@ -34,6 +34,13 @@ export class UnauthorizedRedistributionAccess extends Data.TaggedError(
     readonly userId: string;
   }> {}
 
+export class UnauthorizedRedistributionCreation extends Data.TaggedError(
+  "UnauthorizedRedistributionCreation",
+)<{
+    readonly userId: string;
+    readonly sourceStationId: string;
+  }> {}
+
 export class StationNotFound extends Data.TaggedError("StationNotFound")<{
   readonly stationId: string;
 }> {}
@@ -46,12 +53,36 @@ export class BikeNotAvailable extends Data.TaggedError("BikeNotAvailable")<{
   readonly bikeId: string;
 }> {}
 
+export class NotEnoughBikesAtStation extends Data.TaggedError(
+  "NotEnoughBikesAtStation",
+)<{
+    readonly stationId: string;
+    readonly required: number;
+    readonly available: number;
+  }> {}
+
+export class NotEnoughEmptySlotsAtTarget extends Data.TaggedError(
+  "NotEnoughEmptySlotsAtTarget",
+)<{
+    readonly targetId: string;
+    readonly required: number;
+    readonly available: number;
+  }> {}
+
+export class UserNotFound extends Data.TaggedError("UserNotFound")<{
+  readonly userId: string;
+}> {}
+
 export type RedistributionServiceFailure
   = | RedistributionRequestNotFound
     | RedistributionRequestAlreadyExists
     | InvalidRedistributionStatus
     | UnauthorizedRedistributionAccess
+    | UnauthorizedRedistributionCreation
     | StationNotFound
     | AgencyNotFound
     | BikeNotAvailable
+    | NotEnoughBikesAtStation
+    | NotEnoughEmptySlotsAtTarget
+    | UserNotFound
     | RedistributionRepositoryError;

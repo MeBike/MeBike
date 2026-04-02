@@ -4,18 +4,17 @@ import { serverRoutes } from "@mebike/shared";
 
 import {
   RedistributionAdminController,
-  RedistributionMeController,
   RedistributionStaffController,
 } from "@/http/controllers/redistribution";
 import {
   requireAdminMiddleware,
   requireStaffMiddleware,
-  requireUserMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerRedistributionRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const redistribution = serverRoutes.redistribution;
 
+  // Admin routes
   const adminListRoute = {
     ...redistribution.getRequestListForAdmin,
     middleware: [requireAdminMiddleware] as const,
@@ -28,11 +27,12 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   } satisfies RouteConfig;
   app.openapi(adminDetailRoute, RedistributionAdminController.getRequestDetailForAdmin);
 
+  // Staff routes
   const createRequestRoute = {
     ...redistribution.createRedistributionRequest,
-    middleware: [requireUserMiddleware] as const,
+    middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
-  app.openapi(createRequestRoute, RedistributionMeController.createRedistributionRequest);
+  app.openapi(createRequestRoute, RedistributionStaffController.createRedistributionRequest);
 
   const staffListRoute = {
     ...redistribution.getRequestListForStaff,
@@ -45,16 +45,4 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
     middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(staffDetailRoute, RedistributionStaffController.getRequestDetailForStaff);
-
-  const myListRoute = {
-    ...redistribution.getMyRequestList,
-    middleware: [requireUserMiddleware] as const,
-  } satisfies RouteConfig;
-  app.openapi(myListRoute, RedistributionMeController.getMyRequestList);
-
-  const myDetailRoute = {
-    ...redistribution.getMyRequestDetail,
-    middleware: [requireUserMiddleware] as const,
-  } satisfies RouteConfig;
-  app.openapi(myDetailRoute, RedistributionMeController.getMyRequestDetail);
 }

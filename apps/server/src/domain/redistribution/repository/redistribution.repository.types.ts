@@ -19,7 +19,8 @@ export type CreateRedistributionRequestInput = {
   targetStationId?: string | null;
   targetAgencyId?: string | null;
   requestedQuantity: number;
-  reason: string | null;
+  reason?: string | null;
+  bikeIds?: string[];
 };
 
 export type UpdateRedistributionRequestStatusInput = {

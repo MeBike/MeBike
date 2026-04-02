@@ -3,6 +3,7 @@ import { Effect, Option } from "effect";
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
+  RedistributionStatus,
 } from "generated/prisma/client";
 
 import type { RedistributionRepo } from "../redistribution.repository.types";
@@ -32,11 +33,16 @@ export function makeRedistributionWriteRepository(
               data: {
                 requestedByUserId: data.requestedByUserId,
                 sourceStationId: data.sourceStationId,
-                targetStationId: data.targetStationId ?? null,
-                targetAgencyId: data.targetAgencyId ?? null,
+                targetStationId: data.targetStationId ?? undefined,
+                targetAgencyId: data.targetAgencyId ?? undefined,
                 requestedQuantity: data.requestedQuantity,
                 reason: data.reason,
-                status: "PENDING_APPROVAL",
+                status: "PENDING_APPROVAL" as RedistributionStatus,
+                items: data.bikeIds
+                  ? {
+                      create: data.bikeIds.map(bikeId => ({ bikeId })),
+                    }
+                  : undefined,
               },
               select,
             }),
@@ -75,7 +81,10 @@ export function makeRedistributionWriteRepository(
       }).pipe(
         Effect.catchTag("RedistributionRepositoryError", (error) => {
           // If update fails due to not found, return none
-          if (error.cause instanceof Error && error.cause.message.includes("not found")) {
+          if (
+            error.cause instanceof Error
+            && error.cause.message.includes("not found")
+          ) {
             return Effect.succeed(Option.none());
           }
           return Effect.fail(error);
