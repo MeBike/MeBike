@@ -6,6 +6,7 @@ import { useTheme, YStack } from "tamagui";
 
 import type { Rental } from "@/types/rental-types";
 
+import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { spaceScale } from "@theme/metrics";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
@@ -33,6 +34,7 @@ function BookingHistoryDetailScreen() {
   const { bookingId } = route.params as RouteParams;
   const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
+  const { preview: bikeSwapPreview } = useMyBikeSwapPreview(bookingId);
 
   const {
     detail,
@@ -53,6 +55,11 @@ function BookingHistoryDetailScreen() {
   });
 
   const isOngoing = booking?.status === "RENTED";
+  const bikeSwapStatus = bikeSwapPreview
+    ? booking?.bikeId && booking.bikeId !== bikeSwapPreview.oldBikeId
+      ? "CONFIRMED"
+      : "PENDING"
+    : "NONE";
   const actionBarHeight = isOngoing ? 188 + Math.max(insets.bottom, spaceScale[4]) : spaceScale[9];
 
   const handleChooseReturnStation = useCallback(() => {
@@ -66,6 +73,18 @@ function BookingHistoryDetailScreen() {
       currentReturnStationId: detail.returnSlot?.stationId,
     });
   }, [detail, navigation]);
+
+  const handleRequestBikeSwap = useCallback(() => {
+    if (!detail) {
+      return;
+    }
+
+    (navigation as any).navigate("Trạm", {
+      selectionMode: "rental-bike-swap",
+      rentalId: detail.rental.id,
+      currentBikeSwapStationId: bikeSwapPreview?.stationId,
+    });
+  }, [bikeSwapPreview?.stationId, detail, navigation]);
 
   const handleOpenReturnQr = useCallback(() => {
     (navigation as any).navigate("RentalQr", { bookingId });
@@ -112,7 +131,12 @@ function BookingHistoryDetailScreen() {
 
           <YStack gap="$5" marginTop={-spaceScale[5]} paddingHorizontal="$5">
             <RentalHeroCard rental={booking} />
-            <RentalJourneyCard detail={detail} />
+            <RentalJourneyCard
+              bikeSwapStatus={bikeSwapStatus}
+              detail={detail}
+              isRequestBikeSwapDisabled={Boolean(bikeSwapPreview)}
+              onRequestBikeSwap={handleRequestBikeSwap}
+            />
             <RentalMetaCard detail={detail} />
             <RentalIdPill rentalId={booking.id} />
           </YStack>

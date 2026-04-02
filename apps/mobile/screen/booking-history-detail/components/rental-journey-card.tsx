@@ -4,14 +4,19 @@ import { useTheme, XStack, YStack } from "tamagui";
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
 import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths, elevations } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { getBikeChipDisplay } from "@utils/bike";
 
-import { getSoftCardShadowStyle } from "../card-shadow";
 import { formatTimeOnly } from "../helpers/formatters";
+import { BikeSwapRequestCard } from "./bike-swap-request-card";
 
 type RentalJourneyCardProps = {
   detail: MyRentalResolvedDetail;
+  bikeSwapStatus?: "NONE" | "PENDING" | "CONFIRMED";
+  onRequestBikeSwap: () => void;
+  isRequestBikeSwapDisabled?: boolean;
 };
 
 type JourneyPointProps = {
@@ -105,9 +110,13 @@ function JourneyPoint({
   );
 }
 
-export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
+export function RentalJourneyCard({
+  detail,
+  bikeSwapStatus = "NONE",
+  onRequestBikeSwap,
+  isRequestBikeSwapDisabled = false,
+}: RentalJourneyCardProps) {
   const theme = useTheme();
-  const softCardShadowStyle = getSoftCardShadowStyle(theme.shadowColor.val);
   const { rental, startStation, endStation, returnSlot, returnStation } = detail;
   const isOngoing = rental.status === "RENTED";
   const hasReturnSlot = isOngoing && Boolean(returnSlot);
@@ -134,8 +143,16 @@ export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
         </AppText>
       </XStack>
 
-      <View style={softCardShadowStyle}>
-        <AppCard borderRadius="$5" elevated={false} gap="$5" padding="$5">
+      <AppCard
+        borderColor="$borderSubtle"
+        borderRadius="$5"
+        borderWidth={borderWidths.subtle}
+        chrome="flat"
+        overflow="hidden"
+        padding="$0"
+        style={elevations.whisper}
+      >
+        <YStack gap="$5" padding="$5">
           <JourneyPoint
             clockColor={theme.textSecondary.val}
             iconBackground={theme.surfaceSuccess.val}
@@ -160,8 +177,25 @@ export function RentalJourneyCard({ detail }: RentalJourneyCardProps) {
             value={endStationLabel}
             valueTone={hasReturnSlot ? "warning" : isOngoing ? "danger" : "default"}
           />
-        </AppCard>
-      </View>
+        </YStack>
+
+        {isOngoing
+          ? (
+              <YStack
+                backgroundColor="$surfaceMuted"
+                borderColor="$borderDefault"
+                borderTopWidth={1}
+              >
+                <BikeSwapRequestCard
+                  confirmedBikeLabel={detail.bike ? getBikeChipDisplay(detail.bike) : undefined}
+                  disabled={isRequestBikeSwapDisabled}
+                  onPress={onRequestBikeSwap}
+                  status={bikeSwapStatus}
+                />
+              </YStack>
+            )
+          : null}
+      </AppCard>
     </YStack>
   );
 }

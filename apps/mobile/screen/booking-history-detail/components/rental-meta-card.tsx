@@ -1,13 +1,12 @@
-import { View } from "react-native";
 import { Separator, useTheme, XStack, YStack } from "tamagui";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
 import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths, elevations } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 
-import { getSoftCardShadowStyle } from "../card-shadow";
 import {
   formatCurrencyText,
   getDepositDescription,
@@ -22,13 +21,44 @@ type RentalMetaCardProps = {
 
 export function RentalMetaCard({ detail }: RentalMetaCardProps) {
   const theme = useTheme();
-  const softCardShadowStyle = getSoftCardShadowStyle(theme.shadowColor.val);
   const { rental } = detail;
   const depositStatusTone = getDepositStatusTone(rental.depositStatus);
 
   return (
-    <View style={softCardShadowStyle}>
-      <AppCard borderRadius="$5" elevated={false} gap="$4" padding="$5">
+    <AppCard
+      borderColor="$borderSubtle"
+      borderRadius="$5"
+      borderWidth={borderWidths.subtle}
+      chrome="flat"
+      gap="$4"
+      padding="$5"
+      style={elevations.whisper}
+    >
+      <XStack alignItems="center" justifyContent="space-between">
+        <XStack alignItems="center" gap="$3">
+          <YStack
+            alignItems="center"
+            backgroundColor="$surfaceMuted"
+            borderRadius="$round"
+            height={44}
+            justifyContent="center"
+            width={44}
+          >
+            <IconSymbol color={theme.textSecondary.val} name="wallet.pass.fill" size={20} />
+          </YStack>
+          <AppText variant="cardTitle">
+            Thanh toán
+          </AppText>
+        </XStack>
+
+        <AppText tone="success" variant="subhead">
+          {getPaymentLabel(rental.subscriptionId)}
+        </AppText>
+      </XStack>
+
+      <Separator borderColor="$borderDefault" />
+
+      <YStack gap="$3">
         <XStack alignItems="center" justifyContent="space-between">
           <XStack alignItems="center" gap="$3">
             <YStack
@@ -39,53 +69,27 @@ export function RentalMetaCard({ detail }: RentalMetaCardProps) {
               justifyContent="center"
               width={44}
             >
-              <IconSymbol color={theme.textSecondary.val} name="wallet.pass.fill" size={20} />
+              <IconSymbol color={theme.textSecondary.val} name="lock.shield.fill" size={20} />
             </YStack>
-            <AppText variant="cardTitle">
-              Thanh toán
-            </AppText>
+            <YStack gap="$1">
+              <AppText variant="cardTitle">
+                Tiền cọc
+              </AppText>
+              <AppText tone="muted" variant="bodySmall">
+                {formatCurrencyText(rental.depositAmount ?? 0).replace(" (Gói tháng)", "")}
+              </AppText>
+            </YStack>
           </XStack>
 
-          <AppText tone="success" variant="subhead">
-            {getPaymentLabel(rental.subscriptionId)}
+          <AppText tone={depositStatusTone} variant="subhead">
+            {getDepositStatusLabel(rental.depositStatus)}
           </AppText>
         </XStack>
 
-        <Separator borderColor="$borderDefault" />
-
-        <YStack gap="$3">
-          <XStack alignItems="center" justifyContent="space-between">
-            <XStack alignItems="center" gap="$3">
-              <YStack
-                alignItems="center"
-                backgroundColor="$surfaceMuted"
-                borderRadius="$round"
-                height={44}
-                justifyContent="center"
-                width={44}
-              >
-                <IconSymbol color={theme.textSecondary.val} name="lock.shield.fill" size={20} />
-              </YStack>
-              <YStack gap="$1">
-                <AppText variant="cardTitle">
-                  Tiền cọc
-                </AppText>
-                <AppText tone="muted" variant="bodySmall">
-                  {formatCurrencyText(rental.depositAmount ?? 0).replace(" (Gói tháng)", "")}
-                </AppText>
-              </YStack>
-            </XStack>
-
-            <AppText tone={depositStatusTone} variant="subhead">
-              {getDepositStatusLabel(rental.depositStatus)}
-            </AppText>
-          </XStack>
-
-          <AppText tone="muted" variant="bodySmall">
-            {getDepositDescription(rental.depositStatus)}
-          </AppText>
-        </YStack>
-      </AppCard>
-    </View>
+        <AppText tone="muted" variant="bodySmall">
+          {getDepositDescription(rental.depositStatus)}
+        </AppText>
+      </YStack>
+    </AppCard>
   );
 }
