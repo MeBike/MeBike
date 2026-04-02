@@ -21,14 +21,9 @@ import type { IncidentError } from "./incident-error";
 
 import { asNetworkError, parseIncidentError } from "./incident-error";
 
-export type IncidentListParams = {
-  page?: number;
-  pageSize?: number;
-  stationId?: string;
-  status?: IncidentDetail["status"];
-  sortBy?: "status" | "resolvedAt";
-  sortDir?: "asc" | "desc";
-};
+export type IncidentListParams = z.infer<
+  typeof ServerRoutes.incidents.listIncidents.request.query
+>;
 
 async function decodeIncidentResponse<TValue>(
   response: Response,
