@@ -9,7 +9,7 @@ import { CreateUserFormData, createUserSchema } from "@/schemas/user-schema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
-import { userColumns } from "@/columns/user-columns";
+import { staffColumns } from "@/columns/staff-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useRouter } from "next/navigation";
 import { TableSkeleton } from "@/components/table-skeleton";
@@ -32,10 +32,8 @@ export default function StaffClient() {
   const [limit] = useState<number>(7);
   const {
     staffOnly,
-    getAllUsers,
     isLoading,
-    getAllStatistics,
-    getRefetchDashboardStats,
+    getAllStaffs,
   } = useUserActions({
     hasToken: true,
     limit: limit,
@@ -43,17 +41,12 @@ export default function StaffClient() {
     fullName: searchQuery,
   });
   useEffect(() => {
-    getAllUsers();
-    getAllStatistics();
-    getRefetchDashboardStats();
+    getAllStaffs();
   }, [
     searchQuery,
     verifyFilter,
     roleFilter,
-    getAllUsers,
-    getAllStatistics,
     currentPage,
-    getRefetchDashboardStats,
   ]);
   useEffect(() => {
     setCurrentPage(1);
@@ -67,13 +60,6 @@ export default function StaffClient() {
   const handleFilterChange = () => {
     setCurrentPage(1);
   };
-  // if (isLoading) {
-  //   return (
-  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-  //       <Loader2 className="animate-spin w-16 h-16 text-primary" />
-  //     </div>
-  //   );
-  // }
   const [isVisualLoading, setIsVisualLoading] = useState(false);
 
   useEffect(() => {
@@ -87,10 +73,7 @@ export default function StaffClient() {
     }
   }, [isLoading]);
   const handleDetailUser = (id: string) => {
-    router.push(`/admin/customers/detail/${id}`);
-  };
-  const handleWalletUser = (id: string) => {
-    router.push(`/admin/customers/wallet/${id}`);
+    router.push(`/admin/staffs/detail/${id}`);
   };
   return (
     <div>
@@ -162,33 +145,7 @@ export default function StaffClient() {
             </div>
           </div>
         </div>
-
         <div>
-          {/* <DataTable
-            title="Danh sách người dùng"
-            tableClassName="table-fixed"
-            columns={userColumns({
-              onView: (user) => {
-                handleDetailUser(String(user.id));
-              },
-              onViewWallet: (user) => {
-                handleWalletUser(String(user.id));
-              },
-            })}
-            data={users || []}
-            searchValue={searchQuery}
-            filterPlaceholder="Tìm kiếm người dùng"
-            onSearchChange={setSearchQuery}
-          />
-
-          <div className="pt-3">
-            <PaginationDemo
-              currentPage={currentPage}
-              totalPages={paginationUser?.totalPages ?? 1}
-              onPageChange={setCurrentPage}
-            />
-          </div> */}
-
           <div className="min-h-[400px]">
             {isVisualLoading ? (
               <TableSkeleton />
@@ -202,19 +159,17 @@ export default function StaffClient() {
                 <DataTable
                   title="Danh sách nhân viên"
                   tableClassName="table-fixed"
-                  columns={userColumns({
-                    onView: (user) => handleDetailUser(String(user.id)),
-                    onViewWallet: (user) => handleWalletUser(String(user.id)),
+                  columns={staffColumns({
+                    onView: (staff) => handleDetailUser(String(staff.id)),
                   })}
                   data={staffOnly?.data || []}
                   searchValue={searchQuery}
                   filterPlaceholder="Tìm kiếm nhân viên"
                   onSearchChange={setSearchQuery}
                 />
-
                 <div className="pt-3">
                   <PaginationDemo
-                    currentPage={staffOnly?.pagination?.page ?? 1}
+                    currentPage={currentPage}
                     totalPages={staffOnly?.pagination?.totalPages ?? 1}
                     onPageChange={setCurrentPage}
                   />

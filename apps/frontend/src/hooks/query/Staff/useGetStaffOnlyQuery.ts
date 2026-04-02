@@ -26,8 +26,8 @@ export const useGetStaffOnlyQuery = ({
   pageSize?: number;
 }) => {
   return useQuery({
-    queryKey: ["staff-only"],
-    queryFn: () => fetchStaffOnly({ page: 1, pageSize: 7 }),
+    queryKey: ["staff-only",{page,pageSize}],
+    queryFn: () => fetchStaffOnly({ page: page, pageSize: pageSize}),
     staleTime: 5 * 60 * 1000,
   });
 };

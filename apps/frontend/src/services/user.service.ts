@@ -50,7 +50,7 @@ export const userService = {
   getStaffOnly : async ({page , pageSize}: {page?: number; pageSize?: number}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
       ENDPOINT.USER.BASE,{
-        roles : "STAFF,TECHNICIAN,ADMIN,AGENCY,MANAGER",
+        roles : "STAFF,TECHNICIAN,AGENCY,MANAGER",
         page : page || 1,
         pageSize : pageSize || 7,
       }

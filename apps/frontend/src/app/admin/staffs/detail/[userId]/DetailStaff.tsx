@@ -8,6 +8,7 @@ import {
   CreditCard,
   User,
   CheckCircle,
+  XCircle,
   Clock,
   Edit,
 } from "lucide-react";
@@ -18,12 +19,14 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatToVNTime } from "@lib/formatVNDate";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import type { DetailUser as Me, Station, VerifyStatus } from "@/types";
+import type {
+  DetailUser as Me,
+  Station,
+  VerifyStatus,
+  UserRole,
+} from "@/types";
 import * as React from "react";
 import { toast } from "sonner";
-import type { UseMutationResult } from "@tanstack/react-query";
-import type { AxiosResponse } from "axios";
 import {
   Dialog,
   DialogContent,
@@ -37,69 +40,67 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import {
-  updateStaffSchema,
-  UpdateUserFormData,
-  type UpdateStaffFormData,
-} from "@/schemas/user-schema";
+import { UpdateUserFormData } from "@/schemas/user-schema";
 
 type StatusConfig = {
   label: string;
-  variant: "success" | "muted" | "destructive";
+  variant:
+    | "success"
+    | "warning"
+    | "destructive"
+    | "secondary"
+    | "pending"
+    | "danger";
 };
 
 type UserDisplayStatus = VerifyStatus | "BANNED";
 
-const statusConfig: Record<UserDisplayStatus, StatusConfig> = {
-  VERIFIED: { label: "Đã xác thực", variant: "success" },
-  UNVERIFIED: { label: "Chưa xác thực", variant: "muted" },
-  BANNED: { label: "Bị khóa", variant: "destructive" },
-  "": { label: "Không xác định", variant: "muted" },
-};
-
 const roleConfig = {
-  ADMIN: { label: "Admin", variant: "default" as const },
-  STAFF: { label: "Staff", variant: "info" as const },
-  USER: { label: "User", variant: "secondary" as const },
-  SOS: { label: "SOS", variant: "secondary" as const },
+  ADMIN: { label: "ADMIN", variant: "default" as const },
+  STAFF: { label: "STAFF", variant: "info" as const },
+  USER: { label: "USER", variant: "secondary" as const },
+  TECHNICIAN: { label: "TECHNICIAN", variant: "warning" as const },
+  AGENCY: { label: "AGENCY", variant: "outline" as const },
+  MANAGER: { label: "MANAGER", variant: "customBlue" as const },
 };
 type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
-
 interface UserDetailProps {
   user: Me;
-  onSubmit: ({data}: {data: UpdateUserFormData}) => void;
+  onSubmit: ({ data }: { data: UpdateUserFormData }) => void;
   stations: Station[];
 }
 
 const getUserDisplayStatus = (user: {
   verify: VerifyStatus;
-  accountStatus?: string;
+  accountStatus?: AccountStatus;
 }): UserDisplayStatus => {
-  return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
+  return user.verify;
 };
-
-export default function DetailUser({
+const statusMap: Record<AccountStatus, StatusConfig> = {
+  ACTIVE: { label: "Đang hoạt động", variant: "success" },
+  INACTIVE: { label: "Chưa kích hoạt", variant: "secondary" },
+  SUSPENDED: { label: "Tạm dừng", variant: "warning" },
+  BANNED: { label: "Đã bị khóa", variant: "danger" },
+};
+export const getStatusDisplay = (status: AccountStatus): StatusConfig => {
+  return statusMap[status] || { label: "Không xác định", variant: "secondary" };
+};
+export default function DetailStaff({
   user,
   onSubmit,
   stations,
 }: UserDetailProps) {
   const displayStatus = getUserDisplayStatus(user);
-  const status = statusConfig[displayStatus] || statusConfig.UNVERIFIED;
+  const status = getStatusDisplay(user.accountStatus);
   const role = roleConfig[user.role] || roleConfig.USER;
-
   const [open, setOpen] = React.useState(false);
-  const [editRole, setEditRole] = React.useState<"STAFF" | "TECHNICIAN" | "SOS" | "ADMIN" | "USER">(
-    user.role
+  const [editRole, setEditRole] = React.useState<UserRole>(user.role);
+  const [verify, setVerify] = React.useState<"VERIFIED" | "UNVERIFIED">(
+    displayStatus === "VERIFIED" ? "VERIFIED" : "UNVERIFIED",
   );
-  const [verify, setVerify] = React.useState<
-    "VERIFIED" | "UNVERIFIED"
-  >(displayStatus === "VERIFIED" ? "VERIFIED" : "UNVERIFIED");
   const [accountStatus, setAccountStatus] = useState<
     "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED"
   >(user.accountStatus as AccountStatus);
@@ -107,15 +108,11 @@ export default function DetailUser({
     return (
       <div>
         <div className="text-center py-12">
-          <p className="text-muted-foreground">User not found.</p>
+          <p className="text-muted-foreground">Không có người dùng này!</p>
         </div>
       </div>
     );
   }
-
-  //   const status = statusConfig[user.status] || statusConfig.Inactive;
-  //   const role = roleConfig[user.role] || roleConfig.USER;
-
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -127,11 +124,11 @@ export default function DetailUser({
 
   const handleSave = async () => {
     const payload = {
-      accountStatus : accountStatus,
-      verify : verify,
-    }
-     try {
-      onSubmit({data:payload});
+      accountStatus: accountStatus,
+      verify: verify,
+    };
+    try {
+      onSubmit({ data: payload });
       toast.success("Cập nhật thành công");
       setOpen(false);
     } catch {
@@ -142,19 +139,11 @@ export default function DetailUser({
   return (
     <div>
       <PageHeader
-        title="Thông tin người dùng"
-        description={`Người dùng: ${user.fullName}`}
-        backLink="/admin/customers"
+        title="Thông tin nhân viên"
+        description={`Nhân viên: ${user.fullName}`}
+        backLink="/admin/staffs"
         actions={
-          <div className="flex gap-2">
-            <div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/admin/customers/wallet/${user.id}`}>
-                  <User className="h-4 w-4 mr-2" />
-                  Ví người dùng
-                </Link>
-              </Button>
-            </div>
+          <div className="flex">
             <div>
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
@@ -177,17 +166,16 @@ export default function DetailUser({
                       <Select
                         disabled
                         value={editRole}
-                        onValueChange={(v) =>
-                          setEditRole(
-                            v === "USER" ? "USER" : "STAFF",
-                          )
-                        }
+                        onValueChange={(v: UserRole) => setEditRole(v)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Chọn role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="USER">USER</SelectItem>
+                          <SelectItem value="MANAGER">MANAGER</SelectItem>
+                          <SelectItem value="STAFF">STAFF</SelectItem>
+                          <SelectItem value="AGENCY">AGENCY</SelectItem>
+                          <SelectItem value="TECHNICIAN">TECHNICIAN</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -237,16 +225,11 @@ export default function DetailUser({
                     <Button
                       variant="outline"
                       onClick={() => setOpen(false)}
-                  
                       type="button"
                     >
                       Hủy
                     </Button>
-                    <Button
-                      onClick={handleSave}
-                    
-                      type="button"
-                    >
+                    <Button onClick={handleSave} type="button">
                       Lưu
                     </Button>
                   </DialogFooter>
@@ -257,7 +240,6 @@ export default function DetailUser({
         }
       />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Card */}
         <Card className="lg:col-span-1">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center">
@@ -283,13 +265,18 @@ export default function DetailUser({
                   <Shield className="h-3 w-3 mr-1" />
                   {role.label}
                 </Badge>
-                <Badge>{status.label}</Badge>
+                <Badge variant={status.variant}>{status.label}</Badge>
               </div>
-
               {displayStatus === "VERIFIED" && (
                 <div className="flex items-center gap-1 text-sm text-green-600 mt-3">
                   <CheckCircle className="h-4 w-4" />
                   <span>Verified Account</span>
+                </div>
+              )}
+              {displayStatus === "UNVERIFIED" && (
+                <div className="flex items-center gap-1 text-sm text-red-600 mt-3">
+                  <XCircle className="h-4 w-4" />
+                  <span>Unverified Account</span>
                 </div>
               )}
             </div>
@@ -330,36 +317,36 @@ export default function DetailUser({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
-              User Information
+              Thông tin người dùng
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label>Full Name</Label>
+                <Label>Họ và tên:</Label>
                 <p className="text-sm text-muted-foreground py-2">
                   {user.fullName}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label>Username</Label>
+                <Label>Tên tài khoản:</Label>
                 <p className="text-sm text-muted-foreground py-2">
-                  {user.username || "N/A"}
+                  {user.username || "Chưa có"}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label>Email Address</Label>
+                <Label>Email:</Label>
                 <p className="text-sm text-muted-foreground py-2">
-                  {user.email || "N/A"}
+                  {user.email || "Chưa có"}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label>Phone Number</Label>
+                <Label>Số điện thoại:</Label>
                 <p className="text-sm text-muted-foreground py-2">
-                  {user.phoneNumber || "N/A"}
+                  {user.phoneNumber || "Chưa có"}
                 </p>
               </div>
 
@@ -369,27 +356,32 @@ export default function DetailUser({
               </div> */}
 
               <div className="space-y-2">
-                <Label>Role</Label>
-                <p className="text-sm text-muted-foreground py-2">
-                  {user.role}
-                </p>
+                <Label>Chức vụ:</Label>
+                <Badge variant={role.variant}>
+                  <Shield className="h-3 w-3 mr-1" />
+                  {role.label}
+                </Badge>
               </div>
 
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <p className="text-sm text-muted-foreground py-2">
-                  {displayStatus === "VERIFIED"
-                    ? "Verified"
-                    : displayStatus === "BANNED"
-                      ? "Banned"
-                      : "Pending Verification"}
+              {/* <div className="space-y-2">
+                <Label>Trạng thái tài khoản:</Label>
+                 <p className="text-sm text-muted-foreground">
+                  <Badge
+                    variant={
+                      displayStatus === "VERIFIED" ? "success" : "danger"
+                    }
+                  >
+                    {displayStatus === "VERIFIED"
+                      ? "VERIFIED"
+                        : "UNVERIFIED"}
+                  </Badge>
                 </p>
-              </div>
+              </div> */}
 
               <div className="space-y-2">
-                <Label>NFC Card UID</Label>
+                <Label>NFC Card UID:</Label>
                 <p className="text-sm text-muted-foreground py-2">
-                  {user.nfcCardUid || "N/A"}
+                  {user.nfcCardUid || "Chưa có"}
                 </p>
               </div>
             </div>
@@ -402,49 +394,46 @@ export default function DetailUser({
             </div> */}
 
             <div className="space-y-2">
-              <Label>Location</Label>
+              <Label>Địa chỉ:</Label>
               <p className="text-sm text-muted-foreground py-2">
-                {user.location || "N/A"}
+                {user.location || "Chưa có"}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Account Info Card */}
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-primary" />
-              Account Information
+              Thông tin tài khoản
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <Label>Account ID</Label>
+                <Label>ID tài khoản:</Label>
                 <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-2 rounded">
                   {user.id}
                 </p>
               </div>
               <div className="space-y-2">
-                <Label>Account Email</Label>
+                <Label>Email:</Label>
                 <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-2 rounded">
                   {user.email}
                 </p>
               </div>
               <div className="space-y-2">
-                <Label>Verification Status</Label>
+                <Label>Trạng thái tài khoản:</Label>
                 <p className="text-sm text-muted-foreground">
                   <Badge
                     variant={
-                      displayStatus === "VERIFIED" ? "success" : "warning"
+                      displayStatus === "VERIFIED" ? "success" : "danger"
                     }
                   >
                     {displayStatus === "VERIFIED"
-                      ? "Verified"
-                      : displayStatus === "BANNED"
-                        ? "Banned"
-                        : "Pending Verification"}
+                      ? "Đã xác thực"
+                      : "Chưa xác thực"}
                   </Badge>
                 </p>
               </div>
@@ -454,7 +443,7 @@ export default function DetailUser({
               <div className="flex items-center gap-3 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <span className="text-muted-foreground">Created: </span>
+                  <span className="text-muted-foreground">Thời gian tạo: </span>
                   <span className="font-medium">
                     {formatToVNTime(user.createdAt || "")}
                   </span>
@@ -463,7 +452,9 @@ export default function DetailUser({
               <div className="flex items-center gap-3 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <span className="text-muted-foreground">Updated: </span>
+                  <span className="text-muted-foreground">
+                    Thời gian cập nhật:{" "}
+                  </span>
                   <span className="font-medium">
                     {formatToVNTime(user.updatedAt || "")}
                   </span>
@@ -475,4 +466,4 @@ export default function DetailUser({
       </div>
     </div>
   );
-} 
+}

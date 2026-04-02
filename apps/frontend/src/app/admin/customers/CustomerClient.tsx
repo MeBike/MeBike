@@ -57,7 +57,6 @@ export default function CustomersClient() {
     page: currentPage,
     verify: verifyFilter === "all" ? "" : verifyQuery,
     accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
-    role: roleFilter === "all" ? "" : (roleFilter as UserRole),
     fullName: searchQuery,
   });
   useEffect(() => {
@@ -158,24 +157,6 @@ export default function CustomersClient() {
                 <option value="all">Tất cả</option>
                 <option value="VERIFIED">Đã xác thực</option>
                 <option value="UNVERIFIED">Chưa xác thực</option>
-                <option value="BANNED">Bị cấm</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Vai trò</label>
-              <select
-                value={roleFilter}
-                onChange={(e) => {
-                  setRoleFilter(e.target.value as UserRole | "all");
-                  handleFilterChange();
-                }}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              >
-                <option value="all">Tất cả</option>
-                <option value="ADMIN">Admin</option>
-                <option value="STAFF">Staff</option>
-                <option value="USER">User</option>
               </select>
             </div>
           </div>

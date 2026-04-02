@@ -1,6 +1,7 @@
-export type UserRole = "ADMIN" | "STAFF" | "USER" | "SOS";
-export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "";
-export type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
+export type UserRole = "ADMIN" | "STAFF" | "USER" | "AGENCY" | 
+"MANAGER" | "TECHNICIAN";
+export type VerifyStatus = "VERIFIED" | "UNVERIFIED";
+export type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
 export interface OrgAssigment {
   station : {
     id : string;
@@ -20,7 +21,7 @@ export interface DetailUser {
   fullName: string;
   email: string;
   verify: VerifyStatus;
-  accountStatus?: AccountStatus;
+  accountStatus: AccountStatus;
   location: string | null;
   username: string | null;
   phoneNumber: string | null;

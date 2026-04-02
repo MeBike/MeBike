@@ -55,5 +55,6 @@ export const useGetAllUserQuery = ({
   return useQuery({
     queryKey: ["user", "all", { page, pageSize, verify, accountStatus, role, fullName }],
     queryFn: () => fetchAllUserRequests({ page, pageSize, verify, accountStatus, role, fullName }),
+    enabled:false,
   });
 };

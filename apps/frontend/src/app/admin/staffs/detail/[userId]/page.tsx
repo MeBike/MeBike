@@ -1,7 +1,7 @@
 "use client";
 import { useUserActions } from "@/hooks/use-user";
 import React from "react";
-import DetailUser from "./DetailUser";
+import DetailStaff from "./DetailStaff"; 
 import { useUpdateProfileStaffMutation } from "@/hooks/mutations/User/useUpdateProfileStaffMutation";
 import { useStationActions } from "@/hooks/use-station";
 import { UpdateUserFormData } from "@/schemas";
@@ -30,7 +30,7 @@ export default function Page({
       updateProfileUser(data) 
   };
   return (
-    <DetailUser
+    <DetailStaff
       user={detailUserData.data}
       onSubmit={handleSubmit}
       stations={stations}

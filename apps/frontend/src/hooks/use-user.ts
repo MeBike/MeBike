@@ -72,7 +72,9 @@ export const useUserActions = ({
     accountStatus: accountStatus || "",
     fullName: fullName || "",
   });
-  const { data : staffOnly , isLoading : isLoadingStaffOnly } = useGetStaffOnlyQuery({
+  const { data : staffOnly , isLoading : isLoadingStaffOnly,
+    refetch : refetchStaff,
+   } = useGetStaffOnlyQuery({
     page : page,
     pageSize : limit
   });
@@ -110,6 +112,13 @@ export const useUserActions = ({
       return;
     }
     refetch();
+  }, [hasToken, router, refetch]);
+  const getAllStaffs = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchStaff();
   }, [hasToken, router, refetch]);
   const getAllStatistics = useCallback(() => {
     if (!hasToken) {
@@ -354,6 +363,8 @@ export const useUserActions = ({
     updateProfileStaff,
     getRefetchDashboardStats,
     staffOnly,
-    updateProfileUser
+    updateProfileUser,
+    isLoadingStaffOnly,
+    getAllStaffs
   };
 };
