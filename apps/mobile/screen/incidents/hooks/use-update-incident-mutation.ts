@@ -5,12 +5,16 @@ import { useMutation } from "@tanstack/react-query";
 
 import type { IncidentDetail, UpdateIncidentPayload } from "@/contracts/server";
 
+import { useIncidentCache } from "./incident-cache";
+
 export type UpdateIncidentVariables = {
   incidentId: string;
   payload: UpdateIncidentPayload;
 };
 
 export function useUpdateIncidentMutation() {
+  const { invalidateIncidentQueries } = useIncidentCache();
+
   return useMutation<IncidentDetail, IncidentError, UpdateIncidentVariables>({
     mutationFn: async ({ incidentId, payload }) => {
       const result = await incidentService.updateIncident(incidentId, payload);
@@ -18,6 +22,9 @@ export function useUpdateIncidentMutation() {
         throw result.error;
       }
       return result.value;
+    },
+    onSuccess: (_, { incidentId }) => {
+      void invalidateIncidentQueries(incidentId);
     },
   });
 }

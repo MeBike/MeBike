@@ -3,6 +3,7 @@ import type { InfiniteData } from "@tanstack/react-query";
 
 import { incidentService } from "@services/incidents";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import type { IncidentListResponse } from "@/contracts/server";
 
@@ -40,8 +41,10 @@ export function useIncidentsInfiniteQuery(
     },
   });
 
+  const incidents = useMemo(() => flattenPages(query.data), [query.data]);
+
   return {
     ...query,
-    incidents: flattenPages(query.data),
+    incidents,
   };
 }

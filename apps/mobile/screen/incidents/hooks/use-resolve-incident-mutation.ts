@@ -5,7 +5,11 @@ import { useMutation } from "@tanstack/react-query";
 
 import type { IncidentDetail } from "@/contracts/server";
 
+import { useIncidentCache } from "./incident-cache";
+
 export function useResolveIncidentMutation() {
+  const { invalidateIncidentQueries } = useIncidentCache();
+
   return useMutation<IncidentDetail, IncidentError, string>({
     mutationFn: async (incidentId) => {
       const result = await incidentService.resolveIncident(incidentId);
@@ -13,6 +17,9 @@ export function useResolveIncidentMutation() {
         throw result.error;
       }
       return result.value;
+    },
+    onSuccess: (_, incidentId) => {
+      void invalidateIncidentQueries(incidentId);
     },
   });
 }
