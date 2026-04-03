@@ -60,6 +60,7 @@ export default function StationMap({
   userLocation,
 }: StationMapProps) {
   initMapbox();
+  const cameraRef = useRef<Mapbox.Camera>(null);
   const ignoreNextMapPressRef = useRef(false);
   const ignoreResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -80,6 +81,14 @@ export default function StationMap({
     return [106.660172, 10.762622];
   }, [stations, userLocation]);
 
+  useEffect(() => {
+    cameraRef.current?.setCamera({
+      centerCoordinate,
+      zoomLevel: 14,
+      animationDuration: 700,
+    });
+  }, [centerCoordinate]);
+
   return (
     <View style={styles.container}>
       <Mapbox.MapView
@@ -94,6 +103,7 @@ export default function StationMap({
         }}
       >
         <Mapbox.Camera
+          ref={cameraRef}
           defaultSettings={{
             centerCoordinate,
             zoomLevel: 14,

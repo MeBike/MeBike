@@ -1,13 +1,12 @@
+import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
+
+import { useStationRouteQuery } from "@hooks/query/Station/use-station-route-query";
+import { useStationActions } from "@hooks/useStationAction";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
-
 import { useCurrentLocation } from "@/providers/location-provider";
-import { useStationRouteQuery } from "@hooks/query/Station/use-station-route-query";
-import { useStationActions } from "@hooks/useStationAction";
-import { log } from "@lib/log";
 
 import type {
   StationDetailScreenNavigationProp,
@@ -60,10 +59,7 @@ export function useStationSelect() {
   };
 
   const handleFindNearbyStations = async () => {
-    if (!currentLocation) {
-      log.info("Location not available");
-      await refreshLocation();
-    }
+    await refreshLocation();
     setShowingNearby(!showingNearby);
   };
 
@@ -146,7 +142,6 @@ export function useStationSelect() {
 
     if (!currentLocation) {
       await refreshLocation();
-      return;
     }
 
     setIsRoutingMode(true);
