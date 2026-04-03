@@ -22,41 +22,46 @@ type RentalIncidentCardProps = {
   onReportPress: () => void;
 };
 
-function getIncidentStateCopy(incident: IncidentDetail) {
+function getIncidentStateCopy(incident: IncidentDetail, theme: ReturnType<typeof useTheme>) {
   switch (incident.status) {
     case "OPEN":
       return {
-        headerBackground: "#EA580C",
+        headerBackground: theme.actionAccent.val,
         headerLabel: "HỖ TRỢ KHẨN CẤP",
+        sourceTone: "warning" as const,
         title: "Đã tiếp nhận báo lỗi",
         subtitle: "Hệ thống đang tìm kỹ thuật viên gần nhất để hỗ trợ bạn.",
       };
     case "ASSIGNED":
       return {
-        headerBackground: "#EA580C",
+        headerBackground: theme.actionAccent.val,
         headerLabel: "HỖ TRỢ KHẨN CẤP",
+        sourceTone: "warning" as const,
         title: "Đang điều phối kỹ thuật",
         subtitle: "Kỹ thuật viên đang di chuyển đến vị trí của bạn.",
       };
     case "IN_PROGRESS":
       return {
-        headerBackground: "#DC2626",
+        headerBackground: theme.actionDanger.val,
         headerLabel: "ĐANG XỬ LÝ SỰ CỐ",
+        sourceTone: "danger" as const,
         title: "Kỹ thuật đang hỗ trợ tại chỗ",
         subtitle: "Kỹ thuật viên đang trực tiếp xử lý sự cố cho chuyến thuê của bạn.",
       };
     case "RESOLVED":
     case "CLOSED":
       return {
-        headerBackground: "#059669",
+        headerBackground: theme.statusSuccess.val,
         headerLabel: "HỖ TRỢ ĐÃ HOÀN TẤT",
+        sourceTone: "success" as const,
         title: "Sự cố đã được xử lý",
         subtitle: "Hành trình có thể tiếp tục bình thường.",
       };
     case "CANCELLED":
       return {
-        headerBackground: "#64748B",
+        headerBackground: theme.textSecondary.val,
         headerLabel: "YÊU CẦU ĐÃ HỦY",
+        sourceTone: "muted" as const,
         title: "Yêu cầu hỗ trợ đã hủy",
         subtitle: "Có thể gửi lại báo cáo nếu vấn đề vẫn tiếp diễn.",
       };
@@ -71,7 +76,7 @@ export function RentalIncidentCard({
   onReportPress,
 }: RentalIncidentCardProps) {
   const theme = useTheme();
-  const copy = getIncidentStateCopy(incident);
+  const copy = getIncidentStateCopy(incident, theme);
   const isActiveIncident = !isIncidentTerminalStatus(incident.status);
   const canReportAgain = isIncidentTerminalStatus(incident.status);
   const assignmentDuration = formatIncidentDuration(incident.assignments?.durationSeconds ?? null);
@@ -79,9 +84,9 @@ export function RentalIncidentCard({
   const technicianName = incident.assignments?.technician?.fullName ?? null;
   const sourceLabel = getIncidentSourceLabel(incident.source).toUpperCase();
   const etaText = assignmentDuration
-    ? `Đến sau ${assignmentDuration}`
+    ? `Ước tính đến nơi: ${assignmentDuration}`
     : assignmentDistance
-      ? `Cách bạn ${assignmentDistance}`
+      ? `Khoảng cách hiện tại: ${assignmentDistance}`
       : null;
   const replacementMessage = hasReplacementBike && currentBikeLabel
     ? `Xe thay thế đã được cập nhật cho chuyến thuê của bạn: ${currentBikeLabel}.`
@@ -106,13 +111,13 @@ export function RentalIncidentCard({
       >
         <XStack
           alignItems="center"
-          backgroundColor="rgba(255, 255, 255, 0.16)"
+          backgroundColor={theme.overlayGlass.val}
           borderRadius="$4"
           height={34}
           justifyContent="center"
           width={34}
         >
-          <IconSymbol color="#FFFFFF" name="lock.shield.fill" size={18} />
+          <IconSymbol color={theme.textInverse.val} name="lock.shield.fill" size={18} />
         </XStack>
 
         <AppText flex={1} tone="inverted" variant="label">
@@ -122,7 +127,7 @@ export function RentalIncidentCard({
 
       <YStack gap="$4" padding="$5">
         <YStack gap="$2">
-          <AppText tone="warning" variant="eyebrow">
+          <AppText tone={copy.sourceTone} variant="eyebrow">
             {sourceLabel}
           </AppText>
           <AppText variant="title">

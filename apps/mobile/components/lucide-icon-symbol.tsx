@@ -3,13 +3,13 @@ import type { OpaqueColorValue, StyleProp, ViewStyle } from "react-native";
 import {
   AlertTriangle,
   CheckCircle2,
+  CircleUserRound,
   Clock,
   Copy,
   Map as MapIcon,
   MapPin,
   QrCode,
-  ShieldAlert,
-  UserRound,
+  Shield,
   Wallet,
   Wrench,
 } from "lucide-react-native";
@@ -20,11 +20,11 @@ const MAPPING = {
   "clock": { icon: Clock, filled: false },
   "doc.on.doc": { icon: Copy, filled: false },
   "exclamationmark.triangle": { icon: AlertTriangle, filled: false },
-  "lock.shield.fill": { icon: ShieldAlert, filled: false },
+  "lock.shield.fill": { icon: Shield, filled: false },
   "location": { icon: MapPin, filled: false },
   "location.fill": { icon: MapPin, filled: true },
   "map": { icon: MapIcon, filled: false },
-  "person.crop.circle.fill": { icon: UserRound, filled: false },
+  "person.crop.circle.fill": { icon: CircleUserRound, filled: false },
   "qrcode.viewfinder": { icon: QrCode, filled: false },
   "wallet.pass.fill": { icon: Wallet, filled: false },
   "wrench.and.screwdriver.fill": { icon: Wrench, filled: false },
@@ -45,13 +45,12 @@ export function LucideIconSymbol({
   style?: StyleProp<ViewStyle>;
   strokeWidth?: number;
 }) {
-  const resolvedColor = typeof color === "string" ? color : undefined;
   const { icon: Icon, filled } = MAPPING[name];
 
   return (
     <Icon
-      color={resolvedColor}
-      fill={filled ? resolvedColor : "none"}
+      color={color as any}
+      fill={filled ? color as any : "none"}
       size={size}
       strokeWidth={strokeWidth}
       style={style}

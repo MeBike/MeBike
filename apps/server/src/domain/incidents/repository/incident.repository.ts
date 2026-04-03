@@ -614,6 +614,7 @@ export function makeIncidentRepository(
         const { page, pageSize, skip, take } = normalizedPage(pageReq);
 
         const where: PrismaTypes.IncidentReportWhereInput = {
+          ...(filter.rentalId && { rentalId: filter.rentalId }),
           ...(filter.stationId && { stationId: filter.stationId }),
           ...(filter.status && { status: filter.status }),
           ...(filter.userId && {

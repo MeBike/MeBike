@@ -1,9 +1,10 @@
 import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { fontSizes, fontWeights } from "@theme/typography";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Field } from "@ui/primitives/field";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal, Pressable, TextInput, View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
@@ -12,7 +13,7 @@ type IncidentTypeSheetProps = {
   bottomInset: number;
   isSubmitting: boolean;
   onClose: () => void;
-  onSelect: (incidentType: string) => void;
+  onSelect: (incidentType: string) => Promise<void> | void;
 };
 
 export function IncidentTypeSheet({
@@ -26,42 +27,58 @@ export function IncidentTypeSheet({
   const [incidentType, setIncidentType] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [inputHeight, setInputHeight] = useState(112);
+  const [isStartingSubmit, setStartingSubmit] = useState(false);
+  const submitLockRef = useRef(false);
 
   const trimmedIncidentType = incidentType.trim();
   const showError = hasSubmitted && trimmedIncidentType.length === 0;
+  const isBusy = isSubmitting || isStartingSubmit;
 
   useEffect(() => {
-    if (!visible && !isSubmitting) {
+    if (!visible && !isBusy) {
       setIncidentType("");
       setHasSubmitted(false);
       setInputHeight(112);
     }
-  }, [isSubmitting, visible]);
+  }, [isBusy, visible]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (submitLockRef.current || isBusy) {
+      return;
+    }
+
     setHasSubmitted(true);
 
     if (trimmedIncidentType.length === 0) {
       return;
     }
 
-    onSelect(trimmedIncidentType);
+    submitLockRef.current = true;
+    setStartingSubmit(true);
+
+    try {
+      await onSelect(trimmedIncidentType);
+    }
+    finally {
+      submitLockRef.current = false;
+      setStartingSubmit(false);
+    }
   };
 
   return (
     <Modal
       animationType="slide"
-      onRequestClose={isSubmitting ? undefined : onClose}
+      onRequestClose={isBusy ? undefined : onClose}
       statusBarTranslucent
       transparent
       visible={visible}
     >
       <Pressable
-        disabled={isSubmitting}
+        disabled={isBusy}
         onPress={onClose}
         style={{
           flex: 1,
-          backgroundColor: "rgba(12, 20, 40, 0.36)",
+          backgroundColor: theme.overlayScrim.val,
           justifyContent: "flex-end",
         }}
       >
@@ -80,7 +97,8 @@ export function IncidentTypeSheet({
                   width: 96,
                   height: 6,
                   borderRadius: 999,
-                  backgroundColor: "rgba(148, 163, 184, 0.18)",
+                  backgroundColor: theme.borderDefault.val,
+                  opacity: 0.24,
                 }}
               />
 
@@ -111,7 +129,7 @@ export function IncidentTypeSheet({
                 paddingVertical="$4"
               >
                 <View style={{ paddingTop: 4 }}>
-                  <IconSymbol color="#94A3B8" name="wrench.and.screwdriver.fill" size={18} />
+                  <IconSymbol color={theme.textTertiary.val} name="wrench.and.screwdriver.fill" size={18} />
                 </View>
 
                 <TextInput
@@ -130,8 +148,8 @@ export function IncidentTypeSheet({
                     flex: 1,
                     minHeight: inputHeight,
                     color: theme.textPrimary.val,
-                    fontSize: 16,
-                    fontWeight: "500",
+                    fontSize: fontSizes.md,
+                    fontWeight: fontWeights.medium,
                     paddingTop: 0,
                     paddingBottom: 0,
                     textAlignVertical: "top",
@@ -141,13 +159,13 @@ export function IncidentTypeSheet({
               </XStack>
             </Field>
 
-            <AppButton disabled={isSubmitting} loading={isSubmitting} onPress={handleSubmit} tone="primary">
-              {isSubmitting ? "Đang gửi yêu cầu hỗ trợ..." : "Gửi yêu cầu hỗ trợ"}
+            <AppButton disabled={isBusy} loading={isBusy} onPress={() => { void handleSubmit(); }} tone="primary">
+              {isBusy ? "Đang gửi yêu cầu hỗ trợ..." : "Gửi yêu cầu hỗ trợ"}
             </AppButton>
 
             <AppButton
               backgroundColor="$surfaceMuted"
-              disabled={isSubmitting}
+              disabled={isBusy}
               onPress={onClose}
               pressStyle={{
                 backgroundColor: "$surfaceMuted",

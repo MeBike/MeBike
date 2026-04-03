@@ -30,9 +30,7 @@ export function BikeSwapRequestCard({
           <YStack
             alignItems="center"
             backgroundColor={isPending ? "$surfaceWarning" : isConfirmed ? "$surfaceSuccess" : "$surfaceAccent"}
-            borderColor="$borderSubtle"
             borderRadius="$4"
-            borderWidth={isPending || isConfirmed ? 0 : 0}
             height={44}
             justifyContent="center"
             width={44}

@@ -25,7 +25,8 @@ export function useRentalIncidentQuery(rentalId: string, enabled: boolean = true
     queryFn: async () => {
       const result = await incidentService.listIncidents({
         page: 1,
-        pageSize: 50,
+        pageSize: 20,
+        rentalId,
         sortBy: "resolvedAt",
         sortDir: "desc",
       });
