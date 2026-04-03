@@ -1,14 +1,15 @@
+import { rentalKeys } from "@hooks/query/rentals/rental-query-keys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { rentalKeys } from "@hooks/query/rentals/rental-query-keys";
+import type { BikeSwapStatus } from "@/types/rental-types";
 
 export type MyBikeSwapPreview = {
   requestId: string;
   oldBikeId: string;
   stationId: string;
   stationName: string;
-  status: "PENDING";
+  status: BikeSwapStatus;
 };
 
 export function useMyBikeSwapPreview(rentalId: string) {
@@ -34,6 +35,18 @@ export function useMyBikeSwapPreview(rentalId: string) {
     [queryClient, queryKey],
   );
 
+  const setPreviewStatus = useCallback(
+    (status: BikeSwapStatus) => {
+      queryClient.setQueryData<MyBikeSwapPreview | null>(queryKey, current => current
+        ? {
+            ...current,
+            status,
+          }
+        : current);
+    },
+    [queryClient, queryKey],
+  );
+
   const clearPreview = useCallback(() => {
     queryClient.setQueryData(queryKey, null);
   }, [queryClient, queryKey]);
@@ -41,6 +54,7 @@ export function useMyBikeSwapPreview(rentalId: string) {
   return {
     preview: previewQuery.data,
     setPendingPreview,
+    setPreviewStatus,
     clearPreview,
   };
 }

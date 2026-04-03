@@ -1,19 +1,19 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
-import { useTheme, YStack } from "tamagui";
-
-import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useCreateMyReturnSlotMutation } from "@hooks/mutations/rentals/use-create-my-return-slot-mutation";
 import { useRequestBikeSwapMutation } from "@hooks/mutations/rentals/use-request-bike-swap-mutation";
 import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
 import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
+import { useQueryClient } from "@tanstack/react-query";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { useTheme, YStack } from "tamagui";
+
+import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 
 import { BikeList } from "./components/bike-list";
 import { FixedSlotBanner } from "./components/fixed-slot-banner";
@@ -48,7 +48,8 @@ export default function StationDetailScreen() {
   const isReturnSlotSelection = selectionMode === "rental-return-slot" && Boolean(rentalId);
   const isBikeSwapSelection = selectionMode === "rental-bike-swap" && Boolean(rentalId);
   const isCurrentReturnStation = currentReturnStationId === station?.id;
-  const isCurrentBikeSwapStation = currentBikeSwapStationId === station?.id || bikeSwapPreview?.stationId === station?.id;
+  const isCurrentBikeSwapStation = currentBikeSwapStationId === station?.id
+    || (bikeSwapPreview?.status === "PENDING" && bikeSwapPreview.stationId === station?.id);
 
   const handleSelectReturnStation = () => {
     if (!station || !rentalId) {
