@@ -45,3 +45,8 @@ export type SupplierBikeStats = {
   maintained: number;
   unavailable: number;
 };
+
+export type SupplierStatusSummary = {
+  active: number;
+  inactive: number;
+};

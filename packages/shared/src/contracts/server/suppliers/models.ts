@@ -24,5 +24,11 @@ export const SupplierBikeStatsSchema = z.object({
   unavailable: z.number(),
 });
 
+export const SupplierStatusSummarySchema = z.object({
+  active: z.number().int().nonnegative(),
+  inactive: z.number().int().nonnegative(),
+});
+
 export type SupplierSummary = z.infer<typeof SupplierSummarySchema>;
 export type SupplierBikeStats = z.infer<typeof SupplierBikeStatsSchema>;
+export type SupplierStatusSummary = z.infer<typeof SupplierStatusSummarySchema>;

@@ -11,6 +11,7 @@ import {
   SupplierListQuerySchema,
   SupplierListResponseSchema,
   SupplierStatsListResponseSchema,
+  SupplierStatsSummaryResponseSchema,
   SupplierStatsResponseSchema,
   SupplierSummarySchema,
 } from "./shared";
@@ -123,6 +124,23 @@ export const getAllSupplierStats = createRoute({
   },
 });
 
+export const getSupplierStatsSummary = createRoute({
+  method: "get",
+  path: "/v1/suppliers/stats/summary",
+  tags: ["Suppliers"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "Supplier status summary",
+      content: {
+        "application/json": { schema: SupplierStatsSummaryResponseSchema },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
 export const getSupplierStats = createRoute({
   method: "get",
   path: "/v1/suppliers/{supplierId}/stats",
@@ -155,5 +173,6 @@ export const suppliersQueries = {
   listSuppliers,
   getSupplier,
   getAllSupplierStats,
+  getSupplierStatsSummary,
   getSupplierStats,
 } as const;

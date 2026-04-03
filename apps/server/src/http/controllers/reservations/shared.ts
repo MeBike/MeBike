@@ -13,3 +13,4 @@ export type ReservationExpandedDetailResponse = ReservationsContracts.Reservatio
 export type ListMyReservationsResponse = ReservationsContracts.ListMyReservationsResponse;
 export type ListAdminReservationsResponse = ReservationsContracts.ListAdminReservationsResponse;
 export type ListStaffReservationsResponse = ReservationsContracts.ListStaffReservationsResponse;
+export type ReservationSummaryStatsResponse = ReservationsContracts.ReservationSummaryStatsResponse;

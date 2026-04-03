@@ -1,5 +1,6 @@
 export * from "./domain-errors";
 export * from "./models";
+export * from "./repository/reservation-analytics.repository";
 export * from "./repository/reservation-command.repository";
 export * from "./repository/reservation-query.repository";
 export * from "./services/cancel-reservation.service";
@@ -7,5 +8,6 @@ export * from "./services/confirm-reservation.service";
 export * from "./services/fixed-slot.service";
 export * from "./services/reservation-command.service";
 export * from "./services/reservation-query.service";
+export * from "./services/reservation-stats.service";
 export * from "./services/reserve-bike.service";
 export * from "./types";

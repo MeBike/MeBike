@@ -11,6 +11,7 @@ import type {
   SupplierBikeStats,
   SupplierFilter,
   SupplierRow,
+  SupplierStatusSummary,
   SupplierSortField,
   UpdateSupplierInput,
 } from "../models";
@@ -49,6 +50,7 @@ export type SupplierService = {
   ) => Effect.Effect<SupplierRow, SupplierNotFound | InvalidSupplierStatus>;
 
   getAllStats: () => Effect.Effect<readonly SupplierBikeStats[]>;
+  getStatusSummary: () => Effect.Effect<SupplierStatusSummary>;
   getSupplierStats: (
     supplierId: string,
   ) => Effect.Effect<SupplierBikeStats, SupplierNotFound>;
@@ -86,6 +88,28 @@ export type SupplierStatusCountRow = {
   status: BikeStatus;
   count: number;
 };
+
+export function buildSupplierStatusSummary(
+  counts: readonly { status: SupplierStatus; count: number }[],
+): SupplierStatusSummary {
+  const summary: SupplierStatusSummary = {
+    active: 0,
+    inactive: 0,
+  };
+
+  for (const row of counts) {
+    if (row.status === "ACTIVE") {
+      summary.active = row.count;
+      continue;
+    }
+
+    if (row.status === "INACTIVE") {
+      summary.inactive = row.count;
+    }
+  }
+
+  return summary;
+}
 
 export function updateStatsWithCount(
   stats: SupplierBikeStats,
@@ -225,6 +249,11 @@ export const SupplierServiceLive = Layer.effect(
           const counts = yield* repo.groupBikeCountsBySupplier();
           return buildAllSupplierStats(suppliers, counts);
         }),
+
+      getStatusSummary: () =>
+        repo.groupSupplierStatusCounts().pipe(
+          Effect.map(buildSupplierStatusSummary),
+        ),
 
       getSupplierStats: (supplierId: string) =>
         Effect.gen(function* () {

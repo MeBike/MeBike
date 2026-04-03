@@ -10,6 +10,7 @@ import {
   SupplierErrorCodeSchema,
   SupplierErrorDetailSchema,
   SupplierErrorResponseSchema,
+  SupplierStatusSummarySchema,
   SupplierStatusSchema,
   SupplierSummarySchema,
 } from "../../suppliers";
@@ -106,6 +107,13 @@ export const SupplierStatsResponseSchema = SupplierBikeStatsSchema.openapi(
   },
 );
 
+export const SupplierStatsSummaryResponseSchema = SupplierStatusSummarySchema.openapi(
+  "SupplierStatsSummaryResponse",
+  {
+    description: "Supplier status summary counts",
+  },
+);
+
 export {
   PaginationSchema,
   ServerErrorResponseSchema,
@@ -113,8 +121,10 @@ export {
   SupplierErrorCodeSchema,
   SupplierErrorDetailSchema,
   SupplierErrorResponseSchema,
+  SupplierStatusSummarySchema,
   SupplierStatusSchema,
   SupplierSummarySchema,
 };
 
 export type SupplierListResponse = z.infer<typeof SupplierListResponseSchema>;
+export type SupplierStatsSummaryResponse = z.infer<typeof SupplierStatsSummaryResponseSchema>;
