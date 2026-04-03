@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { DataTable } from "@/components/TableCustom";
 import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Label } from "@radix-ui/react-label";
 import { CreateUserFormData, createUserSchema } from "@/schemas/user-schema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
@@ -15,20 +13,11 @@ import { useUserActions } from "@/hooks/use-user";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/table-skeleton";
 type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
 export default function CustomersClient() {
   const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<CreateUserFormData>({
-    resolver: zodResolver(createUserSchema),
-  });
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
@@ -45,9 +34,6 @@ export default function CustomersClient() {
     getAllUsers,
     isLoading,
     getAllStatistics,
-    isLoadingStatistics,
-    createUser,
-    isFetching,
     paginationUser,
     dashboardStatsData,
     getRefetchDashboardStats,
@@ -99,7 +85,7 @@ export default function CustomersClient() {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600); 
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
@@ -124,7 +110,7 @@ export default function CustomersClient() {
           <div className="flex items-center gap-3">
             <Button
               onClick={() => {
-                router.push("/admin/customers/create")
+                router.push("/admin/customers/create");
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -163,31 +149,6 @@ export default function CustomersClient() {
         </div>
 
         <div>
-          {/* <DataTable
-            title="Danh sách người dùng"
-            tableClassName="table-fixed"
-            columns={userColumns({
-              onView: (user) => {
-                handleDetailUser(String(user.id));
-              },
-              onViewWallet: (user) => {
-                handleWalletUser(String(user.id));
-              },
-            })}
-            data={users || []}
-            searchValue={searchQuery}
-            filterPlaceholder="Tìm kiếm người dùng"
-            onSearchChange={setSearchQuery}
-          />
-
-          <div className="pt-3">
-            <PaginationDemo
-              currentPage={currentPage}
-              totalPages={paginationUser?.totalPages ?? 1}
-              onPageChange={setCurrentPage}
-            />
-          </div> */}
-
           <div className="min-h-[400px]">
             {isVisualLoading ? (
               <TableSkeleton />

@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import { DataTable } from "@/components/TableCustom";
 import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CreateUserFormData, createUserSchema } from "@/schemas/user-schema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
@@ -17,24 +14,12 @@ type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
 export default function StaffClient() {
   const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<CreateUserFormData>({
-    resolver: zodResolver(createUserSchema),
-  });
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(7);
-  const {
-    staffOnly,
-    isLoading,
-    getAllStaffs,
-  } = useUserActions({
+  const { staffOnly, isLoading, getAllStaffs } = useUserActions({
     hasToken: true,
     limit: limit,
     page: currentPage,
@@ -42,12 +27,7 @@ export default function StaffClient() {
   });
   useEffect(() => {
     getAllStaffs();
-  }, [
-    searchQuery,
-    verifyFilter,
-    roleFilter,
-    currentPage,
-  ]);
+  }, [searchQuery, verifyFilter, roleFilter, currentPage]);
   useEffect(() => {
     setCurrentPage(1);
   }, [roleFilter]);
@@ -98,9 +78,6 @@ export default function StaffClient() {
             </Button>
           </div>
         </div>
-
-        {/* {dashboardStatsData && <CustomerStats stats={dashboardStatsData} />} */}
-
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Bộ lọc</h3>
