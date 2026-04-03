@@ -4,7 +4,6 @@ import type { RentalsContracts } from "@mebike/shared";
 import {
   BikeSwapRequestErrorCodeSchema,
   bikeSwapRequestErrorMessages,
-
 } from "@mebike/shared";
 import { Effect, Match, Option } from "effect";
 
@@ -669,12 +668,18 @@ const getMyBikeSwapRequests: RouteHandler<
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const service = yield* RentalServiceTag;
-      return yield* service.getMyBikeSwapRequests(userId, {
-        page: Number(query.page ?? 1),
-        pageSize: Number(query.pageSize ?? 50),
-        sortBy: "createdAt",
-        sortDir: "desc",
-      });
+      return yield* service.getMyBikeSwapRequests(
+        {
+          userId,
+          status: query.status,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: "createdAt",
+          sortDir: "desc",
+        },
+      );
     }),
     "GET /v1/rentals/me/bike-swap-requests",
   );

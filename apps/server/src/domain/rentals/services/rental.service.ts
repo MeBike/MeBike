@@ -15,6 +15,7 @@ import type {
 } from "../domain-errors";
 import type {
   BikeSwapRequestRow,
+  MyBikeSwapRequestFilter,
   MyRentalFilter,
   RentalRow,
   RentalSortField,
@@ -82,7 +83,7 @@ export type RentalService = {
   ) => Effect.Effect<PageResult<StaffBikeSwapRequestRow>, never>;
 
   getMyBikeSwapRequests: (
-    userId: string,
+    filter: MyBikeSwapRequestFilter,
     pageReq: PageRequest<StaffBikeSwapRequestSortField>,
   ) => Effect.Effect<PageResult<StaffBikeSwapRequestRow>, never>;
 
@@ -203,9 +204,9 @@ function makeRentalService(
         .pipe(defectOn(RentalRepositoryError));
     },
 
-    getMyBikeSwapRequests(userId, pageReq) {
+    getMyBikeSwapRequests(filter, pageReq) {
       return repo
-        .getMyBikeSwapRequests(userId, pageReq)
+        .getMyBikeSwapRequests(filter, pageReq)
         .pipe(defectOn(RentalRepositoryError));
     },
 

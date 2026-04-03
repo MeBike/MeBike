@@ -25,6 +25,7 @@ import {
   mapToBikeSwapRequestRow,
   mapToStaffBikeSwapRequestRow,
   staffBikeSwapRequestSelect,
+  toMyBikeSwapRequestsWhere,
   toStaffBikeSwapRequestsOrderBy,
   toStaffBikeSwapRequestsWhere,
 } from "./rental.repository.query";
@@ -346,14 +347,15 @@ export function makeRentalRepository(
       });
     },
 
-    getMyBikeSwapRequests(userId, pageReq) {
+    getMyBikeSwapRequests(filter, pageReq) {
       return Effect.gen(function* () {
         const { page, pageSize, skip, take } = normalizedPage(pageReq);
         const orderBy = toStaffBikeSwapRequestsOrderBy(pageReq);
+        const where = toMyBikeSwapRequestsWhere(filter);
 
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
-            try: () => db.bikeSwapRequest.count({ where: { userId } }),
+            try: () => db.bikeSwapRequest.count({ where }),
             catch: e =>
               new RentalRepositoryError({
                 operation: "getMyBikeSwapRequests.count",
@@ -363,7 +365,7 @@ export function makeRentalRepository(
           Effect.tryPromise({
             try: () =>
               db.bikeSwapRequest.findMany({
-                where: { userId },
+                where,
                 skip,
                 take,
                 orderBy,

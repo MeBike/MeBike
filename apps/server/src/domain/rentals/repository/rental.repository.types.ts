@@ -17,6 +17,7 @@ import type {
   AdminRentalFilter,
   AdminRentalListItem,
   BikeSwapRequestRow,
+  MyBikeSwapRequestFilter,
   MyRentalFilter,
   RentalCountsRow,
   RentalRow,
@@ -167,7 +168,7 @@ export type RentalRepo = {
   >;
 
   getMyBikeSwapRequests: (
-    userId: string,
+    filter: MyBikeSwapRequestFilter,
     pageReq: PageRequest<StaffBikeSwapRequestSortField>,
   ) => Effect.Effect<
     PageResult<StaffBikeSwapRequestRow>,

@@ -57,6 +57,7 @@ export type StaffBikeSwapRequestFilter = {
 };
 
 export type MyBikeSwapRequestFilter = {
+  userId: string;
   status?: BikeSwapStatus;
 };
 
