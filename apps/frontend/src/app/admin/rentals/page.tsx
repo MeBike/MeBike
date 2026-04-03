@@ -1,77 +1,51 @@
 "use client";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { RentalFilters } from "@/components/rentals/rental-filters";
 import { RentalStats } from "@/components/rentals/rental-stats";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { formatDateUTC } from "@/utils/formatDateTime";
-import type {
-  RentalStatus,
-} from "@custom-types";
+import type { RentalStatus } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useRentalsActions } from "@/hooks/use-rental";
-import { useStationActions } from "@/hooks/use-station";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { rentalColumn } from "@/columns/rental-columns";
-import {
-  updateRentalSchema,
-  type UpdateRentalSchema,
-} from "@/schemas/rental-schema";
+import { TableSkeleton } from "@/components/table-skeleton";
 export default function RentalsPage() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(10);
+  const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RentalStatus>("");
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [selectedRentalId, setSelectedRentalId] = useState<string>("");
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-  } = useForm<UpdateRentalSchema>({
-    resolver: zodResolver(updateRentalSchema),
-    defaultValues: {
-      status: "",
-      end_station: "",
-      end_time: "",
-      reason: "",
-      total_price: 0,
-    },
-  });
   const {
     allRentalsData,
     pagination,
     revenueData,
     todayRevenueData,
-    detailData,
-    getDetailRental,
-    updateRental,
     getTodayRevenue,
     summaryRental,
     getSummaryRental,
+    isAllRentalsLoading,
   } = useRentalsActions({
     hasToken: true,
-    limit : limit,
-    page : page,
-    bike_id: selectedRentalId,
-    ...(statusFilter !== "" && { status: statusFilter })
+    limit: limit,
+    page: page,
+    ...(statusFilter !== "" && { status: statusFilter }),
   });
-
-  const { stations, getAllStations } = useStationActions({
-    hasToken: true,
-    page: 1,
-    limit: 100,
-  });
+  const [isVisualLoading, setIsVisualLoading] = useState(false);
   useEffect(() => {
-    getAllStations();
+    if (isAllRentalsLoading) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isAllRentalsLoading]);
+  useEffect(() => {
     getTodayRevenue();
-  }, [ getAllStations, getTodayRevenue]);
+  }, [getTodayRevenue]);
   useEffect(() => {
     getSummaryRental();
   }, [getSummaryRental]);
@@ -80,12 +54,6 @@ export default function RentalsPage() {
   const handleReset = () => {
     setSearchQuery("");
     setStatusFilter("");
-  };
-
-
-  const handleUpdateRental = (data: UpdateRentalSchema) => {
-    updateRental(data);
-    setIsUpdateModalOpen(false);
   };
 
   const stats = {
@@ -106,13 +74,15 @@ export default function RentalsPage() {
     overdue: 0, // No overdue in RentingHistory
     todayRevenue:
       todayRevenueData?.data?.reduce(
-        (sum: number, item: { totalRevenue: number }) => sum + item.totalRevenue,
-        0
+        (sum: number, item: { totalRevenue: number }) =>
+          sum + item.totalRevenue,
+        0,
       ) || 0,
     totalRevenue:
       revenueData?.data?.reduce(
-        (sum: number, item: { totalRevenue: number }) => sum + item.totalRevenue,
-        0
+        (sum: number, item: { totalRevenue: number }) =>
+          sum + item.totalRevenue,
+        0,
       ) || 0,
   };
   useEffect(() => {
@@ -121,7 +91,6 @@ export default function RentalsPage() {
   return (
     <div>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -138,13 +107,8 @@ export default function RentalsPage() {
             </Button>
           </div>
         </div>
+        {summaryRental && <RentalStats params={summaryRental} />}
 
-        {/* Stats */}
-        {
-          summaryRental&& <RentalStats params={summaryRental} />
-        }
-
-        {/* Filters */}
         <RentalFilters
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -152,45 +116,21 @@ export default function RentalsPage() {
           onStatusChange={setStatusFilter}
           onReset={handleReset}
         />
-
-        {/* Results */}
         <div className="w-full rounded-lg space-y-4  flex flex-col">
-          {/* <RentalTable
-            rentals={filteredRentals}
-            onView={(rental) => console.log("[v0] View rental:", rental._id)}
-            onEdit={(rental) => console.log("[v0] Edit rental:", rental._id)}
-            onComplete={(rental) =>
-              console.log("[v0] Complete rental:", rental._id)
-            }
-            onCancel={(rental) =>
-              console.log("[v0] Cancel rental:", rental._id)
-            }
-          /> */}
-          <DataTable
+          {isVisualLoading ? (
+            <TableSkeleton />
+          ) : (
+            <>
+              <DataTable
             columns={rentalColumn({
               onView: ({ id }) => {
-                // setSelectedRentalId(id);
-                // getDetailRental();
-                // setIsDetailModalOpen(true);
                 router.push(`/admin/rentals/detail/${id}`);
-              },
-              onEdit: ({ data }) => {
-                setSelectedRentalId(data.id);
-                getDetailRental();
-                reset({
-                  status: data.status,
-                  end_station: data.endStation || "",
-                  end_time: data.endTime
-                    ? new Date(data.endTime).toISOString().slice(0, 16)
-                    : "",
-                  reason: "",
-                  total_price: data.totalPrice,
-                });
-                setIsUpdateModalOpen(true);
               },
             })}
             data={rentals}
-          />
+            />
+            </>
+          )}
           <PaginationDemo
             currentPage={pagination?.page ?? 1}
             onPageChange={setPage}
@@ -199,7 +139,7 @@ export default function RentalsPage() {
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Trang {pagination?.currentPage} / {pagination?.totalPages} đơn thuê
+          Trang {pagination?.page ?? 1} / {pagination?.totalPages ?? 1} đơn thuê
         </p>
 
         {/* {isCreateModalOpen && (
@@ -340,258 +280,9 @@ export default function RentalsPage() {
         )}
 
 
-        {/* Detail Modal */}
-        {isDetailModalOpen && detailData && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-foreground">
-                  Chi tiết đơn thuê
-                </h2>
-                <button
-                  onClick={() => setIsDetailModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
+        
 
-              <div className="space-y-4">
-                {/* Row 1 */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Mã đơn thuê
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.id}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Trạng thái
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.status}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 2 - User Info */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Tên người dùng
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.user?.fullname}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Email
-                    </label>
-                    <p className="text-foreground text-sm">
-                      {detailData.user?.email}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 3 - User Contact */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Số điện thoại
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.user?.phoneNumber}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Trạng thái xác minh
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.user?.verify}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 4 - Bike Info */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Mã xe đạp
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.bike?.id || "Không có"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Chip ID
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.bike?.chipId || "Không có"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 5 - Bike Status */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Trạng thái xe
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.bike?.status || "Không có"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Nhà cung cấp
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.bike?.supplierId || "Không có"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 6 - Start Station */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Trạm bắt đầu
-                    </label>
-                    <p className="text-foreground font-medium">
-                          {detailData.startStation?.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {detailData.startStation?.address}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Tọa độ trạm bắt đầu
-                    </label>
-                    <p className="text-foreground text-sm">
-                      {detailData.startStation?.latitude},{" "}
-                      {detailData.startStation?.longitude}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 7 - End Station */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Trạm kết thúc
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.endStation?.name || "Chưa trả"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {detailData.endStation?.address || ""}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Tọa độ trạm kết thúc
-                    </label>
-                    <p className="text-foreground text-sm">
-                      {detailData.endStation?.latitude}, ${detailData.endStation?.longitude}`
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 8 - Times */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Thời gian bắt đầu
-                    </label>
-                    <p className="text-foreground text-sm">
-                      {formatDateUTC(detailData.startTime)}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Thời gian kết thúc
-                    </label>
-                    <p className="text-foreground text-sm">
-                      {detailData.endTime
-                        ? formatDateUTC(detailData.endTime)
-                        : "Chưa trả"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 9 - Duration & Price */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Thời lượng (phút)
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.duration}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Tổng tiền
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {detailData.totalPrice?.toLocaleString("vi-VN")}{" "}
-                      VND
-                    </p>
-                  </div>
-                </div>
-
-                {/* Row 10 - Timestamps */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Ngày tạo
-                    </label>
-                    <p className="text-foreground text-sm">
-                      {formatDateUTC(detailData.updatedAt)}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Cập nhật lần cuối
-                    </label>
-                    <p className="text-foreground text-sm">
-                      {formatDateUTC(detailData.updatedAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDetailModalOpen(false)}
-                  className="flex-1"
-                >
-                  Đóng
-                </Button>
-                <Button
-                  onClick={() => {
-                    setIsDetailModalOpen(false);
-                    setIsUpdateModalOpen(true);
-                  }}
-                  className="flex-1"
-                >
-                  Cập nhật
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Update Modal */}
-        {isUpdateModalOpen && detailData && (
+        {/* {isUpdateModalOpen && detailData && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-foreground mb-4">
@@ -726,7 +417,7 @@ export default function RentalsPage() {
               </form>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
