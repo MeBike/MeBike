@@ -4,10 +4,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import type { BikeStatusUpdate } from "@/hooks/use-bike-status-stream";
-import type { Rental } from "@/types/rental-types";
+import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
 type Options = {
-  booking?: Rental;
+  booking?: MyRentalResolvedDetail["rental"];
   hasToken: boolean;
   refetchDetail: () => Promise<unknown> | unknown;
 };

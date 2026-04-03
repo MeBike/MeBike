@@ -70,6 +70,7 @@ export function toMyBikeSwapRequestsWhere(
   filter: MyBikeSwapRequestFilter,
 ): PrismaTypes.BikeSwapRequestWhereInput {
   return {
+    ...(filter.rentalId ? { rentalId: filter.rentalId } : {}),
     ...(filter.userId ? { userId: filter.userId } : {}),
     ...(filter.status ? { status: filter.status } : {}),
   };

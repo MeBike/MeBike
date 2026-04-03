@@ -826,6 +826,7 @@ export const getMyBikeSwapRequests = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     query: z.object({
+      rentalId: z.uuidv7().optional(),
       status: BikeSwapStatusSchema.optional(),
       ...paginationQueryFields,
     }),

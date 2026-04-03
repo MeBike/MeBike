@@ -64,9 +64,17 @@ export type BikeSwapRequestListParams = {
   pageSize?: number;
   userId?: string;
   stationId?: string;
+  rentalId?: string;
   status?: BikeSwapStatus;
   sortBy?: "status" | "updatedAt" | "createdAt";
   sortDir?: "asc" | "desc";
+};
+
+export type MyBikeSwapRequestListParams = {
+  page?: number;
+  pageSize?: number;
+  rentalId?: string;
+  status?: BikeSwapStatus;
 };
 
 export type RejectBikeSwapRequestPayload = {

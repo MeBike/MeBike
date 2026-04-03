@@ -15,6 +15,7 @@ import type {
   BikeSwapRequestListResponse,
   CreateRentalPayload,
   CreateReturnSlotPayload,
+  MyBikeSwapRequestListParams,
   MyRentalListResponse,
   MyRentalResolvedDetail,
   RejectBikeSwapRequestPayload,
@@ -371,6 +372,61 @@ export const rentalServiceV1 = {
           response,
           okSchema as z.ZodType<BikeSwapRequestListResponse>,
           value => value,
+        );
+      }
+
+      return err(await parseBikeSwapRequestError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  listMyBikeSwapRequests: async (
+    params: MyBikeSwapRequestListParams = {},
+  ): Promise<Result<BikeSwapRequestListResponse, RentalError>> => {
+    try {
+      const response = await kyClient.get(routePath(ServerRoutes.rentals.getMyBikeSwapRequests), {
+        searchParams: toSearchParams({
+          page: params.page,
+          pageSize: params.pageSize,
+          rentalId: params.rentalId,
+          status: params.status,
+        }),
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.getMyBikeSwapRequests.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<BikeSwapRequestListResponse>,
+          value => value,
+        );
+      }
+
+      return err(await parseBikeSwapRequestError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  getMyBikeSwapRequest: async (
+    bikeSwapRequestId: string,
+  ): Promise<Result<BikeSwapRequestDetail, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.getMyBikeSwapRequest, {
+        bikeSwapRequestId,
+      });
+
+      const response = await kyClient.get(path, { throwHttpErrors: false });
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.getMyBikeSwapRequest.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: BikeSwapRequestDetail }>,
+          value => value.result,
         );
       }
 
