@@ -101,16 +101,17 @@ const staffGetRental: RouteHandler<RentalsRoutes["staffGetRental"]> = async (
 const staffListBikeSwapRequests: RouteHandler<
   RentalsRoutes["staffListBikeSwapRequests"]
 > = async (c) => {
+  const userId = c.var.currentUser!.userId;
   const query = c.req.valid("query");
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const repo = yield* RentalRepository;
       return yield* repo.staffListBikeSwapRequests(
+        userId,
         {
           userId: query.userId,
           status: query.status,
-          stationId: query.stationId,
         },
         {
           page: Number(query.page ?? 1),
@@ -137,10 +138,11 @@ const staffListBikeSwapRequests: RouteHandler<
 const staffGetBikeSwapRequests: RouteHandler<
   RentalsRoutes["staffGetBikeSwapRequests"]
 > = async (c) => {
+  const userId = c.var.currentUser!.userId;
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    staffGetChangeBikeDetail(bikeSwapRequestId),
+    staffGetChangeBikeDetail(userId, bikeSwapRequestId),
     "GET /v1/staff/bike-swap-requests/{bikeSwapRequestId}",
   );
 
@@ -190,10 +192,11 @@ const staffGetBikeSwapRequests: RouteHandler<
 const staffApproveBikeSwapRequestHandler: RouteHandler<
   RentalsRoutes["approveBikeSwapRequest"]
 > = async (c) => {
+  const userId = c.var.currentUser!.userId;
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    staffApproveBikeSwapRequest(bikeSwapRequestId),
+    staffApproveBikeSwapRequest(userId, bikeSwapRequestId),
     "POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/approve",
   );
 
@@ -285,11 +288,12 @@ const staffApproveBikeSwapRequestHandler: RouteHandler<
 const staffRejectBikeSwapRequestHandler: RouteHandler<
   RentalsRoutes["rejectBikeSwapRequest"]
 > = async (c) => {
+  const userId = c.var.currentUser!.userId;
   const { bikeSwapRequestId } = c.req.valid("param");
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    staffRejectBikeSwapRequest(bikeSwapRequestId, body.reason),
+    staffRejectBikeSwapRequest(userId, bikeSwapRequestId, body.reason),
     "POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/reject",
   );
 

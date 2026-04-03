@@ -55,7 +55,7 @@ export function adminGetChangeBikeDetail(
   return Effect.gen(function* () {
     const repo = yield* RentalRepository;
 
-    const result = yield* repo.staffGetBikeSwapRequests(bikeSwapRequestId);
+    const result = yield* repo.adminGetBikeSwapRequest(bikeSwapRequestId);
 
     if (Option.isNone(result)) {
       return yield* Effect.fail(

@@ -56,6 +56,11 @@ export type StaffBikeSwapRequestFilter = {
   stationId?: string;
 };
 
+export type MyBikeSwapRequestFilter = {
+  userId: string;
+  status?: BikeSwapStatus;
+};
+
 export type StaffBikeSwapRequestSortField
   = | "status"
     | "updatedAt"

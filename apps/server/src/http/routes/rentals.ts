@@ -173,4 +173,24 @@ export function registerRentalRoutes(
     adminGetSwapRequestRoute,
     RentalAdminController.adminGetBikeSwapRequests,
   );
+
+  const mySwapRequestsRoute = {
+    ...rentals.getMyBikeSwapRequests,
+    middleware: [requireUserMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    mySwapRequestsRoute,
+    RentalMeController.getMyBikeSwapRequests,
+  );
+
+  const mySwapRequestRoute = {
+    ...rentals.getMyBikeSwapRequest,
+    middleware: [requireUserMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    mySwapRequestRoute,
+    RentalMeController.getMyBikeSwapRequest,
+  );
 }
