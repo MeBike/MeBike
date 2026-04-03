@@ -191,10 +191,11 @@ const staffGetBikeSwapRequests: RouteHandler<
 const staffApproveBikeSwapRequestHandler: RouteHandler<
   RentalsRoutes["approveBikeSwapRequest"]
 > = async (c) => {
+  const userId = c.var.currentUser!.userId;
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    staffApproveBikeSwapRequest(bikeSwapRequestId),
+    staffApproveBikeSwapRequest(userId, bikeSwapRequestId),
     "POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/approve",
   );
 
@@ -286,11 +287,12 @@ const staffApproveBikeSwapRequestHandler: RouteHandler<
 const staffRejectBikeSwapRequestHandler: RouteHandler<
   RentalsRoutes["rejectBikeSwapRequest"]
 > = async (c) => {
+  const userId = c.var.currentUser!.userId;
   const { bikeSwapRequestId } = c.req.valid("param");
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    staffRejectBikeSwapRequest(bikeSwapRequestId, body.reason),
+    staffRejectBikeSwapRequest(userId, bikeSwapRequestId, body.reason),
     "POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/reject",
   );
 

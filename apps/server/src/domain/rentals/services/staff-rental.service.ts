@@ -53,6 +53,7 @@ export function staffGetChangeBikeDetail(
 }
 
 export function staffApproveBikeSwapRequest(
+  userId: string,
   bikeSwapRequestId: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,
@@ -69,7 +70,7 @@ export function staffApproveBikeSwapRequest(
 
     const result = yield* runPrismaTransaction(client, (tx) => {
       const txRepo = makeRentalRepository(tx);
-      return txRepo.staffApproveBikeSwapRequests(bikeSwapRequestId);
+      return txRepo.staffApproveBikeSwapRequests(userId, bikeSwapRequestId);
     });
 
     if (Option.isNone(result)) {
@@ -83,6 +84,7 @@ export function staffApproveBikeSwapRequest(
 }
 
 export function staffRejectBikeSwapRequest(
+  userId: string,
   bikeSwapRequestId: string,
   reason: string,
 ): Effect.Effect<
@@ -97,6 +99,7 @@ export function staffRejectBikeSwapRequest(
     const repo = yield* RentalRepository;
 
     const result = yield* repo.staffRejectBikeSwapRequests(
+      userId,
       bikeSwapRequestId,
       reason,
     );
