@@ -133,7 +133,17 @@ export const getSupplierStatsSummary = createRoute({
     200: {
       description: "Supplier status summary",
       content: {
-        "application/json": { schema: SupplierStatsSummaryResponseSchema },
+        "application/json": {
+          schema: SupplierStatsSummaryResponseSchema,
+          examples: {
+            Summary: {
+              value: {
+                active: 8,
+                inactive: 3,
+              },
+            },
+          },
+        },
       },
     },
     401: unauthorizedResponse(),

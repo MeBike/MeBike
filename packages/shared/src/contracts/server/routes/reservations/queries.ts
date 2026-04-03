@@ -179,6 +179,18 @@ export const getReservationStatsSummaryRoute = createRoute({
       content: {
         "application/json": {
           schema: ReservationSummaryStatsResponseSchema,
+          examples: {
+            Summary: {
+              value: {
+                reservationList: {
+                  Pending: 12,
+                  Fulfilled: 30,
+                  Cancelled: 7,
+                  Expired: 5,
+                },
+              },
+            },
+          },
         },
       },
     },
