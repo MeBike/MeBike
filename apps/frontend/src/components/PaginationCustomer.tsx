@@ -65,7 +65,6 @@ export function PaginationDemo({
   return (
     <Pagination>
       <PaginationContent>
-        {/* Nút Previous */}
         <PaginationItem>
           <PaginationPrevious
             href="#"

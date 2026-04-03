@@ -8,13 +8,17 @@ import {useGetSupplierByIDQuery,useGetBikeStatsSupplierQuery,useGetAllSupplierQu
 import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
 import {HTTP_STATUS , SUPPLIER_MESSAGE} from "@constants";
 import { SupplierActionProps } from "@custom-types";
-export const useSupplierActions = ({hasToken,supplier_id}: SupplierActionProps) => {
+export const useSupplierActions = ({hasToken,supplier_id,page,pageSize}: SupplierActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
     refetch: refetchAllSuppliers,
     data: allSupplier,
-  } = useGetAllSupplierQuery();
+    isLoading: isLoadingAllSuppliers,
+  } = useGetAllSupplierQuery({
+    page:page,
+    pageSize:pageSize
+  });
   const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
     useGetAllStatsSupplierQuery();
   const useCreateSupplier = useCreateSupplierMutation();
@@ -134,5 +138,6 @@ export const useSupplierActions = ({hasToken,supplier_id}: SupplierActionProps) 
     fetchDetailSupplier,
     detailSupplier : detailSupplier,
     isLoadingDetailSupplier,
+    isLoadingAllSuppliers,
   };
 };
