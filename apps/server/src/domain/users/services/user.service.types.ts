@@ -11,7 +11,6 @@ import type {
 } from "../domain-errors";
 import type {
   CreateUserInput,
-  TechnicianTeamAvailableOption,
   UpdateUserAdminPatch,
   UpdateUserProfilePatch,
   UserFilter,
@@ -39,9 +38,6 @@ export type UserQueryService = {
   listTechnicianSummaries: () => Effect.Effect<
     readonly Pick<UserRow, "id" | "fullname">[]
   >;
-  listAvailableTechnicianTeams: (args?: {
-    stationId?: string;
-  }) => Effect.Effect<readonly TechnicianTeamAvailableOption[]>;
 };
 
 export type UserCommandService = {

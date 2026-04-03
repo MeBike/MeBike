@@ -5,13 +5,20 @@ import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
+import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
 
 import type {
+  BikeSwapRequest,
+  BikeSwapRequestDetail,
+  BikeSwapRequestListParams,
+  BikeSwapRequestListResponse,
   CreateRentalPayload,
   CreateReturnSlotPayload,
+  MyBikeSwapRequestListParams,
   MyRentalListResponse,
   MyRentalResolvedDetail,
+  RejectBikeSwapRequestPayload,
   Rental,
   RentalCounts,
   RentalDetail,
@@ -19,6 +26,7 @@ import type {
   RentalListResponse,
   RentalWithPrice,
   RentalWithPricing,
+  RequestBikeSwapPayload,
   ReturnSlotReservation,
 } from "@/types/rental-types";
 
@@ -27,20 +35,11 @@ import { stationService } from "@/services/station.service";
 
 import type { RentalError } from "./rental-error";
 
-import { asNetworkError, parseRentalError } from "./rental-error";
-
-function toSearchParams(
-  params: Record<string, unknown> | undefined,
-): Record<string, string> | undefined {
-  if (!params) {
-    return undefined;
-  }
-  const entries = Object.entries(params)
-    .filter(([, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => [key, String(value)]);
-
-  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
-}
+import {
+  asNetworkError,
+  parseBikeSwapRequestError,
+  parseRentalError,
+} from "./rental-error";
 
 async function decodeRentalResponse<TRaw, TValue>(
   response: Response,
@@ -124,6 +123,34 @@ export const rentalServiceV1 = {
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.createRental.responses[200].content["application/json"].schema;
         return decodeRentalResponse(response, okSchema as z.ZodType<RentalWithPrice>, value => value);
+      }
+
+      return err(await parseRentalError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  requestBikeSwap: async (
+    rentalId: string,
+    payload: RequestBikeSwapPayload,
+  ): Promise<Result<BikeSwapRequest, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.requestBikeSwap, { rentalId });
+
+      const response = await kyClient.post(path, {
+        json: payload,
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.requestBikeSwap.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: BikeSwapRequest }>,
+          value => value.result,
+        );
       }
 
       return err(await parseRentalError(response));
@@ -324,6 +351,169 @@ export const rentalServiceV1 = {
       }
 
       return err(await parseRentalError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  listStaffBikeSwapRequests: async (
+    params: BikeSwapRequestListParams = {},
+  ): Promise<Result<BikeSwapRequestListResponse, RentalError>> => {
+    try {
+      const response = await kyClient.get(routePath(ServerRoutes.rentals.staffListBikeSwapRequests), {
+        searchParams: toSearchParams(params),
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.staffListBikeSwapRequests.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<BikeSwapRequestListResponse>,
+          value => value,
+        );
+      }
+
+      return err(await parseBikeSwapRequestError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  listMyBikeSwapRequests: async (
+    params: MyBikeSwapRequestListParams = {},
+  ): Promise<Result<BikeSwapRequestListResponse, RentalError>> => {
+    try {
+      const response = await kyClient.get(routePath(ServerRoutes.rentals.getMyBikeSwapRequests), {
+        searchParams: toSearchParams({
+          page: params.page,
+          pageSize: params.pageSize,
+          rentalId: params.rentalId,
+          status: params.status,
+        }),
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.getMyBikeSwapRequests.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<BikeSwapRequestListResponse>,
+          value => value,
+        );
+      }
+
+      return err(await parseBikeSwapRequestError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  getMyBikeSwapRequest: async (
+    bikeSwapRequestId: string,
+  ): Promise<Result<BikeSwapRequestDetail, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.getMyBikeSwapRequest, {
+        bikeSwapRequestId,
+      });
+
+      const response = await kyClient.get(path, { throwHttpErrors: false });
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.getMyBikeSwapRequest.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: BikeSwapRequestDetail }>,
+          value => value.result,
+        );
+      }
+
+      return err(await parseBikeSwapRequestError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  getStaffBikeSwapRequest: async (
+    bikeSwapRequestId: string,
+  ): Promise<Result<BikeSwapRequestDetail, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.staffGetBikeSwapRequests, {
+        bikeSwapRequestId,
+      });
+
+      const response = await kyClient.get(path, { throwHttpErrors: false });
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.staffGetBikeSwapRequests.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: BikeSwapRequestDetail }>,
+          value => value.result,
+        );
+      }
+
+      return err(await parseBikeSwapRequestError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  approveBikeSwapRequest: async (
+    bikeSwapRequestId: string,
+  ): Promise<Result<BikeSwapRequestDetail, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.approveBikeSwapRequest, {
+        bikeSwapRequestId,
+      });
+
+      const response = await kyClient.post(path, {
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.approveBikeSwapRequest.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: BikeSwapRequestDetail }>,
+          value => value.result,
+        );
+      }
+
+      return err(await parseBikeSwapRequestError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  rejectBikeSwapRequest: async (
+    bikeSwapRequestId: string,
+    payload: RejectBikeSwapRequestPayload,
+  ): Promise<Result<BikeSwapRequestDetail, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.rejectBikeSwapRequest, {
+        bikeSwapRequestId,
+      });
+
+      const response = await kyClient.post(path, {
+        json: payload,
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.rejectBikeSwapRequest.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(
+          response,
+          okSchema as z.ZodType<{ result: BikeSwapRequestDetail }>,
+          value => value.result,
+        );
+      }
+
+      return err(await parseBikeSwapRequestError(response));
     }
     catch (error) {
       return asNetworkError(error);

@@ -1,13 +1,13 @@
-import { VerifyEmailModal } from "@components/verify-email-modal";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
-import { Screen } from "@ui/primitives/screen";
 import { useMemo } from "react";
 import { RefreshControl, ScrollView, StatusBar } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Separator, useTheme, YStack } from "tamagui";
 
+import { VerifyEmailModal } from "@components/verify-email-modal";
 import { borderWidths, elevations, radii } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { Screen } from "@ui/primitives/screen";
 
 import ProfileHeader from "./components/profile-header";
 import ProfileMenuOption from "./components/profile-menu-option";
@@ -71,8 +71,6 @@ function ProfileScreen() {
     handleLogout,
     handleChangePassword,
     handleUpdateProfile,
-    handleSupport,
-    handleReportIssue,
     handleReservations,
     handleSubscriptions,
     handleNotifications,
@@ -140,25 +138,6 @@ function ProfileScreen() {
     theme.surfaceWarning.val,
   ]);
 
-  const supportItems = useMemo<MenuItem[]>(() => [
-    {
-      icon: "exclamationmark.triangle",
-      title: "Báo cáo sự cố xe",
-      subtitle: "Gửi phản ánh nhanh cho đội hỗ trợ",
-      iconColor: theme.textDanger.val,
-      iconBackground: theme.surfaceDanger.val,
-      onPress: handleReportIssue,
-    },
-    {
-      icon: "questionmark.circle",
-      title: "Trung tâm trợ giúp",
-      subtitle: "Câu hỏi thường gặp và hỗ trợ",
-      iconColor: theme.textSecondary.val,
-      iconBackground: theme.surfaceMuted.val,
-      onPress: handleSupport,
-    },
-  ], [handleReportIssue, handleSupport, theme.surfaceDanger.val, theme.surfaceMuted.val, theme.textDanger.val, theme.textSecondary.val]);
-
   const destructiveItems = useMemo<MenuItem[]>(() => [
     {
       icon: "arrow.right",
@@ -196,11 +175,6 @@ function ProfileScreen() {
           <YStack gap="$3">
             <SectionLabel title="Cài đặt tài khoản" />
             <MenuGroup items={accountItems} />
-          </YStack>
-
-          <YStack gap="$3">
-            <SectionLabel title="Hỗ trợ" />
-            <MenuGroup items={supportItems} />
           </YStack>
 
           <YStack gap="$4">

@@ -6,6 +6,7 @@ import {
 import {
   adminGetReservationRoute,
   adminListReservationsRoute,
+  getReservationStatsSummaryRoute,
   getMyReservationRoute,
   listMyReservationsRoute,
   staffGetReservationRoute,
@@ -24,6 +25,7 @@ export const reservationsRoutes = {
   getMyReservation: getMyReservationRoute,
   adminListReservations: adminListReservationsRoute,
   adminGetReservation: adminGetReservationRoute,
+  getReservationStatsSummary: getReservationStatsSummaryRoute,
   staffListReservations: staffListReservationsRoute,
   staffGetReservation: staffGetReservationRoute,
 } as const;

@@ -9,6 +9,7 @@ import {
   ReservationErrorCodeSchema,
   ReservationErrorResponseSchema,
   ReservationExpandedDetailResponseSchema,
+  ReservationSummaryStatsResponseSchema,
 } from "../../reservations";
 import {
   forbiddenResponse,
@@ -164,5 +165,36 @@ export const staffGetReservationRoute = createRoute({
         details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND },
       },
     }),
+  },
+});
+
+export const getReservationStatsSummaryRoute = createRoute({
+  method: "get",
+  path: "/v1/reservations/stats/summary",
+  tags: ["Admin", "Reservations"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "Reservation status summary for admin dashboard",
+      content: {
+        "application/json": {
+          schema: ReservationSummaryStatsResponseSchema,
+          examples: {
+            Summary: {
+              value: {
+                reservationList: {
+                  Pending: 12,
+                  Fulfilled: 30,
+                  Cancelled: 7,
+                  Expired: 5,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });

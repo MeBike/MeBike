@@ -17,6 +17,12 @@ export {
   BikeStatsServiceLayer,
 } from "./features/bike.layers";
 export {
+  IncidentDepsLive,
+  IncidentReposLive,
+  IncidentServiceLayer,
+  withIncidentDeps,
+} from "./features/incident.layers";
+export {
   NotificationDepsLive,
   PushNotificationServiceLayer,
   PushTokenReposLive,
@@ -62,6 +68,10 @@ export {
   SupplierReposLive,
   SupplierServiceLayer,
 } from "./features/supplier.layers";
+export {
+  TechnicianTeamDepsLive,
+  TechnicianTeamQueryReposLive,
+} from "./features/technician-team.layers";
 export {
   AvatarUploadServiceLayer,
   UserCommandReposLive,

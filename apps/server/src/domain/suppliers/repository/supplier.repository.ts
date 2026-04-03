@@ -68,6 +68,13 @@ export type SupplierRepo = {
       count: number;
     }[]
   >;
+
+  groupSupplierStatusCounts: () => Effect.Effect<
+    readonly {
+      status: SupplierStatus;
+      count: number;
+    }[]
+  >;
 };
 
 function toSupplierOrderBy(
@@ -259,6 +266,20 @@ export function makeSupplierRepository(client: PrismaClient): SupplierRepo {
           by: ["status"],
           _count: { _all: true },
           where: { supplierId },
+        }).then(rows =>
+          rows.map(row => ({
+            status: row.status,
+            count: row._count._all,
+          })),
+        ),
+      );
+    },
+
+    groupSupplierStatusCounts() {
+      return Effect.promise(() =>
+        client.supplier.groupBy({
+          by: ["status"],
+          _count: { _all: true },
         }).then(rows =>
           rows.map(row => ({
             status: row.status,

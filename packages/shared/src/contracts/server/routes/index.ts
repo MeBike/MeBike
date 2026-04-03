@@ -13,6 +13,7 @@ import { subscriptionsRoutes } from "./subscriptions";
 import { suppliersRoutes } from "./suppliers";
 import { usersRoutes } from "./users";
 import { walletsRoutes } from "./wallets";
+import { incidentsRoutes } from "./incidents";
 
 export * from "./agencies";
 export * from "./agency-requests";
@@ -29,6 +30,7 @@ export * from "./subscriptions";
 export * from "./suppliers";
 export * from "./users";
 export * from "./wallets";
+export * from "./incidents";
 
 export const serverRoutes = {
   agencies: agenciesRoutes,
@@ -46,6 +48,7 @@ export const serverRoutes = {
   ratings: ratingsRoutes,
   wallets: walletsRoutes,
   stripe: stripeRoutes,
+  incidents: incidentsRoutes,
 } as const;
 
 export type ServerRouteKey = keyof typeof serverRoutes;

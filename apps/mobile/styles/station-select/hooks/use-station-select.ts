@@ -2,7 +2,6 @@ import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
 
 import { useStationRouteQuery } from "@hooks/query/Station/use-station-route-query";
 import { useStationActions } from "@hooks/useStationAction";
-import { log } from "@lib/log";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -53,16 +52,14 @@ export function useStationSelect() {
             selectionMode: stationSelectRoute.params.selectionMode,
             rentalId: stationSelectRoute.params.rentalId,
             currentReturnStationId: stationSelectRoute.params.currentReturnStationId,
+            currentBikeSwapStationId: stationSelectRoute.params.currentBikeSwapStationId,
           }
         : {}),
     });
   };
 
   const handleFindNearbyStations = async () => {
-    if (!currentLocation) {
-      log.info("Location not available");
-      await refreshLocation();
-    }
+    await refreshLocation();
     setShowingNearby(!showingNearby);
   };
 
@@ -145,7 +142,6 @@ export function useStationSelect() {
 
     if (!currentLocation) {
       await refreshLocation();
-      return;
     }
 
     setIsRoutingMode(true);

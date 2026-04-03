@@ -71,3 +71,24 @@ export type AdminReservationFilter = ReservationFilter & {
   readonly userId?: string;
   readonly bikeId?: string;
 };
+
+export type ReservationCountsRow = {
+  status: ReservationStatus;
+  count: number;
+};
+
+export type ReservationStatusCounts = {
+  PENDING: number;
+  FULFILLED: number;
+  CANCELLED: number;
+  EXPIRED: number;
+};
+
+export type ReservationSummaryStats = {
+  reservationList: {
+    Pending: number;
+    Fulfilled: number;
+    Cancelled: number;
+    Expired: number;
+  };
+};

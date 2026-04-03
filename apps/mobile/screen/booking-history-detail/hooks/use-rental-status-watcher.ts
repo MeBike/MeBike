@@ -1,12 +1,13 @@
+import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
 import { useBikeStatusEvents } from "@hooks/useBikeStatusEvents";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import type { BikeStatusUpdate } from "@/hooks/use-bike-status-stream";
-import type { Rental } from "@/types/rental-types";
+import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
 type Options = {
-  booking?: Rental;
+  booking?: MyRentalResolvedDetail["rental"];
   hasToken: boolean;
   refetchDetail: () => Promise<unknown> | unknown;
 };
@@ -29,10 +30,7 @@ export function useRentalStatusWatcher({
 
       if (isTargetBike && isRelevantStatus) {
         refetchDetail();
-        queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
-        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
-        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "detail", booking?.id] });
-        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "resolved-detail", booking?.id] });
+        void invalidateMyRentalQueries(queryClient);
       }
     },
     [bikeId, booking?.id, queryClient, refetchDetail],

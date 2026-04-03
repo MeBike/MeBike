@@ -17,6 +17,7 @@ import type {
   AdminRentalFilter,
   AdminRentalListItem,
   BikeSwapRequestRow,
+  MyBikeSwapRequestFilter,
   MyRentalFilter,
   RentalCountsRow,
   RentalRow,
@@ -96,9 +97,7 @@ export type RentalRepo = {
     data: UpdateRentalOnEndInput,
   ) => Effect.Effect<Option.Option<RentalRow>>;
 
-  findById: (
-    rentalId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>>;
+  findById: (rentalId: string) => Effect.Effect<Option.Option<RentalRow>>;
 
   // Admin read views
   adminListRentals: (
@@ -126,6 +125,7 @@ export type RentalRepo = {
   >;
 
   staffListBikeSwapRequests: (
+    staffUserId: string,
     filter: StaffBikeSwapRequestFilter,
     pageReq: PageRequest<StaffBikeSwapRequestSortField>,
   ) => Effect.Effect<
@@ -134,6 +134,7 @@ export type RentalRepo = {
   >;
 
   staffGetBikeSwapRequests: (
+    staffUserId: string,
     bikeSwapRequestId: string,
   ) => Effect.Effect<
     Option.Option<StaffBikeSwapRequestRow>,
@@ -148,7 +149,15 @@ export type RentalRepo = {
     RentalRepositoryError
   >;
 
+  adminGetBikeSwapRequest: (
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    Option.Option<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
+
   staffApproveBikeSwapRequests: (
+    staffUserId: string,
     bikeSwapRequestId: string,
   ) => Effect.Effect<
     Option.Option<StaffBikeSwapRequestRow>,
@@ -159,6 +168,7 @@ export type RentalRepo = {
   >;
 
   staffRejectBikeSwapRequests: (
+    staffUserId: string,
     bikeSwapRequestId: string,
     reason: string,
   ) => Effect.Effect<
@@ -166,5 +176,21 @@ export type RentalRepo = {
     | RentalRepositoryError
     | BikeSwapRequestNotFound
     | InvalidBikeSwapRequestStatus
+  >;
+
+  getMyBikeSwapRequests: (
+    filter: MyBikeSwapRequestFilter,
+    pageReq: PageRequest<StaffBikeSwapRequestSortField>,
+  ) => Effect.Effect<
+    PageResult<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
+
+  getMyBikeSwapRequest: (
+    userId: string,
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    StaffBikeSwapRequestRow,
+    RentalRepositoryError | BikeSwapRequestNotFound
   >;
 };

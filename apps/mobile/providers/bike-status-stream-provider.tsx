@@ -1,3 +1,7 @@
+import {
+  invalidateAllRentalQueries,
+  invalidateRentalSupportQueries,
+} from "@hooks/rentals/rental-cache";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -37,16 +41,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   const handleUpdate = useCallback(
     (payload: BikeStatusUpdate) => {
       setLastUpdate(payload);
-      queryClient.invalidateQueries({ queryKey: ["rentals"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["rentalsHistory"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "current"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] });
-      queryClient.invalidateQueries({ queryKey: ["bikes", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["all-stations"] });
-      queryClient.invalidateQueries({ queryKey: ["station"] });
+      void invalidateAllRentalQueries(queryClient);
+      void invalidateRentalSupportQueries(queryClient);
 
       if (Platform.OS === "android") {
         const status = (payload.status || "").toUpperCase();

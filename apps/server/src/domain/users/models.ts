@@ -9,12 +9,6 @@ export type AgencyOrgUnitRef = OrgUnitRef & {
   readonly status: AccountStatus;
 };
 
-export type TechnicianTeamAvailableOption = {
-  readonly id: string;
-  readonly name: string;
-  readonly stationId: string;
-};
-
 export type UserOrgAssignment = {
   readonly station: OrgUnitRef | null;
   readonly agency: AgencyOrgUnitRef | null;

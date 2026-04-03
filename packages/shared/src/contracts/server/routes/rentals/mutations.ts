@@ -18,13 +18,13 @@ import {
 import { unauthorizedResponse } from "../helpers";
 import {
   BikeSwapRequestDetailSchemaOpenApi,
+  BikeSwapRequestSchemaOpenApi,
   createSuccessResponse,
   RentalDetailSchemaOpenApi,
   RentalErrorResponseSchema,
   RentalIdParamSchema,
   RentalSchemaOpenApi,
   RentalWithPriceSchemaOpenApi,
-  RequestBikeSwapRequestSchemaOpenApi,
   SOSIdParamSchema,
 } from "./shared";
 
@@ -496,7 +496,7 @@ export const requestBikeSwap = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RequestBikeSwapRequestSchemaOpenApi,
+            BikeSwapRequestSchemaOpenApi,
             "Request bike swap response",
           ),
         },
@@ -632,12 +632,11 @@ export const approveBikeSwapRequest = createRoute({
           examples: {
             CannotApproveSwapWithStatus: {
               value: {
-                error: "Cannot approve bike swap in this status",
+                error: "Invalid bike swap request status",
                 details: {
-                  code: RentalErrorCodeSchema.enum
-                    .CANNOT_APPROVE_SWAP_THIS_RENTAL_WITH_STATUS,
-                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                  status: "COMPLETED",
+                  code: BikeSwapRequestErrorCodeSchema.enum
+                    .INVALID_BIKE_SWAP_REQUEST_STATUS,
+                  currentStatus: "CONFIRMED",
                 },
               },
             },
@@ -723,22 +722,11 @@ export const rejectBikeSwapRequest = createRoute({
           examples: {
             CannotRejectSwapWithStatus: {
               value: {
-                error: "Cannot reject bike swap in this status",
+                error: "Invalid bike swap request status",
                 details: {
                   code: BikeSwapRequestErrorCodeSchema.enum
                     .INVALID_BIKE_SWAP_REQUEST_STATUS,
-                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                  status: "COMPLETED",
-                },
-              },
-            },
-            BikeSwapRequestNotFound: {
-              value: {
-                error: "Bike swap request not found",
-                details: {
-                  code: BikeSwapRequestErrorCodeSchema.enum
-                    .BIKE_SWAP_REQUEST_NOT_FOUND,
-                  bikeSwapRequestId: "665fd6e36b7e5d53f8f3d2c9",
+                  currentStatus: "REJECTED",
                 },
               },
             },

@@ -11,7 +11,10 @@ import type {
 } from "../domain-errors";
 import type { StaffBikeSwapRequestRow } from "../models";
 
-import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
+import {
+  makeRentalRepository,
+  RentalRepository,
+} from "../repository/rental.repository";
 
 export class StaffBikeRequestNotFound extends Data.TaggedError(
   "StaffBikeRequestNotFound",
@@ -24,6 +27,7 @@ export class StaffBikeRequestNotFound extends Data.TaggedError(
 }
 
 export function staffGetChangeBikeDetail(
+  userId: string,
   bikeSwapRequestId: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,
@@ -33,7 +37,10 @@ export function staffGetChangeBikeDetail(
   return Effect.gen(function* () {
     const repo = yield* RentalRepository;
 
-    const result = yield* repo.staffGetBikeSwapRequests(bikeSwapRequestId);
+    const result = yield* repo.staffGetBikeSwapRequests(
+      userId,
+      bikeSwapRequestId,
+    );
 
     if (Option.isNone(result)) {
       return yield* Effect.fail(
@@ -46,6 +53,7 @@ export function staffGetChangeBikeDetail(
 }
 
 export function staffApproveBikeSwapRequest(
+  userId: string,
   bikeSwapRequestId: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,
@@ -62,7 +70,7 @@ export function staffApproveBikeSwapRequest(
 
     const result = yield* runPrismaTransaction(client, (tx) => {
       const txRepo = makeRentalRepository(tx);
-      return txRepo.staffApproveBikeSwapRequests(bikeSwapRequestId);
+      return txRepo.staffApproveBikeSwapRequests(userId, bikeSwapRequestId);
     });
 
     if (Option.isNone(result)) {
@@ -76,6 +84,7 @@ export function staffApproveBikeSwapRequest(
 }
 
 export function staffRejectBikeSwapRequest(
+  userId: string,
   bikeSwapRequestId: string,
   reason: string,
 ): Effect.Effect<
@@ -90,6 +99,7 @@ export function staffRejectBikeSwapRequest(
     const repo = yield* RentalRepository;
 
     const result = yield* repo.staffRejectBikeSwapRequests(
+      userId,
       bikeSwapRequestId,
       reason,
     );

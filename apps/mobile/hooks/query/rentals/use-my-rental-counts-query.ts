@@ -1,5 +1,6 @@
 import type { RentalError } from "@services/rentals";
 
+import { rentalKeys } from "@hooks/query/rentals/rental-query-keys";
 import { rentalServiceV1 } from "@services/rentals";
 import { useQuery } from "@tanstack/react-query";
 
@@ -12,7 +13,7 @@ export function useMyRentalCountsQuery(
   const enabled = options?.enabled ?? true;
 
   return useQuery<RentalCounts, RentalError>({
-    queryKey: ["rentals", "me", "counts", status ?? null],
+    queryKey: rentalKeys.meCounts(status),
     enabled,
     queryFn: async () => {
       const result = await rentalServiceV1.getMyRentalCounts(status);

@@ -5,6 +5,8 @@ import type { PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient, UserRole } from "generated/prisma/client";
 
 import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
+import { makeStationRepository } from "@/domain/stations";
+import { makeTechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -31,7 +33,7 @@ import type { AgencyRequestRepo } from "../repository/agency-request.repository"
 import { hashPassword } from "../../auth/services/auth.service";
 import { makeUserCommandRepository } from "../../users/repository/user-command.repository";
 import { makeUserQueryRepository } from "../../users/repository/user-query.repository";
-import { makeUserCommandService } from "../../users/services/commands/user.command.service";
+import { makeUserCommandService } from "../../users/services/user-command.service";
 import {
   AgencyRequestNotFound as AgencyRequestNotFoundError,
   AgencyRequestNotOwned as AgencyRequestNotOwnedError,
@@ -140,8 +142,11 @@ function makeAgencyRequestService(
           const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
           const txAgencyService = makeAgencyService(makeAgencyRepository(tx));
           const txUserCommandService = makeUserCommandService({
+            agencyRepo: makeAgencyRepository(tx),
             commandRepo: makeUserCommandRepository(tx),
             queryRepo: makeUserQueryRepository(tx),
+            stationRepo: makeStationRepository(tx),
+            technicianTeamQueryRepo: makeTechnicianTeamQueryRepository(tx),
           });
 
           const found = yield* txAgencyRequestRepo.findById(agencyRequestId);

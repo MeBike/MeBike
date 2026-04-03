@@ -81,6 +81,7 @@ const MAPPING = {
   // System & Settings
   "gear": "settings",
   "gearshape.fill": "settings",
+  "wrench.and.screwdriver.fill": "build",
   "slider.horizontal.3": "tune",
   "info.circle.fill": "info",
   "info.circle": "info",

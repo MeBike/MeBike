@@ -2,7 +2,10 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match, Option } from "effect";
 
-import { ReservationQueryServiceTag } from "@/domain/reservations";
+import {
+  ReservationQueryServiceTag,
+  ReservationStatsServiceTag,
+} from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractReservation,
@@ -15,6 +18,7 @@ import type {
   ReservationErrorResponse,
   ReservationExpandedDetailResponse,
   ReservationsRoutes,
+  ReservationSummaryStatsResponse,
 } from "./shared";
 
 import {
@@ -103,7 +107,20 @@ const adminGetReservation: RouteHandler<
   );
 };
 
+const getReservationStatsSummary: RouteHandler<
+  ReservationsRoutes["getReservationStatsSummary"]
+> = async (c) => {
+  const eff = withLoggedCause(
+    Effect.flatMap(ReservationStatsServiceTag, svc => svc.getSummary()),
+    "GET /v1/reservations/stats/summary",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json<ReservationSummaryStatsResponse, 200>(result, 200);
+};
+
 export const ReservationAdminController = {
   adminListReservations,
   adminGetReservation,
+  getReservationStatsSummary,
 } as const;
