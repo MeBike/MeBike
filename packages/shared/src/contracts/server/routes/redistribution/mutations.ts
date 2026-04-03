@@ -7,7 +7,7 @@ import {
   RedistributionReqErrorResponseSchema,
   RedistributionRequestSchemaOpenApi,
 } from "./shared";
-import { forbiddenResponse, unauthorizedResponse } from "../helpers";
+import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from "../helpers";
 
 export const createRedistributionRequest = createRoute({
   method: "post",
@@ -36,19 +36,30 @@ export const createRedistributionRequest = createRoute({
       },
     },
     400: {
-      description: "Cannot create distribution request",
+      description: "Redistribution request created failed",
       content: {
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
           examples: {
-            InsufficientBikes: {
+            NotEnoughBikesAtStation: {
               value: {
                 error: "Insufficient available bikes",
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .INSUFFICIENT_AVAILABLE_BIKES,
-                  requestedQuantity: 15,
-                  availableBikes: 10,
+                  required: 15,
+                  available: 10,
+                },
+              },
+            },
+            NotEnoughEmptySlotsAtTarget: {
+              value: {
+                error: "Insufficient empty slots at target station",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .INSUFFICIENT_EMPTY_SLOTS,
+                  required: 15,
+                  available: 10,
                 },
               },
             },
@@ -57,7 +68,39 @@ export const createRedistributionRequest = createRoute({
       },
     },
     401: unauthorizedResponse(),
-    403: forbiddenResponse("Staff"),
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "User not found",
+      example: {
+        error: "User not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+          userId: "user-id",
+        },
+      },
+    }),
+    403: {
+      description: "Unauthorized redistribution request creation",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            ...forbiddenResponse("Staff").content["application/json"].examples,
+            UnauthorizedRedistributionCreation: {
+              value: {
+                error: "Unauthorized redistribution creation",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_REDISTRIBUTION_CREATION,
+                  userId: "user-id",
+                  sourceStationId: "station-id",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 });
 

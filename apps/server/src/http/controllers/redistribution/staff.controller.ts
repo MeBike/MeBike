@@ -61,12 +61,14 @@ const createRedistributionRequest: RouteHandler<
             },
             404,
           )),
-        Match.tag("UnauthorizedRedistributionCreation", () =>
+        Match.tag("UnauthorizedRedistributionCreation", ({ userId, sourceStationId }) =>
           c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
             {
               error: redistributionReqErrorMessages.UNAUTHORIZED_REDISTRIBUTION_CREATION,
               details: {
                 code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_REDISTRIBUTION_CREATION,
+                userId,
+                sourceStationId,
               },
             },
             403,

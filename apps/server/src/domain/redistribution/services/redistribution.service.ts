@@ -21,7 +21,6 @@ import type { RedistributionRepo } from "../repository/redistribution.repository
 import {
   NotEnoughBikesAtStation,
   NotEnoughEmptySlotsAtTarget,
-  StationNotFound,
   UnauthorizedRedistributionCreation,
   UserNotFound,
 } from "../domain-errors";
