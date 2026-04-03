@@ -101,6 +101,7 @@ const staffGetRental: RouteHandler<RentalsRoutes["staffGetRental"]> = async (
 const staffListBikeSwapRequests: RouteHandler<
   RentalsRoutes["staffListBikeSwapRequests"]
 > = async (c) => {
+  const userId = c.var.currentUser!.userId;
   const query = c.req.valid("query");
 
   const eff = withLoggedCause(
@@ -108,9 +109,8 @@ const staffListBikeSwapRequests: RouteHandler<
       const repo = yield* RentalRepository;
       return yield* repo.staffListBikeSwapRequests(
         {
-          userId: query.userId,
+          userId,
           status: query.status,
-          stationId: query.stationId,
         },
         {
           page: Number(query.page ?? 1),
@@ -137,10 +137,11 @@ const staffListBikeSwapRequests: RouteHandler<
 const staffGetBikeSwapRequests: RouteHandler<
   RentalsRoutes["staffGetBikeSwapRequests"]
 > = async (c) => {
+  const userId = c.var.currentUser!.userId;
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    staffGetChangeBikeDetail(bikeSwapRequestId),
+    staffGetChangeBikeDetail(userId, bikeSwapRequestId),
     "GET /v1/staff/bike-swap-requests/{bikeSwapRequestId}",
   );
 

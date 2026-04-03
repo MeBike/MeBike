@@ -195,6 +195,21 @@ export function makeRentalRepository(
       return Effect.gen(function* () {
         const { page, pageSize, skip, take } = normalizedPage(pageReq);
         const orderBy = toStaffBikeSwapRequestsOrderBy(pageReq);
+
+        const stationId = yield* Effect.tryPromise({
+          try: () =>
+            db.userOrgAssignment.findFirst({
+              where: { userId: filter.userId },
+              select: { stationId: true },
+            }),
+          catch: e =>
+            new RentalRepositoryError({
+              operation: "staffListBikeSwapRequests.findStationId",
+              cause: e,
+            }),
+        });
+
+        filter.stationId = stationId?.stationId || "";
         const where = toStaffBikeSwapRequestsWhere(filter);
 
         const [total, items] = yield* Effect.all([
@@ -232,12 +247,25 @@ export function makeRentalRepository(
       });
     },
 
-    staffGetBikeSwapRequests(bikeSwapRequestId) {
+    staffGetBikeSwapRequests(userId, bikeSwapRequestId) {
       return Effect.gen(function* () {
+        const stationId = yield* Effect.tryPromise({
+          try: () =>
+            db.userOrgAssignment.findFirst({
+              where: { userId },
+              select: { stationId: true },
+            }),
+          catch: e =>
+            new RentalRepositoryError({
+              operation: "staffGetBikeSwapRequests.findStationId",
+              cause: e,
+            }),
+        });
+
         const raw = yield* Effect.tryPromise({
           try: () =>
             db.bikeSwapRequest.findUnique({
-              where: { id: bikeSwapRequestId },
+              where: { id: bikeSwapRequestId, stationId: stationId?.stationId },
               select: staffBikeSwapRequestSelect,
             }),
           catch: e =>

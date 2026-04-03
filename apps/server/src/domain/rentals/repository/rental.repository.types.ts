@@ -133,6 +133,7 @@ export type RentalRepo = {
   >;
 
   staffGetBikeSwapRequests: (
+    userId: string,
     bikeSwapRequestId: string,
   ) => Effect.Effect<
     Option.Option<StaffBikeSwapRequestRow>,
