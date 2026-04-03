@@ -60,11 +60,7 @@ export default function BikeClient() {
           <Plus className="w-4 h-4 mr-2" /> Thêm xe
         </Button>
       </div>
-      {statisticData && (
-        <BikeStats
-          stats={statisticData}
-        />
-      )}
+      {statisticData && <BikeStats stats={statisticData} />}
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
@@ -75,6 +71,10 @@ export default function BikeClient() {
           <TableSkeleton />
         ) : (
           <>
+            <p className="text-sm text-muted-foreground mb-4">
+              Hiển thị {paginationBikes?.page ?? 1} /{" "}
+              {paginationBikes?.totalPages ?? 1} trang
+            </p>
             <DataTable
               columns={bikeColumn({
                 onView: ({ id }) => router.push(`/admin/bikes/${id}`),

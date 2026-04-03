@@ -8,13 +8,13 @@ import { QUERY_KEYS } from "@/constants/queryKey";
 interface ActionProps {
   hasToken: boolean;
   page?: number;
-  limit?: number;
+  pageSize?: number;
   id?: string;
 }
-export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps) => {
+export const useReservationActions = ({ hasToken, page, pageSize, id }: ActionProps) => {
   const queryClient = useQueryClient();
   const { data: allReservations, refetch: isRefetchingAllReservation } =
-    useGetAllReservationQuery({ page, limit });
+    useGetAllReservationQuery({ page:page, pageSize:pageSize });
   const { data: reservationStats , refetch : isRefetchingReservationStats} = useGetReservationStatsQuery();
   const { data: detailReservation, refetch: isRefetchingDetailReservation } = useGetDetailReservationQuery(id || "");
   const fetchAllReservations = useCallback(() => {
@@ -22,9 +22,9 @@ export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps
       return;
     }
     queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, limit),
+      queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize),
     });
-  }, [queryClient, hasToken, page, limit]);
+  }, [queryClient, hasToken, page, pageSize]);
   const fetchReservationStats = useCallback(() => {
     if (!hasToken) {
       return;

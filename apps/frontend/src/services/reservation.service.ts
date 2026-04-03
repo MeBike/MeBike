@@ -10,16 +10,16 @@ import { ENDPOINT } from "@/constants";
 export const reservationService = {
   getUserReservations: async ({
     page,
-    limit,
+    pageSize,
   }: {
     page?: number;
-    limit?: number;
+    pageSize?: number;
   }): Promise<AxiosResponse<ApiResponse<Reservation[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Reservation[]>>(
       ENDPOINT.RESERVATION.BASE,
       {
-        page,
-        limit,
+        page : page,
+        pageSize : pageSize,
       },
     );
     return response;
