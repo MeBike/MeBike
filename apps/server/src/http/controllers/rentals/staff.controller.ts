@@ -108,8 +108,8 @@ const staffListBikeSwapRequests: RouteHandler<
     Effect.gen(function* () {
       const repo = yield* RentalRepository;
       return yield* repo.staffListBikeSwapRequests(
+        userId,
         {
-          userId,
           status: query.status,
         },
         {
@@ -141,7 +141,7 @@ const staffGetBikeSwapRequests: RouteHandler<
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    staffGetChangeBikeDetail(userId, bikeSwapRequestId),
+    repo.staffGetBikeSwapRequest(userId, bikeSwapRequestId),
     "GET /v1/staff/bike-swap-requests/{bikeSwapRequestId}",
   );
 

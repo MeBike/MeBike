@@ -125,6 +125,7 @@ export type RentalRepo = {
   >;
 
   staffListBikeSwapRequests: (
+    staffUserId: string,
     filter: StaffBikeSwapRequestFilter,
     pageReq: PageRequest<StaffBikeSwapRequestSortField>,
   ) => Effect.Effect<
@@ -132,8 +133,8 @@ export type RentalRepo = {
     RentalRepositoryError
   >;
 
-  staffGetBikeSwapRequests: (
-    userId: string,
+  staffGetBikeSwapRequest: (
+    staffUserId: string,
     bikeSwapRequestId: string,
   ) => Effect.Effect<
     Option.Option<StaffBikeSwapRequestRow>,

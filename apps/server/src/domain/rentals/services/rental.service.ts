@@ -9,7 +9,7 @@ import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
 import { StationNotFound, StationRepository } from "@/domain/stations";
 
-import type {
+import {
   BikeSwapRequestNotFound,
   RentalServiceFailure,
 } from "../domain-errors";
@@ -78,9 +78,18 @@ export type RentalService = {
   >;
 
   staffListBikeSwapRequests: (
+    staffUserId: string,
     filter: StaffBikeSwapRequestFilter,
     page: PageRequest<StaffBikeSwapRequestSortField>,
   ) => Effect.Effect<PageResult<StaffBikeSwapRequestRow>, never>;
+
+  staffGetBikeSwapRequest: (
+    staffUserId: string,
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    StaffBikeSwapRequestRow,
+    RentalRepositoryError | BikeSwapRequestNotFound
+  >;
 
   getMyBikeSwapRequests: (
     filter: MyBikeSwapRequestFilter,
@@ -198,10 +207,25 @@ function makeRentalService(
           .pipe(defectOn(RentalRepositoryError));
       }),
 
-    staffListBikeSwapRequests(filter, pageReq) {
+    staffListBikeSwapRequests(staffUserId, filter, pageReq) {
       return repo
-        .staffListBikeSwapRequests(filter, pageReq)
+        .staffListBikeSwapRequests(staffUserId, filter, pageReq)
         .pipe(defectOn(RentalRepositoryError));
+    },
+
+    staffGetBikeSwapRequest(staffUserId, bikeSwapRequestId) {
+      return repo
+        .staffGetBikeSwapRequest(staffUserId, bikeSwapRequestId)
+        .pipe(
+          Effect.flatMap(
+            Option.match({
+              onNone: () =>
+                Effect.fail(new BikeSwapRequestNotFound({ bikeSwapRequestId })),
+              onSome: Effect.succeed,
+            }),
+          ),
+          defectOn(RentalRepositoryError),
+        );
     },
 
     getMyBikeSwapRequests(filter, pageReq) {
