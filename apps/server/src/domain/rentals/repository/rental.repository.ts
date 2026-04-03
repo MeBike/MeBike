@@ -229,8 +229,11 @@ export function makeRentalRepository(
           return makePageResult([], 0, page, pageSize);
         }
 
-        filter.stationId = station.stationId;
-        const where = toStaffBikeSwapRequestsWhere(filter);
+        const filterWithStationScope = {
+          ...filter,
+          stationId: station.stationId,
+        };
+        const where = toStaffBikeSwapRequestsWhere(filterWithStationScope);
 
         const [total, items] = yield* Effect.all([
           Effect.tryPromise({
@@ -267,7 +270,7 @@ export function makeRentalRepository(
       });
     },
 
-    staffGetBikeSwapRequest(staffUserId, bikeSwapRequestId) {
+    staffGetBikeSwapRequests(staffUserId, bikeSwapRequestId) {
       return Effect.gen(function* () {
         const station = yield* Effect.tryPromise({
           try: () =>
@@ -346,12 +349,12 @@ export function makeRentalRepository(
       });
     },
 
-    staffApproveBikeSwapRequests(userId: string, bikeSwapRequestId: string) {
-      return approveBikeSwapRequestWithClient(db, userId, bikeSwapRequestId);
+    staffApproveBikeSwapRequests(staffUserId: string, bikeSwapRequestId: string) {
+      return approveBikeSwapRequestWithClient(db, staffUserId, bikeSwapRequestId);
     },
 
     staffRejectBikeSwapRequests(
-      userId: string,
+      staffUserId: string,
       bikeSwapRequestId: string,
       reason: string,
     ) {
@@ -359,7 +362,7 @@ export function makeRentalRepository(
         const stationId = yield* Effect.tryPromise({
           try: () =>
             db.userOrgAssignment.findFirst({
-              where: { userId },
+              where: { userId: staffUserId },
               select: { stationId: true },
             }),
           catch: e =>

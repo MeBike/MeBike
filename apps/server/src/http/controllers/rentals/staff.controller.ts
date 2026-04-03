@@ -110,6 +110,7 @@ const staffListBikeSwapRequests: RouteHandler<
       return yield* repo.staffListBikeSwapRequests(
         userId,
         {
+          userId: query.userId,
           status: query.status,
         },
         {
@@ -141,7 +142,7 @@ const staffGetBikeSwapRequests: RouteHandler<
   const { bikeSwapRequestId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    repo.staffGetBikeSwapRequest(userId, bikeSwapRequestId),
+    staffGetChangeBikeDetail(userId, bikeSwapRequestId),
     "GET /v1/staff/bike-swap-requests/{bikeSwapRequestId}",
   );
 
