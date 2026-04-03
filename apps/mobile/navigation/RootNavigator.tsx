@@ -6,7 +6,6 @@ import type { RootStackParamList } from "../types/navigation";
 import BikeDetailScreen from "../screen/BikeDetailScreen";
 import BookingHistoryDetail from "../screen/booking-history-detail/booking-history-detail-screen";
 import ChangePasswordScreen from "../screen/ChangePasswordScreen";
-import CreateSOSRequestScreen from "../screen/CreateSOSRequestScreen";
 import EmailVerificationScreen from "../screen/EmailVerification";
 import FixedSlotTemplatesScreen from "../screen/fixed-slot-templates";
 import FixedSlotDetailScreen from "../screen/FixedSlotDetailScreen";
@@ -15,26 +14,18 @@ import ForgotPasswordScreen from "../screen/ForgotPassword";
 import IntroScreen from "../screen/Intro";
 import LoginScreen from "../screen/login";
 import MyWalletScreen from "../screen/my-wallet-screen";
-import MySOSDetailScreen from "../screen/MySOSDetailScreen";
-import MySOSScreen from "../screen/MySOSScreen";
 import QRScannerScreen from "../screen/QRScannerScreen";
 import RegisterScreen from "../screen/Register";
 import RentalQrScreen from "../screen/RentalQrScreen";
-import ReportDetailScreen from "../screen/ReportDetailScreen";
-import ReportScreen from "../screen/ReportScreen";
 import ReservationDetailScreen from "../screen/reservation-detail-screen";
 import ReservationFlowScreen from "../screen/ReservationFlowScreen";
 import ReservationScreen from "../screen/reservations";
 import ResetPasswordFormScreen from "../screen/ResetPasswordForm";
 import ResetPasswordOTPScreen from "../screen/ResetPasswordOTP";
-import ResolveSOSFormScreen from "../screen/ResolveSOSFormScreen";
-import ResolveSOSScreen from "../screen/ResolveSOSScreen";
-import SOSAgentDetailScreen from "../screen/SOSAgentDetailScreen";
 import StaffPhoneLookupScreen from "../screen/StaffPhoneLookupScreen";
 import StaffRentalDetailScreen from "../screen/StaffRentalDetailScreen";
 import StationDetailScreen from "../screen/StationDetail";
 import SubscriptionScreen from "../screen/subscription-screen";
-import SupportScreen from "../screen/SupportScreen";
 import UpdateProfileScreen from "../screen/UpdateProfileScreen";
 import WithdrawScreen from "../screen/withdraw-screen";
 import StationSelectScreen from "../styles/StationSelect";
@@ -166,21 +157,6 @@ function RootNavigator() {
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
-        name="Support"
-        component={SupportScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="ReportDetail"
-        component={ReportDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="Report"
-        component={ReportScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
         name="Withdraw"
         component={WithdrawScreen}
         options={{ headerShown: false, gestureEnabled: false }}
@@ -194,55 +170,6 @@ function RootNavigator() {
         name="StaffPhoneLookup"
         component={StaffPhoneLookupScreen}
         options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="ResolveSOSScreen"
-        component={ResolveSOSScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: false,
-          presentation: "modal",
-        }}
-      />
-      <Stack.Screen
-        name="CreateSOSRequest"
-        component={CreateSOSRequestScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: false,
-        }}
-      />
-      <Stack.Screen
-        name="MySOS"
-        component={MySOSScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: false,
-        }}
-      />
-      <Stack.Screen
-        name="MySOSDetail"
-        component={MySOSDetailScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: false,
-        }}
-      />
-      <Stack.Screen
-        name="SOSAgentDetail"
-        component={SOSAgentDetailScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: false,
-        }}
-      />
-      <Stack.Screen
-        name="ResolveSOSForm"
-        component={ResolveSOSFormScreen}
-        options={{
-          headerShown: false,
-          gestureEnabled: false,
-        }}
       />
     </Stack.Navigator>
   );
