@@ -8,30 +8,50 @@ type UseMyBikeSwapRequestQueryOptions = {
   rentalId: string;
   requestId?: string;
   enabled?: boolean;
+  keepPollingWhenMissing?: boolean;
 };
 
 export function useMyBikeSwapRequestQuery({
   rentalId,
   requestId,
   enabled = true,
+  keepPollingWhenMissing = false,
 }: UseMyBikeSwapRequestQueryOptions) {
-  return useQuery<BikeSwapRequestDetail | null>({
-    queryKey: requestId
-      ? rentalKeys.bikeSwap.meDetail(requestId)
-      : rentalKeys.bikeSwap.meList({ page: 1, pageSize: 20, rentalId }),
-    enabled: enabled && Boolean(rentalId),
+  const detailQuery = useQuery<BikeSwapRequestDetail | null>({
+    queryKey: rentalKeys.bikeSwap.meDetail(requestId ?? null),
+    enabled: enabled && Boolean(requestId),
     queryFn: async () => {
-      if (requestId) {
-        const result = await rentalServiceV1.getMyBikeSwapRequest(requestId);
-        if (result.ok) {
-          return result.value;
-        }
-
-        if (!isRentalApiError(result.error) || result.error.code !== "BIKE_SWAP_REQUEST_NOT_FOUND") {
-          throw result.error;
-        }
+      if (!requestId) {
+        return null;
       }
 
+      const result = await rentalServiceV1.getMyBikeSwapRequest(requestId!);
+      if (result.ok) {
+        return result.value;
+      }
+
+      if (!isRentalApiError(result.error) || result.error.code !== "BIKE_SWAP_REQUEST_NOT_FOUND") {
+        throw result.error;
+      }
+
+      return null;
+    },
+    refetchInterval: (query) => {
+      const shouldKeepPollingWithoutResult = keepPollingWhenMissing && query.state.data === null;
+
+      if (shouldKeepPollingWithoutResult || query.state.data?.status === "PENDING") {
+        return 15 * 1000;
+      }
+
+      return false;
+    },
+    staleTime: 5 * 1000,
+  });
+
+  const rentalQuery = useQuery<BikeSwapRequestDetail | null>({
+    queryKey: rentalKeys.bikeSwap.meList({ page: 1, pageSize: 20, rentalId }),
+    enabled: enabled && Boolean(rentalId) && (!requestId || detailQuery.data === null),
+    queryFn: async () => {
       const result = await rentalServiceV1.listMyBikeSwapRequests({
         page: 1,
         pageSize: 20,
@@ -45,8 +65,9 @@ export function useMyBikeSwapRequestQuery({
       return result.value.data[0] ?? null;
     },
     refetchInterval: (query) => {
-      const hasUnresolvedLookup = Boolean(requestId) && query.state.data === undefined;
-      if (hasUnresolvedLookup || query.state.data?.status === "PENDING") {
+      const shouldKeepPollingWithoutResult = keepPollingWhenMissing && query.state.data === null;
+
+      if (shouldKeepPollingWithoutResult || query.state.data?.status === "PENDING") {
         return 15 * 1000;
       }
 
@@ -54,4 +75,15 @@ export function useMyBikeSwapRequestQuery({
     },
     staleTime: 5 * 1000,
   });
+
+  return {
+    data: detailQuery.data ?? rentalQuery.data ?? null,
+    isRefetching: detailQuery.isRefetching || rentalQuery.isRefetching,
+    refetch: async () => {
+      await Promise.all([
+        requestId ? detailQuery.refetch() : Promise.resolve(),
+        rentalQuery.refetch(),
+      ]);
+    },
+  };
 }

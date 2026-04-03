@@ -113,9 +113,11 @@ function BookingHistoryDetailScreen() {
     navigation.navigate("Trạm", {
       selectionMode: "rental-bike-swap",
       rentalId: detail.rental.id,
-      currentBikeSwapStationId: isBikeSwapPending ? bikeSwapPreview?.stationId : undefined,
+      currentBikeSwapStationId: isBikeSwapPending
+        ? (bikeSwapRequest?.station?.id ?? bikeSwapPreview?.stationId)
+        : undefined,
     });
-  }, [bikeSwapPreview?.stationId, detail, isBikeSwapPending, navigation]);
+  }, [bikeSwapPreview?.stationId, bikeSwapRequest?.station?.id, detail, isBikeSwapPending, navigation]);
 
   const handleOpenReturnQr = useCallback(() => {
     navigation.navigate("RentalQr", { bookingId });

@@ -25,6 +25,7 @@ export function useBookingBikeSwapState({
     rentalId: bookingId,
     requestId: bikeSwapPreview?.requestId,
     enabled: isOngoing,
+    keepPollingWhenMissing: bikeSwapPreview?.status === "PENDING",
   });
   const bikeSwapRequest = bikeSwapRequestQuery.data ?? null;
 
