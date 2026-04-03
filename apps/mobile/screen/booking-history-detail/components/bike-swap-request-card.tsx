@@ -1,8 +1,7 @@
-import { Spinner, useTheme, XStack, YStack } from "tamagui";
-
-import { IconSymbol } from "@components/IconSymbol";
+import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
+import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 type BikeSwapPreviewStatus = "NONE" | "PENDING" | "CONFIRMED";
 
@@ -25,15 +24,15 @@ export function BikeSwapRequestCard({
   const isConfirmed = status === "CONFIRMED";
 
   return (
-    <YStack backgroundColor="$surfaceMuted" padding="$4" paddingHorizontal="$5">
+    <YStack backgroundColor="$surfaceDefault" padding="$4" paddingHorizontal="$5">
       <XStack alignItems="center" gap="$3" justifyContent="space-between">
         <XStack alignItems="center" flex={1} gap="$3">
           <YStack
             alignItems="center"
-            backgroundColor={isPending ? "$surfaceWarning" : isConfirmed ? "$surfaceSuccess" : "$surfaceDefault"}
+            backgroundColor={isPending ? "$surfaceWarning" : isConfirmed ? "$surfaceSuccess" : "$surfaceAccent"}
             borderColor="$borderSubtle"
             borderRadius="$4"
-            borderWidth={isPending || isConfirmed ? 0 : 1}
+            borderWidth={isPending || isConfirmed ? 0 : 0}
             height={44}
             justifyContent="center"
             width={44}
@@ -50,7 +49,7 @@ export function BikeSwapRequestCard({
                   )
                 : (
                     <IconSymbol
-                      color={theme.textSecondary.val}
+                      color={theme.actionPrimary.val}
                       name="wrench.and.screwdriver.fill"
                       size={18}
                     />

@@ -1,11 +1,10 @@
-import { Separator, useTheme, XStack, YStack } from "tamagui";
-
-import type { MyRentalResolvedDetail } from "@/types/rental-types";
-
-import { IconSymbol } from "@components/IconSymbol";
+import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { Separator, useTheme, XStack, YStack } from "tamagui";
+
+import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
 import {
   formatCurrencyText,
