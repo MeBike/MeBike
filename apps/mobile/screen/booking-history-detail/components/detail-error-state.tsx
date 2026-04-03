@@ -1,9 +1,8 @@
-import { useTheme, YStack } from "tamagui";
-
-import { IconSymbol } from "@components/IconSymbol";
+import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, YStack } from "tamagui";
 
 type DetailErrorStateProps = {
   onRetry: () => void;

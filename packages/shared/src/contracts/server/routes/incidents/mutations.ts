@@ -1,5 +1,12 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import { TechnicianAssignmentSummarySchema } from "../../incidents";
+import {
+  IncidentErrorCodeSchema,
+  incidentErrorMessages,
+  IncidentErrorResponseSchema,
+} from "../../incidents/errors";
+import { ServerErrorResponseSchema } from "../../schemas";
 import { unauthorizedResponse } from "../helpers";
 import {
   IncidentCreateBodySchema,
@@ -8,12 +15,6 @@ import {
   IncidentSummarySchema,
   IncidentUpdateBodySchema,
 } from "./shared";
-import {
-  IncidentErrorCodeSchema,
-  IncidentErrorResponseSchema,
-  incidentErrorMessages,
-} from "../../incidents/errors";
-import { TechnicianAssignmentSummarySchema } from "../../incidents";
 
 export const createIncident = createRoute({
   method: "post",
@@ -38,7 +39,7 @@ export const createIncident = createRoute({
       description: "Invalid payload",
       content: {
         "application/json": {
-          schema: IncidentErrorResponseSchema,
+          schema: ServerErrorResponseSchema,
           examples: {
             BikeNotAvailable: {
               value: {
@@ -151,7 +152,7 @@ export const updateIncident = createRoute({
       description: "Invalid payload",
       content: {
         "application/json": {
-          schema: IncidentErrorResponseSchema,
+          schema: ServerErrorResponseSchema,
         },
       },
     },

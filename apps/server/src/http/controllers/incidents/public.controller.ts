@@ -26,6 +26,7 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
       return yield* service.listIncidents(
         user!.role,
         {
+          rentalId: query.rentalId,
           stationId: query.stationId,
           status: query.status as IncidentStatus,
           userId: user?.role === "ADMIN" ? undefined : user?.userId,

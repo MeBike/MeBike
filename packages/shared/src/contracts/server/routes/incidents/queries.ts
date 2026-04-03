@@ -1,5 +1,9 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import {
+  IncidentErrorCodeSchema,
+  IncidentErrorResponseSchema,
+} from "../../incidents/errors";
 import { ServerErrorResponseSchema } from "../../schemas";
 import { unauthorizedResponse } from "../helpers";
 import {
@@ -8,10 +12,6 @@ import {
   IncidentListQuerySchema,
   IncidentListResponseSchema,
 } from "./shared";
-import {
-  IncidentErrorCodeSchema,
-  IncidentErrorResponseSchema,
-} from "../../incidents/errors";
 
 export const listIncidents = createRoute({
   method: "get",
@@ -32,7 +32,7 @@ export const listIncidents = createRoute({
       description: "Invalid query",
       content: {
         "application/json": {
-          schema: IncidentErrorResponseSchema,
+          schema: ServerErrorResponseSchema,
           examples: {
             InvalidStatus: {
               value: {
