@@ -2,7 +2,6 @@ import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
-import { getBikeChipDisplay } from "@utils/bike";
 import { View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
@@ -14,7 +13,9 @@ import { IncidentRequestCard } from "./incident-request-card";
 
 type RentalJourneyCardProps = {
   detail: MyRentalResolvedDetail;
-  bikeSwapStatus?: "NONE" | "PENDING" | "CONFIRMED";
+  bikeSwapStatus?: "NONE" | "PENDING" | "CONFIRMED" | "REJECTED";
+  confirmedBikeLabel?: string;
+  bikeSwapRejectionReason?: string | null;
   onRequestBikeSwap?: () => void;
   isRequestBikeSwapDisabled?: boolean;
   showBikeSwapSection?: boolean;
@@ -118,6 +119,8 @@ function JourneyPoint({
 export function RentalJourneyCard({
   detail,
   bikeSwapStatus = "NONE",
+  confirmedBikeLabel,
+  bikeSwapRejectionReason,
   onRequestBikeSwap,
   isRequestBikeSwapDisabled = false,
   showBikeSwapSection = true,
@@ -201,9 +204,10 @@ export function RentalJourneyCard({
                 {showBikeSwapSection && onRequestBikeSwap
                   ? (
                       <BikeSwapRequestCard
-                        confirmedBikeLabel={detail.bike ? getBikeChipDisplay(detail.bike) : undefined}
+                        confirmedBikeLabel={confirmedBikeLabel}
                         disabled={isRequestBikeSwapDisabled}
                         onPress={onRequestBikeSwap}
+                        rejectionReason={bikeSwapRejectionReason}
                         status={bikeSwapStatus}
                       />
                     )

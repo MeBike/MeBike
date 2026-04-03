@@ -21,6 +21,21 @@ export const rentalKeys = {
   bikeSwap: {
     mePreview: (rentalId: string) =>
       ["rentals", "me", "bike-swap", "preview", rentalId] as const,
+    meList: (params: BikeSwapRequestListParams = {}) =>
+      [
+        "rentals",
+        "me",
+        "bike-swap",
+        "list",
+        params.rentalId ?? null,
+        params.status ?? null,
+        params.sortBy ?? null,
+        params.sortDir ?? null,
+        params.page ?? null,
+        params.pageSize ?? null,
+      ] as const,
+    meDetail: (bikeSwapRequestId: string | null) =>
+      ["rentals", "me", "bike-swap", "detail", bikeSwapRequestId] as const,
     staff: () => ["rentals", "staff", "bike-swap"] as const,
     staffList: (params: BikeSwapRequestListParams = {}) =>
       [

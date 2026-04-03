@@ -1,4 +1,5 @@
 import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
+import { useMyBikeSwapRequestQuery } from "@hooks/rentals/use-my-bike-swap-request-query";
 import { log } from "@lib/log";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -7,7 +8,7 @@ import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { Screen } from "@ui/primitives/screen";
 import { getBikeChipDisplay } from "@utils/bike";
 import * as Location from "expo-location";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, YStack } from "tamagui";
@@ -103,7 +104,7 @@ function BookingHistoryDetailScreen() {
   const { bookingId } = route.params as RouteParams;
   const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
-  const { preview: bikeSwapPreview } = useMyBikeSwapPreview(bookingId);
+  const { preview: bikeSwapPreview, setPreviewStatus } = useMyBikeSwapPreview(bookingId);
   const [isIncidentSheetOpen, setIncidentSheetOpen] = useState(false);
   const [isSubmittingIncidentReport, setSubmittingIncidentReport] = useState(false);
   const createIncidentMutation = useCreateIncidentMutation();
@@ -129,11 +130,28 @@ function BookingHistoryDetailScreen() {
   const isOngoing = booking?.status === "RENTED";
   const rentalIncidentQuery = useRentalIncidentQuery(bookingId, isOngoing);
   const rentalIncident = rentalIncidentQuery.data ?? null;
-  const bikeSwapStatus = bikeSwapPreview
-    ? booking?.bikeId && booking.bikeId !== bikeSwapPreview.oldBikeId
-      ? "CONFIRMED"
-      : "PENDING"
-    : "NONE";
+  const bikeSwapRequestQuery = useMyBikeSwapRequestQuery({
+    rentalId: bookingId,
+    requestId: bikeSwapPreview?.requestId,
+    enabled: isOngoing,
+  });
+  const bikeSwapRequest = bikeSwapRequestQuery.data ?? null;
+  const bikeSwapStatus = bikeSwapRequest
+    ? bikeSwapRequest.status === "PENDING"
+      ? "PENDING"
+      : bikeSwapRequest.status === "CONFIRMED"
+        ? "CONFIRMED"
+        : bikeSwapRequest.status === "REJECTED"
+          ? "REJECTED"
+          : "NONE"
+    : bikeSwapPreview?.status === "PENDING"
+      ? "PENDING"
+      : "NONE";
+  const confirmedBikeLabel = bikeSwapRequest?.newBike
+    ? getBikeChipDisplay(bikeSwapRequest.newBike)
+    : detail?.bike
+      ? getBikeChipDisplay(detail.bike)
+      : undefined;
   const isReportingIncident = isSubmittingIncidentReport || createIncidentMutation.isPending;
   const isBikeSwapPending = bikeSwapStatus === "PENDING";
   const hasActiveIncident = Boolean(rentalIncident && !isIncidentTerminalStatus(rentalIncident.status));
@@ -145,7 +163,15 @@ function BookingHistoryDetailScreen() {
     return booking.bikeId !== rentalIncident.bike.id;
   }, [booking, detail?.bike, rentalIncident]);
   const actionBarHeight = isOngoing ? 188 + Math.max(insets.bottom, spaceScale[4]) : spaceScale[9];
-  const isScreenRefreshing = isRefreshing || rentalIncidentQuery.isRefetching;
+  const isScreenRefreshing = isRefreshing || rentalIncidentQuery.isRefetching || bikeSwapRequestQuery.isRefetching;
+
+  useEffect(() => {
+    if (!bikeSwapPreview || !bikeSwapRequest || bikeSwapPreview.status === bikeSwapRequest.status) {
+      return;
+    }
+
+    setPreviewStatus(bikeSwapRequest.status);
+  }, [bikeSwapPreview, bikeSwapRequest, setPreviewStatus]);
 
   const handleChooseReturnStation = useCallback(() => {
     if (!detail) {
@@ -227,8 +253,9 @@ function BookingHistoryDetailScreen() {
     await Promise.all([
       onRefresh(),
       rentalIncidentQuery.refetch(),
+      bikeSwapRequestQuery.refetch(),
     ]);
-  }, [onRefresh, rentalIncidentQuery]);
+  }, [bikeSwapRequestQuery, onRefresh, rentalIncidentQuery]);
 
   if (isInitialLoading && !detail) {
     return (
@@ -283,7 +310,9 @@ function BookingHistoryDetailScreen() {
                 )
               : null}
             <RentalJourneyCard
+              bikeSwapRejectionReason={bikeSwapRequest?.reason ?? null}
               bikeSwapStatus={bikeSwapStatus}
+              confirmedBikeLabel={confirmedBikeLabel}
               detail={detail}
               isRequestBikeSwapDisabled={isBikeSwapPending}
               isReportIncidentDisabled={isReportingIncident}
