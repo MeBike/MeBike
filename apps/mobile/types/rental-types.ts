@@ -70,6 +70,13 @@ export type BikeSwapRequestListParams = {
   sortDir?: "asc" | "desc";
 };
 
+export type MyBikeSwapRequestListParams = {
+  page?: number;
+  pageSize?: number;
+  rentalId?: string;
+  status?: BikeSwapStatus;
+};
+
 export type RejectBikeSwapRequestPayload = {
   reason: string;
 };

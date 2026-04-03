@@ -15,6 +15,7 @@ import type {
   BikeSwapRequestListResponse,
   CreateRentalPayload,
   CreateReturnSlotPayload,
+  MyBikeSwapRequestListParams,
   MyRentalListResponse,
   MyRentalResolvedDetail,
   RejectBikeSwapRequestPayload,
@@ -382,13 +383,14 @@ export const rentalServiceV1 = {
   },
 
   listMyBikeSwapRequests: async (
-    params: BikeSwapRequestListParams = {},
+    params: MyBikeSwapRequestListParams = {},
   ): Promise<Result<BikeSwapRequestListResponse, RentalError>> => {
     try {
       const response = await kyClient.get(routePath(ServerRoutes.rentals.getMyBikeSwapRequests), {
         searchParams: toSearchParams({
           page: params.page,
           pageSize: params.pageSize,
+          rentalId: params.rentalId,
           status: params.status,
         }),
         throwHttpErrors: false,

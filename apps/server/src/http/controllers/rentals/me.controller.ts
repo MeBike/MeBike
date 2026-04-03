@@ -670,6 +670,7 @@ const getMyBikeSwapRequests: RouteHandler<
       const service = yield* RentalServiceTag;
       return yield* service.getMyBikeSwapRequests(
         {
+          rentalId: query.rentalId,
           userId,
           status: query.status,
         },

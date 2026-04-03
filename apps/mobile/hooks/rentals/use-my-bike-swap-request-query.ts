@@ -35,13 +35,14 @@ export function useMyBikeSwapRequestQuery({
       const result = await rentalServiceV1.listMyBikeSwapRequests({
         page: 1,
         pageSize: 20,
+        rentalId,
       });
 
       if (!result.ok) {
         throw result.error;
       }
 
-      return result.value.data.find(request => request.rentalId === rentalId) ?? null;
+      return result.value.data[0] ?? null;
     },
     refetchInterval: (query) => {
       const hasUnresolvedLookup = Boolean(requestId) && query.state.data === undefined;
