@@ -11,8 +11,8 @@ import type {
   SupplierBikeStats,
   SupplierFilter,
   SupplierRow,
-  SupplierStatusSummary,
   SupplierSortField,
+  SupplierStatusSummary,
   UpdateSupplierInput,
 } from "../models";
 
