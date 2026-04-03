@@ -5,6 +5,7 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 import type {
   AdminRentalFilter,
   BikeSwapRequestRow,
+  MyBikeSwapRequestFilter,
   MyRentalFilter,
   RentalRow,
   RentalSortField,
@@ -62,6 +63,15 @@ export function toStaffBikeSwapRequestsWhere(
     ...(filter.status ? { status: filter.status } : {}),
     ...(filter.userId ? { userId: filter.userId } : {}),
     ...(filter.stationId ? { stationId: filter.stationId } : {}),
+  };
+}
+
+export function toMyBikeSwapRequestsWhere(
+  filter: MyBikeSwapRequestFilter,
+): PrismaTypes.BikeSwapRequestWhereInput {
+  return {
+    ...(filter.userId ? { userId: filter.userId } : {}),
+    ...(filter.status ? { status: filter.status } : {}),
   };
 }
 

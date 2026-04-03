@@ -1,6 +1,10 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 import type { RentalsContracts } from "@mebike/shared";
 
+import {
+  BikeSwapRequestErrorCodeSchema,
+  bikeSwapRequestErrorMessages,
+} from "@mebike/shared";
 import { Effect, Match, Option } from "effect";
 
 import {
@@ -13,6 +17,7 @@ import {
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractBikeSwapRequest,
+  toContractBikeSwapRequestDetail,
   toContractRental,
   toContractRentalWithPrice,
   toContractReturnSlot,
@@ -21,10 +26,7 @@ import { toContractPage } from "@/http/shared/pagination";
 
 import type { RentalsRoutes } from "./shared";
 
-import {
-  RentalErrorCodeSchema,
-  rentalErrorMessages,
-} from "./shared";
+import { RentalErrorCodeSchema, rentalErrorMessages } from "./shared";
 
 const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
   const userId = c.var.currentUser!.userId;
@@ -325,7 +327,9 @@ const getMyRentalCounts: RouteHandler<
   );
 };
 
-const createMyReturnSlot: RouteHandler<RentalsRoutes["createMyReturnSlot"]> = async (c) => {
+const createMyReturnSlot: RouteHandler<
+  RentalsRoutes["createMyReturnSlot"]
+> = async (c) => {
   const userId = c.var.currentUser!.userId;
   const { rentalId } = c.req.valid("param");
   const body = c.req.valid("json");
@@ -344,49 +348,75 @@ const createMyReturnSlot: RouteHandler<RentalsRoutes["createMyReturnSlot"]> = as
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json({
-        message: "Return slot updated successfully",
-        result: toContractReturnSlot(right),
-      }, 200)),
+      c.json(
+        {
+          message: "Return slot updated successfully",
+          result: toContractReturnSlot(right),
+        },
+        200,
+      )),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RentalNotFound", () =>
-          c.json({
-            error: rentalErrorMessages.RENTAL_NOT_FOUND,
-            details: {
-              code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
-              rentalId,
+          c.json(
+            {
+              error: rentalErrorMessages.RENTAL_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                rentalId,
+              },
             },
-          }, 404)),
+            404,
+          )),
         Match.tag("StationNotFound", () =>
-          c.json({
-            error: rentalErrorMessages.STATION_NOT_FOUND,
-            details: {
-              code: RentalErrorCodeSchema.enum.STATION_NOT_FOUND,
-              stationId: body.stationId,
+          c.json(
+            {
+              error: rentalErrorMessages.STATION_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.STATION_NOT_FOUND,
+                stationId: body.stationId,
+              },
             },
-          }, 404)),
+            404,
+          )),
         Match.tag("ReturnSlotRequiresActiveRental", ({ status }) =>
-          c.json({
-            error: rentalErrorMessages.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
-            details: {
-              code: RentalErrorCodeSchema.enum.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
-              rentalId,
-              status,
+          c.json(
+            {
+              error: rentalErrorMessages.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
+              details: {
+                code: RentalErrorCodeSchema.enum
+                  .RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
+                rentalId,
+                status,
+              },
             },
-          }, 400)),
-        Match.tag("ReturnSlotCapacityExceeded", ({ stationId, totalCapacity, returnSlotLimit, totalBikes, activeReturnSlots }) =>
-          c.json({
-            error: rentalErrorMessages.RETURN_SLOT_CAPACITY_EXCEEDED,
-            details: {
-              code: RentalErrorCodeSchema.enum.RETURN_SLOT_CAPACITY_EXCEEDED,
-              stationId,
-              totalCapacity,
-              returnSlotLimit,
-              totalBikes,
-              activeReturnSlots,
-            },
-          }, 400)),
+            400,
+          )),
+        Match.tag(
+          "ReturnSlotCapacityExceeded",
+          ({
+            stationId,
+            totalCapacity,
+            returnSlotLimit,
+            totalBikes,
+            activeReturnSlots,
+          }) =>
+            c.json(
+              {
+                error: rentalErrorMessages.RETURN_SLOT_CAPACITY_EXCEEDED,
+                details: {
+                  code: RentalErrorCodeSchema.enum
+                    .RETURN_SLOT_CAPACITY_EXCEEDED,
+                  stationId,
+                  totalCapacity,
+                  returnSlotLimit,
+                  totalBikes,
+                  activeReturnSlots,
+                },
+              },
+              400,
+            ),
+        ),
         Match.orElse(() => {
           throw left;
         }),
@@ -395,7 +425,9 @@ const createMyReturnSlot: RouteHandler<RentalsRoutes["createMyReturnSlot"]> = as
   );
 };
 
-const getMyCurrentReturnSlot: RouteHandler<RentalsRoutes["getMyCurrentReturnSlot"]> = async (c) => {
+const getMyCurrentReturnSlot: RouteHandler<
+  RentalsRoutes["getMyCurrentReturnSlot"]
+> = async (c) => {
   const userId = c.var.currentUser!.userId;
   const { rentalId } = c.req.valid("param");
 
@@ -412,40 +444,53 @@ const getMyCurrentReturnSlot: RouteHandler<RentalsRoutes["getMyCurrentReturnSlot
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
       if (Option.isSome(right)) {
-        return c.json({
-          message: "Return slot fetched successfully",
-          result: toContractReturnSlot(right.value),
-        }, 200);
+        return c.json(
+          {
+            message: "Return slot fetched successfully",
+            result: toContractReturnSlot(right.value),
+          },
+          200,
+        );
       }
 
-      return c.json({
-        error: rentalErrorMessages.RETURN_SLOT_NOT_FOUND,
-        details: {
-          code: RentalErrorCodeSchema.enum.RETURN_SLOT_NOT_FOUND,
-          rentalId,
-          userId,
+      return c.json(
+        {
+          error: rentalErrorMessages.RETURN_SLOT_NOT_FOUND,
+          details: {
+            code: RentalErrorCodeSchema.enum.RETURN_SLOT_NOT_FOUND,
+            rentalId,
+            userId,
+          },
         },
-      }, 404);
+        404,
+      );
     }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RentalNotFound", () =>
-          c.json({
-            error: rentalErrorMessages.RENTAL_NOT_FOUND,
-            details: {
-              code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
-              rentalId,
+          c.json(
+            {
+              error: rentalErrorMessages.RENTAL_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                rentalId,
+              },
             },
-          }, 404)),
+            404,
+          )),
         Match.tag("ReturnSlotRequiresActiveRental", ({ status }) =>
-          c.json({
-            error: rentalErrorMessages.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
-            details: {
-              code: RentalErrorCodeSchema.enum.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
-              rentalId,
-              status,
+          c.json(
+            {
+              error: rentalErrorMessages.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
+              details: {
+                code: RentalErrorCodeSchema.enum
+                  .RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
+                rentalId,
+                status,
+              },
             },
-          }, 400)),
+            400,
+          )),
         Match.orElse(() => {
           throw left;
         }),
@@ -454,7 +499,9 @@ const getMyCurrentReturnSlot: RouteHandler<RentalsRoutes["getMyCurrentReturnSlot
   );
 };
 
-const cancelMyReturnSlot: RouteHandler<RentalsRoutes["cancelMyReturnSlot"]> = async (c) => {
+const cancelMyReturnSlot: RouteHandler<
+  RentalsRoutes["cancelMyReturnSlot"]
+> = async (c) => {
   const userId = c.var.currentUser!.userId;
   const { rentalId } = c.req.valid("param");
 
@@ -471,38 +518,51 @@ const cancelMyReturnSlot: RouteHandler<RentalsRoutes["cancelMyReturnSlot"]> = as
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json({
-        message: "Return slot cancelled successfully",
-        result: toContractReturnSlot(right),
-      }, 200)),
+      c.json(
+        {
+          message: "Return slot cancelled successfully",
+          result: toContractReturnSlot(right),
+        },
+        200,
+      )),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RentalNotFound", () =>
-          c.json({
-            error: rentalErrorMessages.RENTAL_NOT_FOUND,
-            details: {
-              code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
-              rentalId,
+          c.json(
+            {
+              error: rentalErrorMessages.RENTAL_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                rentalId,
+              },
             },
-          }, 404)),
+            404,
+          )),
         Match.tag("ReturnSlotNotFound", () =>
-          c.json({
-            error: rentalErrorMessages.RETURN_SLOT_NOT_FOUND,
-            details: {
-              code: RentalErrorCodeSchema.enum.RETURN_SLOT_NOT_FOUND,
-              rentalId,
-              userId,
+          c.json(
+            {
+              error: rentalErrorMessages.RETURN_SLOT_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.RETURN_SLOT_NOT_FOUND,
+                rentalId,
+                userId,
+              },
             },
-          }, 404)),
+            404,
+          )),
         Match.tag("ReturnSlotRequiresActiveRental", ({ status }) =>
-          c.json({
-            error: rentalErrorMessages.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
-            details: {
-              code: RentalErrorCodeSchema.enum.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
-              rentalId,
-              status,
+          c.json(
+            {
+              error: rentalErrorMessages.RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
+              details: {
+                code: RentalErrorCodeSchema.enum
+                  .RETURN_SLOT_REQUIRES_ACTIVE_RENTAL,
+                rentalId,
+                status,
+              },
             },
-          }, 400)),
+            400,
+          )),
         Match.orElse(() => {
           throw left;
         }),
@@ -599,6 +659,91 @@ const requestBikeSwap: RouteHandler<RentalsRoutes["requestBikeSwap"]> = async (
   );
 };
 
+const getMyBikeSwapRequests: RouteHandler<
+  RentalsRoutes["getMyBikeSwapRequests"]
+> = async (c) => {
+  const userId = c.var.currentUser!.userId;
+  const query = c.req.valid("query");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RentalServiceTag;
+      return yield* service.getMyBikeSwapRequests(
+        {
+          userId,
+          status: query.status,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: "createdAt",
+          sortDir: "desc",
+        },
+      );
+    }),
+    "GET /v1/rentals/me/bike-swap-requests",
+  );
+
+  const result = await c.var.runPromise(eff);
+  const response: RentalsContracts.BikeSwapRequestListResponse = {
+    data: result.items.map(toContractBikeSwapRequestDetail),
+    pagination: toContractPage(result),
+  };
+
+  return c.json<RentalsContracts.BikeSwapRequestListResponse, 200>(
+    response,
+    200,
+  );
+};
+
+const getMyBikeSwapRequest: RouteHandler<
+  RentalsRoutes["getMyBikeSwapRequest"]
+> = async (c) => {
+  const userId = c.var.currentUser!.userId;
+  const { bikeSwapRequestId } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RentalServiceTag;
+      return yield* service.getMyBikeSwapRequest(userId, bikeSwapRequestId);
+    }),
+    "GET /v1/rentals/me/bike-swap-requests/{bikeSwapRequestId}",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) => {
+      const response: RentalsContracts.BikeSwapRequestDetailResponse = {
+        message: "Bike swap request fetched successfully",
+        result: toContractBikeSwapRequestDetail(right),
+      };
+      return c.json<RentalsContracts.BikeSwapRequestDetailResponse, 200>(
+        response,
+        200,
+      );
+    }),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("BikeSwapRequestNotFound", () =>
+          c.json(
+            {
+              error: bikeSwapRequestErrorMessages.BIKE_SWAP_REQUEST_NOT_FOUND,
+              details: {
+                code: BikeSwapRequestErrorCodeSchema.enum
+                  .BIKE_SWAP_REQUEST_NOT_FOUND,
+              },
+            },
+            404,
+          )),
+        Match.orElse((e) => {
+          throw e;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const RentalMeController = {
   cancelMyReturnSlot,
   createRental,
@@ -609,4 +754,6 @@ export const RentalMeController = {
   getMyRental,
   getMyRentalCounts,
   requestBikeSwap,
+  getMyBikeSwapRequests,
+  getMyBikeSwapRequest,
 } as const;
