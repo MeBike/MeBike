@@ -148,6 +148,13 @@ export type RentalRepo = {
     RentalRepositoryError
   >;
 
+  adminGetBikeSwapRequest: (
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    Option.Option<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
+
   staffApproveBikeSwapRequests: (
     userId: string,
     bikeSwapRequestId: string,

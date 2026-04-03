@@ -482,6 +482,28 @@ export function makeRentalRepository(
         return mapToStaffBikeSwapRequestRow(raw);
       });
     },
+
+    adminGetBikeSwapRequest(bikeSwapRequestId) {
+      return Effect.gen(function* () {
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            db.bikeSwapRequest.findUnique({
+              where: { id: bikeSwapRequestId },
+              select: staffBikeSwapRequestSelect,
+            }),
+          catch: e =>
+            new RentalRepositoryError({
+              operation: "adminGetBikeSwapRequest.find",
+              cause: e,
+            }),
+        });
+
+        if (!raw) {
+          return Option.none();
+        }
+        return Option.some(mapToStaffBikeSwapRequestRow(raw));
+      });
+    },
   };
 }
 
