@@ -19,12 +19,13 @@ export default function StaffClient() {
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(7);
-  const { staffOnly, isLoading, getAllStaffs } = useUserActions({
+  const { staffOnly, isLoadingStaffOnly, getAllStaffs } = useUserActions({
     hasToken: true,
     limit: limit,
     page: currentPage,
     fullName: searchQuery,
   });
+  
   useEffect(() => {
     getAllStaffs();
   }, [searchQuery, verifyFilter, roleFilter, currentPage]);
@@ -43,7 +44,7 @@ export default function StaffClient() {
   const [isVisualLoading, setIsVisualLoading] = useState(false);
 
   useEffect(() => {
-    if (isLoading) {
+    if (isLoadingStaffOnly) {
       setIsVisualLoading(true);
     } else {
       const timer = setTimeout(() => {
@@ -51,7 +52,7 @@ export default function StaffClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoading]);
+  }, [isLoadingStaffOnly]);
   const handleDetailUser = (id: string) => {
     router.push(`/admin/staffs/detail/${id}`);
   };
@@ -123,7 +124,7 @@ export default function StaffClient() {
           </div>
         </div>
         <div>
-          <div className="min-h-[400px]">
+          <div className="min-h-[520px]">
             {isVisualLoading ? (
               <TableSkeleton />
             ) : (

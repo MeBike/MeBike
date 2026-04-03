@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import { DataTable } from "@/components/TableCustom";
 import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CreateUserFormData, createUserSchema } from "@/schemas/user-schema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
@@ -70,13 +67,6 @@ export default function CustomersClient() {
   const handleFilterChange = () => {
     setCurrentPage(1);
   };
-  // if (isLoading) {
-  //   return (
-  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-  //       <Loader2 className="animate-spin w-16 h-16 text-primary" />
-  //     </div>
-  //   );
-  // }
   const [isVisualLoading, setIsVisualLoading] = useState(false);
 
   useEffect(() => {
