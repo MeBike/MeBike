@@ -56,5 +56,15 @@ export const ReservationExpandedDetailSchema = ReservationDetailSchema.extend({
   station: ReservationDetailStationSchema,
 }).openapi("ReservationExpandedDetail");
 
+export const ReservationSummaryStatsSchema = z.object({
+  reservationList: z.object({
+    Pending: z.number().int().nonnegative(),
+    Fulfilled: z.number().int().nonnegative(),
+    Cancelled: z.number().int().nonnegative(),
+    Expired: z.number().int().nonnegative(),
+  }),
+}).openapi("ReservationSummaryStats");
+
 export type ReservationDetail = z.infer<typeof ReservationDetailSchema>;
 export type ReservationExpandedDetail = z.infer<typeof ReservationExpandedDetailSchema>;
+export type ReservationSummaryStats = z.infer<typeof ReservationSummaryStatsSchema>;

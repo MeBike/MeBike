@@ -7,6 +7,7 @@ export type SuppliersRoutes = typeof import("@mebike/shared")["serverRoutes"]["s
 export type SupplierSummary = SuppliersContracts.SupplierSummary;
 export type SupplierErrorResponse = SuppliersContracts.SupplierErrorResponse;
 export type SupplierStats = SuppliersContracts.SupplierBikeStats;
+export type SupplierStatusSummary = SuppliersContracts.SupplierStatusSummary;
 
 export const { SupplierErrorCodeSchema, supplierErrorMessages } = SuppliersContracts;
 

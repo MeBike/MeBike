@@ -11,6 +11,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
   app.openapi(suppliers.listSuppliers, SupplierAdminController.listSuppliers);
   app.openapi(suppliers.createSupplier, SupplierAdminController.createSupplier);
   app.openapi(suppliers.getAllSupplierStats, SupplierStatsController.getAllSupplierStats);
+  app.openapi(suppliers.getSupplierStatsSummary, SupplierStatsController.getSupplierStatsSummary);
   app.openapi(suppliers.getSupplier, SupplierAdminController.getSupplier);
   app.openapi(suppliers.getSupplierStats, SupplierStatsController.getSupplierStats);
   app.openapi(suppliers.updateSupplier, SupplierAdminController.updateSupplier);

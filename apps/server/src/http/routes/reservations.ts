@@ -48,4 +48,11 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
   } satisfies RouteConfig;
 
   app.openapi(staffGetRoute, ReservationStaffController.staffGetReservation);
+
+  const statsSummaryRoute = {
+    ...reservations.getReservationStatsSummary,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(statsSummaryRoute, ReservationAdminController.getReservationStatsSummary);
 }
