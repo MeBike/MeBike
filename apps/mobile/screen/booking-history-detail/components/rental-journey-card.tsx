@@ -1,22 +1,27 @@
+import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { borderWidths, elevations } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { getBikeChipDisplay } from "@utils/bike";
 import { View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
-import { IconSymbol } from "@components/IconSymbol";
-import { borderWidths, elevations } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
-import { getBikeChipDisplay } from "@utils/bike";
-
 import { formatTimeOnly } from "../helpers/formatters";
 import { BikeSwapRequestCard } from "./bike-swap-request-card";
+import { IncidentRequestCard } from "./incident-request-card";
 
 type RentalJourneyCardProps = {
   detail: MyRentalResolvedDetail;
   bikeSwapStatus?: "NONE" | "PENDING" | "CONFIRMED";
-  onRequestBikeSwap: () => void;
+  onRequestBikeSwap?: () => void;
   isRequestBikeSwapDisabled?: boolean;
+  showBikeSwapSection?: boolean;
+  onReportIncident?: () => void;
+  isReportIncidentDisabled?: boolean;
+  showIncidentActionSection?: boolean;
+  isReportingIncident?: boolean;
 };
 
 type JourneyPointProps = {
@@ -115,6 +120,11 @@ export function RentalJourneyCard({
   bikeSwapStatus = "NONE",
   onRequestBikeSwap,
   isRequestBikeSwapDisabled = false,
+  showBikeSwapSection = true,
+  onReportIncident,
+  isReportIncidentDisabled = false,
+  showIncidentActionSection = false,
+  isReportingIncident = false,
 }: RentalJourneyCardProps) {
   const theme = useTheme();
   const { rental, startStation, endStation, returnSlot, returnStation } = detail;
@@ -180,18 +190,33 @@ export function RentalJourneyCard({
         </YStack>
 
         {isOngoing
+          && ((showBikeSwapSection && onRequestBikeSwap)
+            || (showIncidentActionSection && onReportIncident))
           ? (
               <YStack
-                backgroundColor="$surfaceMuted"
+                backgroundColor="$surfaceDefault"
                 borderColor="$borderDefault"
                 borderTopWidth={1}
               >
-                <BikeSwapRequestCard
-                  confirmedBikeLabel={detail.bike ? getBikeChipDisplay(detail.bike) : undefined}
-                  disabled={isRequestBikeSwapDisabled}
-                  onPress={onRequestBikeSwap}
-                  status={bikeSwapStatus}
-                />
+                {showBikeSwapSection && onRequestBikeSwap
+                  ? (
+                      <BikeSwapRequestCard
+                        confirmedBikeLabel={detail.bike ? getBikeChipDisplay(detail.bike) : undefined}
+                        disabled={isRequestBikeSwapDisabled}
+                        onPress={onRequestBikeSwap}
+                        status={bikeSwapStatus}
+                      />
+                    )
+                  : null}
+                {showIncidentActionSection && onReportIncident
+                  ? (
+                      <IncidentRequestCard
+                        disabled={isReportIncidentDisabled}
+                        loading={isReportingIncident}
+                        onPress={onReportIncident}
+                      />
+                    )
+                  : null}
               </YStack>
             )
           : null}

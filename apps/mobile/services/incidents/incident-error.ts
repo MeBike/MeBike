@@ -15,7 +15,7 @@ type ContractIncidentErrorCode = z.infer<
   typeof ServerContracts.IncidentsContracts.IncidentErrorCodeSchema
 >;
 
-export type IncidentErrorCode = ContractIncidentErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type IncidentErrorCode = ContractIncidentErrorCode | "UNAUTHORIZED" | "UNKNOWN" | "VALIDATION_ERROR";
 
 export type IncidentError = ServiceError<IncidentErrorCode>;
 
@@ -24,7 +24,8 @@ export function isIncidentContractErrorCode(code: string): code is ContractIncid
 }
 
 export function isIncidentErrorCode(code: string): code is IncidentErrorCode {
-  return isServiceErrorCode(code, isIncidentContractErrorCode);
+  return code === "VALIDATION_ERROR"
+    || isServiceErrorCode(code, isIncidentContractErrorCode);
 }
 
 export function isIncidentApiError(
@@ -37,10 +38,11 @@ export function isIncidentApiError(
 
 export async function parseIncidentError(response: Response): Promise<IncidentError> {
   return parseServiceError(response, {
-    schema: ServerContracts.IncidentsContracts.IncidentErrorResponseSchema,
-    mapCode: code => normalizeServiceErrorCode(code, isIncidentContractErrorCode),
+    schema: ServerContracts.ServerErrorResponseSchema,
+    mapCode: code => code === "VALIDATION_ERROR"
+      ? code
+      : normalizeServiceErrorCode(code, isIncidentContractErrorCode),
     includeUnauthorized: true,
-    includeForbidden: true,
   });
 }
 

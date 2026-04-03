@@ -29,6 +29,7 @@ const DEMO_PASSWORD = "Demo@123456";
 
 const USERS_TARGET = 32;
 const RENTALS_TARGET = 120;
+const DEMO_NON_CUSTOMER_USERS = 6;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
@@ -125,6 +126,18 @@ function pick<T>(arr: readonly T[], idx: number): T {
   return arr[idx % arr.length]!;
 }
 
+function getDemoTechnicianTeamId(index: number) {
+  if (index === 0) {
+    return DEMO_TECH_TEAM_A_ID;
+  }
+
+  if (index === 1) {
+    return DEMO_TECH_TEAM_B_ID;
+  }
+
+  return `019b17bd-d130-7e7d-be69-${String(1000 + index).padStart(12, "0")}`;
+}
+
 async function seedStations(prisma: PrismaClient) {
   for (const station of stations) {
     const stationId = STATION_IDS[station.name] ?? uuidv7();
@@ -197,7 +210,7 @@ async function seedRatingReasons(prisma: PrismaClient) {
   }
 }
 
-function buildDemoUsers(): DemoUser[] {
+function buildDemoUsers(technicianCount: number): DemoUser[] {
   const users: DemoUser[] = [
     {
       id: uuidv7(),
@@ -244,18 +257,21 @@ function buildDemoUsers(): DemoUser[] {
       role: UserRole.AGENCY,
       verify: UserVerifyStatus.VERIFIED,
     },
-    {
-      id: uuidv7(),
-      fullname: "Demo Technician",
-      email: "tech1@mebike.local",
-      phoneNumber: "0900000006",
-      username: "demo_tech_1",
-      role: UserRole.TECHNICIAN,
-      verify: UserVerifyStatus.VERIFIED,
-    },
   ];
 
-  for (let i = 1; i <= USERS_TARGET - 6; i++) {
+  for (let i = 1; i <= technicianCount; i++) {
+    users.push({
+      id: uuidv7(),
+      fullname: `Demo Technician ${i}`,
+      email: `tech${i}@mebike.local`,
+      phoneNumber: `092${String(i).padStart(7, "0")}`,
+      username: `demo_tech_${i}`,
+      role: UserRole.TECHNICIAN,
+      verify: UserVerifyStatus.VERIFIED,
+    });
+  }
+
+  for (let i = 1; i <= USERS_TARGET - DEMO_NON_CUSTOMER_USERS; i++) {
     const order = String(i).padStart(2, "0");
     users.push({
       id: uuidv7(),
@@ -430,7 +446,7 @@ async function main() {
     await seedRatingReasons(prisma);
 
     const stationRows = await prisma.station.findMany({
-      select: { id: true },
+      select: { id: true, name: true },
       orderBy: { name: "asc" },
     });
     const stationIds = stationRows.map(s => s.id);
@@ -478,7 +494,7 @@ async function main() {
       }),
     ]);
 
-    const users = buildDemoUsers();
+    const users = buildDemoUsers(stationRows.length);
     const userEmails = users.map(u => u.email);
 
     await prisma.ratingReasonLink.deleteMany({
@@ -664,34 +680,28 @@ async function main() {
       }),
     ]);
 
-    const [techTeamA] = await Promise.all([
-      prisma.technicianTeam.upsert({
-        where: { id: DEMO_TECH_TEAM_A_ID },
+    const technicianTeams = await Promise.all(
+      stationRows.map((station, index) => prisma.technicianTeam.upsert({
+        where: { id: getDemoTechnicianTeamId(index) },
         create: {
-          id: DEMO_TECH_TEAM_A_ID,
-          name: "Demo Tech Team A",
-          stationId: pick(stationIds, 0),
+          id: getDemoTechnicianTeamId(index),
+          name: `Demo Tech Team - ${station.name}`,
+          stationId: station.id,
         },
         update: {
-          name: "Demo Tech Team A",
-          stationId: pick(stationIds, 0),
+          name: `Demo Tech Team - ${station.name}`,
+          stationId: station.id,
         },
-      }),
-      prisma.technicianTeam.upsert({
-        where: { id: DEMO_TECH_TEAM_B_ID },
-        create: {
-          id: DEMO_TECH_TEAM_B_ID,
-          name: "Demo Tech Team B",
-          stationId: pick(stationIds, 1),
-        },
-        update: {
-          name: "Demo Tech Team B",
-          stationId: pick(stationIds, 1),
-        },
-      }),
-    ]);
+      })),
+    );
 
     const userByEmail = new Map(users.map(user => [user.email, user]));
+    const technicianAssignments = technicianTeams
+      .map((team, index) => ({
+        user: userByEmail.get(`tech${index + 1}@mebike.local`),
+        technicianTeamId: team.id,
+      }))
+      .filter(item => item.user !== undefined);
     const orgAssignments = [
       {
         user: userByEmail.get("staff1@mebike.local"),
@@ -710,13 +720,10 @@ async function main() {
         agencyId: mainAgency.id,
       },
       {
-        user: userByEmail.get("tech1@mebike.local"),
-        technicianTeamId: techTeamA.id,
-      },
-      {
         user: userByEmail.get("admin@mebike.local"),
         agencyId: eastAgency.id,
       },
+      ...technicianAssignments,
     ].filter(item => item.user !== undefined);
 
     if (orgAssignments.length > 0) {

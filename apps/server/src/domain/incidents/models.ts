@@ -77,6 +77,7 @@ export type IncidentDetail = {
 };
 
 export type IncidentFilter = {
+  rentalId?: string;
   stationId?: string;
   status?: IncidentStatus;
   userId?: string;

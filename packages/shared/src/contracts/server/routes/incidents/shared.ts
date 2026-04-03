@@ -1,18 +1,18 @@
 import { z } from "../../../../zod";
 import {
-  paginationQueryFields,
-  PaginationSchema,
-  ServerErrorResponseSchema,
-  SortDirectionSchema,
-} from "../../schemas";
+  IncidentDetailSchema,
+  IncidentSummarySchema,
+} from "../../incidents/models";
 import {
   AssignmentStatusSchema,
   IncidentStatusSchema,
 } from "../../incidents/schemas";
 import {
-  IncidentDetailSchema,
-  IncidentSummarySchema,
-} from "../../incidents/models";
+  paginationQueryFields,
+  PaginationSchema,
+  ServerErrorResponseSchema,
+  SortDirectionSchema,
+} from "../../schemas";
 
 export const IncidentSortFieldSchema = z.enum(["status", "resolvedAt"]);
 
@@ -29,6 +29,7 @@ export const IncidentIdParamSchema = z
 
 export const IncidentListQuerySchema = z
   .object({
+    rentalId: z.uuidv7().optional(),
     stationId: z.uuidv7().optional(),
     status: IncidentStatusSchema.optional(),
     ...paginationQueryFields,
