@@ -20,23 +20,6 @@ export const reservationColumn = ({
   stations?: Station[];
 }): ColumnDef<Reservation>[] => [
   {
-    accessorKey: "id",
-    header: "Mã đặt trước",
-    cell: ({ row }) => {
-      return shortenId(row.original.id);
-    },
-  },
-  {
-    accessorKey: "userId",
-    header: "Mã người dùng",
-    cell: ({ row }) => row.original.userId,
-  },
-  {
-    accessorKey: "bikeId",
-    header: "Mã xe",
-    cell: ({ row }) => row.original.bikeId,
-  },
-  {
     accessorKey: "stationId",
     header: "Tên trạm",
     cell: ({ row }) => {
@@ -78,22 +61,22 @@ export const reservationColumn = ({
       </span>
     ),
   },
-  {
-    accessorKey: "start_time",
-    header: "Thời gian bắt đầu",
-    cell: ({ row }) => formatToVNTime(row.original.startTime),
-  },
-  {
-    accessorKey: "end_time",
-    header: "Thời gian kết thúc",
-    cell: ({ row }) => {
-      if (row.original.endTime) {
-        return formatToVNTime(row.original.endTime);
-      } else {
-        return "Chưa kết thúc";
-      }
-    },
-  },
+  // {
+  //   accessorKey: "start_time",
+  //   header: "Thời gian bắt đầu",
+  //   cell: ({ row }) => formatToVNTime(row.original.startTime),
+  // },
+  // {
+  //   accessorKey: "end_time",
+  //   header: "Thời gian kết thúc",
+  //   cell: ({ row }) => {
+  //     if (row.original.endTime) {
+  //       return formatToVNTime(row.original.endTime);
+  //     } else {
+  //       return "Chưa kết thúc";
+  //     }
+  //   },
+  // },
   {
     id: "actions",
     header: "Hành động",

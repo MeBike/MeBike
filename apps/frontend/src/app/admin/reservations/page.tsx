@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { DataTable } from "@/components/TableCustom";
-import { ReservationStats } from "@/components/reservations/reservation-stats";
 import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useReservationActions } from "@/hooks/use-reservation";
@@ -10,7 +9,6 @@ import { useStationActions } from "@/hooks/use-station";
 import { reservationColumn } from "@/columns/reservation-columns";
 import type { Reservation } from "@/types/Reservation";
 import { Loader2 } from "lucide-react";
-import { formatDateUTC } from "@/utils/formatDateTime";
 export default function ReservationsPage() {
   const { stations, getAllStations } = useStationActions({ hasToken: true });
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,7 +16,7 @@ export default function ReservationsPage() {
     Reservation["status"] | "all"
   >("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState<number>(10);
+  const [limit] = useState<number>(7);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailTab, setDetailTab] = useState<"info" | "stats">("info");
   // const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -94,7 +92,7 @@ export default function ReservationsPage() {
           </div>
         </div>
 
-        <ReservationStats stats={reservationStats?.result ?? []} />
+        {/* <ReservationStats stats={reservationStats?.result ?? []} /> */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Bộ lọc</h3>
@@ -167,8 +165,7 @@ export default function ReservationsPage() {
         </div>
       </div>
 
-      {/* Detail Reservation Modal */}
-      {isDetailModalOpen && detailReservation && (
+      {/* {isDetailModalOpen && detailReservation && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
             <div className="flex items-center justify-between mb-4">
@@ -193,7 +190,6 @@ export default function ReservationsPage() {
               </div>
             ) : (
               <>
-                {/* Tabs for different sections */}
                 <div className="flex gap-2 mb-6 border-b border-border">
                   <button
                     onClick={() => setDetailTab("info")}
@@ -216,8 +212,6 @@ export default function ReservationsPage() {
                     Thống kê
                   </button>
                 </div>
-
-                {/* Tab: Info */}
                 {detailTab === "info" && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -340,8 +334,6 @@ export default function ReservationsPage() {
                     </div>
                   </div>
                 )}
-
-                {/* Tab: Stats */}
                 {detailTab === "stats" && (
                   <div className="space-y-3">
                     <div className="bg-muted rounded-lg p-4">
@@ -394,7 +386,7 @@ export default function ReservationsPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

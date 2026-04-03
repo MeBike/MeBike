@@ -67,6 +67,11 @@ export const ENDPOINT = {
     WALLET : {
         BASE : (userId : string) => `/admin/users/${userId}/wallet`,
         TRANSACTION : (userId : string) => `/admin/users/${userId}/wallet/transactions`,
+    },
+    RESERVATION : {
+        BASE : "/admin/reservations",
+        ID : (reservationId : string) => `/admin/reservations/${reservationId}`,
+        OVERVIEW : "/reservations/stats/summary",
     }
 
 } as const;
