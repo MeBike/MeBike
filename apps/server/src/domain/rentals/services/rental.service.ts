@@ -2,19 +2,17 @@ import { Effect, Layer, Option } from "effect";
 
 import type { BikeRepo } from "@/domain/bikes/repository/bike.repository";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type {
-  StationRepo,
-} from "@/domain/stations";
+import type { StationRepo } from "@/domain/stations";
 
 import { BikeRepository } from "@/domain/bikes";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
-import {
-  StationNotFound,
-  StationRepository,
-} from "@/domain/stations";
+import { StationNotFound, StationRepository } from "@/domain/stations";
 
-import type { RentalServiceFailure } from "../domain-errors";
+import type {
+  BikeSwapRequestNotFound,
+  RentalServiceFailure,
+} from "../domain-errors";
 import type {
   BikeSwapRequestRow,
   MyRentalFilter,
@@ -82,6 +80,19 @@ export type RentalService = {
     filter: StaffBikeSwapRequestFilter,
     page: PageRequest<StaffBikeSwapRequestSortField>,
   ) => Effect.Effect<PageResult<StaffBikeSwapRequestRow>, never>;
+
+  getMyBikeSwapRequests: (
+    userId: string,
+    pageReq: PageRequest<StaffBikeSwapRequestSortField>,
+  ) => Effect.Effect<PageResult<StaffBikeSwapRequestRow>, never>;
+
+  getMyBikeSwapRequest: (
+    userId: string,
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    StaffBikeSwapRequestRow,
+    RentalRepositoryError | BikeSwapRequestNotFound
+  >;
 };
 
 const makeRentalServiceEffect = Effect.gen(function* () {
@@ -117,9 +128,9 @@ function makeRentalService(
     },
 
     getMyRentalCounts(userId) {
-      return repo.getMyRentalCounts(userId).pipe(
-        Effect.map(aggregateRentalStatusCounts),
-      );
+      return repo
+        .getMyRentalCounts(userId)
+        .pipe(Effect.map(aggregateRentalStatusCounts));
     },
 
     createRentalSession({ userId, bikeId, startStationId, startTime }) {
@@ -183,17 +194,25 @@ function makeRentalService(
 
         return yield* repo
           .requestBikeSwap(rentalId, userId, rental.bikeId!, stationId)
-          .pipe(
-            defectOn(RentalRepositoryError),
-          );
+          .pipe(defectOn(RentalRepositoryError));
       }),
 
     staffListBikeSwapRequests(filter, pageReq) {
       return repo
         .staffListBikeSwapRequests(filter, pageReq)
-        .pipe(
-          defectOn(RentalRepositoryError),
-        );
+        .pipe(defectOn(RentalRepositoryError));
+    },
+
+    getMyBikeSwapRequests(userId, pageReq) {
+      return repo
+        .getMyBikeSwapRequests(userId, pageReq)
+        .pipe(defectOn(RentalRepositoryError));
+    },
+
+    getMyBikeSwapRequest(userId, bikeSwapRequestId) {
+      return repo
+        .getMyBikeSwapRequest(userId, bikeSwapRequestId)
+        .pipe(defectOn(RentalRepositoryError));
     },
   };
 

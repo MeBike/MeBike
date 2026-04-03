@@ -96,9 +96,7 @@ export type RentalRepo = {
     data: UpdateRentalOnEndInput,
   ) => Effect.Effect<Option.Option<RentalRow>>;
 
-  findById: (
-    rentalId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>>;
+  findById: (rentalId: string) => Effect.Effect<Option.Option<RentalRow>>;
 
   // Admin read views
   adminListRentals: (
@@ -166,5 +164,21 @@ export type RentalRepo = {
     | RentalRepositoryError
     | BikeSwapRequestNotFound
     | InvalidBikeSwapRequestStatus
+  >;
+
+  getMyBikeSwapRequests: (
+    userId: string,
+    pageReq: PageRequest<StaffBikeSwapRequestSortField>,
+  ) => Effect.Effect<
+    PageResult<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
+
+  getMyBikeSwapRequest: (
+    userId: string,
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    StaffBikeSwapRequestRow,
+    RentalRepositoryError | BikeSwapRequestNotFound
   >;
 };

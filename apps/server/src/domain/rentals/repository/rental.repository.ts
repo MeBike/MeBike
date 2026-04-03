@@ -222,7 +222,12 @@ export function makeRentalRepository(
           }),
         ]);
 
-        return makePageResult(items.map(mapToStaffBikeSwapRequestRow), total, page, pageSize);
+        return makePageResult(
+          items.map(mapToStaffBikeSwapRequestRow),
+          total,
+          page,
+          pageSize,
+        );
       });
     },
 
@@ -280,7 +285,12 @@ export function makeRentalRepository(
           }),
         ]);
 
-        return makePageResult(items.map(mapToStaffBikeSwapRequestRow), total, page, pageSize);
+        return makePageResult(
+          items.map(mapToStaffBikeSwapRequestRow),
+          total,
+          page,
+          pageSize,
+        );
       });
     },
 
@@ -333,6 +343,70 @@ export function makeRentalRepository(
         });
 
         return Option.some(mapToStaffBikeSwapRequestRow(raw as any));
+      });
+    },
+
+    getMyBikeSwapRequests(userId, pageReq) {
+      return Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+        const orderBy = toStaffBikeSwapRequestsOrderBy(pageReq);
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => db.bikeSwapRequest.count({ where: { userId } }),
+            catch: e =>
+              new RentalRepositoryError({
+                operation: "getMyBikeSwapRequests.count",
+                cause: e,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              db.bikeSwapRequest.findMany({
+                where: { userId },
+                skip,
+                take,
+                orderBy,
+                select: staffBikeSwapRequestSelect,
+              }),
+            catch: e =>
+              new RentalRepositoryError({
+                operation: "getMyBikeSwapRequests.findMany",
+                cause: e,
+              }),
+          }),
+        ]);
+
+        return makePageResult(
+          items.map(mapToStaffBikeSwapRequestRow),
+          total,
+          page,
+          pageSize,
+        );
+      });
+    },
+
+    getMyBikeSwapRequest(userId, bikeSwapRequestId) {
+      return Effect.gen(function* () {
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            db.bikeSwapRequest.findUnique({
+              where: { id: bikeSwapRequestId, userId },
+              select: staffBikeSwapRequestSelect,
+            }),
+          catch: e =>
+            new RentalRepositoryError({
+              operation: "getMyBikeSwapRequest.find",
+              cause: e,
+            }),
+        });
+
+        if (!raw) {
+          return yield* Effect.fail(
+            new BikeSwapRequestNotFound({ bikeSwapRequestId }),
+          );
+        }
+        return mapToStaffBikeSwapRequestRow(raw);
       });
     },
   };

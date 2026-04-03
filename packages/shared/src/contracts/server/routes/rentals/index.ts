@@ -40,6 +40,8 @@ export {
   staffGetRental,
   staffListBikeSwapRequests,
   staffListRentals,
+  getMyBikeSwapRequests,
+  getMyBikeSwapRequest,
 } from "./queries";
 
 export const rentalsRoutes = {
