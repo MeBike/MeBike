@@ -24,6 +24,15 @@ export const AppCard = styled(YStack, {
         shadowRadius: elevations.medium.shadowRadius,
         elevation: elevations.medium.elevation,
       },
+      whisper: {
+        borderWidth: borderWidths.subtle,
+        borderColor: "$borderSubtle",
+        shadowColor: "$shadowColor",
+        shadowOffset: elevations.whisper.shadowOffset,
+        shadowOpacity: elevations.whisper.shadowOpacity,
+        shadowRadius: elevations.whisper.shadowRadius,
+        elevation: elevations.whisper.elevation,
+      },
       flat: {
         borderWidth: borderWidths.none,
         borderColor: "transparent",
