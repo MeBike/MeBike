@@ -1,6 +1,6 @@
-import type { AppliesToEnum, RatingReasonType, RentalStatus } from "../../../generated/prisma/enums";
-
 import type { PageRequest } from "@/domain/shared/pagination";
+
+import type { AppliesToEnum, RatingReasonType, RentalStatus } from "../../../generated/prisma/enums";
 
 export type RatingRow = {
   readonly id: string;

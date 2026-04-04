@@ -1,8 +1,7 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { PageResult } from "@/domain/shared/pagination";
-
 import type { BikeNotFound } from "@/domain/bikes";
+import type { PageResult } from "@/domain/shared/pagination";
 import type { StationNotFound } from "@/domain/stations";
 
 import { BikeNotFound as BikeNotFoundError, BikeRepository } from "@/domain/bikes";
