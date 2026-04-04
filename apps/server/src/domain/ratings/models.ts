@@ -1,4 +1,6 @@
-import type { AppliesToEnum, RatingReasonType } from "../../../generated/prisma/enums";
+import type { AppliesToEnum, RatingReasonType, RentalStatus } from "../../../generated/prisma/enums";
+
+import type { PageRequest } from "@/domain/shared/pagination";
 
 export type RatingRow = {
   readonly id: string;
@@ -23,6 +25,60 @@ export type RatingReasonRow = {
   readonly isDefault: boolean;
   readonly isActive: boolean;
 };
+
+export type AdminRatingUserRow = {
+  readonly id: string;
+  readonly fullName: string;
+  readonly phoneNumber: string | null;
+};
+
+export type AdminRatingBikeRow = {
+  readonly id: string;
+  readonly chipId: string;
+};
+
+export type AdminRatingStationRow = {
+  readonly id: string;
+  readonly name: string;
+  readonly address: string;
+};
+
+export type AdminRatingRentalRow = {
+  readonly id: string;
+  readonly status: RentalStatus;
+  readonly startTime: Date;
+  readonly endTime: Date | null;
+};
+
+export type AdminRatingListItemRow = {
+  readonly id: string;
+  readonly rentalId: string;
+  readonly user: AdminRatingUserRow;
+  readonly bike: AdminRatingBikeRow | null;
+  readonly station: AdminRatingStationRow | null;
+  readonly bikeScore: number;
+  readonly stationScore: number;
+  readonly comment: string | null;
+  readonly reasons: readonly Pick<RatingReasonRow, "id" | "type" | "appliesTo" | "message">[];
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly editedAt: Date | null;
+};
+
+export type AdminRatingDetailRow = AdminRatingListItemRow & {
+  readonly rental: AdminRatingRentalRow;
+};
+
+export type AdminRatingSortField = "createdAt" | "updatedAt" | "bikeScore" | "stationScore";
+
+export type AdminRatingFilters = {
+  readonly userId?: string;
+  readonly rentalId?: string;
+  readonly bikeId?: string;
+  readonly stationId?: string;
+};
+
+export type AdminRatingPageRequest = PageRequest<AdminRatingSortField>;
 
 export type CreateRatingInput = {
   readonly userId: string;

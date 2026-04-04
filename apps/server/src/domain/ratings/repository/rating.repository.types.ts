@@ -1,10 +1,16 @@
 import type { Effect, Option } from "effect";
 
+import type { PageResult } from "@/domain/shared/pagination";
+
 import type {
   RatingAlreadyExists,
   RatingRepositoryError,
 } from "../domain-errors";
 import type {
+  AdminRatingDetailRow,
+  AdminRatingFilters,
+  AdminRatingListItemRow,
+  AdminRatingPageRequest,
   CreateRatingInput,
   RatingAggregate,
   RatingRow,
@@ -18,6 +24,13 @@ export type RatingRepo = {
   readonly findByRentalId: (
     rentalId: string,
   ) => Effect.Effect<Option.Option<RatingRow>, RatingRepositoryError>;
+  readonly findAdminList: (
+    filters: AdminRatingFilters,
+    pageReq: AdminRatingPageRequest,
+  ) => Effect.Effect<PageResult<AdminRatingListItemRow>, RatingRepositoryError>;
+  readonly findAdminDetailById: (
+    ratingId: string,
+  ) => Effect.Effect<Option.Option<AdminRatingDetailRow>, RatingRepositoryError>;
   readonly findBikeSummary: (
     bikeId: string,
   ) => Effect.Effect<RatingSummary, RatingRepositoryError>;
