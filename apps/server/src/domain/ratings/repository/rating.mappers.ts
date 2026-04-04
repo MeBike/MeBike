@@ -1,5 +1,10 @@
-// import type { Rating } from "generated/prisma/client";
-import type { RatingRow } from "../models";
+import type {
+  AdminRatingBikeRow,
+  AdminRatingDetailRow,
+  AdminRatingListItemRow,
+  AdminRatingStationRow,
+  RatingRow,
+} from "../models";
 
 export const selectRatingRow = {
   id: true,
@@ -47,5 +52,82 @@ export function toRatingRow(row: {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     editedAt: row.editedAt,
+  };
+}
+
+type RatingReasonPayload = {
+  reason: {
+    id: string;
+    type: "ISSUE" | "COMPLIMENT";
+    appliesTo: "bike" | "station";
+    message: string;
+  };
+};
+
+type AdminRatingBasePayload = {
+  id: string;
+  rentalId: string;
+  bikeId: string | null;
+  stationId: string | null;
+  bikeScore: number;
+  stationScore: number;
+  comment: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  editedAt: Date | null;
+  user: {
+    id: string;
+    fullName: string;
+    phoneNumber: string | null;
+  };
+  reasons: RatingReasonPayload[];
+};
+
+export function toAdminRatingListItemRow(
+  row: AdminRatingBasePayload,
+  bike: AdminRatingBikeRow | null,
+  station: AdminRatingStationRow | null,
+): AdminRatingListItemRow {
+  return {
+    id: row.id,
+    rentalId: row.rentalId,
+    user: row.user,
+    bike,
+    station,
+    bikeScore: row.bikeScore,
+    stationScore: row.stationScore,
+    comment: row.comment,
+    reasons: row.reasons.map(({ reason }) => ({
+      id: reason.id,
+      type: reason.type,
+      appliesTo: reason.appliesTo,
+      message: reason.message,
+    })),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    editedAt: row.editedAt,
+  };
+}
+
+export function toAdminRatingDetailRow(
+  row: AdminRatingBasePayload & {
+    rental: {
+      id: string;
+      status: "RENTED" | "COMPLETED" | "CANCELLED";
+      startTime: Date;
+      endTime: Date | null;
+    };
+  },
+  bike: AdminRatingBikeRow | null,
+  station: AdminRatingStationRow | null,
+): AdminRatingDetailRow {
+  return {
+    ...toAdminRatingListItemRow(row, bike, station),
+    rental: {
+      id: row.rental.id,
+      status: row.rental.status,
+      startTime: row.rental.startTime,
+      endTime: row.rental.endTime,
+    },
   };
 }

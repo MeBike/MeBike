@@ -1,5 +1,7 @@
 import { createRatingRoute } from "./mutations";
 import {
+  adminGetRatingRoute,
+  adminListRatingsRoute,
   getBikeRatingSummaryRoute,
   getRatingByRentalRoute,
   getRatingReasonsRoute,
@@ -12,6 +14,8 @@ export * from "./queries";
 
 export const ratingsRoutes = {
   create: createRatingRoute,
+  adminList: adminListRatingsRoute,
+  adminGet: adminGetRatingRoute,
   getReasons: getRatingReasonsRoute,
   getBikeSummary: getBikeRatingSummaryRoute,
   getStationSummary: getStationRatingSummaryRoute,

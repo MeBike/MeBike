@@ -1,5 +1,12 @@
 import { z } from "../../../zod";
-import { RatingDetailSchema, RatingReasonSchema, RatingSummarySchema } from "./models";
+import { paginationQueryFields, PaginationSchema, SortDirectionSchema } from "../schemas";
+import {
+  AdminRatingDetailSchema,
+  AdminRatingListItemSchema,
+  RatingDetailSchema,
+  RatingReasonSchema,
+  RatingSummarySchema,
+} from "./models";
 
 export const RatingErrorCodeSchema = z.enum([
   "RENTAL_NOT_FOUND",
@@ -24,9 +31,17 @@ export const RatingSummaryErrorCodeSchema = z.enum([
   "STATION_NOT_FOUND",
 ]).openapi("RatingSummaryErrorCode");
 
+export const AdminRatingErrorCodeSchema = z.enum([
+  "RATING_NOT_FOUND",
+]).openapi("AdminRatingErrorCode");
+
 export const ratingSummaryErrorMessages = {
   BIKE_NOT_FOUND: "Bike not found",
   STATION_NOT_FOUND: "Station not found",
+} as const;
+
+export const adminRatingErrorMessages = {
+  RATING_NOT_FOUND: "Rating not found",
 } as const;
 
 export const CreateRatingRequestSchema = z.object({
@@ -58,6 +73,31 @@ export const RatingErrorResponseSchema = z.object({
   }).passthrough(),
 }).openapi("RatingErrorResponse");
 
+export const AdminRatingErrorResponseSchema = z.object({
+  error: z.string(),
+  details: z.object({
+    code: AdminRatingErrorCodeSchema,
+    ratingId: z.uuidv7().optional(),
+  }).passthrough(),
+}).openapi("AdminRatingErrorResponse");
+
+export const ListAdminRatingsQuerySchema = z.object({
+  ...paginationQueryFields,
+  userId: z.uuidv7().optional(),
+  rentalId: z.uuidv7().optional(),
+  bikeId: z.uuidv7().optional(),
+  stationId: z.uuidv7().optional(),
+  sortBy: z.enum(["createdAt", "updatedAt", "bikeScore", "stationScore"]).optional(),
+  sortDir: SortDirectionSchema.optional(),
+}).openapi("ListAdminRatingsQuery");
+
+export const ListAdminRatingsResponseSchema = z.object({
+  data: z.array(AdminRatingListItemSchema),
+  pagination: PaginationSchema,
+}).openapi("ListAdminRatingsResponse");
+
+export const AdminRatingDetailResponseSchema = AdminRatingDetailSchema.openapi("AdminRatingDetailResponse");
+
 export { RatingDetailSchema } from "./models";
 
 export type CreateRatingResponse = z.infer<typeof CreateRatingResponseSchema>;
@@ -68,3 +108,8 @@ export type RatingSummaryErrorResponse = z.infer<typeof RatingSummaryErrorRespon
 export type RatingErrorCode = z.infer<typeof RatingErrorCodeSchema>;
 export type RatingErrorResponse = z.infer<typeof RatingErrorResponseSchema>;
 export type CreateRatingRequest = z.infer<typeof CreateRatingRequestSchema>;
+export type AdminRatingErrorCode = z.infer<typeof AdminRatingErrorCodeSchema>;
+export type AdminRatingErrorResponse = z.infer<typeof AdminRatingErrorResponseSchema>;
+export type ListAdminRatingsQuery = z.infer<typeof ListAdminRatingsQuerySchema>;
+export type ListAdminRatingsResponse = z.infer<typeof ListAdminRatingsResponseSchema>;
+export type AdminRatingDetailResponse = z.infer<typeof AdminRatingDetailResponseSchema>;
