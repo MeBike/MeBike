@@ -9,10 +9,12 @@ export const redistributionReqErrorCodes = [
   // 403
   "UNAUTHORIZED_ACCESS",
   "UNAUTHORIZED_REDISTRIBUTION_CREATION",
+  "UNAUTHORIZED_REDISTRIBUTION_CANCELLATION",
   // 400
   "INSUFFICIENT_AVAILABLE_BIKES",
   "INSUFFICIENT_EMPTY_SLOTS",
   "EXCEEDED_MIN_BIKES_AT_STATION",
+  "CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION",
 ] as const;
 
 export const RedistributionReqErrorCodeSchema = z.enum(redistributionReqErrorCodes);
@@ -50,8 +52,10 @@ export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, 
   // 403
   UNAUTHORIZED_ACCESS: "You are not authorized to access this redistribution request",
   UNAUTHORIZED_REDISTRIBUTION_CREATION: "You are not authorized to create a request for this station",
+  UNAUTHORIZED_REDISTRIBUTION_CANCELLATION: "You are not authorized to cancel this redistribution request",
   // 400
   INSUFFICIENT_AVAILABLE_BIKES: "This station does not have enough bikes for distribution",
   INSUFFICIENT_EMPTY_SLOTS: "Target station does not have enough empty slots",
-  EXCEEDED_MIN_BIKES_AT_STATION: "Source station will have less than minimum bikes after redistribution"
+  EXCEEDED_MIN_BIKES_AT_STATION: "Source station will have less than minimum bikes after redistribution",
+  CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION: "Cannot cancel redistribution request that is not in pending state",
 };

@@ -7,6 +7,7 @@ import {
   CreateRedistributionRequestSchema,
   RedistributionReqErrorCodeSchema,
   RedistributionReqErrorResponseSchema,
+  CancelRedistributionRequestSchema,
 } from "../../redistribution";
 import { paginationQueryFields, PaginationSchema } from "../../schemas";
 
@@ -32,7 +33,7 @@ export function redistributionRequestDateRangeWith<T extends z.ZodRawShape>(
 // Params
 export const RedistributionRequestIdParamSchema = z
   .object({
-    redistributionReqId: z.uuidv7().openapi({
+    requestId: z.uuidv7().openapi({
       example: "019b17bd-d130-7e7d-be69-91ceef7b6959",
       description: "Redistribution request identifier",
     }),
@@ -82,6 +83,11 @@ export const RedistributionRequestListItemSchemaOpenApi =
 export const CreateRedistributionRequestSchemaOpenApi =
   CreateRedistributionRequestSchema.openapi("CreateRedistributionRequest", {
     description: "Payload for creating redistribution request",
+  });
+
+export const CancelRedistributionRequestSchemaOpenApi =
+  CancelRedistributionRequestSchema.openapi("CancelRedistributionRequest", {
+    description: "Payload for cancelling redistribution request",
   });
 
 // Response

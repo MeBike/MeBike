@@ -1,7 +1,7 @@
 import { z } from "../../../zod";
 import { BikeStatusSchema } from "../bikes";
 import { UserRoleSchema, VerifyStatusSchema } from "../users";
-import { PaginationSchema } from '../schemas';
+import { PaginationSchema } from "../schemas";
 
 export const RedistributionStatusSchema = z.enum([
   "PENDING_APPROVAL",
@@ -10,8 +10,8 @@ export const RedistributionStatusSchema = z.enum([
   "IN_TRANSIT",
   "PARTIALLY_COMPLETED",
   "COMPLETED",
-  "CANCELLED"
-])
+  "CANCELLED",
+]);
 
 export const RedistributionRequestItemSchema = z.object({
   id: z.uuidv7(),
@@ -108,7 +108,7 @@ export const RedistributionRequestItemDetailSchema = z.object({
   bike: RedistributionBikeSchema,
   deliveredAt: z.iso.datetime(),
   createdAt: z.iso.datetime(),
-})
+});
 
 export const RedistributionRequestDetailBaseSchema = z.object({
   id: z.uuidv7(),
@@ -121,67 +121,87 @@ export const RedistributionRequestDetailBaseSchema = z.object({
   updatedat: z.iso.datetime(),
 });
 
-export const RedistributionRequestDetailSchema = RedistributionRequestDetailBaseSchema.extend({
-  requestedByUser: RedistributionUserDetailSchema,
-  approvedByUser: RedistributionUserDetailSchema.nullable(),
-  sourceStation: RedistributionStationSchema,
-  targetStation: RedistributionStationSchema.nullable(),
-  targetAgency: RedistributionAgencySchema.nullable(),
-  items: z.array(RedistributionRequestItemDetailSchema),
-})
+export const RedistributionRequestDetailSchema =
+  RedistributionRequestDetailBaseSchema.extend({
+    requestedByUser: RedistributionUserDetailSchema,
+    approvedByUser: RedistributionUserDetailSchema.nullable(),
+    sourceStation: RedistributionStationSchema,
+    targetStation: RedistributionStationSchema.nullable(),
+    targetAgency: RedistributionAgencySchema.nullable(),
+    items: z.array(RedistributionRequestItemDetailSchema),
+  });
 
 // Redistribution list item (for paginated lists)
-export const RedistributionRequestListItemSchema = RedistributionRequestDetailBaseSchema.extend({
-  requestedByUser: RedistributionUserSummarySchema,
-  approvedByUser: RedistributionUserSummarySchema.nullable(),
-  sourceStation: RedistributionStationSummarySchema,
-  targetStation: RedistributionStationSummarySchema.nullable(),
-  targetAgency: RedistributionAgencySummarySchema.nullable(),
-  items: z.array(RedistributionRequestItemSchema),
-})
+export const RedistributionRequestListItemSchema =
+  RedistributionRequestDetailBaseSchema.extend({
+    requestedByUser: RedistributionUserSummarySchema,
+    approvedByUser: RedistributionUserSummarySchema.nullable(),
+    sourceStation: RedistributionStationSummarySchema,
+    targetStation: RedistributionStationSummarySchema.nullable(),
+    targetAgency: RedistributionAgencySummarySchema.nullable(),
+    items: z.array(RedistributionRequestItemSchema),
+  });
 
 // Redistribution list response
 export const RedistributionRequestListResponseSchema = z.object({
   data: z.array(RedistributionRequestListItemSchema),
-  pagination: PaginationSchema
-})
+  pagination: PaginationSchema,
+});
 
-export const CreateRedistributionRequestSchema = z.object({
-  sourceStationId: z.uuidv7(),
-  targetStationId: z.uuidv7().optional(),
-  targetAgencyId: z.uuidv7().optional(),
-  requestedQuantity: z.number().int().positive().max(20),
-  reason: z.string().optional(),
-}).superRefine((data, ctx) => {
-  const hasTargetStation = !!data.targetStationId
-  const hasTargetAgency = !!data.targetAgencyId
+export const CreateRedistributionRequestSchema = z
+  .object({
+    sourceStationId: z.uuidv7(),
+    targetStationId: z.uuidv7().optional(),
+    targetAgencyId: z.uuidv7().optional(),
+    requestedQuantity: z.number().int().positive().max(20),
+    reason: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const hasTargetStation = !!data.targetStationId;
+    const hasTargetAgency = !!data.targetAgencyId;
 
-  if(!hasTargetStation && !hasTargetAgency){
-    ctx.addIssue({
-      code: "custom",
-      message: "Either targetStationId or targetAgencyId is required",
-      path: ["targetStationId"]
-    })
-  }else if(hasTargetStation && hasTargetAgency){
-    ctx.addIssue({
-      code: "custom",
-      message: "Only one of targetStationId or targetAgencyId can be provided",
-      path: ["hasTargetStation", "targetAgencyId"]
-    })
-  }
+    if (!hasTargetStation && !hasTargetAgency) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Either targetStationId or targetAgencyId is required",
+        path: ["targetStationId"],
+      });
+    } else if (hasTargetStation && hasTargetAgency) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Only one of targetStationId or targetAgencyId can be provided",
+        path: ["hasTargetStation", "targetAgencyId"],
+      });
+    }
 
-  if(hasTargetStation && data.targetStationId === data.sourceStationId){
-    ctx.addIssue({
-      code: "custom",
-      message: "Target station cannot be the same as source station",
-      path: ["targetStationId"]
-    })
-  }
-})
+    if (hasTargetStation && data.targetStationId === data.sourceStationId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Target station cannot be the same as source station",
+        path: ["targetStationId"],
+      });
+    }
+  });
+
+export const CancelRedistributionRequestSchema = z.object({
+  reason: z
+    .string()
+    .min(10, "Reason must be at least 10 characters long")
+    .max(200, "Reason must be at most 200 characters long"),
+});
 
 export type RedistributionRequest = z.infer<typeof RedistributionRequestSchema>;
-export type RedistributionRequestDetail = z.infer<typeof RedistributionRequestDetailSchema>;
-export type RedistributionRequestList = z.infer<typeof RedistributionRequestListResponseSchema>;
-export type RedistributionRequestListItem = z.infer<typeof RedistributionRequestListItemSchema>;
+export type RedistributionRequestDetail = z.infer<
+  typeof RedistributionRequestDetailSchema
+>;
+export type RedistributionRequestList = z.infer<
+  typeof RedistributionRequestListResponseSchema
+>;
+export type RedistributionRequestListItem = z.infer<
+  typeof RedistributionRequestListItemSchema
+>;
 
-export type CreateRedistributionRequest = z.infer<typeof CreateRedistributionRequestSchema>
+export type CreateRedistributionRequest = z.infer<
+  typeof CreateRedistributionRequestSchema
+>;
