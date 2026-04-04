@@ -870,6 +870,11 @@ async function main() {
       orderBy: { createdAt: "asc" },
       select: { id: true },
     });
+    const stationReasons = await prisma.ratingReason.findMany({
+      where: { appliesTo: AppliesToEnum.station },
+      orderBy: { createdAt: "asc" },
+      select: { id: true },
+    });
 
     const completedRentals = rentals.filter(r => r.status === RentalStatus.COMPLETED && r.bikeId);
     const ratedRentals = completedRentals.slice(0, 60);
@@ -897,15 +902,30 @@ async function main() {
       select: { id: true },
     });
 
-    if (bikeReasons.length > 0 && createdRatings.length > 0) {
-      await prisma.ratingReasonLink.createMany({
-        data: createdRatings.map((rating, idx) => ({
-          ratingId: rating.id,
-          reasonId: pick(bikeReasons, idx).id,
-          target: AppliesToEnum.bike,
-        })),
-        skipDuplicates: true,
-      });
+    if (createdRatings.length > 0) {
+      const ratingReasonLinks = createdRatings.flatMap((rating, idx) => [
+        ...(bikeReasons.length > 0
+          ? [{
+              ratingId: rating.id,
+              reasonId: pick(bikeReasons, idx).id,
+              target: AppliesToEnum.bike,
+            }]
+          : []),
+        ...(stationReasons.length > 0
+          ? [{
+              ratingId: rating.id,
+              reasonId: pick(stationReasons, idx).id,
+              target: AppliesToEnum.station,
+            }]
+          : []),
+      ]);
+
+      if (ratingReasonLinks.length > 0) {
+        await prisma.ratingReasonLink.createMany({
+          data: ratingReasonLinks,
+          skipDuplicates: true,
+        });
+      }
     }
 
     logger.info("Demo seed completed");
