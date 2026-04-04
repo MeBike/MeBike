@@ -124,7 +124,7 @@ export default function StaffClient() {
           </div>
         </div>
         <div>
-          <div className="min-h-[520px]">
+          <div className="min-h-[700px]">
             {isVisualLoading ? (
               <TableSkeleton />
             ) : (

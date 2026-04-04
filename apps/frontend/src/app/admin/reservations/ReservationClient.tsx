@@ -7,16 +7,20 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useReservationActions } from "@/hooks/use-reservation";
 import { useStationActions } from "@/hooks/use-station";
 import { reservationColumn } from "@/columns/reservation-columns";
-import type { Reservation } from "@/types/Reservation";
+import type {
+  Reservation,
+  ReservationOption,
+  ReservationStatus,
+} from "@/types/Reservation";
 import { ReservationStats } from "@/components/reservations/reservation-stats";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { TableSkeleton } from "@/components/table-skeleton";
 export default function ReservationClient() {
   const { stations, getAllStations } = useStationActions({ hasToken: true });
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    Reservation["status"] | "all"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<ReservationStatus>("");
+  const [option, setReservationOption] = useState<ReservationOption>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState<number>(7);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -32,12 +36,27 @@ export default function ReservationClient() {
     fetchReservationStats,
     detailReservation,
     fetchDetailReservation,
+    isLoadingReservations,
   } = useReservationActions({
     hasToken: true,
     page: currentPage,
     pageSize: pageSize,
     id: selectedReservationId,
+    status: statusFilter,
+    option: option,
   });
+  const [isVisualLoading, setIsVisualLoading] = useState(false);
+
+  useEffect(() => {
+    if (isLoadingReservations) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingReservations]);
   useEffect(() => {
     fetchAllReservations();
     fetchReservationStats();
@@ -57,20 +76,13 @@ export default function ReservationClient() {
 
   const handleReset = () => {
     setSearchQuery("");
-    setStatusFilter("all");
+    setStatusFilter("");
     setCurrentPage(1);
   };
 
   const handleFilterChange = () => {
     setCurrentPage(1);
   };
-  if (!allReservations) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-        <Loader2 className="animate-spin w-16 h-16 text-primary" />
-      </div>
-    );
-  }
   const handleDetailReservation = (id: string) => {
     router.push(`/admin/reservations/detail/${id}`);
   };
@@ -86,16 +98,7 @@ export default function ReservationClient() {
               Theo dõi và quản lý các đơn đặt trước xe đạp
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            {/* <Button
-              // onClick={() => {
-              //   setIsCreateModalOpen(true);
-              // }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Tạo đặt trước
-            </Button> */}
-          </div>
+          <div className="flex items-center gap-3"></div>
         </div>
         {reservationStats && <ReservationStats overview={reservationStats} />}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
@@ -121,50 +124,54 @@ export default function ReservationClient() {
               <select
                 value={statusFilter}
                 onChange={(e) => {
-                  setStatusFilter(
-                    e.target.value as Reservation["status"] | "all",
-                  );
+                  setStatusFilter(e.target.value as ReservationStatus);
                   handleFilterChange();
                 }}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
               >
-                <option value="all">Tất cả</option>
-                <option value="ĐANG CHỜ XỬ LÝ">Đang chờ xử lý</option>
-                <option value="ĐANG HOẠT ĐỘNG">Đang hoạt động</option>
-                <option value="ĐÃ HẾT HẠN">Đã hết hạn</option>
-                <option value="ĐÃ HỦY">Đã hủy</option>
+                <option value="">Tất cả</option>
+                <option value="PENDING">Đang chờ xử lý</option>
+                <option value="FULFILLED">Đang hoạt động</option>
+                <option value="EXPIRED">Đã hết hạn</option>
+                <option value="CANCELLED">Đã hủy</option>
               </select>
             </div>
           </div>
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Hiển thị trang {currentPage}
-          </p>
-          <DataTable
-            columns={reservationColumn({
-              onView: ({ id }) => {
-                handleDetailReservation(id);
-              },
-              onEdit: ({ data }) => {
-                setSelectedReservationId(data.id);
-                console.log("[v0] Edit reservation:", data.id);
-              },
-              stations: stations,
-            })}
-            title={"Danh sách đặt trước"}
-            searchValue={searchQuery}
-            filterPlaceholder="Tìm kiếm theo mã ví hoặc mã người dùng..."
-            data={allReservations?.data || []}
-          />
+        <div className="min-h-[700px]">
+          {isVisualLoading ? (
+            <TableSkeleton />
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-4">
+                Hiển thị trang {currentPage} / {allReservations?.pagination.totalPages}
+              </p>
+              <DataTable
+                columns={reservationColumn({
+                  onView: ({ id }) => {
+                    handleDetailReservation(id);
+                  },
+                  onEdit: ({ data }) => {
+                    setSelectedReservationId(data.id);
+                    console.log("[v0] Edit reservation:", data.id);
+                  },
+                  stations: stations,
+                })}
+                title={"Danh sách đặt trước"}
+                searchValue={searchQuery}
+                filterPlaceholder="Tìm kiếm theo mã ví hoặc mã người dùng..."
+                data={allReservations?.data || []}
+              />
 
-          <div className="pt-3">
-            <PaginationDemo
-              currentPage={allReservations.pagination.page}
-              totalPages={allReservations.pagination.totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
+              <div className="pt-3">
+                <PaginationDemo
+                  currentPage={allReservations?.pagination.page ?? 1}
+                  totalPages={allReservations?.pagination.totalPages ?? 1}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

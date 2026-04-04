@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
 import NProgress from "nprogress";
-import "nprogress/nprogress.css";
+// import "nprogress/nprogress.css";
 
 // Define menu items (giữ nguyên hàm này theo code bạn)
 const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
@@ -126,12 +126,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       href: "/admin/reservations",
       roles: ["ADMIN"],
     },
-    {
-      title: "Quản lý đơn báo cáo",
-      icon: FileCheck2,
-      href: "/admin/reports",
-      roles: ["ADMIN"],
-    },
+    // {
+    //   title: "Quản lý đơn báo cáo",
+    //   icon: FileCheck2,
+    //   href: "/admin/reports",
+    //   roles: ["ADMIN"],
+    // },
     {
       title: "Quản lý đánh giá",
       icon: Star,

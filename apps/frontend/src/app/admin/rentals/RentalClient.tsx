@@ -75,7 +75,7 @@ export default function RentalClient() {
           onStatusChange={setStatusFilter}
           onReset={handleReset}
         />
-        <div className="w-full rounded-lg space-y-4  flex flex-col">
+        <div className="min-h-[520px]">
           {isVisualLoading ? (
             <TableSkeleton />
           ) : (
@@ -92,18 +92,16 @@ export default function RentalClient() {
                 })}
                 data={rentals}
               />
+              <div className="pt-3">
+                <PaginationDemo
+                  currentPage={pagination?.page ?? 1}
+                  onPageChange={setPage}
+                  totalPages={pagination?.totalPages ?? 1}
+                />
+              </div>
             </>
           )}
-          <PaginationDemo
-            currentPage={pagination?.page ?? 1}
-            onPageChange={setPage}
-            totalPages={pagination?.totalPages ?? 1}
-          />
         </div>
-
-        <p className="text-sm text-muted-foreground">
-          Trang {pagination?.page ?? 1} / {pagination?.totalPages ?? 1} đơn thuê
-        </p>
       </div>
     </div>
   );

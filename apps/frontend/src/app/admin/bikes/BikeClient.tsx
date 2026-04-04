@@ -66,7 +66,7 @@ export default function BikeClient() {
         setStatusFilter={setStatusFilter}
       />
 
-      <div className="min-h-[600px]">
+      <div className="min-h-[700px]">
         {isVisualLoading ? (
           <TableSkeleton />
         ) : (

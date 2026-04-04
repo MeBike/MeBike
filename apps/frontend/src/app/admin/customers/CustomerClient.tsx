@@ -139,7 +139,7 @@ export default function CustomersClient() {
         </div>
 
         <div>
-          <div className="min-h-[400px]">
+          <div className="min-h-[700px]">
             {isVisualLoading ? (
               <TableSkeleton />
             ) : (
