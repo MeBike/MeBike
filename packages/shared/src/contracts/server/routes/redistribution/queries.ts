@@ -13,7 +13,7 @@ import {
 export const getRequestListForAdmin = createRoute({
   method: "get",
   path: "/v1/admin/redistribution-requests",
-  tags: ["Admin", "RedistributionRequests"],
+  tags: ["Admin", "Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
     query: RedistributionRequestListQuerySchema,
@@ -38,7 +38,7 @@ export const getRequestListForAdmin = createRoute({
 export const getRequestDetailForAdmin = createRoute({
   method: "get",
   path: "/v1/admin/redistribution-requests/{redistributionReqId}",
-  tags: ["Admin", "RedistributionRequests"],
+  tags: ["Admin", "Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
     params: RedistributionRequestIdParamSchema,
@@ -73,7 +73,7 @@ export const getRequestDetailForAdmin = createRoute({
 export const getRequestListForStaff = createRoute({
   method: "get",
   path: "/v1/staff/redistribution-requests",
-  tags: ["Staff", "RedistributionRequests"],
+  tags: ["Staff", "Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
     query: RedistributionRequestListQuerySchema,
@@ -98,7 +98,7 @@ export const getRequestListForStaff = createRoute({
 export const getRequestDetailForStaff = createRoute({
   method: "get",
   path: "/v1/staff/redistribution-requests/{redistributionReqId}",
-  tags: ["Staff", "RedistributionRequests"],
+  tags: ["Staff", "Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
     params: RedistributionRequestIdParamSchema,
@@ -133,7 +133,7 @@ export const getRequestDetailForStaff = createRoute({
 export const getRequestListForManager = createRoute({
   method: "get",
   path: "/v1/manager/redistribution-requests",
-  tags: ["Manager", "RedistributionRequests"],
+  tags: ["Manager", "Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
     query: RedistributionRequestListQuerySchema,
@@ -158,7 +158,7 @@ export const getRequestListForManager = createRoute({
 export const getRequestDetailForManager = createRoute({
   method: "get",
   path: "/v1/manager/redistribution-requests/{redistributionReqId}",
-  tags: ["Manager", "RedistributionRequests"],
+  tags: ["Manager", "Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
     params: RedistributionRequestIdParamSchema,

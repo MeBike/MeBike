@@ -12,6 +12,7 @@ export const redistributionReqErrorCodes = [
   // 400
   "INSUFFICIENT_AVAILABLE_BIKES",
   "INSUFFICIENT_EMPTY_SLOTS",
+  "EXCEEDED_MIN_BIKES_AT_STATION",
 ] as const;
 
 export const RedistributionReqErrorCodeSchema = z.enum(redistributionReqErrorCodes);
@@ -47,9 +48,10 @@ export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, 
   STATION_NOT_FOUND: "Station not found",
   USER_NOT_FOUND: "User not found",
   // 403
-  UNAUTHORIZED_ACCESS: "You are not authorized to create a request for this station",
+  UNAUTHORIZED_ACCESS: "You are not authorized to access this redistribution request",
   UNAUTHORIZED_REDISTRIBUTION_CREATION: "You are not authorized to create a request for this station",
   // 400
   INSUFFICIENT_AVAILABLE_BIKES: "This station does not have enough bikes for distribution",
   INSUFFICIENT_EMPTY_SLOTS: "Target station does not have enough empty slots",
+  EXCEEDED_MIN_BIKES_AT_STATION: "Source station will have less than minimum bikes after redistribution"
 };

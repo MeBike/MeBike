@@ -31,7 +31,7 @@ export type UpdateRedistributionRequestStatusInput = {
 
 export type RedistributionRepo = {
   // Staff activities
-  createRequest: (
+  create: (
     data: CreateRedistributionRequestInput,
   ) => Effect.Effect<RedistributionRequestRow, RedistributionRepositoryError>;
 
@@ -71,7 +71,7 @@ export type RedistributionRepo = {
   >;
 
   // Manager activities
-  updateRequestStatus: (
+  updateStatus: (
     data: UpdateRedistributionRequestStatusInput,
   ) => Effect.Effect<
     Option.Option<RedistributionRequestRow>,

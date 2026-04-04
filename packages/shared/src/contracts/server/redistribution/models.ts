@@ -147,11 +147,10 @@ export const RedistributionRequestListResponseSchema = z.object({
 })
 
 export const CreateRedistributionRequestSchema = z.object({
-  requestedByUserId: z.uuidv7(),
   sourceStationId: z.uuidv7(),
   targetStationId: z.uuidv7().optional(),
   targetAgencyId: z.uuidv7().optional(),
-  requestedQuantity: z.number(),
+  requestedQuantity: z.number().int().positive().max(20),
   reason: z.string().optional(),
 }).superRefine((data, ctx) => {
   const hasTargetStation = !!data.targetStationId
@@ -168,6 +167,14 @@ export const CreateRedistributionRequestSchema = z.object({
       code: "custom",
       message: "Only one of targetStationId or targetAgencyId can be provided",
       path: ["hasTargetStation", "targetAgencyId"]
+    })
+  }
+
+  if(hasTargetStation && data.targetStationId === data.sourceStationId){
+    ctx.addIssue({
+      code: "custom",
+      message: "Target station cannot be the same as source station",
+      path: ["targetStationId"]
     })
   }
 })

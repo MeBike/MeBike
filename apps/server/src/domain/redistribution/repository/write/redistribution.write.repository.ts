@@ -16,7 +16,7 @@ import {
 
 export type RedistributionWriteRepo = Pick<
   RedistributionRepo,
-  "createRequest" | "updateRequestStatus"
+  "create" | "updateStatus"
 >;
 
 export function makeRedistributionWriteRepository(
@@ -25,7 +25,7 @@ export function makeRedistributionWriteRepository(
   const select = redistributionRequestSelect;
 
   return {
-    createRequest(data) {
+    create(data) {
       return Effect.gen(function* () {
         const raw = yield* Effect.tryPromise({
           try: () =>
@@ -57,7 +57,7 @@ export function makeRedistributionWriteRepository(
       });
     },
 
-    updateRequestStatus(data) {
+    updateStatus(data) {
       return Effect.gen(function* () {
         const raw = yield* Effect.tryPromise({
           try: () =>

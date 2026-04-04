@@ -61,6 +61,17 @@ const createRedistributionRequest: RouteHandler<
             },
             404,
           )),
+        Match.tag("StationNotFound", ({ stationId }) =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.STATION_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.STATION_NOT_FOUND,
+                stationId,
+              },
+            },
+            404,
+          )),
         Match.tag("UnauthorizedRedistributionCreation", ({ userId, sourceStationId }) =>
           c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
             {
@@ -98,6 +109,20 @@ const createRedistributionRequest: RouteHandler<
                 stationId: error.targetId,
                 required: error.required,
                 available: error.available,
+              },
+            },
+            400,
+          )),
+        Match.tag("ExceededMinBikesAtStation", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+            {
+              error: redistributionReqErrorMessages.EXCEEDED_MIN_BIKES_AT_STATION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum
+                  .EXCEEDED_MIN_BIKES_AT_STATION,
+                stationId: error.stationId,
+                minBikes: error.minBikes,
+                restBikesAfterFulfillment: error.restBikesAfterFulfillment,
               },
             },
             400,

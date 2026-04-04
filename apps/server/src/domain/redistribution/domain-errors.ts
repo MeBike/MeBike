@@ -69,6 +69,14 @@ export class NotEnoughEmptySlotsAtTarget extends Data.TaggedError(
     readonly available: number;
   }> {}
 
+export class ExceededMinBikesAtStation extends Data.TaggedError(
+  "ExceededMinBikesAtStation",
+)<{
+    readonly stationId: string;
+    readonly minBikes: number;
+    readonly restBikesAfterFulfillment: number;
+  }> {}
+
 export class UserNotFound extends Data.TaggedError("UserNotFound")<{
   readonly userId: string;
 }> {}
@@ -84,5 +92,6 @@ export type RedistributionServiceFailure
     | BikeNotAvailable
     | NotEnoughBikesAtStation
     | NotEnoughEmptySlotsAtTarget
+    | ExceededMinBikesAtStation
     | UserNotFound
     | RedistributionRepositoryError;

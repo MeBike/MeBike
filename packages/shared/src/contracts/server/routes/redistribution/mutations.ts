@@ -12,7 +12,7 @@ import { forbiddenResponse, notFoundResponse, unauthorizedResponse } from "../he
 export const createRedistributionRequest = createRoute({
   method: "post",
   path: "/v1/staff/redistribution-requests",
-  tags: ["RedistributionRequests"],
+  tags: ["Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
     body: {

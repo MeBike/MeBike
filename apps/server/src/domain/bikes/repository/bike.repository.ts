@@ -62,6 +62,10 @@ export type BikeRepo = {
     bikeId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, BikeRepositoryError>;
+  markBikesUnavailableIfAvailable: (
+    bikeIds: string[],
+    updatedAt: Date,
+  ) => Effect.Effect<number, BikeRepositoryError>;
 
   updateById: (
     bikeId: string,
@@ -376,6 +380,23 @@ export function makeBikeRepository(
             operation: "releaseBikeIfReserved",
             cause: e,
             message: "Failed to release reserved bike",
+          }),
+      }),
+
+    markBikesUnavailableIfAvailable: (bikeIds, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.bike.updateMany({
+            where: { id: { in: bikeIds }, status: "AVAILABLE" },
+            data: { status: "UNAVAILABLE", updatedAt },
+          });
+          return updated.count;
+        },
+        catch: e =>
+          new BikeRepositoryError({
+            operation: "markBikesUnavailableIfAvailable",
+            cause: e,
+            message: "Failed to mark bikes unavailable",
           }),
       }),
 

@@ -1,6 +1,6 @@
 import { Effect, Layer } from "effect";
 
-import type { PrismaClient } from "generated/prisma/client";
+import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
 
@@ -16,7 +16,7 @@ export type {
 } from "./redistribution.repository.types";
 
 export function makeRedistributionRepository(
-  db: PrismaClient,
+  db: PrismaClient | PrismaTypes.TransactionClient,
 ): RedistributionRepo {
   return {
     ...makeRedistributionReadRepository(db),
