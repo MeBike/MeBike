@@ -8,4 +8,5 @@ export * from "./Supplier/index";
 export * from "./User/index";
 export * from "./Wallet/index";
 export * from "./Withdrawal/index";
-export * from "./Staff/index"
+export * from "./Staff/index";
+export * from "./Rating/index"

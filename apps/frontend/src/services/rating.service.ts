@@ -2,27 +2,28 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { Rating } from "@/types";
 import { ApiResponse } from "@/types";
+import { ENDPOINT } from "@/constants";
 export const ratingService = {
   getAllRatings: async ({
-    page = 1,
-    limit = 10,
+    page,
+    pageSize,
   }: {
     page?: number;
-    limit?: number;
+    pageSize?: number;
   }): Promise<AxiosResponse<ApiResponse<Rating[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Rating[]>>(
-      RATING_BASE,
+      ENDPOINT.RATING.BASE,
       {
-        page,
-        limit,
+        page : page,
+        pageSize : pageSize,
       }
     );
     return response;
   },
 
-  getRatingDetail: async (ratingId: string): Promise<AxiosResponse<DetailApiResponse<Rating>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Rating>>(
-      `${RATING_BASE}/detail/${ratingId}`
+  getRatingDetail: async (ratingId: string): Promise<AxiosResponse<Rating>> => {
+    const response = await fetchHttpClient.get<Rating>(
+      ENDPOINT.RATING.ID(ratingId)
     );
     return response;
   },

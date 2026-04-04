@@ -13,29 +13,39 @@ export const ratingColumn = ({
 }: {
   onView?: ({ id }: { id: string }) => void;
 }): ColumnDef<Rating>[] => [
-  {
-    accessorKey: "_id",
-    header: "Mã đánh giá",
-    cell: ({ row }) => {
-      return shortenId(row.original._id);
-    },
-  },
+  // {
+  //   accessorKey: "id",
+  //   header: "Mã đánh giá",
+  //   cell: ({ row }) => {
+  //     return shortenId(row.original.id);
+  //   },
+  // },
   {
     accessorKey: "user",
     header: "Người dùng",
-    cell: ({ row }) => row.original.user?.fullname || "Không có tên người dùng",
+    cell: ({ row }) => row.original.user?.fullName || "Không có tên người dùng",
   },
   {
     accessorKey: "rental_id",
     header: "Mã đơn thuê",
-    cell: ({ row }) => shortenId(row.original.rental_id),
+    cell: ({ row }) => shortenId(row.original.rentalId),
   },
   {
-    accessorKey: "rating",
-    header: "Đánh giá",
+    accessorKey: "bike-score",
+    header: "Đánh giá xe đạp",
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        <span className="font-medium">{row.original.rating}</span>
+        <span className="font-medium">{row.original.bikeScore}</span>
+        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+      </div>
+    ),
+  },
+  {
+    accessorKey: "station-score",
+    header: "Đánh giá trạm",
+    cell: ({ row }) => (
+      <div className="flex items-center gap-1">
+        <span className="font-medium">{row.original.stationScore}</span>
         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
       </div>
     ),
@@ -53,7 +63,7 @@ export const ratingColumn = ({
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return formatDateOnlyVN(row.original.created_at);
+      return formatDateOnlyVN(row.original.createdAt);
     },
   },
   {
@@ -66,7 +76,7 @@ export const ratingColumn = ({
           title="Xem chi tiết"
           onClick={() => {
             if (onView) {
-              onView({ id: row.original._id });
+              onView({ id: row.original.id });
             }
           }}
         >

@@ -72,6 +72,10 @@ export const ENDPOINT = {
         BASE : "/admin/reservations",
         ID : (reservationId : string) => `/admin/reservations/${reservationId}`,
         OVERVIEW : "/reservations/stats/summary",
+    },
+    RATING : {
+        BASE : "/admin/ratings",
+        ID : (ratingID : string) => `/admin/ratings/${ratingID}`,
     }
 
 } as const;

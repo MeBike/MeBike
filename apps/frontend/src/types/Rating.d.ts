@@ -7,45 +7,37 @@ export interface RatingReason {
     vi: string;
   };
 }
-
+export interface IUser{
+  id : string;
+  fullName : string;
+  phoneNumber : string;
+}
+export interface IBike {
+  id : string;
+  chipId : string;
+}
+export interface IStation { 
+  id : string;
+  name : string;
+  address : string;
+}
+export interface IReason {
+  id : string;
+  type : "ISSUE" | "COMPLIMENT";
+  appliesTo : "bike" | "station";
+  message : string;
+}
 export interface Rating {
-  _id: string;
-  user_id: string;
-  rental_id: string;
-  rating: number;
-  reason_ids: string[];
-  comment?: string;
-  created_at: string;
-  updated_at: string;
-  user?: {
-    _id?: string;
-    fullname: string;
-    email: string;
-    phone_number?: string;
-    avatar?: string;
-  };
-  rental?: {
-    _id: string;
-    bike_id: string;
-    start_time?: string;
-    end_time?: string;
-    total_price?: number | { $numberDecimal: string };
-    status?: string;
-    bike?: {
-      _id: string;
-      chip_id: string;
-      status?: string;
-    };
-    start_station?: {
-      _id: string;
-      name: string;
-      address?: string;
-    };
-    end_station?: {
-      _id: string;
-      name: string;
-      address?: string;
-    };
-  };
-  reason_details?: RatingReason[];
+  id: string;
+  rentalId : string;
+  user : IUser;
+  bike : IBike;
+  station : IStation;
+  bikeScore : number;
+  stationScore : number;
+  comment : string | null;
+  reasons : IReason;
+  createdAt : string;
+  updatedAt : string;
+  editedAt : string | null;
 }
