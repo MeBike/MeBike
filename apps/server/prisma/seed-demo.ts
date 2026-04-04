@@ -5,10 +5,8 @@ import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
 import {
-  AppliesToEnum,
   BikeStatus,
   PrismaClient,
-  RatingReasonType,
   RentalStatus,
   ReservationOption,
   ReservationStatus,
@@ -22,6 +20,9 @@ import {
 import logger from "../src/lib/logger";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
+import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
+import { seedDemoRatings } from "./seed/demo-ratings";
+import { seedRatingReasons } from "./seed/rating-reasons";
 import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
 
@@ -38,24 +39,6 @@ const DEMO_AGENCY_SOUTH_ID = "019b17bd-d130-7e7d-be69-91ceef7b9008";
 const DEMO_TECH_TEAM_A_ID = "019b17bd-d130-7e7d-be69-91ceef7b9005";
 const DEMO_TECH_TEAM_B_ID = "019b17bd-d130-7e7d-be69-91ceef7b9006";
 
-const ratingReasonsSeed: ReadonlyArray<{
-  readonly type: RatingReasonType;
-  readonly appliesTo: AppliesToEnum;
-  readonly message: string;
-}> = [
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe chạy êm, vận hành tốt" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe sạch sẽ" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe còn nhiều pin" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Phanh chưa tốt" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Xe bẩn hoặc có mùi" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Pin yếu" },
-
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm dễ tìm" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm gọn gàng, an toàn" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, message: "Trạm khó tìm" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, message: "Trạm đông, khó trả xe" },
-];
-
 type DemoUser = {
   id: string;
   fullname: string;
@@ -69,7 +52,7 @@ type DemoUser = {
 type DemoRental = {
   id: string;
   userId: string;
-  bikeId: string | null;
+  bikeId: string;
   startStationId: string;
   endStationId: string | null;
   createdAt: Date;
@@ -95,6 +78,13 @@ type DemoReservation = {
   status: ReservationStatus;
   createdAt: Date;
   updatedAt: Date;
+};
+
+type DemoOrgAssignment = {
+  readonly user: DemoUser;
+  readonly stationId: string | null;
+  readonly agencyId: string | null;
+  readonly technicianTeamId: string | null;
 };
 
 function getConnectionString() {
@@ -181,35 +171,6 @@ async function seedStations(prisma: PrismaClient) {
   }
 }
 
-async function seedRatingReasons(prisma: PrismaClient) {
-  const existing = await prisma.ratingReason.findMany({
-    select: {
-      id: true,
-      type: true,
-      appliesTo: true,
-      message: true,
-    },
-  });
-
-  const existingKeys = new Set(existing.map(item => `${item.type}|${item.appliesTo}|${item.message}`));
-
-  for (const reason of ratingReasonsSeed) {
-    const key = `${reason.type}|${reason.appliesTo}|${reason.message}`;
-    if (existingKeys.has(key)) {
-      continue;
-    }
-
-    await prisma.ratingReason.create({
-      data: {
-        id: uuidv7(),
-        type: reason.type,
-        appliesTo: reason.appliesTo,
-        message: reason.message,
-      },
-    });
-  }
-}
-
 function buildDemoUsers(technicianCount: number): DemoUser[] {
   const users: DemoUser[] = [
     {
@@ -262,7 +223,7 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
   for (let i = 1; i <= technicianCount; i++) {
     users.push({
       id: uuidv7(),
-      fullname: `Demo Technician ${i}`,
+      fullname: buildDemoTechnicianFullName(i),
       email: `tech${i}@mebike.local`,
       phoneNumber: `092${String(i).padStart(7, "0")}`,
       username: `demo_tech_${i}`,
@@ -275,7 +236,7 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
     const order = String(i).padStart(2, "0");
     users.push({
       id: uuidv7(),
-      fullname: `Demo User ${order}`,
+      fullname: buildDemoCustomerFullName(i),
       email: `user${order}@mebike.local`,
       phoneNumber: `091${String(i).padStart(7, "0")}`,
       username: `demo_user_${order}`,
@@ -696,41 +657,53 @@ async function main() {
     );
 
     const userByEmail = new Map(users.map(user => [user.email, user]));
-    const technicianAssignments = technicianTeams
+    const technicianAssignments: DemoOrgAssignment[] = technicianTeams
       .map((team, index) => ({
         user: userByEmail.get(`tech${index + 1}@mebike.local`),
+        stationId: null,
+        agencyId: null,
         technicianTeamId: team.id,
       }))
-      .filter(item => item.user !== undefined);
-    const orgAssignments = [
+      .filter((item): item is DemoOrgAssignment => item.user !== undefined);
+    const orgAssignments: DemoOrgAssignment[] = [
       {
         user: userByEmail.get("staff1@mebike.local"),
         stationId: pick(stationIds, 2),
+        agencyId: null,
+        technicianTeamId: null,
       },
       {
         user: userByEmail.get("staff2@mebike.local"),
         stationId: pick(stationIds, 3),
+        agencyId: null,
+        technicianTeamId: null,
       },
       {
         user: userByEmail.get("manager@mebike.local"),
         stationId: pick(stationIds, 0),
+        agencyId: null,
+        technicianTeamId: null,
       },
       {
         user: userByEmail.get("agency1@mebike.local"),
+        stationId: null,
         agencyId: mainAgency.id,
+        technicianTeamId: null,
       },
       {
         user: userByEmail.get("admin@mebike.local"),
+        stationId: null,
         agencyId: eastAgency.id,
+        technicianTeamId: null,
       },
       ...technicianAssignments,
-    ].filter(item => item.user !== undefined);
+    ].filter((item): item is DemoOrgAssignment => item.user !== undefined);
 
     if (orgAssignments.length > 0) {
       await prisma.userOrgAssignment.createMany({
         data: orgAssignments.map(item => ({
           id: uuidv7(),
-          userId: item.user!.id,
+          userId: item.user.id,
           stationId: item.stationId ?? null,
           agencyId: item.agencyId ?? null,
           technicianTeamId: item.technicianTeamId ?? null,
@@ -865,68 +838,7 @@ async function main() {
       });
     }
 
-    const bikeReasons = await prisma.ratingReason.findMany({
-      where: { appliesTo: AppliesToEnum.bike },
-      orderBy: { createdAt: "asc" },
-      select: { id: true },
-    });
-    const stationReasons = await prisma.ratingReason.findMany({
-      where: { appliesTo: AppliesToEnum.station },
-      orderBy: { createdAt: "asc" },
-      select: { id: true },
-    });
-
-    const completedRentals = rentals.filter(r => r.status === RentalStatus.COMPLETED && r.bikeId);
-    const ratedRentals = completedRentals.slice(0, 60);
-
-    await prisma.rating.createMany({
-      data: ratedRentals.map((r, idx) => ({
-        id: uuidv7(),
-        userId: r.userId,
-        rentalId: r.id,
-        bikeId: r.bikeId,
-        stationId: r.endStationId ?? r.startStationId,
-        bikeScore: 3 + (idx % 3),
-        stationScore: 3 + ((idx + 1) % 3),
-        comment: idx % 2 === 0 ? "Demo seeded rating" : null,
-        updatedAt: new Date(),
-      })),
-    });
-
-    const createdRatings = await prisma.rating.findMany({
-      where: {
-        rentalId: {
-          in: ratedRentals.map(r => r.id),
-        },
-      },
-      select: { id: true },
-    });
-
-    if (createdRatings.length > 0) {
-      const ratingReasonLinks = createdRatings.flatMap((rating, idx) => [
-        ...(bikeReasons.length > 0
-          ? [{
-              ratingId: rating.id,
-              reasonId: pick(bikeReasons, idx).id,
-              target: AppliesToEnum.bike,
-            }]
-          : []),
-        ...(stationReasons.length > 0
-          ? [{
-              ratingId: rating.id,
-              reasonId: pick(stationReasons, idx).id,
-              target: AppliesToEnum.station,
-            }]
-          : []),
-      ]);
-
-      if (ratingReasonLinks.length > 0) {
-        await prisma.ratingReasonLink.createMany({
-          data: ratingReasonLinks,
-          skipDuplicates: true,
-        });
-      }
-    }
+    await seedDemoRatings(prisma, rentals);
 
     logger.info("Demo seed completed");
     logger.info({ users: users.length }, "Demo users seeded");
