@@ -1,12 +1,4 @@
-export interface RatingReason {
-  _id: string;
-  type: "positive" | "negative";
-  applies_to: string;
-  messages: {
-    en: string;
-    vi: string;
-  };
-}
+
 export interface IUser{
   id : string;
   fullName : string;
