@@ -191,6 +191,13 @@ export const CancelRedistributionRequestSchema = z.object({
     .max(200, "Reason must be at most 200 characters long"),
 });
 
+export const RejectRedistributionRequestSchema = z.object({
+  reason: z
+    .string()
+    .min(10, "Reason must be at least 10 characters long")
+    .max(200, "Reason must be at most 200 characters long"),
+});
+
 export type RedistributionRequest = z.infer<typeof RedistributionRequestSchema>;
 export type RedistributionRequestDetail = z.infer<
   typeof RedistributionRequestDetailSchema

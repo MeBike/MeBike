@@ -8,6 +8,7 @@ import {
   RedistributionReqErrorResponseSchema,
   RedistributionRequestIdParamSchema,
   RedistributionRequestSchemaOpenApi,
+  RejectRedistributionRequestSchemaOpenApi,
 } from "./shared";
 import {
   forbiddenResponse,
@@ -208,7 +209,172 @@ export const cancelRedistributionRequest = createRoute({
   },
 });
 
+export const approveRedistributionRequest = createRoute({
+  method: "post",
+  path: "/v1/manager/redistribution-requests/{requestId}/approve",
+  tags: ["Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RedistributionRequestIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Redistribution request approved successfully",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestSchemaOpenApi,
+            "Redistribution request approved successfully",
+          ),
+        },
+      },
+    },
+    400: {
+      description: "Redistribution request approval failed",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            CannotApproveNonPendingRedistribution: {
+              value: {
+                error: "Cannot approve redistribution request that is not in pending state",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .CANNOT_APPROVE_NON_PENDING_REDISTRIBUTION,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  status: "APPROVED",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: {
+      description: "Unauthorized redistribution request approval",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            ...forbiddenResponse("Manager").content["application/json"].examples,
+            UnauthorizedRedistributionApproval: {
+              value: {
+                error: "Unauthorized redistribution approval",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_REDISTRIBUTION_APPROVAL,
+                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "Redistribution request not found",
+      example: {
+        error: "Redistribution request not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+
+export const rejectRedistributionRequest = createRoute({
+  method: "post",
+  path: "/v1/manager/redistribution-requests/{requestId}/reject",
+  tags: ["Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RedistributionRequestIdParamSchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: RejectRedistributionRequestSchemaOpenApi,
+        }
+      }
+    }
+  },
+  responses: {
+    200: {
+      description: "Redistribution request rejected successfully",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestSchemaOpenApi,
+            "Redistribution request rejected successfully",
+          ),
+        },
+      },
+    },
+    400: {
+      description: "Redistribution request rejection failed",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            CannotRejectNonPendingRedistribution: {
+              value: {
+                error: "Cannot reject redistribution request that is not in pending state",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .CANNOT_REJECT_NON_PENDING_REDISTRIBUTION,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  status: "APPROVED",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: {
+      description: "Unauthorized redistribution request rejection",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            ...forbiddenResponse("Manager").content["application/json"].examples,
+            UnauthorizedRedistributionRejection: {
+              value: {
+                error: "Unauthorized redistribution rejection",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_REDISTRIBUTION_REJECTION,
+                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "Redistribution request not found",
+      example: {
+        error: "Redistribution request not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+
 export const redistributionReqsMutations = {
   createRedistributionRequest,
-  cancelRedistributionRequest
+  cancelRedistributionRequest,
+  approveRedistributionRequest,
+  rejectRedistributionRequest,
 } as const;
