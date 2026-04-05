@@ -1,14 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {
-  ActivityIndicator,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useTheme, YStack } from "tamagui";
 
-import { styles } from "../styles";
+import { IconSymbol } from "@/components/IconSymbol";
+import { AppButton } from "@/ui/primitives/app-button";
+import { AppCard } from "@/ui/primitives/app-card";
+import { AppInput } from "@/ui/primitives/app-input";
+import { AppText } from "@/ui/primitives/app-text";
 
 export function SearchCard({
   phoneNumber,
@@ -25,37 +22,38 @@ export function SearchCard({
   isDisabled: boolean;
   summary: string | null;
 }) {
+  const theme = useTheme();
+
   return (
-    <View style={styles.lookupCard}>
-      <Text style={styles.lookupTitle}>Tìm kiếm khách hàng</Text>
-      <Text style={styles.lookupDescription}>
-        Nhập số điện thoại khách hàng để lấy danh sách phiên thuê đang hoạt động
-        trong trường hợp họ không thể quét mã QR.
-      </Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ví dụ: 0912345678"
-        placeholderTextColor="#9CA3AF"
+    <AppCard borderRadius="$4" chrome="whisper" gap="$4" padding="$4">
+      <YStack gap="$1">
+        <AppText variant="bodyStrong">Tìm kiếm khách hàng</AppText>
+        <AppText tone="muted" variant="bodySmall">
+          Nhập số điện thoại để lấy danh sách phiên thuê đang hoạt động khi khách không thể quét mã QR.
+        </AppText>
+      </YStack>
+
+      <AppInput
+        leadingIcon={<IconSymbol color={theme.textSecondary.val} name="magnifyingglass" size={18} />}
         keyboardType="phone-pad"
-        value={phoneNumber}
-        onChangeText={onPhoneChange}
         maxLength={15}
+        onChangeText={onPhoneChange}
+        onSubmitEditing={onLookup}
+        placeholder="Ví dụ: 0912345678"
+        value={phoneNumber}
       />
-      <TouchableOpacity
-        style={[styles.lookupButton, isDisabled && styles.lookupButtonDisabled]}
-        disabled={isDisabled}
-        onPress={onLookup}
-      >
-        {isPending
-          ? <ActivityIndicator color="#fff" />
-          : (
-              <>
-                <Ionicons name="search" size={18} color="#fff" />
-                <Text style={styles.lookupButtonText}>Tra cứu</Text>
-              </>
-            )}
-      </TouchableOpacity>
-      {summary && <Text style={styles.lookupSummary}>{summary}</Text>}
-    </View>
+
+      <AppButton disabled={isDisabled} loading={isPending} onPress={onLookup} tone="primary">
+        Tra cứu
+      </AppButton>
+
+      {summary
+        ? (
+            <AppText tone="muted" variant="bodySmall">
+              {summary}
+            </AppText>
+          )
+        : null}
+    </AppCard>
   );
 }

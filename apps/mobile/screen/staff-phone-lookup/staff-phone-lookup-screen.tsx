@@ -1,29 +1,25 @@
 import type { StackNavigationProp } from "@react-navigation/stack";
 
-import { useStaffActiveRentalsByPhone } from "@hooks/query/rentals/use-staff-active-rentals-by-phone";
-import { useStationActions } from "@hooks/useStationAction";
 import { useNavigation } from "@react-navigation/native";
-import { formatVietnamDateTime } from "@utils/date";
 import React, { useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-  Text,
-  View,
-} from "react-native";
+import { Alert, RefreshControl, ScrollView, StatusBar } from "react-native";
+import { Spinner, XStack, YStack } from "tamagui";
 
 import type { RootStackParamList } from "@/types/navigation";
 import type { RentalListItem } from "@/types/rental-types";
 
 import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
-import BookingDetailHeader from "../booking-history-detail/components/BookingDetailHeader";
+import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
+import { AppCard } from "@/ui/primitives/app-card";
+import { AppText } from "@/ui/primitives/app-text";
+import { Screen } from "@/ui/primitives/screen";
+import { useStaffActiveRentalsByPhone } from "@hooks/query/rentals/use-staff-active-rentals-by-phone";
+import { useStationActions } from "@hooks/useStationAction";
+import { formatVietnamDateTime } from "@utils/date";
+
 import { EmptyState } from "./components/empty-state";
 import { ResultsList } from "./components/results-list";
 import { SearchCard } from "./components/search-card";
-import { styles } from "./styles";
 
 function formatDate(value?: string | null) {
   if (!value)
@@ -48,18 +44,18 @@ function formatDuration(minutes?: number) {
   return `${mins} phút`;
 }
 
-function getStatusColor(status: string) {
+function getStatusTone(status: string) {
   switch (status) {
     case "RENTED":
-      return "#FF9800";
+      return "warning" as const;
     case "COMPLETED":
-      return "#4CAF50";
+      return "success" as const;
     case "CANCELLED":
-      return "#F44336";
+      return "danger" as const;
     case "RESERVED":
-      return "#7C3AED";
+      return "neutral" as const;
     default:
-      return "#999";
+      return "neutral" as const;
   }
 }
 
@@ -94,12 +90,7 @@ export default function StaffPhoneLookupScreen() {
     );
   }, [stationData]);
 
-  const handleLookup = () => {
-    const normalized = phoneNumber.trim();
-    if (!normalized) {
-      Alert.alert("Thiếu số điện thoại", "Vui lòng nhập số điện thoại hợp lệ.");
-      return;
-    }
+  const runLookup = (normalized: string) => {
     lookupMutation.mutate(
       { phone: normalized },
       {
@@ -116,34 +107,59 @@ export default function StaffPhoneLookupScreen() {
     );
   };
 
-  const lookupButtonDisabled
-    = lookupMutation.isPending || phoneNumber.trim().length === 0;
+  const handleLookup = () => {
+    const normalized = phoneNumber.trim();
+    if (!normalized) {
+      Alert.alert("Thiếu số điện thoại", "Vui lòng nhập số điện thoại hợp lệ.");
+      return;
+    }
+    runLookup(normalized);
+  };
+
+  const handleRefresh = () => {
+    const nextPhone = lastSearchedPhone ?? phoneNumber.trim();
+    if (!nextPhone) {
+      return;
+    }
+
+    runLookup(nextPhone);
+  };
+
+  const lookupButtonDisabled = lookupMutation.isPending || phoneNumber.trim().length === 0;
 
   const searchSummary = useMemo(() => {
     if (!lastSearchedPhone)
       return null;
     if (lookupMutation.isPending) {
-      return `Đang tìm kiếm thuê xe hoạt động cho ${lastSearchedPhone}...`;
+      return `Đang tìm kiếm phiên thuê cho ${lastSearchedPhone}...`;
     }
     return searchResults.length
-      ? `Đang hiển thị ${searchResults.length} phiên thuê hoạt động cho ${lastSearchedPhone}.`
+      ? `Đang hiển thị ${searchResults.length} phiên thuê đang hoạt động cho ${lastSearchedPhone}.`
       : `Không tìm thấy phiên thuê nào cho ${lastSearchedPhone}.`;
   }, [lastSearchedPhone, lookupMutation.isPending, searchResults.length]);
 
   const renderResults = () => {
     if (lookupMutation.isPending || isLoadingGetAllStations) {
-      return null;
+      return (
+        <AppCard alignItems="center" borderRadius="$4" chrome="whisper" gap="$3" padding="$5">
+          <Spinner color="$textBrand" size="small" />
+          <AppText tone="muted" variant="bodySmall">
+            Đang tìm phiên thuê đang hoạt động...
+          </AppText>
+        </AppCard>
+      );
     }
+
     if (!searchResults.length) {
-      return <EmptyState />;
+      return <EmptyState hasSearched={Boolean(lastSearchedPhone)} />;
     }
 
     return (
       <ResultsList
         rentals={searchResults}
         getStationName={id => stationNameMap.get(id) ?? id}
-        getStatusColor={getStatusColor}
         getStatusText={getStatusText}
+        getStatusTone={getStatusTone}
         getBikeLabel={shortenId}
         getStartTimeLabel={formatDate}
         getDurationLabel={formatDuration}
@@ -154,35 +170,53 @@ export default function StaffPhoneLookupScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-      <BookingDetailHeader
-        title="Tra cứu số điện thoại"
-        onBackPress={() => navigation.goBack()}
+    <Screen tone="subtle">
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+      <AppHeroHeader
+        onBack={() => navigation.goBack()}
+        size="compact"
+        subtitle="Tìm phiên thuê đang hoạt động của khách."
+        title="Tra cứu bằng SĐT"
       />
+
       <ScrollView
-        style={styles.content}
         contentContainerStyle={{ paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
         refreshControl={(
           <RefreshControl
             refreshing={lookupMutation.isPending}
-            onRefresh={handleLookup}
+            onRefresh={handleRefresh}
           />
         )}
-        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <SearchCard
-          phoneNumber={phoneNumber}
-          onPhoneChange={setPhoneNumber}
-          onLookup={handleLookup}
-          isPending={lookupMutation.isPending}
-          isDisabled={lookupButtonDisabled}
-          summary={searchSummary}
-        />
+        <YStack gap="$4" padding="$4">
+          <SearchCard
+            phoneNumber={phoneNumber}
+            onPhoneChange={setPhoneNumber}
+            onLookup={handleLookup}
+            isPending={lookupMutation.isPending}
+            isDisabled={lookupButtonDisabled}
+            summary={searchSummary}
+          />
 
-        {renderResults()}
+          {searchResults.length > 0 && !lookupMutation.isPending && !isLoadingGetAllStations
+            ? (
+                <XStack alignItems="center" justifyContent="space-between" paddingHorizontal="$1">
+                  <AppText variant="sectionTitle">Kết quả tra cứu</AppText>
+                  <AppText tone="muted" variant="caption">
+                    {searchResults.length}
+                    {" "}
+                    phiên thuê
+                  </AppText>
+                </XStack>
+              )
+            : null}
+
+          {renderResults()}
+        </YStack>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }

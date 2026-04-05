@@ -1,15 +1,14 @@
 import React from "react";
-import { View } from "react-native";
+import { YStack } from "tamagui";
 
 import type { RentalListItem } from "@/types/rental-types";
 
-import { styles } from "../styles";
 import { ResultCard } from "./result-card";
 
 export function ResultsList({
   rentals,
   getStationName,
-  getStatusColor,
+  getStatusTone,
   getStatusText,
   getBikeLabel,
   getStartTimeLabel,
@@ -19,7 +18,7 @@ export function ResultsList({
 }: {
   rentals: RentalListItem[];
   getStationName: (id: string) => string;
-  getStatusColor: (status: string) => string;
+  getStatusTone: (status: string) => "success" | "warning" | "danger" | "neutral";
   getStatusText: (status: string) => string;
   getBikeLabel: (id: string) => string;
   getStartTimeLabel: (startTime: string) => string;
@@ -28,21 +27,21 @@ export function ResultsList({
   shortenId: (id: string) => string;
 }) {
   return (
-    <View style={styles.resultsContainer}>
+    <YStack gap="$4">
       {rentals.map(rental => (
         <ResultCard
           key={rental.id}
-          title={rental.user?.fullname || "Khách hàng"}
-          rentalIdLabel={`Mã thuê: ${shortenId(rental.id)}`}
-          statusText={getStatusText(rental.status)}
-          statusColor={getStatusColor(rental.status)}
           bikeIdLabel={`Xe: ${getBikeLabel(rental.bikeId)}`}
-          startTimeLabel={`Bắt đầu: ${getStartTimeLabel(rental.startTime)}`}
           durationLabel={`Thời lượng: ${getDurationLabel(rental.duration)}`}
-          stationLabel={`Trạm xuất phát: ${getStationName(rental.startStation)}`}
           onPress={() => onSelect(rental.id)}
+          rentalIdLabel={`Mã thuê: ${shortenId(rental.id)}`}
+          startTimeLabel={`Bắt đầu: ${getStartTimeLabel(rental.startTime)}`}
+          stationLabel={`Trạm xuất phát: ${getStationName(rental.startStation)}`}
+          statusText={getStatusText(rental.status)}
+          statusTone={getStatusTone(rental.status)}
+          title={rental.user?.fullname || "Khách hàng"}
         />
       ))}
-    </View>
+    </YStack>
   );
 }
