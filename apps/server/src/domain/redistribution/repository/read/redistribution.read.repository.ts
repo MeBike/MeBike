@@ -5,7 +5,6 @@ import type {
 
 import type { RedistributionRepo } from "../redistribution.repository.types";
 
-import { makeRedistributionAdminReadRepository } from "./redistribution.admin-read.repository";
 import { makeRedistributionCoreReadRepository } from "./redistribution.core-read.repository";
 import { makeRedistributionStaffReadRepository } from "./redistribution.staff-read.repository";
 
@@ -17,8 +16,6 @@ export type RedistributionReadRepo = Pick<
   | "findOne"
   | "findAndPopulate"
   | "listWithOffset"
-  | "adminListRequests"
-  | "adminGetById"
 >;
 
 export function makeRedistributionReadRepository(
@@ -27,6 +24,5 @@ export function makeRedistributionReadRepository(
   return {
     ...makeRedistributionCoreReadRepository(client),
     ...makeRedistributionStaffReadRepository(client),
-    ...makeRedistributionAdminReadRepository(client),
   };
 }

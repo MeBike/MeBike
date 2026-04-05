@@ -1,67 +1,113 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 import type { RedistributionContracts } from "@mebike/shared";
 
-import { uuidv7 } from "uuidv7";
+import { Effect, Match, Option } from "effect";
+
+import { RedistributionServiceTag } from "@/domain/redistribution";
+import { withLoggedCause } from "@/domain/shared";
+import {
+  toContractRedistributionRequestDetail,
+  toContractRedistributionRequestListItem,
+} from "@/http/presenters/redistribution.presenter";
+import { toContractPage } from "@/http/shared/pagination";
 
 import type { RedistributionRoutes } from "./shared";
 
-const getRequestListForAdmin: RouteHandler<RedistributionRoutes["getRequestListForAdmin"]> = async (c) => {
-  return c.json(
-    {
-      message: "Redistribution request list fetched successfully",
-      result: { data: [], pagination: { page: 1, pageSize: 10, total: 0, totalPages: 0 } },
-    },
-    200,
+import {
+  RedistributionReqErrorCodeSchema,
+  redistributionReqErrorMessages,
+} from "./shared";
+
+const getRequestListForAdmin: RouteHandler<
+  RedistributionRoutes["getRequestListForAdmin"]
+> = async (c) => {
+  const query = c.req.valid("query");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.adminListRequests(
+        {
+          status: query.status,
+          requestedByUserId: query.requestedByUserId,
+          approvedByUserId: query.approvedByUserId,
+          sourceStationId: query.sourceStationId,
+          targetStationId: query.targetStationId,
+          targetAgencyId: query.targetAgencyId,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: query.sortBy ?? "createdAt",
+          sortDir: query.sortDir ?? "desc",
+        },
+      );
+    }),
+    "GET /v1/admin/redistribution-requests",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<{
+        message: string;
+      } & { result: RedistributionContracts.RedistributionRequestList }, 200>(
+        {
+          message: "Redistribution request list fetched successfully",
+          result: {
+            data: right.items.map(toContractRedistributionRequestListItem),
+            pagination: toContractPage(right),
+          },
+        },
+        200,
+      )),
+    Match.tag("Left", ({ left }) => {
+      throw left;
+    }),
+    Match.exhaustive,
   );
 };
 
-const getRequestDetailForAdmin: RouteHandler<RedistributionRoutes["getRequestDetailForAdmin"]> = async (c) => {
-  const now = new Date().toISOString();
-  const userId = (c.var as any).currentUser?.userId ?? "";
-  const detail: RedistributionContracts.RedistributionRequestDetail = {
-    id: uuidv7(),
-    reason: "Sample redistribution",
-    requestedQuantity: undefined,
-    status: "PENDING_APPROVAL",
-    startedAt: null,
-    completedAt: null,
-    createdAt: now,
-    updatedat: now,
-    requestedByUser: {
-      id: userId,
-      fullname: "Test User",
-      email: "test@example.com",
-      verify: "UNVERIFIED",
-      location: "Unknown",
-      username: "testuser",
-      phoneNumber: "0000000000",
-      avatar: "",
-      role: "USER",
-      nfcCardUid: undefined,
-      updatedAt: now,
-    },
-    approvedByUser: null,
-    sourceStation: {
-      id: uuidv7(),
-      name: "Source Station",
-      address: "123 Source St",
-      latitude: 1,
-      longitude: 1,
-      totalCapacity: 10,
-      updatedAt: now,
-      locationGeo: undefined,
-    },
-    targetStation: null,
-    targetAgency: null,
-    items: [],
-  };
+const getRequestDetailForAdmin: RouteHandler<
+  RedistributionRoutes["getRequestDetailForAdmin"]
+> = async (c) => {
+  const { requestId } = c.req.valid("param");
 
-  return c.json(
-    {
-      message: "Redistribution request details fetched successfully",
-      result: detail,
-    },
-    200,
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.adminGetById(requestId);
+    }),
+    "GET /v1/admin/redistribution-requests/{requestId}",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) => {
+      if (Option.isNone(right)) {
+        return c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+          {
+            error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+            details: {
+              code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+              requestId,
+            },
+          },
+          404,
+        );
+      }
+      return c.json(
+        {
+          message: "Redistribution request fetched successfully",
+          result: toContractRedistributionRequestDetail(right.value),
+        },
+        200,
+      );
+    }),
+    Match.tag("Left", ({ left }) => {
+      throw left;
+    }),
+    Match.exhaustive,
   );
 };
 

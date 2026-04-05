@@ -58,7 +58,7 @@ export function makeRedistributionStaffReadRepository(
               }),
             catch: e =>
               new RedistributionRepositoryError({
-                operation: "listMyRequests.findMany",
+                operation: "listMyInStationRequests.findMany",
                 cause: e,
               }),
           }),
@@ -84,7 +84,7 @@ export function makeRedistributionStaffReadRepository(
             }),
           catch: e =>
             new RedistributionRepositoryError({
-              operation: "getMyRequestById",
+              operation: "getMyInStationRequest",
               cause: e,
             }),
         });

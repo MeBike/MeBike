@@ -95,22 +95,4 @@ export type RedistributionRepo = {
     Option.Option<RedistributionRequestRow>,
     RedistributionRepositoryError
   >;
-
-  // Admin activities
-  adminListRequests: (
-    filter: AdminRedistributionFilter,
-    pageReq: PageRequest<RedistributionSortField>,
-  ) => Effect.Effect<
-    PageResult<RedistributionRequestSummaryRow>,
-    RedistributionRepositoryError
-  >;
-
-  adminGetById: (
-    requestId: string,
-  ) => Effect.Effect<
-    Option.Option<RedistributionRequestDetailRow>,
-    RedistributionRepositoryError
-  >;
-
-  // Manager activities
 };

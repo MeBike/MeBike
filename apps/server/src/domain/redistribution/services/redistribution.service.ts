@@ -98,6 +98,13 @@ export type RedistributionService = {
     PageResult<RedistributionRequestSummaryRow>,
     RedistributionServiceFailure
   >;
+
+  adminGetById: (
+    requestId: string,
+  ) => Effect.Effect<
+    Option.Option<RedistributionRequestDetailRow>,
+    RedistributionServiceFailure
+  >;
 };
 
 const makeRedistributionServiceEffect = Effect.gen(function* () {
@@ -129,7 +136,7 @@ function makeRedistributionService(
           .pipe(
             Effect.catchTag("UserRepositoryError", error =>
               Effect.fail(
-                new UserRepositoryError({ operation: "GET", cause: error }),
+                new UserRepositoryError({ operation: "getMyListInStation.getById", cause: error }),
               )),
           );
         if (Option.isNone(userOpt)) {
@@ -150,7 +157,7 @@ function makeRedistributionService(
             Effect.catchTag("RedistributionRepositoryError", error =>
               Effect.fail(
                 new RedistributionRepositoryError({
-                  operation: "GET",
+                  operation: "getMyListInStation.listWithOffset",
                   cause: error,
                 }),
               )),
@@ -166,7 +173,7 @@ function makeRedistributionService(
           .pipe(
             Effect.catchTag("UserRepositoryError", error =>
               Effect.fail(
-                new UserRepositoryError({ operation: "GET", cause: error }),
+                new UserRepositoryError({ operation: "getMyRequestInStation.getById", cause: error }),
               )),
           );
         if (Option.isNone(userOpt)) {
@@ -184,7 +191,7 @@ function makeRedistributionService(
             Effect.catchTag("RedistributionRepositoryError", error =>
               Effect.fail(
                 new RedistributionRepositoryError({
-                  operation: "GET",
+                  operation: "getMyRequestInStation.findAndPopulate",
                   cause: error,
                 }),
               )),
@@ -206,7 +213,7 @@ function makeRedistributionService(
           .pipe(
             Effect.catchTag("UserRepositoryError", error =>
               Effect.fail(
-                new UserRepositoryError({ operation: "GET", cause: error }),
+                new UserRepositoryError({ operation: "createRequestTo.getById", cause: error }),
               )),
           );
 
@@ -376,7 +383,7 @@ function makeRedistributionService(
                 Effect.catchTag("RedistributionRepositoryError", e =>
                   Effect.fail(
                     new RedistributionRepositoryError({
-                      operation: "UPDATE",
+                      operation: "cancel.update",
                       cause: e,
                     }),
                   )),
@@ -399,7 +406,7 @@ function makeRedistributionService(
                   Effect.catchTag("BikeRepositoryError", e =>
                     Effect.fail(
                       new BikeRepositoryError({
-                        operation: "UPDATE",
+                        operation: "cancel.updateStatusAt",
                         cause: e,
                       }),
                     )),
@@ -416,7 +423,7 @@ function makeRedistributionService(
                 Effect.catchTag("RedistributionRepositoryError", e =>
                   Effect.fail(
                     new RedistributionRepositoryError({
-                      operation: "UPDATE",
+                      operation: "cancel.findById",
                       cause: e,
                     }),
                   )),
@@ -479,10 +486,28 @@ function makeRedistributionService(
 
     adminListRequests: (filter, page) =>
       repo
-        .adminListRequests(filter, page)
+        .listWithOffset(filter, page)
         .pipe(
           Effect.catchTag("RedistributionRepositoryError", error =>
-            Effect.die(error)),
+            Effect.fail(
+              new RedistributionRepositoryError({
+                operation: "adminListRequests.listWithOffset",
+                cause: error,
+              }),
+            )),
+        ),
+
+    adminGetById: requestId =>
+      repo
+        .findAndPopulate({ id: requestId })
+        .pipe(
+          Effect.catchTag("RedistributionRepositoryError", error =>
+            Effect.fail(
+              new RedistributionRepositoryError({
+                operation: "adminGetById.findAndPopulate",
+                cause: error,
+              }),
+            )),
         ),
   };
 }

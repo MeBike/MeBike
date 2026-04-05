@@ -88,6 +88,8 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/users/manage-users/admin-reset-password/*", requireAdminMiddleware);
   app.use("/v1/admin/rentals", requireAdminMiddleware);
   app.use("/v1/admin/rentals/*", requireAdminMiddleware);
+  app.use("/v1/admin/redistribution-requests", requireAdminMiddleware);
+  app.use("/v1/admin/redistribution-requests/*", requireAdminMiddleware);
   app.use("/events", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
