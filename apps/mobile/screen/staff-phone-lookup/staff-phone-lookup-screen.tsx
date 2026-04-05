@@ -1,13 +1,14 @@
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { RefreshControl, ScrollView, StatusBar } from "react-native";
-import { Spinner, XStack, YStack, useTheme } from "tamagui";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 import type { StaffPhoneLookupNavigationProp } from "@/types/navigation";
 
 import { AppText } from "@/ui/primitives/app-text";
 import { Screen } from "@/ui/primitives/screen";
+
 import { EmptyState } from "./components/empty-state";
 import { ResultsList } from "./components/results-list";
 import { SearchCard } from "./components/search-card";
@@ -54,6 +55,7 @@ export default function StaffPhoneLookupScreen() {
     handleLookup,
     handleRefresh,
     isLoading,
+    isRefreshing,
     phoneNumber,
     results,
     setPhoneNumber,
@@ -80,27 +82,33 @@ export default function StaffPhoneLookupScreen() {
         />
       </YStack>
 
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 32 }}
-          keyboardShouldPersistTaps="handled"
-          refreshControl={(
-            <RefreshControl
-              colors={[theme.actionPrimary.val]}
-              refreshing={isLoading}
-              onRefresh={handleRefresh}
-              tintColor={theme.actionPrimary.val}
-            />
-          )}
-          showsVerticalScrollIndicator={false}
-        >
-          <YStack gap="$4" padding="$4" paddingTop="$5">
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={(
+          <RefreshControl
+            colors={[theme.actionPrimary.val]}
+            refreshing={isRefreshing}
+            onRefresh={() => {
+              void handleRefresh();
+            }}
+            tintColor={theme.actionPrimary.val}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+      >
+        <YStack gap="$4" padding="$4" paddingTop="$5">
           {showResultsHeader
             ? (
                 <XStack alignItems="center" justifyContent="space-between" paddingHorizontal="$1">
                   <AppText tone="muted" variant="sectionTitle">
                     Kết quả tìm kiếm
                   </AppText>
-                  <AppText tone="muted" variant="caption">{results.length} phiên</AppText>
+                  <AppText tone="muted" variant="caption">
+                    {results.length}
+                    {" "}
+                    phiên
+                  </AppText>
                 </XStack>
               )
             : null}

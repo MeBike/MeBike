@@ -1,5 +1,6 @@
 import type { RentalError } from "@services/rentals";
 
+import { rentalKeys } from "@hooks/query/rentals/rental-query-keys";
 import { rentalServiceV1 } from "@services/rentals";
 import { useQuery } from "@tanstack/react-query";
 
@@ -20,7 +21,7 @@ export function useStaffActiveRentalsByPhone({
 }: LookupQueryArgs) {
   return useQuery<RentalListResponse, RentalError>({
     enabled,
-    queryKey: ["staff-active-rentals-by-phone", phone, page, pageSize],
+    queryKey: rentalKeys.staffActiveByPhone(phone, page, pageSize),
     queryFn: () =>
       rentalServiceV1.listActiveRentalsByPhone({ phone, page, pageSize }).then((result) => {
         if (!result.ok) {

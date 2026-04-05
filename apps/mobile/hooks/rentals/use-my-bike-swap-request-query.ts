@@ -45,6 +45,7 @@ export function useMyBikeSwapRequestQuery({
 
       return false;
     },
+    retry: false,
     staleTime: 5 * 1000,
   });
 
@@ -73,6 +74,7 @@ export function useMyBikeSwapRequestQuery({
 
       return false;
     },
+    retry: false,
     staleTime: 5 * 1000,
   });
 

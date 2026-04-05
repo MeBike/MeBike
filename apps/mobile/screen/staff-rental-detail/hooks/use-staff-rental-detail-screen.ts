@@ -76,7 +76,6 @@ export function useStaffRentalDetailScreen(rentalId: string) {
           onSuccess: () => {
             Alert.alert("Thành công", "Đã kết thúc phiên thuê cho khách.");
             callbacks?.onSuccess?.();
-            void refetchRental();
           },
           onError: (error) => {
             Alert.alert("Thất bại", presentRentalError(error));
@@ -85,7 +84,7 @@ export function useStaffRentalDetailScreen(rentalId: string) {
         },
       );
     },
-    [booking?.returnSlot, endRentalMutation, refetchRental, rentalId],
+    [booking?.returnSlot, endRentalMutation, rentalId],
   );
 
   return {

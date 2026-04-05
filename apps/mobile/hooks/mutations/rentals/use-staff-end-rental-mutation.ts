@@ -1,7 +1,8 @@
 import type { RentalError } from "@services/rentals";
 
+import { invalidateStaffRentalQueries } from "@hooks/rentals/rental-cache";
 import { rentalServiceV1 } from "@services/rentals";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { RentalWithPricing } from "@/types/rental-types";
 
@@ -14,6 +15,8 @@ export type StaffEndRentalVariables = {
 };
 
 export function useStaffEndRentalMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation<RentalWithPricing, RentalError, StaffEndRentalVariables>({
     mutationFn: payload => rentalServiceV1.endRentalByAdmin(payload).then((result) => {
       if (!result.ok) {
@@ -21,5 +24,8 @@ export function useStaffEndRentalMutation() {
       }
       return result.value;
     }),
+    onSuccess: async () => {
+      await invalidateStaffRentalQueries(queryClient);
+    },
   });
 }

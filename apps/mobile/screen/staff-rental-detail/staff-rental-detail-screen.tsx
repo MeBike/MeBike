@@ -18,15 +18,14 @@ import type {
   StaffRentalDetailNavigationProp,
   StaffRentalDetailRouteProp,
 } from "@/types/navigation";
-import type { MyRentalResolvedDetail, RentalDetail } from "@/types/rental-types";
 
 import { IconSymbol } from "@/components/IconSymbol";
 import { AppText } from "@/ui/primitives/app-text";
 
 import DetailErrorState from "../booking-history-detail/components/detail-error-state";
 import DetailLoadingState from "../booking-history-detail/components/detail-loading-state";
-import { RentalJourneyCard } from "../booking-history-detail/components/rental-journey-card";
 import StaffEndRentalCard from "./components/staff-end-rental-card";
+import { StaffJourneyCard } from "./components/staff-journey-card";
 import { StaffPartyCard } from "./components/staff-party-card";
 import { StaffSummaryCard } from "./components/staff-summary-card";
 import { StaffWarningCard } from "./components/staff-warning-card";
@@ -43,47 +42,6 @@ function getStatusMeta(status: string) {
     default:
       return { label: "ĐÃ HỦY", pulseDot: false, tone: "neutral" as const };
   }
-}
-
-function toResolvedJourneyDetail(booking: RentalDetail): MyRentalResolvedDetail {
-  return {
-    rental: {
-      id: booking.id,
-      userId: booking.user.id,
-      bikeId: booking.bike.id,
-      startStation: booking.startStation.id,
-      endStation: booking.endStation?.id,
-      startTime: booking.startTime,
-      endTime: booking.endTime,
-      duration: booking.duration,
-      totalPrice: booking.totalPrice,
-      subscriptionId: booking.subscriptionId,
-      status: booking.status,
-      updatedAt: booking.updatedAt,
-    },
-    bike: null,
-    startStation: booking.startStation as any,
-    endStation: booking.endStation as any,
-    returnSlot: booking.returnSlot
-      ? {
-          id: booking.returnSlot.id,
-          rentalId: booking.id,
-          userId: booking.user.id,
-          stationId: booking.returnSlot.station.id,
-          reservedFrom: booking.returnSlot.reservedFrom,
-          status: booking.returnSlot.status,
-          createdAt: booking.returnSlot.reservedFrom,
-          updatedAt: booking.updatedAt,
-        }
-      : null,
-    returnStation: booking.returnSlot
-      ? ({
-          id: booking.returnSlot.station.id,
-          name: booking.returnSlot.station.name,
-          address: booking.returnSlot.station.address,
-        } as any)
-      : null,
-  };
 }
 
 function StaffRentalDetailScreen() {
@@ -127,7 +85,6 @@ function StaffRentalDetailScreen() {
   }
 
   const status = getStatusMeta(booking.status);
-  const journeyDetail = toResolvedJourneyDetail(booking);
 
   return (
     <Screen tone="subtle">
@@ -192,13 +149,7 @@ function StaffRentalDetailScreen() {
         >
           <YStack gap="$5" padding="$5">
             <StaffSummaryCard booking={booking} />
-            <RentalJourneyCard
-              detail={journeyDetail}
-              missingReturnSlotHelperText="Khách chưa chọn bãi trả xe cho phiên này."
-              missingReturnSlotLabel="Trạm trả xe"
-              reservedReturnStationLabel="Trạm trả xe"
-              showBikeSwapSection={false}
-            />
+            <StaffJourneyCard booking={booking} />
 
             {booking.status === "RENTED" && !booking.returnSlot
               ? (

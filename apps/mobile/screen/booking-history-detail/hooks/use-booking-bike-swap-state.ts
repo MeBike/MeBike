@@ -9,6 +9,7 @@ type UseBookingBikeSwapStateOptions = {
   bookingId: string;
   booking?: MyRentalResolvedDetail["rental"];
   detail?: MyRentalResolvedDetail;
+  enabled?: boolean;
 };
 
 type BookingBikeSwapStatus = "NONE" | "PENDING" | "CONFIRMED" | "REJECTED";
@@ -17,6 +18,7 @@ export function useBookingBikeSwapState({
   bookingId,
   booking,
   detail,
+  enabled = true,
 }: UseBookingBikeSwapStateOptions) {
   const isOngoing = booking?.status === "RENTED";
   const { preview: bikeSwapPreview, setPreviewStatus } = useMyBikeSwapPreview(bookingId);
@@ -24,7 +26,7 @@ export function useBookingBikeSwapState({
   const bikeSwapRequestQuery = useMyBikeSwapRequestQuery({
     rentalId: bookingId,
     requestId: bikeSwapPreview?.requestId,
-    enabled: isOngoing,
+    enabled: enabled && isOngoing,
     keepPollingWhenMissing: bikeSwapPreview?.status === "PENDING",
   });
   const bikeSwapRequest = bikeSwapRequestQuery.data ?? null;

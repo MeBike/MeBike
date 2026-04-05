@@ -28,6 +28,28 @@ type RentalJourneyCardProps = {
   isReportingIncident?: boolean;
 };
 
+export type RentalJourneyViewProps = {
+  startStationLabel: string;
+  endStationLabel: string;
+  startTimeText?: string;
+  endTimeText?: string;
+  isOngoing: boolean;
+  hasReturnSlot: boolean;
+  missingReturnSlotHelperText?: string;
+  missingReturnSlotLabel?: string;
+  reservedReturnStationLabel?: string;
+  bikeSwapStatus?: "NONE" | "PENDING" | "CONFIRMED" | "REJECTED";
+  confirmedBikeLabel?: string;
+  bikeSwapRejectionReason?: string | null;
+  onRequestBikeSwap?: () => void;
+  isRequestBikeSwapDisabled?: boolean;
+  showBikeSwapSection?: boolean;
+  onReportIncident?: () => void;
+  isReportIncidentDisabled?: boolean;
+  showIncidentActionSection?: boolean;
+  isReportingIncident?: boolean;
+};
+
 type JourneyPointProps = {
   label: string;
   value: string;
@@ -119,8 +141,13 @@ function JourneyPoint({
   );
 }
 
-export function RentalJourneyCard({
-  detail,
+export function RentalJourneyView({
+  startStationLabel,
+  endStationLabel,
+  startTimeText,
+  endTimeText,
+  isOngoing,
+  hasReturnSlot,
   missingReturnSlotHelperText = "Bạn cần chọn bãi trả trước khi kết thúc hành trình",
   missingReturnSlotLabel = "Trạm kết thúc",
   reservedReturnStationLabel = "Trạm trả xe (đã đặt)",
@@ -134,24 +161,8 @@ export function RentalJourneyCard({
   isReportIncidentDisabled = false,
   showIncidentActionSection = false,
   isReportingIncident = false,
-}: RentalJourneyCardProps) {
+}: RentalJourneyViewProps) {
   const theme = useTheme();
-  const { rental, startStation, endStation, returnSlot, returnStation } = detail;
-  const isOngoing = rental.status === "RENTED";
-  const hasReturnSlot = isOngoing && Boolean(returnSlot);
-
-  const startStationLabel = startStation?.name ?? "Không xác định";
-  const endStationLabel = isOngoing
-    ? hasReturnSlot
-      ? (returnStation?.name ?? "Bãi trả đã chọn")
-      : "Chưa chọn bãi trả"
-    : (endStation?.name ?? "Không xác định");
-
-  const endTimeLabel = isOngoing
-    ? hasReturnSlot
-      ? `Giữ chỗ từ ${formatTimeOnly(returnSlot?.reservedFrom)}`
-      : undefined
-    : formatTimeOnly(rental.endTime);
 
   return (
     <YStack gap="$3">
@@ -179,7 +190,7 @@ export function RentalJourneyCard({
             iconName="location.fill"
             label="Trạm bắt đầu"
             lineColor={hasReturnSlot ? theme.statusWarning.val : theme.statusInfo.val}
-            timeText={formatTimeOnly(rental.startTime)}
+            timeText={startTimeText}
             value={startStationLabel}
           />
 
@@ -191,7 +202,7 @@ export function RentalJourneyCard({
             helperText={isOngoing && !hasReturnSlot ? missingReturnSlotHelperText : undefined}
             isLast
             label={hasReturnSlot ? reservedReturnStationLabel : missingReturnSlotLabel}
-            timeText={endTimeLabel}
+            timeText={endTimeText}
             timeTone={hasReturnSlot ? "warning" : isOngoing ? "muted" : "muted"}
             value={endStationLabel}
             valueTone={hasReturnSlot ? "warning" : isOngoing ? "danger" : "default"}
@@ -232,5 +243,34 @@ export function RentalJourneyCard({
           : null}
       </AppCard>
     </YStack>
+  );
+}
+
+export function RentalJourneyCard({
+  detail,
+  ...props
+}: RentalJourneyCardProps) {
+  const { rental, startStation, endStation, returnSlot, returnStation } = detail;
+  const isOngoing = rental.status === "RENTED";
+  const hasReturnSlot = isOngoing && Boolean(returnSlot);
+
+  return (
+    <RentalJourneyView
+      endStationLabel={isOngoing
+        ? hasReturnSlot
+          ? (returnStation?.name ?? "Bãi trả đã chọn")
+          : "Chưa chọn bãi trả"
+        : (endStation?.name ?? "Không xác định")}
+      endTimeText={isOngoing
+        ? hasReturnSlot
+          ? `Giữ chỗ từ ${formatTimeOnly(returnSlot?.reservedFrom)}`
+          : undefined
+        : formatTimeOnly(rental.endTime)}
+      hasReturnSlot={hasReturnSlot}
+      isOngoing={isOngoing}
+      startStationLabel={startStation?.name ?? "Không xác định"}
+      startTimeText={formatTimeOnly(rental.startTime)}
+      {...props}
+    />
   );
 }

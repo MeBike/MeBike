@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStaffActiveRentalsByPhone } from "@hooks/query/rentals/use-staff-active-rentals-by-phone";
+import { useStationActions } from "@hooks/useStationAction";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
 import type { RentalListItem } from "@/types/rental-types";
 
 import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
-import { useStaffActiveRentalsByPhone } from "@hooks/query/rentals/use-staff-active-rentals-by-phone";
-import { useStationActions } from "@hooks/useStationAction";
 
 const LOOKUP_DEBOUNCE_MS = 350;
 const MIN_LOOKUP_PHONE_LENGTH = 8;
@@ -18,8 +18,8 @@ type EmptyStateCopy = {
 export function useStaffPhoneLookupScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [lookupPhone, setLookupPhone] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const normalizedPhone = phoneNumber.trim();
-  const lastErrorAtRef = useRef(0);
   const { stations: stationData, isLoadingGetAllStations } = useStationActions(true);
 
   const canLookup = normalizedPhone.length >= MIN_LOOKUP_PHONE_LENGTH;
@@ -42,19 +42,6 @@ export function useStaffPhoneLookupScreen() {
     enabled: lookupPhone.length >= MIN_LOOKUP_PHONE_LENGTH,
   });
 
-  useEffect(() => {
-    if (!lookupQuery.error || lookupQuery.errorUpdatedAt === 0) {
-      return;
-    }
-
-    if (lookupQuery.errorUpdatedAt === lastErrorAtRef.current) {
-      return;
-    }
-
-    lastErrorAtRef.current = lookupQuery.errorUpdatedAt;
-    Alert.alert("Lỗi tra cứu", presentRentalError(lookupQuery.error));
-  }, [lookupQuery.error, lookupQuery.errorUpdatedAt]);
-
   const stationNameMap = useMemo(() => {
     if (!stationData) {
       return new Map<string, string>();
@@ -66,7 +53,9 @@ export function useStaffPhoneLookupScreen() {
   const isDebouncing = canLookup && lookupPhone !== normalizedPhone;
   const isShowingResolvedLookup = lookupPhone === normalizedPhone && canLookup;
   const results = isShowingResolvedLookup ? (lookupQuery.data?.data ?? []) : [];
-  const isLoading = isLoadingGetAllStations || (canLookup && (isDebouncing || lookupQuery.isFetching));
+  const hasResults = results.length > 0;
+  const isLoading = isLoadingGetAllStations || (canLookup && (isDebouncing || (lookupQuery.isFetching && !hasResults)));
+  const lookupErrorDescription = lookupQuery.error ? presentRentalError(lookupQuery.error) : null;
 
   const emptyState = useMemo<EmptyStateCopy>(() => {
     if (!normalizedPhone.length) {
@@ -86,7 +75,7 @@ export function useStaffPhoneLookupScreen() {
     if (lookupQuery.isError && isShowingResolvedLookup) {
       return {
         title: "Không thể tải kết quả",
-        description: "Kéo xuống để thử lại hoặc kiểm tra lại số điện thoại.",
+        description: lookupErrorDescription ?? "Không thể tải kết quả tra cứu.",
       };
     }
 
@@ -94,7 +83,7 @@ export function useStaffPhoneLookupScreen() {
       title: "Không tìm thấy phiên thuê",
       description: "Số điện thoại này hiện không có phiên thuê nào đang hoạt động.",
     };
-  }, [canLookup, isShowingResolvedLookup, lookupQuery.isError, normalizedPhone.length]);
+  }, [canLookup, isShowingResolvedLookup, lookupErrorDescription, lookupQuery.isError, normalizedPhone.length]);
 
   const handleLookup = useCallback(() => {
     if (!canLookup) {
@@ -120,10 +109,13 @@ export function useStaffPhoneLookupScreen() {
 
   const handleRefresh = useCallback(() => {
     if (lookupPhone.length < MIN_LOOKUP_PHONE_LENGTH) {
-      return;
+      return Promise.resolve();
     }
 
-    void lookupQuery.refetch();
+    setIsRefreshing(true);
+    return lookupQuery.refetch().finally(() => {
+      setIsRefreshing(false);
+    });
   }, [lookupPhone, lookupQuery]);
 
   const getStationName = useCallback((id: string) => stationNameMap.get(id) ?? id, [stationNameMap]);
@@ -135,6 +127,7 @@ export function useStaffPhoneLookupScreen() {
     handleLookup,
     handleRefresh,
     isLoading,
+    isRefreshing,
     phoneNumber,
     results,
     setPhoneNumber,
@@ -147,8 +140,9 @@ export type StaffPhoneLookupScreenState = {
   getStationName: (id: string) => string;
   handleClear: () => void;
   handleLookup: () => void;
-  handleRefresh: () => void;
+  handleRefresh: () => Promise<unknown>;
   isLoading: boolean;
+  isRefreshing: boolean;
   phoneNumber: string;
   results: RentalListItem[];
   setPhoneNumber: (value: string) => void;
