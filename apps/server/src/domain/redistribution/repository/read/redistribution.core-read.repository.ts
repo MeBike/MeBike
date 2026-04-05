@@ -11,6 +11,8 @@ import type { RedistributionRepo } from "../redistribution.repository.types";
 
 import { RedistributionRepositoryError } from "../../domain-errors";
 import {
+  detailedRedistributionRequestSelect,
+  mapToRedistributionRequestDetail,
   mapToRedistributionRequestRow,
   mapToRedistributionRequestSummaryRow,
   redistributionRequestSelect,
@@ -20,7 +22,7 @@ import {
 
 export type RedistributionCoreReadRepo = Pick<
   RedistributionRepo,
-  "findById" | "find" | "listWithOffset"
+  "findById" | "findOne" | "findAndPopulate" | "listWithOffset"
 >;
 
 export function makeRedistributionCoreReadRepository(
@@ -28,9 +30,10 @@ export function makeRedistributionCoreReadRepository(
 ): RedistributionCoreReadRepo {
   const select = redistributionRequestSelect;
   const summarySelect = summaryRedistributionRequestSelect;
+  const detailedSelect = detailedRedistributionRequestSelect;
 
   return {
-    find(where) {
+    findOne(where) {
       return Effect.gen(function* () {
         const raw = yield* Effect.tryPromise({
           try: () =>
@@ -40,7 +43,7 @@ export function makeRedistributionCoreReadRepository(
             }),
           catch: e =>
             new RedistributionRepositoryError({
-              operation: "find",
+              operation: "findOne",
               cause: e,
             }),
         });
@@ -53,7 +56,29 @@ export function makeRedistributionCoreReadRepository(
     },
 
     findById(requestId) {
-      return this.find({ id: requestId });
+      return this.findOne({ id: requestId });
+    },
+
+    findAndPopulate(where) {
+      return Effect.gen(function* () {
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            client.redistributionRequest.findUnique({
+              where,
+              select: detailedSelect,
+            }),
+          catch: e =>
+            new RedistributionRepositoryError({
+              operation: "findAndPopulate",
+              cause: e,
+            }),
+        });
+
+        if (!raw) {
+          return Option.none();
+        }
+        return Option.fromNullable(raw).pipe(Option.map(mapToRedistributionRequestDetail));
+      });
     },
 
     listWithOffset(where, pageReq) {

@@ -8,6 +8,7 @@ import { RedistributionServiceTag } from "@/domain/redistribution";
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractRedistributionRequest,
+  toContractRedistributionRequestDetail,
   toContractRedistributionRequestListItem,
 } from "@/http/presenters/redistribution.presenter";
 import { toContractPage } from "@/http/shared/pagination";
@@ -315,52 +316,55 @@ const getRequestListForStaff: RouteHandler<
 const getRequestDetailForStaff: RouteHandler<
   RedistributionRoutes["getRequestDetailForStaff"]
 > = async (c) => {
-  const now = new Date().toISOString();
   const userId = (c.var as any).currentUser?.userId ?? "";
-  const detail: RedistributionContracts.RedistributionRequestDetail = {
-    id: uuidv7(),
-    reason: "Sample redistribution",
-    requestedQuantity: 15,
-    status: "PENDING_APPROVAL",
-    startedAt: null,
-    completedAt: null,
-    createdAt: now,
-    updatedat: now,
-    requestedByUser: {
-      id: userId,
-      fullName: "Test User",
-      email: "test@example.com",
-      verify: "UNVERIFIED",
-      location: "Unknown",
-      username: "testuser",
-      phoneNumber: "0000000000",
-      avatar: "",
-      role: "USER",
-      nfcCardUid: undefined,
-      updatedAt: now,
-    },
-    approvedByUser: null,
-    sourceStation: {
-      id: uuidv7(),
-      name: "Source Station",
-      address: "123 Source St",
-      latitude: 1,
-      longitude: 1,
-      totalCapacity: 10,
-      updatedAt: now,
-      locationGeo: undefined,
-    },
-    targetStation: null,
-    targetAgency: null,
-    items: [],
-  };
+  const { requestId } = c.req.valid("param");
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.getMyRequestInStation({ userId, requestId });
+    }),
+    "GET /v1/staff/redistribution-requests/{requestId}",
+  );
 
-  return c.json(
-    {
-      message: "Redistribution request details fetched successfully",
-      result: detail,
-    },
-    200,
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json(
+        {
+          message: "Redistribution request fetched successfully",
+          result: toContractRedistributionRequestDetail(right),
+        },
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("UserNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.USER_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+                userId: error.userId,
+              },
+            },
+            404,
+          )),
+        Match.tag("RedistributionRequestNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+                requestId: error.requestId,
+              },
+            },
+            404,
+          )),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
   );
 };
 

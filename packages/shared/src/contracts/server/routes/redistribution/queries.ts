@@ -136,14 +136,17 @@ export const getRequestDetailForStaff = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Staff"),
-    404: {
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
       description: "Redistribution request not found",
-      content: {
-        "application/json": {
-          schema: RedistributionReqErrorResponseSchema,
+      example: {
+        error: "Redistribution request not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
         },
       },
-    },
+    }),
   },
 });
 

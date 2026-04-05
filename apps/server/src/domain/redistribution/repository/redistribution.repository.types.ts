@@ -66,10 +66,17 @@ export type RedistributionRepo = {
     RedistributionRepositoryError
   >;
 
-  find: (
+  findOne: (
     where: Prisma.RedistributionRequestWhereUniqueInput,
   ) => Effect.Effect<
     Option.Option<RedistributionRequestRow>,
+    RedistributionRepositoryError
+  >;
+
+  findAndPopulate: (
+    where: Prisma.RedistributionRequestWhereUniqueInput,
+  ) => Effect.Effect<
+    Option.Option<RedistributionRequestDetailRow>,
     RedistributionRepositoryError
   >;
 

@@ -49,15 +49,15 @@ export type RedistributionService = {
     page: PageRequest<RedistributionSortField>,
   ) => Effect.Effect<
     PageResult<RedistributionRequestSummaryRow>,
-    RedistributionServiceFailure
+    RedistributionServiceFailure | UserRepositoryError
   >;
 
   getMyRequestInStation: (args: {
     userId: string;
     requestId: string;
   }) => Effect.Effect<
-    Option.Option<RedistributionRequestDetailRow>,
-    RedistributionServiceFailure
+    RedistributionRequestDetailRow,
+    RedistributionServiceFailure | UserRepositoryError
   >;
 
   createRequestTo: (args: {
@@ -128,32 +128,76 @@ function makeRedistributionService(
           .getById(userId)
           .pipe(
             Effect.catchTag("UserRepositoryError", error =>
-              Effect.die(error)),
+              Effect.fail(
+                new UserRepositoryError({ operation: "GET", cause: error }),
+              )),
           );
         if (Option.isNone(userOpt)) {
           return yield* Effect.fail(new UserNotFound({ userId }));
         }
         const stationId = userOpt.value.orgAssignment?.station?.id;
         // TODO: handle agency case
-        const req = yield* repo
-          .listWithOffset({ ...filter, requestedByUserId: userId, sourceStationId: stationId }, page)
+        const reqList = yield* repo
+          .listWithOffset(
+            {
+              ...filter,
+              requestedByUserId: userId,
+              sourceStationId: stationId,
+            },
+            page,
+          )
           .pipe(
             Effect.catchTag("RedistributionRepositoryError", error =>
-              Effect.die(error)),
+              Effect.fail(
+                new RedistributionRepositoryError({
+                  operation: "GET",
+                  cause: error,
+                }),
+              )),
           );
 
-        return req;
+        return reqList;
       }),
 
-    getMyRequestInStation: ({ userId, requestId }) => {
-      const stationId = "";
-      return repo
-        .getMyInStationRequest(userId, stationId, requestId)
-        .pipe(
-          Effect.catchTag("RedistributionRepositoryError", error =>
-            Effect.die(error)),
-        );
-    },
+    getMyRequestInStation: ({ userId, requestId }) =>
+      Effect.gen(function* () {
+        const userOpt = yield* userService
+          .getById(userId)
+          .pipe(
+            Effect.catchTag("UserRepositoryError", error =>
+              Effect.fail(
+                new UserRepositoryError({ operation: "GET", cause: error }),
+              )),
+          );
+        if (Option.isNone(userOpt)) {
+          return yield* Effect.fail(new UserNotFound({ userId }));
+        }
+        const stationId = userOpt.value.orgAssignment?.station?.id;
+        // TODO: handle agency case
+        const reqOpt = yield* repo
+          .findAndPopulate({
+            id: requestId,
+            requestedByUserId: userId,
+            sourceStationId: stationId,
+          })
+          .pipe(
+            Effect.catchTag("RedistributionRepositoryError", error =>
+              Effect.fail(
+                new RedistributionRepositoryError({
+                  operation: "GET",
+                  cause: error,
+                }),
+              )),
+          );
+
+        if (Option.isNone(reqOpt)) {
+          return yield* Effect.fail(
+            new RedistributionRequestNotFound({ requestId }),
+          );
+        }
+
+        return reqOpt.value;
+      }),
 
     createRequestTo: args =>
       Effect.gen(function* () {
@@ -161,7 +205,9 @@ function makeRedistributionService(
           .getById(args.requestedByUserId)
           .pipe(
             Effect.catchTag("UserRepositoryError", error =>
-              Effect.fail(new UserRepositoryError({ operation: "GET", cause: error }))),
+              Effect.fail(
+                new UserRepositoryError({ operation: "GET", cause: error }),
+              )),
           );
 
         if (Option.isNone(userOpt)) {
@@ -315,17 +361,25 @@ function makeRedistributionService(
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
             const updatedOpt = yield* txRedistributionRepo
-              .update({
-                id: args.requestId,
-                requestedByUserId: args.userId,
-                status: RedistributionStatus.PENDING_APPROVAL,
-              }, {
-                reason: args.reason,
-                status: RedistributionStatus.CANCELLED,
-              })
+              .update(
+                {
+                  id: args.requestId,
+                  requestedByUserId: args.userId,
+                  status: RedistributionStatus.PENDING_APPROVAL,
+                },
+                {
+                  reason: args.reason,
+                  status: RedistributionStatus.CANCELLED,
+                },
+              )
               .pipe(
                 Effect.catchTag("RedistributionRepositoryError", e =>
-                  Effect.fail(new RedistributionRepositoryError({ operation: "UPDATE", cause: e }))),
+                  Effect.fail(
+                    new RedistributionRepositoryError({
+                      operation: "UPDATE",
+                      cause: e,
+                    }),
+                  )),
               );
 
             // Update success
@@ -343,7 +397,12 @@ function makeRedistributionService(
                   // TODO: update empty slots at source and target station
                 ).pipe(
                   Effect.catchTag("BikeRepositoryError", e =>
-                    Effect.fail(new BikeRepositoryError({ operation: "UPDATE", cause: e }))),
+                    Effect.fail(
+                      new BikeRepositoryError({
+                        operation: "UPDATE",
+                        cause: e,
+                      }),
+                    )),
                 );
               }
 
@@ -355,12 +414,19 @@ function makeRedistributionService(
               .findById(args.requestId)
               .pipe(
                 Effect.catchTag("RedistributionRepositoryError", e =>
-                  Effect.fail(new RedistributionRepositoryError({ operation: "UPDATE", cause: e }))),
+                  Effect.fail(
+                    new RedistributionRepositoryError({
+                      operation: "UPDATE",
+                      cause: e,
+                    }),
+                  )),
               );
 
             if (Option.isNone(existingRequest)) {
               return yield* Effect.fail(
-                new RedistributionRequestNotFound({ requestId: args.requestId }),
+                new RedistributionRequestNotFound({
+                  requestId: args.requestId,
+                }),
               );
             }
 
