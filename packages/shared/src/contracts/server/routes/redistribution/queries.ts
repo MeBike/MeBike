@@ -190,13 +190,24 @@ export const getRequestListForManager = createRoute({
         "application/json": {
           schema: createSuccessResponse(
             RedistributionRequestListResponseSchema,
-            "Get distribution request list response",
+            "Get distribution requestgetRequestDetailForManager list response",
           ),
         },
       },
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Manager"),
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "User not found",
+      example: {
+        error: "User not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+          userId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
   },
 });
 
@@ -222,14 +233,38 @@ export const getRequestDetailForManager = createRoute({
       },
     },
     401: unauthorizedResponse(),
-    403: forbiddenResponse("Manager"),
-    404: {
-      description: "Redistribution request not found",
+    403: {
+      description: "Unauthorized redistribution request access",
       content: {
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            ...forbiddenResponse("Manager").content["application/json"].examples,
+            UnauthorizedRedistributionAccess: {
+              value: {
+                error: "Unauthorized redistribution access",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_ACCESS,
+                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                },
+              },
+            },
+          },
         },
       },
     },
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "Redistribution request not found",
+      example: {
+        error: "Redistribution request not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
   },
 });

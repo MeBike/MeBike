@@ -8,6 +8,7 @@ import {
 } from "@/http/controllers/redistribution";
 import {
   requireAdminMiddleware,
+  requireManagerMiddleware,
   requireStaffMiddleware,
 } from "@/http/middlewares/auth";
 
@@ -51,4 +52,17 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
     middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(staffDetailRoute, RedistributionStaffController.getRequestDetailForStaff);
+
+  // Manager routes
+  const managerListRoute = {
+    ...redistribution.getRequestListForManager,
+    middleware: [requireManagerMiddleware] as const,
+  } satisfies RouteConfig;
+  app.openapi(managerListRoute, RedistributionManagerController.getRequestListForManager);
+
+  const managerDetailRoute = {
+    ...redistribution.getRequestDetailForManager,
+    middleware: [requireManagerMiddleware] as const,
+  } satisfies RouteConfig;
+  app.openapi(managerDetailRoute, RedistributionManagerController.getRequestDetailForManager);
 }

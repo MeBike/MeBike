@@ -14,6 +14,7 @@ import { RedistributionStatus } from "generated/prisma/client";
 import type { RedistributionServiceFailure } from "../domain-errors";
 import type {
   AdminRedistributionFilter,
+  InStationRedistributionFilter,
   MyInStationRedistributionFilter,
   RedistributionRequestDetailRow,
   RedistributionRequestRow,
@@ -54,6 +55,23 @@ export type RedistributionService = {
   >;
 
   getMyRequestInStation: (args: {
+    userId: string;
+    requestId: string;
+  }) => Effect.Effect<
+    RedistributionRequestDetailRow,
+    RedistributionServiceFailure | UserRepositoryError
+  >;
+
+  getListInStation: (
+    userId: string,
+    filter: InStationRedistributionFilter,
+    page: PageRequest<RedistributionSortField>,
+  ) => Effect.Effect<
+    PageResult<RedistributionRequestSummaryRow>,
+    RedistributionServiceFailure | UserRepositoryError
+  >;
+
+  getRequestInStation: (args: {
     userId: string;
     requestId: string;
   }) => Effect.Effect<
@@ -186,6 +204,103 @@ function makeRedistributionService(
           .findAndPopulate({
             id: requestId,
             requestedByUserId: userId,
+            sourceStationId: stationId,
+          })
+          .pipe(
+            Effect.catchTag("RedistributionRepositoryError", error =>
+              Effect.fail(
+                new RedistributionRepositoryError({
+                  operation: "getMyRequestInStation.findAndPopulate",
+                  cause: error,
+                }),
+              )),
+          );
+
+        if (Option.isNone(reqOpt)) {
+          const reqOpt = yield* repo.findById(requestId).pipe(
+            Effect.catchTag("RedistributionRepositoryError", error =>
+              Effect.fail(
+                new RedistributionRepositoryError({
+                  operation: "getMyRequestInStation.findById",
+                  cause: error,
+                }),
+              )),
+          );
+
+          if (Option.isSome(reqOpt)) {
+            const req = reqOpt.value;
+
+            if (req.requestedByUserId !== userId) {
+              return yield* Effect.fail(
+                new UnauthorizedRedistributionAccess({
+                  userId,
+                  requestId,
+                }),
+              );
+            }
+          }
+          return yield* Effect.fail(
+            new RedistributionRequestNotFound({ requestId }),
+          );
+        }
+
+        return reqOpt.value;
+      }),
+
+    getListInStation: (userId, filter, page) =>
+      Effect.gen(function* () {
+        const userOpt = yield* userService
+          .getById(userId)
+          .pipe(
+            Effect.catchTag("UserRepositoryError", error =>
+              Effect.fail(
+                new UserRepositoryError({ operation: "getMyListInStation.getById", cause: error }),
+              )),
+          );
+        if (Option.isNone(userOpt)) {
+          return yield* Effect.fail(new UserNotFound({ userId }));
+        }
+        const stationId = userOpt.value.orgAssignment?.station?.id;
+        // TODO: handle agency case
+        const reqList = yield* repo
+          .listWithOffset(
+            {
+              ...filter,
+              sourceStationId: stationId,
+            },
+            page,
+          )
+          .pipe(
+            Effect.catchTag("RedistributionRepositoryError", error =>
+              Effect.fail(
+                new RedistributionRepositoryError({
+                  operation: "getMyListInStation.listWithOffset",
+                  cause: error,
+                }),
+              )),
+          );
+
+        return reqList;
+      }),
+
+    getRequestInStation: ({ userId, requestId }) =>
+      Effect.gen(function* () {
+        const userOpt = yield* userService
+          .getById(userId)
+          .pipe(
+            Effect.catchTag("UserRepositoryError", error =>
+              Effect.fail(
+                new UserRepositoryError({ operation: "getMyRequestInStation.getById", cause: error }),
+              )),
+          );
+        if (Option.isNone(userOpt)) {
+          return yield* Effect.fail(new UserNotFound({ userId }));
+        }
+        const stationId = userOpt.value.orgAssignment?.station?.id;
+        // TODO: handle agency case
+        const reqOpt = yield* repo
+          .findAndPopulate({
+            id: requestId,
             sourceStationId: stationId,
           })
           .pipe(

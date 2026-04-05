@@ -131,6 +131,20 @@ export const requireStaffMiddleware = createMiddleware(async (c, next) => {
   await next();
 });
 
+export const requireManagerMiddleware = createMiddleware(async (c, next) => {
+  const user = c.var.currentUser;
+  if (!user) {
+    if (c.var.authFailure === "forbidden") {
+      return c.json(unauthorizedBody, 403);
+    }
+    return c.json(unauthorizedBody, 401);
+  }
+  if (user.role !== "MANAGER") {
+    return c.json(unauthorizedBody, 403);
+  }
+  await next();
+});
+
 export const requireUserMiddleware = createMiddleware(
   async (c, next) => {
     const user = c.var.currentUser;
