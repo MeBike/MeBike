@@ -113,6 +113,18 @@ export type BookingHistoryDetailRouteProp = RouteProp<
   RootStackParamList,
   "BookingHistoryDetail"
 >;
+export type StaffRentalDetailNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "StaffRentalDetail"
+>;
+export type StaffPhoneLookupNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "StaffPhoneLookup"
+>;
+export type StaffRentalDetailRouteProp = RouteProp<
+  RootStackParamList,
+  "StaffRentalDetail"
+>;
 export type ChangePasswordNavigationProp = StackNavigationProp<
   RootStackParamList,
   "ChangePassword"

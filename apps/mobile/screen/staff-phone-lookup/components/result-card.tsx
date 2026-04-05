@@ -1,91 +1,73 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Pressable } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import { IconSymbol } from "@/components/IconSymbol";
+import { borderWidths, elevations } from "@/theme/metrics";
 import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";
 import { StatusBadge } from "@/ui/primitives/status-badge";
 
-export function ResultCard({
-  title,
-  rentalIdLabel,
-  statusText,
-  statusTone,
-  bikeIdLabel,
-  startTimeLabel,
-  durationLabel,
-  stationLabel,
-  onPress,
-}: {
+type ResultCardProps = {
+  onSelect: (rentalId: string) => void;
+  rentalId: string;
   title: string;
-  rentalIdLabel: string;
   statusText: string;
   statusTone: "success" | "warning" | "danger" | "neutral";
-  bikeIdLabel: string;
-  startTimeLabel: string;
-  durationLabel: string;
   stationLabel?: string;
-  onPress: () => void;
-}) {
+};
+
+export function ResultCard({
+  onSelect,
+  rentalId,
+  title,
+  statusText,
+  statusTone,
+  stationLabel,
+}: ResultCardProps) {
   const theme = useTheme();
+  const handlePress = useCallback(() => {
+    onSelect(rentalId);
+  }, [onSelect, rentalId]);
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       style={({ pressed }) => ({
         opacity: pressed ? 0.985 : 1,
         transform: [{ scale: pressed ? 0.996 : 1 }],
       })}
     >
-      <AppCard borderRadius="$4" chrome="whisper" gap="$4" padding="$4">
-        <XStack alignItems="center" gap="$3">
-          <XStack alignItems="center" backgroundColor="$surfaceAccent" borderRadius="$round" height={44} justifyContent="center" width={44}>
-            <IconSymbol color={theme.textBrand.val} name="person.fill" size={22} />
-          </XStack>
-
+      <AppCard
+        borderColor="$borderSubtle"
+        borderLeftColor="$actionPrimary"
+        borderLeftWidth={borderWidths.heavy}
+        borderRadius="$5"
+        borderWidth={borderWidths.subtle}
+        chrome="flat"
+        gap="$4"
+        padding="$5"
+        style={elevations.whisper}
+      >
+        <XStack alignItems="flex-start" justifyContent="space-between" gap="$3">
           <YStack flex={1} gap="$1">
-            <AppText numberOfLines={1} variant="bodyStrong">{title}</AppText>
-            <AppText tone="muted" variant="bodySmall">{rentalIdLabel}</AppText>
+            <AppText numberOfLines={1} variant="cardTitle">{title}</AppText>
+
+            <XStack alignItems="center" gap="$2" paddingTop="$1">
+              <IconSymbol color={theme.statusSuccess.val} name="location.fill" size={16} />
+              <AppText flex={1} numberOfLines={1} tone="muted" variant="subhead">
+                {stationLabel ?? "--"}
+              </AppText>
+            </XStack>
           </YStack>
 
           <StatusBadge
             label={statusText}
             pulseDot={statusText === "Đang thuê"}
+            size="compact"
             tone={statusTone}
             withDot
           />
-        </XStack>
-
-        <YStack gap="$3">
-          <XStack alignItems="center" gap="$3">
-            <IconSymbol color={theme.textBrand.val} name="bicycle" size={18} />
-            <AppText flex={1} tone="muted" variant="bodySmall">{bikeIdLabel}</AppText>
-          </XStack>
-
-          <XStack alignItems="center" gap="$3">
-            <IconSymbol color={theme.textSecondary.val} name="clock" size={16} />
-            <AppText flex={1} tone="muted" variant="bodySmall">{startTimeLabel}</AppText>
-          </XStack>
-
-          <XStack alignItems="center" gap="$3">
-            <IconSymbol color={theme.textSecondary.val} name="timer" size={16} />
-            <AppText flex={1} tone="muted" variant="bodySmall">{durationLabel}</AppText>
-          </XStack>
-
-          {stationLabel
-            ? (
-                <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={theme.textSecondary.val} name="location.fill" size={16} />
-                  <AppText flex={1} numberOfLines={1} tone="muted" variant="bodySmall">{stationLabel}</AppText>
-                </XStack>
-              )
-            : null}
-        </YStack>
-
-        <XStack alignItems="center" borderTopColor="$borderSubtle" borderTopWidth={1} justifyContent="space-between" paddingTop="$3">
-          <AppText tone="muted" variant="caption">Chạm để quản lý phiên thuê</AppText>
-          <IconSymbol color={theme.textTertiary.val} name="chevron.right" size={18} />
         </XStack>
       </AppCard>
     </Pressable>

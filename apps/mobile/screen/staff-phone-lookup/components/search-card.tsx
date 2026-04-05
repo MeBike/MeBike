@@ -1,59 +1,97 @@
-import React from "react";
-import { useTheme, YStack } from "tamagui";
+import React, { useState } from "react";
+import { Pressable } from "react-native";
+import { Input, XStack, useTheme } from "tamagui";
 
 import { IconSymbol } from "@/components/IconSymbol";
-import { AppButton } from "@/ui/primitives/app-button";
-import { AppCard } from "@/ui/primitives/app-card";
-import { AppInput } from "@/ui/primitives/app-input";
-import { AppText } from "@/ui/primitives/app-text";
+import { borderWidths } from "@/theme/metrics";
 
-export function SearchCard({
-  phoneNumber,
-  onPhoneChange,
-  onLookup,
-  isPending,
-  isDisabled,
-  summary,
-}: {
+type SearchCardProps = {
+  onBack: () => void;
+  onClear: () => void;
   phoneNumber: string;
   onPhoneChange: (value: string) => void;
-  onLookup: () => void;
-  isPending: boolean;
-  isDisabled: boolean;
-  summary: string | null;
-}) {
+  onSubmit: () => void;
+};
+
+export function SearchCard({
+  onBack,
+  onClear,
+  phoneNumber,
+  onPhoneChange,
+  onSubmit,
+}: SearchCardProps) {
   const theme = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
+  const borderColor = isFocused ? "$actionPrimary" : "$borderDefault";
 
   return (
-    <AppCard borderRadius="$4" chrome="whisper" gap="$4" padding="$4">
-      <YStack gap="$1">
-        <AppText variant="bodyStrong">Tìm kiếm khách hàng</AppText>
-        <AppText tone="muted" variant="bodySmall">
-          Nhập số điện thoại để lấy danh sách phiên thuê đang hoạt động khi khách không thể quét mã QR.
-        </AppText>
-      </YStack>
+    <XStack alignItems="center" gap="$3" paddingHorizontal="$4">
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={8}
+        onPress={onBack}
+        style={{
+          width: 40,
+          height: 40,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <IconSymbol color={theme.textSecondary.val} name="arrow.left" size={24} />
+      </Pressable>
 
-      <AppInput
-        leadingIcon={<IconSymbol color={theme.textSecondary.val} name="magnifyingglass" size={18} />}
-        keyboardType="phone-pad"
-        maxLength={15}
-        onChangeText={onPhoneChange}
-        onSubmitEditing={onLookup}
-        placeholder="Ví dụ: 0912345678"
-        value={phoneNumber}
-      />
+      <XStack
+        alignItems="center"
+        backgroundColor="$backgroundRaised"
+        borderColor={borderColor}
+        borderRadius="$round"
+        borderWidth={isFocused ? borderWidths.strong : borderWidths.subtle}
+        flex={1}
+        gap="$3"
+        minHeight={60}
+        paddingHorizontal="$4"
+      >
+        <IconSymbol color={theme.textTertiary.val} name="magnifyingglass" size={22} />
 
-      <AppButton disabled={isDisabled} loading={isPending} onPress={onLookup} tone="primary">
-        Tra cứu
-      </AppButton>
+        <Input
+          autoFocus
+          color="$textPrimary"
+          flex={1}
+          fontFamily="$body"
+          fontSize="$8"
+          fontWeight="$6"
+          keyboardType="phone-pad"
+          maxLength={15}
+          onBlur={() => setIsFocused(false)}
+          onChangeText={onPhoneChange}
+          onFocus={() => setIsFocused(true)}
+          onSubmitEditing={onSubmit}
+          placeholder="Nhập SĐT khách"
+          placeholderTextColor="$textTertiary"
+          returnKeyType="search"
+          selectionColor="$actionPrimary"
+          unstyled
+          value={phoneNumber}
+        />
 
-      {summary
-        ? (
-            <AppText tone="muted" variant="bodySmall">
-              {summary}
-            </AppText>
-          )
-        : null}
-    </AppCard>
+        {phoneNumber.trim().length > 0
+          ? (
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={6}
+                onPress={onClear}
+                style={{
+                  width: 28,
+                  height: 28,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconSymbol color={theme.textTertiary.val} name="xmark" size={18} />
+              </Pressable>
+            )
+          : null}
+      </XStack>
+    </XStack>
   );
 }
