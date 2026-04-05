@@ -31,6 +31,7 @@ import {
   RedistributionRequestNotFound,
   RedistributionRequestNotFoundWithStatus,
   StationNotFound,
+  UnauthorizedRedistributionAccess,
   UnauthorizedRedistributionCancellation,
   UnauthorizedRedistributionCreation,
   UserNotFound,
@@ -40,7 +41,7 @@ import {
   RedistributionRepository,
 } from "../repository/redistribution.repository";
 
-const MIN_BIKES_AT_STATION = 20;
+const MIN_BIKES_AT_STATION = 10;
 
 export type RedistributionService = {
   getMyListInStation: (
@@ -198,6 +199,28 @@ function makeRedistributionService(
           );
 
         if (Option.isNone(reqOpt)) {
+          const reqOpt = yield* repo.findById(requestId).pipe(
+            Effect.catchTag("RedistributionRepositoryError", error =>
+              Effect.fail(
+                new RedistributionRepositoryError({
+                  operation: "getMyRequestInStation.findById",
+                  cause: error,
+                }),
+              )),
+          );
+
+          if (Option.isSome(reqOpt)) {
+            const req = reqOpt.value;
+
+            if (req.requestedByUserId !== userId) {
+              return yield* Effect.fail(
+                new UnauthorizedRedistributionAccess({
+                  userId,
+                  requestId,
+                }),
+              );
+            }
+          }
           return yield* Effect.fail(
             new RedistributionRequestNotFound({ requestId }),
           );

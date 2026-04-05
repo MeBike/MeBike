@@ -138,7 +138,28 @@ export const getRequestDetailForStaff = createRoute({
       },
     },
     401: unauthorizedResponse(),
-    403: forbiddenResponse("Staff"),
+    403: {
+      description: "Unauthorized redistribution request access",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            ...forbiddenResponse("Staff").content["application/json"].examples,
+            UnauthorizedRedistributionAccess: {
+              value: {
+                error: "Unauthorized redistribution access",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_ACCESS,
+                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     404: notFoundResponse({
       schema: RedistributionReqErrorResponseSchema,
       description: "Redistribution request not found",

@@ -360,6 +360,18 @@ const getRequestDetailForStaff: RouteHandler<
             },
             404,
           )),
+        Match.tag("UnauthorizedRedistributionAccess", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
+            {
+              error: redistributionReqErrorMessages.UNAUTHORIZED_ACCESS,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_ACCESS,
+                requestId: error.requestId,
+                userId: error.userId,
+              },
+            },
+            403,
+          )),
         Match.orElse(() => {
           throw left;
         }),
