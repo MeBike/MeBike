@@ -30,7 +30,6 @@ import {
   NotEnoughEmptySlotsAtTarget,
   RedistributionRepositoryError,
   RedistributionRequestNotFound,
-  RedistributionRequestNotFoundWithStatus,
   StationNotFound,
   UnauthorizedRedistributionAccess,
   UnauthorizedRedistributionCancellation,
@@ -299,21 +298,7 @@ function makeRedistributionService(
 
     createRequestTo: args =>
       Effect.gen(function* () {
-        const userOpt = yield* userService.getById(args.requestedByUserId).pipe(
-          Effect.catchTag("UserRepositoryError", error =>
-            Effect.fail(
-              new UserRepositoryError({
-                operation: "createRequestTo.getById",
-                cause: error,
-              }),
-            )),
-        );
-
-        if (Option.isNone(userOpt)) {
-          return yield* Effect.fail(
-            new UserNotFound({ userId: args.requestedByUserId }),
-          );
-        }
+        const user = yield* assertUserExists(args.requestedByUserId);
 
         const sourceStation = yield* stationService
           .getStationById(args.sourceStationId)
@@ -324,9 +309,8 @@ function makeRedistributionService(
               )),
           );
 
-        // Check if source station is creator's one
-        const userStationId = userOpt.value.orgAssignment?.station?.id;
-        if (userStationId !== sourceStation.id) {
+        // Authorization: user must belong to source station
+        if (getUserStationId(user) !== sourceStation.id) {
           return yield* Effect.fail(
             new UnauthorizedRedistributionCreation({
               userId: args.requestedByUserId,
@@ -335,6 +319,7 @@ function makeRedistributionService(
           );
         }
 
+        // Business rules:
         // Check if source station has enough available bikes to meet the requested quantity
         if (sourceStation.availableBikes < args.requestedQuantity) {
           return yield* Effect.fail(
@@ -369,8 +354,8 @@ function makeRedistributionService(
           }
         }
 
-        // Pick bike list, create item list and create request with items
-        const [availableBikes, allBikesCount] = yield* Effect.all([
+        // Fetch bikes + check minimum remaining bikes
+        const [availableBikes, totalBikes] = yield* Effect.all([
           Effect.promise(() =>
             client.bike.findMany({
               where: { stationId: sourceStation.id, status: "AVAILABLE" },
@@ -385,6 +370,8 @@ function makeRedistributionService(
           ),
         ]);
 
+        const restBikes = totalBikes - availableBikes.length;
+
         if (availableBikes.length < args.requestedQuantity) {
           return yield* Effect.fail(
             new NotEnoughBikesAtStation({
@@ -395,7 +382,6 @@ function makeRedistributionService(
           );
         }
 
-        const restBikes = allBikesCount - availableBikes.length;
         if (restBikes < MIN_BIKES_AT_STATION) {
           return yield* Effect.fail(
             new ExceededMinBikesAtStation({
@@ -407,7 +393,9 @@ function makeRedistributionService(
         }
 
         const bikeIds = availableBikes.map(b => b.id);
-        const req = yield* runPrismaTransaction(client, tx =>
+
+        // Transaction
+        return yield* runPrismaTransaction(client, tx =>
           Effect.gen(function* () {
             const txBikeRepo = makeBikeRepository(tx);
             const txRedistributionRepo = makeRedistributionRepository(tx);
@@ -430,32 +418,24 @@ function makeRedistributionService(
                 }),
               );
             }
-            const req = yield* txRedistributionRepo
+            return yield* txRedistributionRepo
               .create({
-                requestedByUserId: args.requestedByUserId,
-                sourceStationId: args.sourceStationId,
-                targetStationId: args.targetStationId,
-                targetAgencyId: args.targetAgencyId,
-                requestedQuantity: args.requestedQuantity,
-                reason: args.reason,
+                ...args,
                 bikeIds,
               })
               .pipe(
                 Effect.catchTag("RedistributionRepositoryError", error =>
                   Effect.die(error)),
               );
-
-            return req;
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
         );
-        return req;
       }),
 
     cancel: args =>
       Effect.gen(function* () {
         const now = new Date();
-        const updated = yield* runPrismaTransaction(client, tx =>
+        return yield* runPrismaTransaction(client, tx =>
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
@@ -475,7 +455,7 @@ function makeRedistributionService(
                 Effect.catchTag("RedistributionRepositoryError", e =>
                   Effect.fail(
                     new RedistributionRepositoryError({
-                      operation: "cancel.update",
+                      operation: "cancel",
                       cause: e,
                     }),
                   )),
@@ -498,7 +478,7 @@ function makeRedistributionService(
                   Effect.catchTag("BikeRepositoryError", e =>
                     Effect.fail(
                       new BikeRepositoryError({
-                        operation: "cancel.updateStatusAt",
+                        operation: "cancel",
                         cause: e,
                       }),
                     )),
@@ -515,51 +495,42 @@ function makeRedistributionService(
                 Effect.catchTag("RedistributionRepositoryError", e =>
                   Effect.fail(
                     new RedistributionRepositoryError({
-                      operation: "cancel.findById",
+                      operation: "cancel",
                       cause: e,
                     }),
                   )),
               );
 
-            if (Option.isNone(existingRequest)) {
-              return yield* Effect.fail(
-                new RedistributionRequestNotFound({
-                  requestId: args.requestId,
-                }),
-              );
+            if (Option.isSome(existingRequest)) {
+              const req = existingRequest.value;
+
+              if (req.requestedByUserId !== args.userId) {
+                return yield* Effect.fail(
+                  new UnauthorizedRedistributionCancellation({
+                    requestId: args.requestId,
+                    requestedByUserId: req.requestedByUserId,
+                    userId: args.userId,
+                  }),
+                );
+              }
+
+              if (req.status !== RedistributionStatus.PENDING_APPROVAL) {
+                return yield* Effect.fail(
+                  new CannotCancelNonPendingRedistribution({
+                    requestId: args.requestId,
+                    currentStatus: req.status,
+                  }),
+                );
+              }
             }
-
-            const req = existingRequest.value;
-
-            if (req.requestedByUserId !== args.userId) {
-              return yield* Effect.fail(
-                new UnauthorizedRedistributionCancellation({
-                  requestId: args.requestId,
-                  requestedByUserId: req.requestedByUserId,
-                  userId: args.userId,
-                }),
-              );
-            }
-
-            if (req.status !== RedistributionStatus.PENDING_APPROVAL) {
-              return yield* Effect.fail(
-                new CannotCancelNonPendingRedistribution({
-                  requestId: args.requestId,
-                  currentStatus: req.status,
-                }),
-              );
-            }
-
             return yield* Effect.fail(
-              new RedistributionRequestNotFoundWithStatus({
+              new RedistributionRequestNotFound({
                 requestId: args.requestId,
-                status: RedistributionStatus.PENDING_APPROVAL,
               }),
             );
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
         );
-        return updated;
       }),
 
     approve: args =>

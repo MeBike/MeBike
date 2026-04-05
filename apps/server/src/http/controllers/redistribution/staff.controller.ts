@@ -226,23 +226,6 @@ const cancelRedistributionRequest: RouteHandler<
             },
             404,
           )),
-        Match.tag(
-          "RedistributionRequestNotFoundWithStatus",
-          ({ requestId, status }) =>
-            c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
-              {
-                error:
-                  redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
-                details: {
-                  code: RedistributionReqErrorCodeSchema.enum
-                    .REDISTRIBUTION_REQUEST_NOT_FOUND,
-                  requestId,
-                  status,
-                },
-              },
-              404,
-            ),
-        ),
         Match.orElse(() => {
           throw left;
         }),
