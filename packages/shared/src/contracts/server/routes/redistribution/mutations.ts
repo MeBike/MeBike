@@ -94,7 +94,7 @@ export const createRedistributionRequest = createRoute({
         error: "User not found",
         details: {
           code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
-          userId: "user-id",
+          userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
         },
       },
     }),
@@ -111,8 +111,8 @@ export const createRedistributionRequest = createRoute({
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_REDISTRIBUTION_CREATION,
-                  userId: "user-id",
-                  sourceStationId: "station-id",
+                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  sourceStationId: "019b6656-ebc9-7dbc-b0d3-3c62d96042d9",
                 },
               },
             },
@@ -162,7 +162,7 @@ export const cancelRedistributionRequest = createRoute({
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION,
-                  requestId: "request-id",
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
                   status: "APPROVED",
                 },
               },
@@ -185,8 +185,8 @@ export const cancelRedistributionRequest = createRoute({
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
-                  userId: "user-id",
-                  requestId: "request-id",
+                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
                 },
               },
             },
@@ -201,7 +201,7 @@ export const cancelRedistributionRequest = createRoute({
         error: "Redistribution request not found",
         details: {
           code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
-          requestId: "request-id",
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
         },
       },
     }),
@@ -210,4 +210,5 @@ export const cancelRedistributionRequest = createRoute({
 
 export const redistributionReqsMutations = {
   createRedistributionRequest,
+  cancelRedistributionRequest
 } as const;

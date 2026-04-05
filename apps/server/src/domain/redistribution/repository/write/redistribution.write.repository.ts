@@ -16,7 +16,7 @@ import {
 
 export type RedistributionWriteRepo = Pick<
   RedistributionRepo,
-  "create" | "updateStatus"
+  "create" | "update"
 >;
 
 export function makeRedistributionWriteRepository(
@@ -48,7 +48,7 @@ export function makeRedistributionWriteRepository(
             }),
           catch: e =>
             new RedistributionRepositoryError({
-              operation: "createRequest",
+              operation: "create",
               cause: e,
             }),
         });
@@ -57,38 +57,35 @@ export function makeRedistributionWriteRepository(
       });
     },
 
-    updateStatus(data) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            client.redistributionRequest.update({
-              where: { id: data.requestId },
-              data: {
-                status: data.status,
-                approvedByUserId: data.approvedByUserId ?? null,
-                updatedAt: new Date(),
-              },
-              select,
-            }),
-          catch: e =>
-            new RedistributionRepositoryError({
-              operation: "updateRequestStatus",
-              cause: e,
-            }),
-        });
+    update(where, data) {
+      return Effect.tryPromise({
+        try: async () => {
+          const updated = await client.redistributionRequest.updateMany({
+            where,
+            data: {
+              ...data,
+              updatedAt: new Date(),
+            },
+          });
 
-        return Option.some(mapToRedistributionRequestRow(raw));
-      }).pipe(
-        Effect.catchTag("RedistributionRepositoryError", (error) => {
-          // If update fails due to not found, return none
-          if (
-            error.cause instanceof Error
-            && error.cause.message.includes("not found")
-          ) {
-            return Effect.succeed(Option.none());
+          if (updated.count === 0) {
+            return null;
           }
-          return Effect.fail(error);
-        }),
+
+          return await client.redistributionRequest.findUnique({
+            where: { id: where.id },
+            select,
+          });
+        },
+        catch: e =>
+          new RedistributionRepositoryError({
+            operation: "update",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(mapToRedistributionRequestRow)),
+        ),
       );
     },
   };

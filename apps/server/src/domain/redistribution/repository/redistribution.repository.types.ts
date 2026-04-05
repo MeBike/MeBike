@@ -1,6 +1,7 @@
 import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { Prisma } from "generated/prisma/client";
 import type { RedistributionStatus } from "generated/prisma/enums";
 
 import type { RedistributionRepositoryError } from "../domain-errors";
@@ -23,10 +24,13 @@ export type CreateRedistributionRequestInput = {
   bikeIds?: string[];
 };
 
-export type UpdateRedistributionRequestStatusInput = {
-  requestId: string;
-  status: RedistributionStatus;
+export type UpdateRedistributionRequestData = {
+  status?: RedistributionStatus;
   approvedByUserId?: string | null;
+  requestedQuantity?: number;
+  reason?: string | null;
+  startedAt?: Date | null;
+  completedAt?: Date | null;
 };
 
 export type RedistributionRepo = {
@@ -54,10 +58,26 @@ export type RedistributionRepo = {
     RedistributionRepositoryError
   >;
 
+  // Core activities
   findById: (
     requestId: string,
   ) => Effect.Effect<
-    Option.Option<RedistributionRequestDetailRow>,
+    Option.Option<RedistributionRequestRow>,
+    RedistributionRepositoryError
+  >;
+
+  find: (
+    where: Prisma.RedistributionRequestWhereUniqueInput,
+  ) => Effect.Effect<
+    Option.Option<RedistributionRequestRow>,
+    RedistributionRepositoryError
+  >;
+
+  update: (
+    where: Prisma.RedistributionRequestWhereUniqueInput,
+    data: UpdateRedistributionRequestData,
+  ) => Effect.Effect<
+    Option.Option<RedistributionRequestRow>,
     RedistributionRepositoryError
   >;
 
@@ -70,11 +90,12 @@ export type RedistributionRepo = {
     RedistributionRepositoryError
   >;
 
-  // Manager activities
-  updateStatus: (
-    data: UpdateRedistributionRequestStatusInput,
+  adminGetById: (
+    requestId: string,
   ) => Effect.Effect<
-    Option.Option<RedistributionRequestRow>,
+    Option.Option<RedistributionRequestDetailRow>,
     RedistributionRepositoryError
   >;
+
+  // Manager activities
 };

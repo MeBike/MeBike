@@ -4,11 +4,12 @@ import type { BikeRepository } from "@/domain/bikes";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient } from "generated/prisma/client";
 
-import { makeBikeRepository } from "@/domain/bikes";
+import { BikeRepositoryError, makeBikeRepository } from "@/domain/bikes";
 import { StationServiceTag } from "@/domain/stations";
-import { UserQueryServiceTag } from "@/domain/users";
+import { UserQueryServiceTag, UserRepositoryError } from "@/domain/users";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { RedistributionStatus } from "generated/prisma/client";
 
 import type { RedistributionServiceFailure } from "../domain-errors";
 import type {
@@ -22,10 +23,15 @@ import type {
 import type { RedistributionRepo } from "../repository/redistribution.repository";
 
 import {
+  CannotCancelNonPendingRedistribution,
   ExceededMinBikesAtStation,
   NotEnoughBikesAtStation,
   NotEnoughEmptySlotsAtTarget,
+  RedistributionRepositoryError,
+  RedistributionRequestNotFound,
+  RedistributionRequestNotFoundWithStatus,
   StationNotFound,
+  UnauthorizedRedistributionCancellation,
   UnauthorizedRedistributionCreation,
   UserNotFound,
 } from "../domain-errors";
@@ -63,13 +69,22 @@ export type RedistributionService = {
     reason: string;
   }) => Effect.Effect<
     RedistributionRequestRow,
-    RedistributionServiceFailure | UserNotFound,
+    RedistributionServiceFailure | UserRepositoryError,
     Prisma | RedistributionRepository | BikeRepository
   >;
 
-  updateRequestStatus: (args: {
+  cancel: (args: {
     requestId: string;
-    status: string;
+    userId: string;
+    reason: string;
+  }) => Effect.Effect<
+    RedistributionRequestRow,
+    RedistributionServiceFailure | BikeRepositoryError,
+    Prisma | RedistributionRepository | BikeRepository
+  >;
+
+  approve: (args: {
+    requestId: string;
     approvedByUserId?: string | null;
   }) => Effect.Effect<
     Option.Option<RedistributionRequestRow>,
@@ -81,13 +96,6 @@ export type RedistributionService = {
     page: PageRequest<RedistributionSortField>,
   ) => Effect.Effect<
     PageResult<RedistributionRequestSummaryRow>,
-    RedistributionServiceFailure
-  >;
-
-  findById: (
-    requestId: string,
-  ) => Effect.Effect<
-    Option.Option<RedistributionRequestDetailRow>,
     RedistributionServiceFailure
   >;
 };
@@ -148,13 +156,13 @@ function makeRedistributionService(
 
     createRequestTo: args =>
       Effect.gen(function* () {
-        // Check if source station is creator's one
         const userOpt = yield* userService
           .getById(args.requestedByUserId)
           .pipe(
             Effect.catchTag("UserRepositoryError", error =>
-              Effect.die(error)),
+              Effect.fail(new UserRepositoryError({ operation: "GET", cause: error }))),
           );
+
         if (Option.isNone(userOpt)) {
           return yield* Effect.fail(
             new UserNotFound({ userId: args.requestedByUserId }),
@@ -170,6 +178,7 @@ function makeRedistributionService(
               )),
           );
 
+        // Check if source station is creator's one
         const userStationId = userOpt.value.orgAssignment?.station?.id;
         if (userStationId !== sourceStation.id) {
           return yield* Effect.fail(
@@ -297,13 +306,105 @@ function makeRedistributionService(
         return req;
       }),
 
-    updateRequestStatus: args =>
+    cancel: args =>
+      Effect.gen(function* () {
+        const now = new Date();
+        const updated = yield* runPrismaTransaction(client, tx =>
+          Effect.gen(function* () {
+            const txRedistributionRepo = makeRedistributionRepository(tx);
+            const txBikeRepo = makeBikeRepository(tx);
+            const updatedOpt = yield* txRedistributionRepo
+              .update({
+                id: args.requestId,
+                requestedByUserId: args.userId,
+                status: RedistributionStatus.PENDING_APPROVAL,
+              }, {
+                reason: args.reason,
+                status: RedistributionStatus.CANCELLED,
+              })
+              .pipe(
+                Effect.catchTag("RedistributionRepositoryError", e =>
+                  Effect.fail(new RedistributionRepositoryError({ operation: "UPDATE", cause: e }))),
+              );
+
+            // Update success
+            if (Option.isSome(updatedOpt)) {
+              const request = updatedOpt.value;
+              const bikeIds = request.items.map(item => item.bikeId);
+
+              // Restore bikes to AVAILABLE if any were marked unavailable
+              if (bikeIds.length > 0) {
+                yield* Effect.all(
+                  bikeIds.map(bikeId =>
+                    txBikeRepo.updateStatusAt(bikeId, "AVAILABLE", now),
+                  ),
+                  { concurrency: "unbounded" },
+                  // TODO: update empty slots at source and target station
+                ).pipe(
+                  Effect.catchTag("BikeRepositoryError", e =>
+                    Effect.fail(new BikeRepositoryError({ operation: "UPDATE", cause: e }))),
+                );
+              }
+
+              return request;
+            }
+
+            // Update failed
+            const existingRequest = yield* txRedistributionRepo
+              .findById(args.requestId)
+              .pipe(
+                Effect.catchTag("RedistributionRepositoryError", e =>
+                  Effect.fail(new RedistributionRepositoryError({ operation: "UPDATE", cause: e }))),
+              );
+
+            if (Option.isNone(existingRequest)) {
+              return yield* Effect.fail(
+                new RedistributionRequestNotFound({ requestId: args.requestId }),
+              );
+            }
+
+            const req = existingRequest.value;
+
+            if (req.requestedByUserId !== args.userId) {
+              return yield* Effect.fail(
+                new UnauthorizedRedistributionCancellation({
+                  requestId: args.requestId,
+                  requestedByUserId: req.requestedByUserId,
+                  userId: args.userId,
+                }),
+              );
+            }
+
+            if (req.status !== RedistributionStatus.PENDING_APPROVAL) {
+              return yield* Effect.fail(
+                new CannotCancelNonPendingRedistribution({
+                  requestId: args.requestId,
+                  currentStatus: req.status,
+                }),
+              );
+            }
+
+            return yield* Effect.fail(
+              new RedistributionRequestNotFoundWithStatus({
+                requestId: args.requestId,
+                status: RedistributionStatus.PENDING_APPROVAL,
+              }),
+            );
+          })).pipe(
+          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+        );
+        return updated;
+      }),
+
+    approve: args =>
       repo
-        .updateStatus({
-          requestId: args.requestId,
-          status: args.status as any,
-          approvedByUserId: args.approvedByUserId,
-        })
+        .update(
+          { id: args.requestId },
+          {
+            status: RedistributionStatus.APPROVED,
+            approvedByUserId: args.approvedByUserId,
+          },
+        )
         .pipe(
           Effect.catchTag("RedistributionRepositoryError", error =>
             Effect.die(error)),
@@ -312,14 +413,6 @@ function makeRedistributionService(
     adminListRequests: (filter, page) =>
       repo
         .adminListRequests(filter, page)
-        .pipe(
-          Effect.catchTag("RedistributionRepositoryError", error =>
-            Effect.die(error)),
-        ),
-
-    findById: requestId =>
-      repo
-        .findById(requestId)
         .pipe(
           Effect.catchTag("RedistributionRepositoryError", error =>
             Effect.die(error)),

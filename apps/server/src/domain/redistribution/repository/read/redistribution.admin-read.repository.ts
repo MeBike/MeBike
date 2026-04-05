@@ -21,7 +21,7 @@ import {
 
 export type RedistributionAdminReadRepo = Pick<
   RedistributionRepo,
-  "adminListRequests" | "findById"
+  "adminListRequests" | "adminGetById"
 >;
 
 export function makeRedistributionAdminReadRepository(
@@ -70,7 +70,7 @@ export function makeRedistributionAdminReadRepository(
       });
     },
 
-    findById(requestId) {
+    adminGetById(requestId) {
       return Effect.gen(function* () {
         const raw = yield* Effect.tryPromise({
           try: () =>

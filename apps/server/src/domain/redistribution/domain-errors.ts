@@ -12,6 +12,13 @@ export class RedistributionRequestNotFound extends Data.TaggedError(
     readonly requestId: string;
   }> {}
 
+export class RedistributionRequestNotFoundWithStatus extends Data.TaggedError(
+  "RedistributionRequestNotFoundWithStatus",
+)<{
+    readonly requestId: string;
+    readonly status: string;
+  }> {}
+
 export class RedistributionRequestAlreadyExists extends Data.TaggedError(
   "RedistributionRequestAlreadyExists",
 )<{
@@ -41,6 +48,17 @@ export class UnauthorizedRedistributionCreation extends Data.TaggedError(
     readonly sourceStationId: string;
   }> {}
 
+export class UnauthorizedRedistributionCancellation extends Data.TaggedError(
+  "UnauthorizedRedistributionCancellation",
+)<{
+    readonly requestId: string;
+    readonly requestedByUserId: string;
+    readonly userId: string;
+  }> {}
+
+export class UserNotFound extends Data.TaggedError("UserNotFound")<{
+  readonly userId: string;
+}> {}
 export class StationNotFound extends Data.TaggedError("StationNotFound")<{
   readonly stationId: string;
 }> {}
@@ -77,21 +95,27 @@ export class ExceededMinBikesAtStation extends Data.TaggedError(
     readonly restBikesAfterFulfillment: number;
   }> {}
 
-export class UserNotFound extends Data.TaggedError("UserNotFound")<{
-  readonly userId: string;
-}> {}
+export class CannotCancelNonPendingRedistribution extends Data.TaggedError(
+  "CannotCancelNonPendingRedistribution",
+)<{
+    readonly requestId: string;
+    readonly currentStatus: string;
+  }> {}
 
 export type RedistributionServiceFailure
   = | RedistributionRequestNotFound
+    | RedistributionRequestNotFoundWithStatus
     | RedistributionRequestAlreadyExists
     | InvalidRedistributionStatus
     | UnauthorizedRedistributionAccess
     | UnauthorizedRedistributionCreation
+    | UnauthorizedRedistributionCancellation
     | StationNotFound
     | AgencyNotFound
+    | UserNotFound
     | BikeNotAvailable
     | NotEnoughBikesAtStation
     | NotEnoughEmptySlotsAtTarget
     | ExceededMinBikesAtStation
-    | UserNotFound
+    | CannotCancelNonPendingRedistribution
     | RedistributionRepositoryError;

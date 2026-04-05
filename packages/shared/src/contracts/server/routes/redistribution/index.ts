@@ -1,7 +1,10 @@
 import * as mutations from "./mutations";
 import * as queries from "./queries";
 
-export { createRedistributionRequest } from "./mutations";
+export {
+  createRedistributionRequest,
+  cancelRedistributionRequest,
+} from "./mutations";
 
 export {
   getRequestListForAdmin,

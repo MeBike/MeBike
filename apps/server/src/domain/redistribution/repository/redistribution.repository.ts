@@ -9,11 +9,7 @@ import type { RedistributionRepo } from "./redistribution.repository.types";
 import { makeRedistributionReadRepository } from "./read/redistribution.read.repository";
 import { makeRedistributionWriteRepository } from "./write/redistribution.write.repository";
 
-export type {
-  CreateRedistributionRequestInput,
-  RedistributionRepo,
-  UpdateRedistributionRequestStatusInput,
-} from "./redistribution.repository.types";
+export type { RedistributionRepo } from "./redistribution.repository.types";
 
 export function makeRedistributionRepository(
   db: PrismaClient | PrismaTypes.TransactionClient,

@@ -30,6 +30,12 @@ export {
   withRatingDeps,
 } from "./features/rating.layers";
 export {
+  RedistributionRequestDepsLive,
+  RedistributionRequestReposLive,
+  RedistributionRequestServiceLayer,
+  withRedistributionRequestDeps,
+} from "./features/redistribution.layers";
+export {
   RentalAnalyticsReposLive,
   RentalDepsLive,
   RentalReposLive,

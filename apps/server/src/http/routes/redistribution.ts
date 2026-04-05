@@ -34,6 +34,12 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   } satisfies RouteConfig;
   app.openapi(createRequestRoute, RedistributionStaffController.createRedistributionRequest);
 
+  const cancelRequestRoute = {
+    ...redistribution.cancelRedistributionRequest,
+    middleware: [requireStaffMiddleware] as const,
+  } satisfies RouteConfig;
+  app.openapi(cancelRequestRoute, RedistributionStaffController.cancelRedistributionRequest);
+
   const staffListRoute = {
     ...redistribution.getRequestListForStaff,
     middleware: [requireStaffMiddleware] as const,

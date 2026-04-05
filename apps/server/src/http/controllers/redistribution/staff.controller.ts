@@ -135,6 +135,94 @@ const createRedistributionRequest: RouteHandler<
   );
 };
 
+const cancelRedistributionRequest: RouteHandler<
+  RedistributionRoutes["cancelRedistributionRequest"]
+> = async (c) => {
+  const payload = c.req.valid("json");
+  const userId = c.var.currentUser!.userId;
+  const { requestId } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.cancel({
+        requestId,
+        userId,
+        reason: payload.reason,
+      });
+    }),
+    "POST /v1/staff/redistribution-requests/{requestId}/cancel",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json(
+        {
+          message: "Redistribution request cancelled successfully",
+          result: toContractRedistributionRequest(right),
+        },
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("CannotCancelNonPendingRedistribution", ({ requestId, currentStatus }) =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+            {
+              error: redistributionReqErrorMessages.CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION,
+                requestId,
+                currentStatus,
+              },
+            },
+            400,
+          )),
+        Match.tag("UnauthorizedRedistributionCancellation", ({ requestId, requestedByUserId, userId }) =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
+            {
+              error: redistributionReqErrorMessages.UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
+                requestId,
+                requestedByUserId,
+                userId,
+              },
+            },
+            403,
+          )),
+        Match.tag("RedistributionRequestNotFound", ({ requestId }) =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+                requestId,
+              },
+            },
+            404,
+          )),
+        Match.tag("RedistributionRequestNotFoundWithStatus", ({ requestId, status }) =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+                requestId,
+                status,
+              },
+            },
+            404,
+          )),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 const getRequestListForStaff: RouteHandler<
   RedistributionRoutes["getRequestListForStaff"]
 > = async (c) => {
@@ -204,6 +292,7 @@ const getRequestDetailForStaff: RouteHandler<
 
 export const RedistributionStaffController = {
   createRedistributionRequest,
+  cancelRedistributionRequest,
   getRequestListForStaff,
   getRequestDetailForStaff,
 } as const;

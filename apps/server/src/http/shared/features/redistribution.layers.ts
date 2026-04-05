@@ -1,4 +1,4 @@
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
 
 import {
   RedistributionRepositoryLive,
@@ -24,3 +24,7 @@ export const RedistributionRequestDepsLive = Layer.mergeAll(
   RedistributionRequestServiceLayer,
   PrismaLive,
 );
+
+export function withRedistributionRequestDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(Effect.provide(RedistributionRequestDepsLive));
+}
