@@ -132,7 +132,7 @@ export type RedistributionFilter = {
   targetAgencyId?: string;
 };
 
-export type RedistributionSortField = "createdAt" | "updatedAt" | "status";
+export type RedistributionSortField = "createdAt" | "startedAt" | "completedAt";
 
 export type MyInStationRedistributionFilter = RedistributionFilter;
 

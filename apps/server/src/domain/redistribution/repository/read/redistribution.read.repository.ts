@@ -15,6 +15,7 @@ export type RedistributionReadRepo = Pick<
   | "getMyInStationRequest"
   | "findById"
   | "find"
+  | "listWithOffset"
   | "adminListRequests"
   | "adminGetById"
 >;

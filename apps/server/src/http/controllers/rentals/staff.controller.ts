@@ -108,7 +108,7 @@ const staffListBikeSwapRequests: RouteHandler<
       const repo = yield* RentalRepository;
       return yield* repo.staffListBikeSwapRequests(
         {
-          userId: query.userId,
+          userId  : query.userId,
           status: query.status,
         },
         {

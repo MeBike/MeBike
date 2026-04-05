@@ -80,10 +80,10 @@ export function toRedistributionOrderBy(
   const sortBy = req.sortBy ?? "createdAt";
   const sortDir = req.sortDir ?? "desc";
   switch (sortBy) {
-    case "updatedAt":
-      return { updatedAt: sortDir };
-    case "status":
-      return { status: sortDir };
+    case "completedAt":
+      return { completedAt: sortDir };
+    case "startedAt":
+      return { startedAt: sortDir };
     case "createdAt":
     default:
       return { createdAt: sortDir };

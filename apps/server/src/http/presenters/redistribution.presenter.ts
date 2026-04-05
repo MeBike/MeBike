@@ -138,7 +138,7 @@ export function toContractRedistributionRequestListItem(
 ): RedistributionContracts.RedistributionRequestListItem {
   return {
     id: row.id,
-    requestedByUser: mapUserSummary(row.approvedByUser)!,
+    requestedByUser: mapUserSummary(row.requestedByUser)!,
     approvedByUser: mapUserSummary(row.approvedByUser),
     sourceStation: mapStationSummary(row.sourceStation)!,
     targetStation: mapStationSummary(row.targetStation),

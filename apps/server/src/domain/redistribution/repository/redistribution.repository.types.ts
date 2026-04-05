@@ -73,6 +73,14 @@ export type RedistributionRepo = {
     RedistributionRepositoryError
   >;
 
+  listWithOffset: (
+    where: Prisma.RedistributionRequestWhereInput,
+    pageReq: PageRequest<RedistributionSortField>,
+  ) => Effect.Effect<
+    PageResult<RedistributionRequestSummaryRow>,
+    RedistributionRepositoryError
+  >;
+
   update: (
     where: Prisma.RedistributionRequestWhereUniqueInput,
     data: UpdateRedistributionRequestData,

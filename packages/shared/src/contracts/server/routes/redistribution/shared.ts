@@ -8,8 +8,9 @@ import {
   RedistributionReqErrorCodeSchema,
   RedistributionReqErrorResponseSchema,
   CancelRedistributionRequestSchema,
+  RedistributionStatusSchema,
 } from "../../redistribution";
-import { paginationQueryFields, PaginationSchema } from "../../schemas";
+import { paginationQueryFields, PaginationSchema, SortDirectionSchema } from "../../schemas";
 
 export function redistributionRequestDateRangeWith<T extends z.ZodRawShape>(
   extra: T,
@@ -54,12 +55,43 @@ export const UserIdParamSchema = z
   });
 
 // Query
-export const RedistributionRequestListQuerySchema = z
-  .object({
-    ...paginationQueryFields,
+const RedistributionRequestListQueryBaseSchema = z.object({
+  ...paginationQueryFields,
+  sortBy: z.enum(["createdAt", "startedAt", "completedAt"]).optional(),
+  sortDir: SortDirectionSchema.optional(),
+  status: RedistributionStatusSchema.optional(),
+});
+
+export const StaffRedistributionRequestListQuerySchema = 
+  RedistributionRequestListQueryBaseSchema.extend({
+    targetStationId: z.uuidv7().optional(),
+    targetAgencyId: z.uuidv7().optional(),
   })
-  .openapi("RedistributionRequestListQuery", {
-    description: "Query parameter for redistribution request list",
+  .openapi("StaffRedistributionRequestListQuery", {
+    description: "Query parameter for staff redistribution request list",
+  });
+
+export const ManagerRedistributionRequestListQuerySchema = 
+  RedistributionRequestListQueryBaseSchema.extend({
+    requestedByUserId: z.uuidv7().optional(),
+    approvedByUserId: z.uuidv7().optional(),
+    targetStationId: z.uuidv7().optional(),
+    targetAgencyId: z.uuidv7().optional(),
+  })
+  .openapi("ManagerRedistributionRequestListQuery", {
+    description: "Query parameter for manager redistribution request list",
+  });
+
+export const AdminRedistributionRequestListQuerySchema = 
+  RedistributionRequestListQueryBaseSchema.extend({
+    requestedByUserId: z.uuidv7().optional(),
+    approvedByUserId: z.uuidv7().optional(),
+    sourceStationId: z.uuidv7().optional(),
+    targetStationId: z.uuidv7().optional(),
+    targetAgencyId: z.uuidv7().optional(),
+  })
+  .openapi("AdminRedistributionRequestListQuery", {
+    description: "Query parameter for admin redistribution request list",
   });
 
 // Queries

@@ -6,7 +6,11 @@ import { uuidv7 } from "uuidv7";
 
 import { RedistributionServiceTag } from "@/domain/redistribution";
 import { withLoggedCause } from "@/domain/shared";
-import { toContractRedistributionRequest } from "@/http/presenters/redistribution.presenter";
+import {
+  toContractRedistributionRequest,
+  toContractRedistributionRequestListItem,
+} from "@/http/presenters/redistribution.presenter";
+import { toContractPage } from "@/http/shared/pagination";
 
 import type { RedistributionRoutes } from "./shared";
 
@@ -72,18 +76,23 @@ const createRedistributionRequest: RouteHandler<
             },
             404,
           )),
-        Match.tag("UnauthorizedRedistributionCreation", ({ userId, sourceStationId }) =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
-            {
-              error: redistributionReqErrorMessages.UNAUTHORIZED_REDISTRIBUTION_CREATION,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_REDISTRIBUTION_CREATION,
-                userId,
-                sourceStationId,
+        Match.tag(
+          "UnauthorizedRedistributionCreation",
+          ({ userId, sourceStationId }) =>
+            c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
+              {
+                error:
+                  redistributionReqErrorMessages.UNAUTHORIZED_REDISTRIBUTION_CREATION,
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_REDISTRIBUTION_CREATION,
+                  userId,
+                  sourceStationId,
+                },
               },
-            },
-            403,
-          )),
+              403,
+            ),
+        ),
         Match.tag("NotEnoughBikesAtStation", error =>
           c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
             {
@@ -116,7 +125,8 @@ const createRedistributionRequest: RouteHandler<
         Match.tag("ExceededMinBikesAtStation", error =>
           c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
             {
-              error: redistributionReqErrorMessages.EXCEEDED_MIN_BIKES_AT_STATION,
+              error:
+                redistributionReqErrorMessages.EXCEEDED_MIN_BIKES_AT_STATION,
               details: {
                 code: RedistributionReqErrorCodeSchema.enum
                   .EXCEEDED_MIN_BIKES_AT_STATION,
@@ -167,54 +177,71 @@ const cancelRedistributionRequest: RouteHandler<
       )),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
-        Match.tag("CannotCancelNonPendingRedistribution", ({ requestId, currentStatus }) =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
-            {
-              error: redistributionReqErrorMessages.CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION,
-                requestId,
-                currentStatus,
+        Match.tag(
+          "CannotCancelNonPendingRedistribution",
+          ({ requestId, currentStatus }) =>
+            c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+              {
+                error:
+                  redistributionReqErrorMessages.CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION,
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION,
+                  requestId,
+                  currentStatus,
+                },
               },
-            },
-            400,
-          )),
-        Match.tag("UnauthorizedRedistributionCancellation", ({ requestId, requestedByUserId, userId }) =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
-            {
-              error: redistributionReqErrorMessages.UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
-                requestId,
-                requestedByUserId,
-                userId,
+              400,
+            ),
+        ),
+        Match.tag(
+          "UnauthorizedRedistributionCancellation",
+          ({ requestId, requestedByUserId, userId }) =>
+            c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
+              {
+                error:
+                  redistributionReqErrorMessages.UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
+                  requestId,
+                  requestedByUserId,
+                  userId,
+                },
               },
-            },
-            403,
-          )),
+              403,
+            ),
+        ),
         Match.tag("RedistributionRequestNotFound", ({ requestId }) =>
           c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
             {
-              error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+              error:
+                redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
               details: {
-                code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+                code: RedistributionReqErrorCodeSchema.enum
+                  .REDISTRIBUTION_REQUEST_NOT_FOUND,
                 requestId,
               },
             },
             404,
           )),
-        Match.tag("RedistributionRequestNotFoundWithStatus", ({ requestId, status }) =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
-            {
-              error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
-                requestId,
-                status,
+        Match.tag(
+          "RedistributionRequestNotFoundWithStatus",
+          ({ requestId, status }) =>
+            c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+              {
+                error:
+                  redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .REDISTRIBUTION_REQUEST_NOT_FOUND,
+                  requestId,
+                  status,
+                },
               },
-            },
-            404,
-          )),
+              404,
+            ),
+        ),
         Match.orElse(() => {
           throw left;
         }),
@@ -226,15 +253,62 @@ const cancelRedistributionRequest: RouteHandler<
 const getRequestListForStaff: RouteHandler<
   RedistributionRoutes["getRequestListForStaff"]
 > = async (c) => {
-  return c.json(
-    {
-      message: "Redistribution request list fetched successfully",
-      result: {
-        data: [],
-        pagination: { page: 1, pageSize: 10, total: 0, totalPages: 0 },
-      },
-    },
-    200,
+  const userId = c.var.currentUser!.userId;
+  const query = c.req.valid("query");
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.getMyListInStation(
+        userId,
+        {
+          status: query.status,
+          targetStationId: query.targetStationId,
+          targetAgencyId: query.targetAgencyId,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: query.sortBy ?? "createdAt",
+          sortDir: query.sortDir ?? "desc",
+        },
+      );
+    }),
+    "GET /v1/staff/redistribution-requests",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<{
+        message: string;
+      } & { result: RedistributionContracts.RedistributionRequestList }, 200>(
+        {
+          message: "Redistribution request list fetched successfully",
+          result: {
+            data: right.items.map(toContractRedistributionRequestListItem),
+            pagination: toContractPage(right),
+          },
+        },
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("UserNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.USER_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+                userId: error.userId,
+              },
+            },
+            404,
+          )),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
   );
 };
 

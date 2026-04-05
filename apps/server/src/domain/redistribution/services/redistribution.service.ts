@@ -43,16 +43,16 @@ import {
 const MIN_BIKES_AT_STATION = 20;
 
 export type RedistributionService = {
-  listMyRequests: (
+  getMyListInStation: (
     userId: string,
     filter: MyInStationRedistributionFilter,
     page: PageRequest<RedistributionSortField>,
   ) => Effect.Effect<
     PageResult<RedistributionRequestSummaryRow>,
-    RedistributionServiceFailure | UserNotFound
+    RedistributionServiceFailure
   >;
 
-  getMyRequestById: (args: {
+  getMyRequestInStation: (args: {
     userId: string;
     requestId: string;
   }) => Effect.Effect<
@@ -122,7 +122,7 @@ function makeRedistributionService(
   client: PrismaClient,
 ): RedistributionService {
   return {
-    listMyRequests: (userId, filter, page) =>
+    getMyListInStation: (userId, filter, page) =>
       Effect.gen(function* () {
         const userOpt = yield* userService
           .getById(userId)
@@ -134,17 +134,18 @@ function makeRedistributionService(
           return yield* Effect.fail(new UserNotFound({ userId }));
         }
         const stationId = userOpt.value.orgAssignment?.station?.id;
-        const reqOpt = yield* repo
-          .listMyInStationRequests(userId, stationId ?? "", filter, page)
+        // TODO: handle agency case
+        const req = yield* repo
+          .listWithOffset({ ...filter, requestedByUserId: userId, sourceStationId: stationId }, page)
           .pipe(
             Effect.catchTag("RedistributionRepositoryError", error =>
               Effect.die(error)),
           );
 
-        return reqOpt;
+        return req;
       }),
 
-    getMyRequestById: ({ userId, requestId }) => {
+    getMyRequestInStation: ({ userId, requestId }) => {
       const stationId = "";
       return repo
         .getMyInStationRequest(userId, stationId, requestId)
