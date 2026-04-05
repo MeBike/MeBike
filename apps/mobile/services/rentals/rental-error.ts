@@ -20,6 +20,7 @@ export type RentalErrorCode
   = | ContractRentalErrorCode
     | ContractBikeSwapRequestErrorCode
     | "UNAUTHORIZED"
+    | "VALIDATION_ERROR"
     | "UNKNOWN";
 
 export type RentalError = ServiceError<RentalErrorCode>;
@@ -41,7 +42,8 @@ function isRentalServiceContractErrorCode(
 }
 
 export function isRentalErrorCode(code: string): code is RentalErrorCode {
-  return isServiceErrorCode(code, isRentalServiceContractErrorCode);
+  return code === "VALIDATION_ERROR"
+    || isServiceErrorCode(code, isRentalServiceContractErrorCode);
 }
 
 export function isRentalApiError(
@@ -54,8 +56,10 @@ export function isRentalApiError(
 
 export async function parseRentalError(response: Response): Promise<RentalError> {
   return parseServiceError(response, {
-    schema: ServerContracts.RentalsContracts.RentalErrorResponseSchema,
-    mapCode: code => normalizeServiceErrorCode(code, isRentalServiceContractErrorCode),
+    schema: ServerContracts.ServerErrorResponseSchema,
+    mapCode: code => code === "VALIDATION_ERROR"
+      ? code
+      : normalizeServiceErrorCode(code, isRentalServiceContractErrorCode),
     includeUnauthorized: true,
     includeForbidden: true,
   });
@@ -65,8 +69,10 @@ export async function parseBikeSwapRequestError(
   response: Response,
 ): Promise<RentalError> {
   return parseServiceError(response, {
-    schema: ServerContracts.RentalsContracts.BikeSwapRequestErrorResponseSchema,
-    mapCode: code => normalizeServiceErrorCode(code, isRentalServiceContractErrorCode),
+    schema: ServerContracts.ServerErrorResponseSchema,
+    mapCode: code => code === "VALIDATION_ERROR"
+      ? code
+      : normalizeServiceErrorCode(code, isRentalServiceContractErrorCode),
     includeUnauthorized: true,
     includeForbidden: true,
   });

@@ -1,13 +1,12 @@
 import type { ReactNode } from "react";
 
+import { IconSymbol } from "@components/IconSymbol";
+import { radii, spacingRules } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, XStack, YStack } from "tamagui";
-
-import { IconSymbol } from "@components/IconSymbol";
-import { radii, spacingRules } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 
 type AppHeroHeaderSize = "default" | "compact";
 

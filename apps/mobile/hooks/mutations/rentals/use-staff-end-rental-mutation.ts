@@ -7,14 +7,15 @@ import type { RentalWithPricing } from "@/types/rental-types";
 
 export type StaffEndRentalVariables = {
   rentalId: string;
-  endStation: string;
+  stationId: string;
   reason: string;
-  endTime?: string;
+  confirmedAt?: string;
+  confirmationMethod?: "MANUAL" | "QR_CODE";
 };
 
 export function useStaffEndRentalMutation() {
   return useMutation<RentalWithPricing, RentalError, StaffEndRentalVariables>({
-    mutationFn: (payload) => rentalServiceV1.endRentalByAdmin(payload).then((result) => {
+    mutationFn: payload => rentalServiceV1.endRentalByAdmin(payload).then((result) => {
       if (!result.ok) {
         throw result.error;
       }

@@ -13,6 +13,9 @@ import { IncidentRequestCard } from "./incident-request-card";
 
 type RentalJourneyCardProps = {
   detail: MyRentalResolvedDetail;
+  missingReturnSlotHelperText?: string;
+  missingReturnSlotLabel?: string;
+  reservedReturnStationLabel?: string;
   bikeSwapStatus?: "NONE" | "PENDING" | "CONFIRMED" | "REJECTED";
   confirmedBikeLabel?: string;
   bikeSwapRejectionReason?: string | null;
@@ -118,6 +121,9 @@ function JourneyPoint({
 
 export function RentalJourneyCard({
   detail,
+  missingReturnSlotHelperText = "Bạn cần chọn bãi trả trước khi kết thúc hành trình",
+  missingReturnSlotLabel = "Trạm kết thúc",
+  reservedReturnStationLabel = "Trạm trả xe (đã đặt)",
   bikeSwapStatus = "NONE",
   confirmedBikeLabel,
   bikeSwapRejectionReason,
@@ -182,9 +188,9 @@ export function RentalJourneyCard({
             iconBackground={hasReturnSlot ? theme.surfaceWarning.val : theme.surfaceAccent.val}
             iconColor={hasReturnSlot ? theme.statusWarning.val : theme.actionPrimary.val}
             iconName="location"
-            helperText={isOngoing && !hasReturnSlot ? "Bạn cần chọn bãi trả trước khi kết thúc hành trình" : undefined}
+            helperText={isOngoing && !hasReturnSlot ? missingReturnSlotHelperText : undefined}
             isLast
-            label={hasReturnSlot ? "Trạm trả xe (đã đặt)" : "Trạm kết thúc"}
+            label={hasReturnSlot ? reservedReturnStationLabel : missingReturnSlotLabel}
             timeText={endTimeLabel}
             timeTone={hasReturnSlot ? "warning" : isOngoing ? "muted" : "muted"}
             value={endStationLabel}

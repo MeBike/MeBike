@@ -56,6 +56,7 @@ const rentalErrorMessages = {
   userNotFound: "Không tìm thấy người dùng phù hợp.",
   userNotFoundForCard: "Không tìm thấy người dùng tương ứng với thẻ này.",
   userNotHaveWallet: "Tài khoản của bạn chưa có ví để thực hiện giao dịch.",
+  validationError: "Dữ liệu gửi lên chưa hợp lệ. Vui lòng thử lại.",
 } as const;
 
 function formatCurrencyDetail(value: unknown): string | null {
@@ -182,6 +183,8 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.userNotFoundForCard;
     case "USER_NOT_HAVE_WALLET":
       return rentalErrorMessages.userNotHaveWallet;
+    case "VALIDATION_ERROR":
+      return rentalErrorMessages.validationError;
     default:
       return error.message ?? fallback;
   }

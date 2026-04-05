@@ -522,18 +522,19 @@ export const rentalServiceV1 = {
 
   endRentalByAdmin: async (args: {
     rentalId: string;
-    endStation: string;
+    stationId: string;
     reason: string;
-    endTime?: string;
+    confirmedAt?: string;
+    confirmationMethod?: "MANUAL" | "QR_CODE";
   }): Promise<Result<RentalWithPricing, RentalError>> => {
     try {
       const path = routePath(ServerRoutes.rentals.endRentalByAdmin, { rentalId: args.rentalId });
 
       const response = await kyClient.put(path, {
         json: {
-          endStation: args.endStation,
-          reason: args.reason,
-          ...(args.endTime ? { endTime: args.endTime } : {}),
+          stationId: args.stationId,
+          confirmationMethod: args.confirmationMethod ?? "MANUAL",
+          ...(args.confirmedAt ? { confirmedAt: args.confirmedAt } : {}),
         },
         throwHttpErrors: false,
       });
