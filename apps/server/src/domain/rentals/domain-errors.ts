@@ -189,6 +189,7 @@ export type RentalServiceFailure
     | ReturnSlotNotFound
     | ReturnSlotCapacityExceeded
     | ReturnAlreadyConfirmed
+    | UnauthorizedRentalAccess
     | SubscriptionNotFound
     | SubscriptionNotUsable
     | SubscriptionUsageExceeded

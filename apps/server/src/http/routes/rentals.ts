@@ -30,14 +30,6 @@ export function registerRentalRoutes(
 
   app.openapi(rentals.getMyRentalCounts, RentalMeController.getMyRentalCounts);
 
-  app.openapi(rentals.getMyRental, RentalMeController.getMyRental);
-
-  app.openapi(rentals.getMyCurrentReturnSlot, RentalMeController.getMyCurrentReturnSlot);
-
-  app.openapi(rentals.createMyReturnSlot, RentalMeController.createMyReturnSlot);
-
-  app.openapi(rentals.cancelMyReturnSlot, RentalMeController.cancelMyReturnSlot);
-
   const activeByPhoneRoute = {
     ...rentals.getActiveRentalsByPhone,
     middleware: [requireAdminOrStaffMiddleware] as const,
@@ -193,4 +185,12 @@ export function registerRentalRoutes(
     mySwapRequestRoute,
     RentalMeController.getMyBikeSwapRequest,
   );
+
+  app.openapi(rentals.getMyRental, RentalMeController.getMyRental);
+
+  app.openapi(rentals.getMyCurrentReturnSlot, RentalMeController.getMyCurrentReturnSlot);
+
+  app.openapi(rentals.createMyReturnSlot, RentalMeController.createMyReturnSlot);
+
+  app.openapi(rentals.cancelMyReturnSlot, RentalMeController.cancelMyReturnSlot);
 }

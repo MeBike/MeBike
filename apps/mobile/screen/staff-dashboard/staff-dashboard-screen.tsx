@@ -2,7 +2,6 @@ import type { StackNavigationProp } from "@react-navigation/stack";
 import type { ComponentProps } from "react";
 
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback } from "react";
 import { Alert, Pressable, ScrollView, StatusBar } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
@@ -12,8 +11,7 @@ import type { RootStackParamList } from "@/types/navigation";
 import { IconSymbol } from "@/components/IconSymbol";
 import { useStaffBikeSwapRequestsQuery } from "@/hooks/query/rentals/use-staff-bike-swap-requests-query";
 import { useAuthNext } from "@/providers/auth-provider-next";
-import { gradients } from "@/theme/colors";
-import { radii, spacingRules } from "@/theme/metrics";
+import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
 import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";
 import { Screen } from "@/ui/primitives/screen";
@@ -110,7 +108,6 @@ function DashboardActionRow({
 
 export default function StaffDashboardScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const theme = useTheme();
   const { isStaff } = useAuthNext();
   const pendingBikeSwapQuery = useStaffBikeSwapRequestsQuery(
     {
@@ -143,35 +140,7 @@ export default function StaffDashboardScreen() {
     <Screen tone="subtle">
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={gradients.brandHero}
-          end={{ x: 1, y: 1 }}
-          start={{ x: 0, y: 0 }}
-          style={{
-            borderBottomLeftRadius: radii.xxl + 12,
-            borderBottomRightRadius: radii.xxl + 12,
-            overflow: "hidden",
-            paddingBottom: 36,
-            paddingHorizontal: spacingRules.hero.paddingX,
-            paddingTop: 64,
-          }}
-        >
-          <YStack gap="$4" position="relative">
-            <IconSymbol
-              color={theme.overlayGlassMuted.val}
-              name="antenna.radiowaves.left.and.right"
-              size={128}
-              style={{ opacity: 0.7, position: "absolute", right: -8, top: -8 }}
-            />
-
-            <YStack gap="$2" maxWidth="88%" pr="$8">
-              <AppText numberOfLines={2} tone="inverted" variant="hero">
-                Công cụ nhân viên
-              </AppText>
-            </YStack>
-
-          </YStack>
-        </LinearGradient>
+        <AppHeroHeader size="compact" title="Công cụ nhân viên" />
 
         <YStack gap="$5" padding="$4">
           <AppText variant="sectionTitle">Công cụ hỗ trợ</AppText>

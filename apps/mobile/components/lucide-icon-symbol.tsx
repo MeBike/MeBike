@@ -49,7 +49,7 @@ export function LucideIconSymbol({
 
   return (
     <Icon
-      color={color as any}
+      color={color}
       fill={filled ? color as any : "none"}
       size={size}
       strokeWidth={strokeWidth}

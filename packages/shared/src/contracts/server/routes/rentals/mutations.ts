@@ -358,6 +358,26 @@ export const confirmRentalReturnByOperator = createRoute({
         },
       },
     },
+    403: {
+      description: "Unauthorized access to rental",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: "Access denied",
+                details: {
+                  code: RentalErrorCodeSchema.enum.ACCESS_DENIED,
+                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                  stationId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 });
 
