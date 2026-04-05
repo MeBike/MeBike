@@ -76,6 +76,10 @@ export const ENDPOINT = {
     RATING : {
         BASE : "/admin/ratings",
         ID : (ratingID : string) => `/admin/ratings/${ratingID}`,
+    },
+    AGENCY : {
+        BASE : "/admin/agencies",
+        ID : (id : string) => `/admin/agencies/${id}`,
     }
 
 } as const;

@@ -121,6 +121,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       roles: ["ADMIN"],
     },
     {
+      title: "Quản lý Agency",
+      icon: MapIcon,
+      href: "/admin/agencies",
+      roles: ["ADMIN"],
+    },
+    {
       title: "Quản lý đặt trước",
       icon: FileText,
       href: "/admin/reservations",
