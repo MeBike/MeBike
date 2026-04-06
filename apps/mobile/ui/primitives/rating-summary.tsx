@@ -1,7 +1,8 @@
-import { useTheme, XStack } from "tamagui";
+import type { IconSymbolSize } from "@components/IconSymbol";
 
 import { IconSymbol } from "@components/IconSymbol";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, XStack } from "tamagui";
 
 type RatingSummarySize = "default" | "compact";
 
@@ -13,17 +14,17 @@ type RatingSummaryProps = {
 };
 
 const sizeStyles: Record<RatingSummarySize, {
-  iconSize: number;
+  iconSize: IconSymbolSize;
   gap: "$1" | "$2";
   variant: "caption" | "label";
 }> = {
   default: {
-    iconSize: 14,
+    iconSize: "caption",
     gap: "$2",
     variant: "label",
   },
   compact: {
-    iconSize: 12,
+    iconSize: "xs",
     gap: "$1",
     variant: "caption",
   },

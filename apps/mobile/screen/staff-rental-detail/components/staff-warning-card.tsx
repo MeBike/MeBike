@@ -1,6 +1,6 @@
 import { useTheme, XStack, YStack } from "tamagui";
 
-import { LucideIconSymbol as IconSymbol } from "@/components/lucide-icon-symbol";
+import { IconSymbol } from "@/components/IconSymbol";
 import { borderWidths, elevations } from "@/theme/metrics";
 import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";

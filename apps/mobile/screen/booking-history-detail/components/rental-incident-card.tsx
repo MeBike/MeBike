@@ -1,12 +1,11 @@
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { IncidentDetail } from "@/contracts/server";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { IncidentDetail } from "@/contracts/server";
 
 import {
   formatIncidentDistance,
@@ -164,7 +163,7 @@ export function RentalIncidentCard({
                   {etaText
                     ? (
                         <XStack alignItems="center" gap="$2">
-                          <IconSymbol color={theme.actionAccent.val} name="clock" size={15} />
+                          <IconSymbol color={theme.actionAccent.val} name="clock" size="caption" />
                           <AppText tone="warning" variant="subhead">
                             {etaText}
                           </AppText>

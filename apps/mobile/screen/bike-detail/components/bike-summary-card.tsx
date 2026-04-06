@@ -1,12 +1,11 @@
-import React from "react";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { BikeSummary } from "@/contracts/server";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
+import React from "react";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { BikeSummary } from "@/contracts/server";
 
 import { createBikeDetailTextStyles } from "../text-styles";
 
@@ -76,7 +75,7 @@ function DetailRow({
   return (
     <XStack alignItems="center" gap="$3" justifyContent="space-between">
       <XStack alignItems="center" flex={1} gap="$2">
-        <IconSymbol color={theme.textTertiary.val} name={icon} size={17} />
+        <IconSymbol color={theme.textTertiary.val} name={icon} size="sm" />
         <AppText style={{ flex: 1, ...bikeDetailTextStyles.detailLabel }}>{label}</AppText>
       </XStack>
 
@@ -115,7 +114,7 @@ export function BikeSummaryCard({
             justifyContent="center"
             width={64}
           >
-            <IconSymbol color={theme.actionPrimary.val} name="bicycle" size={30} />
+            <IconSymbol color={theme.actionPrimary.val} name="bicycle" size="feature" />
           </XStack>
 
           <YStack flex={1} gap="$2">
@@ -137,7 +136,7 @@ export function BikeSummaryCard({
             </XStack>
 
             <XStack alignItems="center" gap="$1">
-              <IconSymbol color={theme.statusWarning.val} name="star.fill" size={15} />
+              <IconSymbol color={theme.statusWarning.val} name="star.fill" size="caption" />
               {hasRatings
                 ? (
                     <>

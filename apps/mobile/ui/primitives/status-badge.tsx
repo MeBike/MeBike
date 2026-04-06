@@ -119,7 +119,7 @@ export function StatusBadge({
       width="auto"
     >
       {iconName
-        ? <IconSymbol color={dotColor} name={iconName} size={size === "compact" ? 14 : 16} />
+        ? <IconSymbol color={dotColor} name={iconName} size={size === "compact" ? "caption" : "sm"} />
         : null}
       {withDot && !iconName
         ? (

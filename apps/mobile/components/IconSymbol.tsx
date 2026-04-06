@@ -1,204 +1,153 @@
-// This file is a fallback for using MaterialIcons on Android and web.
+/* eslint-disable unicorn/filename-case */
 
-import type { SymbolWeight } from "expo-symbols";
-import type {
-  OpaqueColorValue,
-  StyleProp,
-  TextStyle,
-  ViewStyle,
-} from "react-native";
+import type { ColorValue, StyleProp, ViewStyle } from "react-native";
 
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { iconSizes } from "@theme/metrics";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Bell,
+  Bike,
+  Building2,
+  Calendar,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  CircleUserRound,
+  Clock,
+  Copy,
+  Cpu,
+  CreditCard,
+  Eye,
+  EyeOff,
+  FileText,
+  Hash,
+  Home,
+  Info,
+  Lock,
+  Mail,
+  Map,
+  MapPin,
+  Phone,
+  Play,
+  Plus,
+  QrCode,
+  RefreshCw,
+  Search,
+  Shield,
+  SlidersHorizontal,
+  Star,
+  Tag,
+  Timer,
+  TriangleAlert,
+  User,
+  Wallet,
+  Wrench,
+  X,
+} from "lucide-react-native";
 import React from "react";
 
-// Add your SFSymbol to MaterialIcons mappings here.
-const MAPPING = {
-  "house.fill": "home",
-  "house": "home",
-  "arrow.left": "arrow-back",
-  "arrow.right": "arrow-forward",
-  "arrow.up": "arrow-upward",
-  "arrow.down": "arrow-downward",
-  "chevron.left": "chevron-left",
-  "chevron.right": "chevron-right",
-  "chevron.up": "keyboard-arrow-up",
-  "chevron.down": "keyboard-arrow-down",
-  "arrow.clockwise": "refresh",
-  "arrow.counterclockwise": "refresh",
+type LucideIconComponent = typeof ArrowLeft;
 
-  // Communication & Social
-  "paperplane.fill": "send",
-  "paperplane": "send",
-  "envelope.fill": "mail",
-  "envelope": "mail",
-  "phone.fill": "phone",
-  "phone": "phone",
-  "message.fill": "chat",
-  "message": "chat",
-  "bell.fill": "notifications",
-  "bell": "notifications",
-  "heart.fill": "favorite",
-  "heart": "favorite",
+type IconConfig = {
+  fill?: boolean;
+  icon: LucideIconComponent;
+  strokeWidth?: number;
+};
 
-  // Actions & Controls
-  "plus": "add",
-  "minus": "remove",
-  "xmark": "close",
-  "ellipsis": "more-horiz",
-  "checkmark": "check",
-  "checkmark.circle.fill": "check-circle",
-  "checkmark.circle": "check-circle",
-  "checkmark.square.fill": "check-box",
-  "checkmark.square": "check-box",
-  "multiply": "clear",
-  "trash.fill": "delete",
-  "trash": "delete",
-  "pencil": "edit",
-  "pencil.and.list.clipboard": "edit-note",
-  "square.and.pencil": "edit",
-  "doc.text.fill": "description",
-  "doc.text": "description",
-  "folder.fill": "folder",
-  "folder": "folder-open",
-  "doc.fill": "insert-drive-file",
-  "doc": "insert-drive-file",
-  "doc.on.doc": "content-copy",
+const ICONS = {
+  "arrow.clockwise": { icon: RefreshCw },
+  "arrow.down": { icon: ArrowDown },
+  "arrow.left": { icon: ArrowLeft },
+  "arrow.right": { icon: ArrowRight },
+  "arrow.up": { icon: ArrowUp },
+  "bell": { icon: Bell },
+  "bicycle": { icon: Bike },
+  "bicycle.circle.fill": { icon: Bike },
+  "building.2.fill": { icon: Building2 },
+  "calendar": { icon: Calendar },
+  "checkmark": { icon: Check },
+  "checkmark.circle": { icon: CheckCircle2 },
+  "checkmark.circle.fill": { icon: CheckCircle2 },
+  "chevron.right": { icon: ChevronRight },
+  "circle": { icon: Circle },
+  "clock": { icon: Clock },
+  "clock.fill": { icon: Clock },
+  "cpu": { icon: Cpu },
+  "creditcard": { icon: CreditCard },
+  "creditcard.fill": { icon: CreditCard },
+  "doc.on.doc": { icon: Copy },
+  "doc.text": { icon: FileText },
+  "envelope": { icon: Mail },
+  "eye": { icon: Eye },
+  "eye.slash": { icon: EyeOff },
+  "exclamationmark.triangle": { icon: TriangleAlert },
+  "exclamationmark.triangle.fill": { icon: TriangleAlert, fill: true },
+  "house.fill": { icon: Home, fill: true },
+  "info.circle": { icon: Info },
+  "location": { icon: MapPin },
+  "location.fill": { icon: MapPin, fill: true },
+  "lock": { icon: Lock },
+  "lock.shield.fill": { icon: Shield, fill: true },
+  "magnifyingglass": { icon: Search },
+  "map": { icon: Map },
+  "number": { icon: Hash },
+  "person": { icon: User },
+  "person.crop.circle.fill": { icon: CircleUserRound, fill: true },
+  "person.fill": { icon: User, fill: true },
+  "phone": { icon: Phone },
+  "phone.fill": { icon: Phone, fill: true },
+  "play.fill": { icon: Play, fill: true, strokeWidth: 1.8 },
+  "plus": { icon: Plus },
+  "qrcode.viewfinder": { icon: QrCode },
+  "slider.horizontal.3": { icon: SlidersHorizontal },
+  "star": { icon: Star },
+  "star.fill": { icon: Star, fill: true, strokeWidth: 1.8 },
+  "tag": { icon: Tag },
+  "timer": { icon: Timer },
+  "wallet.pass.fill": { icon: Wallet },
+  "wrench.and.screwdriver.fill": { icon: Wrench, fill: true },
+  "xmark": { icon: X },
+} as const satisfies Record<string, IconConfig>;
 
-  // Media & Content
-  "photo.fill": "image",
-  "photo": "image",
-  "camera.fill": "camera-alt",
-  "camera": "camera-alt",
-  "video.fill": "videocam",
-  "video": "videocam",
-  "music.note": "music-note",
-  "speaker.wave.2.fill": "volume-up",
-  "speaker.slash.fill": "volume-off",
-  "play.fill": "play-arrow",
-  "pause.fill": "pause",
-  "stop.fill": "stop",
+export type IconSymbolName = keyof typeof ICONS;
+export type IconSymbolSizeToken = keyof typeof iconSizes;
+export type IconSymbolSizeValue = (typeof iconSizes)[IconSymbolSizeToken];
+export type IconSymbolSize = IconSymbolSizeToken | IconSymbolSizeValue;
 
-  // System & Settings
-  "gear": "settings",
-  "gearshape.fill": "settings",
-  "wrench.and.screwdriver.fill": "build",
-  "slider.horizontal.3": "tune",
-  "info.circle.fill": "info",
-  "info.circle": "info",
-  "exclamationmark.triangle.fill": "warning",
-  "exclamationmark.triangle": "warning",
-  "questionmark.circle.fill": "help",
-  "questionmark.circle": "help",
+export type IconSymbolProps = {
+  color: ColorValue;
+  name: IconSymbolName;
+  size?: IconSymbolSize;
+  style?: StyleProp<ViewStyle>;
+};
 
-  // Shapes & Symbols
-  "square": "square",
-  "circle": "circle",
-  "triangle.fill": "change-history",
-  "star.fill": "star",
-  "star": "star",
-  "bookmark.fill": "bookmark",
-  "bookmark": "bookmark",
-  "tag": "local-offer",
+function resolveIconSize(size: IconSymbolSize = "lg") {
+  return typeof size === "number" ? size : iconSizes[size];
+}
 
-  // Technology & Code
-  "chevron.left.forwardslash.chevron.right": "code",
-  "qrcode.viewfinder": "qr-code",
-  "cpu": "memory",
-  "number": "confirmation-number",
-  "wallet.pass.fill": "account-balance-wallet",
-  "wifi": "wifi",
-  "antenna.radiowaves.left.and.right": "signal-cellular-alt",
-  "battery.100": "battery-full",
-  "battery.25": "battery-2-bar",
-  "lock": "lock",
-  "lock.fill": "lock",
-  "lock.shield.fill": "shield",
-  "lock.open.fill": "lock-open",
-  "bicycle.circle.fill": "directions-bike",
-  "bicycle.circle": "directions-bike",
-  "bicycle": "directions-bike",
-
-  // Shopping & Commerce
-  "cart.fill": "shopping-cart",
-  "cart": "shopping-cart",
-  "creditcard.fill": "credit-card",
-  "creditcard": "credit-card",
-  "dollarsign.circle.fill": "monetization-on",
-  "bag.fill": "shopping-bag",
-  "bag": "shopping-bag",
-
-  // Location & Maps
-  "location.fill": "location-on",
-  "location": "location-on",
-  "map.fill": "map",
-  "map": "map",
-  "compass.drawing": "explore",
-
-  // Time & Calendar
-  "clock.fill": "access-time",
-  "clock": "access-time",
-  "calendar": "event",
-  "timer": "timer",
-
-  // User & Profile
-  "person": "person",
-  "person.fill": "person",
-  "person.2.fill": "group",
-  "person.2": "group",
-  "person.crop.circle.fill": "account-circle",
-  "person.crop.circle": "account-circle",
-
-  // Sharing & Export
-  "square.and.arrow.up": "share",
-  "square.and.arrow.down": "download",
-  "arrow.up.doc.fill": "upload-file",
-  "link": "link",
-
-  // Search & Discovery
-  "magnifyingglass": "search",
-  "line.3.horizontal.decrease": "filter-list",
-  "arrow.up.arrow.down": "sort",
-
-  // Visibility & Display
-  "eye": "visibility",
-  "eye.fill": "visibility",
-  "eye.slash": "visibility-off",
-  "eye.slash.fill": "visibility-off",
-  "lightbulb.fill": "lightbulb",
-  "moon.fill": "dark-mode",
-  "sun.max.fill": "light-mode",
-} as Partial<
-  Record<
-    import("expo-symbols").SymbolViewProps["name"],
-    React.ComponentProps<typeof MaterialIcons>["name"]
-  >
->;
-
-export type IconSymbolName = keyof typeof MAPPING;
-
-/**
- * An icon component that uses native SFSymbols on iOS, and MaterialIcons on Android and web. This ensures a consistent look across platforms, and optimal resource usage.
- *
- * Icon `name`s are based on SFSymbols and require manual mapping to MaterialIcons.
- */
 export function IconSymbol({
   name,
-  size = 24,
+  size = "lg",
   color,
   style,
-}: {
-  name: IconSymbolName;
-  size?: number;
-  color: string | OpaqueColorValue;
-  style?: StyleProp<ViewStyle>;
-  weight?: SymbolWeight;
-}) {
+}: IconSymbolProps) {
+  const config: IconConfig = ICONS[name];
+  const Icon = config.icon;
+  const fill = config.fill ?? false;
+  const strokeWidth = config.strokeWidth ?? 2.2;
+
   return (
-    <MaterialIcons
-      color={color}
-      size={size}
-      name={MAPPING[name]}
-      style={style as StyleProp<TextStyle>}
+    <Icon
+      absoluteStrokeWidth
+      color={color as string}
+      fill={fill ? color as string : "none"}
+      size={resolveIconSize(size)}
+      strokeWidth={strokeWidth}
+      style={style}
     />
   );
 }

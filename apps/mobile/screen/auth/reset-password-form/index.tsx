@@ -2,6 +2,7 @@ import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { authService } from "@services/auth/auth-service";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
@@ -18,7 +19,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
-import { authService } from "@services/auth/auth-service";
 
 import type { RootStackParamList } from "../../../types/navigation";
 
@@ -180,7 +180,7 @@ export default function ResetPasswordFormScreen() {
           <View style={styles.headerContent}>
             <IconSymbol
               name="lock"
-              size={40}
+              size="hero"
               color="white"
             />
             <Text style={styles.headerTitle}>Đặt lại mật khẩu</Text>

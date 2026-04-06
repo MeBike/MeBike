@@ -76,7 +76,7 @@ export function DetailSummaryCard({
                 <IconSymbol
                   color={theme.actionPrimary.val}
                   name={getReservationIdentityIcon(reservation)}
-                  size={26}
+                  size="chip"
                 />
               </XStack>
 
@@ -108,7 +108,7 @@ export function DetailSummaryCard({
                     {" "}
                     {shortReservationId}
                   </AppText>
-                  <IconSymbol color={theme.textTertiary.val} name="doc.on.doc" size={14} />
+                  <IconSymbol color={theme.textTertiary.val} name="doc.on.doc" size="caption" />
                 </XStack>
               </YStack>
             </XStack>

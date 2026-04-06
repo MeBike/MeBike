@@ -1,3 +1,5 @@
+/* eslint-disable ts/no-use-before-define, unicorn/filename-case */
+
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,15 +13,22 @@ import {
   View,
 } from "react-native";
 
+import type { IconSymbolName } from "../components/IconSymbol";
 import type { IntroScreenNavigationProp } from "../types/navigation";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
 // import { useAuth } from '../contexts/AuthContext';
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
-const introSlides = [
+const introSlides: Array<{
+  color: string;
+  description: string;
+  icon: IconSymbolName;
+  id: number;
+  title: string;
+}> = [
   {
     id: 1,
     title: "Chào mừng đến với MeBike",
@@ -76,33 +85,19 @@ export default function IntroScreen() {
     }
   };
 
-  const skipIntro = async () => {
-    if (status === "loading") {
-      return;
-    }
-
-    if (isAuthenticated) {
-      navigation.navigate("Main");
-    }
-    else {
-      // await markIntroAsSeen();
-      navigation.navigate("Login");
-    }
-  };
-
   const goBack = () => {
     navigation.goBack();
   };
 
-  const renderSlide = (slide: typeof introSlides[0], index: number) => (
+  const renderSlide = (slide: typeof introSlides[0], _index: number) => (
     <View key={slide.id} style={styles.slide}>
       <LinearGradient
         colors={[`${slide.color}20`, `${slide.color}10`]}
         style={styles.iconContainer}
       >
         <IconSymbol
-          name={slide.icon as any}
-          size={80}
+          name={slide.icon}
+          size="showcase"
           color={slide.color}
         />
       </LinearGradient>
@@ -134,7 +129,7 @@ export default function IntroScreen() {
       {/* Header with back button and skip */}
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={goBack}>
-          <IconSymbol name="arrow.left" size={24} color={BikeColors.textPrimary} />
+          <IconSymbol name="arrow.left" size="lg" color={BikeColors.textPrimary} />
         </Pressable>
 
         <Pressable style={styles.skipButton} onPress={goBack}>
@@ -165,7 +160,7 @@ export default function IntroScreen() {
           </Text>
           <IconSymbol
             name="arrow.right"
-            size={20}
+            size="md"
             color="white"
           />
         </Pressable>
