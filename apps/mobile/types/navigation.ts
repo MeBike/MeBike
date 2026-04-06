@@ -84,7 +84,6 @@ export type RootStackParamList = {
   };
   "TransactionDetail": { transactionId: string };
   "WithdrawDetail": { withdrawId: string };
-  "Withdraw": undefined;
   "RefundDetail": { refundId: string };
   "QRScanner": undefined;
   "Công cụ": undefined;
