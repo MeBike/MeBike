@@ -1,17 +1,32 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Text, View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
 
-import { styles } from "../styles";
+import { IconSymbol } from "@/components/IconSymbol";
+import { AppText } from "@/ui/primitives/app-text";
 
-export function EmptyState() {
+export function EmptyState({
+  description,
+  title,
+}: {
+  description: string;
+  title: string;
+}) {
+  const theme = useTheme();
+
   return (
-    <View style={styles.emptyState}>
-      <Ionicons name="search" size={48} color="#CBD5F5" />
-      <Text style={styles.emptyTitle}>Chưa có dữ liệu</Text>
-      <Text style={styles.emptySubtitle}>
-        Nhập số điện thoại của khách để kiểm tra phiên thuê đang hoạt động.
-      </Text>
-    </View>
+    <YStack alignItems="center" gap="$3" paddingHorizontal="$6" paddingTop="$10">
+      <XStack alignItems="center" backgroundColor="$surfaceAccent" borderRadius="$round" height={56} justifyContent="center" width={56}>
+        <IconSymbol color={theme.textBrand.val} name="phone.fill" size={24} />
+      </XStack>
+
+      <YStack gap="$1">
+        <AppText align="center" variant="bodyStrong">
+          {title}
+        </AppText>
+        <AppText align="center" tone="muted" variant="bodySmall">
+          {description}
+        </AppText>
+      </YStack>
+    </YStack>
   );
 }

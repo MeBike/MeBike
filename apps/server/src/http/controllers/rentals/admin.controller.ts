@@ -265,6 +265,19 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
             },
             400,
           )),
+        Match.tag("UnauthorizedRentalAccess", ({ userId }) =>
+          c.json<RentalsContracts.RentalErrorResponse, 403>(
+            {
+              error: rentalErrorMessages.ACCESS_DENIED,
+              details: {
+                code: RentalErrorCodeSchema.enum.ACCESS_DENIED,
+                rentalId,
+                stationId: body.stationId,
+                userId,
+              },
+            },
+            403,
+          )),
         Match.tag("ReturnSlotRequiredForReturn", () =>
           c.json(
             {

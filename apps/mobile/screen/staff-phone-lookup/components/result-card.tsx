@@ -1,78 +1,75 @@
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback } from "react";
+import { Pressable } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
 
-import { styles } from "../styles";
+import { IconSymbol } from "@/components/IconSymbol";
+import { borderWidths, elevations } from "@/theme/metrics";
+import { AppCard } from "@/ui/primitives/app-card";
+import { AppText } from "@/ui/primitives/app-text";
+import { StatusBadge } from "@/ui/primitives/status-badge";
+
+type ResultCardProps = {
+  onSelect: (rentalId: string) => void;
+  rentalId: string;
+  title: string;
+  statusText: string;
+  statusTone: "success" | "warning" | "danger" | "neutral";
+  stationLabel?: string;
+};
 
 export function ResultCard({
+  onSelect,
+  rentalId,
   title,
-  rentalIdLabel,
   statusText,
-  statusColor,
-  bikeIdLabel,
-  startTimeLabel,
-  durationLabel,
+  statusTone,
   stationLabel,
-  onPress,
-}: {
-  title: string;
-  rentalIdLabel: string;
-  statusText: string;
-  statusColor: string;
-  bikeIdLabel: string;
-  startTimeLabel: string;
-  durationLabel: string;
-  stationLabel?: string;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={styles.resultCard}
-      activeOpacity={0.9}
-      onPress={onPress}
-    >
-      <View style={styles.resultHeader}>
-        <View style={styles.resultTitleWrapper}>
-          <Text
-            style={styles.resultTitle}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {title}
-          </Text>
-          <Text style={styles.resultSubTitle}>{rentalIdLabel}</Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Text style={styles.statusBadgeText}>{statusText}</Text>
-        </View>
-      </View>
+}: ResultCardProps) {
+  const theme = useTheme();
+  const handlePress = useCallback(() => {
+    onSelect(rentalId);
+  }, [onSelect, rentalId]);
 
-      <View style={styles.resultBody}>
-        <View style={styles.resultRow}>
-          <Ionicons name="bicycle" size={18} color="#2563EB" />
-          <Text style={styles.resultRowText}>{bikeIdLabel}</Text>
-        </View>
-        <View style={styles.resultRow}>
-          <Ionicons name="time" size={16} color="#64748B" />
-          <Text style={styles.resultRowText}>{startTimeLabel}</Text>
-        </View>
-        <View style={styles.resultRow}>
-          <Ionicons name="hourglass" size={16} color="#64748B" />
-          <Text style={styles.resultRowText}>{durationLabel}</Text>
-        </View>
-        {stationLabel && (
-          <View style={styles.resultRow}>
-            <Ionicons name="navigate" size={16} color="#64748B" />
-            <Text style={styles.resultRowText} numberOfLines={1} ellipsizeMode="tail">
-              {stationLabel}
-            </Text>
-          </View>
-        )}
-      </View>
-      <View style={styles.cardFooter}>
-        <Text style={styles.footerHint}>Chạm để quản lý phiên thuê</Text>
-        <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-      </View>
-    </TouchableOpacity>
+  return (
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.985 : 1,
+        transform: [{ scale: pressed ? 0.996 : 1 }],
+      })}
+    >
+      <AppCard
+        borderColor="$borderSubtle"
+        borderLeftColor="$actionPrimary"
+        borderLeftWidth={borderWidths.heavy}
+        borderRadius="$5"
+        borderWidth={borderWidths.subtle}
+        chrome="flat"
+        gap="$4"
+        padding="$5"
+        style={elevations.whisper}
+      >
+        <XStack alignItems="flex-start" justifyContent="space-between" gap="$3">
+          <YStack flex={1} gap="$1">
+            <AppText numberOfLines={1} variant="cardTitle">{title}</AppText>
+
+            <XStack alignItems="center" gap="$2" paddingTop="$1">
+              <IconSymbol color={theme.statusSuccess.val} name="location.fill" size={16} />
+              <AppText flex={1} numberOfLines={1} tone="muted" variant="subhead">
+                {stationLabel ?? "--"}
+              </AppText>
+            </XStack>
+          </YStack>
+
+          <StatusBadge
+            label={statusText}
+            pulseDot={statusText === "Đang thuê"}
+            size="compact"
+            tone={statusTone}
+            withDot
+          />
+        </XStack>
+      </AppCard>
+    </Pressable>
   );
 }

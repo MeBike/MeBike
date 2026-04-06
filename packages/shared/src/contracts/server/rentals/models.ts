@@ -101,12 +101,21 @@ export const RentalStationSchema = z.object({
     .optional(),
 });
 
-// Rental with price (for creation/response)
+export const RentalDetailReturnSlotSchema = z.object({
+  id: z.uuidv7(),
+  reservedFrom: z.iso.datetime(),
+  status: ReturnSlotStatusSchema,
+  station: RentalStationSchema.pick({
+    id: true,
+    name: true,
+    address: true,
+  }),
+});
+
 export const RentalWithPriceSchema = RentalSchema.extend({
   totalPrice: z.number(),
 });
 
-// Rental list item (for paginated lists)
 export const RentalListItemSchema = z.object({
   id: z.uuidv7(),
   user: RentalUserSummarySchema,
@@ -129,6 +138,7 @@ export const RentalDetailSchema = z.object({
   bike: RentalBikeSchema,
   startStation: RentalStationSchema,
   endStation: RentalStationSchema.nullable(),
+  returnSlot: RentalDetailReturnSlotSchema.nullable(),
   startTime: z.iso.datetime(),
   endTime: z.iso.datetime().optional(),
   duration: z.number(),

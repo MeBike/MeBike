@@ -1,19 +1,125 @@
 import type { StackNavigationProp } from "@react-navigation/stack";
+import type { ComponentProps } from "react";
 
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback } from "react";
-import { ScrollView, StatusBar, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, ScrollView, StatusBar } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import type { RootStackParamList } from "@/types/navigation";
 
-import { ToolTile } from "./components/tool-tile";
-import { styles } from "./styles";
+import { IconSymbol } from "@/components/IconSymbol";
+import { useStaffBikeSwapRequestsQuery } from "@/hooks/query/rentals/use-staff-bike-swap-requests-query";
+import { useAuthNext } from "@/providers/auth-provider-next";
+import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
+import { AppCard } from "@/ui/primitives/app-card";
+import { AppText } from "@/ui/primitives/app-text";
+import { Screen } from "@/ui/primitives/screen";
+
+type DashboardActionRowProps = {
+  icon: ComponentProps<typeof IconSymbol>["name"];
+  title: string;
+  description: string;
+  tone?: "primary" | "secondary" | "warning";
+  badge?: string;
+  onPress: () => void;
+};
+
+function DashboardActionRow({
+  icon,
+  title,
+  description,
+  tone = "primary",
+  badge,
+  onPress,
+}: DashboardActionRowProps) {
+  const theme = useTheme();
+  const iconBackground = tone === "secondary"
+    ? "$secondary2"
+    : tone === "warning"
+      ? "$warning2"
+      : "$surfaceAccent";
+  const iconColor = tone === "secondary"
+    ? theme.actionSecondary.val
+    : tone === "warning"
+      ? theme.actionAccent.val
+      : theme.actionPrimary.val;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.985 : 1,
+        transform: [{ scale: pressed ? 0.996 : 1 }],
+      })}
+    >
+      <AppCard
+        borderRadius="$4"
+        chrome="whisper"
+        gap="$4"
+        padding="$4"
+      >
+        <XStack
+          alignItems="center"
+          gap="$4"
+        >
+          <XStack
+            alignItems="center"
+            backgroundColor={iconBackground}
+            borderRadius="$round"
+            height={56}
+            justifyContent="center"
+            width={56}
+          >
+            <IconSymbol color={iconColor} name={icon} size={24} />
+          </XStack>
+
+          <YStack flex={1} gap="$1">
+            <AppText variant="bodyStrong">{title}</AppText>
+            <AppText tone="muted" variant="bodySmall">
+              {description}
+            </AppText>
+          </YStack>
+
+          <YStack alignItems="center" gap="$3">
+            {badge
+              ? (
+                  <YStack
+                    alignItems="center"
+                    backgroundColor="$surfaceWarning"
+                    borderRadius="$round"
+                    minWidth={32}
+                    paddingHorizontal="$2"
+                    paddingVertical="$1"
+                  >
+                    <AppText tone="warning" variant="badgeLabel">
+                      {badge}
+                    </AppText>
+                  </YStack>
+                )
+              : null}
+            <IconSymbol color={theme.textTertiary.val} name="chevron.right" size={22} />
+          </YStack>
+        </XStack>
+      </AppCard>
+    </Pressable>
+  );
+}
 
 export default function StaffDashboardScreen() {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { isStaff } = useAuthNext();
+  const pendingBikeSwapQuery = useStaffBikeSwapRequestsQuery(
+    {
+      status: "PENDING",
+      page: 1,
+      pageSize: 1,
+      sortBy: "createdAt",
+      sortDir: "desc",
+    },
+    isStaff,
+  );
+  const pendingRequestCount = pendingBikeSwapQuery.data?.pagination.total ?? 0;
 
   const handleScanQr = useCallback(() => {
     navigation.navigate("QRScanner");
@@ -23,37 +129,44 @@ export default function StaffDashboardScreen() {
     navigation.navigate("StaffPhoneLookup");
   }, [navigation]);
 
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={["#0066FF", "#00B4D8"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + 32 }]}
-        >
-          <Text style={styles.headerTitle}>Công cụ nhân viên</Text>
-        </LinearGradient>
+  const handleOpenBikeSwap = useCallback(() => {
+    navigation.navigate("StaffBikeSwapList");
+  }, [navigation]);
 
-        <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Chức năng nhanh</Text>
-          <View style={styles.toolsList}>
-            <ToolTile
-              icon="scan"
-              title="Quét QR của khách"
-              description="Hỗ trợ khách quét mã để bắt đầu hoặc kết thúc chuyến đi."
+  return (
+    <Screen tone="subtle">
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+        <AppHeroHeader size="compact" title="Công cụ nhân viên" />
+
+        <YStack gap="$5" padding="$4">
+          <AppText variant="sectionTitle">Công cụ hỗ trợ</AppText>
+
+          <YStack gap="$4">
+            <DashboardActionRow
+              description="Hỗ trợ khách bắt đầu hoặc kết thúc chuyến đi ngay tại xe."
+              icon="qrcode.viewfinder"
               onPress={handleScanQr}
+              title="Quét mã QR"
             />
-            <ToolTile
-              icon="call"
-              title="Tra cứu số điện thoại"
-              description="Tìm phiên thuê đang hoạt động khi khách quên điện thoại hoặc không quét được mã."
+            <DashboardActionRow
+              description="Tìm phiên thuê đang hoạt động bằng số điện thoại của khách."
+              icon="phone.fill"
               onPress={handlePhoneLookup}
+              title="Tra cứu bằng SĐT"
+              tone="secondary"
             />
-          </View>
-        </View>
+            <DashboardActionRow
+              badge={pendingRequestCount > 0 ? String(pendingRequestCount) : undefined}
+              description="Xem và xử lý yêu cầu đổi xe của khách tại trạm hiện tại."
+              icon="arrow.clockwise"
+              onPress={handleOpenBikeSwap}
+              title="Xử lý đổi xe"
+              tone="warning"
+            />
+          </YStack>
+        </YStack>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }

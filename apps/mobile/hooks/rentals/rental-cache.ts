@@ -29,6 +29,10 @@ export function invalidateMyRentalCountsQuery(queryClient: QueryClient) {
   return queryClient.invalidateQueries({ queryKey: rentalKeys.meCounts() });
 }
 
+export function invalidateStaffRentalQueries(queryClient: QueryClient) {
+  return queryClient.invalidateQueries({ queryKey: rentalKeys.staff() });
+}
+
 export function invalidateStaffBikeSwapQueries(queryClient: QueryClient) {
   return queryClient.invalidateQueries({ queryKey: rentalKeys.bikeSwap.staff() });
 }
@@ -74,6 +78,10 @@ export function useRentalCache() {
     ),
     invalidateMyRentalCountsQuery: useCallback(
       () => invalidateMyRentalCountsQuery(queryClient),
+      [queryClient],
+    ),
+    invalidateStaffRentalQueries: useCallback(
+      () => invalidateStaffRentalQueries(queryClient),
       [queryClient],
     ),
     invalidateStaffBikeSwapQueries: useCallback(

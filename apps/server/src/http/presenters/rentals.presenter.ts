@@ -143,6 +143,18 @@ export function toContractAdminRentalDetail(
           updatedAt: detail.endStation.updatedAt.toISOString(),
         }
       : null,
+    returnSlot: detail.returnSlot
+      ? {
+          id: detail.returnSlot.id,
+          reservedFrom: detail.returnSlot.reservedFrom.toISOString(),
+          status: detail.returnSlot.status,
+          station: {
+            id: detail.returnSlot.station.id,
+            name: detail.returnSlot.station.name,
+            address: detail.returnSlot.station.address,
+          },
+        }
+      : null,
     startTime: detail.startTime.toISOString(),
     endTime: detail.endTime ? detail.endTime.toISOString() : undefined,
     duration: detail.durationMinutes ?? 0,

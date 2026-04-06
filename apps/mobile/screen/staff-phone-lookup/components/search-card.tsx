@@ -1,61 +1,97 @@
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import {
-  ActivityIndicator,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useState } from "react";
+import { Pressable } from "react-native";
+import { Input, XStack, useTheme } from "tamagui";
 
-import { styles } from "../styles";
+import { IconSymbol } from "@/components/IconSymbol";
+import { borderWidths } from "@/theme/metrics";
 
-export function SearchCard({
-  phoneNumber,
-  onPhoneChange,
-  onLookup,
-  isPending,
-  isDisabled,
-  summary,
-}: {
+type SearchCardProps = {
+  onBack: () => void;
+  onClear: () => void;
   phoneNumber: string;
   onPhoneChange: (value: string) => void;
-  onLookup: () => void;
-  isPending: boolean;
-  isDisabled: boolean;
-  summary: string | null;
-}) {
+  onSubmit: () => void;
+};
+
+export function SearchCard({
+  onBack,
+  onClear,
+  phoneNumber,
+  onPhoneChange,
+  onSubmit,
+}: SearchCardProps) {
+  const theme = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
+  const borderColor = isFocused ? "$actionPrimary" : "$borderDefault";
+
   return (
-    <View style={styles.lookupCard}>
-      <Text style={styles.lookupTitle}>Tìm kiếm khách hàng</Text>
-      <Text style={styles.lookupDescription}>
-        Nhập số điện thoại khách hàng để lấy danh sách phiên thuê đang hoạt động
-        trong trường hợp họ không thể quét mã QR.
-      </Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ví dụ: 0912345678"
-        placeholderTextColor="#9CA3AF"
-        keyboardType="phone-pad"
-        value={phoneNumber}
-        onChangeText={onPhoneChange}
-        maxLength={15}
-      />
-      <TouchableOpacity
-        style={[styles.lookupButton, isDisabled && styles.lookupButtonDisabled]}
-        disabled={isDisabled}
-        onPress={onLookup}
+    <XStack alignItems="center" gap="$3" paddingHorizontal="$4">
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={8}
+        onPress={onBack}
+        style={{
+          width: 40,
+          height: 40,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        {isPending
-          ? <ActivityIndicator color="#fff" />
-          : (
-              <>
-                <Ionicons name="search" size={18} color="#fff" />
-                <Text style={styles.lookupButtonText}>Tra cứu</Text>
-              </>
-            )}
-      </TouchableOpacity>
-      {summary && <Text style={styles.lookupSummary}>{summary}</Text>}
-    </View>
+        <IconSymbol color={theme.textSecondary.val} name="arrow.left" size={24} />
+      </Pressable>
+
+      <XStack
+        alignItems="center"
+        backgroundColor="$backgroundRaised"
+        borderColor={borderColor}
+        borderRadius="$round"
+        borderWidth={isFocused ? borderWidths.strong : borderWidths.subtle}
+        flex={1}
+        gap="$3"
+        minHeight={60}
+        paddingHorizontal="$4"
+      >
+        <IconSymbol color={theme.textTertiary.val} name="magnifyingglass" size={22} />
+
+        <Input
+          autoFocus
+          color="$textPrimary"
+          flex={1}
+          fontFamily="$body"
+          fontSize="$8"
+          fontWeight="$6"
+          keyboardType="phone-pad"
+          maxLength={15}
+          onBlur={() => setIsFocused(false)}
+          onChangeText={onPhoneChange}
+          onFocus={() => setIsFocused(true)}
+          onSubmitEditing={onSubmit}
+          placeholder="Nhập SĐT khách"
+          placeholderTextColor="$textTertiary"
+          returnKeyType="search"
+          selectionColor="$actionPrimary"
+          unstyled
+          value={phoneNumber}
+        />
+
+        {phoneNumber.trim().length > 0
+          ? (
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={6}
+                onPress={onClear}
+                style={{
+                  width: 28,
+                  height: 28,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconSymbol color={theme.textTertiary.val} name="xmark" size={18} />
+              </Pressable>
+            )
+          : null}
+      </XStack>
+    </XStack>
   );
 }

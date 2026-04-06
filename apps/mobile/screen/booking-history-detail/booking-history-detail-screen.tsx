@@ -1,5 +1,5 @@
 import { useAuthNext } from "@providers/auth-provider-next";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { spaceScale } from "@theme/metrics";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { Screen } from "@ui/primitives/screen";
@@ -31,6 +31,7 @@ import { useRentalStatusWatcher } from "./hooks/use-rental-status-watcher";
 function BookingHistoryDetailScreen() {
   const navigation = useNavigation<BookingHistoryDetailNavigationProp>();
   const route = useRoute<BookingHistoryDetailRouteProp>();
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { bookingId } = route.params;
@@ -66,6 +67,7 @@ function BookingHistoryDetailScreen() {
     bookingId,
     booking,
     detail,
+    enabled: isFocused,
   });
 
   const {

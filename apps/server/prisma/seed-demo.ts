@@ -6,6 +6,7 @@ import { uuidv7 } from "uuidv7";
 
 import {
   BikeStatus,
+  BikeSwapStatus,
   PrismaClient,
   RentalStatus,
   ReservationOption,
@@ -487,6 +488,15 @@ async function main() {
         },
       },
     });
+    await prisma.bikeSwapRequest.deleteMany({
+      where: {
+        user: {
+          email: {
+            in: userEmails,
+          },
+        },
+      },
+    });
     await prisma.rental.deleteMany({
       where: {
         user: {
@@ -836,6 +846,36 @@ async function main() {
           updatedAt: new Date(),
         },
       });
+    }
+
+    const user01 = users.find(user => user.email === "user01@mebike.local");
+    const staff1 = users.find(user => user.email === "staff1@mebike.local");
+    const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
+    const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
+
+    if (user01 && staff1 && staff1Assignment?.stationId && user01ActiveRental?.bikeId) {
+      await prisma.bikeSwapRequest.create({
+        data: {
+          id: uuidv7(),
+          rentalId: user01ActiveRental.id,
+          userId: user01.id,
+          oldBikeId: user01ActiveRental.bikeId,
+          stationId: staff1Assignment.stationId,
+          status: BikeSwapStatus.PENDING,
+          reason: null,
+          createdAt: new Date(Date.now() - 5 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 5 * 60 * 1000),
+        },
+      });
+
+      logger.info(
+        {
+          bikeSwapRequestFor: user01.email,
+          handledBy: staff1.email,
+          stationId: staff1Assignment.stationId,
+        },
+        "Seeded demo pending bike swap request",
+      );
     }
 
     await seedDemoRatings(prisma, rentals);

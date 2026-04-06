@@ -1,48 +1,38 @@
 import React from "react";
-import { View } from "react-native";
+import { YStack } from "tamagui";
 
 import type { RentalListItem } from "@/types/rental-types";
 
-import { styles } from "../styles";
 import { ResultCard } from "./result-card";
+
+type ResultsListProps = {
+  rentals: RentalListItem[];
+  getStationName: (id: string) => string;
+  getStatusTone: (status: string) => "success" | "warning" | "danger" | "neutral";
+  getStatusText: (status: string) => string;
+  onSelect: (id: string) => void;
+};
 
 export function ResultsList({
   rentals,
   getStationName,
-  getStatusColor,
+  getStatusTone,
   getStatusText,
-  getBikeLabel,
-  getStartTimeLabel,
-  getDurationLabel,
   onSelect,
-  shortenId,
-}: {
-  rentals: RentalListItem[];
-  getStationName: (id: string) => string;
-  getStatusColor: (status: string) => string;
-  getStatusText: (status: string) => string;
-  getBikeLabel: (id: string) => string;
-  getStartTimeLabel: (startTime: string) => string;
-  getDurationLabel: (duration: number) => string;
-  onSelect: (id: string) => void;
-  shortenId: (id: string) => string;
-}) {
+}: ResultsListProps) {
   return (
-    <View style={styles.resultsContainer}>
+    <YStack gap="$4">
       {rentals.map(rental => (
         <ResultCard
           key={rental.id}
-          title={rental.user?.fullname || "Khách hàng"}
-          rentalIdLabel={`Mã thuê: ${shortenId(rental.id)}`}
+          onSelect={onSelect}
+          rentalId={rental.id}
+          stationLabel={getStationName(rental.startStation)}
           statusText={getStatusText(rental.status)}
-          statusColor={getStatusColor(rental.status)}
-          bikeIdLabel={`Xe: ${getBikeLabel(rental.bikeId)}`}
-          startTimeLabel={`Bắt đầu: ${getStartTimeLabel(rental.startTime)}`}
-          durationLabel={`Thời lượng: ${getDurationLabel(rental.duration)}`}
-          stationLabel={`Trạm xuất phát: ${getStationName(rental.startStation)}`}
-          onPress={() => onSelect(rental.id)}
+          statusTone={getStatusTone(rental.status)}
+          title={rental.user?.fullname || "Khách hàng"}
         />
       ))}
-    </View>
+    </YStack>
   );
 }
