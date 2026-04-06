@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import fetchHttpClient from "@lib/httpClient";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
@@ -15,9 +17,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import fetchHttpClient from "@lib/httpClient";
-import { useAuthNext } from "@providers/auth-provider-next";
 
 import type { ChangePasswordNavigationProp } from "../../../types/navigation";
 
@@ -228,7 +227,7 @@ function ChangePasswordScreen() {
           <View style={styles.inputContainer}>
             <IconSymbol
               name="lock"
-              size={20}
+              size="md"
               color={BikeColors.textSecondary}
             />
             <TextInput
@@ -246,8 +245,8 @@ function ChangePasswordScreen() {
               style={styles.eyeButton}
             >
               <IconSymbol
-                name={showOldPassword ? "eye.slash" : "eye"}
-                size={20}
+                name={showOldPassword ? "eye-off" : "eye"}
+                size="md"
                 color={BikeColors.textSecondary}
               />
             </Pressable>
@@ -255,7 +254,7 @@ function ChangePasswordScreen() {
           <View style={styles.inputContainer}>
             <IconSymbol
               name="lock"
-              size={20}
+              size="md"
               color={BikeColors.textSecondary}
             />
             <TextInput
@@ -273,8 +272,8 @@ function ChangePasswordScreen() {
               style={styles.eyeButton}
             >
               <IconSymbol
-                name={showPassword ? "eye.slash" : "eye"}
-                size={20}
+                name={showPassword ? "eye-off" : "eye"}
+                size="md"
                 color={BikeColors.textSecondary}
               />
             </Pressable>
@@ -282,7 +281,7 @@ function ChangePasswordScreen() {
           <View style={styles.inputContainer}>
             <IconSymbol
               name="lock"
-              size={20}
+              size="md"
               color={BikeColors.textSecondary}
             />
             <TextInput
@@ -300,8 +299,8 @@ function ChangePasswordScreen() {
               style={styles.eyeButton}
             >
               <IconSymbol
-                name={showConfirmPassword ? "eye.slash" : "eye"}
-                size={20}
+                name={showConfirmPassword ? "eye-off" : "eye"}
+                size="md"
                 color={BikeColors.textSecondary}
               />
             </Pressable>

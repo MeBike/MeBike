@@ -1,12 +1,11 @@
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { IncidentDetail } from "@/contracts/server";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { IncidentDetail } from "@/contracts/server";
 
 import {
   formatIncidentDistance,
@@ -118,7 +117,7 @@ export function RentalIncidentCard({
           justifyContent="center"
           width={34}
         >
-          <IconSymbol color={theme.textInverse.val} name="lock.shield.fill" size={18} />
+          <IconSymbol color={theme.textInverse.val} name="shield-lock" size="input" />
         </XStack>
 
         <AppText flex={1} tone="inverted" variant="label">
@@ -150,7 +149,7 @@ export function RentalIncidentCard({
                   justifyContent="center"
                   width={60}
                 >
-                  <IconSymbol color={theme.actionPrimary.val} name="person.crop.circle.fill" size={28} />
+                  <IconSymbol color={theme.actionPrimary.val} name="person-circle" size="chip" variant="filled" />
                 </XStack>
 
                 <YStack flex={1} gap="$1" minWidth={0}>
@@ -164,7 +163,7 @@ export function RentalIncidentCard({
                   {etaText
                     ? (
                         <XStack alignItems="center" gap="$2">
-                          <IconSymbol color={theme.actionAccent.val} name="clock" size={15} />
+                          <IconSymbol color={theme.actionAccent.val} name="clock" size="caption" />
                           <AppText tone="warning" variant="subhead">
                             {etaText}
                           </AppText>
@@ -199,8 +198,8 @@ export function RentalIncidentCard({
               <YStack paddingTop={2}>
                 <IconSymbol
                   color={theme.statusSuccess.val}
-                  name="checkmark.circle.fill"
-                  size={18}
+                  name="check-circle"
+                  size="input"
                 />
               </YStack>
 

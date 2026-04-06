@@ -38,7 +38,7 @@ export function RejectReasonSheet({
           justifyContent="center"
           width={52}
         >
-          <IconSymbol color={theme.statusDanger.val} name="exclamationmark.triangle.fill" size={22} />
+          <IconSymbol color={theme.statusDanger.val} name="warning" size="section" variant="filled" />
         </YStack>
 
         <YStack gap="$2">

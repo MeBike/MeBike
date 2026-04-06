@@ -1,15 +1,14 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { formatVietnamDateTime } from "@utils/date";
 import React from "react";
 import { Pressable } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Reservation } from "@/types/reservation-types";
-
-import { IconSymbol } from "@components/IconSymbol";
-import { borderWidths } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
-import { formatVietnamDateTime } from "@utils/date";
 
 export function ReservationBanner({
   reservation,
@@ -35,7 +34,7 @@ export function ReservationBanner({
             </AppText>
           </YStack>
 
-          <IconSymbol color={theme.actionPrimary.val} name="calendar" size={20} />
+          <IconSymbol color={theme.actionPrimary.val} name="calendar" size="md" />
         </XStack>
 
         <Pressable
@@ -60,7 +59,7 @@ export function ReservationBanner({
             <AppText tone="brand" variant="bodyStrong">
               Xem chi tiết giữ xe
             </AppText>
-            <IconSymbol color={theme.actionPrimary.val} name="arrow.right" size={16} />
+            <IconSymbol color={theme.actionPrimary.val} name="arrow-right" size="sm" />
           </XStack>
         </Pressable>
       </YStack>

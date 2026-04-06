@@ -1,8 +1,7 @@
-import { Pressable } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { AppText } from "@ui/primitives/app-text";
+import { Pressable } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
 
 type FixedSlotBannerProps = {
   onPress: () => void;
@@ -39,7 +38,7 @@ export function FixedSlotBanner({ onPress }: FixedSlotBannerProps) {
             justifyContent="center"
             width={40}
           >
-            <IconSymbol name="clock.fill" size={20} color={theme.actionPrimary.val} />
+            <IconSymbol color={theme.actionPrimary.val} name="clock" size="md" />
           </XStack>
           <YStack flex={1} gap="$1">
             <AppText variant="bodyStrong">Khung giờ cố định</AppText>
@@ -48,7 +47,7 @@ export function FixedSlotBanner({ onPress }: FixedSlotBannerProps) {
             </AppText>
           </YStack>
         </XStack>
-        <IconSymbol name="chevron.right" size={20} color={theme.textTertiary.val} />
+        <IconSymbol color={theme.textTertiary.val} name="chevron-right" size="md" />
       </XStack>
     </Pressable>
   );

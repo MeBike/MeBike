@@ -42,7 +42,7 @@ function getReservationTitle(reservation: Reservation) {
 
 function getReservationStatusIcon(status: Reservation["status"]) {
   if (status === "PENDING") {
-    return "checkmark.circle" as const;
+    return "check-circle" as const;
   }
 
   return undefined;
@@ -93,8 +93,8 @@ export function ReservationCard({
                   >
                     <IconSymbol
                       color={theme.actionPrimary.val}
-                      name={reservation.bikeId ? "bicycle" : "location"}
-                      size={24}
+                      name={reservation.bikeId ? "bike" : "location"}
+                      size="lg"
                     />
                   </XStack>
 
@@ -127,14 +127,14 @@ export function ReservationCard({
                 paddingVertical="$4"
               >
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={theme.textTertiary.val} name="location" size={20} />
+                  <IconSymbol color={theme.textTertiary.val} name="location" size="md" />
                   <AppText flex={1} numberOfLines={2} variant="subhead">
                     {stationLabel}
                   </AppText>
                 </XStack>
 
                 <XStack alignItems="flex-start" gap="$3">
-                  <IconSymbol color={theme.textTertiary.val} name="clock" size={20} style={{ marginTop: 1 }} />
+                  <IconSymbol color={theme.textTertiary.val} name="clock" size="md" style={{ marginTop: 1 }} />
                   <YStack flex={1} gap="$1">
                     <AppText variant="subhead">
                       {timeRangeLabel}
@@ -146,14 +146,14 @@ export function ReservationCard({
                 </XStack>
 
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={theme.textTertiary.val} name="tag" size={20} />
+                  <IconSymbol color={theme.textTertiary.val} name="tag" size="md" />
                   <AppText tone="muted" variant="bodySmall">
                     {getReservationOptionLabel(reservation.reservationOption)}
                   </AppText>
                 </XStack>
 
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={theme.actionPrimary.val} name="wallet.pass.fill" size={20} />
+                  <IconSymbol color={theme.actionPrimary.val} name="wallet" size="md" />
                   <AppText tone="muted" variant="bodySmall">
                     Đã thanh toán:
                     {" "}

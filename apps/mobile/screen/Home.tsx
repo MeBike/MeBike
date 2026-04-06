@@ -1,3 +1,5 @@
+/* eslint-disable unicorn/filename-case */
+
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,13 +16,14 @@ import {
   View,
 } from "react-native";
 
+import type { IconSymbolName } from "../components/IconSymbol";
 import type { HomeScreenNavigationProp } from "../types/navigation";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   container: {
@@ -289,15 +292,15 @@ export default function HomeScreen() {
     navigation.navigate("Intro");
   };
 
-  const features = [
+  const features: Array<{ color: string; description: string; icon: IconSymbolName; title: string }> = [
     {
-      icon: "bicycle",
+      icon: "bike",
       title: "Thuê xe đạp dễ dàng",
       description: "Tìm và thuê xe đạp tại các trạm metro gần bạn",
       color: BikeColors.primary,
     },
     {
-      icon: "creditcard",
+      icon: "credit-card",
       title: "Thanh toán tiện lợi",
       description: "Thanh toán nhanh chóng qua ví",
       color: BikeColors.secondary,
@@ -323,7 +326,7 @@ export default function HomeScreen() {
         >
           <View style={styles.navigationBar}>
             <View style={styles.logo}>
-              <IconSymbol name="bicycle" size={32} color="white" />
+              <IconSymbol color="white" name="bike" size="xl" />
               <Text style={styles.logoText}>MeBike</Text>
             </View>
 
@@ -369,8 +372,8 @@ export default function HomeScreen() {
                     >
                       <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
                       <IconSymbol
-                        name="arrow.right"
-                        size={20}
+                        name="arrow-right"
+                        size="md"
                         color={BikeColors.primary}
                       />
                     </Pressable>
@@ -382,8 +385,8 @@ export default function HomeScreen() {
                     >
                       <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
                       <IconSymbol
-                        name="arrow.right"
-                        size={20}
+                        name="arrow-right"
+                        size="md"
                         color={BikeColors.primary}
                       />
                     </Pressable>
@@ -410,8 +413,8 @@ export default function HomeScreen() {
                 style={styles.featureIcon}
               >
                 <IconSymbol
-                  name={feature.icon as any}
-                  size={32}
+                  name={feature.icon}
+                  size="xl"
                   color={feature.color}
                 />
               </LinearGradient>
@@ -445,15 +448,15 @@ export default function HomeScreen() {
                     <Text style={styles.statNumber}>{displayStats.bikes}</Text>
                     <Text style={styles.statLabel}>Xe đạp</Text>
                   </View>
-<View style={styles.statCard}>
-  <Text style={styles.statNumber}>{displayStats.users}</Text>
-  <Text style={styles.statLabel}>Người dùng</Text>
-</View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{displayStats.users}</Text>
+                    <Text style={styles.statLabel}>Người dùng</Text>
+                  </View>
 
-<View style={styles.statCard}>
-  <Text style={styles.statNumber}>{displayStats.appRating}</Text>
-  <Text style={styles.statLabel}>Đánh giá App</Text>
-</View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{displayStats.appRating}</Text>
+                    <Text style={styles.statLabel}>Đánh giá App</Text>
+                  </View>
                 </View>
               )}
         </View>
@@ -464,7 +467,7 @@ export default function HomeScreen() {
             colors={[`${BikeColors.primary}20`, `${BikeColors.secondary}20`]}
             style={styles.ctaCard}
           >
-            <IconSymbol name="bicycle" size={48} color={BikeColors.primary} />
+            <IconSymbol color={BikeColors.primary} name="bike" size="display" />
             <Text style={styles.ctaTitle}>Sẵn sàng bắt đầu?</Text>
             <Text style={styles.ctaDescription}>
               Tham gia cộng đồng MeBike và khám phá cách di chuyển mới
@@ -483,7 +486,7 @@ export default function HomeScreen() {
                     )
                   : <Text style={styles.ctaButtonText}>Đăng ký ngay</Text>
               }
-              <IconSymbol name="arrow.right" size={18} color="white" />
+              <IconSymbol color="white" name="arrow-right" size="input" />
             </Pressable>
           </LinearGradient>
         </View>

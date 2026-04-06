@@ -75,8 +75,8 @@ export function AppHeroHeader({
                   }}
                 >
                   <IconSymbol
-                    name="arrow.left"
-                    size={20}
+                    name="arrow-left"
+                    size="md"
                     color={isSurface ? theme.textSecondary.val : theme.onSurfaceBrand.val}
                   />
                 </Pressable>

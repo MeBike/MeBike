@@ -1,13 +1,12 @@
-import { useMemo } from "react";
-import { RefreshControl, ScrollView, StatusBar } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Separator, useTheme, YStack } from "tamagui";
-
 import { VerifyEmailModal } from "@components/verify-email-modal";
 import { borderWidths, elevations, radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
+import { useMemo } from "react";
+import { RefreshControl, ScrollView, StatusBar } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Separator, useTheme, YStack } from "tamagui";
 
 import ProfileHeader from "./components/profile-header";
 import ProfileMenuOption from "./components/profile-menu-option";
@@ -91,7 +90,7 @@ function ProfileScreen() {
 
     if (isCustomer) {
       items.push({
-        icon: "bicycle.circle.fill",
+        icon: "bike",
         title: "Gói tháng",
         subtitle: "Ưu đãi và lịch sử sử dụng",
         iconColor: theme.actionPrimary.val,
@@ -113,7 +112,7 @@ function ProfileScreen() {
       onPress: handleUpdateProfile,
     },
     {
-      icon: "lock.shield.fill",
+      icon: "shield-lock",
       title: "Bảo mật & Mật khẩu",
       subtitle: "Giữ tài khoản của bạn luôn an toàn",
       iconColor: theme.statusWarning.val,
@@ -140,7 +139,7 @@ function ProfileScreen() {
 
   const destructiveItems = useMemo<MenuItem[]>(() => [
     {
-      icon: "arrow.right",
+      icon: "arrow-right",
       title: "Đăng xuất",
       iconColor: theme.textDanger.val,
       iconBackground: theme.surfaceDanger.val,

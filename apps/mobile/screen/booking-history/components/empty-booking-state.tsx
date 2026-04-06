@@ -1,8 +1,7 @@
-import { useTheme, YStack } from "tamagui";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, YStack } from "tamagui";
 
 function EmptyBookingState() {
   const theme = useTheme();
@@ -18,7 +17,7 @@ function EmptyBookingState() {
           justifyContent="center"
           width={64}
         >
-          <IconSymbol color={theme.textTertiary.val} name="doc.text" size={28} />
+          <IconSymbol color={theme.textTertiary.val} name="document" size="chip" />
         </YStack>
         <AppText align="center" variant="xlTitle">
           Chưa có lịch sử thuê xe

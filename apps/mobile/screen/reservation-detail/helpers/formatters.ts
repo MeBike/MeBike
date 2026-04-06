@@ -22,7 +22,7 @@ export function getReservationIdentityTitle(reservation: Reservation) {
 }
 
 export function getReservationIdentityIcon(reservation: Reservation) {
-  return reservation.bikeId ? "bicycle" : "location";
+  return reservation.bikeId ? "bike" : "location";
 }
 
 export function getShortReservationId(reservationId: string) {

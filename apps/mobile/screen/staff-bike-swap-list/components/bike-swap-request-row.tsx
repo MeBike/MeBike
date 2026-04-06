@@ -31,7 +31,7 @@ export function BikeSwapRequestRow({ onPress, request }: BikeSwapRequestRowProps
             justifyContent="center"
             width={48}
           >
-            <IconSymbol color={theme.textBrand.val} name="person" size={22} />
+            <IconSymbol color={theme.textBrand.val} name="person" size="section" />
           </YStack>
         )}
         onPress={() => onPress(request.id)}

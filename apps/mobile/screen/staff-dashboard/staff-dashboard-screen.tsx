@@ -71,7 +71,7 @@ function DashboardActionRow({
             justifyContent="center"
             width={56}
           >
-            <IconSymbol color={iconColor} name={icon} size={24} />
+            <IconSymbol color={iconColor} name={icon} size="lg" />
           </XStack>
 
           <YStack flex={1} gap="$1">
@@ -98,7 +98,7 @@ function DashboardActionRow({
                   </YStack>
                 )
               : null}
-            <IconSymbol color={theme.textTertiary.val} name="chevron.right" size={22} />
+            <IconSymbol color={theme.textTertiary.val} name="chevron-right" size="section" />
           </YStack>
         </XStack>
       </AppCard>
@@ -145,13 +145,13 @@ export default function StaffDashboardScreen() {
           <YStack gap="$4">
             <DashboardActionRow
               description="Hỗ trợ khách bắt đầu hoặc kết thúc chuyến đi ngay tại xe."
-              icon="qrcode.viewfinder"
+              icon="qr-code"
               onPress={handleScanQr}
               title="Quét mã QR"
             />
             <DashboardActionRow
               description="Tìm phiên thuê đang hoạt động bằng số điện thoại của khách."
-              icon="phone.fill"
+              icon="phone"
               onPress={handlePhoneLookup}
               title="Tra cứu bằng SĐT"
               tone="secondary"
@@ -159,7 +159,7 @@ export default function StaffDashboardScreen() {
             <DashboardActionRow
               badge={pendingRequestCount > 0 ? String(pendingRequestCount) : undefined}
               description="Xem và xử lý yêu cầu đổi xe của khách tại trạm hiện tại."
-              icon="arrow.clockwise"
+              icon="refresh"
               onPress={handleOpenBikeSwap}
               title="Xử lý đổi xe"
               tone="warning"

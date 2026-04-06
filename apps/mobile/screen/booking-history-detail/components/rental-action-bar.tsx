@@ -1,9 +1,8 @@
-import { useTheme, XStack, YStack } from "tamagui";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { IconSymbol } from "@components/IconSymbol";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, XStack, YStack } from "tamagui";
 
 type RentalActionBarProps = {
   rentalId: string;
@@ -49,7 +48,7 @@ export function RentalActionBar({
               </AppButton>
               <AppButton flex={2} onPress={onOpenReturnQr} tone="primary">
                 <XStack alignItems="center" gap="$2">
-                  <IconSymbol color={theme.onActionPrimary.val} name="qrcode.viewfinder" size={20} />
+                  <IconSymbol color={theme.onActionPrimary.val} name="qr-code" size="md" />
                   <AppText tone="inverted" variant="actionLabel">
                     Mã QR trả xe
                   </AppText>
@@ -60,7 +59,7 @@ export function RentalActionBar({
         : (
             <AppButton height={60} onPress={onChooseReturnStation} tone="primary">
               <XStack alignItems="center" gap="$2">
-                <IconSymbol color={theme.onActionPrimary.val} name="location.fill" size={20} />
+                <IconSymbol color={theme.onActionPrimary.val} name="location" size="md" variant="filled" />
                 <AppText tone="inverted" variant="headline">
                   Chọn bãi trả xe
                 </AppText>

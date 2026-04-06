@@ -1,9 +1,8 @@
-import { Pressable } from "react-native";
-import { View, useTheme, XStack } from "tamagui";
-
 import { IconSymbol } from "@components/IconSymbol";
-import { elevations, iconSizes, radii, spaceScale } from "@theme/metrics";
+import { elevations, radii, spaceScale } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
+import { Pressable } from "react-native";
+import { useTheme, View, XStack } from "tamagui";
 
 type WalletTopUpCtaProps = {
   onPress: () => void;
@@ -41,7 +40,7 @@ export function WalletTopUpCta({ onPress }: WalletTopUpCtaProps) {
           justifyContent="center"
           width={topUpIconShellSize}
         >
-          <IconSymbol color={theme.actionPrimary.val} name="plus" size={iconSizes.md} />
+          <IconSymbol color={theme.actionPrimary.val} name="plus" size="md" />
         </View>
 
         <AppText tone="brand" variant="sectionTitle">

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pressable } from "react-native";
-import { Input, XStack, useTheme } from "tamagui";
+import { Input, useTheme, XStack } from "tamagui";
 
 import { IconSymbol } from "@/components/IconSymbol";
 import { borderWidths } from "@/theme/metrics";
@@ -37,7 +37,7 @@ export function SearchCard({
           justifyContent: "center",
         }}
       >
-        <IconSymbol color={theme.textSecondary.val} name="arrow.left" size={24} />
+        <IconSymbol color={theme.textSecondary.val} name="arrow-left" size="lg" />
       </Pressable>
 
       <XStack
@@ -51,7 +51,7 @@ export function SearchCard({
         minHeight={60}
         paddingHorizontal="$4"
       >
-        <IconSymbol color={theme.textTertiary.val} name="magnifyingglass" size={22} />
+        <IconSymbol color={theme.textTertiary.val} name="search" size="section" />
 
         <Input
           autoFocus
@@ -87,7 +87,7 @@ export function SearchCard({
                   justifyContent: "center",
                 }}
               >
-                <IconSymbol color={theme.textTertiary.val} name="xmark" size={18} />
+                <IconSymbol color={theme.textTertiary.val} name="close" size="input" />
               </Pressable>
             )
           : null}

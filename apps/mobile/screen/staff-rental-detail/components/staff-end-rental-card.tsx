@@ -1,8 +1,3 @@
-import React from "react";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { RentalDetail } from "@/types/rental-types";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, spaceScale } from "@theme/metrics";
 import { AppBottomModalCard } from "@ui/patterns/app-bottom-modal-card";
@@ -11,6 +6,10 @@ import { AppCard } from "@ui/primitives/app-card";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
 import { formatVietnamDateTime } from "@utils/date";
+import React from "react";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { RentalDetail } from "@/types/rental-types";
 
 type Props = {
   bottomInset: number;
@@ -77,8 +76,8 @@ export default function StaffEndRentalCard({
           <XStack alignItems="center" gap="$2">
             <IconSymbol
               color={canEndRental ? theme.onActionSecondary.val : theme.textTertiary.val}
-              name={canEndRental ? "checkmark.circle.fill" : "lock.shield.fill"}
-              size={20}
+              name={canEndRental ? "check-circle" : "shield-lock"}
+              size="md"
             />
             <AppText tone={canEndRental ? "inverted" : "muted"} variant="bodyStrong">
               Kết thúc phiên cho khách
@@ -121,8 +120,9 @@ export default function StaffEndRentalCard({
               >
                 <IconSymbol
                   color={activeReturnSlot ? theme.statusWarning.val : theme.statusDanger.val}
-                  name={activeReturnSlot ? "location.fill" : "exclamationmark.triangle.fill"}
-                  size={16}
+                  name={activeReturnSlot ? "location" : "warning"}
+                  size="sm"
+                  variant="filled"
                 />
               </YStack>
 

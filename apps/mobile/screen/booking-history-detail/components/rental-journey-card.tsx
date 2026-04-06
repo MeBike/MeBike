@@ -1,12 +1,11 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths, elevations } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
 import { View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
-import { borderWidths, elevations } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
 
 import { formatTimeOnly } from "../helpers/formatters";
 import { BikeSwapRequestCard } from "./bike-swap-request-card";
@@ -56,7 +55,8 @@ type JourneyPointProps = {
   value: string;
   timeText?: string;
   helperText?: string;
-  iconName: "location" | "location.fill";
+  iconName: "location";
+  iconVariant?: "outline" | "filled";
   iconColor: string;
   iconBackground: string;
   valueTone?: "default" | "warning" | "danger";
@@ -74,6 +74,7 @@ function JourneyPoint({
   iconName,
   iconColor,
   iconBackground,
+  iconVariant = "outline",
   valueTone = "default",
   isLast = false,
   lineColor,
@@ -95,7 +96,7 @@ function JourneyPoint({
           shadowRadius={10}
           width={56}
         >
-          <IconSymbol color={iconColor} name={iconName} size={22} />
+          <IconSymbol color={iconColor} name={iconName} size="section" variant={iconVariant} />
         </YStack>
         {isLast
           ? null
@@ -123,7 +124,7 @@ function JourneyPoint({
         {timeText
           ? (
               <XStack alignItems="center" gap="$2">
-                <IconSymbol color={clockColor} name="clock" size={14} />
+                <IconSymbol color={clockColor} name="clock" size="caption" />
                 <AppText tone={timeTone} variant="bodySmall">
                   {timeText}
                 </AppText>
@@ -168,7 +169,7 @@ export function RentalJourneyView({
   return (
     <YStack gap="$3">
       <XStack alignItems="center" gap="$2">
-        <IconSymbol color={theme.textSecondary.val} name="map" size={18} />
+        <IconSymbol color={theme.textSecondary.val} name="map" size="input" />
         <AppText variant="sectionTitle">
           Hành trình
         </AppText>
@@ -188,7 +189,8 @@ export function RentalJourneyView({
             clockColor={theme.textSecondary.val}
             iconBackground={theme.surfaceSuccess.val}
             iconColor={theme.statusSuccess.val}
-            iconName="location.fill"
+            iconName="location"
+            iconVariant="filled"
             label="Trạm bắt đầu"
             lineColor={hasReturnSlot ? theme.statusWarning.val : theme.statusInfo.val}
             timeText={startTimeText}

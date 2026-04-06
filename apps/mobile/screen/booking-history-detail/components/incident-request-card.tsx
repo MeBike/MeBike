@@ -1,8 +1,7 @@
-import { useTheme, XStack, YStack } from "tamagui";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { IconSymbol } from "@components/IconSymbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, XStack, YStack } from "tamagui";
 
 type IncidentRequestCardProps = {
   disabled?: boolean;
@@ -29,7 +28,7 @@ export function IncidentRequestCard({
             justifyContent="center"
             width={44}
           >
-            <IconSymbol color={theme.actionDanger.val} name="lock.shield.fill" size={18} />
+            <IconSymbol color={theme.actionDanger.val} name="shield-lock" size="input" />
           </YStack>
 
           <YStack flex={1} gap="$1">

@@ -16,7 +16,7 @@ export function EmptyState({
   return (
     <YStack alignItems="center" gap="$3" paddingHorizontal="$6" paddingTop="$10">
       <XStack alignItems="center" backgroundColor="$surfaceAccent" borderRadius="$round" height={56} justifyContent="center" width={56}>
-        <IconSymbol color={theme.textBrand.val} name="phone.fill" size={24} />
+        <IconSymbol color={theme.textBrand.val} name="phone" size="lg" variant="filled" />
       </XStack>
 
       <YStack gap="$1">

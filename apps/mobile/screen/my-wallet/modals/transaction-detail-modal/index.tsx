@@ -1,3 +1,11 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { AppText } from "@ui/primitives/app-text";
+import {
+  formatCurrency,
+  formatDate,
+  formatTransactionStatus,
+  formatTransactionType,
+} from "@utils/wallet/formatters";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import Animated, {
@@ -7,15 +15,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useTheme } from "tamagui";
-
-import { IconSymbol } from "@components/IconSymbol";
-import { AppText } from "@ui/primitives/app-text";
-import {
-  formatCurrency,
-  formatDate,
-  formatTransactionStatus,
-  formatTransactionType,
-} from "@utils/wallet/formatters";
 
 import { createTransactionDetailModalStyles } from "./styles";
 
@@ -106,7 +105,7 @@ function DetailRow({
         {showToggle && onToggle
           ? (
               <Pressable onPress={onToggle} style={({ pressed }) => [styles.copyButton, pressed ? styles.copyButtonPressed : null]}>
-                <IconSymbol color={copyIconColor} name="doc.on.doc" size={16} />
+                <IconSymbol color={copyIconColor} name="copy" size="sm" />
               </Pressable>
             )
           : null}
@@ -231,7 +230,7 @@ export function TransactionDetailModal({
             <AppText variant="title">Chi tiết giao dịch</AppText>
 
             <Pressable onPress={closeWithAnimation} style={({ pressed }) => [styles.closeButton, pressed ? styles.closeButtonPressed : null]}>
-              <IconSymbol color={theme.textSecondary.val} name="xmark" size={18} />
+              <IconSymbol color={theme.textSecondary.val} name="close" size="input" />
             </Pressable>
           </View>
 

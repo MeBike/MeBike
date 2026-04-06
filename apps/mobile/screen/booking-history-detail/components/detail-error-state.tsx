@@ -1,9 +1,8 @@
-import { useTheme, YStack } from "tamagui";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { IconSymbol } from "@components/IconSymbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, YStack } from "tamagui";
 
 type DetailErrorStateProps = {
   onRetry: () => void;
@@ -23,7 +22,7 @@ export default function DetailErrorState({ onRetry }: DetailErrorStateProps) {
           justifyContent="center"
           width={64}
         >
-          <IconSymbol color={theme.actionPrimary.val} name="exclamationmark.triangle" size={28} />
+          <IconSymbol color={theme.actionPrimary.val} name="warning" size="chip" />
         </YStack>
         <YStack alignItems="center" gap="$2">
           <AppText align="center" variant="headline">

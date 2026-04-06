@@ -1,14 +1,13 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths, elevations } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { StatusBadge } from "@ui/primitives/status-badge";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { Rental } from "@/types/rental-types";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
-import { borderWidths, elevations } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
-import { StatusBadge } from "@ui/primitives/status-badge";
 
 import {
   formatCurrencyText,
@@ -112,7 +111,7 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
             opacity: 0.05,
           }}
         >
-          <IconSymbol color={theme.textSecondary.val} name="clock" size={144} />
+          <IconSymbol color={theme.textSecondary.val} name="clock" size="splash" />
         </View>
 
         <AppText tone="subtle" variant="eyebrow">

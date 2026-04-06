@@ -22,7 +22,7 @@ export function EmptyState({ description, title }: EmptyStateProps) {
         justifyContent="center"
         width={64}
       >
-        <IconSymbol color={theme.textBrand.val} name="bicycle" size={28} />
+        <IconSymbol color={theme.textBrand.val} name="bike" size="chip" />
       </YStack>
       <YStack alignItems="center" gap="$2">
         <AppText align="center" variant="headline">

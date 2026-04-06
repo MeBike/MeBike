@@ -1,6 +1,6 @@
 import { useTheme, XStack, YStack } from "tamagui";
 
-import { LucideIconSymbol as IconSymbol } from "@/components/lucide-icon-symbol";
+import { IconSymbol } from "@/components/IconSymbol";
 import { borderWidths, elevations } from "@/theme/metrics";
 import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";
@@ -33,7 +33,7 @@ export function StaffWarningCard({ description, title }: StaffWarningCardProps) 
           justifyContent="center"
           width={36}
         >
-          <IconSymbol color={theme.statusDanger.val} name="exclamationmark.triangle" size={20} />
+          <IconSymbol color={theme.statusDanger.val} name="warning" size="md" />
         </YStack>
 
         <YStack flex={1} gap="$2">

@@ -117,7 +117,7 @@ export function StaffSummaryCard({ booking }: StaffSummaryCardProps) {
             justifyContent="center"
             width={60}
           >
-            <IconSymbol color={theme.textBrand.val} name="timer" size={24} />
+            <IconSymbol color={theme.textBrand.val} name="timer" size="lg" />
           </YStack>
 
           <YStack flex={1} gap="$1">
@@ -140,7 +140,7 @@ export function StaffSummaryCard({ booking }: StaffSummaryCardProps) {
               justifyContent="center"
               width={60}
             >
-              <IconSymbol color={theme.statusSuccess.val} name="creditcard" size={24} />
+              <IconSymbol color={theme.statusSuccess.val} name="credit-card" size="lg" />
             </YStack>
 
             <YStack flex={1} gap="$1">

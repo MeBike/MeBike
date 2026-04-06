@@ -1,8 +1,7 @@
-import { Spinner, useTheme, XStack, YStack } from "tamagui";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { IconSymbol } from "@components/IconSymbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
+import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 type BikeSwapPreviewStatus = "NONE" | "PENDING" | "CONFIRMED" | "REJECTED";
 
@@ -51,23 +50,23 @@ export function BikeSwapRequestCard({
                 ? (
                     <IconSymbol
                       color={theme.statusSuccess.val}
-                      name="checkmark.circle.fill"
-                      size={18}
+                      name="check-circle"
+                      size="input"
                     />
                   )
                 : isRejected
                   ? (
                       <IconSymbol
                         color={theme.actionDanger.val}
-                        name="exclamationmark.triangle"
-                        size={18}
+                        name="warning"
+                        size="input"
                       />
                     )
                   : (
                       <IconSymbol
                         color={theme.actionPrimary.val}
-                        name="wrench.and.screwdriver.fill"
-                        size={18}
+                        name="tools"
+                        size="input"
                       />
                     )}
           </YStack>

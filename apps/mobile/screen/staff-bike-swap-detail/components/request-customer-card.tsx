@@ -14,7 +14,7 @@ type RequestCustomerCardProps = {
 };
 
 type ValueRowProps = {
-  iconName: "person" | "qrcode.viewfinder";
+  iconName: "person" | "qr-code";
   label?: string;
   subtitle?: string;
   value: string;
@@ -40,7 +40,7 @@ function ValueRow({
         justifyContent="center"
         width={48}
       >
-        <IconSymbol color={theme.textTertiary.val} name={iconName} size={20} />
+        <IconSymbol color={theme.textTertiary.val} name={iconName} size="md" />
       </YStack>
 
       <YStack flex={1} gap="$1">
@@ -78,7 +78,7 @@ export function RequestCustomerCard({ rentalId, user }: RequestCustomerCardProps
 
       <YStack borderTopColor="$borderSubtle" borderTopWidth={1} paddingTop="$4">
         <ValueRow
-          iconName="qrcode.viewfinder"
+          iconName="qr-code"
           label="Mã phiên thuê gốc"
           value={getBikeSwapRequestCode(rentalId)}
         />

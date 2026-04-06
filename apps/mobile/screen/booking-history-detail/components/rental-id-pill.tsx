@@ -1,7 +1,6 @@
-import { useTheme, XStack } from "tamagui";
-
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { IconSymbol } from "@components/IconSymbol";
 import { AppText } from "@ui/primitives/app-text";
+import { useTheme, XStack } from "tamagui";
 
 import { getRentalCodeLabel } from "../helpers/formatters";
 
@@ -27,7 +26,7 @@ export function RentalIdPill({ rentalId }: RentalIdPillProps) {
           {" "}
           {getRentalCodeLabel(rentalId)}
         </AppText>
-        <IconSymbol color={theme.textSecondary.val} name="doc.on.doc" size={18} />
+        <IconSymbol color={theme.textSecondary.val} name="copy" size="input" />
       </XStack>
     </XStack>
   );

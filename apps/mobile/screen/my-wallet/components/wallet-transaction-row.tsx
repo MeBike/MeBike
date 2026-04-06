@@ -1,10 +1,7 @@
-import { Pressable } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
 import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { iconSizes, spaceScale } from "@theme/metrics";
+import { spaceScale } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import {
@@ -13,6 +10,8 @@ import {
   formatTransactionTitle,
   formatTransactionType,
 } from "@utils/wallet/formatters";
+import { Pressable } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
 
 type WalletTransactionRowProps = {
   item: WalletTransactionDetail;
@@ -20,7 +19,7 @@ type WalletTransactionRowProps = {
 };
 
 type TransactionVisual = {
-  iconName: "arrow.down" | "arrow.up" | "arrow.clockwise" | "slider.horizontal.3";
+  iconName: "arrow-down" | "arrow-up" | "refresh" | "sliders";
   iconColor: string;
   iconBackground: string;
   amountTone: "success" | "brand" | "warning" | "default";
@@ -33,7 +32,7 @@ function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<t
   switch (item.type) {
     case "DEPOSIT":
       return {
-        iconName: "arrow.down",
+        iconName: "arrow-down",
         iconColor: theme.statusSuccess.val,
         iconBackground: theme.surfaceSuccess.val,
         amountTone: "success",
@@ -41,7 +40,7 @@ function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<t
       };
     case "REFUND":
       return {
-        iconName: "arrow.clockwise",
+        iconName: "refresh",
         iconColor: theme.statusSuccess.val,
         iconBackground: theme.surfaceSuccess.val,
         amountTone: "success",
@@ -49,7 +48,7 @@ function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<t
       };
     case "ADJUSTMENT":
       return {
-        iconName: "slider.horizontal.3",
+        iconName: "sliders",
         iconColor: theme.statusWarning.val,
         iconBackground: theme.surfaceWarning.val,
         amountTone: "warning",
@@ -58,7 +57,7 @@ function getTransactionVisual(item: WalletTransactionDetail, theme: ReturnType<t
     case "DEBIT":
     default:
       return {
-        iconName: "arrow.up",
+        iconName: "arrow-up",
         iconColor: theme.textPrimary.val,
         iconBackground: theme.surfaceMuted.val,
         amountTone: "default",
@@ -96,27 +95,27 @@ export function WalletTransactionRow({ item, onPress }: WalletTransactionRowProp
           paddingVertical="$3"
         >
           <XStack alignItems="center" flex={1} gap="$3">
-          <XStack
-            alignItems="center"
-            backgroundColor={visual.iconBackground}
-            borderRadius="$round"
-            height={transactionIconShellSize}
-            justifyContent="center"
-            width={transactionIconShellSize}
-          >
-            <IconSymbol color={visual.iconColor} name={visual.iconName} size={iconSizes.md} />
+            <XStack
+              alignItems="center"
+              backgroundColor={visual.iconBackground}
+              borderRadius="$round"
+              height={transactionIconShellSize}
+              justifyContent="center"
+              width={transactionIconShellSize}
+            >
+              <IconSymbol color={visual.iconColor} name={visual.iconName} size="md" />
+            </XStack>
+
+            <YStack flex={1} gap="$1" minWidth={0}>
+              <AppText numberOfLines={1} variant="compactStrong">
+                {title}
+              </AppText>
+
+              <AppText tone="muted" variant="bodySmall">
+                {formatDate(item.createdAt)}
+              </AppText>
+            </YStack>
           </XStack>
-
-          <YStack flex={1} gap="$1" minWidth={0}>
-            <AppText numberOfLines={1} variant="compactStrong">
-              {title}
-            </AppText>
-
-            <AppText tone="muted" variant="bodySmall">
-              {formatDate(item.createdAt)}
-            </AppText>
-          </YStack>
-        </XStack>
 
           <YStack alignItems="flex-end" flexShrink={0} gap="$1" minWidth={spaceScale[10] + spaceScale[3]}>
             <AppText

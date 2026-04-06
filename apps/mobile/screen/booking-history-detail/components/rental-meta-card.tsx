@@ -1,4 +1,4 @@
-import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
+import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
@@ -43,7 +43,7 @@ export function RentalMetaCard({ detail }: RentalMetaCardProps) {
             justifyContent="center"
             width={44}
           >
-            <IconSymbol color={theme.textSecondary.val} name="wallet.pass.fill" size={20} />
+            <IconSymbol color={theme.textSecondary.val} name="wallet" size="md" />
           </YStack>
           <AppText variant="cardTitle">
             Thanh toán
@@ -68,7 +68,7 @@ export function RentalMetaCard({ detail }: RentalMetaCardProps) {
               justifyContent="center"
               width={44}
             >
-              <IconSymbol color={theme.textSecondary.val} name="lock.shield.fill" size={20} />
+              <IconSymbol color={theme.textSecondary.val} name="shield-lock" size="md" />
             </YStack>
             <YStack gap="$1">
               <AppText variant="cardTitle">

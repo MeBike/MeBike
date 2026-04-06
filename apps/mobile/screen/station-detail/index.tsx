@@ -186,7 +186,7 @@ export default function StationDetailScreen() {
                   </AppButton>
 
                   <YStack alignItems="center" flexDirection="row" gap="$2">
-                    <IconSymbol color={theme.textTertiary.val} name="info.circle" size={16} />
+                    <IconSymbol color={theme.textTertiary.val} name="info" size="sm" />
                     <AppText flex={1} tone="muted" variant="meta">
                       Sau khi giữ chỗ, quay lại chi tiết thuê xe để mở mã QR trả xe cho nhân viên.
                     </AppText>
