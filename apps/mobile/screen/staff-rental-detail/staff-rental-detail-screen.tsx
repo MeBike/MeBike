@@ -1,26 +1,24 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { borderWidths, spaceScale } from "@theme/metrics";
-import { Screen } from "@ui/primitives/screen";
-import { StatusBadge } from "@ui/primitives/status-badge";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   RefreshControl,
   ScrollView,
   StatusBar,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme, XStack, YStack } from "tamagui";
+import { useTheme, YStack } from "tamagui";
 
 import type {
   StaffRentalDetailNavigationProp,
   StaffRentalDetailRouteProp,
 } from "@/types/navigation";
 
-import { IconSymbol } from "@/components/IconSymbol";
-import { AppText } from "@/ui/primitives/app-text";
+import { spaceScale } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
+import { StatusBadge } from "@ui/primitives/status-badge";
 
 import DetailErrorState from "../booking-history-detail/components/detail-error-state";
 import DetailLoadingState from "../booking-history-detail/components/detail-loading-state";
@@ -90,43 +88,21 @@ function StaffRentalDetailScreen() {
     <Screen tone="subtle">
       <StatusBar backgroundColor={theme.surfaceDefault.val} barStyle="dark-content" />
 
-      <YStack
-        backgroundColor="$surfaceDefault"
-        borderBottomColor="$borderSubtle"
-        borderBottomWidth={borderWidths.subtle}
-        paddingBottom="$4"
-        paddingHorizontal="$4"
-        paddingTop={insets.top + 8}
-      >
-        <XStack alignItems="center" justifyContent="space-between" gap="$3">
-          <XStack alignItems="center" flex={1} gap="$3">
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={8}
-              onPress={() => navigation.goBack()}
-              style={{
-                width: 40,
-                height: 40,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <IconSymbol color={theme.textSecondary.val} name="arrow.left" size={24} />
-            </Pressable>
-
-            <AppText numberOfLines={1} variant="sectionTitle">
-              Quản lý phiên thuê
-            </AppText>
-          </XStack>
-
+      <AppHeroHeader
+        accessory={(
           <StatusBadge
             label={status.label}
             pulseDot={status.pulseDot}
             size="compact"
             tone={status.tone}
           />
-        </XStack>
-      </YStack>
+        )}
+        onBack={() => navigation.goBack()}
+        size="compact"
+        title="Quản lý phiên thuê"
+        titleVariant="sectionTitle"
+        variant="surface"
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}

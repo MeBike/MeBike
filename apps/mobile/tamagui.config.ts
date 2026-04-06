@@ -20,7 +20,6 @@ const appFont = createFont({
     5: fontWeights.medium,
     6: fontWeights.semibold,
     7: fontWeights.bold,
-    8: fontWeights.heavy,
   },
   letterSpacing: mapFontScale("letterSpacing"),
   face: {
@@ -28,7 +27,6 @@ const appFont = createFont({
     500: { normal: fontFaces.medium },
     600: { normal: fontFaces.semibold },
     700: { normal: fontFaces.bold },
-    800: { normal: fontFaces.heavy },
   },
 });
 

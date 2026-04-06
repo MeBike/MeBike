@@ -14,46 +14,6 @@ type Props = {
   onSubscribe?: () => void;
 };
 
-export function SubscriptionPackageCard({ info, disabled, isCurrent, loading, onSubscribe }: Props) {
-  return (
-    <LinearGradient colors={info.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
-      <View style={styles.headerRow}>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>{info.title}</Text>
-          <Text style={styles.description}>{info.description}</Text>
-        </View>
-        {isCurrent && (
-          <View style={styles.currentBadge}>
-            <Text style={styles.currentText}>Đã đăng ký</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.priceRow}>
-        <View>
-          <Text style={styles.price}>{formatCurrency(info.price)}</Text>
-          <Text style={styles.limitLabel}>
-            {info.monthlyLimit ? `${info.monthlyLimit} lượt / tháng` : "Không giới hạn"}
-          </Text>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.ctaButton, disabled && styles.ctaButtonDisabled]}
-        onPress={onSubscribe}
-        disabled={disabled || loading}
-        activeOpacity={0.85}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.ctaText}>{isCurrent ? "Đang sử dụng" : "Đăng ký ngay"}</Text>
-        )}
-      </TouchableOpacity>
-    </LinearGradient>
-  );
-}
-
 const styles = StyleSheet.create({
   card: {
     borderRadius: 24,
@@ -98,7 +58,7 @@ const styles = StyleSheet.create({
   price: {
     color: "white",
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: "700",
   },
   limitLabel: {
     color: "rgba(255,255,255,0.9)",
@@ -119,3 +79,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+export function SubscriptionPackageCard({ info, disabled, isCurrent, loading, onSubscribe }: Props) {
+  return (
+    <LinearGradient colors={info.gradient} end={{ x: 1, y: 1 }} start={{ x: 0, y: 0 }} style={styles.card}>
+      <View style={styles.headerRow}>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>{info.title}</Text>
+          <Text style={styles.description}>{info.description}</Text>
+        </View>
+        {isCurrent && (
+          <View style={styles.currentBadge}>
+            <Text style={styles.currentText}>Đã đăng ký</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.priceRow}>
+        <View>
+          <Text style={styles.price}>{formatCurrency(info.price)}</Text>
+          <Text style={styles.limitLabel}>
+            {info.monthlyLimit ? `${info.monthlyLimit} lượt / tháng` : "Không giới hạn"}
+          </Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        activeOpacity={0.85}
+        disabled={disabled || loading}
+        onPress={onSubscribe}
+        style={[styles.ctaButton, disabled && styles.ctaButtonDisabled]}
+      >
+        {loading
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={styles.ctaText}>{isCurrent ? "Đang sử dụng" : "Đăng ký ngay"}</Text>}
+      </TouchableOpacity>
+    </LinearGradient>
+  );
+}
