@@ -6,13 +6,13 @@ import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 import type { StaffPhoneLookupNavigationProp } from "@/types/navigation";
 
+import { useStaffPhoneLookupScreen } from "@/screen/staff/phone-lookup/hooks/use-staff-phone-lookup-screen";
 import { AppText } from "@/ui/primitives/app-text";
 import { Screen } from "@/ui/primitives/screen";
 
 import { EmptyState } from "./components/empty-state";
 import { ResultsList } from "./components/results-list";
 import { SearchCard } from "./components/search-card";
-import { useStaffPhoneLookupScreen } from "./hooks/use-staff-phone-lookup-screen";
 
 function getStatusTone(status: string) {
   switch (status) {

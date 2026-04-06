@@ -11,6 +11,7 @@ import type {
   StaffBikeSwapDetailRouteProp,
 } from "@/types/navigation";
 
+import { useStaffBikeSwapDetailScreen } from "@/screen/staff/bike-swap/detail/hooks/use-staff-bike-swap-detail-screen";
 import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
 import { AppButton } from "@/ui/primitives/app-button";
 import { AppCard } from "@/ui/primitives/app-card";
@@ -25,7 +26,6 @@ import { RejectReasonSheet } from "./components/reject-reason-sheet";
 import { RequestBikeCard } from "./components/request-bike-card";
 import { RequestCustomerCard } from "./components/request-customer-card";
 import { RequestStatusCard } from "./components/request-status-card";
-import { useStaffBikeSwapDetailScreen } from "./hooks/use-staff-bike-swap-detail-screen";
 
 function SectionLabel({ children }: { children: string }) {
   return (

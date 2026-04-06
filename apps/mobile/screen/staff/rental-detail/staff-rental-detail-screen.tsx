@@ -19,6 +19,8 @@ import type {
   StaffRentalDetailRouteProp,
 } from "@/types/navigation";
 
+import { useStaffRentalDetailScreen } from "@/screen/staff/rental-detail/hooks/use-staff-rental-detail-screen";
+
 import DetailErrorState from "../../rental/booking-history-detail/components/detail-error-state";
 import DetailLoadingState from "../../rental/booking-history-detail/components/detail-loading-state";
 import StaffEndRentalCard from "./components/staff-end-rental-card";
@@ -26,7 +28,6 @@ import { StaffJourneyCard } from "./components/staff-journey-card";
 import { StaffPartyCard } from "./components/staff-party-card";
 import { StaffSummaryCard } from "./components/staff-summary-card";
 import { StaffWarningCard } from "./components/staff-warning-card";
-import { useStaffRentalDetailScreen } from "./hooks/use-staff-rental-detail-screen";
 
 const DEFAULT_END_REASON = "Kết thúc phiên thuê bởi nhân viên";
 
