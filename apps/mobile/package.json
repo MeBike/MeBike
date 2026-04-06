@@ -47,7 +47,6 @@
     "expo-secure-store": "^15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.8",
-    "expo-symbols": "^1.0.7",
     "http-status-codes": "^2.3.0",
     "ky": "^1.14.2",
     "lucide-react-native": "^0.546.0",
