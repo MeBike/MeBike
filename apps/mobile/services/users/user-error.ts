@@ -1,19 +1,21 @@
-import type { Result } from "@lib/result";
 import type { z } from "zod";
 
 import { ServerContracts } from "@mebike/shared";
 
+import type { Result } from "@lib/result";
+import type { ServiceError } from "@services/shared/service-error";
+
 import {
-  type ServiceError,
   asNetworkError as asSharedNetworkError,
   isServiceErrorCode,
   normalizeServiceErrorCode,
   parseServiceError,
+
 } from "@services/shared/service-error";
 
 type ContractUserErrorCode = z.infer<typeof ServerContracts.UsersContracts.UserErrorCodeSchema>;
 
-export type UserErrorCode = ContractUserErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type UserErrorCode = ContractUserErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type UserError = ServiceError<UserErrorCode>;
 
@@ -22,7 +24,15 @@ export function isUserContractErrorCode(code: string): code is ContractUserError
 }
 
 export function isUserErrorCode(code: string): code is UserErrorCode {
-  return isServiceErrorCode(code, isUserContractErrorCode);
+  return code === "FORBIDDEN" || isServiceErrorCode(code, isUserContractErrorCode);
+}
+
+function normalizeUserErrorCode(code: string | undefined): UserErrorCode {
+  if (code === "FORBIDDEN") {
+    return "FORBIDDEN";
+  }
+
+  return normalizeServiceErrorCode(code, isUserContractErrorCode);
 }
 
 export function isUserApiError(
@@ -36,7 +46,7 @@ export function isUserApiError(
 export async function parseUserError(response: Response): Promise<UserError> {
   return parseServiceError(response, {
     schema: ServerContracts.UsersContracts.UserErrorResponseSchema,
-    mapCode: code => normalizeServiceErrorCode(code, isUserContractErrorCode),
+    mapCode: normalizeUserErrorCode,
     includeUnauthorized: true,
     includeForbidden: true,
   });

@@ -1,216 +1,165 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import type { Rental } from "@/types/rental-types";
 
-import { useGetRatingQuery } from "@hooks/query/rating/use-get-rating-query";
-import { useRatingActions } from "@hooks/rating/use-rating-actions";
+import type { RentalRatingCardState } from "../components/rental-rating-card";
 
-type RatingStateOptions = {
+import { useBookingRatingForm } from "./use-booking-rating-form";
+import { useBookingRatingStatus } from "./use-booking-rating-status";
+
+type UseBookingRatingOptions = {
   bookingId: string;
   booking?: Rental;
 };
 
-export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
-  const [showRatingForm, setShowRatingForm] = useState(false);
-  const [ratingValue, setRatingValue] = useState<number>(0);
-  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
-  const [ratingComment, setRatingComment] = useState("");
-  const [hasRated, setHasRated] = useState(false);
-  const [ratingError, setRatingError] = useState<string | null>(null);
-  const [showAllReasons, setShowAllReasons] = useState(false);
-
-  const endTimeDate = useMemo(() => {
-    if (!booking?.endTime)
-      return null;
-    const parsed = new Date(booking.endTime);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }, [booking?.endTime]);
-
-  const RATING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-  const ratingWindowExpired = useMemo(() => {
-    if (!endTimeDate)
-      return false;
-    const nowTime = Date.now();
-    const endTime = endTimeDate.getTime();
-    if (Number.isNaN(endTime))
-      return false;
-    return nowTime > endTime + RATING_WINDOW_MS;
-  }, [endTimeDate]);
+export function useBookingRating({ bookingId, booking }: UseBookingRatingOptions) {
+  const {
+    availability,
+    existingRating,
+    isRefetchingRating,
+    showRatingForm,
+    openRatingForm,
+    closeRatingForm,
+    markAsRated,
+    refetchRating,
+  } = useBookingRatingStatus({
+    bookingId,
+    booking,
+  });
 
   const {
-    data: existingRating,
-    isFetched: isRatingFetched,
-  } = useGetRatingQuery(bookingId, Boolean(booking));
-
-  const canOpenRatingForm
-    = Boolean(booking)
-      && booking!.status === "COMPLETED"
-      && isRatingFetched
-      && !hasRated
-      && !ratingWindowExpired;
-
-  const {
-    ratingReasons,
+    bikeScore,
+    stationScore,
+    selectedReasons,
+    ratingComment,
+    ratingError,
+    showAllReasons,
+    displayReasons,
+    filteredReasons,
+    canSubmit,
     isRatingReasonsLoading,
-    submitRating,
     isSubmittingRating,
+    onChangeComment,
+    onShowAllReasons,
+    onChangeBikeScore,
+    onChangeStationScore,
+    onToggleReason,
+    handleSubmit,
     refetchRatingReasons,
-  } = useRatingActions({
+    resetForm,
+    clearError,
+  } = useBookingRatingForm({
+    bookingId,
     enabled: Boolean(booking),
   });
 
-  const filteredReasons = useMemo(() => {
-    if (!ratingReasons || ratingReasons.length === 0)
-      return [];
-    if (!ratingValue)
-      return ratingReasons;
-    const positive = ratingValue >= 4;
-    const desiredType = positive ? "COMPLIMENT" : "ISSUE";
-    const matching = ratingReasons.filter(
-      reason => reason.type === desiredType,
-    );
-    return matching.length > 0 ? matching : ratingReasons;
-  }, [ratingReasons, ratingValue]);
-
-  useEffect(() => {
-    setShowAllReasons(false);
-  }, [ratingValue]);
-
-  const displayReasons = useMemo(() => {
-    if (showAllReasons)
-      return filteredReasons;
-    return filteredReasons.slice(0, 6);
-  }, [filteredReasons, showAllReasons]);
-
-  const resetRatingState = useCallback(() => {
-    setRatingValue(0);
-    setSelectedReasons([]);
-    setRatingComment("");
-    setRatingError(null);
-  }, []);
-
-  useEffect(() => {
-    setShowRatingForm(false);
-    setHasRated(false);
-    resetRatingState();
-  }, [bookingId, resetRatingState]);
-
-  useEffect(() => {
-    if (existingRating) {
-      setHasRated(true);
-    }
-    else if (isRatingFetched) {
-      setHasRated(false);
-    }
-  }, [existingRating, isRatingFetched]);
-
-  const handleToggleReason = useCallback((reasonId: string) => {
-    setSelectedReasons(prev =>
-      prev.includes(reasonId)
-        ? prev.filter(id => id !== reasonId)
-        : [...prev, reasonId],
-    );
-  }, []);
-
   const handleOpenRatingForm = useCallback(() => {
-    if (!canOpenRatingForm)
-      return;
-    setRatingError(null);
-    setShowRatingForm(true);
-    refetchRatingReasons();
-  }, [canOpenRatingForm, refetchRatingReasons]);
+    const didOpen = openRatingForm();
 
-  const handleCancelRating = useCallback(() => {
-    resetRatingState();
-    setShowRatingForm(false);
-  }, [resetRatingState]);
+    if (!didOpen) {
+      return;
+    }
+
+    clearError();
+    refetchRatingReasons();
+  }, [clearError, openRatingForm, refetchRatingReasons]);
+
+  const handleCloseRatingForm = useCallback(() => {
+    resetForm();
+    closeRatingForm();
+  }, [closeRatingForm, resetForm]);
 
   const handleSubmitRating = useCallback(() => {
-    if (!booking?.id) {
-      setRatingError("Không tìm thấy mã thuê xe để đánh giá.");
-      return;
-    }
-    if (!ratingValue) {
-      setRatingError("Vui lòng chọn số sao.");
-      return;
-    }
-    if (selectedReasons.length === 0) {
-      setRatingError("Vui lòng chọn ít nhất một lý do.");
-      return;
-    }
-    submitRating(
-      booking.id,
-      {
-        bikeScore: ratingValue,
-        stationScore: ratingValue,
-        reasonIds: selectedReasons,
-        comment: ratingComment.trim() ? ratingComment.trim() : undefined,
+    handleSubmit({
+      rentalId: booking?.id,
+      onAlreadyRated: () => {
+        markAsRated();
+        closeRatingForm();
+        resetForm();
       },
-      {
-        onSuccess: () => {
-          setHasRated(true);
-          setShowRatingForm(false);
-          resetRatingState();
-        },
-        onAlreadyRated: () => {
-          setHasRated(true);
-          setShowRatingForm(false);
-          resetRatingState();
-        },
-        onError: (message) => {
-          setRatingError(message);
-        },
+      onSuccess: () => {
+        markAsRated();
+        closeRatingForm();
+        resetForm();
       },
-    );
+    });
+  }, [booking?.id, closeRatingForm, handleSubmit, markAsRated, resetForm]);
+
+  const cardState = useMemo<RentalRatingCardState>(() => {
+    switch (availability) {
+      case "checking":
+        return { kind: "checking" };
+      case "not-completed":
+        return { kind: "not-completed" };
+      case "expired":
+        return { kind: "expired" };
+      case "rated":
+        return { kind: "rated", rating: existingRating };
+      case "error":
+        return {
+          kind: "error",
+          onRetry: () => {
+            void refetchRating();
+          },
+        };
+      case "ready":
+        return { kind: "ready", onPress: handleOpenRatingForm };
+      default:
+        return { kind: "checking" };
+    }
   }, [
-    submitRating,
-    booking?.id,
-    ratingValue,
-    selectedReasons,
-    ratingComment,
-    resetRatingState,
+    availability,
+    existingRating,
+    handleOpenRatingForm,
+    refetchRating,
   ]);
 
-  const getAppliesTo = (appliesTo: string) => {
-    switch (appliesTo) {
-      case "app":
-        return "Ứng dụng";
-      case "station":
-        return "Trạm xe";
-      case "bike":
-        return "Xe đạp";
-      default:
-        return appliesTo;
-    }
-  };
+  const sheet = useMemo(() => ({
+    visible: showRatingForm,
+    bikeScore,
+    canSubmit,
+    displayReasons,
+    filteredReasons,
+    isRatingReasonsLoading,
+    isSubmittingRating,
+    onChangeComment,
+    onChangeBikeScore,
+    onChangeStationScore,
+    onClose: handleCloseRatingForm,
+    onShowAllReasons,
+    onSubmit: handleSubmitRating,
+    onToggleReason,
+    ratingComment,
+    ratingError,
+    selectedReasons,
+    showAllReasons,
+    stationScore,
+  }), [
+    showRatingForm,
+    bikeScore,
+    canSubmit,
+    displayReasons,
+    filteredReasons,
+    handleCloseRatingForm,
+    handleSubmitRating,
+    isRatingReasonsLoading,
+    isSubmittingRating,
+    onChangeBikeScore,
+    onChangeComment,
+    onChangeStationScore,
+    onShowAllReasons,
+    onToggleReason,
+    ratingComment,
+    ratingError,
+    selectedReasons,
+    showAllReasons,
+    stationScore,
+  ]);
 
   return {
-    ratingState: {
-      hasRated,
-      existingRating,
-      canOpenRatingForm,
-      ratingWindowExpired,
-      showRatingForm,
-      ratingValue,
-      selectedReasons,
-      ratingComment,
-      ratingError,
-      showAllReasons,
-      ratingReasons,
-      isRatingReasonsLoading,
-      isSubmittingRating,
-      displayReasons,
-      filteredReasons,
-      setRatingValue,
-      setRatingError,
-      setShowAllReasons,
-      handleToggleReason,
-      setRatingComment,
-      handleCancelRating,
-      handleSubmitRating,
-      handleOpenRatingForm,
-      getAppliesTo,
-    },
-    isFetchingRating: !isRatingFetched,
+    cardState,
+    sheet,
+    refresh: () => refetchRating(),
+    isRefreshing: isRefetchingRating,
   };
 }
