@@ -6,6 +6,7 @@ import {
   createSuccessResponse,
   RedistributionReqErrorCodeSchema,
   RedistributionReqErrorResponseSchema,
+  RedistributionRequestDetailSchemaOpenApi,
   RedistributionRequestIdParamSchema,
   RedistributionRequestSchemaOpenApi,
   RejectRedistributionRequestSchemaOpenApi,
@@ -223,7 +224,7 @@ export const approveRedistributionRequest = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RedistributionRequestSchemaOpenApi,
+            RedistributionRequestDetailSchemaOpenApi,
             "Redistribution request approved successfully",
           ),
         },
@@ -264,8 +265,9 @@ export const approveRedistributionRequest = createRoute({
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_REDISTRIBUTION_APPROVAL,
-                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  sourceStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  workingStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                 },
               },
             },

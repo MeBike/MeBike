@@ -4,6 +4,7 @@ import { serverRoutes } from "@mebike/shared";
 
 import {
   RedistributionAdminController,
+  RedistributionManagerController,
   RedistributionStaffController,
 } from "@/http/controllers/redistribution";
 import {
@@ -65,4 +66,16 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
     middleware: [requireManagerMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(managerDetailRoute, RedistributionManagerController.getRequestDetailForManager);
+
+  const managerApproveRoute = {
+    ...redistribution.approveRedistributionRequest,
+    middleware: [requireManagerMiddleware] as const,
+  } satisfies RouteConfig;
+  app.openapi(managerApproveRoute, RedistributionManagerController.approveRedistributionRequest);
+
+  const managerRejectRoute = {
+    ...redistribution.rejectRedistributionRequest,
+    middleware: [requireManagerMiddleware] as const,
+  } satisfies RouteConfig;
+  app.openapi(managerRejectRoute, RedistributionManagerController.rejectRedistributionRequest);
 }

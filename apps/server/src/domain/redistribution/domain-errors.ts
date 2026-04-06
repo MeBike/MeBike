@@ -56,6 +56,14 @@ export class UnauthorizedRedistributionCancellation extends Data.TaggedError(
     readonly userId: string;
   }> {}
 
+export class UnauthorizedRedistributionApproval extends Data.TaggedError(
+  "UnauthorizedRedistributionApproval",
+)<{
+    readonly requestId: string;
+    readonly sourceStationId: string;
+    readonly workingStationId: string;
+  }> {}
+
 export class UserNotFound extends Data.TaggedError("UserNotFound")<{
   readonly userId: string;
 }> {}
@@ -102,6 +110,28 @@ export class CannotCancelNonPendingRedistribution extends Data.TaggedError(
     readonly currentStatus: string;
   }> {}
 
+export class CannotApproveNonPendingRedistribution extends Data.TaggedError(
+  "CannotApproveNonPendingRedistribution",
+)<{
+    readonly requestId: string;
+    readonly currentStatus: string;
+  }> {}
+
+export class CannotRejectNonPendingRedistribution extends Data.TaggedError(
+  "CannotRejectNonPendingRedistribution",
+)<{
+    readonly requestId: string;
+    readonly currentStatus: string;
+  }> {}
+
+export class UnauthorizedRedistributionRejection extends Data.TaggedError(
+  "UnauthorizedRedistributionRejection",
+)<{
+    readonly requestId: string;
+    readonly sourceStationId: string;
+    readonly workingStationId: string;
+  }> {}
+
 export type RedistributionServiceFailure
   = | RedistributionRequestNotFound
     | RedistributionRequestNotFoundWithStatus
@@ -110,6 +140,7 @@ export type RedistributionServiceFailure
     | UnauthorizedRedistributionAccess
     | UnauthorizedRedistributionCreation
     | UnauthorizedRedistributionCancellation
+    | UnauthorizedRedistributionApproval
     | StationNotFound
     | AgencyNotFound
     | UserNotFound
@@ -118,4 +149,7 @@ export type RedistributionServiceFailure
     | NotEnoughEmptySlotsAtTarget
     | ExceededMinBikesAtStation
     | CannotCancelNonPendingRedistribution
+    | CannotApproveNonPendingRedistribution
+    | CannotRejectNonPendingRedistribution
+    | UnauthorizedRedistributionRejection
     | RedistributionRepositoryError;
