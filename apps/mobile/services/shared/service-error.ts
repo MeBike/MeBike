@@ -1,10 +1,12 @@
-import type { Result } from "@lib/result";
 import type { z } from "zod";
+
+import { ServerContracts } from "@mebike/shared";
+import { StatusCodes } from "http-status-codes";
+
+import type { Result } from "@lib/result";
 
 import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { err } from "@lib/result";
-import { ServerContracts } from "@mebike/shared";
-import { StatusCodes } from "http-status-codes";
 
 type ErrorEnvelope = {
   error: string;
@@ -44,11 +46,11 @@ export type UnknownServiceError = {
   message?: string;
 };
 
-export type ServiceError<TCode extends string> =
-  | ApiServiceError<TCode>
-  | NetworkServiceError
-  | DecodeServiceError
-  | UnknownServiceError;
+export type ServiceError<TCode extends string>
+  = | ApiServiceError<TCode>
+    | NetworkServiceError
+    | DecodeServiceError
+    | UnknownServiceError;
 
 export function normalizeServiceErrorCode<TCode extends string>(
   code: string | undefined,

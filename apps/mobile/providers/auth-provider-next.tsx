@@ -1,3 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+
 import type { AuthError } from "@services/auth/auth-error";
 import type { UserError } from "@services/users/user-error";
 
@@ -6,9 +9,8 @@ import { clearTokens, getAccessToken, getRefreshToken } from "@lib/auth-tokens";
 import { log } from "@lib/log";
 import { clearPushToken, getPushToken } from "@lib/push-token";
 import { authService } from "@services/auth/auth-service";
+import { isUserApiError } from "@services/users/user-error";
 import { userService } from "@services/users/user-service";
-import { useQueryClient } from "@tanstack/react-query";
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type UserDetail = import("@services/users/user-service").UserDetail;
 
@@ -61,7 +63,8 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!error || !hasToken) {
       return;
     }
-    if (error._tag === "ApiError" && error.code === "UNAUTHORIZED") {
+
+    if (isUserApiError(error) && (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN")) {
       void clearTokens().finally(() => {
         setHasToken(false);
         queryClient.removeQueries({ queryKey: ["authNext", "me"] });

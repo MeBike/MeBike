@@ -1,12 +1,14 @@
-import type { Result } from "@lib/result";
 import type { UsersContracts } from "@mebike/shared";
 import type { z } from "zod";
+
+import { StatusCodes } from "http-status-codes";
+
+import type { Result } from "@lib/result";
 
 import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
-import { StatusCodes } from "http-status-codes";
 
 import type { UserError } from "./user-error";
 
@@ -56,6 +58,7 @@ export const userService = {
           return decodeResponse(response, okSchema as z.ZodType<UserDetail>);
         }
         case StatusCodes.UNAUTHORIZED:
+        case StatusCodes.FORBIDDEN:
         case StatusCodes.NOT_FOUND:
           return err(await parseUserError(response));
         default:
