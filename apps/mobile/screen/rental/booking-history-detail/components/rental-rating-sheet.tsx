@@ -1,7 +1,3 @@
-import { ActivityIndicator, Pressable, ScrollView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme, XStack, YStack } from "tamagui";
-
 import type { RatingReason } from "@services/ratings";
 
 import { IconSymbol } from "@components/IconSymbol";
@@ -10,6 +6,9 @@ import { AppBottomModalCard } from "@ui/patterns/app-bottom-modal-card";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
+import { ActivityIndicator, Pressable, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import { RatingStarsInput } from "./rating-stars-input";
 

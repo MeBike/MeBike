@@ -1,6 +1,5 @@
 import { useTheme, XStack, YStack } from "tamagui";
 
-import type { Rental } from "@/types/rental-types";
 import type { RatingDetail } from "@services/ratings";
 
 import { IconSymbol } from "@components/IconSymbol";
@@ -9,14 +8,16 @@ import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 
+export type RentalRatingCardState
+  = | { kind: "checking" }
+    | { kind: "not-completed" }
+    | { kind: "expired" }
+    | { kind: "rated"; rating: RatingDetail | null | undefined }
+    | { kind: "ready"; onPress: () => void }
+    | { kind: "error"; onRetry: () => void };
+
 type RentalRatingCardProps = {
-  bookingStatus: Rental["status"];
-  existingRating: RatingDetail | null | undefined;
-  hasRated: boolean;
-  canOpenRatingForm: boolean;
-  ratingWindowExpired: boolean;
-  isFetchingRating: boolean;
-  onOpenRatingForm: () => void;
+  state: RentalRatingCardState;
 };
 
 function ScoreRow({
@@ -66,19 +67,10 @@ function ScoreRow({
   );
 }
 
-export function RentalRatingCard({
-  bookingStatus,
-  existingRating,
-  hasRated,
-  canOpenRatingForm,
-  ratingWindowExpired,
-  isFetchingRating,
-  onOpenRatingForm,
-}: RentalRatingCardProps) {
+export function RentalRatingCard({ state }: RentalRatingCardProps) {
   const theme = useTheme();
-  const isCompleted = bookingStatus === "COMPLETED";
 
-  if (!isCompleted) {
+  if (state.kind === "not-completed") {
     return (
       <AppCard
         borderColor="$borderSubtle"
@@ -110,7 +102,7 @@ export function RentalRatingCard({
     );
   }
 
-  if (isFetchingRating) {
+  if (state.kind === "checking") {
     return (
       <AppCard
         borderColor="$borderSubtle"
@@ -127,7 +119,7 @@ export function RentalRatingCard({
     );
   }
 
-  if (ratingWindowExpired) {
+  if (state.kind === "expired") {
     return (
       <AppCard
         borderColor="$borderSubtle"
@@ -159,7 +151,30 @@ export function RentalRatingCard({
     );
   }
 
-  if (hasRated) {
+  if (state.kind === "error") {
+    return (
+      <AppCard
+        borderColor="$borderSubtle"
+        borderRadius="$5"
+        borderWidth={borderWidths.subtle}
+        chrome="flat"
+        padding="$5"
+        style={elevations.whisper}
+      >
+        <YStack gap="$3">
+          <AppText variant="bodyStrong">Không thể tải trạng thái đánh giá</AppText>
+          <AppText tone="muted" variant="bodySmall">
+            Vui lòng thử lại để kiểm tra đánh giá của chuyến đi này.
+          </AppText>
+          <AppButton alignSelf="flex-start" onPress={state.onRetry} tone="secondary">
+            Thử lại
+          </AppButton>
+        </YStack>
+      </AppCard>
+    );
+  }
+
+  if (state.kind === "rated") {
     return (
       <AppCard
         borderColor="$successSoft"
@@ -189,13 +204,13 @@ export function RentalRatingCard({
             </YStack>
           </XStack>
 
-          {existingRating
+          {state.rating
             ? (
                 <YStack gap="$3">
-                  <ScoreRow label="Chất lượng xe đạp" iconName="bike" score={existingRating.bikeScore} />
-                  <ScoreRow label="Vị trí & bãi trả xe" iconName="location" score={existingRating.stationScore} />
+                  <ScoreRow label="Chất lượng xe đạp" iconName="bike" score={state.rating.bikeScore} />
+                  <ScoreRow label="Vị trí & bãi trả xe" iconName="location" score={state.rating.stationScore} />
 
-                  {existingRating.comment
+                  {state.rating.comment
                     ? (
                         <YStack
                           backgroundColor="$backgroundSubtle"
@@ -206,7 +221,7 @@ export function RentalRatingCard({
                           padding="$4"
                         >
                           <AppText tone="muted" variant="caption">Ghi chú của bạn</AppText>
-                          <AppText variant="bodySmall">{existingRating.comment}</AppText>
+                          <AppText variant="bodySmall">{state.rating.comment}</AppText>
                         </YStack>
                       )
                     : null}
@@ -221,8 +236,7 @@ export function RentalRatingCard({
   return (
     <AppButton
       buttonSize="large"
-      disabled={!canOpenRatingForm}
-      onPress={onOpenRatingForm}
+      onPress={state.onPress}
       tone="primary"
       width="100%"
     >
