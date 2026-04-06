@@ -1,15 +1,14 @@
+import { useAuthNext } from "@providers/auth-provider-next";
+import { spaceScale } from "@theme/metrics";
+import { Screen } from "@ui/primitives/screen";
 import React, { useMemo } from "react";
 import { StatusBar, View } from "react-native";
 import { useTheme, YStack } from "tamagui";
 
-import { useAuthNext } from "@providers/auth-provider-next";
-import { spaceScale } from "@theme/metrics";
-import { Screen } from "@ui/primitives/screen";
-
-import { useReservationNavigation } from "../../hooks/use-reservation-navigation";
 import { ReservationHeader } from "./components/reservation-header";
 import { ReservationInlineLoader, ReservationLoadingState } from "./components/reservation-loading-state";
 import { ReservationsList } from "./components/reservations-list";
+import { useReservationNavigation } from "./hooks/use-reservation-navigation";
 import { useReservations } from "./hooks/use-reservations";
 
 function ReservationsScreen() {

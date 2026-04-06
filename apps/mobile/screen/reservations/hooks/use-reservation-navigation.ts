@@ -1,8 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 
-import type { ReservationsScreenNavigationProp } from "../types/navigation";
-import type { Reservation } from "../types/reservation-types";
+import type { ReservationsScreenNavigationProp } from "@/types/navigation";
+import type { Reservation } from "@/types/reservation-types";
 
 export function useReservationNavigation() {
   const navigation = useNavigation<ReservationsScreenNavigationProp>();
@@ -18,8 +18,8 @@ export function useReservationNavigation() {
   );
 
   return {
-    handleNavigateToDetail,
     canGoBack: () => navigation.canGoBack(),
     goBack: () => navigation.goBack(),
+    handleNavigateToDetail,
   };
 }
