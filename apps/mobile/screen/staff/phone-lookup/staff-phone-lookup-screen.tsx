@@ -12,7 +12,7 @@ import { Screen } from "@/ui/primitives/screen";
 import { EmptyState } from "./components/empty-state";
 import { ResultsList } from "./components/results-list";
 import { SearchCard } from "./components/search-card";
-import { useStaffPhoneLookupScreen } from "./hooks/use-staff-phone-lookup-screen";
+import { useStaffPhoneLookupScreen } from "./hooks";
 
 function getStatusTone(status: string) {
   switch (status) {

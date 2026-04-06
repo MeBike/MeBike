@@ -8,11 +8,11 @@ import { useTheme, YStack } from "tamagui";
 
 import type { StaffBikeSwapListNavigationProp } from "@/types/navigation";
 
-import { BikeSwapErrorState, BikeSwapLoadingState } from "../staff-bike-swap/shared";
+import { BikeSwapErrorState, BikeSwapLoadingState } from "../shared";
 import { BikeSwapRequestRow } from "./components/bike-swap-request-row";
 import { BikeSwapTabBar } from "./components/bike-swap-tab-bar";
 import { EmptyState } from "./components/empty-state";
-import { useStaffBikeSwapListScreen } from "./hooks/use-staff-bike-swap-list-screen";
+import { useStaffBikeSwapListScreen } from "./hooks";
 
 export default function StaffBikeSwapListScreen() {
   const navigation = useNavigation<StaffBikeSwapListNavigationProp>();

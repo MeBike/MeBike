@@ -20,12 +20,12 @@ import {
   BikeSwapErrorState,
   BikeSwapLoadingState,
   getBikeSwapRequestCode,
-} from "../staff-bike-swap/shared";
+} from "../shared";
 import { RejectReasonSheet } from "./components/reject-reason-sheet";
 import { RequestBikeCard } from "./components/request-bike-card";
 import { RequestCustomerCard } from "./components/request-customer-card";
 import { RequestStatusCard } from "./components/request-status-card";
-import { useStaffBikeSwapDetailScreen } from "./hooks/use-staff-bike-swap-detail-screen";
+import { useStaffBikeSwapDetailScreen } from "./hooks";
 
 function SectionLabel({ children }: { children: string }) {
   return (

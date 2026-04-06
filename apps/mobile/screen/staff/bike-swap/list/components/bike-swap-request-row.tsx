@@ -8,7 +8,7 @@ import { AppListRow } from "@/ui/primitives/app-list-row";
 import { AppText } from "@/ui/primitives/app-text";
 import { StatusBadge } from "@/ui/primitives/status-badge";
 
-import { formatBikeSwapDateTime, getBikeSwapStatusMeta } from "../../staff-bike-swap/shared";
+import { formatBikeSwapDateTime, getBikeSwapStatusMeta } from "../../shared";
 
 type BikeSwapRequestRowProps = {
   onPress: (bikeSwapRequestId: string) => void;

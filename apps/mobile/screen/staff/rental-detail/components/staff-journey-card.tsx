@@ -1,7 +1,7 @@
 import type { RentalDetail } from "@/types/rental-types";
 
-import { RentalJourneyView } from "../../booking-history-detail/components/rental-journey-card";
-import { formatTimeOnly } from "../../booking-history-detail/helpers/formatters";
+import { RentalJourneyView } from "../../../rental/booking-history-detail/components/rental-journey-card";
+import { formatTimeOnly } from "../../../rental/booking-history-detail/helpers/formatters";
 
 type StaffJourneyCardProps = {
   booking: RentalDetail;

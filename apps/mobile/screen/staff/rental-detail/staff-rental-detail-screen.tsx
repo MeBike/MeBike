@@ -1,4 +1,8 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { spaceScale } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
+import { StatusBadge } from "@ui/primitives/status-badge";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -15,19 +19,14 @@ import type {
   StaffRentalDetailRouteProp,
 } from "@/types/navigation";
 
-import { spaceScale } from "@theme/metrics";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
-import { Screen } from "@ui/primitives/screen";
-import { StatusBadge } from "@ui/primitives/status-badge";
-
-import DetailErrorState from "../booking-history-detail/components/detail-error-state";
-import DetailLoadingState from "../booking-history-detail/components/detail-loading-state";
+import DetailErrorState from "../../rental/booking-history-detail/components/detail-error-state";
+import DetailLoadingState from "../../rental/booking-history-detail/components/detail-loading-state";
 import StaffEndRentalCard from "./components/staff-end-rental-card";
 import { StaffJourneyCard } from "./components/staff-journey-card";
 import { StaffPartyCard } from "./components/staff-party-card";
 import { StaffSummaryCard } from "./components/staff-summary-card";
 import { StaffWarningCard } from "./components/staff-warning-card";
-import { useStaffRentalDetailScreen } from "./hooks/use-staff-rental-detail-screen";
+import { useStaffRentalDetailScreen } from "./hooks";
 
 const DEFAULT_END_REASON = "Kết thúc phiên thuê bởi nhân viên";
 
