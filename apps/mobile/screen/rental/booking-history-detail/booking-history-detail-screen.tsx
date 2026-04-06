@@ -1,4 +1,9 @@
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
+import { spaceScale } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
+import { getBikeChipDisplay } from "@utils/bike";
 import { useCallback } from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,12 +14,6 @@ import type {
   BookingHistoryDetailRouteProp,
 } from "@/types/navigation";
 
-import { useAuthNext } from "@providers/auth-provider-next";
-import { spaceScale } from "@theme/metrics";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
-import { Screen } from "@ui/primitives/screen";
-import { getBikeChipDisplay } from "@utils/bike";
-
 import DetailErrorState from "./components/detail-error-state";
 import DetailLoadingState from "./components/detail-loading-state";
 import { IncidentTypeSheet } from "./components/incident-type-sheet";
@@ -24,8 +23,11 @@ import { RentalIdPill } from "./components/rental-id-pill";
 import { RentalIncidentCard } from "./components/rental-incident-card";
 import { RentalJourneyCard } from "./components/rental-journey-card";
 import { RentalMetaCard } from "./components/rental-meta-card";
+import { RentalRatingCard } from "./components/rental-rating-card";
+import { RentalRatingSheet } from "./components/rental-rating-sheet";
 import { useBookingBikeSwapState } from "./hooks/use-booking-bike-swap-state";
 import { useBookingIncidentState } from "./hooks/use-booking-incident-state";
+import { useBookingRating } from "./hooks/use-booking-rating";
 import { useRentalDetailData } from "./hooks/use-rental-detail-data";
 import { useRentalStatusWatcher } from "./hooks/use-rental-status-watcher";
 
@@ -82,6 +84,39 @@ function BookingHistoryDetailScreen() {
     rentalIncident,
     rentalIncidentQuery,
   } = useBookingIncidentState({
+    bookingId,
+    booking,
+  });
+
+  const {
+    ratingState: {
+      canOpenRatingForm,
+      canSubmit,
+      bikeScore,
+      displayReasons,
+      existingRating,
+      filteredReasons,
+      handleCancelRating,
+      handleBikeScoreChange,
+      handleOpenRatingForm,
+      handleStationScoreChange,
+      handleSubmitRating,
+      handleToggleReason,
+      hasRated,
+      isRatingReasonsLoading,
+      isSubmittingRating,
+      ratingComment,
+      ratingError,
+      ratingWindowExpired,
+      selectedReasons,
+      setRatingComment,
+      setShowAllReasons,
+      showAllReasons,
+      showRatingForm,
+      stationScore,
+    },
+    isFetchingRating,
+  } = useBookingRating({
     bookingId,
     booking,
   });
@@ -200,6 +235,15 @@ function BookingHistoryDetailScreen() {
               showIncidentActionSection={!rentalIncident}
             />
             <RentalMetaCard detail={detail} />
+            <RentalRatingCard
+              bookingStatus={booking.status}
+              canOpenRatingForm={canOpenRatingForm}
+              existingRating={existingRating}
+              hasRated={hasRated}
+              isFetchingRating={isFetchingRating}
+              onOpenRatingForm={handleOpenRatingForm}
+              ratingWindowExpired={ratingWindowExpired}
+            />
             <RentalIdPill rentalId={booking.id} />
           </YStack>
         </YStack>
@@ -233,6 +277,28 @@ function BookingHistoryDetailScreen() {
         onClose={handleCloseIncidentSheet}
         onSelect={handleSelectIncidentType}
         visible={isIncidentSheetOpen}
+      />
+
+      <RentalRatingSheet
+        bikeScore={bikeScore}
+        canSubmit={canSubmit}
+        displayReasons={displayReasons}
+        filteredReasons={filteredReasons}
+        isRatingReasonsLoading={isRatingReasonsLoading}
+        isSubmittingRating={isSubmittingRating}
+        onChangeComment={setRatingComment}
+        onChangeBikeScore={handleBikeScoreChange}
+        onChangeStationScore={handleStationScoreChange}
+        onClose={handleCancelRating}
+        onShowAllReasons={() => setShowAllReasons(true)}
+        onSubmit={handleSubmitRating}
+        onToggleReason={handleToggleReason}
+        ratingComment={ratingComment}
+        ratingError={ratingError}
+        selectedReasons={selectedReasons}
+        showAllReasons={showAllReasons}
+        stationScore={stationScore}
+        visible={showRatingForm}
       />
     </Screen>
   );
