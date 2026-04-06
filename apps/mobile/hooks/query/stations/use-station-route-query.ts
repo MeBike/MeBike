@@ -26,6 +26,15 @@ export function useStationRouteQuery({
   enabled,
 }: UseStationRouteQueryArgs) {
   return useQuery({
+    enabled: enabled && Boolean(origin) && Boolean(destination),
+    gcTime: 30 * 60 * 1000,
+    queryFn: async (): Promise<MapboxRouteLine | null> => {
+      if (!origin || !destination) {
+        return null;
+      }
+
+      return getRouteLine(origin, destination, profile);
+    },
     queryKey: [
       "mapbox-directions",
       profile,
@@ -34,15 +43,6 @@ export function useStationRouteQuery({
       destination ? roundCoordinate(destination.latitude) : null,
       destination ? roundCoordinate(destination.longitude) : null,
     ],
-    queryFn: async (): Promise<MapboxRouteLine | null> => {
-      if (!origin || !destination) {
-        return null;
-      }
-
-      return getRouteLine(origin, destination, profile);
-    },
-    enabled: enabled && Boolean(origin) && Boolean(destination),
     staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
   });
 }

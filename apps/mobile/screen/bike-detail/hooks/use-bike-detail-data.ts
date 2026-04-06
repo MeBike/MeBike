@@ -1,4 +1,4 @@
-import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/use-get-bike-by-id-query";
+import { useGetBikeDetailQuery } from "@hooks/query/bikes/use-get-bike-detail-query";
 import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
 import { useReservationActions } from "@hooks/use-reservation-actions";
 import { useWalletActions } from "@hooks/use-wallet-action";
@@ -34,7 +34,7 @@ export function useBikeDetailData({ routeParams, hasToken }: UseBikeDetailDataAr
   });
 
   const subscriptionsQuery = useGetSubscriptionsQuery({ status: "ACTIVE" }, hasToken);
-  const bikeDetailQuery = useGetBikeByIDAllQuery(bike.id);
+  const bikeDetailQuery = useGetBikeDetailQuery(bike.id);
   const refetchBikeDetail = bikeDetailQuery.refetch;
   const refetchSubscriptions = subscriptionsQuery.refetch;
 
