@@ -1,35 +1,36 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
 
+import {
+  BikeDetailScreen,
+  BookingHistoryDetailScreen,
+  ChangePasswordScreen,
+  EmailVerificationScreen,
+  FixedSlotDetailScreen,
+  FixedSlotEditorScreen,
+  FixedSlotTemplatesScreen,
+  ForgotPasswordScreen,
+  IntroScreen,
+  LoginScreen,
+  MyWalletScreen,
+  QRScannerScreen,
+  RegisterScreen,
+  RentalQrScreen,
+  ReservationDetailScreen,
+  ReservationFlowScreen,
+  ReservationScreen,
+  ResetPasswordFormScreen,
+  ResetPasswordOTPScreen,
+  StaffBikeSwapDetailScreen,
+  StaffBikeSwapListScreen,
+  StaffPhoneLookupScreen,
+  StaffRentalDetailScreen,
+  StationDetailScreen,
+  SubscriptionScreen,
+  UpdateProfileScreen,
+} from "../screen";
 import type { RootStackParamList } from "../types/navigation";
 
-import BikeDetailScreen from "../screen/BikeDetailScreen";
-import BookingHistoryDetail from "../screen/booking-history-detail/booking-history-detail-screen";
-import ChangePasswordScreen from "../screen/ChangePasswordScreen";
-import EmailVerificationScreen from "../screen/EmailVerification";
-import FixedSlotTemplatesScreen from "../screen/fixed-slot-templates";
-import FixedSlotDetailScreen from "../screen/FixedSlotDetailScreen";
-import FixedSlotEditorScreen from "../screen/FixedSlotEditorScreen";
-import ForgotPasswordScreen from "../screen/ForgotPassword";
-import IntroScreen from "../screen/Intro";
-import LoginScreen from "../screen/login";
-import MyWalletScreen from "../screen/my-wallet-screen";
-import QRScannerScreen from "../screen/QRScannerScreen";
-import RegisterScreen from "../screen/Register";
-import RentalQrScreen from "../screen/RentalQrScreen";
-import ReservationDetailScreen from "../screen/reservation-detail-screen";
-import ReservationFlowScreen from "../screen/ReservationFlowScreen";
-import ReservationScreen from "../screen/reservations";
-import ResetPasswordFormScreen from "../screen/ResetPasswordForm";
-import ResetPasswordOTPScreen from "../screen/ResetPasswordOTP";
-import StaffBikeSwapDetailScreen from "../screen/staff-bike-swap-detail/staff-bike-swap-detail-screen";
-import StaffBikeSwapListScreen from "../screen/staff-bike-swap-list/staff-bike-swap-list-screen";
-import StaffRentalDetailScreen from "../screen/staff-rental-detail/staff-rental-detail-screen";
-import StaffPhoneLookupScreen from "../screen/StaffPhoneLookupScreen";
-import StationDetailScreen from "../screen/StationDetail";
-import SubscriptionScreen from "../screen/subscription-screen";
-import UpdateProfileScreen from "../screen/UpdateProfileScreen";
-import WithdrawScreen from "../screen/withdraw-screen";
 import StationSelectScreen from "../styles/StationSelect";
 import MainTabNavigator from "./main-tab-navigator";
 
@@ -80,7 +81,7 @@ function RootNavigator() {
       />
       <Stack.Screen
         name="BookingHistoryDetail"
-        component={BookingHistoryDetail}
+        component={BookingHistoryDetailScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
@@ -156,11 +157,6 @@ function RootNavigator() {
       <Stack.Screen
         name="FixedSlotEditor"
         component={FixedSlotEditorScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="Withdraw"
-        component={WithdrawScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
