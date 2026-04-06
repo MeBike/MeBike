@@ -13,7 +13,7 @@ import {
   formatTimeOnly,
   getDurationParts,
   getPaymentLabel,
-} from "../../booking-history-detail/helpers/formatters";
+} from "../../../booking-history-detail/helpers/formatters";
 
 type StaffSummaryCardProps = {
   booking: RentalDetail;

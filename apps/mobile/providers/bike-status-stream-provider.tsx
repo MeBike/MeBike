@@ -22,7 +22,7 @@ type BikeStatusStreamContextValue = {
 const BikeStatusStreamContext = createContext<BikeStatusStreamContextValue | undefined>(undefined);
 
 export function BikeStatusStreamProvider({ children }: { children: React.ReactNode }) {
-  const { status } = useAuthNext();
+  const { hydrate, status } = useAuthNext();
   const queryClient = useQueryClient();
   const subscribersRef = useRef<Set<Subscriber>>(new Set());
   const [lastUpdate, setLastUpdate] = useState<BikeStatusUpdate | null>(null);
@@ -64,8 +64,12 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   );
 
   const handleError = useCallback((error: Error) => {
+    if (error.message === "SSE_UNAUTHORIZED") {
+      void hydrate();
+    }
+
     console.warn("[BikeStatusStream] SSE error", error);
-  }, []);
+  }, [hydrate]);
 
   const { isConnected, connect, disconnect } = useBikeStatusStream({
     autoConnect: false,
@@ -74,10 +78,11 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   });
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status !== "authenticated") {
       disconnect();
     }
-    else if (status === "authenticated") {
+
+    if (status === "authenticated") {
       connect();
     }
   }, [connect, disconnect, status]);

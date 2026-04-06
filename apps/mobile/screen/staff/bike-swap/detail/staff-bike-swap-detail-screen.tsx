@@ -20,7 +20,7 @@ import {
   BikeSwapErrorState,
   BikeSwapLoadingState,
   getBikeSwapRequestCode,
-} from "../staff-bike-swap/shared";
+} from "../shared";
 import { RejectReasonSheet } from "./components/reject-reason-sheet";
 import { RequestBikeCard } from "./components/request-bike-card";
 import { RequestCustomerCard } from "./components/request-customer-card";

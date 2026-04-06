@@ -6,7 +6,7 @@ import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";
 import { StatusBadge } from "@/ui/primitives/status-badge";
 
-import { formatBikeSwapDateTime, getBikeSwapStatusMeta } from "../../staff-bike-swap/shared";
+import { formatBikeSwapDateTime, getBikeSwapStatusMeta } from "../../shared";
 
 type RequestStatusCardProps = {
   createdAt: string;

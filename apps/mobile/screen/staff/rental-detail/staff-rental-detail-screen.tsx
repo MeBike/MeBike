@@ -20,8 +20,8 @@ import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { Screen } from "@ui/primitives/screen";
 import { StatusBadge } from "@ui/primitives/status-badge";
 
-import DetailErrorState from "../booking-history-detail/components/detail-error-state";
-import DetailLoadingState from "../booking-history-detail/components/detail-loading-state";
+import DetailErrorState from "../../booking-history-detail/components/detail-error-state";
+import DetailLoadingState from "../../booking-history-detail/components/detail-loading-state";
 import StaffEndRentalCard from "./components/staff-end-rental-card";
 import { StaffJourneyCard } from "./components/staff-journey-card";
 import { StaffPartyCard } from "./components/staff-party-card";

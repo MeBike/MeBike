@@ -8,7 +8,7 @@ import { useTheme, YStack } from "tamagui";
 
 import type { StaffBikeSwapListNavigationProp } from "@/types/navigation";
 
-import { BikeSwapErrorState, BikeSwapLoadingState } from "../staff-bike-swap/shared";
+import { BikeSwapErrorState, BikeSwapLoadingState } from "../shared";
 import { BikeSwapRequestRow } from "./components/bike-swap-request-row";
 import { BikeSwapTabBar } from "./components/bike-swap-tab-bar";
 import { EmptyState } from "./components/empty-state";

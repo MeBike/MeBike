@@ -1,7 +1,7 @@
 import { useTheme, XStack, YStack } from "tamagui";
 
 import { IconSymbol } from "@/components/IconSymbol";
-import { getBikeSwapRequestCode } from "@/screen/staff-bike-swap/shared";
+import { getBikeSwapRequestCode } from "@/screen/staff/bike-swap/shared";
 import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";
 
