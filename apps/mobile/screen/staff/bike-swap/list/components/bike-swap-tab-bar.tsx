@@ -1,9 +1,9 @@
 import { Pressable } from "react-native";
 import { XStack, YStack } from "tamagui";
 
-import type { StaffBikeSwapTab } from "@/screen/staff/bike-swap/list/hooks/use-staff-bike-swap-list-screen";
-
 import { AppText } from "@/ui/primitives/app-text";
+
+import type { StaffBikeSwapTab } from "../hooks";
 
 type BikeSwapTabBarProps = {
   activeTab: StaffBikeSwapTab;
