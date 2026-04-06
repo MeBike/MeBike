@@ -1,8 +1,9 @@
+import { useTheme, XStack, YStack } from "tamagui";
+
 import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
-import { useTheme, XStack, YStack } from "tamagui";
 
 type RentalActionBarProps = {
   rentalId: string;

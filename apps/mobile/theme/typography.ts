@@ -3,7 +3,6 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-  Inter_800ExtraBold,
 } from "@expo-google-fonts/inter";
 
 export const fontFamily = "Inter";
@@ -13,7 +12,6 @@ export const fontFaces = {
   medium: "InterMedium",
   semibold: "InterSemiBold",
   bold: "InterBold",
-  heavy: "InterHeavy",
 } as const;
 
 export const appFontSources = {
@@ -21,7 +19,6 @@ export const appFontSources = {
   [fontFaces.medium]: Inter_500Medium,
   [fontFaces.semibold]: Inter_600SemiBold,
   [fontFaces.bold]: Inter_700Bold,
-  [fontFaces.heavy]: Inter_800ExtraBold,
 } as const;
 
 export const fontSizes = {
@@ -55,7 +52,6 @@ export const fontWeights = {
   medium: "500",
   semibold: "600",
   bold: "700",
-  heavy: "800",
 } as const;
 
 export const letterSpacing = {
@@ -129,14 +125,14 @@ export const textStyles = {
   eyebrow: defineTextStyle({
     fontSize: typographyTokens.meta,
     lineHeight: lineHeights.ssm,
-    fontWeight: fontWeights.heavy,
+    fontWeight: fontWeights.semibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
   }),
   fieldLabel: defineTextStyle({
     fontSize: typographyTokens.meta,
     lineHeight: lineHeights.ssm,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
   }),
   label: defineTextStyle({
     fontSize: typographyTokens.label,
@@ -161,17 +157,17 @@ export const textStyles = {
   compactStrong: defineTextStyle({
     fontSize: typographyTokens.bodySmall,
     lineHeight: 18,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
   }),
   subhead: defineTextStyle({
     fontSize: typographyTokens.body,
     lineHeight: 22,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
   }),
   actionLabel: defineTextStyle({
     fontSize: typographyTokens.body,
     lineHeight: lineHeights.md,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
   }),
   value: defineTextStyle({
     fontSize: typographyTokens.value,
@@ -182,40 +178,40 @@ export const textStyles = {
   sectionTitle: defineTextStyle({
     fontSize: typographyTokens.section,
     lineHeight: lineHeights.lg,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
   }),
   cardTitle: defineTextStyle({
     fontSize: typographyTokens.section,
     lineHeight: 21,
-    fontWeight: fontWeights.heavy,
+    fontWeight: fontWeights.semibold,
     letterSpacing: -0.3,
   }),
   tabLabel: defineTextStyle({
     fontSize: typographyTokens.body,
     lineHeight: 20,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
   }),
   headline: defineTextStyle({
     fontSize: typographyTokens.headline,
     lineHeight: 26,
-    fontWeight: fontWeights.heavy,
+    fontWeight: fontWeights.bold,
     letterSpacing: -0.3,
   }),
   metricValue: defineTextStyle({
     fontSize: typographyTokens.metric,
     lineHeight: 54,
-    fontWeight: fontWeights.heavy,
+    fontWeight: fontWeights.bold,
     letterSpacing: -1,
   }),
   priceValue: defineTextStyle({
     fontSize: typographyTokens.price,
     lineHeight: lineHeights.md,
-    fontWeight: fontWeights.heavy,
+    fontWeight: fontWeights.bold,
   }),
   badgeLabel: defineTextStyle({
     fontSize: typographyTokens.badge,
     lineHeight: 12,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     letterSpacing: 0.8,
     textTransform: "uppercase",
   }),
@@ -234,7 +230,7 @@ export const textStyles = {
   hero: defineTextStyle({
     fontSize: typographyTokens.hero,
     lineHeight: lineHeights.display,
-    fontWeight: fontWeights.heavy,
+    fontWeight: fontWeights.bold,
     letterSpacing: letterSpacing.xxxl,
   }),
 } as const;

@@ -1,9 +1,10 @@
-import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
-import { useMyBikeSwapRequestQuery } from "@hooks/rentals/use-my-bike-swap-request-query";
-import { getBikeChipDisplay } from "@utils/bike";
 import { useEffect } from "react";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
+
+import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
+import { useMyBikeSwapRequestQuery } from "@hooks/rentals/use-my-bike-swap-request-query";
+import { getBikeChipDisplay } from "@utils/bike";
 
 type UseBookingBikeSwapStateOptions = {
   bookingId: string;

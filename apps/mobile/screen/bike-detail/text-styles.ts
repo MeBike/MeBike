@@ -21,7 +21,7 @@ export function createBikeDetailTextStyles(theme: BikeTheme) {
     cardTitle: {
       fontSize: 22,
       lineHeight: 28,
-      fontWeight: fontWeights.heavy,
+      fontWeight: fontWeights.bold,
       color: resolveThemeColor(theme.textPrimary),
       letterSpacing: letterSpacing.xxl,
     } satisfies TextStyle,
@@ -83,7 +83,7 @@ export function createBikeDetailTextStyles(theme: BikeTheme) {
     balanceValue: {
       fontSize: fontSizes.lg,
       lineHeight: lineHeights.md,
-      fontWeight: fontWeights.heavy,
+      fontWeight: fontWeights.bold,
       letterSpacing: -0.3,
       color: resolveThemeColor(theme.actionPrimary),
     } satisfies TextStyle,
