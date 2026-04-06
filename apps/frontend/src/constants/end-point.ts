@@ -80,6 +80,7 @@ export const ENDPOINT = {
     AGENCY : {
         BASE : "/admin/agencies",
         ID : (id : string) => `/admin/agencies/${id}`,
+        STATUS : (id : string) => `/admin/agencies/${id}/status`,
     }
 
 } as const;
