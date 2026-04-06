@@ -9,7 +9,6 @@ import type {
 import type { RedistributionRepo } from "../redistribution.repository.types";
 
 import { RedistributionRepositoryError } from "../../domain-errors";
-import { makeRedistributionReadRepository } from "../read/redistribution.read.repository";
 import {
   detailedRedistributionRequestSelect,
   mapToRedistributionRequestDetail,
@@ -31,15 +30,16 @@ export function makeRedistributionWriteRepository(
   return {
     create(data) {
       return Effect.gen(function* () {
+        const { bikeIds, ...rest } = data;
         const raw = yield* Effect.tryPromise({
           try: () =>
             client.redistributionRequest.create({
               data: {
-                ...data,
+                ...rest,
                 status: "PENDING_APPROVAL" as RedistributionStatus,
-                items: data.bikeIds
+                items: bikeIds
                   ? {
-                      create: data.bikeIds.map(bikeId => ({ bikeId })),
+                      create: bikeIds.map(bikeId => ({ bikeId })),
                     }
                   : undefined,
               },
