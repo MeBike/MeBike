@@ -1,5 +1,6 @@
-import { useMyRentalResolvedDetailQuery } from "@hooks/query/rentals/use-my-rental-resolved-detail-query";
 import { useCallback, useEffect, useState } from "react";
+
+import { useMyRentalResolvedDetailQuery } from "@hooks/query/rentals/use-my-rental-resolved-detail-query";
 
 type Options = {
   onRentalEnd?: () => void;

@@ -1,5 +1,5 @@
 import { ActivityIndicator } from "react-native";
-import { YStack, useTheme } from "tamagui";
+import { useTheme, YStack } from "tamagui";
 
 import { AppText } from "@ui/primitives/app-text";
 

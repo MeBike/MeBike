@@ -1,8 +1,9 @@
-import { useGetRatingQuery } from "@hooks/query/rating/use-get-rating-query";
-import { useRatingActions } from "@hooks/rating/use-rating-actions";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Rental } from "@/types/rental-types";
+
+import { useGetRatingQuery } from "@hooks/query/rating/use-get-rating-query";
+import { useRatingActions } from "@hooks/rating/use-rating-actions";
 
 type RatingStateOptions = {
   bookingId: string;

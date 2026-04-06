@@ -1,11 +1,12 @@
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { IncidentDetail } from "@/contracts/server";
+
 import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { IncidentDetail } from "@/contracts/server";
 
 import {
   formatIncidentDistance,

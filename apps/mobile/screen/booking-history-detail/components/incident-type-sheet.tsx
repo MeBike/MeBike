@@ -1,12 +1,13 @@
+import { useEffect, useRef, useState } from "react";
+import { Modal, Pressable, TextInput, View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
 import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { fontSizes, fontWeights } from "@theme/typography";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Field } from "@ui/primitives/field";
-import { useEffect, useRef, useState } from "react";
-import { Modal, Pressable, TextInput, View } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
 
 type IncidentTypeSheetProps = {
   visible: boolean;

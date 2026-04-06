@@ -1,6 +1,7 @@
+import { useTheme, XStack } from "tamagui";
+
 import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { AppText } from "@ui/primitives/app-text";
-import { useTheme, XStack } from "tamagui";
 
 import { getRentalCodeLabel } from "../helpers/formatters";
 

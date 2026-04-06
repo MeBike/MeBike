@@ -1,7 +1,8 @@
+import { Spinner, useTheme, XStack, YStack } from "tamagui";
+
 import { LucideIconSymbol as IconSymbol } from "@components/lucide-icon-symbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
-import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 type BikeSwapPreviewStatus = "NONE" | "PENDING" | "CONFIRMED" | "REJECTED";
 

@@ -1,9 +1,10 @@
-import { log } from "@lib/log";
 import * as Location from "expo-location";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
+
+import { log } from "@lib/log";
 
 import { useCreateIncidentMutation } from "../../incidents/hooks/use-create-incident-mutation";
 import { useRentalIncidentQuery } from "../../incidents/hooks/use-rental-incident-query";

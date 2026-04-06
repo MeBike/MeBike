@@ -1,9 +1,4 @@
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
-import { spaceScale } from "@theme/metrics";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
-import { Screen } from "@ui/primitives/screen";
-import { getBikeChipDisplay } from "@utils/bike";
 import { useCallback } from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,6 +8,12 @@ import type {
   BookingHistoryDetailNavigationProp,
   BookingHistoryDetailRouteProp,
 } from "@/types/navigation";
+
+import { useAuthNext } from "@providers/auth-provider-next";
+import { spaceScale } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
+import { getBikeChipDisplay } from "@utils/bike";
 
 import DetailErrorState from "./components/detail-error-state";
 import DetailLoadingState from "./components/detail-loading-state";
