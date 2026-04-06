@@ -22,6 +22,8 @@ import ReservationFlowScreen from "../screen/ReservationFlowScreen";
 import ReservationScreen from "../screen/reservations";
 import ResetPasswordFormScreen from "../screen/ResetPasswordForm";
 import ResetPasswordOTPScreen from "../screen/ResetPasswordOTP";
+import StaffBikeSwapDetailScreen from "../screen/staff-bike-swap-detail/staff-bike-swap-detail-screen";
+import StaffBikeSwapListScreen from "../screen/staff-bike-swap-list/staff-bike-swap-list-screen";
 import StaffRentalDetailScreen from "../screen/staff-rental-detail/staff-rental-detail-screen";
 import StaffPhoneLookupScreen from "../screen/StaffPhoneLookupScreen";
 import StationDetailScreen from "../screen/StationDetail";
@@ -169,6 +171,16 @@ function RootNavigator() {
       <Stack.Screen
         name="StaffPhoneLookup"
         component={StaffPhoneLookupScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="StaffBikeSwapList"
+        component={StaffBikeSwapListScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="StaffBikeSwapDetail"
+        component={StaffBikeSwapDetailScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
     </Stack.Navigator>

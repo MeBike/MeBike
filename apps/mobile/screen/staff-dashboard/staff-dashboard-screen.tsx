@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback } from "react";
-import { Alert, Pressable, ScrollView, StatusBar } from "react-native";
+import { Pressable, ScrollView, StatusBar } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { RootStackParamList } from "@/types/navigation";
@@ -130,11 +130,8 @@ export default function StaffDashboardScreen() {
   }, [navigation]);
 
   const handleOpenBikeSwap = useCallback(() => {
-    Alert.alert(
-      "Yêu cầu đổi xe",
-      "Màn hình danh sách xử lý đổi xe sẽ được migrate tiếp theo. Hiện tại dashboard đã hiển thị số yêu cầu pending để staff thấy ngay.",
-    );
-  }, []);
+    navigation.navigate("StaffBikeSwapList");
+  }, [navigation]);
 
   return (
     <Screen tone="subtle">
