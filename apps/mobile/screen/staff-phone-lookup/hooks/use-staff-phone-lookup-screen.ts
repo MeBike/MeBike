@@ -1,5 +1,5 @@
 import { useStaffActiveRentalsByPhone } from "@hooks/query/rentals/use-staff-active-rentals-by-phone";
-import { useStationActions } from "@hooks/useStationAction";
+import { useGetStationListQuery } from "@hooks/query/stations/use-get-station-list-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
@@ -20,7 +20,7 @@ export function useStaffPhoneLookupScreen() {
   const [lookupPhone, setLookupPhone] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const normalizedPhone = phoneNumber.trim();
-  const { stations: stationData, isLoadingGetAllStations } = useStationActions(true);
+  const { data: stationData, isLoading: isLoadingStations } = useGetStationListQuery();
 
   const canLookup = normalizedPhone.length >= MIN_LOOKUP_PHONE_LENGTH;
 
@@ -54,7 +54,7 @@ export function useStaffPhoneLookupScreen() {
   const isShowingResolvedLookup = lookupPhone === normalizedPhone && canLookup;
   const results = isShowingResolvedLookup ? (lookupQuery.data?.data ?? []) : [];
   const hasResults = results.length > 0;
-  const isLoading = isLoadingGetAllStations || (canLookup && (isDebouncing || (lookupQuery.isFetching && !hasResults)));
+  const isLoading = isLoadingStations || (canLookup && (isDebouncing || (lookupQuery.isFetching && !hasResults)));
   const lookupErrorDescription = lookupQuery.error ? presentRentalError(lookupQuery.error) : null;
 
   const emptyState = useMemo<EmptyStateCopy>(() => {

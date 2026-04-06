@@ -1,7 +1,7 @@
 import { useCreateFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useCreateFixedSlotTemplateMutation";
 import { useUpdateFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useUpdateFixedSlotTemplateMutation";
 import { useFixedSlotTemplateDetailQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplateDetailQuery";
-import { useGetStationById } from "@hooks/query/Station/use-get-station-by-id-query";
+import { useGetStationDetailQuery } from "@hooks/query/stations/use-get-station-detail-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,7 +52,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
   const lookupStationId = !canEditStation
     ? templateData?.station_id
     : (stationId.length >= 6 ? stationId : "");
-  const { data: fetchedStation } = useGetStationById(lookupStationId ?? "");
+  const { data: fetchedStation } = useGetStationDetailQuery(lookupStationId ?? "");
 
   const resolvedStationName = stationName ?? templateData?.station_name ?? fetchedStation?.name;
   const isMutating = createMutation.isPending || updateMutation.isPending;

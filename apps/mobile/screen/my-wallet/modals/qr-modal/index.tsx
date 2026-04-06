@@ -1,12 +1,8 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { presentWalletError } from "@/presenters/wallets/wallet-error-presenter";
-import { walletTopupService } from "@services/wallet-topup.service";
 import {
   initPaymentSheet,
   PaymentSheetError,
   presentPaymentSheet,
 } from "@stripe/stripe-react-native";
-import { AppText } from "@ui/primitives/app-text";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -26,7 +22,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTheme } from "tamagui";
 
-import { hasStripePublishableKey, STRIPE_RETURN_URL } from "../../../lib/stripe";
+import { presentWalletError } from "@/presenters/wallets/wallet-error-presenter";
+import { IconSymbol } from "@components/IconSymbol";
+import { hasStripePublishableKey, STRIPE_RETURN_URL } from "@lib/stripe";
+import { walletTopupService } from "@services/wallet-topup.service";
+import { AppText } from "@ui/primitives/app-text";
+
 import { createQrModalStyles } from "./styles";
 
 type QRModalProps = {
@@ -280,7 +281,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
                 pressed ? styles.primaryButtonPressed : null,
                 isSubmitting ? styles.primaryButtonDisabled : null,
               ]}
-              >
+            >
               {isSubmitting
                 ? <ActivityIndicator color={theme.onActionPrimary.val} />
                 : <AppText tone="inverted" variant="sectionTitle">Mở Stripe PaymentSheet</AppText>}

@@ -1,5 +1,6 @@
-import { borderWidths, elevations, radii, spaceScale } from "@theme/metrics";
 import { StyleSheet } from "react-native";
+
+import { borderWidths, elevations, radii, spaceScale } from "@theme/metrics";
 
 export type QrModalThemePalette = {
   overlayScrim: string;

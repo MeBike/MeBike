@@ -1,5 +1,5 @@
 import { LoadingScreen } from "@components/LoadingScreen";
-import { useStationActions } from "@hooks/useStationAction";
+import { useGetStationListQuery } from "@hooks/query/stations/use-get-station-list-query";
 import { useNavigation } from "@react-navigation/native";
 import { Screen } from "@ui/primitives/screen";
 import { useCallback, useMemo } from "react";
@@ -19,7 +19,7 @@ function BookingHistoryScreen() {
     loadMore,
     isFetchingNextPage,
   } = useBookingHistory();
-  const { stations } = useStationActions(true);
+  const { data: stations = [] } = useGetStationListQuery();
 
   const stationNameById = useMemo(() => {
     const map = new Map<string, string>();

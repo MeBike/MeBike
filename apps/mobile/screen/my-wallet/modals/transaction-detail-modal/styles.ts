@@ -1,6 +1,7 @@
+import { StyleSheet } from "react-native";
+
 import { borderWidths, elevations, radii, spaceScale } from "@theme/metrics";
 import { fontSizes, fontWeights, lineHeights } from "@theme/typography";
-import { StyleSheet } from "react-native";
 
 export type TransactionDetailModalThemePalette = {
   overlayScrim: string;

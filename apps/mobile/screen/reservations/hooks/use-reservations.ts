@@ -1,10 +1,10 @@
+import { useGetStationListQuery } from "@hooks/query/stations/use-get-station-list-query";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Reservation } from "../../../types/reservation-types";
 
 import { useReservationActions } from "../../../hooks/use-reservation-actions";
-import { useStationActions } from "../../../hooks/useStationAction";
 
 export type ReservationFilter = "pending" | "history";
 
@@ -35,10 +35,13 @@ export function useReservations(hasToken: boolean) {
     fetchReservationHistory,
   } = useReservationActions({ hasToken, historyPage, historyVersion });
 
-  const { stations, getAllStations } = useStationActions(hasToken);
+  const {
+    data: stations = [],
+    refetch: refetchStations,
+  } = useGetStationListQuery();
   const hasLoadedOnce = useRef(false);
   const fetchPendingRef = useRef(fetchPendingReservations);
-  const getAllStationsRef = useRef(getAllStations);
+  const refetchStationsRef = useRef(refetchStations);
   const fetchHistoryRef = useRef(fetchReservationHistory);
 
   useEffect(() => {
@@ -46,8 +49,8 @@ export function useReservations(hasToken: boolean) {
   }, [fetchPendingReservations]);
 
   useEffect(() => {
-    getAllStationsRef.current = getAllStations;
-  }, [getAllStations]);
+    refetchStationsRef.current = refetchStations;
+  }, [refetchStations]);
 
   useEffect(() => {
     fetchHistoryRef.current = fetchReservationHistory;
@@ -55,7 +58,7 @@ export function useReservations(hasToken: boolean) {
 
   useEffect(() => {
     if (hasToken) {
-      getAllStationsRef.current?.();
+      void refetchStationsRef.current();
     }
   }, [hasToken]);
 
@@ -110,7 +113,7 @@ export function useReservations(hasToken: boolean) {
     setRefreshing(true);
     resetHistory();
     fetchPendingRef.current?.();
-    getAllStationsRef.current?.();
+    void refetchStationsRef.current();
   }, [hasToken, refreshing, resetHistory]);
 
   useFocusEffect(
@@ -126,7 +129,7 @@ export function useReservations(hasToken: boolean) {
 
       resetHistory();
       fetchPendingRef.current?.();
-      getAllStationsRef.current?.();
+      void refetchStationsRef.current();
     }, [hasToken, resetHistory]),
   );
 

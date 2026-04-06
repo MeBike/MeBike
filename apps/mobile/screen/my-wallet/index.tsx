@@ -14,12 +14,12 @@ import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
 
-import { QRModal } from "../components/wallet/qr-modal";
-import { TransactionDetailModal } from "../components/wallet/transaction-detail-modal";
-import { useWallet } from "../hooks/wallet/use-wallet";
-import { WalletHeroCard } from "./my-wallet/components/wallet-hero-card";
-import { WalletTopUpCta } from "./my-wallet/components/wallet-top-up-cta";
-import { WalletTransactionRow } from "./my-wallet/components/wallet-transaction-row";
+import { WalletHeroCard } from "./components/wallet-hero-card";
+import { WalletTopUpCta } from "./components/wallet-top-up-cta";
+import { WalletTransactionRow } from "./components/wallet-transaction-row";
+import { useMyWalletScreen } from "./hooks/use-my-wallet-screen";
+import { QRModal } from "./modals/qr-modal";
+import { TransactionDetailModal } from "./modals/transaction-detail-modal";
 
 const walletRefreshButtonSize = spaceScale[7];
 
@@ -32,7 +32,8 @@ function MyWalletScreen() {
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<WalletTransactionDetail | null>(null);
 
-  const wallet = useWallet();
+  const wallet = useMyWalletScreen();
+  const { getMyTransaction, getMyWallet } = wallet;
 
   const refreshWalletData = useCallback(async () => {
     await Promise.all([
@@ -41,10 +42,10 @@ function MyWalletScreen() {
     ]);
 
     await Promise.all([
-      wallet.getMyWallet(),
-      wallet.getMyTransaction(),
+      getMyWallet(),
+      getMyTransaction(),
     ]);
-  }, [queryClient, wallet]);
+  }, [getMyTransaction, getMyWallet, queryClient]);
 
   useFocusEffect(
     useCallback(() => {

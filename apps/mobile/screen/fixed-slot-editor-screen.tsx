@@ -1,3 +1,4 @@
+import { BikeColors } from "@constants/BikeColors";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,19 +14,71 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BikeColors } from "@constants/BikeColors";
+import type {
+  FixedSlotEditorNavigationProp,
+  FixedSlotEditorRouteProp,
+} from "@/types/navigation";
 
 import { DatePickerModal } from "./fixed-slot-editor/components/DatePickerModal";
 import { SelectedDatesSection } from "./fixed-slot-editor/components/SelectedDatesSection";
 import { StationSection } from "./fixed-slot-editor/components/StationSection";
 import { TimePickerModal } from "./fixed-slot-editor/components/TimePickerModal";
 import { TimeSelectionSection } from "./fixed-slot-editor/components/TimeSelectionSection";
-import { useFixedSlotEditor } from "./fixed-slot-editor/useFixedSlotEditor";
+import { useFixedSlotEditor } from "./fixed-slot-editor/use-fixed-slot-editor";
 
-import type {
-  FixedSlotEditorNavigationProp,
-  FixedSlotEditorRouteProp,
-} from "@/types/navigation";
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BikeColors.background,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  formLoader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 60,
+    gap: 12,
+  },
+  loaderText: {
+    color: BikeColors.textSecondary,
+  },
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderColor: BikeColors.divider,
+    backgroundColor: "#fff",
+  },
+  primaryButton: {
+    backgroundColor: BikeColors.primary,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  primaryButtonDisabled: {
+    opacity: 0.7,
+  },
+  primaryText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+});
 
 export default function FixedSlotEditorScreen() {
   const navigation = useNavigation<FixedSlotEditorNavigationProp>();
@@ -141,57 +194,3 @@ export default function FixedSlotEditorScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BikeColors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#fff",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  formLoader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 60,
-    gap: 12,
-  },
-  loaderText: {
-    color: BikeColors.textSecondary,
-  },
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderColor: BikeColors.divider,
-    backgroundColor: "#fff",
-  },
-  primaryButton: {
-    backgroundColor: BikeColors.primary,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-  },
-  primaryButtonDisabled: {
-    opacity: 0.7,
-  },
-  primaryText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-});

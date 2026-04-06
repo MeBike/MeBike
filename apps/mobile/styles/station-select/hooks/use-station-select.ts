@@ -1,9 +1,10 @@
 import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
 
-import { useStationRouteQuery } from "@hooks/query/Station/use-station-route-query";
-import { useStationActions } from "@hooks/useStationAction";
+import { useGetNearbyStationsQuery } from "@hooks/query/stations/use-get-nearby-stations-query";
+import { useGetStationListQuery } from "@hooks/query/stations/use-get-station-list-query";
+import { useStationRouteQuery } from "@hooks/query/stations/use-station-route-query";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import React, { useEffect } from "react";
+import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useCurrentLocation } from "@/providers/location-provider";
@@ -25,24 +26,16 @@ export function useStationSelect() {
   const [isRoutingMode, setIsRoutingMode] = React.useState(false);
   const { location: currentLocation, refresh: refreshLocation } = useCurrentLocation();
 
+  const { data: allStations = [], refetch: refetchAllStations } = useGetStationListQuery();
   const {
-    getAllStations,
-    getNearbyStations,
-    nearbyStations,
-    isLoadingNearbyStations,
-    stations: data,
-  } = useStationActions(
-    true,
-    undefined,
-    currentLocation?.latitude,
-    currentLocation?.longitude,
+    data: nearbyStations = [],
+    isLoading: isLoadingNearbyStations,
+    refetch: refetchNearbyStations,
+  } = useGetNearbyStationsQuery(
+    currentLocation?.latitude ?? 0,
+    currentLocation?.longitude ?? 0,
+    showingNearby && Boolean(currentLocation),
   );
-
-  useEffect(() => {
-    if (showingNearby && currentLocation) {
-      getNearbyStations();
-    }
-  }, [showingNearby, currentLocation, getNearbyStations]);
 
   const handleSelectStation = (stationId: string) => {
     navigation.navigate("StationDetail", {
@@ -65,16 +58,11 @@ export function useStationSelect() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    if (showingNearby) {
-      await getNearbyStations();
-    }
-    else {
-      await getAllStations();
-    }
+    await (showingNearby ? refetchNearbyStations() : refetchAllStations());
     setRefreshing(false);
   };
 
-  const stations = showingNearby ? nearbyStations : data;
+  const stations = showingNearby ? nearbyStations : allStations;
 
   const selectedStation = React.useMemo(() => {
     if (!selectedStationId)

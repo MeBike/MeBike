@@ -1,11 +1,3 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { AppText } from "@ui/primitives/app-text";
-import {
-  formatCurrency,
-  formatDate,
-  formatTransactionStatus,
-  formatTransactionType,
-} from "@utils/wallet/formatters";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import Animated, {
@@ -15,6 +7,15 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useTheme } from "tamagui";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { AppText } from "@ui/primitives/app-text";
+import {
+  formatCurrency,
+  formatDate,
+  formatTransactionStatus,
+  formatTransactionType,
+} from "@utils/wallet/formatters";
 
 import { createTransactionDetailModalStyles } from "./styles";
 
