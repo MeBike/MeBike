@@ -1,8 +1,12 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { hasStripePublishableKey, STRIPE_RETURN_URL } from "@lib/stripe";
+import { walletTopupService } from "@services/wallet-topup.service";
 import {
   initPaymentSheet,
   PaymentSheetError,
   presentPaymentSheet,
 } from "@stripe/stripe-react-native";
+import { AppText } from "@ui/primitives/app-text";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -23,10 +27,6 @@ import Animated, {
 import { useTheme } from "tamagui";
 
 import { presentWalletError } from "@/presenters/wallets/wallet-error-presenter";
-import { IconSymbol } from "@components/IconSymbol";
-import { hasStripePublishableKey, STRIPE_RETURN_URL } from "@lib/stripe";
-import { walletTopupService } from "@services/wallet-topup.service";
-import { AppText } from "@ui/primitives/app-text";
 
 import { createQrModalStyles } from "./styles";
 
@@ -226,7 +226,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
               <AppText variant="xlTitle">Nạp tiền vào ví</AppText>
 
               <Pressable onPress={closeWithAnimation} style={({ pressed }) => [styles.closeButton, pressed ? styles.closeButtonPressed : null]}>
-                <IconSymbol color={theme.textSecondary.val} name="xmark" size={18} />
+                <IconSymbol color={theme.textSecondary.val} name="close" size="input" />
               </Pressable>
             </View>
 

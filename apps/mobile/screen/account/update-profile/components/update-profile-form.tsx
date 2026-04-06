@@ -1,13 +1,12 @@
 import type { Control, FieldErrors } from "react-hook-form";
 
-import { MaterialIcons } from "@expo/vector-icons";
-import { Controller } from "react-hook-form";
-import { useTheme, XStack, YStack } from "tamagui";
-
 import { IconSymbol } from "@components/IconSymbol";
+import { MaterialIcons } from "@expo/vector-icons";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
 import { Field } from "@ui/primitives/field";
+import { Controller } from "react-hook-form";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import type { TomTomAddressSuggestion } from "../lib/tomtom";
 import type { UpdateProfileFormValues } from "../schema";
@@ -52,7 +51,7 @@ export function UpdateProfileForm({
             <AppInput
               autoCapitalize="words"
               invalid={Boolean(errors.fullname?.message)}
-              leadingIcon={<IconSymbol color={theme.textSecondary.val} name="person" size={18} />}
+              leadingIcon={<IconSymbol color={theme.textSecondary.val} name="person" size="input" />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Nhập họ và tên"
@@ -87,7 +86,7 @@ export function UpdateProfileForm({
         <AppInput
           autoCapitalize="none"
           keyboardType="email-address"
-          leadingIcon={<IconSymbol color={theme.textSecondary.val} name="envelope" size={18} />}
+          leadingIcon={<IconSymbol color={theme.textSecondary.val} name="mail" size="input" />}
           placeholder="Email"
           readOnly
           trailingIcon={<MaterialIcons color={theme.textSecondary.val} name="lock-outline" size={20} />}
@@ -109,7 +108,7 @@ export function UpdateProfileForm({
             <AppInput
               invalid={Boolean(errors.phoneNumber?.message)}
               keyboardType="phone-pad"
-              leadingIcon={<IconSymbol color={theme.textSecondary.val} name="phone" size={18} />}
+              leadingIcon={<IconSymbol color={theme.textSecondary.val} name="phone" size="input" />}
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="Nhập số điện thoại"
@@ -128,7 +127,7 @@ export function UpdateProfileForm({
             render={({ field: { value } }) => (
               <AppInput
                 invalid={Boolean(errors.location?.message)}
-                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="location" size={18} />}
+                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="location" size="input" />}
                 onChangeText={onLocationChange}
                 placeholder="Nhập địa chỉ giao nhận"
                 readOnly={!isEditing}

@@ -47,7 +47,7 @@ export function DetailActions({
         <XStack alignItems="center" gap="$3">
           {isCancelling
             ? <Spinner color="$onActionDanger" />
-            : <IconSymbol color={theme.onActionDanger.val} name="xmark" size={20} />}
+            : <IconSymbol color={theme.onActionDanger.val} name="close" size="md" />}
           <AppText tone="inverted" variant="actionLabel">
             Hủy đặt trước
           </AppText>
@@ -58,7 +58,7 @@ export function DetailActions({
         <XStack alignItems="center" gap="$3">
           {isConfirming
             ? <Spinner color="$onActionPrimary" />
-            : <IconSymbol color={theme.onActionPrimary.val} name="play.fill" size={20} />}
+            : <IconSymbol color={theme.onActionPrimary.val} name="play" size="md" />}
           <AppText tone="inverted" variant="actionLabel">
             Xác nhận & bắt đầu
           </AppText>

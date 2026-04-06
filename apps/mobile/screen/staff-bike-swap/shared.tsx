@@ -94,7 +94,7 @@ export function BikeSwapErrorState({ description, onRetry, title }: BikeSwapErro
           justifyContent="center"
           width={64}
         >
-          <IconSymbol color={theme.actionPrimary.val} name="exclamationmark.triangle" size={28} />
+          <IconSymbol color={theme.actionPrimary.val} name="warning" size="chip" />
         </YStack>
         <YStack alignItems="center" gap="$2">
           <AppText align="center" variant="headline">

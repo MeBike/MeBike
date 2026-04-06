@@ -26,7 +26,7 @@ export function RentalIdPill({ rentalId }: RentalIdPillProps) {
           {" "}
           {getRentalCodeLabel(rentalId)}
         </AppText>
-        <IconSymbol color={theme.textSecondary.val} name="doc.on.doc" size={18} />
+        <IconSymbol color={theme.textSecondary.val} name="copy" size="input" />
       </XStack>
     </XStack>
   );

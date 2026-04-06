@@ -1,14 +1,13 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
 import React from "react";
 import { Pressable } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
-
-import { IconSymbol } from "@components/IconSymbol";
-import { borderWidths } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
 
 import type { PaymentMode } from "../types";
 
@@ -44,14 +43,14 @@ function PaymentOption({
           <YStack gap="$2">
             <XStack alignItems="center" gap="$2" justifyContent="space-between">
               <XStack alignItems="center" flex={1} gap="$2">
-                <IconSymbol color={isActive ? theme.actionPrimary.val : theme.textTertiary.val} name={icon} size={20} />
+                <IconSymbol color={isActive ? theme.actionPrimary.val : theme.textTertiary.val} name={icon} size="md" />
                 <AppText style={[bikeDetailTextStyles.optionTitle, isActive ? bikeDetailTextStyles.optionTitleActive : null]}>
                   {title}
                 </AppText>
               </XStack>
 
               {isActive
-                ? <IconSymbol color={theme.actionPrimary.val} name="checkmark.circle.fill" size={18} />
+                ? <IconSymbol color={theme.actionPrimary.val} name="check-circle" size="input" />
                 : null}
             </XStack>
 
@@ -110,8 +109,8 @@ function SubscriptionSelector({
 
                 <IconSymbol
                   color={isActive ? theme.actionPrimary.val : theme.textTertiary.val}
-                  name={isActive ? "checkmark.circle.fill" : "circle"}
-                  size={20}
+                  name={isActive ? "check-circle" : "circle"}
+                  size="md"
                 />
               </XStack>
             )}
@@ -149,14 +148,14 @@ export function PaymentMethodCard({
       <YStack gap="$3">
         <XStack gap="$3">
           <PaymentOption
-            icon="wallet.pass.fill"
+            icon="wallet"
             isActive={paymentMode === "wallet"}
             onPress={() => onSelectPaymentMode("wallet")}
             subtitle="Số dư hiện có"
             title="Ví MeBike"
           />
           <PaymentOption
-            icon="creditcard.fill"
+            icon="credit-card"
             isActive={paymentMode === "subscription"}
             onPress={() => onSelectPaymentMode("subscription")}
             subtitle={canUseSubscription ? "Gói đã đăng ký" : "Chưa có gói hoạt động"}

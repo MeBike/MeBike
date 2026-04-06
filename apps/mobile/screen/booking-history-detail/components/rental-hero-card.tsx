@@ -111,7 +111,7 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
             opacity: 0.05,
           }}
         >
-          <IconSymbol color={theme.textSecondary.val} name="clock" size={144} />
+          <IconSymbol color={theme.textSecondary.val} name="clock" size="splash" />
         </View>
 
         <AppText tone="subtle" variant="eyebrow">

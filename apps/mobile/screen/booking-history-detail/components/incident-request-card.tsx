@@ -28,7 +28,7 @@ export function IncidentRequestCard({
             justifyContent="center"
             width={44}
           >
-            <IconSymbol color={theme.actionDanger.val} name="lock.shield.fill" size={18} />
+            <IconSymbol color={theme.actionDanger.val} name="shield-lock" size="input" />
           </YStack>
 
           <YStack flex={1} gap="$1">

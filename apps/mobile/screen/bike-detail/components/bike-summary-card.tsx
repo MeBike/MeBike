@@ -114,7 +114,7 @@ export function BikeSummaryCard({
             justifyContent="center"
             width={64}
           >
-            <IconSymbol color={theme.actionPrimary.val} name="bicycle" size="feature" />
+            <IconSymbol color={theme.actionPrimary.val} name="bike" size="feature" />
           </XStack>
 
           <YStack flex={1} gap="$2">
@@ -136,7 +136,7 @@ export function BikeSummaryCard({
             </XStack>
 
             <XStack alignItems="center" gap="$1">
-              <IconSymbol color={theme.statusWarning.val} name="star.fill" size="caption" />
+              <IconSymbol color={theme.statusWarning.val} name="star" size="caption" variant="filled" />
               {hasRatings
                 ? (
                     <>
@@ -158,8 +158,8 @@ export function BikeSummaryCard({
 
         <YStack gap="$3">
           <DetailRow icon="location" label="Trạm hiện tại" value={stationName} />
-          <DetailRow icon="number" label="Nhà cung cấp" value={bike.supplier?.name ?? "Chưa cập nhật"} />
-          <DetailRow icon="cpu" label="Mã vi mạch" value={formatChipValue(bike.chipId)} />
+          <DetailRow icon="tag" label="Nhà cung cấp" value={bike.supplier?.name ?? "Chưa cập nhật"} />
+          <DetailRow icon="chip" label="Mã vi mạch" value={formatChipValue(bike.chipId)} />
         </YStack>
       </YStack>
     </AppCard>

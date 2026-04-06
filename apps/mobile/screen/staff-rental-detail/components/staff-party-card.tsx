@@ -25,7 +25,7 @@ function InfoSection({
   trailing,
 }: {
   accentColor: string;
-  iconName: "bicycle" | "person.fill";
+  iconName: "bike" | "person";
   label: string;
   primary: string;
   secondary?: string | null;
@@ -41,7 +41,7 @@ function InfoSection({
         justifyContent="center"
         width={58}
       >
-        <IconSymbol color={accentColor} name={iconName} size={28} />
+        <IconSymbol color={accentColor} name={iconName} size="chip" />
       </YStack>
 
       <YStack flex={1} gap="$1">
@@ -84,7 +84,7 @@ export function StaffPartyCard({ booking }: StaffPartyCardProps) {
     >
       <InfoSection
         accentColor={theme.textBrand.val}
-        iconName="bicycle"
+        iconName="bike"
         label="Xe đạp"
         primary={formatSupportCode(booking.bike.id)}
         secondary={`Chip: ${getBikeChipDisplay(booking.bike)}`}
@@ -93,7 +93,7 @@ export function StaffPartyCard({ booking }: StaffPartyCardProps) {
       <YStack borderTopColor="$borderSubtle" borderTopWidth={borderWidths.subtle}>
         <InfoSection
           accentColor={theme.actionPrimary.val}
-          iconName="person.fill"
+          iconName="person"
           label="Khách hàng"
           primary={booking.user.fullname}
           secondary={booking.user.phoneNumber}
@@ -120,7 +120,7 @@ export function StaffPartyCard({ booking }: StaffPartyCardProps) {
                 shadowRadius={12}
                 width={56}
               >
-                <IconSymbol color={theme.textSecondary.val} name="phone" size={24} />
+                <IconSymbol color={theme.textSecondary.val} name="phone" size="lg" />
               </YStack>
             </Pressable>
           )}

@@ -46,7 +46,7 @@ export function RatingSummary({
 
   return (
     <XStack alignItems="center" gap={style.gap}>
-      <IconSymbol name={hasRatings ? "star.fill" : "star"} size={style.iconSize} color={theme.actionAccent.val} />
+      <IconSymbol color={theme.actionAccent.val} name="star" size={style.iconSize} variant={hasRatings ? "filled" : "outline"} />
       {hasRatings
         ? (
             <AppText selectable tone="muted" variant={style.variant}>

@@ -43,7 +43,7 @@ export function RentalMetaCard({ detail }: RentalMetaCardProps) {
             justifyContent="center"
             width={44}
           >
-            <IconSymbol color={theme.textSecondary.val} name="wallet.pass.fill" size={20} />
+            <IconSymbol color={theme.textSecondary.val} name="wallet" size="md" />
           </YStack>
           <AppText variant="cardTitle">
             Thanh toán
@@ -68,7 +68,7 @@ export function RentalMetaCard({ detail }: RentalMetaCardProps) {
               justifyContent="center"
               width={44}
             >
-              <IconSymbol color={theme.textSecondary.val} name="lock.shield.fill" size={20} />
+              <IconSymbol color={theme.textSecondary.val} name="shield-lock" size="md" />
             </YStack>
             <YStack gap="$1">
               <AppText variant="cardTitle">

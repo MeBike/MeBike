@@ -129,7 +129,7 @@ export function IncidentTypeSheet({
                 paddingVertical="$4"
               >
                 <View style={{ paddingTop: 4 }}>
-                  <IconSymbol color={theme.textTertiary.val} name="wrench.and.screwdriver.fill" size={18} />
+                  <IconSymbol color={theme.textTertiary.val} name="tools" size="input" />
                 </View>
 
                 <TextInput

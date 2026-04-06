@@ -33,14 +33,14 @@ const introSlides: Array<{
     id: 1,
     title: "Chào mừng đến với MeBike",
     description: "Thuê xe đạp dễ dàng tại các trạm metro. Di chuyển nhanh chóng và thân thiện với môi trường.",
-    icon: "bicycle",
+    icon: "bike",
     color: BikeColors.primary,
   },
   {
     id: 2,
     title: "Quét mã QR để mở khóa",
     description: "Chỉ cần quét mã QR trên xe để mở khóa và bắt đầu hành trình của bạn.",
-    icon: "qrcode.viewfinder",
+    icon: "qr-code",
     color: BikeColors.secondary,
   },
   {
@@ -129,7 +129,7 @@ export default function IntroScreen() {
       {/* Header with back button and skip */}
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={goBack}>
-          <IconSymbol name="arrow.left" size="lg" color={BikeColors.textPrimary} />
+          <IconSymbol color={BikeColors.textPrimary} name="arrow-left" size="lg" />
         </Pressable>
 
         <Pressable style={styles.skipButton} onPress={goBack}>
@@ -159,7 +159,7 @@ export default function IntroScreen() {
             {currentSlide === introSlides.length - 1 ? "Bắt đầu" : "Tiếp theo"}
           </Text>
           <IconSymbol
-            name="arrow.right"
+            name="arrow-right"
             size="md"
             color="white"
           />

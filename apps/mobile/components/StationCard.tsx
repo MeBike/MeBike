@@ -1,3 +1,5 @@
+/* eslint-disable ts/no-use-before-define, unicorn/filename-case */
+
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -32,20 +34,20 @@ export function StationCard({ station, onPress }: StationCardProps) {
     <Pressable style={styles.container} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.stationInfo}>
-          <IconSymbol name="building.2.fill" size={24} color={BikeColors.primary} />
+          <IconSymbol color={BikeColors.primary} name="station" size="lg" />
           <Text style={styles.stationName} numberOfLines={1}>
             {station.name}
           </Text>
         </View>
         <View style={styles.headerRight}>
           <View style={[styles.statusIndicator, { backgroundColor: availabilityColor }]} />
-          <IconSymbol name="chevron.right" size={16} color={BikeColors.onSurfaceVariant} />
+          <IconSymbol color={BikeColors.onSurfaceVariant} name="chevron-right" size="sm" />
         </View>
       </View>
 
       <View style={styles.details}>
         <View style={styles.locationContainer}>
-          <IconSymbol name="location.fill" size={16} color={BikeColors.onSurfaceVariant} />
+          <IconSymbol color={BikeColors.onSurfaceVariant} name="location" size="sm" variant="filled" />
           <Text style={styles.locationText} numberOfLines={2}>
             {station.address}
           </Text>

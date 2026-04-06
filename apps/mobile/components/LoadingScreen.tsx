@@ -1,14 +1,15 @@
+/* eslint-disable ts/no-use-before-define, unicorn/filename-case */
+
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { BikeColors } from "../constants/BikeColors";
-
 import { IconSymbol } from "./IconSymbol";
 
 export const LoadingScreen: React.FC = () => {
   return (
     <View style={styles.container}>
-      <IconSymbol name="bicycle" size={60} color={BikeColors.primary} />
+      <IconSymbol color={BikeColors.primary} name="bike" size="jumbo" />
       <Text style={styles.title}>MeBike</Text>
       <ActivityIndicator size="large" color={BikeColors.primary} style={styles.loader} />
       <Text style={styles.subtitle}>Đang tải...</Text>

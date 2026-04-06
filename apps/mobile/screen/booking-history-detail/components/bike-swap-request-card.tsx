@@ -50,23 +50,23 @@ export function BikeSwapRequestCard({
                 ? (
                     <IconSymbol
                       color={theme.statusSuccess.val}
-                      name="checkmark.circle.fill"
-                      size={18}
+                      name="check-circle"
+                      size="input"
                     />
                   )
                 : isRejected
                   ? (
                       <IconSymbol
                         color={theme.actionDanger.val}
-                        name="exclamationmark.triangle"
-                        size={18}
+                        name="warning"
+                        size="input"
                       />
                     )
                   : (
                       <IconSymbol
                         color={theme.actionPrimary.val}
-                        name="wrench.and.screwdriver.fill"
-                        size={18}
+                        name="tools"
+                        size="input"
                       />
                     )}
           </YStack>

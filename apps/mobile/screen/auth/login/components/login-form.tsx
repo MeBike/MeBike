@@ -1,14 +1,13 @@
 import type { Control, FieldErrors } from "react-hook-form";
 
-import { Controller } from "react-hook-form";
-import { Pressable } from "react-native";
-import { useTheme, YStack } from "tamagui";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
 import { Field } from "@ui/primitives/field";
+import { Controller } from "react-hook-form";
+import { Pressable } from "react-native";
+import { useTheme, YStack } from "tamagui";
 
 import type { LoginFormValues } from "../login.schema";
 
@@ -48,7 +47,7 @@ function LoginForm({
               autoCorrect={false}
               invalid={Boolean(errors.email?.message)}
               keyboardType="email-address"
-              leadingIcon={<IconSymbol name="envelope" size={18} color={theme.textSecondary.val} />}
+              leadingIcon={<IconSymbol color={theme.textSecondary.val} name="mail" size="input" />}
               onChangeText={onChange}
               placeholder="Nhập email của bạn"
               value={value}
@@ -66,15 +65,15 @@ function LoginForm({
               autoCapitalize="none"
               autoCorrect={false}
               invalid={Boolean(errors.password?.message)}
-              leadingIcon={<IconSymbol name="lock" size={18} color={theme.textSecondary.val} />}
+              leadingIcon={<IconSymbol color={theme.textSecondary.val} name="lock" size="input" />}
               onChangeText={onChange}
               placeholder="Nhập mật khẩu"
               secureTextEntry={!showPassword}
               trailingIcon={(
                 <Pressable onPress={toggleShowPassword}>
                   <IconSymbol
-                    name={showPassword ? "eye.slash" : "eye"}
-                    size={18}
+                    name={showPassword ? "eye-off" : "eye"}
+                    size="input"
                     color={theme.textSecondary.val}
                   />
                 </Pressable>

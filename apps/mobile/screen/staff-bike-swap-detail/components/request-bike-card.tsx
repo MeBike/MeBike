@@ -20,7 +20,7 @@ function BikeInfoPanel({
 }: {
   chipId: string;
   iconColor: string;
-  iconName: "bicycle" | "checkmark.circle.fill";
+  iconName: "bike" | "check-circle";
   supplierName: string;
   subtitle: string;
   tone: "warning" | "success";
@@ -40,7 +40,7 @@ function BikeInfoPanel({
         tone={tone}
       >
         <XStack alignItems="center" gap="$3">
-          <IconSymbol color={iconColor} name={iconName} size={24} />
+          <IconSymbol color={iconColor} name={iconName} size="lg" />
 
           <YStack flex={1} gap="$1">
             <AppText variant="sectionTitle">
@@ -64,7 +64,7 @@ export function RequestBikeCard({ request }: RequestBikeCardProps) {
       <BikeInfoPanel
         chipId={request.oldBike.chipId}
         iconColor={theme.statusWarning.val}
-        iconName="bicycle"
+        iconName="bike"
         subtitle="Xe báo lỗi (Cần thu hồi)"
         supplierName={request.oldBike.supplier.name}
         tone="warning"
@@ -75,7 +75,7 @@ export function RequestBikeCard({ request }: RequestBikeCardProps) {
             <BikeInfoPanel
               chipId={request.newBike.chipId}
               iconColor={theme.statusSuccess.val}
-              iconName="checkmark.circle.fill"
+              iconName="check-circle"
               subtitle="Xe cấp mới (Giao khách)"
               supplierName={request.newBike.supplier.name}
               tone="success"
@@ -87,7 +87,7 @@ export function RequestBikeCard({ request }: RequestBikeCardProps) {
         ? (
             <AppCard borderRadius={22} chrome="flat" padding="$4" tone="muted">
               <XStack alignItems="flex-start" gap="$3">
-                <IconSymbol color={theme.actionPrimary.val} name="info.circle" size={18} />
+                <IconSymbol color={theme.actionPrimary.val} name="info" size="input" />
                 <AppText flex={1} tone="muted" variant="bodySmall">
                   Hệ thống sẽ tự động chọn 1 xe
                   {" "}

@@ -196,7 +196,7 @@ export default function ResetPasswordFormScreen() {
           <View style={styles.inputContainer}>
             <IconSymbol
               name="lock"
-              size={20}
+              size="md"
               color={BikeColors.textSecondary}
             />
             <TextInput
@@ -214,8 +214,8 @@ export default function ResetPasswordFormScreen() {
               onPress={() => setShowPassword(!showPassword)}
             >
               <IconSymbol
-                name={showPassword ? "eye.slash" : "eye"}
-                size={20}
+                name={showPassword ? "eye-off" : "eye"}
+                size="md"
                 color={BikeColors.textSecondary}
               />
             </Pressable>
@@ -239,7 +239,7 @@ export default function ResetPasswordFormScreen() {
           <View style={styles.inputContainer}>
             <IconSymbol
               name="lock"
-              size={20}
+              size="md"
               color={BikeColors.textSecondary}
             />
             <TextInput
@@ -257,8 +257,8 @@ export default function ResetPasswordFormScreen() {
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               <IconSymbol
-                name={showConfirmPassword ? "eye.slash" : "eye"}
-                size={20}
+                name={showConfirmPassword ? "eye-off" : "eye"}
+                size="md"
                 color={BikeColors.textSecondary}
               />
             </Pressable>

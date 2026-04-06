@@ -33,7 +33,7 @@ export function StaffWarningCard({ description, title }: StaffWarningCardProps) 
           justifyContent="center"
           width={36}
         >
-          <IconSymbol color={theme.statusDanger.val} name="exclamationmark.triangle" size={20} />
+          <IconSymbol color={theme.statusDanger.val} name="warning" size="md" />
         </YStack>
 
         <YStack flex={1} gap="$2">

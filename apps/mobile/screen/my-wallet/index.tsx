@@ -1,18 +1,17 @@
-import { useFocusEffect } from "@react-navigation/native";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StatusBar, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme, XStack, YStack } from "tamagui";
-
 import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { iconSizes, spaceScale } from "@theme/metrics";
+import { useFocusEffect } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
+import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StatusBar, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import { WalletHeroCard } from "./components/wallet-hero-card";
 import { WalletTopUpCta } from "./components/wallet-top-up-cta";
@@ -130,7 +129,7 @@ function MyWalletScreen() {
                 justifyContent="center"
                 width={walletRefreshButtonSize}
               >
-                <IconSymbol color={theme.textSecondary.val} name="arrow.clockwise" size={iconSizes.md} />
+                <IconSymbol color={theme.textSecondary.val} name="refresh" size="md" />
               </XStack>
             </Pressable>
           </XStack>

@@ -61,7 +61,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
               justifyContent="center"
               width={bookingIconShellSize}
             >
-              <IconSymbol color={theme.textSecondary.val} name="bicycle.circle.fill" size={20} />
+              <IconSymbol color={theme.textSecondary.val} name="bike" size="md" />
             </YStack>
             <YStack flex={1} gap="$1">
               <AppText variant="cardTitle">
@@ -98,7 +98,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
             <YStack
               alignItems="center"
               backgroundColor={theme.surfaceDefault.val}
-               borderColor={theme.borderStrong.val}
+              borderColor={theme.borderStrong.val}
               borderRadius="$round"
               borderWidth={1.5}
               height={routeNodeSize}
@@ -159,14 +159,14 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
 
         <XStack alignItems="center" gap="$4" justifyContent="space-between">
           <XStack alignItems="center" gap="$2" flex={1}>
-            <IconSymbol color={theme.textTertiary.val} name="calendar" size={14} />
+            <IconSymbol color={theme.textTertiary.val} name="calendar" size="caption" />
             <AppText tone="muted" variant="bodySmall">
               {formatVietnamDateTime(booking.startTime)}
             </AppText>
           </XStack>
 
           <XStack alignItems="center" gap="$2" justifyContent="flex-end" flex={1}>
-            <IconSymbol color={theme.textTertiary.val} name="clock" size={14} />
+            <IconSymbol color={theme.textTertiary.val} name="clock" size="caption" />
             <AppText tone="muted" variant="bodySmall">
               {formatDurationMinutes(booking.duration, { hasEnded: Boolean(booking.endTime) })}
             </AppText>

@@ -25,7 +25,7 @@ export function StationDetailHeader({
       subtitle={(
         <XStack alignItems="center" gap="$2">
           <XStack alignItems="center" flex={1} gap="$2" minWidth={0}>
-            <IconSymbol name="location.fill" size={14} color={theme.onSurfaceBrand.val} />
+            <IconSymbol color={theme.onSurfaceBrand.val} name="location" size="caption" variant="filled" />
             <AppText
               ellipsizeMode="tail"
               flex={1}

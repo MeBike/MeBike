@@ -54,7 +54,7 @@ export function ResultCard({
             <AppText numberOfLines={1} variant="cardTitle">{title}</AppText>
 
             <XStack alignItems="center" gap="$2" paddingTop="$1">
-              <IconSymbol color={theme.statusSuccess.val} name="location.fill" size={16} />
+              <IconSymbol color={theme.statusSuccess.val} name="location" size="sm" variant="filled" />
               <AppText flex={1} numberOfLines={1} tone="muted" variant="subhead">
                 {stationLabel ?? "--"}
               </AppText>

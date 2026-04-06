@@ -1,13 +1,13 @@
+import type { UserDetail } from "@services/users/user-service";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths, radii, spaceScale, spacingRules } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image, Pressable } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
-import type { UserDetail } from "@services/users/user-service";
-
 import avatarFallback from "@/assets/avatar2.png";
-import { IconSymbol } from "@components/IconSymbol";
-import { borderWidths, radii, spaceScale, spacingRules } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 
 type ProfileHeaderProps = {
   profile: UserDetail;
@@ -76,7 +76,7 @@ function ProfileHeader({
                     right={-2}
                     width={verificationBadgeSize}
                   >
-                    <IconSymbol color={theme.onStatusSuccess.val} name="checkmark" size={14} />
+                    <IconSymbol color={theme.onStatusSuccess.val} name="check" size="caption" />
                   </XStack>
                 )
               : null}
@@ -131,7 +131,7 @@ function ProfileHeader({
                         paddingHorizontal="$4"
                         paddingVertical="$2"
                       >
-                        <IconSymbol color={theme.onSurfaceBrand.val} name="envelope" size={16} />
+                        <IconSymbol color={theme.onSurfaceBrand.val} name="mail" size="sm" />
                         <AppText tone="inverted" variant="badgeLabel">
                           Xác thực email
                         </AppText>

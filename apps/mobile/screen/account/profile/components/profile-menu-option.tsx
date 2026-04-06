@@ -1,10 +1,9 @@
-import { Pressable } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
 import type { IconSymbolName } from "@components/IconSymbol";
 
 import { IconSymbol } from "@components/IconSymbol";
 import { AppText } from "@ui/primitives/app-text";
+import { Pressable } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
 
 type ProfileMenuOptionProps = {
   icon: IconSymbolName;
@@ -39,7 +38,7 @@ function ProfileMenuOption({
             justifyContent="center"
             width={44}
           >
-            <IconSymbol color={destructive ? theme.textDanger.val : iconColor} name={icon} size={20} />
+            <IconSymbol color={destructive ? theme.textDanger.val : iconColor} name={icon} size="md" />
           </XStack>
 
           <YStack flex={1} gap="$1" minWidth={0}>
@@ -58,8 +57,8 @@ function ProfileMenuOption({
 
         <IconSymbol
           color={destructive ? theme.surfaceDanger.val : theme.borderStrong.val}
-          name="chevron.right"
-          size={20}
+          name="chevron-right"
+          size="md"
         />
       </XStack>
     </Pressable>

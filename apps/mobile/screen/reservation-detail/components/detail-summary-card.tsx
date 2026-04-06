@@ -28,7 +28,7 @@ type DetailSummaryCardProps = {
 
 function getStatusIcon(status: Reservation["status"]) {
   if (status === "PENDING") {
-    return "checkmark.circle" as const;
+    return "check-circle" as const;
   }
 
   return undefined;
@@ -108,7 +108,7 @@ export function DetailSummaryCard({
                     {" "}
                     {shortReservationId}
                   </AppText>
-                  <IconSymbol color={theme.textTertiary.val} name="doc.on.doc" size="caption" />
+                  <IconSymbol color={theme.textTertiary.val} name="copy" size="caption" />
                 </XStack>
               </YStack>
             </XStack>
@@ -133,7 +133,7 @@ export function DetailSummaryCard({
 
             <DetailRow
               highlightValue
-              iconName="wallet.pass.fill"
+              iconName="wallet"
               label="Số tiền đã thanh toán"
               value={formatCurrency(reservation.prepaid)}
             />
