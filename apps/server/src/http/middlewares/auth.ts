@@ -235,6 +235,27 @@ export const requireTechnicianOrAdminOrUserMiddleware = createMiddleware(
   },
 );
 
+export const requireIncidentAccessMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (
+      user.role !== "TECHNICIAN"
+      && user.role !== "ADMIN"
+      && user.role !== "USER"
+      && user.role !== "STAFF"
+    ) {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
 export const requireTechnicianOrAdminOrUserOrAgencyMiddleware = createMiddleware(
   async (c, next) => {
     const user = c.var.currentUser;

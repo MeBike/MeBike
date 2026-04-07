@@ -96,6 +96,68 @@ describe("rentals end routing e2e", () => {
     });
   }
 
+  async function createBikeSwapRequestGraph(options: {
+    stationType: "INTERNAL" | "AGENCY";
+  }) {
+    const renter = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: renter.id, balance: 100_000n });
+
+    let agencyId: string | null = null;
+    if (options.stationType === "AGENCY") {
+      const agency = await fixture.prisma.agency.create({
+        data: {
+          name: `Swap Agency ${renter.id}`,
+          contactPhone: "0287654321",
+          status: "ACTIVE",
+        },
+      });
+      agencyId = agency.id;
+    }
+
+    const station = await fixture.factories.station({
+      name: `${options.stationType} Swap Station ${renter.id}`,
+      stationType: options.stationType,
+      agencyId,
+      capacity: 6,
+    });
+
+    const oldBike = await fixture.factories.bike({
+      stationId: station.id,
+      status: "BOOKED",
+    });
+    const replacementBike = await fixture.factories.bike({
+      stationId: station.id,
+      status: "AVAILABLE",
+    });
+    const rental = await fixture.factories.rental({
+      userId: renter.id,
+      bikeId: oldBike.id,
+      startStationId: station.id,
+      startTime: new Date("2026-03-21T08:00:00.000Z"),
+      status: "RENTED",
+    });
+
+    const bikeSwapRequest = await fixture.prisma.bikeSwapRequest.create({
+      data: {
+        rentalId: rental.id,
+        userId: renter.id,
+        oldBikeId: oldBike.id,
+        stationId: station.id,
+        status: "PENDING",
+      },
+    });
+
+    return {
+      renter,
+      station,
+      oldBike,
+      replacementBike,
+      rental,
+      bikeSwapRequest,
+      agencyId,
+    };
+  }
+
   it("includes the active return slot in admin rental detail", async () => {
     const { user, rental } = await createActiveRentalGraph();
     const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
@@ -353,5 +415,112 @@ describe("rentals end routing e2e", () => {
     });
 
     expect(response.status).toBe(200);
+  });
+
+  it("allows staff approval for bike swap requests at their internal station", async () => {
+    const { station, bikeSwapRequest, rental, oldBike, replacementBike } = await createBikeSwapRequestGraph({
+      stationType: "INTERNAL",
+    });
+    const { token: staffToken } = await createStaffToken(station.id);
+
+    const response = await fixture.app.request(
+      `http://test/v1/staff/bike-swap-requests/${bikeSwapRequest.id}/approve`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${staffToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      },
+    );
+
+    const body = await response.json() as RentalsContracts.BikeSwapRequestDetailResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.result.status).toBe("CONFIRMED");
+    expect(body.result.newBike?.id).toBe(replacementBike.id);
+
+    const persistedRequest = await fixture.prisma.bikeSwapRequest.findUnique({
+      where: { id: bikeSwapRequest.id },
+    });
+    expect(persistedRequest?.status).toBe("CONFIRMED");
+    expect(persistedRequest?.newBikeId).toBe(replacementBike.id);
+
+    const persistedRental = await fixture.prisma.rental.findUnique({
+      where: { id: rental.id },
+    });
+    expect(persistedRental?.bikeId).toBe(replacementBike.id);
+
+    const persistedOldBike = await fixture.prisma.bike.findUnique({
+      where: { id: oldBike.id },
+    });
+    expect(persistedOldBike?.status).toBe("BROKEN");
+
+    const persistedReplacementBike = await fixture.prisma.bike.findUnique({
+      where: { id: replacementBike.id },
+    });
+    expect(persistedReplacementBike?.status).toBe("BOOKED");
+
+    expect(body.result.station?.id).toBe(station.id);
+  });
+
+  it("allows agency approval for bike swap requests at its agency station", async () => {
+    const { station, bikeSwapRequest, replacementBike, agencyId } = await createBikeSwapRequestGraph({
+      stationType: "AGENCY",
+    });
+    const agencyUser = await fixture.factories.user({ role: "AGENCY" });
+    await fixture.factories.userOrgAssignment({
+      userId: agencyUser.id,
+      agencyId: agencyId!,
+    });
+    const agencyToken = fixture.auth.makeAccessToken({
+      userId: agencyUser.id,
+      role: "AGENCY",
+    });
+
+    const response = await fixture.app.request(
+      `http://test/v1/agency/bike-swap-requests/${bikeSwapRequest.id}/approve`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${agencyToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      },
+    );
+
+    const body = await response.json() as RentalsContracts.BikeSwapRequestDetailResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.result.status).toBe("CONFIRMED");
+    expect(body.result.newBike?.id).toBe(replacementBike.id);
+    expect(body.result.station?.id).toBe(station.id);
+  });
+
+  it("rejects staff approval for bike swap requests that belong to an agency station", async () => {
+    const { bikeSwapRequest } = await createBikeSwapRequestGraph({
+      stationType: "AGENCY",
+    });
+    const internalStation = await fixture.factories.station({ capacity: 5 });
+    const { token: staffToken } = await createStaffToken(internalStation.id);
+
+    const response = await fixture.app.request(
+      `http://test/v1/staff/bike-swap-requests/${bikeSwapRequest.id}/approve`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${staffToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      },
+    );
+
+    const body = await response.json() as RentalsContracts.BikeSwapRequestErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.details?.code).toBe("BIKE_SWAP_REQUEST_NOT_FOUND");
   });
 });

@@ -96,6 +96,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/admin/rentals", requireAdminMiddleware);
   app.use("/v1/admin/rentals/*", requireAdminMiddleware);
   app.use("/events", requireAuthMiddleware);
+  app.use("/v1/incidents", requireAuthMiddleware);
   app.use("/v1/incidents/*", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);

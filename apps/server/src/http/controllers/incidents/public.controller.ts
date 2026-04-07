@@ -1,6 +1,10 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 import type { IncidentsContracts } from "@mebike/shared";
 
+import {
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+} from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import type { IncidentStatus } from "generated/kysely/types";
@@ -14,43 +18,31 @@ import type { IncidentRoutes, IncidentSummary } from "./shared";
 
 import { IncidentErrorCodeSchema, incidentErrorMessages } from "./shared";
 
+function respondUnauthorized(c: Parameters<RouteHandler<any>>[0]) {
+  return c.json(
+    {
+      error: unauthorizedErrorMessages.UNAUTHORIZED,
+      details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+    },
+    c.var.authFailure === "forbidden" ? 403 : 401,
+  );
+}
+
 const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   c,
 ) => {
   const user = c.var.currentUser;
   const query = c.req.valid("query");
-
-  if (user?.role === "AGENCY" && !user.operatorStationId) {
-    return c.json<IncidentsContracts.IncidentListResponse, 200>(
-      {
-        data: [],
-        pagination: {
-          page: query.page ?? 1,
-          pageSize: query.pageSize ?? 50,
-          total: 0,
-          totalPages: 0,
-        },
-      },
-      200,
-    );
+  if (!user) {
+    return respondUnauthorized(c);
   }
-
-  if (
-    user?.role === "AGENCY"
-    && query.stationId
-    && query.stationId !== user.operatorStationId
-  ) {
-    return c.json<IncidentsContracts.IncidentListResponse, 200>(
+  if (user.role === "AGENCY") {
+    return c.json(
       {
-        data: [],
-        pagination: {
-          page: query.page ?? 1,
-          pageSize: query.pageSize ?? 50,
-          total: 0,
-          totalPages: 0,
-        },
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
       },
-      200,
+      403,
     );
   }
 
@@ -61,11 +53,9 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
         user!.role,
         {
           rentalId: query.rentalId,
-          stationId: user?.role === "AGENCY"
-            ? (query.stationId ?? user.operatorStationId ?? undefined)
-            : query.stationId,
+          stationId: query.stationId,
           status: query.status as IncidentStatus,
-          userId: user?.role === "ADMIN" || user?.role === "AGENCY"
+          userId: user?.role === "ADMIN"
             ? undefined
             : user?.userId,
         },
@@ -98,6 +88,18 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
 const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
   const user = c.var.currentUser;
   const { incidentId } = c.req.valid("param");
+  if (!user) {
+    return respondUnauthorized(c);
+  }
+  if (user.role === "AGENCY") {
+    return c.json(
+      {
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      },
+      403,
+    );
+  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -114,26 +116,6 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
-      if (
-        user?.role === "AGENCY"
-        && (
-          !user.operatorStationId
-          || right.station?.id !== user.operatorStationId
-        )
-      ) {
-        return c.json(
-          {
-            error: incidentErrorMessages.UNAUTHORIZED_INCIDENT_ACCESS,
-            details: {
-              code: IncidentErrorCodeSchema.enum.UNAUTHORIZED_INCIDENT_ACCESS,
-              incidentId,
-              userId: user.userId,
-            },
-          },
-          403,
-        );
-      }
-
       return c.json(right, 200);
     }),
     Match.tag("Left", ({ left }) =>
@@ -172,8 +154,27 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
 const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
   c,
 ) => {
-  const userId = c.var.currentUser!.userId;
-  const currentRole = c.var.currentUser!.role;
+  const currentUser = c.var.currentUser;
+  if (!currentUser) {
+    return c.json(
+      {
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      },
+      401,
+    );
+  }
+  if (currentUser.role === "AGENCY") {
+    return c.json(
+      {
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      },
+      403,
+    );
+  }
+  const userId = currentUser.userId;
+  const currentRole = currentUser.role;
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
@@ -285,6 +286,19 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
             },
             400,
           )),
+        Match.tag("IncidentInternalStationRequired", ({ stationId, stationType }) =>
+          c.json(
+            {
+              error: incidentErrorMessages.INCIDENT_INTERNAL_STATION_REQUIRED,
+              details: {
+                code: IncidentErrorCodeSchema.enum
+                  .INCIDENT_INTERNAL_STATION_REQUIRED,
+                stationId,
+                stationType,
+              },
+            },
+            400,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
@@ -296,7 +310,17 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
 const updateIncident: RouteHandler<IncidentRoutes["updateIncident"]> = async (
   c,
 ) => {
-  const userId = c.var.currentUser!.userId;
+  const currentUser = c.var.currentUser;
+  if (!currentUser) {
+    return c.json(
+      {
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      },
+      401,
+    );
+  }
+  const userId = currentUser.userId;
   const { incidentId } = c.req.valid("param");
   const body = c.req.valid("json");
 
