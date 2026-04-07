@@ -5,7 +5,7 @@ import type { PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient, UserRole } from "generated/prisma/client";
 
 import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
-import { makeStationRepository } from "@/domain/stations";
+import { makeStationRepository, makeStationService } from "@/domain/stations";
 import { makeTechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
@@ -35,6 +35,7 @@ import { makeUserCommandRepository } from "../../users/repository/user-command.r
 import { makeUserQueryRepository } from "../../users/repository/user-query.repository";
 import { makeUserCommandService } from "../../users/services/user-command.service";
 import {
+  InvalidAgencyRequestStatusTransition as InvalidAgencyRequestStatusTransitionError,
   AgencyRequestNotFound as AgencyRequestNotFoundError,
   AgencyRequestNotOwned as AgencyRequestNotOwnedError,
   AgencyRequestRepositoryError as AgencyRequestRepositoryErrorData,
@@ -140,9 +141,13 @@ function makeAgencyRequestService(
       runPrismaTransaction(client, tx =>
         Effect.gen(function* () {
           const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
-          const txAgencyService = makeAgencyService(makeAgencyRepository(tx));
+          const txAgencyRepo = makeAgencyRepository(tx);
+          const txAgencyService = makeAgencyService(txAgencyRepo);
+          const txStationService = makeStationService(makeStationRepository(tx), {
+            agencyRepo: txAgencyRepo,
+          });
           const txUserCommandService = makeUserCommandService({
-            agencyRepo: makeAgencyRepository(tx),
+            agencyRepo: txAgencyRepo,
             commandRepo: makeUserCommandRepository(tx),
             queryRepo: makeUserQueryRepository(tx),
             stationRepo: makeStationRepository(tx),
@@ -157,11 +162,58 @@ function makeAgencyRequestService(
           }
 
           const agencyRequest = found.value;
+          if (agencyRequest.status !== "PENDING") {
+            return yield* Effect.fail(
+              new InvalidAgencyRequestStatusTransitionError({
+                agencyRequestId: agencyRequest.id,
+                currentStatus: agencyRequest.status,
+                nextStatus: "APPROVED",
+              }),
+            );
+          }
+
           const createdAgency = yield* txAgencyService.create({
             name: agencyRequest.agencyName,
             contactPhone:
               agencyRequest.agencyContactPhone ?? agencyRequest.requesterPhone,
           });
+
+          if (
+            !agencyRequest.stationName
+            || !agencyRequest.stationAddress
+            || agencyRequest.stationLatitude == null
+            || agencyRequest.stationLongitude == null
+            || agencyRequest.stationTotalCapacity == null
+          ) {
+            return yield* Effect.fail(
+              new AgencyRequestRepositoryErrorData({
+                operation: "approve.createStation.missingStationMetadata",
+                cause: new Error(
+                  `Agency request ${agencyRequest.id} is missing station metadata`,
+                ),
+              }),
+            );
+          }
+
+          yield* txStationService.createStation({
+            name: agencyRequest.stationName,
+            address: agencyRequest.stationAddress,
+            stationType: "AGENCY",
+            agencyId: createdAgency.id,
+            totalCapacity: agencyRequest.stationTotalCapacity,
+            pickupSlotLimit:
+              agencyRequest.stationPickupSlotLimit ?? agencyRequest.stationTotalCapacity,
+            returnSlotLimit:
+              agencyRequest.stationReturnSlotLimit ?? agencyRequest.stationTotalCapacity,
+            latitude: agencyRequest.stationLatitude,
+            longitude: agencyRequest.stationLongitude,
+          }).pipe(
+            Effect.mapError(cause =>
+              new AgencyRequestRepositoryErrorData({
+                operation: "approve.createStation",
+                cause,
+              })),
+          );
 
           const credentials = yield* makeAgencyAccountCredentials({
             agencyId: createdAgency.id,

@@ -81,7 +81,7 @@ export type StationService = {
   ) => Effect.Effect<PageResult<NearestStationRow>>;
 };
 
-function makeStationService(repo: StationRepo, deps: {
+export function makeStationService(repo: StationRepo, deps: {
   agencyRepo: Pick<AgencyRepo, "getById">;
 }): StationService {
   function resolveCapacitySplit(input: {

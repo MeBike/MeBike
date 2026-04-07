@@ -141,6 +141,22 @@ export const requireAgencyMiddleware = createMiddleware(async (c, next) => {
   await next();
 });
 
+export const requireStaffOrAgencyMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (user.role !== "STAFF" && user.role !== "AGENCY") {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
 export const requireAdminOrStaffOrAgencyMiddleware = createMiddleware(
   async (c, next) => {
     const user = c.var.currentUser;

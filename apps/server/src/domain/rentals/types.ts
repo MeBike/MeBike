@@ -29,7 +29,7 @@ export type ConfirmRentalReturnInput = {
   rentalId: string;
   stationId: string;
   confirmedByUserId: string;
-  operatorRole?: "ADMIN" | "STAFF" | "AGENCY";
+  operatorRole?: "STAFF" | "AGENCY";
   operatorStationId?: string | null;
   operatorAgencyId?: string | null;
   confirmationMethod: ConfirmationMethod;

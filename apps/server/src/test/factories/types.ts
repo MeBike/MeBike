@@ -23,6 +23,8 @@ export type StationOverrides = {
   id?: string;
   name?: string;
   address?: string;
+  stationType?: "INTERNAL" | "AGENCY";
+  agencyId?: string | null;
   capacity?: number;
   pickupSlotLimit?: number;
   returnSlotLimit?: number;

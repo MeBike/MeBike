@@ -342,10 +342,10 @@ export const confirmRentalReturnByOperator = createRoute({
       },
     },
   },
-  responses: {
-    200: {
-      description: "Rental return confirmed by admin/staff/agency operator",
-      content: {
+    responses: {
+      200: {
+        description: "Rental return confirmed by staff or agency operator",
+        content: {
         "application/json": {
           schema: RentalDetailSchemaOpenApi,
         },

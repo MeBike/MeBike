@@ -13,6 +13,7 @@ import {
   requireAdminOrStaffOrAgencyMiddleware,
   requireAgencyMiddleware,
   requireStaffMiddleware,
+  requireStaffOrAgencyMiddleware,
   requireUserMiddleware,
 } from "@/http/middlewares/auth";
 
@@ -58,7 +59,7 @@ export function registerRentalRoutes(
 
   const confirmReturnByOperatorRoute = {
     ...rentals.confirmRentalReturnByOperator,
-    middleware: [requireAdminOrStaffOrAgencyMiddleware] as const,
+    middleware: [requireStaffOrAgencyMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(

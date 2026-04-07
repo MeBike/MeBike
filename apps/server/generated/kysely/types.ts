@@ -306,6 +306,13 @@ export type AgencyRequest = {
     agency_name: string;
     agency_address: string | null;
     agency_contact_phone: string | null;
+    station_name: string | null;
+    station_address: string | null;
+    station_latitude: string | null;
+    station_longitude: string | null;
+    station_total_capacity: number | null;
+    station_pickup_slot_limit: number | null;
+    station_return_slot_limit: number | null;
     status: Generated<AgencyRequestStatus>;
     description: string | null;
     reviewed_by_user_id: string | null;

@@ -31,12 +31,14 @@ const DEMO_PASSWORD = "Demo@123456";
 
 const USERS_TARGET = 32;
 const RENTALS_TARGET = 120;
-const DEMO_NON_CUSTOMER_USERS = 6;
+const DEMO_NON_CUSTOMER_USERS = 7;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
-const DEMO_AGENCY_NORTH_ID = "019b17bd-d130-7e7d-be69-91ceef7b9007";
-const DEMO_AGENCY_SOUTH_ID = "019b17bd-d130-7e7d-be69-91ceef7b9008";
+const LEGACY_DEMO_AGENCY_IDS = [
+  "019b17bd-d130-7e7d-be69-91ceef7b9007",
+  "019b17bd-d130-7e7d-be69-91ceef7b9008",
+] as const;
 const DEMO_TECH_TEAM_A_ID = "019b17bd-d130-7e7d-be69-91ceef7b9005";
 const DEMO_TECH_TEAM_B_ID = "019b17bd-d130-7e7d-be69-91ceef7b9006";
 
@@ -212,10 +214,19 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
     },
     {
       id: uuidv7(),
-      fullname: "Demo Agency Operator",
+      fullname: "Demo Agency Operator 1",
       email: "agency1@mebike.local",
       phoneNumber: "0900000005",
       username: "demo_agency_1",
+      role: UserRole.AGENCY,
+      verify: UserVerifyStatus.VERIFIED,
+    },
+    {
+      id: uuidv7(),
+      fullname: "Demo Agency Operator 2",
+      email: "agency2@mebike.local",
+      phoneNumber: "0900000006",
+      username: "demo_agency_2",
       role: UserRole.AGENCY,
       verify: UserVerifyStatus.VERIFIED,
     },
@@ -584,6 +595,30 @@ async function main() {
       })),
     });
 
+    await prisma.userOrgAssignment.deleteMany({
+      where: {
+        agencyId: {
+          in: [...LEGACY_DEMO_AGENCY_IDS],
+        },
+      },
+    });
+
+    await prisma.$executeRaw`
+      UPDATE "Station"
+      SET
+        "station_type" = 'INTERNAL'::"station_type",
+        "agency_id" = NULL
+      WHERE "agency_id" IN (${LEGACY_DEMO_AGENCY_IDS[0]}::uuid, ${LEGACY_DEMO_AGENCY_IDS[1]}::uuid)
+    `;
+
+    await prisma.agency.deleteMany({
+      where: {
+        id: {
+          in: [...LEGACY_DEMO_AGENCY_IDS],
+        },
+      },
+    });
+
     const [mainAgency, eastAgency] = await Promise.all([
       prisma.agency.upsert({
         where: { id: DEMO_AGENCY_MAIN_ID },
@@ -611,34 +646,6 @@ async function main() {
           name: "Demo Agency East",
           contactPhone: "02873000002",
           status: "ACTIVE",
-        },
-      }),
-      prisma.agency.upsert({
-        where: { id: DEMO_AGENCY_NORTH_ID },
-        create: {
-          id: DEMO_AGENCY_NORTH_ID,
-          name: "Demo Agency North",
-          contactPhone: "02873000003",
-          status: "INACTIVE",
-        },
-        update: {
-          name: "Demo Agency North",
-          contactPhone: "02873000003",
-          status: "INACTIVE",
-        },
-      }),
-      prisma.agency.upsert({
-        where: { id: DEMO_AGENCY_SOUTH_ID },
-        create: {
-          id: DEMO_AGENCY_SOUTH_ID,
-          name: "Demo Agency South",
-          contactPhone: "02873000004",
-          status: "SUSPENDED",
-        },
-        update: {
-          name: "Demo Agency South",
-          contactPhone: "02873000004",
-          status: "SUSPENDED",
         },
       }),
     ]);
@@ -712,6 +719,12 @@ async function main() {
         user: userByEmail.get("agency1@mebike.local"),
         stationId: null,
         agencyId: mainAgency.id,
+        technicianTeamId: null,
+      },
+      {
+        user: userByEmail.get("agency2@mebike.local"),
+        stationId: null,
+        agencyId: eastAgency.id,
         technicianTeamId: null,
       },
       ...technicianAssignments,
@@ -916,6 +929,7 @@ async function main() {
         staff: "staff1@mebike.local",
         manager: "manager@mebike.local",
         agency: "agency1@mebike.local",
+        agency2: "agency2@mebike.local",
         technician: "tech1@mebike.local",
         user: "user01@mebike.local",
         password: DEMO_PASSWORD,

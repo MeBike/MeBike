@@ -74,8 +74,7 @@ export function confirmRentalReturnByOperator(
             try: async () => {
               if (
                 input.operatorRole
-                && (input.operatorRole === "ADMIN"
-                  || input.operatorRole === "STAFF"
+                && (input.operatorRole === "STAFF"
                   || input.operatorRole === "AGENCY")
               ) {
                 return {

@@ -223,7 +223,7 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
       rentalId,
       stationId: body.stationId,
       confirmedByUserId: c.var.currentUser!.userId,
-      operatorRole: c.var.currentUser!.role as "ADMIN" | "STAFF" | "AGENCY",
+      operatorRole: c.var.currentUser!.role as "STAFF" | "AGENCY",
       operatorStationId: c.var.currentUser!.operatorStationId ?? null,
       operatorAgencyId: c.var.currentUser!.agencyId ?? null,
       confirmationMethod: body.confirmationMethod ?? "MANUAL",
