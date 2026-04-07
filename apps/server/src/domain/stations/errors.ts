@@ -30,9 +30,13 @@ export class StationCapacitySplitInvalid extends Data.TaggedError("StationCapaci
   readonly returnSlotLimit: number;
 }> {}
 
-export class StationAgencyRequired extends Data.TaggedError("StationAgencyRequired")<{}> {}
+export class StationAgencyRequired extends Data.TaggedError("StationAgencyRequired")<
+  Record<string, never>
+> {}
 
-export class StationAgencyForbidden extends Data.TaggedError("StationAgencyForbidden")<{}> {}
+export class StationAgencyForbidden extends Data.TaggedError("StationAgencyForbidden")<
+  Record<string, never>
+> {}
 
 export class StationAgencyNotFound extends Data.TaggedError("StationAgencyNotFound")<{
   readonly agencyId: string;
