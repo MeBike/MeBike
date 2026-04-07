@@ -20,7 +20,6 @@ import {
 } from "@queries";
 import { HTTP_STATUS } from "@constants";
 import { getErrorMessageFromBikeCode, getAxiosErrorCodeMessage } from "@utils";
-import { th } from "date-fns/locale";
 export const useBikeActions = ({
   hasToken,
   bike_detail_id,
@@ -77,6 +76,7 @@ export const useBikeActions = ({
     refetch: fetchBike,
     data,
     isFetching: isLoading,
+    isLoading: isLoadingBikes,
   } = useGetAllBikeQuery({
     page: page,
     pageSize: pageSize,
@@ -254,5 +254,6 @@ export const useBikeActions = ({
     getRentalBikes,
     isFetchingRentalBikes,
     totalRecord: data?.pagination.totalRecords || 0,
+    isLoadingBikes,
   };
 };

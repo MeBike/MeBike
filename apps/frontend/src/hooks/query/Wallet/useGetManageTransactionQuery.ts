@@ -3,12 +3,21 @@ import { walletService } from "@services/wallet.service";
 import { QUERY_KEYS } from "@constants/queryKey";
 const fetchManageTransactions = async ({
   page,
-  limit,
-}: { page?: number; limit?: number }) => {
+  pageSize,
+  id,
+}: {
+  page?: number;
+  pageSize?: number;
+  id: string;
+}) => {
   try {
-    const response = await walletService.getManageTransactions({ page, limit });
-    if(response.status === 200){
-        return response.data;
+    const response = await walletService.getManageTransactions({
+      page,
+      pageSize,
+      id,
+    });
+    if (response.status === 200) {
+      return response.data;
     }
   } catch (error) {
     console.log(error);
@@ -17,10 +26,16 @@ const fetchManageTransactions = async ({
 };
 export const useGetManageTransactionQuery = ({
   page,
-  limit,
-}: { page?: number; limit?: number } = {}) => {
+  pageSize,
+  id,
+}: {
+  page?: number;
+  pageSize?: number;
+  id: string;
+}) => {
   return useQuery({
-    queryKey: QUERY_KEYS.WALLET.MANAGE_TRANSACTIONS(page, limit),
-    queryFn: () => fetchManageTransactions({ page, limit }),
+    queryKey: QUERY_KEYS.WALLET.MANAGE_TRANSACTIONS(id, page, pageSize),
+    queryFn: () => fetchManageTransactions({ page, pageSize, id }),
+    enabled: Boolean(id),
   });
 };

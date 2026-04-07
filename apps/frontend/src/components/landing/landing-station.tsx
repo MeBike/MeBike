@@ -3,16 +3,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Bike } from "lucide-react";
 import { dashboardService } from "@/services/dashboard.service";
+import { Station } from "@/types";
 
-interface StationData {
-  name: string;
-  availableBikes: number;
-  average_rating?: number;
-  total_ratings?: number;
-}
 
 export function Stations() {
-  const [stations, setStations] = useState<StationData[]>([]);
+  const [stations, setStations] = useState<Station[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +16,7 @@ export function Stations() {
         const response = await dashboardService.getStations();
         if (response.data) {
           //order by most available first
-          const sortedStations = response.data.data.sort((a, b) => b.availableBikes - a.availableBikes);
+          const sortedStations = response.data.data.sort((a, b) => b.bikes.available - a.bikes.available);
           setStations(sortedStations);
         }
       } catch (error) {
@@ -87,18 +82,18 @@ export function Stations() {
                 </div>
                 <Badge
                   variant={
-                    getStatus(station.availableBikes) === "available" ? "default" : "secondary"
+                    getStatus(station.bikes.available) === "available" ? "default" : "secondary"
                   }
                 >
-                  {getStatus(station.availableBikes) === "available" ? "Sẵn sàng" : "Sắp hết"}
+                  {getStatus(station.bikes.available) === "available" ? "Sẵn sàng" : "Sắp hết"}
                 </Badge>
               </div>
               <div className="flex items-center gap-2 text-foreground">
                 <Bike className="w-5 h-5 text-primary" />
-                <span className="text-2xl font-bold">{station.availableBikes}</span>
+                <span className="text-2xl font-bold">{station.bikes.available}</span>
                 <span className="text-sm text-muted-foreground">xe có sẵn</span>
               </div>
-              {station.total_ratings !== undefined && (
+              {/* {station.total_ratings !== undefined && (
                 <div className="flex items-center gap-2 mt-2">
                   {station.total_ratings > 0 ? (
                     <>
@@ -110,7 +105,7 @@ export function Stations() {
                     <span className="text-xs text-muted-foreground">Chưa có đánh giá</span>
                   )}
                 </div>
-              )}
+              )} */}
             </Card>
           ))}
         </div>

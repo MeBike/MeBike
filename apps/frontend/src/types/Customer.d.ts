@@ -1,19 +1,34 @@
-export type UserRole = "ADMIN" | "STAFF" | "USER" | "SOS";
-export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "";
-export type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
-
+export type UserRole = "ADMIN" | "STAFF" | "USER" | "AGENCY" | 
+"MANAGER" | "TECHNICIAN";
+export type VerifyStatus = "VERIFIED" | "UNVERIFIED";
+export type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
+export interface OrgAssigment {
+  station : {
+    id : string;
+    name : string;
+  }
+  agency : {
+    id : string;
+    name : string;
+  }
+  technicianTeam : {
+    id : string;
+    name : string;
+  }
+}
 export interface DetailUser {
   id: string;
   fullName: string;
   email: string;
   verify: VerifyStatus;
-  accountStatus?: AccountStatus;
+  accountStatus: AccountStatus;
   location: string | null;
   username: string | null;
   phoneNumber: string | null;
   avatar: string | null;
   role: UserRole;
   nfcCardUid: string | null;
+  orgAssignment : OrgAssigment;
   createdAt: string;
   updatedAt: string;
 }

@@ -115,33 +115,24 @@ export default function ProfilePage() {
   };
   const handleSave = async () => {
     if (!user) return;
-    
     setIsSaving(true);
-    
     const updatedData: Partial<UpdateProfileSchemaFormData> = {};
-    
-    // Kiểm tra các field text
     const textFields: (keyof UpdateProfileSchemaFormData)[] = [
       "fullName",
       "username",
       "phoneNumber",
       "location",
     ];
-
     textFields.forEach((field) => {
-      const newValue = formData[field as keyof DetailUser];
-      const oldValue = user[field as keyof DetailUser] ?? "";
-
+      const newValue = formData[field];
+      const oldValue = user[field] ?? "";
       if (newValue !== oldValue) {
         updatedData[field] = newValue || "";
       }
     });
-
-    // Upload ảnh lên Firebase khi Save (nếu có file mới)
     if (formData.avatarFile) {
       try {
         setIsUploadingAvatar(true);
-        // Compress ảnh trước khi upload
         const compressedFile = await compressImage(formData.avatarFile);
         const imageUrl = await uploadImageToFirebase(compressedFile, "avatars");
         updatedData.avatar = imageUrl;
@@ -155,11 +146,9 @@ export default function ProfilePage() {
         setIsUploadingAvatar(false);
       }
     } else if (formData.avatar !== user.avatar && !avatarPreview.startsWith("data:")) {
-      // Avatar đã thay đổi và đã là URL Firebase
       updatedData.avatar = formData.avatar ?? undefined;
     }
 
-    // Nếu có field nào thay đổi mới gọi API
     if (Object.keys(updatedData).length > 0) {
       try {
         await updateProfile(updatedData);

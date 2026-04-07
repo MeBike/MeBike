@@ -310,13 +310,6 @@ export default function RentalsPage() {
                       {...register("status")}
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                     >
-                      {detailData.status === "RESERVED" && (
-                        <>  
-                          <option value="RENTED">ĐANG THUÊ</option>
-                          <option value="COMPLETED">ĐÃ HOÀN THÀNH</option>
-                          <option value="CANCELLED">ĐÃ HỦY</option>
-                        </>
-                      )}
                       {detailData.status === "RENTED" && (
                         <>
                           <option value="COMPLETED">ĐÃ HOÀN THÀNH</option>

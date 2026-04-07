@@ -72,7 +72,6 @@ export function RentalFilters({
               <SelectItem value="RENTED">Đang thuê</SelectItem>
               <SelectItem value="COMPLETED">Hoàn thành</SelectItem>
               <SelectItem value="CANCELLED">Đã hủy</SelectItem>
-              <SelectItem value="RESERVED">Đã đặt trước</SelectItem>
             </SelectContent>
           </Select>
         </div>

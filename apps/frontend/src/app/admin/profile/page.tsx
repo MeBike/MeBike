@@ -119,7 +119,6 @@ export default function ProfilePage() {
     const updatedData = fields.reduce((acc, field) => {
       const newValue = formData[field];
       const oldValue = user[field as keyof DetailUser] ?? "";
-
       if (newValue !== oldValue) {
         acc[field] = newValue || "";
       }

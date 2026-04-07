@@ -1,10 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { reservationService } from "@services/reservation.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
-const fetchAllReservations = async ({page, limit} : {page?: number, limit?: number}) => {
+import type { ReservationOption,ReservationStatus } from "@/types";
+const fetchAllReservations = async ({
+  page,
+  pageSize,
+  status,
+  option,
+}: {
+  page?: number;
+  pageSize?: number;
+  status?: ReservationStatus;
+  option?: ReservationOption;
+}) => {
   try {
-    const response = await reservationService.getUserReservations({page, limit});
-    if(response.status === 200) {
+    const query: Record<string, number | string> = {
+      page: page ?? 1,
+      pageSize: pageSize ?? 10,
+    };
+    if (status) query.status = status;
+    if (option) query.option = option;
+    const response = await reservationService.getUserReservations(query);
+    if (response.status === 200) {
       return response.data;
     }
   } catch (error) {
@@ -12,10 +29,20 @@ const fetchAllReservations = async ({page, limit} : {page?: number, limit?: numb
     throw new Error("Failed to fetch reservations");
   }
 };
-export const useGetAllReservationQuery = ({page, limit}: {page?: number, limit?: number}) => {
+export const useGetAllReservationQuery = ({
+  page,
+  pageSize,
+  status,
+  option
+}: {
+  page?: number;
+  pageSize?: number;
+  status ?: ReservationStatus;
+  option ?: ReservationOption;
+}) => {
   return useQuery({
-    queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, limit),
-    queryFn: () => fetchAllReservations({page, limit}),
-    staleTime: 5 * 60 * 1000, 
+    queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize),
+    queryFn: () => fetchAllReservations({ page: page, pageSize: pageSize , status : status , option : option }),
+    staleTime: 5 * 60 * 1000,
   });
 };

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { QUERY_KEYS , HTTP_STATUS } from "@constants";
 import { useCreateStationMutation,useSoftDeleteStationMutation,useUpdateStationMutation} from "@mutations"
-import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationStatsReservationQuery,useGetStationByIDQuery,useGetAllStation} from "@queries";
+import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationByIDQuery,useGetAllStation, useGetSelectStation} from "@queries";
 import {getAxiosErrorCodeMessage , getErrorMessageFromStationCode} from "@utils";
 import type { StationActionProps } from "@custom-types";
 export const useStationActions = ({
@@ -18,16 +18,17 @@ export const useStationActions = ({
   name,
 }: StationActionProps) => {
   const queryClient = useQueryClient();
-  const {
-    data: responseStationReservationStats,
-    refetch: refetchStationReservationStats,
-  } = useGetStationStatsReservationQuery(stationId || "");
   const router = useRouter();
   const {
     refetch,
     data: response,
     isLoading,
   } = useGetAllStation({ page: page, limit: limit, name: name });
+  const {
+    data : selectedDataStation,
+    isLoading : isLoadingGetSelectStation,
+    refetch : refetchingGetSelectStation
+  } = useGetSelectStation();
   const {
     refetch: fetchingStationID,
     data: responseStationDetail,
@@ -36,12 +37,6 @@ export const useStationActions = ({
   const useCreateStation = useCreateStationMutation();
   const useSoftDeleteStation = useSoftDeleteStationMutation();
   const useUpdateStation = useUpdateStationMutation(stationId || "");
-  const getReservationStats = useCallback(() => {
-    if (!hasToken || !stationId) {
-      return;
-    }
-    refetchStationReservationStats();
-  }, [refetchStationReservationStats, hasToken, stationId]);
   const getAllStations = useCallback(() => {
     if (!hasToken) {
       return;
@@ -170,13 +165,14 @@ export const useStationActions = ({
     fetchingStationID,
     responseStationDetail,
     isLoadingGetStationByID: isLoadingStationID,
-    responseStationReservationStats,
-    getReservationStats,
     responseStationBikeRevenue,
     getStationBikeRevenue,
     responseStationRevenue,
     getStationRevenue,
     responseNearestAvailableBike,
     getNearestAvailableBike,
+    selectedDataStation : selectedDataStation?.data || [],
+    isLoadingGetSelectStation,
+    refetchingGetSelectStation
   };
 };

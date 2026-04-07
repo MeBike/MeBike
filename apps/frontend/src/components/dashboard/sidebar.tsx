@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
 import NProgress from "nprogress";
-import "nprogress/nprogress.css";
+// import "nprogress/nprogress.css";
 
 // Define menu items (giữ nguyên hàm này theo code bạn)
 const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
@@ -34,20 +34,25 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       icon: User2,
       href: "/staff/profile",
       roles: ["STAFF"],
-    
     },
     {
       title: "Tổng quan",
       icon: LayoutDashboard,
       href: baseUrl,
       roles: ["ADMIN"],
-      exact : true,
+      exact: true,
     },
     {
       title: "Quản lý người dùng",
       icon: Users,
       href: `${baseUrl}/customers`,
       roles: ["STAFF", "ADMIN"],
+    },
+    {
+      title: "Quản lý nhân viên",
+      icon: Users,
+      href: `${baseUrl}/staffs`,
+      roles: ["ADMIN"],
     },
     {
       title: "Quản lý xe đạp",
@@ -91,12 +96,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
     //   href: "/user/booking-history",
     //   roles: ["USER"],
     // },
-    {
-      title: "Quản lý ví",
-      icon: Wallet,
-      href: "/admin/wallet",
-      roles: ["ADMIN"],
-    },
+    // {
+    //   title: "Quản lý ví",
+    //   icon: Wallet,
+    //   href: "/admin/wallet",
+    //   roles: ["ADMIN"],
+    // },
     {
       title: "Quản lý nhà cung cấp",
       icon: Truck,
@@ -116,17 +121,23 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       roles: ["ADMIN"],
     },
     {
+      title: "Quản lý Agency",
+      icon: MapIcon,
+      href: "/admin/agencies",
+      roles: ["ADMIN"],
+    },
+    {
       title: "Quản lý đặt trước",
       icon: FileText,
       href: "/admin/reservations",
       roles: ["ADMIN"],
     },
-    {
-      title: "Quản lý đơn báo cáo",
-      icon: FileCheck2,
-      href: "/admin/reports",
-      roles: ["ADMIN"],
-    },
+    // {
+    //   title: "Quản lý đơn báo cáo",
+    //   icon: FileCheck2,
+    //   href: "/admin/reports",
+    //   roles: ["ADMIN"],
+    // },
     {
       title: "Quản lý đánh giá",
       icon: Star,

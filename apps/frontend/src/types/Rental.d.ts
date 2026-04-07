@@ -2,7 +2,7 @@ import { Bike } from "./Bike";
 import { DetailUser } from "./Customer";
 import { Station } from "./Station";
 
-export type RentalStatus = "RENTED" | "COMPLETED" | "CANCELLED" | "RESERVED" | ""
+export type RentalStatus = "RENTED" | "COMPLETED" | "CANCELLED" | ""
 export type Rental = {
   id : string;
   user : {

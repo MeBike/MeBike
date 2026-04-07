@@ -7,18 +7,18 @@ import { ENDPOINT } from "@/constants/end-point";
 export const supplierService = {
   getAllSuppliers: async ({
     page,
-    limit,
+    pageSize,
     status,
   }: {
     page?: number;
-    limit?: number;
+    pageSize?: number;
     status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | "";
   }): Promise<AxiosResponse<ApiResponse<Supplier[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Supplier[]>>(
       ENDPOINT.SUPPLIER.BASE,
       {
         page: page,
-        limit: limit,
+        pageSize: pageSize,
         status: status,
       }
     );
