@@ -54,6 +54,12 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   } satisfies RouteConfig;
   app.openapi(staffDetailRoute, RedistributionStaffController.getRequestDetailForStaff);
 
+  const startTransitionRoute = {
+    ...redistribution.startTransition,
+    middleware: [requireStaffMiddleware] as const,
+  } satisfies RouteConfig;
+  app.openapi(startTransitionRoute, RedistributionStaffController.startTransition);
+
   // Manager routes
   const managerListRoute = {
     ...redistribution.getRequestListForManager,

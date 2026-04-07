@@ -2,7 +2,6 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import type { RedistributionContracts } from "@mebike/shared";
 
 import { Effect, Match } from "effect";
-import { uuidv7 } from "uuidv7";
 
 import { RedistributionServiceTag } from "@/domain/redistribution";
 import { withLoggedCause } from "@/domain/shared";
@@ -197,7 +196,7 @@ const cancelRedistributionRequest: RouteHandler<
         ),
         Match.tag(
           "UnauthorizedRedistributionCancellation",
-          ({ requestId, requestedByUserId, userId }) =>
+          ({ requestId, requestedByUserId, cancelledByUserId }) =>
             c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
               {
                 error:
@@ -207,7 +206,7 @@ const cancelRedistributionRequest: RouteHandler<
                     .UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
                   requestId,
                   requestedByUserId,
-                  userId,
+                  cancelledByUserId,
                 },
               },
               403,
@@ -363,9 +362,90 @@ const getRequestDetailForStaff: RouteHandler<
   );
 };
 
+const startTransition: RouteHandler<
+  RedistributionRoutes["startTransition"]
+> = async (c) => {
+  const userId = (c.var as any).currentUser?.userId ?? "";
+  const { requestId } = c.req.valid("param");
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.startTransition({ userId, requestId });
+    }),
+    "POST /v1/staff/redistribution-requests/{requestId}/start-transit",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json(
+        {
+          message: "Transition started successfully",
+          result: toContractRedistributionRequestDetail(right),
+        },
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("UserNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.USER_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+                userId: error.userId,
+              },
+            },
+            404,
+          )),
+        Match.tag("RedistributionRequestNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+                requestId: error.requestId,
+              },
+            },
+            404,
+          )),
+        Match.tag("UnauthorizedStartTransition", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
+            {
+              error: redistributionReqErrorMessages.UNAUTHORIZED_START_TRANSITION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_START_TRANSITION,
+                requestId: error.requestId,
+                requestedByUserId: error.requestedByUserId,
+                startedByUserId: error.startedByUserId,
+              },
+            },
+            403,
+          )),
+        Match.tag("CannotStartTransitionNonApprovedRedistribution", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+            {
+              error: redistributionReqErrorMessages.CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION,
+                requestId: error.requestId,
+                currentStatus: error.currentStatus,
+              },
+            },
+            400,
+          )),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const RedistributionStaffController = {
   createRedistributionRequest,
   cancelRedistributionRequest,
   getRequestListForStaff,
   getRequestDetailForStaff,
+  startTransition,
 } as const;

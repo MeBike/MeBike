@@ -53,7 +53,7 @@ export class UnauthorizedRedistributionCancellation extends Data.TaggedError(
 )<{
     readonly requestId: string;
     readonly requestedByUserId: string;
-    readonly userId: string;
+    readonly cancelledByUserId: string;
   }> {}
 
 export class UnauthorizedRedistributionApproval extends Data.TaggedError(
@@ -62,6 +62,22 @@ export class UnauthorizedRedistributionApproval extends Data.TaggedError(
     readonly requestId: string;
     readonly sourceStationId: string;
     readonly workingStationId: string;
+  }> {}
+
+export class UnauthorizedRedistributionRejection extends Data.TaggedError(
+  "UnauthorizedRedistributionRejection",
+)<{
+    readonly requestId: string;
+    readonly sourceStationId: string;
+    readonly workingStationId: string;
+  }> {}
+
+export class UnauthorizedStartTransition extends Data.TaggedError(
+  "UnauthorizedStartTransition",
+)<{
+    readonly requestId: string;
+    readonly requestedByUserId: string;
+    readonly startedByUserId: string;
   }> {}
 
 export class UserNotFound extends Data.TaggedError("UserNotFound")<{
@@ -124,12 +140,11 @@ export class CannotRejectNonPendingRedistribution extends Data.TaggedError(
     readonly currentStatus: string;
   }> {}
 
-export class UnauthorizedRedistributionRejection extends Data.TaggedError(
-  "UnauthorizedRedistributionRejection",
+export class CannotStartTransitionNonApprovedRedistribution extends Data.TaggedError(
+  "CannotStartTransitionNonApprovedRedistribution",
 )<{
     readonly requestId: string;
-    readonly sourceStationId: string;
-    readonly workingStationId: string;
+    readonly currentStatus: string;
   }> {}
 
 export type RedistributionServiceFailure
@@ -141,6 +156,8 @@ export type RedistributionServiceFailure
     | UnauthorizedRedistributionCreation
     | UnauthorizedRedistributionCancellation
     | UnauthorizedRedistributionApproval
+    | UnauthorizedRedistributionRejection
+    | UnauthorizedStartTransition
     | StationNotFound
     | AgencyNotFound
     | UserNotFound
@@ -151,5 +168,5 @@ export type RedistributionServiceFailure
     | CannotCancelNonPendingRedistribution
     | CannotApproveNonPendingRedistribution
     | CannotRejectNonPendingRedistribution
-    | UnauthorizedRedistributionRejection
+    | CannotStartTransitionNonApprovedRedistribution
     | RedistributionRepositoryError;

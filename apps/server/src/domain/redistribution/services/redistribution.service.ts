@@ -27,6 +27,7 @@ import {
   CannotApproveNonPendingRedistribution,
   CannotCancelNonPendingRedistribution,
   CannotRejectNonPendingRedistribution,
+  CannotStartTransitionNonApprovedRedistribution,
   ExceededMinBikesAtStation,
   NotEnoughBikesAtStation,
   NotEnoughEmptySlotsAtTarget,
@@ -38,6 +39,7 @@ import {
   UnauthorizedRedistributionCancellation,
   UnauthorizedRedistributionCreation,
   UnauthorizedRedistributionRejection,
+  UnauthorizedStartTransition,
   UserNotFound,
 } from "../domain-errors";
 import {
@@ -101,6 +103,15 @@ export type RedistributionService = {
     reason: string;
   }) => Effect.Effect<
     RedistributionRequestRow,
+    RedistributionServiceFailure | BikeRepositoryError,
+    Prisma | RedistributionRepository | BikeRepository
+  >;
+
+  startTransition: (args: {
+    requestId: string;
+    userId: string;
+  }) => Effect.Effect<
+    RedistributionRequestDetailRow,
     RedistributionServiceFailure | BikeRepositoryError,
     Prisma | RedistributionRepository | BikeRepository
   >;
@@ -523,7 +534,7 @@ function makeRedistributionService(
                   new UnauthorizedRedistributionCancellation({
                     requestId: args.requestId,
                     requestedByUserId: req.requestedByUserId,
-                    userId: args.userId,
+                    cancelledByUserId: args.userId,
                   }),
                 );
               }
@@ -531,6 +542,83 @@ function makeRedistributionService(
               if (req.status !== RedistributionStatus.PENDING_APPROVAL) {
                 return yield* Effect.fail(
                   new CannotCancelNonPendingRedistribution({
+                    requestId: args.requestId,
+                    currentStatus: req.status,
+                  }),
+                );
+              }
+            }
+            return yield* Effect.fail(
+              new RedistributionRequestNotFound({
+                requestId: args.requestId,
+              }),
+            );
+          })).pipe(
+          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+        );
+      }),
+
+    startTransition: args =>
+      Effect.gen(function* () {
+        const now = new Date();
+        return yield* runPrismaTransaction(client, tx =>
+          Effect.gen(function* () {
+            const txRedistributionRepo = makeRedistributionRepository(tx);
+            const updatedOpt = yield* txRedistributionRepo
+              .updateAndFindWithPopulation(
+                {
+                  id: args.requestId,
+                  status: RedistributionStatus.APPROVED,
+                },
+                {
+                  status: RedistributionStatus.IN_TRANSIT,
+                  startedAt: now,
+                },
+              )
+              .pipe(
+                Effect.catchTag("RedistributionRepositoryError", e =>
+                  Effect.fail(
+                    new RedistributionRepositoryError({
+                      operation: "startTransition",
+                      cause: e,
+                    }),
+                  )),
+              );
+
+            // Update success
+            if (Option.isSome(updatedOpt)) {
+              return updatedOpt.value;
+            }
+
+            // Update failed
+            const existingRequest = yield* txRedistributionRepo
+              .findById(args.requestId)
+              .pipe(
+                Effect.catchTag("RedistributionRepositoryError", e =>
+                  Effect.fail(
+                    new RedistributionRepositoryError({
+                      operation: "startTransition",
+                      cause: e,
+                    }),
+                  )),
+              );
+
+            if (Option.isSome(existingRequest)) {
+              const req = existingRequest.value;
+
+              if (req.requestedByUserId !== args.userId) {
+                return yield* Effect.fail(
+                  new UnauthorizedStartTransition({
+                    requestId: args.requestId,
+                    requestedByUserId: req.requestedByUserId,
+                    startedByUserId: args.userId,
+                  }),
+                );
+              }
+
+              if (req.status !== RedistributionStatus.APPROVED) {
+                return yield* Effect.fail(
+                  new CannotStartTransitionNonApprovedRedistribution({
                     requestId: args.requestId,
                     currentStatus: req.status,
                   }),

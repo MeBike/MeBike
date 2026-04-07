@@ -12,6 +12,7 @@ export const redistributionReqErrorCodes = [
   "UNAUTHORIZED_REDISTRIBUTION_CANCELLATION",
   "UNAUTHORIZED_REDISTRIBUTION_APPROVAL",
   "UNAUTHORIZED_REDISTRIBUTION_REJECTION",
+  "UNAUTHORIZED_START_TRANSITION",
   // 400
   "INSUFFICIENT_AVAILABLE_BIKES",
   "INSUFFICIENT_EMPTY_SLOTS",
@@ -19,6 +20,7 @@ export const redistributionReqErrorCodes = [
   "CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION",
   "CANNOT_APPROVE_NON_PENDING_REDISTRIBUTION",
   "CANNOT_REJECT_NON_PENDING_REDISTRIBUTION",
+  "CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION",
 ] as const;
 
 export const RedistributionReqErrorCodeSchema = z.enum(redistributionReqErrorCodes);
@@ -59,6 +61,7 @@ export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, 
   UNAUTHORIZED_REDISTRIBUTION_CANCELLATION: "You are not authorized to cancel this redistribution request",
   UNAUTHORIZED_REDISTRIBUTION_APPROVAL: "You are not authorized to approve this redistribution request",
   UNAUTHORIZED_REDISTRIBUTION_REJECTION: "You are not authorized to reject this redistribution request",
+  UNAUTHORIZED_START_TRANSITION: "You are not authorized to start the transition of this redistribution request",
   // 400
   INSUFFICIENT_AVAILABLE_BIKES: "This station does not have enough bikes for distribution",
   INSUFFICIENT_EMPTY_SLOTS: "Target station does not have enough empty slots",
@@ -66,4 +69,5 @@ export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, 
   CANNOT_CANCEL_NON_PENDING_REDISTRIBUTION: "Cannot cancel redistribution request that is not in pending state",
   CANNOT_APPROVE_NON_PENDING_REDISTRIBUTION: "Cannot approve redistribution request that is not in pending state",
   CANNOT_REJECT_NON_PENDING_REDISTRIBUTION: "Cannot reject redistribution request that is not in pending state",
+  CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION: "Cannot start the transition of this redistribution request that is not in approved state",
 };

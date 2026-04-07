@@ -374,9 +374,89 @@ export const rejectRedistributionRequest = createRoute({
   },
 });
 
+export const startTransition = createRoute({
+  method: "post",
+  path: "/v1/staff/redistribution-requests/{requestId}/start-transit",
+  tags: ["Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RedistributionRequestIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Redistribution request started transit successfully",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestDetailSchemaOpenApi,
+            "Redistribution request is in transit",
+          ),
+        },
+      },
+    },
+    400: {
+      description: "Redistribution request start transit failed",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            CannotStartTransitionNonApprovedRedistribution: {
+              value: {
+                error: "Cannot start transit redistribution request that is not in approved state",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  status: "PENDING",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: {
+      description: "Unauthorized redistribution request start transit",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            ...forbiddenResponse("Staff").content["application/json"].examples,
+            UnauthorizedRedistributionStartTransit: {
+              value: {
+                error: "Unauthorized redistribution start transit",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_START_TRANSITION,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  requestedByUserId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  startedByUserId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "Redistribution request not found",
+      example: {
+        error: "Redistribution request not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+
 export const redistributionReqsMutations = {
   createRedistributionRequest,
   cancelRedistributionRequest,
   approveRedistributionRequest,
   rejectRedistributionRequest,
+  startTransition,
 } as const;
