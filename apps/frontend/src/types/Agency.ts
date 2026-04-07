@@ -7,6 +7,3 @@ export interface Agency {
   createdAt: string;
   updatedAt: string;
 }
-export interface AgencyDetail {
-  
-}

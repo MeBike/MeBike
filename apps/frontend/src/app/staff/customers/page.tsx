@@ -42,7 +42,7 @@ export default function CustomersPage() {
     page: currentPage,
     verify: verifyFilter === "all" ? "" : verifyQuery,
     accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
-    role: roleFilter === "all" ? "" : (roleFilter as UserRole),
+    // role: roleFilter === "all" ? "" : (roleFilter as UserRole),
     searchQuery: searchQuery,
     id: selectedUserId || "",
   });

@@ -12,7 +12,6 @@ import {
   ThumbsUp,
   Hash,
   Phone,
-  ClipboardList
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -168,7 +167,7 @@ export default function DetailRating({ rating }: DetailRatingProps) {
                     <p className="text-sm font-semibold mt-1 italic text-muted-foreground">
                       Phân loại: <span className="text-foreground">{rating.reasons.appliesTo === "bike" ? "Về Xe" : "Về Trạm"}</span>
                     </p>
-                    <p className="text-sm text-foreground leading-relaxed">"{rating.reasons.message}"</p>
+                    <p className="text-sm text-foreground leading-relaxed">{rating.reasons.message}</p>
                   </div>
                 </div>
               </div>

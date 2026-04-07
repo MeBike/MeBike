@@ -1,19 +1,19 @@
 
-export interface IUser{
+export interface IUserRating{
   id : string;
   fullName : string;
   phoneNumber : string;
 }
-export interface IBike {
+export interface IBikeRating {
   id : string;
   chipId : string;
 }
-export interface IStation { 
+export interface IStationRating { 
   id : string;
   name : string;
   address : string;
 }
-export interface IReason {
+export interface IReasonRating {
   id : string;
   type : "ISSUE" | "COMPLIMENT";
   appliesTo : "bike" | "station";
@@ -22,13 +22,13 @@ export interface IReason {
 export interface Rating {
   id: string;
   rentalId : string;
-  user : IUser;
-  bike : IBike;
-  station : IStation;
+  user : IUserRating;
+  bike : IBikeRating;
+  station : IStationRating;
   bikeScore : number;
   stationScore : number;
   comment : string | null;
-  reasons : IReason;
+  reasons : IReasonRating;
   createdAt : string;
   updatedAt : string;
   editedAt : string | null;

@@ -21,7 +21,6 @@ export default function StationDetailPage() {
     getStationByID,
     responseStationDetail,
     isLoadingGetStationByID,
-    getReservationStats,
     updateStation,
   } = useStationActions({
     hasToken: true,
@@ -34,9 +33,9 @@ export default function StationDetailPage() {
 
   const fetchData = useCallback(async () => {
     if (stationId) {
-      await Promise.all([getStationByID(), getReservationStats()]);
+      await Promise.all([getStationByID(),]);
     }
-  }, [stationId, getStationByID, getReservationStats]);
+  }, [stationId, getStationByID]);
 
   useEffect(() => {
     fetchData();
