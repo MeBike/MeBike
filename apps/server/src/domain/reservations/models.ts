@@ -12,6 +12,7 @@ export type ReservationRow = {
   readonly id: string;
   readonly userId: string;
   readonly bikeId: string | null;
+  readonly bikeNumber: string | null;
   readonly stationId: string;
   readonly pricingPolicyId: string | null;
   readonly reservationOption: ReservationOption;
@@ -37,6 +38,7 @@ export type ReservationDetailUserRow = {
 
 export type ReservationDetailBikeRow = {
   readonly id: string;
+  readonly bikeNumber: string;
   readonly chipId: string;
   readonly status: BikeStatus;
 };

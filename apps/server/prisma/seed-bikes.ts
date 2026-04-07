@@ -11,6 +11,7 @@ import {
   UserRole,
   UserVerifyStatus,
 } from "../generated/prisma/client";
+import { formatBikeNumber } from "../src/domain/bikes/bike-number";
 import logger from "../src/lib/logger";
 import bikes from "./seed/bike.json";
 import { STATION_IDS } from "./seed/station-ids";
@@ -134,7 +135,7 @@ async function main() {
     await prisma.bike.deleteMany();
 
     logger.info("Inserting bikes...");
-    for (const bike of bikes as any[]) {
+    for (const [bikeIndex, bike] of (bikes as any[]).entries()) {
       const oldStationId = bike.station_id?.$oid || bike.station_id;
       const stationName = oldStationId ? stationNameMap[oldStationId] : undefined;
       const stationId = stationName ? STATION_IDS[stationName] : undefined;
@@ -150,6 +151,7 @@ async function main() {
       await prisma.bike.create({
         data: {
           id: uuidv7(),
+          bikeNumber: formatBikeNumber(bikeIndex + 1),
           chipId: bike.chip_id,
           stationId,
           supplierId: supplier.id,

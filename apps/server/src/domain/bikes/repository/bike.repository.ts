@@ -11,6 +11,7 @@ import { isPrismaRecordNotFound, isPrismaUniqueViolation } from "@/infrastructur
 
 import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 
+import { formatBikeNumber } from "../bike-number";
 import { BikeRepositoryError, DuplicateChipId } from "../domain-errors";
 
 export type BikeRepo = {
@@ -93,7 +94,7 @@ export function toBikeOrderBy(
   const sortDir = req.sortDir ?? "asc";
   switch (sortBy) {
     case "name":
-      return { chipId: sortDir };
+      return { bikeNumber: sortDir };
     case "status":
     default:
       return { status: sortDir };
@@ -106,6 +107,7 @@ export function makeBikeRepository(
   const client = db;
   const select = {
     id: true,
+    bikeNumber: true,
     chipId: true,
     stationId: true,
     supplierId: true,
@@ -120,20 +122,43 @@ export function makeBikeRepository(
   ) =>
     tx.bike.findUnique({ where: { id: bikeId }, select });
 
+  const createBikeWithNumber = async (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    input: {
+      chipId: string;
+      stationId: string;
+      supplierId: string;
+      status: BikeStatus;
+    },
+  ) => {
+    const [counter] = await tx.$queryRaw<Array<{ value: bigint }>>`
+      SELECT nextval('bike_number_seq')::bigint AS value
+    `;
+
+    if (!counter) {
+      throw new Error("Failed to get next bike number value");
+    }
+
+    return tx.bike.create({
+      data: {
+        bikeNumber: formatBikeNumber(Number(counter.value)),
+        chipId: input.chipId,
+        stationId: input.stationId,
+        supplierId: input.supplierId,
+        status: input.status,
+        updatedAt: new Date(),
+      },
+      select,
+    });
+  };
+
   return {
     create: input =>
       Effect.tryPromise({
         try: () =>
-          client.bike.create({
-            data: {
-              chipId: input.chipId,
-              stationId: input.stationId,
-              supplierId: input.supplierId,
-              status: input.status,
-              updatedAt: new Date(),
-            },
-            select,
-          }),
+          "$transaction" in client
+            ? client.$transaction(tx => createBikeWithNumber(tx, input))
+            : createBikeWithNumber(client, input),
         catch: (err: unknown) => {
           if (isPrismaUniqueViolation(err)) {
             return new DuplicateChipId({ chipId: input.chipId });

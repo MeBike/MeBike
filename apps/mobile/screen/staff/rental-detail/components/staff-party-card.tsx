@@ -9,8 +9,7 @@ import { IconSymbol } from "@/components/IconSymbol";
 import { borderWidths, elevations } from "@/theme/metrics";
 import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";
-import { getBikeChipDisplay } from "@/utils/bike";
-import { formatSupportCode } from "@/utils/id";
+import { getBikeDisplayLabel } from "@/utils/bike";
 
 type StaffPartyCardProps = {
   booking: RentalDetail;
@@ -86,8 +85,8 @@ export function StaffPartyCard({ booking }: StaffPartyCardProps) {
         accentColor={theme.textBrand.val}
         iconName="bike"
         label="Xe đạp"
-        primary={formatSupportCode(booking.bike.id)}
-        secondary={`Chip: ${getBikeChipDisplay(booking.bike)}`}
+        primary={getBikeDisplayLabel(booking.bike)}
+        secondary={booking.bike.chipId}
       />
 
       <YStack borderTopColor="$borderSubtle" borderTopWidth={borderWidths.subtle}>

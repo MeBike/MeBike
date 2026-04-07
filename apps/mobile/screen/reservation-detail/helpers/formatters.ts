@@ -15,7 +15,7 @@ export function formatReservationDateTime(value?: string | null) {
 
 export function getReservationIdentityTitle(reservation: Reservation) {
   if (reservation.bikeId) {
-    return `Xe #${String(reservation.bikeId).slice(-4)}`;
+    return reservation.bikeNumber ?? `Xe #${String(reservation.bikeId).slice(-4)}`;
   }
 
   return "Chỗ trống tại trạm";

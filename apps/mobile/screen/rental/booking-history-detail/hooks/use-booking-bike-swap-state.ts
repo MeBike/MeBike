@@ -1,10 +1,9 @@
+import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
+import { useMyBikeSwapRequestQuery } from "@hooks/rentals/use-my-bike-swap-request-query";
+import { getBikeDisplayLabel } from "@utils/bike";
 import { useEffect } from "react";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
-
-import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
-import { useMyBikeSwapRequestQuery } from "@hooks/rentals/use-my-bike-swap-request-query";
-import { getBikeChipDisplay } from "@utils/bike";
 
 type UseBookingBikeSwapStateOptions = {
   bookingId: string;
@@ -45,9 +44,9 @@ export function useBookingBikeSwapState({
       : "NONE";
 
   const confirmedBikeLabel = bikeSwapRequest?.newBike
-    ? getBikeChipDisplay(bikeSwapRequest.newBike)
+    ? getBikeDisplayLabel(bikeSwapRequest.newBike)
     : detail?.bike
-      ? getBikeChipDisplay(detail.bike)
+      ? getBikeDisplayLabel(detail.bike)
       : undefined;
 
   useEffect(() => {

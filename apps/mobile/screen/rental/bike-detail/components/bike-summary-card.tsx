@@ -9,25 +9,6 @@ import type { BikeSummary } from "@/contracts/server";
 
 import { createBikeDetailTextStyles } from "../text-styles";
 
-function shortId(value: string, options?: { head?: number; tail?: number }) {
-  const head = options?.head ?? 8;
-  const tail = options?.tail ?? 4;
-
-  if (!value || value.length <= head + tail + 1) {
-    return value;
-  }
-
-  return `${value.slice(0, head)}...${value.slice(-tail)}`;
-}
-
-function formatChipValue(value: string) {
-  if (!value) {
-    return "Chưa cập nhật";
-  }
-
-  return value.length > 16 ? shortId(value, { head: 8, tail: 4 }) : value;
-}
-
 function getStatusTone(status: BikeSummary["status"]) {
   switch (status) {
     case "AVAILABLE":
@@ -122,8 +103,7 @@ export function BikeSummaryCard({
               <YStack flex={1} gap="$1">
                 <AppText style={bikeDetailTextStyles.cardTitle}>Xe đạp</AppText>
                 <AppText style={bikeDetailTextStyles.cardSubtitle}>
-                  #
-                  {shortId(bike.id)}
+                  {bike.bikeNumber}
                 </AppText>
               </YStack>
 
@@ -159,7 +139,7 @@ export function BikeSummaryCard({
         <YStack gap="$3">
           <DetailRow icon="location" label="Trạm hiện tại" value={stationName} />
           <DetailRow icon="tag" label="Nhà cung cấp" value={bike.supplier?.name ?? "Chưa cập nhật"} />
-          <DetailRow icon="chip" label="Mã vi mạch" value={formatChipValue(bike.chipId)} />
+          <DetailRow icon="tag" label="Mã xe" value={bike.bikeNumber} />
         </YStack>
       </YStack>
     </AppCard>

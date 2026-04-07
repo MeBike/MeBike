@@ -18,6 +18,7 @@ import {
   UserVerifyStatus,
   WalletStatus,
 } from "../generated/prisma/client";
+import { formatBikeNumber } from "../src/domain/bikes/bike-number";
 import logger from "../src/lib/logger";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
@@ -735,6 +736,7 @@ async function main() {
 
     const bikesToCreate = Array.from({ length: 40 }, (_, idx) => ({
       id: uuidv7(),
+      bikeNumber: formatBikeNumber(idx + 1),
       chipId: `DEMO-CHIP-${String(idx + 1).padStart(3, "0")}`,
       stationId: pick(stationIds, idx),
       supplierId: suppliers[idx % suppliers.length]!.id,

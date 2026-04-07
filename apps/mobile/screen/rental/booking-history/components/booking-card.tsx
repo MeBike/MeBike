@@ -68,7 +68,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
                 Xe đạp
               </AppText>
               <AppText tone="muted" variant="bodySmall">
-                {formatSupportCode(booking.bikeId)}
+                {booking.bikeNumber ?? formatSupportCode(booking.bikeId)}
               </AppText>
             </YStack>
           </XStack>

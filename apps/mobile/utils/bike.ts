@@ -1,6 +1,6 @@
-import type { BikeSummary } from "@/contracts/server";
-
 import { bikeStatusColors } from "@theme/index";
+
+import type { BikeSummary } from "@/contracts/server";
 
 const BIKE_STATUS_LABELS: Record<BikeSummary["status"], string> = {
   AVAILABLE: "Có sẵn",
@@ -15,10 +15,22 @@ export function getBikeStatusLabel(status: BikeSummary["status"]) {
   return BIKE_STATUS_LABELS[status];
 }
 
-export function getBikeChipDisplay(bike: Pick<BikeSummary, "chipId" | "id">) {
-  return bike.chipId
-    ? `#${bike.chipId.slice(-6)}`
-    : `#${bike.id.slice(-6)}`;
+export function formatBikeNumber(bikeNumber?: string | null, fallbackId?: string | null) {
+  if (bikeNumber) {
+    return bikeNumber;
+  }
+
+  if (!fallbackId) {
+    return "--";
+  }
+
+  return `#${fallbackId.slice(-6)}`;
+}
+
+export function getBikeDisplayLabel(
+  bike: { bikeNumber?: string | null; id?: string | null },
+) {
+  return formatBikeNumber(bike.bikeNumber, bike.id);
 }
 
 export function isBikeAvailable(status: BikeSummary["status"]) {

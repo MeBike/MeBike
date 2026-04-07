@@ -22,6 +22,11 @@ export const adminRentalListSelect = {
       fullName: true,
     },
   },
+  bike: {
+    select: {
+      bikeNumber: true,
+    },
+  },
 } as const;
 
 type AdminRentalListSelectRow = PrismaTypes.RentalGetPayload<{
@@ -38,6 +43,7 @@ export function mapToAdminRentalListItem(
       fullname: item.user.fullName,
     },
     bikeId: item.bikeId,
+    bikeNumber: item.bike?.bikeNumber ?? null,
     status: item.status,
     startStationId: item.startStationId,
     endStationId: item.endStationId,
@@ -82,6 +88,7 @@ export const adminRentalDetailSelect = {
   bike: {
     select: {
       id: true,
+      bikeNumber: true,
       chipId: true,
       status: true,
       supplierId: true,
@@ -153,6 +160,7 @@ export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRe
     },
     bike: {
       id: raw.bike.id,
+      bikeNumber: raw.bike.bikeNumber,
       chipId: raw.bike.chipId,
       status: raw.bike.status,
       supplierId: raw.bike.supplierId,
