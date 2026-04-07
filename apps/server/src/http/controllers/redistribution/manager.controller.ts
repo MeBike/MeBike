@@ -254,10 +254,10 @@ const rejectRedistributionRequest: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<{ message: string } & { result: RedistributionContracts.RedistributionRequest }, 200>(
+      c.json<{ message: string } & { result: RedistributionContracts.RedistributionRequestDetail }, 200>(
         {
           message: "Redistribution request rejected successfully",
-          result: right as unknown as RedistributionContracts.RedistributionRequest,
+          result: toContractRedistributionRequestDetail(right),
         },
         200,
       )),

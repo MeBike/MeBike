@@ -310,7 +310,7 @@ export const rejectRedistributionRequest = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RedistributionRequestSchemaOpenApi,
+            RedistributionRequestDetailSchemaOpenApi,
             "Redistribution request rejected successfully",
           ),
         },

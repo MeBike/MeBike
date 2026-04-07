@@ -118,7 +118,7 @@ export type RedistributionService = {
     rejectedByUserId: string;
     reason: string;
   }) => Effect.Effect<
-    RedistributionRequestRow,
+    RedistributionRequestDetailRow,
     RedistributionServiceFailure | UserRepositoryError | BikeRepositoryError,
     Prisma | RedistributionRepository | BikeRepository
   >;
@@ -615,7 +615,7 @@ function makeRedistributionService(
             const now = new Date();
 
             const updatedOpt = yield* txRedistributionRepo
-              .update(
+              .updateAndFindWithPopulation(
                 {
                   id: args.requestId,
                   sourceStationId: stationId,
@@ -634,7 +634,7 @@ function makeRedistributionService(
             // Update success – restore bikes to AVAILABLE
             if (Option.isSome(updatedOpt)) {
               const request = updatedOpt.value;
-              const bikeIds = request.items.map(item => item.bikeId);
+              const bikeIds = request.items.map(item => item.bike.id);
 
               if (bikeIds.length > 0) {
                 yield* Effect.all(
