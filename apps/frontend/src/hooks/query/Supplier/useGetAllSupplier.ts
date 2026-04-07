@@ -1,17 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { supplierService } from "@/services/supplier.service";
 
-const fetchAllSuppliers = async (
-  page?: number,
-  limit?: number,
-  status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | ""
-) => {
+const fetchAllSuppliers = async ({
+  page,
+  pageSize,
+  status,
+}: {
+  page?: number;
+  pageSize?: number;
+  status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | "";
+}) => {
   try {
     const query: Record<string, number | string> = {
       page: page ?? 1,
-      limit: limit ?? 10,
+      pageSize: pageSize ?? 10,
     };
-    if(status) query.status = status;
+    if (status) query.status = status;
     const response = await supplierService.getAllSuppliers(query);
     if (response.status === 200) {
       return response.data;
@@ -21,9 +25,17 @@ const fetchAllSuppliers = async (
     throw new Error("Failed to fetch suppliers");
   }
 };
-export const useGetAllSupplierQuery = (page ?: number , limit ?:number , status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | "") => {
+export const useGetAllSupplierQuery = ({
+  page,
+  pageSize,
+  status,
+}: {
+  page?: number;
+  pageSize?: number;
+  status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | "";
+}) => {
   return useQuery({
-    queryKey: ["suppliers", "all" , page , limit , status],
-    queryFn: () => fetchAllSuppliers(page, limit, status),
+    queryKey: ["suppliers", "all", page, pageSize, status],
+    queryFn: () => fetchAllSuppliers({page:page,pageSize:pageSize,status:status}),
   });
 };

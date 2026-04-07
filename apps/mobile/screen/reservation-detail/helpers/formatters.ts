@@ -1,3 +1,4 @@
+import { formatBikeNumber } from "@utils/bike";
 import { formatVietnamDateTime } from "@utils/date";
 
 import type { Reservation } from "@/types/reservation-types";
@@ -15,7 +16,7 @@ export function formatReservationDateTime(value?: string | null) {
 
 export function getReservationIdentityTitle(reservation: Reservation) {
   if (reservation.bikeId) {
-    return `Xe #${String(reservation.bikeId).slice(-4)}`;
+    return `Xe ${formatBikeNumber(reservation.bikeNumber, reservation.bikeId)}`;
   }
 
   return "Chỗ trống tại trạm";

@@ -1,12 +1,11 @@
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { spaceScale } from "@theme/metrics";
+import { getBikeDisplayLabel } from "@utils/bike";
 import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { BookingHistoryDetailNavigationProp } from "@/types/navigation";
-
-import { useAuthNext } from "@providers/auth-provider-next";
-import { spaceScale } from "@theme/metrics";
-import { getBikeChipDisplay } from "@utils/bike";
 
 import { useBookingBikeSwapState } from "./use-booking-bike-swap-state";
 import { useBookingIncidentState } from "./use-booking-incident-state";
@@ -138,7 +137,7 @@ export function useBookingHistoryDetailScreen(bookingId: string) {
       handleRequestBikeSwap,
     },
     derived: {
-      currentBikeLabel: rental.detail?.bike ? getBikeChipDisplay(rental.detail.bike) : undefined,
+      currentBikeLabel: rental.detail?.bike ? getBikeDisplayLabel(rental.detail.bike) : undefined,
     },
   };
 }

@@ -19,5 +19,8 @@ export interface StatsSupplierBike {
   unavailable : number;
 }
 export interface SupplierActionProps {
-  hasToken: boolean , supplier_id ?: string
+  hasToken: boolean , 
+  supplier_id ?: string,
+  page ?: number,
+  pageSize ?: number,
 }

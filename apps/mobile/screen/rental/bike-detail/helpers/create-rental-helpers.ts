@@ -2,6 +2,7 @@ import type { ReservationMode } from "@components/reservation-flow/ReservationMo
 import type { QueryClient } from "@tanstack/react-query";
 
 import { invalidateRentalCreationQueries } from "@hooks/rentals/rental-cache";
+import { formatBikeNumber } from "@utils/bike";
 
 import type { BikeSummary } from "@/contracts/server";
 import type { BikeDetailNavigationProp } from "@/types/navigation";
@@ -16,9 +17,7 @@ type StationInfo = {
 };
 
 export function buildBikeLabel(bike: BikeSummary) {
-  return bike.chipId
-    ? `Chip #${bike.chipId}`
-    : `#${bike.id.slice(-4)}`;
+  return formatBikeNumber(bike.bikeNumber, bike.id);
 }
 
 export function buildReservationFlowParams(args: {

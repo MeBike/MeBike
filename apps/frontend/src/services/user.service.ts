@@ -1,11 +1,12 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { DetailUser } from "@/types";
-import { CreateUserFormData, UserProfile } from "@/schemas/user-schema";
+import { CreateUserFormData, UserProfile ,UpdateStaffFormData , UpdateUserFormData} from "@/schemas/user-schema";
 import { ResetPasswordSchemaFormData } from "@schemas";
 import { ApiResponse } from "@/types";
 import {ENDPOINT} from "@/constants/end-point";
 import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse } from "@/types";
+import page from "@/app/admin/bikes/page";
 interface DetailUserResponse<T> {
   message: string;
   result: T;
@@ -19,7 +20,6 @@ export const userService = {
     pageSize,
     verify,
     accountStatus,
-    role,
     fullName,
     sortBy,
     sortDir,
@@ -28,7 +28,6 @@ export const userService = {
     pageSize?: number;
     verify?: "VERIFIED" | "UNVERIFIED" | "";
     accountStatus?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
-    role?: "ADMIN" | "USER" | "STAFF" | "";
     fullName?: string;
     sortBy?: "fullname" | "email" | "role" | "accountStatus" | "verify" | "updatedAt";
     sortDir?: "asc" | "desc";
@@ -37,13 +36,23 @@ export const userService = {
       ENDPOINT.USER.BASE,
       {
         page: page,
-        pageSize: pageSize,
+        pageSize: 7,
         verify: verify,
         accountStatus: accountStatus,
         fullName: fullName,
-        role: role,
+        role: "USER",
         sortBy: sortBy,
         sortDir: sortDir,
+      }
+    );
+    return response;
+  },
+  getStaffOnly : async ({page , pageSize}: {page?: number; pageSize?: number}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
+      ENDPOINT.USER.BASE,{
+        roles : "STAFF,TECHNICIAN,AGENCY,MANAGER",
+        page : page || 1,
+        pageSize : pageSize || 7,
       }
     );
     return response;
@@ -151,10 +160,19 @@ export const userService = {
   },
   updateProfileAdmin: async (
     id: string,
-    data: Partial<UserProfile>
-  ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
+    data: Partial<UpdateStaffFormData>
+  ): Promise<AxiosResponse<DetailUser>> => {
     const response = await fetchHttpClient.patch<
-      DetailUserResponse<DetailUser>
+      DetailUser
+    >(ENDPOINT.USER.UPDATE(id), data);
+    return response;
+  },
+  updateProfileUser: async (
+    id: string,
+    data: Partial<UpdateUserFormData>
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.patch<
+      DetailUser
     >(ENDPOINT.USER.UPDATE(id), data);
     return response;
   }

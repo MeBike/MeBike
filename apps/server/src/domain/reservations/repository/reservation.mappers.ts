@@ -4,6 +4,11 @@ export const selectReservationRow = {
   id: true,
   userId: true,
   bikeId: true,
+  bike: {
+    select: {
+      bikeNumber: true,
+    },
+  },
   stationId: true,
   pricingPolicyId: true,
   reservationOption: true,
@@ -33,6 +38,7 @@ export const selectReservationExpandedDetailRow = {
   bike: {
     select: {
       id: true,
+      bikeNumber: true,
       chipId: true,
       status: true,
     },
@@ -52,6 +58,9 @@ export function toReservationRow(row: {
   id: string;
   userId: string;
   bikeId: string | null;
+  bike: {
+    bikeNumber: string;
+  } | null;
   stationId: string;
   pricingPolicyId: string | null;
   reservationOption: string;
@@ -68,6 +77,7 @@ export function toReservationRow(row: {
     id: row.id,
     userId: row.userId,
     bikeId: row.bikeId,
+    bikeNumber: row.bike?.bikeNumber ?? null,
     stationId: row.stationId,
     pricingPolicyId: row.pricingPolicyId,
     reservationOption: row.reservationOption as ReservationRow["reservationOption"],
@@ -108,6 +118,7 @@ export function toReservationExpandedDetailRow(row: {
   };
   bike: {
     id: string;
+    bikeNumber: string;
     chipId: string;
     status: string;
   } | null;
@@ -133,6 +144,7 @@ export function toReservationExpandedDetailRow(row: {
     bike: row.bike
       ? {
           id: row.bike.id,
+          bikeNumber: row.bike.bikeNumber,
           chipId: row.bike.chipId,
           status: row.bike.status as NonNullable<ReservationExpandedDetailRow["bike"]>["status"],
         }

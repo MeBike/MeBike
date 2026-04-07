@@ -11,16 +11,20 @@ import {
   useGetTopRenterQuery,
   useGetSearchUserQuery,
   useGetDashboardStatsQuery,
+  useGetStaffOnlyQuery
 } from "@queries";
 import {
   useCreateUserMutation,
   useResetPasswordUserMutation,
+  useUpdateProfileStaffMutation,
   useUpdateProfileUserMutation,
 } from "@mutations";
 import {
   UserProfile,
   CreateUserFormData,
   ResetPasswordSchemaFormData,
+  UpdateStaffFormData,
+  UpdateUserFormData,
 } from "@schemas";
 import { HTTP_STATUS } from "@constants";
 import {
@@ -68,6 +72,12 @@ export const useUserActions = ({
     accountStatus: accountStatus || "",
     fullName: fullName || "",
   });
+  const { data : staffOnly , isLoading : isLoadingStaffOnly,
+    refetch : refetchStaff,
+   } = useGetStaffOnlyQuery({
+    page : page,
+    pageSize : limit
+  });
   const pagination = data?.pagination as
     | { total?: number; totalRecords?: number }
     | undefined;
@@ -102,6 +112,13 @@ export const useUserActions = ({
       return;
     }
     refetch();
+  }, [hasToken, router, refetch]);
+  const getAllStaffs = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchStaff();
   }, [hasToken, router, refetch]);
   const getAllStatistics = useCallback(() => {
     if (!hasToken) {
@@ -199,7 +216,8 @@ export const useUserActions = ({
     ],
   );
   const useResetPassword = useResetPasswordUserMutation();
-  const useUpdateProfile = useUpdateProfileUserMutation();
+  const useUpdateStaff = useUpdateProfileStaffMutation();
+  const useUpdateUser = useUpdateProfileUserMutation();
   const resetPassword = useCallback(
     async (userData: ResetPasswordSchemaFormData) => {
       if (!hasToken) {
@@ -226,22 +244,18 @@ export const useUserActions = ({
     },
     [hasToken, router, useResetPassword, id],
   );
-  const updateProfileUser = useCallback(
-    async (userData: UserProfile) => {
+  const updateProfileStaff = useCallback(
+    async (userData: UpdateStaffFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       try {
-        const result = await useUpdateProfile.mutateAsync({
+        const result = await useUpdateStaff.mutateAsync({
           id: id || "",
           data: userData,
         });
-        if (result.status === HTTP_STATUS.OK) {
-          toast.success(
-            result.data?.message || "Cập nhật thông tin thành công",
-          );
-        }
+        
         queryClient.invalidateQueries({
           queryKey: ["user", "all"],
         });
@@ -260,7 +274,49 @@ export const useUserActions = ({
     },
     [
       hasToken,
-      useUpdateProfile,
+      useUpdateStaff,
+      router,
+      queryClient,
+      id,
+      refetchDetailUser,
+      refetch,
+      page,
+      limit,
+      verify,
+      role,
+    ],
+  );
+  const updateProfileUser = useCallback(
+    async (userData: UpdateUserFormData) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useUpdateUser.mutateAsync({
+          id: id || "",
+          data: userData,
+        });
+        
+        queryClient.invalidateQueries({
+          queryKey: ["user", "all"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["user", "detail", id],
+        });
+        refetchDetailUser();
+        refetch();
+        return result;
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
+        toast.error(errorMessage);
+        throw error;
+      }
+    },
+    [
+      hasToken,
+      useUpdateUser,
       router,
       queryClient,
       id,
@@ -304,7 +360,11 @@ export const useUserActions = ({
     isLoadingDetailUser,
     dashboardStatsData,
     resetPassword,
-    updateProfileUser,
+    updateProfileStaff,
     getRefetchDashboardStats,
+    staffOnly,
+    updateProfileUser,
+    isLoadingStaffOnly,
+    getAllStaffs
   };
 };

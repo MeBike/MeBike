@@ -6,6 +6,16 @@ import type { DB } from "generated/kysely/types";
 
 import { authEvents, bikes, rentals, stations, users } from "../fixtures/users-stats.seed";
 
+function getBikeNumberSequenceValue(value: string): number {
+  const numericPart = Number(value.split("-").at(-1));
+
+  if (!Number.isFinite(numericPart) || numericPart < 0) {
+    throw new Error(`Invalid bike number seed value: ${value}`);
+  }
+
+  return numericPart;
+}
+
 export async function seed(db: Kysely<DB>) {
   if (users.length > 0) {
     await db.insertInto("users").values(users).execute();
@@ -48,6 +58,12 @@ export async function seed(db: Kysely<DB>) {
 
   if (bikes.length > 0) {
     await db.insertInto("Bike").values(bikes).execute();
+
+    const maxBikeNumber = Math.max(...bikes.map(bike => getBikeNumberSequenceValue(bike.bike_number)));
+
+    await db.executeQuery(
+      sql`SELECT setval('bike_number_seq', ${maxBikeNumber}, true)`.compile(db),
+    );
   }
 
   if (rentals.length > 0) {

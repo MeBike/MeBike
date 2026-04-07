@@ -330,6 +330,7 @@ export type AuthEvent = {
 };
 export type Bike = {
     id: string;
+    bike_number: string;
     chip_id: string;
     stationId: string | null;
     supplierId: string | null;

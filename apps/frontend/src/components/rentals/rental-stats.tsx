@@ -10,20 +10,7 @@ import {
 } from "lucide-react";
 import { SummaryRental } from "@custom-types";
 import { formatRevenue } from "@/lib/formatVND";
-// interface RentalStatsProps {
-//   stats: {
-//     pending: number;
-//     active: number;
-//     completed: number;
-//     cancelled: number;
-//     overdue: number;
-//     totalRevenue: number;
-//     todayRevenue: number;
-//   };
-// }
-
-export function RentalStats({params}: {params: SummaryRental}) {
-
+export function RentalStats({ params }: { params: SummaryRental }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card className="p-4 bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/20">
@@ -36,20 +23,6 @@ export function RentalStats({params}: {params: SummaryRental}) {
           </div>
           <div className="p-3 bg-yellow-500/10 rounded-lg">
             <Clock className="w-6 h-6 text-yellow-500" />
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Đặt trước</p>
-            <p className="text-3xl font-bold text-blue-500 mt-1">
-              {params.rentalList.Reserved}
-            </p>
-          </div>
-          <div className="p-3 bg-blue-500/10 rounded-lg">
-            <TrendingUp className="w-6 h-6 text-blue-500" />
           </div>
         </div>
       </Card>

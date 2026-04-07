@@ -12,4 +12,5 @@ export * from "./Report";
 export * from "./SOS";
 export * from "./Rating";
 export * from "./Auth.type";
-export * from "./Dashboard.type"
+export * from "./Dashboard.type";
+export * from "./Wallet";

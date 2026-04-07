@@ -1,51 +1,35 @@
-export interface RatingReason {
-  _id: string;
-  type: "positive" | "negative";
-  applies_to: string;
-  messages: {
-    en: string;
-    vi: string;
-  };
-}
 
+export interface IUserRating{
+  id : string;
+  fullName : string;
+  phoneNumber : string;
+}
+export interface IBikeRating {
+  id : string;
+  chipId : string;
+}
+export interface IStationRating { 
+  id : string;
+  name : string;
+  address : string;
+}
+export interface IReasonRating {
+  id : string;
+  type : "ISSUE" | "COMPLIMENT";
+  appliesTo : "bike" | "station";
+  message : string;
+}
 export interface Rating {
-  _id: string;
-  user_id: string;
-  rental_id: string;
-  rating: number;
-  reason_ids: string[];
-  comment?: string;
-  created_at: string;
-  updated_at: string;
-  user?: {
-    _id?: string;
-    fullname: string;
-    email: string;
-    phone_number?: string;
-    avatar?: string;
-  };
-  rental?: {
-    _id: string;
-    bike_id: string;
-    start_time?: string;
-    end_time?: string;
-    total_price?: number | { $numberDecimal: string };
-    status?: string;
-    bike?: {
-      _id: string;
-      chip_id: string;
-      status?: string;
-    };
-    start_station?: {
-      _id: string;
-      name: string;
-      address?: string;
-    };
-    end_station?: {
-      _id: string;
-      name: string;
-      address?: string;
-    };
-  };
-  reason_details?: RatingReason[];
+  id: string;
+  rentalId : string;
+  user : IUserRating;
+  bike : IBikeRating;
+  station : IStationRating;
+  bikeScore : number;
+  stationScore : number;
+  comment : string | null;
+  reasons : IReasonRating;
+  createdAt : string;
+  updatedAt : string;
+  editedAt : string | null;
 }

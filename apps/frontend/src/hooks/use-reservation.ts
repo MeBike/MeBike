@@ -4,17 +4,20 @@ import { useCallback } from "react";
 import { useGetAllReservationQuery } from "./query/Reservation/useGetAllReservationQuery";
 import { useGetReservationStatsQuery } from "./query/Reservation/useGetReservationStatsQuery";
 import { useGetDetailReservationQuery } from "./query/Reservation/useGetDetailReservationQuery";
+import type { ReservationStatus , ReservationOption } from "@/types";
 import { QUERY_KEYS } from "@/constants/queryKey";
 interface ActionProps {
   hasToken: boolean;
-  page?: number;
-  limit?: number;
-  id?: string;
+  page ?: number;
+  pageSize ?: number;
+  id ?: string;
+  status ?: ReservationStatus;
+  option ?: ReservationOption
 }
-export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps) => {
+export const useReservationActions = ({ hasToken, page, pageSize, id , status ,option}: ActionProps) => {
   const queryClient = useQueryClient();
-  const { data: allReservations, refetch: isRefetchingAllReservation } =
-    useGetAllReservationQuery({ page, limit });
+  const { data: allReservations, refetch: isRefetchingAllReservation , isLoading : isLoadingReservations } =
+    useGetAllReservationQuery({ page:page, pageSize:pageSize , status : status , option : option });
   const { data: reservationStats , refetch : isRefetchingReservationStats} = useGetReservationStatsQuery();
   const { data: detailReservation, refetch: isRefetchingDetailReservation } = useGetDetailReservationQuery(id || "");
   const fetchAllReservations = useCallback(() => {
@@ -22,9 +25,9 @@ export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps
       return;
     }
     queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, limit),
+      queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize),
     });
-  }, [queryClient, hasToken, page, limit]);
+  }, [queryClient, hasToken, page, pageSize , status , option]);
   const fetchReservationStats = useCallback(() => {
     if (!hasToken) {
       return;
@@ -51,5 +54,6 @@ export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps
     fetchDetailReservation,
     detailReservation,
     isRefetchingDetailReservation,
+    isLoadingReservations,
   };
 };

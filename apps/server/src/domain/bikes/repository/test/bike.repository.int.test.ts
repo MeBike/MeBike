@@ -48,6 +48,33 @@ describe("bikeRepository Integration", () => {
     expect(created.status).toBe("AVAILABLE");
   });
 
+  it("create generates a unique bikeNumber", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+
+    const first = await runEffect(
+      repo.create({
+        chipId: `chip-${uuidv7()}`,
+        stationId: station.id,
+        supplierId: supplier.id,
+        status: "AVAILABLE",
+      }),
+    );
+
+    const second = await runEffect(
+      repo.create({
+        chipId: `chip-${uuidv7()}`,
+        stationId: station.id,
+        supplierId: supplier.id,
+        status: "AVAILABLE",
+      }),
+    );
+
+    expect(first.bikeNumber).toMatch(/^MB-\d{6}$/);
+    expect(second.bikeNumber).toMatch(/^MB-\d{6}$/);
+    expect(first.bikeNumber).not.toBe(second.bikeNumber);
+  });
+
   it("create rejects duplicate chipId", async () => {
     const station = await fixture.factories.station();
     const supplier = await fixture.factories.supplier();

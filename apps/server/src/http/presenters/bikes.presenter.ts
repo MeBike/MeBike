@@ -25,6 +25,7 @@ export function toBikeSummary(
 ): BikesContracts.BikeSummary {
   return {
     id: row.id,
+    bikeNumber: row.bikeNumber,
     chipId: row.chipId,
     stationId: row.stationId,
     supplier,

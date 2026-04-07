@@ -19,7 +19,6 @@ import { uploadImageToFirebase } from "@/lib/firebase";
 
 type FormDataWithAvatar = DetailUser & { avatarFile?: File };
 
-// Compress image function
 const compressImage = async (file: File): Promise<File> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -31,11 +30,8 @@ const compressImage = async (file: File): Promise<File> => {
         const canvas = document.createElement("canvas");
         let width = imgElement.naturalWidth;
         let height = imgElement.naturalHeight;
-
-        // Max dimensions
         const maxWidth = 800;
         const maxHeight = 800;
-
         if (width > height) {
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
@@ -125,19 +121,15 @@ export default function ProfilePage() {
 
     const updatedData = fields.reduce((acc, field) => {
       const newValue = formData[field];
-      const oldValue = user[field as keyof DetailUser] ?? "";
-
+      const oldValue = user[field] ?? "";
       if (newValue !== oldValue) {
         acc[field] = newValue || "";
       }
       return acc;
     }, {} as UpdateProfileSchemaFormData);
-
-    // Upload ảnh lên Firebase khi Save (nếu có file mới)
     if (formData.avatarFile) {
       try {
         setIsUploadingAvatar(true);
-        // Compress ảnh trước khi upload
         const compressedFile = await compressImage(formData.avatarFile);
         const imageUrl = await uploadImageToFirebase(compressedFile, "avatars");
         updatedData.avatar = imageUrl;

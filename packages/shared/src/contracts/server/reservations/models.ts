@@ -14,6 +14,7 @@ export const ReservationDetailSchema = z.object({
   id: z.uuidv7(),
   userId: z.uuidv7(),
   bikeId: z.uuidv7().optional(),
+  bikeNumber: z.string().optional(),
   stationId: z.uuidv7(),
   reservationOption: ReservationOptionSchema,
   fixedSlotTemplateId: z.uuidv7().optional(),
@@ -38,6 +39,7 @@ export const ReservationDetailUserSchema = z.object({
 
 export const ReservationDetailBikeSchema = z.object({
   id: z.uuidv7(),
+  bikeNumber: z.string(),
   chipId: z.string(),
   status: BikeStatusSchema,
 }).openapi("ReservationDetailBike");
