@@ -13,6 +13,7 @@ import { useGetSummaryRentalQuery } from "./query/Rent/useGetSummaryRental";
 import { QUERY_KEYS } from "@/constants/queryKey";
 import getErrorMessage from "@/utils/error-message";
 import { RentalStatus } from "@/types";
+import { useGetAllRentalsStaffQuery } from "./query/Rent/useGetAllRentalsStaff";
 
 interface UseRentalsActionsProps {
   hasToken: boolean;
@@ -51,6 +52,19 @@ export function useRentalsActions({
     refetch: refetchAllRentals,
     isLoading: isAllRentalsLoading,
   } = useGetAllRentalsAdminStaffQuery(
+    {
+      page: page,
+      pageSize: limit,
+      startStation: start_station,
+      endStation: end_station,
+      status: status,
+    }
+  );
+  const {
+    data: staffRentalsData,
+    refetch: refetchStaffRentals,
+    isLoading: isAllRentalsStaffLoading,
+  } = useGetAllRentalsStaffQuery(
     {
       page: page,
       pageSize: limit,
@@ -211,6 +225,10 @@ export function useRentalsActions({
     getDashboardSummary,
     summaryRental,
     getSummaryRental,
+    staffRentalsData:staffRentalsData?.data,
+    refetchStaffRentals,
+    isAllRentalsStaffLoading,
+    paginationStaffRental : staffRentalsData?.pagination,
   };
 }
 

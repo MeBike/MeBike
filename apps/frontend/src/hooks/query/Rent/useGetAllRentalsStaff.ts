@@ -17,7 +17,7 @@ const getAllRentalsForStaffAdmin = async ({
   status ?: RentalStatus,
 }) => {
   try {
-    const response = await rentalService.getAllRentalsForStaffAdmin({
+    const response = await rentalService.getAllRentalsForStaff({
       page : page,
       pageSize : pageSize,
       startStation : startStation,
@@ -32,7 +32,7 @@ const getAllRentalsForStaffAdmin = async ({
     throw error;
   }
 };
-export function useGetAllRentalsAdminStaffQuery({
+export function useGetAllRentalsStaffQuery({
   page,
   pageSize,
   startStation,
@@ -61,6 +61,5 @@ export function useGetAllRentalsAdminStaffQuery({
         endStation,
         status,
       }),
-    enabled : false,  
   });
 }
