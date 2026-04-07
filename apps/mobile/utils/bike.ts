@@ -11,6 +11,8 @@ const BIKE_STATUS_LABELS: Record<BikeSummary["status"], string> = {
   UNAVAILABLE: "Không có sẵn",
 };
 
+const BIKE_ID_FALLBACK_WIDTH = 6;
+
 export function getBikeStatusLabel(status: BikeSummary["status"]) {
   return BIKE_STATUS_LABELS[status];
 }
@@ -24,7 +26,7 @@ export function formatBikeNumber(bikeNumber?: string | null, fallbackId?: string
     return "--";
   }
 
-  return `#${fallbackId.slice(-6)}`;
+  return `#${fallbackId.slice(-BIKE_ID_FALLBACK_WIDTH)}`;
 }
 
 export function getBikeDisplayLabel(

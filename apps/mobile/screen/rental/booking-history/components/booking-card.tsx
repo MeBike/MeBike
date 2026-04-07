@@ -3,6 +3,7 @@ import { borderWidths, radii, spaceScale } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
+import { formatBikeNumber } from "@utils/bike";
 import { formatVietnamDateTime } from "@utils/date";
 import { formatDurationMinutes } from "@utils/duration";
 import { formatSupportCode } from "@utils/id";
@@ -68,7 +69,7 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
                 Xe đạp
               </AppText>
               <AppText tone="muted" variant="bodySmall">
-                {booking.bikeNumber ?? formatSupportCode(booking.bikeId)}
+                {formatBikeNumber(booking.bikeNumber, booking.bikeId)}
               </AppText>
             </YStack>
           </XStack>

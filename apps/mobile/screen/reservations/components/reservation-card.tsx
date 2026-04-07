@@ -3,6 +3,7 @@ import { radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
+import { formatBikeNumber } from "@utils/bike";
 import { formatVietnamDateTime } from "@utils/date";
 import {
   getReservationOptionLabel,
@@ -34,7 +35,7 @@ function splitFormattedDateTime(value?: string | null) {
 
 function getReservationTitle(reservation: Reservation) {
   if (reservation.bikeId) {
-    return reservation.bikeNumber ?? `Xe #${String(reservation.bikeId).slice(-4)}`;
+    return `Xe ${formatBikeNumber(reservation.bikeNumber, reservation.bikeId)}`;
   }
 
   return "Chỗ trống tại trạm";
