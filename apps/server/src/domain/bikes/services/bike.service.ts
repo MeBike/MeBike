@@ -1,17 +1,9 @@
 import { Effect, Layer, Option } from "effect";
 
-import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { BikeStatus } from "generated/prisma/client";
-
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { DuplicateChipId } from "../domain-errors";
-import type {
-  BikeFilter,
-  BikeRow,
-  BikeSortField,
-} from "../models";
 import type { BikeRepo } from "../repository/bike.repository";
+import type { BikeService } from "./bike.service.types";
 
 import {
   BikeCurrentlyRented,
@@ -21,49 +13,6 @@ import {
   BikeSupplierNotFound,
 } from "../domain-errors";
 import { BikeRepository } from "../repository/bike.repository";
-
-export type BikeService = {
-  createBike: (
-    input: {
-      chipId: string;
-      stationId: string;
-      supplierId: string;
-      status?: BikeStatus;
-    },
-  ) => Effect.Effect<
-    BikeRow,
-    DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
-  >;
-
-  listBikes: (
-    filter: BikeFilter,
-    pageReq: PageRequest<BikeSortField>,
-  ) => Effect.Effect<PageResult<BikeRow>>;
-
-  getBikeDetail: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
-
-  reportBrokenBike: (
-    bikeId: string,
-  ) => Effect.Effect<Option.Option<BikeRow>>;
-
-  adminUpdateBike: (
-    bikeId: string,
-    patch: Partial<{
-      chipId: string;
-      stationId: string;
-      status: BikeStatus;
-      supplierId: string | null;
-    }>,
-  ) => Effect.Effect<
-    Option.Option<BikeRow>,
-    | BikeCurrentlyRented
-    | BikeCurrentlyReserved
-    | BikeNotFound
-    | DuplicateChipId
-    | BikeStationNotFound
-    | BikeSupplierNotFound
-  >;
-};
 
 function makeBikeService(
   repo: BikeRepo,

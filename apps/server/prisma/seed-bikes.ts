@@ -12,6 +12,7 @@ import {
   UserVerifyStatus,
 } from "../generated/prisma/client";
 import { formatBikeNumber } from "../src/domain/bikes/bike-number";
+import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
 import logger from "../src/lib/logger";
 import bikes from "./seed/bike.json";
 import { STATION_IDS } from "./seed/station-ids";
@@ -135,6 +136,7 @@ async function main() {
     await prisma.bike.deleteMany();
 
     logger.info("Inserting bikes...");
+    let maxBikeNumber = 0;
     for (const [bikeIndex, bike] of (bikes as any[]).entries()) {
       const oldStationId = bike.station_id?.$oid || bike.station_id;
       const stationName = oldStationId ? stationNameMap[oldStationId] : undefined;
@@ -159,6 +161,12 @@ async function main() {
           updatedAt,
         },
       });
+
+      maxBikeNumber = bikeIndex + 1;
+    }
+
+    if (maxBikeNumber > 0) {
+      await setBikeNumberSequence(prisma, maxBikeNumber);
     }
 
     const seededAvailableBikes = await prisma.bike.findMany({

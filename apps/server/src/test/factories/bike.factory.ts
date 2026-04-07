@@ -1,6 +1,6 @@
 import { uuidv7 } from "uuidv7";
 
-import { formatBikeNumber } from "@/domain/bikes/bike-number";
+import { getNextBikeNumber } from "@/domain/bikes/repository/bike.repository.shared";
 
 import type { BikeOverrides, CreatedBike, FactoryContext } from "./types";
 
@@ -16,7 +16,7 @@ export function createBikeFactory(ctx: FactoryContext) {
   return async (overrides: BikeOverrides = {}): Promise<CreatedBike> => {
     counter++;
     const id = overrides.id ?? uuidv7();
-    const bikeNumber = overrides.bikeNumber ?? formatBikeNumber(counter);
+    const bikeNumber = overrides.bikeNumber ?? await getNextBikeNumber(ctx.prisma);
     const chipId = overrides.chipId ?? `CHIP-${counter}-${id.slice(0, 8)}`;
 
     await ctx.prisma.bike.create({

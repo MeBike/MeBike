@@ -19,6 +19,7 @@ import {
   WalletStatus,
 } from "../generated/prisma/client";
 import { formatBikeNumber } from "../src/domain/bikes/bike-number";
+import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
 import logger from "../src/lib/logger";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
@@ -745,6 +746,7 @@ async function main() {
     }));
 
     await prisma.bike.createMany({ data: bikesToCreate });
+    await setBikeNumberSequence(prisma, bikesToCreate.length);
 
     const subscriptionUsers = users.filter(u => u.role === UserRole.USER).slice(0, 12);
     const subscriptions = subscriptionUsers.map((user, idx) => ({
