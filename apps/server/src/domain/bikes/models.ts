@@ -2,6 +2,7 @@ import type { BikeStatus } from "generated/prisma/enums";
 
 export type BikeRow = {
   id: string;
+  bikeNumber: string;
   chipId: string;
   stationId: string | null;
   supplierId: string | null;

@@ -8,6 +8,7 @@ import {
   SupplierStatus,
   UserVerifyStatus,
 } from "../../generated/prisma/client";
+import { formatBikeNumber } from "../../src/domain/bikes/bike-number";
 import { DEFAULT_PRICING_POLICY_ID } from "../seed-pricing-policy";
 
 export type SeedUserInput = {
@@ -110,16 +111,36 @@ export async function upsertSeedSupplier(prisma: PrismaClient, input: SeedSuppli
 }
 
 export async function upsertSeedBike(prisma: PrismaClient, input: SeedBikeInput) {
-  return prisma.bike.upsert({
+  const existing = await prisma.bike.findUnique({
     where: { chipId: input.chipId },
-    update: {
-      stationId: input.stationId,
-      status: input.status ?? BikeStatus.AVAILABLE,
-      supplierId: input.supplierId ?? null,
-      updatedAt: new Date(),
-    },
-    create: {
+    select: { id: true },
+  });
+
+  if (existing) {
+    return prisma.bike.update({
+      where: { chipId: input.chipId },
+      data: {
+        stationId: input.stationId,
+        status: input.status ?? BikeStatus.AVAILABLE,
+        supplierId: input.supplierId ?? null,
+        updatedAt: new Date(),
+      },
+      select: { id: true },
+    });
+  }
+
+  const [counter] = await prisma.$queryRaw<Array<{ value: bigint }>>`
+    SELECT nextval('bike_number_seq')::bigint AS value
+  `;
+
+  if (!counter) {
+    throw new Error("Failed to get next bike number value");
+  }
+
+  return prisma.bike.create({
+    data: {
       id: uuidv7(),
+      bikeNumber: formatBikeNumber(Number(counter.value)),
       chipId: input.chipId,
       stationId: input.stationId,
       status: input.status ?? BikeStatus.AVAILABLE,

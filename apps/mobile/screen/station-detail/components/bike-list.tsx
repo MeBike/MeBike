@@ -4,7 +4,7 @@ import { AppListRow } from "@ui/primitives/app-list-row";
 import { AppText } from "@ui/primitives/app-text";
 import { RatingSummary } from "@ui/primitives/rating-summary";
 import { StatusBadge } from "@ui/primitives/status-badge";
-import { getBikeChipDisplay, getBikeStatusLabel, isBikeAvailable } from "@utils/bike";
+import { getBikeDisplayLabel, getBikeStatusLabel, isBikeAvailable } from "@utils/bike";
 import { ActivityIndicator } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
@@ -29,7 +29,7 @@ function BikeListRow({
   showDivider: boolean;
 }) {
   const theme = useTheme();
-  const chipDisplay = getBikeChipDisplay(bike);
+  const bikeLabel = getBikeDisplayLabel(bike);
 
   return (
     <AppListRow
@@ -51,7 +51,7 @@ function BikeListRow({
           selectable
           style={{ fontSize: 18, fontVariant: ["tabular-nums"], fontWeight: "700", lineHeight: 24 }}
         >
-          {chipDisplay}
+          {bikeLabel}
         </AppText>
       )}
       secondary={(

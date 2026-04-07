@@ -11,14 +11,14 @@ type RequestBikeCardProps = {
 };
 
 function BikeInfoPanel({
-  chipId,
+  bikeLabel,
   iconColor,
   iconName,
   supplierName,
   subtitle,
   tone,
 }: {
-  chipId: string;
+  bikeLabel: string;
   iconColor: string;
   iconName: "bike" | "check-circle";
   supplierName: string;
@@ -44,7 +44,7 @@ function BikeInfoPanel({
 
           <YStack flex={1} gap="$1">
             <AppText variant="sectionTitle">
-              {chipId}
+              {bikeLabel}
             </AppText>
             <AppText tone={tone === "success" ? "success" : "warning"} variant="bodySmall">
               {supplierName}
@@ -62,7 +62,7 @@ export function RequestBikeCard({ request }: RequestBikeCardProps) {
   return (
     <AppCard borderRadius={32} chrome="whisper" gap="$4" padding="$4">
       <BikeInfoPanel
-        chipId={request.oldBike.chipId}
+        bikeLabel={request.oldBike.bikeNumber}
         iconColor={theme.statusWarning.val}
         iconName="bike"
         subtitle="Xe báo lỗi (Cần thu hồi)"
@@ -73,7 +73,7 @@ export function RequestBikeCard({ request }: RequestBikeCardProps) {
       {request.status === "CONFIRMED" && request.newBike
         ? (
             <BikeInfoPanel
-              chipId={request.newBike.chipId}
+              bikeLabel={request.newBike.bikeNumber}
               iconColor={theme.statusSuccess.val}
               iconName="check-circle"
               subtitle="Xe cấp mới (Giao khách)"

@@ -26,6 +26,7 @@ export function toContractRental(
     id: row.id,
     userId: row.userId,
     bikeId: row.bikeId,
+    bikeNumber: row.bikeNumber ?? undefined,
     startStation: row.startStationId,
     endStation: row.endStationId ?? undefined,
     startTime: row.startTime.toISOString(),
@@ -46,6 +47,7 @@ export function toContractRentalWithPrice(
     id: row.id,
     userId: row.userId,
     bikeId: row.bikeId,
+    bikeNumber: row.bikeNumber ?? undefined,
     startStation: row.startStationId,
     endStation: row.endStationId ?? undefined,
     startTime: row.startTime.toISOString(),
@@ -66,6 +68,7 @@ export function toContractAdminRentalListItem(
     id: item.id,
     user: item.user,
     bikeId: item.bikeId,
+    bikeNumber: item.bikeNumber ?? undefined,
     status: item.status,
     startStation: item.startStationId,
     endStation: item.endStationId ?? undefined,
@@ -86,6 +89,7 @@ export function toContractRentalListItem(
     id: item.id,
     user: item.user,
     bikeId: item.bikeId,
+    bikeNumber: item.bikeNumber ?? undefined,
     status: item.status,
     startStation: item.startStationId,
     endStation: item.endStationId ?? undefined,
@@ -118,6 +122,7 @@ export function toContractAdminRentalDetail(
     },
     bike: {
       id: detail.bike.id,
+      bikeNumber: detail.bike.bikeNumber,
       chipId: detail.bike.chipId,
       status: detail.bike.status,
       supplierId: detail.bike.supplierId ?? undefined,
@@ -194,6 +199,7 @@ export function toContractBikeSwapRequestDetail(
     },
     oldBike: {
       id: row.oldBike.id,
+      bikeNumber: row.oldBike.bikeNumber,
       chipId: row.oldBike.chipId,
       station: {
         id: row.oldBike.station.id,
@@ -208,6 +214,7 @@ export function toContractBikeSwapRequestDetail(
     newBike: row.newBike
       ? {
           id: row.newBike.id,
+          bikeNumber: row.newBike.bikeNumber,
           chipId: row.newBike.chipId,
           station: {
             id: row.newBike.station.id,
