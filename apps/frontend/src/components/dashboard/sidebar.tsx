@@ -1,205 +1,126 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard,
-  Bike,
-  FileText,
-  Users,
-  LogOut,
-  Wallet,
-  Truck,
-  Download,
-  MapIcon,
-  FileCheck2,
-  Star,
-  Menu,
-  X,
-  User2,
+  LayoutDashboard, Bike, FileText, Users, LogOut, Truck, MapIcon, 
+  Star, FileCheck2, Menu, X, User2, Building2, 
+  ShieldAlert, CalendarCheck2, Store, Timer 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
 import NProgress from "nprogress";
-// import "nprogress/nprogress.css";
 
-// Define menu items (giữ nguyên hàm này theo code bạn)
-const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
-  const baseUrl =
-    userRole === "ADMIN" ? "/admin" : userRole === "STAFF" ? "/staff" : "/user";
-  return [
-    {
-      title: "Hồ sơ cá nhân",
-      icon: User2,
-      href: "/staff/profile",
-      roles: ["STAFF"],
-    },
-    {
-      title: "Tổng quan",
-      icon: LayoutDashboard,
-      href: baseUrl,
-      roles: ["ADMIN"],
-      exact: true,
-    },
-    {
-      title: "Quản lý người dùng",
-      icon: Users,
-      href: `${baseUrl}/customers`,
-      roles: ["STAFF", "ADMIN"],
-    },
-    {
-      title: "Quản lý nhân viên",
-      icon: Users,
-      href: `${baseUrl}/staffs`,
-      roles: ["ADMIN"],
-    },
-    {
-      title: "Quản lý xe đạp",
-      icon: Bike,
-      href: `${baseUrl}/bikes`,
-      roles: ["STAFF", "ADMIN"],
-    },
-    {
-      title: "Đơn thuê xe",
-      icon: FileText,
-      href: `${baseUrl}/rentals`,
-      roles: ["STAFF", "ADMIN"],
-    },
-    // {
-    //   title: "Báo cáo & Thống kê",
-    //   icon: BarChart3,
-    //   href: "/admin/reports",
-    //   roles: ["ADMIN"],
-    // },
-    // {
-    //   title: "Cài đặt",
-    //   icon: Settings,
-    //   href: "/admin/settings",
-    //   roles: ["ADMIN"],
-    // },
-    {
-      title: "Tổng quan người dùng",
-      icon: Users,
-      href: "/user",
-      roles: ["USER"],
-    },
-    {
-      title: "Hồ sơ cá nhân",
-      icon: Users,
-      href: "/user/profile",
-      roles: ["USER"],
-    },
-    // {
-    //   title: "Lịch sử giao dịch",
-    //   icon: History,
-    //   href: "/user/booking-history",
-    //   roles: ["USER"],
-    // },
-    // {
-    //   title: "Quản lý ví",
-    //   icon: Wallet,
-    //   href: "/admin/wallet",
-    //   roles: ["ADMIN"],
-    // },
-    {
-      title: "Quản lý nhà cung cấp",
-      icon: Truck,
-      href: "/admin/suppliers",
-      roles: ["ADMIN"],
-    },
-    {
-      title: "Quản lý trạm",
-      icon: MapIcon,
-      href: "/staff/stations",
-      roles: ["STAFF"],
-    },
-    {
-      title: "Quản lý trạm",
-      icon: MapIcon,
-      href: "/admin/stations",
-      roles: ["ADMIN"],
-    },
-    {
-      title: "Quản lý Agency",
-      icon: MapIcon,
-      href: "/admin/agencies",
-      roles: ["ADMIN"],
-    },
-    {
-      title: "Quản lý đặt trước",
-      icon: FileText,
-      href: "/admin/reservations",
-      roles: ["ADMIN"],
-    },
-    // {
-    //   title: "Quản lý đơn báo cáo",
-    //   icon: FileCheck2,
-    //   href: "/admin/reports",
-    //   roles: ["ADMIN"],
-    // },
-    {
-      title: "Quản lý đánh giá",
-      icon: Star,
-      href: "/admin/ratings",
-      roles: ["ADMIN"],
-    },
-    {
-      title: "Quản lý đơn SOS",
-      icon: FileCheck2,
-      href: "/staff/sos",
-      roles: ["STAFF"],
-    },
-    {
-      title: "Quản lý đơn báo cáo",
-      icon: FileCheck2,
-      href: "/staff/reports",
-      roles: ["STAFF"],
-    },
-    {
-      title: "Quản lý đơn SOS",
-      icon: FileCheck2,
-      href: "/sos/sos-alerts",
-      roles: ["SOS"],
-    },
-    {
-      title: "Hồ sơ cá nhân",
-      icon: Users,
-      href: "/sos/profile",
-      roles: ["SOS"],
-    },
-  ];
+const ROLE_CONFIG = {
+  ADMIN: {
+    label: "Quản trị hệ thống",
+    bg: "bg-slate-950",
+    accent: "bg-red-600",
+    text: "text-red-500",
+    hover: "hover:bg-red-600/10",
+    active: "bg-red-600 text-white",
+  },
+  STAFF: {
+    label: "Nhân viên vận hành",
+    bg: "bg-blue-950",
+    accent: "bg-blue-600",
+    text: "text-blue-400",
+    hover: "hover:bg-blue-600/10",
+    active: "bg-blue-600 text-white",
+  },
+  AGENCY: {
+    label: "Đại lý đối tác",
+    bg: "bg-indigo-950",
+    accent: "bg-indigo-600",
+    text: "text-indigo-400",
+    hover: "hover:bg-indigo-600/10",
+    active: "bg-indigo-600 text-white",
+  },
+  TECHNICIAN: {
+    label: "Kỹ thuật viên",
+    bg: "bg-emerald-950",
+    accent: "bg-emerald-600",
+    text: "text-emerald-400",
+    hover: "hover:bg-emerald-600/10",
+    active: "bg-emerald-600 text-white",
+  },
+  MANAGER: {
+    label: "Quản lý khu vực",
+    bg: "bg-orange-950",
+    accent: "bg-orange-600",
+    text: "text-orange-400",
+    hover: "hover:bg-orange-600/10",
+    active: "bg-orange-600 text-white",
+  },
+  USER: {
+    label: "Khách hàng",
+    bg: "bg-zinc-900",
+    accent: "bg-zinc-700",
+    text: "text-zinc-400",
+    hover: "hover:bg-white/10",
+    active: "bg-white text-black",
+  },
+  SOS: {
+    label: "Đội cứu hộ",
+    bg: "bg-rose-950",
+    accent: "bg-rose-600",
+    text: "text-rose-400",
+    hover: "hover:bg-rose-600/10",
+    active: "bg-rose-600 text-white",
+  },
 };
 
+type RoleType = keyof typeof ROLE_CONFIG;
+
 export function Sidebar() {
-  const [collapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, logOut, isAuthenticated } = useAuth();
+  const { user, logOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const handleLogout = () => {
-    const refreshToken = getRefreshToken();
-    if (refreshToken) {
-      logOut(refreshToken);
-      console.log(user?.email + " đã đăng xuất " + isAuthenticated);
-    }
-  };
+  const role = (user?.role as RoleType) || "USER";
+  const theme = ROLE_CONFIG[role];
 
-  const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER");
-  const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER"),
-  );
+  // 2. Danh sách menu tập trung (Full Option)
+  const menuItems = useMemo(() => [
+    { title: "Tổng quan", icon: LayoutDashboard, href: `/${role.toLowerCase()}`, roles: ["ADMIN", "STAFF", "AGENCY", "MANAGER", "USER"], exact: true },
+    
+    // --- ADMIN & MANAGER SECTION ---
+     { title: "Quản lý khách hàng", icon: Users, href: "/admin/customers", roles: ["ADMIN", "MANAGER"] },
+    { title: "Quản lý nhân viên", icon: Users, href: "/admin/staffs", roles: ["ADMIN", "MANAGER"] },
+    { title: "Quản lý Agency", icon: Building2, href: "/admin/agencies", roles: ["ADMIN"] },
+    { title: "Quản lý nhà cung cấp", icon: Store, href: "/admin/suppliers", roles: ["ADMIN"] },
+    
+    // --- BOOKING & RENTAL MANAGEMENT ---
+    { title: "Quản lý đơn đặt trước", icon: CalendarCheck2, href: `/${role.toLowerCase()}/reservations`, roles: ["ADMIN", "STAFF"] },
+    // { title: "Quản lý đơn thuê", icon: FileText, href: `/${role.toLowerCase()}/rentals`, roles: ["STAFF", "ADMIN", "AGENCY", "MANAGER"] },
+    { title: "Quản lý phiên thuê", icon: Timer, href: `/${role.toLowerCase()}/rentals`, roles: ["STAFF", "ADMIN", "MANAGER"] },
+    
+    // --- ASSETS & INFRASTRUCTURE ---
+    { title: "Quản lý xe đạp", icon: Bike, href: `/${role.toLowerCase()}/bikes`, roles: ["STAFF", "ADMIN", "AGENCY", "MANAGER"] },
+    { title: "Quản lý trạm", icon: MapIcon, href: `/${role.toLowerCase()}/stations`, roles: ["STAFF", "ADMIN", "MANAGER"] },
+    
+    // --- TECHNICAL & SOS ---
+    // { title: "Lịch bảo trì", icon: Tool, href: "/technician/tasks", roles: ["TECHNICIAN", "STAFF"] },
+    { title: "Đơn cứu hộ SOS", icon: ShieldAlert, href: "/sos/alerts", roles: ["SOS", "STAFF"] },
+    { title: "Đánh giá & Phản hồi", icon: Star, href: `/${role.toLowerCase()}/ratings`, roles: ["ADMIN", "MANAGER", "STAFF"] },
 
-  // Navigation handler with progress
+    // --- USER ONLY ---
+    { title: "Chuyến đi của tôi", icon: Bike, href: "/user/trips", roles: ["USER"] },
+    
+    // --- PROFILE ---
+    { title: "Hồ sơ cá nhân", icon: User2, href: `/${role.toLowerCase()}/profile`, roles: ["ADMIN", "STAFF", "AGENCY", "TECHNICIAN", "USER", "SOS"] },
+  ].filter(item => item.roles.includes(role)), [role]);
+
   const handleNav = (href: string) => {
     if (pathname === href) return;
     NProgress.start();
     startTransition(() => {
       router.push(href);
       setMobileOpen(false);
-      setTimeout(() => NProgress.done(), 600);
+      setTimeout(() => NProgress.done(), 500);
     });
   };
 
@@ -207,120 +128,93 @@ export function Sidebar() {
     <>
       {/* Mobile Toggle Button */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-sidebar border border-sidebar-border rounded-lg text-sidebar-foreground hover:bg-sidebar-accent"
+        className={cn("fixed top-4 left-4 z-50 md:hidden p-2 rounded-lg text-white shadow-lg transition-transform active:scale-95", theme.accent)}
         onClick={() => setMobileOpen(!mobileOpen)}
       >
-        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Mobile Overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
+      {/* Sidebar Content */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
-          "w-64 md:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          "fixed left-0 top-0 z-40 h-screen transition-all duration-300 w-64 border-r border-white/10 text-white shadow-2xl",
+          theme.bg,
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
-        style={{ opacity: isPending ? 0.65 : 1, transition: "opacity .2s" }}
       >
         <div className="flex h-full flex-col">
-          {/* Logo Section */}
-          <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-            {!collapsed && (
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-sidebar-primary rounded-lg">
-                  <Bike className="w-5 h-5 text-sidebar-primary-foreground" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-sidebar-foreground">
-                    MeBike
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Quản lý cho thuê
-                  </p>
-                </div>
+          <div className="p-6 border-b border-white/10 bg-black/10">
+            <div className="flex items-center gap-3">
+              <div className={cn("p-2 rounded-xl shadow-lg ring-2 ring-white/10", theme.accent)}>
+                <Bike className="w-6 h-6 text-white" />
               </div>
-            )}
+              <div>
+                <h2 className="font-bold text-lg leading-tight tracking-tight">MeBike</h2>
+                <span className={cn("text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase tracking-wider bg-white/10", theme.text)}>
+                  {theme.label}
+                </span>
+              </div>
+            </div>
           </div>
-          <nav className="flex-1 overflow-y-auto py-4">
-            <ul className="space-y-1 px-2">
-              {filteredMenuItems.map((item) => {
-                const Icon = item.icon;
-                const isRouteActive = (href: string, exact?: boolean) => {
-                  if (exact) return pathname === href;
 
-                  if (pathname === href) return true;
-
-                  const hrefWithSlash = href.endsWith("/") ? href : href + "/";
-                  return pathname.startsWith(hrefWithSlash);
-                };
-                const isActive = isRouteActive(item.href, item.exact);
-                return (
-                  <li key={item.href}>
-                    <button
-                      type="button"
-                      onClick={() => handleNav(item.href)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 w-full rounded-lg transition-colors group",
-                        isActive
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      )}
-                      disabled={isPending || isActive}
-                      style={{ cursor: isPending ? "wait" : "pointer" }}
-                    >
-                      <Icon
-                        className={cn(
-                          "w-5 h-5 flex-shrink-0",
-                          isActive && "text-sidebar-primary-foreground",
-                        )}
-                      />
-                      {!collapsed && (
-                        <span className="text-sm font-medium">
-                          {item.title}
-                        </span>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+          {/* Navigation Links */}
+          <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1 scrollbar-hide">
+            {menuItems.map((item) => {
+              const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+              return (
+                <button
+                  key={item.href}
+                  onClick={() => handleNav(item.href)}
+                  disabled={isPending}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative",
+                    isActive 
+                      ? cn("shadow-xl font-bold", theme.active) 
+                      : cn("text-white/40 hover:text-white", theme.hover)
+                  )}
+                >
+                  <item.icon className={cn("w-5 h-5 transition-all group-hover:rotate-6", isActive ? "text-white" : "text-white/30 group-hover:text-white")} />
+                  <span className="text-sm">{item.title}</span>
+                  {isActive && (
+                    <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
+                  )}
+                </button>
+              );
+            })}
           </nav>
 
-          <div className="border-t border-sidebar-border p-2">
-            {/* <button
-            type="button"
-            onClick={() =>
-              handleNav(
-                `${user?.role === "ADMIN" ? "/admin" : user?.role === "USER" ? "/user" : user?.role === "SOS" ? "/sos" : "/staff"}/profile`
-              )
-            }
-            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-            disabled={isPending}
-          >
-            <User className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">Hồ sơ</span>}
-          </button> */}
+          <div className="p-4 bg-black/40 border-t border-white/10">
+            <div className="flex items-center gap-3 px-3 py-3 mb-3 rounded-2xl bg-white/5 border border-white/5">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white/10 to-transparent flex items-center justify-center border border-white/20">
+                <User2 size={20} className="text-white/60" />
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-xs font-bold truncate">{user?.email || "Người dùng"}</p>
+                <p className="text-[10px] text-white/30 font-medium tracking-tight truncate">Phiên làm việc: {role}</p>
+              </div>
+            </div>
+            
             <button
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-red-600 hover:text-white transition-colors cursor-pointer hover:opacity-90"
-              onClick={() => handleLogout()}
-              disabled={isPending}
+              onClick={() => {
+                const token = getRefreshToken();
+                if (token) logOut(token);
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-red-400 hover:bg-red-600 hover:text-white transition-all font-bold border border-red-500/20 group"
             >
-              <LogOut className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && (
-                <span className="text-sm font-medium">Đăng xuất</span>
-              )}
+              <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+              <span className="text-sm">Đăng xuất</span>
             </button>
           </div>
         </div>
       </aside>
+
+      {/* Overlay Mobile */}
+      {mobileOpen && (
+        <div 
+          className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm md:hidden transition-opacity duration-300" 
+          onClick={() => setMobileOpen(false)} 
+        />
+      )}
     </>
   );
 }
