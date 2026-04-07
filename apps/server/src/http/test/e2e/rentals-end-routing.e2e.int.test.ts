@@ -8,28 +8,12 @@ describe("rentals end routing e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
       const { Layer } = await import("effect");
-      const { PrismaLive } = await import("@/infrastructure/prisma");
-      const { RentalRepositoryLive } = await import("@/domain/rentals/repository/rental.repository");
-      const { ReturnConfirmationRepositoryLive } = await import("@/domain/rentals/repository/return-confirmation.repository");
-      const { ReturnSlotRepositoryLive } = await import("@/domain/rentals/repository/return-slot.repository");
-      const { BikeRepositoryLive } = await import("@/domain/bikes/repository/bike.repository");
-      const { SubscriptionRepositoryLive } = await import("@/domain/subscriptions/repository/subscription.repository");
+      const { RentalDepsLive } = await import("@/http/shared/providers");
       const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
-      const rentalRepoLayer = RentalRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const returnConfirmationRepoLayer = ReturnConfirmationRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const returnSlotRepoLayer = ReturnSlotRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const bikeRepoLayer = BikeRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const subscriptionRepoLayer = SubscriptionRepositoryLive.pipe(Layer.provide(PrismaLive));
-
       return Layer.mergeAll(
-        PrismaLive,
         UserDepsLive,
-        rentalRepoLayer,
-        returnConfirmationRepoLayer,
-        returnSlotRepoLayer,
-        bikeRepoLayer,
-        subscriptionRepoLayer,
+        RentalDepsLive,
       );
     },
   });
@@ -60,6 +44,19 @@ describe("rentals end routing e2e", () => {
     return fixture.auth.makeAccessToken({ userId: admin.id, role: "ADMIN" });
   }
 
+  async function createStaffToken(stationId?: string) {
+    const staff = await fixture.factories.user({ role: "STAFF" });
+
+    if (stationId) {
+      await fixture.factories.userOrgAssignment({ userId: staff.id, stationId });
+    }
+
+    return {
+      staff,
+      token: fixture.auth.makeAccessToken({ userId: staff.id, role: "STAFF" }),
+    };
+  }
+
   async function createReturnSlot(token: string, rentalId: string, stationId: string) {
     return fixture.app.request(`http://test/v1/rentals/me/${rentalId}/return-slot`, {
       method: "POST",
@@ -70,6 +67,49 @@ describe("rentals end routing e2e", () => {
       body: JSON.stringify({ stationId }),
     });
   }
+
+  it("includes the active return slot in admin rental detail", async () => {
+    const { user, rental } = await createActiveRentalGraph();
+    const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    const adminToken = await createAdminToken();
+    const reservedStation = await fixture.factories.station({ capacity: 5 });
+
+    const slotResponse = await createReturnSlot(userToken, rental.id, reservedStation.id);
+    expect(slotResponse.status).toBe(200);
+
+    const response = await fixture.app.request(`http://test/v1/admin/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.returnSlot?.station.id).toBe(reservedStation.id);
+    expect(body.returnSlot?.status).toBe("ACTIVE");
+  });
+
+  it("lists my bike swap requests without being shadowed by the rental detail route", async () => {
+    const { user, rental } = await createActiveRentalGraph();
+    const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+
+    const response = await fixture.app.request(
+      `http://test/v1/rentals/me/bike-swap-requests?page=1&pageSize=20&rentalId=${rental.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      },
+    );
+
+    const body = await response.json() as RentalsContracts.BikeSwapRequestListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual([]);
+    expect(body.pagination.page).toBe(1);
+  });
 
   it("rejects operator confirmation at a station different from the active return slot", async () => {
     const { user, rental } = await createActiveRentalGraph();
@@ -140,6 +180,54 @@ describe("rentals end routing e2e", () => {
     const persistedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(persistedBike?.status).toBe("AVAILABLE");
     expect(persistedBike?.stationId).toBe(targetStation.id);
+  });
+
+  it("rejects staff confirmation when the staff assignment does not match the reserved return station", async () => {
+    const { user, rental } = await createActiveRentalGraph();
+    const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    const reservedStation = await fixture.factories.station({ capacity: 5 });
+    const otherStation = await fixture.factories.station({ capacity: 5 });
+    const { token: staffToken } = await createStaffToken(otherStation.id);
+
+    const slotResponse = await createReturnSlot(userToken, rental.id, reservedStation.id);
+    expect(slotResponse.status).toBe(200);
+
+    const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${staffToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ stationId: reservedStation.id, confirmationMethod: "MANUAL" }),
+    });
+
+    const body = await response.json() as RentalsContracts.RentalErrorResponse;
+
+    expect(response.status).toBe(403);
+    expect(body.details?.code).toBe("ACCESS_DENIED");
+    expect(body.details?.stationId).toBe(reservedStation.id);
+  });
+
+  it("allows staff confirmation when the staff assignment matches the reserved return station", async () => {
+    const { user, rental } = await createActiveRentalGraph();
+    const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    const reservedStation = await fixture.factories.station({ capacity: 5 });
+    const { token: staffToken } = await createStaffToken(reservedStation.id);
+    const confirmedAt = new Date("2026-03-21T08:30:00.000Z").toISOString();
+
+    const slotResponse = await createReturnSlot(userToken, rental.id, reservedStation.id);
+    expect(slotResponse.status).toBe(200);
+
+    const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${staffToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ stationId: reservedStation.id, confirmationMethod: "MANUAL", confirmedAt }),
+    });
+
+    expect(response.status).toBe(200);
   });
 
   it("enforces the same return-slot rule on the admin end rental endpoint", async () => {

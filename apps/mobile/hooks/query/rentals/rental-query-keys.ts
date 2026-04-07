@@ -17,6 +17,8 @@ export const rentalKeys = {
 
   staff: () => ["rentals", "staff"] as const,
   staffDetail: (rentalId: string) => ["rentals", "staff", "detail", rentalId] as const,
+  staffActiveByPhone: (phone: string, page: number, pageSize: number) =>
+    ["rentals", "staff", "active-by-phone", phone, page, pageSize] as const,
 
   bikeSwap: {
     mePreview: (rentalId: string) =>

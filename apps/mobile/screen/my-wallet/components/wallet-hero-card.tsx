@@ -1,12 +1,11 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { View, useTheme, XStack, YStack } from "tamagui";
-
 import type { WalletDetail } from "@services/wallets/wallet.service";
 
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, iconSizes, radii, spaceScale, spacingRules } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
 import { formatBalance, formatWalletStatus } from "@utils/wallet/formatters";
+import { LinearGradient } from "expo-linear-gradient";
+import { useTheme, View, XStack, YStack } from "tamagui";
 
 type WalletHeroCardProps = {
   wallet: WalletDetail;
@@ -104,7 +103,7 @@ export function WalletHeroCard({ wallet, topInset }: WalletHeroCardProps) {
             justifyContent="center"
             width={walletHeroIconShellSize}
           >
-            <IconSymbol color={theme.onSurfaceBrand.val} name="wallet.pass.fill" size={iconSizes.lg} />
+            <IconSymbol color={theme.onSurfaceBrand.val} name="wallet" size="lg" />
           </XStack>
         </XStack>
 

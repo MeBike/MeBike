@@ -1,13 +1,12 @@
 import type { ReactNode } from "react";
 
+import { IconSymbol } from "@components/IconSymbol";
+import { radii, spacingRules } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "tamagui";
-
-import { IconSymbol } from "@components/IconSymbol";
-import { iconSizes, radii, spacingRules } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 
 type AuthHeaderVariant = "brand" | "soft";
 
@@ -72,7 +71,7 @@ export function AuthHeader({
                   backgroundColor: backBackground,
                 }}
               >
-                <IconSymbol color={iconColor} name="arrow.left" size={iconSizes.lg} />
+                <IconSymbol color={iconColor} name="arrow-left" size="lg" />
               </Pressable>
             )
           : null}

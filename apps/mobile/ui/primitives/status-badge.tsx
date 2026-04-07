@@ -1,3 +1,8 @@
+import type { IconSymbolName } from "@components/IconSymbol";
+import type { AppTextTone } from "@ui/primitives/app-text";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { AppText } from "@ui/primitives/app-text";
 import { useEffect } from "react";
 import Animated, {
   Easing,
@@ -8,12 +13,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useTheme, XStack } from "tamagui";
-
-import type { IconSymbolName } from "@components/IconSymbol";
-import type { AppTextTone } from "@ui/primitives/app-text";
-
-import { IconSymbol } from "@components/IconSymbol";
-import { AppText } from "@ui/primitives/app-text";
 
 type StatusBadgeTone = "success" | "warning" | "danger" | "neutral" | "inverted" | "overlaySuccess";
 type StatusBadgeSize = "default" | "compact";
@@ -109,16 +108,18 @@ export function StatusBadge({
 
   return (
     <XStack
+      alignSelf="flex-start"
       alignItems="center"
       backgroundColor={style.bg}
       borderRadius="$round"
+      flexShrink={0}
       gap={sizeStyle.gap}
       paddingHorizontal={sizeStyle.px}
       paddingVertical={sizeStyle.py}
       width="auto"
     >
       {iconName
-        ? <IconSymbol color={dotColor} name={iconName} size={size === "compact" ? 14 : 16} />
+        ? <IconSymbol color={dotColor} name={iconName} size={size === "compact" ? "caption" : "sm"} />
         : null}
       {withDot && !iconName
         ? (

@@ -12,9 +12,11 @@ import type { ConfirmRentalReturnInput } from "../types";
 import {
   InvalidRentalState,
   RentalNotFound,
+  RentalRepositoryError,
   ReturnAlreadyConfirmed,
   ReturnSlotRequiredForReturn,
   ReturnSlotStationMismatch,
+  UnauthorizedRentalAccess,
 } from "../domain-errors";
 import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
 import {
@@ -65,6 +67,33 @@ export function confirmRentalReturnByOperator(
               rentalId: rental.id,
               from: rental.status,
               to: "COMPLETED",
+            }));
+          }
+
+          const operator = yield* Effect.tryPromise({
+            try: () =>
+              tx.user.findUnique({
+                where: { id: input.confirmedByUserId },
+                select: {
+                  role: true,
+                  orgAssignment: {
+                    select: {
+                      stationId: true,
+                    },
+                  },
+                },
+              }),
+            catch: e =>
+              new RentalRepositoryError({
+                operation: "confirmRentalReturnByOperator.findOperator",
+                cause: e,
+              }),
+          }).pipe(defectOn(RentalRepositoryError));
+
+          if (operator?.role === "STAFF" && operator.orgAssignment?.stationId !== input.stationId) {
+            return yield* Effect.fail(new UnauthorizedRentalAccess({
+              rentalId: rental.id,
+              userId: input.confirmedByUserId,
             }));
           }
 

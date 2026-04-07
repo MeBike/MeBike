@@ -4,13 +4,15 @@ import React from "react";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useAuthNext } from "@providers/auth-provider-next";
 
+import {
+  BookingHistoryScreen,
+  HomeScreen,
+  MyWalletScreen,
+  ProfileScreen,
+  StaffDashboardScreen,
+} from "../screen";
 import type { RootStackParamList } from "../types/navigation";
 
-import BookingHistoryScreen from "../screen/booking-history";
-import HomeScreen from "../screen/Home";
-import MyWalletScreen from "../screen/my-wallet-screen";
-import ProfileScreen from "../screen/profile-screen";
-import StaffDashboardScreen from "../screen/StaffDashboardScreen";
 import StationSelectScreen from "../styles/StationSelect";
 import { BottomTabBar } from "./bottom-tab-bar";
 

@@ -110,6 +110,23 @@ export const adminRentalDetailSelect = {
       updatedAt: true,
     },
   },
+  returnSlotReservations: {
+    where: { status: "ACTIVE" },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: {
+      id: true,
+      reservedFrom: true,
+      status: true,
+      station: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+        },
+      },
+    },
+  },
 } as const;
 
 type AdminRentalDetailSelectRow = PrismaTypes.RentalGetPayload<{
@@ -117,6 +134,8 @@ type AdminRentalDetailSelectRow = PrismaTypes.RentalGetPayload<{
 }>;
 
 export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRentalDetail {
+  const activeReturnSlot = raw.returnSlotReservations[0] ?? null;
+
   return {
     id: raw.id,
     user: {
@@ -157,6 +176,18 @@ export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRe
           longitude: raw.endStation.longitude,
           totalCapacity: raw.endStation.totalCapacity,
           updatedAt: raw.endStation.updatedAt,
+        }
+      : null,
+    returnSlot: activeReturnSlot
+      ? {
+          id: activeReturnSlot.id,
+          reservedFrom: activeReturnSlot.reservedFrom,
+          status: activeReturnSlot.status,
+          station: {
+            id: activeReturnSlot.station.id,
+            name: activeReturnSlot.station.name,
+            address: activeReturnSlot.station.address,
+          },
         }
       : null,
     startTime: raw.startTime,

@@ -2,7 +2,6 @@ import React from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useGetSubscriptionDetailQuery } from "@hooks/query/subscription/use-get-subscription-detail-query";
-
 import { formatCurrency, formatDate, getStatusStyle, toSubscriptionStatusLabel } from "@utils/subscription";
 
 type Props = {
@@ -11,62 +10,10 @@ type Props = {
   onClose: () => void;
 };
 
-export function SubscriptionDetailModal({ visible, subscriptionId, onClose }: Props) {
-  const { data, isLoading } = useGetSubscriptionDetailQuery(subscriptionId ?? "", visible);
-  const statusStyles = data ? getStatusStyle(data.status) : undefined;
-
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card} onPress={(event) => event.stopPropagation()}>
-          {isLoading && (
-            <View style={styles.loader}>
-              <ActivityIndicator size="large" color="#2563EB" />
-            </View>
-          )}
-
-          {!isLoading && data && (
-            <>
-              <View style={styles.header}>
-                <Text style={styles.title}>{data.packageName.toUpperCase()}</Text>
-                {statusStyles && (
-                  <View style={[styles.statusBadge, { backgroundColor: statusStyles.background }]}> 
-                    <Text style={[styles.statusText, { color: statusStyles.text }]}>{toSubscriptionStatusLabel(data.status)}</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.price}>{formatCurrency(data.price)}</Text>
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Thông tin gói</Text>
-                <InfoRow label="Cập nhật" value={formatDate(data.updatedAt)} />
-                <InfoRow label="Ngày kích hoạt" value={formatDate(data.activatedAt)} />
-                <InfoRow label="Ngày hết hạn" value={formatDate(data.expiresAt)} />
-                <InfoRow
-                  label="Lượt đã dùng"
-                  value={`${data.usageCount}/${data.maxUsages ?? "∞"}`}
-                />
-              </View>
-            </>
-          )}
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
 type InfoRowProps = {
   label: string;
   value?: string | number | null;
 };
-
-function InfoRow({ label, value }: InfoRowProps) {
-  return (
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value ?? "-"}</Text>
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -105,7 +52,7 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 26,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#111827",
     marginBottom: 16,
   },
@@ -131,3 +78,54 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+
+function InfoRow({ label, value }: InfoRowProps) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value ?? "-"}</Text>
+    </View>
+  );
+}
+
+export function SubscriptionDetailModal({ visible, subscriptionId, onClose }: Props) {
+  const { data, isLoading } = useGetSubscriptionDetailQuery(subscriptionId ?? "", visible);
+  const statusStyles = data ? getStatusStyle(data.status) : undefined;
+
+  return (
+    <Modal animationType="fade" onRequestClose={onClose} transparent visible={visible}>
+      <Pressable onPress={onClose} style={styles.backdrop}>
+        <Pressable onPress={event => event.stopPropagation()} style={styles.card}>
+          {isLoading && (
+            <View style={styles.loader}>
+              <ActivityIndicator color="#2563EB" size="large" />
+            </View>
+          )}
+
+          {!isLoading && data && (
+            <>
+              <View style={styles.header}>
+                <Text style={styles.title}>{data.packageName.toUpperCase()}</Text>
+                {statusStyles && (
+                  <View style={[styles.statusBadge, { backgroundColor: statusStyles.background }]}>
+                    <Text style={[styles.statusText, { color: statusStyles.text }]}>
+                      {toSubscriptionStatusLabel(data.status)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.price}>{formatCurrency(data.price)}</Text>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Thông tin gói</Text>
+                <InfoRow label="Cập nhật" value={formatDate(data.updatedAt)} />
+                <InfoRow label="Ngày kích hoạt" value={formatDate(data.activatedAt)} />
+                <InfoRow label="Ngày hết hạn" value={formatDate(data.expiresAt)} />
+                <InfoRow label="Lượt đã dùng" value={`${data.usageCount}/${data.maxUsages ?? "∞"}`} />
+              </View>
+            </>
+          )}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}

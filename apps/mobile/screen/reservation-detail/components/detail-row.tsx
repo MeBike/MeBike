@@ -1,10 +1,9 @@
-import React from "react";
-import { useTheme, XStack, YStack } from "tamagui";
-
 import type { IconSymbolName } from "@components/IconSymbol";
 
 import { IconSymbol } from "@components/IconSymbol";
 import { AppText } from "@ui/primitives/app-text";
+import React from "react";
+import { useTheme, XStack, YStack } from "tamagui";
 
 type DetailRowProps = {
   iconName: IconSymbolName;
@@ -26,7 +25,7 @@ export function DetailRow({
   return (
     <XStack alignItems="flex-start" gap="$4">
       <YStack paddingTop="$1">
-        <IconSymbol color={theme.textTertiary.val} name={iconName} size={20} />
+        <IconSymbol color={theme.textTertiary.val} name={iconName} size="md" />
       </YStack>
 
       <YStack flex={1} gap="$2">

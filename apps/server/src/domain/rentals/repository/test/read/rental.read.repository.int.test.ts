@@ -64,6 +64,7 @@ describe("rentalRepository read integration", () => {
   it("adminGetRentalById returns detailed rental data", async () => {
     const user = await kit.createUser();
     const { station, bike } = await kit.createBikeGraph();
+    const returnStation = await kit.fixture.factories.station();
 
     const rental = await repo.createRental({
       userId: user.id,
@@ -74,6 +75,16 @@ describe("rentalRepository read integration", () => {
       if (result._tag === "Left")
         throw result.left;
       return result.right;
+    });
+
+    await kit.fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: rental.id,
+        userId: user.id,
+        stationId: returnStation.id,
+        reservedFrom: new Date(),
+        status: "ACTIVE",
+      },
     });
 
     const detailOpt = await repo.adminGetRentalById(rental.id).pipe(runEffectEither).then((result) => {
@@ -91,6 +102,7 @@ describe("rentalRepository read integration", () => {
     expect(detailOpt.value.user.email).toBe(user.email);
     expect(detailOpt.value.bike?.id).toBe(bike.id);
     expect(detailOpt.value.startStation.id).toBe(station.id);
+    expect(detailOpt.value.returnSlot?.station.id).toBe(returnStation.id);
   });
 
   it("listActiveRentalsByPhone returns active rentals for user phone", async () => {

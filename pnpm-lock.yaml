@@ -63,7 +63,7 @@ importers:
         version: link:packages/tsconfig
       orval:
         specifier: ^7.13.0
-        version: 7.18.0(openapi-types@12.1.3)(typescript@5.9.3)
+        version: 7.18.0(@faker-js/faker@10.4.0)(openapi-types@12.1.3)(typescript@5.9.3)
       turbo:
         specifier: ^2.5.6
         version: 2.7.4
@@ -454,9 +454,6 @@ importers:
       '@react-native-masked-view/masked-view':
         specifier: 0.3.2
         version: 0.3.2(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      '@react-native-picker/picker':
-        specifier: ^2.11.4
-        version: 2.11.4(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@react-navigation/bottom-tabs':
         specifier: ^7.4.7
         version: 7.9.0(@react-native-masked-view/masked-view@0.3.2(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(@react-navigation/native@7.1.26(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.2(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-screens@4.16.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -520,12 +517,6 @@ importers:
       expo-status-bar:
         specifier: ~3.0.8
         version: 3.0.9(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      expo-symbols:
-        specifier: ^1.0.7
-        version: 1.0.8(expo@54.0.31(@babel/core@7.28.5)(react-native-webview@13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
-      firebase:
-        specifier: ^12.5.0
-        version: 12.7.0(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))
       http-status-codes:
         specifier: ^2.3.0
         version: 2.3.0
@@ -550,9 +541,6 @@ importers:
       react-native-logs:
         specifier: ^5.5.0
         version: 5.5.0
-      react-native-maps:
-        specifier: 1.18.0
-        version: 1.18.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       react-native-qrcode-svg:
         specifier: ^6.3.20
         version: 6.3.21(react-native-svg@15.15.1(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -571,9 +559,6 @@ importers:
       react-native-svg:
         specifier: ^15.14.0
         version: 15.15.1(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      react-native-vector-icons:
-        specifier: ^10.3.0
-        version: 10.3.0
       react-native-webview:
         specifier: 13.15.0
         version: 13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -696,6 +681,9 @@ importers:
         specifier: ^4.3.5
         version: 4.3.5
     devDependencies:
+      '@faker-js/faker':
+        specifier: ^10.4.0
+        version: 10.4.0
       '@mebike/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -2127,6 +2115,10 @@ packages:
   '@expo/xcpretty@4.3.2':
     resolution: {integrity: sha512-ReZxZ8pdnoI3tP/dNnJdnmAk7uLT4FjsKDGW7YeDdvdOMz2XCQSmSCM9IWlrXuWtMF9zeSB6WJtEhCQ41gQOfw==}
     hasBin: true
+
+  '@faker-js/faker@10.4.0':
+    resolution: {integrity: sha512-sDBWI3yLy8EcDzgobvJTWq1MJYzAkQdpjXuPukga9wXonhpMRvd1Izuo2Qgwey2OiEoRIBr35RMU9HJRoOHzpw==}
+    engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
 
   '@fastify/busboy@3.2.0':
     resolution: {integrity: sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA==}
@@ -3579,12 +3571,6 @@ packages:
     peerDependencies:
       react: '>=16'
       react-native: '>=0.57'
-
-  '@react-native-picker/picker@2.11.4':
-    resolution: {integrity: sha512-Kf8h1AMnBo54b1fdiVylP2P/iFcZqzpMYcglC28EEFB1DEnOjsNr6Ucqc+3R9e91vHxEDnhZFbYDmAe79P2gjA==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
 
   '@react-native/assets-registry@0.81.4':
     resolution: {integrity: sha512-AMcDadefBIjD10BRqkWw+W/VdvXEomR6aEZ0fhQRAv7igrBzb4PTn4vHKYg+sUK0e3wa74kcMy2DLc/HtnGcMA==}
@@ -5449,6 +5435,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -6224,9 +6211,6 @@ packages:
 
   cliui@6.0.0:
     resolution: {integrity: sha512-t6wbgtoCXvAzst7QgXxJYqPt0usEfbgQdftEPbLL/cvv6HPE5VgvqCuAIDR0NgU52ds6rFwqrgakNLrHEjCbrQ==}
-
-  cliui@7.0.4:
-    resolution: {integrity: sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ==}
 
   cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
@@ -7397,12 +7381,6 @@ packages:
     resolution: {integrity: sha512-xyYyVg6V1/SSOZWh4Ni3U129XHCnFHBTcUo0dhWtFDrZbNp/duw5AGsQfb2sVeU0gxWHXSY1+5F0jnKYC7WuOw==}
     peerDependencies:
       react: '*'
-      react-native: '*'
-
-  expo-symbols@1.0.8:
-    resolution: {integrity: sha512-7bNjK350PaQgxBf0owpmSYkdZIpdYYmaPttDBb2WIp6rIKtcEtdzdfmhsc2fTmjBURHYkg36+eCxBFXO25/1hw==}
-    peerDependencies:
-      expo: '*'
       react-native: '*'
 
   expo-updates-interface@2.0.0:
@@ -10114,17 +10092,6 @@ packages:
   react-native-logs@5.5.0:
     resolution: {integrity: sha512-H3Jc1pNTzNhYb9yHuk1drHdyGHwRvt4IERSz3EUul8vVTey6999fzGRFLK6ugrxYnmw7P+5fo/mRzDXeByhA8g==}
 
-  react-native-maps@1.18.0:
-    resolution: {integrity: sha512-S17nYUqeMptgIPaAZuVRo+eRelPreBBYQWw6jsxU7qQ12p+THSfFaqabcNn7fBmsXhT3T27iIl8ek8v1H8BaGw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      react: '>= 17.0.1'
-      react-native: '>= 0.64.3'
-      react-native-web: '>= 0.11'
-    peerDependenciesMeta:
-      react-native-web:
-        optional: true
-
   react-native-qrcode-svg@6.3.21:
     resolution: {integrity: sha512-6vcj4rcdpWedvphDR+NSJcudJykNuLgNGFwm2p4xYjR8RdyTzlrELKI5LkO4ANS9cQUbqsfkpippPv64Q2tUtA==}
     peerDependencies:
@@ -10160,11 +10127,6 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
-
-  react-native-vector-icons@10.3.0:
-    resolution: {integrity: sha512-IFQ0RE57819hOUdFvgK4FowM5aMXg7C7XKsuGLevqXkkIJatc3QopN0wYrb2IrzUgmdpfP+QVIbI3S6h7M0btw==}
-    deprecated: react-native-vector-icons package has moved to a new model of per-icon-family packages. See the https://github.com/oblador/react-native-vector-icons/blob/master/MIGRATION.md on how to migrate
-    hasBin: true
 
   react-native-webview@13.15.0:
     resolution: {integrity: sha512-Vzjgy8mmxa/JO6l5KZrsTC7YemSdq+qB01diA0FqjUTaWGAGwuykpJ73MDj3+mzBSlaDxAEugHzTtkUQkQEQeQ==}
@@ -11924,10 +11886,6 @@ packages:
     resolution: {integrity: sha512-aePbxDmcYW++PaqBsJ+HYUFwCdv4LVvdnhBy78E57PIor8/OVvhMrADFFEDh8DHDFRv/O9i3lPhsENjO7QX0+A==}
     engines: {node: '>=8'}
 
-  yargs@16.2.0:
-    resolution: {integrity: sha512-D1mvvtDG0L5ft/jGWkLpG1+m0eQxOfaBvTNELraWj22wSVUMWxZUvYgJYcKh6jGGIkJFhH4IZPQhR4TKpc8mBw==}
-    engines: {node: '>=10'}
-
   yargs@17.7.2:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
@@ -12538,7 +12496,7 @@ snapshots:
       '@babel/types': 7.28.5
       '@jridgewell/remapping': 2.3.5
       convert-source-map: 2.0.0
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -12590,7 +12548,7 @@ snapshots:
       '@babel/core': 7.28.5
       '@babel/helper-compilation-targets': 7.27.2
       '@babel/helper-plugin-utils': 7.27.1
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       lodash.debounce: 4.0.8
       resolve: 1.22.11
     transitivePeerDependencies:
@@ -13118,7 +13076,7 @@ snapshots:
       '@babel/parser': 7.29.2
       '@babel/template': 7.27.2
       '@babel/types': 7.29.0
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -13499,7 +13457,7 @@ snapshots:
       ci-info: 3.9.0
       compression: 1.8.1
       connect: 3.7.0
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       env-editor: 0.4.2
       expo: 54.0.31(@babel/core@7.28.5)(react-native-webview@13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       expo-server: 1.0.5
@@ -13626,7 +13584,7 @@ snapshots:
       '@expo/plist': 0.4.8
       '@expo/sdk-runtime-versions': 1.0.0
       chalk: 4.1.2
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       getenv: 2.0.0
       glob: 13.0.0
       resolve-from: 5.0.0
@@ -13682,7 +13640,7 @@ snapshots:
   '@expo/env@2.0.8':
     dependencies:
       chalk: 4.1.2
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       dotenv: 16.4.7
       dotenv-expand: 11.0.7
       getenv: 2.0.0
@@ -13694,7 +13652,7 @@ snapshots:
       '@expo/spawn-async': 1.7.2
       arg: 5.0.2
       chalk: 4.1.2
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       getenv: 2.0.0
       glob: 13.0.0
       ignore: 5.3.2
@@ -13735,7 +13693,7 @@ snapshots:
       '@expo/spawn-async': 1.7.2
       browserslist: 4.28.1
       chalk: 4.1.2
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       dotenv: 16.4.7
       dotenv-expand: 11.0.7
       getenv: 2.0.0
@@ -13832,7 +13790,7 @@ snapshots:
       '@expo/image-utils': 0.8.8
       '@expo/json-file': 10.0.8
       '@react-native/normalize-colors': 0.81.5
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       expo: 54.0.31(@babel/core@7.28.5)(react-native-webview@13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       resolve-from: 5.0.0
       semver: 7.7.3
@@ -13886,6 +13844,8 @@ snapshots:
       chalk: 4.1.2
       find-up: 5.0.0
       js-yaml: 4.1.1
+
+  '@faker-js/faker@10.4.0': {}
 
   '@fastify/busboy@3.2.0': {}
 
@@ -13963,19 +13923,6 @@ snapshots:
       idb: 7.1.1
       tslib: 2.8.1
 
-  '@firebase/auth-compat@0.6.2(@firebase/app-compat@0.5.6)(@firebase/app-types@0.9.3)(@firebase/app@0.14.6)(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))':
-    dependencies:
-      '@firebase/app-compat': 0.5.6
-      '@firebase/auth': 1.12.0(@firebase/app@0.14.6)(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))
-      '@firebase/auth-types': 0.13.0(@firebase/app-types@0.9.3)(@firebase/util@1.13.0)
-      '@firebase/component': 0.7.0
-      '@firebase/util': 1.13.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@firebase/app'
-      - '@firebase/app-types'
-      - '@react-native-async-storage/async-storage'
-
   '@firebase/auth-compat@0.6.2(@firebase/app-compat@0.5.6)(@firebase/app-types@0.9.3)(@firebase/app@0.14.6)(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))':
     dependencies:
       '@firebase/app-compat': 0.5.6
@@ -13995,16 +13942,6 @@ snapshots:
     dependencies:
       '@firebase/app-types': 0.9.3
       '@firebase/util': 1.13.0
-
-  '@firebase/auth@1.12.0(@firebase/app@0.14.6)(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))':
-    dependencies:
-      '@firebase/app': 0.14.6
-      '@firebase/component': 0.7.0
-      '@firebase/logger': 0.5.0
-      '@firebase/util': 1.13.0
-      tslib: 2.8.1
-    optionalDependencies:
-      '@react-native-async-storage/async-storage': 2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
 
   '@firebase/auth@1.12.0(@firebase/app@0.14.6)(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))':
     dependencies:
@@ -14919,23 +14856,23 @@ snapshots:
   '@opentelemetry/api@1.9.1':
     optional: true
 
-  '@orval/angular@7.18.0(typescript@5.9.3)':
+  '@orval/angular@7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@faker-js/faker'
       - supports-color
       - typescript
 
-  '@orval/axios@7.18.0(typescript@5.9.3)':
+  '@orval/axios@7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@faker-js/faker'
       - supports-color
       - typescript
 
-  '@orval/core@8.6.2(typescript@5.9.3)':
+  '@orval/core@8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
       '@scalar/openapi-types': 0.5.3
       acorn: 8.15.0
@@ -14948,23 +14885,25 @@ snapshots:
       jiti: 2.6.1
       remeda: 2.33.6
       typedoc: 0.28.18(typescript@5.9.3)
+    optionalDependencies:
+      '@faker-js/faker': 10.4.0
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  '@orval/fetch@7.18.0(typescript@5.9.3)':
+  '@orval/fetch@7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
       openapi3-ts: 4.5.0
     transitivePeerDependencies:
       - '@faker-js/faker'
       - supports-color
       - typescript
 
-  '@orval/hono@7.18.0(typescript@5.9.3)':
+  '@orval/hono@7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
-      '@orval/zod': 7.18.0(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/zod': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
       fs-extra: 11.3.3
       lodash.uniq: 4.5.0
       openapi3-ts: 4.5.0
@@ -14973,30 +14912,30 @@ snapshots:
       - supports-color
       - typescript
 
-  '@orval/mcp@7.18.0(typescript@5.9.3)':
+  '@orval/mcp@7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
-      '@orval/fetch': 7.18.0(typescript@5.9.3)
-      '@orval/zod': 7.18.0(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/fetch': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/zod': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
       openapi3-ts: 4.5.0
     transitivePeerDependencies:
       - '@faker-js/faker'
       - supports-color
       - typescript
 
-  '@orval/mock@8.6.2(typescript@5.9.3)':
+  '@orval/mock@8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
       remeda: 2.33.6
     transitivePeerDependencies:
       - '@faker-js/faker'
       - supports-color
       - typescript
 
-  '@orval/query@7.18.0(typescript@5.9.3)':
+  '@orval/query@7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
-      '@orval/fetch': 7.18.0(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/fetch': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
       chalk: 4.1.2
       lodash.omitby: 4.6.0
     transitivePeerDependencies:
@@ -15004,18 +14943,18 @@ snapshots:
       - supports-color
       - typescript
 
-  '@orval/swr@7.18.0(typescript@5.9.3)':
+  '@orval/swr@7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
-      '@orval/fetch': 7.18.0(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/fetch': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@faker-js/faker'
       - supports-color
       - typescript
 
-  '@orval/zod@7.18.0(typescript@5.9.3)':
+  '@orval/zod@7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)':
     dependencies:
-      '@orval/core': 8.6.2(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
       lodash.uniq: 4.5.0
       openapi3-ts: 4.5.0
     transitivePeerDependencies:
@@ -15670,11 +15609,6 @@ snapshots:
       react: 19.1.0
       react-native: 0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
 
-  '@react-native-picker/picker@2.11.4(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
-    dependencies:
-      react: 19.1.0
-      react-native: 0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
-
   '@react-native/assets-registry@0.81.4': {}
 
   '@react-native/assets-registry@0.81.5': {}
@@ -15760,7 +15694,7 @@ snapshots:
   '@react-native/community-cli-plugin@0.81.4':
     dependencies:
       '@react-native/dev-middleware': 0.81.4
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3
       metro-config: 0.83.3
@@ -15796,7 +15730,7 @@ snapshots:
       chrome-launcher: 0.15.2
       chromium-edge-launcher: 0.2.0
       connect: 3.7.0
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       invariant: 2.2.4
       nullthrows: 1.1.1
       open: 7.4.2
@@ -15814,7 +15748,7 @@ snapshots:
       chrome-launcher: 0.15.2
       chromium-edge-launcher: 0.2.0
       connect: 3.7.0
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       invariant: 2.2.4
       nullthrows: 1.1.1
       open: 7.4.2
@@ -19638,7 +19572,7 @@ snapshots:
       babel-plugin-react-native-web: 0.21.2
       babel-plugin-syntax-hermes-parser: 0.29.1
       babel-plugin-transform-flow-enums: 0.0.2(@babel/core@7.28.5)
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       react-refresh: 0.14.2
       resolve-from: 5.0.0
     optionalDependencies:
@@ -20109,12 +20043,6 @@ snapshots:
       strip-ansi: 6.0.1
       wrap-ansi: 6.2.0
 
-  cliui@7.0.4:
-    dependencies:
-      string-width: 4.2.3
-      strip-ansi: 6.0.1
-      wrap-ansi: 7.0.0
-
   cliui@8.0.1:
     dependencies:
       string-width: 4.2.3
@@ -20393,6 +20321,10 @@ snapshots:
       ms: 2.0.0
 
   debug@3.2.7:
+    dependencies:
+      ms: 2.1.3
+
+  debug@4.4.3:
     dependencies:
       ms: 2.1.3
 
@@ -21525,12 +21457,6 @@ snapshots:
       react-native: 0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
       react-native-is-edge-to-edge: 1.2.1(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
 
-  expo-symbols@1.0.8(expo@54.0.31(@babel/core@7.28.5)(react-native-webview@13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)):
-    dependencies:
-      expo: 54.0.31(@babel/core@7.28.5)(react-native-webview@13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      react-native: 0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
-      sf-symbols-typescript: 2.2.0
-
   expo-updates-interface@2.0.0(expo@54.0.31(@babel/core@7.28.5)(react-native-webview@13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)):
     dependencies:
       expo: 54.0.31(@babel/core@7.28.5)(react-native-webview@13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -21801,39 +21727,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-
-  firebase@12.7.0(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))):
-    dependencies:
-      '@firebase/ai': 2.6.1(@firebase/app-types@0.9.3)(@firebase/app@0.14.6)
-      '@firebase/analytics': 0.10.19(@firebase/app@0.14.6)
-      '@firebase/analytics-compat': 0.2.25(@firebase/app-compat@0.5.6)(@firebase/app@0.14.6)
-      '@firebase/app': 0.14.6
-      '@firebase/app-check': 0.11.0(@firebase/app@0.14.6)
-      '@firebase/app-check-compat': 0.4.0(@firebase/app-compat@0.5.6)(@firebase/app@0.14.6)
-      '@firebase/app-compat': 0.5.6
-      '@firebase/app-types': 0.9.3
-      '@firebase/auth': 1.12.0(@firebase/app@0.14.6)(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))
-      '@firebase/auth-compat': 0.6.2(@firebase/app-compat@0.5.6)(@firebase/app-types@0.9.3)(@firebase/app@0.14.6)(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)))
-      '@firebase/data-connect': 0.3.12(@firebase/app@0.14.6)
-      '@firebase/database': 1.1.0
-      '@firebase/database-compat': 2.1.0
-      '@firebase/firestore': 4.9.3(@firebase/app@0.14.6)
-      '@firebase/firestore-compat': 0.4.3(@firebase/app-compat@0.5.6)(@firebase/app-types@0.9.3)(@firebase/app@0.14.6)
-      '@firebase/functions': 0.13.1(@firebase/app@0.14.6)
-      '@firebase/functions-compat': 0.4.1(@firebase/app-compat@0.5.6)(@firebase/app@0.14.6)
-      '@firebase/installations': 0.6.19(@firebase/app@0.14.6)
-      '@firebase/installations-compat': 0.2.19(@firebase/app-compat@0.5.6)(@firebase/app-types@0.9.3)(@firebase/app@0.14.6)
-      '@firebase/messaging': 0.12.23(@firebase/app@0.14.6)
-      '@firebase/messaging-compat': 0.2.23(@firebase/app-compat@0.5.6)(@firebase/app@0.14.6)
-      '@firebase/performance': 0.7.9(@firebase/app@0.14.6)
-      '@firebase/performance-compat': 0.2.22(@firebase/app-compat@0.5.6)(@firebase/app@0.14.6)
-      '@firebase/remote-config': 0.7.0(@firebase/app@0.14.6)
-      '@firebase/remote-config-compat': 0.2.20(@firebase/app-compat@0.5.6)(@firebase/app@0.14.6)
-      '@firebase/storage': 0.14.0(@firebase/app@0.14.6)
-      '@firebase/storage-compat': 0.4.0(@firebase/app-compat@0.5.6)(@firebase/app-types@0.9.3)(@firebase/app@0.14.6)
-      '@firebase/util': 1.13.0
-    transitivePeerDependencies:
-      - '@react-native-async-storage/async-storage'
 
   firebase@12.7.0(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))):
     dependencies:
@@ -22369,7 +22262,7 @@ snapshots:
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -23694,7 +23587,7 @@ snapshots:
 
   metro-file-map@0.83.3:
     dependencies:
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       fb-watchman: 2.0.2
       flow-enums-runtime: 0.0.6
       graceful-fs: 4.2.11
@@ -23790,7 +23683,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 2.0.0
       connect: 3.7.0
-      debug: 4.4.3(supports-color@5.5.0)
+      debug: 4.4.3
       error-stack-parser: 2.1.4
       flow-enums-runtime: 0.0.6
       graceful-fs: 4.2.11
@@ -24504,20 +24397,20 @@ snapshots:
       strip-ansi: 5.2.0
       wcwidth: 1.0.1
 
-  orval@7.18.0(openapi-types@12.1.3)(typescript@5.9.3):
+  orval@7.18.0(@faker-js/faker@10.4.0)(openapi-types@12.1.3)(typescript@5.9.3):
     dependencies:
       '@apidevtools/swagger-parser': 12.1.0(openapi-types@12.1.3)
       '@commander-js/extra-typings': 14.0.0(commander@14.0.2)
-      '@orval/angular': 7.18.0(typescript@5.9.3)
-      '@orval/axios': 7.18.0(typescript@5.9.3)
-      '@orval/core': 8.6.2(typescript@5.9.3)
-      '@orval/fetch': 7.18.0(typescript@5.9.3)
-      '@orval/hono': 7.18.0(typescript@5.9.3)
-      '@orval/mcp': 7.18.0(typescript@5.9.3)
-      '@orval/mock': 8.6.2(typescript@5.9.3)
-      '@orval/query': 7.18.0(typescript@5.9.3)
-      '@orval/swr': 7.18.0(typescript@5.9.3)
-      '@orval/zod': 7.18.0(typescript@5.9.3)
+      '@orval/angular': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/axios': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/core': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/fetch': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/hono': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/mcp': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/mock': 8.6.2(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/query': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/swr': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
+      '@orval/zod': 7.18.0(@faker-js/faker@10.4.0)(typescript@5.9.3)
       chalk: 4.1.2
       chokidar: 4.0.3
       commander: 14.0.2
@@ -25051,12 +24944,6 @@ snapshots:
 
   react-native-logs@5.5.0: {}
 
-  react-native-maps@1.18.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
-    dependencies:
-      '@types/geojson': 7946.0.16
-      react: 19.1.0
-      react-native: 0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
-
   react-native-qrcode-svg@6.3.21(react-native-svg@15.15.1(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
     dependencies:
       prop-types: 15.8.1
@@ -25097,11 +24984,6 @@ snapshots:
       react: 19.1.0
       react-native: 0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
       warn-once: 0.1.1
-
-  react-native-vector-icons@10.3.0:
-    dependencies:
-      prop-types: 15.8.1
-      yargs: 16.2.0
 
   react-native-webview@13.15.0(react-native@0.81.4(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
     dependencies:
@@ -27172,16 +27054,6 @@ snapshots:
       which-module: 2.0.1
       y18n: 4.0.3
       yargs-parser: 18.1.3
-
-  yargs@16.2.0:
-    dependencies:
-      cliui: 7.0.4
-      escalade: 3.2.0
-      get-caller-file: 2.0.5
-      require-directory: 2.1.1
-      string-width: 4.2.3
-      y18n: 5.0.8
-      yargs-parser: 20.2.9
 
   yargs@17.7.2:
     dependencies:

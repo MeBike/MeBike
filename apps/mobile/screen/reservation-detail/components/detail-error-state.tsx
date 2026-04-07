@@ -1,9 +1,8 @@
-import React from "react";
-import { useTheme, YStack } from "tamagui";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
+import React from "react";
+import { useTheme, YStack } from "tamagui";
 
 type DetailErrorStateProps = {
   onGoBack: () => void;
@@ -20,7 +19,7 @@ export function DetailErrorState({
 
   return (
     <YStack alignItems="center" flex={1} gap="$3" justifyContent="center" padding="$7">
-      <IconSymbol color={theme.statusDanger.val} name="exclamationmark.triangle" size={44} />
+      <IconSymbol color={theme.statusDanger.val} name="warning" size="hero" />
       <AppText align="center" variant="xlTitle">
         {title}
       </AppText>

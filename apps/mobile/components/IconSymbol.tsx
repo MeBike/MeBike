@@ -1,204 +1,159 @@
-// This file is a fallback for using MaterialIcons on Android and web.
+/* eslint-disable unicorn/filename-case */
 
-import type { SymbolWeight } from "expo-symbols";
-import type {
-  OpaqueColorValue,
-  StyleProp,
-  TextStyle,
-  ViewStyle,
-} from "react-native";
+import type { ColorValue, StyleProp, ViewStyle } from "react-native";
 
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { iconSizes } from "@theme/metrics";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Bell,
+  Bike,
+  Building2,
+  Calendar,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  CircleUserRound,
+  Clock,
+  Copy,
+  Cpu,
+  CreditCard,
+  Eye,
+  EyeOff,
+  FileText,
+  Home,
+  Info,
+  Lock,
+  Mail,
+  Map,
+  MapPin,
+  Phone,
+  Play,
+  Plus,
+  QrCode,
+  RefreshCw,
+  Search,
+  Shield,
+  SlidersHorizontal,
+  Star,
+  Tag,
+  Timer,
+  TriangleAlert,
+  User,
+  Wallet,
+  Wrench,
+  X,
+} from "lucide-react-native";
 import React from "react";
 
-// Add your SFSymbol to MaterialIcons mappings here.
-const MAPPING = {
-  "house.fill": "home",
-  "house": "home",
-  "arrow.left": "arrow-back",
-  "arrow.right": "arrow-forward",
-  "arrow.up": "arrow-upward",
-  "arrow.down": "arrow-downward",
-  "chevron.left": "chevron-left",
-  "chevron.right": "chevron-right",
-  "chevron.up": "keyboard-arrow-up",
-  "chevron.down": "keyboard-arrow-down",
-  "arrow.clockwise": "refresh",
-  "arrow.counterclockwise": "refresh",
+type LucideIconComponent = typeof ArrowLeft;
 
-  // Communication & Social
-  "paperplane.fill": "send",
-  "paperplane": "send",
-  "envelope.fill": "mail",
-  "envelope": "mail",
-  "phone.fill": "phone",
-  "phone": "phone",
-  "message.fill": "chat",
-  "message": "chat",
-  "bell.fill": "notifications",
-  "bell": "notifications",
-  "heart.fill": "favorite",
-  "heart": "favorite",
+type IconRenderConfig = {
+  fill?: boolean;
+  icon: LucideIconComponent;
+  strokeWidth?: number;
+};
 
-  // Actions & Controls
-  "plus": "add",
-  "minus": "remove",
-  "xmark": "close",
-  "ellipsis": "more-horiz",
-  "checkmark": "check",
-  "checkmark.circle.fill": "check-circle",
-  "checkmark.circle": "check-circle",
-  "checkmark.square.fill": "check-box",
-  "checkmark.square": "check-box",
-  "multiply": "clear",
-  "trash.fill": "delete",
-  "trash": "delete",
-  "pencil": "edit",
-  "pencil.and.list.clipboard": "edit-note",
-  "square.and.pencil": "edit",
-  "doc.text.fill": "description",
-  "doc.text": "description",
-  "folder.fill": "folder",
-  "folder": "folder-open",
-  "doc.fill": "insert-drive-file",
-  "doc": "insert-drive-file",
-  "doc.on.doc": "content-copy",
+type IconVariantConfig = {
+  filled?: IconRenderConfig;
+  outline: IconRenderConfig;
+};
 
-  // Media & Content
-  "photo.fill": "image",
-  "photo": "image",
-  "camera.fill": "camera-alt",
-  "camera": "camera-alt",
-  "video.fill": "videocam",
-  "video": "videocam",
-  "music.note": "music-note",
-  "speaker.wave.2.fill": "volume-up",
-  "speaker.slash.fill": "volume-off",
-  "play.fill": "play-arrow",
-  "pause.fill": "pause",
-  "stop.fill": "stop",
+const ICONS = {
+  "arrow-down": { outline: { icon: ArrowDown } },
+  "arrow-left": { outline: { icon: ArrowLeft } },
+  "arrow-right": { outline: { icon: ArrowRight } },
+  "arrow-up": { outline: { icon: ArrowUp } },
+  "bell": { outline: { icon: Bell } },
+  "bike": { outline: { icon: Bike } },
+  "calendar": { outline: { icon: Calendar } },
+  "check": { outline: { icon: Check } },
+  "check-circle": { outline: { icon: CheckCircle2 } },
+  "chevron-right": { outline: { icon: ChevronRight } },
+  "chip": { outline: { icon: Cpu } },
+  "circle": { outline: { icon: Circle }, filled: { icon: Circle, fill: true } },
+  "clock": { outline: { icon: Clock } },
+  "close": { outline: { icon: X } },
+  "copy": { outline: { icon: Copy } },
+  "credit-card": { outline: { icon: CreditCard } },
+  "document": { outline: { icon: FileText } },
+  "eye": { outline: { icon: Eye } },
+  "eye-off": { outline: { icon: EyeOff } },
+  "home": { outline: { icon: Home }, filled: { icon: Home, fill: true } },
+  "info": { outline: { icon: Info } },
+  "location": { outline: { icon: MapPin }, filled: { icon: MapPin, fill: true } },
+  "lock": { outline: { icon: Lock } },
+  "mail": { outline: { icon: Mail } },
+  "map": { outline: { icon: Map } },
+  "person": { outline: { icon: User } },
+  "person-circle": { outline: { icon: CircleUserRound }, filled: { icon: CircleUserRound, fill: true } },
+  "phone": { outline: { icon: Phone }, filled: { icon: Phone, fill: true } },
+  "play": { outline: { icon: Play, strokeWidth: 1.8 } },
+  "plus": { outline: { icon: Plus } },
+  "qr-code": { outline: { icon: QrCode } },
+  "refresh": { outline: { icon: RefreshCw } },
+  "search": { outline: { icon: Search } },
+  "shield-lock": { outline: { icon: Shield } },
+  "sliders": { outline: { icon: SlidersHorizontal } },
+  "star": { outline: { icon: Star }, filled: { icon: Star, fill: true, strokeWidth: 1.8 } },
+  "station": { outline: { icon: Building2 } },
+  "tag": { outline: { icon: Tag } },
+  "timer": { outline: { icon: Timer } },
+  "tools": { outline: { icon: Wrench } },
+  "wallet": { outline: { icon: Wallet } },
+  "warning": { outline: { icon: TriangleAlert }, filled: { icon: TriangleAlert, fill: true } },
+} as const satisfies Record<string, IconVariantConfig>;
 
-  // System & Settings
-  "gear": "settings",
-  "gearshape.fill": "settings",
-  "wrench.and.screwdriver.fill": "build",
-  "slider.horizontal.3": "tune",
-  "info.circle.fill": "info",
-  "info.circle": "info",
-  "exclamationmark.triangle.fill": "warning",
-  "exclamationmark.triangle": "warning",
-  "questionmark.circle.fill": "help",
-  "questionmark.circle": "help",
+type IconRegistry = typeof ICONS;
 
-  // Shapes & Symbols
-  "square": "square",
-  "circle": "circle",
-  "triangle.fill": "change-history",
-  "star.fill": "star",
-  "star": "star",
-  "bookmark.fill": "bookmark",
-  "bookmark": "bookmark",
-  "tag": "local-offer",
-
-  // Technology & Code
-  "chevron.left.forwardslash.chevron.right": "code",
-  "qrcode.viewfinder": "qr-code",
-  "cpu": "memory",
-  "number": "confirmation-number",
-  "wallet.pass.fill": "account-balance-wallet",
-  "wifi": "wifi",
-  "antenna.radiowaves.left.and.right": "signal-cellular-alt",
-  "battery.100": "battery-full",
-  "battery.25": "battery-2-bar",
-  "lock": "lock",
-  "lock.fill": "lock",
-  "lock.shield.fill": "shield",
-  "lock.open.fill": "lock-open",
-  "bicycle.circle.fill": "directions-bike",
-  "bicycle.circle": "directions-bike",
-  "bicycle": "directions-bike",
-
-  // Shopping & Commerce
-  "cart.fill": "shopping-cart",
-  "cart": "shopping-cart",
-  "creditcard.fill": "credit-card",
-  "creditcard": "credit-card",
-  "dollarsign.circle.fill": "monetization-on",
-  "bag.fill": "shopping-bag",
-  "bag": "shopping-bag",
-
-  // Location & Maps
-  "location.fill": "location-on",
-  "location": "location-on",
-  "map.fill": "map",
-  "map": "map",
-  "compass.drawing": "explore",
-
-  // Time & Calendar
-  "clock.fill": "access-time",
-  "clock": "access-time",
-  "calendar": "event",
-  "timer": "timer",
-
-  // User & Profile
-  "person": "person",
-  "person.fill": "person",
-  "person.2.fill": "group",
-  "person.2": "group",
-  "person.crop.circle.fill": "account-circle",
-  "person.crop.circle": "account-circle",
-
-  // Sharing & Export
-  "square.and.arrow.up": "share",
-  "square.and.arrow.down": "download",
-  "arrow.up.doc.fill": "upload-file",
-  "link": "link",
-
-  // Search & Discovery
-  "magnifyingglass": "search",
-  "line.3.horizontal.decrease": "filter-list",
-  "arrow.up.arrow.down": "sort",
-
-  // Visibility & Display
-  "eye": "visibility",
-  "eye.fill": "visibility",
-  "eye.slash": "visibility-off",
-  "eye.slash.fill": "visibility-off",
-  "lightbulb.fill": "lightbulb",
-  "moon.fill": "dark-mode",
-  "sun.max.fill": "light-mode",
-} as Partial<
-  Record<
-    import("expo-symbols").SymbolViewProps["name"],
-    React.ComponentProps<typeof MaterialIcons>["name"]
-  >
->;
-
-export type IconSymbolName = keyof typeof MAPPING;
-
-/**
- * An icon component that uses native SFSymbols on iOS, and MaterialIcons on Android and web. This ensures a consistent look across platforms, and optimal resource usage.
- *
- * Icon `name`s are based on SFSymbols and require manual mapping to MaterialIcons.
- */
-export function IconSymbol({
-  name,
-  size = 24,
-  color,
-  style,
-}: {
+export type IconSymbolName = keyof IconRegistry;
+export type IconSymbolVariant = "outline" | "filled";
+export type IconSymbolSize = keyof typeof iconSizes;
+export type IconSymbolProps = {
+  color: ColorValue;
   name: IconSymbolName;
-  size?: number;
-  color: string | OpaqueColorValue;
+  size?: IconSymbolSize;
   style?: StyleProp<ViewStyle>;
-  weight?: SymbolWeight;
-}) {
+  variant?: IconSymbolVariant;
+};
+
+function resolveIconSize(size: IconSymbolSize = "lg") {
+  return iconSizes[size];
+}
+
+function resolveIconConfig(name: IconSymbolName, variant: IconSymbolVariant): IconRenderConfig {
+  const config: IconVariantConfig = ICONS[name];
+
+  if (variant === "filled" && config.filled) {
+    return config.filled;
+  }
+
+  return config.outline;
+}
+
+export function IconSymbol({
+  color,
+  name,
+  size = "lg",
+  style,
+  variant = "outline",
+}: IconSymbolProps) {
+  const config = resolveIconConfig(name, variant);
+  const Icon = config.icon;
+  const fill = config.fill ?? false;
+  const strokeWidth = config.strokeWidth ?? 2.2;
+
   return (
-    <MaterialIcons
-      color={color}
-      size={size}
-      name={MAPPING[name]}
-      style={style as StyleProp<TextStyle>}
+    <Icon
+      absoluteStrokeWidth
+      color={color as string}
+      fill={fill ? color as string : "none"}
+      size={resolveIconSize(size)}
+      strokeWidth={strokeWidth}
+      style={style}
     />
   );
 }

@@ -126,6 +126,16 @@ export type AdminRentalDetail = {
     totalCapacity: number;
     updatedAt: Date;
   } | null;
+  returnSlot: {
+    id: string;
+    reservedFrom: Date;
+    status: ReturnSlotStatus;
+    station: {
+      id: string;
+      name: string;
+      address: string;
+    };
+  } | null;
   startTime: Date;
   endTime: Date | null;
   durationMinutes: number | null;
