@@ -137,11 +137,11 @@ export function makeStationService(repo: StationRepo, deps: {
       const agencyId = args.agencyId ?? null;
 
       if (stationType === "AGENCY" && !agencyId) {
-        return yield* Effect.fail(new StationAgencyRequiredError());
+        return yield* Effect.fail(new StationAgencyRequiredError({}));
       }
 
       if (stationType === "INTERNAL" && agencyId) {
-        return yield* Effect.fail(new StationAgencyForbiddenError());
+        return yield* Effect.fail(new StationAgencyForbiddenError({}));
       }
 
       if (!agencyId) {
