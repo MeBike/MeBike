@@ -130,39 +130,42 @@ export function makeStationService(repo: StationRepo, deps: {
 
   const validateOwnership = (args: {
     stationType: CreateStationInput["stationType"];
-    agencyId: string | null;
+    agencyId: string | null | undefined;
     excludeStationId?: string;
   }) =>
     Effect.gen(function* () {
-      if (args.stationType === "AGENCY" && !args.agencyId) {
+      const stationType = args.stationType ?? "INTERNAL";
+      const agencyId = args.agencyId ?? null;
+
+      if (stationType === "AGENCY" && !agencyId) {
         return yield* Effect.fail(new StationAgencyRequiredError());
       }
 
-      if (args.stationType === "INTERNAL" && args.agencyId) {
+      if (stationType === "INTERNAL" && agencyId) {
         return yield* Effect.fail(new StationAgencyForbiddenError());
       }
 
-      if (!args.agencyId) {
+      if (!agencyId) {
         return;
       }
 
-      const agency = yield* deps.agencyRepo.getById(args.agencyId).pipe(
+      const agency = yield* deps.agencyRepo.getById(agencyId).pipe(
         defectOn(AgencyRepositoryError),
       );
 
       if (Option.isNone(agency)) {
         return yield* Effect.fail(new StationAgencyNotFoundError({
-          agencyId: args.agencyId,
+          agencyId,
         }));
       }
 
-      const existingStation = yield* repo.getByAgencyId(args.agencyId);
+      const existingStation = yield* repo.getByAgencyId(agencyId);
       if (
         Option.isSome(existingStation)
         && existingStation.value.id !== args.excludeStationId
       ) {
         return yield* Effect.fail(new StationAgencyAlreadyAssignedError({
-          agencyId: args.agencyId,
+          agencyId,
           stationId: existingStation.value.id,
         }));
       }

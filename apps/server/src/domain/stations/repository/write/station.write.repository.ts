@@ -122,6 +122,8 @@ export function makeStationWriteRepository(
         });
 
         const stationId = uuidv7();
+        const stationType = input.stationType ?? "INTERNAL";
+        const agencyId = input.agencyId ?? null;
         const pickupSlotLimit = input.pickupSlotLimit ?? input.totalCapacity;
         const returnSlotLimit = input.returnSlotLimit ?? input.totalCapacity;
 
@@ -158,8 +160,8 @@ export function makeStationWriteRepository(
                 ${stationId},
                 ${input.name},
                 ${input.address},
-                ${input.stationType}::"station_type",
-                ${input.agencyId},
+                ${stationType}::"station_type",
+                ${agencyId},
                 ${input.totalCapacity},
                 ${pickupSlotLimit},
                 ${returnSlotLimit},

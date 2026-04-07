@@ -31,8 +31,8 @@ export type StationRow = {
 export type CreateStationInput = {
   name: string;
   address: string;
-  stationType: StationType;
-  agencyId: string | null;
+  stationType?: StationType;
+  agencyId?: string | null;
   totalCapacity: number;
   pickupSlotLimit?: number;
   returnSlotLimit?: number;
