@@ -15,6 +15,412 @@ Checklist nay dung cho code hien tai sau khi da sua theo logic:
 
 File nay uu tien cach test copy-paste duoc trong Scalar va doi chieu bang pgAdmin.
 
+## 1A. Quick retest cho phan moi sua nhat: bike swap + incident
+
+Section nay dung khi team chi muon retest nhanh 2 phan vua doi logic gan nhat, khong can doc het checklist dai ben duoi.
+
+Phan logic can xac nhan lai:
+
+- `bike swap`
+  - station `INTERNAL` -> `STAFF` cua station do confirm
+  - station `AGENCY` -> account `AGENCY` cua owner do confirm
+- `incident`
+  - chi ho tro cho station `INTERNAL`
+  - account `AGENCY` khong duoc dung incident routes
+  - neu tao incident ma `stationId` tro toi station `AGENCY` thi bi chan
+
+### 1A.1. Chay lai du lieu
+
+```bash
+cd D:\do_an_3\MeBike\packages\shared
+pnpm build
+
+cd D:\do_an_3\MeBike\apps\server
+pnpm exec prisma generate
+pnpm prisma migrate reset --force
+pnpm seed:demo
+pnpm dev
+```
+
+### 1A.2. Login cac account can dung
+
+Dung `POST /v1/auth/login` trong Scalar.
+
+`staff1@mebike.local`
+
+```json
+{
+  "email": "staff1@mebike.local",
+  "password": "Demo@123456"
+}
+```
+
+`agency1@mebike.local`
+
+```json
+{
+  "email": "agency1@mebike.local",
+  "password": "Demo@123456"
+}
+```
+
+`agency2@mebike.local`
+
+```json
+{
+  "email": "agency2@mebike.local",
+  "password": "Demo@123456"
+}
+```
+
+`user19@mebike.local`
+
+```json
+{
+  "email": "user19@mebike.local",
+  "password": "Demo@123456"
+}
+```
+
+### 1A.3. SQL baseline can copy de lay ID
+
+Station + owner:
+
+```sql
+SELECT s.id, s.name, s.station_type, s.agency_id, a.name AS agency_name
+FROM "Station" s
+LEFT JOIN "Agency" a ON a.id = s.agency_id
+ORDER BY s.name;
+```
+
+Bike swap request:
+
+```sql
+SELECT
+  bsr.id,
+  bsr.rental_id,
+  u.email AS user_email,
+  bsr.station_id,
+  s.name AS station_name,
+  s.station_type,
+  a.name AS agency_name,
+  bsr.status,
+  old_b.chip_id AS old_bike_chip_id,
+  new_b.chip_id AS new_bike_chip_id,
+  bsr.reason
+FROM "BikeSwapRequest" bsr
+LEFT JOIN users u ON u.id = bsr.user_id
+LEFT JOIN "Station" s ON s.id = bsr.station_id
+LEFT JOIN "Agency" a ON a.id = s.agency_id
+LEFT JOIN "Bike" old_b ON old_b.id = bsr.old_bike_id
+LEFT JOIN "Bike" new_b ON new_b.id = bsr.new_bike_id
+ORDER BY bsr.created_at DESC;
+```
+
+Bike available o station `INTERNAL`:
+
+```sql
+SELECT b.id, b.chip_id, b.status, s.id AS station_id, s.name, s.station_type
+FROM "Bike" b
+JOIN "Station" s ON s.id = b."stationId"
+WHERE s.station_type = 'INTERNAL' AND b.status = 'AVAILABLE'
+ORDER BY s.name, b.chip_id;
+```
+
+Bike available o station `AGENCY`:
+
+```sql
+SELECT b.id, b.chip_id, b.status, s.id AS station_id, s.name, s.station_type, a.name AS agency_name
+FROM "Bike" b
+JOIN "Station" s ON s.id = b."stationId"
+LEFT JOIN "Agency" a ON a.id = s.agency_id
+WHERE s.station_type = 'AGENCY' AND b.status = 'AVAILABLE'
+ORDER BY s.name, b.chip_id;
+```
+
+Incident hien co:
+
+```sql
+SELECT ir.id, ir.station_id, s.name AS station_name, s.station_type, ir.status, ir.incident_type
+FROM "IncidentReport" ir
+LEFT JOIN "Station" s ON s.id = ir.station_id
+ORDER BY ir.reported_at DESC;
+```
+
+### 1A.4. Case retest `bike swap`
+
+Case 1: agency chi thay request cua station agency do quan ly
+
+- Login `agency1`
+- Goi `GET /v1/agency/bike-swap-requests`
+
+Ky vong:
+
+- `200`
+- chi thay request thuoc station `AGENCY` cua `agency1`
+- khong thay request cua `agency2`
+- khong thay request cua station `INTERNAL`
+
+Case 2: agency approve request cua station `AGENCY`
+
+- Chon `bikeSwapRequestId` dang `PENDING` thuoc station cua `agency1`
+- Goi `POST /v1/agency/bike-swap-requests/{bikeSwapRequestId}/approve`
+
+Body:
+
+```json
+{}
+```
+
+Ky vong:
+
+- `200`
+- `status = CONFIRMED`
+- `newBikeId != null`
+
+SQL doi chieu:
+
+```sql
+SELECT id, status, station_id, old_bike_id, new_bike_id, reason
+FROM "BikeSwapRequest"
+WHERE id = '<bikeSwapRequestId>';
+```
+
+Case 3: agency reject request cua station `AGENCY`
+
+Neu seed chi co 1 request `PENDING`, reset DB lai truoc khi test case nay.
+
+- Login `agency1`
+- Goi `POST /v1/agency/bike-swap-requests/{bikeSwapRequestId}/reject`
+
+Body:
+
+```json
+{
+  "reason": "Reject for demo"
+}
+```
+
+Ky vong:
+
+- `200`
+- `status = REJECTED`
+- `reason = "Reject for demo"`
+
+SQL doi chieu:
+
+```sql
+SELECT id, status, reason
+FROM "BikeSwapRequest"
+WHERE id = '<bikeSwapRequestId>';
+```
+
+Case 4: staff khong duoc approve bike swap cua station `AGENCY`
+
+- Login `staff1`
+- Dung chinh `bikeSwapRequestId` thuoc station `AGENCY`
+- Goi `POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/approve`
+
+Body:
+
+```json
+{}
+```
+
+Ky vong:
+
+- request bi chan
+- thuong se la `404` voi y nghia `staff` khong co quyen tren request do
+
+Case 5: staff approve bike swap cua station `INTERNAL`
+
+Case nay can `bikeSwapRequestIdInternal` thuoc station `INTERNAL`.
+Neu seed chua co san, tao request pending bang flow user dang thue xe o station `INTERNAL`, sau do login `staff1` va goi:
+
+`POST /v1/staff/bike-swap-requests/{bikeSwapRequestIdInternal}/approve`
+
+Body:
+
+```json
+{}
+```
+
+Ky vong:
+
+- `200`
+- `status = CONFIRMED`
+- `newBikeId != null`
+
+=> Rule can xac nhan o day:
+
+- station `INTERNAL` -> `STAFF` confirm
+- station `AGENCY` -> `AGENCY` confirm
+
+### 1A.5. Case retest `incident`
+
+Case 1: account `AGENCY` bi chan khoi incident list
+
+- Login `agency1`
+- Goi `GET /v1/incidents`
+
+Ky vong:
+
+- bi chan
+- khong duoc list incident
+
+Case 2: account `AGENCY` bi chan khoi incident detail
+
+- Login `agency1`
+- Goi `GET /v1/incidents/{incidentId}`
+
+Ky vong:
+
+- bi chan
+- khong doc duoc incident detail
+
+Case 3: account `AGENCY` bi chan khoi create incident
+
+- Login `agency1`
+- Goi `POST /v1/incidents`
+
+Body:
+
+```json
+{
+  "bikeId": "<bikeId-o-agency-station>",
+  "stationId": "<agency1StationId>",
+  "incidentType": "FLAT_TIRE",
+  "description": "Agency should not create incident",
+  "latitude": 10.762622,
+  "longitude": 106.660172
+}
+```
+
+Ky vong:
+
+- bi chan
+- khong tao row moi
+
+Case 4: user tao incident o station `AGENCY` bi chan
+
+- Login `user19`
+- Goi `POST /v1/incidents`
+
+Body:
+
+```json
+{
+  "bikeId": "<bikeId-o-agency-station>",
+  "stationId": "<agency1StationId>",
+  "incidentType": "FLAT_TIRE",
+  "description": "Agency station should not accept incident handling",
+  "latitude": 10.762622,
+  "longitude": 106.660172
+}
+```
+
+Ky vong:
+
+- `400`
+- response giong:
+
+```json
+{
+  "error": "Incidents are only supported at internal stations",
+  "details": {
+    "code": "INCIDENT_INTERNAL_STATION_REQUIRED",
+    "stationId": "<agency1StationId>",
+    "stationType": "AGENCY"
+  }
+}
+```
+
+SQL doi chieu:
+
+```sql
+SELECT
+  ir.id,
+  ir.station_id,
+  s.station_type,
+  ir.status,
+  ir.incident_type
+FROM "IncidentReport" ir
+LEFT JOIN "Station" s ON s.id = ir.station_id
+WHERE ir.station_id = '<agency1StationId>'
+ORDER BY ir.reported_at DESC;
+```
+
+Ky vong:
+
+- khong co row moi tu request bi chan nay
+
+Case 5: user tao incident o station `INTERNAL` van duoc
+
+- Chon `internalStationId` va `bikeId` thuoc station `INTERNAL`
+- Login `user19` hoac `user20`
+- Goi `POST /v1/incidents`
+
+Body:
+
+```json
+{
+  "bikeId": "<bikeId-o-internal-station>",
+  "stationId": "<internalStationId>",
+  "incidentType": "BRAKE_ISSUE",
+  "description": "Internal station incident should be accepted",
+  "latitude": 10.7769,
+  "longitude": 106.7009
+}
+```
+
+Ky vong:
+
+- `201`
+- incident duoc tao thanh cong
+
+SQL doi chieu:
+
+```sql
+SELECT
+  ir.id,
+  ir.station_id,
+  s.station_type,
+  ir.status,
+  ir.incident_type
+FROM "IncidentReport" ir
+LEFT JOIN "Station" s ON s.id = ir.station_id
+WHERE ir.station_id = '<internalStationId>'
+ORDER BY ir.reported_at DESC;
+```
+
+Ky vong:
+
+- co row moi
+- `station_type = INTERNAL`
+
+Case 6: user list/get incident internal van hoat dong
+
+- Goi `GET /v1/incidents`
+- Goi `GET /v1/incidents/{incidentId}`
+
+Ky vong:
+
+- xem duoc incident internal vua tao
+
+### 1A.6. Thu tu test nhanh de tranh ton thoi gian
+
+1. Reset DB + seed.
+2. Chay SQL baseline.
+3. Test `agency list bike swap`.
+4. Test `agency approve bike swap`.
+5. Reset DB neu muon test `agency reject`.
+6. Test `staff` khong approve duoc request cua station `AGENCY`.
+7. Test `incident`: agency bi chan list/create.
+8. Test user tao incident o station `AGENCY` bi chan.
+9. Test user tao incident o station `INTERNAL` thanh cong.
+
+Neu chi can retest nhanh sau khi pull code, co the chi chay section `1A` nay.
+
 ## 1. Reset va chay lai du lieu seed
 
 Chay theo dung thu tu:
