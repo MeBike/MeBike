@@ -590,13 +590,11 @@ async function main() {
         create: {
           id: DEMO_AGENCY_MAIN_ID,
           name: "Demo Agency Main",
-          address: "District 1, Ho Chi Minh City",
           contactPhone: "02873000001",
           status: "ACTIVE",
         },
         update: {
           name: "Demo Agency Main",
-          address: "District 1, Ho Chi Minh City",
           contactPhone: "02873000001",
           status: "ACTIVE",
         },
@@ -606,13 +604,11 @@ async function main() {
         create: {
           id: DEMO_AGENCY_EAST_ID,
           name: "Demo Agency East",
-          address: "Thu Duc City, Ho Chi Minh City",
           contactPhone: "02873000002",
           status: "ACTIVE",
         },
         update: {
           name: "Demo Agency East",
-          address: "Thu Duc City, Ho Chi Minh City",
           contactPhone: "02873000002",
           status: "ACTIVE",
         },
@@ -622,13 +618,11 @@ async function main() {
         create: {
           id: DEMO_AGENCY_NORTH_ID,
           name: "Demo Agency North",
-          address: "Go Vap, Ho Chi Minh City",
           contactPhone: "02873000003",
           status: "INACTIVE",
         },
         update: {
           name: "Demo Agency North",
-          address: "Go Vap, Ho Chi Minh City",
           contactPhone: "02873000003",
           status: "INACTIVE",
         },
@@ -638,18 +632,38 @@ async function main() {
         create: {
           id: DEMO_AGENCY_SOUTH_ID,
           name: "Demo Agency South",
-          address: "District 7, Ho Chi Minh City",
           contactPhone: "02873000004",
           status: "SUSPENDED",
         },
         update: {
           name: "Demo Agency South",
-          address: "District 7, Ho Chi Minh City",
           contactPhone: "02873000004",
           status: "SUSPENDED",
         },
       }),
     ]);
+
+    await prisma.$executeRaw`
+      UPDATE "Station"
+      SET
+        "station_type" = 'INTERNAL'::"station_type",
+        "agency_id" = NULL
+    `;
+
+    const agencyOwnedStations = [
+      { stationId: stationIds[0], agencyId: mainAgency.id },
+      { stationId: stationIds[1], agencyId: eastAgency.id },
+    ].filter((item): item is { stationId: string; agencyId: string } => Boolean(item.stationId));
+
+    for (const item of agencyOwnedStations) {
+      await prisma.$executeRaw`
+        UPDATE "Station"
+        SET
+          "station_type" = 'AGENCY'::"station_type",
+          "agency_id" = ${item.agencyId}::uuid
+        WHERE "id" = ${item.stationId}::uuid
+      `;
+    }
 
     const technicianTeams = await Promise.all(
       stationRows.map((station, index) => prisma.technicianTeam.upsert({
@@ -698,12 +712,6 @@ async function main() {
         user: userByEmail.get("agency1@mebike.local"),
         stationId: null,
         agencyId: mainAgency.id,
-        technicianTeamId: null,
-      },
-      {
-        user: userByEmail.get("admin@mebike.local"),
-        stationId: null,
-        agencyId: eastAgency.id,
         technicianTeamId: null,
       },
       ...technicianAssignments,
@@ -852,15 +860,18 @@ async function main() {
     const staff1 = users.find(user => user.email === "staff1@mebike.local");
     const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
+    const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
 
-    if (user01 && staff1 && staff1Assignment?.stationId && user01ActiveRental?.bikeId) {
+    if (user01 && staff1 && (mainAgencyStationId ?? staff1Assignment?.stationId) && user01ActiveRental?.bikeId) {
+      const bikeSwapStationId = mainAgencyStationId ?? staff1Assignment!.stationId!;
+
       await prisma.bikeSwapRequest.create({
         data: {
           id: uuidv7(),
           rentalId: user01ActiveRental.id,
           userId: user01.id,
           oldBikeId: user01ActiveRental.bikeId,
-          stationId: staff1Assignment.stationId,
+          stationId: bikeSwapStationId,
           status: BikeSwapStatus.PENDING,
           reason: null,
           createdAt: new Date(Date.now() - 5 * 60 * 1000),
@@ -872,7 +883,7 @@ async function main() {
         {
           bikeSwapRequestFor: user01.email,
           handledBy: staff1.email,
-          stationId: staff1Assignment.stationId,
+          stationId: bikeSwapStationId,
         },
         "Seeded demo pending bike swap request",
       );

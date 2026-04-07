@@ -159,7 +159,6 @@ function makeAgencyRequestService(
           const agencyRequest = found.value;
           const createdAgency = yield* txAgencyService.create({
             name: agencyRequest.agencyName,
-            address: agencyRequest.agencyAddress,
             contactPhone:
               agencyRequest.agencyContactPhone ?? agencyRequest.requesterPhone,
           });

@@ -3,6 +3,8 @@ import * as queries from "./queries";
 
 export {
   approveBikeSwapRequest,
+  agencyApproveBikeSwapRequest,
+  agencyRejectBikeSwapRequest,
   cancelMyReturnSlot,
   cancelRental,
   confirmRentalReturnByOperator,
@@ -22,6 +24,8 @@ export {
   adminGetRental,
   adminListBikeSwapRequests,
   adminListRentals,
+  agencyGetBikeSwapRequests,
+  agencyListBikeSwapRequests,
   getActiveRentalsByPhone,
   getAllRentals,
   getDashboardSummary,

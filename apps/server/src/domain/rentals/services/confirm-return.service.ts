@@ -71,18 +71,41 @@ export function confirmRentalReturnByOperator(
           }
 
           const operator = yield* Effect.tryPromise({
-            try: () =>
-              tx.user.findUnique({
+            try: async () => {
+              if (
+                input.operatorRole
+                && (input.operatorRole === "ADMIN"
+                  || input.operatorRole === "STAFF"
+                  || input.operatorRole === "AGENCY")
+              ) {
+                return {
+                  role: input.operatorRole,
+                  stationId: input.operatorStationId ?? null,
+                  agencyId: input.operatorAgencyId ?? null,
+                };
+              }
+
+              const user = await tx.user.findUnique({
                 where: { id: input.confirmedByUserId },
                 select: {
                   role: true,
                   orgAssignment: {
                     select: {
                       stationId: true,
+                      agencyId: true,
                     },
                   },
                 },
-              }),
+              });
+
+              return user
+                ? {
+                    role: user.role,
+                    stationId: user.orgAssignment?.stationId ?? null,
+                    agencyId: user.orgAssignment?.agencyId ?? null,
+                  }
+                : null;
+            },
             catch: e =>
               new RentalRepositoryError({
                 operation: "confirmRentalReturnByOperator.findOperator",
@@ -90,11 +113,33 @@ export function confirmRentalReturnByOperator(
               }),
           }).pipe(defectOn(RentalRepositoryError));
 
-          if (operator?.role === "STAFF" && operator.orgAssignment?.stationId !== input.stationId) {
+          if (operator?.role === "STAFF" && operator.stationId !== input.stationId) {
             return yield* Effect.fail(new UnauthorizedRentalAccess({
               rentalId: rental.id,
               userId: input.confirmedByUserId,
             }));
+          }
+
+          if (operator?.role === "AGENCY") {
+            const station = yield* Effect.tryPromise({
+              try: () =>
+                tx.station.findUnique({
+                  where: { id: input.stationId },
+                  select: { agencyId: true },
+                }),
+              catch: e =>
+                new RentalRepositoryError({
+                  operation: "confirmRentalReturnByOperator.findStationAgency",
+                  cause: e,
+                }),
+            }).pipe(defectOn(RentalRepositoryError));
+
+            if (!station || !operator.agencyId || station.agencyId !== operator.agencyId) {
+              return yield* Effect.fail(new UnauthorizedRentalAccess({
+                rentalId: rental.id,
+                userId: input.confirmedByUserId,
+              }));
+            }
           }
 
           const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rental.id);

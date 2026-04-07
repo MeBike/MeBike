@@ -27,6 +27,8 @@ const listStations: RouteHandler<StationsRoutes["listStations"]> = async (c) => 
         {
           name: query.name,
           address: query.address,
+          stationType: query.stationType,
+          agencyId: query.agencyId,
           totalCapacity: query.totalCapacity,
         },
         {

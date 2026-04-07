@@ -28,20 +28,17 @@ model ReturnConfirmation {
   id                 String             @id @default(uuid(7)) @db.Uuid
   rentalId           String             @unique @map("rental_id") @db.Uuid
   stationId          String?            @map("station_id") @db.Uuid
-  agencyId           String?            @map("agency_id") @db.Uuid
   confirmedByUserId  String             @map("confirmed_by_user_id") @db.Uuid
   confirmationMethod ConfirmationMethod @default(QR_CODE) @map("confirmation_method")
   handoverStatus     HandoverStatus     @default(PENDING) @map("handover_status")
   confirmedAt        DateTime           @map("confirmed_at") @db.Timestamptz
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz
 
-  rental          Rental  @relation(fields: [rentalId], references: [id])
+  rental          Rental   @relation(fields: [rentalId], references: [id])
   station         Station? @relation("ReturnConfirmationStation", fields: [stationId], references: [id])
-  agency          Agency?  @relation(fields: [agencyId], references: [id])
   confirmedByUser User     @relation(fields: [confirmedByUserId], references: [id])
 
   @@index([stationId], name: "idx_return_confirmations_station")
-  @@index([agencyId], name: "idx_return_confirmations_agency")
   @@index([confirmedByUserId], name: "idx_return_confirmations_confirmed_by_user")
   @@map("return_confirmations")
 }

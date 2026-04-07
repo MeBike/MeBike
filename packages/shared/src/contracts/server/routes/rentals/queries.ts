@@ -301,7 +301,7 @@ export const getActiveRentalsByPhone = createRoute({
   },
   responses: {
     200: {
-      description: "Active rentals by phone number",
+      description: "Active rentals by phone number for admin/staff/agency operators",
       content: {
         "application/json": {
           schema: RentalListResponseSchema,
@@ -722,6 +722,17 @@ export const staffListBikeSwapRequests = createRoute({
   },
 });
 
+export const agencyListBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/agency/bike-swap-requests",
+  tags: ["Agency", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: staffListBikeSwapRequests.request!.query,
+  },
+  responses: staffListBikeSwapRequests.responses,
+});
+
 export const adminListBikeSwapRequests = createRoute({
   method: "get",
   path: "/v1/admin/bike-swap-requests",
@@ -819,6 +830,17 @@ export const staffGetBikeSwapRequests = createRoute({
       },
     },
   },
+});
+
+export const agencyGetBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/agency/bike-swap-requests/{bikeSwapRequestId}",
+  tags: ["Agency", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: staffGetBikeSwapRequests.responses,
 });
 
 export const getMyBikeSwapRequests = createRoute({

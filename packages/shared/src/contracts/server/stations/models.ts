@@ -1,9 +1,13 @@
 import { z } from "../../../zod";
 
+export const StationTypeSchema = z.enum(["INTERNAL", "AGENCY"]);
+
 export const StationSummarySchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
+  stationType: StationTypeSchema,
+  agencyId: z.uuidv7().nullable(),
   totalCapacity: z.number(),
   pickupSlotLimit: z.number(),
   returnSlotLimit: z.number(),
@@ -52,6 +56,8 @@ export const StationReadSummarySchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
+  stationType: StationTypeSchema,
+  agencyId: z.uuidv7().nullable(),
   location: StationLocationSchema,
   capacity: StationCapacitySchema,
   bikes: StationBikesSchema,
@@ -258,6 +264,7 @@ export const StationAlertsResponseSchema = z.object({
 
 export type StationSummary = z.infer<typeof StationSummarySchema>;
 export type StationReadSummary = z.infer<typeof StationReadSummarySchema>;
+export type StationType = z.infer<typeof StationTypeSchema>;
 export type NearbyStation = z.infer<typeof NearbyStationSchema>;
 export type StationStatsResponse = z.infer<typeof StationStatsResponseSchema>;
 export type StationRevenueResponse = z.infer<typeof StationRevenueResponseSchema>;

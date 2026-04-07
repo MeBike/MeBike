@@ -18,6 +18,7 @@ import {
 import { unauthorizedResponse } from "../helpers";
 import {
   BikeSwapRequestDetailSchemaOpenApi,
+  BikeSwapRequestIdParamSchema,
   BikeSwapRequestSchemaOpenApi,
   createSuccessResponse,
   RentalDetailSchemaOpenApi,
@@ -343,7 +344,7 @@ export const confirmRentalReturnByOperator = createRoute({
   },
   responses: {
     200: {
-      description: "Rental return confirmed by admin/staff",
+      description: "Rental return confirmed by admin/staff/agency operator",
       content: {
         "application/json": {
           schema: RentalDetailSchemaOpenApi,
@@ -703,6 +704,17 @@ export const approveBikeSwapRequest = createRoute({
   },
 });
 
+export const agencyApproveBikeSwapRequest = createRoute({
+  method: "post",
+  path: "/v1/agency/bike-swap-requests/{bikeSwapRequestId}/approve",
+  tags: ["Agency", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: approveBikeSwapRequest.responses,
+});
+
 export const rejectBikeSwapRequest = createRoute({
   method: "post",
   path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}/reject",
@@ -783,4 +795,22 @@ export const rejectBikeSwapRequest = createRoute({
       },
     },
   },
+});
+
+export const agencyRejectBikeSwapRequest = createRoute({
+  method: "post",
+  path: "/v1/agency/bike-swap-requests/{bikeSwapRequestId}/reject",
+  tags: ["Agency", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: rejectBikeSwapRequest.request!.body.content["application/json"].schema,
+        },
+      },
+    },
+  },
+  responses: rejectBikeSwapRequest.responses,
 });

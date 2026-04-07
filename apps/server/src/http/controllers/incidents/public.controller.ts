@@ -20,6 +20,40 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   const user = c.var.currentUser;
   const query = c.req.valid("query");
 
+  if (user?.role === "AGENCY" && !user.operatorStationId) {
+    return c.json<IncidentsContracts.IncidentListResponse, 200>(
+      {
+        data: [],
+        pagination: {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+          total: 0,
+          totalPages: 0,
+        },
+      },
+      200,
+    );
+  }
+
+  if (
+    user?.role === "AGENCY"
+    && query.stationId
+    && query.stationId !== user.operatorStationId
+  ) {
+    return c.json<IncidentsContracts.IncidentListResponse, 200>(
+      {
+        data: [],
+        pagination: {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+          total: 0,
+          totalPages: 0,
+        },
+      },
+      200,
+    );
+  }
+
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const service = yield* IncidentServiceTag;
@@ -27,9 +61,13 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
         user!.role,
         {
           rentalId: query.rentalId,
-          stationId: query.stationId,
+          stationId: user?.role === "AGENCY"
+            ? (query.stationId ?? user.operatorStationId ?? undefined)
+            : query.stationId,
           status: query.status as IncidentStatus,
-          userId: user?.role === "ADMIN" ? undefined : user?.userId,
+          userId: user?.role === "ADMIN" || user?.role === "AGENCY"
+            ? undefined
+            : user?.userId,
         },
         {
           page: query.page ?? 1,
@@ -75,7 +113,29 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) => c.json(right, 200)),
+    Match.tag("Right", ({ right }) => {
+      if (
+        user?.role === "AGENCY"
+        && (
+          !user.operatorStationId
+          || right.station?.id !== user.operatorStationId
+        )
+      ) {
+        return c.json(
+          {
+            error: incidentErrorMessages.UNAUTHORIZED_INCIDENT_ACCESS,
+            details: {
+              code: IncidentErrorCodeSchema.enum.UNAUTHORIZED_INCIDENT_ACCESS,
+              incidentId,
+              userId: user.userId,
+            },
+          },
+          403,
+        );
+      }
+
+      return c.json(right, 200);
+    }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("IncidentNotFound", () =>

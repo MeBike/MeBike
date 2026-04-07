@@ -1,5 +1,7 @@
 import { Layer } from "effect";
 
+import { AgencyReposLive } from "./agency.layers";
+
 import {
   StationRepositoryLive,
   StationServiceLive,
@@ -12,7 +14,7 @@ export const StationReposLive = StationRepositoryLive.pipe(
 );
 
 export const StationServiceLayer = StationServiceLive.pipe(
-  Layer.provide(StationReposLive),
+  Layer.provide(Layer.mergeAll(StationReposLive, AgencyReposLive)),
 );
 
 export const StationDepsLive = Layer.mergeAll(

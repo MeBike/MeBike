@@ -67,11 +67,17 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
       }
       else {
         const user = userOpt.value;
+        const operatorStationId = user.orgAssignment?.station?.id
+          ?? user.orgAssignment?.agency?.stationId
+          ?? undefined;
+
         c.set("currentUser", {
           userId: user.id,
           role: user.role,
           accountStatus: user.accountStatus,
           verifyStatus: user.verify,
+          agencyId: user.orgAssignment?.agency?.id ?? undefined,
+          operatorStationId,
           tokenType: "access",
         });
       }
@@ -115,6 +121,36 @@ export const requireAdminOrStaffMiddleware = createMiddleware(
       return c.json(unauthorizedBody, 401);
     }
     if (user.role !== "ADMIN" && user.role !== "STAFF") {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
+export const requireAgencyMiddleware = createMiddleware(async (c, next) => {
+  const user = c.var.currentUser;
+  if (!user) {
+    if (c.var.authFailure === "forbidden") {
+      return c.json(unauthorizedBody, 403);
+    }
+    return c.json(unauthorizedBody, 401);
+  }
+  if (user.role !== "AGENCY") {
+    return c.json(unauthorizedBody, 403);
+  }
+  await next();
+});
+
+export const requireAdminOrStaffOrAgencyMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (user.role !== "ADMIN" && user.role !== "STAFF" && user.role !== "AGENCY") {
       return c.json(unauthorizedBody, 403);
     }
     await next();
@@ -176,6 +212,27 @@ export const requireTechnicianOrAdminOrUserMiddleware = createMiddleware(
       user.role !== "TECHNICIAN"
       && user.role !== "ADMIN"
       && user.role !== "USER"
+    ) {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
+export const requireTechnicianOrAdminOrUserOrAgencyMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (
+      user.role !== "TECHNICIAN"
+      && user.role !== "ADMIN"
+      && user.role !== "USER"
+      && user.role !== "AGENCY"
     ) {
       return c.json(unauthorizedBody, 403);
     }

@@ -30,6 +30,19 @@ export class StationCapacitySplitInvalid extends Data.TaggedError("StationCapaci
   readonly returnSlotLimit: number;
 }> {}
 
+export class StationAgencyRequired extends Data.TaggedError("StationAgencyRequired")<{}> {}
+
+export class StationAgencyForbidden extends Data.TaggedError("StationAgencyForbidden")<{}> {}
+
+export class StationAgencyNotFound extends Data.TaggedError("StationAgencyNotFound")<{
+  readonly agencyId: string;
+}> {}
+
+export class StationAgencyAlreadyAssigned extends Data.TaggedError("StationAgencyAlreadyAssigned")<{
+  readonly agencyId: string;
+  readonly stationId: string;
+}> {}
+
 export class StationHasBikes extends Data.TaggedError("StationHasBikes")<{
   readonly stationId: string;
 }> {}

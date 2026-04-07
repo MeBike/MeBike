@@ -7,7 +7,7 @@ import { IncidentTechnicianController } from "../controllers/incidents/technican
 import {
   requireAuthMiddleware,
   requireTechnicianMiddleware,
-  requireTechnicianOrAdminOrUserMiddleware,
+  requireTechnicianOrAdminOrUserOrAgencyMiddleware,
 } from "../middlewares/auth";
 
 export function registerIncidentRoutes(
@@ -17,14 +17,14 @@ export function registerIncidentRoutes(
 
   const listIncidentsRoute = {
     ...incidents.listIncidents,
-    middleware: [requireTechnicianOrAdminOrUserMiddleware] as const,
+    middleware: [requireTechnicianOrAdminOrUserOrAgencyMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(listIncidentsRoute, IncidentPublicController.listIncidents);
 
   const getIncidentRoute = {
     ...incidents.getIncident,
-    middleware: [requireTechnicianOrAdminOrUserMiddleware] as const,
+    middleware: [requireTechnicianOrAdminOrUserOrAgencyMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(getIncidentRoute, IncidentPublicController.getIncident);

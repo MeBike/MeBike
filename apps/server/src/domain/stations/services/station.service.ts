@@ -1,5 +1,9 @@
 import { Effect, Layer, Option } from "effect";
 
+import type { AgencyRepo } from "@/domain/agencies";
+
+import { AgencyRepository, AgencyRepositoryError } from "@/domain/agencies";
+import { defectOn } from "@/domain/shared";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import { env } from "@/config/env";
@@ -7,6 +11,10 @@ import { env } from "@/config/env";
 import type {
   StationCapacityLimitExceeded,
   StationCapacitySplitInvalid,
+  StationAgencyAlreadyAssigned,
+  StationAgencyForbidden,
+  StationAgencyNotFound,
+  StationAgencyRequired,
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
 } from "../errors";
@@ -24,6 +32,10 @@ import type { StationRepo } from "../repository/station.repository";
 import {
   StationCapacityLimitExceeded as StationCapacityLimitExceededError,
   StationCapacitySplitInvalid as StationCapacitySplitInvalidError,
+  StationAgencyAlreadyAssigned as StationAgencyAlreadyAssignedError,
+  StationAgencyForbidden as StationAgencyForbiddenError,
+  StationAgencyNotFound as StationAgencyNotFoundError,
+  StationAgencyRequired as StationAgencyRequiredError,
   StationNotFound,
 } from "../errors";
 import { StationRepository } from "../repository/station.repository";
@@ -37,6 +49,10 @@ export type StationService = {
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
     | StationCapacitySplitInvalid
+    | StationAgencyRequired
+    | StationAgencyForbidden
+    | StationAgencyNotFound
+    | StationAgencyAlreadyAssigned
   >;
   updateStation: (
     id: string,
@@ -48,6 +64,10 @@ export type StationService = {
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
     | StationCapacitySplitInvalid
+    | StationAgencyRequired
+    | StationAgencyForbidden
+    | StationAgencyNotFound
+    | StationAgencyAlreadyAssigned
   >;
   listStations: (
     filter: StationFilter,
@@ -61,7 +81,9 @@ export type StationService = {
   ) => Effect.Effect<PageResult<NearestStationRow>>;
 };
 
-function makeStationService(repo: StationRepo): StationService {
+function makeStationService(repo: StationRepo, deps: {
+  agencyRepo: Pick<AgencyRepo, "getById">;
+}): StationService {
   function resolveCapacitySplit(input: {
     totalCapacity: number;
     pickupSlotLimit?: number;
@@ -106,6 +128,46 @@ function makeStationService(repo: StationRepo): StationService {
       && args.returnSlotLimit <= args.totalCapacity;
   }
 
+  const validateOwnership = (args: {
+    stationType: CreateStationInput["stationType"];
+    agencyId: string | null;
+    excludeStationId?: string;
+  }) =>
+    Effect.gen(function* () {
+      if (args.stationType === "AGENCY" && !args.agencyId) {
+        return yield* Effect.fail(new StationAgencyRequiredError());
+      }
+
+      if (args.stationType === "INTERNAL" && args.agencyId) {
+        return yield* Effect.fail(new StationAgencyForbiddenError());
+      }
+
+      if (!args.agencyId) {
+        return;
+      }
+
+      const agency = yield* deps.agencyRepo.getById(args.agencyId).pipe(
+        defectOn(AgencyRepositoryError),
+      );
+
+      if (Option.isNone(agency)) {
+        return yield* Effect.fail(new StationAgencyNotFoundError({
+          agencyId: args.agencyId,
+        }));
+      }
+
+      const existingStation = yield* repo.getByAgencyId(args.agencyId);
+      if (
+        Option.isSome(existingStation)
+        && existingStation.value.id !== args.excludeStationId
+      ) {
+        return yield* Effect.fail(new StationAgencyAlreadyAssignedError({
+          agencyId: args.agencyId,
+          stationId: existingStation.value.id,
+        }));
+      }
+    });
+
   return {
     createStation: input =>
       Effect.gen(function* () {
@@ -120,6 +182,11 @@ function makeStationService(repo: StationRepo): StationService {
         if (!validateCapacitySplit(split)) {
           return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
         }
+
+        yield* validateOwnership({
+          stationType: input.stationType,
+          agencyId: input.agencyId,
+        });
 
         return yield* repo.create(input);
       }),
@@ -146,6 +213,15 @@ function makeStationService(repo: StationRepo): StationService {
           return yield* Effect.fail(new StationCapacitySplitInvalidError(split));
         }
 
+        const nextStationType = input.stationType ?? current.stationType;
+        const nextAgencyId = input.agencyId === undefined ? current.agencyId : input.agencyId;
+
+        yield* validateOwnership({
+          stationType: nextStationType,
+          agencyId: nextAgencyId,
+          excludeStationId: current.id,
+        });
+
         const updatedOpt = yield* repo.update(id, input);
         if (Option.isNone(updatedOpt)) {
           return yield* Effect.fail(new StationNotFound({ id }));
@@ -169,7 +245,8 @@ function makeStationService(repo: StationRepo): StationService {
 
 const makeStationServiceEffect = Effect.gen(function* () {
   const repo = yield* StationRepository;
-  return makeStationService(repo);
+  const agencyRepo = yield* AgencyRepository;
+  return makeStationService(repo, { agencyRepo });
 });
 
 export class StationServiceTag extends Effect.Service<StationServiceTag>()(

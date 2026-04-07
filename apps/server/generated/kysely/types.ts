@@ -211,6 +211,11 @@ export const ReturnSlotStatus = {
     CANCELLED: "CANCELLED"
 } as const;
 export type ReturnSlotStatus = (typeof ReturnSlotStatus)[keyof typeof ReturnSlotStatus];
+export const StationType = {
+    INTERNAL: "INTERNAL",
+    AGENCY: "AGENCY"
+} as const;
+export type StationType = (typeof StationType)[keyof typeof StationType];
 export const SubscriptionStatus = {
     PENDING: "PENDING",
     ACTIVE: "ACTIVE",
@@ -288,7 +293,6 @@ export type WalletWithdrawalStatus = (typeof WalletWithdrawalStatus)[keyof typeo
 export type Agency = {
     id: string;
     name: string;
-    address: string | null;
     contact_phone: string | null;
     status: Generated<AccountStatus>;
     created_at: Generated<Timestamp>;
@@ -539,7 +543,6 @@ export type RedistributionRequest = {
     approved_by_user_id: string | null;
     source_station_id: string;
     target_station_id: string | null;
-    target_agency_id: string | null;
     reason: string | null;
     status: Generated<RedistributionStatus>;
     started_at: Timestamp | null;
@@ -616,7 +619,6 @@ export type ReturnConfirmation = {
     id: string;
     rental_id: string;
     station_id: string | null;
-    agency_id: string | null;
     confirmed_by_user_id: string;
     confirmation_method: Generated<ConfirmationMethod>;
     handover_status: Generated<HandoverStatus>;
@@ -637,6 +639,8 @@ export type Station = {
     id: string;
     name: string;
     address: string;
+    station_type: Generated<StationType>;
+    agency_id: string | null;
     total_capacity: number;
     pickup_slot_limit: Generated<number>;
     return_slot_limit: Generated<number>;
