@@ -31,8 +31,8 @@ import type {
 
 import {
   ActiveIncidentAlreadyExists,
-  IncidentNotFound,
   IncidentInternalStationRequired,
+  IncidentNotFound,
   InvalidIncidentStatus,
   UnauthorizedIncidentAccess,
 } from "../domain-errors";

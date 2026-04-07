@@ -1,13 +1,12 @@
 import { Layer } from "effect";
 
-import { AgencyReposLive } from "./agency.layers";
-
 import {
   StationRepositoryLive,
   StationServiceLive,
 } from "@/domain/stations";
 
 import { PrismaLive } from "../infra.layers";
+import { AgencyReposLive } from "./agency.layers";
 
 export const StationReposLive = StationRepositoryLive.pipe(
   Layer.provide(PrismaLive),

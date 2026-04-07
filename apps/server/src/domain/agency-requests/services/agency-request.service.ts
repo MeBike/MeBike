@@ -35,10 +35,10 @@ import { makeUserCommandRepository } from "../../users/repository/user-command.r
 import { makeUserQueryRepository } from "../../users/repository/user-query.repository";
 import { makeUserCommandService } from "../../users/services/user-command.service";
 import {
-  InvalidAgencyRequestStatusTransition as InvalidAgencyRequestStatusTransitionError,
   AgencyRequestNotFound as AgencyRequestNotFoundError,
   AgencyRequestNotOwned as AgencyRequestNotOwnedError,
   AgencyRequestRepositoryError as AgencyRequestRepositoryErrorData,
+  InvalidAgencyRequestStatusTransition as InvalidAgencyRequestStatusTransitionError,
 } from "../domain-errors";
 import {
   AgencyRequestRepository,

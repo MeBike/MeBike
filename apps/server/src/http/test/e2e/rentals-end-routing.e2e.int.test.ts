@@ -428,7 +428,7 @@ describe("rentals end routing e2e", () => {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${staffToken}`,
+          "Authorization": `Bearer ${staffToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
@@ -484,7 +484,7 @@ describe("rentals end routing e2e", () => {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${agencyToken}`,
+          "Authorization": `Bearer ${agencyToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
@@ -511,7 +511,7 @@ describe("rentals end routing e2e", () => {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${staffToken}`,
+          "Authorization": `Bearer ${staffToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
