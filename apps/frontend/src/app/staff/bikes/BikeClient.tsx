@@ -3,20 +3,21 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useBikeActions } from "@/hooks/use-bike";
 import { useStationActions } from "@/hooks/use-station";
-import { bikeColumnForStaff } from "@/columns/bike-colums";
+import { useSupplierActions } from "@/hooks/use-supplier";
+import { bikeColumn } from "@/columns/bike-colums";
 import { BikeStatus } from "@custom-types";
+import { BikeStats } from "./components/bike-stats";
 import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
 export default function BikeClient() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
-  const { stations } = useStationActions({ hasToken: true });
   const {
     data,
     paginationBikes,
@@ -37,24 +38,19 @@ export default function BikeClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoadingBikes]);  useEffect(() => {
+  }, [isLoadingBikes]);
+  useEffect(() => {
     setPage(1);
   }, [statusFilter]);
-
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
-        <Button onClick={() => router.push("/admin/bikes/create")}>
-          <Plus className="w-4 h-4 mr-2" /> Thêm xe
-        </Button>
       </div>
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
       />
-
       <div className="min-h-[700px]">
         {isVisualLoading ? (
           <TableSkeleton />
@@ -65,10 +61,8 @@ export default function BikeClient() {
               {paginationBikes?.totalPages ?? 1} trang
             </p>
             <DataTable
-              columns={bikeColumnForStaff({
-                onView: ({ id }) => router.push(`/admin/bikes/${id}`),
-                onEdit: ({ id }) => router.push(`/admin/bikes/${id}?edit=true`),
-                stations,
+              columns={bikeColumn({
+                onView: ({ id }) => router.push(`/staff/bikes/detail/${id}`),
               })}
               data={data?.data || []}
             />

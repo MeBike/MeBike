@@ -61,28 +61,22 @@ export const useBikeActions = ({
       router.push("/login");
       return;
     }
-    if (bike_detail_id) {
-      refetchRentalBike();
-    }
-  }, [refetchRentalBike, bike_detail_id, hasToken, router]);
+    refetchRentalBike();
+  }, [hasToken, router]);
   const getBikeActivityStats = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
-    if (bike_detail_id) {
-      refetchGetBikeActivityStats();
-    }
-  }, [refetchGetBikeActivityStats, bike_detail_id, hasToken, router]);
+    refetchGetBikeActivityStats();
+  }, [hasToken, router]);
   const getBikeStats = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
-    if (bike_detail_id) {
-      refetchStatisticsBike();
-    }
-  }, [refetchStatisticsBike, bike_detail_id, hasToken, router]);
+    refetchStatistics();
+  }, [bike_detail_id, hasToken, router]);
   const {
     refetch: fetchBike,
     data,
