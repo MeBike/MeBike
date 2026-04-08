@@ -57,22 +57,22 @@ export function loadBikeSummary(row: BikeRow) {
     const ratingRepo = yield* RatingRepository;
     const stationRepo = yield* StationRepository;
     const supplierRepo = yield* SupplierRepository;
-    const rating = yield* ratingRepo.findBikeAggregates([row.id]).pipe(
-      defectOn(RatingRepositoryError),
-      Effect.map(map => map[row.id]),
-    );
-
-    const station = row.stationId
-      ? yield* stationRepo.findIdNameAddressByIds([row.stationId]).pipe(
-        Effect.map(rows => rows[0] ?? null),
-      )
-      : null;
-
-    const supplier = row.supplierId
-      ? yield* supplierRepo.findIdNameByIds([row.supplierId]).pipe(
-        Effect.map(rows => rows[0] ?? null),
-      )
-      : null;
+    const { rating, station, supplier } = yield* Effect.all({
+      rating: ratingRepo.findBikeAggregates([row.id]).pipe(
+        defectOn(RatingRepositoryError),
+        Effect.map(map => map[row.id]),
+      ),
+      station: row.stationId
+        ? stationRepo.findIdNameAddressByIds([row.stationId]).pipe(
+            Effect.map(rows => rows[0] ?? null),
+          )
+        : Effect.succeed(null),
+      supplier: row.supplierId
+        ? supplierRepo.findIdNameByIds([row.supplierId]).pipe(
+            Effect.map(rows => rows[0] ?? null),
+          )
+        : Effect.succeed(null),
+    });
 
     return toBikeSummary(row, rating, station, supplier);
   });
