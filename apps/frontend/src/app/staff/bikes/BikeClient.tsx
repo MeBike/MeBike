@@ -9,7 +9,7 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useBikeActions } from "@/hooks/use-bike";
 import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
-import { bikeColumn } from "@/columns/bike-colums";
+import { bikeColumnForStaff } from "@/columns/bike-colums";
 import { BikeStatus } from "@custom-types";
 import { BikeStats } from "./components/bike-stats";
 import { BikeFilters } from "./components/bike-filter";
@@ -61,7 +61,7 @@ export default function BikeClient() {
               {paginationBikes?.totalPages ?? 1} trang
             </p>
             <DataTable
-              columns={bikeColumn({
+              columns={bikeColumnForStaff({
                 onView: ({ id }) => router.push(`/staff/bikes/detail/${id}`),
               })}
               data={data?.data || []}

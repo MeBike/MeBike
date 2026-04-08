@@ -3,7 +3,11 @@ export interface Bike {
   id: string;
   bikeNumber : string;
   chipId: string;
-  stationId: string;
+  station : {
+    id : string;
+    name : string;
+    address : string;
+  }
   status: BikeStatus;
   supplier : {
     id : string;

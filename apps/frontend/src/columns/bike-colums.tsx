@@ -51,21 +51,17 @@ export const bikeColumn = (
     },
   },
   {
-    accessorKey: "stationId",
+    accessorKey: "station",
     header: "Tên trạm",
     cell: ({ row }) => {
-      const station = stations.find((s) => s.id === row.original.stationId);
-      return station ? station.name : "Không có";
+      return row.original.station.name ||  "Không có"; 
     },
   },
   {
     accessorKey: "supplierId",
     header: "Tên nhà cung cấp",
     cell: ({ row }) => {
-      const supplier = suppliers.find(
-        (s) => s.id === row.original.supplierId
-      );
-      return supplier ? supplier.name : "Không có";
+      return row.original.supplier.name ||  "Không có"; 
     },
   },
   {
@@ -157,18 +153,16 @@ export const bikeColumnForStaff = (
     accessorKey: "stationId",
     header: "Tên trạm",
     cell: ({ row }) => {
-      const station = stations.find((s) => s.id === row.original.stationId);
-      return station ? station.name : "Không có";
+      return row.original.station.name || "Không có";
     },
   },
   {
     accessorKey: "supplierId",
     header: "Tên nhà cung cấp",
     cell: ({ row }) => {
-      const supplier = suppliers.find(
-        (s) => s.id === row.original.supplierId
-      );
-      return supplier ? supplier.name : "Không có";
+      <span>
+        {row.original.supplier.name}
+      </span>
     },
   },
   {

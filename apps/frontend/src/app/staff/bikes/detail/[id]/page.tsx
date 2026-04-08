@@ -54,7 +54,7 @@ export default function BikeDetailPage({
               Chi tiết xe: {detailBike?.chipId || "N/A"}
             </h1>
           </div>
-          <Button variant="outline" onClick={() => router.push("/admin/bikes")}>
+          <Button variant="outline" onClick={() => router.push("/staff/bikes")}>
              Danh sách xe
           </Button>
         </div>

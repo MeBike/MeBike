@@ -136,6 +136,9 @@ export default function StationsPage() {
             pagination={paginationStations}
             setPage={setPage}
             isLoading={isLoadingGetAllStations}
+            onView={(id) => {
+              router.push(`/staff/stations/detail/${id}`)
+            }}
             onDelete={(id) => {
               if (confirm("Bạn có chắc chắn muốn xóa trạm này?"))
                 deleteStation(id);

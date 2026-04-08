@@ -22,8 +22,8 @@ export default function BikeClient() {
   const { allSupplier } = useSupplierActions({ hasToken: true });
   const {
     data,
-    statisticData,
-    isLoadingStatistics,
+    statusCount,
+    isLoadingStatusCount,
     paginationBikes,
     getStatisticsBike,
     isLoadingBikes,
@@ -50,7 +50,7 @@ export default function BikeClient() {
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
-  if (isLoadingStatistics) return <Loader2 className="animate-spin m-auto" />;
+  if (isLoadingStatusCount) return <Loader2 className="animate-spin m-auto" />;
 
   return (
     <div className="space-y-6">
@@ -60,7 +60,7 @@ export default function BikeClient() {
           <Plus className="w-4 h-4 mr-2" /> Thêm xe
         </Button>
       </div>
-      {statisticData && <BikeStats stats={statisticData} />}
+      {statusCount && <BikeStats stats={statusCount} />}
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}

@@ -30,8 +30,8 @@ export function StationInfoForm({ form, onSubmit, onCancel }: StationInfoFormPro
           <Input {...register("address")} placeholder="Nhập địa chỉ" className="h-11" />
         </FormField>
 
-        <FormField label="Sức chứa" error={errors.capacity?.message} required>
-          <Input type="number" {...register("capacity", { valueAsNumber: true })} className="h-11" />
+        <FormField label="Sức chứa" error={errors.totalCapacity?.message} required>
+          <Input type="number" {...register("totalCapacity", { valueAsNumber: true })} className="h-11" />
         </FormField>
 
         <div className="border-t pt-5 space-y-4">

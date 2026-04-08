@@ -2,23 +2,23 @@
 
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { stationColumns } from "@/columns/station-column";
+import { stationStaffColumns } from "@/columns/station-column";
 import { Button } from "@/components/ui/button";
 import { Pagination, Station } from "@/types";
-
 interface StationTableSectionProps {
   stations: Station[];
   pagination?: Pagination;
   setPage: (page: number) => void;
+  onView : (id:string) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
   isLoading?: boolean;
 }
-
 export function StationTableSection({
   stations,
   pagination,
   setPage,
+  onView,
   onDelete,
   onEdit,
   isLoading = false,
@@ -29,9 +29,10 @@ export function StationTableSection({
       <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
         <DataTable
           title="Danh sách trạm xe"
-          columns={stationColumns({
-            onDelete: ({ id }) => onDelete(id),
-            onEdit: ({ id }) => onEdit(id),
+          columns={stationStaffColumns({
+            onView : ({id}) => {
+              onView(id);
+            }
           })}
           isLoading={isLoading}
           data={stations ?? []}

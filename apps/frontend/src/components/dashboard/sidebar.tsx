@@ -89,6 +89,7 @@ export function Sidebar() {
     
     // --- ADMIN & MANAGER SECTION ---
      { title: "Quản lý khách hàng", icon: Users, href: "/admin/customers", roles: ["ADMIN", "MANAGER"] },
+     { title: "Quản lý khách hàng", icon: Users, href: "/staff/customers", roles: ["STAFF"] },
     { title: "Quản lý nhân viên", icon: Users, href: "/admin/staffs", roles: ["ADMIN", "MANAGER"] },
     { title: "Quản lý Agency", icon: Building2, href: "/admin/agencies", roles: ["ADMIN"] },
     { title: "Quản lý nhà cung cấp", icon: Store, href: "/admin/suppliers", roles: ["ADMIN"] },
