@@ -21,7 +21,33 @@ const SubmitAgencyRequestRequestSchema = z.object({
   agencyName: z.string().min(1),
   agencyAddress: OptionalTrimmedNullableStringSchema,
   agencyContactPhone: OptionalPhoneNumberNullableSchema,
+  stationName: z.string().trim().min(1),
+  stationAddress: z.string().trim().min(1),
+  stationLatitude: z.number().min(-90).max(90),
+  stationLongitude: z.number().min(-180).max(180),
+  stationTotalCapacity: z.number().int().min(1),
+  stationPickupSlotLimit: z.number().int().min(0).optional(),
+  stationReturnSlotLimit: z.number().int().min(0).optional(),
   description: OptionalTrimmedNullableStringSchema,
+}).superRefine((value, ctx) => {
+  const pickupSlotLimit = value.stationPickupSlotLimit ?? value.stationTotalCapacity;
+  const returnSlotLimit = value.stationReturnSlotLimit ?? value.stationTotalCapacity;
+
+  if (pickupSlotLimit > value.stationTotalCapacity) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["stationPickupSlotLimit"],
+      message: "stationPickupSlotLimit must be less than or equal to stationTotalCapacity",
+    });
+  }
+
+  if (returnSlotLimit > value.stationTotalCapacity) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["stationReturnSlotLimit"],
+      message: "stationReturnSlotLimit must be less than or equal to stationTotalCapacity",
+    });
+  }
 }).openapi("SubmitAgencyRequestRequest");
 
 const SubmitAgencyRequestResponseSchema = AgencyRequestSchema.openapi("SubmitAgencyRequestResponse");
@@ -63,6 +89,25 @@ export const submitAgencyRequestRoute = createRoute({
       content: {
         "application/json": {
           schema: SubmitAgencyRequestRequestSchema,
+          examples: {
+            BasicRequest: {
+              value: {
+                requesterEmail: "ops@vincom-q9.example",
+                requesterPhone: "0912345678",
+                agencyName: "VINCOM Quận 9",
+                agencyAddress: "Khu vực quản lý đối tác",
+                agencyContactPhone: "02873000009",
+                stationName: "Ga VINCOM Quận 9",
+                stationAddress: "Tầng trệt VINCOM Quận 9, TP. Thu Duc",
+                stationLatitude: 10.8421,
+                stationLongitude: 106.8284,
+                stationTotalCapacity: 20,
+                stationPickupSlotLimit: 12,
+                stationReturnSlotLimit: 18,
+                description: "Đề nghị mở điểm agency vận hành đầy đủ.",
+              },
+            },
+          },
         },
       },
     },
@@ -172,7 +217,7 @@ export const approveAgencyRequestRoute = createRoute({
           examples: {
             BasicApproval: {
               value: {
-                description: "Approved and agency account has been provisioned.",
+                description: "Approved, agency account and station have been provisioned.",
               },
             },
           },

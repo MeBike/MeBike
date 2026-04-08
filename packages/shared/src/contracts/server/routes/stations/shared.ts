@@ -9,6 +9,7 @@ import {
   BikeRevenueResponseSchema,
   HighestRevenueStationSchema,
   NearestAvailableBikeSchema,
+  StationTypeSchema,
   StationAlertsResponseSchema,
   StationDateRangeQuerySchema,
   StationErrorCodeSchema,
@@ -124,6 +125,8 @@ export const StationListQuerySchema = z
   .object({
     name: z.string().optional(),
     address: z.string().optional(),
+    stationType: StationTypeSchema.optional(),
+    agencyId: z.uuidv7().optional(),
     latitude: optionalLatitudeQuery(),
     longitude: optionalLongitudeQuery(),
     totalCapacity: optionalNumberQuery("totalCapacity", 20),
@@ -144,6 +147,8 @@ export const StationListQuerySchema = z
 export const CreateStationBodySchema = z.object({
   name: z.string().min(1),
   address: z.string().min(1),
+  stationType: StationTypeSchema.default("INTERNAL"),
+  agencyId: z.uuidv7().nullable().optional(),
   totalCapacity: z.number()
     .int({
       message: "totalCapacity must be an integer",
@@ -169,11 +174,29 @@ export const CreateStationBodySchema = z.object({
     .optional(),
   latitude: LatitudeSchema,
   longitude: LongitudeSchema,
+}).superRefine((value, ctx) => {
+  if (value.stationType === "AGENCY" && !value.agencyId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["agencyId"],
+      message: "agencyId is required when stationType is AGENCY",
+    });
+  }
+
+  if (value.stationType === "INTERNAL" && value.agencyId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["agencyId"],
+      message: "agencyId must be null when stationType is INTERNAL",
+    });
+  }
 }).openapi("CreateStationBody");
 
 export const UpdateStationBodySchema = z.object({
   name: z.string().min(1).optional(),
   address: z.string().min(1).optional(),
+  stationType: StationTypeSchema.optional(),
+  agencyId: z.uuidv7().nullable().optional(),
   totalCapacity: z.number()
     .int({
       message: "totalCapacity must be an integer",
@@ -200,6 +223,22 @@ export const UpdateStationBodySchema = z.object({
     .optional(),
   latitude: LatitudeSchema.optional(),
   longitude: LongitudeSchema.optional(),
+}).superRefine((value, ctx) => {
+  if (value.stationType === "AGENCY" && value.agencyId === null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["agencyId"],
+      message: "agencyId cannot be null when stationType is AGENCY",
+    });
+  }
+
+  if (value.stationType === "INTERNAL" && value.agencyId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["agencyId"],
+      message: "agencyId must be null when stationType is INTERNAL",
+    });
+  }
 }).openapi("UpdateStationBody");
 
 export const NearbyStationsQuerySchema = z
@@ -250,6 +289,8 @@ export const StationListResponseSchema = z
           id: "665fd6e36b7e5d53f8f3d2c9",
           name: "Central Station",
           address: "123 Main St",
+          stationType: "INTERNAL",
+          agencyId: null,
           location: {
             latitude: 10.762622,
             longitude: 106.660172,

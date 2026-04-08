@@ -27,6 +27,13 @@ const submit: RouteHandler<AgencyRequestsRoutes["submit"]> = async (c) => {
         agencyName: body.agencyName,
         agencyAddress: body.agencyAddress ?? null,
         agencyContactPhone: body.agencyContactPhone ?? null,
+        stationName: body.stationName,
+        stationAddress: body.stationAddress,
+        stationLatitude: body.stationLatitude,
+        stationLongitude: body.stationLongitude,
+        stationTotalCapacity: body.stationTotalCapacity,
+        stationPickupSlotLimit: body.stationPickupSlotLimit ?? null,
+        stationReturnSlotLimit: body.stationReturnSlotLimit ?? null,
         description: body.description ?? null,
       });
     }),

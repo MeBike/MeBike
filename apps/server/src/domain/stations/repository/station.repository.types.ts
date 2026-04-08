@@ -37,6 +37,9 @@ export type StationRepo = {
   getById: (
     id: string,
   ) => Effect.Effect<Option.Option<StationRow>>;
+  getByAgencyId: (
+    agencyId: string,
+  ) => Effect.Effect<Option.Option<StationRow>>;
   listNearest: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;

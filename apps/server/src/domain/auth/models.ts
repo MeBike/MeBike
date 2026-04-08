@@ -3,6 +3,8 @@ export type AccessTokenPayload = {
   role: "USER" | "STAFF" | "TECHNICIAN" | "MANAGER" | "ADMIN" | "AGENCY";
   accountStatus: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
   verifyStatus: "UNVERIFIED" | "VERIFIED";
+  agencyId?: string;
+  operatorStationId?: string;
   tokenType: "access";
 };
 

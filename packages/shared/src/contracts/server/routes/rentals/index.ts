@@ -3,6 +3,8 @@ import * as queries from "./queries";
 
 export {
   approveBikeSwapRequest,
+  agencyApproveBikeSwapRequest,
+  agencyRejectBikeSwapRequest,
   cancelMyReturnSlot,
   cancelRental,
   confirmRentalReturnByOperator,
@@ -10,6 +12,8 @@ export {
   createRental,
   createRentalFromSOS,
   endRentalByAdmin,
+  operatorApproveBikeSwapRequest,
+  operatorRejectBikeSwapRequest,
   processCardTapRental,
   rejectBikeSwapRequest,
   requestBikeSwap,
@@ -22,6 +26,10 @@ export {
   adminGetRental,
   adminListBikeSwapRequests,
   adminListRentals,
+  agencyGetBikeSwapRequests,
+  agencyListBikeSwapRequests,
+  operatorGetBikeSwapRequests,
+  operatorListBikeSwapRequests,
   getActiveRentalsByPhone,
   getAllRentals,
   getDashboardSummary,

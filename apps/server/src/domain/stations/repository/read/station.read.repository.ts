@@ -32,6 +32,7 @@ export type StationReadRepo = Pick<
   StationRepo,
   | "listWithOffset"
   | "getById"
+  | "getByAgencyId"
   | "listNearest"
 >;
 
@@ -126,6 +127,32 @@ export function makeStationReadRepository(
       }).pipe(defectOn(StationRepositoryError));
     },
 
+    getByAgencyId(agencyId) {
+      return Effect.gen(function* () {
+        const row = yield* Effect.tryPromise({
+          try: () =>
+            client.station.findUnique({
+              where: { agencyId },
+              select: stationSelect,
+            }),
+          catch: cause =>
+            new StationRepositoryError({
+              operation: "getByAgencyId",
+              cause,
+            }),
+        });
+
+        if (!row) {
+          return Option.none();
+        }
+
+        const [station] = yield* attachCounts([row], (item, counts) =>
+          applyCounts(item, counts));
+
+        return Option.some(station);
+      }).pipe(defectOn(StationRepositoryError));
+    },
+
     listNearest({
       latitude,
       longitude,
@@ -149,6 +176,8 @@ export function makeStationReadRepository(
                     id,
                     name,
                     address,
+                    station_type AS "stationType",
+                    agency_id AS "agencyId",
                     total_capacity AS "totalCapacity",
                     pickup_slot_limit AS "pickupSlotLimit",
                     return_slot_limit AS "returnSlotLimit",
@@ -185,6 +214,8 @@ export function makeStationReadRepository(
                     id,
                     name,
                     address,
+                    station_type AS "stationType",
+                    agency_id AS "agencyId",
                     total_capacity AS "totalCapacity",
                     pickup_slot_limit AS "pickupSlotLimit",
                     return_slot_limit AS "returnSlotLimit",

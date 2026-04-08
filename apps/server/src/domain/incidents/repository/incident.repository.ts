@@ -37,6 +37,7 @@ import type {
 
 import {
   ActiveIncidentAlreadyExists,
+  IncidentInternalStationRequired,
   IncidentRepositoryError,
   NoAvailableTechnicianFound,
   NoNearestStationFound,
@@ -64,6 +65,7 @@ export type IncidentRepo = {
     | NoNearestStationFound
     | NoAvailableTechnicianFound
     | ActiveIncidentAlreadyExists
+    | IncidentInternalStationRequired
     | StationNotFound
   >;
 
@@ -163,6 +165,10 @@ function createIncidentWithClient(
       }
 
       for (const station of nearestStation.items) {
+        if (station.stationType !== "INTERNAL") {
+          continue;
+        }
+
         // Count Available Bikes of this station
         const countAvailableBikes = yield* Effect.promise(() =>
           tx.bike.count({
@@ -231,7 +237,7 @@ function createIncidentWithClient(
       const station = yield* Effect.promise(() =>
         tx.station.findUnique({
           where: { id: data.stationId! },
-          select: { latitude: true, longitude: true },
+          select: { latitude: true, longitude: true, stationType: true },
         }),
       );
 
@@ -239,6 +245,15 @@ function createIncidentWithClient(
         return yield* Effect.fail(
           new StationNotFound({
             id: data.stationId!,
+          }),
+        );
+      }
+
+      if (station.stationType !== "INTERNAL") {
+        return yield* Effect.fail(
+          new IncidentInternalStationRequired({
+            stationId: data.stationId!,
+            stationType: station.stationType,
           }),
         );
       }
@@ -450,6 +465,10 @@ function rejectIncidentWithClient(
     }
 
     for (const station of nearestStation.items) {
+      if (station.stationType !== "INTERNAL") {
+        continue;
+      }
+
       // Count Available Bikes of this station
       const countAvailableBikes = yield* Effect.promise(() =>
         tx.bike.count({

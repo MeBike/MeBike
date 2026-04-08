@@ -8,9 +8,18 @@ function toAgencyContract(
   return {
     id: row.id,
     name: row.name,
-    address: row.address,
     contactPhone: row.contactPhone,
     status: row.status,
+    station: row.station
+      ? {
+          id: row.station.id,
+          name: row.station.name,
+          address: row.station.address,
+          latitude: row.station.latitude,
+          longitude: row.station.longitude,
+          stationType: row.station.stationType,
+        }
+      : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

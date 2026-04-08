@@ -62,6 +62,17 @@ export const createIncident = createRoute({
                 },
               },
             },
+            InternalStationRequired: {
+              value: {
+                error: "Incidents are only supported at internal stations",
+                details: {
+                  code: IncidentErrorCodeSchema.enum
+                    .INCIDENT_INTERNAL_STATION_REQUIRED,
+                  stationId: "665fd6e36b7e5d53f8f3d2c9",
+                  stationType: "AGENCY",
+                },
+              },
+            },
           },
         },
       },
@@ -124,6 +135,7 @@ export const createIncident = createRoute({
         },
       },
     },
+    403: unauthorizedResponse(),
     401: unauthorizedResponse(),
   },
 });

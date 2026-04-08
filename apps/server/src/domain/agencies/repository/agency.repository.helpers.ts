@@ -5,9 +5,18 @@ import type { AgencyFilter, AgencySortField } from "../models";
 const selectAgencyRow = {
   id: true,
   name: true,
-  address: true,
   contactPhone: true,
   status: true,
+  station: {
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      latitude: true,
+      longitude: true,
+      stationType: true,
+    },
+  },
   createdAt: true,
   updatedAt: true,
 } satisfies PrismaTypes.AgencySelect;
@@ -18,9 +27,18 @@ export function toAgencyRow(
   return {
     id: row.id,
     name: row.name,
-    address: row.address,
     contactPhone: row.contactPhone,
     status: row.status,
+    station: row.station
+      ? {
+          id: row.station.id,
+          name: row.station.name,
+          address: row.station.address,
+          latitude: row.station.latitude,
+          longitude: row.station.longitude,
+          stationType: row.station.stationType,
+        }
+      : null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -36,11 +54,13 @@ export function toAgencyWhere(filter: AgencyFilter): PrismaTypes.AgencyWhereInpu
           },
         }
       : {}),
-    ...(filter.address
+    ...(filter.stationAddress
       ? {
-          address: {
-            contains: filter.address,
-            mode: "insensitive",
+          station: {
+            address: {
+              contains: filter.stationAddress,
+              mode: "insensitive",
+            },
           },
         }
       : {}),

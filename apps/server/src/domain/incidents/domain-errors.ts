@@ -63,6 +63,13 @@ export class UnauthorizedIncidentAccess extends Data.TaggedError(
     readonly userId: string;
   }> {}
 
+export class IncidentInternalStationRequired extends Data.TaggedError(
+  "IncidentInternalStationRequired",
+)<{
+    readonly stationId: string;
+    readonly stationType: string;
+  }> {}
+
 export class ActiveIncidentAlreadyExists extends Data.TaggedError(
   "ActiveIncidentAlreadyExists",
 )<{

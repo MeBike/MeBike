@@ -22,6 +22,8 @@ const listStations: RouteHandler<StationsRoutes["adminListStations"]> = async (c
       {
         name: query.name,
         address: query.address,
+        stationType: query.stationType,
+        agencyId: query.agencyId,
         totalCapacity: query.totalCapacity,
         excludeAssignedStaff: true,
       },
@@ -62,6 +64,8 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
     service.createStation({
       name: body.name,
       address: body.address,
+      stationType: body.stationType,
+      agencyId: body.agencyId ?? null,
       totalCapacity: body.totalCapacity,
       pickupSlotLimit: body.pickupSlotLimit,
       returnSlotLimit: body.returnSlotLimit,
@@ -101,6 +105,36 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
             error: stationErrorMessages.OUTSIDE_SUPPORTED_AREA,
             details: {
               code: StationErrorCodeSchema.enum.OUTSIDE_SUPPORTED_AREA,
+            },
+          }, 400)),
+        Match.tag("StationAgencyRequired", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_AGENCY_REQUIRED,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_AGENCY_REQUIRED,
+            },
+          }, 400)),
+        Match.tag("StationAgencyForbidden", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_AGENCY_FORBIDDEN,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_AGENCY_FORBIDDEN,
+            },
+          }, 400)),
+        Match.tag("StationAgencyNotFound", ({ agencyId }) =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_AGENCY_NOT_FOUND,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_AGENCY_NOT_FOUND,
+              agencyId,
+            },
+          }, 400)),
+        Match.tag("StationAgencyAlreadyAssigned", ({ stationId }) =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_AGENCY_ALREADY_ASSIGNED,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_AGENCY_ALREADY_ASSIGNED,
+              stationId,
             },
           }, 400)),
         Match.orElse(() => {
@@ -158,6 +192,36 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
             error: stationErrorMessages.OUTSIDE_SUPPORTED_AREA,
             details: {
               code: StationErrorCodeSchema.enum.OUTSIDE_SUPPORTED_AREA,
+            },
+          }, 400)),
+        Match.tag("StationAgencyRequired", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_AGENCY_REQUIRED,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_AGENCY_REQUIRED,
+            },
+          }, 400)),
+        Match.tag("StationAgencyForbidden", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_AGENCY_FORBIDDEN,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_AGENCY_FORBIDDEN,
+            },
+          }, 400)),
+        Match.tag("StationAgencyNotFound", ({ agencyId }) =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_AGENCY_NOT_FOUND,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_AGENCY_NOT_FOUND,
+              agencyId,
+            },
+          }, 400)),
+        Match.tag("StationAgencyAlreadyAssigned", ({ stationId }) =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_AGENCY_ALREADY_ASSIGNED,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_AGENCY_ALREADY_ASSIGNED,
+              stationId,
             },
           }, 400)),
         Match.orElse(() => {

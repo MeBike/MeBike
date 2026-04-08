@@ -16,6 +16,8 @@ export const stationSelect = {
   id: true,
   name: true,
   address: true,
+  stationType: true,
+  agencyId: true,
   totalCapacity: true,
   pickupSlotLimit: true,
   returnSlotLimit: true,
@@ -91,6 +93,8 @@ export function applyCounts(
     id: station.id,
     name: station.name,
     address: station.address,
+    stationType: station.stationType,
+    agencyId: station.agencyId,
     totalCapacity: station.totalCapacity,
     pickupSlotLimit: station.pickupSlotLimit,
     returnSlotLimit: station.returnSlotLimit,
@@ -143,6 +147,8 @@ export function toStationWhere(filter: StationFilter): PrismaTypes.StationWhereI
       address: filter.address
         ? { contains: filter.address, mode: "insensitive" }
         : undefined,
+      stationType: filter.stationType,
+      agencyId: filter.agencyId,
       totalCapacity: filter.totalCapacity,
     }),
     ...(filter.excludeAssignedStaff && {
