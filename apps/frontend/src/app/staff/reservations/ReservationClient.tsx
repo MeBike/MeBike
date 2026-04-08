@@ -6,37 +6,29 @@ import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useReservationActions } from "@/hooks/use-reservation";
 import { useStationActions } from "@/hooks/use-station";
-import { reservationColumn } from "@/columns/reservation-columns";
+import { reservationColumnForStaff } from "@/columns/reservation-columns";
 import type {
   Reservation,
   ReservationOption,
   ReservationStatus,
 } from "@/types/Reservation";
-import { ReservationStats } from "@/components/reservations/reservation-stats";
-import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TableSkeleton } from "@/components/table-skeleton";
 export default function ReservationClient() {
-  const { stations, getAllStations } = useStationActions({ hasToken: true });
+  const { stations } = useStationActions({ hasToken: true });
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus>("");
   const [option, setReservationOption] = useState<ReservationOption>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState<number>(7);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [detailTab, setDetailTab] = useState<"info" | "stats">("info");
-  // const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedReservationId, setSelectedReservationId] =
     useState<string>("");
   const router = useRouter();
   const {
-    allReservations,
-    fetchAllReservations,
-    reservationStats,
-    fetchReservationStats,
-    detailReservation,
+    allReservationsStaff,
+    fetchAllReservationsForStaff,
+    isLoadingReservationsStaff,
     fetchDetailReservation,
-    isLoadingReservations,
   } = useReservationActions({
     hasToken: true,
     page: currentPage,
@@ -48,7 +40,7 @@ export default function ReservationClient() {
   const [isVisualLoading, setIsVisualLoading] = useState(false);
 
   useEffect(() => {
-    if (isLoadingReservations) {
+    if (isLoadingReservationsStaff) {
       setIsVisualLoading(true);
     } else {
       const timer = setTimeout(() => {
@@ -56,24 +48,16 @@ export default function ReservationClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoadingReservations]);
-  useEffect(() => {
-    fetchAllReservations();
-    fetchReservationStats();
-    getAllStations();
-  }, [
-    fetchAllReservations,
-    fetchReservationStats,
-    getAllStations,
-    currentPage,
-  ]);
+  }, [isLoadingReservationsStaff]);
 
   useEffect(() => {
     if (selectedReservationId) {
       fetchDetailReservation();
     }
   }, [selectedReservationId, fetchDetailReservation]);
-
+  useEffect(() => {
+    fetchAllReservationsForStaff();
+  }, [fetchAllReservationsForStaff, currentPage, pageSize]);
   const handleReset = () => {
     setSearchQuery("");
     setStatusFilter("");
@@ -84,7 +68,7 @@ export default function ReservationClient() {
     setCurrentPage(1);
   };
   const handleDetailReservation = (id: string) => {
-    router.push(`/admin/reservations/detail/${id}`);
+    router.push(`/staff/reservations/detail/${id}`);
   };
   return (
     <div>
@@ -100,7 +84,6 @@ export default function ReservationClient() {
           </div>
           <div className="flex items-center gap-3"></div>
         </div>
-        {reservationStats && <ReservationStats overview={reservationStats} />}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Bộ lọc</h3>
@@ -144,29 +127,26 @@ export default function ReservationClient() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-4">
-                Hiển thị trang {currentPage} / {allReservations?.pagination.totalPages}
+                Hiển thị trang {currentPage} /{" "}
+                {allReservationsStaff?.pagination.totalPages}
               </p>
               <DataTable
-                columns={reservationColumn({
+                columns={reservationColumnForStaff({
                   onView: ({ id }) => {
                     handleDetailReservation(id);
-                  },
-                  onEdit: ({ data }) => {
-                    setSelectedReservationId(data.id);
-                    console.log("[v0] Edit reservation:", data.id);
                   },
                   stations: stations,
                 })}
                 title={"Danh sách đặt trước"}
                 searchValue={searchQuery}
                 filterPlaceholder="Tìm kiếm theo mã ví hoặc mã người dùng..."
-                data={allReservations?.data || []}
+                data={allReservationsStaff?.data || []}
               />
 
               <div className="pt-3">
                 <PaginationDemo
-                  currentPage={allReservations?.pagination.page ?? 1}
-                  totalPages={allReservations?.pagination.totalPages ?? 1}
+                  currentPage={allReservationsStaff?.pagination.page ?? 1}
+                  totalPages={allReservationsStaff?.pagination.totalPages ?? 1}
                   onPageChange={setCurrentPage}
                 />
               </div>

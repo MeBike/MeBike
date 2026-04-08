@@ -15,5 +15,6 @@ export const useGetReservationStatsQuery = () => {
   return useQuery({
     queryKey: QUERY_KEYS.RESERVATION.RESERVATION_STATS,
     queryFn: fetchReservationStats,
+    enabled:false,
   });
 };

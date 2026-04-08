@@ -82,16 +82,16 @@ function Field({
 export default function ReservationDetailClient() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  const { detailReservation, fetchDetailReservation } = useReservationActions({
+  const { detailReservationForStaff, fetchDetailReservationForStaff } = useReservationActions({
     hasToken: true,
     id: id,
   });
   useEffect(() => {
     if (id) {
-      fetchDetailReservation();
+      fetchDetailReservationForStaff();
     }
-  }, [id, fetchDetailReservation]);
-  if (!detailReservation) {
+  }, [id, fetchDetailReservationForStaff]);
+  if (!detailReservationForStaff) {
     return (
       <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
         <div className="mx-auto max-w-6xl space-y-6">
@@ -105,7 +105,7 @@ export default function ReservationDetailClient() {
     );
   }
 
-  const data = detailReservation;
+  const data = detailReservationForStaff;
   const isVerified = data.user?.role === "ADMIN" || data.user?.id; // Tùy chỉnh logic verify của bạn
 
   return (
