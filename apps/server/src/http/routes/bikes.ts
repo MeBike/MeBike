@@ -9,7 +9,7 @@ import {
 } from "@/http/controllers/bikes";
 import {
   requireAdminMiddleware,
-  requireAdminOrStaffMiddleware,
+  requireBackofficeMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
@@ -59,14 +59,14 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   const getBikeActivityStatsRoute = {
     ...bikes.getBikeActivityStats,
-    middleware: [requireAdminOrStaffMiddleware] as const,
+    middleware: [requireBackofficeMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(getBikeActivityStatsRoute, BikeStatsController.getBikeActivityStats);
 
   const getBikeRentalHistoryRoute = {
     ...bikes.getBikeRentalHistory,
-    middleware: [requireAdminOrStaffMiddleware] as const,
+    middleware: [requireBackofficeMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(getBikeRentalHistoryRoute, BikeStatsController.getBikeRentalHistory);

@@ -10,10 +10,10 @@ import {
 } from "@/http/controllers/rentals";
 import {
   requireAdminMiddleware,
-  requireAdminOrStaffOrAgencyMiddleware,
   requireAgencyMiddleware,
+  requireRentalOperatorMiddleware,
+  requireRentalSupportMiddleware,
   requireStaffMiddleware,
-  requireStaffOrAgencyMiddleware,
   requireUserMiddleware,
 } from "@/http/middlewares/auth";
 
@@ -35,7 +35,7 @@ export function registerRentalRoutes(
 
   const activeByPhoneRoute = {
     ...rentals.getActiveRentalsByPhone,
-    middleware: [requireAdminOrStaffOrAgencyMiddleware] as const,
+    middleware: [requireRentalSupportMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
@@ -59,7 +59,7 @@ export function registerRentalRoutes(
 
   const confirmReturnByOperatorRoute = {
     ...rentals.confirmRentalReturnByOperator,
-    middleware: [requireStaffOrAgencyMiddleware] as const,
+    middleware: [requireRentalOperatorMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(

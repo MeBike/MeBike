@@ -119,17 +119,17 @@ export const requireAuthMiddleware = createMiddleware(async (c, next) => {
 });
 
 export const requireAdminMiddleware = requireRoles("ADMIN");
-export const requireAdminOrStaffMiddleware = requireRoles("ADMIN", "STAFF");
 export const requireAgencyMiddleware = requireRoles("AGENCY");
-export const requireStaffOrAgencyMiddleware = requireRoles("STAFF", "AGENCY");
-export const requireAdminOrStaffOrAgencyMiddleware = requireRoles(
+export const requireStaffMiddleware = requireRoles("STAFF");
+export const requireUserMiddleware = requireRoles("USER");
+export const requireTechnicianMiddleware = requireRoles("TECHNICIAN");
+export const requireBackofficeMiddleware = requireRoles("ADMIN", "STAFF");
+export const requireRentalOperatorMiddleware = requireRoles("STAFF", "AGENCY");
+export const requireRentalSupportMiddleware = requireRoles(
   "ADMIN",
   "STAFF",
   "AGENCY",
 );
-export const requireStaffMiddleware = requireRoles("STAFF");
-export const requireUserMiddleware = requireRoles("USER");
-export const requireTechnicianMiddleware = requireRoles("TECHNICIAN");
 export const requireIncidentViewerMiddleware = requireRoles(
   "TECHNICIAN",
   "ADMIN",
