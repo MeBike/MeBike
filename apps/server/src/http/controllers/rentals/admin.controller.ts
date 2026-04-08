@@ -6,7 +6,7 @@ import { Effect, Match } from "effect";
 import {
   adminGetChangeBikeDetail,
   adminGetRentalDetail,
-  confirmRentalReturnByOperator,
+  RentalCommandServiceTag,
   RentalRepository,
   RentalStatsServiceTag,
 } from "@/domain/rentals";
@@ -219,12 +219,18 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    confirmRentalReturnByOperator({
-      rentalId,
-      stationId: body.stationId,
-      confirmedByUserId: c.var.currentUser!.userId,
-      confirmationMethod: body.confirmationMethod ?? "MANUAL",
-      confirmedAt: body.confirmedAt ? new Date(body.confirmedAt) : new Date(),
+    Effect.gen(function* () {
+      const service = yield* RentalCommandServiceTag;
+      return yield* service.confirmReturnByOperator({
+        rentalId,
+        stationId: body.stationId,
+        confirmedByUserId: c.var.currentUser!.userId,
+        operatorRole: c.var.currentUser!.role as "STAFF" | "AGENCY",
+        operatorStationId: c.var.currentUser!.operatorStationId ?? null,
+        operatorAgencyId: c.var.currentUser!.agencyId ?? null,
+        confirmationMethod: body.confirmationMethod ?? "MANUAL",
+        confirmedAt: body.confirmedAt ? new Date(body.confirmedAt) : new Date(),
+      });
     }),
     "PUT /v1/rentals/{rentalId}/end",
   );
@@ -290,6 +296,24 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
             },
             400,
           )),
+        Match.tag(
+          "ReturnSlotCapacityExceeded",
+          ({ stationId, totalCapacity, returnSlotLimit, totalBikes, activeReturnSlots }) =>
+            c.json(
+              {
+                error: rentalErrorMessages.RETURN_SLOT_CAPACITY_EXCEEDED,
+                details: {
+                  code: RentalErrorCodeSchema.enum.RETURN_SLOT_CAPACITY_EXCEEDED,
+                  stationId,
+                  totalCapacity,
+                  returnSlotLimit,
+                  totalBikes,
+                  activeReturnSlots,
+                },
+              },
+              400,
+            ),
+        ),
         Match.tag("ReturnSlotStationMismatch", ({ returnSlotStationId, attemptedEndStationId }) =>
           c.json(
             {
@@ -299,6 +323,17 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
                 rentalId,
                 returnSlotStationId,
                 endStationId: attemptedEndStationId,
+              },
+            },
+            400,
+          )),
+        Match.tag("StationNotFound", ({ id }) =>
+          c.json(
+            {
+              error: rentalErrorMessages.STATION_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.STATION_NOT_FOUND,
+                stationId: id,
               },
             },
             400,

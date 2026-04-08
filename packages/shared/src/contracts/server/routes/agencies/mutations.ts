@@ -29,14 +29,12 @@ export const adminUpdateAgencyRoute = createRoute({
             UpdateAgencyBasics: {
               value: {
                 name: "Metro Agency Thu Duc",
-                address: "12 Vo Van Ngan, Thu Duc, TP.HCM",
                 contactPhone: "0912345678",
                 status: "ACTIVE",
               },
             },
-            ClearAddressAndPhone: {
+            ClearPhone: {
               value: {
-                address: null,
                 contactPhone: null,
                 status: "INACTIVE",
               },

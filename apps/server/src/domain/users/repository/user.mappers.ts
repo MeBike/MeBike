@@ -27,6 +27,11 @@ export const selectUserRow = {
           id: true,
           name: true,
           status: true,
+          station: {
+            select: {
+              id: true,
+            },
+          },
         },
       },
       technicianTeam: {
@@ -70,6 +75,7 @@ export function toUserRow(row: PrismaTypes.UserGetPayload<{ select: typeof selec
                 id: row.orgAssignment.agency.id,
                 name: row.orgAssignment.agency.name,
                 status: row.orgAssignment.agency.status,
+                stationId: row.orgAssignment.agency.station?.id ?? null,
               }
             : null,
           technicianTeam: row.orgAssignment.technicianTeam

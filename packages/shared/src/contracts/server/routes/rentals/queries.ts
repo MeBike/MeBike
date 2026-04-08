@@ -165,10 +165,9 @@ export const getMyCurrentReturnSlot = createRoute({
       description: "Get the active return slot for a rental",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            ReturnSlotReservationSchema.openapi("CurrentReturnSlotReservation"),
-            "Current return slot response",
-          ),
+          schema: ReturnSlotReservationSchema.openapi("CurrentReturnSlotResponse", {
+            description: "Current return slot response",
+          }),
         },
       },
     },
@@ -223,10 +222,7 @@ export const getRental = createRoute({
       description: "Detailed rental (admin/staff view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalSchemaOpenApi,
-            "Get rental detail response",
-          ),
+          schema: RentalSchemaOpenApi,
         },
       },
     },
@@ -301,7 +297,7 @@ export const getActiveRentalsByPhone = createRoute({
   },
   responses: {
     200: {
-      description: "Active rentals by phone number",
+      description: "Active rentals by phone number for admin/staff/agency operators",
       content: {
         "application/json": {
           schema: RentalListResponseSchema,
@@ -689,38 +685,45 @@ export const staffListRentals = createRoute({
   },
 });
 
-export const staffListBikeSwapRequests = createRoute({
-  method: "get",
-  path: "/v1/staff/bike-swap-requests",
-  tags: ["Staff", "Bike Swap"],
-  security: [{ bearerAuth: [] }],
-  request: {
-    query: z
-      .object({
-        userId: z.uuidv7().optional(),
-        status: BikeSwapStatusSchema.optional(),
-        stationId: z.uuidv7().optional(),
-        ...paginationQueryFields,
-        sortBy: z.enum(["status", "updatedAt", "createdAt"]).optional(),
-        sortDir: SortDirectionSchema.optional(),
-      })
-      .openapi("StaffBikeSwapRequestsListQuery", {
-        description: "Query parameters for staff bike swap requests listing",
-      }),
-  },
-  responses: {
-    200: {
-      description: "List of bike swap requests",
-      content: {
-        "application/json": {
-          schema: BikeSwapRequestListResponseSchema,
-        },
+const operatorBikeSwapRequestsListQuerySchema = z
+  .object({
+    userId: z.uuidv7().optional(),
+    status: BikeSwapStatusSchema.optional(),
+    stationId: z.uuidv7().optional(),
+    ...paginationQueryFields,
+    sortBy: z.enum(["status", "updatedAt", "createdAt"]).optional(),
+    sortDir: SortDirectionSchema.optional(),
+  })
+  .openapi("OperatorBikeSwapRequestsListQuery", {
+    description: "Query parameters for operator bike swap requests listing",
+  });
+
+const operatorBikeSwapRequestsResponses = {
+  200: {
+    description: "List of bike swap requests visible to the current operator",
+    content: {
+      "application/json": {
+        schema: BikeSwapRequestListResponseSchema,
       },
     },
-    401: unauthorizedResponse(),
-    403: forbiddenResponse("Staff"),
   },
+  401: unauthorizedResponse(),
+  403: forbiddenResponse("Rental operator"),
+} as const;
+
+export const operatorListBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/operators/bike-swap-requests",
+  tags: ["Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: operatorBikeSwapRequestsListQuerySchema,
+  },
+  responses: operatorBikeSwapRequestsResponses,
 });
+
+export const staffListBikeSwapRequests = operatorListBikeSwapRequests;
+export const agencyListBikeSwapRequests = operatorListBikeSwapRequests;
 
 export const adminListBikeSwapRequests = createRoute({
   method: "get",
@@ -788,38 +791,43 @@ export const adminGetBikeSwapRequests = createRoute({
   },
 });
 
-export const staffGetBikeSwapRequests = createRoute({
+const operatorBikeSwapRequestResponses = {
+  200: {
+    description: "Detailed bike swap request visible to the current operator",
+    content: {
+      "application/json": {
+        schema: createSuccessResponse(
+          BikeSwapRequestDetailSchemaOpenApi,
+          "Get operator bike swap request detail response",
+        ),
+      },
+    },
+  },
+  401: unauthorizedResponse(),
+  403: forbiddenResponse("Rental operator"),
+  404: {
+    description: "Bike swap request not found",
+    content: {
+      "application/json": {
+        schema: BikeSwapRequestErrorResponseSchema,
+      },
+    },
+  },
+} as const;
+
+export const operatorGetBikeSwapRequests = createRoute({
   method: "get",
-  path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}",
+  path: "/v1/operators/bike-swap-requests/{bikeSwapRequestId}",
   tags: ["Bike Swap"],
   security: [{ bearerAuth: [] }],
   request: {
     params: BikeSwapRequestIdParamSchema,
   },
-  responses: {
-    200: {
-      description: "Detailed rental with all populated data (staff view)",
-      content: {
-        "application/json": {
-          schema: createSuccessResponse(
-            BikeSwapRequestDetailSchemaOpenApi,
-            "Get staff bike swap request detail response",
-          ),
-        },
-      },
-    },
-    401: unauthorizedResponse(),
-    403: forbiddenResponse("Staff"),
-    404: {
-      description: "Bike swap request not found",
-      content: {
-        "application/json": {
-          schema: BikeSwapRequestErrorResponseSchema,
-        },
-      },
-    },
-  },
+  responses: operatorBikeSwapRequestResponses,
 });
+
+export const staffGetBikeSwapRequests = operatorGetBikeSwapRequests;
+export const agencyGetBikeSwapRequests = operatorGetBikeSwapRequests;
 
 export const getMyBikeSwapRequests = createRoute({
   method: "get",

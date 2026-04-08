@@ -5,6 +5,15 @@ import { describe, expect, it } from "vitest";
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
 const ADMIN_USER_ID = "018d4529-6880-77a8-8e6f-4d2c88d22311";
+const DEFAULT_STATION_REQUEST_FIELDS = {
+  stationName: "Ga Demo Agency",
+  stationAddress: "1 Demo Agency Street",
+  stationLatitude: 10.8231,
+  stationLongitude: 106.7712,
+  stationTotalCapacity: 20,
+  stationPickupSlotLimit: 12,
+  stationReturnSlotLimit: 18,
+} as const;
 
 describe("agency requests routing", () => {
   const fixture = setupHttpE2eFixture({
@@ -29,6 +38,9 @@ describe("agency requests routing", () => {
       );
     },
     seedData: async (_db, prisma) => {
+      const { upsertVietnamBoundary } = await import("../../../../prisma/seed-geo-boundary");
+      await upsertVietnamBoundary(prisma);
+
       await prisma.user.create({
         data: {
           id: ADMIN_USER_ID,
@@ -135,6 +147,7 @@ describe("agency requests routing", () => {
       agencyName: "Guest Agency Request",
       agencyAddress: "1 Guest Street",
       agencyContactPhone: "0987654321",
+      ...DEFAULT_STATION_REQUEST_FIELDS,
       description: "Guest request description",
     });
 
@@ -173,6 +186,7 @@ describe("agency requests routing", () => {
       requesterEmail: "user-agency@example.com",
       requesterPhone: "0911111111",
       agencyName: "User Agency Request",
+      ...DEFAULT_STATION_REQUEST_FIELDS,
     }, { token });
 
     const body = await response.json() as AgencyRequestsContracts.SubmitAgencyRequestResponse;
@@ -193,6 +207,7 @@ describe("agency requests routing", () => {
     const response = await submitAgencyRequest({
       requesterEmail: "minimal-agency@example.com",
       agencyName: "Minimal Agency Request",
+      ...DEFAULT_STATION_REQUEST_FIELDS,
     });
 
     const body = await response.json() as AgencyRequestsContracts.SubmitAgencyRequestResponse;
@@ -201,6 +216,8 @@ describe("agency requests routing", () => {
     expect(body.requesterPhone).toBeNull();
     expect(body.agencyAddress).toBeNull();
     expect(body.agencyContactPhone).toBeNull();
+    expect(body.stationName).toBe(DEFAULT_STATION_REQUEST_FIELDS.stationName);
+    expect(body.stationAddress).toBe(DEFAULT_STATION_REQUEST_FIELDS.stationAddress);
     expect(body.description).toBeNull();
 
     const saved = await fixture.prisma.agencyRequest.findUnique({
@@ -209,6 +226,8 @@ describe("agency requests routing", () => {
         requesterPhone: true,
         agencyAddress: true,
         agencyContactPhone: true,
+        stationName: true,
+        stationAddress: true,
         description: true,
       },
     });
@@ -217,6 +236,8 @@ describe("agency requests routing", () => {
       requesterPhone: null,
       agencyAddress: null,
       agencyContactPhone: null,
+      stationName: DEFAULT_STATION_REQUEST_FIELDS.stationName,
+      stationAddress: DEFAULT_STATION_REQUEST_FIELDS.stationAddress,
       description: null,
     });
   });
@@ -227,6 +248,7 @@ describe("agency requests routing", () => {
     const response = await submitAgencyRequest({
       requesterEmail: "not-an-email",
       agencyName: "Invalid Email Agency Request",
+      ...DEFAULT_STATION_REQUEST_FIELDS,
     });
 
     const body = await response.json() as {
@@ -250,6 +272,7 @@ describe("agency requests routing", () => {
     const response = await submitAgencyRequest({
       requesterEmail: "empty-name@example.com",
       agencyName: "",
+      ...DEFAULT_STATION_REQUEST_FIELDS,
     });
 
     const body = await response.json() as {
@@ -274,6 +297,7 @@ describe("agency requests routing", () => {
       requesterEmail: "invalid-phone@example.com",
       requesterPhone: "123",
       agencyName: "Invalid Phone Agency Request",
+      ...DEFAULT_STATION_REQUEST_FIELDS,
     });
 
     const body = await response.json() as {
@@ -397,7 +421,6 @@ describe("agency requests routing", () => {
       data: {
         id: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd306",
         name: "Detail Approved Agency",
-        address: "1 Detail Street",
         contactPhone: "0900000001",
       },
     });
@@ -427,6 +450,13 @@ describe("agency requests routing", () => {
         agencyName: "Detail Agency",
         agencyAddress: "99 Detail Avenue",
         agencyContactPhone: "0988888888",
+        stationName: "Ga Detail Agency",
+        stationAddress: "99 Detail Avenue",
+        stationLatitude: 10.8235,
+        stationLongitude: 106.7723,
+        stationTotalCapacity: 24,
+        stationPickupSlotLimit: 16,
+        stationReturnSlotLimit: 20,
         status: "APPROVED",
         description: "Approved after full review",
         reviewedByUserId: reviewedByUser.id,
@@ -473,6 +503,13 @@ describe("agency requests routing", () => {
         agencyName: "Provisioned Agency",
         agencyAddress: "12 Agency Street",
         agencyContactPhone: "0987654321",
+        stationName: "Ga Provisioned Agency",
+        stationAddress: "12 Agency Street",
+        stationLatitude: 10.8123,
+        stationLongitude: 106.7456,
+        stationTotalCapacity: 20,
+        stationPickupSlotLimit: 14,
+        stationReturnSlotLimit: 20,
         status: "PENDING",
         description: "Original requester note",
       },
@@ -500,9 +537,35 @@ describe("agency requests routing", () => {
     expect(savedAgency).toMatchObject({
       id: body.approvedAgencyId,
       name: "Provisioned Agency",
-      address: "12 Agency Street",
       contactPhone: "0987654321",
       status: "ACTIVE",
+    });
+
+    const savedStation = await fixture.prisma.station.findUnique({
+      where: { agencyId: body.approvedAgencyId! },
+      select: {
+        agencyId: true,
+        name: true,
+        address: true,
+        stationType: true,
+        latitude: true,
+        longitude: true,
+        totalCapacity: true,
+        pickupSlotLimit: true,
+        returnSlotLimit: true,
+      },
+    });
+
+    expect(savedStation).toEqual({
+      agencyId: body.approvedAgencyId,
+      name: "Ga Provisioned Agency",
+      address: "12 Agency Street",
+      stationType: "AGENCY",
+      latitude: expect.anything(),
+      longitude: expect.anything(),
+      totalCapacity: 20,
+      pickupSlotLimit: 14,
+      returnSlotLimit: 20,
     });
 
     const savedAgencyUser = await fixture.prisma.user.findUnique({

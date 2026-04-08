@@ -1,4 +1,5 @@
 import type { PageRequest } from "@/domain/shared/pagination";
+import type { StationType } from "generated/prisma/client";
 
 export type StationSortField = "name" | "totalCapacity" | "updatedAt";
 
@@ -6,6 +7,8 @@ export type StationRow = {
   id: string;
   name: string;
   address: string;
+  stationType: StationType;
+  agencyId: string | null;
   totalCapacity: number;
   pickupSlotLimit: number;
   returnSlotLimit: number;
@@ -28,6 +31,8 @@ export type StationRow = {
 export type CreateStationInput = {
   name: string;
   address: string;
+  stationType?: StationType;
+  agencyId?: string | null;
   totalCapacity: number;
   pickupSlotLimit?: number;
   returnSlotLimit?: number;
@@ -38,6 +43,8 @@ export type CreateStationInput = {
 export type UpdateStationInput = {
   name?: string;
   address?: string;
+  stationType?: StationType;
+  agencyId?: string | null;
   totalCapacity?: number;
   pickupSlotLimit?: number;
   returnSlotLimit?: number;
@@ -48,6 +55,8 @@ export type UpdateStationInput = {
 export type StationFilter = {
   name?: string;
   address?: string;
+  stationType?: StationType;
+  agencyId?: string;
   totalCapacity?: number;
   excludeAssignedStaff?: boolean;
 };

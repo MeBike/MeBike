@@ -26,7 +26,7 @@ const listAgencies: RouteHandler<AgenciesRoutes["adminList"]> = async (c) => {
     service.listAgencies(
       {
         name: query.name,
-        address: query.address,
+        stationAddress: query.stationAddress,
         contactPhone: query.contactPhone,
         status: query.status,
       },
@@ -85,7 +85,6 @@ const updateAgency: RouteHandler<AgenciesRoutes["adminUpdate"]> = async (c) => {
   const eff = Effect.flatMap(AgencyServiceTag, service =>
     service.updateAgency(id, {
       name: body.name,
-      address: body.address,
       contactPhone: body.contactPhone,
       status: body.status,
     }));

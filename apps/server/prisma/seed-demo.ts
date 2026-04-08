@@ -33,12 +33,14 @@ const DEMO_PASSWORD = "Demo@123456";
 
 const USERS_TARGET = 32;
 const RENTALS_TARGET = 120;
-const DEMO_NON_CUSTOMER_USERS = 6;
+const DEMO_NON_CUSTOMER_USERS = 7;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
-const DEMO_AGENCY_NORTH_ID = "019b17bd-d130-7e7d-be69-91ceef7b9007";
-const DEMO_AGENCY_SOUTH_ID = "019b17bd-d130-7e7d-be69-91ceef7b9008";
+const LEGACY_DEMO_AGENCY_IDS = [
+  "019b17bd-d130-7e7d-be69-91ceef7b9007",
+  "019b17bd-d130-7e7d-be69-91ceef7b9008",
+] as const;
 const DEMO_TECH_TEAM_A_ID = "019b17bd-d130-7e7d-be69-91ceef7b9005";
 const DEMO_TECH_TEAM_B_ID = "019b17bd-d130-7e7d-be69-91ceef7b9006";
 
@@ -214,10 +216,19 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
     },
     {
       id: uuidv7(),
-      fullname: "Demo Agency Operator",
+      fullname: "Demo Agency Operator 1",
       email: "agency1@mebike.local",
       phoneNumber: "0900000005",
       username: "demo_agency_1",
+      role: UserRole.AGENCY,
+      verify: UserVerifyStatus.VERIFIED,
+    },
+    {
+      id: uuidv7(),
+      fullname: "Demo Agency Operator 2",
+      email: "agency2@mebike.local",
+      phoneNumber: "0900000006",
+      username: "demo_agency_2",
       role: UserRole.AGENCY,
       verify: UserVerifyStatus.VERIFIED,
     },
@@ -586,19 +597,41 @@ async function main() {
       })),
     });
 
+    await prisma.userOrgAssignment.deleteMany({
+      where: {
+        agencyId: {
+          in: [...LEGACY_DEMO_AGENCY_IDS],
+        },
+      },
+    });
+
+    await prisma.$executeRaw`
+      UPDATE "Station"
+      SET
+        "station_type" = 'INTERNAL'::"station_type",
+        "agency_id" = NULL
+      WHERE "agency_id" IN (${LEGACY_DEMO_AGENCY_IDS[0]}::uuid, ${LEGACY_DEMO_AGENCY_IDS[1]}::uuid)
+    `;
+
+    await prisma.agency.deleteMany({
+      where: {
+        id: {
+          in: [...LEGACY_DEMO_AGENCY_IDS],
+        },
+      },
+    });
+
     const [mainAgency, eastAgency] = await Promise.all([
       prisma.agency.upsert({
         where: { id: DEMO_AGENCY_MAIN_ID },
         create: {
           id: DEMO_AGENCY_MAIN_ID,
           name: "Demo Agency Main",
-          address: "District 1, Ho Chi Minh City",
           contactPhone: "02873000001",
           status: "ACTIVE",
         },
         update: {
           name: "Demo Agency Main",
-          address: "District 1, Ho Chi Minh City",
           contactPhone: "02873000001",
           status: "ACTIVE",
         },
@@ -608,50 +641,38 @@ async function main() {
         create: {
           id: DEMO_AGENCY_EAST_ID,
           name: "Demo Agency East",
-          address: "Thu Duc City, Ho Chi Minh City",
           contactPhone: "02873000002",
           status: "ACTIVE",
         },
         update: {
           name: "Demo Agency East",
-          address: "Thu Duc City, Ho Chi Minh City",
           contactPhone: "02873000002",
           status: "ACTIVE",
         },
       }),
-      prisma.agency.upsert({
-        where: { id: DEMO_AGENCY_NORTH_ID },
-        create: {
-          id: DEMO_AGENCY_NORTH_ID,
-          name: "Demo Agency North",
-          address: "Go Vap, Ho Chi Minh City",
-          contactPhone: "02873000003",
-          status: "INACTIVE",
-        },
-        update: {
-          name: "Demo Agency North",
-          address: "Go Vap, Ho Chi Minh City",
-          contactPhone: "02873000003",
-          status: "INACTIVE",
-        },
-      }),
-      prisma.agency.upsert({
-        where: { id: DEMO_AGENCY_SOUTH_ID },
-        create: {
-          id: DEMO_AGENCY_SOUTH_ID,
-          name: "Demo Agency South",
-          address: "District 7, Ho Chi Minh City",
-          contactPhone: "02873000004",
-          status: "SUSPENDED",
-        },
-        update: {
-          name: "Demo Agency South",
-          address: "District 7, Ho Chi Minh City",
-          contactPhone: "02873000004",
-          status: "SUSPENDED",
-        },
-      }),
     ]);
+
+    await prisma.$executeRaw`
+      UPDATE "Station"
+      SET
+        "station_type" = 'INTERNAL'::"station_type",
+        "agency_id" = NULL
+    `;
+
+    const agencyOwnedStations = [
+      { stationId: stationIds[0], agencyId: mainAgency.id },
+      { stationId: stationIds[1], agencyId: eastAgency.id },
+    ].filter((item): item is { stationId: string; agencyId: string } => Boolean(item.stationId));
+
+    for (const item of agencyOwnedStations) {
+      await prisma.$executeRaw`
+        UPDATE "Station"
+        SET
+          "station_type" = 'AGENCY'::"station_type",
+          "agency_id" = ${item.agencyId}::uuid
+        WHERE "id" = ${item.stationId}::uuid
+      `;
+    }
 
     const technicianTeams = await Promise.all(
       stationRows.map((station, index) => prisma.technicianTeam.upsert({
@@ -703,7 +724,7 @@ async function main() {
         technicianTeamId: null,
       },
       {
-        user: userByEmail.get("admin@mebike.local"),
+        user: userByEmail.get("agency2@mebike.local"),
         stationId: null,
         agencyId: eastAgency.id,
         technicianTeamId: null,
@@ -856,15 +877,18 @@ async function main() {
     const staff1 = users.find(user => user.email === "staff1@mebike.local");
     const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
+    const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
 
-    if (user01 && staff1 && staff1Assignment?.stationId && user01ActiveRental?.bikeId) {
+    if (user01 && staff1 && (mainAgencyStationId ?? staff1Assignment?.stationId) && user01ActiveRental?.bikeId) {
+      const bikeSwapStationId = mainAgencyStationId ?? staff1Assignment!.stationId!;
+
       await prisma.bikeSwapRequest.create({
         data: {
           id: uuidv7(),
           rentalId: user01ActiveRental.id,
           userId: user01.id,
           oldBikeId: user01ActiveRental.bikeId,
-          stationId: staff1Assignment.stationId,
+          stationId: bikeSwapStationId,
           status: BikeSwapStatus.PENDING,
           reason: null,
           createdAt: new Date(Date.now() - 5 * 60 * 1000),
@@ -876,7 +900,7 @@ async function main() {
         {
           bikeSwapRequestFor: user01.email,
           handledBy: staff1.email,
-          stationId: staff1Assignment.stationId,
+          stationId: bikeSwapStationId,
         },
         "Seeded demo pending bike swap request",
       );
@@ -909,6 +933,7 @@ async function main() {
         staff: "staff1@mebike.local",
         manager: "manager@mebike.local",
         agency: "agency1@mebike.local",
+        agency2: "agency2@mebike.local",
         technician: "tech1@mebike.local",
         user: "user01@mebike.local",
         password: DEMO_PASSWORD,

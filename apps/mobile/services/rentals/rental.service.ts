@@ -93,8 +93,8 @@ async function tryGetCurrentReturnSlot(rentalId: string): Promise<ReturnSlotRese
       const okSchema = ServerRoutes.rentals.getMyCurrentReturnSlot.responses[200].content["application/json"].schema;
       const result = await decodeRentalResponse(
         response,
-        okSchema as z.ZodType<{ result: ReturnSlotReservation }>,
-        value => value.result,
+        okSchema as z.ZodType<ReturnSlotReservation>,
+        value => value,
       );
       return result.ok ? result.value : null;
     }
@@ -261,8 +261,8 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.getMyCurrentReturnSlot.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
-          okSchema as z.ZodType<{ result: ReturnSlotReservation }>,
-          value => value.result,
+          okSchema as z.ZodType<ReturnSlotReservation>,
+          value => value,
         );
       }
 
@@ -288,8 +288,8 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.createMyReturnSlot.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
-          okSchema as z.ZodType<{ result: ReturnSlotReservation }>,
-          value => value.result,
+          okSchema as z.ZodType<ReturnSlotReservation>,
+          value => value,
         );
       }
 
@@ -311,8 +311,8 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.getMyRentalCounts.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
-          okSchema as z.ZodType<{ result: RentalCounts }>,
-          value => value.result,
+          okSchema as z.ZodType<RentalCounts>,
+          value => value,
         );
       }
 
@@ -361,13 +361,13 @@ export const rentalServiceV1 = {
     params: BikeSwapRequestListParams = {},
   ): Promise<Result<BikeSwapRequestListResponse, RentalError>> => {
     try {
-      const response = await kyClient.get(routePath(ServerRoutes.rentals.staffListBikeSwapRequests), {
+      const response = await kyClient.get(routePath(ServerRoutes.rentals.operatorListBikeSwapRequests), {
         searchParams: toSearchParams(params),
         throwHttpErrors: false,
       });
 
       if (response.status === StatusCodes.OK) {
-        const okSchema = ServerRoutes.rentals.staffListBikeSwapRequests.responses[200].content["application/json"].schema;
+        const okSchema = ServerRoutes.rentals.operatorListBikeSwapRequests.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
           okSchema as z.ZodType<BikeSwapRequestListResponse>,
@@ -441,13 +441,13 @@ export const rentalServiceV1 = {
     bikeSwapRequestId: string,
   ): Promise<Result<BikeSwapRequestDetail, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.staffGetBikeSwapRequests, {
+      const path = routePath(ServerRoutes.rentals.operatorGetBikeSwapRequests, {
         bikeSwapRequestId,
       });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
       if (response.status === StatusCodes.OK) {
-        const okSchema = ServerRoutes.rentals.staffGetBikeSwapRequests.responses[200].content["application/json"].schema;
+        const okSchema = ServerRoutes.rentals.operatorGetBikeSwapRequests.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
           okSchema as z.ZodType<{ result: BikeSwapRequestDetail }>,
@@ -466,7 +466,7 @@ export const rentalServiceV1 = {
     bikeSwapRequestId: string,
   ): Promise<Result<BikeSwapRequestDetail, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.approveBikeSwapRequest, {
+      const path = routePath(ServerRoutes.rentals.operatorApproveBikeSwapRequest, {
         bikeSwapRequestId,
       });
 
@@ -475,7 +475,7 @@ export const rentalServiceV1 = {
       });
 
       if (response.status === StatusCodes.OK) {
-        const okSchema = ServerRoutes.rentals.approveBikeSwapRequest.responses[200].content["application/json"].schema;
+        const okSchema = ServerRoutes.rentals.operatorApproveBikeSwapRequest.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
           okSchema as z.ZodType<{ result: BikeSwapRequestDetail }>,
@@ -495,7 +495,7 @@ export const rentalServiceV1 = {
     payload: RejectBikeSwapRequestPayload,
   ): Promise<Result<BikeSwapRequestDetail, RentalError>> => {
     try {
-      const path = routePath(ServerRoutes.rentals.rejectBikeSwapRequest, {
+      const path = routePath(ServerRoutes.rentals.operatorRejectBikeSwapRequest, {
         bikeSwapRequestId,
       });
 
@@ -505,7 +505,7 @@ export const rentalServiceV1 = {
       });
 
       if (response.status === StatusCodes.OK) {
-        const okSchema = ServerRoutes.rentals.rejectBikeSwapRequest.responses[200].content["application/json"].schema;
+        const okSchema = ServerRoutes.rentals.operatorRejectBikeSwapRequest.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
           okSchema as z.ZodType<{ result: BikeSwapRequestDetail }>,

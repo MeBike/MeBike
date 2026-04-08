@@ -20,6 +20,13 @@ export type AgencyRequestRow = {
   readonly agencyName: string;
   readonly agencyAddress: string | null;
   readonly agencyContactPhone: string | null;
+  readonly stationName: string | null;
+  readonly stationAddress: string | null;
+  readonly stationLatitude: number | null;
+  readonly stationLongitude: number | null;
+  readonly stationTotalCapacity: number | null;
+  readonly stationPickupSlotLimit: number | null;
+  readonly stationReturnSlotLimit: number | null;
   readonly status: AgencyRequestStatus;
   readonly description: string | null;
   readonly reviewedByUserId: string | null;
@@ -41,6 +48,13 @@ export type SubmitAgencyRequestInput = {
   readonly agencyName: string;
   readonly agencyAddress?: string | null;
   readonly agencyContactPhone?: string | null;
+  readonly stationName: string;
+  readonly stationAddress: string;
+  readonly stationLatitude: number;
+  readonly stationLongitude: number;
+  readonly stationTotalCapacity: number;
+  readonly stationPickupSlotLimit?: number | null;
+  readonly stationReturnSlotLimit?: number | null;
   readonly description?: string | null;
 };
 

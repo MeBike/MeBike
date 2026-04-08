@@ -53,6 +53,7 @@ export const listIncidents = createRoute({
         },
       },
     },
+    403: unauthorizedResponse(),
     401: unauthorizedResponse(),
   },
 });
@@ -98,6 +99,7 @@ export const getIncident = createRoute({
         },
       },
     },
+    403: unauthorizedResponse(),
     401: unauthorizedResponse(),
   },
 });

@@ -13,6 +13,13 @@ model AgencyRequest {
   agencyName          String              @map("agency_name")
   agencyAddress       String?             @map("agency_address")
   agencyContactPhone  String?             @map("agency_contact_phone")
+  stationName         String?             @map("station_name")
+  stationAddress      String?             @map("station_address")
+  stationLatitude     Decimal?            @map("station_latitude") @db.Decimal(10, 7)
+  stationLongitude    Decimal?            @map("station_longitude") @db.Decimal(10, 7)
+  stationTotalCapacity Int?               @map("station_total_capacity")
+  stationPickupSlotLimit Int?             @map("station_pickup_slot_limit")
+  stationReturnSlotLimit Int?             @map("station_return_slot_limit")
   status              AgencyRequestStatus @default(PENDING)
   description         String?
   reviewedByUserId    String?             @map("reviewed_by_user_id") @db.Uuid

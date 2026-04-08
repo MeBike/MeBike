@@ -9,6 +9,8 @@ export function toContractStationReadSummary(
     id: station.id,
     name: station.name,
     address: station.address,
+    stationType: station.stationType,
+    agencyId: station.agencyId,
     location: {
       latitude: station.latitude,
       longitude: station.longitude,

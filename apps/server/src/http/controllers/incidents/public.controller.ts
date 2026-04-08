@@ -1,6 +1,10 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 import type { IncidentsContracts } from "@mebike/shared";
 
+import {
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+} from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import type { IncidentStatus } from "generated/kysely/types";
@@ -14,11 +18,24 @@ import type { IncidentRoutes, IncidentSummary } from "./shared";
 
 import { IncidentErrorCodeSchema, incidentErrorMessages } from "./shared";
 
+function respondUnauthorized(c: Parameters<RouteHandler<any>>[0]) {
+  return c.json(
+    {
+      error: unauthorizedErrorMessages.UNAUTHORIZED,
+      details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+    },
+    c.var.authFailure === "forbidden" ? 403 : 401,
+  );
+}
+
 const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   c,
 ) => {
   const user = c.var.currentUser;
   const query = c.req.valid("query");
+  if (!user) {
+    return respondUnauthorized(c);
+  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -29,7 +46,9 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
           rentalId: query.rentalId,
           stationId: query.stationId,
           status: query.status as IncidentStatus,
-          userId: user?.role === "ADMIN" ? undefined : user?.userId,
+          userId: user?.role === "ADMIN"
+            ? undefined
+            : user?.userId,
         },
         {
           page: query.page ?? 1,
@@ -60,6 +79,9 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
 const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
   const user = c.var.currentUser;
   const { incidentId } = c.req.valid("param");
+  if (!user) {
+    return respondUnauthorized(c);
+  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -75,7 +97,9 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) => c.json(right, 200)),
+    Match.tag("Right", ({ right }) => {
+      return c.json(right, 200);
+    }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("IncidentNotFound", () =>
@@ -112,8 +136,18 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
 const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
   c,
 ) => {
-  const userId = c.var.currentUser!.userId;
-  const currentRole = c.var.currentUser!.role;
+  const currentUser = c.var.currentUser;
+  if (!currentUser) {
+    return c.json(
+      {
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      },
+      401,
+    );
+  }
+  const userId = currentUser.userId;
+  const currentRole = currentUser.role;
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
@@ -225,6 +259,19 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
             },
             400,
           )),
+        Match.tag("IncidentInternalStationRequired", ({ stationId, stationType }) =>
+          c.json(
+            {
+              error: incidentErrorMessages.INCIDENT_INTERNAL_STATION_REQUIRED,
+              details: {
+                code: IncidentErrorCodeSchema.enum
+                  .INCIDENT_INTERNAL_STATION_REQUIRED,
+                stationId,
+                stationType,
+              },
+            },
+            400,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
@@ -236,7 +283,17 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
 const updateIncident: RouteHandler<IncidentRoutes["updateIncident"]> = async (
   c,
 ) => {
-  const userId = c.var.currentUser!.userId;
+  const currentUser = c.var.currentUser;
+  if (!currentUser) {
+    return c.json(
+      {
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      },
+      401,
+    );
+  }
+  const userId = currentUser.userId;
   const { incidentId } = c.req.valid("param");
   const body = c.req.valid("json");
 

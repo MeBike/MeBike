@@ -22,7 +22,6 @@ export function makeAgencyWriteRepository(
           client.agency.create({
             data: {
               name: input.name,
-              address: input.address ?? null,
               contactPhone: input.contactPhone ?? null,
               status: input.status ?? "ACTIVE",
             },
@@ -55,7 +54,6 @@ export function makeAgencyWriteRepository(
               where: { id },
               data: {
                 ...(input.name !== undefined ? { name: input.name } : {}),
-                ...(input.address !== undefined ? { address: input.address } : {}),
                 ...(input.contactPhone !== undefined
                   ? { contactPhone: input.contactPhone }
                   : {}),

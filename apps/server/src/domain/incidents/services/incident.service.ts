@@ -31,6 +31,7 @@ import type {
 
 import {
   ActiveIncidentAlreadyExists,
+  IncidentInternalStationRequired,
   IncidentNotFound,
   InvalidIncidentStatus,
   UnauthorizedIncidentAccess,
@@ -67,6 +68,7 @@ export type IncidentService = {
     | BikeNotAvailable
     | NoAvailableTechnicianFound
     | ActiveIncidentAlreadyExists
+    | IncidentInternalStationRequired
     | StationNotFound
   >;
 
@@ -293,6 +295,15 @@ export const IncidentServiceLive = Layer.effect(
                 new StationNotFound({ id: data.stationId }),
               );
             }
+
+            if (station.value.stationType !== "INTERNAL") {
+              return yield* Effect.fail(
+                new IncidentInternalStationRequired({
+                  stationId: data.stationId,
+                  stationType: station.value.stationType,
+                }),
+              );
+            }
           }
 
           return yield* repo.create({
@@ -324,6 +335,16 @@ export const IncidentServiceLive = Layer.effect(
                 id: data.stationId!,
               }),
             )),
+          Effect.catchTag(
+            "IncidentInternalStationRequired",
+            ({ stationId, stationType }) =>
+              Effect.fail(
+                new IncidentInternalStationRequired({
+                  stationId,
+                  stationType,
+                }),
+              ),
+          ),
           Effect.catchTag("IncidentRepositoryError", error =>
             Effect.die(error)),
         ),

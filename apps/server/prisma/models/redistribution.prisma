@@ -16,7 +16,6 @@ model RedistributionRequest {
   approvedByUserId  String?              @map("approved_by_user_id") @db.Uuid
   sourceStationId   String               @map("source_station_id") @db.Uuid
   targetStationId   String?              @map("target_station_id") @db.Uuid
-  targetAgencyId    String?              @map("target_agency_id") @db.Uuid
   reason            String?
   status            RedistributionStatus @default(PENDING_APPROVAL)
   startedAt         DateTime?            @map("started_at") @db.Timestamptz
@@ -28,14 +27,12 @@ model RedistributionRequest {
   approvedByUser  User?                 @relation("RedistributionRequestApprovedByUser", fields: [approvedByUserId], references: [id])
   sourceStation   Station               @relation("RedistributionRequestSourceStation", fields: [sourceStationId], references: [id])
   targetStation   Station?              @relation("RedistributionRequestTargetStation", fields: [targetStationId], references: [id])
-  targetAgency    Agency?               @relation("RedistributionRequestTargetAgency", fields: [targetAgencyId], references: [id])
   items           RedistributionRequestItem[]
 
   @@index([requestedByUserId], name: "idx_redistribution_requests_requested_by")
   @@index([approvedByUserId], name: "idx_redistribution_requests_approved_by")
   @@index([sourceStationId], name: "idx_redistribution_requests_source_station")
   @@index([targetStationId], name: "idx_redistribution_requests_target_station")
-  @@index([targetAgencyId], name: "idx_redistribution_requests_target_agency")
   @@index([status], name: "idx_redistribution_requests_status")
   @@map("redistribution_requests")
 }

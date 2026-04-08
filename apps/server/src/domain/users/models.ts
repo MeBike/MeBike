@@ -7,6 +7,7 @@ export type OrgUnitRef = {
 
 export type AgencyOrgUnitRef = OrgUnitRef & {
   readonly status: AccountStatus;
+  readonly stationId: string | null;
 };
 
 export type UserOrgAssignment = {

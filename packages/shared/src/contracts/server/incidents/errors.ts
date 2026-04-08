@@ -13,6 +13,7 @@ export const incidentErrorCodes = [
   "NO_AVAILABLE_TECHNICIAN_FOUND",
   "UNAUTHORIZED_INCIDENT_ACCESS",
   "ACTIVE_INCIDENT_ALREADY_EXISTS",
+  "INCIDENT_INTERNAL_STATION_REQUIRED",
 ] as const;
 
 export const IncidentErrorCodeSchema = z.enum(incidentErrorCodes);
@@ -22,6 +23,7 @@ export const IncidentErrorDetailSchema = ServerErrorDetailSchema.extend({
   incidentId: z.uuidv7().optional(),
   status: z.string().optional(),
   stationId: z.uuidv7().optional(),
+  stationType: z.string().optional(),
 }).openapi({
   description: "Incident-specific error detail",
   example: {
@@ -74,4 +76,5 @@ export const incidentErrorMessages: Record<IncidentErrorCode, string> = {
   NO_AVAILABLE_TECHNICIAN_FOUND: "No available technician found",
   UNAUTHORIZED_INCIDENT_ACCESS: "Unauthorized incident access",
   ACTIVE_INCIDENT_ALREADY_EXISTS: "An active incident already exists for this bike, rental, or station",
+  INCIDENT_INTERNAL_STATION_REQUIRED: "Incidents are only supported at internal stations",
 };

@@ -101,21 +101,18 @@ describe("admin agencies routing e2e", () => {
         {
           id: "019621f8-e58d-7c57-81fc-0db054f1f101",
           name: "Alpha Agency",
-          address: "District 1",
           contactPhone: "0281111111",
           status: "ACTIVE",
         },
         {
           id: "019621f8-e58d-7c57-81fc-0db054f1f102",
           name: "Beta Agency",
-          address: "District 2",
           contactPhone: "0282222222",
           status: "INACTIVE",
         },
         {
           id: "019621f8-e58d-7c57-81fc-0db054f1f103",
           name: "Gamma Agency",
-          address: "District 3",
           contactPhone: "0283333333",
           status: "ACTIVE",
         },
@@ -149,7 +146,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f111",
         name: "Detail Agency",
-        address: "District 5",
         contactPhone: "0285555555",
         status: "SUSPENDED",
       },
@@ -165,9 +161,9 @@ describe("admin agencies routing e2e", () => {
     expect(body).toEqual({
       id: agency.id,
       name: "Detail Agency",
-      address: "District 5",
       contactPhone: "0285555555",
       status: "SUSPENDED",
+      station: null,
       createdAt: agency.createdAt.toISOString(),
       updatedAt: agency.updatedAt.toISOString(),
     });
@@ -178,7 +174,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f121",
         name: "Legacy Agency",
-        address: "District 9",
         contactPhone: "0281234567",
         status: "ACTIVE",
       },
@@ -188,7 +183,6 @@ describe("admin agencies routing e2e", () => {
       agency.id,
       {
         name: "Updated Agency Name",
-        address: "12 Nguyen Hue, District 1",
         contactPhone: "0912345678",
         status: "INACTIVE",
       },
@@ -200,9 +194,9 @@ describe("admin agencies routing e2e", () => {
     expect(body).toMatchObject({
       id: agency.id,
       name: "Updated Agency Name",
-      address: "12 Nguyen Hue, District 1",
       contactPhone: "0912345678",
       status: "INACTIVE",
+      station: null,
     });
 
     const saved = await fixture.prisma.agency.findUnique({
@@ -210,7 +204,6 @@ describe("admin agencies routing e2e", () => {
       select: {
         id: true,
         name: true,
-        address: true,
         contactPhone: true,
         status: true,
       },
@@ -219,7 +212,6 @@ describe("admin agencies routing e2e", () => {
     expect(saved).toEqual({
       id: agency.id,
       name: "Updated Agency Name",
-      address: "12 Nguyen Hue, District 1",
       contactPhone: "0912345678",
       status: "INACTIVE",
     });
@@ -230,7 +222,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f122",
         name: "Clearable Agency",
-        address: "District 7",
         contactPhone: "0911222333",
         status: "ACTIVE",
       },
@@ -239,7 +230,6 @@ describe("admin agencies routing e2e", () => {
     const response = await updateAgency(
       agency.id,
       {
-        address: "   ",
         contactPhone: "   ",
       },
       { userId: ADMIN_USER_ID, role: "ADMIN" },
@@ -247,19 +237,17 @@ describe("admin agencies routing e2e", () => {
     const body = await response.json() as AgenciesContracts.AgencyUpdateResponse;
 
     expect(response.status).toBe(200);
-    expect(body.address).toBeNull();
     expect(body.contactPhone).toBeNull();
+    expect(body.station).toBeNull();
 
     const saved = await fixture.prisma.agency.findUnique({
       where: { id: agency.id },
       select: {
-        address: true,
         contactPhone: true,
       },
     });
 
     expect(saved).toEqual({
-      address: null,
       contactPhone: null,
     });
   });
@@ -269,7 +257,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f127",
         name: "Status Agency",
-        address: "District 8",
         contactPhone: "0281010101",
         status: "ACTIVE",
       },
@@ -288,9 +275,9 @@ describe("admin agencies routing e2e", () => {
     expect(body).toMatchObject({
       id: agency.id,
       name: "Status Agency",
-      address: "District 8",
       contactPhone: "0281010101",
       status: "BANNED",
+      station: null,
     });
 
     const saved = await fixture.prisma.agency.findUnique({
@@ -400,7 +387,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f123",
         name: "Validation Agency",
-        address: "District 4",
         contactPhone: "0284444444",
         status: "ACTIVE",
       },
@@ -432,7 +418,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f128",
         name: "Status Validation Agency",
-        address: "District 6",
         contactPhone: "0282020202",
         status: "ACTIVE",
       },
@@ -460,7 +445,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f124",
         name: "Empty Body Agency",
-        address: "District 11",
         contactPhone: "0287777777",
         status: "ACTIVE",
       },
@@ -495,7 +479,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f125",
         name: "Forbidden Update Agency",
-        address: "District 12",
         contactPhone: "0288888888",
         status: "ACTIVE",
       },
@@ -515,7 +498,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f129",
         name: "Forbidden Status Agency",
-        address: "District 2",
         contactPhone: "0283030303",
         status: "ACTIVE",
       },
@@ -535,7 +517,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f112",
         name: "Forbidden Agency",
-        address: "District 10",
         contactPhone: "0286666666",
         status: "ACTIVE",
       },
@@ -554,7 +535,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f126",
         name: "Auth Update Agency",
-        address: "Binh Thanh",
         contactPhone: "0289999999",
         status: "ACTIVE",
       },
@@ -570,7 +550,6 @@ describe("admin agencies routing e2e", () => {
       data: {
         id: "019621f8-e58d-7c57-81fc-0db054f1f130",
         name: "Auth Status Agency",
-        address: "Phu Nhuan",
         contactPhone: "0284040404",
         status: "ACTIVE",
       },

@@ -11,6 +11,7 @@ import type {
 } from "@/domain/bikes";
 
 type BikeRating = BikesContracts.BikeSummary["rating"];
+type BikeStation = BikesContracts.BikeSummary["station"];
 type BikeSupplier = BikesContracts.BikeSummary["supplier"];
 
 const defaultBikeRating: BikeRating = {
@@ -21,6 +22,7 @@ const defaultBikeRating: BikeRating = {
 export function toBikeSummary(
   row: BikeRow,
   rating: BikeRating = defaultBikeRating,
+  station: BikeStation = null,
   supplier: BikeSupplier = null,
 ): BikesContracts.BikeSummary {
   return {
@@ -28,6 +30,7 @@ export function toBikeSummary(
     bikeNumber: row.bikeNumber,
     chipId: row.chipId,
     stationId: row.stationId,
+    station,
     supplier,
     status: row.status,
     rating,

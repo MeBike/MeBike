@@ -23,7 +23,6 @@ import type { RentalRow } from "../models";
 import {
   BikeNotFound,
   InsufficientBalanceToRent,
-  ReturnSlotRequiredForReturn,
   UserWalletNotFound,
 } from "../domain-errors";
 import { computeSubscriptionCoverage } from "../pricing";
@@ -175,17 +174,11 @@ export function finalizeRentalReturnInTx(
       return yield* Effect.fail(new BikeNotFound({ bikeId }));
     }
 
-    const finalizedReturnSlot = yield* txReturnSlotRepo.finalizeActiveByRentalId(
+    yield* txReturnSlotRepo.finalizeActiveByRentalId(
       rental.id,
       "USED",
       endTime,
     );
-    if (Option.isNone(finalizedReturnSlot)) {
-      return yield* Effect.fail(new ReturnSlotRequiredForReturn({
-        rentalId: rental.id,
-        endStationId,
-      }));
-    }
 
     const updatedRental = yield* txRentalRepo.updateRentalOnEnd({
       rentalId: rental.id,

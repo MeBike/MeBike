@@ -216,7 +216,6 @@ export type ReturnConfirmationRow = {
   id: string;
   rentalId: string;
   stationId: string | null;
-  agencyId: string | null;
   confirmedByUserId: string;
   confirmationMethod: ConfirmationMethod;
   handoverStatus: HandoverStatus;

@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 
 import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
+import { useAuthNext } from "@/providers/auth-provider-next";
 
 type EndRentalPayload = {
   stationId: string;
@@ -19,6 +20,7 @@ type EndRentalCallbacks = {
 
 export function useStaffRentalDetailScreen(rentalId: string) {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { user } = useAuthNext();
 
   const {
     data: booking,
@@ -28,6 +30,7 @@ export function useStaffRentalDetailScreen(rentalId: string) {
   } = useStaffRentalDetailQuery(rentalId, true);
 
   const endRentalMutation = useStaffEndRentalMutation();
+  const operatorStation = user?.orgAssignment?.station ?? null;
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -42,21 +45,14 @@ export function useStaffRentalDetailScreen(rentalId: string) {
   const handleEndRental = useCallback(
     ({ stationId, reason, confirmationMethod, confirmedAt }: EndRentalPayload, callbacks?: EndRentalCallbacks) => {
       const returnSlot = booking?.returnSlot;
+      const resolvedStationId = stationId || returnSlot?.station.id || operatorStation?.id || "";
 
-      if (!returnSlot) {
-        Alert.alert(
-          "Chưa có chỗ trả xe",
-          "Khách cần đặt chỗ trả xe trước khi nhân viên có thể kết thúc phiên này.",
-        );
-        return;
-      }
-
-      if (!stationId) {
+      if (!resolvedStationId) {
         Alert.alert("Thiếu thông tin", "Vui lòng chọn trạm kết thúc.");
         return;
       }
 
-      if (stationId !== returnSlot.station.id) {
+      if (returnSlot && resolvedStationId !== returnSlot.station.id) {
         Alert.alert(
           "Sai trạm trả xe",
           `Phiên này chỉ có thể kết thúc tại ${returnSlot.station.name} vì đó là trạm khách đã giữ chỗ.`,
@@ -67,7 +63,7 @@ export function useStaffRentalDetailScreen(rentalId: string) {
       endRentalMutation.mutate(
         {
           rentalId,
-          stationId,
+          stationId: resolvedStationId,
           reason,
           confirmationMethod: confirmationMethod ?? "MANUAL",
           confirmedAt,
@@ -84,7 +80,7 @@ export function useStaffRentalDetailScreen(rentalId: string) {
         },
       );
     },
-    [booking?.returnSlot, endRentalMutation, rentalId],
+    [booking?.returnSlot, endRentalMutation, operatorStation?.id, rentalId],
   );
 
   return {
@@ -93,6 +89,7 @@ export function useStaffRentalDetailScreen(rentalId: string) {
     isEndingRental: endRentalMutation.isPending,
     isError,
     isInitialLoading: isRentalLoading,
+    operatorStation,
     isRefreshing,
     onRefresh,
   };
