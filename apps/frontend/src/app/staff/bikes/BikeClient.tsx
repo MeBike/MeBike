@@ -3,15 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useBikeActions } from "@/hooks/use-bike";
 import { useStationActions } from "@/hooks/use-station";
-import { useSupplierActions } from "@/hooks/use-supplier";
-import { bikeColumn } from "@/columns/bike-colums";
+import { bikeColumnForStaff } from "@/columns/bike-colums";
 import { BikeStatus } from "@custom-types";
-import { BikeStats } from "./components/bike-stats";
 import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
 export default function BikeClient() {
@@ -19,13 +17,9 @@ export default function BikeClient() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const { stations } = useStationActions({ hasToken: true });
-  const { allSupplier } = useSupplierActions({ hasToken: true });
   const {
     data,
-    statisticData,
-    isLoadingStatistics,
     paginationBikes,
-    getStatisticsBike,
     isLoadingBikes,
   } = useBikeActions({
     hasToken: true,
@@ -43,14 +37,10 @@ export default function BikeClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoadingBikes]);
-  useEffect(() => {
-    getStatisticsBike();
-  }, [getStatisticsBike]);
-  useEffect(() => {
+  }, [isLoadingBikes]);  useEffect(() => {
     setPage(1);
   }, [statusFilter]);
-  if (isLoadingStatistics) return <Loader2 className="animate-spin m-auto" />;
+
 
   return (
     <div className="space-y-6">
@@ -60,7 +50,6 @@ export default function BikeClient() {
           <Plus className="w-4 h-4 mr-2" /> Thêm xe
         </Button>
       </div>
-      {statisticData && <BikeStats stats={statisticData} />}
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
@@ -76,11 +65,10 @@ export default function BikeClient() {
               {paginationBikes?.totalPages ?? 1} trang
             </p>
             <DataTable
-              columns={bikeColumn({
-                onView: ({ id }) => router.push(`/admin/bikes/detail/${id}`),
+              columns={bikeColumnForStaff({
+                onView: ({ id }) => router.push(`/admin/bikes/${id}`),
                 onEdit: ({ id }) => router.push(`/admin/bikes/${id}?edit=true`),
                 stations,
-                suppliers: allSupplier?.data || [],
               })}
               data={data?.data || []}
             />

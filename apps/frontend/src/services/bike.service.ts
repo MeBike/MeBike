@@ -38,10 +38,15 @@ export const bikeService = {
     const response = await fetchHttpClient.delete(ENDPOINT.BIKE.ID(id));
     return response;
   },
+  
   //for both admin and staf
-  getHistoryBikeById: async (id: string): Promise<AxiosResponse<BikeRentalHistory>> => {
-    const response = await fetchHttpClient.get<BikeRentalHistory>(
-      ENDPOINT.BIKE.RENTAL_HISTORY(id)
+  getHistoryBikeById: async (id: string): Promise<AxiosResponse<ApiResponse<BikeRentalHistory[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<BikeRentalHistory[]>>(
+      ENDPOINT.BIKE.RENTAL_HISTORY(id),
+      {
+        page:1,
+        pageSize : 10,
+      }
     );
     return response;
   },

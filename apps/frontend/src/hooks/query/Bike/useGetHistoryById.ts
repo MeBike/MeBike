@@ -4,5 +4,6 @@ export const useGetHistoryByIdQuery = (id: string) => {
     return useQuery({
         queryKey: ["bikes", "history", id],
         queryFn: () => bikeService.getHistoryBikeById(id),
+        enabled : !!id,
     })
 }

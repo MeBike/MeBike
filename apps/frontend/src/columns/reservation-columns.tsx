@@ -1,7 +1,13 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit2, Eye, RefreshCw } from "lucide-react";
 import type { Reservation } from "@/types/Reservation";
+import { Button } from "@/components/ui/button";
 import type { Station } from "@/types/Station";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatToVNTime } from "@/lib/formatVNDate";
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
@@ -194,42 +200,26 @@ export const reservationColumnForStaff = ({
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original.id });
-            }
-          }}
-        >
-          <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
-        {/* {row.original.status !== "CANCELLED" &&
-        row.original.status !== "EXPIRED" &&
-        onEdit ? (
-          <div>
-            <button
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-              title="Chỉnh sửa"
-              onClick={() => {
-                if (onEdit) {
-                  onEdit({ data: row.original });
-                }
-              }}
-            >
-              <Edit2 className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <button
-              title="Cập nhật trạng thái"
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-              onClick={() => onUpdateStatus?.(row.original)}
-            >
-              <RefreshCw className="w-4 h-4 text-blue-500" />
-            </button>
-          </div>
-        ) : null} */}
+      <div className="flex items-center gap-0">
+        <div className="pl-4.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label="Xem chi tiết"
+                onClick={() => {
+                  onView?.({ id: row.original.id });
+                }}
+              >
+                <Eye className="text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xem chi tiết</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     ),
   },

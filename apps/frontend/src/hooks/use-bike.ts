@@ -17,6 +17,7 @@ import {
   useGetBikeByIDAllQuery,
   useGetRentalBikeQuery,
   useGetStatisticsBikeQuery,
+  useGetHistoryByIdQuery,
 } from "@queries";
 import { HTTP_STATUS } from "@constants";
 import { getErrorMessageFromBikeCode, getAxiosErrorCodeMessage } from "@utils";
@@ -30,6 +31,16 @@ export const useBikeActions = ({
   page,
 }: BikeActionProps) => {
   const router = useRouter();
+  const {data : bikeHistory , refetch : refetchGetBikeHistory ,
+    isLoading : isLoadingGetBikeHistory
+  } = useGetHistoryByIdQuery(bike_detail_id || "");
+   const getHistoryBike = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchGetBikeHistory();
+  }, [refetchGetBikeHistory, hasToken, router]);
   const {
     data: bikeActivityStats,
     refetch: refetchGetBikeActivityStats,
@@ -255,5 +266,9 @@ export const useBikeActions = ({
     isFetchingRentalBikes,
     totalRecord: data?.pagination.totalRecords || 0,
     isLoadingBikes,
+    getHistoryBike,
+    bikeHistory:bikeHistory,
+    isLoadingGetBikeHistory
+
   };
 };
