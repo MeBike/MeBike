@@ -100,13 +100,6 @@ const agencyGetBikeSwapRequests: RouteHandler<
             404,
           )),
 
-        Match.tag("RentalRepositoryError", () =>
-          c.json(
-            {
-              error: "Internal Server Error",
-            },
-            500,
-          )),
         Match.orElse((e) => {
           throw e;
         }),
@@ -188,20 +181,6 @@ const agencyApproveBikeSwapRequestHandler: RouteHandler<
             },
             400,
           )),
-        Match.tag("PrismaTransactionError", () =>
-          c.json(
-            {
-              error: "Internal Server Error",
-            },
-            500,
-          )),
-        Match.tag("RentalRepositoryError", () =>
-          c.json(
-            {
-              error: "Internal Server Error",
-            },
-            500,
-          )),
         Match.orElse((e) => {
           throw e;
         }),
@@ -273,13 +252,6 @@ const agencyRejectBikeSwapRequestHandler: RouteHandler<
               },
             },
             400,
-          )),
-        Match.tag("RentalRepositoryError", () =>
-          c.json(
-            {
-              error: "Internal Server Error",
-            },
-            500,
           )),
         Match.orElse((e) => {
           throw e;
