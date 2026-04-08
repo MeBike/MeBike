@@ -185,6 +185,14 @@ export const MyRentalListResponseSchema = z
     description: "Paginated user rental list",
   });
 
+/**
+ * @deprecated Legacy rentals success envelope.
+ * Do not use for new routes.
+ *
+ * Preferred response shapes:
+ * - single resource / mutation result: `{ data: ... }`
+ * - list result: `{ data: [...], pagination: ... }`
+ */
 export function createSuccessResponse<T extends z.ZodType>(
   dataSchema: T,
   description: string,

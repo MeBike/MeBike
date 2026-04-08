@@ -321,10 +321,7 @@ const getMyRentalCounts: RouteHandler<
   );
 
   const result = await c.var.runPromise(eff);
-  return c.json<RentalsContracts.RentalCountsResponse, 200>(
-    { message: "OK", result },
-    200,
-  );
+  return c.json<RentalsContracts.RentalCountsResponse, 200>(result, 200);
 };
 
 const createMyReturnSlot: RouteHandler<
@@ -348,13 +345,7 @@ const createMyReturnSlot: RouteHandler<
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json(
-        {
-          message: "Return slot updated successfully",
-          result: toContractReturnSlot(right),
-        },
-        200,
-      )),
+      c.json(toContractReturnSlot(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RentalNotFound", () =>
@@ -444,13 +435,7 @@ const getMyCurrentReturnSlot: RouteHandler<
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
       if (Option.isSome(right)) {
-        return c.json(
-          {
-            message: "Return slot fetched successfully",
-            result: toContractReturnSlot(right.value),
-          },
-          200,
-        );
+        return c.json(toContractReturnSlot(right.value), 200);
       }
 
       return c.json(
@@ -518,13 +503,7 @@ const cancelMyReturnSlot: RouteHandler<
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json(
-        {
-          message: "Return slot cancelled successfully",
-          result: toContractReturnSlot(right),
-        },
-        200,
-      )),
+      c.json(toContractReturnSlot(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RentalNotFound", () =>
