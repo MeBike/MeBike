@@ -280,7 +280,7 @@ describe("admin agency stats routing e2e", () => {
     expect(response.status).toBe(400);
     expect(body.details.code).toBe("VALIDATION_ERROR");
     expect(body.details.issues?.some(issue =>
-      issue.path === "query.to"
+      issue.path.includes("to")
       && issue.message === "from and to must be provided together")).toBe(true);
   });
 

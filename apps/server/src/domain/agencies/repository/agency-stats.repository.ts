@@ -49,9 +49,24 @@ export type AgencyStatsRepo = {
 };
 
 function toCountMap<T extends string>(
-  rows: ReadonlyArray<{ status: T; _count: { _all: number } }>,
+  rows: ReadonlyArray<{
+    status: T;
+    _count?:
+      | true
+      | {
+          _all?: number | null;
+        }
+      | null;
+  }>,
 ) {
-  return new Map(rows.map(row => [row.status, row._count._all] as const));
+  return new Map(
+    rows.map(row => [
+      row.status,
+      row._count && row._count !== true
+        ? Number(row._count._all ?? 0)
+        : 0,
+    ] as const),
+  );
 }
 
 export function makeAgencyStatsRepository(

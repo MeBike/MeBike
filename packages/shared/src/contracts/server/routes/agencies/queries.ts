@@ -134,7 +134,7 @@ export const adminGetAgencyOperationalStatsRoute = createRoute({
                   code: "VALIDATION_ERROR",
                   issues: [
                     {
-                      path: "query.to",
+                      path: "to",
                       message: "from and to must be provided together",
                       code: "custom",
                     },
