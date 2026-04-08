@@ -78,14 +78,13 @@ function Field({
 export default function AdminRentalDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  const { detailData, isDetailLoading, getDetailRental } = useRentalsActions({
+  const { detailDataForStaff : detailData, isDetailLoadingForStaff, getDetailRentalForStaff } = useRentalsActions({
     hasToken: true,
     bike_id: id,
   });
-
   useEffect(() => {
-    getDetailRental();
-  }, [getDetailRental, id]);
+    getDetailRentalForStaff();
+  }, [getDetailRentalForStaff, id]);
 
   const loadingShell = (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
@@ -103,7 +102,7 @@ export default function AdminRentalDetailPage() {
     </div>
   );
 
-  if (isDetailLoading) {
+  if (isDetailLoadingForStaff) {
     return loadingShell;
   }
 

@@ -1,13 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { RentalFilters } from "@/components/rentals/rental-filters";
-import { RentalStats } from "@/components/rentals/rental-stats";
 import { useRouter } from "next/navigation";
 import type { RentalStatus } from "@custom-types";
 import { useRentalsActions } from "@/hooks/use-rental";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { rentalColumn } from "@/columns/rental-columns";
+import { rentalColumnForStaff } from "@/columns/rental-columns";
 import { TableSkeleton } from "@/components/table-skeleton";
 export default function RentalClient() {
   const router = useRouter();
@@ -78,9 +77,9 @@ export default function RentalClient() {
                 trang
               </p>
               <DataTable
-                columns={rentalColumn({
+                columns={rentalColumnForStaff({
                   onView: ({ id }) => {
-                    router.push(`/admin/rentals/detail/${id}`);
+                    router.push(`/staff/rentals/detail/${id}`);
                   },
                 })}
                 data={rentals}

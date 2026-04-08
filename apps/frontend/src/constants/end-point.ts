@@ -61,6 +61,7 @@ export const ENDPOINT = {
     },
     RENTAL : {
         BASE : "/admin/rentals",
+        STAFF_ID : (id : string) => `/staff/rentals/${id}`,
         STAFF : "/staff/rentals",
         ID : (rentalId : string) => `/admin/rentals/${rentalId}`,
         GET_SUMMARY : "/rentals/stats/summary",

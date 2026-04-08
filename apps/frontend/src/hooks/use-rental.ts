@@ -14,6 +14,7 @@ import { QUERY_KEYS } from "@/constants/queryKey";
 import getErrorMessage from "@/utils/error-message";
 import { RentalStatus } from "@/types";
 import { useGetAllRentalsStaffQuery } from "./query/Rent/useGetAllRentalsStaff";
+import { useGetDetailRentalForStaffQuery } from "./query/Rent/uesGetDetailRentalForStaffQuery";
 
 interface UseRentalsActionsProps {
   hasToken: boolean;
@@ -40,12 +41,19 @@ export function useRentalsActions({
   const { data: detailData, isLoading: isDetailLoading ,
     refetch : refetchDetail
   } = useGetDetailRentalAdminQuery(bike_id || "");
+  const {data : detailDataForStaff , isLoading : isDetailLoadingForStaff , refetch:refetchDetailForStaff} = useGetDetailRentalForStaffQuery(bike_id || "");
   const usePutUpdateRental = usePutUpdateRentalMutation(bike_id || "");
   const getDetailRental = useCallback(() => {
     if(!hasToken || !bike_id){
       return;
     } 
     refetchDetail();
+  }, [hasToken, bike_id, refetchDetail]);
+    const getDetailRentalForStaff = useCallback(() => {
+    if(!hasToken || !bike_id){
+      return;
+    } 
+    refetchDetailForStaff();
   }, [hasToken, bike_id, refetchDetail]);
   const {
     data: allRentalsData,
@@ -235,7 +243,11 @@ export function useRentalsActions({
     refetchStaffRentals,
     isAllRentalsStaffLoading,
     paginationStaffRental : staffRentalsData?.pagination,
-    getStaffRentals
+    getStaffRentals,
+    detailDataForStaff : detailDataForStaff?.data,
+    refetchDetailForStaff,
+    isDetailLoadingForStaff,
+    getDetailRentalForStaff
   };
 }
 

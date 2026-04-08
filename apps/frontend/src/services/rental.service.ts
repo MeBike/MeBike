@@ -209,6 +209,14 @@ export const rentalService = {
     );
     return response;
   },
+  getDetailRentalForStaff: async (
+    id: string
+  ): Promise<AxiosResponse<RentalRecord>> => {
+    const response = await fetchHttpClient.get<RentalRecord>(
+      ENDPOINT.RENTAL.STAFF_ID(id)
+    );
+    return response;
+  },
   updateDetailRental: async (
     id: string,
     data: UpdateRentalSchema
