@@ -7,6 +7,7 @@ export * from "./repository/return-slot.repository";
 export * from "./repository/unique-violation";
 export * from "./services/admin-rentals.service";
 export * from "./services/confirm-return.service";
+export * from "./services/rental-command.service";
 export * from "./services/finalize-rental-return";
 export * from "./services/rental-stats.service";
 export * from "./services/rental.service";

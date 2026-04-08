@@ -172,6 +172,12 @@ describe("rentals end routing e2e", () => {
 
     const persistedConfirmation = await fixture.prisma.returnConfirmation.findUnique({
       where: { rentalId: rental.id },
+      select: {
+        stationId: true,
+        confirmedByUserId: true,
+        confirmationMethod: true,
+        handoverStatus: true,
+      },
     });
     expect(persistedConfirmation?.stationId).toBe(targetStation.id);
     expect(persistedConfirmation?.handoverStatus).toBe("CONFIRMED");
@@ -230,9 +236,10 @@ describe("rentals end routing e2e", () => {
     expect(response.status).toBe(200);
   });
 
-  it("enforces the same return-slot rule on the admin end rental endpoint", async () => {
+  it("allows operator confirmation on the admin end rental endpoint without a return slot when the station has capacity", async () => {
     const { rental, startStation } = await createActiveRentalGraph();
     const adminToken = await createAdminToken();
+    const confirmedAt = new Date("2026-03-21T08:30:00.000Z").toISOString();
 
     const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
       method: "PUT",
@@ -240,15 +247,67 @@ describe("rentals end routing e2e", () => {
         "Authorization": `Bearer ${adminToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ stationId: startStation.id, confirmationMethod: "MANUAL" }),
+      body: JSON.stringify({ stationId: startStation.id, confirmationMethod: "MANUAL", confirmedAt }),
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.status).toBe("COMPLETED");
+    expect(body.endStation?.id).toBe(startStation.id);
+  });
+
+  it("allows operator confirmation without a return slot when only the reservation limit is exhausted", async () => {
+    const { rental } = await createActiveRentalGraph();
+    const adminToken = await createAdminToken();
+    const confirmedAt = new Date("2026-03-21T08:30:00.000Z").toISOString();
+    const station = await fixture.factories.station({
+      capacity: 5,
+      pickupSlotLimit: 5,
+      returnSlotLimit: 0,
+    });
+
+    const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${adminToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ stationId: station.id, confirmationMethod: "MANUAL", confirmedAt }),
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("COMPLETED");
+    expect(body.endStation?.id).toBe(station.id);
+  });
+
+  it("rejects operator confirmation without a return slot when the station has no live capacity", async () => {
+    const { rental } = await createActiveRentalGraph();
+    const adminToken = await createAdminToken();
+    const fullStation = await fixture.factories.station({
+      capacity: 1,
+      pickupSlotLimit: 1,
+      returnSlotLimit: 1,
+    });
+    await fixture.factories.bike({ stationId: fullStation.id, status: "AVAILABLE" });
+
+    const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${adminToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ stationId: fullStation.id, confirmationMethod: "MANUAL" }),
     });
 
     const body = await response.json() as RentalsContracts.RentalErrorResponse;
 
     expect(response.status).toBe(400);
-    expect(body.details?.code).toBe("RETURN_SLOT_REQUIRED_FOR_RETURN");
-    expect(body.details?.rentalId).toBe(rental.id);
-    expect(body.details?.endStationId).toBe(startStation.id);
+    expect(body.details?.code).toBe("RETURN_SLOT_CAPACITY_EXCEEDED");
+    expect(body.details?.stationId).toBe(fullStation.id);
   });
 
   it("rejects duplicate operator confirmation for the same rental", async () => {

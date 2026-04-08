@@ -1,6 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMyRentalQuery } from "@hooks/query/rentals/use-my-rental-query";
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
@@ -16,6 +14,9 @@ import {
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useMyRentalQuery } from "@hooks/query/rentals/use-my-rental-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 type RouteParams = {
   bookingId: string;
@@ -328,6 +329,7 @@ function RentalQrScreen() {
           <View style={styles.instructionCard}>
             <Text style={styles.instructionTitle}>Hướng dẫn kết thúc phiên</Text>
             {[
+              "Nếu đã giữ chỗ trước, hãy đến đúng bãi trả xe đã chọn. Nếu chưa, hãy đến trạm còn chỗ trống.",
               "Đến quầy hoặc gặp nhân viên hỗ trợ của MeBike tại trạm.",
               "Nhấn “Trình mã QR” và đưa màn hình này cho họ quét.",
               "Giữ mở ứng dụng cho đến khi nhân viên xác nhận đã kết thúc phiên thuê.",

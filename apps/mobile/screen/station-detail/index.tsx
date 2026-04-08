@@ -1,19 +1,19 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { useTheme, YStack } from "tamagui";
+
+import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useCreateMyReturnSlotMutation } from "@hooks/mutations/rentals/use-create-my-return-slot-mutation";
 import { useRequestBikeSwapMutation } from "@hooks/mutations/rentals/use-request-bike-swap-mutation";
 import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
 import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
-import { useQueryClient } from "@tanstack/react-query";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
-import { useTheme, YStack } from "tamagui";
-
-import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 
 import { BikeList } from "./components/bike-list";
 import { FixedSlotBanner } from "./components/fixed-slot-banner";
@@ -172,7 +172,7 @@ export default function StationDetailScreen() {
                     <AppText tone="muted" variant="bodySmall">
                       {isCurrentReturnStation
                         ? "Đây đang là bãi trả xe đã giữ chỗ cho phiên thuê của bạn."
-                        : "Xác nhận bãi này để cập nhật điểm trả xe cho phiên thuê đang diễn ra."}
+                        : "Xác nhận bãi này để giữ chỗ trước cho phiên thuê đang diễn ra."}
                     </AppText>
                   </YStack>
 
@@ -188,7 +188,7 @@ export default function StationDetailScreen() {
                   <YStack alignItems="center" flexDirection="row" gap="$2">
                     <IconSymbol color={theme.textTertiary.val} name="info" size="sm" />
                     <AppText flex={1} tone="muted" variant="meta">
-                      Sau khi giữ chỗ, quay lại chi tiết thuê xe để mở mã QR trả xe cho nhân viên.
+                      Giữ chỗ trước là tuỳ chọn. Nếu muốn chắc chắn có chỗ trả tại trạm này, hãy lưu lại bãi trả rồi đưa mã QR cho nhân viên khi tới nơi.
                     </AppText>
                   </YStack>
                 </AppCard>

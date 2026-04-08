@@ -42,7 +42,6 @@ const returnConfirmationSelect = {
   id: true,
   rentalId: true,
   stationId: true,
-  agencyId: true,
   confirmedByUserId: true,
   confirmationMethod: true,
   handoverStatus: true,
@@ -54,14 +53,16 @@ function mapToReturnConfirmationRow(raw: {
   id: string;
   rentalId: string;
   stationId: string | null;
-  agencyId: string | null;
   confirmedByUserId: string;
   confirmationMethod: ConfirmationMethod;
   handoverStatus: HandoverStatus;
   confirmedAt: Date;
   createdAt: Date;
 }): ReturnConfirmationRow {
-  return raw;
+  return {
+    ...raw,
+    agencyId: null,
+  };
 }
 
 export function makeReturnConfirmationRepository(
@@ -94,7 +95,6 @@ export function makeReturnConfirmationRepository(
             data: {
               rentalId: input.rentalId,
               stationId: input.stationId,
-              agencyId: null,
               confirmedByUserId: input.confirmedByUserId,
               confirmationMethod: input.confirmationMethod,
               handoverStatus: input.handoverStatus,

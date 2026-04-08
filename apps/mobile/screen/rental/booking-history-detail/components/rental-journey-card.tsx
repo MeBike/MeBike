@@ -1,11 +1,12 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { borderWidths, elevations } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
 import { View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths, elevations } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
 
 import { formatTimeOnly } from "../helpers/formatters";
 import { BikeSwapRequestCard } from "./bike-swap-request-card";
@@ -150,8 +151,8 @@ export function RentalJourneyView({
   endTimeText,
   isOngoing,
   hasReturnSlot,
-  missingReturnSlotHelperText = "Bạn cần chọn bãi trả trước khi kết thúc hành trình",
-  missingReturnSlotLabel = "Trạm kết thúc",
+  missingReturnSlotHelperText,
+  missingReturnSlotLabel = "Chưa giữ chỗ trước",
   reservedReturnStationLabel = "Trạm trả xe (đã đặt)",
   bikeSwapStatus = "NONE",
   confirmedBikeLabel,
@@ -206,9 +207,9 @@ export function RentalJourneyView({
             isLast
             label={hasReturnSlot ? reservedReturnStationLabel : missingReturnSlotLabel}
             timeText={endTimeText}
-            timeTone={hasReturnSlot ? "warning" : isOngoing ? "muted" : "muted"}
+            timeTone={hasReturnSlot ? "warning" : "muted"}
             value={endStationLabel}
-            valueTone={hasReturnSlot ? "warning" : isOngoing ? "danger" : "default"}
+            valueTone={hasReturnSlot ? "warning" : "default"}
           />
         </YStack>
 
@@ -262,7 +263,7 @@ export function RentalJourneyCard({
       endStationLabel={isOngoing
         ? hasReturnSlot
           ? (returnStation?.name ?? "Bãi trả đã chọn")
-          : "Chưa chọn bãi trả"
+          : "Trả tại trạm còn chỗ"
         : (endStation?.name ?? "Không xác định")}
       endTimeText={isOngoing
         ? hasReturnSlot

@@ -8,9 +8,7 @@ import {
 import { Effect, Match, Option } from "effect";
 
 import {
-  cancelReturnSlot,
-  createReturnSlot,
-  getCurrentReturnSlot,
+  RentalCommandServiceTag,
   RentalServiceTag,
   startRental,
 } from "@/domain/rentals";
@@ -332,11 +330,14 @@ const createMyReturnSlot: RouteHandler<
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    createReturnSlot({
-      rentalId,
-      userId,
-      stationId: body.stationId,
-      now: new Date(),
+    Effect.gen(function* () {
+      const service = yield* RentalCommandServiceTag;
+      return yield* service.createReturnSlot({
+        rentalId,
+        userId,
+        stationId: body.stationId,
+        now: new Date(),
+      });
     }),
     "POST /v1/rentals/me/{rentalId}/return-slot",
   );
@@ -423,9 +424,12 @@ const getMyCurrentReturnSlot: RouteHandler<
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    getCurrentReturnSlot({
-      rentalId,
-      userId,
+    Effect.gen(function* () {
+      const service = yield* RentalCommandServiceTag;
+      return yield* service.getCurrentReturnSlot({
+        rentalId,
+        userId,
+      });
     }),
     "GET /v1/rentals/me/{rentalId}/return-slot",
   );
@@ -491,10 +495,13 @@ const cancelMyReturnSlot: RouteHandler<
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    cancelReturnSlot({
-      rentalId,
-      userId,
-      now: new Date(),
+    Effect.gen(function* () {
+      const service = yield* RentalCommandServiceTag;
+      return yield* service.cancelReturnSlot({
+        rentalId,
+        userId,
+        now: new Date(),
+      });
     }),
     "DELETE /v1/rentals/me/{rentalId}/return-slot",
   );
