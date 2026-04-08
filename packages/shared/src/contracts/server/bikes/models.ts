@@ -6,6 +6,12 @@ export const BikeSupplierSchema = z.object({
   name: z.string(),
 });
 
+export const BikeStationSchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+  address: z.string(),
+});
+
 export const BikeRatingSchema = z.object({
   averageRating: z.number(),
   totalRatings: z.number().int().nonnegative(),
@@ -16,6 +22,7 @@ export const BikeSummarySchema = z.object({
   bikeNumber: z.string(),
   chipId: z.string(),
   stationId: z.uuidv7().nullable(),
+  station: BikeStationSchema.nullable(),
   supplier: BikeSupplierSchema.nullable(),
   status: BikeStatusSchema,
   rating: BikeRatingSchema,
@@ -96,6 +103,7 @@ export const HighestRevenueBikeSchema = z.object({
 
 export type BikeSummary = z.infer<typeof BikeSummarySchema>;
 export type BikeSupplier = z.infer<typeof BikeSupplierSchema>;
+export type BikeStation = z.infer<typeof BikeStationSchema>;
 export type BikeRating = z.infer<typeof BikeRatingSchema>;
 export type BikeRentalHistoryItem = z.infer<typeof BikeRentalHistoryItemSchema>;
 export type BikeActivityStats = z.infer<typeof BikeActivityStatsSchema>;

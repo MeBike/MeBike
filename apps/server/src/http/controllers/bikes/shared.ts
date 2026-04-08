@@ -6,6 +6,7 @@ import type { BikeRow } from "@/domain/bikes";
 import { RatingRepository } from "@/domain/ratings";
 import { RatingRepositoryError } from "@/domain/ratings/domain-errors";
 import { defectOn } from "@/domain/shared";
+import { StationRepository } from "@/domain/stations";
 import { SupplierRepository } from "@/domain/suppliers";
 import { toBikeSummary } from "@/http/presenters/bikes.presenter";
 
@@ -45,14 +46,27 @@ function mapSuppliersById(rows: readonly { id: string; name: string }[]) {
   return Object.fromEntries(rows.map(row => [row.id, row]));
 }
 
+function mapStationsById(
+  rows: readonly { id: string; name: string; address: string }[],
+) {
+  return Object.fromEntries(rows.map(row => [row.id, row]));
+}
+
 export function loadBikeSummary(row: BikeRow) {
   return Effect.gen(function* () {
     const ratingRepo = yield* RatingRepository;
+    const stationRepo = yield* StationRepository;
     const supplierRepo = yield* SupplierRepository;
     const rating = yield* ratingRepo.findBikeAggregates([row.id]).pipe(
       defectOn(RatingRepositoryError),
       Effect.map(map => map[row.id]),
     );
+
+    const station = row.stationId
+      ? yield* stationRepo.findIdNameAddressByIds([row.stationId]).pipe(
+        Effect.map(rows => rows[0] ?? null),
+      )
+      : null;
 
     const supplier = row.supplierId
       ? yield* supplierRepo.findIdNameByIds([row.supplierId]).pipe(
@@ -60,17 +74,23 @@ export function loadBikeSummary(row: BikeRow) {
       )
       : null;
 
-    return toBikeSummary(row, rating, supplier);
+    return toBikeSummary(row, rating, station, supplier);
   });
 }
 
 export function loadBikeSummaries(rows: readonly BikeRow[]) {
   return Effect.gen(function* () {
     const ratingRepo = yield* RatingRepository;
+    const stationRepo = yield* StationRepository;
     const supplierRepo = yield* SupplierRepository;
     const ratingsByBikeId = yield* ratingRepo.findBikeAggregates(rows.map(row => row.id)).pipe(
       defectOn(RatingRepositoryError),
     );
+
+    const stationIds = [...new Set(rows.flatMap(row => (row.stationId ? [row.stationId] : [])))];
+    const stationsById = stationIds.length === 0
+      ? {}
+      : mapStationsById(yield* stationRepo.findIdNameAddressByIds(stationIds));
 
     const supplierIds = [...new Set(rows.flatMap(row => (row.supplierId ? [row.supplierId] : [])))];
     const suppliersById = supplierIds.length === 0
@@ -80,6 +100,7 @@ export function loadBikeSummaries(rows: readonly BikeRow[]) {
     return rows.map(row => toBikeSummary(
       row,
       ratingsByBikeId[row.id],
+      row.stationId ? stationsById[row.stationId] ?? null : null,
       row.supplierId ? suppliersById[row.supplierId] ?? null : null,
     ));
   });
