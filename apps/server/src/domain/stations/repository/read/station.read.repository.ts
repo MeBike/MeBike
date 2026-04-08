@@ -33,6 +33,7 @@ export type StationReadRepo = Pick<
   | "listWithOffset"
   | "getById"
   | "getByAgencyId"
+  | "findIdNameAddressByIds"
   | "listNearest"
 >;
 
@@ -150,6 +151,29 @@ export function makeStationReadRepository(
           applyCounts(item, counts));
 
         return Option.some(station);
+      }).pipe(defectOn(StationRepositoryError));
+    },
+
+    findIdNameAddressByIds(ids) {
+      if (ids.length === 0) {
+        return Effect.succeed([]);
+      }
+
+      return Effect.tryPromise({
+        try: () =>
+          client.station.findMany({
+            where: { id: { in: [...ids] } },
+            select: {
+              id: true,
+              name: true,
+              address: true,
+            },
+          }),
+        catch: cause =>
+          new StationRepositoryError({
+            operation: "findIdNameAddressByIds",
+            cause,
+          }),
       }).pipe(defectOn(StationRepositoryError));
     },
 
