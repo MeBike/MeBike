@@ -198,6 +198,10 @@ export const RejectRedistributionRequestSchema = z.object({
     .max(200, "Reason must be at most 200 characters long"),
 });
 
+export const ConfirmRedistributionRequestCompletionSchema = z.object({
+  completedItemIds: z.array(z.uuidv7()).min(1, "At least one item must be completed"),
+})
+
 export type RedistributionRequest = z.infer<typeof RedistributionRequestSchema>;
 export type RedistributionRequestDetail = z.infer<
   typeof RedistributionRequestDetailSchema
@@ -211,4 +215,8 @@ export type RedistributionRequestListItem = z.infer<
 
 export type CreateRedistributionRequest = z.infer<
   typeof CreateRedistributionRequestSchema
+>;
+
+export type ConfirmRedistributionRequestCompletion = z.infer<
+  typeof ConfirmRedistributionRequestCompletionSchema
 >;

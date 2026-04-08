@@ -2,6 +2,7 @@ import { createRoute } from "@hono/zod-openapi";
 
 import {
   CancelRedistributionRequestSchemaOpenApi,
+  ConfirmRedistributionRequestCompletionSchemaOpenApi,
   CreateRedistributionRequestSchemaOpenApi,
   createSuccessResponse,
   RedistributionReqErrorCodeSchema,
@@ -432,6 +433,92 @@ export const startTransition = createRoute({
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
                   requestedByUserId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   startedByUserId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "Redistribution request not found",
+      example: {
+        error: "Redistribution request not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+
+export const confirmRedistributionRequestCompletion = createRoute({
+  method: "post",
+  path: "/v1/staff/redistribution-requests/{requestId}/confirm-completion",
+  tags: ["Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RedistributionRequestIdParamSchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: ConfirmRedistributionRequestCompletionSchemaOpenApi
+        }
+      }
+    }
+  },
+  responses: {
+    200: {
+      description: "Redistribution request completed successfully",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestDetailSchemaOpenApi,
+            "Redistribution request is completed",
+          ),
+        },
+      },
+    },
+    400: {
+      description: "Redistribution request completion failed",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            CannotCompleteNonTransitOrPartiallyCompletedRedistribution: {
+              value: {
+                error: "Cannot complete redistribution request that is not in transit or partially completed state",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  status: "APPROVED",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: {
+      description: "Unauthorized completed redistribution request confirmation",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            ...forbiddenResponse("Staff").content["application/json"].examples,
+            UnauthorizedCompletedRedistributionConfirmation: {
+              value: {
+                error: "Unauthorized completed redistribution confirmation",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_COMPLETED_REDISTRIBUTION_CONFIRMATION,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  targetManagerId: "019d53a7-dbbb-7185-b741-ae192a4017b4",
+                  completedByUserId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                 },
               },
             },

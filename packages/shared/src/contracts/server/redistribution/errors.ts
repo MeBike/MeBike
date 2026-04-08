@@ -13,6 +13,7 @@ export const redistributionReqErrorCodes = [
   "UNAUTHORIZED_REDISTRIBUTION_APPROVAL",
   "UNAUTHORIZED_REDISTRIBUTION_REJECTION",
   "UNAUTHORIZED_START_TRANSITION",
+  "UNAUTHORIZED_COMPLETED_REDISTRIBUTION_CONFIRMATION",
   // 400
   "INSUFFICIENT_AVAILABLE_BIKES",
   "INSUFFICIENT_EMPTY_SLOTS",
@@ -21,6 +22,7 @@ export const redistributionReqErrorCodes = [
   "CANNOT_APPROVE_NON_PENDING_REDISTRIBUTION",
   "CANNOT_REJECT_NON_PENDING_REDISTRIBUTION",
   "CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION",
+  "CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION",
 ] as const;
 
 export const RedistributionReqErrorCodeSchema = z.enum(redistributionReqErrorCodes);
@@ -62,6 +64,7 @@ export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, 
   UNAUTHORIZED_REDISTRIBUTION_APPROVAL: "You are not authorized to approve this redistribution request",
   UNAUTHORIZED_REDISTRIBUTION_REJECTION: "You are not authorized to reject this redistribution request",
   UNAUTHORIZED_START_TRANSITION: "You are not authorized to start the transition of this redistribution request",
+  UNAUTHORIZED_COMPLETED_REDISTRIBUTION_CONFIRMATION: "You are not authorized to confirm the completion of this redistribution request",
   // 400
   INSUFFICIENT_AVAILABLE_BIKES: "This station does not have enough bikes for distribution",
   INSUFFICIENT_EMPTY_SLOTS: "Target station does not have enough empty slots",
@@ -70,4 +73,5 @@ export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, 
   CANNOT_APPROVE_NON_PENDING_REDISTRIBUTION: "Cannot approve redistribution request that is not in pending state",
   CANNOT_REJECT_NON_PENDING_REDISTRIBUTION: "Cannot reject redistribution request that is not in pending state",
   CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION: "Cannot start the transition of this redistribution request that is not in approved state",
+  CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION: "Cannot complete redistribution request that is not in transit or partially completed state",
 };
