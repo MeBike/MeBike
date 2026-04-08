@@ -34,6 +34,7 @@ export {
 } from "./features/rating.layers";
 export {
   RentalAnalyticsReposLive,
+  RentalCommandServiceLayer,
   RentalDepsLive,
   RentalReposLive,
   RentalServiceLayer,

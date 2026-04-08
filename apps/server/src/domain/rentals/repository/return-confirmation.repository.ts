@@ -59,7 +59,10 @@ function mapToReturnConfirmationRow(raw: {
   confirmedAt: Date;
   createdAt: Date;
 }): ReturnConfirmationRow {
-  return raw;
+  return {
+    ...raw,
+    agencyId: null,
+  };
 }
 
 export function makeReturnConfirmationRepository(
