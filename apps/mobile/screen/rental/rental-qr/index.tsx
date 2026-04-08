@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useMyRentalQuery } from "@hooks/query/rentals/use-my-rental-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
@@ -14,9 +16,6 @@ import {
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { useMyRentalQuery } from "@hooks/query/rentals/use-my-rental-query";
-import { useAuthNext } from "@providers/auth-provider-next";
 
 type RouteParams = {
   bookingId: string;

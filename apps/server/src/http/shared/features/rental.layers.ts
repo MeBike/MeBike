@@ -1,8 +1,8 @@
 import { Layer } from "effect";
 
 import {
-  RentalCommandServiceLive,
   RentalAnalyticsRepositoryLive,
+  RentalCommandServiceLive,
   RentalRepositoryLive,
   RentalServiceLive,
   RentalStatsServiceLive,

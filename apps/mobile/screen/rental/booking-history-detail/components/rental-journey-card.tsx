@@ -1,12 +1,11 @@
-import { View } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { MyRentalResolvedDetail } from "@/types/rental-types";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
 import { formatTimeOnly } from "../helpers/formatters";
 import { BikeSwapRequestCard } from "./bike-swap-request-card";

@@ -1,4 +1,6 @@
-import { Effect, Layer, Option } from "effect";
+import type { Option } from "effect";
+
+import { Effect, Layer } from "effect";
 
 import { BikeRepository } from "@/domain/bikes";
 import { Prisma } from "@/infrastructure/prisma";
@@ -6,6 +8,7 @@ import { Prisma } from "@/infrastructure/prisma";
 import type { RentalServiceFailure } from "../domain-errors";
 import type { RentalRow, ReturnSlotRow } from "../models";
 import type { ConfirmRentalReturnInput } from "../types";
+import type { ReturnSlotFailure } from "./return-slot.service";
 
 import { RentalRepository } from "../repository/rental.repository";
 import {
@@ -19,7 +22,6 @@ import {
   cancelReturnSlot,
   createReturnSlot,
   getCurrentReturnSlot,
-  type ReturnSlotFailure,
 } from "./return-slot.service";
 
 type CreateReturnSlotInput = {
@@ -58,7 +60,7 @@ type RentalCommandDeps = {
   bikeRepository: typeof BikeRepository.Service;
 };
 
-function provideRentalCommandDeps<A, E, R>(
+function provideRentalCommandDeps<A, E>(
   effect: Effect.Effect<
     A,
     E,
