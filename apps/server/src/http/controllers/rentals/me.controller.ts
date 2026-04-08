@@ -322,7 +322,7 @@ const getMyRentalCounts: RouteHandler<
 
   const result = await c.var.runPromise(eff);
   return c.json<RentalsContracts.RentalCountsResponse, 200>(
-    { message: "OK", result },
+    { data: result },
     200,
   );
 };
@@ -350,8 +350,7 @@ const createMyReturnSlot: RouteHandler<
     Match.tag("Right", ({ right }) =>
       c.json(
         {
-          message: "Return slot updated successfully",
-          result: toContractReturnSlot(right),
+          data: toContractReturnSlot(right),
         },
         200,
       )),
@@ -446,8 +445,7 @@ const getMyCurrentReturnSlot: RouteHandler<
       if (Option.isSome(right)) {
         return c.json(
           {
-            message: "Return slot fetched successfully",
-            result: toContractReturnSlot(right.value),
+            data: toContractReturnSlot(right.value),
           },
           200,
         );
@@ -520,8 +518,7 @@ const cancelMyReturnSlot: RouteHandler<
     Match.tag("Right", ({ right }) =>
       c.json(
         {
-          message: "Return slot cancelled successfully",
-          result: toContractReturnSlot(right),
+          data: toContractReturnSlot(right),
         },
         200,
       )),

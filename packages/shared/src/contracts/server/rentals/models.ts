@@ -232,8 +232,7 @@ export const RentalStatusCountsSchema = z.object({
 });
 
 export const RentalCountsResponseSchema = z.object({
-  message: z.string(),
-  result: RentalStatusCountsSchema,
+  data: RentalStatusCountsSchema,
 });
 
 export const RevenueDeltaSchema = z.object({

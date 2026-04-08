@@ -155,7 +155,9 @@ The rental system uses comprehensive error codes with detailed context:
 
 1. **ISO Date Format**: All dates use ISO 8601 format (legacy dd-mm-yyyy parsing not supported)
 2. **Pagination**: Uses standard MongoDB pagination with page/limit/total
-3. **Response Envelope**: Follows standard `{message, result}` or `{data, pagination}` patterns
+3. **Response Envelope**:
+   - single resource / mutation result: `{ data: ... }`
+   - list result: `{ data: [...], pagination: ... }`
 4. **Error Envelope**: Standard `{error, details}` with typed error codes
 5. **Messages**: Error codes in English; user-facing messages can be localized by clients
 
