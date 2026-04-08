@@ -93,8 +93,8 @@ async function tryGetCurrentReturnSlot(rentalId: string): Promise<ReturnSlotRese
       const okSchema = ServerRoutes.rentals.getMyCurrentReturnSlot.responses[200].content["application/json"].schema;
       const result = await decodeRentalResponse(
         response,
-        okSchema as z.ZodType<{ data: ReturnSlotReservation }>,
-        value => value.data,
+        okSchema as z.ZodType<ReturnSlotReservation>,
+        value => value,
       );
       return result.ok ? result.value : null;
     }
@@ -261,8 +261,8 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.getMyCurrentReturnSlot.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
-          okSchema as z.ZodType<{ data: ReturnSlotReservation }>,
-          value => value.data,
+          okSchema as z.ZodType<ReturnSlotReservation>,
+          value => value,
         );
       }
 
@@ -288,8 +288,8 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.createMyReturnSlot.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
-          okSchema as z.ZodType<{ data: ReturnSlotReservation }>,
-          value => value.data,
+          okSchema as z.ZodType<ReturnSlotReservation>,
+          value => value,
         );
       }
 
@@ -311,8 +311,8 @@ export const rentalServiceV1 = {
         const okSchema = ServerRoutes.rentals.getMyRentalCounts.responses[200].content["application/json"].schema;
         return decodeRentalResponse(
           response,
-          okSchema as z.ZodType<{ data: RentalCounts }>,
-          value => value.data,
+          okSchema as z.ZodType<RentalCounts>,
+          value => value,
         );
       }
 

@@ -231,9 +231,7 @@ export const RentalStatusCountsSchema = z.object({
   CANCELLED: z.number(),
 });
 
-export const RentalCountsResponseSchema = z.object({
-  data: RentalStatusCountsSchema,
-});
+export const RentalCountsResponseSchema = RentalStatusCountsSchema;
 
 export const RevenueDeltaSchema = z.object({
   current: z.number(),

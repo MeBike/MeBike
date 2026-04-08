@@ -165,13 +165,9 @@ export const getMyCurrentReturnSlot = createRoute({
       description: "Get the active return slot for a rental",
       content: {
         "application/json": {
-          schema: z
-            .object({
-              data: ReturnSlotReservationSchema.openapi("CurrentReturnSlotReservation"),
-            })
-            .openapi("CurrentReturnSlotResponse", {
-              description: "Current return slot response",
-            }),
+          schema: ReturnSlotReservationSchema.openapi("CurrentReturnSlotResponse", {
+            description: "Current return slot response",
+          }),
         },
       },
     },
@@ -226,13 +222,7 @@ export const getRental = createRoute({
       description: "Detailed rental (admin/staff view)",
       content: {
         "application/json": {
-          schema: z
-            .object({
-              data: RentalSchemaOpenApi,
-            })
-            .openapi("GetRentalResponse", {
-              description: "Get rental detail response",
-            }),
+          schema: RentalSchemaOpenApi,
         },
       },
     },

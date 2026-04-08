@@ -121,13 +121,9 @@ export const createMyReturnSlot = createRoute({
       description: "Create or replace the active return slot for a rental",
       content: {
         "application/json": {
-          schema: z
-            .object({
-              data: ReturnSlotReservationSchema.openapi("ReturnSlotReservation"),
-            })
-            .openapi("CreateReturnSlotResponse", {
-              description: "Return slot response",
-            }),
+          schema: ReturnSlotReservationSchema.openapi("CreateReturnSlotResponse", {
+            description: "Return slot response",
+          }),
         },
       },
     },
@@ -164,13 +160,9 @@ export const cancelMyReturnSlot = createRoute({
       description: "Cancel the active return slot for a rental",
       content: {
         "application/json": {
-          schema: z
-            .object({
-              data: ReturnSlotReservationSchema.openapi("CancelledReturnSlotReservation"),
-            })
-            .openapi("CancelReturnSlotResponse", {
-              description: "Cancelled return slot response",
-            }),
+          schema: ReturnSlotReservationSchema.openapi("CancelReturnSlotResponse", {
+            description: "Cancelled return slot response",
+          }),
         },
       },
     },
@@ -214,13 +206,7 @@ export const staffCreateRental = createRoute({
       description: "Rental created by staff",
       content: {
         "application/json": {
-          schema: z
-            .object({
-              data: RentalWithPriceSchemaOpenApi,
-            })
-            .openapi("StaffCreateRentalResponse", {
-              description: "Staff create rental response",
-            }),
+          schema: RentalWithPriceSchemaOpenApi,
         },
       },
     },
@@ -247,13 +233,7 @@ export const createRentalFromSOS = createRoute({
       description: "Rental created from SOS alert",
       content: {
         "application/json": {
-          schema: z
-            .object({
-              data: RentalWithPriceSchemaOpenApi,
-            })
-            .openapi("CreateRentalFromSosResponse", {
-              description: "Create rental from SOS response",
-            }),
+          schema: RentalWithPriceSchemaOpenApi,
         },
       },
     },
@@ -308,13 +288,7 @@ export const updateRental = createRoute({
       description: "Rental updated successfully",
       content: {
         "application/json": {
-          schema: z
-            .object({
-              data: RentalDetailSchemaOpenApi,
-            })
-            .openapi("UpdateRentalResponse", {
-              description: "Update rental response",
-            }),
+          schema: RentalDetailSchemaOpenApi,
         },
       },
     },
@@ -418,13 +392,7 @@ export const cancelRental = createRoute({
       description: "Rental cancelled successfully",
       content: {
         "application/json": {
-          schema: z
-            .object({
-              data: RentalDetailSchemaOpenApi,
-            })
-            .openapi("CancelRentalResponse", {
-              description: "Cancel rental response",
-            }),
+          schema: RentalDetailSchemaOpenApi,
         },
       },
     },
@@ -472,7 +440,7 @@ export const processCardTapRental = createRoute({
         "application/json": {
           schema: z
             .object({
-              data: RentalSchemaOpenApi,
+              rental: RentalSchemaOpenApi,
               mode: z.string(),
             })
             .openapi("CardTapRentalResponse"),
