@@ -18,8 +18,8 @@ export default function RentalClient() {
   const {
     staffRentalsData,
     isAllRentalsStaffLoading,
-    paginationStaffRental
-    
+    paginationStaffRental,
+    getStaffRentals
   } = useRentalsActions({
     hasToken: true,
     limit: limit,
@@ -45,6 +45,7 @@ export default function RentalClient() {
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
+  useEffect(() => {getStaffRentals()},[getStaffRentals]);
   return (
     <div>
       <div className="space-y-6">

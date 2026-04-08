@@ -105,7 +105,7 @@ export function Sidebar() {
     // --- TECHNICAL & SOS ---
     // { title: "Lịch bảo trì", icon: Tool, href: "/technician/tasks", roles: ["TECHNICIAN", "STAFF"] },
     // { title: "Đơn cứu hộ SOS", icon: ShieldAlert, href: "/sos/alerts", roles: ["SOS", "STAFF"] },
-    { title: "Đánh giá & Phản hồi", icon: Star, href: `/${role.toLowerCase()}/ratings`, roles: ["ADMIN", "MANAGER", "STAFF"] },
+    { title: "Đánh giá & Phản hồi", icon: Star, href: `/${role.toLowerCase()}/ratings`, roles: ["ADMIN", "MANAGER"] },
 
     // --- USER ONLY ---
     { title: "Chuyến đi của tôi", icon: Bike, href: "/user/trips", roles: ["USER"] },

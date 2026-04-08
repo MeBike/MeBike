@@ -61,5 +61,6 @@ export function useGetAllRentalsStaffQuery({
         endStation,
         status,
       }),
+    enabled:false,  
   });
 }

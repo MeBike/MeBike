@@ -20,6 +20,7 @@ export default function RentalClient() {
     pagination,
     getTodayRevenue,
     summaryRental,
+    getRentals,
     getSummaryRental,
     isAllRentalsLoading,
   } = useRentalsActions({
@@ -42,6 +43,9 @@ export default function RentalClient() {
   useEffect(() => {
     getTodayRevenue();
   }, [getTodayRevenue]);
+   useEffect(() => {
+    getRentals();
+  }, [getRentals]);
   useEffect(() => {
     getSummaryRental();
   }, [getSummaryRental]);

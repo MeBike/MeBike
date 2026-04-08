@@ -73,12 +73,18 @@ export function useRentalsActions({
       status: status,
     }
   );
+  const getStaffRentals = useCallback(() => {
+    if(!hasToken){
+      return;
+    }
+    refetchStaffRentals();
+  }, [hasToken, refetchStaffRentals,page,limit]);
   const getRentals = useCallback(() => {
     if(!hasToken){
       return;
     }
     refetchAllRentals();
-  }, [hasToken, refetchAllRentals]);
+  }, [hasToken, refetchAllRentals,page,limit]);
   const { data: revenueData , refetch : refetchRevenue , isLoading : isLoadingRevenue } = useGetRevenueQuery(
     { from: undefined, to: undefined, groupBy: "MONTH" }
   );
@@ -229,6 +235,7 @@ export function useRentalsActions({
     refetchStaffRentals,
     isAllRentalsStaffLoading,
     paginationStaffRental : staffRentalsData?.pagination,
+    getStaffRentals
   };
 }
 
