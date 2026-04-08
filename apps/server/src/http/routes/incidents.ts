@@ -5,9 +5,9 @@ import { serverRoutes } from "@mebike/shared";
 import { IncidentPublicController } from "../controllers/incidents";
 import { IncidentTechnicianController } from "../controllers/incidents/technican.controller";
 import {
-  requireIncidentAccessMiddleware,
+  requireIncidentActorMiddleware,
+  requireIncidentViewerMiddleware,
   requireTechnicianMiddleware,
-  requireTechnicianOrAdminOrUserMiddleware,
 } from "../middlewares/auth";
 
 export function registerIncidentRoutes(
@@ -17,28 +17,28 @@ export function registerIncidentRoutes(
 
   const listIncidentsRoute = {
     ...incidents.listIncidents,
-    middleware: [requireTechnicianOrAdminOrUserMiddleware] as const,
+    middleware: [requireIncidentViewerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(listIncidentsRoute, IncidentPublicController.listIncidents);
 
   const getIncidentRoute = {
     ...incidents.getIncident,
-    middleware: [requireTechnicianOrAdminOrUserMiddleware] as const,
+    middleware: [requireIncidentViewerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(getIncidentRoute, IncidentPublicController.getIncident);
 
   const createIncidentRoute = {
     ...incidents.createIncident,
-    middleware: [requireIncidentAccessMiddleware] as const,
+    middleware: [requireIncidentActorMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(createIncidentRoute, IncidentPublicController.createIncident);
 
   const updateIncidentRoute = {
     ...incidents.updateIncident,
-    middleware: [requireIncidentAccessMiddleware] as const,
+    middleware: [requireIncidentActorMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(updateIncidentRoute, IncidentPublicController.updateIncident);
