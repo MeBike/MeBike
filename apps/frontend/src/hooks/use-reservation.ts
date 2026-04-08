@@ -17,20 +17,18 @@ interface ActionProps {
 }
 export const useReservationActions = ({ hasToken, page, pageSize, id , status ,option}: ActionProps) => {
   const queryClient = useQueryClient();
-  const { data: allReservations, refetch: isRefetchingAllReservation , isLoading : isLoadingReservations } =
+  const { data: allReservations, refetch: refechAllReservation , isLoading : isLoadingReservations } =
     useGetAllReservationQuery({ page:page, pageSize:pageSize , status : status , option : option });
     const { data: allReservationsStaff, refetch: refetchReservationsForStaff , isLoading : isLoadingReservationsStaff } =
     useGetAllReservationForStaffQuery({ page:page, pageSize:pageSize , status : status , option : option }); 
-  const { data: reservationStats , refetch : isRefetchingReservationStats} = useGetReservationStatsQuery();
+  const { data: reservationStats , refetch : refetchReservationsStats} = useGetReservationStatsQuery();
   const { data: detailReservation, refetch: refetchDetailReservation } = useGetDetailReservationQuery(id || "");
     const { data: detailReservationForStaff, refetch: refetchDetailReservationForStaff } = useGetDetailReservationForStaffQuery(id || "");
   const fetchAllReservations = useCallback(() => {
     if (!hasToken) {
       return;
     }
-    queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize),
-    });
+    refechAllReservation();
   }, [queryClient, hasToken, page, pageSize , status , option]);
     const fetchAllReservationsForStaff = useCallback(() => {
     if (!hasToken) {
@@ -42,9 +40,7 @@ export const useReservationActions = ({ hasToken, page, pageSize, id , status ,o
     if (!hasToken) {
       return;
     }
-    queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.RESERVATION.RESERVATION_STATS,
-    });
+    refetchReservationsStats();
   }, [queryClient, hasToken]);
   const fetchDetailReservation = useCallback(() => {
     if (!hasToken || !id) {
@@ -61,10 +57,10 @@ export const useReservationActions = ({ hasToken, page, pageSize, id , status ,o
   return {
     allReservations,
     fetchAllReservations,
-    isRefetchingAllReservation,
+    refechAllReservation,
     reservationStats,
     fetchReservationStats,
-    isRefetchingReservationStats,
+    refetchReservationsStats,
     fetchDetailReservation,
     detailReservation,
     refetchDetailReservation,
