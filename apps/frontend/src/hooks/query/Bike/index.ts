@@ -4,5 +4,6 @@ export { useGetBikeByIDAllQuery } from "./useGetBIkeByIDAll";
 export { useGetHistoryByIdQuery } from "./useGetHistoryById";
 export { useGetRentalBikeQuery } from "./useGetRentalBikeQuery";
 export { useGetBikeStatsQuery } from "./useGetStatsBikeQuery";
-export {useGetStatisticsBikeQuery} from "./useGetStatusBike";
+export {useGetStatusCountQuery} from "./useGetStatusBike";
 export {useGetStatusBikeIDQuery} from "./useGetStatusBikeByID"
+export {useGetStatisticsBikeQuery} from "./useGetStatisticsBikeQuery"

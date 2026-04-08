@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
-const getStatisticsBikeAdmin = async () => {
+const getStatusCount = async () => {
   try {
-    const response = await bikeService.getStatisticsBikeAdmin();
+    const response = await bikeService.getStatusCountBikeAdmin();
     if (response.status === 200) {
       return response.data;
     }
@@ -11,10 +11,10 @@ const getStatisticsBikeAdmin = async () => {
     throw new Error("Error fetching bike statuses");
   }
 };
-export const useGetStatisticsBikeQuery = () => {
+export const useGetStatusCountQuery = () => {
   return useQuery({
     queryKey: ["bikes", "status"],
-    queryFn: () => getStatisticsBikeAdmin(),
+    queryFn: () => getStatusCount(),
     enabled: false,
   });
 };

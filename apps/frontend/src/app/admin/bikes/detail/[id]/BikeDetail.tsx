@@ -167,8 +167,6 @@ export function BikeDetailView({
           </SectionCard>
         </div>
       </div>
-
-      {/* Lịch sử thuê xe */}
       <SectionCard icon={History} title="Lịch sử thuê xe gần đây">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">

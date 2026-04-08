@@ -20,12 +20,12 @@ export const bikeService = {
     );
     return response;
   },
-  getStatisticsBikeAdmin: async (): Promise<
+  getStatusCountBikeAdmin: async (): Promise<
     AxiosResponse<BikeStatistics>
   > => {
     const response = await fetchHttpClient.get<
     BikeStatistics
-    >(ENDPOINT.BIKE.STATS_SUMMARY);
+    >(ENDPOINT.BIKE.STATUS_COUNT);
     return response;
   },
   getStatusBikeByIdAdmin: async (id: string): Promise<AxiosResponse<BikeStatus>> => {

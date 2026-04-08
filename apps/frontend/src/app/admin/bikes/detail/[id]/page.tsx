@@ -23,8 +23,9 @@ export default function BikeDetailPage({
     bikeActivityStats,
     bikeHistory,
     getHistoryBike,
-    statisticData,
-    isLoadingStatistics,
+    statisticsBike,
+    getStatsBike,
+isLoadingStatisticsBike,
     getStatisticsBike,
     bikeStats,
     getBikeStats,
@@ -38,7 +39,7 @@ export default function BikeDetailPage({
     getBikeStats()
   }, [id]);
 
-  if (isLoadingDetail || isLoadingStatistics) {
+  if (isLoadingDetail || isLoadingStatisticsBike) {
     return (
       <div className="flex h-[60vh] w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -74,7 +75,7 @@ export default function BikeDetailPage({
           bike={detailBike || null} 
           activity={bikeActivityStats || null} 
           rentals={bikeHistory?.data.data || []}
-          statisticData={bikeStats || null}
+          statisticData={statisticsBike || null}
         />
       </div>
     </div>

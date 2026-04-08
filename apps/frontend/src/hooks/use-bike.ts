@@ -16,8 +16,9 @@ import {
   useGetBikeActivityStatsQuery,
   useGetBikeByIDAllQuery,
   useGetRentalBikeQuery,
-  useGetStatisticsBikeQuery,
+  useGetStatusCountQuery,
   useGetHistoryByIdQuery,
+  useGetStatisticsBikeQuery
 } from "@queries";
 import { HTTP_STATUS } from "@constants";
 import { getErrorMessageFromBikeCode, getAxiosErrorCodeMessage } from "@utils";
@@ -75,7 +76,7 @@ export const useBikeActions = ({
       router.push("/login");
       return;
     }
-    refetchStatistics();
+    refetchStatusCount();
   }, [bike_detail_id, hasToken, router]);
   const {
     refetch: fetchBike,
@@ -92,10 +93,10 @@ export const useBikeActions = ({
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
   const {
-    data: statisticData,
-    refetch: refetchStatistics,
-    isFetching: isLoadingStatistics,
-  } = useGetStatisticsBikeQuery();
+    data: statusCount,
+    refetch: refetchStatusCount,
+    isFetching: isLoadingStatusCount,
+  } = useGetStatusCountQuery();
   const deleteBikeMutation = useSoftDeleteBikeMutation();
   const reportBikeMutation = useReportBike();
   const {
@@ -116,8 +117,8 @@ export const useBikeActions = ({
       router.push("/login");
       return;
     }
-    refetchStatistics();
-  }, [refetchStatistics, hasToken, router]);
+    refetchStatusCount();
+  }, [refetchStatusCount, hasToken, router]);
   const createBike = useCallback(
     async (data: BikeSchemaFormData) => {
       if (!hasToken) {
@@ -228,6 +229,14 @@ export const useBikeActions = ({
       getDetailBike();
     }
   }, [getDetailBike, bike_detail_id]);
+  const {
+    data : statisticsBike,
+    refetch : refetchStatisticBike,
+    isLoading : isLoadingStatisticsBike,
+  } = useGetStatisticsBikeQuery(bike_detail_id || "");
+  const getStatsBike = useCallback(() => {
+    refetchStatisticBike();
+  }, [bike_detail_id]);
   return {
     getBikes,
     createBike,
@@ -246,8 +255,8 @@ export const useBikeActions = ({
     useGetAllBikeQuery,
     data: data,
     getStatisticsBike,
-    isLoadingStatistics,
-    statisticData,
+    isLoadingStatusCount,
+    statusCount,
     paginationOfBikes: data?.pagination,
     bikeActivityStats: bikeActivityStats,
     getBikeActivityStats,
@@ -262,7 +271,9 @@ export const useBikeActions = ({
     isLoadingBikes,
     getHistoryBike,
     bikeHistory:bikeHistory,
-    isLoadingGetBikeHistory
-
+    isLoadingGetBikeHistory,
+    statisticsBike,
+    getStatsBike,
+isLoadingStatisticsBike,
   };
 };
