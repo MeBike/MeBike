@@ -36,15 +36,6 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   if (!user) {
     return respondUnauthorized(c);
   }
-  if (user.role === "AGENCY") {
-    return c.json(
-      {
-        error: unauthorizedErrorMessages.UNAUTHORIZED,
-        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-      },
-      403,
-    );
-  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -90,15 +81,6 @@ const getIncident: RouteHandler<IncidentRoutes["getIncident"]> = async (c) => {
   const { incidentId } = c.req.valid("param");
   if (!user) {
     return respondUnauthorized(c);
-  }
-  if (user.role === "AGENCY") {
-    return c.json(
-      {
-        error: unauthorizedErrorMessages.UNAUTHORIZED,
-        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-      },
-      403,
-    );
   }
 
   const eff = withLoggedCause(
@@ -162,15 +144,6 @@ const createIncident: RouteHandler<IncidentRoutes["createIncident"]> = async (
         details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
       },
       401,
-    );
-  }
-  if (currentUser.role === "AGENCY") {
-    return c.json(
-      {
-        error: unauthorizedErrorMessages.UNAUTHORIZED,
-        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-      },
-      403,
     );
   }
   const userId = currentUser.userId;
