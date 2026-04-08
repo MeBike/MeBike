@@ -17,6 +17,10 @@ type Props = {
   isSubmitting: boolean;
   isVisible: boolean;
   note: string;
+  operatorStation: {
+    id: string;
+    name: string;
+  } | null;
   onChangeVisible: (visible: boolean) => void;
   onNoteChange: (value: string) => void;
   onSubmit: (payload: {
@@ -35,16 +39,18 @@ export default function StaffEndRentalCard({
   isSubmitting,
   isVisible,
   note,
+  operatorStation,
   onChangeVisible,
   onNoteChange,
   onSubmit,
 }: Props) {
   const theme = useTheme();
   const activeReturnSlot = booking.returnSlot;
-  const canEndRental = booking.status === "RENTED" && Boolean(activeReturnSlot);
+  const endStation = activeReturnSlot?.station ?? operatorStation;
+  const canEndRental = booking.status === "RENTED" && Boolean(endStation);
 
   const handleConfirm = () => {
-    if (!activeReturnSlot) {
+    if (!endStation) {
       onSubmit({ reason: note, stationId: "" });
       return;
     }
@@ -52,7 +58,7 @@ export default function StaffEndRentalCard({
     onSubmit({
       confirmationMethod: "MANUAL",
       reason: note.trim() ? note.trim() : DEFAULT_REASON,
-      stationId: activeReturnSlot.station.id,
+      stationId: endStation.id,
     });
   };
 
@@ -94,7 +100,7 @@ export default function StaffEndRentalCard({
               Bạn đang kết thúc phiên tại trạm
               {" "}
               <AppText tone="default" variant="bodyStrong">
-                {activeReturnSlot?.station.name ?? "--"}
+                {endStation?.name ?? "--"}
               </AppText>
               .
             </AppText>
@@ -128,12 +134,16 @@ export default function StaffEndRentalCard({
 
               <YStack flex={1} gap="$1">
                 <AppText variant="bodyStrong">
-                  {activeReturnSlot ? activeReturnSlot.station.name : "Khách chưa đặt chỗ trả xe"}
+                  {activeReturnSlot
+                    ? activeReturnSlot.station.name
+                    : (operatorStation?.name ?? "Chưa xác định được trạm trả xe")}
                 </AppText>
                 <AppText tone="muted" variant="bodySmall">
                   {activeReturnSlot
                     ? `Giữ chỗ từ ${formatVietnamDateTime(activeReturnSlot.reservedFrom)}`
-                    : "Yêu cầu khách chọn bãi trả xe trong ứng dụng trước khi tiếp tục."}
+                    : operatorStation
+                      ? "Khách chưa giữ chỗ trước. Hệ thống sẽ kiểm tra chỗ trống hiện tại tại trạm của bạn khi xác nhận trả xe."
+                      : "Không tìm thấy trạm vận hành của bạn để xác nhận trả xe."}
                 </AppText>
               </YStack>
             </XStack>

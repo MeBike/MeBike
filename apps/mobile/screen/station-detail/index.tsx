@@ -172,7 +172,7 @@ export default function StationDetailScreen() {
                     <AppText tone="muted" variant="bodySmall">
                       {isCurrentReturnStation
                         ? "Đây đang là bãi trả xe đã giữ chỗ cho phiên thuê của bạn."
-                        : "Xác nhận bãi này để cập nhật điểm trả xe cho phiên thuê đang diễn ra."}
+                        : "Xác nhận bãi này để giữ chỗ trước cho phiên thuê đang diễn ra."}
                     </AppText>
                   </YStack>
 
@@ -188,7 +188,7 @@ export default function StationDetailScreen() {
                   <YStack alignItems="center" flexDirection="row" gap="$2">
                     <IconSymbol color={theme.textTertiary.val} name="info" size="sm" />
                     <AppText flex={1} tone="muted" variant="meta">
-                      Sau khi giữ chỗ, quay lại chi tiết thuê xe để mở mã QR trả xe cho nhân viên.
+                      Giữ chỗ trước là tuỳ chọn. Nếu muốn chắc chắn có chỗ trả tại trạm này, hãy lưu lại bãi trả rồi đưa mã QR cho nhân viên khi tới nơi.
                     </AppText>
                   </YStack>
                 </AppCard>
