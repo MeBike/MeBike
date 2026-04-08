@@ -424,7 +424,7 @@ describe("rentals end routing e2e", () => {
     const { token: staffToken } = await createStaffToken(station.id);
 
     const response = await fixture.app.request(
-      `http://test/v1/staff/bike-swap-requests/${bikeSwapRequest.id}/approve`,
+      `http://test/v1/operators/bike-swap-requests/${bikeSwapRequest.id}/approve`,
       {
         method: "POST",
         headers: {
@@ -480,7 +480,7 @@ describe("rentals end routing e2e", () => {
     });
 
     const response = await fixture.app.request(
-      `http://test/v1/agency/bike-swap-requests/${bikeSwapRequest.id}/approve`,
+      `http://test/v1/operators/bike-swap-requests/${bikeSwapRequest.id}/approve`,
       {
         method: "POST",
         headers: {
@@ -507,7 +507,7 @@ describe("rentals end routing e2e", () => {
     const { token: staffToken } = await createStaffToken(internalStation.id);
 
     const response = await fixture.app.request(
-      `http://test/v1/staff/bike-swap-requests/${bikeSwapRequest.id}/approve`,
+      `http://test/v1/operators/bike-swap-requests/${bikeSwapRequest.id}/approve`,
       {
         method: "POST",
         headers: {
@@ -522,5 +522,52 @@ describe("rentals end routing e2e", () => {
 
     expect(response.status).toBe(404);
     expect(body.details?.code).toBe("BIKE_SWAP_REQUEST_NOT_FOUND");
+  });
+
+  it("lists bike swap requests for both staff and agency through the shared operator route", async () => {
+    const internalGraph = await createBikeSwapRequestGraph({
+      stationType: "INTERNAL",
+    });
+    const agencyGraph = await createBikeSwapRequestGraph({
+      stationType: "AGENCY",
+    });
+    const { token: staffToken } = await createStaffToken(internalGraph.station.id);
+    const agencyUser = await fixture.factories.user({ role: "AGENCY" });
+    await fixture.factories.userOrgAssignment({
+      userId: agencyUser.id,
+      agencyId: agencyGraph.agencyId!,
+    });
+    const agencyToken = fixture.auth.makeAccessToken({
+      userId: agencyUser.id,
+      role: "AGENCY",
+    });
+
+    const staffResponse = await fixture.app.request(
+      "http://test/v1/operators/bike-swap-requests?page=1&pageSize=20",
+      {
+        headers: {
+          Authorization: `Bearer ${staffToken}`,
+        },
+      },
+    );
+    const agencyResponse = await fixture.app.request(
+      "http://test/v1/operators/bike-swap-requests?page=1&pageSize=20",
+      {
+        headers: {
+          Authorization: `Bearer ${agencyToken}`,
+        },
+      },
+    );
+
+    const staffBody = await staffResponse.json() as RentalsContracts.BikeSwapRequestListResponse;
+    const agencyBody = await agencyResponse.json() as RentalsContracts.BikeSwapRequestListResponse;
+
+    expect(staffResponse.status).toBe(200);
+    expect(staffBody.data.map(item => item.id)).toContain(internalGraph.bikeSwapRequest.id);
+    expect(staffBody.data.map(item => item.id)).not.toContain(agencyGraph.bikeSwapRequest.id);
+
+    expect(agencyResponse.status).toBe(200);
+    expect(agencyBody.data.map(item => item.id)).toContain(agencyGraph.bikeSwapRequest.id);
+    expect(agencyBody.data.map(item => item.id)).not.toContain(internalGraph.bikeSwapRequest.id);
   });
 });

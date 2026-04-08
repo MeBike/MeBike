@@ -4,13 +4,12 @@ import { serverRoutes } from "@mebike/shared";
 
 import {
   RentalAdminController,
-  RentalAgencyController,
   RentalMeController,
+  RentalOperatorController,
   RentalStaffController,
 } from "@/http/controllers/rentals";
 import {
   requireAdminMiddleware,
-  requireAgencyMiddleware,
   requireRentalOperatorMiddleware,
   requireRentalSupportMiddleware,
   requireStaffMiddleware,
@@ -109,16 +108,6 @@ export function registerRentalRoutes(
 
   app.openapi(requestSwapRoute, RentalMeController.requestBikeSwap);
 
-  const staffListSwapRequestsRoute = {
-    ...rentals.staffListBikeSwapRequests,
-    middleware: [requireStaffMiddleware] as const,
-  } satisfies RouteConfig;
-
-  app.openapi(
-    staffListSwapRequestsRoute,
-    RentalStaffController.staffListBikeSwapRequests,
-  );
-
   const adminListSwapRequestsRoute = {
     ...rentals.adminListBikeSwapRequests,
     middleware: [requireAdminMiddleware] as const,
@@ -129,34 +118,44 @@ export function registerRentalRoutes(
     RentalAdminController.adminListBikeSwapRequests,
   );
 
-  const staffApproveSwapRoute = {
-    ...rentals.approveBikeSwapRequest,
-    middleware: [requireStaffMiddleware] as const,
+  const operatorListSwapRequestsRoute = {
+    ...rentals.operatorListBikeSwapRequests,
+    middleware: [requireRentalOperatorMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
-    staffApproveSwapRoute,
-    RentalStaffController.staffApproveBikeSwapRequest,
+    operatorListSwapRequestsRoute,
+    RentalOperatorController.operatorListBikeSwapRequests,
   );
 
-  const staffRejectSwapRequestRoute = {
-    ...rentals.rejectBikeSwapRequest,
-    middleware: [requireStaffMiddleware] as const,
+  const operatorApproveSwapRoute = {
+    ...rentals.operatorApproveBikeSwapRequest,
+    middleware: [requireRentalOperatorMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
-    staffRejectSwapRequestRoute,
-    RentalStaffController.staffRejectBikeSwapRequest,
+    operatorApproveSwapRoute,
+    RentalOperatorController.operatorApproveBikeSwapRequest,
   );
 
-  const staffGetSwapRequestRoute = {
-    ...rentals.staffGetBikeSwapRequests,
-    middleware: [requireStaffMiddleware] as const,
+  const operatorRejectSwapRequestRoute = {
+    ...rentals.operatorRejectBikeSwapRequest,
+    middleware: [requireRentalOperatorMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
-    staffGetSwapRequestRoute,
-    RentalStaffController.staffGetBikeSwapRequests,
+    operatorRejectSwapRequestRoute,
+    RentalOperatorController.operatorRejectBikeSwapRequest,
+  );
+
+  const operatorGetSwapRequestRoute = {
+    ...rentals.operatorGetBikeSwapRequests,
+    middleware: [requireRentalOperatorMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    operatorGetSwapRequestRoute,
+    RentalOperatorController.operatorGetBikeSwapRequest,
   );
 
   const adminGetSwapRequestRoute = {
@@ -187,46 +186,6 @@ export function registerRentalRoutes(
   app.openapi(
     mySwapRequestRoute,
     RentalMeController.getMyBikeSwapRequest,
-  );
-
-  const agencyListSwapRequestsRoute = {
-    ...rentals.agencyListBikeSwapRequests,
-    middleware: [requireAgencyMiddleware] as const,
-  } satisfies RouteConfig;
-
-  app.openapi(
-    agencyListSwapRequestsRoute,
-    RentalAgencyController.agencyListBikeSwapRequests,
-  );
-
-  const agencyGetSwapRequestRoute = {
-    ...rentals.agencyGetBikeSwapRequests,
-    middleware: [requireAgencyMiddleware] as const,
-  } satisfies RouteConfig;
-
-  app.openapi(
-    agencyGetSwapRequestRoute,
-    RentalAgencyController.agencyGetBikeSwapRequests,
-  );
-
-  const agencyApproveSwapRoute = {
-    ...rentals.agencyApproveBikeSwapRequest,
-    middleware: [requireAgencyMiddleware] as const,
-  } satisfies RouteConfig;
-
-  app.openapi(
-    agencyApproveSwapRoute,
-    RentalAgencyController.agencyApproveBikeSwapRequestHandler,
-  );
-
-  const agencyRejectSwapRequestRoute = {
-    ...rentals.agencyRejectBikeSwapRequest,
-    middleware: [requireAgencyMiddleware] as const,
-  } satisfies RouteConfig;
-
-  app.openapi(
-    agencyRejectSwapRequestRoute,
-    RentalAgencyController.agencyRejectBikeSwapRequestHandler,
   );
 
   app.openapi(rentals.getMyRental, RentalMeController.getMyRental);

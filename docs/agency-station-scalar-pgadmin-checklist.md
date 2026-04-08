@@ -24,6 +24,7 @@ Phan logic can xac nhan lai:
 - `bike swap`
   - station `INTERNAL` -> `STAFF` cua station do confirm
   - station `AGENCY` -> account `AGENCY` cua owner do confirm
+  - ca hai actor deu dung chung operator endpoints `/v1/operators/...`
 - `incident`
   - chi ho tro cho station `INTERNAL`
   - account `AGENCY` khong duoc dung incident routes
@@ -152,7 +153,7 @@ ORDER BY ir.reported_at DESC;
 Case 1: agency chi thay request cua station agency do quan ly
 
 - Login `agency1`
-- Goi `GET /v1/agency/bike-swap-requests`
+- Goi `GET /v1/operators/bike-swap-requests`
 
 Ky vong:
 
@@ -164,7 +165,7 @@ Ky vong:
 Case 2: agency approve request cua station `AGENCY`
 
 - Chon `bikeSwapRequestId` dang `PENDING` thuoc station cua `agency1`
-- Goi `POST /v1/agency/bike-swap-requests/{bikeSwapRequestId}/approve`
+- Goi `POST /v1/operators/bike-swap-requests/{bikeSwapRequestId}/approve`
 
 Body:
 
@@ -191,7 +192,7 @@ Case 3: agency reject request cua station `AGENCY`
 Neu seed chi co 1 request `PENDING`, reset DB lai truoc khi test case nay.
 
 - Login `agency1`
-- Goi `POST /v1/agency/bike-swap-requests/{bikeSwapRequestId}/reject`
+- Goi `POST /v1/operators/bike-swap-requests/{bikeSwapRequestId}/reject`
 
 Body:
 
@@ -219,7 +220,7 @@ Case 4: staff khong duoc approve bike swap cua station `AGENCY`
 
 - Login `staff1`
 - Dung chinh `bikeSwapRequestId` thuoc station `AGENCY`
-- Goi `POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/approve`
+- Goi `POST /v1/operators/bike-swap-requests/{bikeSwapRequestId}/approve`
 
 Body:
 
@@ -237,7 +238,7 @@ Case 5: staff approve bike swap cua station `INTERNAL`
 Case nay can `bikeSwapRequestIdInternal` thuoc station `INTERNAL`.
 Neu seed chua co san, tao request pending bang flow user dang thue xe o station `INTERNAL`, sau do login `staff1` va goi:
 
-`POST /v1/staff/bike-swap-requests/{bikeSwapRequestIdInternal}/approve`
+`POST /v1/operators/bike-swap-requests/{bikeSwapRequestIdInternal}/approve`
 
 Body:
 
@@ -1034,13 +1035,13 @@ Ky vong:
 Login `agency1`, goi:
 
 ```text
-GET /v1/agency/bike-swap-requests
+GET /v1/operators/bike-swap-requests
 ```
 
 Ky vong:
 
 - chi thay request thuoc station cua `agency1`
-- staff route va agency route khong dung chung:
+- cung mot operator route duoc dung chung:
   - `STAFF` chi xu ly request o station `INTERNAL` ma ho duoc assign
   - `AGENCY` chi xu ly request o station `AGENCY` thuoc `agencyId` cua ho
 
@@ -1074,7 +1075,7 @@ Lay `bikeSwapRequestIdAgency1` cua request `PENDING`.
 Login `agency1`, goi:
 
 ```text
-POST /v1/agency/bike-swap-requests/{bikeSwapRequestId}/approve
+POST /v1/operators/bike-swap-requests/{bikeSwapRequestId}/approve
 ```
 
 Body:
@@ -1109,7 +1110,7 @@ Neu seed chi co 1 request `PENDING`, cach sach nhat la:
 Goi:
 
 ```text
-POST /v1/agency/bike-swap-requests/{bikeSwapRequestId}/reject
+POST /v1/operators/bike-swap-requests/{bikeSwapRequestId}/reject
 ```
 
 Body:
@@ -1139,7 +1140,7 @@ WHERE id = '<bikeSwapRequestId>';
 Login `staff1` neu station cua `staff1` co request pending phu hop. Neu khong thi tao request pending moi tren station internal roi goi:
 
 ```text
-POST /v1/staff/bike-swap-requests/{bikeSwapRequestId}/approve
+POST /v1/operators/bike-swap-requests/{bikeSwapRequestId}/approve
 ```
 
 Body:
@@ -1398,3 +1399,4 @@ Thu tu khuyen nghi:
 - `POST /v1/agency-requests` bat buoc co `requesterEmail`.
 - `PUT /v1/rentals/{rentalId}/end` hien tai chi hop le cho `STAFF` hoac `AGENCY`, khong con `ADMIN`.
 - `incident` khong con ho tro `AGENCY` role va khong duoc tao o station `AGENCY`.
+- `bike swap` da duoc gop thanh operator routes chung `/v1/operators/bike-swap-requests...`; quyen duoc resolve theo role dang dang nhap va owner cua station.

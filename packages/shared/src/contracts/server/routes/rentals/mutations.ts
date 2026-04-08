@@ -608,9 +608,9 @@ export const requestBikeSwap = createRoute({
   },
 });
 
-export const approveBikeSwapRequest = createRoute({
+export const operatorApproveBikeSwapRequest = createRoute({
   method: "post",
-  path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}/approve",
+  path: "/v1/operators/bike-swap-requests/{bikeSwapRequestId}/approve",
   security: [{ bearerAuth: [] }],
   tags: ["Bike Swap"],
   request: {
@@ -689,20 +689,12 @@ export const approveBikeSwapRequest = createRoute({
   },
 });
 
-export const agencyApproveBikeSwapRequest = createRoute({
-  method: "post",
-  path: "/v1/agency/bike-swap-requests/{bikeSwapRequestId}/approve",
-  tags: ["Agency", "Bike Swap"],
-  security: [{ bearerAuth: [] }],
-  request: {
-    params: BikeSwapRequestIdParamSchema,
-  },
-  responses: approveBikeSwapRequest.responses,
-});
+export const approveBikeSwapRequest = operatorApproveBikeSwapRequest;
+export const agencyApproveBikeSwapRequest = operatorApproveBikeSwapRequest;
 
-export const rejectBikeSwapRequest = createRoute({
+export const operatorRejectBikeSwapRequest = createRoute({
   method: "post",
-  path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}/reject",
+  path: "/v1/operators/bike-swap-requests/{bikeSwapRequestId}/reject",
   security: [{ bearerAuth: [] }],
   tags: ["Bike Swap"],
   request: {
@@ -782,20 +774,5 @@ export const rejectBikeSwapRequest = createRoute({
   },
 });
 
-export const agencyRejectBikeSwapRequest = createRoute({
-  method: "post",
-  path: "/v1/agency/bike-swap-requests/{bikeSwapRequestId}/reject",
-  tags: ["Agency", "Bike Swap"],
-  security: [{ bearerAuth: [] }],
-  request: {
-    params: BikeSwapRequestIdParamSchema,
-    body: {
-      content: {
-        "application/json": {
-          schema: rejectBikeSwapRequest.request!.body.content["application/json"].schema,
-        },
-      },
-    },
-  },
-  responses: rejectBikeSwapRequest.responses,
-});
+export const rejectBikeSwapRequest = operatorRejectBikeSwapRequest;
+export const agencyRejectBikeSwapRequest = operatorRejectBikeSwapRequest;
