@@ -7,6 +7,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
@@ -31,7 +32,7 @@ type CreateReturnConfirmationInput = {
 export type ReturnConfirmationRepo = {
   findByRentalId: (
     rentalId: string,
-  ) => Effect.Effect<Option.Option<ReturnConfirmationRow>, RentalRepositoryError>;
+  ) => Effect.Effect<Option.Option<ReturnConfirmationRow>>;
   create: (
     input: CreateReturnConfirmationInput,
   ) => Effect.Effect<ReturnConfirmationRow, ReturnConfirmationRepoError>;
@@ -41,7 +42,6 @@ const returnConfirmationSelect = {
   id: true,
   rentalId: true,
   stationId: true,
-  agencyId: true,
   confirmedByUserId: true,
   confirmationMethod: true,
   handoverStatus: true,
@@ -53,7 +53,6 @@ function mapToReturnConfirmationRow(raw: {
   id: string;
   rentalId: string;
   stationId: string | null;
-  agencyId: string | null;
   confirmedByUserId: string;
   confirmationMethod: ConfirmationMethod;
   handoverStatus: HandoverStatus;
@@ -83,6 +82,7 @@ export function makeReturnConfirmationRepository(
           }),
       }).pipe(
         Effect.map(row => Option.fromNullable(row).pipe(Option.map(mapToReturnConfirmationRow))),
+        defectOn(RentalRepositoryError),
       ),
 
     create: input =>
@@ -92,7 +92,6 @@ export function makeReturnConfirmationRepository(
             data: {
               rentalId: input.rentalId,
               stationId: input.stationId,
-              agencyId: null,
               confirmedByUserId: input.confirmedByUserId,
               confirmationMethod: input.confirmationMethod,
               handoverStatus: input.handoverStatus,
@@ -119,7 +118,10 @@ export function makeReturnConfirmationRepository(
                 }),
             ),
           ),
-      }).pipe(Effect.map(mapToReturnConfirmationRow)),
+      }).pipe(
+        Effect.map(mapToReturnConfirmationRow),
+        defectOn(RentalRepositoryError),
+      ),
   };
 }
 

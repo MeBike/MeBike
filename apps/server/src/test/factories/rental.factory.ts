@@ -3,7 +3,6 @@ import { uuidv7 } from "uuidv7";
 import type { CreatedRental, FactoryContext, RentalOverrides } from "./types";
 
 const defaults = {
-  bikeId: null,
   endStationId: null,
   startTime: new Date(),
   endTime: null,
@@ -28,13 +27,16 @@ export function createRentalFactory(ctx: FactoryContext) {
     if (!overrides.startStationId) {
       throw new Error("startStationId is required for createRental");
     }
+    if (!overrides.bikeId) {
+      throw new Error("bikeId is required for createRental");
+    }
 
     await ctx.prisma.rental.create({
       data: {
         id,
         userId: overrides.userId,
         reservationId: overrides.reservationId ?? null,
-        bikeId: overrides.bikeId ?? defaults.bikeId,
+        bikeId: overrides.bikeId,
         pricingPolicyId: overrides.pricingPolicyId ?? activePricingPolicy?.id ?? null,
         startStationId: overrides.startStationId,
         endStationId: overrides.endStationId ?? defaults.endStationId,

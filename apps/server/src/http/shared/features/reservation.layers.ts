@@ -1,9 +1,12 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
-  ReservationHoldServiceLive,
-  ReservationRepositoryLive,
-  ReservationServiceLive,
+  ReservationAnalyticsRepositoryLive,
+  ReservationCommandRepositoryLive,
+  ReservationCommandServiceLive,
+  ReservationQueryRepositoryLive,
+  ReservationQueryServiceLive,
+  ReservationStatsServiceLive,
 } from "@/domain/reservations";
 
 import { PrismaLive } from "../infra.layers";
@@ -16,22 +19,37 @@ import {
 } from "./subscription.layers";
 import { WalletDepsLive } from "./wallet.layers";
 
-export const ReservationReposLive = ReservationRepositoryLive.pipe(
+export const ReservationQueryReposLive = ReservationQueryRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-export const ReservationServiceLayer = ReservationServiceLive.pipe(
-  Layer.provide(ReservationReposLive),
+export const ReservationCommandReposLive = ReservationCommandRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
 );
 
-export const ReservationHoldServiceLayer = ReservationHoldServiceLive.pipe(
-  Layer.provide(ReservationReposLive),
+export const ReservationAnalyticsReposLive = ReservationAnalyticsRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+export const ReservationQueryServiceLayer = ReservationQueryServiceLive.pipe(
+  Layer.provide(ReservationQueryReposLive),
+);
+
+export const ReservationCommandServiceLayer = ReservationCommandServiceLive.pipe(
+  Layer.provide(ReservationCommandReposLive),
+);
+
+export const ReservationStatsServiceLayer = ReservationStatsServiceLive.pipe(
+  Layer.provide(ReservationAnalyticsReposLive),
 );
 
 export const ReservationDepsLive = Layer.mergeAll(
-  ReservationReposLive,
-  ReservationServiceLayer,
-  ReservationHoldServiceLayer,
+  ReservationQueryReposLive,
+  ReservationCommandReposLive,
+  ReservationAnalyticsReposLive,
+  ReservationQueryServiceLayer,
+  ReservationCommandServiceLayer,
+  ReservationStatsServiceLayer,
   BikeReposLive,
   StationReposLive,
   RentalReposLive,
@@ -40,7 +58,3 @@ export const ReservationDepsLive = Layer.mergeAll(
   SubscriptionServiceLayer,
   PrismaLive,
 );
-
-export function withReservationDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(ReservationDepsLive));
-}

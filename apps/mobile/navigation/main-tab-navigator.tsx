@@ -1,22 +1,29 @@
-import { useAuthNext } from "@providers/auth-provider-next";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 
+import { LoadingScreen } from "@components/LoadingScreen";
+import { useAuthNext } from "@providers/auth-provider-next";
+
+import {
+  BookingHistoryScreen,
+  HomeScreen,
+  MyWalletScreen,
+  ProfileScreen,
+  StaffDashboardScreen,
+} from "../screen";
 import type { RootStackParamList } from "../types/navigation";
 
-import BookingHistoryScreen from "../screen/booking-history";
-import HomeScreen from "../screen/Home";
-import MyWalletScreen from "../screen/my-wallet-screen";
-import ProfileScreen from "../screen/profile-screen";
-import SOSAgentDashboardScreen from "../screen/SOSAgentDashboardScreen";
-import StaffDashboardScreen from "../screen/StaffDashboardScreen";
 import StationSelectScreen from "../styles/StationSelect";
 import { BottomTabBar } from "./bottom-tab-bar";
 
 const Tab = createBottomTabNavigator<RootStackParamList>();
 
 function MainTabNavigator() {
-  const { isAuthenticated, isStaff, isSOS } = useAuthNext();
+  const { status, isAuthenticated, isStaff } = useAuthNext();
+
+  if (status === "loading") {
+    return <LoadingScreen />;
+  }
 
   return (
     <Tab.Navigator
@@ -26,35 +33,28 @@ function MainTabNavigator() {
       }}
       tabBar={props => <BottomTabBar {...props} />}
     >
-      {isSOS
+      {isStaff
         ? (
             <>
-              <Tab.Screen name="SOS Dashboard" component={SOSAgentDashboardScreen} />
+              <Tab.Screen name="Công cụ" component={StaffDashboardScreen} />
               <Tab.Screen name="Tôi" component={ProfileScreen} />
             </>
           )
-        : isStaff
-          ? (
-              <>
-                <Tab.Screen name="Công cụ" component={StaffDashboardScreen} />
-                <Tab.Screen name="Tôi" component={ProfileScreen} />
-              </>
-            )
-          : (
-              <>
-                <Tab.Screen name="Nhà" component={HomeScreen} />
-                <Tab.Screen name="Trạm" component={StationSelectScreen} />
-                {isAuthenticated
-                  ? <Tab.Screen name="Booking" component={BookingHistoryScreen} />
-                  : null}
-                {isAuthenticated
-                  ? <Tab.Screen name="Ví" component={MyWalletScreen} />
-                  : null}
-                {isAuthenticated
-                  ? <Tab.Screen name="Tôi" component={ProfileScreen} />
-                  : null}
-              </>
-            )}
+        : (
+            <>
+              <Tab.Screen name="Nhà" component={HomeScreen} />
+              <Tab.Screen name="Trạm" component={StationSelectScreen} />
+              {isAuthenticated
+                ? <Tab.Screen name="Booking" component={BookingHistoryScreen} />
+                : null}
+              {isAuthenticated
+                ? <Tab.Screen name="Ví" component={MyWalletScreen} />
+                : null}
+              {isAuthenticated
+                ? <Tab.Screen name="Tôi" component={ProfileScreen} />
+                : null}
+            </>
+          )}
     </Tab.Navigator>
   );
 }

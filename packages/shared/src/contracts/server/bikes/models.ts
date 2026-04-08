@@ -13,6 +13,7 @@ export const BikeRatingSchema = z.object({
 
 export const BikeSummarySchema = z.object({
   id: z.uuidv7(),
+  bikeNumber: z.string(),
   chipId: z.string(),
   stationId: z.uuidv7().nullable(),
   supplier: BikeSupplierSchema.nullable(),

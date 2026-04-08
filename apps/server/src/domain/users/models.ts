@@ -5,15 +5,14 @@ export type OrgUnitRef = {
   readonly name: string;
 };
 
-export type TechnicianTeamAvailableOption = {
-  readonly id: string;
-  readonly name: string;
-  readonly stationId: string;
+export type AgencyOrgUnitRef = OrgUnitRef & {
+  readonly status: AccountStatus;
+  readonly stationId: string | null;
 };
 
 export type UserOrgAssignment = {
   readonly station: OrgUnitRef | null;
-  readonly agency: OrgUnitRef | null;
+  readonly agency: AgencyOrgUnitRef | null;
   readonly technicianTeam: OrgUnitRef | null;
 };
 
@@ -64,10 +63,6 @@ export type UpdateUserProfilePatch = Partial<{
   username: string | null;
   avatar: string | null;
   location: string | null;
-  role: UserRole;
-  accountStatus: AccountStatus;
-  verify: UserVerifyStatus;
-  nfcCardUid: string | null;
 }>;
 
 export type UpdateUserAdminPatch = Partial<{

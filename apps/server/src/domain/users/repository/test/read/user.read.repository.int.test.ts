@@ -1,9 +1,11 @@
-import { Either, Option } from "effect";
+import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { runEffect, runEffectEither } from "@/test/effect/run";
+import { expectDefect } from "@/test/effect/assertions";
+import { runEffect } from "@/test/effect/run";
 
 import {
   createUserInput,
@@ -88,89 +90,16 @@ describe("userReadRepository Integration", () => {
     expect(result.some(item => item.fullname === "Regular User")).toBe(false);
   });
 
-  it("countTechnicianTeamMembers counts members and supports exclusion", async () => {
-    const station = await kit.fixture.factories.station({ name: "Read Team Station" });
-    const team = await kit.fixture.factories.technicianTeam({
-      name: "Read Team",
-      stationId: station.id,
-    });
-    const first = await kit.fixture.factories.user({ role: "TECHNICIAN", email: "read-team-1@example.com" });
-    const second = await kit.fixture.factories.user({ role: "TECHNICIAN", email: "read-team-2@example.com" });
-
-    await kit.fixture.factories.userOrgAssignment({
-      userId: first.id,
-      technicianTeamId: team.id,
-    });
-    await kit.fixture.factories.userOrgAssignment({
-      userId: second.id,
-      technicianTeamId: team.id,
-    });
-
-    const count = await runEffect(repo.countTechnicianTeamMembers(team.id));
-    const excludedCount = await runEffect(repo.countTechnicianTeamMembers(team.id, {
-      excludeUserId: first.id,
-    }));
-
-    expect(count).toBe(2);
-    expect(excludedCount).toBe(1);
-  });
-
-  it("listAvailableTechnicianTeams omits full teams and supports station filter", async () => {
-    const stationA = await kit.fixture.factories.station({ name: "Team Station A" });
-    const stationB = await kit.fixture.factories.station({ name: "Team Station B" });
-    const availableTeam = await kit.fixture.factories.technicianTeam({
-      name: "Available Team",
-      stationId: stationA.id,
-    });
-    const fullTeam = await kit.fixture.factories.technicianTeam({
-      name: "Full Team",
-      stationId: stationA.id,
-    });
-    await kit.fixture.factories.technicianTeam({
-      name: "Unavailable Team",
-      stationId: stationA.id,
-      availabilityStatus: "UNAVAILABLE",
-    });
-    const otherStationTeam = await kit.fixture.factories.technicianTeam({
-      name: "Other Station Team",
-      stationId: stationB.id,
-    });
-
-    for (let i = 0; i < 3; i++) {
-      const user = await kit.fixture.factories.user({
-        role: "TECHNICIAN",
-        email: `full-team-${i}@example.com`,
-      });
-      await kit.fixture.factories.userOrgAssignment({
-        userId: user.id,
-        technicianTeamId: fullTeam.id,
-      });
-    }
-
-    const allTeams = await runEffect(repo.listAvailableTechnicianTeams());
-    expect(allTeams.map(item => item.id)).toContain(availableTeam.id);
-    expect(allTeams.map(item => item.id)).toContain(otherStationTeam.id);
-    expect(allTeams.map(item => item.id)).not.toContain(fullTeam.id);
-
-    const filteredTeams = await runEffect(repo.listAvailableTechnicianTeams({
-      stationId: stationA.id,
-    }));
-    expect(filteredTeams.map(item => item.id)).toContain(availableTeam.id);
-    expect(filteredTeams.map(item => item.id)).not.toContain(otherStationTeam.id);
-    expect(filteredTeams.map(item => item.id)).not.toContain(fullTeam.id);
-  });
-
-  it("returns UserRepositoryError when database is unreachable", async () => {
+  it("defects with UserRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = kit.makeRepo(broken.client);
-      const result = await runEffectEither(brokenRepo.findById(uuidv7()));
 
-      if (Either.isRight(result)) {
-        throw new Error("Expected failure but got success");
-      }
-
-      expect(result.left._tag).toBe("UserRepositoryError");
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        UserRepositoryError,
+        { operation: "findById" },
+      );
     }
     finally {
       await broken.stop();

@@ -5,10 +5,11 @@ import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
 import {
-  makeReservationRepository,
-  ReservationRepository,
-  ReservationRepositoryLive,
-} from "@/domain/reservations/repository/reservation.repository";
+  makeReservationCommandRepository,
+  makeReservationQueryRepository,
+  ReservationQueryRepository,
+  ReservationQueryRepositoryLive,
+} from "@/domain/reservations";
 import {
   StationRepository,
   StationRepositoryLive,
@@ -26,7 +27,7 @@ import {
 import logger from "@/lib/logger";
 
 type ReservationWorkerDeps
-  = | ReservationRepository
+  = | ReservationQueryRepository
     | BikeRepository
     | UserQueryRepository
     | StationRepository
@@ -37,7 +38,7 @@ function runReservationEffect<A, E>(
 ): Promise<A> {
   return Effect.runPromise(
     eff.pipe(
-      Effect.provide(ReservationRepositoryLive),
+      Effect.provide(ReservationQueryRepositoryLive),
       Effect.provide(BikeRepositoryLive),
       Effect.provide(UserQueryRepositoryLive),
       Effect.provide(StationRepositoryLive),
@@ -67,14 +68,12 @@ export async function handleReservationNotifyNearExpiry(
 
   const result = await runReservationEffect(
     Effect.gen(function* () {
-      const reservationRepo = yield* ReservationRepository;
+      const reservationRepo = yield* ReservationQueryRepository;
       const userRepo = yield* UserQueryRepository;
       const stationRepo = yield* StationRepository;
       const now = new Date();
 
-      const reservationOpt = yield* reservationRepo.findById(payload.reservationId).pipe(
-        Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-      );
+      const reservationOpt = yield* reservationRepo.findById(payload.reservationId);
       if (Option.isNone(reservationOpt)) {
         return { outcome: "NOT_FOUND" as const };
       }
@@ -90,17 +89,13 @@ export async function handleReservationNotifyNearExpiry(
         return { outcome: "SKIPPED", reason: "MISSING_BIKE" as const };
       }
 
-      const userOpt = yield* userRepo.findById(reservation.userId).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-      );
+      const userOpt = yield* userRepo.findById(reservation.userId);
       if (Option.isNone(userOpt)) {
         return { outcome: "SKIPPED", reason: "MISSING_USER" as const };
       }
       const user = userOpt.value;
 
-      const stationOpt = yield* stationRepo.getById(reservation.stationId).pipe(
-        Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
-      );
+      const stationOpt = yield* stationRepo.getById(reservation.stationId);
       if (Option.isNone(stationOpt)) {
         return { outcome: "SKIPPED", reason: "MISSING_STATION" as const };
       }
@@ -200,11 +195,10 @@ export async function handleReservationExpireHold(
         try: async () => {
           return await client.$transaction(async (tx) => {
             const txBikeRepo = makeBikeRepository(tx);
-            const txReservationRepo = makeReservationRepository(tx);
+            const txReservationQueryRepo = makeReservationQueryRepository(tx);
+            const txReservationCommandRepo = makeReservationCommandRepository(tx);
             const reservationOpt = await Effect.runPromise(
-              txReservationRepo.findById(payload.reservationId).pipe(
-                Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-              ),
+              txReservationQueryRepo.findById(payload.reservationId),
             );
 
             if (Option.isNone(reservationOpt)) {
@@ -223,18 +217,14 @@ export async function handleReservationExpireHold(
             }
 
             const expired = await Effect.runPromise(
-              txReservationRepo.expirePendingHold(reservation.id, now).pipe(
-                Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-              ),
+              txReservationCommandRepo.expirePendingHold(reservation.id, now),
             );
             if (!expired) {
               return { outcome: "SKIPPED" as const, reason: "ALREADY_HANDLED" as const };
             }
 
             await Effect.runPromise(
-              txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now).pipe(
-                Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-              ),
+              txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now),
             );
 
             return {
@@ -256,17 +246,13 @@ export async function handleReservationExpireHold(
         return outcome;
       }
 
-      const userOpt = yield* userRepo.findById(outcome.userId).pipe(
-        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-      );
+      const userOpt = yield* userRepo.findById(outcome.userId);
       if (Option.isNone(userOpt)) {
         return { outcome: "SKIPPED" as const, reason: "MISSING_USER" as const };
       }
       const user = userOpt.value;
 
-      const stationOpt = yield* stationRepo.getById(outcome.stationId).pipe(
-        Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
-      );
+      const stationOpt = yield* stationRepo.getById(outcome.stationId);
       if (Option.isNone(stationOpt)) {
         return { outcome: "SKIPPED" as const, reason: "MISSING_STATION" as const };
       }

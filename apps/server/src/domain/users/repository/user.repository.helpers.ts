@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { pickDefined } from "@/domain/shared/pick-defined";
+import { TECHNICIAN_TEAM_MEMBER_LIMIT } from "@/domain/technician-teams";
 
 import type { PageRequest } from "../../shared/pagination";
 import type {
@@ -13,9 +14,7 @@ import type {
   UserSortField,
 } from "../models";
 
-import { TechnicianTeamMemberLimitExceeded, UserRepositoryError } from "../domain-errors";
-
-export const TECHNICIAN_TEAM_MEMBER_LIMIT = 3;
+import { StationRoleAssignmentLimitExceeded, TechnicianTeamMemberLimitExceeded, UserRepositoryError } from "../domain-errors";
 
 export function toOrgAssignmentData(
   assignment:
@@ -99,31 +98,43 @@ export function toWhere(filter: UserFilter): PrismaTypes.UserWhereInput {
   });
 }
 
-export function countTechnicianTeamMembersForClient(
+export function countStationRoleAssignmentsForClient(
   client: PrismaClient | PrismaTypes.TransactionClient,
-  technicianTeamId: string,
+  stationId: string,
+  role: "STAFF" | "MANAGER",
   options?: { readonly excludeUserId?: string },
 ) {
   return Effect.tryPromise({
     try: () =>
       client.userOrgAssignment.count({
-        where: {
-          technicianTeamId,
-          ...(options?.excludeUserId
-            ? {
-                userId: {
-                  not: options.excludeUserId,
-                },
-              }
-            : {}),
-        },
+        where: toStationRoleAssignmentWhere(stationId, role, options),
       }),
-    catch: err =>
+    catch: (err: unknown) =>
       new UserRepositoryError({
-        operation: "countTechnicianTeamMembers",
+        operation: "countStationRoleAssignments",
         cause: err,
       }),
   });
+}
+
+function toStationRoleAssignmentWhere(
+  stationId: string,
+  role: "STAFF" | "MANAGER",
+  options?: { readonly excludeUserId?: string },
+): PrismaTypes.UserOrgAssignmentWhereInput {
+  return {
+    stationId,
+    ...(options?.excludeUserId
+      ? {
+          userId: {
+            not: options.excludeUserId,
+          },
+        }
+      : {}),
+    user: {
+      role,
+    },
+  };
 }
 
 export async function ensureTechnicianTeamCapacity(
@@ -148,6 +159,25 @@ export async function ensureTechnicianTeamCapacity(
     throw new TechnicianTeamMemberLimitExceeded({
       technicianTeamId,
       memberLimit: TECHNICIAN_TEAM_MEMBER_LIMIT,
+    });
+  }
+}
+
+export async function ensureStationRoleAssignmentLimit(
+  client: PrismaTypes.TransactionClient,
+  stationId: string,
+  role: "STAFF" | "MANAGER",
+  options?: { readonly excludeUserId?: string },
+) {
+  const assignmentCount = await client.userOrgAssignment.count({
+    where: toStationRoleAssignmentWhere(stationId, role, options),
+  });
+
+  if (assignmentCount >= 1) {
+    throw new StationRoleAssignmentLimitExceeded({
+      stationId,
+      role,
+      assignmentLimit: 1,
     });
   }
 }

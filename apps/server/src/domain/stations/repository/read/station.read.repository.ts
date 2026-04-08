@@ -5,6 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 
 import type { NearestSearchArgs, NearestStationRow } from "../../models";
@@ -31,6 +32,7 @@ export type StationReadRepo = Pick<
   StationRepo,
   | "listWithOffset"
   | "getById"
+  | "getByAgencyId"
   | "listNearest"
 >;
 
@@ -96,7 +98,7 @@ export function makeStationReadRepository(
           applyCounts(item, counts));
 
         return makePageResult(mappedItems, total, page, pageSize);
-      });
+      }).pipe(defectOn(StationRepositoryError));
     },
 
     getById(id) {
@@ -122,7 +124,33 @@ export function makeStationReadRepository(
           applyCounts(item, counts));
 
         return Option.some(station);
-      });
+      }).pipe(defectOn(StationRepositoryError));
+    },
+
+    getByAgencyId(agencyId) {
+      return Effect.gen(function* () {
+        const row = yield* Effect.tryPromise({
+          try: () =>
+            client.station.findUnique({
+              where: { agencyId },
+              select: stationSelect,
+            }),
+          catch: cause =>
+            new StationRepositoryError({
+              operation: "getByAgencyId",
+              cause,
+            }),
+        });
+
+        if (!row) {
+          return Option.none();
+        }
+
+        const [station] = yield* attachCounts([row], (item, counts) =>
+          applyCounts(item, counts));
+
+        return Option.some(station);
+      }).pipe(defectOn(StationRepositoryError));
     },
 
     listNearest({
@@ -148,6 +176,8 @@ export function makeStationReadRepository(
                     id,
                     name,
                     address,
+                    station_type AS "stationType",
+                    agency_id AS "agencyId",
                     total_capacity AS "totalCapacity",
                     pickup_slot_limit AS "pickupSlotLimit",
                     return_slot_limit AS "returnSlotLimit",
@@ -184,6 +214,8 @@ export function makeStationReadRepository(
                     id,
                     name,
                     address,
+                    station_type AS "stationType",
+                    agency_id AS "agencyId",
                     total_capacity AS "totalCapacity",
                     pickup_slot_limit AS "pickupSlotLimit",
                     return_slot_limit AS "returnSlotLimit",
@@ -262,7 +294,7 @@ export function makeStationReadRepository(
         }));
 
         return makePageResult(mappedItems, total, resolvedPage, resolvedPageSize);
-      });
+      }).pipe(defectOn(StationRepositoryError));
     },
   };
 }

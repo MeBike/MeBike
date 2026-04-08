@@ -13,7 +13,8 @@ export type RentalRow = {
   id: string;
   userId: string;
   reservationId: string | null;
-  bikeId: string | null;
+  bikeId: string;
+  bikeNumber: string | null;
   depositHoldId: string | null;
   depositAmount: number | null;
   depositStatus: "NONE" | "HELD" | "RELEASED" | "FORFEITED";
@@ -56,6 +57,12 @@ export type StaffBikeSwapRequestFilter = {
   stationId?: string;
 };
 
+export type MyBikeSwapRequestFilter = {
+  rentalId?: string;
+  userId: string;
+  status?: BikeSwapStatus;
+};
+
 export type StaffBikeSwapRequestSortField
   = | "status"
     | "updatedAt"
@@ -67,7 +74,8 @@ export type AdminRentalListItem = {
     id: string;
     fullname: string;
   };
-  bikeId: string | null;
+  bikeId: string;
+  bikeNumber: string | null;
   status: RentalStatus;
   startStationId: string;
   endStationId: string | null;
@@ -97,11 +105,12 @@ export type AdminRentalDetail = {
   };
   bike: {
     id: string;
+    bikeNumber: string;
     chipId: string;
     status: BikeStatus;
     supplierId: string | null;
     updatedAt: Date;
-  } | null;
+  };
   startStation: {
     id: string;
     name: string;
@@ -119,6 +128,16 @@ export type AdminRentalDetail = {
     longitude: number;
     totalCapacity: number;
     updatedAt: Date;
+  } | null;
+  returnSlot: {
+    id: string;
+    reservedFrom: Date;
+    status: ReturnSlotStatus;
+    station: {
+      id: string;
+      name: string;
+      address: string;
+    };
   } | null;
   startTime: Date;
   endTime: Date | null;
@@ -197,7 +216,6 @@ export type ReturnConfirmationRow = {
   id: string;
   rentalId: string;
   stationId: string | null;
-  agencyId: string | null;
   confirmedByUserId: string;
   confirmationMethod: ConfirmationMethod;
   handoverStatus: HandoverStatus;
@@ -251,6 +269,7 @@ export type StaffBikeSwapRequestRow = {
   };
   oldBike: {
     id: string;
+    bikeNumber: string;
     chipId: string;
     station: {
       id: string;
@@ -264,6 +283,7 @@ export type StaffBikeSwapRequestRow = {
   };
   newBike: {
     id: string;
+    bikeNumber: string;
     chipId: string;
     station: {
       id: string;

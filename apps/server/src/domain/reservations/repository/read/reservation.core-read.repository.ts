@@ -5,6 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { ReservationStatus } from "generated/prisma/client";
 
 import type { ReservationRepo } from "../reservation.repository.types";
@@ -42,6 +43,7 @@ export function makeReservationCoreReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
         ),
+        defectOn(ReservationRepositoryError),
       ),
 
     findExpandedDetailById: reservationId =>
@@ -60,6 +62,7 @@ export function makeReservationCoreReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationExpandedDetailRow)),
         ),
+        defectOn(ReservationRepositoryError),
       ),
 
     findPendingFixedSlotByTemplateAndStart: (templateId, startTime) =>
@@ -84,6 +87,7 @@ export function makeReservationCoreReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationRow)),
         ),
+        defectOn(ReservationRepositoryError),
       ),
   };
 }

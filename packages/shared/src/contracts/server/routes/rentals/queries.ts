@@ -8,10 +8,7 @@ import {
   BikeSwapStatusSchema,
   ReturnSlotReservationSchema,
 } from "../../rentals";
-import {
-  paginationQueryFields,
-  SortDirectionSchema,
-} from "../../schemas";
+import { paginationQueryFields, SortDirectionSchema } from "../../schemas";
 import {
   forbiddenResponse,
   paginatedResponse,
@@ -168,10 +165,9 @@ export const getMyCurrentReturnSlot = createRoute({
       description: "Get the active return slot for a rental",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            ReturnSlotReservationSchema.openapi("CurrentReturnSlotReservation"),
-            "Current return slot response",
-          ),
+          schema: ReturnSlotReservationSchema.openapi("CurrentReturnSlotResponse", {
+            description: "Current return slot response",
+          }),
         },
       },
     },
@@ -226,10 +222,7 @@ export const getRental = createRoute({
       description: "Detailed rental (admin/staff view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalSchemaOpenApi,
-            "Get rental detail response",
-          ),
+          schema: RentalSchemaOpenApi,
         },
       },
     },
@@ -304,7 +297,7 @@ export const getActiveRentalsByPhone = createRoute({
   },
   responses: {
     200: {
-      description: "Active rentals by phone number",
+      description: "Active rentals by phone number for admin/staff/agency operators",
       content: {
         "application/json": {
           schema: RentalListResponseSchema,
@@ -549,6 +542,7 @@ export const adminGetRental = createRoute({
                   totalCapacity: 25,
                   updatedAt: "2026-03-10T08:00:00.000Z",
                 },
+                returnSlot: null,
                 startTime: "2026-03-10T09:10:00.000Z",
                 endTime: "2026-03-10T10:25:00.000Z",
                 duration: 75,
@@ -622,22 +616,23 @@ export const staffGetRental = createRoute({
                   totalCapacity: 30,
                   updatedAt: "2026-03-10T08:00:00.000Z",
                 },
-                endStation: {
-                  id: "019b17bd-d130-7e7d-be69-91ceef7b6222",
-                  name: "Tao Dan Station",
-                  address: "District 1, Ho Chi Minh City",
-                  latitude: 10.776,
-                  longitude: 106.691,
-                  totalCapacity: 25,
-                  updatedAt: "2026-03-10T08:00:00.000Z",
+                endStation: null,
+                returnSlot: {
+                  id: "019b17bd-d130-7e7d-be69-91ceef7b6444",
+                  reservedFrom: "2026-03-10T10:00:00.000Z",
+                  status: "ACTIVE",
+                  station: {
+                    id: "019b17bd-d130-7e7d-be69-91ceef7b6222",
+                    name: "Tao Dan Station",
+                    address: "District 1, Ho Chi Minh City",
+                  },
                 },
                 startTime: "2026-03-10T09:10:00.000Z",
-                endTime: "2026-03-10T10:25:00.000Z",
                 duration: 75,
                 totalPrice: 30000,
                 subscriptionId: "019b17bd-d130-7e7d-be69-91ceef7b6333",
-                status: "COMPLETED",
-                updatedAt: "2026-03-10T10:25:00.000Z",
+                status: "RENTED",
+                updatedAt: "2026-03-10T10:00:00.000Z",
               },
             },
           },
@@ -700,8 +695,9 @@ export const staffListBikeSwapRequests = createRoute({
       .object({
         userId: z.uuidv7().optional(),
         status: BikeSwapStatusSchema.optional(),
+        stationId: z.uuidv7().optional(),
         ...paginationQueryFields,
-        sortBy: z.enum(["status", "updatedAt"]).optional(),
+        sortBy: z.enum(["status", "updatedAt", "createdAt"]).optional(),
         sortDir: SortDirectionSchema.optional(),
       })
       .openapi("StaffBikeSwapRequestsListQuery", {
@@ -722,6 +718,17 @@ export const staffListBikeSwapRequests = createRoute({
   },
 });
 
+export const agencyListBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/agency/bike-swap-requests",
+  tags: ["Agency", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: staffListBikeSwapRequests.request!.query,
+  },
+  responses: staffListBikeSwapRequests.responses,
+});
+
 export const adminListBikeSwapRequests = createRoute({
   method: "get",
   path: "/v1/admin/bike-swap-requests",
@@ -732,8 +739,9 @@ export const adminListBikeSwapRequests = createRoute({
       .object({
         userId: z.uuidv7().optional(),
         status: BikeSwapStatusSchema.optional(),
+        stationId: z.uuidv7().optional(),
         ...paginationQueryFields,
-        sortBy: z.enum(["status", "updatedAt"]).optional(),
+        sortBy: z.enum(["status", "updatedAt", "createdAt"]).optional(),
         sortDir: SortDirectionSchema.optional(),
       })
       .openapi("AdminBikeSwapRequestsListQuery", {
@@ -809,6 +817,74 @@ export const staffGetBikeSwapRequests = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Staff"),
+    404: {
+      description: "Bike swap request not found",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const agencyGetBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/agency/bike-swap-requests/{bikeSwapRequestId}",
+  tags: ["Agency", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: staffGetBikeSwapRequests.responses,
+});
+
+export const getMyBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/bike-swap-requests",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z.object({
+      rentalId: z.uuidv7().optional(),
+      status: BikeSwapStatusSchema.optional(),
+      ...paginationQueryFields,
+    }),
+  },
+  responses: {
+    200: {
+      description: "User's bike swap requests",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestListResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+  },
+});
+
+export const getMyBikeSwapRequest = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/bike-swap-requests/{bikeSwapRequestId}",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get the bike swap request",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            BikeSwapRequestDetailSchemaOpenApi,
+            "Get bike swap request response",
+          ),
+        },
+      },
+    },
+    401: unauthorizedResponse(),
     404: {
       description: "Bike swap request not found",
       content: {

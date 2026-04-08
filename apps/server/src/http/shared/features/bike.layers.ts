@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Layer } from "effect";
 
 import {
   BikeRepositoryLive,
@@ -30,7 +30,3 @@ export const BikeDepsLive = Layer.mergeAll(
   BikeStatsServiceLayer,
   PrismaLive,
 );
-
-export function withBikeDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(BikeDepsLive));
-}

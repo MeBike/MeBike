@@ -1,22 +1,15 @@
 import type { ReservationError } from "@services/reservations";
 
-import {
-  reservationErrorMessage,
-} from "@services/reservations";
-
-export function isApiReservationError(
-  error: ReservationError,
-): error is Extract<ReservationError, { _tag: "ApiError" }> {
-  return error._tag === "ApiError";
-}
+import { presentReservationError } from "@/presenters/reservations/reservation-error-presenter";
+import { isReservationApiError } from "@services/reservations";
 
 export function getReservationErrorCode(error: ReservationError): string | null {
-  if (isApiReservationError(error)) {
+  if (isReservationApiError(error)) {
     return error.code;
   }
   return null;
 }
 
 export function getReservationErrorMessage(error: ReservationError, fallback: string): string {
-  return reservationErrorMessage(error, fallback);
+  return presentReservationError(error, fallback);
 }

@@ -3,10 +3,11 @@ import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect, expectLeftTag } from "@/test/effect/assertions";
 import { runEffect, runEffectEither } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
+import { BikeRepositoryError } from "../../domain-errors";
 import { makeBikeRepository } from "../bike.repository";
 
 describe("bikeRepository Integration", () => {
@@ -45,6 +46,33 @@ describe("bikeRepository Integration", () => {
     expect(created.stationId).toBe(station.id);
     expect(created.supplierId).toBe(supplier.id);
     expect(created.status).toBe("AVAILABLE");
+  });
+
+  it("create generates a unique bikeNumber", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+
+    const first = await runEffect(
+      repo.create({
+        chipId: `chip-${uuidv7()}`,
+        stationId: station.id,
+        supplierId: supplier.id,
+        status: "AVAILABLE",
+      }),
+    );
+
+    const second = await runEffect(
+      repo.create({
+        chipId: `chip-${uuidv7()}`,
+        stationId: station.id,
+        supplierId: supplier.id,
+        status: "AVAILABLE",
+      }),
+    );
+
+    expect(first.bikeNumber).toMatch(/^MB-\d{6}$/);
+    expect(second.bikeNumber).toMatch(/^MB-\d{6}$/);
+    expect(first.bikeNumber).not.toBe(second.bikeNumber);
   });
 
   it("create rejects duplicate chipId", async () => {
@@ -168,14 +196,12 @@ describe("bikeRepository Integration", () => {
     expect(updated.value.status).toBe("AVAILABLE");
   });
 
-  it("returns BikeRepositoryError when database is unreachable", async () => {
+  it("defects with BikeRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = makeBikeRepository(broken.client);
 
-      const result = await runEffectEither(brokenRepo.getById(uuidv7()));
-
-      expectLeftTag(result, "BikeRepositoryError");
+      await expectDefect(brokenRepo.getById(uuidv7()), BikeRepositoryError);
     }
     finally {
       await broken.stop();

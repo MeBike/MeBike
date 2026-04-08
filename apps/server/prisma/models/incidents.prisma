@@ -74,6 +74,7 @@ model IncidentReport {
 
   @@index([reporterUserId], name: "idx_incident_reports_reporter")
   @@index([rentalId], name: "idx_incident_reports_rental")
+  @@index([bikeId], name: "idx_incident_reports_bike")
   @@index([bikeId, status], name: "idx_incident_reports_bike_status")
   @@index([stationId], name: "idx_incident_reports_station")
   @@map("incident_reports")
@@ -97,6 +98,9 @@ model TechnicianAssignment {
   technicianTeamId String?          @map("technician_team_id") @db.Uuid
   technicianUserId String?          @map("technician_user_id") @db.Uuid
   assignedByUserId String?          @map("assigned_by_user_id") @db.Uuid
+  distanceMeters   Float?           @map("distance_meters")
+  durationSeconds  Float?           @map("duration_seconds")
+  routeGeometry    String?          @map("route_geometry")
   assignedAt       DateTime         @default(now()) @map("assigned_at") @db.Timestamptz
   acceptedAt       DateTime?        @map("accepted_at") @db.Timestamptz
   startedAt        DateTime?        @map("started_at") @db.Timestamptz

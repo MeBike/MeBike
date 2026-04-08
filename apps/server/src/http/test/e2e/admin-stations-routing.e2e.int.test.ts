@@ -10,16 +10,21 @@ describe("admin stations routing e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
       const { Layer } = await import("effect");
+      const { AgencyRepositoryLive } = await import("@/domain/agencies/repository/agency.repository");
       const { PrismaLive } = await import("@/infrastructure/prisma");
       const { StationRepositoryLive } = await import("@/domain/stations/repository/station.repository");
       const { StationServiceLive } = await import("@/domain/stations/services/station.service");
       const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
+      const agencyRepoLayer = AgencyRepositoryLive.pipe(Layer.provide(PrismaLive));
       const stationRepoLayer = StationRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const stationServiceLayer = StationServiceLive.pipe(Layer.provide(stationRepoLayer));
+      const stationServiceLayer = StationServiceLive.pipe(
+        Layer.provide(Layer.merge(stationRepoLayer, agencyRepoLayer)),
+      );
 
       return Layer.mergeAll(
         UserDepsLive,
+        agencyRepoLayer,
         stationRepoLayer,
         stationServiceLayer,
         PrismaLive,

@@ -1,6 +1,6 @@
 import fetchHttpClient from "@lib/httpClient";
 import { AxiosResponse } from "axios";
-import { DashboardStats, Station, StationData , ApiResponse } from "@custom-types";
+import { DashboardStats, Station , ApiResponse } from "@custom-types";
 import {ENDPOINT} from "@/constants/end-point";
 const DASHBOARD_BASE = "/dashboard";
 const DASHBOARD_ENDPOINTS = {

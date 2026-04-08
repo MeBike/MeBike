@@ -1,3 +1,7 @@
+import {
+  invalidateAllRentalQueries,
+  invalidateRentalSupportQueries,
+} from "@hooks/rentals/rental-cache";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +22,7 @@ type BikeStatusStreamContextValue = {
 const BikeStatusStreamContext = createContext<BikeStatusStreamContextValue | undefined>(undefined);
 
 export function BikeStatusStreamProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthNext();
+  const { hydrate, status } = useAuthNext();
   const queryClient = useQueryClient();
   const subscribersRef = useRef<Set<Subscriber>>(new Set());
   const [lastUpdate, setLastUpdate] = useState<BikeStatusUpdate | null>(null);
@@ -37,16 +41,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   const handleUpdate = useCallback(
     (payload: BikeStatusUpdate) => {
       setLastUpdate(payload);
-      queryClient.invalidateQueries({ queryKey: ["rentals"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["rentalsHistory"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "current"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] });
-      queryClient.invalidateQueries({ queryKey: ["bikes", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["all-stations"] });
-      queryClient.invalidateQueries({ queryKey: ["station"] });
+      void invalidateAllRentalQueries(queryClient);
+      void invalidateRentalSupportQueries(queryClient);
 
       if (Platform.OS === "android") {
         const status = (payload.status || "").toUpperCase();
@@ -68,8 +64,12 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   );
 
   const handleError = useCallback((error: Error) => {
+    if (error.message === "SSE_UNAUTHORIZED") {
+      void hydrate();
+    }
+
     console.warn("[BikeStatusStream] SSE error", error);
-  }, []);
+  }, [hydrate]);
 
   const { isConnected, connect, disconnect } = useBikeStatusStream({
     autoConnect: false,
@@ -78,13 +78,14 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (status !== "authenticated") {
       disconnect();
     }
-    else {
+
+    if (status === "authenticated") {
       connect();
     }
-  }, [connect, disconnect, isAuthenticated]);
+  }, [connect, disconnect, status]);
 
   const subscribe = useCallback((listener: Subscriber) => {
     subscribersRef.current.add(listener);

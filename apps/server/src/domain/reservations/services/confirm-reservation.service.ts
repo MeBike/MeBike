@@ -8,11 +8,13 @@ import {
   makeRentalRepository,
   RentalRepository,
 } from "@/domain/rentals";
+import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { createRentalDepositHoldInTx } from "@/domain/rentals/services/rental-deposit-hold.service";
 import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/unique-violation-mapper";
+import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { ReservationServiceFailure } from "../domain-errors";
 import type { ReservationRow } from "../models";
@@ -22,7 +24,8 @@ import {
   BikeNotFound,
   ReservationConfirmBlockedByActiveRental,
 } from "../domain-errors";
-import { ReservationServiceTag } from "../services/reservation.service";
+import { makeReservationCommandRepository } from "../repository/reservation-command.repository";
+import { ReservationCommandServiceTag } from "./reservation-command.service";
 
 export type ConfirmReservationInput = {
   readonly reservationId: string;
@@ -35,11 +38,11 @@ export function confirmReservation(
 ): Effect.Effect<
   ReservationRow,
   ReservationServiceFailure,
-  Prisma | ReservationServiceTag | BikeRepository | RentalRepository
+  Prisma | ReservationCommandServiceTag | BikeRepository | RentalRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
-    const reservationService = yield* ReservationServiceTag;
+    const reservationService = yield* ReservationCommandServiceTag;
     yield* RentalRepository;
     const now = input.now ?? new Date();
 
@@ -48,6 +51,7 @@ export function confirmReservation(
         const txRentalRepo = makeRentalRepository(tx);
         const bikeRepo = makeBikeRepository(tx);
         const txPricingPolicyRepo = makePricingPolicyRepository(tx);
+        const txReservationCommandRepo = makeReservationCommandRepository(tx);
         const { reservation, bikeId } = yield* reservationService.validatePendingForConfirmationInTx(
           tx,
           {
@@ -57,13 +61,9 @@ export function confirmReservation(
           },
         );
 
-        const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now).pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-        );
+        const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now);
         if (!bikeBooked) {
-          const bikeOpt = yield* bikeRepo.getById(bikeId).pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-          );
+          const bikeOpt = yield* bikeRepo.getById(bikeId);
           if (Option.isNone(bikeOpt)) {
             return yield* Effect.fail(new BikeNotFound({ bikeId }));
           }
@@ -75,13 +75,11 @@ export function confirmReservation(
 
         const pricingPolicyId = reservation.pricingPolicyId
           ?? (yield* txPricingPolicyRepo.getActive().pipe(
-            Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
             Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
             Effect.map(policy => policy.id),
           ));
         const pricingPolicy = yield* txPricingPolicyRepo.getById(pricingPolicyId).pipe(
-          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
           Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
         );
 
@@ -116,7 +114,7 @@ export function confirmReservation(
               `Invariant violated: bike ${bikeId} should not be concurrently rented while confirming reservation ${reservation.id}`,
             ));
           }),
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          defectOn(RentalRepositoryError),
         );
 
         yield* createRentalDepositHoldInTx({
@@ -127,12 +125,10 @@ export function confirmReservation(
         }).pipe(
           Effect.catchTag("WalletNotFound", err => Effect.fail(err)),
           Effect.catchTag("InsufficientWalletBalance", err => Effect.fail(err)),
-          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-          Effect.catchTag("WalletHoldRepositoryError", err => Effect.die(err)),
-          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+          defectOn(RentalRepositoryError),
         );
 
-        const updatedReservation = yield* reservationService.updateStatus({
+        const updatedReservation = yield* txReservationCommandRepo.updateStatus({
           reservationId: reservation.id,
           status: "FULFILLED",
           updatedAt: now,
@@ -143,7 +139,7 @@ export function confirmReservation(
         // TODO(iot): send booking "claim" command once IoT integration is ready.
         return updatedReservation;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
 
     return reservation;

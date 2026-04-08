@@ -1,20 +1,22 @@
 import { Effect, Option } from "effect";
 
 import { BikeRepository } from "@/domain/bikes";
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { RentalServiceFailure } from "../domain-errors";
 import type { RentalRow } from "../models";
 import type { ConfirmRentalReturnInput } from "../types";
 
 import {
-  BikeNotFound,
   InvalidRentalState,
   RentalNotFound,
+  RentalRepositoryError,
   ReturnAlreadyConfirmed,
   ReturnSlotRequiredForReturn,
   ReturnSlotStationMismatch,
+  UnauthorizedRentalAccess,
 } from "../domain-errors";
 import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
 import {
@@ -50,9 +52,7 @@ export function confirmRentalReturnByOperator(
           const txReturnSlotRepo = makeReturnSlotRepository(tx);
           const txReturnConfirmationRepo = makeReturnConfirmationRepository(tx);
 
-          const rentalOpt = yield* txRentalRepo.findById(input.rentalId).pipe(
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-          );
+          const rentalOpt = yield* txRentalRepo.findById(input.rentalId);
 
           if (Option.isNone(rentalOpt)) {
             return yield* Effect.fail(new RentalNotFound({
@@ -70,13 +70,78 @@ export function confirmRentalReturnByOperator(
             }));
           }
 
-          if (!rental.bikeId) {
-            return yield* Effect.fail(new BikeNotFound({ bikeId: "unknown" }));
+          const operator = yield* Effect.tryPromise({
+            try: async () => {
+              if (
+                input.operatorRole
+                && (input.operatorRole === "STAFF"
+                  || input.operatorRole === "AGENCY")
+              ) {
+                return {
+                  role: input.operatorRole,
+                  stationId: input.operatorStationId ?? null,
+                  agencyId: input.operatorAgencyId ?? null,
+                };
+              }
+
+              const user = await tx.user.findUnique({
+                where: { id: input.confirmedByUserId },
+                select: {
+                  role: true,
+                  orgAssignment: {
+                    select: {
+                      stationId: true,
+                      agencyId: true,
+                    },
+                  },
+                },
+              });
+
+              return user
+                ? {
+                    role: user.role,
+                    stationId: user.orgAssignment?.stationId ?? null,
+                    agencyId: user.orgAssignment?.agencyId ?? null,
+                  }
+                : null;
+            },
+            catch: e =>
+              new RentalRepositoryError({
+                operation: "confirmRentalReturnByOperator.findOperator",
+                cause: e,
+              }),
+          }).pipe(defectOn(RentalRepositoryError));
+
+          if (operator?.role === "STAFF" && operator.stationId !== input.stationId) {
+            return yield* Effect.fail(new UnauthorizedRentalAccess({
+              rentalId: rental.id,
+              userId: input.confirmedByUserId,
+            }));
           }
 
-          const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rental.id).pipe(
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-          );
+          if (operator?.role === "AGENCY") {
+            const station = yield* Effect.tryPromise({
+              try: () =>
+                tx.station.findUnique({
+                  where: { id: input.stationId },
+                  select: { agencyId: true },
+                }),
+              catch: e =>
+                new RentalRepositoryError({
+                  operation: "confirmRentalReturnByOperator.findStationAgency",
+                  cause: e,
+                }),
+            }).pipe(defectOn(RentalRepositoryError));
+
+            if (!station || !operator.agencyId || station.agencyId !== operator.agencyId) {
+              return yield* Effect.fail(new UnauthorizedRentalAccess({
+                rentalId: rental.id,
+                userId: input.confirmedByUserId,
+              }));
+            }
+          }
+
+          const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rental.id);
 
           if (Option.isNone(activeReturnSlotOpt)) {
             return yield* Effect.fail(new ReturnSlotRequiredForReturn({
@@ -94,9 +159,7 @@ export function confirmRentalReturnByOperator(
             }));
           }
 
-          const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(rental.id).pipe(
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-          );
+          const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(rental.id);
 
           if (Option.isSome(existingConfirmationOpt)) {
             return yield* Effect.fail(new ReturnAlreadyConfirmed({
@@ -114,7 +177,6 @@ export function confirmRentalReturnByOperator(
           }).pipe(
             Effect.catchTag("ReturnConfirmationUniqueViolation", () =>
               Effect.fail(new ReturnAlreadyConfirmed({ rentalId: rental.id }))),
-            Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
           );
 
           return yield* finalizeRentalReturnInTx({
@@ -126,7 +188,7 @@ export function confirmRentalReturnByOperator(
           });
         }),
     ).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
   });
 }

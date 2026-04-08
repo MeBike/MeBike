@@ -5,10 +5,9 @@ import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
 import {
-  AppliesToEnum,
   BikeStatus,
+  BikeSwapStatus,
   PrismaClient,
-  RatingReasonType,
   RentalStatus,
   ReservationOption,
   ReservationStatus,
@@ -19,9 +18,14 @@ import {
   UserVerifyStatus,
   WalletStatus,
 } from "../generated/prisma/client";
+import { formatBikeNumber } from "../src/domain/bikes/bike-number";
+import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
 import logger from "../src/lib/logger";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
+import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
+import { seedDemoRatings } from "./seed/demo-ratings";
+import { seedRatingReasons } from "./seed/rating-reasons";
 import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
 
@@ -29,29 +33,16 @@ const DEMO_PASSWORD = "Demo@123456";
 
 const USERS_TARGET = 32;
 const RENTALS_TARGET = 120;
+const DEMO_NON_CUSTOMER_USERS = 7;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
+const LEGACY_DEMO_AGENCY_IDS = [
+  "019b17bd-d130-7e7d-be69-91ceef7b9007",
+  "019b17bd-d130-7e7d-be69-91ceef7b9008",
+] as const;
 const DEMO_TECH_TEAM_A_ID = "019b17bd-d130-7e7d-be69-91ceef7b9005";
 const DEMO_TECH_TEAM_B_ID = "019b17bd-d130-7e7d-be69-91ceef7b9006";
-
-const ratingReasonsSeed: ReadonlyArray<{
-  readonly type: RatingReasonType;
-  readonly appliesTo: AppliesToEnum;
-  readonly message: string;
-}> = [
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe chạy êm, vận hành tốt" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe sạch sẽ" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe còn nhiều pin" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Phanh chưa tốt" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Xe bẩn hoặc có mùi" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Pin yếu" },
-
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm dễ tìm" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm gọn gàng, an toàn" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, message: "Trạm khó tìm" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, message: "Trạm đông, khó trả xe" },
-];
 
 type DemoUser = {
   id: string;
@@ -66,7 +57,7 @@ type DemoUser = {
 type DemoRental = {
   id: string;
   userId: string;
-  bikeId: string | null;
+  bikeId: string;
   startStationId: string;
   endStationId: string | null;
   createdAt: Date;
@@ -92,6 +83,13 @@ type DemoReservation = {
   status: ReservationStatus;
   createdAt: Date;
   updatedAt: Date;
+};
+
+type DemoOrgAssignment = {
+  readonly user: DemoUser;
+  readonly stationId: string | null;
+  readonly agencyId: string | null;
+  readonly technicianTeamId: string | null;
 };
 
 function getConnectionString() {
@@ -121,6 +119,18 @@ function toUtcDateInMonth(year: number, month: number, day: number, hour: number
 
 function pick<T>(arr: readonly T[], idx: number): T {
   return arr[idx % arr.length]!;
+}
+
+function getDemoTechnicianTeamId(index: number) {
+  if (index === 0) {
+    return DEMO_TECH_TEAM_A_ID;
+  }
+
+  if (index === 1) {
+    return DEMO_TECH_TEAM_B_ID;
+  }
+
+  return `019b17bd-d130-7e7d-be69-${String(1000 + index).padStart(12, "0")}`;
 }
 
 async function seedStations(prisma: PrismaClient) {
@@ -166,36 +176,7 @@ async function seedStations(prisma: PrismaClient) {
   }
 }
 
-async function seedRatingReasons(prisma: PrismaClient) {
-  const existing = await prisma.ratingReason.findMany({
-    select: {
-      id: true,
-      type: true,
-      appliesTo: true,
-      message: true,
-    },
-  });
-
-  const existingKeys = new Set(existing.map(item => `${item.type}|${item.appliesTo}|${item.message}`));
-
-  for (const reason of ratingReasonsSeed) {
-    const key = `${reason.type}|${reason.appliesTo}|${reason.message}`;
-    if (existingKeys.has(key)) {
-      continue;
-    }
-
-    await prisma.ratingReason.create({
-      data: {
-        id: uuidv7(),
-        type: reason.type,
-        appliesTo: reason.appliesTo,
-        message: reason.message,
-      },
-    });
-  }
-}
-
-function buildDemoUsers(): DemoUser[] {
+function buildDemoUsers(technicianCount: number): DemoUser[] {
   const users: DemoUser[] = [
     {
       id: uuidv7(),
@@ -235,7 +216,7 @@ function buildDemoUsers(): DemoUser[] {
     },
     {
       id: uuidv7(),
-      fullname: "Demo Agency Operator",
+      fullname: "Demo Agency Operator 1",
       email: "agency1@mebike.local",
       phoneNumber: "0900000005",
       username: "demo_agency_1",
@@ -244,20 +225,32 @@ function buildDemoUsers(): DemoUser[] {
     },
     {
       id: uuidv7(),
-      fullname: "Demo Technician",
-      email: "tech1@mebike.local",
+      fullname: "Demo Agency Operator 2",
+      email: "agency2@mebike.local",
       phoneNumber: "0900000006",
-      username: "demo_tech_1",
-      role: UserRole.TECHNICIAN,
+      username: "demo_agency_2",
+      role: UserRole.AGENCY,
       verify: UserVerifyStatus.VERIFIED,
     },
   ];
 
-  for (let i = 1; i <= USERS_TARGET - 6; i++) {
+  for (let i = 1; i <= technicianCount; i++) {
+    users.push({
+      id: uuidv7(),
+      fullname: buildDemoTechnicianFullName(i),
+      email: `tech${i}@mebike.local`,
+      phoneNumber: `092${String(i).padStart(7, "0")}`,
+      username: `demo_tech_${i}`,
+      role: UserRole.TECHNICIAN,
+      verify: UserVerifyStatus.VERIFIED,
+    });
+  }
+
+  for (let i = 1; i <= USERS_TARGET - DEMO_NON_CUSTOMER_USERS; i++) {
     const order = String(i).padStart(2, "0");
     users.push({
       id: uuidv7(),
-      fullname: `Demo User ${order}`,
+      fullname: buildDemoCustomerFullName(i),
       email: `user${order}@mebike.local`,
       phoneNumber: `091${String(i).padStart(7, "0")}`,
       username: `demo_user_${order}`,
@@ -428,7 +421,7 @@ async function main() {
     await seedRatingReasons(prisma);
 
     const stationRows = await prisma.station.findMany({
-      select: { id: true },
+      select: { id: true, name: true },
       orderBy: { name: "asc" },
     });
     const stationIds = stationRows.map(s => s.id);
@@ -476,7 +469,7 @@ async function main() {
       }),
     ]);
 
-    const users = buildDemoUsers();
+    const users = buildDemoUsers(stationRows.length);
     const userEmails = users.map(u => u.email);
 
     await prisma.ratingReasonLink.deleteMany({
@@ -500,6 +493,15 @@ async function main() {
       },
     });
     await prisma.returnSlotReservation.deleteMany({
+      where: {
+        user: {
+          email: {
+            in: userEmails,
+          },
+        },
+      },
+    });
+    await prisma.bikeSwapRequest.deleteMany({
       where: {
         user: {
           email: {
@@ -595,19 +597,43 @@ async function main() {
       })),
     });
 
+    await prisma.userOrgAssignment.deleteMany({
+      where: {
+        agencyId: {
+          in: [...LEGACY_DEMO_AGENCY_IDS],
+        },
+      },
+    });
+
+    await prisma.$executeRaw`
+      UPDATE "Station"
+      SET
+        "station_type" = 'INTERNAL'::"station_type",
+        "agency_id" = NULL
+      WHERE "agency_id" IN (${LEGACY_DEMO_AGENCY_IDS[0]}::uuid, ${LEGACY_DEMO_AGENCY_IDS[1]}::uuid)
+    `;
+
+    await prisma.agency.deleteMany({
+      where: {
+        id: {
+          in: [...LEGACY_DEMO_AGENCY_IDS],
+        },
+      },
+    });
+
     const [mainAgency, eastAgency] = await Promise.all([
       prisma.agency.upsert({
         where: { id: DEMO_AGENCY_MAIN_ID },
         create: {
           id: DEMO_AGENCY_MAIN_ID,
           name: "Demo Agency Main",
-          address: "District 1, Ho Chi Minh City",
           contactPhone: "02873000001",
+          status: "ACTIVE",
         },
         update: {
           name: "Demo Agency Main",
-          address: "District 1, Ho Chi Minh City",
           contactPhone: "02873000001",
+          status: "ACTIVE",
         },
       }),
       prisma.agency.upsert({
@@ -615,77 +641,102 @@ async function main() {
         create: {
           id: DEMO_AGENCY_EAST_ID,
           name: "Demo Agency East",
-          address: "Thu Duc City, Ho Chi Minh City",
           contactPhone: "02873000002",
+          status: "ACTIVE",
         },
         update: {
           name: "Demo Agency East",
-          address: "Thu Duc City, Ho Chi Minh City",
           contactPhone: "02873000002",
+          status: "ACTIVE",
         },
       }),
     ]);
 
-    const [techTeamA] = await Promise.all([
-      prisma.technicianTeam.upsert({
-        where: { id: DEMO_TECH_TEAM_A_ID },
+    await prisma.$executeRaw`
+      UPDATE "Station"
+      SET
+        "station_type" = 'INTERNAL'::"station_type",
+        "agency_id" = NULL
+    `;
+
+    const agencyOwnedStations = [
+      { stationId: stationIds[0], agencyId: mainAgency.id },
+      { stationId: stationIds[1], agencyId: eastAgency.id },
+    ].filter((item): item is { stationId: string; agencyId: string } => Boolean(item.stationId));
+
+    for (const item of agencyOwnedStations) {
+      await prisma.$executeRaw`
+        UPDATE "Station"
+        SET
+          "station_type" = 'AGENCY'::"station_type",
+          "agency_id" = ${item.agencyId}::uuid
+        WHERE "id" = ${item.stationId}::uuid
+      `;
+    }
+
+    const technicianTeams = await Promise.all(
+      stationRows.map((station, index) => prisma.technicianTeam.upsert({
+        where: { id: getDemoTechnicianTeamId(index) },
         create: {
-          id: DEMO_TECH_TEAM_A_ID,
-          name: "Demo Tech Team A",
-          stationId: pick(stationIds, 0),
+          id: getDemoTechnicianTeamId(index),
+          name: `Demo Tech Team - ${station.name}`,
+          stationId: station.id,
         },
         update: {
-          name: "Demo Tech Team A",
-          stationId: pick(stationIds, 0),
+          name: `Demo Tech Team - ${station.name}`,
+          stationId: station.id,
         },
-      }),
-      prisma.technicianTeam.upsert({
-        where: { id: DEMO_TECH_TEAM_B_ID },
-        create: {
-          id: DEMO_TECH_TEAM_B_ID,
-          name: "Demo Tech Team B",
-          stationId: pick(stationIds, 1),
-        },
-        update: {
-          name: "Demo Tech Team B",
-          stationId: pick(stationIds, 1),
-        },
-      }),
-    ]);
+      })),
+    );
 
     const userByEmail = new Map(users.map(user => [user.email, user]));
-    const orgAssignments = [
+    const technicianAssignments: DemoOrgAssignment[] = technicianTeams
+      .map((team, index) => ({
+        user: userByEmail.get(`tech${index + 1}@mebike.local`),
+        stationId: null,
+        agencyId: null,
+        technicianTeamId: team.id,
+      }))
+      .filter((item): item is DemoOrgAssignment => item.user !== undefined);
+    const orgAssignments: DemoOrgAssignment[] = [
       {
         user: userByEmail.get("staff1@mebike.local"),
         stationId: pick(stationIds, 2),
+        agencyId: null,
+        technicianTeamId: null,
       },
       {
         user: userByEmail.get("staff2@mebike.local"),
         stationId: pick(stationIds, 3),
+        agencyId: null,
+        technicianTeamId: null,
       },
       {
         user: userByEmail.get("manager@mebike.local"),
         stationId: pick(stationIds, 0),
+        agencyId: null,
+        technicianTeamId: null,
       },
       {
         user: userByEmail.get("agency1@mebike.local"),
+        stationId: null,
         agencyId: mainAgency.id,
+        technicianTeamId: null,
       },
       {
-        user: userByEmail.get("tech1@mebike.local"),
-        technicianTeamId: techTeamA.id,
-      },
-      {
-        user: userByEmail.get("admin@mebike.local"),
+        user: userByEmail.get("agency2@mebike.local"),
+        stationId: null,
         agencyId: eastAgency.id,
+        technicianTeamId: null,
       },
-    ].filter(item => item.user !== undefined);
+      ...technicianAssignments,
+    ].filter((item): item is DemoOrgAssignment => item.user !== undefined);
 
     if (orgAssignments.length > 0) {
       await prisma.userOrgAssignment.createMany({
         data: orgAssignments.map(item => ({
           id: uuidv7(),
-          userId: item.user!.id,
+          userId: item.user.id,
           stationId: item.stationId ?? null,
           agencyId: item.agencyId ?? null,
           technicianTeamId: item.technicianTeamId ?? null,
@@ -707,6 +758,7 @@ async function main() {
 
     const bikesToCreate = Array.from({ length: 40 }, (_, idx) => ({
       id: uuidv7(),
+      bikeNumber: formatBikeNumber(idx + 1),
       chipId: `DEMO-CHIP-${String(idx + 1).padStart(3, "0")}`,
       stationId: pick(stationIds, idx),
       supplierId: suppliers[idx % suppliers.length]!.id,
@@ -715,6 +767,7 @@ async function main() {
     }));
 
     await prisma.bike.createMany({ data: bikesToCreate });
+    await setBikeNumberSequence(prisma, bikesToCreate.length);
 
     const subscriptionUsers = users.filter(u => u.role === UserRole.USER).slice(0, 12);
     const subscriptions = subscriptionUsers.map((user, idx) => ({
@@ -820,48 +873,40 @@ async function main() {
       });
     }
 
-    const bikeReasons = await prisma.ratingReason.findMany({
-      where: { appliesTo: AppliesToEnum.bike },
-      orderBy: { createdAt: "asc" },
-      select: { id: true },
-    });
+    const user01 = users.find(user => user.email === "user01@mebike.local");
+    const staff1 = users.find(user => user.email === "staff1@mebike.local");
+    const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
+    const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
+    const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
 
-    const completedRentals = rentals.filter(r => r.status === RentalStatus.COMPLETED && r.bikeId);
-    const ratedRentals = completedRentals.slice(0, 60);
+    if (user01 && staff1 && (mainAgencyStationId ?? staff1Assignment?.stationId) && user01ActiveRental?.bikeId) {
+      const bikeSwapStationId = mainAgencyStationId ?? staff1Assignment!.stationId!;
 
-    await prisma.rating.createMany({
-      data: ratedRentals.map((r, idx) => ({
-        id: uuidv7(),
-        userId: r.userId,
-        rentalId: r.id,
-        bikeId: r.bikeId,
-        stationId: r.endStationId ?? r.startStationId,
-        bikeScore: 3 + (idx % 3),
-        stationScore: 3 + ((idx + 1) % 3),
-        comment: idx % 2 === 0 ? "Demo seeded rating" : null,
-        updatedAt: new Date(),
-      })),
-    });
-
-    const createdRatings = await prisma.rating.findMany({
-      where: {
-        rentalId: {
-          in: ratedRentals.map(r => r.id),
+      await prisma.bikeSwapRequest.create({
+        data: {
+          id: uuidv7(),
+          rentalId: user01ActiveRental.id,
+          userId: user01.id,
+          oldBikeId: user01ActiveRental.bikeId,
+          stationId: bikeSwapStationId,
+          status: BikeSwapStatus.PENDING,
+          reason: null,
+          createdAt: new Date(Date.now() - 5 * 60 * 1000),
+          updatedAt: new Date(Date.now() - 5 * 60 * 1000),
         },
-      },
-      select: { id: true },
-    });
-
-    if (bikeReasons.length > 0 && createdRatings.length > 0) {
-      await prisma.ratingReasonLink.createMany({
-        data: createdRatings.map((rating, idx) => ({
-          ratingId: rating.id,
-          reasonId: pick(bikeReasons, idx).id,
-          target: AppliesToEnum.bike,
-        })),
-        skipDuplicates: true,
       });
+
+      logger.info(
+        {
+          bikeSwapRequestFor: user01.email,
+          handledBy: staff1.email,
+          stationId: bikeSwapStationId,
+        },
+        "Seeded demo pending bike swap request",
+      );
     }
+
+    await seedDemoRatings(prisma, rentals);
 
     logger.info("Demo seed completed");
     logger.info({ users: users.length }, "Demo users seeded");
@@ -888,6 +933,7 @@ async function main() {
         staff: "staff1@mebike.local",
         manager: "manager@mebike.local",
         agency: "agency1@mebike.local",
+        agency2: "agency2@mebike.local",
         technician: "tech1@mebike.local",
         user: "user01@mebike.local",
         password: DEMO_PASSWORD,

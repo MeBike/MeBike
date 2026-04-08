@@ -1,3 +1,4 @@
+import type { PageRequest } from "@/domain/shared/pagination";
 import type { AgencyRequestStatus } from "generated/prisma/client";
 
 export type AgencyRequestActorRef = {
@@ -19,6 +20,13 @@ export type AgencyRequestRow = {
   readonly agencyName: string;
   readonly agencyAddress: string | null;
   readonly agencyContactPhone: string | null;
+  readonly stationName: string | null;
+  readonly stationAddress: string | null;
+  readonly stationLatitude: number | null;
+  readonly stationLongitude: number | null;
+  readonly stationTotalCapacity: number | null;
+  readonly stationPickupSlotLimit: number | null;
+  readonly stationReturnSlotLimit: number | null;
   readonly status: AgencyRequestStatus;
   readonly description: string | null;
   readonly reviewedByUserId: string | null;
@@ -40,6 +48,13 @@ export type SubmitAgencyRequestInput = {
   readonly agencyName: string;
   readonly agencyAddress?: string | null;
   readonly agencyContactPhone?: string | null;
+  readonly stationName: string;
+  readonly stationAddress: string;
+  readonly stationLatitude: number;
+  readonly stationLongitude: number;
+  readonly stationTotalCapacity: number;
+  readonly stationPickupSlotLimit?: number | null;
+  readonly stationReturnSlotLimit?: number | null;
   readonly description?: string | null;
 };
 
@@ -48,7 +63,9 @@ export type ReviewAgencyRequestInput = {
   readonly description?: string | null;
 };
 
-export type ApproveAgencyRequestInput = ReviewAgencyRequestInput & {
+export type ApproveAgencyRequestInput = ReviewAgencyRequestInput;
+
+export type FinalizeAgencyRequestApprovalInput = ReviewAgencyRequestInput & {
   readonly approvedAgencyId: string;
   readonly createdAgencyUserId: string;
 };
@@ -56,5 +73,15 @@ export type ApproveAgencyRequestInput = ReviewAgencyRequestInput & {
 export type AgencyRequestFilter = {
   readonly requesterUserId?: string;
   readonly requesterEmail?: string;
+  readonly agencyName?: string;
   readonly status?: AgencyRequestStatus;
 };
+
+export type AgencyRequestSortField
+  = "createdAt"
+    | "updatedAt"
+    | "status"
+    | "requesterEmail"
+    | "agencyName";
+
+export type AgencyRequestPageRequest = PageRequest<AgencyRequestSortField>;

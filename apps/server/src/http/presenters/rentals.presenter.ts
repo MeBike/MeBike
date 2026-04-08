@@ -25,7 +25,8 @@ export function toContractRental(
   return {
     id: row.id,
     userId: row.userId,
-    bikeId: row.bikeId ?? undefined,
+    bikeId: row.bikeId,
+    bikeNumber: row.bikeNumber ?? undefined,
     startStation: row.startStationId,
     endStation: row.endStationId ?? undefined,
     startTime: row.startTime.toISOString(),
@@ -45,7 +46,8 @@ export function toContractRentalWithPrice(
   return {
     id: row.id,
     userId: row.userId,
-    bikeId: row.bikeId ?? undefined,
+    bikeId: row.bikeId,
+    bikeNumber: row.bikeNumber ?? undefined,
     startStation: row.startStationId,
     endStation: row.endStationId ?? undefined,
     startTime: row.startTime.toISOString(),
@@ -65,7 +67,8 @@ export function toContractAdminRentalListItem(
   return {
     id: item.id,
     user: item.user,
-    bikeId: item.bikeId ?? undefined,
+    bikeId: item.bikeId,
+    bikeNumber: item.bikeNumber ?? undefined,
     status: item.status,
     startStation: item.startStationId,
     endStation: item.endStationId ?? undefined,
@@ -82,14 +85,11 @@ export function toContractAdminRentalListItem(
 export function toContractRentalListItem(
   item: AdminRentalListItem,
 ): RentalsContracts.RentalListResponse["data"][number] {
-  if (!item.bikeId) {
-    throw new Error("bikeId is required for rental list item");
-  }
-
   return {
     id: item.id,
     user: item.user,
     bikeId: item.bikeId,
+    bikeNumber: item.bikeNumber ?? undefined,
     status: item.status,
     startStation: item.startStationId,
     endStation: item.endStationId ?? undefined,
@@ -120,15 +120,14 @@ export function toContractAdminRentalDetail(
       nfcCardUid: detail.user.nfcCardUid ?? undefined,
       updatedAt: detail.user.updatedAt.toISOString(),
     },
-    bike: detail.bike
-      ? {
-          id: detail.bike.id,
-          chipId: detail.bike.chipId,
-          status: detail.bike.status,
-          supplierId: detail.bike.supplierId ?? undefined,
-          updatedAt: detail.bike.updatedAt.toISOString(),
-        }
-      : null,
+    bike: {
+      id: detail.bike.id,
+      bikeNumber: detail.bike.bikeNumber,
+      chipId: detail.bike.chipId,
+      status: detail.bike.status,
+      supplierId: detail.bike.supplierId ?? undefined,
+      updatedAt: detail.bike.updatedAt.toISOString(),
+    },
     startStation: {
       id: detail.startStation.id,
       name: detail.startStation.name,
@@ -147,6 +146,18 @@ export function toContractAdminRentalDetail(
           longitude: detail.endStation.longitude,
           totalCapacity: detail.endStation.totalCapacity,
           updatedAt: detail.endStation.updatedAt.toISOString(),
+        }
+      : null,
+    returnSlot: detail.returnSlot
+      ? {
+          id: detail.returnSlot.id,
+          reservedFrom: detail.returnSlot.reservedFrom.toISOString(),
+          status: detail.returnSlot.status,
+          station: {
+            id: detail.returnSlot.station.id,
+            name: detail.returnSlot.station.name,
+            address: detail.returnSlot.station.address,
+          },
         }
       : null,
     startTime: detail.startTime.toISOString(),
@@ -188,6 +199,7 @@ export function toContractBikeSwapRequestDetail(
     },
     oldBike: {
       id: row.oldBike.id,
+      bikeNumber: row.oldBike.bikeNumber,
       chipId: row.oldBike.chipId,
       station: {
         id: row.oldBike.station.id,
@@ -202,6 +214,7 @@ export function toContractBikeSwapRequestDetail(
     newBike: row.newBike
       ? {
           id: row.newBike.id,
+          bikeNumber: row.newBike.bikeNumber,
           chipId: row.newBike.chipId,
           station: {
             id: row.newBike.station.id,

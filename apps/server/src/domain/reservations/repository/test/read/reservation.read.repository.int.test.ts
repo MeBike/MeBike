@@ -2,9 +2,10 @@ import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { ReservationRepositoryError } from "@/domain/reservations/domain-errors";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect } from "@/test/effect/assertions";
 
 import { setupReservationRepositoryIntTestKit } from "../reservation.repository.int.test-kit";
 
@@ -60,7 +61,7 @@ describe("reservationRepository read integration", () => {
     expect(Option.isNone(result)).toBe(true);
   });
 
-  it("findLatestPendingOrActiveByUserId returns most recently updated pending/active", async () => {
+  it("findLatestPendingOrActiveByUserId returns most recently updated pending reservation", async () => {
     const user = await kit.createUser();
     const station = await kit.createStation({ name: "Station C" });
     const bikeA = await kit.createBike({ stationId: station.id, status: "AVAILABLE" });
@@ -80,7 +81,7 @@ describe("reservationRepository read integration", () => {
       status: "CANCELLED",
     });
 
-    const active = await kit.fixture.prisma.reservation.create({
+    const pending = await kit.fixture.prisma.reservation.create({
       data: {
         id: uuidv7(),
         userId: user.id,
@@ -90,7 +91,7 @@ describe("reservationRepository read integration", () => {
         startTime: newer,
         endTime: new Date(newer.getTime() + 60 * 60 * 1000),
         prepaid: toPrismaDecimal("0"),
-        status: "ACTIVE",
+        status: "PENDING",
         updatedAt: newer,
       },
       select: { id: true },
@@ -99,7 +100,7 @@ describe("reservationRepository read integration", () => {
     const result = await Effect.runPromise(repo.findLatestPendingOrActiveByUserId(user.id));
 
     expect(Option.isSome(result)).toBe(true);
-    expect(Option.getOrThrow(result).id).toBe(active.id);
+    expect(Option.getOrThrow(result).id).toBe(pending.id);
   });
 
   it("listForAdmin supports global listing with user filters", async () => {
@@ -188,16 +189,16 @@ describe("reservationRepository read integration", () => {
     expect(Option.getOrThrow(found).id).toBe(reservation.id);
   });
 
-  it("returns ReservationRepositoryError when database is unreachable", async () => {
+  it("defects with ReservationRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = kit.makeRepo(broken.client);
 
-      const result = await Effect.runPromise(
-        brokenRepo.findById(uuidv7()).pipe(Effect.either),
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        ReservationRepositoryError,
+        { operation: "findById" },
       );
-
-      expectLeftTag(result, "ReservationRepositoryError");
     }
     finally {
       await broken.stop();

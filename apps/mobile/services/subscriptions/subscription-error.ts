@@ -1,61 +1,58 @@
 import type { Result } from "@lib/result";
+import type { z } from "zod";
 
-import { readJson } from "@lib/api-decode";
 import { ServerContracts } from "@mebike/shared";
 
 import {
+  type ServiceError,
   asNetworkError as asSharedNetworkError,
-  isUnauthorizedStatus,
-  parseErrorFromSchema,
-  parseUnauthorizedError,
-} from "../shared/service-error";
+  isServiceErrorCode,
+  normalizeServiceErrorCode,
+  parseServiceError,
+} from "@services/shared/service-error";
 
-export type SubscriptionErrorCode = string;
+type ContractSubscriptionErrorCode = z.infer<typeof ServerContracts.SubscriptionsContracts.SubscriptionErrorCodeSchema>;
 
-export type SubscriptionError
-  = | { _tag: "ApiError"; code: SubscriptionErrorCode; message?: string }
-    | { _tag: "NetworkError"; message?: string }
-    | { _tag: "DecodeError" }
-    | { _tag: "UnknownError"; message?: string };
+export type SubscriptionErrorCode = ContractSubscriptionErrorCode | "UNAUTHORIZED" | "UNKNOWN";
 
-export function subscriptionErrorMessage(error: SubscriptionError): string {
+export type SubscriptionError = ServiceError<SubscriptionErrorCode>;
+
+export function isSubscriptionContractErrorCode(code: string): code is ContractSubscriptionErrorCode {
+  return ServerContracts.SubscriptionsContracts.SubscriptionErrorCodeSchema.safeParse(code).success;
+}
+
+export function isSubscriptionErrorCode(code: string): code is SubscriptionErrorCode {
+  return isServiceErrorCode(code, isSubscriptionContractErrorCode);
+}
+
+export function isSubscriptionApiError(
+  error: { _tag: string; code?: string },
+): error is Extract<SubscriptionError, { _tag: "ApiError" }> {
+  return error._tag === "ApiError"
+    && typeof error.code === "string"
+    && isSubscriptionErrorCode(error.code);
+}
+
+export function isSubscriptionError(error: unknown): error is SubscriptionError {
+  if (!error || typeof error !== "object" || !("_tag" in error) || typeof error._tag !== "string") {
+    return false;
+  }
+
   if (error._tag === "ApiError") {
-    return error.message ?? "Yêu cầu không hợp lệ";
+    return "code" in error && typeof error.code === "string" && isSubscriptionErrorCode(error.code);
   }
-  if (error._tag === "NetworkError") {
-    return "Không thể kết nối tới máy chủ.";
-  }
-  return "Đã có lỗi xảy ra. Vui lòng thử lại.";
+
+  return error._tag === "NetworkError"
+    || error._tag === "DecodeError"
+    || error._tag === "UnknownError";
 }
 
 export async function parseSubscriptionError(response: Response): Promise<SubscriptionError> {
-  try {
-    const data = await readJson(response);
-
-    if (isUnauthorizedStatus(response.status)) {
-      const unauthorized = parseUnauthorizedError(data);
-      if (unauthorized) {
-        return { _tag: "ApiError", code: unauthorized.code, message: unauthorized.message };
-      }
-      return { _tag: "DecodeError" };
-    }
-
-    const parsed = parseErrorFromSchema(
-      ServerContracts.SubscriptionsContracts.SubscriptionErrorResponseSchema,
-      data,
-    );
-    if (parsed) {
-      return {
-        _tag: "ApiError",
-        code: parsed.code,
-        message: parsed.message,
-      };
-    }
-    return { _tag: "DecodeError" };
-  }
-  catch {
-    return { _tag: "DecodeError" };
-  }
+  return parseServiceError(response, {
+    schema: ServerContracts.SubscriptionsContracts.SubscriptionErrorResponseSchema,
+    mapCode: code => normalizeServiceErrorCode(code, isSubscriptionContractErrorCode),
+    includeUnauthorized: true,
+  });
 }
 
 export function asNetworkError(error: unknown): Result<never, SubscriptionError> {

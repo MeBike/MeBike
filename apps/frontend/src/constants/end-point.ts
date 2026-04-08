@@ -22,6 +22,8 @@ export const ENDPOINT = {
         STATION_REVENUE: () => "/stations/revenue",
         STATION_NEAREST_AVAILABLE_BIKE: () =>
             "/stations/nearest-available-bike",
+        SELECT_STATION :  
+            "/admin/stations",
     },
     SUPPLIER : {
         BASE : "/suppliers",
@@ -61,6 +63,24 @@ export const ENDPOINT = {
         BASE : "/admin/rentals",
         ID : (rentalId : string) => `/admin/rentals/${rentalId}`,
         GET_SUMMARY : "/rentals/stats/summary",
+    },
+    WALLET : {
+        BASE : (userId : string) => `/admin/users/${userId}/wallet`,
+        TRANSACTION : (userId : string) => `/admin/users/${userId}/wallet/transactions`,
+    },
+    RESERVATION : {
+        BASE : "/admin/reservations",
+        ID : (reservationId : string) => `/admin/reservations/${reservationId}`,
+        OVERVIEW : "/reservations/stats/summary",
+    },
+    RATING : {
+        BASE : "/admin/ratings",
+        ID : (ratingID : string) => `/admin/ratings/${ratingID}`,
+    },
+    AGENCY : {
+        BASE : "/admin/agencies",
+        ID : (id : string) => `/admin/agencies/${id}`,
+        STATUS : (id : string) => `/admin/agencies/${id}/status`,
     }
 
 } as const;

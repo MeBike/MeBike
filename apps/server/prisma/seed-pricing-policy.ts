@@ -2,7 +2,7 @@ import type { PrismaClient } from "../generated/prisma/client";
 
 import { toPrismaDecimal } from "../src/domain/shared/decimal";
 
-const DEFAULT_PRICING_POLICY_ID = "11111111-1111-4111-8111-111111111111";
+export const DEFAULT_PRICING_POLICY_ID = "11111111-1111-4111-8111-111111111111";
 
 export async function seedDefaultPricingPolicy(prisma: PrismaClient): Promise<void> {
   await prisma.pricingPolicy.upsert({

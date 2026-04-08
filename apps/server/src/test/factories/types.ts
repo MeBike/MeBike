@@ -23,6 +23,8 @@ export type StationOverrides = {
   id?: string;
   name?: string;
   address?: string;
+  stationType?: "INTERNAL" | "AGENCY";
+  agencyId?: string | null;
   capacity?: number;
   pickupSlotLimit?: number;
   returnSlotLimit?: number;
@@ -32,6 +34,7 @@ export type StationOverrides = {
 
 export type BikeOverrides = {
   id?: string;
+  bikeNumber?: string;
   chipId?: string;
   stationId?: string | null;
   supplierId?: string | null;
@@ -51,7 +54,7 @@ export type RentalOverrides = {
   id?: string;
   userId?: string;
   reservationId?: string | null;
-  bikeId?: string | null;
+  bikeId?: string;
   pricingPolicyId?: string | null;
   startStationId?: string;
   endStationId?: string | null;
@@ -75,7 +78,7 @@ export type ReservationOverrides = {
   startTime?: Date;
   endTime?: Date | null;
   prepaid?: string;
-  status?: "PENDING" | "ACTIVE" | "FULFILLED" | "CANCELLED" | "EXPIRED";
+  status?: "PENDING" | "FULFILLED" | "CANCELLED" | "EXPIRED";
 };
 
 export type SubscriptionOverrides = {
@@ -151,6 +154,7 @@ export type CreatedStation = {
 
 export type CreatedBike = {
   id: string;
+  bikeNumber: string;
   chipId: string;
 };
 

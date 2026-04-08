@@ -3,57 +3,13 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
-import { AppliesToEnum, PrismaClient, RatingReasonType } from "../generated/prisma/client";
+import { PrismaClient } from "../generated/prisma/client";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
+import { seedRatingReasons } from "./seed/rating-reasons";
+import { seedSampleCompletedRatings } from "./seed/sample-completed-ratings";
 import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
-
-const ratingReasonsSeed: ReadonlyArray<{
-  readonly type: RatingReasonType;
-  readonly appliesTo: AppliesToEnum;
-  readonly message: string;
-}> = [
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe chạy êm, vận hành tốt" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe sạch sẽ" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe còn nhiều pin" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Phanh chưa tốt" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Xe bẩn hoặc có mùi" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Pin yếu" },
-
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm dễ tìm" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm gọn gàng, an toàn" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, message: "Trạm khó tìm" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.station, message: "Trạm đông, khó trả xe" },
-];
-
-async function seedRatingReasons(prisma: PrismaClient) {
-  const existing = await prisma.ratingReason.findMany({
-    select: {
-      type: true,
-      appliesTo: true,
-      message: true,
-    },
-  });
-
-  const existingKeys = new Set(existing.map(item => `${item.type}|${item.appliesTo}|${item.message}`));
-
-  for (const reason of ratingReasonsSeed) {
-    const key = `${reason.type}|${reason.appliesTo}|${reason.message}`;
-    if (existingKeys.has(key)) {
-      continue;
-    }
-
-    await prisma.ratingReason.create({
-      data: {
-        id: uuidv7(),
-        type: reason.type,
-        appliesTo: reason.appliesTo,
-        message: reason.message,
-      },
-    });
-  }
-}
 
 function getConnectionString() {
   const url = process.env.DATABASE_URL;
@@ -107,6 +63,7 @@ async function main() {
   }
 
   await seedRatingReasons(prisma);
+  await seedSampleCompletedRatings(prisma);
 
   await prisma.$disconnect();
 }

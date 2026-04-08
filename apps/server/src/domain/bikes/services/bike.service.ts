@@ -1,20 +1,9 @@
 import { Effect, Layer, Option } from "effect";
 
-import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { BikeStatus } from "generated/prisma/client";
-
 import { Prisma } from "@/infrastructure/prisma";
 
-import type {
-  BikeRepositoryError,
-  DuplicateChipId,
-} from "../domain-errors";
-import type {
-  BikeFilter,
-  BikeRow,
-  BikeSortField,
-} from "../models";
 import type { BikeRepo } from "../repository/bike.repository";
+import type { BikeService } from "./bike.service.types";
 
 import {
   BikeCurrentlyRented,
@@ -24,50 +13,6 @@ import {
   BikeSupplierNotFound,
 } from "../domain-errors";
 import { BikeRepository } from "../repository/bike.repository";
-
-export type BikeService = {
-  createBike: (
-    input: {
-      chipId: string;
-      stationId: string;
-      supplierId: string;
-      status?: BikeStatus;
-    },
-  ) => Effect.Effect<
-    BikeRow,
-    BikeRepositoryError | DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
-  >;
-
-  listBikes: (
-    filter: BikeFilter,
-    pageReq: PageRequest<BikeSortField>,
-  ) => Effect.Effect<PageResult<BikeRow>>;
-
-  getBikeDetail: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
-
-  reportBrokenBike: (
-    bikeId: string,
-  ) => Effect.Effect<Option.Option<BikeRow>>;
-
-  adminUpdateBike: (
-    bikeId: string,
-    patch: Partial<{
-      chipId: string;
-      stationId: string;
-      status: BikeStatus;
-      supplierId: string | null;
-    }>,
-  ) => Effect.Effect<
-    Option.Option<BikeRow>,
-    | BikeCurrentlyRented
-    | BikeCurrentlyReserved
-    | BikeNotFound
-    | DuplicateChipId
-    | BikeStationNotFound
-    | BikeSupplierNotFound
-    | BikeRepositoryError
-  >;
-};
 
 function makeBikeService(
   repo: BikeRepo,
@@ -105,29 +50,17 @@ function makeBikeService(
       }),
 
     listBikes: (filter, pageReq) =>
-      repo
-        .listByStationWithOffset(filter.stationId, filter, pageReq)
-        .pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-        ),
+      repo.listByStationWithOffset(filter.stationId, filter, pageReq),
 
     getBikeDetail: (bikeId: string) =>
-      repo.getById(bikeId).pipe(
-        Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-      ),
+      repo.getById(bikeId),
 
     reportBrokenBike: (bikeId: string) =>
-      repo.updateStatus(bikeId, "BROKEN").pipe(
-        Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-      ),
+      repo.updateStatus(bikeId, "BROKEN"),
 
     adminUpdateBike: (bikeId, patch) =>
       Effect.gen(function* () {
-        const current = yield* repo
-          .getById(bikeId)
-          .pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-          );
+        const current = yield* repo.getById(bikeId);
         if (Option.isNone(current)) {
           return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
         }

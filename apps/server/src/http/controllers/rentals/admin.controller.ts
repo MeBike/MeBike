@@ -223,6 +223,9 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
       rentalId,
       stationId: body.stationId,
       confirmedByUserId: c.var.currentUser!.userId,
+      operatorRole: c.var.currentUser!.role as "STAFF" | "AGENCY",
+      operatorStationId: c.var.currentUser!.operatorStationId ?? null,
+      operatorAgencyId: c.var.currentUser!.agencyId ?? null,
       confirmationMethod: body.confirmationMethod ?? "MANUAL",
       confirmedAt: body.confirmedAt ? new Date(body.confirmedAt) : new Date(),
     }),
@@ -264,6 +267,19 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
               },
             },
             400,
+          )),
+        Match.tag("UnauthorizedRentalAccess", ({ userId }) =>
+          c.json<RentalsContracts.RentalErrorResponse, 403>(
+            {
+              error: rentalErrorMessages.ACCESS_DENIED,
+              details: {
+                code: RentalErrorCodeSchema.enum.ACCESS_DENIED,
+                rentalId,
+                stationId: body.stationId,
+                userId,
+              },
+            },
+            403,
           )),
         Match.tag("ReturnSlotRequiredForReturn", () =>
           c.json(
@@ -403,6 +419,7 @@ const adminListBikeSwapRequests: RouteHandler<
         {
           userId: query.userId,
           status: query.status,
+          stationId: query.stationId,
         },
         {
           page: Number(query.page ?? 1),

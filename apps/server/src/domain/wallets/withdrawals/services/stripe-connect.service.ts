@@ -2,10 +2,8 @@ import type Stripe from "stripe";
 
 import { Effect, Match } from "effect";
 
-import type { UserRepositoryError } from "@/domain/users/domain-errors";
-
-import { UserCommandServiceTag } from "@/domain/users/services/user-command.service";
-import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
+import { UserCommandServiceTag } from "@/domain/users/services/user-command.live";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.live";
 
 import type {
   StripeConnectNotEnabled,
@@ -38,8 +36,7 @@ export function startStripeConnectOnboardingUseCase(
   input: StartStripeConnectOnboardingInput,
 ): Effect.Effect<
   StartStripeConnectOnboardingResult,
-  StripeConnectNotEnabled | WithdrawalProviderError | WithdrawalUserNotFound | InvalidWithdrawalRequest
-  | UserRepositoryError,
+  StripeConnectNotEnabled | WithdrawalProviderError | WithdrawalUserNotFound | InvalidWithdrawalRequest,
   StripeWithdrawalServiceTag | UserQueryServiceTag | UserCommandServiceTag
 > {
   return Effect.gen(function* () {
@@ -109,7 +106,7 @@ export function handleStripeAccountUpdatedUseCase(
   event: Stripe.Event,
 ): Effect.Effect<
   StripeAccountUpdatedOutcome,
-  UserRepositoryError,
+  never,
   UserCommandServiceTag
 > {
   return Effect.gen(function* () {

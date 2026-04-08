@@ -1,6 +1,7 @@
-import { BikeColors } from "@constants/BikeColors";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
+
+import { BikeColors } from "@constants/BikeColors";
 
 type StationMapMarkerProps = {
   count: number;
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   markerText: {
     color: BikeColors.primary,
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 });
 

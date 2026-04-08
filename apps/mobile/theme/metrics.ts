@@ -79,15 +79,31 @@ export const borderWidths = {
 } as const;
 
 export const iconSizes = {
+  xs: 12,
+  caption: 14,
   sm: 16,
+  input: 18,
   md: 20,
+  section: 22,
   lg: 24,
+  chip: 28,
+  feature: 30,
   xl: 32,
   hero: 44,
+  display: 48,
   jumbo: 60,
+  showcase: 80,
+  splash: 144,
 } as const;
 
 export const elevations = {
+  whisper: {
+    shadowColor: lightThemeColors.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.035,
+    shadowRadius: 8,
+    elevation: 1,
+  },
   soft: {
     shadowColor: lightThemeColors.shadowColor,
     shadowOffset: { width: 0, height: 4 },

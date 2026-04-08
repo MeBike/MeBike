@@ -1,9 +1,11 @@
 import type { Result } from "@lib/result";
+import type { z } from "zod";
 
 import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
+import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
 
 import type {
@@ -15,9 +17,12 @@ import type {
   ReservationOption,
   ReservationStatus,
 } from "@/types/reservation-types";
+
 import type { ReservationError } from "./reservation-error";
 
 import { asNetworkError, parseReservationError } from "./reservation-error";
+
+export type { CreateReservationPayload };
 
 type ReservationListParams = {
   page?: number;
@@ -27,21 +32,22 @@ type ReservationListParams = {
   reservationOption?: ReservationOption;
 };
 
-const CURRENT_RESERVATION_STATUSES: ReservationStatus[] = ["PENDING", "ACTIVE"];
+const CURRENT_RESERVATION_STATUSES: ReservationStatus[] = ["PENDING"];
 const RESERVATION_HISTORY_STATUSES: ReservationStatus[] = ["FULFILLED", "CANCELLED", "EXPIRED"];
 
-function toSearchParams(
-  params: Record<string, unknown> | undefined,
-): Record<string, string> | undefined {
-  if (!params) {
-    return undefined;
+async function decodeReservationResponse<TRaw, TValue>(
+  response: Response,
+  schema: z.ZodType<TRaw>,
+  map: (value: TRaw) => TValue,
+): Promise<Result<TValue, ReservationError>> {
+  try {
+    const data = await readJson(response);
+    const parsed = decodeWithSchema(schema, data);
+    return parsed.ok ? ok(map(parsed.value)) : err({ _tag: "DecodeError" });
   }
-
-  const entries = Object.entries(params)
-    .filter(([, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => [key, String(value)]);
-
-  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+  catch {
+    return err({ _tag: "DecodeError" });
+  }
 }
 
 function mapReservation(detail: ReservationDetail | ReservationExpandedDetail): Reservation {
@@ -83,9 +89,7 @@ export const reservationService = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.reservations.reserveBike.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(mapReservation(parsed.value)) : err({ _tag: "DecodeError" });
+        return decodeReservationResponse(response, okSchema as z.ZodType<ReservationDetail>, mapReservation);
       }
 
       return err(await parseReservationError(response));
@@ -106,17 +110,10 @@ export const reservationService = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.reservations.listMyReservations.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-
-        if (!parsed.ok) {
-          return err({ _tag: "DecodeError" });
-        }
-
-        return ok({
-          data: parsed.value.data.map(mapReservation),
-          pagination: mapPagination(parsed.value.pagination),
-        });
+        return decodeReservationResponse(response, okSchema as z.ZodType<PaginatedReservations>, value => ({
+          data: value.data.map(mapReservation),
+          pagination: mapPagination(value.pagination),
+        }));
       }
 
       return err(await parseReservationError(response));
@@ -156,17 +153,13 @@ export const reservationService = {
 
   getReservationDetails: async (reservationId: string): Promise<Result<Reservation, ReservationError>> => {
     try {
-      const path = routePath(ServerRoutes.reservations.getMyReservation)
-        .replace("{reservationId}", reservationId)
-        .replace(":reservationId", reservationId);
+      const path = routePath(ServerRoutes.reservations.getMyReservation, { reservationId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.reservations.getMyReservation.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(mapReservation(parsed.value)) : err({ _tag: "DecodeError" });
+        return decodeReservationResponse(response, okSchema as z.ZodType<ReservationExpandedDetail>, mapReservation);
       }
 
       return err(await parseReservationError(response));
@@ -178,17 +171,13 @@ export const reservationService = {
 
   cancelReservation: async (reservationId: string): Promise<Result<Reservation, ReservationError>> => {
     try {
-      const path = routePath(ServerRoutes.reservations.cancelReservation)
-        .replace("{reservationId}", reservationId)
-        .replace(":reservationId", reservationId);
+      const path = routePath(ServerRoutes.reservations.cancelReservation, { reservationId });
 
       const response = await kyClient.post(path, { throwHttpErrors: false });
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.reservations.cancelReservation.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(mapReservation(parsed.value)) : err({ _tag: "DecodeError" });
+        return decodeReservationResponse(response, okSchema as z.ZodType<ReservationDetail>, mapReservation);
       }
 
       return err(await parseReservationError(response));
@@ -200,17 +189,13 @@ export const reservationService = {
 
   confirmReservation: async (reservationId: string): Promise<Result<Reservation, ReservationError>> => {
     try {
-      const path = routePath(ServerRoutes.reservations.confirmReservation)
-        .replace("{reservationId}", reservationId)
-        .replace(":reservationId", reservationId);
+      const path = routePath(ServerRoutes.reservations.confirmReservation, { reservationId });
 
       const response = await kyClient.post(path, { throwHttpErrors: false });
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.reservations.confirmReservation.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(mapReservation(parsed.value)) : err({ _tag: "DecodeError" });
+        return decodeReservationResponse(response, okSchema as z.ZodType<ReservationDetail>, mapReservation);
       }
 
       return err(await parseReservationError(response));

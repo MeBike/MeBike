@@ -1,7 +1,6 @@
-import { useGetStationById } from "@hooks/query/Station/use-get-station-by-id-query";
-import { useBikeActions } from "@hooks/useBikeAction";
+import { useGetStationDetailQuery } from "@hooks/query/stations/use-get-station-detail-query";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 
 import type { BikeSummary } from "@/contracts/server";
 
@@ -9,6 +8,8 @@ import type {
   StationDetailRouteProp,
   StationDetailScreenNavigationProp,
 } from "../../../types/navigation";
+
+import { useStationBikes } from "./use-station-bikes";
 
 const PAGE_SIZE = 20;
 
@@ -20,60 +21,33 @@ export function useStationDetail() {
     selectionMode,
     rentalId,
     currentReturnStationId,
+    currentBikeSwapStationId,
   } = route.params;
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loadedBikes, setLoadedBikes] = useState<BikeSummary[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [focusedBike, setFocusedBike] = useState<BikeSummary | null>(null);
-
-  const stationQuery = useGetStationById(stationId);
-
   const {
-    allBikes,
-    isFetchingAllBikes,
-    getBikes,
+    data: stationData,
+    isLoading: isStationLoading,
+    isRefetching: isStationRefetching,
+    refetch: refetchStation,
+  } = useGetStationDetailQuery(stationId);
+  const {
+    bikes: loadedBikes,
+    hasMore,
+    isFetchingMore: isFetchingAllBikes,
+    isLoadingBikes,
+    isRefreshing: isRefreshingBikes,
+    loadMore,
+    refresh: refreshBikes,
     totalRecords,
-  } = useBikeActions({
-    hasToken: true,
-    stationId,
-    page: currentPage,
-    limit: PAGE_SIZE,
-    status: "AVAILABLE",
-  });
+  } = useStationBikes({ pageSize: PAGE_SIZE, stationId });
 
-  useEffect(() => {
-    if (stationId) {
-      getBikes();
-    }
-  }, [stationId, currentPage, getBikes]);
-
-  useEffect(() => {
-    if (allBikes && allBikes.length > 0) {
-      if (currentPage === 1) {
-        setLoadedBikes(allBikes);
-      }
-      else {
-        setLoadedBikes(prev => [...prev, ...allBikes]);
-      }
-      setHasMore(allBikes.length === PAGE_SIZE);
-    }
-    else if (currentPage > 1) {
-      setHasMore(false);
-    }
-    if (refreshing)
-      setRefreshing(false);
-  }, [allBikes, currentPage, refreshing]);
-
-  const station = stationQuery.data ?? null;
-  const isLoading = stationQuery.isLoading || isFetchingAllBikes;
+  const station = stationData ?? null;
+  const isLoading = isStationLoading || isLoadingBikes;
 
   const handleBikePress = useCallback(
     (bike: BikeSummary) => {
       if (!station)
         return;
-      setFocusedBike(bike);
       navigation.navigate("BikeDetail", {
         bike,
         station: {
@@ -87,29 +61,21 @@ export function useStationDetail() {
   );
 
   const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    setCurrentPage(1);
-    setHasMore(true);
-    setLoadedBikes([]);
-    void stationQuery.refetch();
-  }, []);
+    void Promise.allSettled([refetchStation(), refreshBikes()]);
+  }, [refetchStation, refreshBikes]);
 
   const handleLoadMore = useCallback(() => {
-    if (hasMore && !isFetchingAllBikes) {
-      setCurrentPage(prev => prev + 1);
-    }
-  }, [hasMore, isFetchingAllBikes]);
+    loadMore();
+  }, [loadMore]);
 
   return {
     station,
     isLoading,
     loadedBikes,
-    allBikes,
     isFetchingAllBikes,
     hasMore,
     totalRecords,
-    refreshing,
-    focusedBike,
+    refreshing: isStationRefetching || isRefreshingBikes,
     handleBikePress,
     handleRefresh,
     handleLoadMore,
@@ -117,5 +83,6 @@ export function useStationDetail() {
     selectionMode,
     rentalId,
     currentReturnStationId,
+    currentBikeSwapStationId,
   };
 }

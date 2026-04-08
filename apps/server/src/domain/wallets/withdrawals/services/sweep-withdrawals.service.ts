@@ -2,16 +2,14 @@ import type Stripe from "stripe";
 
 import { Effect, Match } from "effect";
 
-import type { UserRepositoryError } from "@/domain/users/domain-errors";
 import type {
   WalletBalanceConstraint,
-  WalletHoldRepositoryError,
-  WalletRepositoryError,
 } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 
 import { env } from "@/config/env";
-import { UserQueryServiceTag } from "@/domain/users/services/user-query.service";
+import { defectOn } from "@/domain/shared";
+import { UserQueryServiceTag } from "@/domain/users/services/user-query.live";
 import {
   InsufficientWalletBalance,
   WalletNotFound,
@@ -19,9 +17,9 @@ import {
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalProviderError, WithdrawalRepositoryError } from "../domain-errors";
+import type { WithdrawalProviderError } from "../domain-errors";
 
 import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
 import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
@@ -68,13 +66,9 @@ export function sweepWithdrawalsUseCase(
   now: Date = new Date(),
 ): Effect.Effect<
   WithdrawalSweepSummary,
-  | WithdrawalRepositoryError
-  | WalletHoldRepositoryError
   | WalletNotFound
-  | WalletRepositoryError
   | InsufficientWalletBalance
-  | WithdrawalProviderError
-  | UserRepositoryError,
+  | WithdrawalProviderError,
   Prisma
   | WithdrawalRepository
   | UserQueryServiceTag
@@ -182,7 +176,7 @@ function markSucceededAndSettle(
   withdrawal: import("../models").WalletWithdrawalRow,
   payoutId: string,
   now: Date,
-): Effect.Effect<boolean, WithdrawalRepositoryError | WalletHoldRepositoryError | WalletNotFound | WalletRepositoryError | InsufficientWalletBalance> {
+): Effect.Effect<boolean, WalletNotFound | InsufficientWalletBalance> {
   return runPrismaTransaction(client, tx =>
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
@@ -222,7 +216,7 @@ function markSucceededAndSettle(
 
       return true;
     })).pipe(
-    Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+    defectOn(PrismaTransactionError),
   );
 }
 
@@ -231,7 +225,7 @@ function markFailedAndReleaseHold(
   withdrawal: import("../models").WalletWithdrawalRow,
   reason: string,
   now: Date,
-): Effect.Effect<boolean, WithdrawalRepositoryError | WalletHoldRepositoryError | WalletRepositoryError> {
+): Effect.Effect<boolean> {
   return runPrismaTransaction(client, tx =>
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
@@ -263,6 +257,6 @@ function markFailedAndReleaseHold(
 
       return true;
     })).pipe(
-    Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+    defectOn(PrismaTransactionError),
   );
 }

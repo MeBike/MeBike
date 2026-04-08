@@ -2,8 +2,9 @@ import { Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectLeftTag } from "@/test/effect/assertions";
+import { expectDefect } from "@/test/effect/assertions";
 import { runEffectEither } from "@/test/effect/run";
 
 import { setupRentalRepositoryIntTestKit } from "../rental.repository.int.test-kit";
@@ -63,6 +64,7 @@ describe("rentalRepository read integration", () => {
   it("adminGetRentalById returns detailed rental data", async () => {
     const user = await kit.createUser();
     const { station, bike } = await kit.createBikeGraph();
+    const returnStation = await kit.fixture.factories.station();
 
     const rental = await repo.createRental({
       userId: user.id,
@@ -73,6 +75,16 @@ describe("rentalRepository read integration", () => {
       if (result._tag === "Left")
         throw result.left;
       return result.right;
+    });
+
+    await kit.fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: rental.id,
+        userId: user.id,
+        stationId: returnStation.id,
+        reservedFrom: new Date(),
+        status: "ACTIVE",
+      },
     });
 
     const detailOpt = await repo.adminGetRentalById(rental.id).pipe(runEffectEither).then((result) => {
@@ -90,6 +102,7 @@ describe("rentalRepository read integration", () => {
     expect(detailOpt.value.user.email).toBe(user.email);
     expect(detailOpt.value.bike?.id).toBe(bike.id);
     expect(detailOpt.value.startStation.id).toBe(station.id);
+    expect(detailOpt.value.returnSlot?.station.id).toBe(returnStation.id);
   });
 
   it("listActiveRentalsByPhone returns active rentals for user phone", async () => {
@@ -164,14 +177,16 @@ describe("rentalRepository read integration", () => {
     expect(page.items[0].status).toBe("RENTED");
   });
 
-  it("returns RentalRepositoryError when database is unreachable", async () => {
+  it("defects with RentalRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
       const brokenRepo = kit.makeRepo(broken.client);
 
-      const result = await runEffectEither(brokenRepo.findById(uuidv7()));
-
-      expectLeftTag(result, "RentalRepositoryError");
+      await expectDefect(
+        brokenRepo.findById(uuidv7()),
+        RentalRepositoryError,
+        { operation: "findById" },
+      );
     }
     finally {
       await broken.stop();

@@ -9,7 +9,9 @@ import { routePath, ServerRoutes } from "@lib/server-routes";
 import { AuthContracts } from "@mebike/shared";
 import { StatusCodes } from "http-status-codes";
 
-import type { ApiAuthError, AuthError } from "./auth-error";
+import type { AuthError } from "./auth-error";
+
+import { asNetworkError, parseAuthError } from "./auth-error";
 
 export type Tokens = z.output<typeof AuthContracts.TokensSchema>;
 
@@ -21,45 +23,27 @@ export type RefreshRequest = z.output<typeof AuthContracts.RefreshRequestSchema>
 
 export type VerifyResetPasswordOtpRequest = z.output<typeof AuthContracts.VerifyResetPasswordOtpRequestSchema>;
 
-async function parseAuthError(response: Response): Promise<AuthError> {
+async function decodeEnvelopeData<TEnvelope, TValue>(
+  response: Response,
+  schema: z.ZodType<TEnvelope>,
+  select: (value: TEnvelope) => TValue,
+): Promise<Result<TValue, AuthError>> {
   try {
     const data = await readJson(response);
-    const parsed = decodeWithSchema(AuthContracts.AuthErrorResponseSchema, data);
-    if (parsed.ok) {
-      return {
-        _tag: "ApiError",
-        code: parsed.value.details.code as ApiAuthError["code"],
-        message: parsed.value.error,
-      };
-    }
+    const parsed = decodeWithSchema(schema, data);
+    return parsed.ok ? ok(select(parsed.value)) : err({ _tag: "DecodeError" });
   }
   catch {
-    return { _tag: "DecodeError" };
+    return err({ _tag: "DecodeError" });
   }
-
-  return { _tag: "UnknownError", message: "Unknown auth error" };
 }
 
 async function parseTokens(response: Response): Promise<Result<Tokens, AuthError>> {
-  try {
-    const data = await readJson(response);
-    const parsed = decodeWithSchema(AuthContracts.TokensEnvelopeSchema, data);
-    return parsed.ok ? ok(parsed.value.data) : err({ _tag: "DecodeError" });
-  }
-  catch {
-    return err({ _tag: "DecodeError" });
-  }
+  return decodeEnvelopeData(response, AuthContracts.TokensEnvelopeSchema, value => value.data);
 }
 
 async function parseResetToken(response: Response): Promise<Result<string, AuthError>> {
-  try {
-    const data = await readJson(response);
-    const parsed = decodeWithSchema(AuthContracts.ResetPasswordTokenEnvelopeSchema, data);
-    return parsed.ok ? ok(parsed.value.data.resetToken) : err({ _tag: "DecodeError" });
-  }
-  catch {
-    return err({ _tag: "DecodeError" });
-  }
+  return decodeEnvelopeData(response, AuthContracts.ResetPasswordTokenEnvelopeSchema, value => value.data.resetToken);
 }
 
 export const authService = {
@@ -86,10 +70,7 @@ export const authService = {
       return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -116,10 +97,7 @@ export const authService = {
       return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -146,10 +124,7 @@ export const authService = {
       return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -173,10 +148,7 @@ export const authService = {
       return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -194,10 +166,7 @@ export const authService = {
       return err(await parseAuthError(response));
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -215,10 +184,7 @@ export const authService = {
       return err(await parseAuthError(response));
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -237,10 +203,7 @@ export const authService = {
       return err(await parseAuthError(response));
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -260,10 +223,7 @@ export const authService = {
       return err(await parseAuthError(response));
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -282,10 +242,7 @@ export const authService = {
       return err(await parseAuthError(response));
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 };

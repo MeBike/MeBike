@@ -23,7 +23,7 @@ describe("reservation use-cases unhappy paths", () => {
     runCancel = runners.cancel;
   });
 
-  it("reserveBikeUseCase fails with ActiveReservationExists when user already has active reservation", async () => {
+  it("reserveBikeUseCase fails with ActiveReservationExists when user already has pending reservation", async () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 50000n },
     });
@@ -34,7 +34,7 @@ describe("reservation use-cases unhappy paths", () => {
       userId: user.id,
       stationId: station.id,
       bikeId: null,
-      status: "ACTIVE",
+      status: "PENDING",
     });
 
     const now = new Date();
@@ -222,7 +222,7 @@ describe("reservation use-cases unhappy paths", () => {
       userId: user.id,
       bikeId: bike.id,
       stationId: station.id,
-      status: "ACTIVE",
+      status: "CANCELLED",
       endTime: null,
     });
 
@@ -361,7 +361,7 @@ describe("reservation use-cases unhappy paths", () => {
       userId: user.id,
       bikeId: null,
       stationId: station.id,
-      status: "ACTIVE",
+      status: "EXPIRED",
       endTime: null,
     });
 

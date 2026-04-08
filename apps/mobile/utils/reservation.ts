@@ -6,7 +6,6 @@ export const reservationStatusColors: Record<ReservationStatus, string> = reserv
 
 export const reservationStatusLabels: Record<ReservationStatus, string> = {
   PENDING: "Đang chờ xử lý",
-  ACTIVE: "Đang giữ chỗ",
   FULFILLED: "Hoàn thành",
   CANCELLED: "Đã hủy",
   EXPIRED: "Hết hạn",
@@ -20,8 +19,6 @@ export function getReservationStatusTone(status: ReservationStatus) {
   switch (status) {
     case "PENDING":
       return "warning" as const;
-    case "ACTIVE":
-      return "success" as const;
     case "CANCELLED":
       return "danger" as const;
     case "FULFILLED":

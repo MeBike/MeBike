@@ -1,20 +1,20 @@
-import React from "react";
-import { Pressable, View } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { Reservation } from "@/types/reservation-types";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
+import { formatBikeNumber } from "@utils/bike";
 import { formatVietnamDateTime } from "@utils/date";
 import {
   getReservationOptionLabel,
   getReservationStatusLabel,
   getReservationStatusTone,
 } from "@utils/reservation";
+import React from "react";
+import { Pressable, View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { Reservation } from "@/types/reservation-types";
 
 import { formatCurrency } from "../../../utils/reservation-screen-utils";
 
@@ -35,15 +35,15 @@ function splitFormattedDateTime(value?: string | null) {
 
 function getReservationTitle(reservation: Reservation) {
   if (reservation.bikeId) {
-    return `Xe #${String(reservation.bikeId).slice(-4)}`;
+    return `Xe ${formatBikeNumber(reservation.bikeNumber, reservation.bikeId)}`;
   }
 
   return "Chỗ trống tại trạm";
 }
 
 function getReservationStatusIcon(status: Reservation["status"]) {
-  if (status === "ACTIVE") {
-    return "checkmark.circle" as const;
+  if (status === "PENDING") {
+    return "check-circle" as const;
   }
 
   return undefined;
@@ -94,8 +94,8 @@ export function ReservationCard({
                   >
                     <IconSymbol
                       color={theme.actionPrimary.val}
-                      name={reservation.bikeId ? "bicycle" : "location"}
-                      size={24}
+                      name={reservation.bikeId ? "bike" : "location"}
+                      size="lg"
                     />
                   </XStack>
 
@@ -128,14 +128,14 @@ export function ReservationCard({
                 paddingVertical="$4"
               >
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={theme.textTertiary.val} name="location" size={20} />
+                  <IconSymbol color={theme.textTertiary.val} name="location" size="md" />
                   <AppText flex={1} numberOfLines={2} variant="subhead">
                     {stationLabel}
                   </AppText>
                 </XStack>
 
                 <XStack alignItems="flex-start" gap="$3">
-                  <IconSymbol color={theme.textTertiary.val} name="clock" size={20} style={{ marginTop: 1 }} />
+                  <IconSymbol color={theme.textTertiary.val} name="clock" size="md" style={{ marginTop: 1 }} />
                   <YStack flex={1} gap="$1">
                     <AppText variant="subhead">
                       {timeRangeLabel}
@@ -147,14 +147,14 @@ export function ReservationCard({
                 </XStack>
 
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={theme.textTertiary.val} name="tag" size={20} />
+                  <IconSymbol color={theme.textTertiary.val} name="tag" size="md" />
                   <AppText tone="muted" variant="bodySmall">
                     {getReservationOptionLabel(reservation.reservationOption)}
                   </AppText>
                 </XStack>
 
                 <XStack alignItems="center" gap="$3">
-                  <IconSymbol color={theme.actionPrimary.val} name="wallet.pass.fill" size={20} />
+                  <IconSymbol color={theme.actionPrimary.val} name="wallet" size="md" />
                   <AppText tone="muted" variant="bodySmall">
                     Đã thanh toán:
                     {" "}

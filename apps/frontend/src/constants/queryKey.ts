@@ -77,13 +77,15 @@ export const QUERY_KEYS = {
     ],
   },
   WALLET: {
-    ALL_WALLET_USER: (page?: number, limit?: number) => [
+    ALL_WALLET_USER: (userId: string, page?: number, limit?: number) => [
       "all-wallet-users",
+      userId,
       page,
       limit,
     ],
-    MANAGE_TRANSACTIONS: (page?: number, limit?: number) => [
+    MANAGE_TRANSACTIONS: (userId: string, page?: number, limit?: number) => [
       "manage-transactions",
+      userId,
       page,
       limit,
     ],

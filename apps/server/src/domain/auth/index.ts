@@ -1,3 +1,4 @@
+export * from "./agency-account-access";
 export * from "./config";
 export * from "./domain-errors";
 export * from "./jwt";

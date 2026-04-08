@@ -1,0 +1,120 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigation } from "@react-navigation/native";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Alert, Animated } from "react-native";
+
+import type { LoginScreenNavigationProp } from "@/types/navigation";
+
+import { log } from "@/lib/log";
+import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
+import { testBackendConnection } from "@/utils/test-connection";
+import { useAuthNext } from "@providers/auth-provider-next";
+import { isAuthApiError } from "@services/auth/auth-error";
+
+import type { LoginFormValues } from "../login.schema";
+
+import { loginSchema } from "../login.schema";
+
+export type BackendStatus = "checking" | "online" | "offline";
+
+export function useLogin() {
+  const navigation = useNavigation<LoginScreenNavigationProp>();
+  const [showPassword, setShowPassword] = useState(false);
+  const [backendStatus, setBackendStatus] = useState<BackendStatus>("checking");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const { login } = useAuthNext();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  useEffect(() => {
+    const checkBackend = async () => {
+      const isOnline = await testBackendConnection();
+      setBackendStatus(isOnline ? "online" : "offline");
+    };
+    checkBackend();
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      log.warn("Login form errors", { errors });
+    }
+  }, [errors]);
+
+  const toggleShowPassword = () => {
+    setShowPassword(value => !value);
+  };
+
+  const submit = handleSubmit(async (data) => {
+    const rotationAnimation = Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    );
+
+    try {
+      setIsSubmitting(true);
+      rotationAnimation.start();
+      const { email, password } = data;
+      const result = await login({ email, password });
+      if (result) {
+        const message = isAuthApiError(result)
+          ? presentAuthError(result, "Không thể đăng nhập. Vui lòng thử lại.")
+          : result._tag === "NetworkError"
+            ? "Không thể kết nối tới máy chủ."
+            : "Không thể đăng nhập. Vui lòng thử lại.";
+
+        Alert.alert("Đăng nhập thất bại", message);
+        return;
+      }
+      navigation.navigate("Main");
+    }
+    catch {
+      rotateAnim.stopAnimation();
+      rotateAnim.setValue(0);
+    }
+    finally {
+      rotationAnimation.stop();
+      rotateAnim.setValue(0);
+      setIsSubmitting(false);
+    }
+  });
+
+  const goToRegister = () => {
+    navigation.navigate("Register");
+  };
+
+  const goBack = () => {
+    navigation.goBack();
+  };
+
+  const handleForgotPassword = () => {
+    navigation.navigate("ForgotPassword");
+  };
+
+  return {
+    control,
+    errors,
+    showPassword,
+    toggleShowPassword,
+    backendStatus,
+    rotateAnim,
+    submit,
+    isSubmitting,
+    goToRegister,
+    goBack,
+    handleForgotPassword,
+  };
+}

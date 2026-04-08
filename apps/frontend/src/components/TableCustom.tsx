@@ -12,6 +12,12 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TableSkeleton } from "./table-skeleton";
+import { cn } from "@/lib/utils";
+
+export type DataTableColumnMeta = {
+  thClassName?: string;
+  tdClassName?: string;
+};
 
 export interface FilterOptionsProps {
   value: string;
@@ -50,6 +56,8 @@ interface DataTableProps<TData, TValue> {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   title?: string;
+  /** Merged onto the `<table>` (e.g. `table-fixed` for stable column widths). */
+  tableClassName?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -59,6 +67,7 @@ export function DataTable<TData, TValue>({
   searchValue,
   onSearchChange,
   title,
+  tableClassName,
   isLoading = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -129,12 +138,20 @@ export function DataTable<TData, TValue>({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className={cn("w-full text-sm", tableClassName)}>
               <thead>
                 <tr className="border-b">
                   {table.getHeaderGroups().map((headerGroup) =>
                     headerGroup.headers.map((header) => (
-                      <th key={header.id} className="text-left py-3 px-4 font-medium">
+                      <th
+                        key={header.id}
+                        className={cn(
+                          "py-3 px-4 text-left align-middle font-medium",
+                          (header.column.columnDef.meta as
+                            | DataTableColumnMeta
+                            | undefined)?.thClassName
+                        )}
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -151,7 +168,15 @@ export function DataTable<TData, TValue>({
                   table.getRowModel().rows.map((row) => (
                     <tr key={row.id} className="border-b hover:bg-muted/50">
                       {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="py-3 px-4">
+                        <td
+                          key={cell.id}
+                          className={cn(
+                            "py-3 px-4 align-middle text-left",
+                            (cell.column.columnDef.meta as
+                              | DataTableColumnMeta
+                              | undefined)?.tdClassName
+                          )}
+                        >
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()

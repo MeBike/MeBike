@@ -263,6 +263,7 @@ describe("return slot integration", () => {
       wallet: { balance: 5000n },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
 
     expectRight(await runCreateReturnSlot({
       rentalId: rental.id,
@@ -302,6 +303,7 @@ describe("return slot integration", () => {
       wallet: { balance: 5000n },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
 
     const result = await runConfirmReturn({
       rentalId: rental.id,
@@ -321,6 +323,7 @@ describe("return slot integration", () => {
     const operator = await fixture.factories.user({ role: "STAFF" });
     const reservedStation = await fixture.factories.station({ capacity: 2 });
     const attemptedStation = await fixture.factories.station({ capacity: 2 });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: attemptedStation.id });
 
     expectRight(await runCreateReturnSlot({
       rentalId: rental.id,
@@ -345,6 +348,7 @@ describe("return slot integration", () => {
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     const station = await fixture.factories.station({ capacity: 2 });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
 
     await fixture.prisma.returnSlotReservation.create({
       data: {
@@ -375,5 +379,31 @@ describe("return slot integration", () => {
     });
 
     expectLeftTag(result, "ReturnAlreadyConfirmed");
+  });
+
+  it("fails when a staff operator is not assigned to the return station", async () => {
+    const { user, rental } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    const reservedStation = await fixture.factories.station({ capacity: 2 });
+    const assignedStation = await fixture.factories.station({ capacity: 2 });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: assignedStation.id });
+
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: reservedStation.id,
+    }));
+
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: reservedStation.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    expectLeftTag(result, "UnauthorizedRentalAccess");
   });
 });

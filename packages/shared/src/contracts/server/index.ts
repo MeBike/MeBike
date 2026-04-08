@@ -1,3 +1,5 @@
+export * as AgenciesContracts from "./agencies";
+export * from "./agencies";
 export * as AgencyRequestsContracts from "./agency-requests";
 export * from "./agency-requests";
 export * as AuthContracts from "./auth";
@@ -18,6 +20,7 @@ export * as SubscriptionsContracts from "./subscriptions";
 export * as SuppliersContracts from "./suppliers";
 export * as UsersContracts from "./users";
 export * as WalletsContracts from "./wallets";
+export * as IncidentsContracts from "./incidents";
 export * as RedistributionContracts from "./redistribution"
 
 export const serverOpenApi = {

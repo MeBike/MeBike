@@ -5,6 +5,7 @@ import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
+import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
 
 import type { RatingError } from "./rating-error";
@@ -19,20 +20,6 @@ export type RatingReasonFilters = {
   type?: RatingReason["type"];
   appliesTo?: RatingReason["appliesTo"];
 };
-
-function toSearchParams(
-  params: Record<string, unknown> | undefined,
-): Record<string, string> | undefined {
-  if (!params) {
-    return undefined;
-  }
-
-  const entries = Object.entries(params)
-    .filter(([, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => [key, String(value)]);
-
-  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
-}
 
 export const ratingService = {
   getRatingReasons: async (
@@ -62,9 +49,7 @@ export const ratingService = {
     rentalId: string,
   ): Promise<Result<RatingDetail | null, RatingError>> => {
     try {
-      const path = routePath(ServerRoutes.ratings.getByRental)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.ratings.getByRental, { rentalId });
 
       const response = await kyClient.get(path, { throwHttpErrors: false });
 
@@ -92,9 +77,7 @@ export const ratingService = {
     payload: CreateRatingPayload,
   ): Promise<Result<RatingDetail, RatingError>> => {
     try {
-      const path = routePath(ServerRoutes.ratings.create)
-        .replace("{rentalId}", rentalId)
-        .replace(":rentalId", rentalId);
+      const path = routePath(ServerRoutes.ratings.create, { rentalId });
 
       const response = await kyClient.post(path, {
         json: payload,

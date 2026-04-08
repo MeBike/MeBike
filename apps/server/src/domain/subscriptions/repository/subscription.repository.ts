@@ -8,6 +8,7 @@ import type {
   SubscriptionStatus,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -33,40 +34,37 @@ export type ActivateSubscriptionInput = {
 export type SubscriptionRepo = {
   createPending: (
     input: CreatePendingSubscriptionInput,
-  ) => Effect.Effect<SubscriptionRow, SubscriptionRepositoryError>;
+  ) => Effect.Effect<SubscriptionRow>;
 
   findById: (
     subscriptionId: string,
-  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
+  ) => Effect.Effect<Option.Option<SubscriptionRow>>;
 
   findCurrentForUser: (
     userId: string,
     statuses: readonly SubscriptionStatus[],
-  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
+  ) => Effect.Effect<Option.Option<SubscriptionRow>>;
 
   listForUser: (
     userId: string,
     filter: SubscriptionFilter,
     pageReq: PageRequest<SubscriptionSortField>,
-  ) => Effect.Effect<PageResult<SubscriptionRow>, SubscriptionRepositoryError>;
+  ) => Effect.Effect<PageResult<SubscriptionRow>>;
 
   activate: (
     input: ActivateSubscriptionInput,
-  ) => Effect.Effect<
-    Option.Option<SubscriptionRow>,
-    SubscriptionRepositoryError | ActiveSubscriptionExists
-  >;
+  ) => Effect.Effect<Option.Option<SubscriptionRow>, ActiveSubscriptionExists>;
 
   incrementUsage: (
     subscriptionId: string,
     expectedUsageCount: number,
     amount: number,
     statuses?: readonly SubscriptionStatus[],
-  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
+  ) => Effect.Effect<Option.Option<SubscriptionRow>>;
 
   markExpiredNow: (
     now: Date,
-  ) => Effect.Effect<number, SubscriptionRepositoryError>;
+  ) => Effect.Effect<number>;
 };
 
 export class SubscriptionRepository extends Context.Tag("SubscriptionRepository")<
@@ -116,6 +114,7 @@ export function makeSubscriptionRepository(
       Effect.map(row =>
         Option.fromNullable(row).pipe(Option.map(toSubscriptionRow)),
       ),
+      defectOn(SubscriptionRepositoryError),
     );
 
   return {
@@ -137,7 +136,10 @@ export function makeSubscriptionRepository(
             operation: "createPending",
             cause: err,
           }),
-      }).pipe(Effect.map(toSubscriptionRow)),
+      }).pipe(
+        Effect.map(toSubscriptionRow),
+        defectOn(SubscriptionRepositoryError),
+      ),
 
     findById: subscriptionId => findByIdWithClient(client, subscriptionId),
 
@@ -162,6 +164,7 @@ export function makeSubscriptionRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toSubscriptionRow)),
         ),
+        defectOn(SubscriptionRepositoryError),
       ),
 
     listForUser: (userId, filter, pageReq) =>
@@ -205,7 +208,7 @@ export function makeSubscriptionRepository(
         const mapped = items.map(toSubscriptionRow);
 
         return makePageResult(mapped, total, page, pageSize);
-      }),
+      }).pipe(defectOn(SubscriptionRepositoryError)),
 
     activate: input =>
       Effect.gen(function* () {
@@ -254,7 +257,7 @@ export function makeSubscriptionRepository(
         });
 
         return Option.fromNullable(row).pipe(Option.map(toSubscriptionRow));
-      }),
+      }).pipe(defectOn(SubscriptionRepositoryError)),
 
     incrementUsage: (subscriptionId, expectedUsageCount, amount, statuses = ["ACTIVE"]) =>
       Effect.gen(function* () {
@@ -296,7 +299,7 @@ export function makeSubscriptionRepository(
         });
 
         return Option.fromNullable(row).pipe(Option.map(toSubscriptionRow));
-      }),
+      }).pipe(defectOn(SubscriptionRepositoryError)),
 
     markExpiredNow: now =>
       Effect.tryPromise({
@@ -318,7 +321,7 @@ export function makeSubscriptionRepository(
             operation: "markExpiredNow",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(SubscriptionRepositoryError)),
   };
 }
 

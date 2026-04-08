@@ -1,16 +1,10 @@
 import { Effect } from "effect";
 
-import type {
-  InvalidOrgAssignment,
-  TechnicianTeamMemberLimitExceeded,
-  UserRepositoryError,
-} from "../domain-errors";
+import type { InvalidOrgAssignment } from "../domain-errors";
 import type { UserOrgAssignmentPatch, UserRow } from "../models";
-import type { UserQueryRepo } from "../repository/user-query.repository";
 
 import {
   InvalidOrgAssignment as InvalidOrgAssignmentError,
-  TechnicianTeamMemberLimitExceeded as TechnicianTeamMemberLimitExceededError,
 } from "../domain-errors";
 
 export function normalizeOrgAssignment(
@@ -74,8 +68,12 @@ export function validateOrgAssignmentForRole(
   switch (role) {
     case "USER":
     case "ADMIN":
-    case "MANAGER":
       return hasStation || hasAgency || hasTechnicianTeam ? fail() : Effect.void;
+    case "MANAGER":
+      return (hasStation && !hasAgency && !hasTechnicianTeam)
+        || (!hasStation && !hasAgency && !hasTechnicianTeam)
+        ? Effect.void
+        : fail();
     case "STAFF":
       return hasStation && !hasAgency && !hasTechnicianTeam ? Effect.void : fail();
     case "AGENCY":
@@ -85,29 +83,4 @@ export function validateOrgAssignmentForRole(
     default:
       return fail();
   }
-}
-
-export function makeValidateTechnicianTeamCapacity(repo: Pick<UserQueryRepo, "countTechnicianTeamMembers">) {
-  const technicianTeamMemberLimit = 3;
-
-  return (args: {
-    technicianTeamId: string | null;
-    excludeUserId?: string;
-  }): Effect.Effect<void, TechnicianTeamMemberLimitExceeded | UserRepositoryError> =>
-    Effect.gen(function* () {
-      if (!args.technicianTeamId) {
-        return;
-      }
-
-      const memberCount = yield* repo.countTechnicianTeamMembers(args.technicianTeamId, {
-        excludeUserId: args.excludeUserId,
-      });
-
-      if (memberCount >= technicianTeamMemberLimit) {
-        return yield* Effect.fail(new TechnicianTeamMemberLimitExceededError({
-          technicianTeamId: args.technicianTeamId,
-          memberLimit: technicianTeamMemberLimit,
-        }));
-      }
-    });
 }

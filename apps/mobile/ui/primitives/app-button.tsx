@@ -103,7 +103,7 @@ const AppButtonFrame = styled(Button, {
         },
       },
     },
-    size: {
+    buttonSize: {
       compact: {
         height: "$5",
         paddingHorizontal: "$3",
@@ -120,12 +120,13 @@ const AppButtonFrame = styled(Button, {
   } as const,
   defaultVariants: {
     tone: "primary",
-    size: "default",
+    buttonSize: "default",
   },
 });
 
-type AppButtonProps = Omit<GetProps<typeof AppButtonFrame>, "children"> & {
+type AppButtonProps = Omit<GetProps<typeof AppButtonFrame>, "children" | "size"> & {
   children: ReactNode;
+  buttonSize?: AppButtonSize;
   loading?: boolean;
 };
 
@@ -159,6 +160,7 @@ function getSpinnerColor(tone: AppButtonTone) {
 }
 
 export function AppButton({
+  buttonSize = "default",
   children,
   loading = false,
   tone = "primary",
@@ -169,6 +171,7 @@ export function AppButton({
 
   return (
     <AppButtonFrame
+      buttonSize={buttonSize}
       disabled={disabled || loading}
       tone={tone}
       {...props}

@@ -29,7 +29,7 @@ export function adminGetRentalDetail(
   rentalId: string,
 ): Effect.Effect<
   AdminRentalDetail,
-  RentalRepositoryError | AdminRentalNotFound,
+  AdminRentalNotFound,
   RentalRepository
 > {
   return Effect.gen(function* () {
@@ -55,7 +55,7 @@ export function adminGetChangeBikeDetail(
   return Effect.gen(function* () {
     const repo = yield* RentalRepository;
 
-    const result = yield* repo.staffGetBikeSwapRequests(bikeSwapRequestId);
+    const result = yield* repo.adminGetBikeSwapRequest(bikeSwapRequestId);
 
     if (Option.isNone(result)) {
       return yield* Effect.fail(

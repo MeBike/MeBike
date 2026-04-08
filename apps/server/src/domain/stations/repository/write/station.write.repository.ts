@@ -6,6 +6,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import {
   isPrismaRawUniqueViolation,
   isPrismaUniqueViolation,
@@ -121,6 +122,8 @@ export function makeStationWriteRepository(
         });
 
         const stationId = uuidv7();
+        const stationType = input.stationType ?? "INTERNAL";
+        const agencyId = input.agencyId ?? null;
         const pickupSlotLimit = input.pickupSlotLimit ?? input.totalCapacity;
         const returnSlotLimit = input.returnSlotLimit ?? input.totalCapacity;
 
@@ -130,6 +133,8 @@ export function makeStationWriteRepository(
               id: string;
               name: string;
               address: string;
+              stationType: import("generated/prisma/client").StationType;
+              agencyId: string | null;
               totalCapacity: number;
               pickupSlotLimit: number;
               returnSlotLimit: number;
@@ -142,6 +147,8 @@ export function makeStationWriteRepository(
                 "id",
                 "name",
                 "address",
+                "station_type",
+                "agency_id",
                 "total_capacity",
                 "pickup_slot_limit",
                 "return_slot_limit",
@@ -153,6 +160,8 @@ export function makeStationWriteRepository(
                 ${stationId},
                 ${input.name},
                 ${input.address},
+                ${stationType}::"station_type",
+                ${agencyId},
                 ${input.totalCapacity},
                 ${pickupSlotLimit},
                 ${returnSlotLimit},
@@ -165,6 +174,8 @@ export function makeStationWriteRepository(
                 "id",
                 "name",
                 "address",
+                "station_type" AS "stationType",
+                "agency_id" AS "agencyId",
                 "total_capacity" AS "totalCapacity",
                 "pickup_slot_limit" AS "pickupSlotLimit",
                 "return_slot_limit" AS "returnSlotLimit",
@@ -193,7 +204,7 @@ export function makeStationWriteRepository(
         }
 
         return applyCounts(created, undefined);
-      });
+      }).pipe(defectOn(StationRepositoryError));
     },
 
     update(id, input) {
@@ -217,6 +228,8 @@ export function makeStationWriteRepository(
 
         const nextLatitude = input.latitude ?? existing.latitude;
         const nextLongitude = input.longitude ?? existing.longitude;
+        const nextStationType = input.stationType ?? existing.stationType;
+        const nextAgencyId = input.agencyId === undefined ? existing.agencyId : input.agencyId;
         const nextCapacity = input.totalCapacity ?? existing.totalCapacity;
         const nextPickupSlotLimit = input.pickupSlotLimit
           ?? (input.totalCapacity != null && existing.pickupSlotLimit === existing.totalCapacity
@@ -239,6 +252,8 @@ export function makeStationWriteRepository(
               id: string;
               name: string;
               address: string;
+              stationType: import("generated/prisma/client").StationType;
+              agencyId: string | null;
               totalCapacity: number;
               pickupSlotLimit: number;
               returnSlotLimit: number;
@@ -251,6 +266,8 @@ export function makeStationWriteRepository(
               SET
                 "name" = ${input.name ?? existing.name},
                 "address" = ${input.address ?? existing.address},
+                "station_type" = ${nextStationType}::"station_type",
+                "agency_id" = ${nextAgencyId},
                 "total_capacity" = ${nextCapacity},
                 "pickup_slot_limit" = ${nextPickupSlotLimit},
                 "return_slot_limit" = ${nextReturnSlotLimit},
@@ -266,6 +283,8 @@ export function makeStationWriteRepository(
                 "id",
                 "name",
                 "address",
+                "station_type" AS "stationType",
+                "agency_id" AS "agencyId",
                 "total_capacity" AS "totalCapacity",
                 "pickup_slot_limit" AS "pickupSlotLimit",
                 "return_slot_limit" AS "returnSlotLimit",
@@ -289,7 +308,7 @@ export function makeStationWriteRepository(
         }
 
         return yield* loadStationWithCounts(updated.id);
-      });
+      }).pipe(defectOn(StationRepositoryError));
     },
   };
 }

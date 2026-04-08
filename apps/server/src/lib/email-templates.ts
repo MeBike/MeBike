@@ -52,6 +52,12 @@ type ReservationExpiredEmailParams = {
   readonly callBackUrl?: string;
 };
 
+type AgencyApprovedEmailParams = {
+  readonly agencyName: string;
+  readonly loginEmail: string;
+  readonly temporaryPassword: string;
+};
+
 const BRAND_NAME = "MeBike";
 const BRAND_COLOR = "#007bff";
 const TEXT_COLOR = "#1f2933";
@@ -386,6 +392,52 @@ export function buildReservationExpiredEmail({
     html: renderEmailShell({
       title,
       previewText: `Xe #${bikeId} đã được giải phóng`,
+      bodyHtml: body,
+    }),
+  };
+}
+
+export function buildAgencyApprovedEmail({
+  agencyName,
+  loginEmail,
+  temporaryPassword,
+}: AgencyApprovedEmailParams): { subject: string; html: string } {
+  const safeAgencyName = escapeHtml(agencyName);
+  const safeLoginEmail = escapeHtml(loginEmail);
+  const safeTemporaryPassword = escapeHtml(temporaryPassword);
+  const title = "Yeu cau Agency da duoc phe duyet";
+
+  const body = `
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chao,</p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      Yeu cau tao agency <strong>${safeAgencyName}</strong> da duoc MeBike phe duyet.
+    </p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      MeBike da tao mot tai khoan rieng cho vai tro <strong>AGENCY</strong>. Vui long dang nhap bang thong tin ben duoi:
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: ${TEXT_COLOR}; background: #f8fafc; border-radius: 8px; overflow: hidden;">
+      <tr>
+        <td style="padding: 12px; font-weight: 600; width: 180px;">Email dang nhap</td>
+        <td style="padding: 12px;">${safeLoginEmail}</td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; font-weight: 600;">Mat khau tam thoi</td>
+        <td style="padding: 12px;">${safeTemporaryPassword}</td>
+      </tr>
+    </table>
+    <p style="margin: 20px 0 0; color: ${TEXT_COLOR};">
+      Tai khoan nay doc lap voi tai khoan guest/user da gui request truoc do. Sau khi dang nhap, ban nen doi mat khau ngay.
+    </p>
+    <p style="margin: 12px 0 0; color: ${MUTED_COLOR}; font-size: 14px;">
+      Neu ban can ho tro them, vui long lien he doi ngu MeBike.
+    </p>
+  `;
+
+  return {
+    subject: "MeBike phe duyet tai khoan agency",
+    html: renderEmailShell({
+      title,
+      previewText: `${agencyName} da duoc phe duyet`,
       bodyHtml: body,
     }),
   };

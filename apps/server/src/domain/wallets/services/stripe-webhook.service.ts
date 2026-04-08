@@ -2,16 +2,12 @@ import type Stripe from "stripe";
 
 import { Effect, Match } from "effect";
 
-import type { UserRepositoryError } from "@/domain/users/domain-errors";
 import type {
   InsufficientWalletBalance,
-  WalletHoldRepositoryError,
   WalletNotFound,
-  WalletRepositoryError,
 } from "@/domain/wallets/domain-errors";
-import type { PaymentAttemptRepositoryError, TopupProviderError } from "@/domain/wallets/topups/domain-errors";
+import type { TopupProviderError } from "@/domain/wallets/topups/domain-errors";
 import type { StripeWebhookOutcome as StripeTopupOutcome } from "@/domain/wallets/topups/services/stripe-topup.service";
-import type { WithdrawalRepositoryError } from "@/domain/wallets/withdrawals/domain-errors";
 import type { StripeAccountUpdatedOutcome } from "@/domain/wallets/withdrawals/services/stripe-connect.service";
 import type { StripePayoutOutcome } from "@/domain/wallets/withdrawals/services/stripe-payout.service";
 
@@ -32,16 +28,11 @@ export function handleStripeWebhookUseCase(
 ): Effect.Effect<
   StripeWebhookDispatchOutcome,
   | TopupProviderError
-  | PaymentAttemptRepositoryError
-  | WithdrawalRepositoryError
-  | WalletHoldRepositoryError
   | WalletNotFound
-  | WalletRepositoryError
-  | InsufficientWalletBalance
-  | UserRepositoryError,
+  | InsufficientWalletBalance,
   | import("@/domain/wallets/topups/services/stripe-topup.service").StripeTopupServiceTag
   | import("@/domain/wallets/withdrawals/repository/withdrawal.repository").WithdrawalRepository
-  | import("@/domain/users/services/user-command.service").UserCommandServiceTag
+  | import("@/domain/users/services/user-command.live").UserCommandServiceTag
   | import("@/infrastructure/prisma").Prisma
 > {
   return Match.value(event.type).pipe(

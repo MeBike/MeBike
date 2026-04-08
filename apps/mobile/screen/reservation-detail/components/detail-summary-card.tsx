@@ -1,3 +1,9 @@
+import { IconSymbol } from "@components/IconSymbol";
+import { radii } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { StatusBadge } from "@ui/primitives/status-badge";
+import { getReservationStatusLabel, getReservationStatusTone } from "@utils/reservation";
 import React from "react";
 import { View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
@@ -5,12 +11,6 @@ import { useTheme, XStack, YStack } from "tamagui";
 import type { Reservation } from "@/types/reservation-types";
 
 import { formatCurrency } from "@/utils/reservation-screen-utils";
-import { IconSymbol } from "@components/IconSymbol";
-import { radii } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
-import { StatusBadge } from "@ui/primitives/status-badge";
-import { getReservationStatusLabel, getReservationStatusTone } from "@utils/reservation";
 
 import {
   formatReservationDateTime,
@@ -27,8 +27,8 @@ type DetailSummaryCardProps = {
 };
 
 function getStatusIcon(status: Reservation["status"]) {
-  if (status === "ACTIVE") {
-    return "checkmark.circle" as const;
+  if (status === "PENDING") {
+    return "check-circle" as const;
   }
 
   return undefined;
@@ -76,7 +76,7 @@ export function DetailSummaryCard({
                 <IconSymbol
                   color={theme.actionPrimary.val}
                   name={getReservationIdentityIcon(reservation)}
-                  size={26}
+                  size="chip"
                 />
               </XStack>
 
@@ -108,7 +108,7 @@ export function DetailSummaryCard({
                     {" "}
                     {shortReservationId}
                   </AppText>
-                  <IconSymbol color={theme.textTertiary.val} name="doc.on.doc" size={14} />
+                  <IconSymbol color={theme.textTertiary.val} name="copy" size="caption" />
                 </XStack>
               </YStack>
             </XStack>
@@ -133,7 +133,7 @@ export function DetailSummaryCard({
 
             <DetailRow
               highlightValue
-              iconName="wallet.pass.fill"
+              iconName="wallet"
               label="Số tiền đã thanh toán"
               value={formatCurrency(reservation.prepaid)}
             />

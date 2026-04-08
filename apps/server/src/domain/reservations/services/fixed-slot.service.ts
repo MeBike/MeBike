@@ -13,7 +13,8 @@ import {
   buildFixedSlotNoBikeEmail,
 } from "@/lib/email-templates";
 
-import { makeReservationRepository } from "../repository/reservation.repository";
+import { makeReservationCommandRepository } from "../repository/reservation-command.repository";
+import { makeReservationQueryRepository } from "../repository/reservation-query.repository";
 
 export type FixedSlotAssignmentSummary = {
   readonly slotDate: string;
@@ -149,12 +150,11 @@ export function assignFixedSlotReservations(args: {
           client.$transaction(async tx =>
             Effect.runPromise(Effect.gen(function* () {
               const bikeRepo = makeBikeRepository(tx);
-              const txReservationRepo = makeReservationRepository(tx);
-              const reservationOpt = yield* txReservationRepo.findPendingFixedSlotByTemplateAndStart(
+              const txReservationQueryRepo = makeReservationQueryRepository(tx);
+              const txReservationCommandRepo = makeReservationCommandRepository(tx);
+              const reservationOpt = yield* txReservationQueryRepo.findPendingFixedSlotByTemplateAndStart(
                 template.id,
                 slotStartAt,
-              ).pipe(
-                Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
               );
 
               if (Option.isNone(reservationOpt)) {
@@ -162,9 +162,7 @@ export function assignFixedSlotReservations(args: {
               }
               const reservation = reservationOpt.value;
 
-              const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId).pipe(
-                Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-              );
+              const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId);
 
               if (Option.isNone(bikeOpt)) {
                 const email = buildFixedSlotNoBikeEmail({
@@ -193,20 +191,16 @@ export function assignFixedSlotReservations(args: {
               }
               const bike = bikeOpt.value;
 
-              const reservationAssigned = yield* txReservationRepo.assignBikeToPendingReservation(
+              const reservationAssigned = yield* txReservationCommandRepo.assignBikeToPendingReservation(
                 reservation.id,
                 bike.id,
                 now,
-              ).pipe(
-                Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
               );
               if (!reservationAssigned) {
                 return "CONFLICT" as const;
               }
 
-              const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, now).pipe(
-                Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-              );
+              const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, now);
               if (!bikeReserved) {
                 return "CONFLICT" as const;
               }

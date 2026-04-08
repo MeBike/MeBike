@@ -18,13 +18,14 @@ import {
 import { unauthorizedResponse } from "../helpers";
 import {
   BikeSwapRequestDetailSchemaOpenApi,
+  BikeSwapRequestIdParamSchema,
+  BikeSwapRequestSchemaOpenApi,
   createSuccessResponse,
   RentalDetailSchemaOpenApi,
   RentalErrorResponseSchema,
   RentalIdParamSchema,
   RentalSchemaOpenApi,
   RentalWithPriceSchemaOpenApi,
-  RequestBikeSwapRequestSchemaOpenApi,
   SOSIdParamSchema,
 } from "./shared";
 
@@ -121,10 +122,9 @@ export const createMyReturnSlot = createRoute({
       description: "Create or replace the active return slot for a rental",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            ReturnSlotReservationSchema.openapi("ReturnSlotReservation"),
-            "Return slot response",
-          ),
+          schema: ReturnSlotReservationSchema.openapi("CreateReturnSlotResponse", {
+            description: "Return slot response",
+          }),
         },
       },
     },
@@ -161,10 +161,9 @@ export const cancelMyReturnSlot = createRoute({
       description: "Cancel the active return slot for a rental",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            ReturnSlotReservationSchema.openapi("CancelledReturnSlotReservation"),
-            "Cancelled return slot response",
-          ),
+          schema: ReturnSlotReservationSchema.openapi("CancelReturnSlotResponse", {
+            description: "Cancelled return slot response",
+          }),
         },
       },
     },
@@ -208,10 +207,7 @@ export const staffCreateRental = createRoute({
       description: "Rental created by staff",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalWithPriceSchemaOpenApi,
-            "Staff create rental response",
-          ),
+          schema: RentalWithPriceSchemaOpenApi,
         },
       },
     },
@@ -238,10 +234,7 @@ export const createRentalFromSOS = createRoute({
       description: "Rental created from SOS alert",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalWithPriceSchemaOpenApi,
-            "Create rental from SOS response",
-          ),
+          schema: RentalWithPriceSchemaOpenApi,
         },
       },
     },
@@ -296,10 +289,7 @@ export const updateRental = createRoute({
       description: "Rental updated successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalDetailSchemaOpenApi,
-            "Update rental response",
-          ),
+          schema: RentalDetailSchemaOpenApi,
         },
       },
     },
@@ -341,10 +331,10 @@ export const confirmRentalReturnByOperator = createRoute({
       },
     },
   },
-  responses: {
-    200: {
-      description: "Rental return confirmed by admin/staff",
-      content: {
+    responses: {
+      200: {
+        description: "Rental return confirmed by staff or agency operator",
+        content: {
         "application/json": {
           schema: RentalDetailSchemaOpenApi,
         },
@@ -355,6 +345,26 @@ export const confirmRentalReturnByOperator = createRoute({
       content: {
         "application/json": {
           schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Unauthorized access to rental",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: "Access denied",
+                details: {
+                  code: RentalErrorCodeSchema.enum.ACCESS_DENIED,
+                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                  stationId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -383,10 +393,7 @@ export const cancelRental = createRoute({
       description: "Rental cancelled successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RentalDetailSchemaOpenApi,
-            "Cancel rental response",
-          ),
+          schema: RentalDetailSchemaOpenApi,
         },
       },
     },
@@ -434,9 +441,8 @@ export const processCardTapRental = createRoute({
         "application/json": {
           schema: z
             .object({
-              message: z.string(),
+              rental: RentalSchemaOpenApi,
               mode: z.string(),
-              result: RentalSchemaOpenApi,
             })
             .openapi("CardTapRentalResponse"),
         },
@@ -496,7 +502,7 @@ export const requestBikeSwap = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RequestBikeSwapRequestSchemaOpenApi,
+            BikeSwapRequestSchemaOpenApi,
             "Request bike swap response",
           ),
         },
@@ -632,12 +638,11 @@ export const approveBikeSwapRequest = createRoute({
           examples: {
             CannotApproveSwapWithStatus: {
               value: {
-                error: "Cannot approve bike swap in this status",
+                error: "Invalid bike swap request status",
                 details: {
-                  code: RentalErrorCodeSchema.enum
-                    .CANNOT_APPROVE_SWAP_THIS_RENTAL_WITH_STATUS,
-                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                  status: "COMPLETED",
+                  code: BikeSwapRequestErrorCodeSchema.enum
+                    .INVALID_BIKE_SWAP_REQUEST_STATUS,
+                  currentStatus: "CONFIRMED",
                 },
               },
             },
@@ -684,6 +689,17 @@ export const approveBikeSwapRequest = createRoute({
   },
 });
 
+export const agencyApproveBikeSwapRequest = createRoute({
+  method: "post",
+  path: "/v1/agency/bike-swap-requests/{bikeSwapRequestId}/approve",
+  tags: ["Agency", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: approveBikeSwapRequest.responses,
+});
+
 export const rejectBikeSwapRequest = createRoute({
   method: "post",
   path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}/reject",
@@ -723,22 +739,11 @@ export const rejectBikeSwapRequest = createRoute({
           examples: {
             CannotRejectSwapWithStatus: {
               value: {
-                error: "Cannot reject bike swap in this status",
+                error: "Invalid bike swap request status",
                 details: {
                   code: BikeSwapRequestErrorCodeSchema.enum
                     .INVALID_BIKE_SWAP_REQUEST_STATUS,
-                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                  status: "COMPLETED",
-                },
-              },
-            },
-            BikeSwapRequestNotFound: {
-              value: {
-                error: "Bike swap request not found",
-                details: {
-                  code: BikeSwapRequestErrorCodeSchema.enum
-                    .BIKE_SWAP_REQUEST_NOT_FOUND,
-                  bikeSwapRequestId: "665fd6e36b7e5d53f8f3d2c9",
+                  currentStatus: "REJECTED",
                 },
               },
             },
@@ -775,4 +780,22 @@ export const rejectBikeSwapRequest = createRoute({
       },
     },
   },
+});
+
+export const agencyRejectBikeSwapRequest = createRoute({
+  method: "post",
+  path: "/v1/agency/bike-swap-requests/{bikeSwapRequestId}/reject",
+  tags: ["Agency", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: rejectBikeSwapRequest.request!.body.content["application/json"].schema,
+        },
+      },
+    },
+  },
+  responses: rejectBikeSwapRequest.responses,
 });

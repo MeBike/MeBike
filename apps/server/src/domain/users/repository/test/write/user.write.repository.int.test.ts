@@ -43,12 +43,66 @@ describe("userWriteRepository Integration", () => {
     expect(Option.isNone(result)).toBe(true);
   });
 
+  it("updateProfile ignores privileged fields even if a caller bypasses types", async () => {
+    const user = await runEffect(repo.createUser(createUserInput({
+      role: "USER",
+      accountStatus: "ACTIVE",
+      verify: "UNVERIFIED",
+      nfcCardUid: null,
+    })));
+
+    const result = await runEffect(repo.updateProfile(user.id, {
+      fullname: "Updated Self Profile",
+      role: "ADMIN",
+      accountStatus: "BANNED",
+      verify: "VERIFIED",
+      nfcCardUid: "card-123",
+    } as never));
+
+    expect(Option.isSome(result)).toBe(true);
+    if (Option.isNone(result)) {
+      throw new Error("Expected updated user");
+    }
+
+    expect(result.value.fullname).toBe("Updated Self Profile");
+    expect(result.value.role).toBe("USER");
+    expect(result.value.accountStatus).toBe("ACTIVE");
+    expect(result.value.verify).toBe("UNVERIFIED");
+    expect(result.value.nfcCardUid).toBeNull();
+  });
+
   it("updateAdminById rejects duplicate email", async () => {
     const first = await runEffect(repo.createUser(createUserInput({ email: "one@example.com" })));
     const second = await runEffect(repo.createUser(createUserInput({ email: "two@example.com" })));
 
     const result = await runEffectEither(repo.updateAdminById(second.id, { email: first.email }));
     expectLeftTag(result, "DuplicateUserEmail");
+  });
+
+  it("updateAdminById can update privileged user fields", async () => {
+    const user = await runEffect(repo.createUser(createUserInput({
+      role: "USER",
+      accountStatus: "ACTIVE",
+      verify: "UNVERIFIED",
+      nfcCardUid: null,
+    })));
+
+    const result = await runEffect(repo.updateAdminById(user.id, {
+      role: "STAFF",
+      accountStatus: "BANNED",
+      verify: "VERIFIED",
+      nfcCardUid: "card-admin-123",
+    }));
+
+    expect(Option.isSome(result)).toBe(true);
+    if (Option.isNone(result)) {
+      throw new Error("Expected updated user");
+    }
+
+    expect(result.value.role).toBe("STAFF");
+    expect(result.value.accountStatus).toBe("BANNED");
+    expect(result.value.verify).toBe("VERIFIED");
+    expect(result.value.nfcCardUid).toBe("card-admin-123");
   });
 
   it("createUser rejects assigning a fourth member to a technician team", async () => {

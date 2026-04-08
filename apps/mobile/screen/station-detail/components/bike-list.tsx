@@ -1,15 +1,14 @@
-import { ActivityIndicator } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { BikeSummary } from "@/contracts/server";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppListRow } from "@ui/primitives/app-list-row";
 import { AppText } from "@ui/primitives/app-text";
 import { RatingSummary } from "@ui/primitives/rating-summary";
 import { StatusBadge } from "@ui/primitives/status-badge";
-import { getBikeChipDisplay, getBikeStatusLabel, isBikeAvailable } from "@utils/bike";
+import { getBikeDisplayLabel, getBikeStatusLabel, isBikeAvailable } from "@utils/bike";
+import { ActivityIndicator } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { BikeSummary } from "@/contracts/server";
 
 type BikeListProps = {
   bikes: BikeSummary[];
@@ -30,7 +29,7 @@ function BikeListRow({
   showDivider: boolean;
 }) {
   const theme = useTheme();
-  const chipDisplay = getBikeChipDisplay(bike);
+  const bikeLabel = getBikeDisplayLabel(bike);
 
   return (
     <AppListRow
@@ -43,7 +42,7 @@ function BikeListRow({
           justifyContent="center"
           width={40}
         >
-          <IconSymbol name="bicycle.circle.fill" size={20} color={theme.textSecondary.val} />
+          <IconSymbol color={theme.textSecondary.val} name="bike" size="md" />
         </XStack>
       )}
       onPress={() => onPress(bike)}
@@ -52,7 +51,7 @@ function BikeListRow({
           selectable
           style={{ fontSize: 18, fontVariant: ["tabular-nums"], fontWeight: "700", lineHeight: 24 }}
         >
-          {chipDisplay}
+          {bikeLabel}
         </AppText>
       )}
       secondary={(
@@ -66,7 +65,7 @@ function BikeListRow({
       trailing={(
         <XStack alignItems="center" gap="$2">
           <StatusBadge label={getBikeStatusLabel(bike.status)} tone="success" />
-          <IconSymbol name="chevron.right" size={18} color={theme.borderSubtle.val} />
+          <IconSymbol color={theme.borderSubtle.val} name="chevron-right" size="input" />
         </XStack>
       )}
     />

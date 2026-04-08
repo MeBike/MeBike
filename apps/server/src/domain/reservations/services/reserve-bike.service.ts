@@ -2,11 +2,7 @@ import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Option } from "effect";
 
 import type { BikeRepository } from "@/domain/bikes";
-import type {
-  SubscriptionNotFound,
-  SubscriptionNotUsable,
-  SubscriptionUsageExceeded,
-} from "@/domain/subscriptions/domain-errors";
+import type { SubscriptionNotFound, SubscriptionNotUsable, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
 import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { ReservationOption } from "generated/prisma/client";
@@ -14,6 +10,7 @@ import type { ReservationOption } from "generated/prisma/client";
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
+import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
@@ -22,7 +19,7 @@ import { makeWalletRepository } from "@/domain/wallets";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import { buildReservationConfirmedEmail } from "@/lib/email-templates";
 
 import type { ReservationServiceFailure } from "../domain-errors";
@@ -38,9 +35,9 @@ import {
   StationPickupSlotLimitExceeded,
   SubscriptionRequired,
 } from "../domain-errors";
-import { makeReservationRepository } from "../repository/reservation.repository";
-import { ReservationHoldServiceTag } from "../services/reservation-hold.service";
-import { ReservationServiceTag } from "../services/reservation.service";
+import { makeReservationQueryRepository } from "../repository/reservation-query.repository";
+import { ReservationCommandServiceTag } from "./reservation-command.service";
+import { ReservationQueryServiceTag } from "./reservation-query.service";
 
 export type ReserveBikeInput = {
   readonly userId: string;
@@ -78,15 +75,15 @@ export function reserveBike(
   ReservationRow,
   ReserveBikeFailure,
   | Prisma
-  | ReservationServiceTag
-  | ReservationHoldServiceTag
+  | ReservationQueryServiceTag
+  | ReservationCommandServiceTag
   | BikeRepository
   | SubscriptionServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
-    const reservationService = yield* ReservationServiceTag;
-    const reservationHoldService = yield* ReservationHoldServiceTag;
+    const reservationQueryService = yield* ReservationQueryServiceTag;
+    const reservationCommandService = yield* ReservationCommandServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
     const now = input.now ?? new Date();
 
@@ -99,7 +96,7 @@ export function reserveBike(
           );
         }
 
-        const existingByUser = yield* reservationHoldService.getCurrentHoldForUserNowInTx(
+        const existingByUser = yield* reservationQueryService.getCurrentHoldForUserNowInTx(
           tx,
           input.userId,
           now,
@@ -108,7 +105,7 @@ export function reserveBike(
           return yield* Effect.fail(new ActiveReservationExists({ userId: input.userId }));
         }
 
-        const activeReservation = yield* reservationService.getLatestPendingOrActiveForUserInTx(
+        const activeReservation = yield* reservationQueryService.getLatestPendingOrActiveForUserInTx(
           tx,
           input.userId,
         );
@@ -116,7 +113,7 @@ export function reserveBike(
           return yield* Effect.fail(new ActiveReservationExists({ userId: input.userId }));
         }
 
-        const existingByBike = yield* reservationHoldService.getCurrentHoldForBikeNowInTx(
+        const existingByBike = yield* reservationQueryService.getCurrentHoldForBikeNowInTx(
           tx,
           input.bikeId,
           now,
@@ -125,9 +122,7 @@ export function reserveBike(
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
         }
 
-        const bikeOpt = yield* bikeRepo.getById(input.bikeId).pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-        );
+        const bikeOpt = yield* bikeRepo.getById(input.bikeId);
         if (Option.isNone(bikeOpt)) {
           return yield* Effect.fail(new BikeNotFound({ bikeId: input.bikeId }));
         }
@@ -148,19 +143,15 @@ export function reserveBike(
         }
 
         const txStationRepo = makeStationRepository(tx);
-        const txReservationRepo = makeReservationRepository(tx);
-        const stationOpt = yield* txStationRepo.getById(input.stationId).pipe(
-          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
-        );
+        const txReservationQueryRepo = makeReservationQueryRepository(tx);
+        const stationOpt = yield* txStationRepo.getById(input.stationId);
         if (Option.isNone(stationOpt)) {
           return yield* Effect.die(new Error(
             `Invariant violated: bike ${input.bikeId} references missing station ${input.stationId}`,
           ));
         }
 
-        const pendingReservations = yield* txReservationRepo.countPendingByStationId(input.stationId).pipe(
-          Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
-        );
+        const pendingReservations = yield* txReservationQueryRepo.countPendingByStationId(input.stationId);
         if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
           return yield* Effect.fail(new StationPickupSlotLimitExceeded({
             stationId: input.stationId,
@@ -171,7 +162,6 @@ export function reserveBike(
 
         const subscriptionId: string | null = input.subscriptionId ?? null;
         const pricingPolicy = yield* makePricingPolicyRepository(tx).getActive().pipe(
-          Effect.catchTag("PricingPolicyRepositoryError", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
         );
@@ -187,9 +177,7 @@ export function reserveBike(
             subscriptionId,
             userId: input.userId,
             now,
-          }).pipe(
-            Effect.catchTag("SubscriptionRepositoryError", err => Effect.die(err)),
-          );
+          });
 
           prepaid = toPrismaDecimal("0");
           prepaidMinor = 0n;
@@ -204,7 +192,7 @@ export function reserveBike(
 
         const endTime = input.endTime ?? computeEndTime(input.startTime);
 
-        const reservation = yield* reservationService.reserveHoldInTx(tx, {
+        const reservation = yield* reservationCommandService.reserveHoldInTx(tx, {
           userId: input.userId,
           bikeId: input.bikeId,
           stationId: input.stationId,
@@ -216,9 +204,7 @@ export function reserveBike(
           pricingPolicyId: pricingPolicy.id,
         });
 
-        const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now).pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-        );
+        const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now);
         if (!bikeReserved) {
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
         }
@@ -256,12 +242,8 @@ export function reserveBike(
         {
           const txUserRepo = makeUserQueryRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
-            txUserRepo.findById(reservation.userId).pipe(
-              Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-            ),
-            txStationRepo.getById(reservation.stationId).pipe(
-              Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
-            ),
+            txUserRepo.findById(reservation.userId),
+            txStationRepo.getById(reservation.stationId),
           ]);
 
           if (Option.isNone(userOpt)) {
@@ -299,7 +281,7 @@ export function reserveBike(
 
         return reservation;
       })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+      defectOn(PrismaTransactionError),
     );
 
     return reservation;
@@ -320,6 +302,5 @@ function debitWallet(
         balance: err.balance,
         attemptedDebit: err.attemptedDebit,
       }))),
-    Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
   );
 }

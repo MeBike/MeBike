@@ -2,6 +2,7 @@ import { Context, Effect, Layer, Option } from "effect";
 
 import type { PaymentProvider, PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { getPrismaUniqueViolationTarget, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
@@ -48,25 +49,25 @@ function toPaymentAttemptRow(row: PrismaTypes.PaymentAttemptGetPayload<{ select:
 export type PaymentAttemptRepositoryType = {
   create: (input: CreatePaymentAttemptInput) => Effect.Effect<
     PaymentAttemptRow,
-    PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation
+    PaymentAttemptUniqueViolation
   >;
-  findById: (id: string) => Effect.Effect<Option.Option<PaymentAttemptRow>, PaymentAttemptRepositoryError>;
+  findById: (id: string) => Effect.Effect<Option.Option<PaymentAttemptRow>>;
   findByProviderRef: (
     provider: PaymentProvider,
     providerRef: string,
-  ) => Effect.Effect<Option.Option<PaymentAttemptRow>, PaymentAttemptRepositoryError>;
+  ) => Effect.Effect<Option.Option<PaymentAttemptRow>>;
   setProviderRef: (
     id: string,
     providerRef: string,
-  ) => Effect.Effect<PaymentAttemptRow, PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation>;
+  ) => Effect.Effect<PaymentAttemptRow, PaymentAttemptUniqueViolation>;
   markSucceededIfPending: (
     id: string,
     providerRef: string,
-  ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
+  ) => Effect.Effect<boolean>;
   markFailedIfPending: (
     id: string,
     failureReason: string,
-  ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
+  ) => Effect.Effect<boolean>;
 };
 
 export class PaymentAttemptRepository extends Context.Tag("PaymentAttemptRepository")<
@@ -111,7 +112,7 @@ export function makePaymentAttemptRepository(
             cause: err,
           });
         },
-      }),
+      }).pipe(defectOn(PaymentAttemptRepositoryError)),
 
     findById: id =>
       Effect.tryPromise({
@@ -127,7 +128,7 @@ export function makePaymentAttemptRepository(
             operation: "findById",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(PaymentAttemptRepositoryError)),
 
     findByProviderRef: (provider, providerRef) =>
       Effect.tryPromise({
@@ -143,7 +144,7 @@ export function makePaymentAttemptRepository(
             operation: "findByProviderRef",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(PaymentAttemptRepositoryError)),
 
     setProviderRef: (id, providerRef) =>
       Effect.tryPromise({
@@ -168,7 +169,7 @@ export function makePaymentAttemptRepository(
             cause: err,
           });
         },
-      }),
+      }).pipe(defectOn(PaymentAttemptRepositoryError)),
 
     markSucceededIfPending: (id, providerRef) =>
       Effect.tryPromise({
@@ -188,7 +189,7 @@ export function makePaymentAttemptRepository(
             operation: "markSucceededIfPending",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(PaymentAttemptRepositoryError)),
 
     markFailedIfPending: (id, failureReason) =>
       Effect.tryPromise({
@@ -207,7 +208,7 @@ export function makePaymentAttemptRepository(
             operation: "markFailedIfPending",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(PaymentAttemptRepositoryError)),
 
   };
 }

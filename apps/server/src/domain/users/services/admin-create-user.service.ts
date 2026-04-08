@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { UserRow } from "../models";
 
 import { hashPassword } from "../../auth/services/auth.service";
-import { UserCommandServiceTag } from "./user-command.service";
+import { UserCommandServiceTag } from "./user-command.live";
 
 export function adminCreateUserUseCase(args: {
   fullname: string;
@@ -20,10 +20,10 @@ export function adminCreateUserUseCase(args: {
   nfcCardUid?: string | null;
 }): Effect.Effect<
   UserRow,
-  import("../domain-errors").UserRepositoryError
-    | import("../domain-errors").DuplicateUserEmail
+  import("../domain-errors").DuplicateUserEmail
     | import("../domain-errors").DuplicateUserPhoneNumber
     | import("../domain-errors").InvalidOrgAssignment
+    | import("../domain-errors").StationRoleAssignmentLimitExceeded
     | import("../domain-errors").TechnicianTeamMemberLimitExceeded,
   UserCommandServiceTag
 > {

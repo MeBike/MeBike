@@ -2,7 +2,10 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match, Option } from "effect";
 
-import { ReservationRepository } from "@/domain/reservations";
+import {
+  ReservationQueryServiceTag,
+  ReservationStatsServiceTag,
+} from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractReservation,
@@ -15,6 +18,7 @@ import type {
   ReservationErrorResponse,
   ReservationExpandedDetailResponse,
   ReservationsRoutes,
+  ReservationSummaryStatsResponse,
 } from "./shared";
 
 import {
@@ -29,8 +33,8 @@ const adminListReservations: RouteHandler<
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const repo = yield* ReservationRepository;
-      return yield* repo.listForAdmin(
+      const service = yield* ReservationQueryServiceTag;
+      return yield* service.listForAdmin(
         {
           userId: query.userId,
           bikeId: query.bikeId,
@@ -66,8 +70,8 @@ const adminGetReservation: RouteHandler<
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const repo = yield* ReservationRepository;
-      return yield* repo.findExpandedDetailById(reservationId);
+      const service = yield* ReservationQueryServiceTag;
+      return yield* service.getExpandedDetailById(reservationId);
     }),
     "GET /v1/admin/reservations/{reservationId}",
   );
@@ -103,7 +107,20 @@ const adminGetReservation: RouteHandler<
   );
 };
 
+const getReservationStatsSummary: RouteHandler<
+  ReservationsRoutes["getReservationStatsSummary"]
+> = async (c) => {
+  const eff = withLoggedCause(
+    Effect.flatMap(ReservationStatsServiceTag, svc => svc.getSummary()),
+    "GET /v1/reservations/stats/summary",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json<ReservationSummaryStatsResponse, 200>(result, 200);
+};
+
 export const ReservationAdminController = {
   adminListReservations,
   adminGetReservation,
+  getReservationStatsSummary,
 } as const;

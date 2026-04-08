@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 import type { AccessTokenPayload } from "@/domain/auth";
 import type { RunPromise } from "@/http/shared/runtime";
 
-import { requireJwtSecret } from "@/domain/auth";
+import { hasActiveAgencyAccess, requireJwtSecret } from "@/domain/auth";
 import { UserQueryServiceTag } from "@/domain/users";
 
 const unauthorizedBody = {
@@ -58,16 +58,26 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
     const payload = verifyAccessToken(token);
     if (payload) {
       const userOpt = await loadUser(c.var.runPromise, payload.userId);
-      if (Option.isNone(userOpt) || userOpt.value.accountStatus === "BANNED") {
+      if (
+        Option.isNone(userOpt)
+        || userOpt.value.accountStatus === "BANNED"
+        || !hasActiveAgencyAccess(userOpt.value)
+      ) {
         c.set("authFailure", "forbidden");
       }
       else {
         const user = userOpt.value;
+        const operatorStationId = user.orgAssignment?.station?.id
+          ?? user.orgAssignment?.agency?.stationId
+          ?? undefined;
+
         c.set("currentUser", {
           userId: user.id,
           role: user.role,
           accountStatus: user.accountStatus,
           verifyStatus: user.verify,
+          agencyId: user.orgAssignment?.agency?.id ?? undefined,
+          operatorStationId,
           tokenType: "access",
         });
       }
@@ -117,6 +127,52 @@ export const requireAdminOrStaffMiddleware = createMiddleware(
   },
 );
 
+export const requireAgencyMiddleware = createMiddleware(async (c, next) => {
+  const user = c.var.currentUser;
+  if (!user) {
+    if (c.var.authFailure === "forbidden") {
+      return c.json(unauthorizedBody, 403);
+    }
+    return c.json(unauthorizedBody, 401);
+  }
+  if (user.role !== "AGENCY") {
+    return c.json(unauthorizedBody, 403);
+  }
+  await next();
+});
+
+export const requireStaffOrAgencyMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (user.role !== "STAFF" && user.role !== "AGENCY") {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
+export const requireAdminOrStaffOrAgencyMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (user.role !== "ADMIN" && user.role !== "STAFF" && user.role !== "AGENCY") {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
 export const requireStaffMiddleware = createMiddleware(async (c, next) => {
   const user = c.var.currentUser;
   if (!user) {
@@ -145,7 +201,35 @@ export const requireManagerMiddleware = createMiddleware(async (c, next) => {
   await next();
 });
 
-export const requireUserMiddleware = createMiddleware(
+export const requireUserMiddleware = createMiddleware(async (c, next) => {
+  const user = c.var.currentUser;
+  if (!user) {
+    if (c.var.authFailure === "forbidden") {
+      return c.json(unauthorizedBody, 403);
+    }
+    return c.json(unauthorizedBody, 401);
+  }
+  if (user.role !== "USER") {
+    return c.json(unauthorizedBody, 403);
+  }
+  await next();
+});
+
+export const requireTechnicianMiddleware = createMiddleware(async (c, next) => {
+  const user = c.var.currentUser;
+  if (!user) {
+    if (c.var.authFailure === "forbidden") {
+      return c.json(unauthorizedBody, 403);
+    }
+    return c.json(unauthorizedBody, 401);
+  }
+  if (user.role !== "TECHNICIAN") {
+    return c.json(unauthorizedBody, 403);
+  }
+  await next();
+});
+
+export const requireTechnicianOrAdminOrUserMiddleware = createMiddleware(
   async (c, next) => {
     const user = c.var.currentUser;
     if (!user) {
@@ -154,7 +238,53 @@ export const requireUserMiddleware = createMiddleware(
       }
       return c.json(unauthorizedBody, 401);
     }
-    if (user.role !== "USER") {
+    if (
+      user.role !== "TECHNICIAN"
+      && user.role !== "ADMIN"
+      && user.role !== "USER"
+    ) {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
+export const requireIncidentAccessMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (
+      user.role !== "TECHNICIAN"
+      && user.role !== "ADMIN"
+      && user.role !== "USER"
+      && user.role !== "STAFF"
+    ) {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
+export const requireTechnicianOrAdminOrUserOrAgencyMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (
+      user.role !== "TECHNICIAN"
+      && user.role !== "ADMIN"
+      && user.role !== "USER"
+      && user.role !== "AGENCY"
+    ) {
       return c.json(unauthorizedBody, 403);
     }
     await next();

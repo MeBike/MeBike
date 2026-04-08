@@ -1,71 +1,33 @@
 import type { Result } from "@lib/result";
+import type { ServerContracts } from "@mebike/shared";
+import type { z } from "zod";
 
 import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
-import { ServerContracts } from "@mebike/shared";
+import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
+
+import type { WalletError } from "./wallet-error";
+
+import { asNetworkError, parseWalletError } from "./wallet-error";
 
 export type WalletDetail = ServerContracts.WalletsContracts.WalletDetail;
 export type WalletTransactionDetail = ServerContracts.WalletsContracts.WalletTransactionDetail;
 export type ListMyWalletTransactionsResponse = ServerContracts.WalletsContracts.ListMyWalletTransactionsResponse;
 
-export type WalletError
-  = | { _tag: "ApiError"; code: string; message?: string }
-    | { _tag: "NetworkError"; message?: string }
-    | { _tag: "DecodeError" }
-    | { _tag: "UnknownError"; message?: string };
-
-function toSearchParams(params: Record<string, unknown> | undefined): Record<string, string> | undefined {
-  if (!params) {
-    return undefined;
-  }
-  const entries = Object.entries(params)
-    .filter(([, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => [key, String(value)]);
-
-  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
-}
-
-export function walletErrorMessage(error: WalletError): string {
-  if (error._tag === "ApiError") {
-    return error.message ?? "Yeu cau khong hop le";
-  }
-  if (error._tag === "NetworkError") {
-    return "Khong the ket noi toi may chu.";
-  }
-  return "Da co loi xay ra. Vui long thu lai.";
-}
-
-async function parseWalletError(response: Response): Promise<WalletError> {
+async function decodeWalletResponse<TValue>(
+  response: Response,
+  schema: z.ZodType<TValue>,
+): Promise<Result<TValue, WalletError>> {
   try {
     const data = await readJson(response);
-    const parsed = decodeWithSchema(ServerContracts.WalletsContracts.WalletErrorResponseSchema, data);
-    if (parsed.ok) {
-      return {
-        _tag: "ApiError",
-        code: parsed.value.details.code,
-        message: parsed.value.error,
-      };
-    }
-
-    const unauthorized = decodeWithSchema(ServerContracts.UnauthorizedErrorResponseSchema, data);
-    if (unauthorized.ok) {
-      return {
-        _tag: "ApiError",
-        code: unauthorized.value.details.code,
-        message: unauthorized.value.error,
-      };
-    }
-
-    return { _tag: "DecodeError" };
+    const parsed = decodeWithSchema(schema, data);
+    return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
   }
-  catch (error) {
-    return {
-      _tag: "UnknownError",
-      message: error instanceof Error ? error.message : undefined,
-    };
+  catch {
+    return err({ _tag: "DecodeError" });
   }
 }
 
@@ -78,18 +40,13 @@ export const walletServiceV1 = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.wallets.getMyWallet.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeWalletResponse(response, okSchema as z.ZodType<WalletDetail>);
       }
 
       return err(await parseWalletError(response));
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 
@@ -105,18 +62,13 @@ export const walletServiceV1 = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.wallets.listMyWalletTransactions.responses[200].content["application/json"].schema;
-        const data = await readJson(response);
-        const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
+        return decodeWalletResponse(response, okSchema as z.ZodType<ListMyWalletTransactionsResponse>);
       }
 
       return err(await parseWalletError(response));
     }
     catch (error) {
-      return err({
-        _tag: "NetworkError",
-        message: error instanceof Error ? error.message : undefined,
-      });
+      return asNetworkError(error);
     }
   },
 };

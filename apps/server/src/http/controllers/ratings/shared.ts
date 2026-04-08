@@ -3,6 +3,8 @@ import { RatingsContracts, UnauthorizedErrorCodeSchema, unauthorizedErrorMessage
 export type RatingsRoutes = typeof import("@mebike/shared")["serverRoutes"]["ratings"];
 
 export const {
+  adminRatingErrorMessages,
+  AdminRatingErrorCodeSchema,
   ratingErrorMessages,
   RatingErrorCodeSchema,
   ratingSummaryErrorMessages,

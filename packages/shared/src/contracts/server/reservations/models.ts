@@ -3,7 +3,7 @@ import { BikeStatusSchema } from "../bikes";
 import { UserRoleSchema } from "../users";
 
 export const ReservationStatusSchema = z
-  .enum(["PENDING", "ACTIVE", "FULFILLED", "CANCELLED", "EXPIRED"])
+  .enum(["PENDING", "FULFILLED", "CANCELLED", "EXPIRED"])
   .openapi("ReservationStatus");
 
 export const ReservationOptionSchema = z
@@ -14,6 +14,7 @@ export const ReservationDetailSchema = z.object({
   id: z.uuidv7(),
   userId: z.uuidv7(),
   bikeId: z.uuidv7().optional(),
+  bikeNumber: z.string().optional(),
   stationId: z.uuidv7(),
   reservationOption: ReservationOptionSchema,
   fixedSlotTemplateId: z.uuidv7().optional(),
@@ -38,6 +39,7 @@ export const ReservationDetailUserSchema = z.object({
 
 export const ReservationDetailBikeSchema = z.object({
   id: z.uuidv7(),
+  bikeNumber: z.string(),
   chipId: z.string(),
   status: BikeStatusSchema,
 }).openapi("ReservationDetailBike");
@@ -56,5 +58,15 @@ export const ReservationExpandedDetailSchema = ReservationDetailSchema.extend({
   station: ReservationDetailStationSchema,
 }).openapi("ReservationExpandedDetail");
 
+export const ReservationSummaryStatsSchema = z.object({
+  reservationList: z.object({
+    Pending: z.number().int().nonnegative(),
+    Fulfilled: z.number().int().nonnegative(),
+    Cancelled: z.number().int().nonnegative(),
+    Expired: z.number().int().nonnegative(),
+  }),
+}).openapi("ReservationSummaryStats");
+
 export type ReservationDetail = z.infer<typeof ReservationDetailSchema>;
 export type ReservationExpandedDetail = z.infer<typeof ReservationExpandedDetailSchema>;
+export type ReservationSummaryStats = z.infer<typeof ReservationSummaryStatsSchema>;

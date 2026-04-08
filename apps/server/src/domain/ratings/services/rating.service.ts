@@ -1,13 +1,23 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { BikeNotFound, BikeRepositoryError } from "@/domain/bikes";
-import type { StationNotFound, StationRepositoryError } from "@/domain/stations";
+import type { BikeNotFound } from "@/domain/bikes";
+import type { PageResult } from "@/domain/shared/pagination";
+import type { StationNotFound } from "@/domain/stations";
 
 import { BikeNotFound as BikeNotFoundError, BikeRepository } from "@/domain/bikes";
 import { StationNotFound as StationNotFoundError, StationRepository } from "@/domain/stations";
 
 import type { RatingAlreadyExists, RatingRepositoryError } from "../domain-errors";
-import type { CreateRatingInput, RatingReasonRow, RatingRow, RatingSummary } from "../models";
+import type {
+  AdminRatingDetailRow,
+  AdminRatingFilters,
+  AdminRatingListItemRow,
+  AdminRatingPageRequest,
+  CreateRatingInput,
+  RatingReasonRow,
+  RatingRow,
+  RatingSummary,
+} from "../models";
 
 import { RatingReasonRepository } from "../repository/rating-reason.repository";
 import { RatingRepository } from "../repository/rating.repository";
@@ -31,17 +41,24 @@ export type RatingService = {
       readonly appliesTo?: RatingReasonRow["appliesTo"];
     },
   ) => Effect.Effect<readonly RatingReasonRow[]>;
+  listForAdmin: (
+    filters: AdminRatingFilters,
+    pageReq: AdminRatingPageRequest,
+  ) => Effect.Effect<PageResult<AdminRatingListItemRow>, RatingRepositoryError>;
+  getAdminDetailById: (
+    ratingId: string,
+  ) => Effect.Effect<Option.Option<AdminRatingDetailRow>, RatingRepositoryError>;
   getBikeSummary: (
     bikeId: string,
   ) => Effect.Effect<
     RatingSummary,
-    RatingRepositoryError | BikeRepositoryError | BikeNotFound
+    RatingRepositoryError | BikeNotFound
   >;
   getStationSummary: (
     stationId: string,
   ) => Effect.Effect<
     RatingSummary,
-    RatingRepositoryError | StationRepositoryError | StationNotFound
+    RatingRepositoryError | StationNotFound
   >;
 };
 
@@ -67,6 +84,12 @@ export const RatingServiceLive = Layer.effect(
 
       getReasons: filters =>
         reasonRepo.findMany(filters).pipe(Effect.orDie),
+
+      listForAdmin: (filters, pageReq) =>
+        repo.findAdminList(filters, pageReq),
+
+      getAdminDetailById: ratingId =>
+        repo.findAdminDetailById(ratingId),
 
       getBikeSummary: bikeId =>
         Effect.gen(function* () {

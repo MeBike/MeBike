@@ -7,6 +7,7 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { DB } from "generated/kysely/types";
 
 import { db } from "@/database";
+import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { UserRole, UserVerifyStatus } from "generated/prisma/client";
 
@@ -27,25 +28,25 @@ import {
 } from "./user-stats.mappers";
 
 export type UserStatsRepo = {
-  readonly getOverviewStats: () => Effect.Effect<UserStatsOverview, UserRepositoryError>;
+  readonly getOverviewStats: () => Effect.Effect<UserStatsOverview>;
   readonly getActiveUsersSeries: (args: {
     startDate: Date;
     endDate: Date;
     groupBy: "day" | "month";
-  }) => Effect.Effect<readonly ActiveUsersSeriesRow[], UserRepositoryError>;
+  }) => Effect.Effect<readonly ActiveUsersSeriesRow[]>;
   readonly getTopRenters: (
     pageReq: PageRequest<"totalRentals">,
-  ) => Effect.Effect<PageResult<TopRenterRow>, UserRepositoryError>;
+  ) => Effect.Effect<PageResult<TopRenterRow>>;
   readonly getNewUsersCounts: (args: {
     thisMonthStart: Date;
     thisMonthEnd: Date;
     lastMonthStart: Date;
     lastMonthEnd: Date;
-  }) => Effect.Effect<NewUsersCounts, UserRepositoryError>;
+  }) => Effect.Effect<NewUsersCounts>;
   readonly getDashboardStatsRaw: (args: {
     monthStart: Date;
     monthEnd: Date;
-  }) => Effect.Effect<DashboardStatsRaw, UserRepositoryError>;
+  }) => Effect.Effect<DashboardStatsRaw>;
 };
 
 export class UserStatsRepository extends Context.Tag("UserStatsRepository")<
@@ -111,7 +112,7 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
           totalUnverified,
           totalBanned,
         };
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
 
     getActiveUsersSeries: ({ startDate, endDate, groupBy }) => {
       const bucketExpr
@@ -137,7 +138,7 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
             activeUsersCount: Number(row.active_users_count),
           })),
         ),
-      );
+      ).pipe(defectOn(UserRepositoryError));
     },
 
     getTopRenters: pageReq =>
@@ -186,7 +187,7 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
 
         const { items, totalRecords } = mapTopRenterRows(rows);
         return makePageResult(items, totalRecords, page, pageSize);
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
 
     getNewUsersCounts: ({ thisMonthStart, thisMonthEnd, lastMonthStart, lastMonthEnd }) =>
       Effect.gen(function* () {
@@ -212,7 +213,7 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
         ]);
 
         return { thisMonth, lastMonth };
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
 
     getDashboardStatsRaw: ({ monthStart, monthEnd }) =>
       Effect.gen(function* () {
@@ -290,7 +291,7 @@ export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
           vipCustomer,
           totalRevenue: revenueValue,
         };
-      }),
+      }).pipe(defectOn(UserRepositoryError)),
   };
 }
 

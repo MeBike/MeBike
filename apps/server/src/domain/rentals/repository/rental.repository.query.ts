@@ -5,6 +5,7 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 import type {
   AdminRentalFilter,
   BikeSwapRequestRow,
+  MyBikeSwapRequestFilter,
   MyRentalFilter,
   RentalRow,
   RentalSortField,
@@ -65,6 +66,16 @@ export function toStaffBikeSwapRequestsWhere(
   };
 }
 
+export function toMyBikeSwapRequestsWhere(
+  filter: MyBikeSwapRequestFilter,
+): PrismaTypes.BikeSwapRequestWhereInput {
+  return {
+    ...(filter.rentalId ? { rentalId: filter.rentalId } : {}),
+    ...(filter.userId ? { userId: filter.userId } : {}),
+    ...(filter.status ? { status: filter.status } : {}),
+  };
+}
+
 export function toStaffBikeSwapRequestsOrderBy(
   req: PageRequest<StaffBikeSwapRequestSortField>,
 ): PrismaTypes.BikeSwapRequestOrderByWithRelationInput {
@@ -86,6 +97,11 @@ export const rentalSelect = {
   userId: true,
   reservationId: true,
   bikeId: true,
+  bike: {
+    select: {
+      bikeNumber: true,
+    },
+  },
   depositHoldId: true,
   depositHold: {
     select: {
@@ -126,6 +142,7 @@ export function mapToRentalRow(raw: RentalSelectRow): RentalRow {
     userId: raw.userId,
     reservationId: raw.reservationId,
     bikeId: raw.bikeId,
+    bikeNumber: raw.bike?.bikeNumber ?? null,
     depositHoldId: raw.depositHoldId,
     depositAmount: raw.depositHold ? Number(raw.depositHold.amount) : null,
     depositStatus,
@@ -191,6 +208,7 @@ export const staffBikeSwapRequestSelect = {
   oldBike: {
     select: {
       id: true,
+      bikeNumber: true,
       chipId: true,
       station: {
         select: {
@@ -210,6 +228,7 @@ export const staffBikeSwapRequestSelect = {
   newBike: {
     select: {
       id: true,
+      bikeNumber: true,
       chipId: true,
       station: {
         select: {
@@ -248,6 +267,7 @@ function mapBikeInfo(bike: any) {
     return null;
   return {
     id: bike.id,
+    bikeNumber: bike.bikeNumber,
     chipId: bike.chipId,
     station: {
       id: bike.station?.id,

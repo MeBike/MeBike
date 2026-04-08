@@ -22,6 +22,11 @@ export const adminRentalListSelect = {
       fullName: true,
     },
   },
+  bike: {
+    select: {
+      bikeNumber: true,
+    },
+  },
 } as const;
 
 type AdminRentalListSelectRow = PrismaTypes.RentalGetPayload<{
@@ -38,6 +43,7 @@ export function mapToAdminRentalListItem(
       fullname: item.user.fullName,
     },
     bikeId: item.bikeId,
+    bikeNumber: item.bike?.bikeNumber ?? null,
     status: item.status,
     startStationId: item.startStationId,
     endStationId: item.endStationId,
@@ -82,6 +88,7 @@ export const adminRentalDetailSelect = {
   bike: {
     select: {
       id: true,
+      bikeNumber: true,
       chipId: true,
       status: true,
       supplierId: true,
@@ -110,6 +117,23 @@ export const adminRentalDetailSelect = {
       updatedAt: true,
     },
   },
+  returnSlotReservations: {
+    where: { status: "ACTIVE" },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: {
+      id: true,
+      reservedFrom: true,
+      status: true,
+      station: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+        },
+      },
+    },
+  },
 } as const;
 
 type AdminRentalDetailSelectRow = PrismaTypes.RentalGetPayload<{
@@ -117,6 +141,8 @@ type AdminRentalDetailSelectRow = PrismaTypes.RentalGetPayload<{
 }>;
 
 export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRentalDetail {
+  const activeReturnSlot = raw.returnSlotReservations[0] ?? null;
+
   return {
     id: raw.id,
     user: {
@@ -132,15 +158,14 @@ export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRe
       nfcCardUid: raw.user.nfcCardUid,
       updatedAt: raw.user.updatedAt,
     },
-    bike: raw.bike
-      ? {
-          id: raw.bike.id,
-          chipId: raw.bike.chipId,
-          status: raw.bike.status,
-          supplierId: raw.bike.supplierId,
-          updatedAt: raw.bike.updatedAt,
-        }
-      : null,
+    bike: {
+      id: raw.bike.id,
+      bikeNumber: raw.bike.bikeNumber,
+      chipId: raw.bike.chipId,
+      status: raw.bike.status,
+      supplierId: raw.bike.supplierId,
+      updatedAt: raw.bike.updatedAt,
+    },
     startStation: {
       id: raw.startStation.id,
       name: raw.startStation.name,
@@ -159,6 +184,18 @@ export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRe
           longitude: raw.endStation.longitude,
           totalCapacity: raw.endStation.totalCapacity,
           updatedAt: raw.endStation.updatedAt,
+        }
+      : null,
+    returnSlot: activeReturnSlot
+      ? {
+          id: activeReturnSlot.id,
+          reservedFrom: activeReturnSlot.reservedFrom,
+          status: activeReturnSlot.status,
+          station: {
+            id: activeReturnSlot.station.id,
+            name: activeReturnSlot.station.name,
+            address: activeReturnSlot.station.address,
+          },
         }
       : null,
     startTime: raw.startTime,

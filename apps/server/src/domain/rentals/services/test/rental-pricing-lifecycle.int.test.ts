@@ -46,6 +46,7 @@ describe("rental pricing lifecycle integration", () => {
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture);
     const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
 
     const reserveNow = new Date("2026-03-22T09:00:00.000Z");
     const reservation = expectRight(await runReserve({
@@ -149,6 +150,7 @@ describe("rental pricing lifecycle integration", () => {
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture);
     const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
 
     const reserveNow = new Date("2026-03-22T15:00:00.000Z");
     const reservation = expectRight(await runReserve({

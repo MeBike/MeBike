@@ -2,6 +2,7 @@ import { Context, Effect, Layer, Option } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type { CreateWalletHoldInput, WalletHoldRow } from "../models";
@@ -45,39 +46,39 @@ function toWalletHoldRow(
 export type WalletHoldRepo = {
   create: (
     input: CreateWalletHoldInput,
-  ) => Effect.Effect<WalletHoldRow, WalletHoldRepositoryError>;
+  ) => Effect.Effect<WalletHoldRow>;
   findById: (
     holdId: string,
-  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletHoldRow>>;
   findByWithdrawalId: (
     withdrawalId: string,
-  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletHoldRow>>;
   findActiveByRentalId: (
     rentalId: string,
-  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  ) => Effect.Effect<Option.Option<WalletHoldRow>>;
   sumActiveAmountByWallet: (
     walletId: string,
-  ) => Effect.Effect<bigint, WalletHoldRepositoryError>;
+  ) => Effect.Effect<bigint>;
   releaseById: (
     holdId: string,
     releasedAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
   releaseByWithdrawalId: (
     withdrawalId: string,
     releasedAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
   settleById: (
     holdId: string,
     settledAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
   forfeitById: (
     holdId: string,
     forfeitedAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
   settleByWithdrawalId: (
     withdrawalId: string,
     settledAt: Date,
-  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  ) => Effect.Effect<boolean>;
 };
 
 export class WalletHoldRepository extends Context.Tag("WalletHoldRepository")<
@@ -110,7 +111,7 @@ export function makeWalletHoldRepository(
             operation: "create",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     findById: holdId =>
       Effect.tryPromise({
@@ -126,7 +127,7 @@ export function makeWalletHoldRepository(
             operation: "findById",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     findByWithdrawalId: withdrawalId =>
       Effect.tryPromise({
@@ -142,7 +143,7 @@ export function makeWalletHoldRepository(
             operation: "findByWithdrawalId",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     findActiveByRentalId: rentalId =>
       Effect.tryPromise({
@@ -163,7 +164,7 @@ export function makeWalletHoldRepository(
             operation: "findActiveByRentalId",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     sumActiveAmountByWallet: walletId =>
       Effect.tryPromise({
@@ -179,7 +180,7 @@ export function makeWalletHoldRepository(
             operation: "sumActiveAmountByWallet",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     releaseByWithdrawalId: (withdrawalId, releasedAt) =>
       Effect.tryPromise({
@@ -198,7 +199,7 @@ export function makeWalletHoldRepository(
             operation: "releaseByWithdrawalId",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     releaseById: (holdId, releasedAt) =>
       Effect.tryPromise({
@@ -217,7 +218,7 @@ export function makeWalletHoldRepository(
             operation: "releaseById",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     settleByWithdrawalId: (withdrawalId, settledAt) =>
       Effect.tryPromise({
@@ -236,7 +237,7 @@ export function makeWalletHoldRepository(
             operation: "settleByWithdrawalId",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     settleById: (holdId, settledAt) =>
       Effect.tryPromise({
@@ -255,7 +256,7 @@ export function makeWalletHoldRepository(
             operation: "settleById",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
     forfeitById: (holdId, forfeitedAt) =>
       Effect.tryPromise({
@@ -275,7 +276,7 @@ export function makeWalletHoldRepository(
             operation: "forfeitById",
             cause: err,
           }),
-      }),
+      }).pipe(defectOn(WalletHoldRepositoryError)),
 
   };
 }

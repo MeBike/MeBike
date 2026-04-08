@@ -7,6 +7,7 @@ import { uuidv7 } from "uuidv7";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { env } from "@/config/env";
+import { makeAgencyRequestRepository } from "@/domain/agency-requests/repository/agency-request.repository";
 import { makeUserCommandRepository } from "@/domain/users/repository/user-command.repository";
 import { makeUserQueryRepository } from "@/domain/users/repository/user-query.repository";
 import { runEffectWithLayer } from "@/test/effect/run";
@@ -28,6 +29,7 @@ export function makeAuthTestKit(args: {
     authEventRepo: makeAuthEventRepository(args.prisma),
     userQueryRepo,
     userCommandRepo,
+    agencyRequestRepo: makeAgencyRequestRepository(args.prisma),
     client: args.prisma,
   });
 

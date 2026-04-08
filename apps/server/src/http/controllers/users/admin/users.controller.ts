@@ -8,6 +8,7 @@ import { Effect, Match } from "effect";
 
 import { hashPassword } from "@/domain/auth/services/auth.service";
 import { withLoggedCause } from "@/domain/shared";
+import { TechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import {
   adminCreateUserUseCase,
   UserCommandServiceTag,
@@ -95,8 +96,8 @@ const adminAvailableTechnicianTeams: RouteHandler<UsersRoutes["adminAvailableTec
   const query = c.req.valid("query");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* UserQueryServiceTag;
-      return yield* service.listAvailableTechnicianTeams({
+      const repo = yield* TechnicianTeamQueryRepository;
+      return yield* repo.listAvailable({
         stationId: query.stationId,
       });
     }),
@@ -201,6 +202,20 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
             },
             409,
           )),
+        Match.tag("StationRoleAssignmentLimitExceeded", err =>
+          c.json<UsersContracts.UserErrorResponse, 409>(
+            {
+              error: err.role === "STAFF"
+                ? UsersContracts.userErrorMessages.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED
+                : UsersContracts.userErrorMessages.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
+              details: {
+                code: err.role === "STAFF"
+                  ? UsersContracts.UserErrorCodeSchema.enum.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED
+                  : UsersContracts.UserErrorCodeSchema.enum.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
+              },
+            },
+            409,
+          )),
         Match.orElse((err) => {
           throw err;
         }),
@@ -253,6 +268,20 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
               error: UsersContracts.userErrorMessages.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
               details: {
                 code: UsersContracts.UserErrorCodeSchema.enum.TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED,
+              },
+            },
+            409,
+          )),
+        Match.tag("StationRoleAssignmentLimitExceeded", err =>
+          c.json<UsersContracts.UserErrorResponse, 409>(
+            {
+              error: err.role === "STAFF"
+                ? UsersContracts.userErrorMessages.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED
+                : UsersContracts.userErrorMessages.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
+              details: {
+                code: err.role === "STAFF"
+                  ? UsersContracts.UserErrorCodeSchema.enum.STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED
+                  : UsersContracts.UserErrorCodeSchema.enum.STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED,
               },
             },
             409,

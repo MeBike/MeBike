@@ -4,7 +4,12 @@ import { Effect, Match } from "effect";
 
 import { SupplierServiceTag } from "@/domain/suppliers/services/supplier.service";
 
-import type { SupplierErrorResponse, SuppliersRoutes, SupplierStats } from "./shared";
+import type {
+  SupplierErrorResponse,
+  SuppliersRoutes,
+  SupplierStats,
+  SupplierStatusSummary,
+} from "./shared";
 
 import {
   SupplierErrorCodeSchema,
@@ -16,6 +21,12 @@ const getAllSupplierStats: RouteHandler<SuppliersRoutes["getAllSupplierStats"]> 
   const eff = Effect.flatMap(SupplierServiceTag, svc => svc.getAllStats());
   const rows = await c.var.runPromise(eff);
   return c.json<{ data: SupplierStats[] }, 200>({ data: Array.from(rows) }, 200);
+};
+
+const getSupplierStatsSummary: RouteHandler<SuppliersRoutes["getSupplierStatsSummary"]> = async (c) => {
+  const eff = Effect.flatMap(SupplierServiceTag, svc => svc.getStatusSummary());
+  const summary = await c.var.runPromise(eff);
+  return c.json<SupplierStatusSummary, 200>(summary, 200);
 };
 
 const getSupplierStats: RouteHandler<SuppliersRoutes["getSupplierStats"]> = async (c) => {
@@ -51,5 +62,6 @@ const getSupplierStats: RouteHandler<SuppliersRoutes["getSupplierStats"]> = asyn
 
 export const SupplierStatsController = {
   getAllSupplierStats,
+  getSupplierStatsSummary,
   getSupplierStats,
 } as const;

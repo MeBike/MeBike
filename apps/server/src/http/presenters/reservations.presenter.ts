@@ -10,6 +10,7 @@ export function toContractReservation(row: ReservationRow): ReservationListItem 
     id: row.id,
     userId: row.userId,
     bikeId: row.bikeId ?? undefined,
+    bikeNumber: row.bikeNumber ?? undefined,
     stationId: row.stationId,
     reservationOption: row.reservationOption,
     fixedSlotTemplateId: row.fixedSlotTemplateId ?? undefined,
@@ -40,6 +41,7 @@ export function toContractReservationExpanded(
     bike: row.bike
       ? {
           id: row.bike.id,
+          bikeNumber: row.bike.bikeNumber,
           chipId: row.bike.chipId,
           status: row.bike.status,
         }

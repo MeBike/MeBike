@@ -1,3 +1,4 @@
+import { agenciesRoutes } from "./agencies";
 import { agencyRequestsRoutes } from "./agency-requests";
 import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
@@ -12,8 +13,10 @@ import { subscriptionsRoutes } from "./subscriptions";
 import { suppliersRoutes } from "./suppliers";
 import { usersRoutes } from "./users";
 import { walletsRoutes } from "./wallets";
+import { incidentsRoutes } from "./incidents";
 import { redistributionRoutes } from "./redistribution";
 
+export * from "./agencies";
 export * from "./agency-requests";
 export * from "./auth";
 export * from "./bikes";
@@ -28,9 +31,11 @@ export * from "./subscriptions";
 export * from "./suppliers";
 export * from "./users";
 export * from "./wallets";
+export * from "./incidents";
 export * from "./redistribution"
 
 export const serverRoutes = {
+  agencies: agenciesRoutes,
   agencyRequests: agencyRequestsRoutes,
   auth: authRoutes,
   health: healthRoutes,
@@ -45,6 +50,7 @@ export const serverRoutes = {
   ratings: ratingsRoutes,
   wallets: walletsRoutes,
   stripe: stripeRoutes,
+  incidents: incidentsRoutes,
   redistribution: redistributionRoutes
 } as const;
 

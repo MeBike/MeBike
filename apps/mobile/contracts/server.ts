@@ -1,4 +1,5 @@
-import type { ServerContracts } from "@mebike/shared";
+import type { ServerContracts, serverRoutes } from "@mebike/shared";
+import type { z } from "zod";
 
 export type BikeSummary = ServerContracts.BikesContracts.BikeSummary;
 export type StationReadSummary = ServerContracts.StationsContracts.StationReadSummary;
@@ -24,3 +25,25 @@ export type MyRentalListResponse = ServerContracts.RentalsContracts.MyRentalList
 export type CreateRentalPayload = ServerContracts.RentalsContracts.CreateRentalRequest;
 export type CreateReturnSlotPayload = ServerContracts.RentalsContracts.CreateReturnSlotRequest;
 export type ReturnSlotReservation = ServerContracts.RentalsContracts.ReturnSlotReservation;
+export type BikeSwapStatus = ServerContracts.RentalsContracts.BikeSwapStatus;
+export type BikeSwapRequest = ServerContracts.RentalsContracts.BikeSwapRequest;
+export type BikeSwapRequestDetail = ServerContracts.RentalsContracts.BikeSwapRequestDetail;
+export type BikeSwapRequestListResponse = ServerContracts.RentalsContracts.BikeSwapRequestListResponse;
+export type RequestBikeSwapPayload = z.output<
+  typeof ServerContracts.RentalsContracts.RequestBikeSwapRequestSchema
+>;
+
+export type IncidentStatus = ServerContracts.IncidentsContracts.IncidentStatus;
+export type IncidentSeverity = ServerContracts.IncidentsContracts.IncidentSeverity;
+export type IncidentSource = ServerContracts.IncidentsContracts.IncidentSource;
+export type AssignmentStatus = ServerContracts.IncidentsContracts.AssignmentStatus;
+export type IncidentSummary = ServerContracts.IncidentsContracts.IncidentSummary;
+export type IncidentDetail = ServerContracts.IncidentsContracts.IncidentDetail;
+export type IncidentListResponse = ServerContracts.IncidentsContracts.IncidentListResponse;
+export type TechnicianAssignmentSummary = ServerContracts.IncidentsContracts.TechnicianAssignmentSummary;
+export type CreateIncidentPayload = z.output<
+  typeof serverRoutes.incidents.createIncident.request.body.content["application/json"]["schema"]
+>;
+export type UpdateIncidentPayload = z.output<
+  typeof serverRoutes.incidents.updateIncident.request.body.content["application/json"]["schema"]
+>;
