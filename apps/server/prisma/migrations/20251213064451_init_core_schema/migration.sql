@@ -1,9 +1,5 @@
-/*
-  Warnings:
+CREATE EXTENSION IF NOT EXISTS "postgis" WITH SCHEMA "public";
 
-  - You are about to drop the `stations` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
 CREATE TYPE "BikeStatus" AS ENUM ('AVAILABLE', 'BOOKED', 'BROKEN', 'RESERVED', 'MAINTAINED', 'UNAVAILABLE');
 
@@ -39,9 +35,6 @@ CREATE TYPE "UserRole" AS ENUM ('USER', 'STAFF', 'ADMIN', 'SOS');
 
 -- CreateEnum
 CREATE TYPE "UserVerifyStatus" AS ENUM ('UNVERIFIED', 'VERIFIED', 'BANNED');
-
--- DropTable
-DROP TABLE "stations";
 
 -- CreateTable
 CREATE TABLE "Bike" (
