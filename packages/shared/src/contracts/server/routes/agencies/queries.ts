@@ -9,6 +9,8 @@ import {
   AgencyIdParamSchema,
   AgencyListQuerySchema,
   AgencyListResponseSchema,
+  AgencyOperationalStatsResponseSchema,
+  AgencyStatsQuerySchema,
   ServerErrorResponseSchema,
   agencyErrorMessages,
 } from "./shared";
@@ -98,5 +100,64 @@ export const adminListAgenciesRoute = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Admin"),
+  },
+});
+
+export const adminGetAgencyOperationalStatsRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/agencies/{id}/stats",
+  tags: ["Admin", "Agencies"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: AgencyIdParamSchema,
+    query: AgencyStatsQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Get agency operational statistics",
+      content: {
+        "application/json": {
+          schema: AgencyOperationalStatsResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid path parameter or date range query",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+          examples: {
+            MissingTo: {
+              value: {
+                error: "Invalid request payload",
+                details: {
+                  code: "VALIDATION_ERROR",
+                  issues: [
+                    {
+                      path: "to",
+                      message: "from and to must be provided together",
+                      code: "custom",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+    404: notFoundResponse({
+      description: "Agency not found",
+      schema: AgencyErrorResponseSchema,
+      example: {
+        error: agencyErrorMessages.AGENCY_NOT_FOUND,
+        details: {
+          code: AgencyErrorCodeSchema.enum.AGENCY_NOT_FOUND,
+          agencyId: "019b17bd-d130-7e7d-be69-91ceef7b9003",
+        },
+      },
+    }),
   },
 });

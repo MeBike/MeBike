@@ -7,6 +7,11 @@ import { uuidv7 } from "uuidv7";
 import {
   BikeStatus,
   BikeSwapStatus,
+  ConfirmationMethod,
+  HandoverStatus,
+  IncidentSeverity,
+  IncidentSource,
+  IncidentStatus,
   PrismaClient,
   RentalStatus,
   ReservationOption,
@@ -510,6 +515,24 @@ async function main() {
         },
       },
     });
+    await prisma.returnConfirmation.deleteMany({
+      where: {
+        confirmedByUser: {
+          email: {
+            in: userEmails,
+          },
+        },
+      },
+    });
+    await prisma.incidentReport.deleteMany({
+      where: {
+        reporterUser: {
+          email: {
+            in: userEmails,
+          },
+        },
+      },
+    });
     await prisma.rental.deleteMany({
       where: {
         user: {
@@ -873,6 +896,165 @@ async function main() {
       });
     }
 
+    const agencyStatsRentals: DemoRental[] = [];
+    const agencyStatsMainBike = bikesToCreate.find(b => b.stationId === agencyOwnedStations[0]?.stationId);
+    const agencyStatsEastBike = bikesToCreate.find(b => b.stationId === agencyOwnedStations[1]?.stationId);
+    const agencyStatsMainUser = userByEmail.get("user01@mebike.local");
+    const agencyStatsEastUser = userByEmail.get("user02@mebike.local");
+    const agencyStatsMainOperator = userByEmail.get("agency1@mebike.local");
+    const agencyStatsEastOperator = userByEmail.get("agency2@mebike.local");
+
+    if (
+      agencyOwnedStations[0]?.stationId
+      && agencyStatsMainBike
+      && agencyStatsMainUser
+      && agencyStatsMainOperator
+    ) {
+      const endTime = toUtcDate(-3, 11, 15);
+      const startTime = new Date(endTime.getTime() - 52 * 60 * 1000);
+      const rental = {
+        id: uuidv7(),
+        userId: agencyStatsMainUser.id,
+        bikeId: agencyStatsMainBike.id,
+        startStationId: agencyOwnedStations[0].stationId,
+        endStationId: agencyOwnedStations[0].stationId,
+        createdAt: new Date(startTime.getTime() - 5 * 60 * 1000),
+        startTime,
+        endTime,
+        duration: 52,
+        totalPrice: 36000,
+        subscriptionId: null,
+        status: RentalStatus.COMPLETED,
+        updatedAt: endTime,
+      } satisfies DemoRental;
+
+      agencyStatsRentals.push(rental);
+
+      await prisma.rental.create({
+        data: {
+          id: rental.id,
+          userId: rental.userId,
+          bikeId: rental.bikeId,
+          startStationId: rental.startStationId,
+          endStationId: rental.endStationId,
+          createdAt: rental.createdAt,
+          startTime: rental.startTime,
+          endTime: rental.endTime,
+          duration: rental.duration,
+          totalPrice: rental.totalPrice,
+          subscriptionId: rental.subscriptionId,
+          status: rental.status,
+          updatedAt: rental.updatedAt,
+        },
+      });
+
+      await prisma.returnConfirmation.create({
+        data: {
+          id: uuidv7(),
+          rentalId: rental.id,
+          stationId: agencyOwnedStations[0].stationId,
+          confirmedByUserId: agencyStatsMainOperator.id,
+          confirmationMethod: ConfirmationMethod.MANUAL,
+          handoverStatus: HandoverStatus.UNDER_AGENCY_CARE,
+          confirmedAt: new Date(endTime.getTime() + 5 * 60 * 1000),
+        },
+      });
+
+      await prisma.incidentReport.createMany({
+        data: [
+          {
+            id: uuidv7(),
+            reporterUserId: agencyStatsMainUser.id,
+            rentalId: rental.id,
+            bikeId: agencyStatsMainBike.id,
+            stationId: agencyOwnedStations[0].stationId,
+            source: IncidentSource.POST_RETURN,
+            incidentType: "BRAKE",
+            severity: IncidentSeverity.CRITICAL,
+            description: "Demo critical agency incident",
+            bikeLocked: true,
+            status: IncidentStatus.OPEN,
+            reportedAt: new Date(endTime.getTime() + 30 * 60 * 1000),
+          },
+        ],
+      });
+    }
+
+    if (
+      agencyOwnedStations[1]?.stationId
+      && agencyStatsEastBike
+      && agencyStatsEastUser
+      && agencyStatsEastOperator
+    ) {
+      const endTime = toUtcDate(-5, 15, 10);
+      const startTime = new Date(endTime.getTime() - 38 * 60 * 1000);
+      const rental = {
+        id: uuidv7(),
+        userId: agencyStatsEastUser.id,
+        bikeId: agencyStatsEastBike.id,
+        startStationId: agencyOwnedStations[1].stationId,
+        endStationId: agencyOwnedStations[1].stationId,
+        createdAt: new Date(startTime.getTime() - 5 * 60 * 1000),
+        startTime,
+        endTime,
+        duration: 38,
+        totalPrice: 29000,
+        subscriptionId: null,
+        status: RentalStatus.COMPLETED,
+        updatedAt: endTime,
+      } satisfies DemoRental;
+
+      agencyStatsRentals.push(rental);
+
+      await prisma.rental.create({
+        data: {
+          id: rental.id,
+          userId: rental.userId,
+          bikeId: rental.bikeId,
+          startStationId: rental.startStationId,
+          endStationId: rental.endStationId,
+          createdAt: rental.createdAt,
+          startTime: rental.startTime,
+          endTime: rental.endTime,
+          duration: rental.duration,
+          totalPrice: rental.totalPrice,
+          subscriptionId: rental.subscriptionId,
+          status: rental.status,
+          updatedAt: rental.updatedAt,
+        },
+      });
+
+      await prisma.returnConfirmation.create({
+        data: {
+          id: uuidv7(),
+          rentalId: rental.id,
+          stationId: agencyOwnedStations[1].stationId,
+          confirmedByUserId: agencyStatsEastOperator.id,
+          confirmationMethod: ConfirmationMethod.QR_CODE,
+          handoverStatus: HandoverStatus.UNDER_AGENCY_CARE,
+          confirmedAt: new Date(endTime.getTime() + 3 * 60 * 1000),
+        },
+      });
+
+      await prisma.incidentReport.create({
+        data: {
+          id: uuidv7(),
+          reporterUserId: agencyStatsEastUser.id,
+          rentalId: rental.id,
+          bikeId: agencyStatsEastBike.id,
+          stationId: agencyOwnedStations[1].stationId,
+          source: IncidentSource.DURING_RENTAL,
+          incidentType: "CHAIN",
+          severity: IncidentSeverity.MEDIUM,
+          description: "Demo resolved agency incident",
+          bikeLocked: false,
+          status: IncidentStatus.RESOLVED,
+          reportedAt: new Date(startTime.getTime() + 10 * 60 * 1000),
+          resolvedAt: new Date(endTime.getTime() + 20 * 60 * 1000),
+        },
+      });
+    }
+
     const user01 = users.find(user => user.email === "user01@mebike.local");
     const staff1 = users.find(user => user.email === "staff1@mebike.local");
     const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
@@ -910,9 +1092,13 @@ async function main() {
 
     logger.info("Demo seed completed");
     logger.info({ users: users.length }, "Demo users seeded");
-    logger.info({ rentals: rentals.length }, "Demo rentals seeded");
+    logger.info({ rentals: rentals.length + agencyStatsRentals.length }, "Demo rentals seeded");
     logger.info(
-      { completed: rentals.filter(r => r.status === RentalStatus.COMPLETED).length },
+      {
+        completed:
+          rentals.filter(r => r.status === RentalStatus.COMPLETED).length
+          + agencyStatsRentals.filter(r => r.status === RentalStatus.COMPLETED).length,
+      },
       "Completed rentals seeded",
     );
     logger.info(

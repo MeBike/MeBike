@@ -2,7 +2,10 @@ import type { RouteConfig } from "@hono/zod-openapi";
 
 import { serverRoutes } from "@mebike/shared";
 
-import { AgencyAdminController } from "@/http/controllers/agencies";
+import {
+  AgencyAdminController,
+  AgencyStatsController,
+} from "@/http/controllers/agencies";
 import { requireAdminMiddleware } from "@/http/middlewares/auth";
 
 export function registerAgencyRoutes(
@@ -17,6 +20,10 @@ export function registerAgencyRoutes(
     ...agencies.adminList,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const adminGetAgencyOperationalStatsRoute = {
+    ...agencies.adminGetOperationalStats,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
   const adminUpdateAgencyRoute = {
     ...agencies.adminUpdate,
     middleware: [requireAdminMiddleware] as const,
@@ -28,6 +35,10 @@ export function registerAgencyRoutes(
 
   app.openapi(adminGetAgencyRoute, AgencyAdminController.getAgencyById);
   app.openapi(adminListAgenciesRoute, AgencyAdminController.listAgencies);
+  app.openapi(
+    adminGetAgencyOperationalStatsRoute,
+    AgencyStatsController.getAgencyOperationalStats,
+  );
   app.openapi(adminUpdateAgencyRoute, AgencyAdminController.updateAgency);
   app.openapi(adminUpdateAgencyStatusRoute, AgencyAdminController.updateAgencyStatus);
 }

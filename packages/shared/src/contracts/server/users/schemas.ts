@@ -39,6 +39,10 @@ export const UserErrorCodeSchema = z.enum([
   "STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED",
   "STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED",
   "TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED",
+  "STATION_NAME_ALREADY_EXISTS",
+  "CAPACITY_LIMIT_EXCEEDED",
+  "CAPACITY_SPLIT_INVALID",
+  "OUTSIDE_SUPPORTED_AREA",
 ]).openapi("UserErrorCode");
 
 export const userErrorMessages = {
@@ -55,6 +59,10 @@ export const userErrorMessages = {
   STATION_STAFF_ASSIGNMENT_LIMIT_EXCEEDED: "Station already has a staff assigned",
   STATION_MANAGER_ASSIGNMENT_LIMIT_EXCEEDED: "Station already has a manager assigned",
   TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED: "Technician team already has maximum members",
+  STATION_NAME_ALREADY_EXISTS: "Station name already exists",
+  CAPACITY_LIMIT_EXCEEDED: "Station capacity exceeds configured limit",
+  CAPACITY_SPLIT_INVALID: "Station pickup and return slot limits are invalid for the configured capacity",
+  OUTSIDE_SUPPORTED_AREA: "Coordinates are outside supported service area",
 } as const;
 
 export const UserStatsErrorCodeSchema = z.enum([
