@@ -1,6 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import {
+  CreateStationErrorResponseSchema,
   CreateStationBodySchema,
   StationErrorCodeSchema,
   StationErrorResponseSchema,
@@ -32,7 +33,7 @@ export const createStation = createRoute({
       description: "Invalid input or duplicate name",
       content: {
         "application/json": {
-          schema: StationErrorResponseSchema,
+          schema: CreateStationErrorResponseSchema,
           examples: {
             DuplicateName: {
               value: {
