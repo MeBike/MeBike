@@ -4,6 +4,8 @@ import React from "react";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useAuthNext } from "@providers/auth-provider-next";
 
+import type { RootStackParamList } from "../types/navigation";
+
 import {
   BookingHistoryScreen,
   HomeScreen,
@@ -11,12 +13,13 @@ import {
   ProfileScreen,
   StaffDashboardScreen,
 } from "../screen";
-import type { RootStackParamList } from "../types/navigation";
-
-import StationSelectScreen from "../styles/StationSelect";
 import { BottomTabBar } from "./bottom-tab-bar";
 
 const Tab = createBottomTabNavigator<RootStackParamList>();
+
+function StationTabRedirectScreen() {
+  return null;
+}
 
 function MainTabNavigator() {
   const { status, isAuthenticated, isStaff } = useAuthNext();
@@ -43,7 +46,16 @@ function MainTabNavigator() {
         : (
             <>
               <Tab.Screen name="Nhà" component={HomeScreen} />
-              <Tab.Screen name="Trạm" component={StationSelectScreen} />
+              <Tab.Screen
+                name="Trạm"
+                component={StationTabRedirectScreen}
+                listeners={({ navigation }) => ({
+                  tabPress: (event) => {
+                    event.preventDefault();
+                    navigation.getParent()?.navigate("StationSelectFlow");
+                  },
+                })}
+              />
               {isAuthenticated
                 ? <Tab.Screen name="Booking" component={BookingHistoryScreen} />
                 : null}

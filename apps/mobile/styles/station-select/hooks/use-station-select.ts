@@ -1,13 +1,13 @@
-import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
-
-import { useGetNearbyStationsQuery } from "@hooks/query/stations/use-get-nearby-stations-query";
-import { useGetStationListQuery } from "@hooks/query/stations/use-get-station-list-query";
-import { useStationRouteQuery } from "@hooks/query/stations/use-station-route-query";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
+
 import { useCurrentLocation } from "@/providers/location-provider";
+import { useGetNearbyStationsQuery } from "@hooks/query/stations/use-get-nearby-stations-query";
+import { useGetStationListQuery } from "@hooks/query/stations/use-get-station-list-query";
+import { useStationRouteQuery } from "@hooks/query/stations/use-station-route-query";
 
 import type {
   StationDetailScreenNavigationProp,
@@ -24,9 +24,17 @@ export function useStationSelect() {
   const [routeProfile, setRouteProfile] = React.useState<MapboxDirectionsProfile>("walking");
   const [routeRequested, setRouteRequested] = React.useState(false);
   const [isRoutingMode, setIsRoutingMode] = React.useState(false);
-  const { location: currentLocation, refresh: refreshLocation } = useCurrentLocation();
+  const {
+    location: currentLocation,
+    refresh: refreshLocation,
+    status: locationStatus,
+  } = useCurrentLocation();
 
-  const { data: allStations = [], refetch: refetchAllStations } = useGetStationListQuery();
+  const {
+    data: allStations = [],
+    isLoading: isLoadingAllStations,
+    refetch: refetchAllStations,
+  } = useGetStationListQuery();
   const {
     data: nearbyStations = [],
     isLoading: isLoadingNearbyStations,
@@ -52,8 +60,16 @@ export function useStationSelect() {
   };
 
   const handleFindNearbyStations = async () => {
-    await refreshLocation();
-    setShowingNearby(!showingNearby);
+    if (showingNearby) {
+      setShowingNearby(false);
+      return;
+    }
+
+    if (!currentLocation) {
+      await refreshLocation();
+    }
+
+    setShowingNearby(true);
   };
 
   const handleRefresh = async () => {
@@ -151,7 +167,9 @@ export function useStationSelect() {
     route,
     isRouting,
     routeProfile,
+    isLoadingStations: isLoadingAllStations,
     isLoadingNearbyStations,
+    isResolvingNearbyLocation: locationStatus === "loading",
     handleSelectStation,
     handleSelectStationForRoute,
     handleFindNearbyStations,

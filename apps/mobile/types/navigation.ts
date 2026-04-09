@@ -1,9 +1,9 @@
-// Common navigation hook types
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
 import type { BikeSummary } from "@/contracts/server";
+// Common navigation hook types
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 
 // Navigation Types for React Navigation
 import type { Reservation } from "./reservation-types";
@@ -28,6 +28,7 @@ export type RootStackParamList = {
   "EmailVerification": { email: string };
   "StationDetail": { stationId: string } & Partial<StationSelectionContext>;
   "Trạm": Partial<StationSelectionContext> | undefined;
+  "StationSelectFlow": Partial<StationSelectionContext> | undefined;
   "Modal": undefined;
   "FormSheet": undefined;
   "TransparentModal": undefined;
@@ -159,7 +160,9 @@ export type SubscriptionsNavigationProp = StackNavigationProp<
   "Subscriptions"
 >;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, "StationDetail">;
-export type StationSelectRouteProp = RouteProp<RootStackParamList, "Trạm">;
+export type StationSelectRouteProp
+  = | RouteProp<RootStackParamList, "Trạm">
+    | RouteProp<RootStackParamList, "StationSelectFlow">;
 export type ReservationsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Reservations"
