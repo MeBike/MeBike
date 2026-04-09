@@ -56,9 +56,6 @@ export type StationService = {
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
     | StationCapacitySplitInvalid
-    | StationCapacityBelowActiveUsage
-    | StationReturnSlotLimitBelowActiveReservations
-    | StationPickupSlotLimitBelowPendingReservations
     | StationAgencyRequired
     | StationAgencyForbidden
     | StationAgencyNotFound
