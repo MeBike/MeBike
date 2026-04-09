@@ -53,7 +53,7 @@ describe("manage-users agency provision e2e", () => {
         requesterPhone: "0912345678",
         agencyName: "Metro Agency Thu Duc",
         agencyAddress: "Tret toa nha Metro Thu Duc",
-        agencyContactPhone: "02873001234",
+        agencyContactPhone: "0987654321",
         stationName: "Ga Metro Thu Duc",
         stationAddress: "01 Xa Lo Ha Noi, Thu Duc, TP.HCM",
         stationLatitude: 10.8486,
@@ -102,7 +102,7 @@ describe("manage-users agency provision e2e", () => {
     expect(savedAgency).toEqual({
       id: body.orgAssignment?.agency?.id,
       name: "Metro Agency Thu Duc",
-      contactPhone: "02873001234",
+      contactPhone: "0987654321",
       status: "ACTIVE",
     });
 
@@ -156,7 +156,7 @@ describe("manage-users agency provision e2e", () => {
       requesterPhone: "0912345678",
       agencyName: "Metro Agency Thu Duc",
       agencyAddress: "Tret toa nha Metro Thu Duc",
-      agencyContactPhone: "02873001234",
+      agencyContactPhone: "0987654321",
       stationName: "Ga Metro Thu Duc",
       stationAddress: "01 Xa Lo Ha Noi, Thu Duc, TP.HCM",
       status: "APPROVED",

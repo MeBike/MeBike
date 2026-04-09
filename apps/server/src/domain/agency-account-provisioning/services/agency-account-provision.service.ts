@@ -67,7 +67,9 @@ export type ProvisionAgencyAccountError
     | StationAgencyNotFound
     | StationAgencyAlreadyAssigned
     | import("@/domain/agencies/domain-errors").AgencyRepositoryError
+    | import("@/domain/agency-requests/domain-errors").AgencyRequestNotFound
     | import("@/domain/agency-requests/domain-errors").AgencyRequestRepositoryError
+    | import("@/domain/agency-requests/domain-errors").InvalidAgencyRequestStatusTransition
     | import("@/lib/effect/prisma-tx").PrismaTransactionError;
 
 export type AgencyAccountProvisionService = {

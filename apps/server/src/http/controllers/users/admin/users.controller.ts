@@ -227,29 +227,35 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
 
 const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
   const body = c.req.valid("json");
-  const eff = withLoggedCause(
-    body.role === "AGENCY"
-      ? adminCreateAgencyAccountUseCase({
-          requesterEmail: body.requesterEmail,
-          requesterPhone: body.requesterPhone ?? null,
-          agencyName: body.agencyName,
-          agencyAddress: body.agencyAddress ?? null,
-          agencyContactPhone: body.agencyContactPhone ?? null,
-          stationName: body.stationName,
-          stationAddress: body.stationAddress,
-          stationLatitude: body.stationLatitude,
-          stationLongitude: body.stationLongitude,
-          stationTotalCapacity: body.stationTotalCapacity,
-          stationPickupSlotLimit: body.stationPickupSlotLimit ?? null,
-          stationReturnSlotLimit: body.stationReturnSlotLimit ?? null,
-          description: body.description ?? null,
-          reviewedByUserId: c.var.currentUser!.userId,
-        })
-      : adminCreateUserUseCase(body),
-    routeContext(users.adminCreate),
-  );
+  const result = body.role === "AGENCY"
+    ? await c.var.runPromise(
+        withLoggedCause(
+          adminCreateAgencyAccountUseCase({
+            requesterEmail: body.requesterEmail,
+            requesterPhone: body.requesterPhone ?? null,
+            agencyName: body.agencyName,
+            agencyAddress: body.agencyAddress ?? null,
+            agencyContactPhone: body.agencyContactPhone ?? null,
+            stationName: body.stationName,
+            stationAddress: body.stationAddress,
+            stationLatitude: body.stationLatitude,
+            stationLongitude: body.stationLongitude,
+            stationTotalCapacity: body.stationTotalCapacity,
+            stationPickupSlotLimit: body.stationPickupSlotLimit ?? null,
+            stationReturnSlotLimit: body.stationReturnSlotLimit ?? null,
+            description: body.description ?? null,
+            reviewedByUserId: c.var.currentUser!.userId,
+          }),
+          routeContext(users.adminCreate),
+        ).pipe(Effect.either),
+      )
+    : await c.var.runPromise(
+        withLoggedCause(
+          adminCreateUserUseCase(body),
+          routeContext(users.adminCreate),
+        ).pipe(Effect.either),
+      );
 
-  const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
       c.json<UsersContracts.AdminUserDetailResponse, 201>(mapUserDetail(right), 201)),
