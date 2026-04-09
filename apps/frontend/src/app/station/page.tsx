@@ -163,10 +163,10 @@ const Page = () => {
                       Tọa độ
                     </h3>
                     <p className="text-gray-600">
-                      Lat: {formatCoord(selectedStation.latitude)}
+                      Lat: {formatCoord(selectedStation.location.latitude)}
                     </p>
                     <p className="text-gray-600">
-                      Lng: {formatCoord(selectedStation.longitude)}
+                      Lng: {formatCoord(selectedStation.location.longitude)}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">

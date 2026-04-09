@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { LucideIcon } from "lucide-react";
 import { useStationActions } from "@/hooks/use-station";
 import { 
   ArrowLeft, 
@@ -195,7 +196,7 @@ export default function StationDetailPage() {
 
 // --- SUB COMPONENTS ---
 
-function StatusItem({ icon: Icon, label, value, color }: { icon: any, label: string, value: number, color: string }) {
+function StatusItem({ icon: Icon, label, value, color }: { icon: LucideIcon, label: string, value: number, color: string }) {
     return (
         <div className="flex items-center justify-between text-sm py-1 border-b border-border/40 last:border-0">
             <div className="flex items-center gap-2">

@@ -22,7 +22,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Wrench,
-  Ban
+  Ban,
+  LucideIcon
 } from "lucide-react";
 import { Station } from "@/types";
 import { cn } from "@/lib/utils";
@@ -271,7 +272,7 @@ export default function StationDetailPage() {
 
 // --- SUB COMPONENTS ---
 
-function StatusItem({ icon: Icon, label, value, color }: { icon: any, label: string, value: number, color: string }) {
+function StatusItem({ icon: Icon, label, value, color }: { icon: LucideIcon, label: string, value: number, color: string }) {
     return (
         <div className="flex items-center justify-between text-sm py-1 border-b border-border/40 last:border-0">
             <div className="flex items-center gap-2">

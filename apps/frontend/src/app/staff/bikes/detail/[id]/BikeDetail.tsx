@@ -17,16 +17,6 @@ import type { BikeRentalHistory, BikeActivityStats, BikeStats, Bike as BikeType 
 
 // Mở rộng type Bike để khớp với UI bạn đang hiển thị 
 // (vì interface gốc bạn đưa thiếu name, type, station, totalDistance...)
-interface ExtendedBike extends BikeType {
-  name?: string;
-  type?: string;
-  totalDistance?: number;
-  firmwareVersion?: string;
-  station?: {
-    name: string;
-  };
-}
-
 function SectionCard({
   icon: Icon,
   title,
@@ -73,7 +63,7 @@ export function BikeDetailView({
   bike, 
   rentals,
 }: { 
-  bike: ExtendedBike | null; // Sử dụng Extended để dùng được bike.name, bike.station...
+  bike: BikeType | null; // Sử dụng Extended để dùng được bike.name, bike.station...
   rentals: BikeRentalHistory[];
 }) {
   if (!bike) return null;
@@ -98,7 +88,7 @@ export function BikeDetailView({
         <div className="space-y-6 lg:col-span-2">
           <SectionCard icon={BikeIcon} title="Thông tin cơ bản">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <Field label="Tên xe / Model" value={bike.name || `Bike #${bike.chipId.slice(-4)}`} />
+              <Field label="Tên xe / Model" value={`Bike #${bike.chipId.slice(-4)}`} />
               <Field 
                 label="Trạng thái hiện tại" 
                 value={
@@ -115,8 +105,6 @@ export function BikeDetailView({
           <SectionCard icon={Cpu} title="Thông số kỹ thuật & Chip">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Field label="Mã Chip (Chip ID)" value={<code className="text-primary font-bold">{bike.chipId}</code>} />
-              <Field label="Phiên bản phần mềm" value={bike.firmwareVersion || "v1.0.2"} />
-              <Field label="Quãng đường đã đi" value={`${bike.totalDistance || 0} km`} />
             </div>
           </SectionCard>
         </div>
@@ -127,7 +115,7 @@ export function BikeDetailView({
               {/* Đã sửa lỗi: Truy cập vào bike.station.name */}
               <Field 
                 label="Trạm hiện tại" 
-                value={bike.station?.name || `Mã trạm: ${bike.stationId}` || "Đang di chuyển"} 
+                value={bike.station?.name || `Tên trạm: ${bike.station.name}` || "Đang di chuyển"} 
               />
             </div>
           </SectionCard>

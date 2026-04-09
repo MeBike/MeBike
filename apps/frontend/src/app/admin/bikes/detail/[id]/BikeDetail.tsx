@@ -17,17 +17,6 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import type { BikeRentalHistory, BikeActivityStats, BikeStats, Bike as BikeType } from "@/types";
 
 // Cập nhật Interface dựa trên dữ liệu mới của bạn
-interface ExtendedBike extends BikeType {
-  name?: string;
-  type?: string;
-  totalDistance?: number;
-  firmwareVersion?: string;
-  station?: {
-    name: string;
-  };
-
-}
-
 function SectionCard({
   icon: Icon,
   title,
@@ -76,7 +65,7 @@ export function BikeDetailView({
   rentals,
   statisticData, 
 }: { 
-  bike: ExtendedBike | null;
+  bike: BikeType | null;
   activity: BikeActivityStats | null; 
   rentals: BikeRentalHistory[];
   statisticData: BikeStats | null;
@@ -108,7 +97,7 @@ export function BikeDetailView({
           {/* Thông tin cơ bản */}
           <SectionCard icon={BikeIcon} title="Thông tin cơ bản">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <Field label="Tên xe / Model" value={bike.name || `Xe #${bike.bikeNumber}`} />
+              <Field label="Tên xe / Model" value={`Xe #${bike.bikeNumber}`} />
               <Field 
                 label="Trạng thái" 
                 value={<Badge variant={bikeStatusVariant(bike.status)} className="rounded-full">{bike.status}</Badge>} 
@@ -136,7 +125,6 @@ export function BikeDetailView({
           <SectionCard icon={Cpu} title="Thông số kỹ thuật & Chip">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Field label="Mã Chip" value={<code className="text-primary font-bold">{bike.chipId}</code>} />
-              <Field label="Quãng đường" value={`${bike.totalDistance || 0} km`} />
             </div>
           </SectionCard>
         </div>
@@ -145,7 +133,7 @@ export function BikeDetailView({
           <SectionCard icon={MapPin} title="Vị trí">
             <Field 
               label="Trạm hiện tại" 
-              value={bike.station?.name || `Mã trạm: ${bike.stationId}` || "Ngoài trạm"} 
+              value={bike.station?.name || `Tên trạm: ${bike.station.name}` || "Ngoài trạm"} 
             />
           </SectionCard>
 
