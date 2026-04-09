@@ -103,8 +103,6 @@ export type PricingPolicyOverrides = {
   depositRequired?: string;
   lateReturnCutoff?: Date;
   status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
-  activeFrom?: Date | null;
-  activeTo?: Date | null;
 };
 
 export type TechnicianTeamOverrides = {

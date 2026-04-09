@@ -16,8 +16,6 @@ export async function seedDefaultPricingPolicy(prisma: PrismaClient): Promise<vo
       depositRequired: toPrismaDecimal("500000"),
       lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
       status: "ACTIVE",
-      activeFrom: null,
-      activeTo: null,
     },
     create: {
       id: DEFAULT_PRICING_POLICY_ID,
@@ -29,8 +27,6 @@ export async function seedDefaultPricingPolicy(prisma: PrismaClient): Promise<vo
       depositRequired: toPrismaDecimal("500000"),
       lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
       status: "ACTIVE",
-      activeFrom: null,
-      activeTo: null,
     },
   });
 }
