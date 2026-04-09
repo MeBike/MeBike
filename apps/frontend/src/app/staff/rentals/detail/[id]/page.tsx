@@ -114,7 +114,7 @@ export default function AdminRentalDetailPage() {
             <h1 className="text-2xl font-bold text-foreground">
               Chi tiết đơn thuê
             </h1>
-            <Button variant="outline" onClick={() => router.push("/admin/rentals")}>
+            <Button variant="outline" onClick={() => router.push("/staff/rentals")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Quay lại danh sách
             </Button>

@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useStationActions } from "@/hooks/use-station";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { stationSchema, StationSchemaFormData } from "@/schemas/station-schema";
-import { Input } from "@/components/ui/input";
 import { 
   ArrowLeft, 
-  Edit, 
-  Save, 
-  X, 
   Bike, 
   Info, 
   MapPin, 
@@ -30,19 +23,17 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// --- REUSABLE COMPONENTS (Matching your style) ---
+// --- REUSABLE COMPONENTS ---
 
 function SectionCard({
   icon: Icon,
   title,
   children,
-  footer,
   className,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   children: React.ReactNode;
-  footer?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -52,7 +43,6 @@ function SectionCard({
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
-      {footer}
     </div>
   );
 }
@@ -71,52 +61,30 @@ function Field({ label, value, className }: { label: string; value: React.ReactN
 export default function StationDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  const [isEditing, setIsEditing] = useState(false);
+
   const {
     getStationByID,
     responseStationDetail,
     isLoadingGetStationByID,
-    updateStation,
   } = useStationActions({
     hasToken: true,
-    stationId : id,
-  });
-
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<StationSchemaFormData>({
-    resolver: zodResolver(stationSchema),
+    stationId: id,
   });
 
   useEffect(() => {
-    getStationByID();
-    setIsEditing(false);
-  }, [id]);
+    if (id) {
+      getStationByID();
+    }
+  }, [id, getStationByID]);
 
   if (isLoadingGetStationByID) return <StationDetailSkeleton />;
+  
   if (!responseStationDetail && !isLoadingGetStationByID) {
     notFound();
     return null;
   }
 
   const station = responseStationDetail as Station;
-
-  const handleEdit = () => {
-    reset({
-      name: station.name,
-      address: station.address,
-      latitude: station.location.latitude,
-      longitude: station.location.longitude,
-      capacity: station.capacity.total,
-    });
-    setIsEditing(true);
-  };
-
-  const onSave = async (data: StationSchemaFormData) => {
-    const success = await updateStation(data);
-    if (success) {
-      setIsEditing(false);
-      getStationByID();
-    }
-  };
 
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
@@ -129,33 +97,21 @@ export default function StationDetailPage() {
               variant="outline"
               size="icon"
               className="h-9 w-9 shrink-0"
-              onClick={() => router.push("/admin/stations")}
+              onClick={() => router.back()}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              {isEditing ? "Chỉnh sửa trạm" : "Chi tiết trạm"}
+              Chi tiết trạm
             </h1>
-            {!isEditing && (
-                <Badge variant="outline" className="rounded-full px-3 py-0.5 font-semibold bg-primary/5 text-primary border-primary/20">
-                    Station Active
-                </Badge>
-            )}
+            <Badge variant="outline" className="rounded-full px-3 py-0.5 font-semibold bg-primary/5 text-primary border-primary/20">
+              Station Active
+            </Badge>
           </div>
           
-          <div className="flex gap-2">
-            {!isEditing ? (
-              <Button onClick={handleEdit} className="shrink-0">
-                <Edit className="mr-2 h-4 w-4" />
-                Chỉnh sửa
-              </Button>
-            ) : (
-              <Button variant="outline" onClick={() => setIsEditing(false)} className="shrink-0">
-                <X className="mr-2 h-4 w-4" />
-                Hủy bỏ
-              </Button>
-            )}
-          </div>
+          <Button variant="outline" onClick={() => router.push("/staff/stations")}>
+            Quay lại danh sách
+          </Button>
         </div>
 
         {/* Metadata Bar */}
@@ -176,48 +132,17 @@ export default function StationDetailPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           
-          {/* Left Column: Info & Map */}
+          {/* Left Column: Info & Capacity */}
           <div className="space-y-6 lg:col-span-2">
             <SectionCard icon={Info} title="Thông tin quản lý">
-              {isEditing ? (
-                <form onSubmit={handleSubmit(onSave)} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Tên trạm</label>
-                      <Input {...register("name")} className={errors.name ? "border-destructive" : ""} />
-                      {errors.name && <p className="text-[10px] text-destructive">{errors.name.message}</p>}
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Sức chứa tổng</label>
-                      <Input type="number" {...register("capacity", { valueAsNumber: true })} />
-                    </div>
-                    <div className="md:col-span-2 space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Địa chỉ cụ thể</label>
-                      <Input {...register("address")} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Vĩ độ (Latitude)</label>
-                      <Input type="number" step="any" {...register("latitude", { valueAsNumber: true })} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Kinh độ (Longitude)</label>
-                      <Input type="number" step="any" {...register("longitude", { valueAsNumber: true })} />
-                    </div>
-                  </div>
-                  <div className="pt-4">
-                    <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      <Save className="w-4 h-4 mr-2" />
-                      {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
-                  <Field label="Tên trạm" value={station.name} />
-                  <Field label="Tọa độ GPS" value={`${station.location.latitude}, ${station.location.longitude}`} />
-                  <Field label="Địa chỉ" value={station.address} className="md:col-span-2" />
-                </div>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                <Field label="Tên trạm" value={station.name} />
+                <Field 
+                  label="Tọa độ GPS" 
+                  value={station.location.latitude ? `${station.location.latitude}, ${station.location.longitude}` : "N/A"} 
+                />
+                <Field label="Địa chỉ" value={station.address} className="md:col-span-2" />
+              </div>
             </SectionCard>
 
             <SectionCard icon={LayoutGrid} title="Cấu hình sức chứa">
@@ -247,7 +172,7 @@ export default function StationDetailPage() {
             <SectionCard icon={Activity} title="Thống kê xe tại trạm">
                 <div className="space-y-4">
                     <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-5 text-center">
-                        <p className="text-xs font-medium text-muted-foreground uppercase">Tổng số xe</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Tổng số xe hiện có</p>
                         <p className="mt-1 text-4xl font-bold text-primary">{station.bikes.total}</p>
                     </div>
 
@@ -301,4 +226,4 @@ function StationDetailSkeleton() {
         </div>
       </div>
     );
-  }
+}
