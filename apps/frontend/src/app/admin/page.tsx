@@ -15,7 +15,7 @@ export default function DashboardPage() {
   const { newRegistrationStats, getNewRegistrationStats } = useUserActions({
     hasToken: true,
   }); 
-  const { statisticData, totalRecord , getStatisticsBike} = useBikeActions({hasToken:true});
+  const { statusCount, totalRecord , getStatisticsBike} = useBikeActions({hasToken:true});
   const { dashboardSummaryData, getDashboardSummary , getSummaryRental , summaryRental } = useRentalsActions({
     hasToken: true,
   });
@@ -31,8 +31,8 @@ export default function DashboardPage() {
   useEffect(() => {
     getSummaryRental();
   }, [getSummaryRental]);
-  const changePercentBike = statisticData?.AVAILABLE
-    ? Math.round((statisticData.AVAILABLE / totalRecord || 1) * 100)
+  const changePercentBike = statusCount?.AVAILABLE
+    ? Math.round((statusCount.AVAILABLE / totalRecord || 1) * 100)
     : 0;
   
   // const formattedValue =
@@ -76,8 +76,8 @@ export default function DashboardPage() {
             <StatsCard
               title="Xe đang cho thuê"
               value={
-                statisticData
-                  ? statisticData.UNAVAILABLE?.toString()
+                statusCount
+                  ? statusCount.UNAVAILABLE?.toString()
                   : "0"
               }
               change={`${

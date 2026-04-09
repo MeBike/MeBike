@@ -50,8 +50,9 @@ export default function StationsPage() {
     setPage(1);
   }, [searchQuery]);
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8 max-w-7xl">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
+    <div>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
             Quản lý trạm xe
@@ -135,6 +136,9 @@ export default function StationsPage() {
             pagination={paginationStations}
             setPage={setPage}
             isLoading={isLoadingGetAllStations}
+            onView={(id) => {
+              router.push(`/admin/stations/detail/${id}`)
+            }}
             onDelete={(id) => {
               if (confirm("Bạn có chắc chắn muốn xóa trạm này?"))
                 deleteStation(id);
@@ -144,6 +148,7 @@ export default function StationsPage() {
             }}
           />
         )}
+      </div>
       </div>
     </div>
   );

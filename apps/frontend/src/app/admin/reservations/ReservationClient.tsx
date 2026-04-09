@@ -67,7 +67,6 @@ export default function ReservationClient() {
     getAllStations,
     currentPage,
   ]);
-
   useEffect(() => {
     if (selectedReservationId) {
       fetchDetailReservation();

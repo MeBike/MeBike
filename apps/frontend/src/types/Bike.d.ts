@@ -1,10 +1,22 @@
 
 export interface Bike {
   id: string;
+  bikeNumber : string;
   chipId: string;
-  stationId: string;
+  station : {
+    id : string;
+    name : string;
+    address : string;
+  }
   status: BikeStatus;
-  supplierId: string | null;
+  supplier : {
+    id : string;
+    name : string;
+  };
+  rating : {
+    averageRating : string;
+    totalRatings : string;
+  }
   createdAt: string;
   updatedAt: string;
   chipId: string;

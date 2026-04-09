@@ -20,12 +20,12 @@ export const bikeService = {
     );
     return response;
   },
-  getStatisticsBikeAdmin: async (): Promise<
+  getStatusCountBikeAdmin: async (): Promise<
     AxiosResponse<BikeStatistics>
   > => {
     const response = await fetchHttpClient.get<
     BikeStatistics
-    >(ENDPOINT.BIKE.STATS_SUMMARY);
+    >(ENDPOINT.BIKE.STATUS_COUNT);
     return response;
   },
   getStatusBikeByIdAdmin: async (id: string): Promise<AxiosResponse<BikeStatus>> => {
@@ -38,10 +38,15 @@ export const bikeService = {
     const response = await fetchHttpClient.delete(ENDPOINT.BIKE.ID(id));
     return response;
   },
+  
   //for both admin and staf
-  getHistoryBikeById: async (id: string): Promise<AxiosResponse<BikeRentalHistory>> => {
-    const response = await fetchHttpClient.get<BikeRentalHistory>(
-      ENDPOINT.BIKE.RENTAL_HISTORY(id)
+  getHistoryBikeById: async (id: string): Promise<AxiosResponse<ApiResponse<BikeRentalHistory[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<BikeRentalHistory[]>>(
+      ENDPOINT.BIKE.RENTAL_HISTORY(id),
+      {
+        page:1,
+        pageSize : 10,
+      }
     );
     return response;
   },

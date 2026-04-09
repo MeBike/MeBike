@@ -47,7 +47,7 @@ export const ENDPOINT = {
     },
     BIKE : {
         BASE : "/bikes",
-        STATS_SUMMARY : "/bikes/stats/status-counts",
+        STATUS_COUNT : "/bikes/stats/status-counts",
         STATS_BIKE : (id : string) => `/bikes/${id}/stats/summary`,
         STATS_HIGHEST_REVENUE : "/bikes/stats/highest-revenue",
         ID : (id : string) => `/bikes/${id}`,
@@ -61,6 +61,8 @@ export const ENDPOINT = {
     },
     RENTAL : {
         BASE : "/admin/rentals",
+        STAFF_ID : (id : string) => `/staff/rentals/${id}`,
+        STAFF : "/staff/rentals",
         ID : (rentalId : string) => `/admin/rentals/${rentalId}`,
         GET_SUMMARY : "/rentals/stats/summary",
     },
@@ -70,6 +72,8 @@ export const ENDPOINT = {
     },
     RESERVATION : {
         BASE : "/admin/reservations",
+        STAFF : "/staff/reservations",
+        STAFF_ID : (id:string) => `/staff/reservations/${id}`,
         ID : (reservationId : string) => `/admin/reservations/${reservationId}`,
         OVERVIEW : "/reservations/stats/summary",
     },

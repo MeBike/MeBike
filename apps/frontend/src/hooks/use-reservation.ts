@@ -6,6 +6,7 @@ import { useGetReservationStatsQuery } from "./query/Reservation/useGetReservati
 import { useGetDetailReservationQuery } from "./query/Reservation/useGetDetailReservationQuery";
 import type { ReservationStatus , ReservationOption } from "@/types";
 import { QUERY_KEYS } from "@/constants/queryKey";
+import { useGetAllReservationForStaffQuery, useGetDetailReservationForStaffQuery } from "./query";
 interface ActionProps {
   hasToken: boolean;
   page ?: number;
@@ -16,44 +17,58 @@ interface ActionProps {
 }
 export const useReservationActions = ({ hasToken, page, pageSize, id , status ,option}: ActionProps) => {
   const queryClient = useQueryClient();
-  const { data: allReservations, refetch: isRefetchingAllReservation , isLoading : isLoadingReservations } =
+  const { data: allReservations, refetch: refechAllReservation , isLoading : isLoadingReservations } =
     useGetAllReservationQuery({ page:page, pageSize:pageSize , status : status , option : option });
-  const { data: reservationStats , refetch : isRefetchingReservationStats} = useGetReservationStatsQuery();
-  const { data: detailReservation, refetch: isRefetchingDetailReservation } = useGetDetailReservationQuery(id || "");
+    const { data: allReservationsStaff, refetch: refetchReservationsForStaff , isLoading : isLoadingReservationsStaff } =
+    useGetAllReservationForStaffQuery({ page:page, pageSize:pageSize , status : status , option : option }); 
+  const { data: reservationStats , refetch : refetchReservationsStats} = useGetReservationStatsQuery();
+  const { data: detailReservation, refetch: refetchDetailReservation } = useGetDetailReservationQuery(id || "");
+    const { data: detailReservationForStaff, refetch: refetchDetailReservationForStaff } = useGetDetailReservationForStaffQuery(id || "");
   const fetchAllReservations = useCallback(() => {
     if (!hasToken) {
       return;
     }
-    queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize),
-    });
+    refechAllReservation();
   }, [queryClient, hasToken, page, pageSize , status , option]);
+    const fetchAllReservationsForStaff = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchReservationsForStaff();
+  }, [queryClient, hasToken, page, pageSize , status , option,refetchReservationsForStaff]);
   const fetchReservationStats = useCallback(() => {
     if (!hasToken) {
       return;
     }
-    queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.RESERVATION.RESERVATION_STATS,
-    });
+    refetchReservationsStats();
   }, [queryClient, hasToken]);
   const fetchDetailReservation = useCallback(() => {
     if (!hasToken || !id) {
       return;
     } 
-    queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.RESERVATION.DETAIL_RESERVATION(id),
-    });
-  }, [queryClient, hasToken, id]);
+    refetchDetailReservation()
+  }, [queryClient, hasToken, id,refetchDetailReservation()]);
+  const fetchDetailReservationForStaff = useCallback(() => {
+    if (!hasToken || !id) {
+      return;
+    } 
+    refetchDetailReservationForStaff()
+  }, [queryClient, hasToken, id,refetchDetailReservationForStaff()]);
   return {
     allReservations,
     fetchAllReservations,
-    isRefetchingAllReservation,
+    refechAllReservation,
     reservationStats,
     fetchReservationStats,
-    isRefetchingReservationStats,
+    refetchReservationsStats,
     fetchDetailReservation,
     detailReservation,
-    isRefetchingDetailReservation,
+    refetchDetailReservation,
     isLoadingReservations,
+    fetchAllReservationsForStaff,
+    allReservationsStaff,
+    isLoadingReservationsStaff,
+    detailReservationForStaff,
+    fetchDetailReservationForStaff,
   };
 };
