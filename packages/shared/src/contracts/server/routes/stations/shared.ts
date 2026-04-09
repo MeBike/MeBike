@@ -107,6 +107,27 @@ export const StationErrorResponseSchema = ServerErrorResponseSchema.extend({
   description: "Standard error payload for station endpoints",
 });
 
+export const CreateStationErrorCodeSchema = z.enum([
+  "STATION_NAME_ALREADY_EXISTS",
+  "CAPACITY_LIMIT_EXCEEDED",
+  "CAPACITY_SPLIT_INVALID",
+  "OUTSIDE_SUPPORTED_AREA",
+  "STATION_AGENCY_REQUIRED",
+  "STATION_AGENCY_FORBIDDEN",
+  "STATION_AGENCY_NOT_FOUND",
+  "STATION_AGENCY_ALREADY_ASSIGNED",
+]);
+
+export const CreateStationErrorDetailSchema = StationErrorDetailSchema.extend({
+  code: CreateStationErrorCodeSchema,
+});
+
+export const CreateStationErrorResponseSchema = ServerErrorResponseSchema.extend({
+  details: CreateStationErrorDetailSchema.optional(),
+}).openapi("CreateStationErrorResponse", {
+  description: "Error payload for create station endpoint",
+});
+
 export const StationIdParamSchema = z
   .object({
     stationId: z.union([z.uuidv4().openapi({
