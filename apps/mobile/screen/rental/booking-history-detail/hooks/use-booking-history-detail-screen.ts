@@ -1,11 +1,12 @@
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { spaceScale } from "@theme/metrics";
-import { getBikeDisplayLabel } from "@utils/bike";
 import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { BookingHistoryDetailNavigationProp } from "@/types/navigation";
+
+import { useAuthNext } from "@providers/auth-provider-next";
+import { spaceScale } from "@theme/metrics";
+import { getBikeDisplayLabel } from "@utils/bike";
 
 import { useBookingBikeSwapState } from "./use-booking-bike-swap-state";
 import { useBookingIncidentState } from "./use-booking-incident-state";
@@ -60,7 +61,7 @@ export function useBookingHistoryDetailScreen(bookingId: string) {
       return;
     }
 
-    navigation.navigate("Trạm", {
+    navigation.navigate("StationSelectFlow", {
       selectionMode: "rental-return-slot",
       rentalId: rental.detail.rental.id,
       currentReturnStationId: rental.detail.returnSlot?.stationId,
@@ -72,7 +73,7 @@ export function useBookingHistoryDetailScreen(bookingId: string) {
       return;
     }
 
-    navigation.navigate("Trạm", {
+    navigation.navigate("StationSelectFlow", {
       selectionMode: "rental-bike-swap",
       rentalId: rental.detail.rental.id,
       currentBikeSwapStationId: bikeSwap.isBikeSwapPending

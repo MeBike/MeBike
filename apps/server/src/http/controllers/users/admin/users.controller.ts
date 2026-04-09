@@ -6,6 +6,7 @@ import {
 } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
+import { adminCreateAgencyAccountUseCase } from "@/domain/agency-account-provisioning";
 import { hashPassword } from "@/domain/auth/services/auth.service";
 import { withLoggedCause } from "@/domain/shared";
 import { TechnicianTeamQueryRepository } from "@/domain/technician-teams";
@@ -226,9 +227,35 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
 
 const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
   const body = c.req.valid("json");
-  const eff = withLoggedCause(adminCreateUserUseCase(body), routeContext(users.adminCreate));
+  const result = body.role === "AGENCY"
+    ? await c.var.runPromise(
+        withLoggedCause(
+          adminCreateAgencyAccountUseCase({
+            requesterEmail: body.requesterEmail,
+            requesterPhone: body.requesterPhone ?? null,
+            agencyName: body.agencyName,
+            agencyAddress: body.agencyAddress ?? null,
+            agencyContactPhone: body.agencyContactPhone ?? null,
+            stationName: body.stationName,
+            stationAddress: body.stationAddress,
+            stationLatitude: body.stationLatitude,
+            stationLongitude: body.stationLongitude,
+            stationTotalCapacity: body.stationTotalCapacity,
+            stationPickupSlotLimit: body.stationPickupSlotLimit ?? null,
+            stationReturnSlotLimit: body.stationReturnSlotLimit ?? null,
+            description: body.description ?? null,
+            reviewedByUserId: c.var.currentUser!.userId,
+          }),
+          routeContext(users.adminCreate),
+        ).pipe(Effect.either),
+      )
+    : await c.var.runPromise(
+        withLoggedCause(
+          adminCreateUserUseCase(body),
+          routeContext(users.adminCreate),
+        ).pipe(Effect.either),
+      );
 
-  const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
       c.json<UsersContracts.AdminUserDetailResponse, 201>(mapUserDetail(right), 201)),
@@ -258,6 +285,46 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
               error: UsersContracts.userErrorMessages.INVALID_ORG_ASSIGNMENT,
               details: {
                 code: UsersContracts.UserErrorCodeSchema.enum.INVALID_ORG_ASSIGNMENT,
+              },
+            },
+            400,
+          )),
+        Match.tag("StationNameAlreadyExists", () =>
+          c.json<UsersContracts.UserErrorResponse, 400>(
+            {
+              error: UsersContracts.userErrorMessages.STATION_NAME_ALREADY_EXISTS,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.STATION_NAME_ALREADY_EXISTS,
+              },
+            },
+            400,
+          )),
+        Match.tag("StationCapacityLimitExceeded", () =>
+          c.json<UsersContracts.UserErrorResponse, 400>(
+            {
+              error: UsersContracts.userErrorMessages.CAPACITY_LIMIT_EXCEEDED,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.CAPACITY_LIMIT_EXCEEDED,
+              },
+            },
+            400,
+          )),
+        Match.tag("StationCapacitySplitInvalid", () =>
+          c.json<UsersContracts.UserErrorResponse, 400>(
+            {
+              error: UsersContracts.userErrorMessages.CAPACITY_SPLIT_INVALID,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.CAPACITY_SPLIT_INVALID,
+              },
+            },
+            400,
+          )),
+        Match.tag("StationOutsideSupportedArea", () =>
+          c.json<UsersContracts.UserErrorResponse, 400>(
+            {
+              error: UsersContracts.userErrorMessages.OUTSIDE_SUPPORTED_AREA,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.OUTSIDE_SUPPORTED_AREA,
               },
             },
             400,

@@ -1,6 +1,9 @@
 import type { AgenciesContracts } from "@mebike/shared";
 
-import type { AgencyRow } from "@/domain/agencies";
+import type {
+  AgencyOperationalStats,
+  AgencyRow,
+} from "@/domain/agencies";
 
 function toAgencyContract(
   row: AgencyRow,
@@ -35,4 +38,21 @@ export function toAgencyDetail(
   row: AgencyRow,
 ): AgenciesContracts.AgencyDetailResponse {
   return toAgencyContract(row);
+}
+
+export function toAgencyOperationalStats(
+  stats: AgencyOperationalStats,
+): AgenciesContracts.AgencyOperationalStatsResponse {
+  return {
+    agency: toAgencySummary(stats.agency),
+    period: {
+      from: stats.period.from.toISOString(),
+      to: stats.period.to.toISOString(),
+    },
+    operators: stats.operators,
+    currentStation: stats.currentStation,
+    pickups: stats.pickups,
+    returns: stats.returns,
+    incidents: stats.incidents,
+  };
 }

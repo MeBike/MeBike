@@ -12,8 +12,6 @@ export type PricingPolicyRow = {
   readonly depositRequired: PricingDecimal;
   readonly lateReturnCutoff: Date;
   readonly status: AccountStatus;
-  readonly activeFrom: Date | null;
-  readonly activeTo: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };

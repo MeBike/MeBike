@@ -1,6 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import {
+  CreateStationErrorResponseSchema,
   CreateStationBodySchema,
   StationErrorCodeSchema,
   StationErrorResponseSchema,
@@ -32,7 +33,7 @@ export const createStation = createRoute({
       description: "Invalid input or duplicate name",
       content: {
         "application/json": {
-          schema: StationErrorResponseSchema,
+          schema: CreateStationErrorResponseSchema,
           examples: {
             DuplicateName: {
               value: {
@@ -88,7 +89,45 @@ export const updateStation = createRoute({
     400: {
       description: "Invalid input or duplicate name",
       content: {
-        "application/json": { schema: StationErrorResponseSchema },
+        "application/json": {
+          schema: StationErrorResponseSchema,
+          examples: {
+            CapacityBelowActiveUsage: {
+              value: {
+                error: "Station capacity cannot be lower than bikes and active return slots already assigned",
+                details: {
+                  code: StationErrorCodeSchema.enum.CAPACITY_BELOW_ACTIVE_USAGE,
+                  stationId: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+                  totalCapacity: 2,
+                  totalBikes: 2,
+                  activeReturnSlots: 1,
+                },
+              },
+            },
+            ReturnSlotLimitBelowActiveReservations: {
+              value: {
+                error: "Return slot limit cannot be lower than active return slots",
+                details: {
+                  code: StationErrorCodeSchema.enum.RETURN_SLOT_LIMIT_BELOW_ACTIVE_RESERVATIONS,
+                  stationId: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+                  returnSlotLimit: 0,
+                  activeReturnSlots: 1,
+                },
+              },
+            },
+            PickupSlotLimitBelowPendingReservations: {
+              value: {
+                error: "Pickup slot limit cannot be lower than pending reservations",
+                details: {
+                  code: StationErrorCodeSchema.enum.PICKUP_SLOT_LIMIT_BELOW_PENDING_RESERVATIONS,
+                  stationId: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+                  pickupSlotLimit: 0,
+                  pendingReservations: 1,
+                },
+              },
+            },
+          },
+        },
       },
     },
     404: {

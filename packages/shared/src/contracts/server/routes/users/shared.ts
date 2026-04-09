@@ -116,7 +116,7 @@ const AdminUserOrgAssignmentInputSchema = z
     }
   });
 
-export const AdminCreateUserRequestSchema = z.object({
+const AdminCreateStandardUserRequestSchema = z.object({
   fullname: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(8),
@@ -129,7 +129,7 @@ export const AdminCreateUserRequestSchema = z.object({
   verify: VerifyStatusSchema.optional(),
   orgAssignment: AdminUserOrgAssignmentInputSchema.optional().nullable(),
   nfcCardUid: z.string().optional().nullable(),
-}).openapi("AdminCreateUserRequest", {
+}).openapi("AdminCreateStandardUserRequest", {
   example: {
     fullname: "Tran Staff",
     email: "tran.staff@example.com",
@@ -147,6 +147,67 @@ export const AdminCreateUserRequestSchema = z.object({
     nfcCardUid: null,
   },
 });
+
+const AgencyStationLatitudeSchema = z.number().min(-90).max(90);
+const AgencyStationLongitudeSchema = z.number().min(-180).max(180);
+
+export const AdminCreateAgencyUserRequestSchema = z.object({
+  role: z.literal("AGENCY"),
+  requesterEmail: z.string().email(),
+  requesterPhone: OptionalPhoneNumberNullableSchema,
+  agencyName: z.string().trim().min(1),
+  agencyAddress: OptionalTrimmedNullableStringSchema,
+  agencyContactPhone: OptionalPhoneNumberNullableSchema,
+  stationName: z.string().trim().min(1),
+  stationAddress: z.string().trim().min(1),
+  stationLatitude: AgencyStationLatitudeSchema,
+  stationLongitude: AgencyStationLongitudeSchema,
+  stationTotalCapacity: z.number().int().min(1),
+  stationPickupSlotLimit: z.number().int().min(0).optional(),
+  stationReturnSlotLimit: z.number().int().min(0).optional(),
+  description: OptionalTrimmedNullableStringSchema,
+}).superRefine((value, ctx) => {
+  const pickupSlotLimit = value.stationPickupSlotLimit ?? value.stationTotalCapacity;
+  const returnSlotLimit = value.stationReturnSlotLimit ?? value.stationTotalCapacity;
+
+  if (pickupSlotLimit > value.stationTotalCapacity) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["stationPickupSlotLimit"],
+      message: "stationPickupSlotLimit must be less than or equal to stationTotalCapacity",
+    });
+  }
+
+  if (returnSlotLimit > value.stationTotalCapacity) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["stationReturnSlotLimit"],
+      message: "stationReturnSlotLimit must be less than or equal to stationTotalCapacity",
+    });
+  }
+}).openapi("AdminCreateAgencyUserRequest", {
+  example: {
+    role: "AGENCY",
+    requesterEmail: "ops.metro.thuduc@example.com",
+    requesterPhone: "0912345678",
+    agencyName: "Metro Agency Thu Duc",
+    agencyAddress: "Tret toa nha Metro Thu Duc",
+    agencyContactPhone: "0987654321",
+    stationName: "Ga Metro Thu Duc",
+    stationAddress: "01 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+    stationLatitude: 10.8486,
+    stationLongitude: 106.7717,
+    stationTotalCapacity: 20,
+    stationPickupSlotLimit: 12,
+    stationReturnSlotLimit: 18,
+    description: "Admin tao truc tiep doi tac agency moi.",
+  },
+});
+
+export const AdminCreateUserRequestSchema = z.union([
+  AdminCreateStandardUserRequestSchema,
+  AdminCreateAgencyUserRequestSchema,
+]).openapi("AdminCreateUserRequest");
 
 export const AdminUpdateUserRequestSchema = z.object({
   fullname: z.string().min(1).optional(),

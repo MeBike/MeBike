@@ -41,7 +41,7 @@ export function RentalActionBar({
       </AppText>
 
       <XStack gap="$3">
-        <AppButton flex={1} onPress={onChooseReturnStation} tone="primary ">
+        <AppButton flex={1} onPress={onChooseReturnStation} tone="primary">
           <XStack alignItems="center" gap="$2">
             <AppText tone="inverted" variant="actionLabel">
               {hasReturnSlot ? "Đổi bãi" : "Giữ chỗ"}

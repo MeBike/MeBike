@@ -1,17 +1,10 @@
 import { Effect, Layer, Option } from "effect";
-import crypto from "node:crypto";
 
 import type { PageResult } from "@/domain/shared/pagination";
-import type { PrismaClient, UserRole } from "generated/prisma/client";
+import type { PrismaClient } from "generated/prisma/client";
 
-import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
-import { makeStationRepository, makeStationService } from "@/domain/stations";
-import { makeTechnicianTeamQueryRepository } from "@/domain/technician-teams";
-import { JobTypes } from "@/infrastructure/jobs/job-types";
-import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
+import { makeAgencyAccountProvisionService } from "@/domain/agency-account-provisioning";
 import { Prisma } from "@/infrastructure/prisma";
-import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
-import { buildAgencyApprovedEmail } from "@/lib/email-templates";
 
 import type {
   AgencyRequestNotFound,
@@ -24,16 +17,11 @@ import type {
   AgencyRequestPageRequest,
   AgencyRequestRow,
   ApproveAgencyRequestInput,
-  FinalizeAgencyRequestApprovalInput,
   ReviewAgencyRequestInput,
   SubmitAgencyRequestInput,
 } from "../models";
 import type { AgencyRequestRepo } from "../repository/agency-request.repository";
 
-import { hashPassword } from "../../auth/services/auth.service";
-import { makeUserCommandRepository } from "../../users/repository/user-command.repository";
-import { makeUserQueryRepository } from "../../users/repository/user-query.repository";
-import { makeUserCommandService } from "../../users/services/user-command.service";
 import {
   AgencyRequestNotFound as AgencyRequestNotFoundError,
   AgencyRequestNotOwned as AgencyRequestNotOwnedError,
@@ -44,14 +32,6 @@ import {
   AgencyRequestRepository,
   makeAgencyRequestRepository,
 } from "../repository/agency-request.repository";
-
-type AgencyAccountCredentials = {
-  readonly email: string;
-  readonly username: string;
-  readonly password: string;
-  readonly fullName: string;
-  readonly role: UserRole;
-};
 
 export type AgencyRequestService = {
   getById: (
@@ -122,6 +102,8 @@ function makeAgencyRequestService(
   repo: AgencyRequestRepo,
   client: PrismaClient,
 ): AgencyRequestService {
+  const provisionService = makeAgencyAccountProvisionService(client);
+
   return {
     getById: id => repo.findById(id),
     getByIdOrFail: id =>
@@ -138,135 +120,51 @@ function makeAgencyRequestService(
     listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
     submit: input => repo.submit(input),
     approve: (agencyRequestId, input) =>
-      runPrismaTransaction(client, tx =>
-        Effect.gen(function* () {
-          const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
-          const txAgencyRepo = makeAgencyRepository(tx);
-          const txAgencyService = makeAgencyService(txAgencyRepo);
-          const txStationService = makeStationService(makeStationRepository(tx), {
-            agencyRepo: txAgencyRepo,
-          });
-          const txUserCommandService = makeUserCommandService({
-            agencyRepo: txAgencyRepo,
-            commandRepo: makeUserCommandRepository(tx),
-            queryRepo: makeUserQueryRepository(tx),
-            stationRepo: makeStationRepository(tx),
-            technicianTeamQueryRepo: makeTechnicianTeamQueryRepository(tx),
-          });
+      Effect.gen(function* () {
+        const txAgencyRequestRepo = makeAgencyRequestRepository(client);
+        const found = yield* txAgencyRequestRepo.findById(agencyRequestId);
 
-          const found = yield* txAgencyRequestRepo.findById(agencyRequestId);
-          if (Option.isNone(found)) {
-            return yield* Effect.fail(
-              new AgencyRequestNotFoundError({ agencyRequestId }),
-            );
-          }
-
-          const agencyRequest = found.value;
-          if (agencyRequest.status !== "PENDING") {
-            return yield* Effect.fail(
-              new InvalidAgencyRequestStatusTransitionError({
-                agencyRequestId: agencyRequest.id,
-                currentStatus: agencyRequest.status,
-                nextStatus: "APPROVED",
-              }),
-            );
-          }
-
-          const createdAgency = yield* txAgencyService.create({
-            name: agencyRequest.agencyName,
-            contactPhone:
-              agencyRequest.agencyContactPhone ?? agencyRequest.requesterPhone,
-          });
-
-          if (
-            !agencyRequest.stationName
-            || !agencyRequest.stationAddress
-            || agencyRequest.stationLatitude == null
-            || agencyRequest.stationLongitude == null
-            || agencyRequest.stationTotalCapacity == null
-          ) {
-            return yield* Effect.fail(
-              new AgencyRequestRepositoryErrorData({
-                operation: "approve.createStation.missingStationMetadata",
-                cause: new Error(
-                  `Agency request ${agencyRequest.id} is missing station metadata`,
-                ),
-              }),
-            );
-          }
-
-          yield* txStationService.createStation({
-            name: agencyRequest.stationName,
-            address: agencyRequest.stationAddress,
-            stationType: "AGENCY",
-            agencyId: createdAgency.id,
-            totalCapacity: agencyRequest.stationTotalCapacity,
-            pickupSlotLimit:
-              agencyRequest.stationPickupSlotLimit ?? agencyRequest.stationTotalCapacity,
-            returnSlotLimit:
-              agencyRequest.stationReturnSlotLimit ?? agencyRequest.stationTotalCapacity,
-            latitude: agencyRequest.stationLatitude,
-            longitude: agencyRequest.stationLongitude,
-          }).pipe(
-            Effect.mapError(cause =>
-              new AgencyRequestRepositoryErrorData({
-                operation: "approve.createStation",
-                cause,
-              })),
+        if (Option.isNone(found)) {
+          return yield* Effect.fail(
+            new AgencyRequestNotFoundError({ agencyRequestId }),
           );
+        }
 
-          const credentials = yield* makeAgencyAccountCredentials({
-            agencyId: createdAgency.id,
-            agencyName: createdAgency.name,
-          });
-
-          const passwordHash = yield* hashPassword(credentials.password);
-          const createdAgencyUser = yield* txUserCommandService.create({
-            fullname: credentials.fullName,
-            email: credentials.email,
-            passwordHash,
-            username: credentials.username,
-            role: credentials.role,
-            accountStatus: "ACTIVE",
-            verify: "VERIFIED",
-            orgAssignment: {
-              agencyId: createdAgency.id,
-            },
-          });
-
-          const finalizeApproveInput: FinalizeAgencyRequestApprovalInput = {
-            reviewedByUserId: input.reviewedByUserId,
-            description: input.description,
-            approvedAgencyId: createdAgency.id,
-            createdAgencyUserId: createdAgencyUser.id,
-          };
-
-          const updatedAgencyRequest = yield* txAgencyRequestRepo.approve(
-            agencyRequest.id,
-            finalizeApproveInput,
+        const agencyRequest = found.value;
+        if (agencyRequest.status !== "PENDING") {
+          return yield* Effect.fail(
+            new InvalidAgencyRequestStatusTransitionError({
+              agencyRequestId: agencyRequest.id,
+              currentStatus: agencyRequest.status,
+              nextStatus: "APPROVED",
+            }),
           );
+        }
 
-          const approvalEmail = buildAgencyApprovedEmail({
-            agencyName: createdAgency.name,
-            loginEmail: credentials.email,
-            temporaryPassword: credentials.password,
-          });
+        if (
+          !agencyRequest.stationName
+          || !agencyRequest.stationAddress
+          || agencyRequest.stationLatitude == null
+          || agencyRequest.stationLongitude == null
+          || agencyRequest.stationTotalCapacity == null
+        ) {
+          return yield* Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation.missingStationMetadata",
+              cause: new Error(
+                `Agency request ${agencyRequest.id} is missing station metadata`,
+              ),
+            }),
+          );
+        }
 
-          yield* enqueueOutboxJobInTx(tx, {
-            type: JobTypes.EmailSend,
-            dedupeKey: `agency-request-approved:${agencyRequest.id}`,
-            payload: {
-              version: 1,
-              kind: "raw",
-              to: agencyRequest.requesterEmail,
-              subject: approvalEmail.subject,
-              html: approvalEmail.html,
-            },
-            runAt: new Date(),
-          });
+        const provisioned = yield* provisionService.approveExistingRequest(
+          agencyRequest,
+          input,
+        );
 
-          return updatedAgencyRequest;
-        })).pipe(
+        return provisioned.agencyRequest;
+      }).pipe(
         Effect.catchTag("AgencyRepositoryError", err =>
           Effect.fail(
             new AgencyRequestRepositoryErrorData({
@@ -309,6 +207,62 @@ function makeAgencyRequestService(
               cause: err,
             }),
           )),
+        Effect.catchTag("StationNameAlreadyExists", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
+        Effect.catchTag("StationOutsideSupportedArea", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
+        Effect.catchTag("StationCapacityLimitExceeded", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
+        Effect.catchTag("StationCapacitySplitInvalid", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
+        Effect.catchTag("StationAgencyRequired", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
+        Effect.catchTag("StationAgencyForbidden", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
+        Effect.catchTag("StationAgencyNotFound", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
+        Effect.catchTag("StationAgencyAlreadyAssigned", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
         Effect.catchTag("PrismaTransactionError", err =>
           Effect.fail(
             new AgencyRequestRepositoryErrorData({
@@ -343,26 +297,6 @@ function makeAgencyRequestService(
         return yield* repo.cancel(agencyRequest.id);
       }),
   };
-}
-
-function makeAgencyAccountCredentials(args: {
-  agencyId: string;
-  agencyName: string;
-}): Effect.Effect<AgencyAccountCredentials> {
-  return Effect.sync(() => {
-    const compactAgencyId = args.agencyId.replace(/-/g, "");
-    const username = `agency_${compactAgencyId}`;
-    const email = `agency+${compactAgencyId}@accounts.mebike.local`;
-    const password = `Mbk!${crypto.randomBytes(12).toString("base64url")}`;
-
-    return {
-      email,
-      username,
-      password,
-      fullName: `Agency Admin - ${args.agencyName}`,
-      role: "AGENCY",
-    } as const;
-  });
 }
 
 const makeAgencyRequestServiceEffect = Effect.gen(function* () {

@@ -21,8 +21,6 @@ function makePolicy(overrides: Partial<PricingPolicyRow> = {}): PricingPolicyRow
     depositRequired: toPrismaDecimal("500000"),
     lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
     status: "ACTIVE",
-    activeFrom: null,
-    activeTo: null,
     createdAt: new Date("2026-03-22T00:00:00.000Z"),
     updatedAt: new Date("2026-03-22T00:00:00.000Z"),
     ...overrides,
