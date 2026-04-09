@@ -38,7 +38,7 @@ describe("manage-users agency provision e2e", () => {
   function adminAuthHeader() {
     const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
     return {
-      Authorization: `Bearer ${token}`,
+      "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
     };
   }

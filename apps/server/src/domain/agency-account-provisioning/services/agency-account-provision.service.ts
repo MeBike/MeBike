@@ -1,18 +1,7 @@
 import { Effect } from "effect";
 import crypto from "node:crypto";
 
-import type {
-  Prisma as PrismaTypes,
-  PrismaClient,
-  UserRole,
-} from "generated/prisma/client";
-
-import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
 import type { AgencyRequestRow } from "@/domain/agency-requests/models";
-import { makeAgencyRequestRepository } from "@/domain/agency-requests/repository/agency-request.repository";
-import { hashPassword } from "@/domain/auth/services/auth.service";
-import { makeReservationQueryRepository } from "@/domain/reservations";
-import { makeStationRepository, makeStationService } from "@/domain/stations";
 import type {
   StationAgencyAlreadyAssigned,
   StationAgencyForbidden,
@@ -23,7 +12,6 @@ import type {
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
 } from "@/domain/stations/errors";
-import { makeTechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import type {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
@@ -31,6 +19,18 @@ import type {
   StationRoleAssignmentLimitExceeded,
   TechnicianTeamMemberLimitExceeded,
 } from "@/domain/users/domain-errors";
+import type {
+  PrismaClient,
+  Prisma as PrismaTypes,
+  UserRole,
+} from "generated/prisma/client";
+
+import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
+import { makeAgencyRequestRepository } from "@/domain/agency-requests/repository/agency-request.repository";
+import { hashPassword } from "@/domain/auth/services/auth.service";
+import { makeReservationQueryRepository } from "@/domain/reservations";
+import { makeStationRepository, makeStationService } from "@/domain/stations";
+import { makeTechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import { makeUserCommandRepository } from "@/domain/users/repository/user-command.repository";
 import { makeUserQueryRepository } from "@/domain/users/repository/user-query.repository";
 import { makeUserCommandService } from "@/domain/users/services/user-command.service";
@@ -201,35 +201,30 @@ export function makeAgencyAccountProvisionService(
     approveExistingRequest: (agencyRequest, input) =>
       runPrismaTransaction(client, tx =>
         provisionFromPendingRequestInTx(tx, agencyRequest, input)),
-    createFromAdmin: input =>
-      runPrismaTransaction(client, tx =>
-        Effect.gen(function* () {
-          const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
-          const pendingAgencyRequest = yield* txAgencyRequestRepo.submit({
-            requesterUserId: input.requesterUserId ?? null,
-            requesterEmail: input.requesterEmail,
-            requesterPhone: input.requesterPhone ?? null,
-            agencyName: input.agencyName,
-            agencyAddress: input.agencyAddress ?? null,
-            agencyContactPhone: input.agencyContactPhone ?? null,
-            stationName: input.stationName,
-            stationAddress: input.stationAddress,
-            stationLatitude: input.stationLatitude,
-            stationLongitude: input.stationLongitude,
-            stationTotalCapacity: input.stationTotalCapacity,
-            stationPickupSlotLimit:
-              input.stationPickupSlotLimit ?? null,
-            stationReturnSlotLimit:
-              input.stationReturnSlotLimit ?? null,
-            description: input.description ?? null,
-          });
+    createFromAdmin: input => runPrismaTransaction(client, tx =>
+      Effect.gen(function* () {
+        const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
+        const pendingAgencyRequest = yield* txAgencyRequestRepo.submit({
+          requesterUserId: input.requesterUserId ?? null,
+          requesterEmail: input.requesterEmail,
+          requesterPhone: input.requesterPhone ?? null,
+          agencyName: input.agencyName,
+          agencyAddress: input.agencyAddress ?? null,
+          agencyContactPhone: input.agencyContactPhone ?? null,
+          stationName: input.stationName,
+          stationAddress: input.stationAddress,
+          stationLatitude: input.stationLatitude,
+          stationLongitude: input.stationLongitude,
+          stationTotalCapacity: input.stationTotalCapacity,
+          stationPickupSlotLimit:
+            input.stationPickupSlotLimit ?? null,
+          stationReturnSlotLimit:
+            input.stationReturnSlotLimit ?? null,
+          description: input.description ?? null,
+        });
 
-          return yield* provisionFromPendingRequestInTx(tx, pendingAgencyRequest, {
-            reviewedByUserId: input.reviewedByUserId,
-            description: input.description,
-          });
-        }),
-      ),
+        return yield* provisionFromPendingRequestInTx(tx, pendingAgencyRequest, { reviewedByUserId: input.reviewedByUserId, description: input.description });
+      })),
   };
 }
 

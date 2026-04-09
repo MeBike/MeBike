@@ -4,14 +4,14 @@ import type {
   AgencyOperationalStats,
   AgencyStatsPeriod,
 } from "../models";
-import type { AgencyRepo } from "../repository/agency.repository";
 import type { AgencyStatsRepo } from "../repository/agency-stats.repository";
+import type { AgencyRepo } from "../repository/agency.repository";
 
 import { AgencyNotFound } from "../domain-errors";
-import { AgencyRepository } from "../repository/agency.repository";
 import {
   AgencyStatsRepository,
 } from "../repository/agency-stats.repository";
+import { AgencyRepository } from "../repository/agency.repository";
 
 type AgencyStatsInput = {
   readonly from?: Date;

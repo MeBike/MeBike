@@ -5,18 +5,18 @@ export {
   AgencyRequestServiceLayer,
 } from "./features/agency-request.layers";
 export {
-  AuthDepsLive,
-  AuthReposLive,
-  AuthServiceLayer,
-  AuthUserQueryServiceLayer,
-} from "./features/auth.layers";
-export {
   AgencyDepsLive,
   AgencyReposLive,
   AgencyServiceLayer,
   AgencyStatsReposLive,
   AgencyStatsServiceLayer,
 } from "./features/agency.layers";
+export {
+  AuthDepsLive,
+  AuthReposLive,
+  AuthServiceLayer,
+  AuthUserQueryServiceLayer,
+} from "./features/auth.layers";
 export {
   BikeDepsLive,
   BikeReposLive,

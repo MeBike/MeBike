@@ -1,10 +1,10 @@
 import { Layer } from "effect";
 
 import {
-  AgencyStatsRepositoryLive,
-  AgencyStatsServiceLive,
   AgencyRepositoryLive,
   AgencyServiceLive,
+  AgencyStatsRepositoryLive,
+  AgencyStatsServiceLive,
 } from "@/domain/agencies";
 
 import { PrismaLive } from "../infra.layers";

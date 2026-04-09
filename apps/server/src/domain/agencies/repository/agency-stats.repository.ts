@@ -4,6 +4,8 @@ import type {
   PrismaClient,
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
+
+import { Prisma } from "@/infrastructure/prisma";
 import {
   BikeStatus,
   IncidentSeverity,
@@ -11,8 +13,6 @@ import {
   RentalStatus,
   UserRole,
 } from "generated/prisma/client";
-
-import { Prisma } from "@/infrastructure/prisma";
 
 import type {
   AgencyCurrentStationStats,
@@ -54,8 +54,8 @@ function toCountMap<T extends string>(
     _count?:
       | true
       | {
-          _all?: number | null;
-        }
+        _all?: number | null;
+      }
       | null;
   }>,
 ) {

@@ -60,7 +60,7 @@ describe("admin agency stats routing e2e", () => {
   function authHeader(userId: string, role: "ADMIN" | "STAFF") {
     const token = fixture.auth.makeAccessToken({ userId, role });
     return {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
   }
 
