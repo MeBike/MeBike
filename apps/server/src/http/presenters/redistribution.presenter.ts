@@ -29,26 +29,6 @@ function mapStationDetail(station: any) {
   };
 }
 
-function mapAgencySummary(agency: any) {
-  if (!agency)
-    return null;
-  return {
-    id: agency.id,
-    name: agency.name,
-  };
-}
-
-function mapAgencyDetail(agency: any) {
-  if (!agency)
-    return null;
-  return {
-    id: agency.id,
-    name: agency.name,
-    address: agency.address,
-    updatedAt: agency.updatedAt.toISOString(),
-  };
-}
-
 function mapUserSummary(user: any) {
   if (!user)
     return null;
@@ -120,8 +100,7 @@ export function toContractRedistributionRequest(
     requestedByUserId: row.requestedByUserId,
     approvedByUserId: row.approvedByUserId ?? undefined,
     sourceStationId: row.sourceStationId,
-    targetStationId: row.targetStationId ?? undefined,
-    targetAgencyId: row.targetAgencyId ?? undefined,
+    targetStationId: row.targetStationId,
     requestedQuantity: row.requestedQuantity,
     reason: row.reason ?? "",
     items: mapRequestItemArray(row.items),
@@ -141,8 +120,7 @@ export function toContractRedistributionRequestListItem(
     requestedByUser: mapUserSummary(row.requestedByUser)!,
     approvedByUser: mapUserSummary(row.approvedByUser),
     sourceStation: mapStationSummary(row.sourceStation)!,
-    targetStation: mapStationSummary(row.targetStation),
-    targetAgency: mapAgencySummary(row.targetAgency),
+    targetStation: mapStationSummary(row.targetStation)!,
     items: mapRequestItemArray(row.items),
     requestedQuantity: row.requestedQuantity ?? undefined,
     reason: row.reason,
@@ -162,8 +140,7 @@ export function toContractRedistributionRequestDetail(
     requestedByUser: mapUserDetail(row.requestedByUser)!,
     approvedByUser: mapUserDetail(row.approvedByUser),
     sourceStation: mapStationDetail(row.sourceStation)!,
-    targetStation: mapStationDetail(row.targetStation),
-    targetAgency: mapAgencyDetail(row.targetAgency),
+    targetStation: mapStationDetail(row.targetStation)!,
     items: mapDetailedRequestItemArray(row.items),
     requestedQuantity: row.requestedQuantity ?? undefined,
     reason: row.reason,

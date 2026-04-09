@@ -10,8 +10,10 @@ import {
 import {
   requireAdminMiddleware,
   requireManagerMiddleware,
+  requireRolesMiddleware,
   requireStaffMiddleware,
 } from "@/http/middlewares/auth";
+import { UserRole } from "generated/prisma/enums";
 
 export function registerRedistributionRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const redistribution = serverRoutes.redistribution;
@@ -32,13 +34,13 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   // Staff routes
   const createRequestRoute = {
     ...redistribution.createRedistributionRequest,
-    middleware: [requireStaffMiddleware] as const,
+    middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
   } satisfies RouteConfig;
   app.openapi(createRequestRoute, RedistributionStaffController.createRedistributionRequest);
 
   const cancelRequestRoute = {
     ...redistribution.cancelRedistributionRequest,
-    middleware: [requireStaffMiddleware] as const,
+    middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
   } satisfies RouteConfig;
   app.openapi(cancelRequestRoute, RedistributionStaffController.cancelRedistributionRequest);
 
@@ -56,7 +58,7 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
 
   const startTransitionRoute = {
     ...redistribution.startTransition,
-    middleware: [requireStaffMiddleware] as const,
+    middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
   } satisfies RouteConfig;
   app.openapi(startTransitionRoute, RedistributionStaffController.startTransition);
 
@@ -75,13 +77,13 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
 
   const managerApproveRoute = {
     ...redistribution.approveRedistributionRequest,
-    middleware: [requireManagerMiddleware] as const,
+    middleware: [requireRolesMiddleware([UserRole.MANAGER, UserRole.AGENCY])] as const,
   } satisfies RouteConfig;
   app.openapi(managerApproveRoute, RedistributionManagerController.approveRedistributionRequest);
 
   const managerRejectRoute = {
     ...redistribution.rejectRedistributionRequest,
-    middleware: [requireManagerMiddleware] as const,
+    middleware: [requireRolesMiddleware([UserRole.MANAGER, UserRole.AGENCY])] as const,
   } satisfies RouteConfig;
   app.openapi(managerRejectRoute, RedistributionManagerController.rejectRedistributionRequest);
 }

@@ -6,7 +6,6 @@ import type { RedistributionStatus } from "generated/prisma/enums";
 
 import type { RedistributionRepositoryError } from "../domain-errors";
 import type {
-  AdminRedistributionFilter,
   MyInStationRedistributionFilter,
   RedistributionRequestDetailRow,
   RedistributionRequestRow,
@@ -17,8 +16,7 @@ import type {
 export type CreateRedistributionRequestInput = {
   requestedByUserId: string;
   sourceStationId: string;
-  targetStationId?: string | null;
-  targetAgencyId?: string | null;
+  targetStationId: string;
   requestedQuantity: number;
   reason?: string | null;
   bikeIds?: string[];

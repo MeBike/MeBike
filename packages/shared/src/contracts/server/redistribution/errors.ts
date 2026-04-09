@@ -30,7 +30,9 @@ export const RedistributionReqErrorCodeSchema = z.enum(redistributionReqErrorCod
 export const RedistributionReqErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: RedistributionReqErrorCodeSchema,
   redistributionId: z.uuidv7().optional(),
-  stationId: z.string().optional(),
+  sourceStationId: z.string().optional(),
+  targetStationId: z.string().optional(),
+  workingStationId: z.string().optional(),
   userId: z.string().optional(),
   required: z.number().optional(),
   available: z.number().optional(),

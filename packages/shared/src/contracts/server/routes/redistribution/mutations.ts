@@ -20,7 +20,7 @@ import {
 
 export const createRedistributionRequest = createRoute({
   method: "post",
-  path: "/v1/staff/redistribution-requests",
+  path: "/v1/redistribution-requests",
   tags: ["Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -114,8 +114,9 @@ export const createRedistributionRequest = createRoute({
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_REDISTRIBUTION_CREATION,
-                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  requestedByUserId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   sourceStationId: "019b6656-ebc9-7dbc-b0d3-3c62d96042d9",
+                  workingStationId: "019b6656-ebbb-7dbc-74d3-3c62d960e566",
                 },
               },
             },
@@ -128,7 +129,7 @@ export const createRedistributionRequest = createRoute({
 
 export const cancelRedistributionRequest = createRoute({
   method: "post",
-  path: "/v1/staff/redistribution-requests/{requestId}/cancel",
+  path: "/v1/redistribution-requests/{requestId}/cancel",
   tags: ["Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -181,15 +182,15 @@ export const cancelRedistributionRequest = createRoute({
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
           examples: {
-            ...forbiddenResponse("Staff").content["application/json"].examples,
             UnauthorizedRedistributionCancellation: {
               value: {
                 error: "Unauthorized redistribution cancellation",
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_REDISTRIBUTION_CANCELLATION,
-                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  requestedByUserId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  cancelledByUserId: "019dadf3-dbbb-7185-b741-eee4e592a403",
                 },
               },
             },
@@ -213,7 +214,7 @@ export const cancelRedistributionRequest = createRoute({
 
 export const approveRedistributionRequest = createRoute({
   method: "post",
-  path: "/v1/manager/redistribution-requests/{requestId}/approve",
+  path: "/v1/redistribution-requests/{requestId}/approve",
   tags: ["Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -244,7 +245,7 @@ export const approveRedistributionRequest = createRoute({
                   code: RedistributionReqErrorCodeSchema.enum
                     .CANNOT_APPROVE_NON_PENDING_REDISTRIBUTION,
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
-                  status: "APPROVED",
+                  currentStatus: "APPROVED",
                 },
               },
             },
@@ -259,7 +260,6 @@ export const approveRedistributionRequest = createRoute({
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
           examples: {
-            ...forbiddenResponse("Manager").content["application/json"].examples,
             UnauthorizedRedistributionApproval: {
               value: {
                 error: "Unauthorized redistribution approval",
@@ -267,7 +267,7 @@ export const approveRedistributionRequest = createRoute({
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_REDISTRIBUTION_APPROVAL,
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
-                  sourceStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  targetStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   workingStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                 },
               },
@@ -292,7 +292,7 @@ export const approveRedistributionRequest = createRoute({
 
 export const rejectRedistributionRequest = createRoute({
   method: "post",
-  path: "/v1/manager/redistribution-requests/{requestId}/reject",
+  path: "/v1/redistribution-requests/{requestId}/reject",
   tags: ["Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -330,7 +330,7 @@ export const rejectRedistributionRequest = createRoute({
                   code: RedistributionReqErrorCodeSchema.enum
                     .CANNOT_REJECT_NON_PENDING_REDISTRIBUTION,
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
-                  status: "APPROVED",
+                  currentStatus: "APPROVED",
                 },
               },
             },
@@ -345,15 +345,15 @@ export const rejectRedistributionRequest = createRoute({
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
           examples: {
-            ...forbiddenResponse("Manager").content["application/json"].examples,
             UnauthorizedRedistributionRejection: {
               value: {
                 error: "Unauthorized redistribution rejection",
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_REDISTRIBUTION_REJECTION,
-                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  targetStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  workingStationId: "019d432f-dbbb-7185-b741-eee4e5662134",
                 },
               },
             },
@@ -377,7 +377,7 @@ export const rejectRedistributionRequest = createRoute({
 
 export const startTransition = createRoute({
   method: "post",
-  path: "/v1/staff/redistribution-requests/{requestId}/start-transit",
+  path: "/v1/redistribution-requests/{requestId}/start-transit",
   tags: ["Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -408,7 +408,7 @@ export const startTransition = createRoute({
                   code: RedistributionReqErrorCodeSchema.enum
                     .CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION,
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
-                  status: "PENDING",
+                  currentStatus: "PENDING",
                 },
               },
             },
@@ -423,7 +423,6 @@ export const startTransition = createRoute({
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
           examples: {
-            ...forbiddenResponse("Staff").content["application/json"].examples,
             UnauthorizedRedistributionStartTransit: {
               value: {
                 error: "Unauthorized redistribution start transit",
@@ -456,7 +455,7 @@ export const startTransition = createRoute({
 
 export const confirmRedistributionRequestCompletion = createRoute({
   method: "post",
-  path: "/v1/staff/redistribution-requests/{requestId}/confirm-completion",
+  path: "/v1/redistribution-requests/{requestId}/confirm-completion",
   tags: ["Redistribution Requests"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -509,7 +508,6 @@ export const confirmRedistributionRequestCompletion = createRoute({
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
           examples: {
-            ...forbiddenResponse("Staff").content["application/json"].examples,
             UnauthorizedCompletedRedistributionConfirmation: {
               value: {
                 error: "Unauthorized completed redistribution confirmation",
@@ -517,8 +515,8 @@ export const confirmRedistributionRequestCompletion = createRoute({
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_COMPLETED_REDISTRIBUTION_CONFIRMATION,
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
-                  targetManagerId: "019d53a7-dbbb-7185-b741-ae192a4017b4",
-                  completedByUserId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  targetStationId: "019d53a7-dbbb-7185-b741-ae192a4017b4",
+                  workingStationId: "019d432f-dbbb-7185-b741-eee4e5662134",
                 },
               },
             },

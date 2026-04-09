@@ -1,3 +1,7 @@
+import type {
+  UserRole,
+} from "@mebike/shared";
+
 import {
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
@@ -290,3 +294,19 @@ export const requireTechnicianOrAdminOrUserOrAgencyMiddleware = createMiddleware
     await next();
   },
 );
+
+export function requireRolesMiddleware(roles: UserRole[]) {
+  return createMiddleware(async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (!roles.includes(user.role)) {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  });
+}

@@ -32,13 +32,12 @@ const createRedistributionRequest: RouteHandler<
       return yield* service.createRequestTo({
         requestedByUserId: userId,
         sourceStationId: payload.sourceStationId,
-        targetStationId: payload.targetStationId ?? undefined,
-        targetAgencyId: payload.targetAgencyId ?? undefined,
+        targetStationId: payload.targetStationId,
         requestedQuantity: payload.requestedQuantity,
         reason: payload.reason ?? defaultReason,
       });
     }),
-    "POST /v1/staff/redistribution-requests/",
+    "POST /v1/redistribution-requests/",
   );
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
@@ -78,7 +77,7 @@ const createRedistributionRequest: RouteHandler<
           )),
         Match.tag(
           "UnauthorizedRedistributionCreation",
-          ({ userId, sourceStationId }) =>
+          ({ requestedByUserId, sourceStationId, workingStationId }) =>
             c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
               {
                 error:
@@ -86,8 +85,9 @@ const createRedistributionRequest: RouteHandler<
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .UNAUTHORIZED_REDISTRIBUTION_CREATION,
-                  userId,
+                  requestedByUserId,
                   sourceStationId,
+                  workingStationId,
                 },
               },
               403,
@@ -161,7 +161,7 @@ const cancelRedistributionRequest: RouteHandler<
         reason: payload.reason,
       });
     }),
-    "POST /v1/staff/redistribution-requests/{requestId}/cancel",
+    "POST /v1/redistribution-requests/{requestId}/cancel",
   );
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
@@ -246,7 +246,6 @@ const getRequestListForStaff: RouteHandler<
         {
           status: query.status,
           targetStationId: query.targetStationId,
-          targetAgencyId: query.targetAgencyId,
         },
         {
           page: Number(query.page ?? 1),
@@ -372,7 +371,7 @@ const startTransition: RouteHandler<
       const service = yield* RedistributionServiceTag;
       return yield* service.startTransition({ userId, requestId });
     }),
-    "POST /v1/staff/redistribution-requests/{requestId}/start-transit",
+    "POST /v1/redistribution-requests/{requestId}/start-transit",
   );
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));

@@ -26,8 +26,7 @@ export const RedistributionRequestSchema = z.object({
   requestedByUserId: z.uuidv7(),
   approvedByUserId: z.uuidv7().optional(),
   sourceStationId: z.uuidv7(),
-  targetStationId: z.uuidv7().optional(),
-  targetAgencyId: z.uuidv7().optional(),
+  targetStationId: z.uuidv7(),
   requestedQuantity: z.number(),
   reason: z.string().optional(),
   items: z.array(RedistributionRequestItemSchema),
@@ -58,7 +57,7 @@ export const RedistributionUserDetailSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
-// Station / Agency info for redistribution
+// Station info for redistribution
 export const RedistributionStationSchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
@@ -75,19 +74,7 @@ export const RedistributionStationSchema = z.object({
     .optional(),
 });
 
-export const RedistributionAgencySchema = z.object({
-  id: z.uuidv7(),
-  name: z.string(),
-  address: z.string(),
-  updatedAt: z.iso.datetime(),
-});
-
 export const RedistributionStationSummarySchema = z.object({
-  id: z.uuidv7(),
-  name: z.string(),
-});
-
-export const RedistributionAgencySummarySchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
 });
@@ -126,8 +113,7 @@ export const RedistributionRequestDetailSchema =
     requestedByUser: RedistributionUserDetailSchema,
     approvedByUser: RedistributionUserDetailSchema.nullable(),
     sourceStation: RedistributionStationSchema,
-    targetStation: RedistributionStationSchema.nullable(),
-    targetAgency: RedistributionAgencySchema.nullable(),
+    targetStation: RedistributionStationSchema,
     items: z.array(RedistributionRequestItemDetailSchema),
   });
 
@@ -137,8 +123,7 @@ export const RedistributionRequestListItemSchema =
     requestedByUser: RedistributionUserSummarySchema,
     approvedByUser: RedistributionUserSummarySchema.nullable(),
     sourceStation: RedistributionStationSummarySchema,
-    targetStation: RedistributionStationSummarySchema.nullable(),
-    targetAgency: RedistributionAgencySummarySchema.nullable(),
+    targetStation: RedistributionStationSummarySchema,
     items: z.array(RedistributionRequestItemSchema),
   });
 
@@ -151,31 +136,12 @@ export const RedistributionRequestListResponseSchema = z.object({
 export const CreateRedistributionRequestSchema = z
   .object({
     sourceStationId: z.uuidv7(),
-    targetStationId: z.uuidv7().optional(),
-    targetAgencyId: z.uuidv7().optional(),
+    targetStationId: z.uuidv7(),
     requestedQuantity: z.number().int().positive().max(20),
     reason: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    const hasTargetStation = !!data.targetStationId;
-    const hasTargetAgency = !!data.targetAgencyId;
-
-    if (!hasTargetStation && !hasTargetAgency) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Either targetStationId or targetAgencyId is required",
-        path: ["targetStationId"],
-      });
-    } else if (hasTargetStation && hasTargetAgency) {
-      ctx.addIssue({
-        code: "custom",
-        message:
-          "Only one of targetStationId or targetAgencyId can be provided",
-        path: ["hasTargetStation", "targetAgencyId"],
-      });
-    }
-
-    if (hasTargetStation && data.targetStationId === data.sourceStationId) {
+    if (data.targetStationId === data.sourceStationId) {
       ctx.addIssue({
         code: "custom",
         message: "Target station cannot be the same as source station",

@@ -3,8 +3,6 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type {
   AdminRedistributionFilter,
-  AgencyDetail,
-  AgencySummary,
   InStationRedistributionFilter,
   MyInStationRedistributionFilter,
   RedistributionRequestDetailRow,
@@ -29,7 +27,6 @@ export function toMyInStationRedistributionRequestsWhere(
     ...(filter.targetStationId
       ? { targetStationId: filter.targetStationId }
       : {}),
-    ...(filter.targetAgencyId ? { targetAgencyId: filter.targetAgencyId } : {}),
   };
 }
 
@@ -49,7 +46,6 @@ export function toInStationRedistributionRequestsWhere(
     ...(filter.targetStationId
       ? { targetStationId: filter.targetStationId }
       : {}),
-    ...(filter.targetAgencyId ? { targetAgencyId: filter.targetAgencyId } : {}),
   };
 }
 
@@ -70,7 +66,6 @@ export function toAdminRedistributionRequestsWhere(
     ...(filter.targetStationId
       ? { targetStationId: filter.targetStationId }
       : {}),
-    ...(filter.targetAgencyId ? { targetAgencyId: filter.targetAgencyId } : {}),
   };
 }
 
@@ -110,26 +105,6 @@ function mapStationDetail(station: any): StationDetail | null {
     longitude: station.longitude,
     totalCapacity: station.totalCapacity,
     updatedAt: station.updatedAt,
-  };
-}
-
-function mapAgencySummary(agency: any): AgencySummary | null {
-  if (!agency)
-    return null;
-  return {
-    id: agency.id,
-    name: agency.name,
-  };
-}
-
-function mapAgencyDetail(agency: any): AgencyDetail | null {
-  if (!agency)
-    return null;
-  return {
-    id: agency.id,
-    name: agency.name,
-    address: agency.address,
-    updatedAt: agency.updatedAt,
   };
 }
 
@@ -230,14 +205,6 @@ export const detailedRedistributionRequestSelect = {
       updatedAt: true,
     },
   },
-  targetAgency: {
-    select: {
-      id: true,
-      name: true,
-      address: true,
-      updatedAt: true,
-    },
-  },
   requestedQuantity: true,
   reason: true,
   items: {
@@ -284,12 +251,6 @@ export const summaryRedistributionRequestSelect = {
       name: true,
     },
   },
-  targetAgency: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
   requestedQuantity: true,
   reason: true,
   items: {
@@ -308,7 +269,6 @@ export const redistributionRequestSelect = {
   approvedByUserId: true,
   sourceStationId: true,
   targetStationId: true,
-  targetAgencyId: true,
   requestedQuantity: true,
   reason: true,
   items: {
@@ -344,8 +304,7 @@ export function mapToRedistributionRequestDetail(
     requestedByUser: mapUserDetail(raw.requestedByUser)!,
     approvedByUser: mapUserDetail(raw.approvedByUser),
     sourceStation: mapStationDetail(raw.sourceStation)!,
-    targetStation: mapStationDetail(raw.targetStation),
-    targetAgency: mapAgencyDetail(raw.targetAgency),
+    targetStation: mapStationDetail(raw.targetStation)!,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],
@@ -366,8 +325,7 @@ export function mapToRedistributionRequestSummaryRow(
     requestedByUser: mapUserSummary(raw.requestedByUser)!,
     approvedByUser: mapUserSummary(raw.approvedByUser),
     sourceStation: mapStationSummary(raw.sourceStation)!,
-    targetStation: mapStationSummary(raw.targetStation),
-    targetAgency: mapAgencySummary(raw.targetAgency),
+    targetStation: mapStationSummary(raw.targetStation)!,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],
@@ -387,8 +345,7 @@ export function mapToRedistributionRequestRow(
     requestedByUserId: raw.requestedByUserId,
     approvedByUserId: raw.approvedByUserId ?? null,
     sourceStationId: raw.sourceStationId,
-    targetStationId: raw.targetStationId ?? null,
-    targetAgencyId: raw.targetAgencyId ?? null,
+    targetStationId: raw.targetStationId,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],

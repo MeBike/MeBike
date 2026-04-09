@@ -67,7 +67,6 @@ const RedistributionRequestListQueryBaseSchema = z.object({
 export const StaffRedistributionRequestListQuerySchema = 
   RedistributionRequestListQueryBaseSchema.extend({
     targetStationId: z.uuidv7().optional(),
-    targetAgencyId: z.uuidv7().optional(),
   })
   .openapi("StaffRedistributionRequestListQuery", {
     description: "Query parameter for staff redistribution request list",
@@ -78,7 +77,6 @@ export const ManagerRedistributionRequestListQuerySchema =
     requestedByUserId: z.uuidv7().optional(),
     approvedByUserId: z.uuidv7().optional(),
     targetStationId: z.uuidv7().optional(),
-    targetAgencyId: z.uuidv7().optional(),
   })
   .openapi("ManagerRedistributionRequestListQuery", {
     description: "Query parameter for manager redistribution request list",
@@ -90,7 +88,6 @@ export const AdminRedistributionRequestListQuerySchema =
     approvedByUserId: z.uuidv7().optional(),
     sourceStationId: z.uuidv7().optional(),
     targetStationId: z.uuidv7().optional(),
-    targetAgencyId: z.uuidv7().optional(),
   })
   .openapi("AdminRedistributionRequestListQuery", {
     description: "Query parameter for admin redistribution request list",

@@ -44,8 +44,9 @@ export class UnauthorizedRedistributionAccess extends Data.TaggedError(
 export class UnauthorizedRedistributionCreation extends Data.TaggedError(
   "UnauthorizedRedistributionCreation",
 )<{
-    readonly userId: string;
+    readonly requestedByUserId: string;
     readonly sourceStationId: string;
+    readonly workingStationId: string;
   }> {}
 
 export class UnauthorizedRedistributionCancellation extends Data.TaggedError(
@@ -60,7 +61,7 @@ export class UnauthorizedRedistributionApproval extends Data.TaggedError(
   "UnauthorizedRedistributionApproval",
 )<{
     readonly requestId: string;
-    readonly sourceStationId: string;
+    readonly targetStationId: string;
     readonly workingStationId: string;
   }> {}
 
@@ -68,7 +69,7 @@ export class UnauthorizedRedistributionRejection extends Data.TaggedError(
   "UnauthorizedRedistributionRejection",
 )<{
     readonly requestId: string;
-    readonly sourceStationId: string;
+    readonly targetStationId: string;
     readonly workingStationId: string;
   }> {}
 

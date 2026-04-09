@@ -34,7 +34,6 @@ const getRequestListForManager: RouteHandler<
           requestedByUserId: query.requestedByUserId,
           approvedByUserId: query.approvedByUserId,
           targetStationId: query.targetStationId,
-          targetAgencyId: query.targetAgencyId,
         },
         {
           page: Number(query.page ?? 1),
@@ -166,7 +165,7 @@ const approveRedistributionRequest: RouteHandler<
       const service = yield* RedistributionServiceTag;
       return yield* service.approve({ requestId, approvedByUserId: userId });
     }),
-    "POST /v1/manager/redistribution-requests/{requestId}/approve",
+    "POST /v1/redistribution-requests/{requestId}/approve",
   );
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
@@ -210,7 +209,7 @@ const approveRedistributionRequest: RouteHandler<
               details: {
                 code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_REDISTRIBUTION_APPROVAL,
                 requestId: error.requestId,
-                sourceStationId: error.sourceStationId,
+                targetStationId: error.targetStationId,
                 workingStationId: error.workingStationId,
               },
             },
@@ -248,7 +247,7 @@ const rejectRedistributionRequest: RouteHandler<
       const service = yield* RedistributionServiceTag;
       return yield* service.reject({ requestId, rejectedByUserId: userId, reason: body.reason });
     }),
-    "POST /v1/manager/redistribution-requests/{requestId}/reject",
+    "POST /v1/redistribution-requests/{requestId}/reject",
   );
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
@@ -292,7 +291,7 @@ const rejectRedistributionRequest: RouteHandler<
               details: {
                 code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_REDISTRIBUTION_REJECTION,
                 requestId: error.requestId,
-                sourceStationId: error.sourceStationId,
+                targetStationId: error.targetStationId,
                 workingStationId: error.workingStationId,
               },
             },

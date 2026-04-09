@@ -39,18 +39,6 @@ export type StationDetail = {
   updatedAt: Date;
 };
 
-export type AgencySummary = {
-  id: string;
-  name: string;
-};
-
-export type AgencyDetail = {
-  id: string;
-  name: string;
-  address: string;
-  updatedAt: Date;
-};
-
 export type BikeDetail = {
   id: string;
   chipId: string;
@@ -80,8 +68,7 @@ export type RedistributionRequestRow = {
   requestedByUserId: string;
   approvedByUserId: string | null;
   sourceStationId: string;
-  targetStationId: string | null;
-  targetAgencyId: string | null;
+  targetStationId: string;
   requestedQuantity: number;
   reason: string | null;
   items: RedistributionRequestItem[];
@@ -97,8 +84,7 @@ export type RedistributionRequestSummaryRow = {
   requestedByUser: UserSummary;
   approvedByUser: UserSummary | null;
   sourceStation: StationSummary;
-  targetStation: StationSummary | null;
-  targetAgency: AgencySummary | null;
+  targetStation: StationSummary;
   requestedQuantity: number;
   reason: string | null;
   items: RedistributionRequestItem[];
@@ -114,8 +100,7 @@ export type RedistributionRequestDetailRow = {
   requestedByUser: UserDetail;
   approvedByUser: UserDetail | null;
   sourceStation: StationDetail;
-  targetStation: StationDetail | null;
-  targetAgency: AgencyDetail | null;
+  targetStation: StationDetail;
   requestedQuantity: number;
   reason: string | null;
   items: RedistributionRequestItemDetail[];
@@ -129,7 +114,6 @@ export type RedistributionRequestDetailRow = {
 export type RedistributionFilter = {
   status?: RedistributionStatus;
   targetStationId?: string;
-  targetAgencyId?: string;
 };
 
 export type RedistributionSortField = "createdAt" | "startedAt" | "completedAt";
