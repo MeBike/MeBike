@@ -5,6 +5,7 @@ import type { PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient, UserRole } from "generated/prisma/client";
 
 import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
+import { makeReservationQueryRepository } from "@/domain/reservations";
 import { makeStationRepository, makeStationService } from "@/domain/stations";
 import { makeTechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
@@ -142,9 +143,11 @@ function makeAgencyRequestService(
         Effect.gen(function* () {
           const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
           const txAgencyRepo = makeAgencyRepository(tx);
+          const txReservationRepo = makeReservationQueryRepository(tx);
           const txAgencyService = makeAgencyService(txAgencyRepo);
           const txStationService = makeStationService(makeStationRepository(tx), {
             agencyRepo: txAgencyRepo,
+            reservationRepo: txReservationRepo,
           });
           const txUserCommandService = makeUserCommandService({
             agencyRepo: txAgencyRepo,
