@@ -11,6 +11,7 @@ import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
 import type { AgencyRequestRow } from "@/domain/agency-requests/models";
 import { makeAgencyRequestRepository } from "@/domain/agency-requests/repository/agency-request.repository";
 import { hashPassword } from "@/domain/auth/services/auth.service";
+import { makeReservationQueryRepository } from "@/domain/reservations";
 import { makeStationRepository, makeStationService } from "@/domain/stations";
 import type {
   StationAgencyAlreadyAssigned,
@@ -94,8 +95,10 @@ export function makeAgencyAccountProvisionService(
       const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
       const txAgencyRepo = makeAgencyRepository(tx);
       const txAgencyService = makeAgencyService(txAgencyRepo);
+      const txReservationRepo = makeReservationQueryRepository(tx);
       const txStationService = makeStationService(makeStationRepository(tx), {
         agencyRepo: txAgencyRepo,
+        reservationRepo: txReservationRepo,
       });
       const txUserCommandService = makeUserCommandService({
         agencyRepo: txAgencyRepo,

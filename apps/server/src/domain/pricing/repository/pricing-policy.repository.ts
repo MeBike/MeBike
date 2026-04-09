@@ -36,8 +36,6 @@ const pricingPolicySelect = {
   depositRequired: true,
   lateReturnCutoff: true,
   status: true,
-  activeFrom: true,
-  activeTo: true,
   createdAt: true,
   updatedAt: true,
 } as const;

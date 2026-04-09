@@ -1,9 +1,5 @@
-/*
-  Warnings:
+CREATE EXTENSION IF NOT EXISTS "postgis" WITH SCHEMA "public";
 
-  - You are about to drop the `stations` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
 CREATE TYPE "BikeStatus" AS ENUM ('AVAILABLE', 'BOOKED', 'BROKEN', 'RESERVED', 'MAINTAINED', 'UNAVAILABLE');
 
@@ -35,13 +31,10 @@ CREATE TYPE "SubscriptionPackage" AS ENUM ('basic', 'premium', 'unlimited');
 CREATE TYPE "SupplierStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'TERMINATED');
 
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('USER', 'STAFF', 'ADMIN', 'SOS');
+CREATE TYPE "UserRole" AS ENUM ('USER', 'STAFF', 'TECHNICIAN', 'MANAGER', 'ADMIN', 'AGENCY');
 
 -- CreateEnum
-CREATE TYPE "UserVerifyStatus" AS ENUM ('UNVERIFIED', 'VERIFIED', 'BANNED');
-
--- DropTable
-DROP TABLE "stations";
+CREATE TYPE "UserVerifyStatus" AS ENUM ('UNVERIFIED', 'VERIFIED');
 
 -- CreateTable
 CREATE TABLE "Bike" (
@@ -50,6 +43,7 @@ CREATE TABLE "Bike" (
     "stationId" UUID,
     "supplierId" UUID,
     "status" "BikeStatus" NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "Bike_pkey" PRIMARY KEY ("id")
@@ -82,6 +76,8 @@ CREATE TABLE "RatingReason" (
     "type" "RatingReasonType" NOT NULL,
     "applies_to" "AppliesToEnum" NOT NULL,
     "messages" TEXT NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "RatingReason_pkey" PRIMARY KEY ("id")
 );
@@ -93,6 +89,7 @@ CREATE TABLE "Rating" (
     "rental_id" UUID NOT NULL,
     "rating" INTEGER NOT NULL,
     "comment" TEXT,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Rating_pkey" PRIMARY KEY ("id")
@@ -113,6 +110,7 @@ CREATE TABLE "Rental" (
     "bike_id" UUID,
     "start_station" UUID NOT NULL,
     "end_station" UUID,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "start_time" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "end_time" TIMESTAMPTZ,
     "duration" INTEGER,
@@ -137,6 +135,7 @@ CREATE TABLE "Reservation" (
     "end_time" TIMESTAMPTZ,
     "prepaid" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "status" "ReservationStatus" NOT NULL DEFAULT 'PENDING',
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Reservation_pkey" PRIMARY KEY ("id")
@@ -150,6 +149,7 @@ CREATE TABLE "Station" (
     "capacity" INTEGER NOT NULL,
     "latitude" DOUBLE PRECISION NOT NULL,
     "longitude" DOUBLE PRECISION NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
     "position" geography(Point, 4326) NOT NULL,
 
@@ -167,6 +167,7 @@ CREATE TABLE "Subscription" (
     "activated_at" TIMESTAMPTZ,
     "expires_at" TIMESTAMPTZ,
     "price" DECIMAL(12,2) NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Subscription_pkey" PRIMARY KEY ("id")
@@ -180,6 +181,7 @@ CREATE TABLE "Supplier" (
     "phone_number" TEXT,
     "contract_fee" DECIMAL(10,2),
     "status" "SupplierStatus" NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
     CONSTRAINT "Supplier_pkey" PRIMARY KEY ("id")
@@ -196,12 +198,9 @@ CREATE TABLE "User" (
     "avatar" TEXT,
     "location" TEXT,
     "nfc_card_uid" TEXT,
-    "email_verify_otp" TEXT,
-    "email_verify_otp_expires" TIMESTAMPTZ,
-    "forgot_password_otp" TEXT,
-    "forgot_password_otp_expires" TIMESTAMPTZ,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "verify" "UserVerifyStatus" NOT NULL DEFAULT 'UNVERIFIED',
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -263,6 +262,11 @@ CREATE INDEX "idx_rentals_start_station" ON "Rental"("start_station");
 
 -- CreateIndex
 CREATE INDEX "idx_rentals_user_active" ON "Rental"("user_id", "status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "idx_rentals_active_bike"
+  ON "Rental"("bike_id")
+  WHERE "status" = 'RENTED' AND "bike_id" IS NOT NULL;
 
 -- CreateIndex
 CREATE INDEX "idx_reservations_user" ON "Reservation"("user_id");

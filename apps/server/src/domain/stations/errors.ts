@@ -30,6 +30,25 @@ export class StationCapacitySplitInvalid extends Data.TaggedError("StationCapaci
   readonly returnSlotLimit: number;
 }> {}
 
+export class StationCapacityBelowActiveUsage extends Data.TaggedError("StationCapacityBelowActiveUsage")<{
+  readonly stationId: string;
+  readonly totalCapacity: number;
+  readonly totalBikes: number;
+  readonly activeReturnSlots: number;
+}> {}
+
+export class StationReturnSlotLimitBelowActiveReservations extends Data.TaggedError("StationReturnSlotLimitBelowActiveReservations")<{
+  readonly stationId: string;
+  readonly returnSlotLimit: number;
+  readonly activeReturnSlots: number;
+}> {}
+
+export class StationPickupSlotLimitBelowPendingReservations extends Data.TaggedError("StationPickupSlotLimitBelowPendingReservations")<{
+  readonly stationId: string;
+  readonly pickupSlotLimit: number;
+  readonly pendingReservations: number;
+}> {}
+
 export class StationAgencyRequired extends Data.TaggedError("StationAgencyRequired")<
   Record<string, never>
 > {}

@@ -102,6 +102,8 @@ function makeAgencyRequestService(
   repo: AgencyRequestRepo,
   client: PrismaClient,
 ): AgencyRequestService {
+  const provisionService = makeAgencyAccountProvisionService(client);
+
   return {
     getById: id => repo.findById(id),
     getByIdOrFail: id =>
@@ -121,7 +123,6 @@ function makeAgencyRequestService(
       Effect.gen(function* () {
         const txAgencyRequestRepo = makeAgencyRequestRepository(client);
         const found = yield* txAgencyRequestRepo.findById(agencyRequestId);
-        const provisionService = makeAgencyAccountProvisionService(client);
 
         if (Option.isNone(found)) {
           return yield* Effect.fail(
