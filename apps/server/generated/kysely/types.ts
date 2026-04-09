@@ -500,8 +500,6 @@ export type PricingPolicy = {
     deposit_required: Generated<string>;
     late_return_cutoff: Generated<Timestamp>;
     status: Generated<AccountStatus>;
-    active_from: Timestamp | null;
-    active_to: Timestamp | null;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
