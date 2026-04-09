@@ -15,6 +15,8 @@ import {
 } from "@/http/middlewares/auth";
 import { UserRole } from "generated/prisma/enums";
 
+import { RedistributionAgencyController } from "../controllers/redistribution/agency.controller";
+
 export function registerRedistributionRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const redistribution = serverRoutes.redistribution;
 
@@ -31,7 +33,7 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   } satisfies RouteConfig;
   app.openapi(adminDetailRoute, RedistributionAdminController.getRequestDetailForAdmin);
 
-  // Staff routes
+  // Staff/Agency routes
   const createRequestRoute = {
     ...redistribution.createRedistributionRequest,
     middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
@@ -44,6 +46,13 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   } satisfies RouteConfig;
   app.openapi(cancelRequestRoute, RedistributionStaffController.cancelRedistributionRequest);
 
+  const startTransitionRoute = {
+    ...redistribution.startTransition,
+    middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
+  } satisfies RouteConfig;
+  app.openapi(startTransitionRoute, RedistributionStaffController.startTransition);
+
+  // Staff routes
   const staffListRoute = {
     ...redistribution.getRequestListForStaff,
     middleware: [requireStaffMiddleware] as const,
@@ -55,12 +64,6 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
     middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(staffDetailRoute, RedistributionStaffController.getRequestDetailForStaff);
-
-  const startTransitionRoute = {
-    ...redistribution.startTransition,
-    middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
-  } satisfies RouteConfig;
-  app.openapi(startTransitionRoute, RedistributionStaffController.startTransition);
 
   // Manager routes
   const managerListRoute = {
@@ -75,6 +78,7 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   } satisfies RouteConfig;
   app.openapi(managerDetailRoute, RedistributionManagerController.getRequestDetailForManager);
 
+  // Manager/Agency routes
   const managerApproveRoute = {
     ...redistribution.approveRedistributionRequest,
     middleware: [requireRolesMiddleware([UserRole.MANAGER, UserRole.AGENCY])] as const,
@@ -86,4 +90,17 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
     middleware: [requireRolesMiddleware([UserRole.MANAGER, UserRole.AGENCY])] as const,
   } satisfies RouteConfig;
   app.openapi(managerRejectRoute, RedistributionManagerController.rejectRedistributionRequest);
+
+  // Agency routes
+  const agencyListRoute = {
+    ...redistribution.getRequestListForAgency,
+    middleware: [requireRolesMiddleware([UserRole.AGENCY])] as const,
+  } satisfies RouteConfig;
+  app.openapi(agencyListRoute, RedistributionAgencyController.getRequestListForAgency);
+
+  const agencyDetailRoute = {
+    ...redistribution.getRequestDetailForAgency,
+    middleware: [requireRolesMiddleware([UserRole.AGENCY])] as const,
+  } satisfies RouteConfig;
+  app.openapi(agencyDetailRoute, RedistributionAgencyController.getRequestDetailForAgency);
 }

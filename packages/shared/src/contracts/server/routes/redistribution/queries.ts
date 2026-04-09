@@ -6,6 +6,7 @@ import {
 } from "../helpers";
 import {
   AdminRedistributionRequestListQuerySchema,
+  AgencyRedistributionRequestListQuerySchema,
   createSuccessResponse,
   ManagerRedistributionRequestListQuerySchema,
   RedistributionReqErrorCodeSchema,
@@ -190,7 +191,7 @@ export const getRequestListForManager = createRoute({
         "application/json": {
           schema: createSuccessResponse(
             RedistributionRequestListResponseSchema,
-            "Get distribution requestgetRequestDetailForManager list response",
+            "Get distribution list response",
           ),
         },
       },
@@ -240,6 +241,101 @@ export const getRequestDetailForManager = createRoute({
           schema: RedistributionReqErrorResponseSchema,
           examples: {
             ...forbiddenResponse("Manager").content["application/json"].examples,
+            UnauthorizedRedistributionAccess: {
+              value: {
+                error: "Unauthorized redistribution access",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_ACCESS,
+                  userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "Redistribution request not found",
+      example: {
+        error: "Redistribution request not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+
+// Agency paths
+export const getRequestListForAgency = createRoute({
+  method: "get",
+  path: "/v1/agency/redistribution-requests",
+  tags: ["Agency", "Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: AgencyRedistributionRequestListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Redistribution request list in assigned agency",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestListResponseSchema,
+            "Get distribution list response",
+          ),
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "User not found",
+      example: {
+        error: "User not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+          userId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+
+export const getRequestDetailForAgency = createRoute({
+  method: "get",
+  path: "/v1/agency/redistribution-requests/{requestId}",
+  tags: ["Agency", "Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RedistributionRequestIdParamSchema,
+  },
+  responses: {
+    200: {
+      description:
+        "Detailed redistribution request with all populated data (agency view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestDetailSchemaOpenApi,
+            "Get detailed distribution request response",
+          ),
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: {
+      description: "Unauthorized redistribution request access",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            ...forbiddenResponse("Agency").content["application/json"].examples,
             UnauthorizedRedistributionAccess: {
               value: {
                 error: "Unauthorized redistribution access",

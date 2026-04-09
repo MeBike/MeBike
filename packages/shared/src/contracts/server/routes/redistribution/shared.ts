@@ -82,6 +82,15 @@ export const ManagerRedistributionRequestListQuerySchema =
     description: "Query parameter for manager redistribution request list",
   });
 
+export const AgencyRedistributionRequestListQuerySchema = 
+  RedistributionRequestListQueryBaseSchema.extend({
+    approvedByUserId: z.uuidv7().optional(),
+    targetStationId: z.uuidv7().optional(),
+  })
+  .openapi("AgencyRedistributionRequestListQuery", {
+    description: "Query parameter for agency redistribution request list",
+  });
+
 export const AdminRedistributionRequestListQuerySchema = 
   RedistributionRequestListQueryBaseSchema.extend({
     requestedByUserId: z.uuidv7().optional(),
