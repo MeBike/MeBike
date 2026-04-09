@@ -1,37 +1,37 @@
-import { LoadingScreen } from "@components/LoadingScreen";
-import { BikeColors } from "@constants/BikeColors";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import React from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { Pressable, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme, XStack, YStack } from "tamagui";
 
 import StationMap from "@/components/station-map";
+import { IconSymbol } from "@components/IconSymbol";
+import { LoadingScreen } from "@components/LoadingScreen";
+import { borderWidths } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { Screen } from "@ui/primitives/screen";
 
 import { StationList } from "./components/station-list";
 import { StationSelectMapOverlay } from "./components/station-select-map-overlay";
 import { useStationSelect } from "./hooks/use-station-select";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BikeColors.surface,
-    padding: 0,
-  },
-});
-
 export default function StationSelectScreen() {
   const [isListOpen, setIsListOpen] = React.useState(false);
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
 
   const {
     stations,
     refreshing,
     showingNearby,
-    route,
+    route: stationRoute,
     isRouting,
     routeProfile,
+    isLoadingStations,
     isLoadingNearbyStations,
+    isResolvingNearbyLocation,
     handleSelectStationForRoute,
     handleFindNearbyStations,
     handleRefresh,
@@ -51,49 +51,66 @@ export default function StationSelectScreen() {
     [selectedStationId, stations],
   );
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const parent = navigation.getParent();
-      parent?.setOptions({ tabBarStyle: { display: "none" } });
-      return () => parent?.setOptions({ tabBarStyle: undefined });
-    }, [navigation]),
-  );
-
-  if (
-    !Array.isArray(stations)
-    || stations === null
-    || stations.length === 0
-  ) {
+  if (isLoadingStations && !showingNearby) {
     return <LoadingScreen />;
   }
 
   return (
-    <View style={styles.container}>
+    <Screen>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+
       <StationMap
         stations={stations}
-        route={route}
-        onStationPress={station => handleSelectStationForRoute(station.id)}
+        route={stationRoute}
+        onStationPress={station => void handleSelectStationForRoute(station.id)}
         onMapPress={deselectStation}
         userLocation={currentLocation ?? undefined}
         selectedStationId={selectedStationId}
       />
+
+      <YStack
+        left={0}
+        pointerEvents="box-none"
+        position="absolute"
+        right={0}
+        top={0}
+        zIndex="$3"
+        style={{ paddingTop: insets.top + 12, paddingLeft: 16 }}
+      >
+        <Pressable onPress={() => navigation.goBack()}>
+          <AppCard
+            alignItems="center"
+            borderColor="$borderSubtle"
+            borderRadius="$round"
+            borderWidth={borderWidths.subtle}
+            chrome="flat"
+            height={44}
+            justifyContent="center"
+            padding="$0"
+            width={44}
+          >
+            <IconSymbol color={theme.textPrimary.val} name="chevron-left" size="input" />
+          </AppCard>
+        </Pressable>
+      </YStack>
+
       <StationSelectMapOverlay
         safeBottom={insets.bottom}
         showingNearby={showingNearby}
         isLoadingNearbyStations={isLoadingNearbyStations}
+        isResolvingNearbyLocation={isResolvingNearbyLocation}
         destinationLabel={selectedStation
           ? selectedStation.name
           : "Chọn một trạm trên bản đồ"}
         selectedStationAddress={selectedStation?.address ?? null}
         selectedStationAvailableBikes={selectedStation?.bikes.available ?? null}
         routeProfile={routeProfile}
-        routeDistanceMeters={route?.properties.distanceMeters ?? null}
-        routeDurationSeconds={route?.properties.durationSeconds ?? null}
+        routeDistanceMeters={stationRoute?.properties.distanceMeters ?? null}
+        routeDurationSeconds={stationRoute?.properties.durationSeconds ?? null}
         isRouting={isRouting}
         hasDestination={Boolean(selectedStationId)}
         isRoutingMode={isRoutingMode}
-        hasRoute={Boolean(route)}
+        hasRoute={Boolean(stationRoute)}
         onToggleNearby={handleFindNearbyStations}
         onOpenList={() => setIsListOpen(true)}
         onEnterRoutingMode={enterRoutingMode}
@@ -103,6 +120,7 @@ export default function StationSelectScreen() {
         onResetSelection={deselectStation}
         onClearRoute={clearRoute}
       />
+
       {isListOpen
         ? (
             <View
@@ -112,23 +130,65 @@ export default function StationSelectScreen() {
                 right: 0,
                 bottom: 0,
                 top: 0,
-                backgroundColor: "rgba(0,0,0,0.35)",
+                backgroundColor: theme.overlayScrim.val,
               }}
-              onTouchEnd={() => setIsListOpen(false)}
             >
-              <View
+              <Pressable
+                onPress={() => setIsListOpen(false)}
                 style={{
                   position: "absolute",
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  maxHeight: "72%",
-                  backgroundColor: "white",
-                  borderTopLeftRadius: 20,
-                  borderTopRightRadius: 20,
-                  overflow: "hidden",
+                  top: 0,
                 }}
+              />
+
+              <YStack
+                backgroundColor="$surfaceDefault"
+                borderTopLeftRadius="$5"
+                borderTopRightRadius="$5"
+                bottom={0}
+                left={0}
+                maxHeight="82%"
+                overflow="hidden"
+                position="absolute"
+                right={0}
               >
+                <YStack
+                  borderBottomColor="$borderSubtle"
+                  borderBottomWidth={borderWidths.subtle}
+                  gap="$3"
+                  padding="$5"
+                >
+                  <XStack alignItems="center" justifyContent="space-between">
+                    <YStack flex={1} gap="$1" paddingRight="$3">
+                      <AppText variant="title">Danh sách trạm</AppText>
+                      <AppText tone="muted" variant="bodySmall">
+                        {stations.length}
+                        {" "}
+                        trạm hiển thị
+                      </AppText>
+                    </YStack>
+
+                    <Pressable hitSlop={8} onPress={() => setIsListOpen(false)}>
+                      <AppCard
+                        alignItems="center"
+                        backgroundColor="$surfaceMuted"
+                        borderRadius="$round"
+                        chrome="flat"
+                        height={40}
+                        justifyContent="center"
+                        padding="$0"
+                        width={40}
+                      >
+                        <IconSymbol color={theme.textSecondary.val} name="close" size="input" />
+                      </AppCard>
+                    </Pressable>
+                  </XStack>
+
+                </YStack>
+
                 <StationList
                   stations={stations}
                   refreshing={refreshing}
@@ -138,10 +198,10 @@ export default function StationSelectScreen() {
                     setIsListOpen(false);
                   }}
                 />
-              </View>
+              </YStack>
             </View>
           )
         : null}
-    </View>
+    </Screen>
   );
 }

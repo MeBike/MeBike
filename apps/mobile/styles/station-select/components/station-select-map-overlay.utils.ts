@@ -20,3 +20,11 @@ export function formatDuration(seconds: number): string {
     return `${hours} giờ`;
   return `${hours} giờ ${remainingMinutes} phút`;
 }
+
+export function formatAvailableBikeLabel(availableBikes: number): string {
+  if (!Number.isFinite(availableBikes) || availableBikes <= 0) {
+    return "Hết xe";
+  }
+
+  return `${availableBikes} xe`;
+}

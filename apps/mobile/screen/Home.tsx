@@ -1,6 +1,5 @@
 /* eslint-disable unicorn/filename-case */
 
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { User } from "lucide-react-native";
@@ -15,6 +14,8 @@ import {
   Text,
   View,
 } from "react-native";
+
+import { useAuthNext } from "@providers/auth-provider-next";
 
 import type { IconSymbolName } from "../components/IconSymbol";
 import type { HomeScreenNavigationProp } from "../types/navigation";
@@ -368,7 +369,7 @@ export default function HomeScreen() {
                 ? (
                     <Pressable
                       style={styles.primaryButton}
-                      onPress={() => navigation.navigate("Trạm")}
+                      onPress={() => navigation.navigate("StationSelectFlow")}
                     >
                       <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
                       <IconSymbol

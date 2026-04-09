@@ -2,7 +2,6 @@
 
 import type { ColorValue, StyleProp, ViewStyle } from "react-native";
 
-import { iconSizes } from "@theme/metrics";
 import {
   ArrowDown,
   ArrowLeft,
@@ -12,8 +11,11 @@ import {
   Bike,
   Building2,
   Calendar,
+  CarFront,
   Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Circle,
   CircleUserRound,
@@ -21,11 +23,14 @@ import {
   Copy,
   Cpu,
   CreditCard,
+  Crosshair,
   Eye,
   EyeOff,
   FileText,
+  Footprints,
   Home,
   Info,
+  List,
   Lock,
   Mail,
   Map,
@@ -49,6 +54,8 @@ import {
 } from "lucide-react-native";
 import React from "react";
 
+import { iconSizes } from "@theme/metrics";
+
 type LucideIconComponent = typeof ArrowLeft;
 
 type IconRenderConfig = {
@@ -70,8 +77,11 @@ const ICONS = {
   "bell": { outline: { icon: Bell } },
   "bike": { outline: { icon: Bike } },
   "calendar": { outline: { icon: Calendar } },
+  "car": { outline: { icon: CarFront } },
   "check": { outline: { icon: Check } },
   "check-circle": { outline: { icon: CheckCircle2 } },
+  "chevron-down": { outline: { icon: ChevronDown } },
+  "chevron-left": { outline: { icon: ChevronLeft } },
   "chevron-right": { outline: { icon: ChevronRight } },
   "chip": { outline: { icon: Cpu } },
   "circle": { outline: { icon: Circle }, filled: { icon: Circle, fill: true } },
@@ -79,13 +89,16 @@ const ICONS = {
   "close": { outline: { icon: X } },
   "copy": { outline: { icon: Copy } },
   "credit-card": { outline: { icon: CreditCard } },
+  "crosshair": { outline: { icon: Crosshair } },
   "document": { outline: { icon: FileText } },
   "eye": { outline: { icon: Eye } },
   "eye-off": { outline: { icon: EyeOff } },
+  "footprints": { outline: { icon: Footprints } },
   "home": { outline: { icon: Home }, filled: { icon: Home, fill: true } },
   "info": { outline: { icon: Info } },
   "location": { outline: { icon: MapPin }, filled: { icon: MapPin, fill: true } },
   "lock": { outline: { icon: Lock } },
+  "list": { outline: { icon: List } },
   "mail": { outline: { icon: Mail } },
   "map": { outline: { icon: Map } },
   "person": { outline: { icon: User } },
