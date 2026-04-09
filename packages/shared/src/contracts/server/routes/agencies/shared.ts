@@ -6,7 +6,10 @@ import {
   ServerErrorResponseSchema,
   SortDirectionSchema,
 } from "../../schemas";
-import { AgencySummarySchema } from "../../agencies";
+import {
+  AgencyOperationalStatsSchema,
+  AgencySummarySchema,
+} from "../../agencies";
 import { AccountStatusSchema } from "../../users";
 
 export const AgencyIdParamSchema = z
@@ -55,6 +58,44 @@ export const AgencyDetailResponseSchema = AgencySummarySchema.openapi(
   "AgencyDetailResponse",
   {
     description: "Agency details for admin",
+  },
+);
+
+export const AgencyStatsQuerySchema = z
+  .object({
+    from: z.iso.datetime().optional(),
+    to: z.iso.datetime().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if ((value.from && !value.to) || (!value.from && value.to)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [value.from ? "to" : "from"],
+        message: "from and to must be provided together",
+      });
+    }
+
+    if (value.from && value.to && new Date(value.from) > new Date(value.to)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["from"],
+        message: "from must not be after to",
+      });
+    }
+  })
+  .openapi("AgencyStatsQuery", {
+    description:
+      "Optional ISO datetime range for agency operational metrics. Provide both from and to, or omit both to use the default rolling 30-day window.",
+    example: {
+      from: "2026-03-01T00:00:00.000Z",
+      to: "2026-03-31T23:59:59.999Z",
+    },
+  });
+
+export const AgencyOperationalStatsResponseSchema = AgencyOperationalStatsSchema.openapi(
+  "AgencyOperationalStatsResponse",
+  {
+    description: "Operational statistics for an agency",
   },
 );
 
@@ -131,6 +172,8 @@ export const agencyErrorMessages = {
 
 export type AgencyListResponse = z.infer<typeof AgencyListResponseSchema>;
 export type AgencyDetailResponse = z.infer<typeof AgencyDetailResponseSchema>;
+export type AgencyStatsQuery = z.infer<typeof AgencyStatsQuerySchema>;
+export type AgencyOperationalStatsResponse = z.infer<typeof AgencyOperationalStatsResponseSchema>;
 export type UpdateAgencyBody = z.infer<typeof UpdateAgencyBodySchema>;
 export type UpdateAgencyStatusBody = z.infer<typeof UpdateAgencyStatusBodySchema>;
 export type AgencyUpdateResponse = z.infer<typeof AgencyUpdateResponseSchema>;
