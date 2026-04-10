@@ -10,7 +10,7 @@ import { StationServiceTag } from "@/domain/stations";
 import { UserQueryServiceTag, UserRepositoryError } from "@/domain/users";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
-import { RedistributionStatus } from "generated/prisma/client";
+import { BikeStatus, RedistributionStatus } from "generated/prisma/client";
 
 import type { RedistributionServiceFailure } from "../domain-errors";
 import type {
@@ -27,17 +27,19 @@ import type { RedistributionRepo } from "../repository/redistribution.repository
 import {
   CannotApproveNonPendingRedistribution,
   CannotCancelNonPendingRedistribution,
+  CannotConfirmNonTransitedRedistribution,
   CannotRejectNonPendingRedistribution,
   CannotStartTransitionNonApprovedRedistribution,
   ExceededMinBikesAtStation,
+  InvalidBikeIdsForRedistributionCompletion,
   NotEnoughBikesAtStation,
   NotEnoughEmptySlotsAtTarget,
-  RedistributionRepositoryError,
   RedistributionRequestNotFound,
   StationNotFound,
   UnauthorizedRedistributionAccess,
   UnauthorizedRedistributionApproval,
   UnauthorizedRedistributionCancellation,
+  UnauthorizedRedistributionCompletion,
   UnauthorizedRedistributionCreation,
   UnauthorizedRedistributionRejection,
   UnauthorizedStartTransition,
@@ -134,6 +136,16 @@ export type RedistributionService = {
     Prisma | RedistributionRepository | BikeRepository
   >;
 
+  confirmCompletion: (args: {
+    requestId: string;
+    confirmedByUserId: string;
+    completedBikeIds: string[];
+  }) => Effect.Effect<
+    RedistributionRequestDetailRow,
+    RedistributionServiceFailure | BikeRepositoryError,
+    Prisma | RedistributionRepository | BikeRepository
+  >;
+
   adminListRequests: (
     filter: AdminRedistributionFilter,
     page: PageRequest<RedistributionSortField>,
@@ -181,51 +193,40 @@ function makeRedistributionService(
       return userOpt.value;
     });
 
-  const getUserStationId = (user: UserRow) => (user.orgAssignment?.station?.id ?? user.orgAssignment?.agency?.stationId) ?? undefined;
+  const getUserStationId = (user: UserRow) =>
+    user.orgAssignment?.station?.id
+    ?? user.orgAssignment?.agency?.stationId
+    ?? undefined;
 
   return {
     getMyListInStation: (userId, filter, page) =>
       Effect.gen(function* () {
         const user = yield* assertUserExists(userId);
         const stationId = getUserStationId(user)!;
-        return yield* repo
-          .listWithOffset(
-            {
-              ...filter,
-              requestedByUserId: userId,
-              sourceStationId: stationId,
-            },
-            page,
-          )
-          .pipe(
-            Effect.catchTag("RedistributionRepositoryError", error =>
-              Effect.fail(
-                new RedistributionRepositoryError({
-                  operation: "getMyListInStation",
-                  cause: error,
-                }),
-              )),
-          );
+        return yield* repo.listWithOffset(
+          {
+            ...filter,
+            requestedByUserId: userId,
+            sourceStationId: stationId,
+          },
+          page,
+        );
       }),
 
     getMyRequestInStation: ({ userId, requestId }) =>
       Effect.gen(function* () {
         const user = yield* assertUserExists(userId);
         const stationId = getUserStationId(user)!;
-        const reqOpt = yield* repo
-          .findAndPopulate({
-            id: requestId,
-            requestedByUserId: userId,
-            sourceStationId: stationId,
-          })
-          .pipe(Effect.catchTag("RedistributionRepositoryError", Effect.die));
+        const reqOpt = yield* repo.findAndPopulate({
+          id: requestId,
+          requestedByUserId: userId,
+          sourceStationId: stationId,
+        });
 
         if (Option.isSome(reqOpt))
           return reqOpt.value;
 
-        const existing = yield* repo
-          .findById(requestId)
-          .pipe(Effect.catchTag("RedistributionRepositoryError", Effect.die));
+        const existing = yield* repo.findById(requestId);
         if (
           Option.isSome(existing)
           && existing.value.requestedByUserId !== userId
@@ -244,57 +245,29 @@ function makeRedistributionService(
       Effect.gen(function* () {
         const user = yield* assertUserExists(userId);
         const stationId = getUserStationId(user)!;
-        return yield* repo
-          .listWithOffset(
-            {
-              ...filter,
-              sourceStationId: stationId,
-            },
-            page,
-          )
-          .pipe(
-            Effect.catchTag("RedistributionRepositoryError", error =>
-              Effect.fail(
-                new RedistributionRepositoryError({
-                  operation: "getListInStation",
-                  cause: error,
-                }),
-              )),
-          );
+        return yield* repo.listWithOffset(
+          {
+            ...filter,
+            sourceStationId: stationId,
+          },
+          page,
+        );
       }),
 
     getRequestInStation: ({ userId, requestId }) =>
       Effect.gen(function* () {
         const user = yield* assertUserExists(userId);
         const stationId = getUserStationId(user)!;
-        const reqOpt = yield* repo
-          .findAndPopulate({
-            id: requestId,
-            sourceStationId: stationId,
-          })
-          .pipe(
-            Effect.catchTag("RedistributionRepositoryError", error =>
-              Effect.fail(
-                new RedistributionRepositoryError({
-                  operation: "getRequestInStation.findAndPopulate",
-                  cause: error,
-                }),
-              )),
-          );
+        const reqOpt = yield* repo.findAndPopulate({
+          id: requestId,
+          sourceStationId: stationId,
+        });
 
         if (Option.isSome(reqOpt)) {
           return reqOpt.value;
         }
 
-        const existing = yield* repo.findById(requestId).pipe(
-          Effect.catchTag("RedistributionRepositoryError", error =>
-            Effect.fail(
-              new RedistributionRepositoryError({
-                operation: "getRequestInStation.findById",
-                cause: error,
-              }),
-            )),
-        );
+        const existing = yield* repo.findById(requestId);
         if (
           Option.isSome(existing)
           && existing.value.requestedByUserId !== userId
@@ -422,15 +395,10 @@ function makeRedistributionService(
             );
 
             // TODO: Update empty slots at source and target stations
-            return yield* txRedistributionRepo
-              .create({
-                ...args,
-                bikeIds,
-              })
-              .pipe(
-                Effect.catchTag("RedistributionRepositoryError", error =>
-                  Effect.die(error)),
-              );
+            return yield* txRedistributionRepo.create({
+              ...args,
+              bikeIds,
+            });
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
         );
@@ -443,27 +411,17 @@ function makeRedistributionService(
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
-            const updatedOpt = yield* txRedistributionRepo
-              .update(
-                {
-                  id: args.requestId,
-                  requestedByUserId: args.userId,
-                  status: RedistributionStatus.PENDING_APPROVAL,
-                },
-                {
-                  reason: args.reason,
-                  status: RedistributionStatus.CANCELLED,
-                },
-              )
-              .pipe(
-                Effect.catchTag("RedistributionRepositoryError", e =>
-                  Effect.fail(
-                    new RedistributionRepositoryError({
-                      operation: "cancel",
-                      cause: e,
-                    }),
-                  )),
-              );
+            const updatedOpt = yield* txRedistributionRepo.update(
+              {
+                id: args.requestId,
+                requestedByUserId: args.userId,
+                status: RedistributionStatus.PENDING_APPROVAL,
+              },
+              {
+                reason: args.reason,
+                status: RedistributionStatus.CANCELLED,
+              },
+            );
 
             // Update success
             if (Option.isSome(updatedOpt)) {
@@ -485,17 +443,9 @@ function makeRedistributionService(
             }
 
             // Update failed
-            const existingRequest = yield* txRedistributionRepo
-              .findById(args.requestId)
-              .pipe(
-                Effect.catchTag("RedistributionRepositoryError", e =>
-                  Effect.fail(
-                    new RedistributionRepositoryError({
-                      operation: "cancel",
-                      cause: e,
-                    }),
-                  )),
-              );
+            const existingRequest = yield* txRedistributionRepo.findById(
+              args.requestId,
+            );
 
             if (Option.isSome(existingRequest)) {
               const req = existingRequest.value;
@@ -535,8 +485,8 @@ function makeRedistributionService(
         return yield* runPrismaTransaction(client, tx =>
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
-            const updatedOpt = yield* txRedistributionRepo
-              .updateAndFindWithPopulation(
+            const updatedOpt
+              = yield* txRedistributionRepo.updateAndFindWithPopulation(
                 {
                   id: args.requestId,
                   status: RedistributionStatus.APPROVED,
@@ -545,15 +495,6 @@ function makeRedistributionService(
                   status: RedistributionStatus.IN_TRANSIT,
                   startedAt: now,
                 },
-              )
-              .pipe(
-                Effect.catchTag("RedistributionRepositoryError", e =>
-                  Effect.fail(
-                    new RedistributionRepositoryError({
-                      operation: "startTransition",
-                      cause: e,
-                    }),
-                  )),
               );
 
             // Update success
@@ -562,17 +503,9 @@ function makeRedistributionService(
             }
 
             // Update failed
-            const existingRequest = yield* txRedistributionRepo
-              .findById(args.requestId)
-              .pipe(
-                Effect.catchTag("RedistributionRepositoryError", e =>
-                  Effect.fail(
-                    new RedistributionRepositoryError({
-                      operation: "startTransition",
-                      cause: e,
-                    }),
-                  )),
-              );
+            const existingRequest = yield* txRedistributionRepo.findById(
+              args.requestId,
+            );
 
             if (Option.isSome(existingRequest)) {
               const req = existingRequest.value;
@@ -610,36 +543,24 @@ function makeRedistributionService(
       Effect.gen(function* () {
         const user = yield* assertUserExists(args.approvedByUserId);
         const stationId = getUserStationId(user)!;
-        const updatedOpt = yield* repo
-          .updateAndFindWithPopulation(
-            {
-              id: args.requestId,
-              targetStationId: stationId,
-              status: RedistributionStatus.PENDING_APPROVAL,
-            },
-            {
-              status: RedistributionStatus.APPROVED,
-              approvedByUserId: args.approvedByUserId,
-            },
-          )
-          .pipe(
-            Effect.catchTag("RedistributionRepositoryError", error =>
-              Effect.die(error)),
-          );
+        const updatedOpt = yield* repo.updateAndFindWithPopulation(
+          {
+            id: args.requestId,
+            targetStationId: stationId,
+            status: RedistributionStatus.PENDING_APPROVAL,
+          },
+          {
+            status: RedistributionStatus.APPROVED,
+            approvedByUserId: args.approvedByUserId,
+          },
+        );
+
         // Update success
         if (Option.isSome(updatedOpt))
           return updatedOpt.value;
 
         // Update failed
-        const existingReq = yield* repo.findById(args.requestId).pipe(
-          Effect.catchTag("RedistributionRepositoryError", e =>
-            Effect.fail(
-              new RedistributionRepositoryError({
-                operation: "approve",
-                cause: e,
-              }),
-            )),
-        );
+        const existingReq = yield* repo.findById(args.requestId);
         if (Option.isSome(existingReq)) {
           const req = existingReq.value;
           if (req.targetStationId !== stationId) {
@@ -676,8 +597,8 @@ function makeRedistributionService(
             const txBikeRepo = makeBikeRepository(tx);
             const now = new Date();
 
-            const updatedOpt = yield* txRedistributionRepo
-              .updateAndFindWithPopulation(
+            const updatedOpt
+              = yield* txRedistributionRepo.updateAndFindWithPopulation(
                 {
                   id: args.requestId,
                   targetStationId: stationId,
@@ -687,12 +608,7 @@ function makeRedistributionService(
                   status: RedistributionStatus.REJECTED,
                   reason: args.reason,
                 },
-              )
-              .pipe(
-                Effect.catchTag("RedistributionRepositoryError", error =>
-                  Effect.die(error)),
               );
-
             // Update success – restore bikes to AVAILABLE
             if (Option.isSome(updatedOpt)) {
               const request = updatedOpt.value;
@@ -711,17 +627,9 @@ function makeRedistributionService(
             }
 
             // Update failed
-            const existingReq = yield* txRedistributionRepo
-              .findById(args.requestId)
-              .pipe(
-                Effect.catchTag("RedistributionRepositoryError", e =>
-                  Effect.fail(
-                    new RedistributionRepositoryError({
-                      operation: "reject",
-                      cause: e,
-                    }),
-                  )),
-              );
+            const existingReq = yield* txRedistributionRepo.findById(
+              args.requestId,
+            );
 
             if (Option.isSome(existingReq)) {
               const req = existingReq.value;
@@ -754,27 +662,124 @@ function makeRedistributionService(
         );
       }),
 
-    adminListRequests: (filter, page) =>
-      repo.listWithOffset(filter, page).pipe(
-        Effect.catchTag("RedistributionRepositoryError", error =>
-          Effect.fail(
-            new RedistributionRepositoryError({
-              operation: "adminListRequests.listWithOffset",
-              cause: error,
-            }),
-          )),
-      ),
+    confirmCompletion: ({ requestId, confirmedByUserId, completedBikeIds }) =>
+      Effect.gen(function* () {
+        const user = yield* assertUserExists(confirmedByUserId);
+        const stationId = getUserStationId(user)!;
 
-    adminGetById: requestId =>
-      repo.findAndPopulate({ id: requestId }).pipe(
-        Effect.catchTag("RedistributionRepositoryError", error =>
-          Effect.fail(
-            new RedistributionRepositoryError({
-              operation: "adminGetById.findAndPopulate",
-              cause: error,
-            }),
-          )),
-      ),
+        return yield* runPrismaTransaction(client, (tx) => {
+          const txRedistributionRepo = makeRedistributionRepository(tx);
+          const txBikeRepo = makeBikeRepository(tx);
+
+          return Effect.gen(function* () {
+            const reqOpt = yield* txRedistributionRepo.findAndPopulate({
+              id: requestId,
+            });
+
+            if (Option.isNone(reqOpt)) {
+              return yield* Effect.fail(
+                new RedistributionRequestNotFound({ requestId }),
+              );
+            }
+
+            const req = reqOpt.value;
+
+            // Authorization checks
+            if (req.targetStation.id !== stationId) {
+              return yield* Effect.fail(
+                new UnauthorizedRedistributionCompletion({
+                  requestId,
+                  targetStationId: req.targetStation.id,
+                  workingStationId: stationId,
+                }),
+              );
+            }
+
+            if (
+              req.status !== RedistributionStatus.IN_TRANSIT
+              && req.status !== RedistributionStatus.PARTIALLY_COMPLETED
+            ) {
+              return yield* Effect.fail(
+                new CannotConfirmNonTransitedRedistribution({
+                  requestId,
+                  currentStatus: req.status,
+                }),
+              );
+            }
+
+            // Comparison logic
+            const unconfirmedBikeIds = req.items
+              .filter(item => item.bike.status === BikeStatus.UNAVAILABLE)
+              .map(item => item.bike.id);
+
+            const validCompletedBikeIds = completedBikeIds.filter(id =>
+              unconfirmedBikeIds.includes(id),
+            );
+            const validLength = validCompletedBikeIds.length;
+
+            if (validLength === 0) {
+              return yield* Effect.fail(
+                new InvalidBikeIdsForRedistributionCompletion({
+                  requestId,
+                  providedBikeIds: completedBikeIds,
+                  unconfirmedBikeIds,
+                }),
+              );
+            }
+
+            const isFullMatch
+              = unconfirmedBikeIds.length === validCompletedBikeIds.length;
+
+            const finalStatus = isFullMatch
+              ? RedistributionStatus.COMPLETED
+              : RedistributionStatus.PARTIALLY_COMPLETED;
+
+            const now = new Date();
+
+            // Update item delivery status
+            if (validCompletedBikeIds.length > 0) {
+              yield* txRedistributionRepo.updateItemDeliveredAt(
+                requestId,
+                validCompletedBikeIds,
+                now,
+              );
+
+              yield* Effect.all(
+                validCompletedBikeIds.map(bikeId =>
+                  txBikeRepo.updateStatusAndStationAt(
+                    bikeId,
+                    "AVAILABLE",
+                    req.targetStation.id,
+                    now,
+                  ),
+                ),
+                { concurrency: "unbounded" },
+              );
+            }
+            // Update status
+            const updatedReq = yield* txRedistributionRepo
+              .updateAndFindWithPopulation(
+                { id: requestId },
+                {
+                  status: finalStatus,
+                  completedAt:
+                    finalStatus === RedistributionStatus.COMPLETED
+                      ? now
+                      : undefined,
+                },
+              )
+              .pipe(Effect.map(o => Option.getOrThrow(o)));
+
+            return updatedReq;
+          });
+        }).pipe(
+          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+        );
+      }),
+
+    adminListRequests: (filter, page) => repo.listWithOffset(filter, page),
+
+    adminGetById: requestId => repo.findAndPopulate({ id: requestId }),
   };
 }
 

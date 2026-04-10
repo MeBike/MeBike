@@ -23,6 +23,7 @@ export const redistributionReqErrorCodes = [
   "CANNOT_REJECT_NON_PENDING_REDISTRIBUTION",
   "CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION",
   "CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION",
+  "INVALID_BIKE_IDS_FOR_REDISTRIBUTION_COMPLETION",
 ] as const;
 
 export const RedistributionReqErrorCodeSchema = z.enum(redistributionReqErrorCodes);
@@ -76,4 +77,5 @@ export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, 
   CANNOT_REJECT_NON_PENDING_REDISTRIBUTION: "Cannot reject redistribution request that is not in pending state",
   CANNOT_START_TRANSIT_NON_APPROVED_REDISTRIBUTION: "Cannot start the transition of this redistribution request that is not in approved state",
   CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION: "Cannot complete redistribution request that is not in transit or partially completed state",
+  INVALID_BIKE_IDS_FOR_REDISTRIBUTION_COMPLETION: "Invalid bike Ids provided for redistribution completion",
 };

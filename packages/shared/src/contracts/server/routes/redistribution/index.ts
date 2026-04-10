@@ -4,6 +4,10 @@ import * as queries from "./queries";
 export {
   createRedistributionRequest,
   cancelRedistributionRequest,
+  approveRedistributionRequest,
+  rejectRedistributionRequest,
+  startTransition,
+  confirmRedistributionRequestCompletion,
 } from "./mutations";
 
 export {
@@ -13,6 +17,8 @@ export {
   getRequestDetailForStaff,
   getRequestListForManager,
   getRequestDetailForManager,
+  getRequestListForAgency,
+  getRequestDetailForAgency,
 } from "./queries";
 
 export const redistributionRoutes = {

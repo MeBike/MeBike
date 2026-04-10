@@ -5,7 +5,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
-import { makePageResult, normalizedPage } from "@/domain/shared";
+import { defectOn, makePageResult, normalizedPage } from "@/domain/shared";
 
 import type { RedistributionRepo } from "../redistribution.repository.types";
 
@@ -33,56 +33,54 @@ export function makeRedistributionCoreReadRepository(
   const detailedSelect = detailedRedistributionRequestSelect;
 
   return {
-    findOne(where) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            client.redistributionRequest.findUnique({
-              where,
-              select,
-            }),
-          catch: e =>
-            new RedistributionRepositoryError({
-              operation: "findOne",
-              cause: e,
-            }),
-        });
-
-        if (!raw) {
-          return Option.none();
-        }
-        return Option.fromNullable(raw).pipe(Option.map(mapToRedistributionRequestRow));
-      });
-    },
+    findOne: where =>
+      Effect.tryPromise({
+        try: () =>
+          client.redistributionRequest.findUnique({
+            where,
+            select,
+          }),
+        catch: e =>
+          new RedistributionRepositoryError({
+            operation: "findOne",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(
+            Option.map(mapToRedistributionRequestRow),
+          ),
+        ),
+        defectOn(RedistributionRepositoryError),
+      ),
 
     findById(requestId) {
       return this.findOne({ id: requestId });
     },
 
-    findAndPopulate(where) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            client.redistributionRequest.findUnique({
-              where,
-              select: detailedSelect,
-            }),
-          catch: e =>
-            new RedistributionRepositoryError({
-              operation: "findAndPopulate",
-              cause: e,
-            }),
-        });
+    findAndPopulate: where =>
+      Effect.tryPromise({
+        try: () =>
+          client.redistributionRequest.findUnique({
+            where,
+            select: detailedSelect,
+          }),
+        catch: e =>
+          new RedistributionRepositoryError({
+            operation: "findAndPopulate",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(
+            Option.map(mapToRedistributionRequestDetail),
+          ),
+        ),
+        defectOn(RedistributionRepositoryError),
+      ),
 
-        if (!raw) {
-          return Option.none();
-        }
-        return Option.fromNullable(raw).pipe(Option.map(mapToRedistributionRequestDetail));
-      });
-    },
-
-    listWithOffset(where, pageReq) {
-      return Effect.gen(function* () {
+    listWithOffset: (where, pageReq) =>
+      Effect.gen(function* () {
         const { page, pageSize, skip, take } = normalizedPage(pageReq);
         const orderBy = toRedistributionOrderBy(pageReq);
 
@@ -115,7 +113,6 @@ export function makeRedistributionCoreReadRepository(
         const mappedItems = items.map(mapToRedistributionRequestSummaryRow);
 
         return makePageResult(mappedItems, total, page, pageSize);
-      });
-    },
+      }).pipe(defectOn(RedistributionRepositoryError)),
   };
 }

@@ -73,6 +73,14 @@ export class UnauthorizedRedistributionRejection extends Data.TaggedError(
     readonly workingStationId: string;
   }> {}
 
+export class UnauthorizedRedistributionCompletion extends Data.TaggedError(
+  "UnauthorizedRedistributionCompletion",
+)<{
+    readonly requestId: string;
+    readonly targetStationId: string;
+    readonly workingStationId: string;
+  }> {}
+
 export class UnauthorizedStartTransition extends Data.TaggedError(
   "UnauthorizedStartTransition",
 )<{
@@ -148,6 +156,21 @@ export class CannotStartTransitionNonApprovedRedistribution extends Data.TaggedE
     readonly currentStatus: string;
   }> {}
 
+export class CannotConfirmNonTransitedRedistribution extends Data.TaggedError(
+  "CannotConfirmNonTransitedRedistribution",
+)<{
+    readonly requestId: string;
+    readonly currentStatus: string;
+  }> {}
+
+export class InvalidBikeIdsForRedistributionCompletion extends Data.TaggedError(
+  "InvalidBikeIdsForRedistributionCompletion",
+)<{
+    readonly requestId: string;
+    readonly providedBikeIds: string[];
+    readonly unconfirmedBikeIds: string[];
+  }> {}
+
 export type RedistributionServiceFailure
   = | RedistributionRequestNotFound
     | RedistributionRequestNotFoundWithStatus
@@ -158,6 +181,7 @@ export type RedistributionServiceFailure
     | UnauthorizedRedistributionCancellation
     | UnauthorizedRedistributionApproval
     | UnauthorizedRedistributionRejection
+    | UnauthorizedRedistributionCompletion
     | UnauthorizedStartTransition
     | StationNotFound
     | AgencyNotFound
@@ -170,4 +194,6 @@ export type RedistributionServiceFailure
     | CannotApproveNonPendingRedistribution
     | CannotRejectNonPendingRedistribution
     | CannotStartTransitionNonApprovedRedistribution
+    | CannotConfirmNonTransitedRedistribution
+    | InvalidBikeIdsForRedistributionCompletion
     | RedistributionRepositoryError;

@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Effect, Match, Option } from "effect";
 
 import type {
   PrismaClient,
@@ -6,7 +6,12 @@ import type {
   RedistributionStatus,
 } from "generated/prisma/client";
 
-import type { RedistributionRepo } from "../redistribution.repository.types";
+import { defectOn } from "@/domain/shared";
+
+import type {
+  CreateRedistributionRequestInput,
+  RedistributionRepo,
+} from "../redistribution.repository.types";
 
 import { RedistributionRepositoryError } from "../../domain-errors";
 import {
@@ -18,7 +23,7 @@ import {
 
 export type RedistributionWriteRepo = Pick<
   RedistributionRepo,
-  "create" | "update" | "updateAndFindWithPopulation"
+  "create" | "update" | "updateAndFindWithPopulation" | "updateItemDeliveredAt"
 >;
 
 export function makeRedistributionWriteRepository(
@@ -27,33 +32,40 @@ export function makeRedistributionWriteRepository(
   const select = redistributionRequestSelect;
   const detailedSelect = detailedRedistributionRequestSelect;
 
+  const createWithClient = (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    data: CreateRedistributionRequestInput,
+  ) =>
+    Effect.tryPromise({
+      try: async () =>
+        tx.redistributionRequest.create({
+          data: {
+            requestedByUserId: data.requestedByUserId,
+            sourceStationId: data.sourceStationId,
+            targetStationId: data.targetStationId,
+            requestedQuantity: data.requestedQuantity,
+            reason: data.reason,
+            status: "PENDING_APPROVAL" as RedistributionStatus,
+            items: data.bikeIds
+              ? {
+                  create: data.bikeIds.map(bikeId => ({ bikeId })),
+                }
+              : undefined,
+          },
+          select,
+        }),
+      catch: e =>
+        new RedistributionRepositoryError({
+          operation: "create",
+          cause: e,
+        }),
+    }).pipe(
+      Effect.map(mapToRedistributionRequestRow),
+      defectOn(RedistributionRepositoryError),
+    );
   return {
     create(data) {
-      return Effect.gen(function* () {
-        const { bikeIds, ...rest } = data;
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            client.redistributionRequest.create({
-              data: {
-                ...rest,
-                status: "PENDING_APPROVAL" as RedistributionStatus,
-                items: bikeIds
-                  ? {
-                      create: bikeIds.map(bikeId => ({ bikeId })),
-                    }
-                  : undefined,
-              },
-              select,
-            }),
-          catch: e =>
-            new RedistributionRepositoryError({
-              operation: "create",
-              cause: e,
-            }),
-        });
-
-        return mapToRedistributionRequestRow(raw);
-      });
+      return createWithClient(client, data);
     },
 
     update(where, data) {
@@ -83,8 +95,11 @@ export function makeRedistributionWriteRepository(
           }),
       }).pipe(
         Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(mapToRedistributionRequestRow)),
+          Option.fromNullable(row).pipe(
+            Option.map(mapToRedistributionRequestRow),
+          ),
         ),
+        defectOn(RedistributionRepositoryError),
       );
     },
 
@@ -115,8 +130,36 @@ export function makeRedistributionWriteRepository(
           }),
       }).pipe(
         Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(mapToRedistributionRequestDetail)),
+          Option.fromNullable(row).pipe(
+            Option.map(mapToRedistributionRequestDetail),
+          ),
         ),
+        defectOn(RedistributionRepositoryError),
+      );
+    },
+
+    updateItemDeliveredAt(requestId, bikeIds, deliveredAt) {
+      return Effect.tryPromise({
+        try: async () => {
+          await client.redistributionRequestItem.updateMany({
+            where: {
+              redistributionRequestId: requestId,
+              bikeId: { in: bikeIds },
+              deliveredAt: null, // Only update if not already delivered
+            },
+            data: {
+              deliveredAt,
+            },
+          });
+        },
+        catch: e =>
+          new RedistributionRepositoryError({
+            operation: "updateItemDeliveredAt",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.asVoid,
+        defectOn(RedistributionRepositoryError),
       );
     },
   };

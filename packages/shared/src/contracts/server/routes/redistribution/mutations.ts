@@ -537,11 +537,3 @@ export const confirmRedistributionRequestCompletion = createRoute({
     }),
   },
 });
-
-export const redistributionReqsMutations = {
-  createRedistributionRequest,
-  cancelRedistributionRequest,
-  approveRedistributionRequest,
-  rejectRedistributionRequest,
-  startTransition,
-} as const;

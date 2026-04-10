@@ -317,9 +317,105 @@ const rejectRedistributionRequest: RouteHandler<
   );
 };
 
+const confirmRedistributionRequestCompletion: RouteHandler<
+  RedistributionRoutes["confirmRedistributionRequestCompletion"]
+> = async (c) => {
+  const { userId } = c.var.currentUser!;
+  const { requestId } = c.req.valid("param");
+  const { completedBikeIds } = c.req.valid("json");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.confirmCompletion({ requestId, confirmedByUserId: userId, completedBikeIds });
+    }),
+    "POST /v1/redistribution-requests/{requestId}/confirm-completion",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<{ message: string } & { result: RedistributionContracts.RedistributionRequestDetail }, 200>(
+        {
+          message: "Redistribution request completed successfully",
+          result: toContractRedistributionRequestDetail(right),
+        },
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("UserNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.USER_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+                userId: error.userId,
+              },
+            },
+            404,
+          )),
+        Match.tag("RedistributionRequestNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+                requestId: error.requestId,
+              },
+            },
+            404,
+          )),
+        Match.tag("UnauthorizedRedistributionCompletion", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
+            {
+              error: redistributionReqErrorMessages.UNAUTHORIZED_COMPLETED_REDISTRIBUTION_CONFIRMATION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_COMPLETED_REDISTRIBUTION_CONFIRMATION,
+                requestId: error.requestId,
+                targetStationId: error.targetStationId,
+                workingStationId: error.workingStationId,
+              },
+            },
+            403,
+          )),
+        Match.tag("CannotConfirmNonTransitedRedistribution", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+            {
+              error: redistributionReqErrorMessages.CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION,
+                requestId: error.requestId,
+                currentStatus: error.currentStatus,
+              },
+            },
+            400,
+          )),
+        Match.tag("InvalidBikeIdsForRedistributionCompletion", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+            {
+              error: redistributionReqErrorMessages.INVALID_BIKE_IDS_FOR_REDISTRIBUTION_COMPLETION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.INVALID_BIKE_IDS_FOR_REDISTRIBUTION_COMPLETION,
+                requestId: error.requestId,
+                providedBikeIds: error.providedBikeIds,
+                unconfirmedBikeIds: error.unconfirmedBikeIds,
+              },
+            },
+            400,
+          )),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const RedistributionManagerController = {
   getRequestListForManager,
   getRequestDetailForManager,
   approveRedistributionRequest,
   rejectRedistributionRequest,
+  confirmRedistributionRequestCompletion,
 } as const;
