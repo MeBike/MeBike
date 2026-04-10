@@ -32,6 +32,7 @@ import {
   CannotStartTransitionNonApprovedRedistribution,
   ExceededMinBikesAtStation,
   InvalidBikeIdsForRedistributionCompletion,
+  NoBikesInRedistributionRequest,
   NotEnoughBikesAtStation,
   NotEnoughEmptySlotsAtTarget,
   RedistributionRequestNotFound,
@@ -104,7 +105,7 @@ export type RedistributionService = {
     userId: string;
     reason: string;
   }) => Effect.Effect<
-    RedistributionRequestRow,
+    RedistributionRequestDetailRow,
     RedistributionServiceFailure | BikeRepositoryError,
     Prisma | RedistributionRepository | BikeRepository
   >;
@@ -387,11 +388,10 @@ function makeRedistributionService(
             const txRedistributionRepo = makeRedistributionRepository(tx);
 
             // Marks bikes as unavailable
-            yield* Effect.all(
-              bikeIds.map(bikeId =>
-                txBikeRepo.updateStatusAt(bikeId, "UNAVAILABLE", now),
-              ),
-              { concurrency: "unbounded" },
+            yield* txBikeRepo.updateManyStatusAt(
+              bikeIds,
+              BikeStatus.UNAVAILABLE,
+              now,
             );
 
             // TODO: Update empty slots at source and target stations
@@ -411,69 +411,63 @@ function makeRedistributionService(
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
-            const updatedOpt = yield* txRedistributionRepo.update(
-              {
-                id: args.requestId,
-                requestedByUserId: args.userId,
-                status: RedistributionStatus.PENDING_APPROVAL,
-              },
-              {
-                reason: args.reason,
-                status: RedistributionStatus.CANCELLED,
-              },
-            );
 
-            // Update success
-            if (Option.isSome(updatedOpt)) {
-              const request = updatedOpt.value;
-              const bikeIds = request.items.map(item => item.bikeId);
-
-              // Restore bikes to AVAILABLE if any were marked unavailable
-              if (bikeIds.length > 0) {
-                yield* Effect.all(
-                  bikeIds.map(bikeId =>
-                    txBikeRepo.updateStatusAt(bikeId, "AVAILABLE", now),
-                  ),
-                  { concurrency: "unbounded" },
-                  // TODO: update empty slots at source and target station
-                );
-              }
-
-              return request;
-            }
-
-            // Update failed
-            const existingRequest = yield* txRedistributionRepo.findById(
+            const existingOpt = yield* txRedistributionRepo.findById(
               args.requestId,
             );
 
-            if (Option.isSome(existingRequest)) {
-              const req = existingRequest.value;
-
-              if (req.requestedByUserId !== args.userId) {
-                return yield* Effect.fail(
-                  new UnauthorizedRedistributionCancellation({
-                    requestId: args.requestId,
-                    requestedByUserId: req.requestedByUserId,
-                    cancelledByUserId: args.userId,
-                  }),
-                );
-              }
-
-              if (req.status !== RedistributionStatus.PENDING_APPROVAL) {
-                return yield* Effect.fail(
-                  new CannotCancelNonPendingRedistribution({
-                    requestId: args.requestId,
-                    currentStatus: req.status,
-                  }),
-                );
-              }
+            if (Option.isNone(existingOpt)) {
+              return yield* Effect.fail(
+                new RedistributionRequestNotFound({
+                  requestId: args.requestId,
+                }),
+              );
             }
-            return yield* Effect.fail(
-              new RedistributionRequestNotFound({
-                requestId: args.requestId,
-              }),
-            );
+
+            const existing = existingOpt.value;
+
+            if (existing.requestedByUserId !== args.userId) {
+              return yield* Effect.fail(
+                new UnauthorizedRedistributionCancellation({
+                  requestId: args.requestId,
+                  requestedByUserId: existing.requestedByUserId,
+                  cancelledByUserId: args.userId,
+                }),
+              );
+            }
+
+            if (existing.status !== RedistributionStatus.PENDING_APPROVAL) {
+              return yield* Effect.fail(
+                new CannotCancelNonPendingRedistribution({
+                  requestId: args.requestId,
+                  currentStatus: existing.status,
+                }),
+              );
+            }
+
+            const bikeIds = existing.items.map(item => item.bikeId);
+
+            // Restore bikes to AVAILABLE if any were marked unavailable
+            if (bikeIds.length > 0) {
+              yield* txBikeRepo.updateManyStatusAt(
+                bikeIds,
+                BikeStatus.AVAILABLE,
+                now,
+              );
+            }
+
+            const updatedOpt
+              = yield* txRedistributionRepo.updateAndFindWithPopulation(
+                {
+                  id: args.requestId,
+                },
+                {
+                  reason: args.reason,
+                  status: RedistributionStatus.CANCELLED,
+                },
+              );
+
+            return Option.getOrThrow(updatedOpt);
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
         );
@@ -485,11 +479,56 @@ function makeRedistributionService(
         return yield* runPrismaTransaction(client, tx =>
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
+            const txBikeRepo = makeBikeRepository(tx);
+
+            const existingRequest = yield* txRedistributionRepo.findById(
+              args.requestId,
+            );
+
+            if (Option.isNone(existingRequest)) {
+              return yield* Effect.fail(
+                new RedistributionRequestNotFound({
+                  requestId: args.requestId,
+                }),
+              );
+            }
+
+            const req = existingRequest.value;
+
+            if (req.requestedByUserId !== args.userId) {
+              return yield* Effect.fail(
+                new UnauthorizedStartTransition({
+                  requestId: args.requestId,
+                  requestedByUserId: req.requestedByUserId,
+                  startedByUserId: args.userId,
+                }),
+              );
+            }
+
+            if (req.status !== RedistributionStatus.APPROVED) {
+              return yield* Effect.fail(
+                new CannotStartTransitionNonApprovedRedistribution({
+                  requestId: args.requestId,
+                  currentStatus: req.status,
+                }),
+              );
+            }
+
+            const bikeIds = req.items.map(item => item.bikeId);
+            if (bikeIds.length === 0) {
+              return yield* Effect.fail(
+                new NoBikesInRedistributionRequest({
+                  requestId: args.requestId,
+                }),
+              );
+            }
+
+            yield* txBikeRepo.updateManyStationAt(bikeIds, null, now);
+
             const updatedOpt
               = yield* txRedistributionRepo.updateAndFindWithPopulation(
                 {
                   id: args.requestId,
-                  status: RedistributionStatus.APPROVED,
                 },
                 {
                   status: RedistributionStatus.IN_TRANSIT,
@@ -497,43 +536,7 @@ function makeRedistributionService(
                 },
               );
 
-            // Update success
-            if (Option.isSome(updatedOpt)) {
-              return updatedOpt.value;
-            }
-
-            // Update failed
-            const existingRequest = yield* txRedistributionRepo.findById(
-              args.requestId,
-            );
-
-            if (Option.isSome(existingRequest)) {
-              const req = existingRequest.value;
-
-              if (req.requestedByUserId !== args.userId) {
-                return yield* Effect.fail(
-                  new UnauthorizedStartTransition({
-                    requestId: args.requestId,
-                    requestedByUserId: req.requestedByUserId,
-                    startedByUserId: args.userId,
-                  }),
-                );
-              }
-
-              if (req.status !== RedistributionStatus.APPROVED) {
-                return yield* Effect.fail(
-                  new CannotStartTransitionNonApprovedRedistribution({
-                    requestId: args.requestId,
-                    currentStatus: req.status,
-                  }),
-                );
-              }
-            }
-            return yield* Effect.fail(
-              new RedistributionRequestNotFound({
-                requestId: args.requestId,
-              }),
-            );
+            return Option.getOrThrow(updatedOpt);
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
         );
@@ -590,73 +593,70 @@ function makeRedistributionService(
       Effect.gen(function* () {
         const user = yield* assertUserExists(args.rejectedByUserId);
         const stationId = getUserStationId(user)!;
-        // TODO: handle agency case
         return yield* runPrismaTransaction(client, tx =>
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
             const now = new Date();
 
+            const existingOpt = yield* txRedistributionRepo.findAndPopulate({
+              id: args.requestId,
+            });
+
+            if (Option.isNone(existingOpt)) {
+              return yield* Effect.fail(
+                new RedistributionRequestNotFound({
+                  requestId: args.requestId,
+                }),
+              );
+            }
+
+            const existing = existingOpt.value;
+
+            // Authorization check
+            if (existing.targetStation.id !== stationId) {
+              return yield* Effect.fail(
+                new UnauthorizedRedistributionRejection({
+                  requestId: args.requestId,
+                  targetStationId: existing.targetStation.id,
+                  workingStationId: stationId,
+                }),
+              );
+            }
+
+            // Status check
+            if (existing.status !== RedistributionStatus.PENDING_APPROVAL) {
+              return yield* Effect.fail(
+                new CannotRejectNonPendingRedistribution({
+                  requestId: args.requestId,
+                  currentStatus: existing.status,
+                }),
+              );
+            }
+
+            const bikeIds = existing.items.map(item => item.bike.id);
+
+            // Restore bikes to AVAILABLE
+            if (bikeIds.length > 0) {
+              yield* txBikeRepo.updateManyStatusAt(
+                bikeIds,
+                BikeStatus.AVAILABLE,
+                now,
+              );
+            }
+
             const updatedOpt
               = yield* txRedistributionRepo.updateAndFindWithPopulation(
                 {
                   id: args.requestId,
-                  targetStationId: stationId,
-                  status: RedistributionStatus.PENDING_APPROVAL,
                 },
                 {
                   status: RedistributionStatus.REJECTED,
                   reason: args.reason,
                 },
               );
-            // Update success – restore bikes to AVAILABLE
-            if (Option.isSome(updatedOpt)) {
-              const request = updatedOpt.value;
-              const bikeIds = request.items.map(item => item.bike.id);
 
-              if (bikeIds.length > 0) {
-                yield* Effect.all(
-                  bikeIds.map(bikeId =>
-                    txBikeRepo.updateStatusAt(bikeId, "AVAILABLE", now),
-                  ),
-                  { concurrency: "unbounded" },
-                );
-              }
-
-              return request;
-            }
-
-            // Update failed
-            const existingReq = yield* txRedistributionRepo.findById(
-              args.requestId,
-            );
-
-            if (Option.isSome(existingReq)) {
-              const req = existingReq.value;
-
-              if (req.targetStationId !== stationId) {
-                return yield* Effect.fail(
-                  new UnauthorizedRedistributionRejection({
-                    requestId: args.requestId,
-                    targetStationId: req.targetStationId,
-                    workingStationId: stationId,
-                  }),
-                );
-              }
-
-              if (req.status !== RedistributionStatus.PENDING_APPROVAL) {
-                return yield* Effect.fail(
-                  new CannotRejectNonPendingRedistribution({
-                    requestId: args.requestId,
-                    currentStatus: req.status,
-                  }),
-                );
-              }
-            }
-
-            return yield* Effect.fail(
-              new RedistributionRequestNotFound({ requestId: args.requestId }),
-            );
+            return Option.getOrThrow(updatedOpt);
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
         );
@@ -744,16 +744,11 @@ function makeRedistributionService(
                 now,
               );
 
-              yield* Effect.all(
-                validCompletedBikeIds.map(bikeId =>
-                  txBikeRepo.updateStatusAndStationAt(
-                    bikeId,
-                    "AVAILABLE",
-                    req.targetStation.id,
-                    now,
-                  ),
-                ),
-                { concurrency: "unbounded" },
+              yield* txBikeRepo.updateManyStatusAndStationAt(
+                validCompletedBikeIds,
+                BikeStatus.AVAILABLE,
+                req.targetStation.id,
+                now,
               );
             }
             // Update status

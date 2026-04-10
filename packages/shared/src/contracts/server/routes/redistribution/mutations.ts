@@ -148,7 +148,7 @@ export const cancelRedistributionRequest = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RedistributionRequestSchemaOpenApi,
+            RedistributionRequestDetailSchemaOpenApi,
             "Redistribution request cancelled successfully",
           ),
         },

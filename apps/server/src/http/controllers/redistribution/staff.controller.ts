@@ -171,7 +171,7 @@ const cancelRedistributionRequest: RouteHandler<
       c.json(
         {
           message: "Redistribution request cancelled successfully",
-          result: toContractRedistributionRequest(right),
+          result: toContractRedistributionRequestDetail(right),
         },
         200,
       )),
@@ -433,6 +433,14 @@ const startTransition: RouteHandler<
             },
             400,
           )),
+        Match.tag("NoBikesInRedistributionRequest", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>({
+            error: redistributionReqErrorMessages.NO_BIKES_IN_REDISTRIBUTION_REQUEST,
+            details: {
+              code: RedistributionReqErrorCodeSchema.enum.NO_BIKES_IN_REDISTRIBUTION_REQUEST,
+              requestId: error.requestId,
+            },
+          }, 400)),
         Match.orElse(() => {
           throw left;
         }),

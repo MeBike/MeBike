@@ -163,6 +163,12 @@ export class CannotConfirmNonTransitedRedistribution extends Data.TaggedError(
     readonly currentStatus: string;
   }> {}
 
+export class NoBikesInRedistributionRequest extends Data.TaggedError(
+  "NoBikesInRedistributionRequest",
+)<{
+    readonly requestId: string;
+  }> {}
+
 export class InvalidBikeIdsForRedistributionCompletion extends Data.TaggedError(
   "InvalidBikeIdsForRedistributionCompletion",
 )<{
@@ -195,5 +201,6 @@ export type RedistributionServiceFailure
     | CannotRejectNonPendingRedistribution
     | CannotStartTransitionNonApprovedRedistribution
     | CannotConfirmNonTransitedRedistribution
+    | NoBikesInRedistributionRequest
     | InvalidBikeIdsForRedistributionCompletion
     | RedistributionRepositoryError;
