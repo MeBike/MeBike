@@ -1,172 +1,191 @@
 "use client";
 
-import {
-  Users,
-  MapPin,
-  TrendingUp,
-  AlertTriangle,
-  Calendar,
-  DollarSign,
-  ArrowUpRight,
-  ArrowDownRight,
-  CheckCircle2,
-  Bike,
+import { useEffect, useState } from "react";
+import { getStatusColor } from "@/columns/agency-column";
+import { 
+  Settings2, Edit3, Loader2, Users, MapPin, Bike, 
+  TrendingUp, AlertTriangle, Calendar, DollarSign, 
+  ArrowUpRight, ArrowDownRight, CheckCircle2, Clock 
 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
-import { AgencyStats } from "@/types/Agency";
+import type { AgencyStats , AgencyStatus } from "@custom-types";
+import { updateSchema, updateAgencyStatusSchema, UpdateAgencyFormData, UpdateAgencyStatusFormData } from "@/schemas";
 
-function SectionCard({
-  icon: Icon,
-  title,
-  children,
-  className,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  children: React.ReactNode;
-  className?: string;
+// --- UI Helpers ---
+const SectionCard = ({ icon: Icon, title, children }: any) => (
+  <div className="rounded-xl border border-border/60 bg-card overflow-hidden flex flex-col shadow-sm">
+    <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4 bg-muted/20">
+      <Icon className="h-5 w-5 text-primary" />
+      <h2 className="text-sm font-semibold uppercase">{title}</h2>
+    </div>
+    <div className="p-5 flex-1">{children}</div>
+  </div>
+);
+
+const StatRow = ({ label, value, color }: any) => (
+  <div className="flex items-center justify-between border-b border-border/40 pb-2 last:border-0 last:pb-0">
+    <span className="text-sm text-muted-foreground">{label}</span>
+    <span className={cn("text-sm font-bold", color)}>{value}</span>
+  </div>
+);
+
+export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: { 
+  stats: AgencyStats; 
+  onUpdateInfo: (data: UpdateAgencyFormData) => Promise<void>;
+  onUpdateStatus: (data: UpdateAgencyStatusFormData) => Promise<void>;
 }) {
-  return (
-    <div className={cn("overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm", className)}>
-      <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4">
-        <Icon className="h-5 w-5 shrink-0 text-primary" />
-        <h2 className="text-base font-semibold text-foreground">{title}</h2>
-      </div>
-      <div className="p-5">{children}</div>
-    </div>
-  );
-}
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-function StatRow({ label, value, subValue }: { label: string; value: React.ReactNode; subValue?: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-border/40 pb-3 last:border-0 last:pb-0">
-      <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        {subValue && <p className="text-[10px] text-muted-foreground/70 uppercase">{subValue}</p>}
-      </div>
-      <div className="text-sm font-bold text-foreground">{value}</div>
-    </div>
-  );
-}
+  const { agency, period, operators, currentStation, pickups, returns, incidents } = stats;
 
-export function AgencyStatsView({ stats }: { stats: AgencyStats | null }) {
-  if (!stats) return null;
+  // 1. Khởi tạo Form
+  const infoForm = useForm<UpdateAgencyFormData>({
+    resolver: zodResolver(updateSchema),
+    defaultValues: { name: agency.name, contactPhone: agency.contactPhone || "" },
+  });
 
-  const { currentStation, pickups, operators, incidents, period } = stats;
+  const statusForm = useForm<UpdateAgencyStatusFormData>({
+    resolver: zodResolver(updateAgencyStatusSchema),
+    defaultValues: { status: agency.status as any },
+  });
+
+  // 2. ✅ Reset form khi chuyển sang Agency khác (Fix lỗi data cũ)
+  useEffect(() => {
+    infoForm.reset({ name: agency.name, contactPhone: agency.contactPhone || "" });
+    statusForm.reset({ status: agency.status as any });
+  }, [agency, infoForm, statusForm]);
+
+  // 3. ✅ Wrapper xử lý submit (Fix lỗi kẹt nút)
+  const handleAction = async (task: () => Promise<void>, close: () => void) => {
+    setIsSubmitting(true);
+    try {
+      await task();
+      close();
+    } catch (error) {
+      console.error(error);
+      // Nút sẽ tự quay lại trạng thái bình thường nhờ finally
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header Info & Period */}
-      <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-primary/5 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">{stats.agency.name}</h1>
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            <Calendar className="h-3.5 w-3.5" />
-            Kỳ báo cáo: {formatToVNTime(period.from)} - {formatToVNTime(period.to)}
-          </p>
+      {/* Header */}
+      <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-white p-6 sm:flex-row sm:items-center sm:justify-between shadow-sm">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{agency.name}</h1>
+            <Badge className={`${getStatusColor(agency.status as AgencyStatus)}`}>{agency.status}</Badge>
+          </div>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> Kỳ: {formatToVNTime(period.from)}</span>
+            <span>SĐT: {agency.contactPhone}</span>
+          </div>
         </div>
+
         <div className="flex gap-2">
-          <Badge variant="outline" className="bg-background">
-            Cập nhật: {formatToVNTime(stats.updatedAt)}
-          </Badge>
+          {/* Status Dialog */}
+          <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+            <DialogTrigger asChild><Button variant="outline" size="sm">Trạng thái</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Cập nhật trạng thái</DialogTitle></DialogHeader>
+              <Form {...statusForm}>
+                <form onSubmit={statusForm.handleSubmit(d => handleAction(() => onUpdateStatus(d), () => setIsStatusOpen(false)))} className="space-y-4">
+                  <FormField control={statusForm.control} name="status" render={({ field }) => (
+                    <FormItem>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {["ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <DialogFooter><Button type="submit" disabled={isSubmitting}>{isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Lưu</Button></DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Info Dialog */}
+          <Dialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+            <DialogTrigger asChild><Button size="sm">Chỉnh sửa</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Thông tin Agency</DialogTitle></DialogHeader>
+              <Form {...infoForm}>
+                <form onSubmit={infoForm.handleSubmit(d => handleAction(() => onUpdateInfo(d), () => setIsInfoOpen(false)))} className="space-y-4">
+                  <FormField control={infoForm.control} name="name" render={({ field }) => (
+                    <FormItem><FormLabel>Tên</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={infoForm.control} name="contactPhone" render={({ field }) => (
+                    <FormItem><FormLabel>SĐT</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                  )} />
+                  <DialogFooter><Button type="submit" disabled={isSubmitting}>{isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Cập nhật</Button></DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
+      {/* Stats Grids */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Nhân sự */}
-        <SectionCard icon={Users} title="Vận hành">
-          <div className="space-y-4">
-            <StatRow label="Tổng nhân viên" value={operators.totalOperators} />
-            <StatRow 
-              label="Đang hoạt động" 
-              value={<span className="text-green-600">{operators.activeOperators}</span>} 
-            />
+        <SectionCard icon={DollarSign} title="Tài chính">
+          <p className="text-2xl font-bold text-primary">{pickups.totalRevenue.toLocaleString()}đ</p>
+          <div className="mt-4 space-y-2">
+            <StatRow label="Hoàn tất" value={pickups.completedRentals} />
+            <StatRow label="TB phút" value={pickups.avgDurationMinutes} />
           </div>
         </SectionCard>
 
-        {/* Trạm xe */}
-        <SectionCard icon={MapPin} title="Trạng thái trạm">
-          <div className="space-y-4">
-            <StatRow label="Sức chứa" value={currentStation.totalCapacity} />
-            <StatRow 
-              label="Tỉ lệ lấp đầy" 
-              value={`${(currentStation.occupancyRate * 100).toFixed(1)}%`} 
-            />
+        <SectionCard icon={MapPin} title="Trạm xe">
+          <p className="text-2xl font-bold">{(currentStation.occupancyRate * 100).toFixed(1)}%</p>
+          <div className="mt-4 space-y-2">
+            <StatRow label="Tổng xe" value={currentStation.totalBikes} />
             <StatRow label="Ô trống" value={currentStation.emptySlots} />
           </div>
         </SectionCard>
 
-        {/* Doanh thu & Thuê xe */}
-        <SectionCard icon={DollarSign} title="Tài chính">
-          <div className="space-y-4">
-            <StatRow 
-              label="Tổng doanh thu" 
-              value={<span className="text-primary text-lg">{(pickups.totalRevenue).toLocaleString('vi-VN')}đ</span>} 
-            />
-            <StatRow label="Thời gian thuê TB" value={`${pickups.avgDurationMinutes} phút`} />
-          </div>
+        <SectionCard icon={Users} title="Nhân sự">
+          <StatRow label="Tổng số" value={operators.totalOperators} />
+          <StatRow label="Hoạt động" value={operators.activeOperators} color="text-green-600" />
         </SectionCard>
 
-        {/* Sự cố */}
         <SectionCard icon={AlertTriangle} title="Sự cố">
-          <div className="space-y-4">
-            <StatRow label="Tổng sự cố" value={incidents.totalIncidentsInPeriod} />
-            <StatRow 
-              label="Nghiêm trọng" 
-              value={<span className={incidents.criticalOpenIncidents > 0 ? "text-destructive" : ""}>{incidents.criticalOpenIncidents}</span>} 
-            />
-            <StatRow 
-              label="Đã xử lý" 
-              value={<span className="text-green-600">{incidents.resolvedIncidentsInPeriod}</span>} 
-            />
-          </div>
+          <StatRow label="Tổng số" value={incidents.totalIncidentsInPeriod} />
+          <StatRow label="Chưa xử lý" value={incidents.openIncidents} color="text-destructive" />
         </SectionCard>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Chi tiết xe tại trạm */}
-        <SectionCard icon={Bike} title="Chi tiết quản lý xe">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            <StatRow label="Tổng số xe" value={currentStation.totalBikes} />
-            <StatRow label="Sẵn sàng" value={<Badge className="bg-green-500">{currentStation.availableBikes}</Badge>} />
-            <StatRow label="Đang đặt trước" value={currentStation.bookedBikes} />
-            <StatRow label="Đang hỏng" value={<span className="text-destructive font-bold">{currentStation.brokenBikes}</span>} />
-            <StatRow label="Đang bảo trì" value={currentStation.maintainedBikes} />
-            <StatRow label="Không khả dụng" value={currentStation.unavailableBikes} />
+        <SectionCard icon={Bike} title="Chi tiết xe tại trạm">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 bg-green-50 rounded-lg"><p className="text-xs text-muted-foreground">Sẵn sàng</p><p className="text-xl font-bold text-green-700">{currentStation.availableBikes}</p></div>
+            <div className="p-3 bg-amber-50 rounded-lg"><p className="text-xs text-muted-foreground">Đặt trước</p><p className="text-xl font-bold text-amber-700">{currentStation.bookedBikes}</p></div>
+            <div className="p-3 bg-red-50 rounded-lg"><p className="text-xs text-muted-foreground">Đang hỏng</p><p className="text-xl font-bold text-red-700">{currentStation.brokenBikes}</p></div>
+            <div className="p-3 bg-blue-50 rounded-lg"><p className="text-xs text-muted-foreground">Bảo trì</p><p className="text-xl font-bold text-blue-700">{currentStation.maintainedBikes}</p></div>
           </div>
         </SectionCard>
 
-        {/* Thống kê lượt thuê */}
-        <SectionCard icon={TrendingUp} title="Hoạt động thuê & Trả">
-          <div className="grid grid-cols-1 gap-4">
-            <div className="flex items-center justify-around rounded-lg bg-muted/50 p-4">
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground uppercase">Lượt lấy xe</p>
-                <p className="text-2xl font-bold flex items-center justify-center gap-1">
-                  <ArrowUpRight className="h-5 w-5 text-green-500" />
-                  {pickups.totalRentals}
-                </p>
-              </div>
-              <div className="h-10 w-[1px] bg-border" />
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground uppercase">Lượt trả xe</p>
-                <p className="text-2xl font-bold flex items-center justify-center gap-1">
-                  <ArrowDownRight className="h-5 w-5 text-blue-500" />
-                  {stats.returns.totalReturns}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <StatRow label="Thuê thành công" value={pickups.completedRentals} />
-              <StatRow label="Thuê đã hủy" value={<span className="text-muted-foreground">{pickups.cancelledRentals}</span>} />
-              <StatRow 
-                label="Đại lý xác nhận trả" 
-                value={<div className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-blue-500"/>{stats.returns.agencyConfirmedReturns}</div>} 
-              />
-            </div>
+        <SectionCard icon={TrendingUp} title="Dòng luân chuyển">
+          <div className="flex justify-around border-b pb-4 mb-4">
+            <div className="text-center"><ArrowUpRight className="text-green-500 mx-auto" /><p className="text-xl font-bold">{pickups.totalRentals}</p><p className="text-[10px] text-muted-foreground">LƯỢT THUÊ</p></div>
+            <div className="text-center"><ArrowDownRight className="text-blue-500 mx-auto" /><p className="text-xl font-bold">{returns.totalReturns}</p><p className="text-[10px] text-muted-foreground">LƯỢT TRẢ</p></div>
           </div>
+          <StatRow label="Đang di chuyển" value={pickups.activeRentals} />
+          <StatRow label="Xác nhận trả" value={returns.agencyConfirmedReturns} />
         </SectionCard>
       </div>
     </div>

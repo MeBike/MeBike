@@ -740,3 +740,6 @@ export const DASHBOARD_MESSAGES = {
   GET_DASHBOARD_STATS_ERROR: 'Lỗi khi lấy thống kê dashboard',
   STATIONS_FETCH_SUCCESS: 'Lấy danh sách trạm thành công'
 }
+export const AGENCY_MESSAGES = {
+  VALIDATION_ERROR : 'Thông tin số điện thoại chỉ có 10 chữ số'
+}

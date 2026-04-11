@@ -85,7 +85,7 @@ export const ENDPOINT = {
         BASE : "/admin/agencies",
         ID : (id : string) => `/admin/agencies/${id}`,
         STATUS : (id : string) => `/admin/agencies/${id}/status`,
-        STATS : (id:string) => `/admin/agencies/${id}/stats`
+        STATS : (id:string) => `/admin/agencies/${id}/stats`,
     }
 
 } as const;

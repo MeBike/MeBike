@@ -3,6 +3,7 @@ import { ENDPOINT } from "@/constants";
 import { AxiosResponse } from "axios";
 import { ApiResponse } from "@/types";
 import type { Agency , AgencyStats } from "@/types/Agency";
+import { UpdateAgencyFormData , UpdateAgencyStatusFormData } from "@/schemas";
 export const agencyService = {
   getAgencies: async ({
     page,
@@ -24,5 +25,13 @@ export const agencyService = {
   getAgencyStats : async({id}:{id:string}) : Promise<AxiosResponse<AgencyStats>> => {
     const response = fetchHttpClient.get<AgencyStats>(ENDPOINT.AGENCY.STATS(id));
     return response;
-  }
+  },
+  updateAgencyStatus : async({id , data }:{id:string , data : UpdateAgencyStatusFormData}) : Promise<AxiosResponse<Agency>> => {
+    const response  = fetchHttpClient.patch<Agency>(ENDPOINT.AGENCY.STATUS(id),data);
+    return response
+  },
+  updateAgency : async({id , data }:{id:string , data : Partial<UpdateAgencyFormData>}) : Promise<AxiosResponse<Agency>> => {
+    const response  = fetchHttpClient.patch<Agency>(ENDPOINT.AGENCY.ID(id),data);
+    return response
+  },
 };

@@ -1,11 +1,9 @@
 import * as z from "zod";
-import { isValidUUID } from "@utils";
-export const updateStatusAgencySchema = z.object({
+export const updateAgencyStatusSchema = z.object({
     status : z.enum(["ACTIVE","INACTIVE","SUSPENDED","BANNED"]),
 })
-export type UpdateStatusAgencyFormData = z.infer<typeof updateStatusAgencySchema>;
+export type UpdateAgencyStatusFormData = z.infer<typeof updateAgencyStatusSchema>;
 export const updateSchema = z.object({
-    address : z.string(),
     contactPhone :  z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự"),
     name : z.string(),
 })

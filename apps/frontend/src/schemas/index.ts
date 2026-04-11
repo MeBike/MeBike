@@ -9,4 +9,4 @@ export * from "./supplier-schema";
 export * from "./user-schema";
 export * from "./wallet-schema";
 export * from "./withdraw-schema";
-export * from "./agency-schema"
+export * from "./agency-schema";

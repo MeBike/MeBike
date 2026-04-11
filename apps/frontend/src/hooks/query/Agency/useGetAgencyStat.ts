@@ -20,7 +20,7 @@ export const useGetAgencyStat = ({
   id : string
 }) => {
   return useQuery({
-    queryKey: ["stats", "agency"],
+    queryKey: ["stats", "agency",id],
     queryFn: () => getAgencyStat({ id : id }),
     enabled : !!id,
   });
