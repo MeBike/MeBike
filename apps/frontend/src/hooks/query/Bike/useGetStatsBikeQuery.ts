@@ -16,6 +16,6 @@ export const useGetBikeStatsQuery = (bikeId: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.BIKE.BIKE_STATS(bikeId),
     queryFn: () => fetchBikeStats(bikeId),
-    enabled: !!bikeId,
+    enabled: false,
   });
 };

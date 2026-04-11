@@ -10,8 +10,8 @@ import { env } from "@/config/env";
 import {
   currentUserMiddleware,
   requireAdminMiddleware,
-  requireAdminOrStaffMiddleware,
   requireAuthMiddleware,
+  requireBackofficeMiddleware,
 } from "@/http/middlewares/auth";
 import logger from "@/lib/logger";
 
@@ -89,7 +89,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/redistribution/*", requireAuthMiddleware);
   app.use("/v1/suppliers", requireAdminMiddleware);
   app.use("/v1/suppliers/*", requireAdminMiddleware);
-  app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
+  app.use("/v1/users/manage-users/*", requireBackofficeMiddleware);
   app.use("/v1/users/manage-users/create", requireAdminMiddleware);
   app.use(
     "/v1/users/manage-users/admin-reset-password/*",

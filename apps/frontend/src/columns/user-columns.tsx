@@ -200,3 +200,138 @@ export const userColumns = ({
     },
   },
 ];
+export const userColumnsStaff = ({
+  onView,
+  onViewWallet,
+}: {
+  onView?: ({ id }: { id: string }) => void;
+  onViewWallet?: ({id} : {id:string}) => void;
+}): ColumnDef<DetailUser>[] => [
+  {
+    accessorKey: "fullName",
+    header: "Họ tên",
+    meta: {
+      thClassName: "w-[17%]",
+      tdClassName: "max-w-0",
+    },
+    cell: ({ row }) => {
+      const name = row.original.fullName || "Không có";
+      return (
+        <div className="truncate" title={name}>
+          {name}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+    meta: {
+      thClassName: "w-[30%]",
+      tdClassName: "max-w-0",
+    },
+    cell: ({ row }) => {
+      const email = row.original.email || "Không có";
+      return (
+        <div className="truncate" title={email}>
+          {email}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "phoneNumber",
+    header: "Số điện thoại",
+    meta: {
+      thClassName: "w-[15%]",
+      tdClassName: "max-w-0 whitespace-nowrap",
+    },
+    cell: ({ row }) => {
+      return row.original.phoneNumber || "Không có";
+    },
+  },
+  {
+    accessorKey: "role",
+    header: "Vai trò",
+    meta: {
+      thClassName: "w-[12%]",
+      tdClassName: "whitespace-nowrap",
+    },
+    cell: ({ row }) => (
+      <span
+        className={`inline-flex px-1 py-1 rounded-full text-xxs font-medium ${getRoleColor(
+          row.original.role,
+        )}`}
+      >
+        {row.original.role}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "verify",
+    header: "Trạng thái",
+    meta: {
+      thClassName: "w-[14%]",
+      tdClassName: "whitespace-nowrap",
+    },
+    cell: ({ row }) => {
+      const displayStatus = getUserDisplayStatus(row.original);
+      return (
+        <span
+          className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
+            displayStatus,
+          )}`}
+        >
+          {displayStatus}
+        </span>
+      );
+    },
+  },
+  // {
+  //   accessorKey: "created_at",
+  //   header: "Ngày tạo",
+  //   cell: ({ row }) => {
+  //     return formatToVNTime(row.original.createdAt);
+  //   },
+  // },
+  // {
+  //   accessorKey: "updated_at",
+  //   header: "Ngày cập nhật",
+  //   cell: ({ row }) => {
+  //     return formatToVNTime(row.original.updatedAt);
+  //   },
+  // },
+  {
+    id: "actions",
+    header: "Hành động",
+    meta: {
+      thClassName: "w-[12%]",
+      tdClassName: "whitespace-nowrap",
+    },
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center gap-0">
+          <div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  aria-label="Xem chi tiết"
+                  onClick={() => {
+                    onView?.({ id: row.original.id });
+                  }}
+                >
+                  <Eye className="text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Xem chi tiết</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+      );
+    },
+  },
+];

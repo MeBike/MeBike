@@ -89,6 +89,7 @@ export function Sidebar() {
     
     // --- ADMIN & MANAGER SECTION ---
      { title: "Quản lý khách hàng", icon: Users, href: "/admin/customers", roles: ["ADMIN", "MANAGER"] },
+     { title: "Quản lý khách hàng", icon: Users, href: "/staff/customers", roles: ["STAFF"] },
     { title: "Quản lý nhân viên", icon: Users, href: "/admin/staffs", roles: ["ADMIN", "MANAGER"] },
     { title: "Quản lý Agency", icon: Building2, href: "/admin/agencies", roles: ["ADMIN"] },
     { title: "Quản lý nhà cung cấp", icon: Store, href: "/admin/suppliers", roles: ["ADMIN"] },
@@ -104,8 +105,8 @@ export function Sidebar() {
     
     // --- TECHNICAL & SOS ---
     // { title: "Lịch bảo trì", icon: Tool, href: "/technician/tasks", roles: ["TECHNICIAN", "STAFF"] },
-    { title: "Đơn cứu hộ SOS", icon: ShieldAlert, href: "/sos/alerts", roles: ["SOS", "STAFF"] },
-    { title: "Đánh giá & Phản hồi", icon: Star, href: `/${role.toLowerCase()}/ratings`, roles: ["ADMIN", "MANAGER", "STAFF"] },
+    // { title: "Đơn cứu hộ SOS", icon: ShieldAlert, href: "/sos/alerts", roles: ["SOS", "STAFF"] },
+    { title: "Đánh giá & Phản hồi", icon: Star, href: `/${role.toLowerCase()}/ratings`, roles: ["ADMIN", "MANAGER"] },
 
     // --- USER ONLY ---
     { title: "Chuyến đi của tôi", icon: Bike, href: "/user/trips", roles: ["USER"] },

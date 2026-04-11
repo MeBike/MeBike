@@ -34,38 +34,29 @@ export function RentalActionBar({
       paddingTop="$5"
       paddingBottom={Math.max(bottomInset, spaceScale[4])}
     >
-      <AppText align="center" tone={hasReturnSlot ? "muted" : "danger"} variant="body">
+      <AppText align="center" tone={hasReturnSlot ? "muted" : "muted"} variant="body">
         {hasReturnSlot
           ? `Vui lòng đưa mã QR cho nhân viên tại ${returnStationName ?? "bãi trả đã chọn"} để trả xe.`
-          : "Bạn cần đặt bãi trả xe trước khi kết thúc hành trình."}
+          : "Đưa mã QR cho nhân viên tại trạm còn chỗ. Giữ chỗ trước nếu muốn chắc suất."}
       </AppText>
 
-      {hasReturnSlot
-        ? (
-            <XStack gap="$3">
-              <AppButton flex={1} onPress={onChooseReturnStation} tone="outline">
-                Đổi bãi
-              </AppButton>
-              <AppButton flex={2} onPress={onOpenReturnQr} tone="primary">
-                <XStack alignItems="center" gap="$2">
-                  <IconSymbol color={theme.onActionPrimary.val} name="qr-code" size="md" />
-                  <AppText tone="inverted" variant="actionLabel">
-                    Mã QR trả xe
-                  </AppText>
-                </XStack>
-              </AppButton>
-            </XStack>
-          )
-        : (
-            <AppButton height={60} onPress={onChooseReturnStation} tone="primary">
-              <XStack alignItems="center" gap="$2">
-                <IconSymbol color={theme.onActionPrimary.val} name="location" size="md" variant="filled" />
-                <AppText tone="inverted" variant="headline">
-                  Chọn bãi trả xe
-                </AppText>
-              </XStack>
-            </AppButton>
-          )}
+      <XStack gap="$3">
+        <AppButton flex={1} onPress={onChooseReturnStation} tone="primary">
+          <XStack alignItems="center" gap="$2">
+            <AppText tone="inverted" variant="actionLabel">
+              {hasReturnSlot ? "Đổi bãi" : "Giữ chỗ"}
+            </AppText>
+          </XStack>
+        </AppButton>
+        <AppButton flex={2} onPress={onOpenReturnQr} tone="primary">
+          <XStack alignItems="center" gap="$2">
+            <IconSymbol color={theme.onActionPrimary.val} name="qr-code" size="md" />
+            <AppText tone="inverted" variant="actionLabel">
+              Mã QR trả xe
+            </AppText>
+          </XStack>
+        </AppButton>
+      </XStack>
 
       <AppText align="center" tone="subtle" variant="meta">
         Mã thuê:

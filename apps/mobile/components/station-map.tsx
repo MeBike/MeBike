@@ -1,11 +1,11 @@
+import Mapbox from "@rnmapbox/maps";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Pressable, View } from "react-native";
+
+import type { StationReadSummary } from "@/contracts/server";
 import type { MapboxRouteLine } from "@lib/mapbox-directions";
 
 import { initMapbox } from "@lib/mapbox";
-import Mapbox from "@rnmapbox/maps";
-import React, { useEffect, useMemo, useRef } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-
-import type { StationReadSummary } from "@/contracts/server";
 
 import { StationMapMarker } from "./station-map-marker";
 
@@ -20,36 +20,6 @@ type StationMapProps = {
     longitude: number;
   };
 };
-
-const routeLineStyle = {
-  lineColor: "#2563EB",
-  lineWidth: 4,
-  lineCap: "round",
-  lineJoin: "round",
-} as const;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  map: {
-    flex: 1,
-  },
-  userLocationMarker: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#2563EB",
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
-  },
-});
 
 export default function StationMap({
   stations,
@@ -90,15 +60,16 @@ export default function StationMap({
   }, [centerCoordinate]);
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <Mapbox.MapView
-        style={styles.map}
+        style={{ flex: 1 }}
         styleURL={Mapbox.StyleURL.Street}
         onPress={() => {
           if (ignoreNextMapPressRef.current) {
             ignoreNextMapPressRef.current = false;
             return;
           }
+
           onMapPress?.();
         }}
       >
@@ -113,7 +84,15 @@ export default function StationMap({
         {route
           ? (
               <Mapbox.ShapeSource id="route-source" shape={route}>
-                <Mapbox.LineLayer id="route-line" style={routeLineStyle} />
+                <Mapbox.LineLayer
+                  id="route-line"
+                  style={{
+                    lineColor: "#2563EB",
+                    lineWidth: 4,
+                    lineCap: "round",
+                    lineJoin: "round",
+                  }}
+                />
               </Mapbox.ShapeSource>
             )
           : null}
@@ -122,10 +101,7 @@ export default function StationMap({
           <Mapbox.MarkerView
             key={station.id}
             id={station.id}
-            coordinate={[
-              station.location.longitude,
-              station.location.latitude,
-            ]}
+            coordinate={[station.location.longitude, station.location.latitude]}
           >
             <Pressable
               onPress={() => {
@@ -152,7 +128,21 @@ export default function StationMap({
                 coordinate={[userLocation.longitude, userLocation.latitude]}
                 allowOverlap={true}
               >
-                <View style={styles.userLocationMarker} />
+                <View
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 9,
+                    backgroundColor: "#2563EB",
+                    borderWidth: 3,
+                    borderColor: "#FFFFFF",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 3,
+                    elevation: 4,
+                  }}
+                />
               </Mapbox.MarkerView>
             )
           : null}

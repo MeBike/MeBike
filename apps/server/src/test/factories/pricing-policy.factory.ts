@@ -13,8 +13,6 @@ const defaults = {
   depositRequired: "500000",
   lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
   status: "ACTIVE" as const,
-  activeFrom: null,
-  activeTo: null,
 };
 
 export function createPricingPolicyFactory(ctx: FactoryContext) {
@@ -31,8 +29,6 @@ export function createPricingPolicyFactory(ctx: FactoryContext) {
         depositRequired: toPrismaDecimal(overrides.depositRequired ?? defaults.depositRequired),
         lateReturnCutoff: overrides.lateReturnCutoff ?? defaults.lateReturnCutoff,
         status: overrides.status ?? defaults.status,
-        activeFrom: overrides.activeFrom ?? defaults.activeFrom,
-        activeTo: overrides.activeTo ?? defaults.activeTo,
       },
     });
 

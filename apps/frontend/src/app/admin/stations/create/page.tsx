@@ -17,7 +17,7 @@ export default function CreateStationPage() {
 
   const form = useForm<StationSchemaFormData>({
     resolver: zodResolver(stationSchema),
-    defaultValues: { name: "", address: "", latitude: 0, longitude: 0, capacity: 0 },
+    defaultValues: { name: "", address: "", latitude: 0, longitude: 0, totalCapacity: 0 },
   });
 
   const onLocationSelect = (lat: number, lng: number) => {

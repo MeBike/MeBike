@@ -150,6 +150,39 @@ export const rentalService = {
     );
     return response;
   },
+  getAllRentalsForStaff: async ({
+    page,
+    pageSize,
+    startStation,
+    endStation,
+    status,
+    userId,
+    bikeId,
+  }: {
+    page ?: number,
+    pageSize ?: number,
+    startStation ?: string,
+    endStation ?: string,
+    status ?: RentalStatus,
+    userId ?: string,
+    bikeId ?: string,
+  }): Promise<
+    AxiosResponse<ApiResponse<Rental[]>>
+  > => {
+    const response = await fetchHttpClient.get<ApiResponse<Rental[]>>(
+      ENDPOINT.RENTAL.STAFF,
+      {
+        page : page,
+        pageSize : pageSize,
+        startStation : startStation,
+        endStation : endStation,
+        status : status,
+        userId : userId,
+        bikeId : bikeId
+      }
+    );
+    return response;
+  },
   getRevenue: async ({
     from,
     to,
@@ -173,6 +206,14 @@ export const rentalService = {
   ): Promise<AxiosResponse<RentalRecord>> => {
     const response = await fetchHttpClient.get<RentalRecord>(
       ENDPOINT.RENTAL.ID(id)
+    );
+    return response;
+  },
+  getDetailRentalForStaff: async (
+    id: string
+  ): Promise<AxiosResponse<RentalRecord>> => {
+    const response = await fetchHttpClient.get<RentalRecord>(
+      ENDPOINT.RENTAL.STAFF_ID(id)
     );
     return response;
   },

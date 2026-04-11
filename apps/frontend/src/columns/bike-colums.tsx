@@ -2,6 +2,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw, Pencil } from "lucide-react";
 import type { Bike, BikeStatus, Station, Supplier } from "@/types";
 import { formatToVNTime } from "@/lib/formatVNDate";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 export const getStatusColor = (status: BikeStatus) => {
   switch (status) {
     case "BOOKED":
@@ -45,21 +51,17 @@ export const bikeColumn = (
     },
   },
   {
-    accessorKey: "stationId",
+    accessorKey: "station",
     header: "Tên trạm",
     cell: ({ row }) => {
-      const station = stations.find((s) => s.id === row.original.stationId);
-      return station ? station.name : "Không có";
+      return row.original.station.name ||  "Không có"; 
     },
   },
   {
     accessorKey: "supplierId",
     header: "Tên nhà cung cấp",
     cell: ({ row }) => {
-      const supplier = suppliers.find(
-        (s) => s.id === row.original.supplierId
-      );
-      return supplier ? supplier.name : "Không có";
+      return row.original.supplier.name ||  "Không có"; 
     },
   },
   {
@@ -125,3 +127,95 @@ export const bikeColumn = (
     ),
   },
 ];
+export const bikeColumnForStaff = (
+  {
+    onView,
+    onEdit,
+    stations = [],
+    suppliers = [],
+   //  onUpdateStatus,
+  }: {
+    onView?: ({ id }: { id: string }) => void;
+    onEdit?: ({ id }: { id: string }) => void;
+    stations?: Station[];
+    suppliers?: Supplier[];
+   //  onUpdateStatus?: ((data: ) => void) | undefined;
+  }
+): ColumnDef<Bike>[] => [
+  {
+    accessorKey: "chipId",
+    header: "Tên chip",
+    cell: ({ row }) => {
+      return shortenId(row.original.chipId) || "Không có";
+    },
+  },
+  {
+    accessorKey: "stationId",
+    header: "Tên trạm",
+    cell: ({ row }) => {
+      return row.original.station.name || "Không có";
+    },
+  },
+  {
+    accessorKey: "supplierId",
+    header: "Tên nhà cung cấp",
+    cell: ({ row }) => {
+      <span>
+        {row.original.supplier.name}
+      </span>
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Trạng thái",
+    cell: ({ row }) => (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(row.original.status as BikeStatus)}`}
+      >
+        {row.original.status}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Ngày tạo",
+    cell: ({ row }) => {
+      return row.original.createdAt ? formatToVNTime(row.original.createdAt) : "Không có";
+    },
+  },
+  {
+    accessorKey: "updatedAt",
+    header: "Ngày cập nhật",
+    cell: ({ row }) => {
+      return row.original.updatedAt ? formatToVNTime(row.original.updatedAt) : "Không có";
+    },
+  },
+  {
+    id: "actions",
+    header: "Hành động",
+    cell: ({ row }) => (
+            <div className="flex items-center gap-0">
+        <div className="pl-4.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label="Xem chi tiết"
+                onClick={() => {
+                  onView?.({ id: row.original.id });
+                }}
+              >
+                <Eye className="text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xem chi tiết</TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    ),
+  },
+];
+

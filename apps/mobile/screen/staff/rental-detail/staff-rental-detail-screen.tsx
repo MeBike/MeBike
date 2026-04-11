@@ -58,6 +58,7 @@ function StaffRentalDetailScreen() {
     isInitialLoading,
     isRefreshing,
     onRefresh,
+    operatorStation,
   } = useStaffRentalDetailScreen(rentalId);
 
   if (isInitialLoading && !booking) {
@@ -129,8 +130,10 @@ function StaffRentalDetailScreen() {
             {booking.status === "RENTED" && !booking.returnSlot
               ? (
                   <StaffWarningCard
-                    description="Khách hàng chưa đặt chỗ trả xe. Vui lòng yêu cầu khách chọn bãi trả xe trên ứng dụng trước khi thu xe."
-                    title="Không thể kết thúc phiên"
+                    description={operatorStation
+                      ? `Khách hàng chưa đặt chỗ trả xe trước. Bạn vẫn có thể thu xe tại ${operatorStation.name} nếu hệ thống xác nhận còn chỗ trống.`
+                      : "Khách hàng chưa đặt chỗ trả xe và tài khoản của bạn chưa có trạm vận hành để xác nhận thu xe."}
+                    title={operatorStation ? "Chưa có chỗ trả xe trước" : "Không thể kết thúc phiên"}
                   />
                 )
               : null}
@@ -148,6 +151,7 @@ function StaffRentalDetailScreen() {
               isSubmitting={isEndingRental}
               isVisible={isEndRentalOpen}
               note={endReason}
+              operatorStation={operatorStation}
               onChangeVisible={(visible) => {
                 setIsEndRentalOpen(visible);
                 if (!visible) {

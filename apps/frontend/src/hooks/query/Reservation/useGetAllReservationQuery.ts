@@ -44,5 +44,6 @@ export const useGetAllReservationQuery = ({
     queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize),
     queryFn: () => fetchAllReservations({ page: page, pageSize: pageSize , status : status , option : option }),
     staleTime: 5 * 60 * 1000,
+    enabled:false,
   });
 };

@@ -289,6 +289,10 @@ describe("return slot integration", () => {
 
     const confirmation = await fixture.prisma.returnConfirmation.findUnique({
       where: { rentalId: rental.id },
+      select: {
+        confirmedByUserId: true,
+        handoverStatus: true,
+      },
     });
     expect(confirmation?.confirmedByUserId).toBe(operator.id);
     expect(confirmation?.handoverStatus).toBe("CONFIRMED");
@@ -298,22 +302,84 @@ describe("return slot integration", () => {
     expect(updatedBike?.stationId).toBe(station.id);
   });
 
-  it("fails to confirm a rental return without an active return slot", async () => {
-    const { station, rental } = await givenActiveRental(fixture, {
+  it("allows confirming a rental return without an active return slot when the station has live capacity", async () => {
+    const { station, bike, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
 
-    const result = await runConfirmReturn({
+    const ended = expectRight(await runConfirmReturn({
       rentalId: rental.id,
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
       confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    }));
+
+    expect(ended.status).toBe("COMPLETED");
+
+    const current = await fixture.prisma.returnSlotReservation.findFirst({
+      where: { rentalId: rental.id },
+    });
+    expect(current).toBeNull();
+
+    const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
+    expect(updatedBike?.status).toBe("AVAILABLE");
+    expect(updatedBike?.stationId).toBe(station.id);
+  });
+
+  it("allows confirming a rental return without an active return slot when only the reservation limit is exhausted", async () => {
+    const { bike, rental } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const station = await fixture.factories.station({
+      capacity: 5,
+      pickupSlotLimit: 5,
+      returnSlotLimit: 0,
     });
 
-    expectLeftTag(result, "ReturnSlotRequiredForReturn");
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
+
+    const ended = expectRight(await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    }));
+
+    expect(ended.status).toBe("COMPLETED");
+
+    const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
+    expect(updatedBike?.status).toBe("AVAILABLE");
+    expect(updatedBike?.stationId).toBe(station.id);
+  });
+
+  it("fails to confirm a rental return without an active return slot when the station has no live capacity", async () => {
+    const { rental } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const fullStation = await fixture.factories.station({
+      capacity: 1,
+      pickupSlotLimit: 1,
+      returnSlotLimit: 1,
+    });
+    await fixture.factories.bike({ stationId: fullStation.id, status: "AVAILABLE" });
+
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: fullStation.id });
+
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: fullStation.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    expectLeftTag(result, "ReturnSlotCapacityExceeded");
   });
 
   it("fails to confirm a rental return at a different station than the active return slot", async () => {
@@ -368,6 +434,7 @@ describe("return slot integration", () => {
         handoverStatus: "CONFIRMED",
         confirmedAt: new Date("2026-03-21T12:30:00.000Z"),
       },
+      select: { id: true },
     });
 
     const result = await runConfirmReturn({

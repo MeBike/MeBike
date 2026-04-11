@@ -1,6 +1,4 @@
-import type {
-  UserRole,
-} from "@mebike/shared";
+import type { Context } from "hono";
 
 import {
   UnauthorizedErrorCodeSchema,
@@ -16,10 +14,32 @@ import type { RunPromise } from "@/http/shared/runtime";
 import { hasActiveAgencyAccess, requireJwtSecret } from "@/domain/auth";
 import { UserQueryServiceTag } from "@/domain/users";
 
+type Role = AccessTokenPayload["role"];
+
 const unauthorizedBody = {
   error: unauthorizedErrorMessages.UNAUTHORIZED,
   details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
 } as const;
+
+function rejectUnauthorized(c: Context) {
+  if (c.var.authFailure === "forbidden") {
+    return c.json(unauthorizedBody, 403);
+  }
+  return c.json(unauthorizedBody, 401);
+}
+
+function requireRoles(...allowedRoles: readonly Role[]) {
+  return createMiddleware(async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      return rejectUnauthorized(c);
+    }
+    if (!allowedRoles.includes(user.role)) {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  });
+}
 
 function parseBearerToken(header: string | null | undefined): string | null {
   if (!header)
@@ -93,164 +113,33 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
 export const requireAuthMiddleware = createMiddleware(async (c, next) => {
   const user = c.var.currentUser;
   if (!user) {
-    if (c.var.authFailure === "forbidden") {
-      return c.json(unauthorizedBody, 403);
-    }
-    return c.json(unauthorizedBody, 401);
+    return rejectUnauthorized(c);
   }
   await next();
 });
 
-export const requireAdminMiddleware = createMiddleware(async (c, next) => {
-  const user = c.var.currentUser;
-  if (!user) {
-    if (c.var.authFailure === "forbidden") {
-      return c.json(unauthorizedBody, 403);
-    }
-    return c.json(unauthorizedBody, 401);
-  }
-  if (user.role !== "ADMIN") {
-    return c.json(unauthorizedBody, 403);
-  }
-  await next();
-});
-
-export const requireAdminOrStaffMiddleware = createMiddleware(
-  async (c, next) => {
-    const user = c.var.currentUser;
-    if (!user) {
-      if (c.var.authFailure === "forbidden") {
-        return c.json(unauthorizedBody, 403);
-      }
-      return c.json(unauthorizedBody, 401);
-    }
-    if (user.role !== "ADMIN" && user.role !== "STAFF") {
-      return c.json(unauthorizedBody, 403);
-    }
-    await next();
-  },
+export const requireAdminMiddleware = requireRoles("ADMIN");
+export const requireAgencyMiddleware = requireRoles("AGENCY");
+export const requireStaffMiddleware = requireRoles("STAFF");
+export const requireUserMiddleware = requireRoles("USER");
+export const requireTechnicianMiddleware = requireRoles("TECHNICIAN");
+export const requireBackofficeMiddleware = requireRoles("ADMIN", "STAFF");
+export const requireRentalOperatorMiddleware = requireRoles("STAFF", "AGENCY");
+export const requireRentalSupportMiddleware = requireRoles(
+  "ADMIN",
+  "STAFF",
+  "AGENCY",
 );
-
-export const requireAgencyMiddleware = createMiddleware(async (c, next) => {
-  const user = c.var.currentUser;
-  if (!user) {
-    if (c.var.authFailure === "forbidden") {
-      return c.json(unauthorizedBody, 403);
-    }
-    return c.json(unauthorizedBody, 401);
-  }
-  if (user.role !== "AGENCY") {
-    return c.json(unauthorizedBody, 403);
-  }
-  await next();
-});
-
-export const requireStaffOrAgencyMiddleware = createMiddleware(
-  async (c, next) => {
-    const user = c.var.currentUser;
-    if (!user) {
-      if (c.var.authFailure === "forbidden") {
-        return c.json(unauthorizedBody, 403);
-      }
-      return c.json(unauthorizedBody, 401);
-    }
-    if (user.role !== "STAFF" && user.role !== "AGENCY") {
-      return c.json(unauthorizedBody, 403);
-    }
-    await next();
-  },
+export const requireIncidentViewerMiddleware = requireRoles(
+  "TECHNICIAN",
+  "ADMIN",
+  "USER",
 );
-
-export const requireAdminOrStaffOrAgencyMiddleware = createMiddleware(
-  async (c, next) => {
-    const user = c.var.currentUser;
-    if (!user) {
-      if (c.var.authFailure === "forbidden") {
-        return c.json(unauthorizedBody, 403);
-      }
-      return c.json(unauthorizedBody, 401);
-    }
-    if (user.role !== "ADMIN" && user.role !== "STAFF" && user.role !== "AGENCY") {
-      return c.json(unauthorizedBody, 403);
-    }
-    await next();
-  },
-);
-
-export const requireStaffMiddleware = createMiddleware(async (c, next) => {
-  const user = c.var.currentUser;
-  if (!user) {
-    if (c.var.authFailure === "forbidden") {
-      return c.json(unauthorizedBody, 403);
-    }
-    return c.json(unauthorizedBody, 401);
-  }
-  if (user.role !== "STAFF") {
-    return c.json(unauthorizedBody, 403);
-  }
-  await next();
-});
-
-export const requireManagerMiddleware = createMiddleware(async (c, next) => {
-  const user = c.var.currentUser;
-  if (!user) {
-    if (c.var.authFailure === "forbidden") {
-      return c.json(unauthorizedBody, 403);
-    }
-    return c.json(unauthorizedBody, 401);
-  }
-  if (user.role !== "MANAGER") {
-    return c.json(unauthorizedBody, 403);
-  }
-  await next();
-});
-
-export const requireUserMiddleware = createMiddleware(async (c, next) => {
-  const user = c.var.currentUser;
-  if (!user) {
-    if (c.var.authFailure === "forbidden") {
-      return c.json(unauthorizedBody, 403);
-    }
-    return c.json(unauthorizedBody, 401);
-  }
-  if (user.role !== "USER") {
-    return c.json(unauthorizedBody, 403);
-  }
-  await next();
-});
-
-export const requireTechnicianMiddleware = createMiddleware(async (c, next) => {
-  const user = c.var.currentUser;
-  if (!user) {
-    if (c.var.authFailure === "forbidden") {
-      return c.json(unauthorizedBody, 403);
-    }
-    return c.json(unauthorizedBody, 401);
-  }
-  if (user.role !== "TECHNICIAN") {
-    return c.json(unauthorizedBody, 403);
-  }
-  await next();
-});
-
-export const requireTechnicianOrAdminOrUserMiddleware = createMiddleware(
-  async (c, next) => {
-    const user = c.var.currentUser;
-    if (!user) {
-      if (c.var.authFailure === "forbidden") {
-        return c.json(unauthorizedBody, 403);
-      }
-      return c.json(unauthorizedBody, 401);
-    }
-    if (
-      user.role !== "TECHNICIAN"
-      && user.role !== "ADMIN"
-      && user.role !== "USER"
-    ) {
-      return c.json(unauthorizedBody, 403);
-    }
-    await next();
-  },
+export const requireIncidentActorMiddleware = requireRoles(
+  "TECHNICIAN",
+  "ADMIN",
+  "USER",
+  "STAFF",
 );
 
 export const requireIncidentAccessMiddleware = createMiddleware(

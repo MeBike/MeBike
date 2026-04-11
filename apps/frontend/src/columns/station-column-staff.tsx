@@ -15,12 +15,12 @@ export const stationColumns = (): ColumnDef<Station>[] => [
   {
     accessorKey: "latitude",
     header: "Vĩ độ",
-    cell: ({ row }) => row.original.latitude,
+    cell: ({ row }) => row.original.location.latitude,
   },
   {
     accessorKey: "longitude",
     header: "Kinh độ",
-    cell: ({ row }) => row.original.longitude,
+    cell: ({ row }) => row.original.location.longitude,
   },
   {
     accessorKey: "capacity",

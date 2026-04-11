@@ -1,6 +1,7 @@
 import { Data } from "effect";
 
 import type { WithGenericError } from "@/domain/shared";
+import type { StationNotFound } from "@/domain/stations/errors";
 import type {
   SubscriptionNotFound,
   SubscriptionNotUsable,
@@ -190,6 +191,7 @@ export type RentalServiceFailure
     | ReturnSlotCapacityExceeded
     | ReturnAlreadyConfirmed
     | UnauthorizedRentalAccess
+    | StationNotFound
     | SubscriptionNotFound
     | SubscriptionNotUsable
     | SubscriptionUsageExceeded

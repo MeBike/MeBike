@@ -1,6 +1,8 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
 
+import type { RootStackParamList } from "../types/navigation";
+
 import {
   BikeDetailScreen,
   BookingHistoryDetailScreen,
@@ -29,8 +31,6 @@ import {
   SubscriptionScreen,
   UpdateProfileScreen,
 } from "../screen";
-import type { RootStackParamList } from "../types/navigation";
-
 import StationSelectScreen from "../styles/StationSelect";
 import MainTabNavigator from "./main-tab-navigator";
 
@@ -75,7 +75,7 @@ function RootNavigator() {
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
-        name="Trạm"
+        name="StationSelectFlow"
         component={StationSelectScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />

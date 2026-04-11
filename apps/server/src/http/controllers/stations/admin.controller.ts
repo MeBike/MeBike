@@ -80,49 +80,49 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("StationNameAlreadyExists", () =>
-          c.json<StationErrorResponse, 400>({
+          c.json({
             error: stationErrorMessages.STATION_NAME_ALREADY_EXISTS,
             details: {
               code: StationErrorCodeSchema.enum.STATION_NAME_ALREADY_EXISTS,
             },
           }, 400)),
         Match.tag("StationCapacityLimitExceeded", () =>
-          c.json<StationErrorResponse, 400>({
+          c.json({
             error: stationErrorMessages.CAPACITY_LIMIT_EXCEEDED,
             details: {
               code: StationErrorCodeSchema.enum.CAPACITY_LIMIT_EXCEEDED,
             },
           }, 400)),
         Match.tag("StationCapacitySplitInvalid", () =>
-          c.json<StationErrorResponse, 400>({
+          c.json({
             error: stationErrorMessages.CAPACITY_SPLIT_INVALID,
             details: {
               code: StationErrorCodeSchema.enum.CAPACITY_SPLIT_INVALID,
             },
           }, 400)),
         Match.tag("StationOutsideSupportedArea", () =>
-          c.json<StationErrorResponse, 400>({
+          c.json({
             error: stationErrorMessages.OUTSIDE_SUPPORTED_AREA,
             details: {
               code: StationErrorCodeSchema.enum.OUTSIDE_SUPPORTED_AREA,
             },
           }, 400)),
         Match.tag("StationAgencyRequired", () =>
-          c.json<StationErrorResponse, 400>({
+          c.json({
             error: stationErrorMessages.STATION_AGENCY_REQUIRED,
             details: {
               code: StationErrorCodeSchema.enum.STATION_AGENCY_REQUIRED,
             },
           }, 400)),
         Match.tag("StationAgencyForbidden", () =>
-          c.json<StationErrorResponse, 400>({
+          c.json({
             error: stationErrorMessages.STATION_AGENCY_FORBIDDEN,
             details: {
               code: StationErrorCodeSchema.enum.STATION_AGENCY_FORBIDDEN,
             },
           }, 400)),
         Match.tag("StationAgencyNotFound", ({ agencyId }) =>
-          c.json<StationErrorResponse, 400>({
+          c.json({
             error: stationErrorMessages.STATION_AGENCY_NOT_FOUND,
             details: {
               code: StationErrorCodeSchema.enum.STATION_AGENCY_NOT_FOUND,
@@ -130,7 +130,7 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
             },
           }, 400)),
         Match.tag("StationAgencyAlreadyAssigned", ({ stationId }) =>
-          c.json<StationErrorResponse, 400>({
+          c.json({
             error: stationErrorMessages.STATION_AGENCY_ALREADY_ASSIGNED,
             details: {
               code: StationErrorCodeSchema.enum.STATION_AGENCY_ALREADY_ASSIGNED,
@@ -185,6 +185,37 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
             error: stationErrorMessages.CAPACITY_SPLIT_INVALID,
             details: {
               code: StationErrorCodeSchema.enum.CAPACITY_SPLIT_INVALID,
+            },
+          }, 400)),
+        Match.tag("StationCapacityBelowActiveUsage", ({ stationId, totalCapacity, totalBikes, activeReturnSlots }) =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.CAPACITY_BELOW_ACTIVE_USAGE,
+            details: {
+              code: StationErrorCodeSchema.enum.CAPACITY_BELOW_ACTIVE_USAGE,
+              stationId,
+              totalCapacity,
+              totalBikes,
+              activeReturnSlots,
+            },
+          }, 400)),
+        Match.tag("StationReturnSlotLimitBelowActiveReservations", ({ stationId, returnSlotLimit, activeReturnSlots }) =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.RETURN_SLOT_LIMIT_BELOW_ACTIVE_RESERVATIONS,
+            details: {
+              code: StationErrorCodeSchema.enum.RETURN_SLOT_LIMIT_BELOW_ACTIVE_RESERVATIONS,
+              stationId,
+              returnSlotLimit,
+              activeReturnSlots,
+            },
+          }, 400)),
+        Match.tag("StationPickupSlotLimitBelowPendingReservations", ({ stationId, pickupSlotLimit, pendingReservations }) =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.PICKUP_SLOT_LIMIT_BELOW_PENDING_RESERVATIONS,
+            details: {
+              code: StationErrorCodeSchema.enum.PICKUP_SLOT_LIMIT_BELOW_PENDING_RESERVATIONS,
+              stationId,
+              pickupSlotLimit,
+              pendingReservations,
             },
           }, 400)),
         Match.tag("StationOutsideSupportedArea", () =>

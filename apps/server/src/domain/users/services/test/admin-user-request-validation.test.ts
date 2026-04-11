@@ -59,12 +59,32 @@ describe("admin user request validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects admin create payload with role AGENCY", () => {
+  it("accepts admin create payload with role AGENCY when agency provisioning data is present", () => {
     const result = UsersContracts.AdminCreateUserRequestSchema.safeParse({
-      fullname: "Agency User",
-      email: "agency@example.com",
-      password: "12345678",
       role: "AGENCY",
+      requesterEmail: "agency@example.com",
+      agencyName: "Metro Agency",
+      stationName: "Metro Station",
+      stationAddress: "01 Xa Lo Ha Noi",
+      stationLatitude: 10.8486,
+      stationLongitude: 106.7717,
+      stationTotalCapacity: 20,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects admin create agency payload when station capacity split exceeds total capacity", () => {
+    const result = UsersContracts.AdminCreateUserRequestSchema.safeParse({
+      role: "AGENCY",
+      requesterEmail: "agency@example.com",
+      agencyName: "Metro Agency",
+      stationName: "Metro Station",
+      stationAddress: "01 Xa Lo Ha Noi",
+      stationLatitude: 10.8486,
+      stationLongitude: 106.7717,
+      stationTotalCapacity: 20,
+      stationPickupSlotLimit: 21,
     });
 
     expect(result.success).toBe(false);

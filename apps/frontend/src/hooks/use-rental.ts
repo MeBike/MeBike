@@ -13,6 +13,8 @@ import { useGetSummaryRentalQuery } from "./query/Rent/useGetSummaryRental";
 import { QUERY_KEYS } from "@/constants/queryKey";
 import getErrorMessage from "@/utils/error-message";
 import { RentalStatus } from "@/types";
+import { useGetAllRentalsStaffQuery } from "./query/Rent/useGetAllRentalsStaff";
+import { useGetDetailRentalForStaffQuery } from "./query/Rent/uesGetDetailRentalForStaffQuery";
 
 interface UseRentalsActionsProps {
   hasToken: boolean;
@@ -39,12 +41,19 @@ export function useRentalsActions({
   const { data: detailData, isLoading: isDetailLoading ,
     refetch : refetchDetail
   } = useGetDetailRentalAdminQuery(bike_id || "");
+  const {data : detailDataForStaff , isLoading : isDetailLoadingForStaff , refetch:refetchDetailForStaff} = useGetDetailRentalForStaffQuery(bike_id || "");
   const usePutUpdateRental = usePutUpdateRentalMutation(bike_id || "");
   const getDetailRental = useCallback(() => {
     if(!hasToken || !bike_id){
       return;
     } 
     refetchDetail();
+  }, [hasToken, bike_id, refetchDetail]);
+    const getDetailRentalForStaff = useCallback(() => {
+    if(!hasToken || !bike_id){
+      return;
+    } 
+    refetchDetailForStaff();
   }, [hasToken, bike_id, refetchDetail]);
   const {
     data: allRentalsData,
@@ -59,12 +68,31 @@ export function useRentalsActions({
       status: status,
     }
   );
+  const {
+    data: staffRentalsData,
+    refetch: refetchStaffRentals,
+    isLoading: isAllRentalsStaffLoading,
+  } = useGetAllRentalsStaffQuery(
+    {
+      page: page,
+      pageSize: limit,
+      startStation: start_station,
+      endStation: end_station,
+      status: status,
+    }
+  );
+  const getStaffRentals = useCallback(() => {
+    if(!hasToken){
+      return;
+    }
+    refetchStaffRentals();
+  }, [hasToken, refetchStaffRentals,page,limit]);
   const getRentals = useCallback(() => {
     if(!hasToken){
       return;
     }
     refetchAllRentals();
-  }, [hasToken, refetchAllRentals]);
+  }, [hasToken, refetchAllRentals,page,limit]);
   const { data: revenueData , refetch : refetchRevenue , isLoading : isLoadingRevenue } = useGetRevenueQuery(
     { from: undefined, to: undefined, groupBy: "MONTH" }
   );
@@ -211,6 +239,15 @@ export function useRentalsActions({
     getDashboardSummary,
     summaryRental,
     getSummaryRental,
+    staffRentalsData:staffRentalsData?.data,
+    refetchStaffRentals,
+    isAllRentalsStaffLoading,
+    paginationStaffRental : staffRentalsData?.pagination,
+    getStaffRentals,
+    detailDataForStaff : detailDataForStaff?.data,
+    refetchDetailForStaff,
+    isDetailLoadingForStaff,
+    getDetailRentalForStaff
   };
 }
 
