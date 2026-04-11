@@ -113,7 +113,10 @@ export type RedistributionRequestDetailRow = {
 
 export type RedistributionFilter = {
   status?: RedistributionStatus;
+  statuses?: RedistributionStatus[];
   targetStationId?: string;
+  from?: Date;
+  to?: Date;
 };
 
 export type RedistributionSortField = "createdAt" | "startedAt" | "completedAt";
@@ -123,10 +126,12 @@ export type MyInStationRedistributionFilter = RedistributionFilter;
 export type InStationRedistributionFilter = {
   requestedByUserId?: string;
   approvedByUserId?: string;
+  sourceStationId?: string;
 } & RedistributionFilter;
 
 export type AdminRedistributionFilter = {
   requestedByUserId?: string;
   approvedByUserId?: string;
   sourceStationId?: string;
+  OR?: AdminRedistributionFilter[];
 } & RedistributionFilter;

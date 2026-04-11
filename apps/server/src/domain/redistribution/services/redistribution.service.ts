@@ -3,11 +3,11 @@ import { Effect, Layer, Option } from "effect";
 import type { BikeRepository, BikeRepositoryError } from "@/domain/bikes";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { UserRow } from "@/domain/users";
-import type { PrismaClient } from "generated/prisma/client";
+import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import { StationServiceTag } from "@/domain/stations";
-import { UserQueryServiceTag, UserRepositoryError } from "@/domain/users";
+import { UserQueryServiceTag } from "@/domain/users";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import { BikeStatus, RedistributionStatus } from "generated/prisma/client";
@@ -161,6 +161,33 @@ export type RedistributionService = {
     Option.Option<RedistributionRequestDetailRow>,
     RedistributionServiceFailure
   >;
+
+  getHistoryForStaff: (
+    userId: string,
+    filter: MyInStationRedistributionFilter,
+    page: PageRequest<RedistributionSortField>,
+  ) => Effect.Effect<
+    PageResult<RedistributionRequestSummaryRow>,
+    RedistributionServiceFailure
+  >;
+
+  getHistoryForManager: (
+    userId: string,
+    filter: InStationRedistributionFilter,
+    page: PageRequest<RedistributionSortField>,
+  ) => Effect.Effect<
+    PageResult<RedistributionRequestSummaryRow>,
+    RedistributionServiceFailure
+  >;
+
+  getHistoryForAgency: (
+    userId: string,
+    filter: InStationRedistributionFilter,
+    page: PageRequest<RedistributionSortField>,
+  ) => Effect.Effect<
+    PageResult<RedistributionRequestSummaryRow>,
+    RedistributionServiceFailure
+  >;
 };
 
 const makeRedistributionServiceEffect = Effect.gen(function* () {
@@ -199,13 +226,66 @@ function makeRedistributionService(
     ?? user.orgAssignment?.agency?.stationId
     ?? undefined;
 
+  const toRedistributionWhere = (filter: AdminRedistributionFilter): PrismaTypes.RedistributionRequestWhereInput => {
+    const where: PrismaTypes.RedistributionRequestWhereInput = {
+      requestedByUserId: filter.requestedByUserId,
+      approvedByUserId: filter.approvedByUserId,
+      sourceStationId: filter.sourceStationId,
+      targetStationId: filter.targetStationId,
+    };
+
+    if (filter.status) {
+      where.status = filter.status;
+    }
+    else if (filter.statuses && filter.statuses.length > 0) {
+      where.status = { in: filter.statuses };
+    }
+
+    if (filter.from || filter.to) {
+      where.createdAt = {
+        gte: filter.from,
+        lte: filter.to,
+      };
+    }
+
+    if (filter.OR) {
+      where.OR = filter.OR.map(toRedistributionWhere);
+    }
+
+    return where;
+  };
+
+  const TERMINAL_STATUSES: RedistributionStatus[] = [
+    RedistributionStatus.COMPLETED,
+    RedistributionStatus.CANCELLED,
+    RedistributionStatus.REJECTED,
+  ];
+
+  const getHistoryForStation = (userId: string, filter: any, page: PageRequest<RedistributionSortField>) =>
+    Effect.gen(function* () {
+      const user = yield* assertUserExists(userId);
+      const stationId = getUserStationId(user)!;
+
+      return yield* repo.listWithOffset(
+        toRedistributionWhere({
+          ...filter,
+          statuses: filter.statuses ?? TERMINAL_STATUSES,
+          OR: [
+            { sourceStationId: stationId },
+            { targetStationId: stationId },
+          ],
+        }),
+        page,
+      );
+    });
+
   return {
     getMyListInStation: (userId, filter, page) =>
       repo.listWithOffset(
-        {
+        toRedistributionWhere({
           ...filter,
           requestedByUserId: userId,
-        },
+        }),
         page,
       ),
 
@@ -240,14 +320,14 @@ function makeRedistributionService(
       Effect.gen(function* () {
         const user = yield* assertUserExists(userId);
         const stationId = getUserStationId(user)!;
-        return yield* repo.listWithOffset(
-          {
+        return yield* repo.listWithOffset (
+          toRedistributionWhere({
             ...filter,
             OR: [
               { sourceStationId: stationId },
               { targetStationId: stationId },
             ],
-          },
+          }),
           page,
         );
       }),
@@ -775,9 +855,26 @@ function makeRedistributionService(
         );
       }),
 
-    adminListRequests: (filter, page) => repo.listWithOffset(filter, page),
+    adminListRequests: (filter, page) => repo.listWithOffset(toRedistributionWhere(filter), page),
 
     adminGetById: requestId => repo.findAndPopulate({ id: requestId }),
+
+    getHistoryForStaff: (userId, filter, page) =>
+      repo.listWithOffset(
+        toRedistributionWhere({
+          ...filter,
+          requestedByUserId: userId,
+          statuses: filter.statuses ?? TERMINAL_STATUSES,
+        }),
+        page,
+      ),
+
+    getHistoryForManager: (userId, filter, page) =>
+      getHistoryForStation(userId, filter, page),
+
+    getHistoryForAgency: (userId, filter, page) =>
+      getHistoryForStation(userId, filter, page),
+
   };
 }
 

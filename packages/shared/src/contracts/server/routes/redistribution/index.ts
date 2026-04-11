@@ -19,6 +19,9 @@ export {
   getRequestDetailForManager,
   getRequestListForAgency,
   getRequestDetailForAgency,
+  getRequestHistoryForStaff,
+  getRequestHistoryForManager,
+  getRequestHistoryForAgency,
 } from "./queries";
 
 export const redistributionRoutes = {

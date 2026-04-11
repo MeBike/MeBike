@@ -33,6 +33,8 @@ const getRequestListForAdmin: RouteHandler<
           approvedByUserId: query.approvedByUserId,
           sourceStationId: query.sourceStationId,
           targetStationId: query.targetStationId,
+          from: query.from ? new Date(query.from) : undefined,
+          to: query.to ? new Date(query.to) : undefined,
         },
         {
           page: Number(query.page ?? 1),

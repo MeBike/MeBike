@@ -31,8 +31,12 @@ const getRequestListForAgency: RouteHandler<
         userId,
         {
           status: query.status,
+          requestedByUserId: query.requestedByUserId,
           approvedByUserId: query.approvedByUserId,
+          sourceStationId: query.sourceStationId,
           targetStationId: query.targetStationId,
+          from: query.from ? new Date(query.from) : undefined,
+          to: query.to ? new Date(query.to) : undefined,
         },
         {
           page: Number(query.page ?? 1),
@@ -56,6 +60,76 @@ const getRequestListForAgency: RouteHandler<
       >(
         {
           message: "Redistribution request list fetched successfully",
+          result: {
+            data: right.items.map(toContractRedistributionRequestListItem),
+            pagination: toContractPage(right),
+          },
+        },
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("UserNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.USER_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+                userId: error.userId,
+              },
+            },
+            404,
+          )),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
+const getRequestHistoryForAgency: RouteHandler<
+  RedistributionRoutes["getRequestHistoryForAgency"]
+> = async (c) => {
+  const query = c.req.valid("query");
+  const { userId } = c.var.currentUser!;
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.getHistoryForAgency(
+        userId,
+        {
+          status: query.status,
+          requestedByUserId: query.requestedByUserId,
+          approvedByUserId: query.approvedByUserId,
+          sourceStationId: query.sourceStationId,
+          targetStationId: query.targetStationId,
+          from: query.from ? new Date(query.from) : undefined,
+          to: query.to ? new Date(query.to) : undefined,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: query.sortBy ?? "createdAt",
+          sortDir: query.sortDir ?? "desc",
+        },
+      );
+    }),
+    "GET /v1/agency/redistribution-requests/history",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<
+        {
+          message: string;
+        } & { result: RedistributionContracts.RedistributionRequestList },
+        200
+      >(
+        {
+          message: "Redistribution request history fetched successfully",
           result: {
             data: right.items.map(toContractRedistributionRequestListItem),
             pagination: toContractPage(right),
@@ -158,5 +232,6 @@ const getRequestDetailForAgency: RouteHandler<
 
 export const RedistributionAgencyController = {
   getRequestListForAgency,
+  getRequestHistoryForAgency,
   getRequestDetailForAgency,
 } as const;

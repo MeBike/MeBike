@@ -65,7 +65,8 @@ const RedistributionRequestListQueryBaseSchema = z.object({
 });
 
 export const StaffRedistributionRequestListQuerySchema = 
-  RedistributionRequestListQueryBaseSchema.extend({
+  redistributionRequestDateRangeWith({
+    ...RedistributionRequestListQueryBaseSchema.shape,
     targetStationId: z.uuidv7().optional(),
   })
   .openapi("StaffRedistributionRequestListQuery", {
@@ -73,9 +74,11 @@ export const StaffRedistributionRequestListQuerySchema =
   });
 
 export const ManagerRedistributionRequestListQuerySchema = 
-  RedistributionRequestListQueryBaseSchema.extend({
+  redistributionRequestDateRangeWith({
+    ...RedistributionRequestListQueryBaseSchema.shape,
     requestedByUserId: z.uuidv7().optional(),
     approvedByUserId: z.uuidv7().optional(),
+    sourceStationId: z.uuidv7().optional(),
     targetStationId: z.uuidv7().optional(),
   })
   .openapi("ManagerRedistributionRequestListQuery", {
@@ -83,8 +86,11 @@ export const ManagerRedistributionRequestListQuerySchema =
   });
 
 export const AgencyRedistributionRequestListQuerySchema = 
-  RedistributionRequestListQueryBaseSchema.extend({
+  redistributionRequestDateRangeWith({
+    ...RedistributionRequestListQueryBaseSchema.shape,
+    requestedByUserId: z.uuidv7().optional(),
     approvedByUserId: z.uuidv7().optional(),
+    sourceStationId: z.uuidv7().optional(),
     targetStationId: z.uuidv7().optional(),
   })
   .openapi("AgencyRedistributionRequestListQuery", {
@@ -92,7 +98,8 @@ export const AgencyRedistributionRequestListQuerySchema =
   });
 
 export const AdminRedistributionRequestListQuerySchema = 
-  RedistributionRequestListQueryBaseSchema.extend({
+  redistributionRequestDateRangeWith({
+    ...RedistributionRequestListQueryBaseSchema.shape,
     requestedByUserId: z.uuidv7().optional(),
     approvedByUserId: z.uuidv7().optional(),
     sourceStationId: z.uuidv7().optional(),

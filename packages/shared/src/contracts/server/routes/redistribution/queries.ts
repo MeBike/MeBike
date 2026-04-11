@@ -164,6 +164,31 @@ export const getRequestDetailForStaff = createRoute({
   },
 });
 
+export const getRequestHistoryForStaff = createRoute({
+  method: "get",
+  path: "/v1/staff/redistribution-requests/history",
+  tags: ["Staff", "Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: StaffRedistributionRequestListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Redistribution request history (staff view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestListResponseSchema,
+            "Get redistribution request history response",
+          ),
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
+  },
+});
+
 // Manager paths
 export const getRequestListForManager = createRoute({
   method: "get",
@@ -261,6 +286,42 @@ export const getRequestDetailForManager = createRoute({
   },
 });
 
+export const getRequestHistoryForManager = createRoute({
+  method: "get",
+  path: "/v1/manager/redistribution-requests/history",
+  tags: ["Manager", "Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ManagerRedistributionRequestListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Redistribution request history (manager view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestListResponseSchema,
+            "Get distribution list response",
+          ),
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Manager"),
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "User not found",
+      example: {
+        error: "User not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+          userId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+
 // Agency paths
 export const getRequestListForAgency = createRoute({
   method: "get",
@@ -352,6 +413,42 @@ export const getRequestDetailForAgency = createRoute({
         details: {
           code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
           requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+
+export const getRequestHistoryForAgency = createRoute({
+  method: "get",
+  path: "/v1/agency/redistribution-requests/history",
+  tags: ["Agency", "Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: AgencyRedistributionRequestListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Redistribution request history (agency view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RedistributionRequestListResponseSchema,
+            "Get distribution list response",
+          ),
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "User not found",
+      example: {
+        error: "User not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+          userId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
         },
       },
     }),

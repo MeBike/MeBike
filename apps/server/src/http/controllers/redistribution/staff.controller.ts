@@ -246,6 +246,8 @@ const getRequestListForStaff: RouteHandler<
         {
           status: query.status,
           targetStationId: query.targetStationId,
+          from: query.from ? new Date(query.from) : undefined,
+          to: query.to ? new Date(query.to) : undefined,
         },
         {
           page: Number(query.page ?? 1),
@@ -266,6 +268,55 @@ const getRequestListForStaff: RouteHandler<
       } & { result: RedistributionContracts.RedistributionRequestList }, 200>(
         {
           message: "Redistribution request list fetched successfully",
+          result: {
+            data: right.items.map(toContractRedistributionRequestListItem),
+            pagination: toContractPage(right),
+          },
+        },
+        200,
+      )),
+    Match.tag("Left", ({ left }) => {
+      throw left;
+    }),
+    Match.exhaustive,
+  );
+};
+
+const getRequestHistoryForStaff: RouteHandler<
+  RedistributionRoutes["getRequestHistoryForStaff"]
+> = async (c) => {
+  const userId = c.var.currentUser!.userId;
+  const query = c.req.valid("query");
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.getHistoryForStaff(
+        userId,
+        {
+          status: query.status,
+          targetStationId: query.targetStationId,
+          from: query.from ? new Date(query.from) : undefined,
+          to: query.to ? new Date(query.to) : undefined,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: query.sortBy ?? "createdAt",
+          sortDir: query.sortDir ?? "desc",
+        },
+      );
+    }),
+    "GET /v1/staff/redistribution-requests/history",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<{
+        message: string;
+      } & { result: RedistributionContracts.RedistributionRequestList }, 200>(
+        {
+          message: "Redistribution request history fetched successfully",
           result: {
             data: right.items.map(toContractRedistributionRequestListItem),
             pagination: toContractPage(right),
@@ -428,6 +479,7 @@ export const RedistributionStaffController = {
   createRedistributionRequest,
   cancelRedistributionRequest,
   getRequestListForStaff,
+  getRequestHistoryForStaff,
   getRequestDetailForStaff,
   startTransition,
 } as const;
