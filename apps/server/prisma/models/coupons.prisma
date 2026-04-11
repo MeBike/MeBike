@@ -47,17 +47,17 @@ model CouponRule {
 }
 
 model Coupon {
-  id            String        @id @default(uuid(7)) @db.Uuid
-  couponRuleId  String?       @map("coupon_rule_id") @db.Uuid
-  code          String        @unique
-  discountType  DiscountType  @map("discount_type")
-  discountValue Decimal       @map("discount_value") @db.Decimal(12, 2)
-  expiresAt     DateTime?     @map("expires_at") @db.Timestamptz
-  status        CouponStatus  @default(ACTIVE)
-  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  id            String       @id @default(uuid(7)) @db.Uuid
+  couponRuleId  String?      @map("coupon_rule_id") @db.Uuid
+  code          String       @unique
+  discountType  DiscountType @map("discount_type")
+  discountValue Decimal      @map("discount_value") @db.Decimal(12, 2)
+  expiresAt     DateTime?    @map("expires_at") @db.Timestamptz
+  status        CouponStatus @default(ACTIVE)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz
 
-  couponRule CouponRule? @relation(fields: [couponRuleId], references: [id])
+  couponRule  CouponRule?  @relation(fields: [couponRuleId], references: [id])
   userCoupons UserCoupon[]
 
   @@index([couponRuleId], name: "idx_coupons_rule")
@@ -65,15 +65,15 @@ model Coupon {
 }
 
 model UserCoupon {
-  id                String       @id @default(uuid(7)) @db.Uuid
-  userId            String       @map("user_id") @db.Uuid
-  couponId          String       @map("coupon_id") @db.Uuid
-  assignedAt        DateTime     @default(now()) @map("assigned_at") @db.Timestamptz
-  usedAt            DateTime?    @map("used_at") @db.Timestamptz
-  lockedAt          DateTime?    @map("locked_at") @db.Timestamptz
-  lockExpiresAt     DateTime?    @map("lock_expires_at") @db.Timestamptz
-  lockedForPaymentId String?     @map("locked_for_payment_id") @db.Uuid
-  status            CouponStatus @default(ASSIGNED)
+  id                 String       @id @default(uuid(7)) @db.Uuid
+  userId             String       @map("user_id") @db.Uuid
+  couponId           String       @map("coupon_id") @db.Uuid
+  assignedAt         DateTime     @default(now()) @map("assigned_at") @db.Timestamptz
+  usedAt             DateTime?    @map("used_at") @db.Timestamptz
+  lockedAt           DateTime?    @map("locked_at") @db.Timestamptz
+  lockExpiresAt      DateTime?    @map("lock_expires_at") @db.Timestamptz
+  lockedForPaymentId String?      @map("locked_for_payment_id") @db.Uuid
+  status             CouponStatus @default(ASSIGNED)
 
   user             User     @relation(fields: [userId], references: [id])
   coupon           Coupon   @relation(fields: [couponId], references: [id])

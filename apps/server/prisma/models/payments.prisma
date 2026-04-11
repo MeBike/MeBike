@@ -45,10 +45,10 @@ model Payment {
   createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime            @updatedAt @map("updated_at") @db.Timestamptz
 
-  user         User          @relation(fields: [userId], references: [id])
-  wallet       Wallet?       @relation(fields: [walletId], references: [id])
-  rental       Rental?       @relation(fields: [rentalId], references: [id])
-  reservation  Reservation?  @relation(fields: [reservationId], references: [id])
+  user          User         @relation(fields: [userId], references: [id])
+  wallet        Wallet?      @relation(fields: [walletId], references: [id])
+  rental        Rental?      @relation(fields: [rentalId], references: [id])
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
   lockedCoupons UserCoupon[] @relation("UserCouponLockedForPayment")
 
   @@index([userId], name: "idx_payments_user")
