@@ -28,21 +28,19 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
-export const bikeColumn = (
-  {
-    onView,
-    onEdit,
-    stations = [],
-    suppliers = [],
-   //  onUpdateStatus,
-  }: {
-    onView?: ({ id }: { id: string }) => void;
-    onEdit?: ({ id }: { id: string }) => void;
-    stations?: Station[];
-    suppliers?: Supplier[];
-   //  onUpdateStatus?: ((data: ) => void) | undefined;
-  }
-): ColumnDef<Bike>[] => [
+export const bikeColumn = ({
+  onView,
+  onEdit,
+  stations = [],
+  suppliers = [],
+  //  onUpdateStatus,
+}: {
+  onView?: ({ id }: { id: string }) => void;
+  onEdit?: ({ id }: { id: string }) => void;
+  stations?: Station[];
+  suppliers?: Supplier[];
+  //  onUpdateStatus?: ((data: ) => void) | undefined;
+}): ColumnDef<Bike>[] => [
   {
     accessorKey: "chipId",
     header: "Tên chip",
@@ -54,14 +52,14 @@ export const bikeColumn = (
     accessorKey: "station",
     header: "Tên trạm",
     cell: ({ row }) => {
-      return row.original.station.name ||  "Không có"; 
+      return row.original.station.name || "Không có";
     },
   },
   {
     accessorKey: "supplierId",
     header: "Tên nhà cung cấp",
     cell: ({ row }) => {
-      return row.original.supplier.name ||  "Không có"; 
+      return row.original.supplier.name || "Không có";
     },
   },
   {
@@ -79,14 +77,18 @@ export const bikeColumn = (
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return row.original.createdAt ? formatToVNTime(row.original.createdAt) : "Không có";
+      return row.original.createdAt
+        ? formatToVNTime(row.original.createdAt)
+        : "Không có";
     },
   },
   {
     accessorKey: "updatedAt",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return row.original.updatedAt ? formatToVNTime(row.original.updatedAt) : "Không có";
+      return row.original.updatedAt
+        ? formatToVNTime(row.original.updatedAt)
+        : "Không có";
     },
   },
   {
@@ -127,21 +129,19 @@ export const bikeColumn = (
     ),
   },
 ];
-export const bikeColumnForStaff = (
-  {
-    onView,
-    onEdit,
-    stations = [],
-    suppliers = [],
-   //  onUpdateStatus,
-  }: {
-    onView?: ({ id }: { id: string }) => void;
-    onEdit?: ({ id }: { id: string }) => void;
-    stations?: Station[];
-    suppliers?: Supplier[];
-   //  onUpdateStatus?: ((data: ) => void) | undefined;
-  }
-): ColumnDef<Bike>[] => [
+export const bikeColumnForStaff = ({
+  onView,
+  onEdit,
+  stations = [],
+  suppliers = [],
+  //  onUpdateStatus,
+}: {
+  onView?: ({ id }: { id: string }) => void;
+  onEdit?: ({ id }: { id: string }) => void;
+  stations?: Station[];
+  suppliers?: Supplier[];
+  //  onUpdateStatus?: ((data: ) => void) | undefined;
+}): ColumnDef<Bike>[] => [
   {
     accessorKey: "chipId",
     header: "Tên chip",
@@ -160,9 +160,7 @@ export const bikeColumnForStaff = (
     accessorKey: "supplierId",
     header: "Tên nhà cung cấp",
     cell: ({ row }) => {
-      <span>
-        {row.original.supplier.name}
-      </span>
+      <span>{row.original.supplier.name}</span>;
     },
   },
   {
@@ -180,21 +178,25 @@ export const bikeColumnForStaff = (
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return row.original.createdAt ? formatToVNTime(row.original.createdAt) : "Không có";
+      return row.original.createdAt
+        ? formatToVNTime(row.original.createdAt)
+        : "Không có";
     },
   },
   {
     accessorKey: "updatedAt",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return row.original.updatedAt ? formatToVNTime(row.original.updatedAt) : "Không có";
+      return row.original.updatedAt
+        ? formatToVNTime(row.original.updatedAt)
+        : "Không có";
     },
   },
   {
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-            <div className="flex items-center gap-0">
+      <div className="flex items-center gap-0">
         <div className="pl-4.5">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -218,4 +220,3 @@ export const bikeColumnForStaff = (
     ),
   },
 ];
-

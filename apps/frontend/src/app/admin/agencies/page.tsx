@@ -1,10 +1,11 @@
-"use client"
-import React from 'react'
+"use client";
+import React from "react";
+import AgencyClient from "./AgencyClient";
 
-const page = () => {
+export default function page() {
   return (
-    <div>page</div>
-  )
+    <>
+      <AgencyClient />
+    </>
+  );
 }
-
-export default page;
