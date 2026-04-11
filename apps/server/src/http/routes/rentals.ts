@@ -11,10 +11,10 @@ import {
 } from "@/http/controllers/rentals";
 import {
   requireAdminMiddleware,
+  requireAgencyMiddleware,
   requireRentalOperatorMiddleware,
   requireRentalSupportMiddleware,
   requireStaffMiddleware,
-  requireStaffOrAgencyMiddleware,
   requireUserMiddleware,
 } from "@/http/middlewares/auth";
 

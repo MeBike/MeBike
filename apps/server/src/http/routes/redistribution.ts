@@ -9,11 +9,12 @@ import {
 } from "@/http/controllers/redistribution";
 import {
   requireAdminMiddleware,
+  requireAgencyMiddleware,
   requireManagerMiddleware,
-  requireRolesMiddleware,
+  requireRequestActorMiddleware,
   requireStaffMiddleware,
+  requireStationManagementMiddleware,
 } from "@/http/middlewares/auth";
-import { UserRole } from "generated/prisma/enums";
 
 import { RedistributionAgencyController } from "../controllers/redistribution/agency.controller";
 
@@ -36,19 +37,19 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   // Staff/Agency routes
   const createRequestRoute = {
     ...redistribution.createRedistributionRequest,
-    middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
+    middleware: [requireRequestActorMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(createRequestRoute, RedistributionStaffController.createRedistributionRequest);
 
   const cancelRequestRoute = {
     ...redistribution.cancelRedistributionRequest,
-    middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
+    middleware: [requireRequestActorMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(cancelRequestRoute, RedistributionStaffController.cancelRedistributionRequest);
 
   const startTransitionRoute = {
     ...redistribution.startTransition,
-    middleware: [requireRolesMiddleware([UserRole.STAFF, UserRole.AGENCY])] as const,
+    middleware: [requireRequestActorMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(startTransitionRoute, RedistributionStaffController.startTransition);
 
@@ -93,38 +94,38 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   // Manager/Agency routes
   const managerApproveRoute = {
     ...redistribution.approveRedistributionRequest,
-    middleware: [requireRolesMiddleware([UserRole.MANAGER, UserRole.AGENCY])] as const,
+    middleware: [requireStationManagementMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(managerApproveRoute, RedistributionManagerController.approveRedistributionRequest);
 
   const managerRejectRoute = {
     ...redistribution.rejectRedistributionRequest,
-    middleware: [requireRolesMiddleware([UserRole.MANAGER, UserRole.AGENCY])] as const,
+    middleware: [requireStationManagementMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(managerRejectRoute, RedistributionManagerController.rejectRedistributionRequest);
 
   const managerConfirmRoute = {
     ...redistribution.confirmRedistributionRequestCompletion,
-    middleware: [requireRolesMiddleware([UserRole.MANAGER, UserRole.AGENCY])] as const,
+    middleware: [requireStationManagementMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(managerConfirmRoute, RedistributionManagerController.confirmRedistributionRequestCompletion);
 
   // Agency routes
   const agencyListRoute = {
     ...redistribution.getRequestListForAgency,
-    middleware: [requireRolesMiddleware([UserRole.AGENCY])] as const,
+    middleware: [requireAgencyMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(agencyListRoute, RedistributionAgencyController.getRequestListForAgency);
 
   const agencyHistoryRoute = {
     ...redistribution.getRequestHistoryForAgency,
-    middleware: [requireRolesMiddleware([UserRole.AGENCY])] as const,
+    middleware: [requireAgencyMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(agencyHistoryRoute, RedistributionAgencyController.getRequestHistoryForAgency);
 
   const agencyDetailRoute = {
     ...redistribution.getRequestDetailForAgency,
-    middleware: [requireRolesMiddleware([UserRole.AGENCY])] as const,
+    middleware: [requireAgencyMiddleware] as const,
   } satisfies RouteConfig;
   app.openapi(agencyDetailRoute, RedistributionAgencyController.getRequestDetailForAgency);
 }

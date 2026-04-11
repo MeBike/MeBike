@@ -1,4 +1,4 @@
-import { Effect, Match, Option } from "effect";
+import { Effect, Option } from "effect";
 
 import type {
   PrismaClient,
