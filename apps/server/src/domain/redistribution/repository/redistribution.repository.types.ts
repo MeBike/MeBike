@@ -5,7 +5,6 @@ import type { Prisma } from "generated/prisma/client";
 import type { RedistributionStatus } from "generated/prisma/enums";
 
 import type {
-  MyInStationRedistributionFilter,
   RedistributionRequestDetailRow,
   RedistributionRequestRow,
   RedistributionRequestSummaryRow,
@@ -34,20 +33,6 @@ export type RedistributionRepo = {
   create: (
     data: CreateRedistributionRequestInput,
   ) => Effect.Effect<RedistributionRequestRow>;
-
-  listMyInStationRequests: (
-    userId: string,
-    stationId: string,
-    filter: MyInStationRedistributionFilter,
-    pageReq: PageRequest<RedistributionSortField>,
-  ) => Effect.Effect<PageResult<RedistributionRequestSummaryRow>>;
-
-  getMyInStationRequest: (
-    userId: string,
-    stationId: string,
-    requestId: string,
-  ) => Effect.Effect<Option.Option<RedistributionRequestDetailRow>>;
-
   // Core activities
   findById: (
     requestId: string,

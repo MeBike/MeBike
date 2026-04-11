@@ -273,23 +273,9 @@ const getRequestListForStaff: RouteHandler<
         },
         200,
       )),
-    Match.tag("Left", ({ left }) =>
-      Match.value(left).pipe(
-        Match.tag("UserNotFound", error =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
-            {
-              error: redistributionReqErrorMessages.USER_NOT_FOUND,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
-                userId: error.userId,
-              },
-            },
-            404,
-          )),
-        Match.orElse(() => {
-          throw left;
-        }),
-      )),
+    Match.tag("Left", ({ left }) => {
+      throw left;
+    }),
     Match.exhaustive,
   );
 };
@@ -319,17 +305,6 @@ const getRequestDetailForStaff: RouteHandler<
       )),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
-        Match.tag("UserNotFound", error =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
-            {
-              error: redistributionReqErrorMessages.USER_NOT_FOUND,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
-                userId: error.userId,
-              },
-            },
-            404,
-          )),
         Match.tag("RedistributionRequestNotFound", error =>
           c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
             {

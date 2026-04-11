@@ -39,6 +39,8 @@ export class UnauthorizedRedistributionAccess extends Data.TaggedError(
 )<{
     readonly requestId: string;
     readonly userId: string;
+    readonly sourceStationId?: string;
+    readonly targetStationId?: string;
   }> {}
 
 export class UnauthorizedRedistributionCreation extends Data.TaggedError(

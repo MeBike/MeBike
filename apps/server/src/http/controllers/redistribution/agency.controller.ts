@@ -141,6 +141,9 @@ const getRequestDetailForAgency: RouteHandler<
               details: {
                 code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_ACCESS,
                 requestId: error.requestId,
+                userId: error.userId,
+                sourceStationId: error.sourceStationId,
+                targetStationId: error.targetStationId,
               },
             },
             403,

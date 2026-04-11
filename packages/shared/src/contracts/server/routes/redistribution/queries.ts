@@ -103,17 +103,6 @@ export const getRequestListForStaff = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Staff"),
-    404: notFoundResponse({
-      schema: RedistributionReqErrorResponseSchema,
-      description: "User not found",
-      example: {
-        error: "User not found",
-        details: {
-          code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
-          userId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
-        },
-      },
-    }),
   },
 });
 
@@ -249,6 +238,8 @@ export const getRequestDetailForManager = createRoute({
                     .UNAUTHORIZED_ACCESS,
                   userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  sourceStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  targetStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                 },
               },
             },
@@ -344,6 +335,8 @@ export const getRequestDetailForAgency = createRoute({
                     .UNAUTHORIZED_ACCESS,
                   userId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  sourceStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  targetStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                 },
               },
             },

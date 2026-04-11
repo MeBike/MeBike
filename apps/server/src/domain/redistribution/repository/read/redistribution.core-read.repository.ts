@@ -36,7 +36,7 @@ export function makeRedistributionCoreReadRepository(
     findOne: where =>
       Effect.tryPromise({
         try: () =>
-          client.redistributionRequest.findUnique({
+          client.redistributionRequest.findFirst({
             where,
             select,
           }),
@@ -61,7 +61,7 @@ export function makeRedistributionCoreReadRepository(
     findAndPopulate: where =>
       Effect.tryPromise({
         try: () =>
-          client.redistributionRequest.findUnique({
+          client.redistributionRequest.findFirst({
             where,
             select: detailedSelect,
           }),

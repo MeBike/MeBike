@@ -2,9 +2,6 @@ import type { PageRequest } from "@/domain/shared/pagination";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type {
-  AdminRedistributionFilter,
-  InStationRedistributionFilter,
-  MyInStationRedistributionFilter,
   RedistributionRequestDetailRow,
   RedistributionRequestRow,
   RedistributionRequestSummaryRow,
@@ -14,60 +11,6 @@ import type {
   UserDetail,
   UserSummary,
 } from "../models";
-
-export function toMyInStationRedistributionRequestsWhere(
-  userId: string,
-  stationId: string,
-  filter: MyInStationRedistributionFilter,
-): PrismaTypes.RedistributionRequestWhereInput {
-  return {
-    requestedByUserId: userId,
-    sourceStationId: stationId,
-    ...(filter.status ? { status: filter.status } : {}),
-    ...(filter.targetStationId
-      ? { targetStationId: filter.targetStationId }
-      : {}),
-  };
-}
-
-export function toInStationRedistributionRequestsWhere(
-  stationId: string,
-  filter: InStationRedistributionFilter,
-): PrismaTypes.RedistributionRequestWhereInput {
-  return {
-    sourceStationId: stationId,
-    ...(filter.status ? { status: filter.status } : {}),
-    ...(filter.requestedByUserId
-      ? { requestedByUserId: filter.requestedByUserId }
-      : {}),
-    ...(filter.approvedByUserId
-      ? { approvedByUserId: filter.approvedByUserId }
-      : {}),
-    ...(filter.targetStationId
-      ? { targetStationId: filter.targetStationId }
-      : {}),
-  };
-}
-
-export function toAdminRedistributionRequestsWhere(
-  filter: AdminRedistributionFilter,
-): PrismaTypes.RedistributionRequestWhereInput {
-  return {
-    ...(filter.requestedByUserId
-      ? { requestedByUserId: filter.requestedByUserId }
-      : {}),
-    ...(filter.approvedByUserId
-      ? { approvedByUserId: filter.approvedByUserId }
-      : {}),
-    ...(filter.status ? { status: filter.status } : {}),
-    ...(filter.sourceStationId
-      ? { sourceStationId: filter.sourceStationId }
-      : {}),
-    ...(filter.targetStationId
-      ? { targetStationId: filter.targetStationId }
-      : {}),
-  };
-}
 
 export function toRedistributionOrderBy(
   req: PageRequest<RedistributionSortField>,

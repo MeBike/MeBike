@@ -201,45 +201,39 @@ function makeRedistributionService(
 
   return {
     getMyListInStation: (userId, filter, page) =>
-      Effect.gen(function* () {
-        const user = yield* assertUserExists(userId);
-        const stationId = getUserStationId(user)!;
-        return yield* repo.listWithOffset(
-          {
-            ...filter,
-            requestedByUserId: userId,
-            sourceStationId: stationId,
-          },
-          page,
-        );
-      }),
+      repo.listWithOffset(
+        {
+          ...filter,
+          requestedByUserId: userId,
+        },
+        page,
+      ),
 
     getMyRequestInStation: ({ userId, requestId }) =>
       Effect.gen(function* () {
-        const user = yield* assertUserExists(userId);
-        const stationId = getUserStationId(user)!;
         const reqOpt = yield* repo.findAndPopulate({
           id: requestId,
-          requestedByUserId: userId,
-          sourceStationId: stationId,
         });
 
-        if (Option.isSome(reqOpt))
-          return reqOpt.value;
-
-        const existing = yield* repo.findById(requestId);
-        if (
-          Option.isSome(existing)
-          && existing.value.requestedByUserId !== userId
-        ) {
+        if (Option.isNone(reqOpt)) {
           return yield* Effect.fail(
-            new UnauthorizedRedistributionAccess({ userId, requestId }),
+            new RedistributionRequestNotFound({ requestId }),
           );
         }
 
-        return yield* Effect.fail(
-          new RedistributionRequestNotFound({ requestId }),
-        );
+        const req = reqOpt.value;
+
+        // Authorization: users can only view their own request
+        if (req.requestedByUser.id !== userId) {
+          return yield* Effect.fail(
+            new UnauthorizedRedistributionAccess({
+              requestId,
+              userId,
+            }),
+          );
+        }
+
+        return req;
       }),
 
     getListInStation: (userId, filter, page) =>
@@ -249,7 +243,10 @@ function makeRedistributionService(
         return yield* repo.listWithOffset(
           {
             ...filter,
-            sourceStationId: stationId,
+            OR: [
+              { sourceStationId: stationId },
+              { targetStationId: stationId },
+            ],
           },
           page,
         );
@@ -261,26 +258,32 @@ function makeRedistributionService(
         const stationId = getUserStationId(user)!;
         const reqOpt = yield* repo.findAndPopulate({
           id: requestId,
-          sourceStationId: stationId,
         });
 
-        if (Option.isSome(reqOpt)) {
-          return reqOpt.value;
-        }
-
-        const existing = yield* repo.findById(requestId);
-        if (
-          Option.isSome(existing)
-          && existing.value.requestedByUserId !== userId
-        ) {
+        if (Option.isNone(reqOpt)) {
           return yield* Effect.fail(
-            new UnauthorizedRedistributionAccess({ userId, requestId }),
+            new RedistributionRequestNotFound({ requestId }),
           );
         }
 
-        return yield* Effect.fail(
-          new RedistributionRequestNotFound({ requestId }),
-        );
+        // Authorization: users can only view request related to their station
+        const req = reqOpt.value;
+        const hasAccess
+          = req.sourceStation.id === stationId
+            || req.targetStation.id === stationId;
+
+        if (!hasAccess) {
+          return yield* Effect.fail(
+            new UnauthorizedRedistributionAccess({
+              requestId,
+              userId,
+              sourceStationId: req.sourceStation.id,
+              targetStationId: req.targetStation.id,
+            }),
+          );
+        }
+
+        return req;
       }),
 
     createRequestTo: args =>
