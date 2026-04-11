@@ -47,6 +47,13 @@ export const agencyColumn = ({
       return row.original.station.address || "Không có";
     },
   },
+    {
+    accessorKey: "contact-phone",
+    header: "SĐT",
+    cell: ({ row }) => {
+      return row.original.contactPhone || "Không có";
+    },
+  },
   {
     accessorKey: "station-name",
     header: "Tên trạm",

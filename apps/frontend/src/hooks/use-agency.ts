@@ -1,4 +1,4 @@
-import { useGetAgencies, useGetAgencyDetail } from "@queries";
+import { useGetAgencies, useGetAgencyDetail , useGetAgencyStat } from "@queries";
 import { toast } from "sonner";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -40,6 +40,14 @@ export const useAgencyActions = ({
     }
     refetchAgencyDetail();
   }, [refetchAgencyDetail, hasToken, router,agency_id]);
+  const {data : agencyStats , refetch : refetchAgencyStats , isLoading : isLoadingAgencyStats} = useGetAgencyStat({id : agency_id || ""});
+  const getAgencyStat = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchAgencyStats();
+  }, [refetchAgencyStats, hasToken, router,agency_id]);
   return {
     agencies,
     getAgencies,
@@ -47,5 +55,9 @@ export const useAgencyActions = ({
     getAgencyDetail,
     isLoadingAgencyDetail,
     agencyDetail,
+    getAgencyStat,
+    agencyStats,
+    isLoadingAgencyStats,
   };
+  
 };

@@ -51,7 +51,7 @@ export default function AgencyClient() {
             </p>
             <DataTable
               columns={agencyColumn({
-                onView: ({ id }) => router.push(`/admin/bikes/detail/${id}`),
+                onView: ({ id }) => router.push(`/admin/agencies/detail/${id}`),
                 onEdit: ({ id }) => router.push(`/admin/bikes/${id}?edit=true`),
               })}
               data={agencies?.data || []}

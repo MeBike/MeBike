@@ -2,7 +2,7 @@ import fetchHttpClient from "@/lib/httpClient";
 import { ENDPOINT } from "@/constants";
 import { AxiosResponse } from "axios";
 import { ApiResponse } from "@/types";
-import type { Agency } from "@/types/Agency";
+import type { Agency , AgencyStats } from "@/types/Agency";
 export const agencyService = {
   getAgencies: async ({
     page,
@@ -21,4 +21,8 @@ export const agencyService = {
     const response = fetchHttpClient.get<Agency>(ENDPOINT.AGENCY.ID(id));
     return response;
   },
+  getAgencyStats : async({id}:{id:string}) : Promise<AxiosResponse<AgencyStats>> => {
+    const response = fetchHttpClient.get<AgencyStats>(ENDPOINT.AGENCY.STATS(id));
+    return response;
+  }
 };
