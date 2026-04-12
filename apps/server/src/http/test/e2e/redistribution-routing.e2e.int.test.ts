@@ -28,6 +28,9 @@ describe("redistribution routing e2e", () => {
       userId: user.id,
       stationId: station.id,
     });
+    // Create 2 available bikes to satisfy redistribution requirements (requested: 1, min rest: 1)
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const token = fixture.auth.makeAccessToken({ userId: user.id, role: "STAFF" });
 
     const response = await fixture.app.request("http://test/v1/redistribution-requests", {
