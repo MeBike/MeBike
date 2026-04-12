@@ -1,6 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-
 import type { AuthError } from "@services/auth/auth-error";
 import type { UserError } from "@services/users/user-error";
 
@@ -12,6 +9,8 @@ import { clearPushToken, getPushToken } from "@lib/push-token";
 import { authService } from "@services/auth/auth-service";
 import { isUserApiError } from "@services/users/user-error";
 import { userService } from "@services/users/user-service";
+import { useQueryClient } from "@tanstack/react-query";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type UserDetail = import("@services/users/user-service").UserDetail;
 

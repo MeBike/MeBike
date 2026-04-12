@@ -1,23 +1,24 @@
+import type { UserDetail } from "@services/users/user-service";
+
+import { useMyRentalCountsQuery } from "@hooks/query/rentals/use-my-rental-counts-query";
+import { invalidateMyRentalCountsQuery } from "@hooks/rentals/rental-cache";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
-import type { UserDetail } from "@services/users/user-service";
-
-import { authQueryKeys } from "@/hooks/query/auth-next/auth-query-keys";
 import { useResendVerifyEmailMutation } from "@/hooks/mutations/AuthNext/use-resend-verify-email-mutation";
 import { useVerifyEmailOtpMutation } from "@/hooks/mutations/AuthNext/use-verify-email-otp-mutation";
+import { authQueryKeys } from "@/hooks/query/auth-next/auth-query-keys";
 import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
-import { useMyRentalCountsQuery } from "@hooks/query/rentals/use-my-rental-counts-query";
-import { invalidateMyRentalCountsQuery } from "@hooks/rentals/rental-cache";
-import { useAuthNext } from "@providers/auth-provider-next";
 
 export function useProfile() {
   const navigation = useNavigation();
   const { user, logout, isCustomer, hydrate } = useAuthNext();
   const queryClient = useQueryClient();
   const hasToken = Boolean(user?.id);
+  const shouldLoadRentalCounts = hasToken && isCustomer;
   const [profile, setProfile] = useState<UserDetail>(() => ({
     id: user?.id ?? "",
     fullName: user?.fullName ?? "",
@@ -39,7 +40,9 @@ export function useProfile() {
   const resendOtpMutation = useResendVerifyEmailMutation();
   const verifyOtpMutation = useVerifyEmailOtpMutation();
 
-  const { data: rentalCounts, isLoading: isRentalCountsLoading } = useMyRentalCountsQuery({ enabled: hasToken });
+  const { data: rentalCounts, isLoading: isRentalCountsLoading } = useMyRentalCountsQuery({
+    enabled: shouldLoadRentalCounts,
+  });
   const completedTrips = rentalCounts?.COMPLETED ?? 0;
 
   const onRefresh = useCallback(async () => {
