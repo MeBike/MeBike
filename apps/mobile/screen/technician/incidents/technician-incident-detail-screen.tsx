@@ -1,7 +1,7 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { spaceScale } from "@theme/metrics";
+import { borderWidths, spaceScale } from "@theme/metrics";
 import React, { useState } from "react";
-import { RefreshControl, ScrollView, StatusBar } from "react-native";
+import { Linking, Pressable, RefreshControl, ScrollView, StatusBar } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type {
@@ -9,7 +9,9 @@ import type {
   TechnicianIncidentDetailRouteProp,
 } from "@/types/navigation";
 
+import { IconSymbol } from "@/components/IconSymbol";
 import { useIncidentDetailQuery } from "@/screen/incidents/hooks/use-incident-detail-query";
+import { formatIncidentCode, formatIncidentDateTime } from "@/screen/incidents/incident-formatters";
 import {
   formatIncidentDistance,
   formatIncidentDuration,
@@ -29,26 +31,6 @@ import { StatusBadge } from "@/ui/primitives/status-badge";
 import { TechnicianIncidentActionBar } from "./components/technician-incident-action-bar";
 import { useTechnicianIncidentActions } from "./hooks/use-technician-incident-actions";
 
-function formatIncidentCode(incidentId: string) {
-  return `SC-${incidentId.slice(-6).toUpperCase()}`;
-}
-
-function formatDateTime(value: Date | string | null) {
-  if (!value) {
-    return null;
-  }
-
-  const date = value instanceof Date ? value : new Date(value);
-
-  return new Intl.DateTimeFormat("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-}
-
 function formatCoordinates(latitude: number | null, longitude: number | null) {
   if (typeof latitude !== "number" || typeof longitude !== "number") {
     return null;
@@ -57,25 +39,116 @@ function formatCoordinates(latitude: number | null, longitude: number | null) {
   return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
 }
 
-function SectionLabel({ children }: { children: string }) {
+function formatIncidentTitle(incidentType: string) {
+  return incidentType.replaceAll("_", " ");
+}
+
+function SectionCard({
+  accentTone = "accent",
+  children,
+  icon,
+  title,
+}: {
+  accentTone?: "accent" | "danger" | "success" | "warning";
+  children: React.ReactNode;
+  icon: "bike" | "person" | "tools" | "clock";
+  title: string;
+}) {
+  const toneStyles = {
+    accent: { backgroundColor: "$surfaceAccent", iconColorKey: "textBrand" },
+    danger: { backgroundColor: "$surfaceDanger", iconColorKey: "textDanger" },
+    success: { backgroundColor: "$surfaceSuccess", iconColorKey: "textSuccess" },
+    warning: { backgroundColor: "$surfaceWarning", iconColorKey: "textWarning" },
+  } as const;
+  const theme = useTheme();
+  const toneStyle = toneStyles[accentTone];
+  const iconColor = theme[toneStyle.iconColorKey].val;
+
   return (
-    <AppText tone="subtle" variant="eyebrow">
-      {children}
-    </AppText>
+    <AppCard borderRadius="$6" borderWidth={0} chrome="whisper" gap="$0" overflow="hidden" padding="$0">
+      <XStack
+        alignItems="center"
+        backgroundColor="$surfaceMuted"
+        borderBottomColor="$borderSubtle"
+        borderBottomWidth={borderWidths.subtle}
+        gap="$3"
+        paddingHorizontal="$5"
+        paddingVertical="$3"
+      >
+        <XStack
+          alignItems="center"
+          backgroundColor={toneStyle.backgroundColor}
+          borderRadius="$4"
+          height={40}
+          justifyContent="center"
+          width={40}
+        >
+          <IconSymbol color={iconColor} name={icon} size="sm" />
+        </XStack>
+        <AppText variant="label">{title}</AppText>
+      </XStack>
+
+      <YStack paddingHorizontal="$5" paddingVertical="$1">
+        {children}
+      </YStack>
+    </AppCard>
   );
 }
 
-function DetailLine({ label, value }: { label: string; value: string | null | undefined }) {
-  if (!value) {
-    return null;
-  }
+function DetailRow({
+  action,
+  emptyLabel = "Chưa có",
+  isLast = false,
+  label,
+  value,
+  valueTone = "default",
+}: {
+  action?: React.ReactNode;
+  emptyLabel?: string;
+  isLast?: boolean;
+  label: string;
+  value: React.ReactNode;
+  valueTone?: "default" | "brand" | "danger" | "warning" | "success";
+}) {
+  const hasValue = value !== null && value !== undefined && value !== "";
 
   return (
-    <YStack gap="$1">
-      <AppText tone="muted" variant="caption">
-        {label}
-      </AppText>
-      <AppText variant="bodySmall">{value}</AppText>
+    <YStack>
+      <XStack
+        alignItems="center"
+        gap="$3"
+        justifyContent="space-between"
+        paddingVertical="$4"
+      >
+        <AppText tone="muted" variant="bodySmall">
+          {label}
+        </AppText>
+        <XStack alignItems="center" gap="$3" maxWidth="60%">
+          {hasValue
+            ? (
+                <AppText align="right" flexShrink={1} tone={valueTone} variant="compactStrong">
+                  {value}
+                </AppText>
+              )
+            : (
+                <AppText align="right" flexShrink={1} tone="subtle" variant="bodySmall">
+                  {emptyLabel}
+                </AppText>
+              )}
+          {action ?? null}
+        </XStack>
+      </XStack>
+
+      {!isLast
+        ? (
+            <XStack
+              alignSelf="stretch"
+              backgroundColor="$backgroundSubtle"
+              height={borderWidths.subtle}
+              marginHorizontal="$2"
+            />
+          )
+        : null}
     </YStack>
   );
 }
@@ -168,6 +241,16 @@ export default function TechnicianIncidentDetailScreen() {
         .join(", ")
     : null;
   const coordinates = formatCoordinates(incident.latitude, incident.longitude);
+  const handleCallReporter = () => {
+    if (incident.reporterUser.phoneNumber) {
+      void Linking.openURL(`tel:${incident.reporterUser.phoneNumber}`);
+    }
+  };
+  const handleOpenMap = () => {
+    if (coordinates) {
+      void Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${incident.latitude},${incident.longitude}`);
+    }
+  };
 
   const needsFooterSpacer = Boolean(actionKind)
     && contentHeight + footerHeight > viewportHeight;
@@ -202,66 +285,108 @@ export default function TechnicianIncidentDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <YStack
-          gap="$4"
+          gap="$5"
           onLayout={(event) => {
             setContentHeight(event.nativeEvent.layout.height);
           }}
           padding="$4"
+          paddingTop="$5"
         >
-          <AppCard borderRadius="$4" chrome="whisper" gap="$3" padding="$4">
+          <AppCard borderRadius="$6" borderWidth={0} chrome="whisper" gap="$4" padding="$5">
             <XStack flexWrap="wrap" gap="$2">
-              <StatusBadge label={getIncidentStatusLabel(incident.status)} tone={getIncidentStatusTone(incident.status)} />
-              <StatusBadge label={getIncidentSeverityLabel(incident.severity)} tone={getIncidentSeverityTone(incident.severity)} />
+              <StatusBadge label={getIncidentStatusLabel(incident.status).toUpperCase()} pulseDot={incident.status !== "RESOLVED" && incident.status !== "CLOSED" && incident.status !== "CANCELLED"} tone={getIncidentStatusTone(incident.status)} />
+              <StatusBadge label={getIncidentSeverityLabel(incident.severity)} tone={getIncidentSeverityTone(incident.severity)} withDot={false} />
               <StatusBadge label={getIncidentSourceLabel(incident.source)} tone="neutral" withDot={false} />
             </XStack>
 
-            <YStack gap="$2">
-              <AppText variant="sectionTitle">{incident.incidentType}</AppText>
+            <YStack gap="$3">
+              <AppText variant="sectionTitle">{formatIncidentTitle(incident.incidentType)}</AppText>
               {incident.description
-                ? <AppText variant="bodySmall">{incident.description}</AppText>
+                ? (
+                    <AppCard borderRadius="$5" chrome="flat" tone="muted" padding="$4">
+                      <AppText tone="muted" variant="bodySmall">
+                        {incident.description}
+                      </AppText>
+                    </AppCard>
+                  )
                 : <AppText tone="muted" variant="bodySmall">Chưa có mô tả chi tiết từ người báo sự cố.</AppText>}
             </YStack>
           </AppCard>
 
-          <YStack gap="$3">
-            <SectionLabel>Người báo và chuyến thuê</SectionLabel>
-            <AppCard borderRadius="$4" chrome="whisper" gap="$3" padding="$4">
-              <DetailLine label="Người báo" value={incident.reporterUser.fullName} />
-              <DetailLine label="Số điện thoại" value={incident.reporterUser.phoneNumber} />
-              <DetailLine label="Mã chuyến thuê" value={incident.rental?.id ?? null} />
-              <DetailLine label="Trạng thái chuyến thuê" value={incident.rental?.status ?? null} />
-            </AppCard>
-          </YStack>
+          <SectionCard icon="person" title="Người báo & Chuyến thuê">
+            <DetailRow label="Người báo" value={incident.reporterUser.fullName} />
+            <DetailRow
+              action={(
+                <Pressable
+                  onPress={handleCallReporter}
+                  style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.96 : 1 }] })}
+                >
+                  <XStack
+                    alignItems="center"
+                    backgroundColor="$surfaceAccent"
+                    borderColor="$borderSubtle"
+                    borderRadius="$round"
+                    borderWidth={borderWidths.subtle}
+                    height={44}
+                    justifyContent="center"
+                    width={44}
+                  >
+                    <IconSymbol color={theme.textBrand.val} name="phone" size="sm" />
+                  </XStack>
+                </Pressable>
+              )}
+              label="Số điện thoại"
+              value={incident.reporterUser.phoneNumber}
+            />
+            <DetailRow emptyLabel="Chưa có mã chuyến" label="Mã chuyến thuê" value={incident.rental?.id ? `${incident.rental.id.slice(0, 10)}...` : ""} />
+            <DetailRow emptyLabel="Chưa có trạng thái" isLast label="Trạng thái chuyến" value={incident.rental?.status ?? ""} valueTone="warning" />
+          </SectionCard>
 
-          <YStack gap="$3">
-            <SectionLabel>Thông tin xe và vị trí</SectionLabel>
-            <AppCard borderRadius="$4" chrome="whisper" gap="$3" padding="$4">
-              <DetailLine label="Mã xe" value={incident.bike.chipId} />
-              <DetailLine label="Trạm liên quan" value={incident.station?.name ?? null} />
-              <DetailLine label="Địa chỉ trạm" value={incident.station?.address ?? null} />
-              <DetailLine label="Tọa độ" value={coordinates} />
-              <DetailLine label="Bánh xe đang khóa" value={incident.bikeLocked ? "Có" : "Không"} />
-            </AppCard>
-          </YStack>
+          <SectionCard accentTone="success" icon="bike" title="Thông tin xe & Vị trí">
+            <DetailRow label="Mã xe" value={incident.bike.chipId} />
+            <DetailRow label="Bánh xe đang khóa" value={incident.bikeLocked ? "Có" : "Không"} valueTone={incident.bikeLocked ? "danger" : "success"} />
+            <DetailRow emptyLabel="Không gắn với trạm" label="Trạm liên quan" value={incident.station?.name ?? ""} />
+            <DetailRow
+              action={coordinates
+                ? (
+                    <Pressable
+                      onPress={handleOpenMap}
+                      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.96 : 1 }] })}
+                    >
+                      <XStack
+                        alignItems="center"
+                        backgroundColor="$surfaceDefault"
+                        borderColor="$borderSubtle"
+                        borderRadius="$round"
+                        borderWidth={borderWidths.subtle}
+                        height={44}
+                        justifyContent="center"
+                        width={44}
+                      >
+                        <IconSymbol color={theme.textSecondary.val} name="location" size="sm" />
+                      </XStack>
+                    </Pressable>
+                  )
+                : undefined}
+              emptyLabel="Chưa có tọa độ"
+              label="Tọa độ"
+              value={coordinates}
+              isLast
+            />
+          </SectionCard>
 
-          <YStack gap="$3">
-            <SectionLabel>Điều phối kỹ thuật viên</SectionLabel>
-            <AppCard borderRadius="$4" chrome="whisper" gap="$3" padding="$4">
-              <DetailLine label="Kỹ thuật viên" value={incident.assignments?.technician?.fullName ?? null} />
-              <DetailLine label="Nhóm kỹ thuật" value={incident.assignments?.team?.name ?? null} />
-              <DetailLine label="Lộ trình" value={assignmentRoute} />
-              <DetailLine label="Được phân công lúc" value={formatDateTime(incident.assignments?.assignedAt ?? null)} />
-            </AppCard>
-          </YStack>
+          <SectionCard icon="tools" title="Điều phối kỹ thuật">
+            <DetailRow emptyLabel="Chưa điều phối" label="Kỹ thuật viên" value={incident.assignments?.technician?.fullName ?? ""} />
+            <DetailRow emptyLabel="Chưa có nhóm" label="Nhóm kỹ thuật" value={incident.assignments?.team?.name ?? ""} />
+            <DetailRow emptyLabel="Chưa có ETA" label="Lộ trình" value={assignmentRoute} valueTone="brand" />
+            <DetailRow emptyLabel="Chưa phân công" isLast label="Phân công lúc" value={formatIncidentDateTime(incident.assignments?.assignedAt ?? null)} />
+          </SectionCard>
 
-          <YStack gap="$3">
-            <SectionLabel>Mốc thời gian</SectionLabel>
-            <AppCard borderRadius="$4" chrome="whisper" gap="$3" padding="$4">
-              <DetailLine label="Báo lúc" value={formatDateTime(incident.reportedAt)} />
-              <DetailLine label="Xử lý xong lúc" value={formatDateTime(incident.resolvedAt)} />
-              <DetailLine label="Đóng lúc" value={formatDateTime(incident.closedAt)} />
-            </AppCard>
-          </YStack>
+          <SectionCard accentTone="warning" icon="clock" title="Mốc thời gian">
+            <DetailRow label="Báo lúc" value={formatIncidentDateTime(incident.reportedAt)} />
+            <DetailRow emptyLabel="Chưa hoàn tất" label="Xử lý xong lúc" value={formatIncidentDateTime(incident.resolvedAt)} />
+            <DetailRow emptyLabel="Chưa đóng" isLast label="Đóng lúc" value={formatIncidentDateTime(incident.closedAt)} />
+          </SectionCard>
         </YStack>
       </ScrollView>
 

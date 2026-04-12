@@ -9,6 +9,7 @@ import type { TechnicianIncidentListNavigationProp } from "@/types/navigation";
 
 import { IconSymbol } from "@/components/IconSymbol";
 import { useIncidentsInfiniteQuery } from "@/screen/incidents/hooks/use-incidents-infinite-query";
+import { formatIncidentCode } from "@/screen/incidents/incident-formatters";
 import {
   formatIncidentDistance,
   formatIncidentDuration,
@@ -26,8 +27,8 @@ import { StatusBadge } from "@/ui/primitives/status-badge";
 
 type IncidentTab = "ACTIVE" | "HISTORY";
 
-function formatIncidentCode(incidentId: string) {
-  return `SC-${incidentId.slice(-6).toUpperCase()}`;
+function formatIncidentTitle(incidentType: string) {
+  return incidentType.replaceAll("_", " ");
 }
 
 function formatReportedAt(value: Date | string) {
@@ -64,17 +65,21 @@ function IncidentTabButton({
       style={({ pressed }) => ({
         flex: 1,
         opacity: pressed ? 0.98 : 1,
-        transform: [{ scale: pressed ? 0.995 : 1 }],
+        transform: [{ scale: pressed ? 0.992 : 1 }],
       })}
     >
-      {({ pressed }) => (
+      {() => (
         <YStack
           alignItems="center"
-          backgroundColor={active ? "$surfaceDefault" : "$overlayGlass"}
+          backgroundColor={active ? "$surfaceDefault" : "$overlayGlassMuted"}
           borderRadius="$4"
-          opacity={pressed ? 0.98 : 1}
           paddingHorizontal="$4"
           paddingVertical="$4"
+          shadowColor="$shadowColor"
+          shadowOffset={{ width: 0, height: 8 }}
+          shadowOpacity={active ? 0.08 : 0}
+          shadowRadius={active ? 18 : 0}
+          elevation={active ? 3 : 0}
         >
           <AppText tone={active ? "brand" : "inverted"} variant="tabLabel">
             {label}
@@ -95,27 +100,30 @@ function IncidentRow({
   const eta = formatIncidentDuration(incident.assignments?.durationSeconds ?? null);
   const distance = formatIncidentDistance(incident.assignments?.distanceMeters ?? null);
   const coordinates = formatCoordinates(incident.latitude, incident.longitude);
+  const routeSummary = eta || distance
+    ? `${distance ? `Khoảng cách ${distance}` : "Khoảng cách đang cập nhật"}${eta ? `, ETA ${eta}` : ""}`
+    : null;
 
   return (
     <Pressable onPress={() => onPress(incident.id)}>
       {({ pressed }) => (
         <AppCard
-          borderRadius="$4"
-          chrome="whisper"
-          gap="$3"
+          borderRadius="$6"
+          chrome="card"
+          gap="$4"
           opacity={pressed ? 0.975 : 1}
-          padding="$4"
+          padding="$5"
         >
           <XStack alignItems="flex-start" justifyContent="space-between" gap="$3">
-            <YStack flex={1} gap="$1">
-              <AppText variant="bodyStrong">{incident.incidentType}</AppText>
-              <AppText tone="muted" variant="bodySmall">
+            <YStack flex={1} gap="$2">
+              <AppText variant="cardTitle">{formatIncidentTitle(incident.incidentType)}</AppText>
+              <AppText tone="muted" variant="subhead">
                 {formatIncidentCode(incident.id)}
               </AppText>
             </YStack>
             <StatusBadge
-              label={getIncidentStatusLabel(incident.status)}
-              pulseDot={incident.status === "OPEN" || incident.status === "IN_PROGRESS"}
+              label={getIncidentStatusLabel(incident.status).toUpperCase()}
+              pulseDot={incident.status !== "RESOLVED" && incident.status !== "CLOSED" && incident.status !== "CANCELLED"}
               size="compact"
               tone={getIncidentStatusTone(incident.status)}
             />
@@ -126,27 +134,32 @@ function IncidentRow({
               label={getIncidentSeverityLabel(incident.severity)}
               size="compact"
               tone={getIncidentSeverityTone(incident.severity)}
+              withDot={false}
             />
-            {incident.station
-              ? <StatusBadge label={incident.station.name} size="compact" tone="neutral" withDot={false} />
-              : null}
+            <StatusBadge label="Trong chuyến thuê" size="compact" tone="neutral" withDot={false} />
           </XStack>
 
-          <YStack gap="$2">
+          <YStack gap="$3">
             <AppText tone="muted" variant="bodySmall">
               Khách báo:
               {" "}
-              {incident.reporterUser.fullName}
+              <AppText tone="default" variant="bodyStrong">
+                {incident.reporterUser.fullName}
+              </AppText>
             </AppText>
             <AppText tone="muted" variant="bodySmall">
               Xe:
               {" "}
-              {incident.bike.chipId}
+              <AppText tone="default" variant="bodyStrong">
+                {incident.bike.chipId}
+              </AppText>
             </AppText>
             <AppText tone="muted" variant="bodySmall">
               Thời gian báo:
               {" "}
-              {formatReportedAt(incident.reportedAt)}
+              <AppText tone="default" variant="bodyStrong">
+                {formatReportedAt(incident.reportedAt)}
+              </AppText>
             </AppText>
             {coordinates
               ? (
@@ -157,11 +170,10 @@ function IncidentRow({
                   </AppText>
                 )
               : null}
-            {eta || distance
+            {routeSummary
               ? (
                   <AppText tone="muted" variant="bodySmall">
-                    {distance ? `Khoảng cách ${distance}` : "Khoảng cách đang cập nhật"}
-                    {eta ? `, ETA ${eta}` : ""}
+                    {routeSummary}
                   </AppText>
                 )
               : null}
@@ -176,7 +188,7 @@ function EmptyState({ description, title }: { description: string; title: string
   const theme = useTheme();
 
   return (
-    <AppCard alignItems="center" borderRadius={32} chrome="whisper" gap="$4" padding="$6">
+    <AppCard alignItems="center" borderRadius="$6" chrome="card" gap="$4" padding="$7">
       <YStack
         alignItems="center"
         backgroundColor="$surfaceAccent"
@@ -188,7 +200,7 @@ function EmptyState({ description, title }: { description: string; title: string
         <IconSymbol color={theme.textBrand.val} name="warning" size="chip" />
       </YStack>
       <YStack alignItems="center" gap="$2">
-        <AppText align="center" variant="headline">
+        <AppText align="center" variant="sectionTitle">
           {title}
         </AppText>
         <AppText align="center" tone="muted" variant="bodySmall">
@@ -293,7 +305,7 @@ export default function TechnicianIncidentListScreen() {
         <YStack>
           {header}
 
-          <YStack gap="$4" padding="$4">
+          <YStack gap="$4" padding="$4" paddingTop="$6">
             {visibleIncidents.length > 0
               ? visibleIncidents.map(incident => (
                   <IncidentRow
@@ -319,7 +331,7 @@ export default function TechnicianIncidentListScreen() {
                     }}
                   >
                     {({ pressed }) => (
-                      <AppCard borderRadius="$4" chrome="flat" opacity={pressed ? 0.975 : 1} padding="$4">
+                      <AppCard borderRadius="$5" chrome="card" opacity={pressed ? 0.975 : 1} padding="$4">
                         <AppText align="center" tone="brand" variant="bodyStrong">
                           {incidentQuery.isFetchingNextPage ? "Đang tải thêm..." : "Tải thêm sự cố"}
                         </AppText>
