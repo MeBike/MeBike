@@ -18,10 +18,12 @@ type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 type TokenState = "checking" | "missing" | "present";
 
 function deriveAuthStatus({
+  hasRecoverableSessionError,
   tokenState,
   user,
   isMePending,
 }: {
+  hasRecoverableSessionError: boolean;
   tokenState: TokenState;
   user: UserDetail | null;
   isMePending: boolean;
@@ -40,6 +42,10 @@ function deriveAuthStatus({
 
   if (isMePending) {
     return "loading";
+  }
+
+  if (hasRecoverableSessionError) {
+    return "authenticated";
   }
 
   return "unauthenticated";
@@ -64,8 +70,21 @@ const AuthContextNext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
   const [tokenState, setTokenState] = useState<TokenState>("checking");
+  const [sessionUser, setSessionUser] = useState<UserDetail | null>(null);
 
   const meQuery = useMeQuery(tokenState === "present");
+
+  useEffect(() => {
+    if (meQuery.data) {
+      setSessionUser(meQuery.data);
+    }
+  }, [meQuery.data]);
+
+  useEffect(() => {
+    if (tokenState === "missing") {
+      setSessionUser(null);
+    }
+  }, [tokenState]);
 
   useEffect(() => {
     let active = true;
@@ -95,6 +114,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
 
     if (isUserApiError(error) && (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN")) {
       void clearTokens().finally(() => {
+        setSessionUser(null);
         setTokenState("missing");
         queryClient.removeQueries({ queryKey: authQueryKeys.me() });
       });
@@ -144,17 +164,25 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     await clearTokens();
     await clearPushToken();
+    setSessionUser(null);
     setTokenState("missing");
     queryClient.removeQueries({ queryKey: authQueryKeys.me() });
   }, [queryClient]);
 
   const value = useMemo<AuthContextValue>(() => {
-    const user = meQuery.data ?? null;
+    const user = meQuery.data ?? sessionUser;
     const role = user?.role;
     const isStaff = role === "STAFF";
     const isTechnician = role === "TECHNICIAN";
     const lastError = meQuery.error ?? null;
+    const isAuthSessionError = meQuery.error
+      ? isUserApiError(meQuery.error) && (meQuery.error.code === "UNAUTHORIZED" || meQuery.error.code === "FORBIDDEN")
+      : false;
+    const hasRecoverableSessionError = tokenState === "present"
+      && Boolean(meQuery.error)
+      && !isAuthSessionError;
     const status = deriveAuthStatus({
+      hasRecoverableSessionError,
       tokenState,
       user,
       isMePending: meQuery.isPending,
@@ -172,7 +200,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
       logout,
       hydrate,
     };
-  }, [meQuery.data, meQuery.error, meQuery.isPending, tokenState, login, logout, hydrate]);
+  }, [meQuery.data, meQuery.error, meQuery.isPending, tokenState, sessionUser, login, logout, hydrate]);
 
   return <AuthContextNext.Provider value={value}>{children}</AuthContextNext.Provider>;
 };
