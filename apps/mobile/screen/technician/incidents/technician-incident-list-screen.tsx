@@ -8,13 +8,7 @@ import type { IncidentDetail } from "@/contracts/server";
 import type { TechnicianIncidentListNavigationProp } from "@/types/navigation";
 
 import { IconSymbol } from "@/components/IconSymbol";
-import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
-import { AppCard } from "@/ui/primitives/app-card";
-import { AppText } from "@/ui/primitives/app-text";
-import { Screen } from "@/ui/primitives/screen";
-import { StatusBadge } from "@/ui/primitives/status-badge";
-
-import { useIncidentsInfiniteQuery } from "../../rental/incidents/hooks/use-incidents-infinite-query";
+import { useIncidentsInfiniteQuery } from "@/screen/incidents/hooks/use-incidents-infinite-query";
 import {
   formatIncidentDistance,
   formatIncidentDuration,
@@ -24,7 +18,12 @@ import {
   getIncidentStatusTone,
   isIncidentTerminalStatus,
   presentIncidentError,
-} from "../../rental/incidents/incident-presenters";
+} from "@/screen/incidents/incident-presenters";
+import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
+import { AppCard } from "@/ui/primitives/app-card";
+import { AppText } from "@/ui/primitives/app-text";
+import { Screen } from "@/ui/primitives/screen";
+import { StatusBadge } from "@/ui/primitives/status-badge";
 
 type IncidentTab = "ACTIVE" | "HISTORY";
 

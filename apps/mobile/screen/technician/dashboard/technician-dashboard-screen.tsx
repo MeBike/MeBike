@@ -9,7 +9,7 @@ import { useTheme, XStack, YStack } from "tamagui";
 import type { RootStackParamList } from "@/types/navigation";
 
 import { IconSymbol } from "@/components/IconSymbol";
-import { useIncidentsInfiniteQuery } from "@/screen/rental/incidents/hooks/use-incidents-infinite-query";
+import { useIncidentsInfiniteQuery } from "@/screen/incidents/hooks/use-incidents-infinite-query";
 import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
 import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";

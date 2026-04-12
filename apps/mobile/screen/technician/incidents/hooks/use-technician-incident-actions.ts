@@ -2,11 +2,11 @@ import { Alert } from "react-native";
 
 import type { AssignmentStatus } from "@/contracts/server";
 
-import { useAcceptIncidentMutation } from "@/screen/rental/incidents/hooks/use-accept-incident-mutation";
-import { useRejectIncidentMutation } from "@/screen/rental/incidents/hooks/use-reject-incident-mutation";
-import { useResolveIncidentMutation } from "@/screen/rental/incidents/hooks/use-resolve-incident-mutation";
-import { useStartIncidentMutation } from "@/screen/rental/incidents/hooks/use-start-incident-mutation";
-import { presentIncidentError } from "@/screen/rental/incidents/incident-presenters";
+import { useAcceptIncidentMutation } from "@/screen/incidents/hooks/use-accept-incident-mutation";
+import { useRejectIncidentMutation } from "@/screen/incidents/hooks/use-reject-incident-mutation";
+import { useResolveIncidentMutation } from "@/screen/incidents/hooks/use-resolve-incident-mutation";
+import { useStartIncidentMutation } from "@/screen/incidents/hooks/use-start-incident-mutation";
+import { presentIncidentError } from "@/screen/incidents/incident-presenters";
 
 type ActionKind = "assigned" | "accepted" | "in_progress";
 

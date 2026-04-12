@@ -12,7 +12,7 @@ import {
   formatIncidentDuration,
   getIncidentSourceLabel,
   isIncidentTerminalStatus,
-} from "../../incidents/incident-presenters";
+} from "@/screen/incidents/incident-presenters";
 
 type RentalIncidentCardProps = {
   incident: IncidentDetail;

@@ -9,13 +9,7 @@ import type {
   TechnicianIncidentDetailRouteProp,
 } from "@/types/navigation";
 
-import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
-import { AppCard } from "@/ui/primitives/app-card";
-import { AppText } from "@/ui/primitives/app-text";
-import { Screen } from "@/ui/primitives/screen";
-import { StatusBadge } from "@/ui/primitives/status-badge";
-
-import { useIncidentDetailQuery } from "../../rental/incidents/hooks/use-incident-detail-query";
+import { useIncidentDetailQuery } from "@/screen/incidents/hooks/use-incident-detail-query";
 import {
   formatIncidentDistance,
   formatIncidentDuration,
@@ -25,7 +19,13 @@ import {
   getIncidentStatusLabel,
   getIncidentStatusTone,
   presentIncidentError,
-} from "../../rental/incidents/incident-presenters";
+} from "@/screen/incidents/incident-presenters";
+import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
+import { AppCard } from "@/ui/primitives/app-card";
+import { AppText } from "@/ui/primitives/app-text";
+import { Screen } from "@/ui/primitives/screen";
+import { StatusBadge } from "@/ui/primitives/status-badge";
+
 import { TechnicianIncidentActionBar } from "./components/technician-incident-action-bar";
 import { useTechnicianIncidentActions } from "./hooks/use-technician-incident-actions";
 
