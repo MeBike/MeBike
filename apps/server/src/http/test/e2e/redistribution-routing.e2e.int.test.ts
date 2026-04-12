@@ -22,9 +22,13 @@ describe("redistribution routing e2e", () => {
   });
 
   it("allows authenticated user to create a redistribution request", async () => {
-    const user = await fixture.factories.user({ role: "USER" });
+    const user = await fixture.factories.user({ role: "STAFF" });
     const station = await fixture.factories.station({ capacity: 5 });
-    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    await fixture.factories.userOrgAssignment({
+      userId: user.id,
+      stationId: station.id,
+    });
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "STAFF" });
 
     const response = await fixture.app.request("http://test/v1/redistribution-requests", {
       method: "POST",
@@ -36,6 +40,7 @@ describe("redistribution routing e2e", () => {
         requestedByUserId: user.id,
         sourceStationId: station.id,
         targetStationId: station.id,
+        requestedQuantity: 1,
         reason: "Balance adjustment",
       }),
     });

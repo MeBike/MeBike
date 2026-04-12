@@ -11,6 +11,7 @@ export type RedistributionReadRepo = Pick<
   RedistributionRepo,
   | "findById"
   | "findOne"
+  | "findWhere"
   | "findAndPopulate"
   | "listWithOffset"
 >;
