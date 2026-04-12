@@ -3,10 +3,13 @@ import { Effect, Layer, Option } from "effect";
 import type { BikeRepository, BikeRepositoryError } from "@/domain/bikes";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { UserRow } from "@/domain/users";
-import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
+import type {
+  PrismaClient,
+  Prisma as PrismaTypes,
+} from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { StationServiceTag } from "@/domain/stations";
+import { makeStationRepository, StationServiceTag } from "@/domain/stations";
 import { UserQueryServiceTag } from "@/domain/users";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -226,7 +229,9 @@ function makeRedistributionService(
     ?? user.orgAssignment?.agency?.stationId
     ?? undefined;
 
-  const toRedistributionWhere = (filter: AdminRedistributionFilter): PrismaTypes.RedistributionRequestWhereInput => {
+  const toRedistributionWhere = (
+    filter: AdminRedistributionFilter,
+  ): PrismaTypes.RedistributionRequestWhereInput => {
     const where: PrismaTypes.RedistributionRequestWhereInput = {
       requestedByUserId: filter.requestedByUserId,
       approvedByUserId: filter.approvedByUserId,
@@ -261,7 +266,11 @@ function makeRedistributionService(
     RedistributionStatus.REJECTED,
   ];
 
-  const getHistoryForStation = (userId: string, filter: any, page: PageRequest<RedistributionSortField>) =>
+  const getHistoryForStation = (
+    userId: string,
+    filter: InStationRedistributionFilter,
+    page: PageRequest<RedistributionSortField>,
+  ) =>
     Effect.gen(function* () {
       const user = yield* assertUserExists(userId);
       const stationId = getUserStationId(user)!;
@@ -270,10 +279,7 @@ function makeRedistributionService(
         toRedistributionWhere({
           ...filter,
           statuses: filter.statuses ?? TERMINAL_STATUSES,
-          OR: [
-            { sourceStationId: stationId },
-            { targetStationId: stationId },
-          ],
+          OR: [{ sourceStationId: stationId }, { targetStationId: stationId }],
         }),
         page,
       );
@@ -320,7 +326,7 @@ function makeRedistributionService(
       Effect.gen(function* () {
         const user = yield* assertUserExists(userId);
         const stationId = getUserStationId(user)!;
-        return yield* repo.listWithOffset (
+        return yield* repo.listWithOffset(
           toRedistributionWhere({
             ...filter,
             OR: [
@@ -391,19 +397,7 @@ function makeRedistributionService(
           );
         }
 
-        // Business rules:
-        // Check if source station has enough available bikes to meet the requested quantity
-        if (sourceStation.availableBikes < args.requestedQuantity) {
-          return yield* Effect.fail(
-            new NotEnoughBikesAtStation({
-              stationId: args.sourceStationId,
-              required: args.requestedQuantity,
-              available: sourceStation.availableBikes,
-            }),
-          );
-        }
-
-        // Check if target station or agency has enough empty slot to meet the requested quantity
+        // Check if target station has enough empty slot to meet the requested quantity
         const targetStation = yield* stationService
           .getStationById(args.targetStationId)
           .pipe(
@@ -423,52 +417,54 @@ function makeRedistributionService(
           );
         }
 
-        // Fetch bikes + check minimum remaining bikes
-        const [availableBikes, totalBikes] = yield* Effect.all([
-          Effect.promise(() =>
-            client.bike.findMany({
-              where: { stationId: sourceStation.id, status: "AVAILABLE" },
-              take: args.requestedQuantity,
-              select: { id: true },
-            }),
-          ),
-          Effect.promise(() =>
-            client.bike.count({
-              where: { stationId: sourceStation.id },
-            }),
-          ),
-        ]);
-
-        const restBikes = totalBikes - availableBikes.length;
-
-        if (availableBikes.length < args.requestedQuantity) {
-          return yield* Effect.fail(
-            new NotEnoughBikesAtStation({
-              stationId: args.sourceStationId,
-              required: args.requestedQuantity,
-              available: availableBikes.length,
-            }),
-          );
-        }
-
-        if (restBikes < MIN_BIKES_AT_STATION) {
-          return yield* Effect.fail(
-            new ExceededMinBikesAtStation({
-              stationId: args.sourceStationId,
-              minBikes: MIN_BIKES_AT_STATION,
-              restBikesAfterFulfillment: restBikes,
-            }),
-          );
-        }
-
         const now = new Date();
-        const bikeIds = availableBikes.map(b => b.id);
+        const bikeIds: string[] = [];
 
         // Transaction
         return yield* runPrismaTransaction(client, tx =>
           Effect.gen(function* () {
             const txBikeRepo = makeBikeRepository(tx);
             const txRedistributionRepo = makeRedistributionRepository(tx);
+
+            // Fetch bikes + check minimum remaining bikes
+            const [availableBikes, totalBikes] = yield* Effect.all([
+              Effect.promise(() =>
+                tx.bike.findMany({
+                  where: { stationId: sourceStation.id, status: "AVAILABLE" },
+                  take: args.requestedQuantity,
+                  select: { id: true },
+                }),
+              ),
+              Effect.promise(() =>
+                tx.bike.count({
+                  where: { stationId: sourceStation.id },
+                }),
+              ),
+            ]);
+
+            const restBikes = totalBikes - availableBikes.length;
+
+            if (availableBikes.length < args.requestedQuantity) {
+              return yield* Effect.fail(
+                new NotEnoughBikesAtStation({
+                  stationId: args.sourceStationId,
+                  required: args.requestedQuantity,
+                  available: availableBikes.length,
+                }),
+              );
+            }
+
+            if (restBikes < MIN_BIKES_AT_STATION) {
+              return yield* Effect.fail(
+                new ExceededMinBikesAtStation({
+                  stationId: args.sourceStationId,
+                  minBikes: MIN_BIKES_AT_STATION,
+                  restBikesAfterFulfillment: restBikes,
+                }),
+              );
+            }
+
+            bikeIds.push(...availableBikes.map(b => b.id));
 
             // Marks bikes as unavailable
             yield* txBikeRepo.updateManyStatusAt(
@@ -477,7 +473,6 @@ function makeRedistributionService(
               now,
             );
 
-            // TODO: Update empty slots at source and target stations
             return yield* txRedistributionRepo.create({
               ...args,
               bikeIds,
@@ -563,6 +558,7 @@ function makeRedistributionService(
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
+            const txStationRepo = makeStationRepository(tx);
 
             const existingRequest = yield* txRedistributionRepo.findById(
               args.requestId,
@@ -598,10 +594,29 @@ function makeRedistributionService(
             }
 
             const bikeIds = req.items.map(item => item.bikeId);
-            if (bikeIds.length === 0) {
+            const bikeQuantity = bikeIds.length;
+            const targetStationOpt = yield* txStationRepo.getById(req.targetStationId);
+            if (Option.isNone(targetStationOpt)) {
+              return yield* Effect.fail(
+                new StationNotFound({
+                  stationId: req.targetStationId,
+                }),
+              );
+            }
+            const targetStation = targetStationOpt.value;
+            if (bikeQuantity === 0) {
               return yield* Effect.fail(
                 new NoBikesInRedistributionRequest({
                   requestId: args.requestId,
+                }),
+              );
+            }
+            else if (bikeQuantity > targetStation.emptySlots) {
+              return yield* Effect.fail(
+                new NotEnoughEmptySlotsAtTarget({
+                  targetId: targetStation.id,
+                  required: targetStation.emptySlots,
+                  available: bikeQuantity,
                 }),
               );
             }
@@ -753,6 +768,7 @@ function makeRedistributionService(
         return yield* runPrismaTransaction(client, (tx) => {
           const txRedistributionRepo = makeRedistributionRepository(tx);
           const txBikeRepo = makeBikeRepository(tx);
+          const txStationRepo = makeStationRepository(tx);
 
           return Effect.gen(function* () {
             const reqOpt = yield* txRedistributionRepo.findAndPopulate({
@@ -798,6 +814,16 @@ function makeRedistributionService(
             const validCompletedBikeIds = completedBikeIds.filter(id =>
               unconfirmedBikeIds.includes(id),
             );
+
+            const targetStationOpt = yield* txStationRepo.getById(req.targetStation.id);
+            if (Option.isNone(targetStationOpt)) {
+              return yield* Effect.fail(
+                new StationNotFound({
+                  stationId: req.targetStation.id,
+                }),
+              );
+            }
+            const targetStation = targetStationOpt.value;
             const validLength = validCompletedBikeIds.length;
 
             if (validLength === 0) {
@@ -806,6 +832,15 @@ function makeRedistributionService(
                   requestId,
                   providedBikeIds: completedBikeIds,
                   unconfirmedBikeIds,
+                }),
+              );
+            }
+            else if (validLength > targetStation.emptySlots) {
+              return yield* Effect.fail(
+                new NotEnoughEmptySlotsAtTarget({
+                  targetId: targetStation.id,
+                  required: validLength,
+                  available: targetStation.emptySlots,
                 }),
               );
             }
@@ -855,7 +890,8 @@ function makeRedistributionService(
         );
       }),
 
-    adminListRequests: (filter, page) => repo.listWithOffset(toRedistributionWhere(filter), page),
+    adminListRequests: (filter, page) =>
+      repo.listWithOffset(toRedistributionWhere(filter), page),
 
     adminGetById: requestId => repo.findAndPopulate({ id: requestId }),
 
@@ -874,7 +910,6 @@ function makeRedistributionService(
 
     getHistoryForAgency: (userId, filter, page) =>
       getHistoryForStation(userId, filter, page),
-
   };
 }
 

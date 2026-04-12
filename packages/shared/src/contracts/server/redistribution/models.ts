@@ -165,8 +165,10 @@ export const RejectRedistributionRequestSchema = z.object({
 });
 
 export const ConfirmRedistributionRequestCompletionSchema = z.object({
-  completedBikeIds: z.array(z.uuidv7()).min(1, "At least one bike must be completed"),
-})
+  completedBikeIds: z
+    .array(z.uuidv7())
+    .min(1, "At least one bike must be completed"),
+});
 
 export type RedistributionRequest = z.infer<typeof RedistributionRequestSchema>;
 export type RedistributionRequestDetail = z.infer<

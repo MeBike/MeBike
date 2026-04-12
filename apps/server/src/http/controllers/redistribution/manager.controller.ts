@@ -480,6 +480,19 @@ const confirmRedistributionRequestCompletion: RouteHandler<
             },
             400,
           )),
+        Match.tag("NotEnoughEmptySlotsAtTarget", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+            {
+              error: redistributionReqErrorMessages.INSUFFICIENT_EMPTY_SLOTS,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.INSUFFICIENT_EMPTY_SLOTS,
+                targetId: error.targetId,
+                required: error.required,
+                available: error.available,
+              },
+            },
+            400,
+          )),
         Match.orElse(() => {
           throw left;
         }),

@@ -74,7 +74,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
     honoLogger(message => logger.info(message)),
   );
   app.use("*", async (c, next) => {
-    (c as any).set("runPromise", runPromise);
+    c.set("runPromise", runPromise);
     await next();
   });
   app.use("*", currentUserMiddleware);
@@ -86,7 +86,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/reservations", requireAuthMiddleware);
   app.use("/v1/reservations/*", requireAuthMiddleware);
   app.use("/v1/stripe/*", requireAuthMiddleware);
-  app.use("/v1/redistribution/*", requireAuthMiddleware);
+  app.use("/v1/redistribution-requests/*", requireAuthMiddleware);
   app.use("/v1/suppliers", requireAdminMiddleware);
   app.use("/v1/suppliers/*", requireAdminMiddleware);
   app.use("/v1/users/manage-users/*", requireBackofficeMiddleware);

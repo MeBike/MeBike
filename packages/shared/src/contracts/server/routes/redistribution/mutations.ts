@@ -412,6 +412,28 @@ export const startTransition = createRoute({
                 },
               },
             },
+            NoBikesInRedistributionRequest: {
+              value: {
+                error: "No bikes in redistribution request",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .NO_BIKES_IN_REDISTRIBUTION_REQUEST,
+                  requestId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                },
+              },
+            },
+            NotEnoughEmptySlotsAtTarget: {
+              value: {
+                error: "Not enough empty slots at target station",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .INSUFFICIENT_EMPTY_SLOTS,
+                  targetId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  required: 10,
+                  available: 5,
+                },
+              },
+            },
           },
         },
       },
@@ -486,14 +508,38 @@ export const confirmRedistributionRequestCompletion = createRoute({
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
           examples: {
-            CannotCompleteNonTransitOrPartiallyCompletedRedistribution: {
+            CannotConfirmNonTransitedRedistribution: {
               value: {
-                error: "Cannot complete redistribution request that is not in transit or partially completed state",
+                error: "Cannot confirm redistribution request that is not in transit or partially completed state",
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION,
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
                   status: "APPROVED",
+                },
+              },
+            },
+            InvalidBikeIdsForRedistributionCompletion: {
+              value: {
+                error: "Invalid bike ids for redistribution completion",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .INVALID_BIKE_IDS_FOR_REDISTRIBUTION_COMPLETION,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  providedBikeIds: ["bike-1", "bike-2"],
+                  unconfirmedBikeIds: ["bike-3", "bike-4"],
+                },
+              },
+            },
+            NotEnoughEmptySlotsAtTarget: {
+              value: {
+                error: "Not enough empty slots at target station",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .INSUFFICIENT_EMPTY_SLOTS,
+                  targetId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  required: 10,
+                  available: 5,
                 },
               },
             },
