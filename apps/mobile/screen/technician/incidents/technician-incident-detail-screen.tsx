@@ -1,7 +1,7 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { borderWidths, spaceScale } from "@theme/metrics";
 import React, { useState } from "react";
-import { Linking, Pressable, RefreshControl, ScrollView, StatusBar } from "react-native";
+import { Linking, RefreshControl, ScrollView, StatusBar } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type {
@@ -24,6 +24,7 @@ import {
 } from "@/screen/incidents/incident-presenters";
 import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
 import { AppCard } from "@/ui/primitives/app-card";
+import { AppIconActionButton } from "@/ui/primitives/app-icon-action-button";
 import { AppText } from "@/ui/primitives/app-text";
 import { Screen } from "@/ui/primitives/screen";
 import { StatusBadge } from "@/ui/primitives/status-badge";
@@ -65,10 +66,10 @@ function SectionCard({
   const iconColor = theme[toneStyle.iconColorKey].val;
 
   return (
-    <AppCard borderRadius="$6" borderWidth={0} chrome="whisper" gap="$0" overflow="hidden" padding="$0">
+    <AppCard borderColor="$borderSubtle" borderRadius="$6" borderWidth={borderWidths.subtle} chrome="flat" gap="$0" overflow="hidden" padding="$0">
       <XStack
         alignItems="center"
-        backgroundColor="$surfaceMuted"
+        backgroundColor="$surfaceDefault"
         borderBottomColor="$borderSubtle"
         borderBottomWidth={borderWidths.subtle}
         gap="$3"
@@ -88,7 +89,7 @@ function SectionCard({
         <AppText variant="label">{title}</AppText>
       </XStack>
 
-      <YStack paddingHorizontal="$5" paddingVertical="$1">
+      <YStack paddingVertical="$1">
         {children}
       </YStack>
     </AppCard>
@@ -118,6 +119,7 @@ function DetailRow({
         alignItems="center"
         gap="$3"
         justifyContent="space-between"
+        paddingHorizontal="$5"
         paddingVertical="$4"
       >
         <AppText tone="muted" variant="bodySmall">
@@ -145,7 +147,6 @@ function DetailRow({
               alignSelf="stretch"
               backgroundColor="$backgroundSubtle"
               height={borderWidths.subtle}
-              marginHorizontal="$2"
             />
           )
         : null}
@@ -292,7 +293,7 @@ export default function TechnicianIncidentDetailScreen() {
           padding="$4"
           paddingTop="$5"
         >
-          <AppCard borderRadius="$6" borderWidth={0} chrome="whisper" gap="$4" padding="$5">
+          <AppCard borderRadius="$6" borderWidth={0} chrome="flat" gap="$4" padding="$5">
             <XStack flexWrap="wrap" gap="$2">
               <StatusBadge label={getIncidentStatusLabel(incident.status).toUpperCase()} pulseDot={incident.status !== "RESOLVED" && incident.status !== "CLOSED" && incident.status !== "CANCELLED"} tone={getIncidentStatusTone(incident.status)} />
               <StatusBadge label={getIncidentSeverityLabel(incident.severity)} tone={getIncidentSeverityTone(incident.severity)} withDot={false} />
@@ -316,25 +317,7 @@ export default function TechnicianIncidentDetailScreen() {
           <SectionCard icon="person" title="Người báo & Chuyến thuê">
             <DetailRow label="Người báo" value={incident.reporterUser.fullName} />
             <DetailRow
-              action={(
-                <Pressable
-                  onPress={handleCallReporter}
-                  style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.96 : 1 }] })}
-                >
-                  <XStack
-                    alignItems="center"
-                    backgroundColor="$surfaceAccent"
-                    borderColor="$borderSubtle"
-                    borderRadius="$round"
-                    borderWidth={borderWidths.subtle}
-                    height={44}
-                    justifyContent="center"
-                    width={44}
-                  >
-                    <IconSymbol color={theme.textBrand.val} name="phone" size="sm" />
-                  </XStack>
-                </Pressable>
-              )}
+              action={<AppIconActionButton icon="phone" onPress={handleCallReporter} tone="accent" />}
               label="Số điện thoại"
               value={incident.reporterUser.phoneNumber}
             />
@@ -344,29 +327,11 @@ export default function TechnicianIncidentDetailScreen() {
 
           <SectionCard accentTone="success" icon="bike" title="Thông tin xe & Vị trí">
             <DetailRow label="Mã xe" value={incident.bike.chipId} />
-            <DetailRow label="Bánh xe đang khóa" value={incident.bikeLocked ? "Có" : "Không"} valueTone={incident.bikeLocked ? "danger" : "success"} />
+            <DetailRow label="Khóa xe đang bật" value={incident.bikeLocked ? "Có" : "Không"} valueTone={incident.bikeLocked ? "danger" : "success"} />
             <DetailRow emptyLabel="Không gắn với trạm" label="Trạm liên quan" value={incident.station?.name ?? ""} />
             <DetailRow
               action={coordinates
-                ? (
-                    <Pressable
-                      onPress={handleOpenMap}
-                      style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.96 : 1 }] })}
-                    >
-                      <XStack
-                        alignItems="center"
-                        backgroundColor="$surfaceDefault"
-                        borderColor="$borderSubtle"
-                        borderRadius="$round"
-                        borderWidth={borderWidths.subtle}
-                        height={44}
-                        justifyContent="center"
-                        width={44}
-                      >
-                        <IconSymbol color={theme.textSecondary.val} name="location" size="sm" />
-                      </XStack>
-                    </Pressable>
-                  )
+                ? <AppIconActionButton icon="location" onPress={handleOpenMap} tone="neutral" />
                 : undefined}
               emptyLabel="Chưa có tọa độ"
               label="Tọa độ"
@@ -375,7 +340,7 @@ export default function TechnicianIncidentDetailScreen() {
             />
           </SectionCard>
 
-          <SectionCard icon="tools" title="Điều phối kỹ thuật">
+          <SectionCard icon="tools" title="Thông tin kỹ thuật viên ">
             <DetailRow emptyLabel="Chưa điều phối" label="Kỹ thuật viên" value={incident.assignments?.technician?.fullName ?? ""} />
             <DetailRow emptyLabel="Chưa có nhóm" label="Nhóm kỹ thuật" value={incident.assignments?.team?.name ?? ""} />
             <DetailRow emptyLabel="Chưa có ETA" label="Lộ trình" value={assignmentRoute} valueTone="brand" />

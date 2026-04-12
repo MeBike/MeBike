@@ -37,7 +37,7 @@ function getIncidentStateCopy(incident: IncidentDetail, theme: ReturnType<typeof
         headerBackground: theme.actionAccent.val,
         headerLabel: "HỖ TRỢ KHẨN CẤP",
         sourceTone: "warning" as const,
-        title: "Đang điều phối kỹ thuật",
+        title: "Đang điều phối kỹ thuật viên",
         subtitle: "Kỹ thuật viên đang di chuyển đến vị trí của bạn.",
       };
     case "IN_PROGRESS":

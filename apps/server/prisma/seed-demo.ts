@@ -427,7 +427,7 @@ async function main() {
     await seedRatingReasons(prisma);
 
     const stationRows = await prisma.station.findMany({
-      select: { id: true, name: true },
+      select: { id: true, name: true, latitude: true, longitude: true },
       orderBy: { name: "asc" },
     });
     const stationIds = stationRows.map(s => s.id);
@@ -1063,6 +1063,7 @@ async function main() {
     const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
     const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
+    const user01IncidentStation = stationRows.find(station => station.id === user01ActiveRental?.startStationId);
 
     if (user01 && tech1 && tech1Assignment?.technicianTeamId && user01ActiveRental?.bikeId) {
       const reportedAt = new Date(Date.now() - 12 * 60 * 1000);
@@ -1091,6 +1092,8 @@ async function main() {
           incidentType: "FLAT_TIRE",
           severity: IncidentSeverity.HIGH,
           description: "Demo technician incident for user01 active rental",
+          latitude: user01IncidentStation?.latitude,
+          longitude: user01IncidentStation?.longitude,
           bikeLocked: true,
           status: IncidentStatus.OPEN,
           reportedAt,
@@ -1103,6 +1106,8 @@ async function main() {
           incidentType: "FLAT_TIRE",
           severity: IncidentSeverity.HIGH,
           description: "Demo technician incident for user01 active rental",
+          latitude: user01IncidentStation?.latitude,
+          longitude: user01IncidentStation?.longitude,
           bikeLocked: true,
           status: IncidentStatus.OPEN,
           reportedAt,

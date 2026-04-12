@@ -125,8 +125,8 @@ function ProfileScreen() {
       icon: "bell",
       title: "Thông báo",
       subtitle: "Tùy chỉnh nhắc nhở và cập nhật",
-      iconColor: "#DB2777",
-      iconBackground: "#FCE7F3",
+      iconColor: theme.actionSecondary.val,
+      iconBackground: theme.surfaceAccent.val,
       onPress: handleNotifications,
     },
   ], [
@@ -135,8 +135,10 @@ function ProfileScreen() {
     handleUpdateProfile,
     theme.statusSuccess.val,
     theme.statusWarning.val,
+    theme.actionSecondary.val,
     theme.surfaceSuccess.val,
     theme.surfaceWarning.val,
+    theme.surfaceAccent.val,
   ]);
 
   const destructiveItems = useMemo<MenuItem[]>(() => [
