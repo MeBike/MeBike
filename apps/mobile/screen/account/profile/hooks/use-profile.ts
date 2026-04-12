@@ -5,6 +5,7 @@ import { Alert } from "react-native";
 
 import type { UserDetail } from "@services/users/user-service";
 
+import { authQueryKeys } from "@/hooks/query/auth-next/auth-query-keys";
 import { useResendVerifyEmailMutation } from "@/hooks/mutations/AuthNext/use-resend-verify-email-mutation";
 import { useVerifyEmailOtpMutation } from "@/hooks/mutations/AuthNext/use-verify-email-otp-mutation";
 import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
@@ -44,7 +45,7 @@ export function useProfile() {
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["authNext", "me"] }),
+      queryClient.invalidateQueries({ queryKey: authQueryKeys.me() }),
       invalidateMyRentalCountsQuery(queryClient),
       hydrate(),
     ]);
@@ -152,7 +153,7 @@ export function useProfile() {
         return;
       }
       Alert.alert("Success", "Email đã được xác thực.");
-      void queryClient.invalidateQueries({ queryKey: ["authNext", "me"] });
+      void queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
       await hydrate();
       setTimeout(() => {
         setIsVerifyEmailModalOpen(false);
