@@ -1,6 +1,6 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { spaceScale } from "@theme/metrics";
-import React from "react";
+import React, { useState } from "react";
 import { RefreshControl, ScrollView, StatusBar } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
@@ -26,6 +26,8 @@ import {
   getIncidentStatusTone,
   presentIncidentError,
 } from "../../rental/incidents/incident-presenters";
+import { TechnicianIncidentActionBar } from "./components/technician-incident-action-bar";
+import { useTechnicianIncidentActions } from "./hooks/use-technician-incident-actions";
 
 function formatIncidentCode(incidentId: string) {
   return `SC-${incidentId.slice(-6).toUpperCase()}`;
@@ -96,6 +98,9 @@ export default function TechnicianIncidentDetailScreen() {
   const { incidentId } = route.params;
   const incidentQuery = useIncidentDetailQuery(incidentId, true);
   const incident = incidentQuery.data;
+  const [contentHeight, setContentHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
 
   const header = (
     <AppHeroHeader
@@ -148,6 +153,29 @@ export default function TechnicianIncidentDetailScreen() {
         .join(", ")
     : null;
   const coordinates = formatCoordinates(incident.latitude, incident.longitude);
+  const {
+    actionKind,
+    handleAccept,
+    handleReject,
+    handleResolve,
+    handleStart,
+    isAccepting,
+    isRejecting,
+    isResolving,
+    isStarting,
+  } = useTechnicianIncidentActions({
+    assignmentStatus: incident.assignments?.status ?? null,
+    incidentId: incident.id,
+    onRejected: () => navigation.goBack(),
+  });
+
+  const needsFooterSpacer = Boolean(actionKind)
+    && contentHeight + footerHeight > viewportHeight;
+  const bottomContentPadding = actionKind
+    ? needsFooterSpacer
+      ? footerHeight + spaceScale[3]
+      : spaceScale[4]
+    : spaceScale[7];
 
   return (
     <Screen tone="subtle">
@@ -156,7 +184,11 @@ export default function TechnicianIncidentDetailScreen() {
       {header}
 
       <ScrollView
-        contentContainerStyle={{ paddingBottom: spaceScale[7] }}
+        onLayout={(event) => {
+          setViewportHeight(event.nativeEvent.layout.height);
+        }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: bottomContentPadding }}
         refreshControl={(
           <RefreshControl
             colors={[theme.actionPrimary.val]}
@@ -169,7 +201,13 @@ export default function TechnicianIncidentDetailScreen() {
         )}
         showsVerticalScrollIndicator={false}
       >
-        <YStack gap="$4" padding="$4">
+        <YStack
+          gap="$4"
+          onLayout={(event) => {
+            setContentHeight(event.nativeEvent.layout.height);
+          }}
+          padding="$4"
+        >
           <AppCard borderRadius="$4" chrome="whisper" gap="$3" padding="$4">
             <XStack flexWrap="wrap" gap="$2">
               <StatusBadge label={getIncidentStatusLabel(incident.status)} tone={getIncidentStatusTone(incident.status)} />
@@ -226,6 +264,19 @@ export default function TechnicianIncidentDetailScreen() {
           </YStack>
         </YStack>
       </ScrollView>
+
+      <TechnicianIncidentActionBar
+        actionKind={actionKind}
+        isAccepting={isAccepting}
+        isRejecting={isRejecting}
+        isResolving={isResolving}
+        isStarting={isStarting}
+        onAccept={handleAccept}
+        onLayout={setFooterHeight}
+        onReject={handleReject}
+        onResolve={handleResolve}
+        onStart={handleStart}
+      />
     </Screen>
   );
 }
