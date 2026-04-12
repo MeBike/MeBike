@@ -5,6 +5,7 @@ import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
 import {
+  AssignmentStatus,
   BikeStatus,
   BikeSwapStatus,
   ConfirmationMethod,
@@ -1055,11 +1056,89 @@ async function main() {
       });
     }
 
+    const tech1 = users.find(user => user.email === "tech1@mebike.local");
+    const tech1Assignment = orgAssignments.find(item => item.user.email === "tech1@mebike.local");
     const user01 = users.find(user => user.email === "user01@mebike.local");
     const staff1 = users.find(user => user.email === "staff1@mebike.local");
     const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
     const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
+
+    if (user01 && tech1 && tech1Assignment?.technicianTeamId && user01ActiveRental?.bikeId) {
+      const reportedAt = new Date(Date.now() - 12 * 60 * 1000);
+      const assignedAt = new Date(Date.now() - 9 * 60 * 1000);
+      const existingActiveIncident = await prisma.incidentReport.findFirst({
+        where: {
+          bikeId: user01ActiveRental.bikeId,
+          status: {
+            in: [IncidentStatus.OPEN, IncidentStatus.ASSIGNED, IncidentStatus.IN_PROGRESS],
+          },
+        },
+        select: { id: true },
+      });
+
+      const technicianIncidentId = existingActiveIncident?.id ?? uuidv7();
+
+      await prisma.incidentReport.upsert({
+        where: { id: technicianIncidentId },
+        create: {
+          id: technicianIncidentId,
+          reporterUserId: user01.id,
+          rentalId: user01ActiveRental.id,
+          bikeId: user01ActiveRental.bikeId,
+          stationId: null,
+          source: IncidentSource.DURING_RENTAL,
+          incidentType: "FLAT_TIRE",
+          severity: IncidentSeverity.HIGH,
+          description: "Demo technician incident for user01 active rental",
+          bikeLocked: true,
+          status: IncidentStatus.OPEN,
+          reportedAt,
+        },
+        update: {
+          reporterUserId: user01.id,
+          rentalId: user01ActiveRental.id,
+          stationId: null,
+          source: IncidentSource.DURING_RENTAL,
+          incidentType: "FLAT_TIRE",
+          severity: IncidentSeverity.HIGH,
+          description: "Demo technician incident for user01 active rental",
+          bikeLocked: true,
+          status: IncidentStatus.OPEN,
+          reportedAt,
+          resolvedAt: null,
+          closedAt: null,
+        },
+      });
+
+      await prisma.technicianAssignment.deleteMany({
+        where: { incidentReportId: technicianIncidentId },
+      });
+
+      await prisma.technicianAssignment.create({
+        data: {
+          id: uuidv7(),
+          incidentReportId: technicianIncidentId,
+          technicianTeamId: tech1Assignment.technicianTeamId,
+          technicianUserId: tech1.id,
+          assignedAt,
+          status: AssignmentStatus.ASSIGNED,
+          distanceMeters: 1800,
+          durationSeconds: 420,
+          routeGeometry: null,
+        },
+      });
+
+      logger.info(
+        {
+          incidentFor: user01.email,
+          assignedTechnician: tech1.email,
+          rentalId: user01ActiveRental.id,
+          incidentId: technicianIncidentId,
+        },
+        "Seeded demo technician incident assignment",
+      );
+    }
 
     if (user01 && staff1 && (mainAgencyStationId ?? staff1Assignment?.stationId) && user01ActiveRental?.bikeId) {
       const bikeSwapStationId = mainAgencyStationId ?? staff1Assignment!.stationId!;

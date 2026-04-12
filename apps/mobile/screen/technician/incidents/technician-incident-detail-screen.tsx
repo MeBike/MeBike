@@ -101,6 +101,21 @@ export default function TechnicianIncidentDetailScreen() {
   const [contentHeight, setContentHeight] = useState(0);
   const [footerHeight, setFooterHeight] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
+  const {
+    actionKind,
+    handleAccept,
+    handleReject,
+    handleResolve,
+    handleStart,
+    isAccepting,
+    isRejecting,
+    isResolving,
+    isStarting,
+  } = useTechnicianIncidentActions({
+    assignmentStatus: incident?.assignments?.status ?? null,
+    incidentId,
+    onRejected: () => navigation.goBack(),
+  });
 
   const header = (
     <AppHeroHeader
@@ -153,21 +168,6 @@ export default function TechnicianIncidentDetailScreen() {
         .join(", ")
     : null;
   const coordinates = formatCoordinates(incident.latitude, incident.longitude);
-  const {
-    actionKind,
-    handleAccept,
-    handleReject,
-    handleResolve,
-    handleStart,
-    isAccepting,
-    isRejecting,
-    isResolving,
-    isStarting,
-  } = useTechnicianIncidentActions({
-    assignmentStatus: incident.assignments?.status ?? null,
-    incidentId: incident.id,
-    onRejected: () => navigation.goBack(),
-  });
 
   const needsFooterSpacer = Boolean(actionKind)
     && contentHeight + footerHeight > viewportHeight;
