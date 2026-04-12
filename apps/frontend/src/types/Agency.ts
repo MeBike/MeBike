@@ -62,3 +62,40 @@ export interface AgencyStats {
   },
 
 }
+export type UserInAgencyRequest = {
+  id: string;
+  fullName: string;
+  email: string;
+};
+export type AgencyInAgencyRequest = {
+  id: string;
+  name: string;
+};
+export type AgencyRequest = {
+  id: string;
+  requesterUserId: string;
+  requesterEmail: string;
+  requesterPhone: string;
+  agencyName: string;
+  agencyAddress: string;
+  agencyContactPhone: string;
+  stationName: string;
+  stationAddress: string;
+  stationLatitude: number;
+  stationLongitude: number;
+  stationTotalCapacity: number;
+  stationPickupSlotLimit: number;
+  stationReturnSlotLimit: number;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  description: string;
+  reviewedByUserId: string;
+  reviewedAt: string;
+  approvedAgencyId: string;
+  createdAgencyUserId: string;
+  createdAt: string;
+  updatedAt: string;
+  requesterUser: UserInAgencyRequest;
+  reviewedByUser: UserInAgencyRequest;
+  approvedAgency: AgencyInAgencyRequest;
+  createdAgencyUser: UserInAgencyRequest;
+};

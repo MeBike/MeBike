@@ -88,8 +88,8 @@ export function Sidebar() {
     { title: "Tổng quan", icon: LayoutDashboard, href: `/${role.toLowerCase()}`, roles: ["ADMIN", "STAFF", "AGENCY", "MANAGER", "USER"], exact: true },
     
     // --- ADMIN & MANAGER SECTION ---
-     { title: "Quản lý khách hàng", icon: Users, href: "/admin/customers", roles: ["ADMIN", "MANAGER"] },
-     { title: "Quản lý khách hàng", icon: Users, href: "/staff/customers", roles: ["STAFF"] },
+    { title: "Quản lý khách hàng", icon: Users, href: "/admin/customers", roles: ["ADMIN", "MANAGER"] },
+    { title: "Quản lý khách hàng", icon: Users, href: "/staff/customers", roles: ["STAFF"] },
     { title: "Quản lý nhân viên", icon: Users, href: "/admin/staffs", roles: ["ADMIN", "MANAGER"] },
     { title: "Quản lý Agency", icon: Building2, href: "/admin/agencies", roles: ["ADMIN"] },
     { title: "Quản lý nhà cung cấp", icon: Store, href: "/admin/suppliers", roles: ["ADMIN"] },
@@ -112,6 +112,7 @@ export function Sidebar() {
     { title: "Chuyến đi của tôi", icon: Bike, href: "/user/trips", roles: ["USER"] },
     
     // --- PROFILE ---
+    { title: "Yêu cầu trở thành Agency", icon: User2, href: `/${role.toLowerCase()}/agency-request`, roles: ["ADMIN"] },
     { title: "Hồ sơ cá nhân", icon: User2, href: `/${role.toLowerCase()}/profile`, roles: ["ADMIN", "STAFF", "AGENCY", "TECHNICIAN", "USER", "SOS"] },
   ].filter(item => item.roles.includes(role)), [role]);
 
