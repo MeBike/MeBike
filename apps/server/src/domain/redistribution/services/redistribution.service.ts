@@ -34,6 +34,7 @@ import {
   CannotRejectNonPendingRedistribution,
   CannotStartTransitionNonApprovedRedistribution,
   ExceededMinBikesAtStation,
+  IncompletedRedistributionRequestExists,
   InvalidBikeIdsForRedistributionCompletion,
   NoBikesInRedistributionRequest,
   NotEnoughBikesAtStation,
@@ -214,6 +215,12 @@ function makeRedistributionService(
   stationService: StationServiceTag,
   client: PrismaClient,
 ): RedistributionService {
+  const TERMINAL_STATUSES: RedistributionStatus[] = [
+    RedistributionStatus.COMPLETED,
+    RedistributionStatus.CANCELLED,
+    RedistributionStatus.REJECTED,
+  ];
+
   const assertUserExists = (userId: string) =>
     Effect.gen(function* () {
       const userOpt = yield* userService.getById(userId);
@@ -228,6 +235,12 @@ function makeRedistributionService(
     user.orgAssignment?.station?.id
     ?? user.orgAssignment?.agency?.stationId
     ?? undefined;
+
+  const getIncompletedRequestAt = (stationId: string) =>
+    repo.findWhere({
+      sourceStationId: stationId,
+      status: { notIn: TERMINAL_STATUSES },
+    });
 
   const toRedistributionWhere = (
     filter: AdminRedistributionFilter,
@@ -259,12 +272,6 @@ function makeRedistributionService(
 
     return where;
   };
-
-  const TERMINAL_STATUSES: RedistributionStatus[] = [
-    RedistributionStatus.COMPLETED,
-    RedistributionStatus.CANCELLED,
-    RedistributionStatus.REJECTED,
-  ];
 
   const getHistoryForStation = (
     userId: string,
@@ -374,6 +381,17 @@ function makeRedistributionService(
 
     createRequestTo: args =>
       Effect.gen(function* () {
+        const existingReqOpt = yield* getIncompletedRequestAt(args.sourceStationId);
+        if (Option.isSome(existingReqOpt)) {
+          const existingReq = existingReqOpt.value;
+          return yield* Effect.fail(
+            new IncompletedRedistributionRequestExists({
+              requestId: existingReq.id,
+              sourceStationId: args.sourceStationId,
+              status: existingReq.status,
+            }),
+          );
+        }
         const user = yield* assertUserExists(args.requestedByUserId);
         const workingStationId = getUserStationId(user)!;
 
@@ -595,7 +613,9 @@ function makeRedistributionService(
 
             const bikeIds = req.items.map(item => item.bikeId);
             const bikeQuantity = bikeIds.length;
-            const targetStationOpt = yield* txStationRepo.getById(req.targetStationId);
+            const targetStationOpt = yield* txStationRepo.getById(
+              req.targetStationId,
+            );
             if (Option.isNone(targetStationOpt)) {
               return yield* Effect.fail(
                 new StationNotFound({
@@ -815,7 +835,9 @@ function makeRedistributionService(
               unconfirmedBikeIds.includes(id),
             );
 
-            const targetStationOpt = yield* txStationRepo.getById(req.targetStation.id);
+            const targetStationOpt = yield* txStationRepo.getById(
+              req.targetStation.id,
+            );
             if (Option.isNone(targetStationOpt)) {
               return yield* Effect.fail(
                 new StationNotFound({

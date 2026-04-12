@@ -25,6 +25,7 @@ export const redistributionReqErrorCodes = [
   "CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION",
   "INVALID_BIKE_IDS_FOR_REDISTRIBUTION_COMPLETION",
   "NO_BIKES_IN_REDISTRIBUTION_REQUEST",
+  "INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS",
 ] as const;
 
 export const RedistributionReqErrorCodeSchema = z.enum(redistributionReqErrorCodes);
@@ -80,4 +81,5 @@ export const redistributionReqErrorMessages: Record<RedistributionReqErrorCode, 
   CANNOT_COMPLETE_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION: "Cannot complete redistribution request that is not in transit or partially completed state",
   INVALID_BIKE_IDS_FOR_REDISTRIBUTION_COMPLETION: "Invalid bike Ids provided for redistribution completion",
   NO_BIKES_IN_REDISTRIBUTION_REQUEST: "No bikes in redistribution request",
+  INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS: "Can handle only one redistribution request at a time",
 };

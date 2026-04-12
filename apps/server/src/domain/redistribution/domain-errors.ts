@@ -179,6 +179,14 @@ export class InvalidBikeIdsForRedistributionCompletion extends Data.TaggedError(
     readonly unconfirmedBikeIds: string[];
   }> {}
 
+export class IncompletedRedistributionRequestExists extends Data.TaggedError(
+  "IncompletedRedistributionRequestExists",
+)<{
+    readonly requestId: string;
+    readonly sourceStationId: string;
+    readonly status: string;
+  }> {}
+
 export type RedistributionServiceFailure
   = | RedistributionRequestNotFound
     | RedistributionRequestNotFoundWithStatus
@@ -205,4 +213,5 @@ export type RedistributionServiceFailure
     | CannotConfirmNonTransitedRedistribution
     | NoBikesInRedistributionRequest
     | InvalidBikeIdsForRedistributionCompletion
+    | IncompletedRedistributionRequestExists
     | RedistributionRepositoryError;

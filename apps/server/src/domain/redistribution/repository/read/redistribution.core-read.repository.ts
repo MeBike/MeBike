@@ -22,7 +22,7 @@ import {
 
 export type RedistributionCoreReadRepo = Pick<
   RedistributionRepo,
-  "findById" | "findOne" | "findAndPopulate" | "listWithOffset"
+  "findById" | "findOne" | "findAndPopulate" | "findWhere" | "listWithOffset"
 >;
 
 export function makeRedistributionCoreReadRepository(
@@ -57,6 +57,27 @@ export function makeRedistributionCoreReadRepository(
     findById(requestId) {
       return this.findOne({ id: requestId });
     },
+
+    findWhere: where =>
+      Effect.tryPromise({
+        try: () =>
+          client.redistributionRequest.findFirst({
+            where,
+            select,
+          }),
+        catch: e =>
+          new RedistributionRepositoryError({
+            operation: "findWhere",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(
+            Option.map(mapToRedistributionRequestRow),
+          ),
+        ),
+        defectOn(RedistributionRepositoryError),
+      ),
 
     findAndPopulate: where =>
       Effect.tryPromise({

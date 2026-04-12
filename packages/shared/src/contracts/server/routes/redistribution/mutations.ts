@@ -50,6 +50,18 @@ export const createRedistributionRequest = createRoute({
         "application/json": {
           schema: RedistributionReqErrorResponseSchema,
           examples: {
+            IncompletedRedistributionRequestExists: {
+              value: {
+                error: "Incompleted redistribution request exists",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  sourceStationId: "019b6656-ebc9-7dbc-b0d3-3c62d96042d9",
+                  status: "PENDING",
+                },
+              },
+            },
             NotEnoughBikesAtStation: {
               value: {
                 error: "Insufficient available bikes",

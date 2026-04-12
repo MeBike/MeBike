@@ -93,6 +93,21 @@ const createRedistributionRequest: RouteHandler<
               403,
             ),
         ),
+        Match.tag("IncompletedRedistributionRequestExists", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+            {
+              error:
+                redistributionReqErrorMessages.INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum
+                  .INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS,
+                requestId: error.requestId,
+                sourceStationId: error.sourceStationId,
+                status: error.status,
+              },
+            },
+            400,
+          )),
         Match.tag("NotEnoughBikesAtStation", error =>
           c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
             {

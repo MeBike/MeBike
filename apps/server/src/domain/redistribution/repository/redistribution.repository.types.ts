@@ -42,6 +42,10 @@ export type RedistributionRepo = {
     where: Prisma.RedistributionRequestWhereUniqueInput,
   ) => Effect.Effect<Option.Option<RedistributionRequestRow>>;
 
+  findWhere: (
+    where: Prisma.RedistributionRequestWhereInput,
+  ) => Effect.Effect<Option.Option<RedistributionRequestRow>>;
+
   findAndPopulate: (
     where: Prisma.RedistributionRequestWhereUniqueInput,
   ) => Effect.Effect<Option.Option<RedistributionRequestDetailRow>>;
