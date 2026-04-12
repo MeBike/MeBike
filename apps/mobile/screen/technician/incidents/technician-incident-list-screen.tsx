@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StatusBar } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
-import type { IncidentDetail } from "@/contracts/server";
+import type { IncidentDetail, IncidentStatus } from "@/contracts/server";
 import type { TechnicianIncidentListNavigationProp } from "@/types/navigation";
 
 import { IconSymbol } from "@/components/IconSymbol";
@@ -16,7 +16,6 @@ import {
   getIncidentSeverityTone,
   getIncidentStatusLabel,
   getIncidentStatusTone,
-  isIncidentTerminalStatus,
   presentIncidentError,
 } from "@/screen/incidents/incident-presenters";
 import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
@@ -52,12 +51,10 @@ function formatCoordinates(latitude: number | null, longitude: number | null) {
 
 function IncidentTabButton({
   active,
-  count,
   label,
   onPress,
 }: {
   active: boolean;
-  count: number;
   label: string;
   onPress: () => void;
 }) {
@@ -80,7 +77,7 @@ function IncidentTabButton({
           paddingVertical="$4"
         >
           <AppText tone={active ? "brand" : "inverted"} variant="tabLabel">
-            {`${label} (${count})`}
+            {label}
           </AppText>
         </YStack>
       )}
@@ -206,24 +203,22 @@ export default function TechnicianIncidentListScreen() {
   const navigation = useNavigation<TechnicianIncidentListNavigationProp>();
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState<IncidentTab>("ACTIVE");
+  const statusFilters = useMemo<Array<IncidentStatus>>(
+    () => activeTab === "ACTIVE"
+      ? ["OPEN", "ASSIGNED", "IN_PROGRESS"]
+      : ["RESOLVED", "CLOSED", "CANCELLED"],
+    [activeTab],
+  );
   const incidentQuery = useIncidentsInfiniteQuery(
     {
       pageSize: 20,
+      statuses: statusFilters,
       sortBy: "resolvedAt",
       sortDir: "desc",
     },
     true,
   );
-
-  const activeIncidents = useMemo(
-    () => incidentQuery.incidents.filter(incident => !isIncidentTerminalStatus(incident.status)),
-    [incidentQuery.incidents],
-  );
-  const historyIncidents = useMemo(
-    () => incidentQuery.incidents.filter(incident => isIncidentTerminalStatus(incident.status)),
-    [incidentQuery.incidents],
-  );
-  const visibleIncidents = activeTab === "ACTIVE" ? activeIncidents : historyIncidents;
+  const visibleIncidents = incidentQuery.incidents;
 
   const header = (
     <AppHeroHeader
@@ -231,13 +226,11 @@ export default function TechnicianIncidentListScreen() {
         <XStack gap="$3">
           <IncidentTabButton
             active={activeTab === "ACTIVE"}
-            count={activeIncidents.length}
             label="Đang xử lý"
             onPress={() => setActiveTab("ACTIVE")}
           />
           <IncidentTabButton
             active={activeTab === "HISTORY"}
-            count={historyIncidents.length}
             label="Lịch sử"
             onPress={() => setActiveTab("HISTORY")}
           />

@@ -16,6 +16,31 @@ import {
 
 export const IncidentSortFieldSchema = z.enum(["status", "resolvedAt"]);
 
+const IncidentStatusesQuerySchema = z
+  .preprocess((value) => {
+    if (value === undefined || value === null || value === "") {
+      return undefined;
+    }
+
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map(status => status.trim())
+        .filter(Boolean);
+    }
+
+    return value;
+  }, z.array(IncidentStatusSchema).min(1))
+  .optional()
+  .openapi({
+    example: ["OPEN", "ASSIGNED", "IN_PROGRESS"],
+    description: "Filter by multiple incident statuses using repeated query params or a comma-separated string.",
+  });
+
 export const IncidentIdParamSchema = z
   .object({
     incidentId: z.union([z.uuidv7()]).openapi({
@@ -32,6 +57,7 @@ export const IncidentListQuerySchema = z
     rentalId: z.uuidv7().optional(),
     stationId: z.uuidv7().optional(),
     status: IncidentStatusSchema.optional(),
+    statuses: IncidentStatusesQuerySchema,
     ...paginationQueryFields,
     sortBy: IncidentSortFieldSchema.optional().openapi({
       description: "Sort field",

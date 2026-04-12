@@ -80,6 +80,7 @@ export type IncidentFilter = {
   rentalId?: string;
   stationId?: string;
   status?: IncidentStatus;
+  statuses?: IncidentStatus[];
   userId?: string;
 };
 

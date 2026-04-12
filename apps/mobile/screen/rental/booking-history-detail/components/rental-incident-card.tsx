@@ -65,6 +65,14 @@ function getIncidentStateCopy(incident: IncidentDetail, theme: ReturnType<typeof
         title: "Yêu cầu hỗ trợ đã hủy",
         subtitle: "Có thể gửi lại báo cáo nếu vấn đề vẫn tiếp diễn.",
       };
+    default:
+      return {
+        headerBackground: theme.textSecondary.val,
+        headerLabel: "TRẠNG THÁI CHƯA XÁC ĐỊNH",
+        sourceTone: "muted" as const,
+        title: "Đang cập nhật trạng thái sự cố",
+        subtitle: "Vui lòng thử tải lại để xem thông tin mới nhất.",
+      };
   }
 }
 
