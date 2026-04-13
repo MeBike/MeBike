@@ -13,6 +13,8 @@ import {
   buildFixedSlotNoBikeEmail,
 } from "@/lib/email-templates";
 
+import type { FixedSlotAssignmentTemplateRow } from "../models";
+
 import { makeReservationCommandRepository } from "../repository/reservation-command.repository";
 import { makeReservationQueryRepository } from "../repository/reservation-query.repository";
 
@@ -23,20 +25,6 @@ export type FixedSlotAssignmentSummary = {
   readonly noBike: number;
   readonly missingReservation: number;
   readonly conflicts: number;
-};
-
-type FixedSlotTemplateWithDetails = {
-  readonly id: string;
-  readonly userId: string;
-  readonly stationId: string;
-  readonly slotStart: Date;
-  readonly user: {
-    readonly fullName: string;
-    readonly email: string;
-  };
-  readonly station: {
-    readonly name: string;
-  };
 };
 
 type FixedSlotAssignmentOutcome
@@ -129,30 +117,6 @@ async function enqueueEmailIdempotent(
   }
 }
 
-function loadActiveTemplates(
-  client: PrismaClient | PrismaTypes.TransactionClient,
-  slotDate: Date,
-) {
-  return Effect.tryPromise({
-    try: () =>
-      client.fixedSlotTemplate.findMany({
-        where: {
-          status: "ACTIVE",
-          dates: { some: { slotDate } },
-        },
-        select: {
-          id: true,
-          userId: true,
-          stationId: true,
-          slotStart: true,
-          user: { select: { fullName: true, email: true } },
-          station: { select: { name: true } },
-        },
-      }) as Promise<FixedSlotTemplateWithDetails[]>,
-    catch: err => err as unknown,
-  }).pipe(Effect.catchAll(err => Effect.die(err)));
-}
-
 function buildFixedSlotLabels(
   slotDate: Date,
   slotStart: Date,
@@ -166,7 +130,7 @@ function buildFixedSlotLabels(
 
 function enqueueNoBikeEmail(
   tx: PrismaTypes.TransactionClient,
-  template: FixedSlotTemplateWithDetails,
+  template: FixedSlotAssignmentTemplateRow,
   labels: FixedSlotLabels,
   context: FixedSlotAssignmentContext,
 ) {
@@ -198,7 +162,7 @@ function enqueueNoBikeEmail(
 function enqueueAssignedEmail(
   tx: PrismaTypes.TransactionClient,
   reservationId: string,
-  template: FixedSlotTemplateWithDetails,
+  template: FixedSlotAssignmentTemplateRow,
   labels: FixedSlotLabels,
   context: FixedSlotAssignmentContext,
 ) {
@@ -229,7 +193,7 @@ function enqueueAssignedEmail(
 
 async function runFixedSlotAssignmentTransaction(
   client: PrismaClient,
-  template: FixedSlotTemplateWithDetails,
+  template: FixedSlotAssignmentTemplateRow,
   labels: FixedSlotLabels,
   context: FixedSlotAssignmentContext,
 ): Promise<FixedSlotAssignmentOutcome> {
@@ -291,7 +255,7 @@ async function runFixedSlotAssignmentTransaction(
 
 function processFixedSlotTemplate(
   client: PrismaClient,
-  template: FixedSlotTemplateWithDetails,
+  template: FixedSlotAssignmentTemplateRow,
   context: FixedSlotAssignmentContext,
 ) {
   const labels = buildFixedSlotLabels(context.slotDate, template.slotStart);
@@ -352,7 +316,8 @@ export function assignFixedSlotReservations(args: {
       now: args.now ?? new Date(),
     };
 
-    const templates = yield* loadActiveTemplates(client, slotDate);
+    const reservationQueryRepo = makeReservationQueryRepository(client);
+    const templates = yield* reservationQueryRepo.listActiveFixedSlotTemplatesByDate(slotDate);
     const counts: FixedSlotCounts = {
       assigned: 0,
       noBike: 0,

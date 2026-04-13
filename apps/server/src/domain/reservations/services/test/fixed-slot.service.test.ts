@@ -65,11 +65,19 @@ describe("assignFixedSlotReservations", () => {
       bikeStatus: "AVAILABLE",
     };
 
-    mocks.makeReservationQueryRepository.mockImplementation((tx: { state: DraftState }) => ({
-      findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(
-        tx.state.reservationBikeId === null ? Option.some(reservation) : Option.none(),
-      ),
-    }));
+    mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
+      if (client.state) {
+        return {
+          findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(
+            client.state!.reservationBikeId === null ? Option.some(reservation) : Option.none(),
+          ),
+        };
+      }
+
+      return {
+        listActiveFixedSlotTemplatesByDate: () => Effect.succeed([template]),
+      };
+    });
 
     mocks.makeReservationCommandRepository.mockImplementation((tx: { state: DraftState }) => ({
       assignBikeToPendingReservation: (_reservationId: string, bikeId: string) =>
