@@ -5,7 +5,7 @@ import { BikeRepository } from "@/domain/bikes";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";
 
-import { assignFixedSlotReservations } from "../fixed-slot.service";
+import { assignFixedSlotReservations } from "../fixed-slot/fixed-slot.service";
 
 const mocks = vi.hoisted(() => ({
   makeBikeRepository: vi.fn(),
