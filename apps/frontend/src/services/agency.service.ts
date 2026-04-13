@@ -3,7 +3,7 @@ import { ENDPOINT } from "@/constants";
 import { AxiosResponse } from "axios";
 import { ApiResponse } from "@/types";
 import type { Agency, AgencyStats, AgencyRequest } from "@/types/Agency";
-import { UpdateAgencyFormData, UpdateAgencyStatusFormData , RegisterAgencyFormData } from "@/schemas";
+import { UpdateAgencyFormData, UpdateAgencyStatusFormData , RegisterAgencyFormData , AdminCreateAgencyUserRequest } from "@/schemas";
 export const agencyService = {
   getAgencies: async ({
     page,
@@ -71,8 +71,8 @@ export const agencyService = {
   }: {
     page?: number;
     pageSize?: number;
-  }): Promise<AxiosResponse<AgencyRequest>> => {
-    const response = fetchHttpClient.get<AgencyRequest>(
+  }): Promise<AxiosResponse<ApiResponse<AgencyRequest[]>>> => {
+    const response = fetchHttpClient.get<ApiResponse<AgencyRequest[]>>(
       ENDPOINT.AGENCY_REQUEST.BASE,
       {
         page: page,
@@ -135,6 +135,10 @@ export const agencyService = {
   },
   registerAgency : async({data}:{data:RegisterAgencyFormData}) : Promise<AxiosResponse<AgencyRequest>> => {
     const response = await fetchHttpClient.post<AgencyRequest>(ENDPOINT.AGENCY_REQUEST.BASE);
+    return response
+  },
+  adminCreateAgency : async({data}:{data:Partial<AdminCreateAgencyUserRequest>}) => {
+    const response = await fetchHttpClient.post<Agency>(ENDPOINT.USER.CREATE_USER);
     return response
   }
 };

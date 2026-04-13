@@ -55,3 +55,48 @@ export const registerToAgency = z.object({
     .optional(),
 });
 export type RegisterAgencyFormData = z.infer<typeof registerToAgency>
+const AgencyStationLatitudeSchema = z.number().min(-90).max(90);
+const AgencyStationLongitudeSchema = z.number().min(-180).max(180);
+
+export const adminCreateAgencyUserRequestSchema = z.object({
+  role: z.literal("AGENCY"),
+  requesterEmail: z.string().email(),
+  requesterPhone:  z
+    .string()
+    .regex(/^\d{10}$/, "Phone must be 10 digits")
+    .optional()
+    .nullable(),
+  agencyName: z.string().trim().min(1,"Agency Name là bắt buộc"),
+  agencyAddress: z.string(),
+  agencyContactPhone:  z
+    .string()
+    .regex(/^\d{10}$/, "Phone must be 10 digits")
+    .optional()
+    .nullable(),
+  stationName: z.string().trim().min(1),
+  stationAddress: z.string().trim().min(1),
+  stationLatitude: AgencyStationLatitudeSchema,
+  stationLongitude: AgencyStationLongitudeSchema,
+  stationTotalCapacity: z.number().int().min(1),
+  stationPickupSlotLimit: z.number().int().min(0).optional(),
+  stationReturnSlotLimit: z.number().int().min(0).optional(),
+  description: z.string().trim().optional(),
+}).superRefine((value, ctx) => {
+  const pickupSlotLimit = value.stationPickupSlotLimit ?? value.stationTotalCapacity;
+  const returnSlotLimit = value.stationReturnSlotLimit ?? value.stationTotalCapacity;
+  if (pickupSlotLimit > value.stationTotalCapacity) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["stationPickupSlotLimit"],
+      message: "stationPickupSlotLimit must be less than or equal to stationTotalCapacity",
+    });
+  }
+  if (returnSlotLimit > value.stationTotalCapacity) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["stationReturnSlotLimit"],
+      message: "stationReturnSlotLimit must be less than or equal to stationTotalCapacity",
+    });
+  }
+})
+export type AdminCreateAgencyUserRequest = z.infer<typeof adminCreateAgencyUserRequestSchema>

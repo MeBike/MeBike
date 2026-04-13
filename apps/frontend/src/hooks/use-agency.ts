@@ -20,6 +20,7 @@ import {
   UpdateAgencyFormData,
   UpdateAgencyStatusFormData,
   RegisterAgencyFormData,
+  AdminCreateAgencyUserRequest,
 } from "@/schemas";
 import { HTTP_STATUS } from "@/constants";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,7 +55,7 @@ export const useAgencyActions = ({
       router.push("/login");
       return;
     }
-    refetchGetAgencies();
+    refetchGetAgencyRequest();
   }, [refetchGetAgencyRequest, hasToken, router, page]);
     const {
     data: agencyRequestDetail,
