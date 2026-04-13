@@ -13,13 +13,11 @@ export default function DashboardPage() {
     );
   }
   return (
-    <DashboardLayout user={user}>
       <div className="space-y-8">
         <section>
           <ProfileHeader user={user} />
         </section>
 
       </div>
-    </DashboardLayout>
   );
 }
