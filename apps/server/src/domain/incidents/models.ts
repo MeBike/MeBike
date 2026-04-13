@@ -3,6 +3,7 @@ import type {
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
+  RentalStatus,
 } from "generated/kysely/types";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
@@ -36,7 +37,7 @@ export type IncidentDetail = {
   };
   rental: {
     id: string;
-    status: string;
+    status: RentalStatus;
   } | null;
   bike: {
     id: string;
@@ -49,7 +50,7 @@ export type IncidentDetail = {
   } | null;
   assignments: {
     id: string;
-    status: string;
+    status: AssignmentStatus;
     technician: {
       id: string;
       fullName: string;
@@ -80,6 +81,7 @@ export type IncidentFilter = {
   rentalId?: string;
   stationId?: string;
   status?: IncidentStatus;
+  statuses?: IncidentStatus[];
   userId?: string;
 };
 

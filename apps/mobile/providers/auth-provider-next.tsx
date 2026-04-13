@@ -1,9 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query";
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-
 import type { AuthError } from "@services/auth/auth-error";
 import type { UserError } from "@services/users/user-error";
 
+import { authQueryKeys } from "@hooks/query/auth-next/auth-query-keys";
 import { useMeQuery } from "@hooks/query/auth-next/use-me-query";
 import { clearTokens, getAccessToken, getRefreshToken } from "@lib/auth-tokens";
 import { log } from "@lib/log";
@@ -11,10 +9,47 @@ import { clearPushToken, getPushToken } from "@lib/push-token";
 import { authService } from "@services/auth/auth-service";
 import { isUserApiError } from "@services/users/user-error";
 import { userService } from "@services/users/user-service";
+import { useQueryClient } from "@tanstack/react-query";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type UserDetail = import("@services/users/user-service").UserDetail;
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+type TokenState = "checking" | "missing" | "present";
+
+function deriveAuthStatus({
+  hasRecoverableSessionError,
+  tokenState,
+  user,
+  isMePending,
+}: {
+  hasRecoverableSessionError: boolean;
+  tokenState: TokenState;
+  user: UserDetail | null;
+  isMePending: boolean;
+}): AuthStatus {
+  if (tokenState === "checking") {
+    return "loading";
+  }
+
+  if (tokenState === "missing") {
+    return "unauthenticated";
+  }
+
+  if (user) {
+    return "authenticated";
+  }
+
+  if (isMePending) {
+    return "loading";
+  }
+
+  if (hasRecoverableSessionError) {
+    return "authenticated";
+  }
+
+  return "unauthenticated";
+}
 
 type AuthContextValue = {
   status: AuthStatus;
@@ -23,8 +58,8 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   isLoading: boolean;
   isStaff: boolean;
+  isTechnician: boolean;
   isCustomer: boolean;
-  isSOS: boolean;
   login: (payload: import("@services/auth/auth-service").LoginRequest) => Promise<AuthError | UserError | null>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
@@ -34,9 +69,22 @@ const AuthContextNext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
-  const [hasToken, setHasToken] = useState<boolean | null>(null);
+  const [tokenState, setTokenState] = useState<TokenState>("checking");
+  const [sessionUser, setSessionUser] = useState<UserDetail | null>(null);
 
-  const meQuery = useMeQuery(hasToken === true);
+  const meQuery = useMeQuery(tokenState === "present");
+
+  useEffect(() => {
+    if (meQuery.data) {
+      setSessionUser(meQuery.data);
+    }
+  }, [meQuery.data]);
+
+  useEffect(() => {
+    if (tokenState === "missing") {
+      setSessionUser(null);
+    }
+  }, [tokenState]);
 
   useEffect(() => {
     let active = true;
@@ -45,12 +93,12 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!active) {
           return;
         }
-        setHasToken(Boolean(token));
+        setTokenState(token ? "present" : "missing");
       })
       .catch((err) => {
         log.warn("AuthProviderNext token check failed", err);
         if (active) {
-          setHasToken(false);
+          setTokenState("missing");
         }
       });
     return () => {
@@ -60,29 +108,30 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const error = meQuery.error;
-    if (!error || !hasToken) {
+    if (!error || tokenState !== "present") {
       return;
     }
 
     if (isUserApiError(error) && (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN")) {
       void clearTokens().finally(() => {
-        setHasToken(false);
-        queryClient.removeQueries({ queryKey: ["authNext", "me"] });
+        setSessionUser(null);
+        setTokenState("missing");
+        queryClient.removeQueries({ queryKey: authQueryKeys.me() });
       });
     }
-  }, [meQuery.error, hasToken, queryClient]);
+  }, [meQuery.error, queryClient, tokenState]);
 
   const hydrate = useCallback(async () => {
     const token = await getAccessToken();
-    const nextHasToken = Boolean(token);
-    setHasToken(nextHasToken);
+    const nextTokenState = token ? "present" : "missing";
+    setTokenState(nextTokenState);
 
-    if (!nextHasToken) {
-      queryClient.removeQueries({ queryKey: ["authNext", "me"] });
+    if (nextTokenState === "missing") {
+      queryClient.removeQueries({ queryKey: authQueryKeys.me() });
       return;
     }
 
-    await queryClient.invalidateQueries({ queryKey: ["authNext", "me"] });
+    await queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
   }, [queryClient]);
 
   const login = useCallback(
@@ -93,8 +142,8 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!result.ok) {
         return result.error;
       }
-      setHasToken(true);
-      await queryClient.invalidateQueries({ queryKey: ["authNext", "me"] });
+      setTokenState("present");
+      await queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
       return null;
     },
     [queryClient],
@@ -115,33 +164,43 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     await clearTokens();
     await clearPushToken();
-    setHasToken(false);
-    queryClient.removeQueries({ queryKey: ["authNext", "me"] });
+    setSessionUser(null);
+    setTokenState("missing");
+    queryClient.removeQueries({ queryKey: authQueryKeys.me() });
   }, [queryClient]);
 
   const value = useMemo<AuthContextValue>(() => {
-    const user = meQuery.data ?? null;
+    const user = meQuery.data ?? sessionUser;
     const role = user?.role;
+    const isStaff = role === "STAFF";
+    const isTechnician = role === "TECHNICIAN";
     const lastError = meQuery.error ?? null;
-    const status: AuthStatus = hasToken === null
-      ? "loading"
-      : hasToken
-        ? (user ? "authenticated" : "loading")
-        : "unauthenticated";
+    const isAuthSessionError = meQuery.error
+      ? isUserApiError(meQuery.error) && (meQuery.error.code === "UNAUTHORIZED" || meQuery.error.code === "FORBIDDEN")
+      : false;
+    const hasRecoverableSessionError = tokenState === "present"
+      && Boolean(meQuery.error)
+      && !isAuthSessionError;
+    const status = deriveAuthStatus({
+      hasRecoverableSessionError,
+      tokenState,
+      user,
+      isMePending: meQuery.isPending,
+    });
     return {
       status,
       user,
       lastError,
       isAuthenticated: status === "authenticated",
       isLoading: status === "loading",
-      isStaff: role === "STAFF",
+      isStaff,
+      isTechnician,
       isCustomer: role === "USER",
-      isSOS: false,
       login,
       logout,
       hydrate,
     };
-  }, [meQuery.data, meQuery.error, hasToken, login, logout, hydrate]);
+  }, [meQuery.data, meQuery.error, meQuery.isPending, tokenState, sessionUser, login, logout, hydrate]);
 
   return <AuthContextNext.Provider value={value}>{children}</AuthContextNext.Provider>;
 };

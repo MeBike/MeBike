@@ -1,4 +1,5 @@
 import { z } from "../../../zod";
+import { RentalStatusSchema } from "../rentals";
 import {
   AssignmentStatusSchema,
   IncidentSeveritySchema,
@@ -35,7 +36,7 @@ export const IncidentDetailSchema = z.object({
   rental: z
     .object({
       id: z.uuidv7(),
-      status: z.string(),
+      status: RentalStatusSchema,
     })
     .nullable(),
   bike: z.object({
@@ -52,7 +53,7 @@ export const IncidentDetailSchema = z.object({
   assignments: z
     .object({
       id: z.uuidv7(),
-      status: z.string(),
+      status: AssignmentStatusSchema,
       technician: z
         .object({
           id: z.uuidv7(),

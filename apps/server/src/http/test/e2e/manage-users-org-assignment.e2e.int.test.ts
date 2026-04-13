@@ -224,9 +224,22 @@ describe("manage-users org assignment e2e", () => {
       }),
     });
 
+    const managerWithoutStationResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Manager Missing Assignment",
+        email: "manager-missing-assignment@example.com",
+        password: "password123",
+        role: "MANAGER",
+        orgAssignment: null,
+      }),
+    });
+
     const staffWithTeamBody = await staffWithTeamResponse.json() as UsersContracts.UserErrorResponse;
     const userWithStationBody = await userWithStationResponse.json() as UsersContracts.UserErrorResponse;
     const managerWithTeamBody = await managerWithTeamResponse.json() as UsersContracts.UserErrorResponse;
+    const managerWithoutStationBody = await managerWithoutStationResponse.json() as UsersContracts.UserErrorResponse;
 
     expect(staffWithTeamResponse.status).toBe(400);
     expect(staffWithTeamBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
@@ -234,6 +247,8 @@ describe("manage-users org assignment e2e", () => {
     expect(userWithStationBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
     expect(managerWithTeamResponse.status).toBe(400);
     expect(managerWithTeamBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+    expect(managerWithoutStationResponse.status).toBe(400);
+    expect(managerWithoutStationBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
 
   it("returns INVALID_ORG_ASSIGNMENT when create references nonexistent station or technician team", async () => {
@@ -558,7 +573,7 @@ describe("manage-users org assignment e2e", () => {
     expect(body.data.some(user => user.fullName === "Regular User")).toBe(false);
   });
 
-  it("replaces org assignment and can clear it on update", async () => {
+  it("replaces org assignment on update and rejects manager without station", async () => {
     const station = await fixture.factories.station({ name: "Station Team Base" });
     const team = await fixture.prisma.technicianTeam.create({
       data: {
@@ -615,11 +630,10 @@ describe("manage-users org assignment e2e", () => {
       },
     );
 
-    const cleared = await clearResponse.json() as UsersContracts.AdminUserDetailResponse;
+    const cleared = await clearResponse.json() as UsersContracts.UserErrorResponse;
 
-    expect(clearResponse.status).toBe(200);
-    expect(cleared.role).toBe("MANAGER");
-    expect(cleared.orgAssignment).toBeNull();
+    expect(clearResponse.status).toBe(400);
+    expect(cleared.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
 
   it("returns team member limit error when updating a user into a full technician team", async () => {
