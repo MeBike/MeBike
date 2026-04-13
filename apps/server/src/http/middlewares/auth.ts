@@ -120,6 +120,7 @@ export const requireAuthMiddleware = createMiddleware(async (c, next) => {
 
 export const requireAdminMiddleware = requireRoles("ADMIN");
 export const requireAgencyMiddleware = requireRoles("AGENCY");
+export const requireManagerMiddleware = requireRoles("MANAGER");
 export const requireStaffMiddleware = requireRoles("STAFF");
 export const requireUserMiddleware = requireRoles("USER");
 export const requireTechnicianMiddleware = requireRoles("TECHNICIAN");
@@ -140,4 +141,54 @@ export const requireIncidentActorMiddleware = requireRoles(
   "ADMIN",
   "USER",
   "STAFF",
+);
+export const requireRequestActorMiddleware = requireRoles(
+  "STAFF",
+  "AGENCY",
+);
+export const requireStationManagementMiddleware = requireRoles(
+  "MANAGER",
+  "AGENCY",
+);
+
+export const requireIncidentAccessMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (
+      user.role !== "TECHNICIAN"
+      && user.role !== "ADMIN"
+      && user.role !== "USER"
+      && user.role !== "STAFF"
+    ) {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
+);
+
+export const requireTechnicianOrAdminOrUserOrAgencyMiddleware = createMiddleware(
+  async (c, next) => {
+    const user = c.var.currentUser;
+    if (!user) {
+      if (c.var.authFailure === "forbidden") {
+        return c.json(unauthorizedBody, 403);
+      }
+      return c.json(unauthorizedBody, 401);
+    }
+    if (
+      user.role !== "TECHNICIAN"
+      && user.role !== "ADMIN"
+      && user.role !== "USER"
+      && user.role !== "AGENCY"
+    ) {
+      return c.json(unauthorizedBody, 403);
+    }
+    await next();
+  },
 );
