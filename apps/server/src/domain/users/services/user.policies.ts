@@ -70,10 +70,7 @@ export function validateOrgAssignmentForRole(
     case "ADMIN":
       return hasStation || hasAgency || hasTechnicianTeam ? fail() : Effect.void;
     case "MANAGER":
-      return (hasStation && !hasAgency && !hasTechnicianTeam)
-        || (!hasStation && !hasAgency && !hasTechnicianTeam)
-        ? Effect.void
-        : fail();
+      return hasStation && !hasAgency && !hasTechnicianTeam ? Effect.void : fail();
     case "STAFF":
       return hasStation && !hasAgency && !hasTechnicianTeam ? Effect.void : fail();
     case "AGENCY":

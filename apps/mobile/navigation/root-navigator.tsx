@@ -29,6 +29,8 @@ import {
   StaffRentalDetailScreen,
   StationDetailScreen,
   SubscriptionScreen,
+  TechnicianIncidentDetailScreen,
+  TechnicianIncidentListScreen,
   UpdateProfileScreen,
 } from "../screen";
 import StationSelectScreen from "../styles/StationSelect";
@@ -177,6 +179,16 @@ function RootNavigator() {
       <Stack.Screen
         name="StaffBikeSwapDetail"
         component={StaffBikeSwapDetailScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="TechnicianIncidentList"
+        component={TechnicianIncidentListScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="TechnicianIncidentDetail"
+        component={TechnicianIncidentDetailScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
     </Stack.Navigator>

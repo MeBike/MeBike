@@ -189,6 +189,64 @@ describe("reservationRepository read integration", () => {
     expect(Option.getOrThrow(found).id).toBe(reservation.id);
   });
 
+  it("listActiveFixedSlotTemplatesByDate returns active templates scheduled for slot date", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 14));
+    const otherDate = new Date(Date.UTC(2026, 3, 15));
+    const user = await kit.createUser();
+    const station = await kit.createStation({ name: "Station Fixed Slot Query" });
+    const activeTemplate = await kit.fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        stationId: station.id,
+        slotStart: new Date(Date.UTC(2000, 0, 1, 9, 0, 0)),
+        status: "ACTIVE",
+        updatedAt: new Date(),
+        dates: {
+          create: [{ id: uuidv7(), slotDate }],
+        },
+      },
+      select: { id: true },
+    });
+
+    await kit.fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        stationId: station.id,
+        slotStart: new Date(Date.UTC(2000, 0, 1, 10, 0, 0)),
+        status: "CANCELLED",
+        updatedAt: new Date(),
+        dates: {
+          create: [{ id: uuidv7(), slotDate }],
+        },
+      },
+      select: { id: true },
+    });
+
+    await kit.fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        stationId: station.id,
+        slotStart: new Date(Date.UTC(2000, 0, 1, 11, 0, 0)),
+        status: "ACTIVE",
+        updatedAt: new Date(),
+        dates: {
+          create: [{ id: uuidv7(), slotDate: otherDate }],
+        },
+      },
+      select: { id: true },
+    });
+
+    const templates = await Effect.runPromise(repo.listActiveFixedSlotTemplatesByDate(slotDate));
+
+    expect(templates).toHaveLength(1);
+    expect(templates[0]?.id).toBe(activeTemplate.id);
+    expect(templates[0]?.user.email).toBeDefined();
+    expect(templates[0]?.station.name).toBe(station.name);
+  });
+
   it("defects with ReservationRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {

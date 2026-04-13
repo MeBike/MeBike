@@ -57,6 +57,20 @@ export type ReservationExpandedDetailRow = ReservationRow & {
   readonly station: ReservationDetailStationRow;
 };
 
+export type FixedSlotAssignmentTemplateRow = {
+  readonly id: string;
+  readonly userId: string;
+  readonly stationId: string;
+  readonly slotStart: Date;
+  readonly user: {
+    readonly fullName: string;
+    readonly email: string;
+  };
+  readonly station: {
+    readonly name: string;
+  };
+};
+
 export type ReservationSortField = "startTime" | "endTime" | "status" | "updatedAt";
 
 export type AdminReservationSortField

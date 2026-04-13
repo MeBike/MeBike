@@ -11,8 +11,8 @@ import avatarFallback from "@/assets/avatar2.png";
 
 type ProfileHeaderProps = {
   profile: UserDetail;
-  completedTrips: number;
-  isLoadingTrips: boolean;
+  completedTrips?: number;
+  isLoadingTrips?: boolean;
   topInset: number;
   onVerifyEmail: () => void;
   formatDate: (dateString: string) => string;
@@ -32,6 +32,7 @@ function ProfileHeader({
   const theme = useTheme();
   const memberSince = formatDate(profile.createdAt || profile.updatedAt);
   const isVerified = profile.verify === "VERIFIED";
+  const showCompletedTrips = typeof completedTrips === "number";
 
   return (
     <LinearGradient
@@ -100,23 +101,27 @@ function ProfileHeader({
             </AppText>
 
             <XStack alignItems="center" flexWrap="wrap" gap="$3">
-              <XStack
-                alignItems="center"
-                backgroundColor="$overlayGlass"
-                borderColor="$overlayGlass"
-                borderRadius="$4"
-                borderWidth={borderWidths.subtle}
-                gap="$2"
-                paddingHorizontal="$4"
-                paddingVertical="$2"
-              >
-                <AppText tone="inverted" variant="headline">
-                  {isLoadingTrips ? "-" : String(completedTrips)}
-                </AppText>
-                <AppText opacity={0.82} tone="inverted" variant="eyebrow">
-                  Chuyến đi
-                </AppText>
-              </XStack>
+              {showCompletedTrips
+                ? (
+                    <XStack
+                      alignItems="center"
+                      backgroundColor="$overlayGlass"
+                      borderColor="$overlayGlass"
+                      borderRadius="$4"
+                      borderWidth={borderWidths.subtle}
+                      gap="$2"
+                      paddingHorizontal="$4"
+                      paddingVertical="$2"
+                    >
+                      <AppText tone="inverted" variant="headline">
+                        {isLoadingTrips ? "-" : String(completedTrips)}
+                      </AppText>
+                      <AppText opacity={0.82} tone="inverted" variant="eyebrow">
+                        Chuyến đi
+                      </AppText>
+                    </XStack>
+                  )
+                : null}
 
               {!isVerified
                 ? (

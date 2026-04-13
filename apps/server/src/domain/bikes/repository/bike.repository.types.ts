@@ -49,6 +49,22 @@ export type BikeCommandRepo = {
     stationId: string,
     updatedAt: Date,
   ) => Effect.Effect<Option.Option<BikeRow>>;
+  updateManyStatusAt: (
+    bikeIds: string[],
+    status: BikeStatus,
+    updatedAt: Date,
+  ) => Effect.Effect<number>;
+  updateManyStationAt: (
+    bikeIds: string[],
+    stationId: string | null,
+    updatedAt: Date,
+  ) => Effect.Effect<number>;
+  updateManyStatusAndStationAt: (
+    bikeIds: string[],
+    status: BikeStatus,
+    stationId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<number>;
   bookBikeIfAvailable: (
     bikeId: string,
     updatedAt: Date,

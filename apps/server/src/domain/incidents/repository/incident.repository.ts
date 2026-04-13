@@ -635,6 +635,9 @@ export function makeIncidentRepository(
         const where: PrismaTypes.IncidentReportWhereInput = {
           ...(filter.rentalId && { rentalId: filter.rentalId }),
           ...(filter.stationId && { stationId: filter.stationId }),
+          ...(filter.statuses && filter.statuses.length > 0
+            ? { status: { in: [...filter.statuses] } }
+            : {}),
           ...(filter.status && { status: filter.status }),
           ...(filter.userId && {
             OR: [
