@@ -5,7 +5,8 @@ import { getStatusColor } from "@/columns/agency-column";
 import { 
   Settings2, Edit3, Loader2, Users, MapPin, Bike, 
   TrendingUp, AlertTriangle, Calendar, DollarSign, 
-  ArrowUpRight, ArrowDownRight, CheckCircle2, Clock 
+  ArrowUpRight, ArrowDownRight, CheckCircle2, Clock, 
+  LucideIcon
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +22,7 @@ import type { AgencyStats , AgencyStatus } from "@custom-types";
 import { updateSchema, updateAgencyStatusSchema, UpdateAgencyFormData, UpdateAgencyStatusFormData } from "@/schemas";
 
 // --- UI Helpers ---
-const SectionCard = ({ icon: Icon, title, children }: any) => (
+const SectionCard = ({ icon: Icon, title, children }: {icon:LucideIcon,title:string,children:React.ReactNode}) => (
   <div className="rounded-xl border border-border/60 bg-card overflow-hidden flex flex-col shadow-sm">
     <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4 bg-muted/20">
       <Icon className="h-5 w-5 text-primary" />
@@ -31,7 +32,7 @@ const SectionCard = ({ icon: Icon, title, children }: any) => (
   </div>
 );
 
-const StatRow = ({ label, value, color }: any) => (
+const StatRow = ({ label, value, color }: {label:string,value:React.ReactNode,color?:string}) => (
   <div className="flex items-center justify-between border-b border-border/40 pb-2 last:border-0 last:pb-0">
     <span className="text-sm text-muted-foreground">{label}</span>
     <span className={cn("text-sm font-bold", color)}>{value}</span>
@@ -57,13 +58,13 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
 
   const statusForm = useForm<UpdateAgencyStatusFormData>({
     resolver: zodResolver(updateAgencyStatusSchema),
-    defaultValues: { status: agency.status as any },
+    defaultValues: { status: agency.status as AgencyStatus },
   });
 
   // 2. ✅ Reset form khi chuyển sang Agency khác (Fix lỗi data cũ)
   useEffect(() => {
     infoForm.reset({ name: agency.name, contactPhone: agency.contactPhone || "" });
-    statusForm.reset({ status: agency.status as any });
+    statusForm.reset({ status: agency.status as AgencyStatus });
   }, [agency, infoForm, statusForm]);
 
   // 3. ✅ Wrapper xử lý submit (Fix lỗi kẹt nút)
