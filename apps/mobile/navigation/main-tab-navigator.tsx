@@ -1,8 +1,7 @@
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import React from "react";
-
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useAuthNext } from "@providers/auth-provider-next";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import React from "react";
 
 import type { RootStackParamList } from "../types/navigation";
 
@@ -12,6 +11,7 @@ import {
   MyWalletScreen,
   ProfileScreen,
   StaffDashboardScreen,
+  TechnicianDashboardScreen,
 } from "../screen";
 import { BottomTabBar } from "./bottom-tab-bar";
 
@@ -22,7 +22,7 @@ function StationTabRedirectScreen() {
 }
 
 function MainTabNavigator() {
-  const { status, isAuthenticated, isStaff } = useAuthNext();
+  const { status, isAuthenticated, isStaff, isTechnician } = useAuthNext();
 
   if (status === "loading") {
     return <LoadingScreen />;
@@ -36,10 +36,13 @@ function MainTabNavigator() {
       }}
       tabBar={props => <BottomTabBar {...props} />}
     >
-      {isStaff
+      {isStaff || isTechnician
         ? (
             <>
-              <Tab.Screen name="Công cụ" component={StaffDashboardScreen} />
+              <Tab.Screen
+                name="Công cụ"
+                component={isTechnician ? TechnicianDashboardScreen : StaffDashboardScreen}
+              />
               <Tab.Screen name="Tôi" component={ProfileScreen} />
             </>
           )

@@ -30,6 +30,8 @@ export function getIncidentStatusLabel(status: IncidentStatus) {
       return "Đã đóng";
     case "CANCELLED":
       return "Đã hủy";
+    default:
+      return "Không rõ trạng thái";
   }
 }
 
@@ -47,6 +49,8 @@ export function getIncidentStatusTone(status: IncidentStatus): BadgeTone {
       return "neutral";
     case "CANCELLED":
       return "danger";
+    default:
+      return "neutral";
   }
 }
 
@@ -60,6 +64,8 @@ export function getIncidentSeverityLabel(severity: IncidentSeverity) {
       return "Mức cao";
     case "CRITICAL":
       return "Khẩn cấp";
+    default:
+      return "Mức chưa xác định";
   }
 }
 
@@ -73,6 +79,8 @@ export function getIncidentSeverityTone(severity: IncidentSeverity): BadgeTone {
       return "warning";
     case "CRITICAL":
       return "danger";
+    default:
+      return "neutral";
   }
 }
 
@@ -84,6 +92,8 @@ export function getIncidentSourceLabel(source: IncidentSource) {
       return "Sau khi trả xe";
     case "STAFF_INSPECTION":
       return "Kiểm tra kỹ thuật";
+    default:
+      return "Nguồn không xác định";
   }
 }
 

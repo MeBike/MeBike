@@ -28,3 +28,6 @@ export { default as StaffPhoneLookupScreen } from "./staff/phone-lookup/staff-ph
 export { default as StaffRentalDetailScreen } from "./staff/rental-detail/staff-rental-detail-screen";
 export { default as StationDetailScreen } from "./station-detail";
 export { default as SubscriptionScreen } from "./subscription";
+export { default as TechnicianDashboardScreen } from "./technician/dashboard/technician-dashboard-screen";
+export { default as TechnicianIncidentDetailScreen } from "./technician/incidents/technician-incident-detail-screen";
+export { default as TechnicianIncidentListScreen } from "./technician/incidents/technician-incident-list-screen";

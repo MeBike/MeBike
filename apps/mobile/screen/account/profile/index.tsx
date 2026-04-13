@@ -77,6 +77,10 @@ function ProfileScreen() {
   } = useProfile();
 
   const activityItems = useMemo<MenuItem[]>(() => {
+    if (!isCustomer) {
+      return [];
+    }
+
     const items: MenuItem[] = [
       {
         icon: "calendar",
@@ -88,16 +92,14 @@ function ProfileScreen() {
       },
     ];
 
-    if (isCustomer) {
-      items.push({
-        icon: "bike",
-        title: "Gói tháng",
-        subtitle: "Ưu đãi và lịch sử sử dụng",
-        iconColor: theme.actionPrimary.val,
-        iconBackground: theme.surfaceAccent.val,
-        onPress: handleSubscriptions,
-      });
-    }
+    items.push({
+      icon: "bike",
+      title: "Gói tháng",
+      subtitle: "Ưu đãi và lịch sử sử dụng",
+      iconColor: theme.actionPrimary.val,
+      iconBackground: theme.surfaceAccent.val,
+      onPress: handleSubscriptions,
+    });
 
     return items;
   }, [handleReservations, handleSubscriptions, isCustomer, theme.actionPrimary.val, theme.surfaceAccent.val]);
@@ -123,8 +125,8 @@ function ProfileScreen() {
       icon: "bell",
       title: "Thông báo",
       subtitle: "Tùy chỉnh nhắc nhở và cập nhật",
-      iconColor: "#DB2777",
-      iconBackground: "#FCE7F3",
+      iconColor: theme.actionSecondary.val,
+      iconBackground: theme.surfaceAccent.val,
       onPress: handleNotifications,
     },
   ], [
@@ -133,8 +135,10 @@ function ProfileScreen() {
     handleUpdateProfile,
     theme.statusSuccess.val,
     theme.statusWarning.val,
+    theme.actionSecondary.val,
     theme.surfaceSuccess.val,
     theme.surfaceWarning.val,
+    theme.surfaceAccent.val,
   ]);
 
   const destructiveItems = useMemo<MenuItem[]>(() => [
@@ -157,19 +161,23 @@ function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ProfileHeader
-          completedTrips={completedTrips}
+          completedTrips={isCustomer ? completedTrips : undefined}
           formatDate={formatDate}
-          isLoadingTrips={isRentalCountsLoading}
+          isLoadingTrips={isCustomer ? isRentalCountsLoading : undefined}
           onVerifyEmail={openVerifyModal}
           profile={profile}
           topInset={insets.top}
         />
 
         <YStack gap="$6" paddingHorizontal="$5" paddingTop="$6" paddingBottom="$7">
-          <YStack gap="$3">
-            <SectionLabel title="Hoạt động của tôi" />
-            <MenuGroup items={activityItems} />
-          </YStack>
+          {activityItems.length > 0
+            ? (
+                <YStack gap="$3">
+                  <SectionLabel title="Hoạt động của tôi" />
+                  <MenuGroup items={activityItems} />
+                </YStack>
+              )
+            : null}
 
           <YStack gap="$3">
             <SectionLabel title="Cài đặt tài khoản" />
