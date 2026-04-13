@@ -89,6 +89,7 @@ export const ENDPOINT = {
     },
     AGENCY_REQUEST : {
         BASE : "/admin/agency-requests",
+        CREATE : "/agency-requests",
         ID : (id : string) => `/admin/agency-requests/${id}`,
         APPROVE : (id:string) => `/admin/agency-requests/${id}/approve`,
         REJECT : (id:string) => `/admin/agency-requests/${id}/reject`,

@@ -110,6 +110,8 @@ export function Sidebar() {
 
     // --- USER ONLY ---
     { title: "Chuyến đi của tôi", icon: Bike, href: "/user/trips", roles: ["USER"] },
+    { title: "Tạo đơn trở thành agency", icon: Bike, href: "/user/create-agency-request", roles: ["USER"] },
+    { title: "Yêu cầu của tôi", icon: Bike, href: "/user/agency-request", roles: ["USER"] },
     
     // --- PROFILE ---
     { title: "Yêu cầu trở thành Agency", icon: User2, href: `/${role.toLowerCase()}/agency-request`, roles: ["ADMIN"] },

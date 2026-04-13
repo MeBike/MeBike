@@ -134,11 +134,11 @@ export const agencyService = {
     return response;
   },
   registerAgency : async({data}:{data:RegisterAgencyFormData}) : Promise<AxiosResponse<AgencyRequest>> => {
-    const response = await fetchHttpClient.post<AgencyRequest>(ENDPOINT.AGENCY_REQUEST.BASE);
+    const response = await fetchHttpClient.post<AgencyRequest>(ENDPOINT.AGENCY_REQUEST.CREATE,data);
     return response
   },
   adminCreateAgency : async({data}:{data:Partial<AdminCreateAgencyUserRequest>}) => {
-    const response = await fetchHttpClient.post<Agency>(ENDPOINT.USER.CREATE_USER);
+    const response = await fetchHttpClient.post<Agency>(ENDPOINT.USER.CREATE_USER,data);
     return response
   }
 };

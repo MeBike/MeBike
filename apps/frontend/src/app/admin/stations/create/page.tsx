@@ -8,9 +8,21 @@ import { useStationActions } from "@/hooks/use-station";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-import { StationMap } from "../components/station-map";
+import { Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { StationInfoForm } from "../components/station-infor-form";
-
+const StationMapDynamic = dynamic(
+  () => import("@/app/admin/stations/components/station-map").then((mod) => mod.StationMap),
+  {
+    ssr: false, // Chốt chặn quan trọng nhất!
+    loading: () => (
+      <div className="w-full h-full min-h-[500px] bg-muted/50 animate-pulse flex flex-col items-center justify-center text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin mb-2" />
+        <p className="text-sm">Đang khởi tạo bản đồ TomTom...</p>
+      </div>
+    )
+  }
+);
 export default function CreateStationPage() {
   const router = useRouter();
   const { createStation } = useStationActions({ hasToken: true });
@@ -58,7 +70,7 @@ export default function CreateStationPage() {
         </div>
         
         <div className="lg:col-span-2 min-h-[500px]">
-          <StationMap onLocationSelect={onLocationSelect} />
+          <StationMapDynamic onLocationSelect={onLocationSelect} />
         </div>
       </form>
     </div>

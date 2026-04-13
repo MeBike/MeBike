@@ -296,7 +296,7 @@ export const useAgencyActions = ({
         throw error;
       }
     },
-    [rejectAgencyRequestMutation, hasToken],
+    [registerAgencyRequestMutation, hasToken],
   );
   return {
     agencies,

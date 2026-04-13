@@ -25,5 +25,6 @@ export const useGetAgencies = ({page,pageSize}:{page?:number,pageSize?:number}) 
     return useQuery({
         queryKey:["data","agencies"],
         queryFn : () => getAgencies({page:page,pageSize:pageSize}),
+        enabled:false,
     })
 }
