@@ -1,7 +1,7 @@
-import { Effect, Option } from "effect";
+import { Cause, Effect, Exit, Option } from "effect";
 
 import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
-import type { Prisma as PrismaTypes } from "generated/prisma/client";
+import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
@@ -38,6 +38,37 @@ type FixedSlotTemplateWithDetails = {
     readonly name: string;
   };
 };
+
+type FixedSlotAssignmentOutcome
+  = | "ASSIGNED"
+    | "NO_BIKE"
+    | "MISSING_RESERVATION"
+    | "CONFLICT";
+
+type FixedSlotAssignmentContext = {
+  readonly slotDate: Date;
+  readonly slotDateKey: string;
+  readonly now: Date;
+};
+
+type FixedSlotLabels = {
+  readonly slotStartAt: Date;
+  readonly slotDateLabel: string;
+  readonly slotTimeLabel: string;
+};
+
+type FixedSlotCounts = {
+  assigned: number;
+  noBike: number;
+  missingReservation: number;
+  conflicts: number;
+};
+
+class FixedSlotAssignmentConflict extends Error {
+  constructor() {
+    super("Fixed-slot assignment conflict");
+  }
+}
 
 function toSlotDateKey(date: Date): string {
   const year = date.getUTCFullYear();
@@ -98,6 +129,209 @@ async function enqueueEmailIdempotent(
   }
 }
 
+function loadActiveTemplates(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+  slotDate: Date,
+) {
+  return Effect.tryPromise({
+    try: () =>
+      client.fixedSlotTemplate.findMany({
+        where: {
+          status: "ACTIVE",
+          dates: { some: { slotDate } },
+        },
+        select: {
+          id: true,
+          userId: true,
+          stationId: true,
+          slotStart: true,
+          user: { select: { fullName: true, email: true } },
+          station: { select: { name: true } },
+        },
+      }) as Promise<FixedSlotTemplateWithDetails[]>,
+    catch: err => err as unknown,
+  }).pipe(Effect.catchAll(err => Effect.die(err)));
+}
+
+function buildFixedSlotLabels(
+  slotDate: Date,
+  slotStart: Date,
+): FixedSlotLabels {
+  return {
+    slotStartAt: mergeSlotStart(slotDate, slotStart),
+    slotDateLabel: formatSlotDateLabel(slotDate),
+    slotTimeLabel: formatSlotTimeLabel(slotStart),
+  };
+}
+
+function enqueueNoBikeEmail(
+  tx: PrismaTypes.TransactionClient,
+  template: FixedSlotTemplateWithDetails,
+  labels: FixedSlotLabels,
+  context: FixedSlotAssignmentContext,
+) {
+  const email = buildFixedSlotNoBikeEmail({
+    fullName: template.user.fullName,
+    stationName: template.station.name,
+    slotDateLabel: labels.slotDateLabel,
+    slotTimeLabel: labels.slotTimeLabel,
+  });
+
+  return Effect.tryPromise({
+    try: () =>
+      enqueueEmailIdempotent(tx, {
+        type: JobTypes.EmailSend,
+        dedupeKey: `fixed-slot:no-bike:${template.id}:${context.slotDateKey}`,
+        payload: {
+          version: 1,
+          to: template.user.email,
+          kind: "raw",
+          subject: email.subject,
+          html: email.html,
+        },
+        runAt: context.now,
+      }),
+    catch: err => err as unknown,
+  }).pipe(Effect.catchAll(err => Effect.die(err)));
+}
+
+function enqueueAssignedEmail(
+  tx: PrismaTypes.TransactionClient,
+  reservationId: string,
+  template: FixedSlotTemplateWithDetails,
+  labels: FixedSlotLabels,
+  context: FixedSlotAssignmentContext,
+) {
+  const email = buildFixedSlotAssignedEmail({
+    fullName: template.user.fullName,
+    stationName: template.station.name,
+    slotDateLabel: labels.slotDateLabel,
+    slotTimeLabel: labels.slotTimeLabel,
+  });
+
+  return Effect.tryPromise({
+    try: () =>
+      enqueueEmailIdempotent(tx, {
+        type: JobTypes.EmailSend,
+        dedupeKey: `fixed-slot:assigned:${reservationId}`,
+        payload: {
+          version: 1,
+          to: template.user.email,
+          kind: "raw",
+          subject: email.subject,
+          html: email.html,
+        },
+        runAt: context.now,
+      }),
+    catch: err => err as unknown,
+  }).pipe(Effect.catchAll(err => Effect.die(err)));
+}
+
+async function runFixedSlotAssignmentTransaction(
+  client: PrismaClient,
+  template: FixedSlotTemplateWithDetails,
+  labels: FixedSlotLabels,
+  context: FixedSlotAssignmentContext,
+): Promise<FixedSlotAssignmentOutcome> {
+  return client.$transaction(async (tx) => {
+    const exit = await Effect.runPromiseExit(Effect.gen(function* () {
+      const bikeRepo = makeBikeRepository(tx);
+      const txReservationQueryRepo = makeReservationQueryRepository(tx);
+      const txReservationCommandRepo = makeReservationCommandRepository(tx);
+      const reservationOpt = yield* txReservationQueryRepo.findPendingFixedSlotByTemplateAndStart(
+        template.id,
+        labels.slotStartAt,
+      );
+
+      if (Option.isNone(reservationOpt)) {
+        return "MISSING_RESERVATION" as const;
+      }
+      const reservation = reservationOpt.value;
+
+      const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId);
+      if (Option.isNone(bikeOpt)) {
+        yield* enqueueNoBikeEmail(tx, template, labels, context);
+        return "NO_BIKE" as const;
+      }
+      const bike = bikeOpt.value;
+
+      const reservationAssigned = yield* txReservationCommandRepo.assignBikeToPendingReservation(
+        reservation.id,
+        bike.id,
+        context.now,
+      );
+      if (!reservationAssigned) {
+        return "CONFLICT" as const;
+      }
+
+      const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, context.now);
+      if (!bikeReserved) {
+        // Roll back the reservation bike assignment so the next run can retry cleanly.
+        return yield* Effect.fail(new FixedSlotAssignmentConflict());
+      }
+
+      // TODO(iot): send reservation "reserve" command once IoT integration is ready.
+      yield* enqueueAssignedEmail(tx, reservation.id, template, labels, context);
+
+      return "ASSIGNED" as const;
+    }));
+
+    if (Exit.isSuccess(exit)) {
+      return exit.value;
+    }
+
+    const failure = Cause.failureOption(exit.cause);
+    if (Option.isSome(failure)) {
+      throw failure.value;
+    }
+
+    throw Cause.squash(exit.cause);
+  });
+}
+
+function processFixedSlotTemplate(
+  client: PrismaClient,
+  template: FixedSlotTemplateWithDetails,
+  context: FixedSlotAssignmentContext,
+) {
+  const labels = buildFixedSlotLabels(context.slotDate, template.slotStart);
+
+  return Effect.tryPromise({
+    try: () => runFixedSlotAssignmentTransaction(client, template, labels, context),
+    catch: err => err as unknown,
+  }).pipe(
+    Effect.catchIf(
+      (err): err is FixedSlotAssignmentConflict => err instanceof FixedSlotAssignmentConflict,
+      () => Effect.succeed("CONFLICT" as const),
+    ),
+    Effect.catchAll(err => Effect.die(err)),
+  );
+}
+
+function incrementFixedSlotCounts(
+  counts: FixedSlotCounts,
+  outcome: FixedSlotAssignmentOutcome,
+) {
+  switch (outcome) {
+    case "ASSIGNED":
+      counts.assigned += 1;
+      break;
+    case "NO_BIKE":
+      counts.noBike += 1;
+      break;
+    case "MISSING_RESERVATION":
+      counts.missingReservation += 1;
+      break;
+    case "CONFLICT":
+      counts.conflicts += 1;
+      break;
+    default: {
+      const _exhaustive: never = outcome;
+      throw _exhaustive;
+    }
+  }
+}
+
 export function assignFixedSlotReservations(args: {
   readonly slotDate?: Date;
   readonly assignmentTime?: Date;
@@ -112,157 +346,31 @@ export function assignFixedSlotReservations(args: {
     yield* BikeRepository;
     const assignmentTime = args.assignmentTime ?? new Date();
     const slotDate = args.slotDate ?? normalizeSlotDate(assignmentTime);
-    const slotDateKey = toSlotDateKey(slotDate);
-    const now = args.now ?? new Date();
+    const context: FixedSlotAssignmentContext = {
+      slotDate,
+      slotDateKey: toSlotDateKey(slotDate),
+      now: args.now ?? new Date(),
+    };
 
-    const templates = yield* Effect.tryPromise({
-      try: () =>
-        client.fixedSlotTemplate.findMany({
-          where: {
-            status: "ACTIVE",
-            dates: { some: { slotDate } },
-          },
-          select: {
-            id: true,
-            userId: true,
-            stationId: true,
-            slotStart: true,
-            user: { select: { fullName: true, email: true } },
-            station: { select: { name: true } },
-          },
-        }) as Promise<FixedSlotTemplateWithDetails[]>,
-      catch: err => err as unknown,
-    }).pipe(Effect.catchAll(err => Effect.die(err)));
-
-    let assigned = 0;
-    let noBike = 0;
-    let missingReservation = 0;
-    let conflicts = 0;
+    const templates = yield* loadActiveTemplates(client, slotDate);
+    const counts: FixedSlotCounts = {
+      assigned: 0,
+      noBike: 0,
+      missingReservation: 0,
+      conflicts: 0,
+    };
     // TODO(ops): Avoid "sequential death" — a single unexpected DB/infra failure currently dies the whole run.
     // Wrap per-template processing with `Effect.either` / `Effect.catchAll` to log + continue, and track an error count.
 
     for (const template of templates) {
-      const slotStartAt = mergeSlotStart(slotDate, template.slotStart);
-      const slotDateLabel = formatSlotDateLabel(slotDate);
-      const slotTimeLabel = formatSlotTimeLabel(template.slotStart);
-      const outcome = yield* Effect.tryPromise({
-        try: () =>
-          client.$transaction(async tx =>
-            Effect.runPromise(Effect.gen(function* () {
-              const bikeRepo = makeBikeRepository(tx);
-              const txReservationQueryRepo = makeReservationQueryRepository(tx);
-              const txReservationCommandRepo = makeReservationCommandRepository(tx);
-              const reservationOpt = yield* txReservationQueryRepo.findPendingFixedSlotByTemplateAndStart(
-                template.id,
-                slotStartAt,
-              );
-
-              if (Option.isNone(reservationOpt)) {
-                return "MISSING_RESERVATION" as const;
-              }
-              const reservation = reservationOpt.value;
-
-              const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId);
-
-              if (Option.isNone(bikeOpt)) {
-                const email = buildFixedSlotNoBikeEmail({
-                  fullName: template.user.fullName,
-                  stationName: template.station.name,
-                  slotDateLabel,
-                  slotTimeLabel,
-                });
-                yield* Effect.tryPromise({
-                  try: () =>
-                    enqueueEmailIdempotent(tx, {
-                      type: JobTypes.EmailSend,
-                      dedupeKey: `fixed-slot:no-bike:${template.id}:${slotDateKey}`,
-                      payload: {
-                        version: 1,
-                        to: template.user.email,
-                        kind: "raw",
-                        subject: email.subject,
-                        html: email.html,
-                      },
-                      runAt: now,
-                    }),
-                  catch: err => err as unknown,
-                }).pipe(Effect.catchAll(err => Effect.die(err)));
-                return "NO_BIKE" as const;
-              }
-              const bike = bikeOpt.value;
-
-              const reservationAssigned = yield* txReservationCommandRepo.assignBikeToPendingReservation(
-                reservation.id,
-                bike.id,
-                now,
-              );
-              if (!reservationAssigned) {
-                return "CONFLICT" as const;
-              }
-
-              const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, now);
-              if (!bikeReserved) {
-                return "CONFLICT" as const;
-              }
-
-              // TODO(iot): send reservation "reserve" command once IoT integration is ready.
-
-              const email = buildFixedSlotAssignedEmail({
-                fullName: template.user.fullName,
-                stationName: template.station.name,
-                slotDateLabel,
-                slotTimeLabel,
-              });
-              yield* Effect.tryPromise({
-                try: () =>
-                  enqueueEmailIdempotent(tx, {
-                    type: JobTypes.EmailSend,
-                    dedupeKey: `fixed-slot:assigned:${reservation.id}`,
-                    payload: {
-                      version: 1,
-                      to: template.user.email,
-                      kind: "raw",
-                      subject: email.subject,
-                      html: email.html,
-                    },
-                    runAt: now,
-                  }),
-                catch: err => err as unknown,
-              }).pipe(Effect.catchAll(err => Effect.die(err)));
-
-              return "ASSIGNED" as const;
-            })),
-          ),
-        catch: err => err as unknown,
-      }).pipe(Effect.catchAll(err => Effect.die(err)));
-
-      switch (outcome) {
-        case "ASSIGNED":
-          assigned += 1;
-          break;
-        case "NO_BIKE":
-          noBike += 1;
-          break;
-        case "MISSING_RESERVATION":
-          missingReservation += 1;
-          break;
-        case "CONFLICT":
-          conflicts += 1;
-          break;
-        default: {
-          const _exhaustive: never = outcome;
-          throw _exhaustive;
-        }
-      }
+      const outcome = yield* processFixedSlotTemplate(client, template, context);
+      incrementFixedSlotCounts(counts, outcome);
     }
 
     return {
-      slotDate: slotDateKey,
+      slotDate: context.slotDateKey,
       totalTemplates: templates.length,
-      assigned,
-      noBike,
-      missingReservation,
-      conflicts,
+      ...counts,
     };
   });
 }
