@@ -45,7 +45,10 @@ function formatSlotTimeLabel(slotStart: Date): string {
 }
 
 function formatSlotDateLabel(slotDate: Date): string {
-  return slotDate.toLocaleDateString("vi-VN");
+  const day = String(slotDate.getUTCDate()).padStart(2, "0");
+  const month = String(slotDate.getUTCMonth() + 1).padStart(2, "0");
+  const year = slotDate.getUTCFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 export function buildFixedSlotLabels(

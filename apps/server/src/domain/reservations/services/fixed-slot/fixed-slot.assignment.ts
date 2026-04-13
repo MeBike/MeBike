@@ -1,6 +1,5 @@
 import { Cause, Effect, Exit, Option } from "effect";
 
-import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
@@ -29,19 +28,14 @@ class FixedSlotAssignmentConflict extends Error {
   }
 }
 
-async function enqueueEmailIdempotent(
+function enqueueEmailIdempotent(
   tx: PrismaTypes.TransactionClient,
-  args: Parameters<typeof enqueueOutboxJob>[1],
-): Promise<void> {
-  try {
-    await Effect.runPromise(enqueueOutboxJobInTx(tx, args));
-  }
-  catch (err) {
-    if (isPrismaUniqueViolation(err)) {
-      return;
-    }
-    throw err;
-  }
+  args: Parameters<typeof enqueueOutboxJobInTx>[1],
+) {
+  return enqueueOutboxJobInTx(tx, args).pipe(
+    Effect.catchIf(isPrismaUniqueViolation, () => Effect.void),
+    Effect.catchAll(err => Effect.die(err)),
+  );
 }
 
 function enqueueNoBikeEmail(
@@ -57,22 +51,18 @@ function enqueueNoBikeEmail(
     slotTimeLabel: labels.slotTimeLabel,
   });
 
-  return Effect.tryPromise({
-    try: () =>
-      enqueueEmailIdempotent(tx, {
-        type: JobTypes.EmailSend,
-        dedupeKey: `fixed-slot:no-bike:${template.id}:${context.slotDateKey}`,
-        payload: {
-          version: 1,
-          to: template.user.email,
-          kind: "raw",
-          subject: email.subject,
-          html: email.html,
-        },
-        runAt: context.now,
-      }),
-    catch: err => err as unknown,
-  }).pipe(Effect.catchAll(err => Effect.die(err)));
+  return enqueueEmailIdempotent(tx, {
+    type: JobTypes.EmailSend,
+    dedupeKey: `fixed-slot:no-bike:${template.id}:${context.slotDateKey}`,
+    payload: {
+      version: 1,
+      to: template.user.email,
+      kind: "raw",
+      subject: email.subject,
+      html: email.html,
+    },
+    runAt: context.now,
+  });
 }
 
 function enqueueAssignedEmail(
@@ -89,22 +79,18 @@ function enqueueAssignedEmail(
     slotTimeLabel: labels.slotTimeLabel,
   });
 
-  return Effect.tryPromise({
-    try: () =>
-      enqueueEmailIdempotent(tx, {
-        type: JobTypes.EmailSend,
-        dedupeKey: `fixed-slot:assigned:${reservationId}`,
-        payload: {
-          version: 1,
-          to: template.user.email,
-          kind: "raw",
-          subject: email.subject,
-          html: email.html,
-        },
-        runAt: context.now,
-      }),
-    catch: err => err as unknown,
-  }).pipe(Effect.catchAll(err => Effect.die(err)));
+  return enqueueEmailIdempotent(tx, {
+    type: JobTypes.EmailSend,
+    dedupeKey: `fixed-slot:assigned:${reservationId}`,
+    payload: {
+      version: 1,
+      to: template.user.email,
+      kind: "raw",
+      subject: email.subject,
+      html: email.html,
+    },
+    runAt: context.now,
+  });
 }
 
 async function runFixedSlotAssignmentTransaction(
