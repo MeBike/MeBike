@@ -86,6 +86,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/reservations", requireAuthMiddleware);
   app.use("/v1/reservations/*", requireAuthMiddleware);
   app.use("/v1/stripe/*", requireAuthMiddleware);
+  app.use("/v1/redistribution-requests", requireAuthMiddleware);
   app.use("/v1/redistribution-requests/*", requireAuthMiddleware);
   app.use("/v1/suppliers", requireAdminMiddleware);
   app.use("/v1/suppliers/*", requireAdminMiddleware);
