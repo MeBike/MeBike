@@ -55,7 +55,7 @@ import {
   RedistributionRepository,
 } from "../repository/redistribution.repository";
 
-const MIN_BIKES_AT_STATION = 1;
+const MIN_BIKES_AT_STATION = 10;
 
 export type RedistributionService = {
   getMyListInStation: (

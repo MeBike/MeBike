@@ -17,6 +17,7 @@ export const RedistributionRequestServiceLayer = RedistributionServiceLive.pipe(
   Layer.provide(RedistributionRequestReposLive),
   Layer.provide(UserQueryServiceLayer),
   Layer.provide(StationServiceLayer),
+  Layer.provide(PrismaLive),
 );
 
 export const RedistributionRequestDepsLive = Layer.mergeAll(
