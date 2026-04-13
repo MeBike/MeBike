@@ -7,6 +7,7 @@ import { BikeDepsLive } from "./features/bike.layers";
 import { IncidentDepsLive } from "./features/incident.layers";
 import { NotificationDepsLive } from "./features/notification.layers";
 import { RatingDepsLive } from "./features/rating.layers";
+import { RedistributionRequestDepsLive } from "./features/redistribution.layers";
 import { RentalDepsLive } from "./features/rental.layers";
 import { ReservationDepsLive } from "./features/reservation.layers";
 import { StationDepsLive } from "./features/station.layers";
@@ -40,6 +41,7 @@ export const HttpDepsLive = Layer.mergeAll(
   WalletDepsLive,
   WithdrawalDepsLive,
   IncidentDepsLive,
+  RedistributionRequestDepsLive,
 ).pipe(
   Layer.provide(AppInfraLive),
 );

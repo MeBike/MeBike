@@ -45,6 +45,7 @@ const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
         {
           rentalId: query.rentalId,
           stationId: query.stationId,
+          statuses: query.statuses as IncidentStatus[] | undefined,
           status: query.status as IncidentStatus,
           userId: user?.role === "ADMIN"
             ? undefined

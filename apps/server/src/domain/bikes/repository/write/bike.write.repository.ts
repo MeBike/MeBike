@@ -13,6 +13,35 @@ import { BikeRepositoryError, DuplicateChipId } from "../../domain-errors";
 import { bikeSelect, buildStatusUpdate, findBikeById, getNextBikeNumber } from "../bike.repository.shared";
 
 export function makeBikeWriteRepository(client: BikeDbClient): BikeCommandRepo {
+  // Helper for updateMany operations
+  function updateManyBikes(
+    client: BikeDbClient,
+    bikeIds: string[],
+    data: Record<string, unknown>,
+    operation: string,
+  ): Effect.Effect<number> {
+    if (bikeIds.length === 0) {
+      return Effect.succeed(0);
+    }
+
+    return Effect.tryPromise({
+      try: () =>
+        client.bike.updateMany({
+          where: { id: { in: bikeIds } },
+          data,
+        }),
+      catch: cause =>
+        new BikeRepositoryError({
+          operation,
+          cause,
+          message: "Failed to update multiple bikes",
+        }),
+    }).pipe(
+      Effect.map(result => result.count),
+      defectOn(BikeRepositoryError),
+    );
+  }
+
   return {
     create: input =>
       Effect.tryPromise({
@@ -32,6 +61,25 @@ export function makeBikeWriteRepository(client: BikeDbClient): BikeCommandRepo {
         bikeId,
         { ...buildStatusUpdate(status, updatedAt), stationId },
         "updateStatusAndStationAt",
+      ),
+
+    updateManyStatusAt: (bikeIds: string[], status: BikeStatus, updatedAt: Date) =>
+      updateManyBikes(client, bikeIds, { status, updatedAt }, "updateManyStatusAt"),
+
+    updateManyStatusAndStationAt: (bikeIds: string[], status: BikeStatus, stationId: string, updatedAt: Date) =>
+      updateManyBikes(
+        client,
+        bikeIds,
+        { status, stationId, updatedAt },
+        "updateManyStatusAndStationAt",
+      ),
+
+    updateManyStationAt: (bikeIds: string[], stationId: string | null, updatedAt: Date) =>
+      updateManyBikes(
+        client,
+        bikeIds,
+        { stationId, updatedAt },
+        "updateManyStationAt",
       ),
 
     bookBikeIfAvailable: (bikeId, updatedAt) =>

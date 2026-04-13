@@ -1,9 +1,9 @@
+// Common navigation hook types
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
 import type { BikeSummary } from "@/contracts/server";
-// Common navigation hook types
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 
 // Navigation Types for React Navigation
 import type { Reservation } from "./reservation-types";
@@ -46,6 +46,8 @@ export type RootStackParamList = {
   "StaffPhoneLookup": undefined;
   "StaffBikeSwapList": undefined;
   "StaffBikeSwapDetail": { bikeSwapRequestId: string };
+  "TechnicianIncidentList": undefined;
+  "TechnicianIncidentDetail": { incidentId: string };
   "RentalQr": { bookingId: string };
   "ChangePassword": undefined;
   "ForgotPassword": undefined;
@@ -131,6 +133,14 @@ export type StaffBikeSwapDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
   "StaffBikeSwapDetail"
 >;
+export type TechnicianIncidentListNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "TechnicianIncidentList"
+>;
+export type TechnicianIncidentDetailNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "TechnicianIncidentDetail"
+>;
 export type StaffRentalDetailRouteProp = RouteProp<
   RootStackParamList,
   "StaffRentalDetail"
@@ -138,6 +148,10 @@ export type StaffRentalDetailRouteProp = RouteProp<
 export type StaffBikeSwapDetailRouteProp = RouteProp<
   RootStackParamList,
   "StaffBikeSwapDetail"
+>;
+export type TechnicianIncidentDetailRouteProp = RouteProp<
+  RootStackParamList,
+  "TechnicianIncidentDetail"
 >;
 export type ChangePasswordNavigationProp = StackNavigationProp<
   RootStackParamList,

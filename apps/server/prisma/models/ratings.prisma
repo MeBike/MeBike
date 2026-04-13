@@ -26,16 +26,16 @@ model RatingReason {
 }
 
 model Rating {
-  id           String   @id @default(uuid(7)) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
-  rentalId     String   @unique @map("rental_id") @db.Uuid
-  bikeId       String?  @map("bike_id") @db.Uuid
-  stationId    String?  @map("station_id") @db.Uuid
-  bikeScore    Int      @map("bike_score")
-  stationScore Int      @map("station_score")
+  id           String    @id @default(uuid(7)) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  rentalId     String    @unique @map("rental_id") @db.Uuid
+  bikeId       String?   @map("bike_id") @db.Uuid
+  stationId    String?   @map("station_id") @db.Uuid
+  bikeScore    Int       @map("bike_score")
+  stationScore Int       @map("station_score")
   comment      String?
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   editedAt     DateTime? @map("edited_at") @db.Timestamptz
 
   user    User               @relation(fields: [userId], references: [id])

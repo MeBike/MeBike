@@ -12,7 +12,7 @@ import {
   formatIncidentDuration,
   getIncidentSourceLabel,
   isIncidentTerminalStatus,
-} from "../../incidents/incident-presenters";
+} from "@/screen/incidents/incident-presenters";
 
 type RentalIncidentCardProps = {
   incident: IncidentDetail;
@@ -37,7 +37,7 @@ function getIncidentStateCopy(incident: IncidentDetail, theme: ReturnType<typeof
         headerBackground: theme.actionAccent.val,
         headerLabel: "HỖ TRỢ KHẨN CẤP",
         sourceTone: "warning" as const,
-        title: "Đang điều phối kỹ thuật",
+        title: "Đang điều phối kỹ thuật viên",
         subtitle: "Kỹ thuật viên đang di chuyển đến vị trí của bạn.",
       };
     case "IN_PROGRESS":
@@ -64,6 +64,14 @@ function getIncidentStateCopy(incident: IncidentDetail, theme: ReturnType<typeof
         sourceTone: "muted" as const,
         title: "Yêu cầu hỗ trợ đã hủy",
         subtitle: "Có thể gửi lại báo cáo nếu vấn đề vẫn tiếp diễn.",
+      };
+    default:
+      return {
+        headerBackground: theme.textSecondary.val,
+        headerLabel: "TRẠNG THÁI CHƯA XÁC ĐỊNH",
+        sourceTone: "muted" as const,
+        title: "Đang cập nhật trạng thái sự cố",
+        subtitle: "Vui lòng thử tải lại để xem thông tin mới nhất.",
       };
   }
 }
