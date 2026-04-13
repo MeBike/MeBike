@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { agencyService } from "@/services/agency.service";
 import { HTTP_STATUS } from "@constants";
-const getAgencies = async ({
+const getAgencyRequests = async ({
   page,
   pageSize,
 }: {
@@ -9,7 +9,7 @@ const getAgencies = async ({
   pageSize?: number;
 }) => {
   try {
-    const response = await agencyService.getAgencies({
+    const response = await agencyService.getAgencyRequest({
       page: page,
       pageSize: pageSize,
     });
@@ -21,10 +21,10 @@ const getAgencies = async ({
     throw new Error("Failed to fetch agencies");
   }
 };
-export const useGetAgencies = ({page,pageSize}:{page?:number,pageSize?:number}) => {
+export const useGetAgencyRequests = ({page,pageSize}:{page?:number,pageSize?:number}) => {
     return useQuery({
-        queryKey:["data","agencies"],
-        queryFn : () => getAgencies({page:page,pageSize:pageSize}),
+        queryKey:["data","agency-request"],
+        queryFn : () => getAgencyRequests({page:page,pageSize:pageSize}),
         enabled:false,
     })
 }

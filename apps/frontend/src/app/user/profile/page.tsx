@@ -189,7 +189,7 @@ export default function ProfilePage() {
     }
   };
   return (
-    <DashboardLayout user={data}>
+     <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -510,7 +510,6 @@ export default function ProfilePage() {
         onClose={() => setIsVerifyEmailModalOpen(false)}
         onSubmit={handleVerifyEmailSubmit}
         isLoading={isVerifyingEmail}
-      />
-    </DashboardLayout>
+      /></>
   );
 }

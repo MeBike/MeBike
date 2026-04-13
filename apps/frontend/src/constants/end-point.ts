@@ -85,6 +85,15 @@ export const ENDPOINT = {
         BASE : "/admin/agencies",
         ID : (id : string) => `/admin/agencies/${id}`,
         STATUS : (id : string) => `/admin/agencies/${id}/status`,
+        STATS : (id:string) => `/admin/agencies/${id}/stats`,
+    },
+    AGENCY_REQUEST : {
+        BASE : "/admin/agency-requests",
+        CREATE : "/agency-requests",
+        ID : (id : string) => `/admin/agency-requests/${id}`,
+        APPROVE : (id:string) => `/admin/agency-requests/${id}/approve`,
+        REJECT : (id:string) => `/admin/agency-requests/${id}/reject`,
+        CANCEL : (id:string) => `/admin/agency-requests/${id}/cancel`,
     }
 
 } as const;
