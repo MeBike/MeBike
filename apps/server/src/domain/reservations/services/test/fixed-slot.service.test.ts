@@ -5,7 +5,7 @@ import { BikeRepository } from "@/domain/bikes";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";
 
-import { assignFixedSlotReservations } from "../fixed-slot.service";
+import { assignFixedSlotReservations } from "../fixed-slot/fixed-slot.service";
 
 const mocks = vi.hoisted(() => ({
   makeBikeRepository: vi.fn(),
@@ -65,11 +65,19 @@ describe("assignFixedSlotReservations", () => {
       bikeStatus: "AVAILABLE",
     };
 
-    mocks.makeReservationQueryRepository.mockImplementation((tx: { state: DraftState }) => ({
-      findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(
-        tx.state.reservationBikeId === null ? Option.some(reservation) : Option.none(),
-      ),
-    }));
+    mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
+      if (client.state) {
+        return {
+          findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(
+            client.state!.reservationBikeId === null ? Option.some(reservation) : Option.none(),
+          ),
+        };
+      }
+
+      return {
+        listActiveFixedSlotTemplatesByDate: () => Effect.succeed([template]),
+      };
+    });
 
     mocks.makeReservationCommandRepository.mockImplementation((tx: { state: DraftState }) => ({
       assignBikeToPendingReservation: (_reservationId: string, bikeId: string) =>

@@ -18,9 +18,21 @@ import {
   toReservationRow,
 } from "../reservation.mappers";
 
+const selectFixedSlotAssignmentTemplateRow = {
+  id: true,
+  userId: true,
+  stationId: true,
+  slotStart: true,
+  user: { select: { fullName: true, email: true } },
+  station: { select: { name: true } },
+} as const;
+
 export type ReservationCoreReadRepo = Pick<
   ReservationRepo,
-  "findById" | "findExpandedDetailById" | "findPendingFixedSlotByTemplateAndStart"
+  | "findById"
+  | "findExpandedDetailById"
+  | "findPendingFixedSlotByTemplateAndStart"
+  | "listActiveFixedSlotTemplatesByDate"
 >;
 
 export function makeReservationCoreReadRepository(
@@ -89,5 +101,22 @@ export function makeReservationCoreReadRepository(
         ),
         defectOn(ReservationRepositoryError),
       ),
+
+    listActiveFixedSlotTemplatesByDate: slotDate =>
+      Effect.tryPromise({
+        try: () =>
+          client.fixedSlotTemplate.findMany({
+            where: {
+              status: "ACTIVE",
+              dates: { some: { slotDate } },
+            },
+            select: selectFixedSlotAssignmentTemplateRow,
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "listActiveFixedSlotTemplatesByDate",
+            cause: err,
+          }),
+      }).pipe(defectOn(ReservationRepositoryError)),
   };
 }

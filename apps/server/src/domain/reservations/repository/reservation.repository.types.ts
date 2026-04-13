@@ -9,6 +9,7 @@ import type {
 import type {
   AdminReservationFilter,
   AdminReservationSortField,
+  FixedSlotAssignmentTemplateRow,
   ReservationExpandedDetailRow,
   ReservationFilter,
   ReservationRow,
@@ -84,6 +85,14 @@ export type ReservationQueryRepo = {
     templateId: string,
     startTime: Date,
   ) => Effect.Effect<Option.Option<ReservationRow>>;
+
+  /**
+   * EN: Returns active fixed-slot templates scheduled for a specific slot date.
+   * VI: Trả về fixed-slot template đang ACTIVE cho một ngày slot cụ thể.
+   */
+  listActiveFixedSlotTemplatesByDate: (
+    slotDate: Date,
+  ) => Effect.Effect<ReadonlyArray<FixedSlotAssignmentTemplateRow>>;
 
   /**
    * EN: Returns the next upcoming PENDING reservation (startTime > now). Useful for fixed-slot UX.
