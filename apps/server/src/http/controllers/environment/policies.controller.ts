@@ -35,6 +35,32 @@ const createPolicy: RouteHandler<
   );
 };
 
+const listPolicies: RouteHandler<
+  EnvironmentRoutes["listEnvironmentPolicies"]
+> = async (c) => {
+  const query = c.req.valid("query");
+
+  const eff = Effect.flatMap(EnvironmentPolicyServiceTag, service =>
+    service.listPolicies({
+      page: query.page,
+      pageSize: query.pageSize,
+      status: query.status,
+      search: query.search,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+    }));
+
+  const result = await c.var.runPromise(eff);
+
+  return c.json<EnvironmentContracts.EnvironmentPolicyListResponse, 200>({
+    items: result.items.map(toContractEnvironmentPolicy),
+    page: result.page,
+    pageSize: result.pageSize,
+    totalItems: result.total,
+    totalPages: result.totalPages,
+  }, 200);
+};
+
 const getActivePolicy: RouteHandler<
   EnvironmentRoutes["getActiveEnvironmentPolicy"]
 > = async (c) => {
@@ -68,5 +94,6 @@ const getActivePolicy: RouteHandler<
 
 export const EnvironmentPolicyController = {
   createPolicy,
+  listPolicies,
   getActivePolicy,
 } as const;

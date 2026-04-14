@@ -2,7 +2,9 @@ import { Context, Effect, Layer } from "effect";
 
 import type {
   CreateEnvironmentPolicyInput,
+  EnvironmentPolicyPageResult,
   EnvironmentPolicyRow,
+  ListEnvironmentPoliciesInput,
 } from "../models";
 
 import {
@@ -19,6 +21,9 @@ export type EnvironmentPolicyService = {
     EnvironmentPolicyRow,
     ActiveEnvironmentPolicyNotFound
   >;
+  listPolicies: (
+    input: ListEnvironmentPoliciesInput,
+  ) => Effect.Effect<EnvironmentPolicyPageResult>;
 };
 
 export class EnvironmentPolicyServiceTag extends Context.Tag(
@@ -72,6 +77,18 @@ export const EnvironmentPolicyServiceLive = Layer.effect(
            */
           return policy;
         }),
+      listPolicies: input => repo.listPolicies(
+        {
+          status: input.status,
+          search: input.search?.trim() || undefined,
+        },
+        {
+          page: input.page ?? 1,
+          pageSize: input.pageSize ?? 20,
+          sortBy: input.sortBy ?? "created_at",
+          sortOrder: input.sortOrder ?? "desc",
+        },
+      ),
     };
 
     return service;

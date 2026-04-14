@@ -1,5 +1,7 @@
 import type { AccountStatus, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import type { PageResult } from "@/domain/shared/pagination";
+
 export const DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG = {
   return_scan_buffer_minutes: 3,
   confidence_factor: 0.85,
@@ -46,3 +48,34 @@ export type CreateEnvironmentPolicyData = {
   activeTo: null;
   formulaConfig: EnvironmentPolicyFormulaConfig;
 };
+
+export type EnvironmentPolicySortField =
+  | "created_at"
+  | "updated_at"
+  | "active_from"
+  | "name";
+
+export type EnvironmentPolicySortOrder = "asc" | "desc";
+
+export type ListEnvironmentPoliciesInput = {
+  page?: number;
+  pageSize?: number;
+  status?: AccountStatus;
+  search?: string;
+  sortBy?: EnvironmentPolicySortField;
+  sortOrder?: EnvironmentPolicySortOrder;
+};
+
+export type EnvironmentPolicyListFilter = {
+  status?: AccountStatus;
+  search?: string;
+};
+
+export type EnvironmentPolicyListPageRequest = {
+  page: number;
+  pageSize: number;
+  sortBy: EnvironmentPolicySortField;
+  sortOrder: EnvironmentPolicySortOrder;
+};
+
+export type EnvironmentPolicyPageResult = PageResult<EnvironmentPolicyRow>;

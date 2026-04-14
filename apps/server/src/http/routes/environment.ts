@@ -13,11 +13,16 @@ export function registerEnvironmentRoutes(
     ...environment.createEnvironmentPolicy,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const listPoliciesRoute = {
+    ...environment.listEnvironmentPolicies,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
   const getActivePolicyRoute = {
     ...environment.getActiveEnvironmentPolicy,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
 
+  app.openapi(listPoliciesRoute, EnvironmentPolicyController.listPolicies);
   app.openapi(createPolicyRoute, EnvironmentPolicyController.createPolicy);
   app.openapi(getActivePolicyRoute, EnvironmentPolicyController.getActivePolicy);
 }

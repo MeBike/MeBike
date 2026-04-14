@@ -6,6 +6,7 @@ export {
 } from "./mutations";
 
 export {
+  listEnvironmentPolicies,
   getActiveEnvironmentPolicy,
 } from "./queries";
 

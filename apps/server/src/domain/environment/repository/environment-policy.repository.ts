@@ -8,10 +8,14 @@ import type {
 import { Prisma as PrismaNamespace } from "generated/prisma/client";
 import { uuidv7 } from "uuidv7";
 
+import { makePageResult } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type {
   CreateEnvironmentPolicyData,
+  EnvironmentPolicyListFilter,
+  EnvironmentPolicyListPageRequest,
+  EnvironmentPolicyPageResult,
   EnvironmentPolicyFormulaConfig,
   EnvironmentPolicyRow,
 } from "../models";
@@ -21,6 +25,10 @@ export type EnvironmentPolicyRepo = {
     data: CreateEnvironmentPolicyData,
   ) => Effect.Effect<EnvironmentPolicyRow>;
   findActive: (now: Date) => Effect.Effect<EnvironmentPolicyRow | null>;
+  listPolicies: (
+    filter: EnvironmentPolicyListFilter,
+    pageReq: EnvironmentPolicyListPageRequest,
+  ) => Effect.Effect<EnvironmentPolicyPageResult>;
 };
 
 type RawEnvironmentPolicyRow = {
@@ -35,6 +43,32 @@ type RawEnvironmentPolicyRow = {
   created_at: Date;
   updated_at: Date;
 };
+
+type PrismaEnvironmentPolicyRow = {
+  id: string;
+  name: string;
+  averageSpeedKmh: PrismaTypes.Decimal;
+  co2SavedPerKm: PrismaTypes.Decimal;
+  status: EnvironmentPolicyRow["status"];
+  activeFrom: Date | null;
+  activeTo: Date | null;
+  formulaConfig: PrismaTypes.JsonValue | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const environmentPolicySelect = {
+  id: true,
+  name: true,
+  averageSpeedKmh: true,
+  co2SavedPerKm: true,
+  status: true,
+  activeFrom: true,
+  activeTo: true,
+  formulaConfig: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 function toEnvironmentPolicyRow(
   row: RawEnvironmentPolicyRow,
@@ -51,6 +85,52 @@ function toEnvironmentPolicyRow(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function toEnvironmentPolicyRowFromPrisma(
+  row: PrismaEnvironmentPolicyRow,
+): EnvironmentPolicyRow {
+  return {
+    id: row.id,
+    name: row.name,
+    averageSpeedKmh: row.averageSpeedKmh,
+    co2SavedPerKm: row.co2SavedPerKm,
+    status: row.status,
+    activeFrom: row.activeFrom,
+    activeTo: row.activeTo,
+    formulaConfig: row.formulaConfig as EnvironmentPolicyFormulaConfig | null,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function toEnvironmentPolicyWhere(
+  filter: EnvironmentPolicyListFilter,
+): PrismaTypes.EnvironmentalImpactPolicyWhereInput {
+  return {
+    ...(filter.status ? { status: filter.status } : {}),
+    ...(filter.search
+      ? { name: { contains: filter.search, mode: "insensitive" as const } }
+      : {}),
+  };
+}
+
+function toEnvironmentPolicyOrderBy(
+  pageReq: EnvironmentPolicyListPageRequest,
+): PrismaTypes.EnvironmentalImpactPolicyOrderByWithRelationInput[] {
+  const direction = pageReq.sortOrder;
+
+  switch (pageReq.sortBy) {
+    case "updated_at":
+      return [{ updatedAt: direction }, { createdAt: "desc" }];
+    case "active_from":
+      return [{ activeFrom: direction }, { createdAt: "desc" }];
+    case "name":
+      return [{ name: direction }, { createdAt: "desc" }];
+    case "created_at":
+    default:
+      return [{ createdAt: direction }];
+  }
 }
 
 export function makeEnvironmentPolicyRepository(
@@ -135,6 +215,33 @@ export function makeEnvironmentPolicyRepository(
 
         const row = rows[0];
         return row ? toEnvironmentPolicyRow(row) : null;
+      });
+    },
+    listPolicies(filter, pageReq) {
+      return Effect.promise(async () => {
+        const page = Math.max(1, pageReq.page);
+        const pageSize = Math.max(1, Math.min(100, pageReq.pageSize));
+        const skip = (page - 1) * pageSize;
+        const where = toEnvironmentPolicyWhere(filter);
+        const orderBy = toEnvironmentPolicyOrderBy(pageReq);
+
+        const [total, items] = await Promise.all([
+          client.environmentalImpactPolicy.count({ where }),
+          client.environmentalImpactPolicy.findMany({
+            where,
+            skip,
+            take: pageSize,
+            orderBy,
+            select: environmentPolicySelect,
+          }),
+        ]);
+
+        return makePageResult(
+          items.map(toEnvironmentPolicyRowFromPrisma),
+          total,
+          page,
+          pageSize,
+        );
       });
     },
   };
