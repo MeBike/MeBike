@@ -32,18 +32,31 @@ export const RedistributionReqErrorCodeSchema = z.enum(redistributionReqErrorCod
 
 export const RedistributionReqErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: RedistributionReqErrorCodeSchema,
-  redistributionId: z.uuidv7().optional(),
-  sourceStationId: z.string().optional(),
-  targetStationId: z.string().optional(),
-  workingStationId: z.string().optional(),
-  userId: z.string().optional(),
+  requestId: z.uuidv7().optional(),
+  userId: z.uuidv7().optional(),
+  sourceStationId: z.uuidv7().optional(),
+  targetStationId: z.uuidv7().optional(),
+  workingStationId: z.uuidv7().optional(),
+  stationId: z.uuidv7().optional(),
+  agencyId: z.uuidv7().optional(),
+  bikeId: z.uuidv7().optional(),
+  status: z.string().optional(),
+  currentStatus: z.string().optional(),
+  attemptedStatus: z.string().optional(),
+  requestedByUserId: z.uuidv7().optional(),
+  cancelledByUserId: z.uuidv7().optional(),
+  startedByUserId: z.uuidv7().optional(),
   required: z.number().optional(),
   available: z.number().optional(),
+  minBikes: z.number().optional(),
+  restBikesAfterFulfillment: z.number().optional(),
+  providedBikeIds: z.array(z.uuidv7()).optional(),
+  unconfirmedBikeIds: z.array(z.uuidv7()).optional(),
 }).openapi({
   description: "Redistribution-specific error detail",
   example: {
     code: "REDISTRIBUTION_REQUEST_NOT_FOUND",
-    redistributionId: "665fd6e36b7e5d53f8f3d2c9",
+    requestId: "019b17bd-d130-7e7d-be69-91ceef7b6959",
   },
 });
 
