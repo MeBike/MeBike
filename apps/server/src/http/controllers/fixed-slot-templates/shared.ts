@@ -17,6 +17,7 @@ export type FixedSlotTemplateResponse = FixedSlotTemplatesContracts.FixedSlotTem
 export type ListFixedSlotTemplatesResponse = FixedSlotTemplatesContracts.ListFixedSlotTemplatesResponse;
 export type UpdateFixedSlotTemplateResponse = FixedSlotTemplatesContracts.UpdateFixedSlotTemplateResponse;
 
+/** Body lỗi unauthorized dùng chung cho các route fixed-slot template. */
 export const unauthorizedBody = {
   error: unauthorizedErrorMessages.UNAUTHORIZED,
   details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },

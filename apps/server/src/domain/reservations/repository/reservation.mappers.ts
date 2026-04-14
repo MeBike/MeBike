@@ -58,6 +58,7 @@ export const selectReservationExpandedDetailRow = {
   },
 } as const;
 
+/** Select shape cho fixed-slot template row, gom station va danh sach ngay. */
 export const selectFixedSlotTemplateRow = {
   id: true,
   userId: true,
@@ -87,6 +88,10 @@ export const selectFixedSlotTemplateRow = {
   },
 } as const;
 
+/**
+ * Chuyển raw Prisma reservation row thành domain reservation row.
+ * Dùng cho các query/write path muốn trả ra shape ổn định ở tầng domain.
+ */
 export function toReservationRow(row: {
   id: string;
   userId: string;
@@ -125,6 +130,10 @@ export function toReservationRow(row: {
   };
 }
 
+/**
+ * Chuyển raw Prisma reservation detail row thành domain detail row.
+ * Áp dụng cho shape có thêm nested user, bike và station.
+ */
 export function toReservationExpandedDetailRow(row: {
   id: string;
   userId: string;
@@ -192,6 +201,10 @@ export function toReservationExpandedDetailRow(row: {
   };
 }
 
+/**
+ * Chuyển raw Prisma fixed-slot template row thành domain row.
+ * Hàm này cũng gom danh sách `dates` thành `slotDates` ở tầng domain.
+ */
 export function toFixedSlotTemplateRow(row: {
   id: string;
   userId: string;

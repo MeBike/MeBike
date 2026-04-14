@@ -14,6 +14,7 @@ import {
 } from "../../fixed-slots/schemas";
 import { unauthorizedResponse } from "../helpers";
 
+/** Khai báo contract cho route tạo fixed-slot template. */
 export const createFixedSlotTemplateRoute = createRoute({
   method: "post",
   path: "/v1/fixed-slot-templates",
@@ -116,6 +117,7 @@ export const createFixedSlotTemplateRoute = createRoute({
   },
 });
 
+/** Khai báo contract cho route hủy toàn bộ fixed-slot template. */
 export const cancelFixedSlotTemplateRoute = createRoute({
   method: "post",
   path: "/v1/fixed-slot-templates/{id}/cancel",
@@ -175,6 +177,7 @@ export const cancelFixedSlotTemplateRoute = createRoute({
   },
 });
 
+/** Khai báo contract cho route cập nhật fixed-slot template. */
 export const updateFixedSlotTemplateRoute = createRoute({
   method: "patch",
   path: "/v1/fixed-slot-templates/{id}",
@@ -287,6 +290,7 @@ export const updateFixedSlotTemplateRoute = createRoute({
   },
 });
 
+/** Khai báo contract cho route xóa một ngày khỏi fixed-slot template. */
 export const removeFixedSlotTemplateDateRoute = createRoute({
   method: "delete",
   path: "/v1/fixed-slot-templates/{id}/dates/{slotDate}",

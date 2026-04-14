@@ -11,6 +11,7 @@ import {
 } from "../../fixed-slots/schemas";
 import { unauthorizedResponse } from "../helpers";
 
+/** Khai báo contract cho route lấy danh sách fixed-slot template của user hiện tại. */
 export const listFixedSlotTemplatesRoute = createRoute({
   method: "get",
   path: "/v1/fixed-slot-templates",
@@ -32,6 +33,7 @@ export const listFixedSlotTemplatesRoute = createRoute({
   },
 });
 
+/** Khai báo contract cho route lấy chi tiết một fixed-slot template của user hiện tại. */
 export const getFixedSlotTemplateRoute = createRoute({
   method: "get",
   path: "/v1/fixed-slot-templates/{id}",

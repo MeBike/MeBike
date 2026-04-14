@@ -40,6 +40,12 @@ export type ReservationWriteRepo = Pick<
   | "createFixedSlotTemplate"
 >;
 
+/**
+ * Tao write repository cho reservation va fixed-slot template.
+ *
+ * @param client Prisma client hoac transaction client.
+ * @returns Write repository phuc vu create/update reservation va fixed-slot.
+ */
 export function makeReservationWriteRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): ReservationWriteRepo {
@@ -113,6 +119,9 @@ export function makeReservationWriteRepository(
       defectOn(ReservationRepositoryError),
     );
 
+  /**
+   * Tao fixed-slot template va snapshot billing cho tung ngay trong cung mot write call.
+   */
   const createFixedSlotTemplateWithClient = (
     tx: PrismaClient | PrismaTypes.TransactionClient,
     input: CreateFixedSlotTemplateInput,
@@ -150,6 +159,9 @@ export function makeReservationWriteRepository(
       defectOn(ReservationRepositoryError),
     );
 
+  /**
+   * Cap nhat status cua fixed-slot template va tra ve row moi nhat.
+   */
   const updateFixedSlotTemplateStatusWithClient = (
     tx: PrismaClient | PrismaTypes.TransactionClient,
     input: {

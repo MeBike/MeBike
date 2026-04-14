@@ -51,6 +51,10 @@ type RemoveFixedSlotTemplateDateError
     | FixedSlotTemplateNotFound
     | FixedSlotTemplateUpdateConflict;
 
+/**
+ * Hàm xử lý tạo fixed-slot template cho user hiện tại.
+ * Hàm này chỉ làm việc ở mép HTTP: đọc request, gọi service, rồi map domain error về response contract.
+ */
 const createFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["createFixedSlotTemplate"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
   if (!userId) {
@@ -131,6 +135,10 @@ const createFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["createFixe
   );
 };
 
+/**
+ * Hàm xử lý lấy danh sách fixed-slot template của user hiện tại.
+ * Kết quả được trả về dưới dạng danh sách có phân trang.
+ */
 const listFixedSlotTemplates: RouteHandler<FixedSlotTemplatesRoutes["listFixedSlotTemplates"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
   if (!userId) {
@@ -166,6 +174,9 @@ const listFixedSlotTemplates: RouteHandler<FixedSlotTemplatesRoutes["listFixedSl
   }, 200);
 };
 
+/**
+ * Hàm xử lý lấy chi tiết một fixed-slot template của user hiện tại.
+ */
 const getFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["getFixedSlotTemplate"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
   if (!userId) {
@@ -203,6 +214,10 @@ const getFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["getFixedSlotT
   );
 };
 
+/**
+ * Hàm xử lý hủy toàn bộ fixed-slot template của user hiện tại.
+ * Flow này cũng hủy các reservation pending liên quan ở tầng service.
+ */
 const cancelFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["cancelFixedSlotTemplate"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
   if (!userId) {
@@ -247,6 +262,10 @@ const cancelFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["cancelFixe
   );
 };
 
+/**
+ * Hàm xử lý cập nhật fixed-slot template của user hiện tại.
+ * Có thể đổi giờ bắt đầu, thêm ngày mới, hoặc bỏ bớt ngày trong template.
+ */
 const updateFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["updateFixedSlotTemplate"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
   if (!userId) {
@@ -340,6 +359,9 @@ const updateFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["updateFixe
   );
 };
 
+/**
+ * Hàm xử lý xóa một ngày cụ thể khỏi fixed-slot template của user hiện tại.
+ */
 const removeFixedSlotTemplateDate: RouteHandler<FixedSlotTemplatesRoutes["removeFixedSlotTemplateDate"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
   if (!userId) {
@@ -399,6 +421,7 @@ const removeFixedSlotTemplateDate: RouteHandler<FixedSlotTemplatesRoutes["remove
   );
 };
 
+/** Gom các hàm xử lý fixed-slot template dành cho user hiện tại. */
 export const FixedSlotTemplateMeController = {
   cancelFixedSlotTemplate,
   createFixedSlotTemplate,

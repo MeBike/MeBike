@@ -2,6 +2,11 @@ import { serverRoutes } from "@mebike/shared";
 
 import { FixedSlotTemplateMeController } from "@/http/controllers/fixed-slot-templates";
 
+/**
+ * Đăng ký toàn bộ route HTTP cho feature fixed-slot template.
+ *
+ * @param app OpenAPIHono app dang duoc bootstrap.
+ */
 export function registerFixedSlotTemplateRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const fixedSlotTemplates = serverRoutes.fixedSlotTemplates;
 

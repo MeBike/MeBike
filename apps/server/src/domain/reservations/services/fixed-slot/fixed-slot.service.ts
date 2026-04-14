@@ -13,6 +13,15 @@ import { makeReservationQueryRepository } from "../../repository/reservation-que
 import { processFixedSlotTemplate } from "./fixed-slot.assignment";
 import { incrementFixedSlotCounts, normalizeSlotDate, toSlotDateKey } from "./fixed-slot.helpers";
 
+/**
+ * Chay worker flow de materialize reservation cho mot ngay fixed-slot.
+ *
+ * @param args Dau vao worker.
+ * @param args.slotDate Ngay muon xu ly. Bo trong thi suy ra tu `assignmentTime`.
+ * @param args.assignmentTime Moc thoi gian worker dang chay.
+ * @param args.now Moc thoi gian dung cho side effect va outbox.
+ * @returns Effect tong hop ket qua assignment cua toan bo template trong ngay do.
+ */
 export function assignFixedSlotReservations(args: {
   readonly slotDate?: Date;
   readonly assignmentTime?: Date;

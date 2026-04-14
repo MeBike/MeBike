@@ -13,6 +13,7 @@ import {
   FixedSlotTimeStringSchema,
 } from "./models";
 
+/** Tập mã lỗi dùng riêng cho fixed-slot template API. */
 export const FixedSlotTemplateErrorCodeSchema = z
   .enum([
     "FIXED_SLOT_TEMPLATE_NOT_FOUND",
@@ -29,6 +30,7 @@ export const FixedSlotTemplateErrorCodeSchema = z
   ])
   .openapi("FixedSlotTemplateErrorCode");
 
+/** Bảng message mặc định tương ứng với từng mã lỗi fixed-slot template. */
 export const fixedSlotTemplateErrorMessages = {
   FIXED_SLOT_TEMPLATE_NOT_FOUND: "Fixed-slot template not found",
   FIXED_SLOT_STATION_NOT_FOUND: "Station not found",
@@ -43,6 +45,7 @@ export const fixedSlotTemplateErrorMessages = {
   FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT: "Fixed-slot template could not be updated safely",
 } as const;
 
+/** Schema response lỗi chuẩn cho fixed-slot template API. */
 export const FixedSlotTemplateErrorResponseSchema = z.object({
   error: z.string(),
   details: z.object({
@@ -56,6 +59,7 @@ export const FixedSlotTemplateErrorResponseSchema = z.object({
   }),
 }).openapi("FixedSlotTemplateErrorResponse");
 
+/** Schema request tạo fixed-slot template. */
 export const CreateFixedSlotTemplateRequestSchema = z.object({
   stationId: z.uuidv7(),
   slotStart: FixedSlotTimeStringSchema,
@@ -66,10 +70,12 @@ export const CreateFixedSlotTemplateRequestSchema = z.object({
     }),
 }).openapi("CreateFixedSlotTemplateRequest");
 
+/** Schema response khi tạo fixed-slot template thành công. */
 export const CreateFixedSlotTemplateResponseSchema = FixedSlotTemplateSchema.openapi(
   "CreateFixedSlotTemplateResponse",
 );
 
+/** Schema request cập nhật fixed-slot template. */
 export const UpdateFixedSlotTemplateRequestSchema = z.object({
   slotStart: FixedSlotTimeStringSchema.optional(),
   slotDates: z.array(FixedSlotDateStringSchema)
@@ -84,16 +90,19 @@ export const UpdateFixedSlotTemplateRequestSchema = z.object({
   },
 ).openapi("UpdateFixedSlotTemplateRequest");
 
+/** Schema response khi cập nhật fixed-slot template thành công. */
 export const UpdateFixedSlotTemplateResponseSchema = FixedSlotTemplateSchema.openapi(
   "UpdateFixedSlotTemplateResponse",
 );
 
+/** Schema query cho màn danh sách fixed-slot template. */
 export const ListFixedSlotTemplatesQuerySchema = z.object({
   ...paginationQueryFields,
   status: FixedSlotTemplateStatusSchema.optional(),
   stationId: z.uuidv7().optional(),
 }).openapi("ListFixedSlotTemplatesQuery");
 
+/** Schema response danh sách fixed-slot template có phân trang. */
 export const ListFixedSlotTemplatesResponseSchema = z.object({
   data: FixedSlotTemplateSchema.array(),
   pagination: PaginationSchema,

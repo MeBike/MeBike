@@ -16,6 +16,7 @@ export { updateFixedSlotTemplateRoute as updateFixedSlotTemplate } from "./mutat
 export { getFixedSlotTemplateRoute as getFixedSlotTemplate } from "./queries";
 export { listFixedSlotTemplatesRoute as listFixedSlotTemplates } from "./queries";
 
+/** Gom toàn bộ route contract của fixed-slot template để server đăng ký tập trung. */
 export const fixedSlotTemplatesRoutes = {
   cancelFixedSlotTemplate: cancelFixedSlotTemplateRoute,
   createFixedSlotTemplate: createFixedSlotTemplateRoute,

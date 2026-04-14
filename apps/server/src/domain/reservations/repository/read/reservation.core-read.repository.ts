@@ -45,6 +45,12 @@ export type ReservationCoreReadRepo = Pick<
   | "listFixedSlotTemplatesForUser"
 >;
 
+/**
+ * Tao read repository toi gian cho reservation va fixed-slot flow.
+ *
+ * @param client Prisma client hoac transaction client.
+ * @returns Read repository phuc vu query reservation/fixed-slot.
+ */
 export function makeReservationCoreReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): ReservationCoreReadRepo {

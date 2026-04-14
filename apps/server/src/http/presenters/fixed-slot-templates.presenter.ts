@@ -7,6 +7,12 @@ import {
   toSlotDateKey,
 } from "@/domain/reservations";
 
+/**
+ * Chuyển fixed-slot template ở tầng domain thành response contract cho HTTP.
+ *
+ * @param row Dữ liệu fixed-slot template ở tầng domain.
+ * @returns Object response đúng shape contract chia sẻ với client.
+ */
 export function toFixedSlotTemplate(
   row: FixedSlotTemplateRow,
 ): FixedSlotTemplatesContracts.FixedSlotTemplate {
