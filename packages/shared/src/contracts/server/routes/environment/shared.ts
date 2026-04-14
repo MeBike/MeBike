@@ -7,6 +7,14 @@ import { EnvironmentPolicySchema } from "../../environment";
 
 export { EnvironmentPolicySchema, ServerErrorResponseSchema, UnauthorizedErrorResponseSchema };
 
+export const EnvironmentErrorCodeSchema = z.enum([
+  "ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND",
+]).openapi("EnvironmentErrorCode");
+
+export const environmentErrorMessages = {
+  ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND: "No active environment policy found",
+} as const;
+
 export const CreateEnvironmentPolicyBodySchema = z.object({
   name: z.string().trim().min(1, {
     message: "name must not be empty",

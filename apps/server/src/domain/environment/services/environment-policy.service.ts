@@ -8,12 +8,17 @@ import type {
 import {
   DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG,
 } from "../models";
+import { ActiveEnvironmentPolicyNotFound } from "../domain-errors";
 import { EnvironmentPolicyRepository } from "../repository/environment-policy.repository";
 
 export type EnvironmentPolicyService = {
   createPolicy: (
     input: CreateEnvironmentPolicyInput,
   ) => Effect.Effect<EnvironmentPolicyRow>;
+  getActivePolicy: () => Effect.Effect<
+    EnvironmentPolicyRow,
+    ActiveEnvironmentPolicyNotFound
+  >;
 };
 
 export class EnvironmentPolicyServiceTag extends Context.Tag(
@@ -51,6 +56,22 @@ export const EnvironmentPolicyServiceLive = Layer.effect(
           ),
         },
       }),
+      getActivePolicy: () =>
+        Effect.gen(function* () {
+          const policy = yield* repo.findActive(new Date());
+          if (!policy) {
+            return yield* Effect.fail(new ActiveEnvironmentPolicyNotFound({
+              reason: "MISSING_ACTIVE_POLICY",
+            }));
+          }
+
+          /*
+           * Legacy-data fallback: if historical rows contain multiple valid ACTIVE
+           * policies, the repository returns the latest effective row. New writes
+           * should still enforce the "one active policy at a time" rule separately.
+           */
+          return policy;
+        }),
     };
 
     return service;

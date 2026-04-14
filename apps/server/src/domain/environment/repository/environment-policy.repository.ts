@@ -20,6 +20,7 @@ export type EnvironmentPolicyRepo = {
   create: (
     data: CreateEnvironmentPolicyData,
   ) => Effect.Effect<EnvironmentPolicyRow>;
+  findActive: (now: Date) => Effect.Effect<EnvironmentPolicyRow | null>;
 };
 
 type RawEnvironmentPolicyRow = {
@@ -104,6 +105,36 @@ export function makeEnvironmentPolicyRepository(
         }
 
         return toEnvironmentPolicyRow(row);
+      });
+    },
+    findActive(now) {
+      return Effect.promise(async () => {
+        const rows = await client.$queryRaw<RawEnvironmentPolicyRow[]>`
+          SELECT
+            "id",
+            "name",
+            "average_speed_kmh",
+            "co2_saved_per_km",
+            "status",
+            "active_from",
+            "active_to",
+            "formula_config",
+            "created_at",
+            "updated_at"
+          FROM "public"."environmental_impact_policies"
+          WHERE
+            "status" = 'ACTIVE'::"AccountStatus"
+            AND ("active_from" IS NULL OR "active_from" <= ${now})
+            AND ("active_to" IS NULL OR "active_to" > ${now})
+          ORDER BY
+            "active_from" DESC NULLS LAST,
+            "updated_at" DESC,
+            "created_at" DESC
+          LIMIT 1
+        `;
+
+        const row = rows[0];
+        return row ? toEnvironmentPolicyRow(row) : null;
       });
     },
   };

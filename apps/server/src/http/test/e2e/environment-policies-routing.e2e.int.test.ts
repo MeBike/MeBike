@@ -81,6 +81,45 @@ describe("environment policies routing e2e", () => {
     };
   }
 
+  async function insertEnvironmentPolicy(input: {
+    id: string;
+    name: string;
+    status: "ACTIVE" | "INACTIVE";
+    activeFrom: Date | null;
+    activeTo: Date | null;
+    updatedAt: Date;
+    formulaConfig: Record<string, unknown>;
+  }) {
+    await fixture.prisma.$executeRaw`
+      INSERT INTO "public"."environmental_impact_policies"
+        (
+          "id",
+          "name",
+          "average_speed_kmh",
+          "co2_saved_per_km",
+          "status",
+          "active_from",
+          "active_to",
+          "formula_config",
+          "created_at",
+          "updated_at"
+        )
+      VALUES
+        (
+          ${input.id}::uuid,
+          ${input.name},
+          ${12},
+          ${75},
+          ${input.status}::"AccountStatus",
+          ${input.activeFrom},
+          ${input.activeTo},
+          ${JSON.stringify(input.formulaConfig)}::jsonb,
+          ${new Date(input.updatedAt.getTime() - 1000)},
+          ${input.updatedAt}
+        )
+    `;
+  }
+
   it("creates an inactive environment policy as admin", async () => {
     const response = await fixture.app.request("http://test/environment/policies", {
       method: "POST",
@@ -157,6 +196,114 @@ describe("environment policies routing e2e", () => {
         average_speed_kmh: 12,
         co2_saved_per_km: 75,
       }),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 404 when no active environment policy exists", async () => {
+    const response = await fixture.app.request("http://test/environment/policies/active", {
+      method: "GET",
+      headers: adminHeaders(),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("No active environment policy found");
+    expect(body.details?.code).toBe("ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND");
+  });
+
+  it("returns the active environment policy as admin", async () => {
+    const activeFrom = new Date(Date.now() - 60_000);
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000001",
+      name: "Active Environment Policy",
+      status: "ACTIVE",
+      activeFrom,
+      activeTo: null,
+      updatedAt: new Date(),
+      formulaConfig: {
+        confidence_factor: 0.9,
+      },
+    });
+
+    const response = await fixture.app.request("http://test/environment/policies/active", {
+      method: "GET",
+      headers: adminHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentPolicy;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe("018fa200-0000-7000-8000-000000000001");
+    expect(body.name).toBe("Active Environment Policy");
+    expect(body.status).toBe("ACTIVE");
+    expect(body.active_from).toBe(activeFrom.toISOString());
+    expect(body.active_to).toBeNull();
+    expect(body.co2_saved_per_km_unit).toBe("gCO2e/km");
+    expect(body.formula_config).toEqual({
+      return_scan_buffer_minutes: 3,
+      confidence_factor: 0.9,
+      display_unit: "gCO2e",
+      formula_version: "PHASE_1_TIME_SPEED",
+      distance_source: "TIME_SPEED",
+    });
+  });
+
+  it("falls back to the newest valid active policy when legacy data has multiple active rows", async () => {
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000002",
+      name: "Older Active Environment Policy",
+      status: "ACTIVE",
+      activeFrom: new Date(Date.now() - 120_000),
+      activeTo: null,
+      updatedAt: new Date(Date.now() - 10_000),
+      formulaConfig: {
+        return_scan_buffer_minutes: 3,
+        confidence_factor: 0.85,
+        display_unit: "gCO2e",
+        formula_version: "PHASE_1_TIME_SPEED",
+        distance_source: "TIME_SPEED",
+      },
+    });
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000003",
+      name: "Newest Active Environment Policy",
+      status: "ACTIVE",
+      activeFrom: new Date(Date.now() - 60_000),
+      activeTo: null,
+      updatedAt: new Date(Date.now() - 20_000),
+      formulaConfig: {
+        return_scan_buffer_minutes: 4,
+        confidence_factor: 0.8,
+        display_unit: "gCO2e",
+        formula_version: "PHASE_1_TIME_SPEED",
+        distance_source: "TIME_SPEED",
+      },
+    });
+
+    const response = await fixture.app.request("http://test/environment/policies/active", {
+      method: "GET",
+      headers: adminHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentPolicy;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe("018fa200-0000-7000-8000-000000000003");
+    expect(body.name).toBe("Newest Active Environment Policy");
+  });
+
+  it("rejects unauthenticated active policy reads", async () => {
+    const response = await fixture.app.request("http://test/environment/policies/active", {
+      method: "GET",
+    });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("rejects non-admin active policy reads", async () => {
+    const response = await fixture.app.request("http://test/environment/policies/active", {
+      method: "GET",
+      headers: userHeaders(),
     });
 
     expect(response.status).toBe(403);

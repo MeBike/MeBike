@@ -1,8 +1,12 @@
 import type { RouteHandler } from "@hono/zod-openapi";
-import type { EnvironmentContracts } from "@mebike/shared";
+import type { EnvironmentContracts, ServerErrorResponse } from "@mebike/shared";
 
-import { serverRoutes } from "@mebike/shared";
-import { Effect } from "effect";
+import {
+  EnvironmentErrorCodeSchema,
+  environmentErrorMessages,
+  serverRoutes,
+} from "@mebike/shared";
+import { Effect, Match } from "effect";
 
 import { EnvironmentPolicyServiceTag } from "@/domain/environment";
 import { toContractEnvironmentPolicy } from "@/http/presenters/environment.presenter";
@@ -31,6 +35,38 @@ const createPolicy: RouteHandler<
   );
 };
 
+const getActivePolicy: RouteHandler<
+  EnvironmentRoutes["getActiveEnvironmentPolicy"]
+> = async (c) => {
+  const eff = Effect.flatMap(EnvironmentPolicyServiceTag, service =>
+    service.getActivePolicy());
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<EnvironmentContracts.EnvironmentPolicy, 200>(
+        toContractEnvironmentPolicy(right),
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("ActiveEnvironmentPolicyNotFound", () =>
+          c.json<ServerErrorResponse, 404>({
+            error: environmentErrorMessages.ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND,
+            details: {
+              code: EnvironmentErrorCodeSchema.enum.ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND,
+            },
+          }, 404)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const EnvironmentPolicyController = {
   createPolicy,
+  getActivePolicy,
 } as const;
