@@ -1,7 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { forbiddenResponse, unauthorizedResponse } from "../helpers";
-
 import {
   BikeRevenueResponseSchemaOpenApi,
   HighestRevenueStationSchemaOpenApi,
@@ -264,7 +263,7 @@ export const getAllStationsRevenue = createRoute({
   },
   responses: {
     200: {
-      description: "Revenue stats for all stations",
+      description: "Revenue stats for all stations. When from/to are omitted, server defaults to previous full UTC month.",
       content: {
         "application/json": { schema: StationRevenueResponseSchemaOpenApi },
       },

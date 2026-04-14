@@ -1,6 +1,10 @@
 import type { StationsContracts } from "@mebike/shared";
 
-import type { NearestStationRow, StationRow } from "@/domain/stations";
+import type {
+  NearestStationRow,
+  StationRevenueStats,
+  StationRow,
+} from "@/domain/stations";
 
 export function toContractStationReadSummary(
   station: StationRow,
@@ -46,5 +50,31 @@ export function toContractNearbyStation(
     ...toContractStationReadSummary(station),
     distanceMeters: station.distanceMeters,
     distanceKm: station.distanceMeters / 1000,
+  };
+}
+
+export function toContractStationRevenue(
+  stats: StationRevenueStats,
+): StationsContracts.StationRevenueResponse {
+  return {
+    period: {
+      from: stats.period.from.toISOString(),
+      to: stats.period.to.toISOString(),
+    },
+    summary: {
+      totalStations: stats.summary.totalStations,
+      totalRevenue: stats.summary.totalRevenue,
+      totalRentals: stats.summary.totalRentals,
+      avgRevenuePerStation: stats.summary.avgRevenuePerStation,
+    },
+    stations: stats.stations.map(station => ({
+      id: station.stationId,
+      name: station.name,
+      address: station.address,
+      totalRentals: station.totalRentals,
+      totalRevenue: station.totalRevenue,
+      totalDuration: station.totalDuration,
+      avgDuration: station.avgDuration,
+    })),
   };
 }
