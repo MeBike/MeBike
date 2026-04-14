@@ -1,0 +1,21 @@
+import {
+  FixedSlotTemplatesContracts,
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+} from "@mebike/shared";
+
+export type FixedSlotTemplatesRoutes = typeof import("@mebike/shared")["serverRoutes"]["fixedSlotTemplates"];
+
+export const {
+  FixedSlotTemplateErrorCodeSchema,
+  fixedSlotTemplateErrorMessages,
+} = FixedSlotTemplatesContracts;
+
+export type CreateFixedSlotTemplateResponse = FixedSlotTemplatesContracts.CreateFixedSlotTemplateResponse;
+export type FixedSlotTemplateErrorResponse = FixedSlotTemplatesContracts.FixedSlotTemplateErrorResponse;
+export type ListFixedSlotTemplatesResponse = FixedSlotTemplatesContracts.ListFixedSlotTemplatesResponse;
+
+export const unauthorizedBody = {
+  error: unauthorizedErrorMessages.UNAUTHORIZED,
+  details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+} as const;
