@@ -52,18 +52,10 @@ const getRequestListForAgency: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<
+      c.json<RedistributionContracts.RedistributionRequestList, 200>(
         {
-          message: string;
-        } & { result: RedistributionContracts.RedistributionRequestList },
-        200
-      >(
-        {
-          message: "Redistribution request list fetched successfully",
-          result: {
-            data: right.items.map(toContractRedistributionRequestListItem),
-            pagination: toContractPage(right),
-          },
+          data: right.items.map(toContractRedistributionRequestListItem),
+          pagination: toContractPage(right),
         },
         200,
       )),
@@ -122,18 +114,10 @@ const getRequestHistoryForAgency: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<
+      c.json<RedistributionContracts.RedistributionRequestList, 200>(
         {
-          message: string;
-        } & { result: RedistributionContracts.RedistributionRequestList },
-        200
-      >(
-        {
-          message: "Redistribution request history fetched successfully",
-          result: {
-            data: right.items.map(toContractRedistributionRequestListItem),
-            pagination: toContractPage(right),
-          },
+          data: right.items.map(toContractRedistributionRequestListItem),
+          pagination: toContractPage(right),
         },
         200,
       )),
@@ -175,13 +159,7 @@ const getRequestDetailForAgency: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json(
-        {
-          message: "Redistribution request fetched successfully",
-          result: toContractRedistributionRequestDetail(right),
-        },
-        200,
-      )),
+      c.json(toContractRedistributionRequestDetail(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("UserNotFound", error =>

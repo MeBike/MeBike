@@ -50,15 +50,10 @@ const getRequestListForAdmin: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<{
-        message: string;
-      } & { result: RedistributionContracts.RedistributionRequestList }, 200>(
+      c.json<RedistributionContracts.RedistributionRequestList, 200>(
         {
-          message: "Redistribution request list fetched successfully",
-          result: {
-            data: right.items.map(toContractRedistributionRequestListItem),
-            pagination: toContractPage(right),
-          },
+          data: right.items.map(toContractRedistributionRequestListItem),
+          pagination: toContractPage(right),
         },
         200,
       )),
@@ -97,13 +92,7 @@ const getRequestDetailForAdmin: RouteHandler<
           404,
         );
       }
-      return c.json(
-        {
-          message: "Redistribution request fetched successfully",
-          result: toContractRedistributionRequestDetail(right.value),
-        },
-        200,
-      );
+      return c.json(toContractRedistributionRequestDetail(right.value), 200);
     }),
     Match.tag("Left", ({ left }) => {
       throw left;

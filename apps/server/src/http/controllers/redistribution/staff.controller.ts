@@ -44,13 +44,7 @@ const createRedistributionRequest: RouteHandler<
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json(
-        {
-          message: "Redistribution request created successfully",
-          result: toContractRedistributionRequest(right),
-        },
-        201,
-      )),
+      c.json(toContractRedistributionRequest(right), 201)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("UserNotFound", ({ userId }) =>
@@ -183,13 +177,7 @@ const cancelRedistributionRequest: RouteHandler<
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json(
-        {
-          message: "Redistribution request cancelled successfully",
-          result: toContractRedistributionRequestDetail(right),
-        },
-        200,
-      )),
+      c.json(toContractRedistributionRequestDetail(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag(
@@ -278,15 +266,10 @@ const getRequestListForStaff: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<{
-        message: string;
-      } & { result: RedistributionContracts.RedistributionRequestList }, 200>(
+      c.json<RedistributionContracts.RedistributionRequestList, 200>(
         {
-          message: "Redistribution request list fetched successfully",
-          result: {
-            data: right.items.map(toContractRedistributionRequestListItem),
-            pagination: toContractPage(right),
-          },
+          data: right.items.map(toContractRedistributionRequestListItem),
+          pagination: toContractPage(right),
         },
         200,
       )),
@@ -327,15 +310,10 @@ const getRequestHistoryForStaff: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<{
-        message: string;
-      } & { result: RedistributionContracts.RedistributionRequestList }, 200>(
+      c.json<RedistributionContracts.RedistributionRequestList, 200>(
         {
-          message: "Redistribution request history fetched successfully",
-          result: {
-            data: right.items.map(toContractRedistributionRequestListItem),
-            pagination: toContractPage(right),
-          },
+          data: right.items.map(toContractRedistributionRequestListItem),
+          pagination: toContractPage(right),
         },
         200,
       )),
@@ -362,13 +340,7 @@ const getRequestDetailForStaff: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json(
-        {
-          message: "Redistribution request fetched successfully",
-          result: toContractRedistributionRequestDetail(right),
-        },
-        200,
-      )),
+      c.json(toContractRedistributionRequestDetail(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RedistributionRequestNotFound", error =>
@@ -418,13 +390,7 @@ const startTransition: RouteHandler<
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json(
-        {
-          message: "Transition started successfully",
-          result: toContractRedistributionRequestDetail(right),
-        },
-        200,
-      )),
+      c.json(toContractRedistributionRequestDetail(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("UserNotFound", error =>

@@ -4,7 +4,6 @@ import {
   CancelRedistributionRequestSchemaOpenApi,
   ConfirmRedistributionRequestCompletionSchemaOpenApi,
   CreateRedistributionRequestSchemaOpenApi,
-  createSuccessResponse,
   RedistributionReqErrorCodeSchema,
   RedistributionReqErrorResponseSchema,
   RedistributionRequestDetailSchemaOpenApi,
@@ -37,10 +36,7 @@ export const createRedistributionRequest = createRoute({
       description: "Redistribution request created successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestSchemaOpenApi,
-            "Create redistribution request with validated data",
-          ),
+          schema: RedistributionRequestSchemaOpenApi
         },
       },
     },
@@ -159,10 +155,7 @@ export const cancelRedistributionRequest = createRoute({
       description: "Redistribution request cancelled successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Redistribution request cancelled successfully",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi,
         },
       },
     },
@@ -237,10 +230,7 @@ export const approveRedistributionRequest = createRoute({
       description: "Redistribution request approved successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Redistribution request approved successfully",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi,
         },
       },
     },
@@ -322,10 +312,7 @@ export const rejectRedistributionRequest = createRoute({
       description: "Redistribution request rejected successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Redistribution request rejected successfully",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi,
         },
       },
     },
@@ -400,10 +387,7 @@ export const startTransition = createRoute({
       description: "Redistribution request started transit successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Redistribution request is in transit",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi,
         },
       },
     },
@@ -507,10 +491,7 @@ export const confirmRedistributionRequestCompletion = createRoute({
       description: "Redistribution request completed successfully",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Redistribution request is completed",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi,
         },
       },
     },

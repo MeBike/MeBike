@@ -7,7 +7,6 @@ import {
 import {
   AdminRedistributionRequestListQuerySchema,
   AgencyRedistributionRequestListQuerySchema,
-  createSuccessResponse,
   ManagerRedistributionRequestListQuerySchema,
   RedistributionReqErrorCodeSchema,
   RedistributionReqErrorResponseSchema,
@@ -31,10 +30,7 @@ export const getRequestListForAdmin = createRoute({
       description: "Redistribution request list (admin view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestListResponseSchema,
-            "Get distribution request list response",
-          ),
+          schema: RedistributionRequestListResponseSchema
         },
       },
     },
@@ -57,10 +53,7 @@ export const getRequestDetailForAdmin = createRoute({
         "Detailed redistribution request with all populated data (admin view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Get detailed distribution request response",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi
         },
       },
     },
@@ -94,10 +87,7 @@ export const getRequestListForStaff = createRoute({
       description: "Redistribution request list (staff view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestListResponseSchema,
-            "Get redistribution request list response",
-          ),
+          schema: RedistributionRequestListResponseSchema
         },
       },
     },
@@ -120,10 +110,7 @@ export const getRequestDetailForStaff = createRoute({
         "Detailed redistribution request with all populated data (staff view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Get detailed distribution request response",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi
         },
       },
     },
@@ -177,10 +164,7 @@ export const getRequestHistoryForStaff = createRoute({
       description: "Redistribution request history (staff view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestListResponseSchema,
-            "Get redistribution request history response",
-          ),
+          schema: RedistributionRequestListResponseSchema
         },
       },
     },
@@ -203,10 +187,7 @@ export const getRequestListForManager = createRoute({
       description: "Redistribution request list in assigned station",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestListResponseSchema,
-            "Get distribution list response",
-          ),
+          schema: RedistributionRequestListResponseSchema
         },
       },
     },
@@ -240,10 +221,7 @@ export const getRequestDetailForManager = createRoute({
         "Detailed redistribution request with all populated data (manager view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Get detailed distribution request response",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi
         },
       },
     },
@@ -299,10 +277,7 @@ export const getRequestHistoryForManager = createRoute({
       description: "Redistribution request history (manager view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestListResponseSchema,
-            "Get distribution list response",
-          ),
+          schema: RedistributionRequestListResponseSchema
         },
       },
     },
@@ -336,10 +311,7 @@ export const getRequestListForAgency = createRoute({
       description: "Redistribution request list in assigned agency",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestListResponseSchema,
-            "Get distribution list response",
-          ),
+          schema: RedistributionRequestListResponseSchema
         },
       },
     },
@@ -373,10 +345,7 @@ export const getRequestDetailForAgency = createRoute({
         "Detailed redistribution request with all populated data (agency view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestDetailSchemaOpenApi,
-            "Get detailed distribution request response",
-          ),
+          schema: RedistributionRequestDetailSchemaOpenApi
         },
       },
     },
@@ -432,10 +401,7 @@ export const getRequestHistoryForAgency = createRoute({
       description: "Redistribution request history (agency view)",
       content: {
         "application/json": {
-          schema: createSuccessResponse(
-            RedistributionRequestListResponseSchema,
-            "Get distribution list response",
-          ),
+          schema: RedistributionRequestListResponseSchema
         },
       },
     },
