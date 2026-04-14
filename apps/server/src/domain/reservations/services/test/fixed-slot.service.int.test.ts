@@ -63,7 +63,7 @@ describe("assignFixedSlotReservations integration", () => {
       where: {
         fixedSlotTemplateId: template.id,
         reservationOption: "FIXED_SLOT",
-        startTime: new Date(Date.UTC(2026, 3, 14, 9, 0, 0)),
+        startTime: new Date(Date.UTC(2026, 3, 14, 2, 0, 0)),
       },
     });
 
@@ -85,7 +85,7 @@ describe("assignFixedSlotReservations integration", () => {
     expect(outbox).toHaveLength(1);
   });
 
-  it("stores fixed-slot start time as UTC wall clock, not Vietnam local time", async () => {
+  it("stores fixed-slot start time as the UTC instant for Vietnam local time", async () => {
     const slotDate = new Date(Date.UTC(2026, 3, 20));
     const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 30, 0));
     const user = await fixture.factories.user({ fullname: "Fixed Slot Timezone User" });
@@ -123,8 +123,8 @@ describe("assignFixedSlotReservations integration", () => {
     });
 
     expect(reservation).not.toBeNull();
-    expect(reservation?.startTime.toISOString()).toBe("2026-04-20T09:30:00.000Z");
-    expect(reservation?.startTime.toLocaleString("en-GB", { timeZone: "Asia/Ho_Chi_Minh" })).toContain("16:30:00");
+    expect(reservation?.startTime.toISOString()).toBe("2026-04-20T02:30:00.000Z");
+    expect(reservation?.startTime.toLocaleString("en-GB", { timeZone: "Asia/Ho_Chi_Minh" })).toContain("09:30:00");
   });
 
   it("treats rerun as already assigned and keeps one daily reservation", async () => {
@@ -174,7 +174,7 @@ describe("assignFixedSlotReservations integration", () => {
       where: {
         fixedSlotTemplateId: template.id,
         reservationOption: "FIXED_SLOT",
-        startTime: new Date(Date.UTC(2026, 3, 15, 10, 30, 0)),
+        startTime: new Date(Date.UTC(2026, 3, 15, 3, 30, 0)),
       },
     });
     expect(reservations).toHaveLength(1);

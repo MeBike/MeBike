@@ -11,6 +11,11 @@ export type JobQueueOptions = {
   readonly retryDelayMax?: number;
 };
 
+export type JobScheduleOptions = {
+  readonly tz?: string;
+  readonly key?: string;
+};
+
 export type QueueJob<TData = unknown> = {
   readonly id: string;
   readonly data: TData;
@@ -45,5 +50,6 @@ export type JobScheduler = {
     type: T,
     cron: string,
     payload: JobPayload<T>,
+    options?: JobScheduleOptions,
   ) => Promise<void>;
 };
