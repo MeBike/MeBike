@@ -85,6 +85,48 @@ describe("assignFixedSlotReservations integration", () => {
     expect(outbox).toHaveLength(1);
   });
 
+  it("stores fixed-slot start time as UTC wall clock, not Vietnam local time", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 20));
+    const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 30, 0));
+    const user = await fixture.factories.user({ fullname: "Fixed Slot Timezone User" });
+    const station = await fixture.factories.station({ name: "Fixed Slot Timezone Station" });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    const template = await fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        stationId: station.id,
+        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
+        subscriptionId: null,
+        prepaid: toPrismaDecimal("2000"),
+        slotStart,
+        status: "ACTIVE",
+        updatedAt: new Date(),
+        dates: {
+          create: [{ id: uuidv7(), slotDate }],
+        },
+      },
+      select: { id: true },
+    });
+
+    await runEffectWithLayer(
+      assignFixedSlotReservations({ slotDate, assignmentTime: slotDate, now: slotDate }),
+      layer,
+    );
+
+    const reservation = await fixture.prisma.reservation.findFirst({
+      where: {
+        fixedSlotTemplateId: template.id,
+        reservationOption: "FIXED_SLOT",
+      },
+    });
+
+    expect(reservation).not.toBeNull();
+    expect(reservation?.startTime.toISOString()).toBe("2026-04-20T09:30:00.000Z");
+    expect(reservation?.startTime.toLocaleString("en-GB", { timeZone: "Asia/Ho_Chi_Minh" })).toContain("16:30:00");
+  });
+
   it("treats rerun as already assigned and keeps one daily reservation", async () => {
     const slotDate = new Date(Date.UTC(2026, 3, 15));
     const slotStart = new Date(Date.UTC(2000, 0, 1, 10, 30, 0));

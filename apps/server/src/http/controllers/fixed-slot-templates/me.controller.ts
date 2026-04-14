@@ -2,6 +2,20 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
+import type {
+  FixedSlotTemplateBillingConflict,
+  FixedSlotTemplateConflict,
+  FixedSlotTemplateDateLocked,
+  FixedSlotTemplateDateNotFound,
+  FixedSlotTemplateDateNotFuture,
+  FixedSlotTemplateNotFound,
+  FixedSlotTemplateUpdateConflict,
+} from "@/domain/reservations";
+import type {
+  InsufficientWalletBalance,
+  WalletNotFound,
+} from "@/domain/wallets/domain-errors";
+
 import { FixedSlotTemplateServiceTag } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
 import { toFixedSlotTemplate } from "@/http/presenters/fixed-slot-templates.presenter";
@@ -12,6 +26,7 @@ import type {
   FixedSlotTemplateResponse,
   FixedSlotTemplatesRoutes,
   ListFixedSlotTemplatesResponse,
+  UpdateFixedSlotTemplateResponse,
 } from "./shared";
 
 import {
@@ -19,6 +34,22 @@ import {
   fixedSlotTemplateErrorMessages,
   unauthorizedBody,
 } from "./shared";
+
+type UpdateFixedSlotTemplateError
+  = | FixedSlotTemplateBillingConflict
+    | FixedSlotTemplateConflict
+    | FixedSlotTemplateDateLocked
+    | FixedSlotTemplateDateNotFuture
+    | FixedSlotTemplateNotFound
+    | FixedSlotTemplateUpdateConflict
+    | InsufficientWalletBalance
+    | WalletNotFound;
+
+type RemoveFixedSlotTemplateDateError
+  = | FixedSlotTemplateDateLocked
+    | FixedSlotTemplateDateNotFound
+    | FixedSlotTemplateNotFound
+    | FixedSlotTemplateUpdateConflict;
 
 const createFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["createFixedSlotTemplate"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
@@ -216,9 +247,163 @@ const cancelFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["cancelFixe
   );
 };
 
+const updateFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["updateFixedSlotTemplate"]> = async (c) => {
+  const userId = c.var.currentUser?.userId ?? null;
+  if (!userId) {
+    return c.json(unauthorizedBody, 401);
+  }
+
+  const { id } = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(FixedSlotTemplateServiceTag, service =>
+      service.updateForUser({
+        userId,
+        templateId: id,
+        slotStart: body.slotStart,
+        slotDates: body.slotDates,
+      })),
+    "PATCH /v1/fixed-slot-templates/{id}",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  if (result._tag === "Right") {
+    return c.json<UpdateFixedSlotTemplateResponse, 200>(toFixedSlotTemplate(result.right), 200);
+  }
+
+  return Match.value(result.left as UpdateFixedSlotTemplateError).pipe(
+    Match.tag("FixedSlotTemplateNotFound", () =>
+      c.json<FixedSlotTemplateErrorResponse, 404>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+        },
+      }, 404)),
+    Match.tag("FixedSlotTemplateDateNotFuture", ({ slotDate }) =>
+      c.json<FixedSlotTemplateErrorResponse, 400>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_DATE_NOT_FUTURE,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_NOT_FUTURE,
+          slotDate,
+        },
+      }, 400)),
+    Match.tag("FixedSlotTemplateDateLocked", ({ slotDate }) =>
+      c.json<FixedSlotTemplateErrorResponse, 409>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_DATE_LOCKED,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_LOCKED,
+          slotDate,
+        },
+      }, 409)),
+    Match.tag("FixedSlotTemplateConflict", ({ slotStart, slotDates }) =>
+      c.json<FixedSlotTemplateErrorResponse, 409>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_CONFLICT,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CONFLICT,
+          slotStart,
+          slotDates: [...slotDates],
+        },
+      }, 409)),
+    Match.tag("WalletNotFound", () =>
+      c.json<FixedSlotTemplateErrorResponse, 400>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_WALLET_NOT_FOUND,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_WALLET_NOT_FOUND,
+        },
+      }, 400)),
+    Match.tag("InsufficientWalletBalance", ({ balance, attemptedDebit }) =>
+      c.json<FixedSlotTemplateErrorResponse, 400>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_INSUFFICIENT_BALANCE,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_INSUFFICIENT_BALANCE,
+          balance: balance.toString(),
+          requiredAmount: attemptedDebit.toString(),
+        },
+      }, 400)),
+    Match.tag("FixedSlotTemplateBillingConflict", () =>
+      c.json<FixedSlotTemplateErrorResponse, 409>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_BILLING_CONFLICT,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_BILLING_CONFLICT,
+        },
+      }, 409)),
+    Match.tag("FixedSlotTemplateUpdateConflict", () =>
+      c.json<FixedSlotTemplateErrorResponse, 409>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT,
+        },
+      }, 409)),
+    Match.exhaustive,
+  );
+};
+
+const removeFixedSlotTemplateDate: RouteHandler<FixedSlotTemplatesRoutes["removeFixedSlotTemplateDate"]> = async (c) => {
+  const userId = c.var.currentUser?.userId ?? null;
+  if (!userId) {
+    return c.json(unauthorizedBody, 401);
+  }
+
+  const { id, slotDate } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(FixedSlotTemplateServiceTag, service =>
+      service.removeDateForUser({
+        userId,
+        templateId: id,
+        slotDate,
+      })),
+    "DELETE /v1/fixed-slot-templates/{id}/dates/{slotDate}",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  if (result._tag === "Right") {
+    return c.json<FixedSlotTemplateResponse, 200>(toFixedSlotTemplate(result.right), 200);
+  }
+
+  return Match.value(result.left as RemoveFixedSlotTemplateDateError).pipe(
+    Match.tag("FixedSlotTemplateNotFound", () =>
+      c.json<FixedSlotTemplateErrorResponse, 404>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+        },
+      }, 404)),
+    Match.tag("FixedSlotTemplateDateNotFound", ({ slotDate }) =>
+      c.json<FixedSlotTemplateErrorResponse, 404>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_DATE_NOT_FOUND,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_NOT_FOUND,
+          slotDate,
+        },
+      }, 404)),
+    Match.tag("FixedSlotTemplateDateLocked", ({ slotDate }) =>
+      c.json<FixedSlotTemplateErrorResponse, 409>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_DATE_LOCKED,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_LOCKED,
+          slotDate,
+        },
+      }, 409)),
+    Match.tag("FixedSlotTemplateUpdateConflict", () =>
+      c.json<FixedSlotTemplateErrorResponse, 409>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT,
+        },
+      }, 409)),
+    Match.exhaustive,
+  );
+};
+
 export const FixedSlotTemplateMeController = {
   cancelFixedSlotTemplate,
   createFixedSlotTemplate,
   getFixedSlotTemplate,
   listFixedSlotTemplates,
+  removeFixedSlotTemplateDate,
+  updateFixedSlotTemplate,
 } as const;

@@ -131,6 +131,9 @@ export function makeReservationWriteRepository(
             updatedAt: input.updatedAt ?? new Date(),
             dates: {
               create: input.slotDates.map(slotDate => ({
+                pricingPolicyId: input.pricingPolicyId ?? null,
+                subscriptionId: input.subscriptionId ?? null,
+                prepaid: input.prepaid,
                 slotDate,
               })),
             },

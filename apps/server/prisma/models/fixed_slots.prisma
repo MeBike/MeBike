@@ -29,13 +29,20 @@ model FixedSlotTemplate {
 }
 
 model FixedSlotDate {
-  id         String   @id @default(uuid(7)) @db.Uuid
-  templateId String   @map("template_id") @db.Uuid
-  slotDate   DateTime @map("slot_date") @db.Date
+  id              String        @id @default(uuid(7)) @db.Uuid
+  templateId      String        @map("template_id") @db.Uuid
+  pricingPolicyId String?       @map("pricing_policy_id") @db.Uuid
+  subscriptionId  String?       @map("subscription_id") @db.Uuid
+  slotDate        DateTime      @map("slot_date") @db.Date
+  prepaid         Decimal?      @db.Decimal(12, 2)
 
-  template FixedSlotTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template      FixedSlotTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  pricingPolicy PricingPolicy?   @relation(fields: [pricingPolicyId], references: [id])
+  subscription  Subscription?    @relation(fields: [subscriptionId], references: [id])
 
   @@unique([templateId, slotDate], name: "uq_fixed_slot_date")
   @@index([templateId], name: "idx_fixed_slot_dates_template")
+  @@index([pricingPolicyId], name: "idx_fixed_slot_dates_pricing_policy")
+  @@index([subscriptionId], name: "idx_fixed_slot_dates_subscription")
   @@index([slotDate], name: "idx_fixed_slot_dates_date")
 }

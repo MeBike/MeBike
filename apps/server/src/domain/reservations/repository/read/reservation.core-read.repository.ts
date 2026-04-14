@@ -141,14 +141,38 @@ export function makeReservationCoreReadRepository(
               status: "ACTIVE",
               dates: { some: { slotDate } },
             },
-            select: selectFixedSlotAssignmentTemplateRow,
+            select: {
+              ...selectFixedSlotAssignmentTemplateRow,
+              dates: {
+                where: { slotDate },
+                take: 1,
+                select: {
+                  pricingPolicyId: true,
+                  subscriptionId: true,
+                  prepaid: true,
+                },
+              },
+            },
           }),
         catch: err =>
           new ReservationRepositoryError({
             operation: "listActiveFixedSlotTemplatesByDate",
             cause: err,
           }),
-      }).pipe(defectOn(ReservationRepositoryError)),
+      }).pipe(
+        Effect.map(rows => rows.map(row => ({
+          id: row.id,
+          userId: row.userId,
+          stationId: row.stationId,
+          pricingPolicyId: row.dates[0]?.pricingPolicyId ?? row.pricingPolicyId,
+          subscriptionId: row.dates[0]?.subscriptionId ?? row.subscriptionId,
+          prepaid: row.dates[0]?.prepaid ?? row.prepaid,
+          slotStart: row.slotStart,
+          user: row.user,
+          station: row.station,
+        }))),
+        defectOn(ReservationRepositoryError),
+      ),
 
     listPendingFixedSlotReservationsByTemplateId: templateId =>
       Effect.tryPromise({
@@ -174,12 +198,13 @@ export function makeReservationCoreReadRepository(
         defectOn(ReservationRepositoryError),
       ),
 
-    countActiveFixedSlotTemplateConflicts: (userId, slotStart, slotDates) =>
+    countActiveFixedSlotTemplateConflicts: (userId, slotStart, slotDates, excludeTemplateId) =>
       Effect.tryPromise({
         try: () =>
           client.fixedSlotTemplate.count({
             where: {
               userId,
+              ...(excludeTemplateId ? { id: { not: excludeTemplateId } } : {}),
               status: "ACTIVE",
               slotStart,
               dates: {

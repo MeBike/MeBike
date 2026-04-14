@@ -15,6 +15,7 @@ export type CreateFixedSlotTemplateResponse = FixedSlotTemplatesContracts.Create
 export type FixedSlotTemplateErrorResponse = FixedSlotTemplatesContracts.FixedSlotTemplateErrorResponse;
 export type FixedSlotTemplateResponse = FixedSlotTemplatesContracts.FixedSlotTemplate;
 export type ListFixedSlotTemplatesResponse = FixedSlotTemplatesContracts.ListFixedSlotTemplatesResponse;
+export type UpdateFixedSlotTemplateResponse = FixedSlotTemplatesContracts.UpdateFixedSlotTemplateResponse;
 
 export const unauthorizedBody = {
   error: unauthorizedErrorMessages.UNAUTHORIZED,

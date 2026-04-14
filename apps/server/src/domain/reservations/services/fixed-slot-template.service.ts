@@ -1,37 +1,36 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { BikeRepository } from "@/domain/bikes";
-import type {
-  FixedSlotTemplateFilter,
-  FixedSlotTemplateRow,
-} from "@/domain/reservations/models";
-import type { PageResult } from "@/domain/shared/pagination";
 import type { StationRepo } from "@/domain/stations";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
+import { makePricingPolicyRepository } from "@/domain/pricing";
 import { defectOn } from "@/domain/shared";
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository, StationRepository } from "@/domain/stations";
 import { makeSubscriptionRepository } from "@/domain/subscriptions";
-import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { ReservationCommandRepo } from "../repository/reservation-command.repository";
 import type { ReservationQueryRepo } from "../repository/reservation-query.repository";
+import type { FixedSlotTemplateService } from "./fixed-slot-template/fixed-slot-template.types";
 
 import {
-  FixedSlotTemplateBillingConflict,
   FixedSlotTemplateCancelConflict,
   FixedSlotTemplateConflict,
+  FixedSlotTemplateDateLocked,
+  FixedSlotTemplateDateNotFound,
   FixedSlotTemplateDateNotFuture,
   FixedSlotTemplateNotFound,
   FixedSlotTemplateStationNotFound,
 } from "../domain-errors";
 import { makeReservationCommandRepository, ReservationCommandRepository } from "../repository/reservation-command.repository";
 import { makeReservationQueryRepository, ReservationQueryRepository } from "../repository/reservation-query.repository";
+import { billFixedSlotDates } from "./fixed-slot-template/billing";
+import {
+  applyTemplateMutation,
+  ensureTemplateMutationAllowed,
+} from "./fixed-slot-template/mutations";
 import {
   normalizeSlotDate,
   parseSlotDateKey,
@@ -39,44 +38,18 @@ import {
   toSlotDateKey,
 } from "./fixed-slot/fixed-slot.helpers";
 
-export type FixedSlotTemplateService = {
-  createForUser: (args: {
-    userId: string;
-    stationId: string;
-    slotStart: string;
-    slotDates: ReadonlyArray<string>;
-    now?: Date;
-  }) => Effect.Effect<
-    FixedSlotTemplateRow,
-    | FixedSlotTemplateStationNotFound
-    | FixedSlotTemplateDateNotFuture
-    | FixedSlotTemplateConflict
-    | FixedSlotTemplateBillingConflict
-    | WalletNotFound
-    | InsufficientWalletBalance,
-    Prisma
-  >;
-  getByIdForUser: (args: {
-    userId: string;
-    templateId: string;
-  }) => Effect.Effect<FixedSlotTemplateRow, FixedSlotTemplateNotFound>;
-  listForUser: (args: {
-    userId: string;
-    filter: FixedSlotTemplateFilter;
-    page?: number;
-    pageSize?: number;
-  }) => Effect.Effect<PageResult<FixedSlotTemplateRow>>;
-  cancelForUser: (args: {
-    userId: string;
-    templateId: string;
-    now?: Date;
-  }) => Effect.Effect<
-    FixedSlotTemplateRow,
-    FixedSlotTemplateNotFound | FixedSlotTemplateCancelConflict,
-    Prisma | BikeRepository
-  >;
-};
+export type { FixedSlotTemplateService } from "./fixed-slot-template/fixed-slot-template.types";
 
+/**
+ * Tao service orchestration cho fixed-slot template.
+ * Giu public API o day, day helper nho xuong folder con.
+ *
+ * @param deps Cac repo can de tao service.
+ * @param deps.reservationQueryRepo Repo query cho template va reservation.
+ * @param deps.reservationCommandRepo Repo command cho template va reservation.
+ * @param deps.stationRepo Repo station o service scope.
+ * @returns Service public de create/list/get/cancel/update/remove fixed-slot template.
+ */
 export function makeFixedSlotTemplateService(deps: {
   reservationQueryRepo: ReservationQueryRepo;
   reservationCommandRepo: ReservationCommandRepo;
@@ -128,71 +101,21 @@ export function makeFixedSlotTemplateService(deps: {
               }));
             }
 
-            const pricingPolicy = yield* txPricingPolicyRepo.getActive().pipe(
-              Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
-              Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
-            );
-            const prepaidMinor = getReservationFeeMinor(pricingPolicy);
-            const totalSlots = slotDates.length;
-
-            let subscriptionId: string | null = null;
-            let prepaid = toPrismaDecimal(prepaidMinor.toString());
-
-            const currentSubscriptionOpt = yield* txSubscriptionRepo.findCurrentForUser(
-              args.userId,
-              ["ACTIVE", "PENDING"],
-            );
-
-            if (Option.isSome(currentSubscriptionOpt)) {
-              const subscription = currentSubscriptionOpt.value;
-              const remainingUsages = subscription.maxUsages === null
-                ? null
-                : subscription.maxUsages - subscription.usageCount;
-
-              if (remainingUsages === null || remainingUsages >= totalSlots) {
-                const incremented = yield* txSubscriptionRepo.incrementUsage(
-                  subscription.id,
-                  subscription.usageCount,
-                  totalSlots,
-                  ["ACTIVE", "PENDING"],
-                );
-
-                if (Option.isNone(incremented)) {
-                  return yield* Effect.fail(new FixedSlotTemplateBillingConflict({ userId: args.userId }));
-                }
-
-                subscriptionId = subscription.id;
-                prepaid = toPrismaDecimal("0");
-              }
-            }
-
-            if (subscriptionId === null) {
-              const totalPrepaidMinor = prepaidMinor * BigInt(totalSlots);
-
-              yield* txWalletRepo.decreaseBalance({
-                userId: args.userId,
-                amount: totalPrepaidMinor,
-                description: `Fixed-slot template upfront ${args.userId}`,
-              }).pipe(
-                Effect.catchTag("WalletRecordNotFound", () =>
-                  Effect.fail(new WalletNotFound({ userId: args.userId }))),
-                Effect.catchTag("WalletBalanceConstraint", ({ walletId, userId, balance, attemptedDebit }) =>
-                  Effect.fail(new InsufficientWalletBalance({
-                    walletId,
-                    userId,
-                    balance,
-                    attemptedDebit,
-                  }))),
-              );
-            }
+            const billing = yield* billFixedSlotDates({
+              userId: args.userId,
+              totalSlots: slotDates.length,
+              txPricingPolicyRepo,
+              txSubscriptionRepo,
+              txWalletRepo,
+            });
 
             return yield* txReservationCommandRepo.createFixedSlotTemplate({
               userId: args.userId,
               stationId: args.stationId,
-              pricingPolicyId: pricingPolicy.id,
-              subscriptionId,
+              pricingPolicyId: billing.pricingPolicyId,
+              subscriptionId: billing.subscriptionId,
               slotStart,
-              prepaid,
+              prepaid: billing.prepaid,
               slotDates,
               updatedAt: now,
             });
@@ -278,6 +201,128 @@ export function makeFixedSlotTemplateService(deps: {
               templateId: args.templateId,
               status: "CANCELLED",
               updatedAt: now,
+            });
+          }));
+      }).pipe(defectOn(PrismaTransactionError)),
+
+    updateForUser: args =>
+      Effect.gen(function* () {
+        const { client } = yield* Prisma;
+        const now = args.now ?? new Date();
+        const today = normalizeSlotDate(now);
+
+        return yield* runPrismaTransaction(client, tx =>
+          Effect.gen(function* () {
+            const txQueryRepo = makeReservationQueryRepository(tx);
+            const txCommandRepo = makeReservationCommandRepository(tx);
+            const bikeRepo = makeBikeRepository(tx);
+
+            const templateOpt = yield* txQueryRepo.findFixedSlotTemplateByIdForUser(
+              args.userId,
+              args.templateId,
+            );
+            if (Option.isNone(templateOpt)) {
+              return yield* Effect.fail(new FixedSlotTemplateNotFound({
+                templateId: args.templateId,
+              }));
+            }
+
+            const template = yield* ensureTemplateMutationAllowed(templateOpt.value, args.templateId);
+            const currentDateKeySet = new Set(template.slotDates.map(toSlotDateKey));
+            const lockedDateKeySet = new Set(
+              template.slotDates
+                .filter(slotDate => slotDate.getTime() <= today.getTime())
+                .map(toSlotDateKey),
+            );
+
+            const nextSlotStart = args.slotStart ? parseSlotTimeValue(args.slotStart) : template.slotStart;
+            let nextSlotDates = template.slotDates;
+
+            if (args.slotDates) {
+              nextSlotDates = args.slotDates.map(parseSlotDateKey);
+              const nextDateKeySet = new Set(nextSlotDates.map(toSlotDateKey));
+
+              for (const lockedDateKey of lockedDateKeySet) {
+                if (!nextDateKeySet.has(lockedDateKey)) {
+                  return yield* Effect.fail(new FixedSlotTemplateDateLocked({
+                    slotDate: lockedDateKey,
+                  }));
+                }
+              }
+
+              for (const slotDate of nextSlotDates) {
+                const slotDateKey = toSlotDateKey(slotDate);
+                if (slotDate.getTime() <= today.getTime() && !currentDateKeySet.has(slotDateKey)) {
+                  return yield* Effect.fail(new FixedSlotTemplateDateNotFuture({ slotDate: slotDateKey }));
+                }
+              }
+            }
+
+            return yield* applyTemplateMutation({
+              userId: args.userId,
+              template,
+              templateId: args.templateId,
+              nextSlotStart,
+              nextSlotDates,
+              now,
+              tx,
+              txQueryRepo,
+              txCommandRepo,
+              bikeRepo,
+            });
+          }));
+      }).pipe(defectOn(PrismaTransactionError)),
+
+    removeDateForUser: args =>
+      Effect.gen(function* () {
+        const { client } = yield* Prisma;
+        const now = args.now ?? new Date();
+        const today = normalizeSlotDate(now);
+        const targetSlotDate = parseSlotDateKey(args.slotDate);
+        const targetSlotDateKey = toSlotDateKey(targetSlotDate);
+
+        return yield* runPrismaTransaction(client, tx =>
+          Effect.gen(function* () {
+            const txQueryRepo = makeReservationQueryRepository(tx);
+            const txCommandRepo = makeReservationCommandRepository(tx);
+            const bikeRepo = makeBikeRepository(tx);
+
+            const templateOpt = yield* txQueryRepo.findFixedSlotTemplateByIdForUser(
+              args.userId,
+              args.templateId,
+            );
+            if (Option.isNone(templateOpt)) {
+              return yield* Effect.fail(new FixedSlotTemplateNotFound({
+                templateId: args.templateId,
+              }));
+            }
+
+            const template = yield* ensureTemplateMutationAllowed(templateOpt.value, args.templateId);
+            const currentDateKeySet = new Set(template.slotDates.map(toSlotDateKey));
+            if (!currentDateKeySet.has(targetSlotDateKey)) {
+              return yield* Effect.fail(new FixedSlotTemplateDateNotFound({
+                templateId: args.templateId,
+                slotDate: targetSlotDateKey,
+              }));
+            }
+
+            if (targetSlotDate.getTime() <= today.getTime()) {
+              return yield* Effect.fail(new FixedSlotTemplateDateLocked({
+                slotDate: targetSlotDateKey,
+              }));
+            }
+
+            return yield* applyTemplateMutation({
+              userId: args.userId,
+              template,
+              templateId: args.templateId,
+              nextSlotStart: template.slotStart,
+              nextSlotDates: template.slotDates.filter(slotDate => toSlotDateKey(slotDate) !== targetSlotDateKey),
+              now,
+              tx,
+              txQueryRepo,
+              txCommandRepo,
+              bikeRepo,
             });
           }));
       }).pipe(defectOn(PrismaTransactionError)),

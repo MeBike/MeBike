@@ -4,10 +4,13 @@ import { z } from "../../../../zod";
 import {
   CreateFixedSlotTemplateRequestSchema,
   CreateFixedSlotTemplateResponseSchema,
+  FixedSlotDateStringSchema,
   FixedSlotTemplateErrorCodeSchema,
   fixedSlotTemplateErrorMessages,
   FixedSlotTemplateErrorResponseSchema,
   FixedSlotTemplateSchema,
+  UpdateFixedSlotTemplateRequestSchema,
+  UpdateFixedSlotTemplateResponseSchema,
 } from "../../fixed-slots/schemas";
 import { unauthorizedResponse } from "../helpers";
 
@@ -162,6 +165,188 @@ export const cancelFixedSlotTemplateRoute = createRoute({
                 error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT,
                 details: {
                   code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const updateFixedSlotTemplateRoute = createRoute({
+  method: "patch",
+  path: "/v1/fixed-slot-templates/{id}",
+  tags: ["Fixed Slot Templates"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.uuidv7(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: UpdateFixedSlotTemplateRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Update fixed-slot template",
+      content: {
+        "application/json": {
+          schema: UpdateFixedSlotTemplateResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid fixed-slot template update",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateErrorResponseSchema,
+          examples: {
+            DateNotFuture: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_DATE_NOT_FUTURE,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_NOT_FUTURE,
+                  slotDate: "2026-04-10",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Fixed-slot template or date not found",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateErrorResponseSchema,
+          examples: {
+            TemplateNotFound: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    409: {
+      description: "Fixed-slot update conflict",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateErrorResponseSchema,
+          examples: {
+            DateLocked: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_DATE_LOCKED,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_LOCKED,
+                  slotDate: "2026-04-20",
+                },
+              },
+            },
+            TemplateConflict: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_CONFLICT,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CONFLICT,
+                  slotStart: "09:30",
+                  slotDates: ["2026-04-20"],
+                },
+              },
+            },
+            BillingConflict: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_BILLING_CONFLICT,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_BILLING_CONFLICT,
+                },
+              },
+            },
+            UpdateConflict: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const removeFixedSlotTemplateDateRoute = createRoute({
+  method: "delete",
+  path: "/v1/fixed-slot-templates/{id}/dates/{slotDate}",
+  tags: ["Fixed Slot Templates"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.uuidv7(),
+      slotDate: FixedSlotDateStringSchema,
+    }),
+  },
+  responses: {
+    200: {
+      description: "Remove one fixed-slot date",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Fixed-slot template or date not found",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateErrorResponseSchema,
+          examples: {
+            DateNotFound: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_DATE_NOT_FOUND,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_NOT_FOUND,
+                  slotDate: "2026-04-20",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    409: {
+      description: "Fixed-slot remove conflict",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateErrorResponseSchema,
+          examples: {
+            DateLocked: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_DATE_LOCKED,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_LOCKED,
+                  slotDate: "2026-04-20",
+                },
+              },
+            },
+            UpdateConflict: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT,
                 },
               },
             },

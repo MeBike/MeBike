@@ -77,6 +77,9 @@ export const selectFixedSlotTemplateRow = {
   dates: {
     select: {
       slotDate: true,
+      pricingPolicyId: true,
+      subscriptionId: true,
+      prepaid: true,
     },
     orderBy: {
       slotDate: "asc",
@@ -205,6 +208,9 @@ export function toFixedSlotTemplateRow(row: {
   };
   dates: ReadonlyArray<{
     slotDate: Date;
+    pricingPolicyId?: string | null;
+    subscriptionId?: string | null;
+    prepaid?: FixedSlotTemplateRow["prepaid"] | null;
   }>;
 }): FixedSlotTemplateRow {
   return {

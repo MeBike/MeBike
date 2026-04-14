@@ -135,6 +135,15 @@ export class FixedSlotTemplateDateNotFuture extends Data.TaggedError("FixedSlotT
   readonly slotDate: string;
 }> {}
 
+export class FixedSlotTemplateDateLocked extends Data.TaggedError("FixedSlotTemplateDateLocked")<{
+  readonly slotDate: string;
+}> {}
+
+export class FixedSlotTemplateDateNotFound extends Data.TaggedError("FixedSlotTemplateDateNotFound")<{
+  readonly templateId: string;
+  readonly slotDate: string;
+}> {}
+
 export class FixedSlotTemplateConflict extends Data.TaggedError("FixedSlotTemplateConflict")<{
   readonly userId: string;
   readonly slotStart: string;
@@ -146,6 +155,10 @@ export class FixedSlotTemplateBillingConflict extends Data.TaggedError("FixedSlo
 }> {}
 
 export class FixedSlotTemplateCancelConflict extends Data.TaggedError("FixedSlotTemplateCancelConflict")<{
+  readonly templateId: string;
+}> {}
+
+export class FixedSlotTemplateUpdateConflict extends Data.TaggedError("FixedSlotTemplateUpdateConflict")<{
   readonly templateId: string;
 }> {}
 

@@ -149,6 +149,7 @@ export type ReservationQueryRepo = {
     userId: string,
     slotStart: Date,
     slotDates: ReadonlyArray<Date>,
+    excludeTemplateId?: string,
   ) => Effect.Effect<number>;
 
 };
