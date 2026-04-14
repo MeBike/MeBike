@@ -10,7 +10,11 @@ import { isPrismaRecordNotFound, isPrismaUniqueViolation } from "@/infrastructur
 import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 import { ReservationStatus } from "generated/prisma/client";
 
-import type { CreateReservationInput, UpdateReservationStatusInput } from "../../types";
+import type {
+  CreateFixedSlotTemplateInput,
+  CreateReservationInput,
+  UpdateReservationStatusInput,
+} from "../../types";
 import type { ReservationRepo } from "../reservation.repository.types";
 
 import {
@@ -18,7 +22,12 @@ import {
   ReservationRepositoryError,
   ReservationUniqueViolation,
 } from "../../domain-errors";
-import { selectReservationRow, toReservationRow } from "../reservation.mappers";
+import {
+  selectFixedSlotTemplateRow,
+  selectReservationRow,
+  toFixedSlotTemplateRow,
+  toReservationRow,
+} from "../reservation.mappers";
 
 export type ReservationWriteRepo = Pick<
   ReservationRepo,
@@ -27,6 +36,7 @@ export type ReservationWriteRepo = Pick<
   | "updateStatus"
   | "expirePendingHold"
   | "markExpiredNow"
+  | "createFixedSlotTemplate"
 >;
 
 export function makeReservationWriteRepository(
@@ -102,6 +112,37 @@ export function makeReservationWriteRepository(
       defectOn(ReservationRepositoryError),
     );
 
+  const createFixedSlotTemplateWithClient = (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    input: CreateFixedSlotTemplateInput,
+  ) =>
+    Effect.tryPromise({
+      try: () =>
+        tx.fixedSlotTemplate.create({
+          data: {
+            userId: input.userId,
+            stationId: input.stationId,
+            slotStart: input.slotStart,
+            status: "ACTIVE",
+            updatedAt: input.updatedAt ?? new Date(),
+            dates: {
+              create: input.slotDates.map(slotDate => ({
+                slotDate,
+              })),
+            },
+          },
+          select: selectFixedSlotTemplateRow,
+        }),
+      catch: err =>
+        new ReservationRepositoryError({
+          operation: "createFixedSlotTemplate",
+          cause: err,
+        }),
+    }).pipe(
+      Effect.map(toFixedSlotTemplateRow),
+      defectOn(ReservationRepositoryError),
+    );
+
   return {
     createReservation: input => createReservationWithClient(client, input),
 
@@ -169,6 +210,9 @@ export function makeReservationWriteRepository(
         Effect.map(result => result.count),
         defectOn(ReservationRepositoryError),
       ),
+
+    createFixedSlotTemplate: input =>
+      createFixedSlotTemplateWithClient(client, input),
 
   };
 }

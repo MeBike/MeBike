@@ -1,4 +1,8 @@
-import type { ReservationExpandedDetailRow, ReservationRow } from "../models";
+import type {
+  FixedSlotTemplateRow,
+  ReservationExpandedDetailRow,
+  ReservationRow,
+} from "../models";
 
 export const selectReservationRow = {
   id: true,
@@ -50,6 +54,29 @@ export const selectReservationExpandedDetailRow = {
       address: true,
       latitude: true,
       longitude: true,
+    },
+  },
+} as const;
+
+export const selectFixedSlotTemplateRow = {
+  id: true,
+  userId: true,
+  slotStart: true,
+  status: true,
+  updatedAt: true,
+  station: {
+    select: {
+      id: true,
+      name: true,
+      address: true,
+    },
+  },
+  dates: {
+    select: {
+      slotDate: true,
+    },
+    orderBy: {
+      slotDate: "asc",
     },
   },
 } as const;
@@ -156,5 +183,35 @@ export function toReservationExpandedDetailRow(row: {
       latitude: row.station.latitude,
       longitude: row.station.longitude,
     },
+  };
+}
+
+export function toFixedSlotTemplateRow(row: {
+  id: string;
+  userId: string;
+  slotStart: Date;
+  status: string;
+  updatedAt: Date;
+  station: {
+    id: string;
+    name: string;
+    address: string;
+  };
+  dates: ReadonlyArray<{
+    slotDate: Date;
+  }>;
+}): FixedSlotTemplateRow {
+  return {
+    id: row.id,
+    userId: row.userId,
+    station: {
+      id: row.station.id,
+      name: row.station.name,
+      address: row.station.address,
+    },
+    slotStart: row.slotStart,
+    slotDates: row.dates.map(date => date.slotDate),
+    status: row.status as FixedSlotTemplateRow["status"],
+    updatedAt: row.updatedAt,
   };
 }

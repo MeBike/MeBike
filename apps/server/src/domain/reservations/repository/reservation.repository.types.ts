@@ -10,12 +10,19 @@ import type {
   AdminReservationFilter,
   AdminReservationSortField,
   FixedSlotAssignmentTemplateRow,
+  FixedSlotTemplateFilter,
+  FixedSlotTemplateRow,
+  FixedSlotTemplateSortField,
   ReservationExpandedDetailRow,
   ReservationFilter,
   ReservationRow,
   ReservationSortField,
 } from "../models";
-import type { CreateReservationInput, UpdateReservationStatusInput } from "../types";
+import type {
+  CreateFixedSlotTemplateInput,
+  CreateReservationInput,
+  UpdateReservationStatusInput,
+} from "../types";
 
 export type ReservationQueryRepo = {
   /**
@@ -123,6 +130,18 @@ export type ReservationQueryRepo = {
     pageReq: PageRequest<AdminReservationSortField>,
   ) => Effect.Effect<PageResult<ReservationRow>>;
 
+  listFixedSlotTemplatesForUser: (
+    userId: string,
+    filter: FixedSlotTemplateFilter,
+    pageReq: PageRequest<FixedSlotTemplateSortField>,
+  ) => Effect.Effect<PageResult<FixedSlotTemplateRow>>;
+
+  countActiveFixedSlotTemplateConflicts: (
+    userId: string,
+    slotStart: Date,
+    slotDates: ReadonlyArray<Date>,
+  ) => Effect.Effect<number>;
+
 };
 
 export type ReservationCommandRepo = {
@@ -173,6 +192,10 @@ export type ReservationCommandRepo = {
   markExpiredNow: (
     now: Date,
   ) => Effect.Effect<number>;
+
+  createFixedSlotTemplate: (
+    input: CreateFixedSlotTemplateInput,
+  ) => Effect.Effect<FixedSlotTemplateRow>;
 };
 
 export type ReservationRepo = ReservationQueryRepo & ReservationCommandRepo;

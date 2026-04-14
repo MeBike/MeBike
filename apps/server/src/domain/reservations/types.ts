@@ -19,3 +19,11 @@ export type UpdateReservationStatusInput = {
   readonly status: ReservationStatus;
   readonly updatedAt?: Date;
 };
+
+export type CreateFixedSlotTemplateInput = {
+  readonly userId: string;
+  readonly stationId: string;
+  readonly slotStart: Date;
+  readonly slotDates: readonly Date[];
+  readonly updatedAt?: Date;
+};

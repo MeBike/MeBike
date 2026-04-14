@@ -44,6 +44,20 @@ function formatSlotTimeLabel(slotStart: Date): string {
   return `${hours}:${minutes}`;
 }
 
+export function formatSlotTimeValue(slotStart: Date): string {
+  return formatSlotTimeLabel(slotStart);
+}
+
+export function parseSlotTimeValue(value: string): Date {
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+  if (!match) {
+    throw new Error(`Invalid slot time format: ${value}`);
+  }
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  return new Date(Date.UTC(2000, 0, 1, hours, minutes, 0, 0));
+}
+
 function formatSlotDateLabel(slotDate: Date): string {
   const day = String(slotDate.getUTCDate()).padStart(2, "0");
   const month = String(slotDate.getUTCMonth() + 1).padStart(2, "0");

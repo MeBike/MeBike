@@ -123,6 +123,20 @@ export class ReservationNotFound extends Data.TaggedError("ReservationNotFound")
   readonly reservationId: string;
 }> {}
 
+export class FixedSlotTemplateStationNotFound extends Data.TaggedError("FixedSlotTemplateStationNotFound")<{
+  readonly stationId: string;
+}> {}
+
+export class FixedSlotTemplateDateNotFuture extends Data.TaggedError("FixedSlotTemplateDateNotFuture")<{
+  readonly slotDate: string;
+}> {}
+
+export class FixedSlotTemplateConflict extends Data.TaggedError("FixedSlotTemplateConflict")<{
+  readonly userId: string;
+  readonly slotStart: string;
+  readonly slotDates: ReadonlyArray<string>;
+}> {}
+
 export type ReservationServiceFailure
   = | ActiveReservationExists
     | ReservationConfirmBlockedByActiveRental
