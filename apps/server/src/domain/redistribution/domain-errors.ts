@@ -117,7 +117,7 @@ export class NotEnoughBikesAtStation extends Data.TaggedError(
 export class NotEnoughEmptySlotsAtTarget extends Data.TaggedError(
   "NotEnoughEmptySlotsAtTarget",
 )<{
-    readonly targetId: string;
+    readonly targetStationId: string;
     readonly required: number;
     readonly available: number;
   }> {}

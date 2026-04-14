@@ -424,7 +424,7 @@ export const startTransition = createRoute({
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .INSUFFICIENT_EMPTY_SLOTS,
-                  targetId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  targetStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   required: 10,
                   available: 5,
                 },
@@ -530,7 +530,7 @@ export const confirmRedistributionRequestCompletion = createRoute({
                 details: {
                   code: RedistributionReqErrorCodeSchema.enum
                     .INSUFFICIENT_EMPTY_SLOTS,
-                  targetId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
+                  targetStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
                   required: 10,
                   available: 5,
                 },

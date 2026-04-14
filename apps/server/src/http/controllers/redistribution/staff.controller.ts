@@ -122,9 +122,8 @@ const createRedistributionRequest: RouteHandler<
             {
               error: redistributionReqErrorMessages.INSUFFICIENT_EMPTY_SLOTS,
               details: {
-                code: RedistributionReqErrorCodeSchema.enum
-                  .INSUFFICIENT_EMPTY_SLOTS,
-                stationId: error.targetId,
+                code: RedistributionReqErrorCodeSchema.enum.INSUFFICIENT_EMPTY_SLOTS,
+                targetStationId: error.targetStationId,
                 required: error.required,
                 available: error.available,
               },
@@ -464,9 +463,8 @@ const startTransition: RouteHandler<
             {
               error: redistributionReqErrorMessages.INSUFFICIENT_EMPTY_SLOTS,
               details: {
-                code: RedistributionReqErrorCodeSchema.enum
-                  .INSUFFICIENT_EMPTY_SLOTS,
-                stationId: error.targetId,
+                code: RedistributionReqErrorCodeSchema.enum.INSUFFICIENT_EMPTY_SLOTS,
+                targetStationId: error.targetStationId,
                 required: error.required,
                 available: error.available,
               },

@@ -446,7 +446,7 @@ const confirmRedistributionRequestCompletion: RouteHandler<
               error: redistributionReqErrorMessages.INSUFFICIENT_EMPTY_SLOTS,
               details: {
                 code: RedistributionReqErrorCodeSchema.enum.INSUFFICIENT_EMPTY_SLOTS,
-                targetId: error.targetId,
+                targetStationId: error.targetStationId,
                 required: error.required,
                 available: error.available,
               },
