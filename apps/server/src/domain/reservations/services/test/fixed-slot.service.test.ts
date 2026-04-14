@@ -2,6 +2,7 @@ import { Effect, Layer, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BikeRepository } from "@/domain/bikes";
+import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";
 
@@ -61,6 +62,9 @@ describe("assignFixedSlotReservations", () => {
       id: "template-1",
       userId: "user-1",
       stationId: "station-1",
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
       station: { name: "Test Station" },
@@ -146,6 +150,9 @@ describe("assignFixedSlotReservations", () => {
       id: "template-1",
       userId: "user-1",
       stationId: "station-1",
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
       station: { name: "Test Station" },
@@ -213,6 +220,9 @@ describe("assignFixedSlotReservations", () => {
       id: "template-1",
       userId: "user-1",
       stationId: "station-1",
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
       station: { name: "Test Station" },
@@ -292,6 +302,9 @@ describe("assignFixedSlotReservations", () => {
       id: "template-1",
       userId: "user-1",
       stationId: "station-1",
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
       station: { name: "Test Station" },

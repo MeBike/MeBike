@@ -49,6 +49,15 @@ export const createFixedSlotTemplateRoute = createRoute({
                 },
               },
             },
+            InsufficientBalance: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_INSUFFICIENT_BALANCE,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_INSUFFICIENT_BALANCE,
+                  requiredAmount: "4000",
+                },
+              },
+            },
           },
         },
       },
@@ -74,18 +83,26 @@ export const createFixedSlotTemplateRoute = createRoute({
       },
     },
     409: {
-      description: "Overlapping fixed-slot template already exists",
+      description: "Fixed-slot conflict or billing race",
       content: {
         "application/json": {
           schema: FixedSlotTemplateErrorResponseSchema,
           examples: {
-            Conflict: {
+            TemplateConflict: {
               value: {
                 error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_CONFLICT,
                 details: {
                   code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CONFLICT,
                   slotStart: "09:30",
                   slotDates: ["2026-04-20"],
+                },
+              },
+            },
+            BillingConflict: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_BILLING_CONFLICT,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_BILLING_CONFLICT,
                 },
               },
             },

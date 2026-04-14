@@ -3,7 +3,6 @@ import { Cause, Effect, Exit, Option } from "effect";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -133,11 +132,13 @@ async function runFixedSlotAssignmentTransaction(
         userId: template.userId,
         bikeId: bike.id,
         stationId: template.stationId,
+        pricingPolicyId: template.pricingPolicyId,
         reservationOption: "FIXED_SLOT",
         fixedSlotTemplateId: template.id,
+        subscriptionId: template.subscriptionId,
         startTime: labels.slotStartAt,
         endTime: null,
-        prepaid: toPrismaDecimal("0"),
+        prepaid: template.prepaid,
         status: "PENDING",
       }).pipe(
         Effect.catchTag("ReservationUniqueViolation", () =>

@@ -141,6 +141,10 @@ export class FixedSlotTemplateConflict extends Data.TaggedError("FixedSlotTempla
   readonly slotDates: ReadonlyArray<string>;
 }> {}
 
+export class FixedSlotTemplateBillingConflict extends Data.TaggedError("FixedSlotTemplateBillingConflict")<{
+  readonly userId: string;
+}> {}
+
 export class FixedSlotTemplateCancelConflict extends Data.TaggedError("FixedSlotTemplateCancelConflict")<{
   readonly templateId: string;
 }> {}

@@ -123,7 +123,10 @@ export function makeReservationWriteRepository(
           data: {
             userId: input.userId,
             stationId: input.stationId,
+            pricingPolicyId: input.pricingPolicyId ?? null,
+            subscriptionId: input.subscriptionId ?? null,
             slotStart: input.slotStart,
+            prepaid: input.prepaid,
             status: "ACTIVE",
             updatedAt: input.updatedAt ?? new Date(),
             dates: {

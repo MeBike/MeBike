@@ -61,6 +61,9 @@ export const selectReservationExpandedDetailRow = {
 export const selectFixedSlotTemplateRow = {
   id: true,
   userId: true,
+  pricingPolicyId: true,
+  subscriptionId: true,
+  prepaid: true,
   slotStart: true,
   status: true,
   updatedAt: true,
@@ -189,6 +192,9 @@ export function toReservationExpandedDetailRow(row: {
 export function toFixedSlotTemplateRow(row: {
   id: string;
   userId: string;
+  pricingPolicyId: string | null;
+  subscriptionId: string | null;
+  prepaid: FixedSlotTemplateRow["prepaid"];
   slotStart: Date;
   status: string;
   updatedAt: Date;
@@ -204,6 +210,9 @@ export function toFixedSlotTemplateRow(row: {
   return {
     id: row.id,
     userId: row.userId,
+    pricingPolicyId: row.pricingPolicyId,
+    subscriptionId: row.subscriptionId,
+    prepaid: row.prepaid,
     station: {
       id: row.station.id,
       name: row.station.name,

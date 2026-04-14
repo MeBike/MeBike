@@ -3,6 +3,7 @@ import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { BikeRepository } from "@/domain/bikes";
+import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
@@ -32,6 +33,9 @@ describe("assignFixedSlotReservations integration", () => {
         id: uuidv7(),
         userId: user.id,
         stationId: station.id,
+        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
+        subscriptionId: null,
+        prepaid: toPrismaDecimal("2000"),
         slotStart,
         status: "ACTIVE",
         updatedAt: new Date(),
@@ -68,7 +72,9 @@ describe("assignFixedSlotReservations integration", () => {
     expect(reservation?.bikeId).toBe(bike.id);
     expect(reservation?.stationId).toBe(station.id);
     expect(reservation?.endTime).toBeNull();
-    expect(reservation?.prepaid.toString()).toBe("0");
+    expect(reservation?.pricingPolicyId).toBe("11111111-1111-4111-8111-111111111111");
+    expect(reservation?.subscriptionId).toBeNull();
+    expect(reservation?.prepaid.toString()).toBe("2000");
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("RESERVED");
@@ -91,6 +97,9 @@ describe("assignFixedSlotReservations integration", () => {
         id: uuidv7(),
         userId: user.id,
         stationId: station.id,
+        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
+        subscriptionId: null,
+        prepaid: toPrismaDecimal("2000"),
         slotStart,
         status: "ACTIVE",
         updatedAt: new Date(),

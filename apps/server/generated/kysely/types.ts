@@ -415,7 +415,10 @@ export type FixedSlotTemplate = {
     id: string;
     user_id: string;
     station_id: string;
+    pricing_policy_id: string | null;
+    subscription_id: string | null;
     slot_start: Timestamp;
+    prepaid: Generated<string>;
     status: Generated<FixedSlotStatus>;
     updated_at: Generated<Timestamp>;
 };

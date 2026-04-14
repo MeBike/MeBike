@@ -22,6 +22,7 @@ describe("fixed-slot templates routing e2e", () => {
 
   it("user can create fixed-slot template", async () => {
     const user = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: user.id, balance: 10000n });
     const station = await fixture.factories.station({ name: "Fixed Slot Station" });
     const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
 
@@ -58,10 +59,87 @@ describe("fixed-slot templates routing e2e", () => {
     });
     expect(created?.userId).toBe(user.id);
     expect(created?.stationId).toBe(station.id);
+    expect(created?.pricingPolicyId).toBe("11111111-1111-4111-8111-111111111111");
+    expect(created?.subscriptionId).toBeNull();
+    expect(created?.prepaid.toString()).toBe("2000");
     expect(created?.dates.map(date => date.slotDate.toISOString().slice(0, 10))).toEqual([
       "2026-04-20",
       "2026-04-22",
     ]);
+
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    expect(wallet?.balance).toBe(6000n);
+  });
+
+  it("uses current subscription upfront when enough usages remain", async () => {
+    const user = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: user.id, balance: 10000n });
+    const station = await fixture.factories.station({ name: "Subscription Station" });
+    const subscription = await fixture.factories.subscription({
+      userId: user.id,
+      status: "ACTIVE",
+      maxUsages: 5,
+      usageCount: 1,
+    });
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+
+    const response = await fixture.app.request("http://test/v1/fixed-slot-templates", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        stationId: station.id,
+        slotStart: "09:30",
+        slotDates: ["2026-04-20", "2026-04-22"],
+      }),
+    });
+
+    const body = await response.json() as FixedSlotTemplatesContracts.CreateFixedSlotTemplateResponse;
+
+    expect(response.status).toBe(201);
+
+    const created = await fixture.prisma.fixedSlotTemplate.findUnique({ where: { id: body.id } });
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    const updatedSubscription = await fixture.prisma.subscription.findUnique({ where: { id: subscription.id } });
+
+    expect(created?.subscriptionId).toBe(subscription.id);
+    expect(created?.prepaid.toString()).toBe("0");
+    expect(wallet?.balance).toBe(10000n);
+    expect(updatedSubscription?.usageCount).toBe(3);
+  });
+
+  it("rejects fixed-slot create when wallet balance is insufficient", async () => {
+    const user = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: user.id, balance: 3000n });
+    const station = await fixture.factories.station({ name: "Low Balance Station" });
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+
+    const response = await fixture.app.request("http://test/v1/fixed-slot-templates", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        stationId: station.id,
+        slotStart: "09:30",
+        slotDates: ["2026-04-20", "2026-04-22"],
+      }),
+    });
+
+    const body = await response.json() as FixedSlotTemplatesContracts.FixedSlotTemplateErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Insufficient balance for fixed-slot upfront payment",
+      details: {
+        code: "FIXED_SLOT_INSUFFICIENT_BALANCE",
+        balance: "3000",
+        requiredAmount: "4000",
+      },
+    });
   });
 
   it("user can list own fixed-slot templates with filters", async () => {

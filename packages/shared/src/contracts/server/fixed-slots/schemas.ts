@@ -19,6 +19,9 @@ export const FixedSlotTemplateErrorCodeSchema = z
     "FIXED_SLOT_STATION_NOT_FOUND",
     "FIXED_SLOT_DATE_NOT_FUTURE",
     "FIXED_SLOT_TEMPLATE_CONFLICT",
+    "FIXED_SLOT_WALLET_NOT_FOUND",
+    "FIXED_SLOT_INSUFFICIENT_BALANCE",
+    "FIXED_SLOT_BILLING_CONFLICT",
     "FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT",
   ])
   .openapi("FixedSlotTemplateErrorCode");
@@ -28,6 +31,9 @@ export const fixedSlotTemplateErrorMessages = {
   FIXED_SLOT_STATION_NOT_FOUND: "Station not found",
   FIXED_SLOT_DATE_NOT_FUTURE: "Fixed-slot dates must be in the future",
   FIXED_SLOT_TEMPLATE_CONFLICT: "An active fixed-slot template already exists for one or more selected dates at this time",
+  FIXED_SLOT_WALLET_NOT_FOUND: "Wallet not found",
+  FIXED_SLOT_INSUFFICIENT_BALANCE: "Insufficient balance for fixed-slot upfront payment",
+  FIXED_SLOT_BILLING_CONFLICT: "Fixed-slot billing could not be completed safely",
   FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT: "Fixed-slot template could not be cancelled safely",
 } as const;
 
@@ -39,6 +45,8 @@ export const FixedSlotTemplateErrorResponseSchema = z.object({
     slotDate: FixedSlotDateStringSchema.optional(),
     slotStart: FixedSlotTimeStringSchema.optional(),
     slotDates: z.array(FixedSlotDateStringSchema).optional(),
+    requiredAmount: z.string().optional(),
+    balance: z.string().optional(),
   }),
 }).openapi("FixedSlotTemplateErrorResponse");
 

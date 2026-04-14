@@ -71,6 +71,29 @@ const createFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["createFixe
           slotDates: [...slotDates],
         },
       }, 409)),
+    Match.tag("WalletNotFound", () =>
+      c.json<FixedSlotTemplateErrorResponse, 400>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_WALLET_NOT_FOUND,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_WALLET_NOT_FOUND,
+        },
+      }, 400)),
+    Match.tag("InsufficientWalletBalance", ({ balance, attemptedDebit }) =>
+      c.json<FixedSlotTemplateErrorResponse, 400>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_INSUFFICIENT_BALANCE,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_INSUFFICIENT_BALANCE,
+          balance: balance.toString(),
+          requiredAmount: attemptedDebit.toString(),
+        },
+      }, 400)),
+    Match.tag("FixedSlotTemplateBillingConflict", () =>
+      c.json<FixedSlotTemplateErrorResponse, 409>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_BILLING_CONFLICT,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_BILLING_CONFLICT,
+        },
+      }, 409)),
     Match.orElse((error) => {
       throw error;
     }),
