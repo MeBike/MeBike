@@ -14,4 +14,5 @@ export * from "./Rating";
 export * from "./Auth.type";
 export * from "./Dashboard.type";
 export * from "./Wallet";
-export * from "./Agency"
+export * from "./Agency";
+export * from "./Subscription"

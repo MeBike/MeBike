@@ -94,6 +94,10 @@ export const ENDPOINT = {
         APPROVE : (id:string) => `/admin/agency-requests/${id}/approve`,
         REJECT : (id:string) => `/admin/agency-requests/${id}/reject`,
         CANCEL : (id:string) => `/admin/agency-requests/${id}/cancel`,
-    }
+    },
+    SUBSCRIPTION : {
+        BASE : "/subscriptions",
+        ID : (id:string) => `/subscriptions/${id}`,
+    },
 
 } as const;
