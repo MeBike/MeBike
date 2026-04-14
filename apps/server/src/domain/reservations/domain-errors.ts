@@ -127,6 +127,10 @@ export class FixedSlotTemplateStationNotFound extends Data.TaggedError("FixedSlo
   readonly stationId: string;
 }> {}
 
+export class FixedSlotTemplateNotFound extends Data.TaggedError("FixedSlotTemplateNotFound")<{
+  readonly templateId: string;
+}> {}
+
 export class FixedSlotTemplateDateNotFuture extends Data.TaggedError("FixedSlotTemplateDateNotFuture")<{
   readonly slotDate: string;
 }> {}
@@ -135,6 +139,10 @@ export class FixedSlotTemplateConflict extends Data.TaggedError("FixedSlotTempla
   readonly userId: string;
   readonly slotStart: string;
   readonly slotDates: ReadonlyArray<string>;
+}> {}
+
+export class FixedSlotTemplateCancelConflict extends Data.TaggedError("FixedSlotTemplateCancelConflict")<{
+  readonly templateId: string;
 }> {}
 
 export type ReservationServiceFailure

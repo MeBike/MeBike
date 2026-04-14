@@ -1,7 +1,12 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import { z } from "../../../../zod";
 import { ListFixedSlotTemplatesQuerySchema } from "../../fixed-slots";
 import {
+  FixedSlotTemplateErrorCodeSchema,
+  fixedSlotTemplateErrorMessages,
+  FixedSlotTemplateErrorResponseSchema,
+  FixedSlotTemplateSchema,
   ListFixedSlotTemplatesResponseSchema,
 } from "../../fixed-slots/schemas";
 import { unauthorizedResponse } from "../helpers";
@@ -24,5 +29,46 @@ export const listFixedSlotTemplatesRoute = createRoute({
       },
     },
     401: unauthorizedResponse(),
+  },
+});
+
+export const getFixedSlotTemplateRoute = createRoute({
+  method: "get",
+  path: "/v1/fixed-slot-templates/{id}",
+  tags: ["Fixed Slot Templates"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.uuidv7(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Get current user's fixed-slot template",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Fixed-slot template not found",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 });

@@ -13,6 +13,7 @@ export const {
 
 export type CreateFixedSlotTemplateResponse = FixedSlotTemplatesContracts.CreateFixedSlotTemplateResponse;
 export type FixedSlotTemplateErrorResponse = FixedSlotTemplatesContracts.FixedSlotTemplateErrorResponse;
+export type FixedSlotTemplateResponse = FixedSlotTemplatesContracts.FixedSlotTemplate;
 export type ListFixedSlotTemplatesResponse = FixedSlotTemplatesContracts.ListFixedSlotTemplatesResponse;
 
 export const unauthorizedBody = {

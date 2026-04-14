@@ -1,5 +1,6 @@
 import { Context, Effect, Layer, Option } from "effect";
 
+import type { BikeRepository } from "@/domain/bikes";
 import type {
   FixedSlotTemplateFilter,
   FixedSlotTemplateRow,
@@ -7,18 +8,23 @@ import type {
 import type { PageResult } from "@/domain/shared/pagination";
 import type { StationRepo } from "@/domain/stations";
 
+import { makeBikeRepository } from "@/domain/bikes";
 import { StationRepository } from "@/domain/stations";
+import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { ReservationCommandRepo } from "../repository/reservation-command.repository";
 import type { ReservationQueryRepo } from "../repository/reservation-query.repository";
 
 import {
+  FixedSlotTemplateCancelConflict,
   FixedSlotTemplateConflict,
   FixedSlotTemplateDateNotFuture,
+  FixedSlotTemplateNotFound,
   FixedSlotTemplateStationNotFound,
 } from "../domain-errors";
-import { ReservationCommandRepository } from "../repository/reservation-command.repository";
-import { ReservationQueryRepository } from "../repository/reservation-query.repository";
+import { makeReservationCommandRepository, ReservationCommandRepository } from "../repository/reservation-command.repository";
+import { makeReservationQueryRepository, ReservationQueryRepository } from "../repository/reservation-query.repository";
 import {
   normalizeSlotDate,
   parseSlotDateKey,
@@ -37,12 +43,25 @@ export type FixedSlotTemplateService = {
     FixedSlotTemplateRow,
     FixedSlotTemplateStationNotFound | FixedSlotTemplateDateNotFuture | FixedSlotTemplateConflict
   >;
+  getByIdForUser: (args: {
+    userId: string;
+    templateId: string;
+  }) => Effect.Effect<FixedSlotTemplateRow, FixedSlotTemplateNotFound>;
   listForUser: (args: {
     userId: string;
     filter: FixedSlotTemplateFilter;
     page?: number;
     pageSize?: number;
   }) => Effect.Effect<PageResult<FixedSlotTemplateRow>>;
+  cancelForUser: (args: {
+    userId: string;
+    templateId: string;
+    now?: Date;
+  }) => Effect.Effect<
+    FixedSlotTemplateRow,
+    FixedSlotTemplateNotFound | FixedSlotTemplateCancelConflict,
+    Prisma | BikeRepository
+  >;
 };
 
 export function makeFixedSlotTemplateService(deps: {
@@ -105,6 +124,79 @@ export function makeFixedSlotTemplateService(deps: {
           sortBy: "updatedAt",
           sortDir: "desc",
         },
+      ),
+
+    getByIdForUser: args =>
+      Effect.gen(function* () {
+        const templateOpt = yield* deps.reservationQueryRepo.findFixedSlotTemplateByIdForUser(
+          args.userId,
+          args.templateId,
+        );
+
+        if (Option.isNone(templateOpt)) {
+          return yield* Effect.fail(new FixedSlotTemplateNotFound({
+            templateId: args.templateId,
+          }));
+        }
+
+        return templateOpt.value;
+      }),
+
+    cancelForUser: args =>
+      Effect.gen(function* () {
+        const { client } = yield* Prisma;
+        const now = args.now ?? new Date();
+
+        return yield* runPrismaTransaction(client, tx =>
+          Effect.gen(function* () {
+            const txQueryRepo = makeReservationQueryRepository(tx);
+            const txCommandRepo = makeReservationCommandRepository(tx);
+            const bikeRepo = makeBikeRepository(tx);
+
+            const templateOpt = yield* txQueryRepo.findFixedSlotTemplateByIdForUser(
+              args.userId,
+              args.templateId,
+            );
+            if (Option.isNone(templateOpt)) {
+              return yield* Effect.fail(new FixedSlotTemplateNotFound({
+                templateId: args.templateId,
+              }));
+            }
+
+            const pendingReservations = yield* txQueryRepo.listPendingFixedSlotReservationsByTemplateId(
+              args.templateId,
+            );
+
+            for (const reservation of pendingReservations) {
+              yield* txCommandRepo.updateStatus({
+                reservationId: reservation.id,
+                status: "CANCELLED",
+                updatedAt: now,
+              }).pipe(
+                Effect.catchTag("ReservationNotFound", () =>
+                  Effect.fail(new FixedSlotTemplateCancelConflict({ templateId: args.templateId }))),
+              );
+
+              if (reservation.bikeId) {
+                const released = yield* bikeRepo.releaseBikeIfReserved(reservation.bikeId, now);
+                if (!released) {
+                  return yield* Effect.fail(new FixedSlotTemplateCancelConflict({ templateId: args.templateId }));
+                }
+              }
+            }
+
+            if (templateOpt.value.status === "CANCELLED") {
+              return templateOpt.value;
+            }
+
+            return yield* txCommandRepo.updateFixedSlotTemplateStatus({
+              templateId: args.templateId,
+              status: "CANCELLED",
+              updatedAt: now,
+            });
+          }));
+      }).pipe(
+        Effect.catchTag("PrismaTransactionError", error => Effect.die(error)),
       ),
   };
 }

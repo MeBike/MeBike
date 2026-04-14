@@ -93,6 +93,15 @@ export type ReservationQueryRepo = {
     startTime: Date,
   ) => Effect.Effect<Option.Option<ReservationRow>>;
 
+  findFixedSlotTemplateByIdForUser: (
+    userId: string,
+    templateId: string,
+  ) => Effect.Effect<Option.Option<FixedSlotTemplateRow>>;
+
+  listPendingFixedSlotReservationsByTemplateId: (
+    templateId: string,
+  ) => Effect.Effect<ReadonlyArray<ReservationRow>>;
+
   /**
    * EN: Returns active fixed-slot templates scheduled for a specific slot date.
    * VI: Trả về fixed-slot template đang ACTIVE cho một ngày slot cụ thể.
@@ -196,6 +205,12 @@ export type ReservationCommandRepo = {
   createFixedSlotTemplate: (
     input: CreateFixedSlotTemplateInput,
   ) => Effect.Effect<FixedSlotTemplateRow>;
+
+  updateFixedSlotTemplateStatus: (input: {
+    templateId: string;
+    status: FixedSlotTemplateRow["status"];
+    updatedAt?: Date;
+  }) => Effect.Effect<FixedSlotTemplateRow>;
 };
 
 export type ReservationRepo = ReservationQueryRepo & ReservationCommandRepo;

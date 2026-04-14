@@ -15,16 +15,20 @@ import {
 
 export const FixedSlotTemplateErrorCodeSchema = z
   .enum([
+    "FIXED_SLOT_TEMPLATE_NOT_FOUND",
     "FIXED_SLOT_STATION_NOT_FOUND",
     "FIXED_SLOT_DATE_NOT_FUTURE",
     "FIXED_SLOT_TEMPLATE_CONFLICT",
+    "FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT",
   ])
   .openapi("FixedSlotTemplateErrorCode");
 
 export const fixedSlotTemplateErrorMessages = {
+  FIXED_SLOT_TEMPLATE_NOT_FOUND: "Fixed-slot template not found",
   FIXED_SLOT_STATION_NOT_FOUND: "Station not found",
   FIXED_SLOT_DATE_NOT_FUTURE: "Fixed-slot dates must be in the future",
   FIXED_SLOT_TEMPLATE_CONFLICT: "An active fixed-slot template already exists for one or more selected dates at this time",
+  FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT: "Fixed-slot template could not be cancelled safely",
 } as const;
 
 export const FixedSlotTemplateErrorResponseSchema = z.object({

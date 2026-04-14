@@ -34,6 +34,7 @@ export type ReservationWriteRepo = Pick<
   | "createReservation"
   | "assignBikeToPendingReservation"
   | "updateStatus"
+  | "updateFixedSlotTemplateStatus"
   | "expirePendingHold"
   | "markExpiredNow"
   | "createFixedSlotTemplate"
@@ -143,6 +144,34 @@ export function makeReservationWriteRepository(
       defectOn(ReservationRepositoryError),
     );
 
+  const updateFixedSlotTemplateStatusWithClient = (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    input: {
+      templateId: string;
+      status: "ACTIVE" | "CANCELLED";
+      updatedAt?: Date;
+    },
+  ) =>
+    Effect.tryPromise({
+      try: () =>
+        tx.fixedSlotTemplate.update({
+          where: { id: input.templateId },
+          data: {
+            status: input.status,
+            updatedAt: input.updatedAt ?? new Date(),
+          },
+          select: selectFixedSlotTemplateRow,
+        }),
+      catch: err =>
+        new ReservationRepositoryError({
+          operation: "updateFixedSlotTemplateStatus",
+          cause: err,
+        }),
+    }).pipe(
+      Effect.map(toFixedSlotTemplateRow),
+      defectOn(ReservationRepositoryError),
+    );
+
   return {
     createReservation: input => createReservationWithClient(client, input),
 
@@ -213,6 +242,9 @@ export function makeReservationWriteRepository(
 
     createFixedSlotTemplate: input =>
       createFixedSlotTemplateWithClient(client, input),
+
+    updateFixedSlotTemplateStatus: input =>
+      updateFixedSlotTemplateStatusWithClient(client, input),
 
   };
 }

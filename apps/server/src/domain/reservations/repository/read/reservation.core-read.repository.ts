@@ -35,7 +35,9 @@ export type ReservationCoreReadRepo = Pick<
   | "findById"
   | "findExpandedDetailById"
   | "findPendingFixedSlotByTemplateAndStart"
+  | "findFixedSlotTemplateByIdForUser"
   | "listActiveFixedSlotTemplatesByDate"
+  | "listPendingFixedSlotReservationsByTemplateId"
   | "countActiveFixedSlotTemplateConflicts"
   | "listFixedSlotTemplatesForUser"
 >;
@@ -106,6 +108,28 @@ export function makeReservationCoreReadRepository(
         defectOn(ReservationRepositoryError),
       ),
 
+    findFixedSlotTemplateByIdForUser: (userId, templateId) =>
+      Effect.tryPromise({
+        try: () =>
+          client.fixedSlotTemplate.findFirst({
+            where: {
+              id: templateId,
+              userId,
+            },
+            select: selectFixedSlotTemplateRow,
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "findFixedSlotTemplateByIdForUser",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toFixedSlotTemplateRow)),
+        ),
+        defectOn(ReservationRepositoryError),
+      ),
+
     listActiveFixedSlotTemplatesByDate: slotDate =>
       Effect.tryPromise({
         try: () =>
@@ -122,6 +146,30 @@ export function makeReservationCoreReadRepository(
             cause: err,
           }),
       }).pipe(defectOn(ReservationRepositoryError)),
+
+    listPendingFixedSlotReservationsByTemplateId: templateId =>
+      Effect.tryPromise({
+        try: () =>
+          client.reservation.findMany({
+            where: {
+              fixedSlotTemplateId: templateId,
+              reservationOption: "FIXED_SLOT",
+              status: ReservationStatus.PENDING,
+            },
+            orderBy: {
+              startTime: "asc",
+            },
+            select: selectReservationRow,
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "listPendingFixedSlotReservationsByTemplateId",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(rows => rows.map(toReservationRow)),
+        defectOn(ReservationRepositoryError),
+      ),
 
     countActiveFixedSlotTemplateConflicts: (userId, slotStart, slotDates) =>
       Effect.tryPromise({

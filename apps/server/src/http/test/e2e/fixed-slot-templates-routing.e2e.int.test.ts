@@ -179,4 +179,100 @@ describe("fixed-slot templates routing e2e", () => {
       },
     });
   });
+
+  it("user can get own fixed-slot template detail", async () => {
+    const user = await fixture.factories.user({ role: "USER" });
+    const station = await fixture.factories.station({ name: "Detail Station" });
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+
+    const template = await fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        userId: user.id,
+        stationId: station.id,
+        slotStart: new Date(Date.UTC(2000, 0, 1, 14, 15, 0)),
+        status: "ACTIVE",
+        updatedAt: new Date("2026-04-10T10:00:00.000Z"),
+        dates: {
+          create: [
+            { slotDate: new Date(Date.UTC(2026, 3, 20)) },
+            { slotDate: new Date(Date.UTC(2026, 3, 21)) },
+          ],
+        },
+      },
+    });
+
+    const response = await fixture.app.request(`http://test/v1/fixed-slot-templates/${template.id}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const body = await response.json() as FixedSlotTemplatesContracts.FixedSlotTemplate;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: template.id,
+      userId: user.id,
+      station: {
+        id: station.id,
+        name: "Detail Station",
+      },
+      slotStart: "14:15",
+      slotDates: ["2026-04-20", "2026-04-21"],
+      status: "ACTIVE",
+    });
+  });
+
+  it("user can cancel fixed-slot template and linked pending reservations", async () => {
+    const user = await fixture.factories.user({ role: "USER" });
+    const station = await fixture.factories.station({ name: "Cancel Station" });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "RESERVED" });
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+
+    const template = await fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        userId: user.id,
+        stationId: station.id,
+        slotStart: new Date(Date.UTC(2000, 0, 1, 9, 30, 0)),
+        status: "ACTIVE",
+        updatedAt: new Date("2026-04-10T10:00:00.000Z"),
+        dates: {
+          create: [{ slotDate: new Date(Date.UTC(2026, 3, 20)) }],
+        },
+      },
+    });
+    const reservation = await fixture.factories.reservation({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      fixedSlotTemplateId: template.id,
+      reservationOption: "FIXED_SLOT",
+      startTime: new Date("2026-04-20T09:30:00.000Z"),
+      status: "PENDING",
+    });
+
+    const response = await fixture.app.request(
+      `http://test/v1/fixed-slot-templates/${template.id}/cancel`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    const body = await response.json() as FixedSlotTemplatesContracts.FixedSlotTemplate;
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("CANCELLED");
+
+    const updatedTemplate = await fixture.prisma.fixedSlotTemplate.findUnique({ where: { id: template.id } });
+    const updatedReservation = await fixture.prisma.reservation.findUnique({ where: { id: reservation.id } });
+    const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
+
+    expect(updatedTemplate?.status).toBe("CANCELLED");
+    expect(updatedReservation?.status).toBe("CANCELLED");
+    expect(updatedBike?.status).toBe("AVAILABLE");
+  });
 });

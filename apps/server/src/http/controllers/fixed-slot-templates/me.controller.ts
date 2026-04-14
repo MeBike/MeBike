@@ -9,6 +9,7 @@ import { toFixedSlotTemplate } from "@/http/presenters/fixed-slot-templates.pres
 import type {
   CreateFixedSlotTemplateResponse,
   FixedSlotTemplateErrorResponse,
+  FixedSlotTemplateResponse,
   FixedSlotTemplatesRoutes,
   ListFixedSlotTemplatesResponse,
 } from "./shared";
@@ -111,7 +112,90 @@ const listFixedSlotTemplates: RouteHandler<FixedSlotTemplatesRoutes["listFixedSl
   }, 200);
 };
 
+const getFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["getFixedSlotTemplate"]> = async (c) => {
+  const userId = c.var.currentUser?.userId ?? null;
+  if (!userId) {
+    return c.json(unauthorizedBody, 401);
+  }
+
+  const { id } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(FixedSlotTemplateServiceTag, service =>
+      service.getByIdForUser({
+        userId,
+        templateId: id,
+      })),
+    "GET /v1/fixed-slot-templates/{id}",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  if (result._tag === "Right") {
+    return c.json<FixedSlotTemplateResponse, 200>(toFixedSlotTemplate(result.right), 200);
+  }
+
+  return Match.value(result.left).pipe(
+    Match.tag("FixedSlotTemplateNotFound", () =>
+      c.json<FixedSlotTemplateErrorResponse, 404>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+        },
+      }, 404)),
+    Match.orElse((error) => {
+      throw error;
+    }),
+  );
+};
+
+const cancelFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["cancelFixedSlotTemplate"]> = async (c) => {
+  const userId = c.var.currentUser?.userId ?? null;
+  if (!userId) {
+    return c.json(unauthorizedBody, 401);
+  }
+
+  const { id } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(FixedSlotTemplateServiceTag, service =>
+      service.cancelForUser({
+        userId,
+        templateId: id,
+      })),
+    "POST /v1/fixed-slot-templates/{id}/cancel",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  if (result._tag === "Right") {
+    return c.json<FixedSlotTemplateResponse, 200>(toFixedSlotTemplate(result.right), 200);
+  }
+
+  return Match.value(result.left).pipe(
+    Match.tag("FixedSlotTemplateNotFound", () =>
+      c.json<FixedSlotTemplateErrorResponse, 404>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+        },
+      }, 404)),
+    Match.tag("FixedSlotTemplateCancelConflict", () =>
+      c.json<FixedSlotTemplateErrorResponse, 409>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT,
+        },
+      }, 409)),
+    Match.orElse((error) => {
+      throw error;
+    }),
+  );
+};
+
 export const FixedSlotTemplateMeController = {
+  cancelFixedSlotTemplate,
   createFixedSlotTemplate,
+  getFixedSlotTemplate,
   listFixedSlotTemplates,
 } as const;

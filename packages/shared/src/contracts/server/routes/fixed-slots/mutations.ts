@@ -1,11 +1,13 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import { z } from "../../../../zod";
 import {
   CreateFixedSlotTemplateRequestSchema,
   CreateFixedSlotTemplateResponseSchema,
   FixedSlotTemplateErrorCodeSchema,
   fixedSlotTemplateErrorMessages,
   FixedSlotTemplateErrorResponseSchema,
+  FixedSlotTemplateSchema,
 } from "../../fixed-slots/schemas";
 import { unauthorizedResponse } from "../helpers";
 
@@ -84,6 +86,65 @@ export const createFixedSlotTemplateRoute = createRoute({
                   code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CONFLICT,
                   slotStart: "09:30",
                   slotDates: ["2026-04-20"],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const cancelFixedSlotTemplateRoute = createRoute({
+  method: "post",
+  path: "/v1/fixed-slot-templates/{id}/cancel",
+  tags: ["Fixed Slot Templates"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.uuidv7(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Cancel fixed-slot template",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Fixed-slot template not found",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_NOT_FOUND,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    409: {
+      description: "Fixed-slot template cancel conflict",
+      content: {
+        "application/json": {
+          schema: FixedSlotTemplateErrorResponseSchema,
+          examples: {
+            Conflict: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT,
                 },
               },
             },
