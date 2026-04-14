@@ -31,6 +31,8 @@ export function registerStationRoutes(
 
   app.openapi(stations.listStations, StationPublicController.listStations);
 
+  app.openapi(stations.getAllStationsRevenue, StationPublicController.getAllStationsRevenue);
+
   app.openapi(stations.getNearbyStations, StationPublicController.getNearbyStations);
 
   app.openapi(stations.getStation, StationPublicController.getStation);

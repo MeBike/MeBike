@@ -157,18 +157,6 @@ export const RedistributionRequestListResponseSchema = z
     description: "Paginated redistribution request list",
   });
 
-export function createSuccessResponse<T extends z.ZodType>(
-  dataSchema: T,
-  description: string,
-) {
-  return z
-    .object({
-      message: z.string(),
-      result: dataSchema,
-    })
-    .openapi("SuccessResponse", { description });
-}
-
 export {
   RedistributionReqErrorCodeSchema,
   RedistributionReqErrorResponseSchema,

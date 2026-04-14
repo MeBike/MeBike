@@ -109,25 +109,20 @@ export const StationStatsResponseSchema = z.object({
 });
 
 export const StationRevenueItemSchema = z.object({
-  _id: z.uuidv7(),
+  id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
   totalRentals: z.number(),
   totalRevenue: z.number(),
-  totalRevenueFormatted: z.string(),
   totalDuration: z.number(),
-  totalDurationFormatted: z.string(),
   avgDuration: z.number(),
-  avgDurationFormatted: z.string(),
 });
 
 export const StationRevenueSummarySchema = z.object({
   totalStations: z.number(),
   totalRevenue: z.number(),
-  totalRevenueFormatted: z.string(),
   totalRentals: z.number(),
   avgRevenuePerStation: z.number(),
-  avgRevenuePerStationFormatted: z.string(),
 });
 
 export const StationRevenueResponseSchema = z.object({

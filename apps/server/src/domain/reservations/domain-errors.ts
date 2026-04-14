@@ -123,6 +123,53 @@ export class ReservationNotFound extends Data.TaggedError("ReservationNotFound")
   readonly reservationId: string;
 }> {}
 
+export class FixedSlotTemplateStationNotFound extends Data.TaggedError("FixedSlotTemplateStationNotFound")<{
+  readonly stationId: string;
+}> {}
+
+/** VI: Không tìm thấy fixed-slot template theo id. */
+export class FixedSlotTemplateNotFound extends Data.TaggedError("FixedSlotTemplateNotFound")<{
+  readonly templateId: string;
+}> {}
+
+/** VI: Ngày fixed-slot không còn ở tương lai theo rule hiện tại của hệ thống. */
+export class FixedSlotTemplateDateNotFuture extends Data.TaggedError("FixedSlotTemplateDateNotFuture")<{
+  readonly slotDate: string;
+}> {}
+
+/** VI: Ngày fixed-slot đã bị khóa, không cho sửa hoặc xóa nữa. */
+export class FixedSlotTemplateDateLocked extends Data.TaggedError("FixedSlotTemplateDateLocked")<{
+  readonly slotDate: string;
+}> {}
+
+/** VI: Không tìm thấy ngày cụ thể bên trong fixed-slot template. */
+export class FixedSlotTemplateDateNotFound extends Data.TaggedError("FixedSlotTemplateDateNotFound")<{
+  readonly templateId: string;
+  readonly slotDate: string;
+}> {}
+
+/** VI: User đã có template active trùng giờ và đụng tập ngày với request hiện tại. */
+export class FixedSlotTemplateConflict extends Data.TaggedError("FixedSlotTemplateConflict")<{
+  readonly userId: string;
+  readonly slotStart: string;
+  readonly slotDates: ReadonlyArray<string>;
+}> {}
+
+/** VI: Billing upfront cho fixed-slot không thể hoàn tất an toàn. */
+export class FixedSlotTemplateBillingConflict extends Data.TaggedError("FixedSlotTemplateBillingConflict")<{
+  readonly userId: string;
+}> {}
+
+/** VI: Hủy fixed-slot template thất bại do conflict trong side effect liên quan. */
+export class FixedSlotTemplateCancelConflict extends Data.TaggedError("FixedSlotTemplateCancelConflict")<{
+  readonly templateId: string;
+}> {}
+
+/** VI: Update fixed-slot template thất bại do conflict trong mutation flow. */
+export class FixedSlotTemplateUpdateConflict extends Data.TaggedError("FixedSlotTemplateUpdateConflict")<{
+  readonly templateId: string;
+}> {}
+
 export type ReservationServiceFailure
   = | ActiveReservationExists
     | ReservationConfirmBlockedByActiveRental

@@ -8,3 +8,4 @@ export type StationSummary = StationsContracts.StationSummary;
 export type StationReadSummary = StationsContracts.StationReadSummary;
 export type StationErrorResponse = StationsContracts.StationErrorResponse;
 export type StationListResponse = StationsContracts.StationListResponse;
+export type StationRevenueResponse = StationsContracts.StationRevenueResponse;

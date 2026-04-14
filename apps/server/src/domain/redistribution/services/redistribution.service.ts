@@ -428,7 +428,7 @@ function makeRedistributionService(
         if (targetStation.emptySlots < args.requestedQuantity) {
           return yield* Effect.fail(
             new NotEnoughEmptySlotsAtTarget({
-              targetId: args.targetStationId,
+              targetStationId: args.targetStationId,
               required: args.requestedQuantity,
               available: targetStation.emptySlots,
             }),
@@ -634,7 +634,7 @@ function makeRedistributionService(
             else if (bikeQuantity > targetStation.emptySlots) {
               return yield* Effect.fail(
                 new NotEnoughEmptySlotsAtTarget({
-                  targetId: targetStation.id,
+                  targetStationId: targetStation.id,
                   required: targetStation.emptySlots,
                   available: bikeQuantity,
                 }),
@@ -860,7 +860,7 @@ function makeRedistributionService(
             else if (validLength > targetStation.emptySlots) {
               return yield* Effect.fail(
                 new NotEnoughEmptySlotsAtTarget({
-                  targetId: targetStation.id,
+                  targetStationId: targetStation.id,
                   required: validLength,
                   available: targetStation.emptySlots,
                 }),

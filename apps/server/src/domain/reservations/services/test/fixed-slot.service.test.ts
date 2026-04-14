@@ -1,7 +1,8 @@
 import { Effect, Layer, Option } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BikeRepository } from "@/domain/bikes";
+import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";
 
@@ -42,26 +43,34 @@ vi.mock("@/lib/email-templates", () => ({
 }));
 
 type DraftState = {
-  reservationBikeId: string | null;
+  reservationId: string | null;
   bikeStatus: "AVAILABLE" | "RESERVED";
 };
 
 describe("assignFixedSlotReservations", () => {
-  it("rolls back reservation bike assignment when bike reservation conflicts", async () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.enqueueOutboxJobInTx.mockImplementation(() => Effect.void);
+  });
+
+  it("creates and assigns daily fixed-slot reservation when bike is available", async () => {
     const slotDate = new Date(Date.UTC(2026, 3, 14));
     const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
-    const reservation = { id: "reservation-1" };
+    const createdReservation = { id: "reservation-1", bikeId: null };
     const bike = { id: "bike-1" };
     const template = {
       id: "template-1",
       userId: "user-1",
       stationId: "station-1",
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
       station: { name: "Test Station" },
     };
     const state: DraftState = {
-      reservationBikeId: null,
+      reservationId: null,
       bikeStatus: "AVAILABLE",
     };
 
@@ -69,7 +78,9 @@ describe("assignFixedSlotReservations", () => {
       if (client.state) {
         return {
           findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(
-            client.state!.reservationBikeId === null ? Option.some(reservation) : Option.none(),
+            client.state!.reservationId === null
+              ? Option.none()
+              : Option.some({ id: client.state!.reservationId, bikeId: "bike-1" }),
           ),
         };
       }
@@ -80,14 +91,169 @@ describe("assignFixedSlotReservations", () => {
     });
 
     mocks.makeReservationCommandRepository.mockImplementation((tx: { state: DraftState }) => ({
-      assignBikeToPendingReservation: (_reservationId: string, bikeId: string) =>
-        Effect.sync(() => {
-          if (tx.state.reservationBikeId !== null) {
-            return false;
-          }
-          tx.state.reservationBikeId = bikeId;
-          return true;
+      createReservation: ({ bikeId }: { bikeId?: string | null }) => Effect.sync(() => {
+        tx.state.reservationId = createdReservation.id;
+        return { ...createdReservation, bikeId: bikeId ?? null };
+      }),
+      assignBikeToPendingReservation: vi.fn(),
+    }));
+
+    mocks.makeBikeRepository.mockImplementation((tx: { state: DraftState }) => ({
+      findAvailableByStation: () => Effect.succeed(
+        tx.state.bikeStatus === "AVAILABLE" ? Option.some(bike) : Option.none(),
+      ),
+      reserveBikeIfAvailable: () => Effect.sync(() => {
+        if (tx.state.bikeStatus !== "AVAILABLE") {
+          return false;
+        }
+        tx.state.bikeStatus = "RESERVED";
+        return true;
+      }),
+    }));
+
+    const client = {
+      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) => {
+        const draft: DraftState = { ...state };
+        const result = await callback({ state: draft });
+        state.reservationId = draft.reservationId;
+        state.bikeStatus = draft.bikeStatus;
+        return result;
+      },
+    };
+
+    const layer = Layer.mergeAll(
+      Layer.succeed(Prisma, Prisma.make({ client: client as never })),
+      Layer.succeed(BikeRepository, BikeRepository.make({} as never)),
+    );
+
+    const summary = await runEffectWithLayer(
+      assignFixedSlotReservations({ slotDate, assignmentTime: slotDate, now: slotDate }),
+      layer,
+    );
+
+    expect(summary).toMatchObject({
+      totalTemplates: 1,
+      assigned: 1,
+      alreadyAssigned: 0,
+      conflicts: 0,
+      noBike: 0,
+    });
+    expect(state.reservationId).toBe(createdReservation.id);
+    expect(state.bikeStatus).toBe("RESERVED");
+    expect(mocks.enqueueOutboxJobInTx).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips duplicate creation when day reservation already assigned", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 14));
+    const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
+    const template = {
+      id: "template-1",
+      userId: "user-1",
+      stationId: "station-1",
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
+      slotStart,
+      user: { fullName: "Test User", email: "user@example.com" },
+      station: { name: "Test Station" },
+    };
+
+    mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
+      if (client.state) {
+        return {
+          findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(
+            Option.some({ id: "reservation-1", bikeId: "bike-1" }),
+          ),
+        };
+      }
+
+      return {
+        listActiveFixedSlotTemplatesByDate: () => Effect.succeed([template]),
+      };
+    });
+
+    mocks.makeReservationCommandRepository.mockReturnValue({
+      createReservation: vi.fn(),
+      assignBikeToPendingReservation: vi.fn(),
+    });
+    mocks.makeBikeRepository.mockReturnValue({
+      findAvailableByStation: vi.fn(),
+      reserveBikeIfAvailable: vi.fn(),
+    });
+
+    const client = {
+      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) =>
+        callback({
+          state: {
+            reservationId: "reservation-1",
+            bikeStatus: "RESERVED",
+          },
         }),
+    };
+
+    const layer = Layer.mergeAll(
+      Layer.succeed(Prisma, Prisma.make({ client: client as never })),
+      Layer.succeed(BikeRepository, BikeRepository.make({} as never)),
+    );
+
+    const summary = await runEffectWithLayer(
+      assignFixedSlotReservations({ slotDate, assignmentTime: slotDate, now: slotDate }),
+      layer,
+    );
+
+    expect(summary).toMatchObject({
+      totalTemplates: 1,
+      assigned: 0,
+      alreadyAssigned: 1,
+      conflicts: 0,
+      noBike: 0,
+    });
+    expect(mocks.enqueueOutboxJobInTx).not.toHaveBeenCalled();
+  });
+
+  it("does not create daily reservation when bike reserve step conflicts", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 14));
+    const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
+    const reservation = { id: "reservation-1", bikeId: null };
+    const bike = { id: "bike-1" };
+    const template = {
+      id: "template-1",
+      userId: "user-1",
+      stationId: "station-1",
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
+      slotStart,
+      user: { fullName: "Test User", email: "user@example.com" },
+      station: { name: "Test Station" },
+    };
+    const state: DraftState = {
+      reservationId: null,
+      bikeStatus: "AVAILABLE",
+    };
+
+    mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
+      if (client.state) {
+        return {
+          findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(
+            client.state!.reservationId === null
+              ? Option.none()
+              : Option.some({ id: reservation.id, bikeId: "bike-1" }),
+          ),
+        };
+      }
+
+      return {
+        listActiveFixedSlotTemplatesByDate: () => Effect.succeed([template]),
+      };
+    });
+
+    mocks.makeReservationCommandRepository.mockImplementation((tx: { state: DraftState }) => ({
+      createReservation: ({ bikeId }: { bikeId?: string | null }) => Effect.sync(() => {
+        tx.state.reservationId = reservation.id;
+        return { ...reservation, bikeId: bikeId ?? null };
+      }),
+      assignBikeToPendingReservation: vi.fn(),
     }));
 
     mocks.makeBikeRepository.mockImplementation((tx: { state: DraftState }) => ({
@@ -98,13 +264,10 @@ describe("assignFixedSlotReservations", () => {
     }));
 
     const client = {
-      fixedSlotTemplate: {
-        findMany: vi.fn(async () => [template]),
-      },
       $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) => {
         const draft: DraftState = { ...state };
         const result = await callback({ state: draft });
-        state.reservationBikeId = draft.reservationBikeId;
+        state.reservationId = draft.reservationId;
         state.bikeStatus = draft.bikeStatus;
         return result;
       },
@@ -123,12 +286,79 @@ describe("assignFixedSlotReservations", () => {
     expect(summary).toMatchObject({
       totalTemplates: 1,
       assigned: 0,
+      alreadyAssigned: 0,
       conflicts: 1,
       noBike: 0,
-      missingReservation: 0,
     });
-    expect(state.reservationBikeId).toBeNull();
+    expect(state.reservationId).toBeNull();
     expect(state.bikeStatus).toBe("AVAILABLE");
+    expect(mocks.enqueueOutboxJobInTx).not.toHaveBeenCalled();
+  });
+
+  it("treats old unassigned fixed-slot reservation as conflict", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 14));
+    const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
+    const template = {
+      id: "template-1",
+      userId: "user-1",
+      stationId: "station-1",
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
+      slotStart,
+      user: { fullName: "Test User", email: "user@example.com" },
+      station: { name: "Test Station" },
+    };
+
+    mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
+      if (client.state) {
+        return {
+          findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(
+            Option.some({ id: "reservation-1", bikeId: null }),
+          ),
+        };
+      }
+
+      return {
+        listActiveFixedSlotTemplatesByDate: () => Effect.succeed([template]),
+      };
+    });
+    mocks.makeReservationCommandRepository.mockReturnValue({
+      createReservation: vi.fn(),
+      assignBikeToPendingReservation: vi.fn(),
+    });
+    mocks.makeBikeRepository.mockReturnValue({
+      findAvailableByStation: vi.fn(),
+      reserveBikeIfAvailable: vi.fn(),
+    });
+
+    const client = {
+      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) =>
+        callback({
+          state: {
+            reservationId: "reservation-1",
+            bikeStatus: "AVAILABLE",
+          },
+        }),
+    };
+
+    const layer = Layer.mergeAll(
+      Layer.succeed(Prisma, Prisma.make({ client: client as never })),
+      Layer.succeed(BikeRepository, BikeRepository.make({} as never)),
+    );
+
+    const summary = await runEffectWithLayer(
+      assignFixedSlotReservations({ slotDate, assignmentTime: slotDate, now: slotDate }),
+      layer,
+    );
+
+    expect(summary).toMatchObject({
+      totalTemplates: 1,
+      assigned: 0,
+      alreadyAssigned: 0,
+      noBike: 0,
+      conflicts: 1,
+    });
     expect(mocks.enqueueOutboxJobInTx).not.toHaveBeenCalled();
   });
 });

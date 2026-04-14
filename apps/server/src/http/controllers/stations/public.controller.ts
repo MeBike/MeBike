@@ -2,17 +2,20 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
+import { previousUtcMonthFullRange } from "@/domain/rentals/services/rental-stats-time";
 import { withLoggedCause } from "@/domain/shared";
 import { StationServiceTag } from "@/domain/stations";
 import {
   toContractNearbyStation,
   toContractStationReadSummary,
+  toContractStationRevenue,
 } from "@/http/presenters/stations.presenter";
 
 import type {
   StationErrorResponse,
   StationListResponse,
   StationReadSummary,
+  StationRevenueResponse,
   StationsRoutes,
 } from "./shared";
 
@@ -134,8 +137,40 @@ const getStation: RouteHandler<StationsRoutes["getStation"]> = async (c) => {
   );
 };
 
+const getAllStationsRevenue: RouteHandler<StationsRoutes["getAllStationsRevenue"]> = async (c) => {
+  const query = c.req.valid("query");
+
+  const from = query.from ? new Date(query.from) : null;
+  const to = query.to ? new Date(query.to) : null;
+
+  if ((from && !to) || (!from && to)) {
+    return c.json<StationErrorResponse, 400>({
+      error: stationErrorMessages.INVALID_DATE_RANGE,
+      details: {
+        code: StationErrorCodeSchema.enum.INVALID_DATE_RANGE,
+        from: query.from,
+        to: query.to,
+      },
+    }, 400);
+  }
+
+  const range = from && to ? { from, to } : previousUtcMonthFullRange(new Date());
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* StationServiceTag;
+      return yield* service.getRevenueByStation(range);
+    }),
+    "GET /v1/stations/revenue",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json<StationRevenueResponse, 200>(toContractStationRevenue(result), 200);
+};
+
 export const StationPublicController = {
   listStations,
   getNearbyStations,
   getStation,
+  getAllStationsRevenue,
 } as const;

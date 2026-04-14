@@ -73,6 +73,30 @@ export type NearestSearchArgs = {
   pageSize?: number;
 };
 
+export type StationRevenueRow = {
+  stationId: string;
+  name: string;
+  address: string;
+  totalRentals: number;
+  totalRevenue: number;
+  totalDuration: number;
+  avgDuration: number;
+};
+
+export type StationRevenueStats = {
+  period: {
+    from: Date;
+    to: Date;
+  };
+  summary: {
+    totalStations: number;
+    totalRevenue: number;
+    totalRentals: number;
+    avgRevenuePerStation: number;
+  };
+  stations: readonly StationRevenueRow[];
+};
+
 export type ListStationsInput = {
   filter: StationFilter;
   pageReq: PageRequest<StationSortField>;
