@@ -8,7 +8,11 @@ import type {
 import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 
-import type { NearestSearchArgs, NearestStationRow } from "../../models";
+import type {
+  NearestSearchArgs,
+  NearestStationRow,
+  StationRevenueRow,
+} from "../../models";
 import type { StationRepo } from "../station.repository.types";
 
 import { StationRepositoryError } from "../../errors";
@@ -35,6 +39,7 @@ export type StationReadRepo = Pick<
   | "getByAgencyId"
   | "findIdNameAddressByIds"
   | "listNearest"
+  | "getRevenueByStation"
 >;
 
 export function makeStationReadRepository(
@@ -318,6 +323,66 @@ export function makeStationReadRepository(
         }));
 
         return makePageResult(mappedItems, total, resolvedPage, resolvedPageSize);
+      }).pipe(defectOn(StationRepositoryError));
+    },
+
+    getRevenueByStation({ from, to }) {
+      return Effect.tryPromise({
+        try: async () => {
+          const rows = await client.rental.groupBy({
+            by: ["startStationId"],
+            where: {
+              status: "COMPLETED",
+              startTime: {
+                gte: from,
+                lte: to,
+              },
+            },
+            _count: { _all: true },
+            _sum: {
+              totalPrice: true,
+              duration: true,
+            },
+            _avg: {
+              duration: true,
+            },
+          });
+
+          const stationIds = rows.map(row => row.startStationId);
+          const stations = stationIds.length === 0
+            ? []
+            : await client.station.findMany({
+                where: { id: { in: stationIds } },
+                select: {
+                  id: true,
+                  name: true,
+                  address: true,
+                },
+              });
+          const stationMap = new Map(stations.map(station => [station.id, station]));
+
+          return rows.flatMap((row): StationRevenueRow[] => {
+            const station = stationMap.get(row.startStationId);
+            if (!station) {
+              return [];
+            }
+
+            return [{
+              stationId: station.id,
+              name: station.name,
+              address: station.address,
+              totalRentals: row._count._all,
+              totalRevenue: row._sum.totalPrice === null ? 0 : Number(row._sum.totalPrice),
+              totalDuration: row._sum.duration ?? 0,
+              avgDuration: row._avg.duration === null ? 0 : Number(row._avg.duration.toFixed(2)),
+            }];
+          });
+        },
+        catch: cause =>
+          new StationRepositoryError({
+            operation: "getRevenueByStation",
+            cause,
+          }),
       }).pipe(defectOn(StationRepositoryError));
     },
   };

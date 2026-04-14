@@ -11,6 +11,7 @@ import type {
   NearestSearchArgs,
   NearestStationRow,
   StationFilter,
+  StationRevenueRow,
   StationRow,
   StationSortField,
   UpdateStationInput,
@@ -46,4 +47,8 @@ export type StationRepo = {
   listNearest: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;
+  getRevenueByStation: (args: {
+    from: Date;
+    to: Date;
+  }) => Effect.Effect<readonly StationRevenueRow[]>;
 };

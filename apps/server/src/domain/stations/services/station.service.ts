@@ -27,6 +27,7 @@ import type {
   NearestSearchArgs,
   NearestStationRow,
   StationFilter,
+  StationRevenueStats,
   StationRow,
   StationSortField,
   UpdateStationInput,
@@ -89,6 +90,10 @@ export type StationService = {
   listNearestStations: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;
+  getRevenueByStation: (args: {
+    from: Date;
+    to: Date;
+  }) => Effect.Effect<StationRevenueStats>;
 };
 
 export function makeStationService(repo: StationRepo, deps: {
@@ -299,6 +304,26 @@ export function makeStationService(repo: StationRepo, deps: {
       }),
     listNearestStations: args =>
       repo.listNearest(args),
+    getRevenueByStation: args =>
+      Effect.gen(function* () {
+        const rows = yield* repo.getRevenueByStation(args);
+        const stations = [...rows].sort((a, b) => b.totalRevenue - a.totalRevenue);
+        const totalRevenue = stations.reduce((sum, station) => sum + station.totalRevenue, 0);
+        const totalRentals = stations.reduce((sum, station) => sum + station.totalRentals, 0);
+
+        return {
+          period: args,
+          summary: {
+            totalStations: stations.length,
+            totalRevenue,
+            totalRentals,
+            avgRevenuePerStation: stations.length === 0
+              ? 0
+              : Number((totalRevenue / stations.length).toFixed(2)),
+          },
+          stations,
+        } satisfies StationRevenueStats;
+      }),
   };
 }
 

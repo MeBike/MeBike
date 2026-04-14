@@ -9,7 +9,6 @@ import {
   BikeRevenueResponseSchema,
   HighestRevenueStationSchema,
   NearestAvailableBikeSchema,
-  StationTypeSchema,
   StationAlertsResponseSchema,
   StationDateRangeQuerySchema,
   StationErrorCodeSchema,
@@ -18,6 +17,7 @@ import {
   StationRevenueResponseSchema,
   StationStatsResponseSchema,
   StationSummarySchema,
+  StationTypeSchema,
 } from "../../stations";
 
 export {
@@ -279,7 +279,7 @@ export const NearbyStationsQuerySchema = z
 export const StationRevenueQuerySchema = StationDateRangeQuerySchema.openapi(
   "StationRevenueQuery",
   {
-    description: "Optional date range filters for revenue/statistics endpoints",
+    description: "Optional date range filters for revenue/statistics endpoints. Provide both from and to together, or omit both to default to previous full UTC month.",
   },
 );
 

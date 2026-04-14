@@ -94,6 +94,82 @@ describe("stationReadRepository Integration", () => {
     expect(result.items[1].id).toBe(farId);
   });
 
+  it("getRevenueByStation aggregates completed rental revenue by start station", async () => {
+    const stationA = await kit.fixture.factories.station({ name: "Revenue Station A" });
+    const stationB = await kit.fixture.factories.station({ name: "Revenue Station B" });
+    const bikeA = await kit.fixture.factories.bike({ stationId: stationA.id });
+    const bikeB = await kit.fixture.factories.bike({ stationId: stationB.id });
+    const userA = await kit.fixture.factories.user({ email: "revenue-user-a@example.com" });
+    const userB = await kit.fixture.factories.user({ email: "revenue-user-b@example.com" });
+    const from = new Date("2026-02-01T00:00:00.000Z");
+    const to = new Date("2026-02-28T23:59:59.999Z");
+
+    await kit.fixture.factories.rental({
+      userId: userA.id,
+      bikeId: bikeA.id,
+      startStationId: stationA.id,
+      startTime: new Date("2026-02-05T09:00:00.000Z"),
+      endTime: new Date("2026-02-05T09:30:00.000Z"),
+      duration: 30,
+      totalPrice: "10000",
+      status: "COMPLETED",
+    });
+    await kit.fixture.factories.rental({
+      userId: userA.id,
+      bikeId: bikeA.id,
+      startStationId: stationA.id,
+      startTime: new Date("2026-02-10T09:00:00.000Z"),
+      endTime: new Date("2026-02-10T10:00:00.000Z"),
+      duration: 60,
+      totalPrice: "20000",
+      status: "COMPLETED",
+    });
+    await kit.fixture.factories.rental({
+      userId: userB.id,
+      bikeId: bikeB.id,
+      startStationId: stationB.id,
+      startTime: new Date("2026-02-12T09:00:00.000Z"),
+      endTime: new Date("2026-02-12T09:20:00.000Z"),
+      duration: 20,
+      totalPrice: "5000",
+      status: "COMPLETED",
+    });
+    await kit.fixture.factories.rental({
+      userId: userB.id,
+      bikeId: bikeB.id,
+      startStationId: stationB.id,
+      startTime: new Date("2026-02-15T09:00:00.000Z"),
+      endTime: new Date("2026-02-15T09:15:00.000Z"),
+      duration: 15,
+      totalPrice: "9000",
+      status: "CANCELLED",
+    });
+
+    const result = await Effect.runPromise(repo.getRevenueByStation({ from, to }));
+
+    expect(result).toHaveLength(2);
+
+    const stationARow = result.find(item => item.stationId === stationA.id);
+    const stationBRow = result.find(item => item.stationId === stationB.id);
+
+    expect(stationARow).toMatchObject({
+      stationId: stationA.id,
+      name: "Revenue Station A",
+      totalRentals: 2,
+      totalRevenue: 30000,
+      totalDuration: 90,
+      avgDuration: 45,
+    });
+    expect(stationBRow).toMatchObject({
+      stationId: stationB.id,
+      name: "Revenue Station B",
+      totalRentals: 1,
+      totalRevenue: 5000,
+      totalDuration: 20,
+      avgDuration: 20,
+    });
+  });
+
   it("defects with StationRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
