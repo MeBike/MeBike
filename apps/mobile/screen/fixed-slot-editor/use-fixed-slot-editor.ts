@@ -1,11 +1,10 @@
-import { useCreateFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useCreateFixedSlotTemplateMutation";
-import { useUpdateFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useUpdateFixedSlotTemplateMutation";
-import { useFixedSlotTemplateDetailQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplateDetailQuery";
+import { useCreateFixedSlotTemplateMutation } from "@hooks/mutations/fixed-slots/use-create-fixed-slot-template-mutation";
+import { useUpdateFixedSlotTemplateMutation } from "@hooks/mutations/fixed-slots/use-update-fixed-slot-template-mutation";
+import { useFixedSlotTemplateDetailQuery } from "@hooks/query/fixed-slots/use-fixed-slot-template-detail-query";
 import { useGetStationDetailQuery } from "@hooks/query/stations/use-get-station-detail-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
-import { getApiErrorMessage } from "@utils/error";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Platform } from "react-native";
 
@@ -13,6 +12,7 @@ import type {
   FixedSlotEditorNavigationProp,
   FixedSlotEditorRouteProp,
 } from "@/types/navigation";
+import { presentFixedSlotError } from "@/presenters/fixed-slots/fixed-slot-presenter";
 
 import {
   filterFutureDates,
@@ -50,11 +50,11 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
   );
 
   const lookupStationId = !canEditStation
-    ? templateData?.station_id
+    ? templateData?.station.id
     : (stationId.length >= 6 ? stationId : "");
   const { data: fetchedStation } = useGetStationDetailQuery(lookupStationId ?? "");
 
-  const resolvedStationName = stationName ?? templateData?.station_name ?? fetchedStation?.name;
+  const resolvedStationName = stationName ?? templateData?.station.name ?? fetchedStation?.name;
   const isMutating = createMutation.isPending || updateMutation.isPending;
   const headerTitle = isEditMode ? "Chỉnh sửa khung giờ" : "Tạo khung giờ";
   const submitLabel = isMutating
@@ -63,12 +63,12 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
 
   useEffect(() => {
     if (templateData) {
-      setStationId(templateData.station_id);
-      setSlotStart(templateData.slot_start);
-      setTimePickerValue(timeStringToDate(templateData.slot_start));
-      const futureDates = filterFutureDates(templateData.selected_dates ?? []).sort();
+      setStationId(templateData.station.id);
+      setSlotStart(templateData.slotStart);
+      setTimePickerValue(timeStringToDate(templateData.slotStart));
+      const futureDates = filterFutureDates(templateData.slotDates ?? []).sort();
       setSelectedDates(futureDates);
-      setPastDatesHidden((templateData.selected_dates?.length ?? 0) - futureDates.length);
+      setPastDatesHidden((templateData.slotDates?.length ?? 0) - futureDates.length);
     }
   }, [templateData]);
 
@@ -167,7 +167,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
       return;
     }
 
-    const payload = { slot_start: slotStart, selected_dates: selectedDates };
+    const payload = { slotStart, slotDates: selectedDates };
 
     if (isEditMode && templateId) {
       updateMutation.mutate(
@@ -184,7 +184,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
           onError: (error) => {
             Alert.alert(
               "Không thể cập nhật",
-              getApiErrorMessage(error, "Vui lòng thử lại."),
+              presentFixedSlotError(error, "Vui lòng thử lại."),
             );
           },
         },
@@ -193,7 +193,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
     }
 
     createMutation.mutate(
-      { station_id: normalizedStationId, ...payload },
+      { stationId: normalizedStationId, ...payload },
       {
         onSuccess: async () => {
           await queryClient.invalidateQueries({ queryKey: ["fixed-slots"] });
@@ -204,7 +204,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
         onError: (error) => {
           Alert.alert(
             "Không thể tạo khung giờ",
-            getApiErrorMessage(error, "Vui lòng thử lại."),
+            presentFixedSlotError(error, "Vui lòng thử lại."),
           );
         },
       },

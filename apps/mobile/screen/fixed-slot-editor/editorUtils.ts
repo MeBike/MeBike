@@ -11,6 +11,10 @@ export function formatDate(value: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function getDateKey(value: Date) {
+  return formatDate(value);
+}
+
 export function getTomorrowDate() {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
@@ -19,8 +23,8 @@ export function getTomorrowDate() {
 }
 
 export function filterFutureDates(dates: string[]) {
-  const tomorrow = getTomorrowDate();
-  return dates.filter((date) => new Date(date) >= tomorrow);
+  const tomorrowKey = getDateKey(getTomorrowDate());
+  return dates.filter(date => date >= tomorrowKey);
 }
 
 export function timeStringToDate(value: string) {

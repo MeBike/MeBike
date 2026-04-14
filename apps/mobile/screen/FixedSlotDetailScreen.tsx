@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BikeColors } from "@constants/BikeColors";
-import { useFixedSlotTemplateDetailQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplateDetailQuery";
+import { useFixedSlotTemplateDetailQuery } from "@hooks/query/fixed-slots/use-fixed-slot-template-detail-query";
 
 import { DateChips } from "./fixed-slot-detail/components/DateChips";
 import { InfoHighlights } from "./fixed-slot-detail/components/InfoHighlights";
@@ -60,27 +60,27 @@ export default function FixedSlotDetailScreen() {
           : (
               <View style={styles.card}>
                 <StationSummary
-                  name={data.station_name}
-                  stationId={data.station_id}
+                  name={data.station.name}
+                  stationId={data.station.id}
                   status={data.status}
                 />
 
-                <InfoHighlights slotStart={data.slot_start} totalDates={data.selected_dates.length} />
+                <InfoHighlights slotStart={data.slotStart} totalDates={data.slotDates.length} />
 
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionLabel}>Danh sách ngày</Text>
-                  <Text style={styles.sectionMeta}>{data.selected_dates.length} ngày</Text>
+                  <Text style={styles.sectionMeta}>{data.slotDates.length} ngày</Text>
                 </View>
-                <DateChips dates={data.selected_dates} />
+                <DateChips dates={data.slotDates} />
 
-                {data.status === "ĐANG HOẠT ĐỘNG" && (
+                {data.status === "ACTIVE" && (
                   <TouchableOpacity
                     style={styles.editButton}
                     onPress={() =>
                       navigation.navigate("FixedSlotEditor", {
                         templateId,
-                        stationId: data.station_id,
-                        stationName: data.station_name,
+                        stationId: data.station.id,
+                        stationName: data.station.name,
                       })}
                   >
                     <Text style={styles.editButtonText}>Chỉnh sửa khung giờ</Text>

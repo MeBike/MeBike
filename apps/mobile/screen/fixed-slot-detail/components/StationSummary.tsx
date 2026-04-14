@@ -2,17 +2,21 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { BikeColors } from "@constants/BikeColors";
+import { presentFixedSlotStatus } from "@/presenters/fixed-slots/fixed-slot-presenter";
+
+import type { FixedSlotStatus } from "@/contracts/server";
 
 import { STATUS_STYLES } from "../utils";
 
 type Props = {
   name?: string | null;
   stationId?: string | null;
-  status: string;
+  status: FixedSlotStatus;
 };
 
 export function StationSummary({ name, stationId, status }: Props) {
-  const statusStyle = STATUS_STYLES[status] ?? STATUS_STYLES["ĐANG HOẠT ĐỘNG"];
+  const statusStyle = STATUS_STYLES[status] ?? STATUS_STYLES.ACTIVE;
+  const statusLabel = presentFixedSlotStatus(status);
 
   return (
     <View style={styles.container}>
@@ -22,7 +26,7 @@ export function StationSummary({ name, stationId, status }: Props) {
         </Text>
         <View style={[styles.badge, { backgroundColor: statusStyle.backgroundColor }]}
         >
-          <Text style={[styles.badgeText, { color: statusStyle.color }]}>{status}</Text>
+          <Text style={[styles.badgeText, { color: statusStyle.color }]}>{statusLabel}</Text>
         </View>
       </View>
       {stationId ? (

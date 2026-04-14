@@ -1,14 +1,14 @@
 import { BikeColors } from "@constants/BikeColors";
-import { useCancelFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useCancelFixedSlotTemplateMutation";
-import { useFixedSlotTemplatesQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplatesQuery";
+import { useCancelFixedSlotTemplateMutation } from "@hooks/mutations/fixed-slots/use-cancel-fixed-slot-template-mutation";
+import { useFixedSlotTemplatesQuery } from "@hooks/query/fixed-slots/use-fixed-slot-templates-query";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { getApiErrorMessage } from "@utils/error";
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
-import type { FixedSlotStatus } from "@/types/fixed-slot-types";
+import type { FixedSlotStatus } from "@/contracts/server";
+import { presentFixedSlotError } from "@/presenters/fixed-slots/fixed-slot-presenter";
 import type {
   FixedSlotTemplatesNavigationProp,
   FixedSlotTemplatesRouteProp,
@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
 
 const STATUS_FILTERS: Array<{ label: string; value?: FixedSlotStatus }> = [
   { label: "Tất cả" },
-  { label: "ĐANG HOẠT ĐỘNG", value: "ĐANG HOẠT ĐỘNG" },
-  { label: "ĐÃ HUỶ", value: "ĐÃ HUỶ" },
+  { label: "Đang hoạt động", value: "ACTIVE" },
+  { label: "Đã hủy", value: "CANCELLED" },
 ];
 
 export default function FixedSlotTemplatesScreen() {
@@ -55,7 +55,7 @@ export default function FixedSlotTemplatesScreen() {
     isFetchingNextPage,
     isRefetching,
   } = useFixedSlotTemplatesQuery(
-    { limit: pageLimit, station_id: stationId, status: statusFilter },
+    { pageSize: pageLimit, stationId, status: statusFilter },
     hasToken,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -80,7 +80,7 @@ export default function FixedSlotTemplatesScreen() {
           cancelMutation.mutate(id, {
             onSuccess: () => handleInvalidate(),
             onError: (error) => {
-              Alert.alert("Không thể huỷ khung giờ", getApiErrorMessage(error, "Vui lòng thử lại sau."));
+              Alert.alert("Không thể hủy khung giờ", presentFixedSlotError(error, "Vui lòng thử lại sau."));
             },
           });
         },

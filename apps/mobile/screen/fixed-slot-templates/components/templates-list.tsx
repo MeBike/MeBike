@@ -1,6 +1,5 @@
 import { FixedSlotTemplateCard } from "@components/reservation-flow/FixedSlotTemplateCard";
 import { BikeColors } from "@constants/BikeColors";
-import type { FixedSlotTemplateListItem } from "@/types/fixed-slot-types";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,6 +8,8 @@ import {
   Text,
   View,
 } from "react-native";
+
+import type { FixedSlotTemplate } from "@/contracts/server";
 
 const styles = StyleSheet.create({
   list: {
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
 });
 
 type FixedSlotTemplatesListProps = {
-  templates: FixedSlotTemplateListItem[];
+  templates: FixedSlotTemplate[];
   refreshing: boolean;
   isLoading: boolean;
   isFetchingMore: boolean;
@@ -80,7 +81,7 @@ export function FixedSlotTemplatesList({
     <FlatList
       style={styles.list}
       data={templates}
-      keyExtractor={(item) => item._id}
+      keyExtractor={item => item.id}
       contentContainerStyle={styles.content}
       refreshing={refreshing}
       onRefresh={onRefresh}
@@ -111,8 +112,8 @@ export function FixedSlotTemplatesList({
       renderItem={({ item }) => (
         <FixedSlotTemplateCard
           template={item}
-          onCancel={() => onCancel(item._id)}
-          onSelect={() => onSelect(item._id)}
+          onCancel={() => onCancel(item.id)}
+          onSelect={() => onSelect(item.id)}
         />
       )}
     />

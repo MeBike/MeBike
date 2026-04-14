@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import type { ListRenderItemInfo } from "react-native";
 
-import type { FixedSlotStatus } from "@/types/fixed-slot-types";
+import type { FixedSlotStatus } from "@/contracts/server";
 
 const styles = StyleSheet.create({
   container: {

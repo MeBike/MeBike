@@ -2,19 +2,20 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { BikeColors } from "@constants/BikeColors";
+import { presentFixedSlotStatus } from "@/presenters/fixed-slots/fixed-slot-presenter";
 
-import type { FixedSlotTemplateListItem } from "@/types/fixed-slot-types";
+import type { FixedSlotTemplate } from "@/contracts/server";
 
 type Props = {
-  template: FixedSlotTemplateListItem;
+  template: FixedSlotTemplate;
   isSelected?: boolean;
-  onSelect?: (template: FixedSlotTemplateListItem) => void;
-  onCancel?: (template: FixedSlotTemplateListItem) => void;
+  onSelect?: () => void;
+  onCancel?: () => void;
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  "ĐANG HOẠT ĐỘNG": BikeColors.success,
-  "ĐÃ HUỶ": BikeColors.error,
+const STATUS_COLORS = {
+  ACTIVE: BikeColors.success,
+  CANCELLED: BikeColors.error,
 };
 
 export function FixedSlotTemplateCard({
@@ -24,9 +25,10 @@ export function FixedSlotTemplateCard({
   onCancel,
 }: Props) {
   const statusColor = STATUS_COLORS[template.status] ?? BikeColors.textSecondary;
-  const selectedDateCount = template.selected_dates?.length ?? 0;
-  const slotStartLabel = template.slot_start ?? "--:--";
-  const canCancel = template.status !== "ĐÃ HUỶ";
+  const selectedDateCount = template.slotDates.length;
+  const slotStartLabel = template.slotStart;
+  const canCancel = template.status !== "CANCELLED";
+  const statusLabel = presentFixedSlotStatus(template.status);
 
   return (
     <TouchableOpacity
@@ -35,12 +37,12 @@ export function FixedSlotTemplateCard({
         isSelected && styles.cardSelected,
       ]}
       activeOpacity={0.85}
-      onPress={() => onSelect?.(template)}
+      onPress={onSelect}
     >
       <View style={styles.row}>
         <View style={styles.stationInfo}>
           <Text style={styles.stationName}>
-            {template.station_name ?? "Khung giờ"}
+            {template.station.name}
           </Text>
           <Text style={styles.metaText}>
             Giờ bắt đầu: {slotStartLabel}
@@ -50,7 +52,7 @@ export function FixedSlotTemplateCard({
           </Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Text style={styles.statusText}>{template.status}</Text>
+          <Text style={styles.statusText}>{statusLabel}</Text>
         </View>
       </View>
 
@@ -58,7 +60,7 @@ export function FixedSlotTemplateCard({
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.actionButton, styles.dangerButton]}
-            onPress={() => onCancel?.(template)}
+            onPress={onCancel}
           >
             <Text style={styles.dangerText}>Huỷ</Text>
           </TouchableOpacity>

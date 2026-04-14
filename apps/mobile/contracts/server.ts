@@ -47,3 +47,16 @@ export type CreateIncidentPayload = z.output<
 export type UpdateIncidentPayload = z.output<
   typeof serverRoutes.incidents.updateIncident.request.body.content["application/json"]["schema"]
 >;
+
+export type FixedSlotTemplate = ServerContracts.FixedSlotTemplatesContracts.FixedSlotTemplate;
+export type FixedSlotStatus = FixedSlotTemplate["status"];
+export type FixedSlotTemplateListResponse = ServerContracts.FixedSlotTemplatesContracts.ListFixedSlotTemplatesResponse;
+export type FixedSlotTemplateListParams = z.output<
+  typeof serverRoutes.fixedSlotTemplates.listFixedSlotTemplates.request.query
+>;
+export type CreateFixedSlotTemplatePayload = z.output<
+  typeof serverRoutes.fixedSlotTemplates.createFixedSlotTemplate.request.body.content["application/json"]["schema"]
+>;
+export type UpdateFixedSlotTemplatePayload = z.output<
+  typeof serverRoutes.fixedSlotTemplates.updateFixedSlotTemplate.request.body.content["application/json"]["schema"]
+>;
