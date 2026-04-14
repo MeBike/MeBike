@@ -1,37 +1,14 @@
-import { FixedSlotTemplateCard } from "@components/reservation-flow/FixedSlotTemplateCard";
-import { BikeColors } from "@constants/BikeColors";
+import { AppText } from "@ui/primitives/app-text";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { useTheme, YStack } from "tamagui";
 
 import type { FixedSlotTemplate } from "@/contracts/server";
-
-const styles = StyleSheet.create({
-  list: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-    gap: 16,
-    paddingBottom: 40,
-  },
-  emptyState: {
-    padding: 32,
-    alignItems: "center",
-    gap: 12,
-  },
-  emptyText: {
-    color: BikeColors.textSecondary,
-  },
-  footerLoader: {
-    paddingVertical: 16,
-  },
-});
+import { FixedSlotTemplateCard } from "./fixed-slot-template-card";
 
 type FixedSlotTemplatesListProps = {
   templates: FixedSlotTemplate[];
@@ -58,6 +35,7 @@ export function FixedSlotTemplatesList({
   onCancel,
   onSelect,
 }: FixedSlotTemplatesListProps) {
+  const theme = useTheme();
   const [contentHeight, setContentHeight] = useState(0);
 
   useEffect(() => {
@@ -79,10 +57,9 @@ export function FixedSlotTemplatesList({
 
   return (
     <FlatList
-      style={styles.list}
       data={templates}
       keyExtractor={item => item.id}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}
       refreshing={refreshing}
       onRefresh={onRefresh}
       onEndReached={handleEndReached}
@@ -92,21 +69,24 @@ export function FixedSlotTemplatesList({
       }}
       ListFooterComponent={
         isFetchingMore ? (
-          <View style={styles.footerLoader}>
-            <ActivityIndicator color={BikeColors.primary} />
+          <View style={{ paddingVertical: 16 }}>
+            <ActivityIndicator color={theme.actionPrimary.val} />
           </View>
         ) : null
       }
       ListEmptyComponent={
         isLoading ? (
-          <View style={styles.emptyState}>
-            <ActivityIndicator color={BikeColors.primary} size="large" />
-            <Text style={styles.emptyText}>Đang tải khung giờ...</Text>
-          </View>
+          <YStack alignItems="center" gap="$3" padding="$7">
+            <ActivityIndicator color={theme.actionPrimary.val} size="large" />
+            <AppText tone="muted" variant="bodySmall">Đang tải khung giờ...</AppText>
+          </YStack>
         ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>Chưa có khung giờ nào.</Text>
-          </View>
+          <YStack alignItems="center" gap="$2" padding="$7">
+            <AppText variant="sectionTitle">Chưa có khung giờ nào</AppText>
+            <AppText align="center" tone="muted" variant="bodySmall">
+              Tạo khung giờ cố định để giữ nhịp thuê xe nhanh hơn tại trạm quen thuộc.
+            </AppText>
+          </YStack>
         )
       }
       renderItem={({ item }) => (

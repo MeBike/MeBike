@@ -11,6 +11,15 @@ export function formatDate(value: Date) {
   return `${year}-${month}-${day}`;
 }
 
+export function formatDateLabel(value: string) {
+  const [year, month, day] = value.split("-");
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  return `${day}-${month}-${year}`;
+}
+
 function getDateKey(value: Date) {
   return formatDate(value);
 }

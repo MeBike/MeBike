@@ -1,89 +1,34 @@
-import { BikeColors } from "@constants/BikeColors";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
 import React from "react";
 import {
   ActivityIndicator,
   Platform,
   ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme, YStack } from "tamagui";
 
 import type {
   FixedSlotEditorNavigationProp,
   FixedSlotEditorRouteProp,
 } from "@/types/navigation";
 
-import { DatePickerModal } from "./fixed-slot-editor/components/DatePickerModal";
-import { SelectedDatesSection } from "./fixed-slot-editor/components/SelectedDatesSection";
-import { StationSection } from "./fixed-slot-editor/components/StationSection";
-import { TimePickerModal } from "./fixed-slot-editor/components/TimePickerModal";
-import { TimeSelectionSection } from "./fixed-slot-editor/components/TimeSelectionSection";
+import { DatePickerModal } from "./fixed-slot-editor/components/date-picker-modal";
+import { SelectedDatesSection } from "./fixed-slot-editor/components/selected-dates-section";
+import { StationSection } from "./fixed-slot-editor/components/station-section";
+import { TimePickerModal } from "./fixed-slot-editor/components/time-picker-modal";
+import { TimeSelectionSection } from "./fixed-slot-editor/components/time-selection-section";
 import { useFixedSlotEditor } from "./fixed-slot-editor/use-fixed-slot-editor";
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BikeColors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#fff",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  formLoader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 60,
-    gap: 12,
-  },
-  loaderText: {
-    color: BikeColors.textSecondary,
-  },
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderColor: BikeColors.divider,
-    backgroundColor: "#fff",
-  },
-  primaryButton: {
-    backgroundColor: BikeColors.primary,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-  },
-  primaryButtonDisabled: {
-    opacity: 0.7,
-  },
-  primaryText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-});
 
 export default function FixedSlotEditorScreen() {
   const navigation = useNavigation<FixedSlotEditorNavigationProp>();
   const route = useRoute<FixedSlotEditorRouteProp>();
-  const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const {
     headerTitle,
     submitLabel,
@@ -115,42 +60,37 @@ export default function FixedSlotEditorScreen() {
   } = useFixedSlotEditor({ navigation, routeParams: route.params });
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[BikeColors.primary, BikeColors.secondary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + 16 }]}
-      >
-        <Ionicons
-          name="chevron-back"
-          size={24}
-          color="#fff"
-          onPress={() => navigation.goBack()}
-        />
-        <Text style={styles.headerTitle}>{headerTitle}</Text>
-      </LinearGradient>
+    <Screen tone="subtle">
+      <AppHeroHeader
+        onBack={() => navigation.goBack()}
+        size="compact"
+        subtitle={isEditMode ? resolvedStationName : stationName}
+        title={headerTitle}
+        variant="surface"
+      />
 
-      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {isEditMode && isDetailLoading
           ? (
-              <View style={styles.formLoader}>
-                <ActivityIndicator color={BikeColors.primary} size="large" />
-                <Text style={styles.loaderText}>Đang tải thông tin khung giờ...</Text>
-              </View>
+              <Screen alignItems="center" justifyContent="center" minHeight={320} tone="subtle">
+                <ActivityIndicator color={theme.actionPrimary.val} size="large" />
+                <AppText tone="muted" variant="bodySmall">Đang tải thông tin khung giờ...</AppText>
+              </Screen>
             )
           : (
-              <>
-                <StationSection
-                  stationId={stationId}
-                  stationName={stationName}
-                  resolvedStationName={resolvedStationName}
-                  canEdit={canEditStation}
-                  isEditMode={isEditMode}
-                  onChangeStationId={setStationId}
-                />
+              <YStack gap="$4">
+                <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$5" chrome="flat" gap="$4">
+                  <StationSection
+                    stationId={stationId}
+                    stationName={stationName}
+                    resolvedStationName={resolvedStationName}
+                    canEdit={canEditStation}
+                    isEditMode={isEditMode}
+                    onChangeStationId={setStationId}
+                  />
 
-                <TimeSelectionSection slotStart={slotStart} onSelectTime={handleSelectTime} />
+                  <TimeSelectionSection slotStart={slotStart} onSelectTime={handleSelectTime} />
+                </AppCard>
 
                 <SelectedDatesSection
                   selectedDates={selectedDates}
@@ -158,18 +98,21 @@ export default function FixedSlotEditorScreen() {
                   onAddDate={handleAddDate}
                   onRemoveDate={removeDate}
                 />
-              </>
+              </YStack>
             )}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.primaryButton, (isMutating || (isEditMode && isDetailLoading)) && styles.primaryButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={isMutating || (isEditMode && isDetailLoading)}
-        >
-          <Text style={styles.primaryText}>{submitLabel}</Text>
-        </TouchableOpacity>
+      <View>
+        <AppCard borderTopColor="$borderSubtle" borderTopWidth={1} borderRadius="$0" chrome="flat" padding="$4">
+          <AppButton
+            disabled={isMutating || (isEditMode && isDetailLoading)}
+            loading={isMutating}
+            onPress={handleSubmit}
+            tone="primary"
+          >
+            {submitLabel}
+          </AppButton>
+        </AppCard>
       </View>
 
       {Platform.OS !== "android" && (
@@ -189,8 +132,8 @@ export default function FixedSlotEditorScreen() {
           onChange={handleTimePickerChange}
           onConfirm={confirmTimePicker}
           onClose={cancelTimePicker}
-        />
+          />
       )}
-    </View>
+    </Screen>
   );
 }

@@ -20,7 +20,7 @@ import {
   formatTime,
   getTomorrowDate,
   timeStringToDate,
-} from "./editorUtils";
+} from "./editor-utils";
 
 export type FixedSlotEditorHookParams = {
   navigation: FixedSlotEditorNavigationProp;

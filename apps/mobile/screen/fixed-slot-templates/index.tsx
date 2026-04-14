@@ -1,11 +1,12 @@
-import { BikeColors } from "@constants/BikeColors";
 import { useCancelFixedSlotTemplateMutation } from "@hooks/mutations/fixed-slots/use-cancel-fixed-slot-template-mutation";
 import { useFixedSlotTemplatesQuery } from "@hooks/query/fixed-slots/use-fixed-slot-templates-query";
 import { useAuthNext } from "@providers/auth-provider-next";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useMemo, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert } from "react-native";
 
 import type { FixedSlotStatus } from "@/contracts/server";
 import { presentFixedSlotError } from "@/presenters/fixed-slots/fixed-slot-presenter";
@@ -15,18 +16,7 @@ import type {
 } from "@/types/navigation";
 
 import { FixedSlotFilterBar } from "./components/filter-bar";
-import { FixedSlotTemplatesHeader } from "./components/header";
 import { FixedSlotTemplatesList } from "./components/templates-list";
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BikeColors.background,
-  },
-  listContainer: {
-    flex: 1,
-  },
-});
 
 const STATUS_FILTERS: Array<{ label: string; value?: FixedSlotStatus }> = [
   { label: "Tất cả" },
@@ -129,22 +119,28 @@ export default function FixedSlotTemplatesScreen() {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
-    <View style={styles.container}>
-      <FixedSlotTemplatesHeader
-        title={headerTitle}
+    <Screen tone="subtle">
+      <AppHeroHeader
+        footer={(
+          <FixedSlotFilterBar
+            filters={STATUS_FILTERS}
+            activeFilter={statusFilter}
+            onFilterChange={setStatusFilter}
+            onCreate={handleCreateTemplate}
+          />
+        )}
         onBack={() => navigation.goBack()}
+        size="compact"
+        subtitle="Quản lý lịch giữ xe theo trạm và giờ quen thuộc."
+        title={headerTitle}
+        variant="surface"
       />
-      <FixedSlotFilterBar
-        filters={STATUS_FILTERS}
-        activeFilter={statusFilter}
-        onFilterChange={setStatusFilter}
-        onCreate={handleCreateTemplate}
-      />
-      <View
-        style={styles.listContainer}
+      <Screen
+        flex={1}
         onLayout={({ nativeEvent }) => {
           setListHeight(nativeEvent.layout.height);
         }}
+        tone="subtle"
       >
         <FixedSlotTemplatesList
           templates={templates}
@@ -158,7 +154,7 @@ export default function FixedSlotTemplatesScreen() {
           onCancel={handleCancel}
           onSelect={templateId => navigation.navigate("FixedSlotDetail", { templateId })}
         />
-      </View>
-    </View>
+      </Screen>
+    </Screen>
   );
 }

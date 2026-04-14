@@ -3,6 +3,8 @@ import type { FixedSlotError } from "@/services/fixed-slots";
 
 import { isFixedSlotApiError } from "@/services/fixed-slots";
 
+type FixedSlotStatusTone = "success" | "danger";
+
 const fixedSlotStatusLabels: Record<FixedSlotStatus, string> = {
   ACTIVE: "Đang hoạt động",
   CANCELLED: "Đã hủy",
@@ -26,6 +28,10 @@ const fixedSlotErrorMessages: Record<string, string> = {
 
 export function presentFixedSlotStatus(status: FixedSlotStatus): string {
   return fixedSlotStatusLabels[status];
+}
+
+export function getFixedSlotStatusTone(status: FixedSlotStatus): FixedSlotStatusTone {
+  return status === "ACTIVE" ? "success" : "danger";
 }
 
 export function presentFixedSlotError(
