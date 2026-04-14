@@ -3,6 +3,7 @@ import { Cause, Effect, Exit, Option } from "effect";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
+import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -104,15 +105,17 @@ async function runFixedSlotAssignmentTransaction(
       const bikeRepo = makeBikeRepository(tx);
       const txReservationQueryRepo = makeReservationQueryRepository(tx);
       const txReservationCommandRepo = makeReservationCommandRepository(tx);
-      const reservationOpt = yield* txReservationQueryRepo.findPendingFixedSlotByTemplateAndStart(
+      const existingReservationOpt = yield* txReservationQueryRepo.findPendingFixedSlotByTemplateAndStart(
         template.id,
         labels.slotStartAt,
       );
 
-      if (Option.isNone(reservationOpt)) {
-        return "MISSING_RESERVATION" as const;
+      if (Option.isSome(existingReservationOpt) && existingReservationOpt.value.bikeId) {
+        return "ALREADY_ASSIGNED" as const;
       }
-      const reservation = reservationOpt.value;
+      if (Option.isSome(existingReservationOpt)) {
+        return yield* Effect.fail(new FixedSlotAssignmentConflict());
+      }
 
       const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId);
       if (Option.isNone(bikeOpt)) {
@@ -121,19 +124,25 @@ async function runFixedSlotAssignmentTransaction(
       }
       const bike = bikeOpt.value;
 
-      const reservationAssigned = yield* txReservationCommandRepo.assignBikeToPendingReservation(
-        reservation.id,
-        bike.id,
-        context.now,
-      );
-      if (!reservationAssigned) {
-        return "CONFLICT" as const;
-      }
-
       const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, context.now);
       if (!bikeReserved) {
         return yield* Effect.fail(new FixedSlotAssignmentConflict());
       }
+
+      const reservation = yield* txReservationCommandRepo.createReservation({
+        userId: template.userId,
+        bikeId: bike.id,
+        stationId: template.stationId,
+        reservationOption: "FIXED_SLOT",
+        fixedSlotTemplateId: template.id,
+        startTime: labels.slotStartAt,
+        endTime: null,
+        prepaid: toPrismaDecimal("0"),
+        status: "PENDING",
+      }).pipe(
+        Effect.catchTag("ReservationUniqueViolation", () =>
+          Effect.fail(new FixedSlotAssignmentConflict())),
+      );
 
       yield* enqueueAssignedEmail(tx, reservation.id, template, labels, context);
 

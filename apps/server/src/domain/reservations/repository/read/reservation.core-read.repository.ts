@@ -86,7 +86,6 @@ export function makeReservationCoreReadRepository(
               reservationOption: "FIXED_SLOT",
               startTime,
               status: ReservationStatus.PENDING,
-              bikeId: null,
             },
             select: selectReservationRow,
           }),

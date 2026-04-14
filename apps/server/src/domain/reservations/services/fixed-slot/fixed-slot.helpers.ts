@@ -70,11 +70,11 @@ export function incrementFixedSlotCounts(
     case "ASSIGNED":
       counts.assigned += 1;
       break;
+    case "ALREADY_ASSIGNED":
+      counts.alreadyAssigned += 1;
+      break;
     case "NO_BIKE":
       counts.noBike += 1;
-      break;
-    case "MISSING_RESERVATION":
-      counts.missingReservation += 1;
       break;
     case "CONFLICT":
       counts.conflicts += 1;

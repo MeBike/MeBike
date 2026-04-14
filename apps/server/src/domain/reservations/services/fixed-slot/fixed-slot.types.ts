@@ -4,15 +4,15 @@ export type FixedSlotAssignmentSummary = {
   readonly slotDate: string;
   readonly totalTemplates: number;
   readonly assigned: number;
+  readonly alreadyAssigned: number;
   readonly noBike: number;
-  readonly missingReservation: number;
   readonly conflicts: number;
 };
 
 export type FixedSlotAssignmentOutcome
   = | "ASSIGNED"
+    | "ALREADY_ASSIGNED"
     | "NO_BIKE"
-    | "MISSING_RESERVATION"
     | "CONFLICT";
 
 export type FixedSlotAssignmentContext = {
@@ -29,8 +29,8 @@ export type FixedSlotLabels = {
 
 export type FixedSlotCounts = {
   assigned: number;
+  alreadyAssigned: number;
   noBike: number;
-  missingReservation: number;
   conflicts: number;
 };
 

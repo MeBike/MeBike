@@ -37,8 +37,8 @@ export function assignFixedSlotReservations(args: {
     const templates = yield* reservationQueryRepo.listActiveFixedSlotTemplatesByDate(slotDate);
     const counts: FixedSlotCounts = {
       assigned: 0,
+      alreadyAssigned: 0,
       noBike: 0,
-      missingReservation: 0,
       conflicts: 0,
     };
     // TODO(ops): Avoid "sequential death" — a single unexpected DB/infra failure currently dies the whole run.

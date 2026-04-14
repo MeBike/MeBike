@@ -78,8 +78,8 @@ export type ReservationQueryRepo = {
   ) => Effect.Effect<number>;
 
   /**
-   * EN: Find a PENDING FIXED_SLOT reservation for a template at a specific start time (bike unassigned).
-   * VI: Tìm reservation FIXED_SLOT ở trạng thái PENDING theo template + thời điểm bắt đầu (chưa gán bike).
+   * EN: Find a PENDING FIXED_SLOT reservation for a template at a specific start time.
+   * VI: Tìm reservation FIXED_SLOT ở trạng thái PENDING theo template + thời điểm bắt đầu.
    */
   findPendingFixedSlotByTemplateAndStart: (
     templateId: string,
