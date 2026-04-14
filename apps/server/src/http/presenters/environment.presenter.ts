@@ -13,7 +13,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function normalizeFormulaConfig(
   value: EnvironmentPolicyRow["formulaConfig"],
 ): EnvironmentPolicyFormulaConfig {
-  const config = isRecord(value) ? value : {};
+  const config: Record<string, unknown> = isRecord(value) ? value : {};
   const defaults = DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG;
 
   return {

@@ -61,6 +61,46 @@ const listPolicies: RouteHandler<
   }, 200);
 };
 
+const activatePolicy: RouteHandler<
+  EnvironmentRoutes["activateEnvironmentPolicy"]
+> = async (c) => {
+  const { policyId } = c.req.valid("param");
+
+  const eff = Effect.flatMap(EnvironmentPolicyServiceTag, service =>
+    service.activatePolicy(policyId));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<EnvironmentContracts.EnvironmentPolicy, 200>(
+        toContractEnvironmentPolicy(right),
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("EnvironmentPolicyNotFound", () =>
+          c.json<ServerErrorResponse, 404>({
+            error: environmentErrorMessages.ENVIRONMENT_POLICY_NOT_FOUND,
+            details: {
+              code: EnvironmentErrorCodeSchema.enum.ENVIRONMENT_POLICY_NOT_FOUND,
+            },
+          }, 404)),
+        Match.tag("EnvironmentPolicyActivationBlocked", () =>
+          c.json<ServerErrorResponse, 409>({
+            error: environmentErrorMessages.ENVIRONMENT_POLICY_ACTIVATION_BLOCKED,
+            details: {
+              code: EnvironmentErrorCodeSchema.enum.ENVIRONMENT_POLICY_ACTIVATION_BLOCKED,
+            },
+          }, 409)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 const getActivePolicy: RouteHandler<
   EnvironmentRoutes["getActiveEnvironmentPolicy"]
 > = async (c) => {
@@ -95,5 +135,6 @@ const getActivePolicy: RouteHandler<
 export const EnvironmentPolicyController = {
   createPolicy,
   listPolicies,
+  activatePolicy,
   getActivePolicy,
 } as const;

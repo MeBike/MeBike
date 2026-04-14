@@ -500,6 +500,209 @@ describe("environment policies routing e2e", () => {
     expect(body.name).toBe("Newest Active Environment Policy");
   });
 
+  it("activates an inactive environment policy and deactivates the previous active policy", async () => {
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000041",
+      name: "Previous Active Environment Policy",
+      status: "ACTIVE",
+      activeFrom: new Date("2026-04-15T00:00:00.000Z"),
+      activeTo: null,
+      updatedAt: new Date("2026-04-15T01:00:00.000Z"),
+      formulaConfig: {
+        return_scan_buffer_minutes: 5,
+        confidence_factor: 0.9,
+      },
+    });
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000042",
+      name: "Target Inactive Environment Policy",
+      status: "INACTIVE",
+      activeFrom: null,
+      activeTo: null,
+      updatedAt: new Date("2026-04-15T02:00:00.000Z"),
+      formulaConfig: {},
+    });
+
+    const response = await fixture.app.request(
+      "http://test/environment/policies/018fa200-0000-7000-8000-000000000042/activate",
+      {
+        method: "PATCH",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentPolicy;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: "018fa200-0000-7000-8000-000000000042",
+      name: "Target Inactive Environment Policy",
+      status: "ACTIVE",
+      active_to: null,
+      co2_saved_per_km_unit: "gCO2e/km",
+      formula_config: {
+        return_scan_buffer_minutes: 3,
+        confidence_factor: 0.85,
+        display_unit: "gCO2e",
+        formula_version: "PHASE_1_TIME_SPEED",
+        distance_source: "TIME_SPEED",
+      },
+    });
+    expect(body.active_from).not.toBeNull();
+
+    const rows = await fixture.prisma.$queryRaw<
+      Array<{ id: string; status: string; active_from: Date | null; active_to: Date | null }>
+    >`
+      SELECT "id", "status", "active_from", "active_to"
+      FROM "public"."environmental_impact_policies"
+      WHERE "id" IN (
+        '018fa200-0000-7000-8000-000000000041'::uuid,
+        '018fa200-0000-7000-8000-000000000042'::uuid
+      )
+      ORDER BY "id"
+    `;
+
+    expect(rows).toMatchObject([
+      {
+        id: "018fa200-0000-7000-8000-000000000041",
+        status: "INACTIVE",
+      },
+      {
+        id: "018fa200-0000-7000-8000-000000000042",
+        status: "ACTIVE",
+        active_to: null,
+      },
+    ]);
+
+    const [activeCount] = await fixture.prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT COUNT(*) AS count
+      FROM "public"."environmental_impact_policies"
+      WHERE "status" = 'ACTIVE'::"AccountStatus"
+    `;
+
+    expect(Number(activeCount?.count ?? 0)).toBe(1);
+  });
+
+  it("keeps activate idempotent when the target is already active and cleans up other active rows", async () => {
+    const targetActiveFrom = new Date("2026-04-15T03:00:00.000Z");
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000043",
+      name: "Already Active Environment Policy",
+      status: "ACTIVE",
+      activeFrom: targetActiveFrom,
+      activeTo: null,
+      updatedAt: new Date("2026-04-15T03:01:00.000Z"),
+      formulaConfig: {},
+    });
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000044",
+      name: "Legacy Other Active Environment Policy",
+      status: "ACTIVE",
+      activeFrom: new Date("2026-04-15T02:00:00.000Z"),
+      activeTo: null,
+      updatedAt: new Date("2026-04-15T02:01:00.000Z"),
+      formulaConfig: {},
+    });
+
+    const response = await fixture.app.request(
+      "http://test/environment/policies/018fa200-0000-7000-8000-000000000043/activate",
+      {
+        method: "PATCH",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentPolicy;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe("018fa200-0000-7000-8000-000000000043");
+    expect(body.status).toBe("ACTIVE");
+    expect(body.active_from).toBe(targetActiveFrom.toISOString());
+
+    const [other] = await fixture.prisma.$queryRaw<Array<{ status: string }>>`
+      SELECT "status"
+      FROM "public"."environmental_impact_policies"
+      WHERE "id" = '018fa200-0000-7000-8000-000000000044'::uuid
+    `;
+
+    expect(other?.status).toBe("INACTIVE");
+  });
+
+  it("rejects invalid activate policyId params", async () => {
+    const response = await fixture.app.request(
+      "http://test/environment/policies/not-a-uuid/activate",
+      {
+        method: "PATCH",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("returns 404 when activating a missing environment policy", async () => {
+    const response = await fixture.app.request(
+      "http://test/environment/policies/018fa200-0000-7000-8000-000000000045/activate",
+      {
+        method: "PATCH",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("Environment policy not found");
+    expect(body.details?.code).toBe("ENVIRONMENT_POLICY_NOT_FOUND");
+  });
+
+  it("blocks activating suspended or banned environment policies", async () => {
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000046",
+      name: "Suspended Environment Policy",
+      status: "SUSPENDED",
+      activeFrom: null,
+      activeTo: null,
+      updatedAt: new Date("2026-04-15T04:00:00.000Z"),
+      formulaConfig: {},
+    });
+
+    const response = await fixture.app.request(
+      "http://test/environment/policies/018fa200-0000-7000-8000-000000000046/activate",
+      {
+        method: "PATCH",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(409);
+    expect(body.error).toBe("Cannot activate suspended or banned environment policy");
+    expect(body.details?.code).toBe("ENVIRONMENT_POLICY_ACTIVATION_BLOCKED");
+  });
+
+  it("rejects unauthenticated activate requests", async () => {
+    const response = await fixture.app.request(
+      "http://test/environment/policies/018fa200-0000-7000-8000-000000000047/activate",
+      {
+        method: "PATCH",
+      },
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  it("rejects non-admin activate requests", async () => {
+    const response = await fixture.app.request(
+      "http://test/environment/policies/018fa200-0000-7000-8000-000000000048/activate",
+      {
+        method: "PATCH",
+        headers: userHeaders(),
+      },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
   it("rejects unauthenticated active policy reads", async () => {
     const response = await fixture.app.request("http://test/environment/policies/active", {
       method: "GET",

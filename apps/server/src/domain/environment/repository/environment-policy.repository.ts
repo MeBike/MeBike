@@ -11,6 +11,10 @@ import { uuidv7 } from "uuidv7";
 import { makePageResult } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 
+import {
+  EnvironmentPolicyActivationBlocked,
+  EnvironmentPolicyNotFound,
+} from "../domain-errors";
 import type {
   CreateEnvironmentPolicyData,
   EnvironmentPolicyListFilter,
@@ -24,6 +28,12 @@ export type EnvironmentPolicyRepo = {
   create: (
     data: CreateEnvironmentPolicyData,
   ) => Effect.Effect<EnvironmentPolicyRow>;
+  activatePolicy: (
+    policyId: string,
+  ) => Effect.Effect<
+    EnvironmentPolicyRow,
+    EnvironmentPolicyNotFound | EnvironmentPolicyActivationBlocked
+  >;
   findActive: (now: Date) => Effect.Effect<EnvironmentPolicyRow | null>;
   listPolicies: (
     filter: EnvironmentPolicyListFilter,
@@ -133,6 +143,17 @@ function toEnvironmentPolicyOrderBy(
   }
 }
 
+function runInTransaction<T>(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+  operation: (tx: PrismaTypes.TransactionClient) => Promise<T>,
+) {
+  if ("$transaction" in client) {
+    return client.$transaction(operation);
+  }
+
+  return operation(client as PrismaTypes.TransactionClient);
+}
+
 export function makeEnvironmentPolicyRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): EnvironmentPolicyRepo {
@@ -185,6 +206,75 @@ export function makeEnvironmentPolicyRepository(
         }
 
         return toEnvironmentPolicyRow(row);
+      });
+    },
+    activatePolicy(policyId) {
+      return Effect.tryPromise({
+        try: () =>
+          runInTransaction(client, async (tx) => {
+            const now = new Date();
+
+            await tx.$executeRaw`
+              LOCK TABLE "public"."environmental_impact_policies"
+              IN EXCLUSIVE MODE
+            `;
+
+            const target = await tx.environmentalImpactPolicy.findUnique({
+              where: { id: policyId },
+              select: environmentPolicySelect,
+            });
+
+            if (!target) {
+              throw new EnvironmentPolicyNotFound({ policyId });
+            }
+
+            if (target.status === "SUSPENDED" || target.status === "BANNED") {
+              throw new EnvironmentPolicyActivationBlocked({
+                policyId,
+                status: target.status,
+              });
+            }
+
+            await tx.environmentalImpactPolicy.updateMany({
+              where: {
+                status: "ACTIVE",
+                id: { not: policyId },
+              },
+              data: {
+                status: "INACTIVE",
+                updatedAt: now,
+              },
+            });
+
+            if (target.status === "ACTIVE" && target.activeTo === null) {
+              return toEnvironmentPolicyRowFromPrisma(target);
+            }
+
+            const activated = await tx.environmentalImpactPolicy.update({
+              where: { id: policyId },
+              data: {
+                status: "ACTIVE",
+                activeFrom: target.status === "ACTIVE"
+                  ? target.activeFrom ?? now
+                  : now,
+                activeTo: null,
+                updatedAt: now,
+              },
+              select: environmentPolicySelect,
+            });
+
+            return toEnvironmentPolicyRowFromPrisma(activated);
+          }),
+        catch: (cause) => {
+          if (
+            cause instanceof EnvironmentPolicyNotFound
+            || cause instanceof EnvironmentPolicyActivationBlocked
+          ) {
+            return cause;
+          }
+
+          throw cause;
+        },
       });
     },
     findActive(now) {

@@ -18,11 +18,22 @@ export {
 
 export const EnvironmentErrorCodeSchema = z.enum([
   "ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND",
+  "ENVIRONMENT_POLICY_NOT_FOUND",
+  "ENVIRONMENT_POLICY_ACTIVATION_BLOCKED",
 ]).openapi("EnvironmentErrorCode");
 
 export const environmentErrorMessages = {
   ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND: "No active environment policy found",
+  ENVIRONMENT_POLICY_NOT_FOUND: "Environment policy not found",
+  ENVIRONMENT_POLICY_ACTIVATION_BLOCKED: "Cannot activate suspended or banned environment policy",
 } as const;
+
+export const EnvironmentPolicyIdParamsSchema = z.object({
+  policyId: z.uuid().openapi({
+    description: "Environment Policy UUID",
+    example: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+  }),
+}).openapi("EnvironmentPolicyIdParams");
 
 export const CreateEnvironmentPolicyBodySchema = z.object({
   name: z.string().trim().min(1, {

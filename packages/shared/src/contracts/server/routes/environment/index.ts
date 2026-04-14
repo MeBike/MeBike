@@ -3,6 +3,7 @@ import * as queries from "./queries";
 
 export {
   createEnvironmentPolicy,
+  activateEnvironmentPolicy,
 } from "./mutations";
 
 export {

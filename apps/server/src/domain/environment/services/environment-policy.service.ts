@@ -10,13 +10,23 @@ import type {
 import {
   DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG,
 } from "../models";
-import { ActiveEnvironmentPolicyNotFound } from "../domain-errors";
+import {
+  ActiveEnvironmentPolicyNotFound,
+  EnvironmentPolicyActivationBlocked,
+  EnvironmentPolicyNotFound,
+} from "../domain-errors";
 import { EnvironmentPolicyRepository } from "../repository/environment-policy.repository";
 
 export type EnvironmentPolicyService = {
   createPolicy: (
     input: CreateEnvironmentPolicyInput,
   ) => Effect.Effect<EnvironmentPolicyRow>;
+  activatePolicy: (
+    policyId: string,
+  ) => Effect.Effect<
+    EnvironmentPolicyRow,
+    EnvironmentPolicyNotFound | EnvironmentPolicyActivationBlocked
+  >;
   getActivePolicy: () => Effect.Effect<
     EnvironmentPolicyRow,
     ActiveEnvironmentPolicyNotFound
@@ -61,6 +71,7 @@ export const EnvironmentPolicyServiceLive = Layer.effect(
           ),
         },
       }),
+      activatePolicy: policyId => repo.activatePolicy(policyId),
       getActivePolicy: () =>
         Effect.gen(function* () {
           const policy = yield* repo.findActive(new Date());
