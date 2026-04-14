@@ -98,7 +98,6 @@ export default function DetailUser({
   const displayStatus = getUserDisplayStatus(user);
   const status = getStatusDisplay(user.accountStatus);
   const role = roleConfig[user.role] || roleConfig.USER;
-
   const [open, setOpen] = React.useState(false);
   const [editRole, setEditRole] = React.useState<UserRole>(user.role);
   const [verify, setVerify] = React.useState<"VERIFIED" | "UNVERIFIED">(
@@ -125,7 +124,7 @@ export default function DetailUser({
       .toUpperCase()
       .slice(0, 2);
   };
-
+  
   const handleSave = async () => {
     const payload = {
       accountStatus: accountStatus,

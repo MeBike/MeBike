@@ -1,8 +1,6 @@
 import "./globals.css";
 import Providers from "@providers/providers";
 import { AuthProvider } from "@/providers/auth-providers";
-import "@tomtom-international/web-sdk-maps/dist/maps.css";
-
 export default function RootLayout({
   children,
 }: {
