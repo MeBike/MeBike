@@ -157,7 +157,7 @@ describe("reservationRepository read integration", () => {
     // Re-enable once we finalize fixed-slot semantics and adjust the constraint accordingly.
   });
 
-  it("findPendingFixedSlotByTemplateAndStart returns matching reservation", async () => {
+  it("findPendingFixedSlotByTemplateAndStart returns matching pending reservation", async () => {
     const now = new Date();
     const user = await kit.createUser();
     const station = await kit.createStation({ name: "Station E" });
@@ -171,6 +171,39 @@ describe("reservationRepository read integration", () => {
     const reservation = await kit.fixture.factories.reservation({
       userId: user.id,
       bikeId: null,
+      stationId: station.id,
+      reservationOption: "FIXED_SLOT",
+      fixedSlotTemplateId: template.id,
+      startTime,
+      endTime: null,
+      prepaid: "0",
+      status: "PENDING",
+    });
+
+    const found = await kit.fixture.prisma.$transaction(async (tx) => {
+      const txRepo = kit.makeRepo(tx);
+      return Effect.runPromise(txRepo.findPendingFixedSlotByTemplateAndStart(template.id, startTime));
+    });
+
+    expect(Option.isSome(found)).toBe(true);
+    expect(Option.getOrThrow(found).id).toBe(reservation.id);
+  });
+
+  it("findPendingFixedSlotByTemplateAndStart also returns already-assigned pending reservation", async () => {
+    const now = new Date();
+    const user = await kit.createUser();
+    const station = await kit.createStation({ name: "Station E Assigned" });
+    const bike = await kit.createBike({ stationId: station.id, status: "AVAILABLE" });
+    const template = await kit.createFixedSlotTemplate({
+      userId: user.id,
+      stationId: station.id,
+      slotStart: new Date(Date.UTC(2000, 0, 1, 9, 0, 0)),
+    });
+    const startTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+    const reservation = await kit.fixture.factories.reservation({
+      userId: user.id,
+      bikeId: bike.id,
       stationId: station.id,
       reservationOption: "FIXED_SLOT",
       fixedSlotTemplateId: template.id,

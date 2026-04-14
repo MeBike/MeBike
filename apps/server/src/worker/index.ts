@@ -184,6 +184,8 @@ main().catch((err) => {
 });
 
 async function ensureSchedules(scheduler: JobScheduler) {
+  const fixedSlotScheduleTz = "Asia/Ho_Chi_Minh";
+
   await scheduler.schedule(
     JobTypes.SubscriptionExpireSweep,
     "*/5 * * * *",
@@ -195,10 +197,11 @@ async function ensureSchedules(scheduler: JobScheduler) {
     JobTypes.ReservationFixedSlotAssign,
     env.FIXED_SLOT_ASSIGN_CRON,
     { version: 1 },
+    { tz: fixedSlotScheduleTz },
   );
   WorkerLog.scheduleEnsured(
     JobTypes.ReservationFixedSlotAssign,
-    env.FIXED_SLOT_ASSIGN_CRON,
+    `${env.FIXED_SLOT_ASSIGN_CRON} (${fixedSlotScheduleTz})`,
   );
 
   await scheduler.schedule(

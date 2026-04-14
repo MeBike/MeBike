@@ -28,6 +28,13 @@ class FixedSlotAssignmentConflict extends Error {
   }
 }
 
+/**
+ * Enqueue email outbox theo cach idempotent cho fixed-slot flow.
+ *
+ * @param tx Prisma transaction hien tai.
+ * @param args Payload outbox can enqueue.
+ * @returns Effect bo qua unique violation de worker rerun van safe.
+ */
 function enqueueEmailIdempotent(
   tx: PrismaTypes.TransactionClient,
   args: Parameters<typeof enqueueOutboxJobInTx>[1],
@@ -38,6 +45,15 @@ function enqueueEmailIdempotent(
   );
 }
 
+/**
+ * Enqueue email thong bao khong con xe cho slot dang xu ly.
+ *
+ * @param tx Prisma transaction hien tai.
+ * @param template Template dang duoc assign.
+ * @param labels Label da build cho slot hien tai.
+ * @param context Context chung cua lan assignment.
+ * @returns Effect enqueue email voi dedupe key theo template + ngay.
+ */
 function enqueueNoBikeEmail(
   tx: PrismaTypes.TransactionClient,
   template: FixedSlotAssignmentTemplateRow,
@@ -65,6 +81,16 @@ function enqueueNoBikeEmail(
   });
 }
 
+/**
+ * Enqueue email thong bao assignment thanh cong cho reservation vua tao.
+ *
+ * @param tx Prisma transaction hien tai.
+ * @param reservationId ID reservation vua duoc tao.
+ * @param template Template dang duoc assign.
+ * @param labels Label da build cho slot hien tai.
+ * @param context Context chung cua lan assignment.
+ * @returns Effect enqueue email voi dedupe key theo reservation.
+ */
 function enqueueAssignedEmail(
   tx: PrismaTypes.TransactionClient,
   reservationId: string,
@@ -93,6 +119,15 @@ function enqueueAssignedEmail(
   });
 }
 
+/**
+ * Chay transaction assignment cho mot fixed-slot template.
+ *
+ * @param client Prisma client goc de mo transaction.
+ * @param template Template dang xu ly.
+ * @param labels Label va `slotStartAt` cua slot hien tai.
+ * @param context Context assignment cho ngay dang chay.
+ * @returns Promise ket qua assignment cho template do.
+ */
 async function runFixedSlotAssignmentTransaction(
   client: PrismaClient,
   template: FixedSlotAssignmentTemplateRow,
@@ -104,15 +139,17 @@ async function runFixedSlotAssignmentTransaction(
       const bikeRepo = makeBikeRepository(tx);
       const txReservationQueryRepo = makeReservationQueryRepository(tx);
       const txReservationCommandRepo = makeReservationCommandRepository(tx);
-      const reservationOpt = yield* txReservationQueryRepo.findPendingFixedSlotByTemplateAndStart(
+      const existingReservationOpt = yield* txReservationQueryRepo.findPendingFixedSlotByTemplateAndStart(
         template.id,
         labels.slotStartAt,
       );
 
-      if (Option.isNone(reservationOpt)) {
-        return "MISSING_RESERVATION" as const;
+      if (Option.isSome(existingReservationOpt) && existingReservationOpt.value.bikeId) {
+        return "ALREADY_ASSIGNED" as const;
       }
-      const reservation = reservationOpt.value;
+      if (Option.isSome(existingReservationOpt)) {
+        return yield* Effect.fail(new FixedSlotAssignmentConflict());
+      }
 
       const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId);
       if (Option.isNone(bikeOpt)) {
@@ -121,19 +158,27 @@ async function runFixedSlotAssignmentTransaction(
       }
       const bike = bikeOpt.value;
 
-      const reservationAssigned = yield* txReservationCommandRepo.assignBikeToPendingReservation(
-        reservation.id,
-        bike.id,
-        context.now,
-      );
-      if (!reservationAssigned) {
-        return "CONFLICT" as const;
-      }
-
       const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, context.now);
       if (!bikeReserved) {
         return yield* Effect.fail(new FixedSlotAssignmentConflict());
       }
+
+      const reservation = yield* txReservationCommandRepo.createReservation({
+        userId: template.userId,
+        bikeId: bike.id,
+        stationId: template.stationId,
+        pricingPolicyId: template.pricingPolicyId,
+        reservationOption: "FIXED_SLOT",
+        fixedSlotTemplateId: template.id,
+        subscriptionId: template.subscriptionId,
+        startTime: labels.slotStartAt,
+        endTime: null,
+        prepaid: template.prepaid,
+        status: "PENDING",
+      }).pipe(
+        Effect.catchTag("ReservationUniqueViolation", () =>
+          Effect.fail(new FixedSlotAssignmentConflict())),
+      );
 
       yield* enqueueAssignedEmail(tx, reservation.id, template, labels, context);
 
@@ -153,6 +198,14 @@ async function runFixedSlotAssignmentTransaction(
   });
 }
 
+/**
+ * Xu ly assignment cho mot fixed-slot template trong ngay muc tieu.
+ *
+ * @param client Prisma client goc.
+ * @param template Template dang duoc assign.
+ * @param context Context assignment cho ngay dang chay.
+ * @returns Effect ket qua assignment da duoc map ve union outcome on dinh.
+ */
 export function processFixedSlotTemplate(
   client: PrismaClient,
   template: FixedSlotAssignmentTemplateRow,

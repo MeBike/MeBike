@@ -6,14 +6,17 @@ import type {
 } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { ReservationStatus } from "generated/prisma/client";
 
 import type { ReservationRepo } from "../reservation.repository.types";
 
 import { ReservationRepositoryError } from "../../domain-errors";
 import {
+  selectFixedSlotTemplateRow,
   selectReservationExpandedDetailRow,
   selectReservationRow,
+  toFixedSlotTemplateRow,
   toReservationExpandedDetailRow,
   toReservationRow,
 } from "../reservation.mappers";
@@ -22,6 +25,9 @@ const selectFixedSlotAssignmentTemplateRow = {
   id: true,
   userId: true,
   stationId: true,
+  pricingPolicyId: true,
+  subscriptionId: true,
+  prepaid: true,
   slotStart: true,
   user: { select: { fullName: true, email: true } },
   station: { select: { name: true } },
@@ -32,9 +38,19 @@ export type ReservationCoreReadRepo = Pick<
   | "findById"
   | "findExpandedDetailById"
   | "findPendingFixedSlotByTemplateAndStart"
+  | "findFixedSlotTemplateByIdForUser"
   | "listActiveFixedSlotTemplatesByDate"
+  | "listPendingFixedSlotReservationsByTemplateId"
+  | "countActiveFixedSlotTemplateConflicts"
+  | "listFixedSlotTemplatesForUser"
 >;
 
+/**
+ * Tao read repository toi gian cho reservation va fixed-slot flow.
+ *
+ * @param client Prisma client hoac transaction client.
+ * @returns Read repository phuc vu query reservation/fixed-slot.
+ */
 export function makeReservationCoreReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): ReservationCoreReadRepo {
@@ -86,7 +102,6 @@ export function makeReservationCoreReadRepository(
               reservationOption: "FIXED_SLOT",
               startTime,
               status: ReservationStatus.PENDING,
-              bikeId: null,
             },
             select: selectReservationRow,
           }),
@@ -102,6 +117,28 @@ export function makeReservationCoreReadRepository(
         defectOn(ReservationRepositoryError),
       ),
 
+    findFixedSlotTemplateByIdForUser: (userId, templateId) =>
+      Effect.tryPromise({
+        try: () =>
+          client.fixedSlotTemplate.findFirst({
+            where: {
+              id: templateId,
+              userId,
+            },
+            select: selectFixedSlotTemplateRow,
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "findFixedSlotTemplateByIdForUser",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toFixedSlotTemplateRow)),
+        ),
+        defectOn(ReservationRepositoryError),
+      ),
+
     listActiveFixedSlotTemplatesByDate: slotDate =>
       Effect.tryPromise({
         try: () =>
@@ -110,13 +147,128 @@ export function makeReservationCoreReadRepository(
               status: "ACTIVE",
               dates: { some: { slotDate } },
             },
-            select: selectFixedSlotAssignmentTemplateRow,
+            select: {
+              ...selectFixedSlotAssignmentTemplateRow,
+              dates: {
+                where: { slotDate },
+                take: 1,
+                select: {
+                  pricingPolicyId: true,
+                  subscriptionId: true,
+                  prepaid: true,
+                },
+              },
+            },
           }),
         catch: err =>
           new ReservationRepositoryError({
             operation: "listActiveFixedSlotTemplatesByDate",
             cause: err,
           }),
+      }).pipe(
+        Effect.map(rows => rows.map(row => ({
+          id: row.id,
+          userId: row.userId,
+          stationId: row.stationId,
+          pricingPolicyId: row.dates[0]?.pricingPolicyId ?? row.pricingPolicyId,
+          subscriptionId: row.dates[0]?.subscriptionId ?? row.subscriptionId,
+          prepaid: row.dates[0]?.prepaid ?? row.prepaid,
+          slotStart: row.slotStart,
+          user: row.user,
+          station: row.station,
+        }))),
+        defectOn(ReservationRepositoryError),
+      ),
+
+    listPendingFixedSlotReservationsByTemplateId: templateId =>
+      Effect.tryPromise({
+        try: () =>
+          client.reservation.findMany({
+            where: {
+              fixedSlotTemplateId: templateId,
+              reservationOption: "FIXED_SLOT",
+              status: ReservationStatus.PENDING,
+            },
+            orderBy: {
+              startTime: "asc",
+            },
+            select: selectReservationRow,
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "listPendingFixedSlotReservationsByTemplateId",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(rows => rows.map(toReservationRow)),
+        defectOn(ReservationRepositoryError),
+      ),
+
+    countActiveFixedSlotTemplateConflicts: (userId, slotStart, slotDates, excludeTemplateId) =>
+      Effect.tryPromise({
+        try: () =>
+          client.fixedSlotTemplate.count({
+            where: {
+              userId,
+              ...(excludeTemplateId ? { id: { not: excludeTemplateId } } : {}),
+              status: "ACTIVE",
+              slotStart,
+              dates: {
+                some: {
+                  slotDate: {
+                    in: [...slotDates],
+                  },
+                },
+              },
+            },
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "countActiveFixedSlotTemplateConflicts",
+            cause: err,
+          }),
       }).pipe(defectOn(ReservationRepositoryError)),
+
+    listFixedSlotTemplatesForUser: (userId, filter, pageReq) => {
+      const page = normalizedPage({
+        page: pageReq.page,
+        pageSize: pageReq.pageSize,
+      });
+
+      return Effect.tryPromise({
+        try: async () => {
+          const where = {
+            userId,
+            ...(filter.status ? { status: filter.status } : {}),
+            ...(filter.stationId ? { stationId: filter.stationId } : {}),
+          };
+
+          const [rows, total] = await Promise.all([
+            client.fixedSlotTemplate.findMany({
+              where,
+              orderBy: {
+                updatedAt: "desc",
+              },
+              skip: (page.page - 1) * page.pageSize,
+              take: page.pageSize,
+              select: selectFixedSlotTemplateRow,
+            }),
+            client.fixedSlotTemplate.count({ where }),
+          ]);
+
+          return makePageResult(
+            rows.map(toFixedSlotTemplateRow),
+            total,
+            page.page,
+            page.pageSize,
+          );
+        },
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "listFixedSlotTemplatesForUser",
+            cause: err,
+          }),
+      }).pipe(defectOn(ReservationRepositoryError));
+    },
   };
 }

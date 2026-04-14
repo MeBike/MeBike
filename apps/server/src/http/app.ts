@@ -20,6 +20,7 @@ import { registerAgencyRequestRoutes } from "./routes/agency-requests";
 import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
 import { registerEventRoutes } from "./routes/events";
+import { registerFixedSlotTemplateRoutes } from "./routes/fixed-slot-templates";
 import { registerHealthRoutes } from "./routes/health";
 import { registerIncidentRoutes } from "./routes/incidents";
 import { registerRatingRoutes } from "./routes/ratings";
@@ -83,6 +84,8 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/ratings/*", requireAuthMiddleware);
   app.use("/v1/wallets/*", requireAuthMiddleware);
   app.use("/v1/subscriptions/*", requireAuthMiddleware);
+  app.use("/v1/fixed-slot-templates", requireAuthMiddleware);
+  app.use("/v1/fixed-slot-templates/*", requireAuthMiddleware);
   app.use("/v1/reservations", requireAuthMiddleware);
   app.use("/v1/reservations/*", requireAuthMiddleware);
   app.use("/v1/stripe/*", requireAuthMiddleware);
@@ -115,6 +118,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerStationRoutes(app);
   registerStatsRoutes(app);
   registerHealthRoutes(app);
+  registerFixedSlotTemplateRoutes(app);
   registerAgencyRoutes(app);
   registerAgencyRequestRoutes(app);
   registerBikeRoutes(app);

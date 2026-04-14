@@ -2,8 +2,11 @@ import { agenciesRoutes } from "./agencies";
 import { agencyRequestsRoutes } from "./agency-requests";
 import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
+import { fixedSlotTemplatesRoutes } from "./fixed-slots";
 import { healthRoutes } from "./health";
+import { incidentsRoutes } from "./incidents";
 import { ratingsRoutes } from "./ratings";
+import { redistributionRoutes } from "./redistribution";
 import { rentalsRoutes } from "./rentals";
 import { reservationsRoutes } from "./reservations";
 import { stationsRoutes } from "./stations";
@@ -13,15 +16,16 @@ import { subscriptionsRoutes } from "./subscriptions";
 import { suppliersRoutes } from "./suppliers";
 import { usersRoutes } from "./users";
 import { walletsRoutes } from "./wallets";
-import { incidentsRoutes } from "./incidents";
-import { redistributionRoutes } from "./redistribution";
 
 export * from "./agencies";
 export * from "./agency-requests";
 export * from "./auth";
 export * from "./bikes";
+export * from "./fixed-slots";
 export * from "./health";
+export * from "./incidents";
 export * from "./ratings";
+export * from "./redistribution";
 export * from "./rentals";
 export * from "./reservations";
 export * from "./stations";
@@ -31,13 +35,12 @@ export * from "./subscriptions";
 export * from "./suppliers";
 export * from "./users";
 export * from "./wallets";
-export * from "./incidents";
-export * from "./redistribution"
 
 export const serverRoutes = {
   agencies: agenciesRoutes,
   agencyRequests: agencyRequestsRoutes,
   auth: authRoutes,
+  fixedSlotTemplates: fixedSlotTemplatesRoutes,
   health: healthRoutes,
   rentals: rentalsRoutes,
   reservations: reservationsRoutes,
@@ -51,7 +54,7 @@ export const serverRoutes = {
   wallets: walletsRoutes,
   stripe: stripeRoutes,
   incidents: incidentsRoutes,
-  redistribution: redistributionRoutes
+  redistribution: redistributionRoutes,
 } as const;
 
 export type ServerRouteKey = keyof typeof serverRoutes;

@@ -1,5 +1,6 @@
 import type {
   BikeStatus,
+  FixedSlotStatus,
   Prisma as PrismaTypes,
   ReservationOption,
   ReservationStatus,
@@ -61,6 +62,9 @@ export type FixedSlotAssignmentTemplateRow = {
   readonly id: string;
   readonly userId: string;
   readonly stationId: string;
+  readonly pricingPolicyId: string | null;
+  readonly subscriptionId: string | null;
+  readonly prepaid: ReservationDecimal;
   readonly slotStart: Date;
   readonly user: {
     readonly fullName: string;
@@ -70,6 +74,30 @@ export type FixedSlotAssignmentTemplateRow = {
     readonly name: string;
   };
 };
+
+export type FixedSlotTemplateRow = {
+  readonly id: string;
+  readonly userId: string;
+  readonly pricingPolicyId: string | null;
+  readonly subscriptionId: string | null;
+  readonly prepaid: ReservationDecimal;
+  readonly station: {
+    readonly id: string;
+    readonly name: string;
+    readonly address: string;
+  };
+  readonly slotStart: Date;
+  readonly slotDates: readonly Date[];
+  readonly status: FixedSlotStatus;
+  readonly updatedAt: Date;
+};
+
+export type FixedSlotTemplateFilter = {
+  readonly status?: FixedSlotStatus;
+  readonly stationId?: string;
+};
+
+export type FixedSlotTemplateSortField = "updatedAt";
 
 export type ReservationSortField = "startTime" | "endTime" | "status" | "updatedAt";
 

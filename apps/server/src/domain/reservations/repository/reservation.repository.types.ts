@@ -10,12 +10,19 @@ import type {
   AdminReservationFilter,
   AdminReservationSortField,
   FixedSlotAssignmentTemplateRow,
+  FixedSlotTemplateFilter,
+  FixedSlotTemplateRow,
+  FixedSlotTemplateSortField,
   ReservationExpandedDetailRow,
   ReservationFilter,
   ReservationRow,
   ReservationSortField,
 } from "../models";
-import type { CreateReservationInput, UpdateReservationStatusInput } from "../types";
+import type {
+  CreateFixedSlotTemplateInput,
+  CreateReservationInput,
+  UpdateReservationStatusInput,
+} from "../types";
 
 export type ReservationQueryRepo = {
   /**
@@ -78,13 +85,30 @@ export type ReservationQueryRepo = {
   ) => Effect.Effect<number>;
 
   /**
-   * EN: Find a PENDING FIXED_SLOT reservation for a template at a specific start time (bike unassigned).
-   * VI: Tìm reservation FIXED_SLOT ở trạng thái PENDING theo template + thời điểm bắt đầu (chưa gán bike).
+   * EN: Find a PENDING FIXED_SLOT reservation for a template at a specific start time.
+   * VI: Tìm reservation FIXED_SLOT ở trạng thái PENDING theo template + thời điểm bắt đầu.
    */
   findPendingFixedSlotByTemplateAndStart: (
     templateId: string,
     startTime: Date,
   ) => Effect.Effect<Option.Option<ReservationRow>>;
+
+  /**
+   * Lấy fixed-slot template theo cặp `userId` và `templateId`.
+   * Dùng cho các flow detail, update, remove-date và cancel để bảo đảm user chỉ thao tác trên template của chính mình.
+   */
+  findFixedSlotTemplateByIdForUser: (
+    userId: string,
+    templateId: string,
+  ) => Effect.Effect<Option.Option<FixedSlotTemplateRow>>;
+
+  /**
+   * Lấy toàn bộ reservation `FIXED_SLOT` đang ở trạng thái `PENDING` của một template.
+   * Kết quả này được dùng khi cần hủy date, hủy cả template, hoặc đổi giờ cho các reservation đã materialize.
+   */
+  listPendingFixedSlotReservationsByTemplateId: (
+    templateId: string,
+  ) => Effect.Effect<ReadonlyArray<ReservationRow>>;
 
   /**
    * EN: Returns active fixed-slot templates scheduled for a specific slot date.
@@ -122,6 +146,27 @@ export type ReservationQueryRepo = {
     filter: AdminReservationFilter,
     pageReq: PageRequest<AdminReservationSortField>,
   ) => Effect.Effect<PageResult<ReservationRow>>;
+
+  /**
+   * Lấy danh sách fixed-slot template của user, có phân trang và filter.
+   * Dùng cho màn list ở phía người dùng.
+   */
+  listFixedSlotTemplatesForUser: (
+    userId: string,
+    filter: FixedSlotTemplateFilter,
+    pageReq: PageRequest<FixedSlotTemplateSortField>,
+  ) => Effect.Effect<PageResult<FixedSlotTemplateRow>>;
+
+  /**
+   * Đếm số fixed-slot template `ACTIVE` bị trùng giờ bắt đầu và giao nhau về ngày.
+   * Dùng để chặn tạo mới hoặc update sang một tập ngày gây xung đột với template đang có.
+   */
+  countActiveFixedSlotTemplateConflicts: (
+    userId: string,
+    slotStart: Date,
+    slotDates: ReadonlyArray<Date>,
+    excludeTemplateId?: string,
+  ) => Effect.Effect<number>;
 
 };
 
@@ -173,6 +218,24 @@ export type ReservationCommandRepo = {
   markExpiredNow: (
     now: Date,
   ) => Effect.Effect<number>;
+
+  /**
+   * Tạo fixed-slot template cùng toàn bộ date row đi kèm.
+   * Billing snapshot hiện tại cũng được copy xuống từng date ngay trong bước này.
+   */
+  createFixedSlotTemplate: (
+    input: CreateFixedSlotTemplateInput,
+  ) => Effect.Effect<FixedSlotTemplateRow>;
+
+  /**
+   * Cập nhật trạng thái của fixed-slot template và trả về row mới nhất sau khi update.
+   * Dùng chủ yếu cho flow hủy template.
+   */
+  updateFixedSlotTemplateStatus: (input: {
+    templateId: string;
+    status: FixedSlotTemplateRow["status"];
+    updatedAt?: Date;
+  }) => Effect.Effect<FixedSlotTemplateRow>;
 };
 
 export type ReservationRepo = ReservationQueryRepo & ReservationCommandRepo;

@@ -12,6 +12,8 @@ model PricingPolicy {
   updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
   reservations         Reservation[]
+  fixedSlotDates       FixedSlotDate[]
+  fixedSlotTemplates   FixedSlotTemplate[]
   rentals              Rental[]
   rentalBillingRecords RentalBillingRecord[]
 

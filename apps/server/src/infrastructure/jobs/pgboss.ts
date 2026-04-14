@@ -57,8 +57,8 @@ export function makePgBossJobRuntime(boss: PgBoss): JobRuntime & JobScheduler {
     fail(queue, jobId, error) {
       return boss.fail(queue, jobId, { message: error }).then(() => undefined);
     },
-    schedule(type, cron, payload) {
-      return boss.schedule(type, cron, payload);
+    schedule(type, cron, payload, options) {
+      return boss.schedule(type, cron, payload, options);
     },
   };
 }

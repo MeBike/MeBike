@@ -1,4 +1,8 @@
-import type { ReservationExpandedDetailRow, ReservationRow } from "../models";
+import type {
+  FixedSlotTemplateRow,
+  ReservationExpandedDetailRow,
+  ReservationRow,
+} from "../models";
 
 export const selectReservationRow = {
   id: true,
@@ -54,6 +58,40 @@ export const selectReservationExpandedDetailRow = {
   },
 } as const;
 
+/** Select shape cho fixed-slot template row, gom station va danh sach ngay. */
+export const selectFixedSlotTemplateRow = {
+  id: true,
+  userId: true,
+  pricingPolicyId: true,
+  subscriptionId: true,
+  prepaid: true,
+  slotStart: true,
+  status: true,
+  updatedAt: true,
+  station: {
+    select: {
+      id: true,
+      name: true,
+      address: true,
+    },
+  },
+  dates: {
+    select: {
+      slotDate: true,
+      pricingPolicyId: true,
+      subscriptionId: true,
+      prepaid: true,
+    },
+    orderBy: {
+      slotDate: "asc",
+    },
+  },
+} as const;
+
+/**
+ * Chuyển raw Prisma reservation row thành domain reservation row.
+ * Dùng cho các query/write path muốn trả ra shape ổn định ở tầng domain.
+ */
 export function toReservationRow(row: {
   id: string;
   userId: string;
@@ -92,6 +130,10 @@ export function toReservationRow(row: {
   };
 }
 
+/**
+ * Chuyển raw Prisma reservation detail row thành domain detail row.
+ * Áp dụng cho shape có thêm nested user, bike và station.
+ */
 export function toReservationExpandedDetailRow(row: {
   id: string;
   userId: string;
@@ -156,5 +198,48 @@ export function toReservationExpandedDetailRow(row: {
       latitude: row.station.latitude,
       longitude: row.station.longitude,
     },
+  };
+}
+
+/**
+ * Chuyển raw Prisma fixed-slot template row thành domain row.
+ * Hàm này cũng gom danh sách `dates` thành `slotDates` ở tầng domain.
+ */
+export function toFixedSlotTemplateRow(row: {
+  id: string;
+  userId: string;
+  pricingPolicyId: string | null;
+  subscriptionId: string | null;
+  prepaid: FixedSlotTemplateRow["prepaid"];
+  slotStart: Date;
+  status: string;
+  updatedAt: Date;
+  station: {
+    id: string;
+    name: string;
+    address: string;
+  };
+  dates: ReadonlyArray<{
+    slotDate: Date;
+    pricingPolicyId?: string | null;
+    subscriptionId?: string | null;
+    prepaid?: FixedSlotTemplateRow["prepaid"] | null;
+  }>;
+}): FixedSlotTemplateRow {
+  return {
+    id: row.id,
+    userId: row.userId,
+    pricingPolicyId: row.pricingPolicyId,
+    subscriptionId: row.subscriptionId,
+    prepaid: row.prepaid,
+    station: {
+      id: row.station.id,
+      name: row.station.name,
+      address: row.station.address,
+    },
+    slotStart: row.slotStart,
+    slotDates: row.dates.map(date => date.slotDate),
+    status: row.status as FixedSlotTemplateRow["status"],
+    updatedAt: row.updatedAt,
   };
 }

@@ -1,6 +1,7 @@
 import { Layer } from "effect";
 
 import {
+  FixedSlotTemplateServiceLive,
   ReservationAnalyticsRepositoryLive,
   ReservationCommandRepositoryLive,
   ReservationCommandServiceLive,
@@ -43,6 +44,14 @@ export const ReservationStatsServiceLayer = ReservationStatsServiceLive.pipe(
   Layer.provide(ReservationAnalyticsReposLive),
 );
 
+export const FixedSlotTemplateServiceLayer = FixedSlotTemplateServiceLive.pipe(
+  Layer.provide(Layer.mergeAll(
+    ReservationQueryReposLive,
+    ReservationCommandReposLive,
+    StationReposLive,
+  )),
+);
+
 export const ReservationDepsLive = Layer.mergeAll(
   ReservationQueryReposLive,
   ReservationCommandReposLive,
@@ -50,6 +59,7 @@ export const ReservationDepsLive = Layer.mergeAll(
   ReservationQueryServiceLayer,
   ReservationCommandServiceLayer,
   ReservationStatsServiceLayer,
+  FixedSlotTemplateServiceLayer,
   BikeReposLive,
   StationReposLive,
   RentalReposLive,

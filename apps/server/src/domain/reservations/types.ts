@@ -19,3 +19,14 @@ export type UpdateReservationStatusInput = {
   readonly status: ReservationStatus;
   readonly updatedAt?: Date;
 };
+
+export type CreateFixedSlotTemplateInput = {
+  readonly userId: string;
+  readonly stationId: string;
+  readonly pricingPolicyId?: string | null;
+  readonly subscriptionId?: string | null;
+  readonly slotStart: Date;
+  readonly prepaid: PrismaTypes.Decimal;
+  readonly slotDates: readonly Date[];
+  readonly updatedAt?: Date;
+};
