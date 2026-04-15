@@ -4,7 +4,7 @@ import { Effect, Match } from "effect";
 
 import { previousUtcMonthFullRange } from "@/domain/rentals/services/rental-stats-time";
 import { withLoggedCause } from "@/domain/shared";
-import { StationServiceTag } from "@/domain/stations";
+import { StationQueryServiceTag } from "@/domain/stations";
 import {
   toContractNearbyStation,
   toContractStationReadSummary,
@@ -25,7 +25,7 @@ const listStations: RouteHandler<StationsRoutes["listStations"]> = async (c) => 
   const query = c.req.valid("query");
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* StationServiceTag;
+      const service = yield* StationQueryServiceTag;
       return yield* service.listStations(
         {
           name: query.name,
@@ -77,7 +77,7 @@ const getNearbyStations: RouteHandler<StationsRoutes["getNearbyStations"]> = asy
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* StationServiceTag;
+      const service = yield* StationQueryServiceTag;
       return yield* service.listNearestStations({
         latitude: query.latitude,
         longitude: query.longitude,
@@ -113,7 +113,7 @@ const getNearbyStations: RouteHandler<StationsRoutes["getNearbyStations"]> = asy
 const getStation: RouteHandler<StationsRoutes["getStation"]> = async (c) => {
   const { stationId } = c.req.valid("param");
   const eff = Effect.gen(function* () {
-    const service = yield* StationServiceTag;
+    const service = yield* StationQueryServiceTag;
     return yield* service.getStationById(stationId);
   });
 
@@ -158,7 +158,7 @@ const getAllStationsRevenue: RouteHandler<StationsRoutes["getAllStationsRevenue"
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* StationServiceTag;
+      const service = yield* StationQueryServiceTag;
       return yield* service.getRevenueByStation(range);
     }),
     "GET /v1/stations/revenue",

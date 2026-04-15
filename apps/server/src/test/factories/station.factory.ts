@@ -6,7 +6,6 @@ const defaults = {
   address: "123 Test Street",
   stationType: "INTERNAL" as const,
   capacity: 10,
-  pickupSlotLimit: 10,
   returnSlotLimit: 10,
   latitude: 10.762622,
   longitude: 106.660172,
@@ -21,7 +20,7 @@ export function createStationFactory(ctx: FactoryContext) {
     const name = overrides.name ?? `Station ${counter}`;
 
     await ctx.prisma.$executeRaw`
-      INSERT INTO "Station" (id, name, address, station_type, agency_id, total_capacity, pickup_slot_limit, return_slot_limit, latitude, longitude, created_at, updated_at, position)
+      INSERT INTO "Station" (id, name, address, station_type, agency_id, total_capacity, return_slot_limit, latitude, longitude, created_at, updated_at, position)
       VALUES (
         ${id}::uuid,
         ${name},
@@ -29,7 +28,6 @@ export function createStationFactory(ctx: FactoryContext) {
         ${(overrides.stationType ?? defaults.stationType)}::"station_type",
         ${overrides.agencyId ?? null}::uuid,
         ${overrides.capacity ?? defaults.capacity},
-        ${overrides.pickupSlotLimit ?? overrides.capacity ?? defaults.pickupSlotLimit},
         ${overrides.returnSlotLimit ?? overrides.capacity ?? defaults.returnSlotLimit},
         ${overrides.latitude ?? defaults.latitude},
         ${overrides.longitude ?? defaults.longitude},

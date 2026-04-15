@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { Effect, Option } from "effect";
 
 import type { AgencyRepo } from "@/domain/agencies";
-import type { StationRepo } from "@/domain/stations";
+import type { StationQueryRepo } from "@/domain/stations";
 import type { TechnicianTeamQueryRepo } from "@/domain/technician-teams";
 
 import { env } from "@/config/env";
@@ -28,7 +28,7 @@ export function makeUserCommandService(args: {
   commandRepo: UserCommandRepo;
   queryRepo: UserQueryRepo;
   agencyRepo: Pick<AgencyRepo, "getById">;
-  stationRepo: Pick<StationRepo, "getById">;
+  stationRepo: Pick<StationQueryRepo, "getById">;
   technicianTeamQueryRepo: Pick<TechnicianTeamQueryRepo, "countMembers" | "getById">;
 }): UserCommandService {
   const {

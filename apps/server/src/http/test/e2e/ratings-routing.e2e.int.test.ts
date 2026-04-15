@@ -14,14 +14,14 @@ describe("ratings routing e2e", () => {
       const { Layer } = await import("effect");
       const { PrismaLive } = await import("@/infrastructure/prisma");
       const { BikeRepositoryLive } = await import("@/domain/bikes/repository/bike.repository");
-      const { StationRepositoryLive } = await import("@/domain/stations/repository/station.repository");
+      const { StationQueryRepositoryLive } = await import("@/domain/stations");
       const { RatingRepositoryLive } = await import("@/domain/ratings/repository/rating.repository");
       const { RatingReasonRepositoryLive } = await import("@/domain/ratings/repository/rating-reason.repository");
       const { RatingServiceLive } = await import("@/domain/ratings/services/rating.service");
       const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
       const bikeRepoLayer = BikeRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const stationRepoLayer = StationRepositoryLive.pipe(Layer.provide(PrismaLive));
+      const stationRepoLayer = StationQueryRepositoryLive.pipe(Layer.provide(PrismaLive));
       const ratingReposLayer = Layer.mergeAll(
         RatingRepositoryLive,
         RatingReasonRepositoryLive,

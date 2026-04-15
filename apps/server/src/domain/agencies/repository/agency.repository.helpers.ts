@@ -16,7 +16,6 @@ const selectAgencyRow = {
       longitude: true,
       stationType: true,
       totalCapacity: true,
-      pickupSlotLimit: true,
       returnSlotLimit: true,
     },
   },
@@ -41,7 +40,7 @@ export function toAgencyRow(
           longitude: row.station.longitude,
           stationType: row.station.stationType,
           totalCapacity: row.station.totalCapacity,
-          pickupSlotLimit: row.station.pickupSlotLimit,
+          pickupSlotLimit: row.station.totalCapacity,
           returnSlotLimit: row.station.returnSlotLimit,
         }
       : null,

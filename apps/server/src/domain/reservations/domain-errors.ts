@@ -66,10 +66,11 @@ export class BikeNotAvailable extends Data.TaggedError("BikeNotAvailable")<{
   readonly status: string;
 }> {}
 
-export class StationPickupSlotLimitExceeded extends Data.TaggedError("StationPickupSlotLimitExceeded")<{
+export class StationReservationAvailabilityTooLow extends Data.TaggedError("StationReservationAvailabilityTooLow")<{
   readonly stationId: string;
-  readonly pickupSlotLimit: number;
-  readonly pendingReservations: number;
+  readonly totalCapacity: number;
+  readonly availableBikes: number;
+  readonly requiredAvailableBikes: number;
 }> {}
 
 /**
@@ -177,7 +178,7 @@ export type ReservationServiceFailure
     | BikeNotFound
     | BikeNotFoundInStation
     | BikeNotAvailable
-    | StationPickupSlotLimitExceeded
+    | StationReservationAvailabilityTooLow
     | ReservationOptionNotSupported
     | ReservationNotFound
     | ReservationNotOwned

@@ -12,7 +12,7 @@ import {
 
 import { PrismaLive } from "../infra.layers";
 import { BikeDepsLive, BikeReposLive } from "./bike.layers";
-import { StationReposLive } from "./station.layers";
+import { StationQueryReposLive } from "./station.layers";
 import {
   SubscriptionReposLive,
   SubscriptionServiceLayer,
@@ -38,7 +38,7 @@ export const RentalAnalyticsReposLive = RentalAnalyticsRepositoryLive.pipe(
 export const RentalServiceLayer = RentalServiceLive.pipe(
   Layer.provide(RentalReposLive),
   Layer.provide(BikeReposLive),
-  Layer.provide(StationReposLive),
+  Layer.provide(StationQueryReposLive),
 );
 
 export const RentalCommandServiceLayer = RentalCommandServiceLive.pipe(

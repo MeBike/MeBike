@@ -12,7 +12,7 @@ import {
   isPrismaUniqueViolation,
 } from "@/infrastructure/prisma-errors";
 
-import type { StationRepo } from "../station.repository.types";
+import type { StationCommandRepo } from "../station.repository.types";
 
 import {
   StationNameAlreadyExists,
@@ -27,11 +27,26 @@ import {
   stationSelect,
 } from "../station.repository.helpers";
 
-export type StationWriteRepo = Pick<StationRepo, "create" | "update">;
+export type StationWriteRepo = Pick<StationCommandRepo, "create" | "update">;
 
+/**
+ * Tao write repository cho station domain.
+ *
+ * @param client Prisma client hoac transaction client.
+ * @returns Repository gom create/update voi validate geo boundary va hydrate counts.
+ */
 export function makeStationWriteRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): StationWriteRepo {
+  /**
+   * Dam bao toa do tram nam trong geo boundary duoc ho tro.
+   *
+   * @param args Toa do va loai thao tac dang thuc hien.
+   * @param args.latitude Vi do can kiem tra.
+   * @param args.longitude Kinh do can kiem tra.
+   * @param args.operation Ten thao tac dang thuc hien de gan vao error context.
+   * @returns Effect fail neu diem nam ngoai supported area hoac thieu boundary row.
+   */
   const assertWithinSupportedArea = (args: {
     latitude: number;
     longitude: number;
@@ -76,6 +91,12 @@ export function makeStationWriteRepository(
       }
     });
 
+  /**
+   * Doc lai tram va hydrate bike/return-slot counts sau khi ghi du lieu.
+   *
+   * @param id ID tram can hydrate.
+   * @returns Effect tra ve `Option.none` neu tram khong ton tai.
+   */
   const loadStationWithCounts = (id: string) =>
     Effect.gen(function* () {
       const row = yield* Effect.tryPromise({
@@ -124,7 +145,6 @@ export function makeStationWriteRepository(
         const stationId = uuidv7();
         const stationType = input.stationType ?? "INTERNAL";
         const agencyId = input.agencyId ?? null;
-        const pickupSlotLimit = input.pickupSlotLimit ?? input.totalCapacity;
         const returnSlotLimit = input.returnSlotLimit ?? input.totalCapacity;
 
         const rows = yield* Effect.tryPromise({
@@ -136,7 +156,6 @@ export function makeStationWriteRepository(
               stationType: import("generated/prisma/client").StationType;
               agencyId: string | null;
               totalCapacity: number;
-              pickupSlotLimit: number;
               returnSlotLimit: number;
               latitude: number;
               longitude: number;
@@ -150,7 +169,6 @@ export function makeStationWriteRepository(
                 "station_type",
                 "agency_id",
                 "total_capacity",
-                "pickup_slot_limit",
                 "return_slot_limit",
                 "latitude",
                 "longitude",
@@ -163,7 +181,6 @@ export function makeStationWriteRepository(
                 ${stationType}::"station_type",
                 ${agencyId},
                 ${input.totalCapacity},
-                ${pickupSlotLimit},
                 ${returnSlotLimit},
                 ${input.latitude},
                 ${input.longitude},
@@ -177,7 +194,6 @@ export function makeStationWriteRepository(
                 "station_type" AS "stationType",
                 "agency_id" AS "agencyId",
                 "total_capacity" AS "totalCapacity",
-                "pickup_slot_limit" AS "pickupSlotLimit",
                 "return_slot_limit" AS "returnSlotLimit",
                 "latitude",
                 "longitude",
@@ -231,10 +247,6 @@ export function makeStationWriteRepository(
         const nextStationType = input.stationType ?? existing.stationType;
         const nextAgencyId = input.agencyId === undefined ? existing.agencyId : input.agencyId;
         const nextCapacity = input.totalCapacity ?? existing.totalCapacity;
-        const nextPickupSlotLimit = input.pickupSlotLimit
-          ?? (input.totalCapacity != null && existing.pickupSlotLimit === existing.totalCapacity
-            ? input.totalCapacity
-            : existing.pickupSlotLimit);
         const nextReturnSlotLimit = input.returnSlotLimit
           ?? (input.totalCapacity != null && existing.returnSlotLimit === existing.totalCapacity
             ? input.totalCapacity
@@ -255,7 +267,6 @@ export function makeStationWriteRepository(
               stationType: import("generated/prisma/client").StationType;
               agencyId: string | null;
               totalCapacity: number;
-              pickupSlotLimit: number;
               returnSlotLimit: number;
               latitude: number;
               longitude: number;
@@ -269,7 +280,6 @@ export function makeStationWriteRepository(
                 "station_type" = ${nextStationType}::"station_type",
                 "agency_id" = ${nextAgencyId},
                 "total_capacity" = ${nextCapacity},
-                "pickup_slot_limit" = ${nextPickupSlotLimit},
                 "return_slot_limit" = ${nextReturnSlotLimit},
                 "latitude" = ${nextLatitude},
                 "longitude" = ${nextLongitude},
@@ -286,7 +296,6 @@ export function makeStationWriteRepository(
                 "station_type" AS "stationType",
                 "agency_id" AS "agencyId",
                 "total_capacity" AS "totalCapacity",
-                "pickup_slot_limit" AS "pickupSlotLimit",
                 "return_slot_limit" AS "returnSlotLimit",
                 "latitude",
                 "longitude",

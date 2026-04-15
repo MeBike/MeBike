@@ -14,7 +14,6 @@ model Station {
   stationType     StationType                           @default(INTERNAL) @map("station_type")
   agencyId        String?                               @unique @map("agency_id") @db.Uuid
   totalCapacity   Int                                   @map("total_capacity")
-  pickupSlotLimit Int                                   @default(0) @map("pickup_slot_limit")
   returnSlotLimit Int                                   @default(0) @map("return_slot_limit")
   latitude        Float
   longitude       Float

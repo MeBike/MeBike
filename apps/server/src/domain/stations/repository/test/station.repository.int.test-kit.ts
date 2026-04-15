@@ -5,7 +5,8 @@ import type {
 
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { makeStationRepository } from "../station.repository";
+import { makeStationCommandRepository } from "../station-command.repository";
+import { makeStationQueryRepository } from "../station-query.repository";
 
 type StationRepoClient = PrismaClient | PrismaTypes.TransactionClient;
 
@@ -50,8 +51,10 @@ export function setupStationRepositoryIntTestKit() {
 
   return {
     fixture,
-    makeRepo: (client: StationRepoClient = fixture.prisma) =>
-      makeStationRepository(client),
+    makeQueryRepo: (client: StationRepoClient = fixture.prisma) =>
+      makeStationQueryRepository(client),
+    makeCommandRepo: (client: StationRepoClient = fixture.prisma) =>
+      makeStationCommandRepository(client),
     createStation,
   };
 }

@@ -69,6 +69,7 @@ export type FixedSlotAssignmentTemplateRow = {
   };
   readonly station: {
     readonly name: string;
+    readonly totalCapacity: number;
   };
 };
 

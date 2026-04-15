@@ -76,7 +76,7 @@ describe("assignFixedSlotReservations", () => {
       stationId: "station-1",
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
-      station: { name: "Test Station" },
+      station: { name: "Test Station", totalCapacity: 10 },
     };
     const state: DraftState = {
       reservationId: null,
@@ -108,6 +108,7 @@ describe("assignFixedSlotReservations", () => {
     }));
 
     mocks.makeBikeRepository.mockImplementation((tx: { state: DraftState }) => ({
+      countAvailableByStation: () => Effect.succeed(tx.state.bikeStatus === "AVAILABLE" ? 6 : 0),
       findAvailableByStation: () => Effect.succeed(
         tx.state.bikeStatus === "AVAILABLE" ? Option.some(bike) : Option.none(),
       ),
@@ -162,7 +163,7 @@ describe("assignFixedSlotReservations", () => {
       stationId: "station-1",
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
-      station: { name: "Test Station" },
+      station: { name: "Test Station", totalCapacity: 10 },
     };
 
     mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
@@ -184,6 +185,7 @@ describe("assignFixedSlotReservations", () => {
       assignBikeToPendingReservation: vi.fn(),
     });
     mocks.makeBikeRepository.mockReturnValue({
+      countAvailableByStation: vi.fn(),
       findAvailableByStation: vi.fn(),
       reserveBikeIfAvailable: vi.fn(),
     });
@@ -230,7 +232,7 @@ describe("assignFixedSlotReservations", () => {
       stationId: "station-1",
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
-      station: { name: "Test Station" },
+      station: { name: "Test Station", totalCapacity: 10 },
     };
     const state: DraftState = {
       reservationId: null,
@@ -262,6 +264,7 @@ describe("assignFixedSlotReservations", () => {
     }));
 
     mocks.makeBikeRepository.mockImplementation((tx: { state: DraftState }) => ({
+      countAvailableByStation: () => Effect.succeed(tx.state.bikeStatus === "AVAILABLE" ? 6 : 0),
       findAvailableByStation: () => Effect.succeed(
         tx.state.bikeStatus === "AVAILABLE" ? Option.some(bike) : Option.none(),
       ),
@@ -310,7 +313,7 @@ describe("assignFixedSlotReservations", () => {
       stationId: "station-1",
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
-      station: { name: "Test Station" },
+      station: { name: "Test Station", totalCapacity: 10 },
     };
 
     mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
@@ -331,6 +334,7 @@ describe("assignFixedSlotReservations", () => {
       assignBikeToPendingReservation: vi.fn(),
     });
     mocks.makeBikeRepository.mockReturnValue({
+      countAvailableByStation: vi.fn(),
       findAvailableByStation: vi.fn(),
       reserveBikeIfAvailable: vi.fn(),
     });
@@ -376,7 +380,7 @@ describe("assignFixedSlotReservations", () => {
       stationId: "station-1",
       slotStart,
       user: { fullName: "Test User", email: "user@example.com" },
-      station: { name: "Test Station" },
+      station: { name: "Test Station", totalCapacity: 10 },
     };
 
     mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
@@ -395,6 +399,7 @@ describe("assignFixedSlotReservations", () => {
       assignBikeToPendingReservation: vi.fn(),
     });
     mocks.makeBikeRepository.mockReturnValue({
+      countAvailableByStation: () => Effect.succeed(6),
       findAvailableByStation: () => Effect.succeed(Option.some(bike)),
       reserveBikeIfAvailable: vi.fn(),
     });

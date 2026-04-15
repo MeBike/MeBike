@@ -6,7 +6,7 @@ import type { BikeRow } from "@/domain/bikes";
 import { RatingRepository } from "@/domain/ratings";
 import { RatingRepositoryError } from "@/domain/ratings/domain-errors";
 import { defectOn } from "@/domain/shared";
-import { StationRepository } from "@/domain/stations";
+import { StationQueryRepository } from "@/domain/stations";
 import { SupplierRepository } from "@/domain/suppliers";
 import { toBikeSummary } from "@/http/presenters/bikes.presenter";
 
@@ -55,7 +55,7 @@ function mapStationsById(
 export function loadBikeSummary(row: BikeRow) {
   return Effect.gen(function* () {
     const ratingRepo = yield* RatingRepository;
-    const stationRepo = yield* StationRepository;
+    const stationRepo = yield* StationQueryRepository;
     const supplierRepo = yield* SupplierRepository;
     const { rating, station, supplier } = yield* Effect.all({
       rating: ratingRepo.findBikeAggregates([row.id]).pipe(
@@ -81,7 +81,7 @@ export function loadBikeSummary(row: BikeRow) {
 export function loadBikeSummaries(rows: readonly BikeRow[]) {
   return Effect.gen(function* () {
     const ratingRepo = yield* RatingRepository;
-    const stationRepo = yield* StationRepository;
+    const stationRepo = yield* StationQueryRepository;
     const supplierRepo = yield* SupplierRepository;
     const ratingsByBikeId = yield* ratingRepo.findBikeAggregates(rows.map(row => row.id)).pipe(
       defectOn(RatingRepositoryError),
