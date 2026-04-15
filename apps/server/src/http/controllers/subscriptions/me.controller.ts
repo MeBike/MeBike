@@ -4,8 +4,7 @@ import type { SubscriptionsContracts } from "@mebike/shared";
 import { Data, Effect, Match, Option } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
-import { activateSubscriptionUseCase, createSubscriptionUseCase } from "@/domain/subscriptions";
-import { SubscriptionQueryServiceTag } from "@/domain/subscriptions";
+import { activateSubscriptionUseCase, createSubscriptionUseCase, SubscriptionQueryServiceTag } from "@/domain/subscriptions";
 import { UserQueryServiceTag } from "@/domain/users";
 import { toSubscriptionDetail } from "@/http/presenters/subscriptions.presenter";
 

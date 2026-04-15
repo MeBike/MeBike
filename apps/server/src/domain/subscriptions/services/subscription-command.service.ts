@@ -1,9 +1,9 @@
 import { Effect, Option } from "effect";
 
+import { env } from "@/config/env";
+
 import type { SubscriptionCommandRepo, SubscriptionQueryRepo } from "../repository/subscription.repository.types";
 import type { SubscriptionCommandService } from "./subscription.service.types";
-
-import { env } from "@/config/env";
 
 import {
   SubscriptionNotFound,

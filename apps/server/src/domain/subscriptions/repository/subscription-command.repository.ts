@@ -58,7 +58,7 @@ export function makeSubscriptionCommandRepository(
                 updatedAt: input.activatedAt,
               },
             }),
-          catch: err => {
+          catch: (err) => {
             if (isPrismaUniqueViolation(err)) {
               return new ActiveSubscriptionExists({
                 subscriptionId: input.subscriptionId,

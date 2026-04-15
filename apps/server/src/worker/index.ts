@@ -4,6 +4,9 @@ import { parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect } from "effect";
 import process from "node:process";
 
+import type {
+  SubscriptionQueryServiceTag,
+} from "@/domain/subscriptions";
 import type { JobScheduler, QueueJob } from "@/infrastructure/jobs/ports";
 import type { Prisma } from "@/infrastructure/prisma";
 
@@ -16,7 +19,6 @@ import {
   SubscriptionCommandServiceTag,
   SubscriptionQueryRepositoryLive,
   SubscriptionQueryServiceLive,
-  SubscriptionQueryServiceTag,
 } from "@/domain/subscriptions";
 import { makeJobBackend } from "@/infrastructure/jobs/backend";
 import { JobTypes } from "@/infrastructure/jobs/job-types";

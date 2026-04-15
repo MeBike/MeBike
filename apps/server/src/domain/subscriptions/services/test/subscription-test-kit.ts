@@ -1,5 +1,9 @@
 import { Effect, Layer } from "effect";
 
+import type {
+  SubscriptionCommandServiceTag,
+  SubscriptionQueryServiceTag,
+} from "@/domain/subscriptions";
 import type { PrismaClient, Prisma as PrismaNS } from "generated/prisma/client";
 
 import {
@@ -7,10 +11,8 @@ import {
   makeSubscriptionQueryRepository,
   SubscriptionCommandRepository,
   SubscriptionCommandServiceLive,
-  SubscriptionCommandServiceTag,
   SubscriptionQueryRepository,
   SubscriptionQueryServiceLive,
-  SubscriptionQueryServiceTag,
 } from "@/domain/subscriptions";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";

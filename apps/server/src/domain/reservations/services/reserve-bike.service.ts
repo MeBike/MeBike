@@ -73,12 +73,12 @@ export function reserveBike(
   input: ReserveBikeInput,
 ): Effect.Effect<
   ReservationRow,
-   ReserveBikeFailure,
-   | Prisma
-   | ReservationQueryServiceTag
-   | ReservationCommandServiceTag
-   | BikeRepository
-   | SubscriptionCommandServiceTag
+  ReserveBikeFailure,
+  | Prisma
+  | ReservationQueryServiceTag
+  | ReservationCommandServiceTag
+  | BikeRepository
+  | SubscriptionCommandServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;

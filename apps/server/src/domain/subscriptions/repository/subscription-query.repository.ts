@@ -7,10 +7,10 @@ import { defectOn } from "@/domain/shared";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 
+import type { SubscriptionSortField } from "../models";
 import type { SubscriptionQueryRepo } from "./subscription.repository.types";
 
 import { SubscriptionRepositoryError } from "../domain-errors";
-import type { SubscriptionSortField } from "../models";
 import {
   selectAdminSubscriptionRow,
   selectSubscriptionRow,
