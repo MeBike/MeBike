@@ -1,9 +1,10 @@
 import React from "react";
 import { Pressable, View } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
+import { useTheme, XStack } from "tamagui";
+
+import type { FixedSlotTemplate } from "@/contracts/server";
 
 import { IconSymbol } from "@/components/IconSymbol";
-import type { FixedSlotTemplate } from "@/contracts/server";
 import { getFixedSlotStatusTone, presentFixedSlotStatus } from "@/presenters/fixed-slots/fixed-slot-presenter";
 import { AppCard } from "@/ui/primitives/app-card";
 import { AppText } from "@/ui/primitives/app-text";

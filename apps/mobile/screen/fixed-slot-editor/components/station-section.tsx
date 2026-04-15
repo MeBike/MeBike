@@ -37,7 +37,9 @@ export function StationSection({
               {stationName
                 ? (
                     <AppText tone="muted" variant="caption">
-                      Gợi ý: {stationName}
+                      Gợi ý:
+                      {" "}
+                      {stationName}
                     </AppText>
                   )
                 : null}

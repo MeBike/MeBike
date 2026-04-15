@@ -27,10 +27,10 @@ export function TimeSelectionSection({ slotStart, onSelectTime }: Props) {
           >
             <XStack alignItems="center" gap="$3" justifyContent="space-between">
               <XStack alignItems="center" flex={1} gap="$3">
-              <IconSymbol color={theme.actionPrimary.val} name="clock" size="input" />
-              <YStack flex={1}>
-                <AppText variant="bodyStrong">{slotStart}</AppText>
-              </YStack>
+                <IconSymbol color={theme.actionPrimary.val} name="clock" size="input" />
+                <YStack flex={1}>
+                  <AppText variant="bodyStrong">{slotStart}</AppText>
+                </YStack>
               </XStack>
               <IconSymbol color={theme.textPrimary.val} name="clock" size="sm" />
             </XStack>

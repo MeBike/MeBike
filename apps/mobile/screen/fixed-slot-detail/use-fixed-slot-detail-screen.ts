@@ -5,8 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { Alert } from "react-native";
 
-import { presentFixedSlotError, presentFixedSlotStatus, getFixedSlotStatusTone } from "@/presenters/fixed-slots/fixed-slot-presenter";
 import type { FixedSlotDetailNavigationProp } from "@/types/navigation";
+
+import { getFixedSlotStatusTone, presentFixedSlotError, presentFixedSlotStatus } from "@/presenters/fixed-slots/fixed-slot-presenter";
 
 import { formatDisplayDate } from "./utils";
 

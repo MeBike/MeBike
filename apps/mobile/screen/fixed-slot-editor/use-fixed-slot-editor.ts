@@ -12,6 +12,7 @@ import type {
   FixedSlotEditorNavigationProp,
   FixedSlotEditorRouteProp,
 } from "@/types/navigation";
+
 import { presentFixedSlotError } from "@/presenters/fixed-slots/fixed-slot-presenter";
 
 import {

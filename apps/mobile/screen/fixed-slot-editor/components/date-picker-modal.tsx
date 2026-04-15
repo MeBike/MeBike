@@ -1,7 +1,7 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { AppBottomModalCard } from "@ui/patterns/app-bottom-modal-card";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
-import { AppBottomModalCard } from "@ui/patterns/app-bottom-modal-card";
 import React from "react";
 import { View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";

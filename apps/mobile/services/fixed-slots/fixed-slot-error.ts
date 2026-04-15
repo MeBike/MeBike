@@ -1,13 +1,14 @@
 import type { Result } from "@lib/result";
+import type { ServiceError } from "@services/shared/service-error";
 import type { z } from "zod";
 
 import { ServerContracts } from "@mebike/shared";
 import {
-  type ServiceError,
   asNetworkError as asSharedNetworkError,
   isServiceErrorCode,
   normalizeServiceErrorCode,
   parseServiceError,
+
 } from "@services/shared/service-error";
 
 type ContractFixedSlotErrorCode = z.infer<typeof ServerContracts.FixedSlotTemplatesContracts.FixedSlotTemplateErrorCodeSchema>;

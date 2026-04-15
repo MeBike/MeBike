@@ -1,11 +1,11 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { borderWidths, elevations, spaceScale, spacing } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { Screen } from "@ui/primitives/screen";
 import React from "react";
-import { borderWidths, elevations, spacing, spaceScale } from "@theme/metrics";
 import {
   ActivityIndicator,
   Platform,
@@ -19,6 +19,7 @@ import type {
   FixedSlotEditorNavigationProp,
   FixedSlotEditorRouteProp,
 } from "@/types/navigation";
+
 import { IconSymbol } from "@/components/IconSymbol";
 
 import { DatePickerModal } from "./fixed-slot-editor/components/date-picker-modal";
@@ -99,23 +100,23 @@ export default function FixedSlotEditorScreen() {
                     gap="$4"
                     style={elevations.whisper}
                   >
-                  <StationSection
-                    stationId={stationId}
-                    stationName={stationName}
-                    resolvedStationName={resolvedStationName}
-                    canEdit={canEditStation}
-                    onChangeStationId={setStationId}
+                    <StationSection
+                      stationId={stationId}
+                      stationName={stationName}
+                      resolvedStationName={resolvedStationName}
+                      canEdit={canEditStation}
+                      onChangeStationId={setStationId}
+                    />
+
+                    <TimeSelectionSection slotStart={slotStart} onSelectTime={handleSelectTime} />
+                  </AppCard>
+
+                  <SelectedDatesSection
+                    selectedDates={selectedDates}
+                    pastDatesHidden={pastDatesHidden}
+                    onAddDate={handleAddDate}
+                    onRemoveDate={removeDate}
                   />
-
-                  <TimeSelectionSection slotStart={slotStart} onSelectTime={handleSelectTime} />
-                </AppCard>
-
-                <SelectedDatesSection
-                  selectedDates={selectedDates}
-                  pastDatesHidden={pastDatesHidden}
-                  onAddDate={handleAddDate}
-                  onRemoveDate={removeDate}
-                />
 
                   <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$4" chrome="flat" gap="$3" tone="danger">
                     <XStack alignItems="flex-start" gap="$3">
@@ -167,7 +168,7 @@ export default function FixedSlotEditorScreen() {
           onChange={handleTimePickerChange}
           onConfirm={confirmTimePicker}
           onClose={cancelTimePicker}
-          />
+        />
       )}
     </Screen>
   );

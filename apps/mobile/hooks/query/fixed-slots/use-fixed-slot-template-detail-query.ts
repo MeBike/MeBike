@@ -1,8 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-
 import type { FixedSlotError } from "@services/fixed-slots";
 
 import { fixedSlotService } from "@services/fixed-slots";
+import { useQuery } from "@tanstack/react-query";
 
 import type { FixedSlotTemplate } from "@/contracts/server";
 

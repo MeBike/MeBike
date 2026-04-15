@@ -1,11 +1,11 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { borderWidths, elevations, spaceScale, spacing } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { Screen } from "@ui/primitives/screen";
 import React from "react";
-import { borderWidths, elevations, spacing, spaceScale } from "@theme/metrics";
 import {
   ActivityIndicator,
   Pressable,
@@ -15,16 +15,16 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, XStack, YStack } from "tamagui";
 
+import type {
+  FixedSlotDetailNavigationProp,
+  FixedSlotDetailRouteProp,
+} from "@/types/navigation";
+
 import { IconSymbol } from "@/components/IconSymbol";
 import { StatusBadge } from "@/ui/primitives/status-badge";
 
 import { useFixedSlotDetailScreen } from "./fixed-slot-detail/use-fixed-slot-detail-screen";
 import { formatDisplayDate } from "./fixed-slot-detail/utils";
-
-import type {
-  FixedSlotDetailNavigationProp,
-  FixedSlotDetailRouteProp,
-} from "@/types/navigation";
 
 export default function FixedSlotDetailScreen() {
   const navigation = useNavigation<FixedSlotDetailNavigationProp>();
@@ -81,107 +81,111 @@ export default function FixedSlotDetailScreen() {
                     gap="$5"
                     style={elevations.whisper}
                   >
-                  <StatusBadge
-                    label={statusLabel?.toUpperCase() ?? ""}
-                    pulseDot={canMutate}
-                    size="compact"
-                    tone={statusTone}
-                    withDot
-                  />
+                    <StatusBadge
+                      label={statusLabel?.toUpperCase() ?? ""}
+                      pulseDot={canMutate}
+                      size="compact"
+                      tone={statusTone}
+                      withDot
+                    />
 
-                  <YStack gap="$2">
-                    <AppText variant="title">{template.station.name}</AppText>
-                    <XStack alignItems="flex-start" gap="$2">
-                      <IconSymbol color={theme.textTertiary.val} name="location" size="sm" />
-                      <AppText flex={1} tone="muted" variant="bodySmall">{template.station.address}</AppText>
-                    </XStack>
-                  </YStack>
-
-                  <AppCard borderColor="$borderSubtle" borderWidth={1} chrome="flat" gap="$3" tone="accent">
-                    <XStack alignItems="center" gap="$3">
-                      <XStack alignItems="center" backgroundColor="$surfaceDefault" borderRadius="$3" height={40} justifyContent="center" width={40}>
-                        <IconSymbol color={theme.actionPrimary.val} name="clock" size="md" />
+                    <YStack gap="$2">
+                      <AppText variant="title">{template.station.name}</AppText>
+                      <XStack alignItems="flex-start" gap="$2">
+                        <IconSymbol color={theme.textTertiary.val} name="location" size="sm" />
+                        <AppText flex={1} tone="muted" variant="bodySmall">{template.station.address}</AppText>
                       </XStack>
-                      <YStack flex={1} gap="$1" minWidth={0}>
-                        <AppText numberOfLines={1} tone="brand" variant="eyebrow">Giờ nhận xe</AppText>
-                        <AppText numberOfLines={1} variant="headline">{template.slotStart}</AppText>
-                      </YStack>
+                    </YStack>
+
+                    <AppCard borderColor="$borderSubtle" borderWidth={1} chrome="flat" gap="$3" tone="accent">
+                      <XStack alignItems="center" gap="$3">
+                        <XStack alignItems="center" backgroundColor="$surfaceDefault" borderRadius="$3" height={40} justifyContent="center" width={40}>
+                          <IconSymbol color={theme.actionPrimary.val} name="clock" size="md" />
+                        </XStack>
+                        <YStack flex={1} gap="$1" minWidth={0}>
+                          <AppText numberOfLines={1} tone="brand" variant="eyebrow">Giờ nhận xe</AppText>
+                          <AppText numberOfLines={1} variant="headline">{template.slotStart}</AppText>
+                        </YStack>
+                      </XStack>
+                    </AppCard>
+
+                    <XStack alignItems="flex-start" gap="$2">
+                      <IconSymbol color={theme.textTertiary.val} name="info" size="caption" />
+                      <AppText flex={1} tone="muted" variant="caption">
+                        Hệ thống sẽ ưu tiên giữ xe cho bạn vào khung giờ này.
+                      </AppText>
                     </XStack>
                   </AppCard>
 
-                  <XStack alignItems="flex-start" gap="$2">
-                    <IconSymbol color={theme.textTertiary.val} name="info" size="caption" />
-                    <AppText flex={1} tone="muted" variant="caption">
-                      Hệ thống sẽ ưu tiên giữ xe cho bạn vào khung giờ này.
-                    </AppText>
-                  </XStack>
-                </AppCard>
-
-                <AppCard
-                  borderColor="$borderSubtle"
-                  borderRadius="$5"
-                  borderWidth={borderWidths.subtle}
-                  chrome="flat"
-                  gap="$0"
-                  overflow="hidden"
-                  padding="$0"
-                  style={elevations.whisper}
-                >
-                  <XStack alignItems="center" backgroundColor="$surfaceMuted" borderBottomColor="$borderSubtle" borderBottomWidth={1} justifyContent="space-between" paddingHorizontal="$5" paddingVertical="$4">
-                    <XStack alignItems="center" gap="$2">
-                      <IconSymbol color={theme.textPrimary.val} name="calendar" size="sm" />
-                      <AppText variant="bodyStrong">Danh sách ngày ({template.slotDates.length})</AppText>
+                  <AppCard
+                    borderColor="$borderSubtle"
+                    borderRadius="$5"
+                    borderWidth={borderWidths.subtle}
+                    chrome="flat"
+                    gap="$0"
+                    overflow="hidden"
+                    padding="$0"
+                    style={elevations.whisper}
+                  >
+                    <XStack alignItems="center" backgroundColor="$surfaceMuted" borderBottomColor="$borderSubtle" borderBottomWidth={1} justifyContent="space-between" paddingHorizontal="$5" paddingVertical="$4">
+                      <XStack alignItems="center" gap="$2">
+                        <IconSymbol color={theme.textPrimary.val} name="calendar" size="sm" />
+                        <AppText variant="bodyStrong">
+                          Danh sách ngày (
+                          {template.slotDates.length}
+                          )
+                        </AppText>
+                      </XStack>
+                      {canMutate
+                        ? (
+                            <Pressable
+                              onPress={handleNavigateToEditor}
+                            >
+                              {({ pressed }) => (
+                                <AppText opacity={pressed ? 0.75 : 1} tone="brand" variant="bodySmall">Chỉnh sửa</AppText>
+                              )}
+                            </Pressable>
+                          )
+                        : null}
                     </XStack>
-                    {canMutate
-                      ? (
-                          <Pressable
-                            onPress={handleNavigateToEditor}
-                          >
-                            {({ pressed }) => (
-                              <AppText opacity={pressed ? 0.75 : 1} tone="brand" variant="bodySmall">Chỉnh sửa</AppText>
-                            )}
-                          </Pressable>
-                        )
-                      : null}
-                  </XStack>
 
-                  <YStack gap="$3">
-                    {template.slotDates.length === 0
-                      ? (
-                          <YStack padding="$4">
-                            <AppText align="center" tone="muted" variant="bodySmall">
-                              Không còn ngày nào.
-                            </AppText>
-                          </YStack>
-                        )
-                      : template.slotDates.map((slotDate) => (
-                          <AppCard
-                            key={slotDate}
-                            backgroundColor="$surfaceDefault"
-                            borderColor="$borderSubtle"
-                            borderRadius="$4"
-                            borderWidth={1}
-                            chrome="flat"
-                            padding="$5"
-                          >
-                            <XStack alignItems="center" justifyContent="space-between">
-                              <AppText variant="bodyStrong">{formatDisplayDate(slotDate)}</AppText>
-                              {canMutate
-                                ? (
-                                    <Pressable onPress={() => handleRemoveDate(slotDate)}>
-                                      {({ pressed }) => (
-                                        <XStack opacity={pressed ? 0.7 : 1} padding="$2">
-                                          <IconSymbol color={theme.textTertiary.val} name="close" size="sm" />
-                                        </XStack>
-                                      )}
-                                    </Pressable>
-                                  )
-                                : null}
-                            </XStack>
-                          </AppCard>
-                        ))}
-                  </YStack>
-                </AppCard>
+                    <YStack gap="$3">
+                      {template.slotDates.length === 0
+                        ? (
+                            <YStack padding="$4">
+                              <AppText align="center" tone="muted" variant="bodySmall">
+                                Không còn ngày nào.
+                              </AppText>
+                            </YStack>
+                          )
+                        : template.slotDates.map(slotDate => (
+                            <AppCard
+                              key={slotDate}
+                              backgroundColor="$surfaceDefault"
+                              borderColor="$borderSubtle"
+                              borderRadius="$4"
+                              borderWidth={1}
+                              chrome="flat"
+                              padding="$5"
+                            >
+                              <XStack alignItems="center" justifyContent="space-between">
+                                <AppText variant="bodyStrong">{formatDisplayDate(slotDate)}</AppText>
+                                {canMutate
+                                  ? (
+                                      <Pressable onPress={() => handleRemoveDate(slotDate)}>
+                                        {({ pressed }) => (
+                                          <XStack opacity={pressed ? 0.7 : 1} padding="$2">
+                                            <IconSymbol color={theme.textTertiary.val} name="close" size="sm" />
+                                          </XStack>
+                                        )}
+                                      </Pressable>
+                                    )
+                                  : null}
+                              </XStack>
+                            </AppCard>
+                          ))}
+                    </YStack>
+                  </AppCard>
 
                   <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$5" chrome="flat" gap="$3" tone="warning">
                     <XStack alignItems="flex-start" gap="$3">

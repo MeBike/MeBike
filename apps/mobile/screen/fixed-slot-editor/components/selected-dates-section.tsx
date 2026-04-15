@@ -64,7 +64,11 @@ export function SelectedDatesSection({ selectedDates, pastDatesHidden, onAddDate
         {pastDatesHidden > 0
           ? (
               <AppText tone="muted" variant="caption">
-                Đã ẩn {pastDatesHidden} ngày cũ khỏi danh sách.
+                Đã ẩn
+                {" "}
+                {pastDatesHidden}
+                {" "}
+                ngày cũ khỏi danh sách.
               </AppText>
             )
           : null}
