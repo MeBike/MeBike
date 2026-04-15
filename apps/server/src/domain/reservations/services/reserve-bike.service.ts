@@ -36,6 +36,7 @@ import {
   SubscriptionRequired,
 } from "../domain-errors";
 import {
+  lockStationForReservationCheck,
   requiredAvailableBikesForReservation,
   stationCanAcceptReservation,
 } from "./reservation-availability-rule";
@@ -152,6 +153,8 @@ export function reserveBike(
             `Invariant violated: bike ${input.bikeId} references missing station ${input.stationId}`,
           ));
         }
+
+        yield* lockStationForReservationCheck(tx, input.stationId);
 
         const availableBikes = yield* bikeRepo.countAvailableByStation(input.stationId);
         const requiredAvailableBikes = requiredAvailableBikesForReservation(

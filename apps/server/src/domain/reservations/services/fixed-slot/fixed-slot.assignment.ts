@@ -33,7 +33,10 @@ import type {
 import { makeReservationCommandRepository } from "../../repository/reservation-command.repository";
 import { makeReservationQueryRepository } from "../../repository/reservation-query.repository";
 import { billFixedSlotDates } from "../fixed-slot-template/billing";
-import { stationCanAcceptReservation } from "../reservation-availability-rule";
+import {
+  lockStationForReservationCheck,
+  stationCanAcceptReservation,
+} from "../reservation-availability-rule";
 import { buildFixedSlotLabels } from "./fixed-slot.helpers";
 
 class FixedSlotAssignmentConflict extends Error {
@@ -203,6 +206,8 @@ async function runFixedSlotAssignmentTransaction(
       if (Option.isSome(existingReservationOpt)) {
         return yield* Effect.fail(new FixedSlotAssignmentConflict());
       }
+
+      yield* lockStationForReservationCheck(tx, template.stationId);
 
       const availableBikes = yield* bikeRepo.countAvailableByStation(template.stationId);
       if (!stationCanAcceptReservation({

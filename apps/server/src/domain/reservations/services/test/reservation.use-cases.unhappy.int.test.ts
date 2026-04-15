@@ -1,3 +1,4 @@
+import { Either } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
@@ -111,6 +112,50 @@ describe("reservation use-cases unhappy paths", () => {
     });
 
     expectLeftTag(result, "StationReservationAvailabilityTooLow");
+  });
+
+  it("reserveBikeUseCase serializes station availability checks under concurrent reservations", async () => {
+    const first = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
+    const second = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
+    const station = await fixture.factories.station({
+      capacity: 10,
+      returnSlotLimit: 10,
+    });
+
+    for (let index = 0; index < 4; index++) {
+      await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    }
+
+    const bikeA = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    const bikeB = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    const now = new Date();
+
+    const [firstResult, secondResult] = await Promise.all([
+      runReserve({
+        userId: first.user.id,
+        bikeId: bikeA.id,
+        stationId: station.id,
+        startTime: now,
+        now,
+      }),
+      runReserve({
+        userId: second.user.id,
+        bikeId: bikeB.id,
+        stationId: station.id,
+        startTime: now,
+        now,
+      }),
+    ]);
+
+    const results = [firstResult, secondResult];
+    const successCount = results.filter(Either.isRight).length;
+    const availabilityFailureCount = results.filter(
+      result => Either.isLeft(result) && result.left._tag === "StationReservationAvailabilityTooLow",
+    ).length;
+
+    expect(successCount).toBe(1);
+    expect(availabilityFailureCount).toBe(1);
+    expect(await fixture.prisma.bike.count({ where: { stationId: station.id, status: "RESERVED" } })).toBe(1);
   });
 
   it("reserveBikeUseCase fails with SubscriptionRequired when subscription option missing id", async () => {
