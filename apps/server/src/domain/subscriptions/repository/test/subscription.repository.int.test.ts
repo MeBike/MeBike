@@ -7,14 +7,17 @@ import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { expectDefect, expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { makeSubscriptionRepository } from "../subscription.repository";
+import { makeSubscriptionCommandRepository } from "../subscription-command.repository";
+import { makeSubscriptionQueryRepository } from "../subscription-query.repository";
 
 describe("subscriptionRepository Integration", () => {
   const fixture = setupPrismaIntFixture();
-  let repo: ReturnType<typeof makeSubscriptionRepository>;
+  let queryRepo: ReturnType<typeof makeSubscriptionQueryRepository>;
+  let commandRepo: ReturnType<typeof makeSubscriptionCommandRepository>;
 
   beforeAll(() => {
-    repo = makeSubscriptionRepository(fixture.prisma);
+    queryRepo = makeSubscriptionQueryRepository(fixture.prisma);
+    commandRepo = makeSubscriptionCommandRepository(fixture.prisma);
   });
 
   const createUser = async () => {
@@ -26,7 +29,7 @@ describe("subscriptionRepository Integration", () => {
     const { id: userId } = await createUser();
 
     const created = await Effect.runPromise(
-      repo.createPending({
+      commandRepo.createPending({
         userId,
         packageName: "basic",
         maxUsages: 10,
@@ -34,7 +37,7 @@ describe("subscriptionRepository Integration", () => {
       }),
     );
 
-    const found = await Effect.runPromise(repo.findById(created.id));
+    const found = await Effect.runPromise(queryRepo.findById(created.id));
     if (Option.isNone(found)) {
       throw new Error("Expected subscription to exist");
     }
@@ -45,7 +48,7 @@ describe("subscriptionRepository Integration", () => {
     const { id: userId } = await createUser();
 
     await Effect.runPromise(
-      repo.createPending({
+      commandRepo.createPending({
         userId,
         packageName: "premium",
         maxUsages: null,
@@ -54,7 +57,7 @@ describe("subscriptionRepository Integration", () => {
     );
 
     const result = await Effect.runPromise(
-      repo.listForUser(userId, {}, { page: 1, pageSize: 10 }),
+      queryRepo.listForUser(userId, {}, { page: 1, pageSize: 10 }),
     );
 
     expect(result.items).toHaveLength(1);
@@ -65,7 +68,7 @@ describe("subscriptionRepository Integration", () => {
     const { id: userId } = await createUser();
 
     const created = await Effect.runPromise(
-      repo.createPending({
+      commandRepo.createPending({
         userId,
         packageName: "basic",
         maxUsages: 5,
@@ -77,7 +80,7 @@ describe("subscriptionRepository Integration", () => {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     const result = await Effect.runPromise(
-      repo.activate({
+      commandRepo.activate({
         subscriptionId: created.id,
         activatedAt,
         expiresAt,
@@ -94,7 +97,7 @@ describe("subscriptionRepository Integration", () => {
     const { id: userId } = await createUser();
 
     const created = await Effect.runPromise(
-      repo.createPending({
+      commandRepo.createPending({
         userId,
         packageName: "basic",
         maxUsages: 5,
@@ -106,7 +109,7 @@ describe("subscriptionRepository Integration", () => {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     const activated = await Effect.runPromise(
-      repo.activate({
+      commandRepo.activate({
         subscriptionId: created.id,
         activatedAt,
         expiresAt,
@@ -118,7 +121,7 @@ describe("subscriptionRepository Integration", () => {
     }
 
     const updated = await Effect.runPromise(
-      repo.incrementUsage(activated.value.id, 0, 1),
+      commandRepo.incrementUsage(activated.value.id, 0, 1),
     );
 
     if (Option.isNone(updated)) {
@@ -131,7 +134,7 @@ describe("subscriptionRepository Integration", () => {
     const { id: userId } = await createUser();
 
     const created = await Effect.runPromise(
-      repo.createPending({
+      commandRepo.createPending({
         userId,
         packageName: "basic",
         maxUsages: 5,
@@ -141,7 +144,7 @@ describe("subscriptionRepository Integration", () => {
 
     const expiredAt = new Date(Date.now() - 60 * 1000);
     const activated = await Effect.runPromise(
-      repo.activate({
+      commandRepo.activate({
         subscriptionId: created.id,
         activatedAt: expiredAt,
         expiresAt: expiredAt,
@@ -152,7 +155,7 @@ describe("subscriptionRepository Integration", () => {
       throw new Error("Expected activation to succeed");
     }
 
-    const count = await Effect.runPromise(repo.markExpiredNow(new Date()));
+    const count = await Effect.runPromise(commandRepo.markExpiredNow(new Date()));
     expect(count).toBe(1);
   });
 
@@ -160,7 +163,7 @@ describe("subscriptionRepository Integration", () => {
     const { id: userId } = await createUser();
 
     const first = await Effect.runPromise(
-      repo.createPending({
+      commandRepo.createPending({
         userId,
         packageName: "basic",
         maxUsages: 5,
@@ -168,7 +171,7 @@ describe("subscriptionRepository Integration", () => {
       }),
     );
     const second = await Effect.runPromise(
-      repo.createPending({
+      commandRepo.createPending({
         userId,
         packageName: "premium",
         maxUsages: 5,
@@ -180,7 +183,7 @@ describe("subscriptionRepository Integration", () => {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await Effect.runPromise(
-      repo.activate({
+      commandRepo.activate({
         subscriptionId: first.id,
         activatedAt,
         expiresAt,
@@ -188,7 +191,7 @@ describe("subscriptionRepository Integration", () => {
     );
 
     const result = await Effect.runPromise(
-      repo
+      commandRepo
         .activate({
           subscriptionId: second.id,
           activatedAt,
@@ -203,7 +206,7 @@ describe("subscriptionRepository Integration", () => {
   it("defects with SubscriptionRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
-      const brokenRepo = makeSubscriptionRepository(broken.client);
+      const brokenRepo = makeSubscriptionQueryRepository(broken.client);
 
       await expectDefect(
         brokenRepo.findById(uuidv7()),

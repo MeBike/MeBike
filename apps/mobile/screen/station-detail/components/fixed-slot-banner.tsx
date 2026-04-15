@@ -43,7 +43,7 @@ export function FixedSlotBanner({ onPress }: FixedSlotBannerProps) {
           <YStack flex={1} gap="$1">
             <AppText variant="bodyStrong">Khung giờ cố định</AppText>
             <AppText tone="muted" variant="caption">
-              Tạo lịch giữ xe nhanh hơn tại trạm này.
+              Lên lịch giữ xe tự động cho các ngày bạn chọn.
             </AppText>
           </YStack>
         </XStack>

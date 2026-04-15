@@ -1,6 +1,6 @@
 import type { SubscriptionsContracts } from "@mebike/shared";
 
-import type { SubscriptionRow } from "@/domain/subscriptions";
+import type { AdminSubscriptionRow, SubscriptionRow } from "@/domain/subscriptions";
 import type { SubscriptionPackageConfig } from "@/domain/subscriptions/package-config";
 
 export function toSubscriptionDetail(
@@ -28,5 +28,14 @@ export function toSubscriptionPackageDetail(
     price: pkg.price.toString(),
     maxUsages: pkg.maxUsages,
     currency: pkg.currency,
+  };
+}
+
+export function toAdminSubscriptionDetail(
+  row: AdminSubscriptionRow,
+): SubscriptionsContracts.AdminSubscriptionDetail {
+  return {
+    ...toSubscriptionDetail(row),
+    user: row.user,
   };
 }

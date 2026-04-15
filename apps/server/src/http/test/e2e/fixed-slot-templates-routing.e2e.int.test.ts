@@ -63,16 +63,13 @@ describe("fixed-slot templates routing e2e", () => {
     });
     expect(created?.userId).toBe(user.id);
     expect(created?.stationId).toBe(station.id);
-    expect(created?.pricingPolicyId).toBe("11111111-1111-4111-8111-111111111111");
-    expect(created?.subscriptionId).toBeNull();
-    expect(created?.prepaid.toString()).toBe("2000");
     expect(created?.dates.map(date => date.slotDate.toISOString().slice(0, 10))).toEqual([
       "2026-04-20",
       "2026-04-22",
     ]);
 
     const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
-    expect(wallet?.balance).toBe(6000n);
+    expect(wallet?.balance).toBe(10000n);
   });
 
   it("rejects a slot that is already today in Vietnam even if UTC is still previous day", async () => {
@@ -109,7 +106,7 @@ describe("fixed-slot templates routing e2e", () => {
     });
   });
 
-  it("uses current subscription upfront when enough usages remain", async () => {
+  it("does not consume subscription when creating fixed-slot template", async () => {
     const user = await fixture.factories.user({ role: "USER" });
     await fixture.factories.wallet({ userId: user.id, balance: 10000n });
     const station = await fixture.factories.station({ name: "Subscription Station" });
@@ -142,13 +139,12 @@ describe("fixed-slot templates routing e2e", () => {
     const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
     const updatedSubscription = await fixture.prisma.subscription.findUnique({ where: { id: subscription.id } });
 
-    expect(created?.subscriptionId).toBe(subscription.id);
-    expect(created?.prepaid.toString()).toBe("0");
+    expect(created?.id).toBe(body.id);
     expect(wallet?.balance).toBe(10000n);
-    expect(updatedSubscription?.usageCount).toBe(3);
+    expect(updatedSubscription?.usageCount).toBe(1);
   });
 
-  it("rejects fixed-slot create when wallet balance is insufficient", async () => {
+  it("allows fixed-slot create even when wallet balance is currently insufficient", async () => {
     const user = await fixture.factories.user({ role: "USER" });
     await fixture.factories.wallet({ userId: user.id, balance: 3000n });
     const station = await fixture.factories.station({ name: "Low Balance Station" });
@@ -167,17 +163,12 @@ describe("fixed-slot templates routing e2e", () => {
       }),
     });
 
-    const body = await response.json() as FixedSlotTemplatesContracts.FixedSlotTemplateErrorResponse;
+    const body = await response.json() as FixedSlotTemplatesContracts.CreateFixedSlotTemplateResponse;
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
 
-    expect(response.status).toBe(400);
-    expect(body).toEqual({
-      error: "Insufficient balance for fixed-slot upfront payment",
-      details: {
-        code: "FIXED_SLOT_INSUFFICIENT_BALANCE",
-        balance: "3000",
-        requiredAmount: "4000",
-      },
-    });
+    expect(response.status).toBe(201);
+    expect(body.station.id).toBe(station.id);
+    expect(wallet?.balance).toBe(3000n);
   });
 
   it("user can list own fixed-slot templates with filters", async () => {
@@ -392,7 +383,7 @@ describe("fixed-slot templates routing e2e", () => {
     expect(updatedBike?.status).toBe("AVAILABLE");
   });
 
-  it("user can update fixed-slot template by adding dates with extra upfront charge", async () => {
+  it("user can update fixed-slot template by adding dates without charging upfront", async () => {
     const user = await fixture.factories.user({ role: "USER" });
     await fixture.factories.wallet({ userId: user.id, balance: 10000n });
     const station = await fixture.factories.station({ name: "Update Station" });
@@ -432,25 +423,10 @@ describe("fixed-slot templates routing e2e", () => {
 
     expect(updateResponse.status).toBe(200);
     expect(body.slotDates).toEqual(["2026-04-20", "2026-04-22"]);
-    expect(wallet?.balance).toBe(6000n);
-    expect(updated?.dates.map(date => ({
-      slotDate: date.slotDate.toISOString().slice(0, 10),
-      pricingPolicyId: date.pricingPolicyId,
-      subscriptionId: date.subscriptionId,
-      prepaid: date.prepaid?.toString() ?? null,
-    }))).toEqual([
-      {
-        slotDate: "2026-04-20",
-        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
-        subscriptionId: null,
-        prepaid: "2000",
-      },
-      {
-        slotDate: "2026-04-22",
-        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
-        subscriptionId: null,
-        prepaid: "2000",
-      },
+    expect(wallet?.balance).toBe(10000n);
+    expect(updated?.dates.map(date => date.slotDate.toISOString().slice(0, 10))).toEqual([
+      "2026-04-20",
+      "2026-04-22",
     ]);
   });
 
@@ -463,9 +439,7 @@ describe("fixed-slot templates routing e2e", () => {
       data: {
         userId: user.id,
         stationId: station.id,
-        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
         slotStart: new Date(Date.UTC(2000, 0, 1, 9, 30, 0)),
-        prepaid: "2000",
         status: "ACTIVE",
         updatedAt: new Date("2026-04-10T10:00:00.000Z"),
         dates: {
@@ -501,7 +475,7 @@ describe("fixed-slot templates routing e2e", () => {
     expect(updatedReservation?.startTime.toISOString()).toBe("2026-04-20T03:45:00.000Z");
   });
 
-  it("user can remove one fixed-slot date without refund", async () => {
+  it("user can remove one fixed-slot date without wallet side effects before assignment", async () => {
     const user = await fixture.factories.user({ role: "USER" });
     await fixture.factories.wallet({ userId: user.id, balance: 10000n });
     const station = await fixture.factories.station({ name: "Skip Date Station" });
@@ -549,7 +523,7 @@ describe("fixed-slot templates routing e2e", () => {
 
     expect(response.status).toBe(200);
     expect(body.slotDates).toEqual(["2026-04-20"]);
-    expect(wallet?.balance).toBe(6000n);
+    expect(wallet?.balance).toBe(10000n);
     expect(updatedRemovedReservation?.status).toBe("CANCELLED");
     expect(updatedRemovedBike?.status).toBe("AVAILABLE");
   });

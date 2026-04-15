@@ -3,7 +3,7 @@ import { Effect, Option } from "effect";
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { defectOn } from "@/domain/shared";
-import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
+import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -30,13 +30,13 @@ export function startRental(
 ): Effect.Effect<
   RentalRow,
   RentalServiceFailure,
-  Prisma | RentalRepository | BikeRepository | SubscriptionServiceTag
+  Prisma | RentalRepository | BikeRepository | SubscriptionCommandServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     yield* RentalRepository;
     yield* BikeRepository;
-    const subscriptionService = yield* SubscriptionServiceTag;
+    const subscriptionCommandService = yield* SubscriptionCommandServiceTag;
     const { userId, bikeId, startStationId, startTime, subscriptionId } = input;
 
     const rental = yield* runPrismaTransaction(
@@ -85,7 +85,7 @@ export function startRental(
 
           const requiredBalance = getDepositRequiredMinor(pricingPolicy);
           if (subscriptionId) {
-            yield* subscriptionService.useOneInTx(tx, {
+            yield* subscriptionCommandService.useOne(tx, {
               subscriptionId,
               userId,
               now: startTime,

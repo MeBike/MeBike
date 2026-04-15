@@ -14,7 +14,8 @@ import { makeReservationQueryRepository } from "@/domain/reservations/repository
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
 import { SubscriptionNotFound, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
-import { makeSubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
+import { makeSubscriptionCommandRepository } from "@/domain/subscriptions/repository/subscription-command.repository";
+import { makeSubscriptionQueryRepository } from "@/domain/subscriptions/repository/subscription-query.repository";
 import { makeWalletRepository } from "@/domain/wallets";
 
 import type { RentalServiceFailure } from "../domain-errors";
@@ -83,9 +84,10 @@ export function finalizeRentalReturnInTx(
     }
 
     if (rental.subscriptionId) {
-      const txSubscriptionRepo = makeSubscriptionRepository(tx);
+      const txSubscriptionQueryRepo = makeSubscriptionQueryRepository(tx);
+      const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(tx);
 
-      const subscriptionOpt = yield* txSubscriptionRepo.findById(rental.subscriptionId);
+      const subscriptionOpt = yield* txSubscriptionQueryRepo.findById(rental.subscriptionId);
 
       if (Option.isNone(subscriptionOpt)) {
         return yield* Effect.fail(new SubscriptionNotFound({
@@ -105,7 +107,7 @@ export function finalizeRentalReturnInTx(
       usageToAdd = coverage.usageToAdd;
 
       if (usageToAdd > 0) {
-        const incremented = yield* txSubscriptionRepo.incrementUsage(
+        const incremented = yield* txSubscriptionCommandRepo.incrementUsage(
           subscription.id,
           subscription.usageCount,
           usageToAdd,

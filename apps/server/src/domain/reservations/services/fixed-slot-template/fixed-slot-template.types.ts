@@ -2,12 +2,10 @@ import type { Effect } from "effect";
 
 import type { FixedSlotTemplateFilter, FixedSlotTemplateRow } from "@/domain/reservations/models";
 import type { PageResult } from "@/domain/shared/pagination";
-import type { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import type { Prisma } from "@/infrastructure/prisma";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type {
-  FixedSlotTemplateBillingConflict,
   FixedSlotTemplateCancelConflict,
   FixedSlotTemplateConflict,
   FixedSlotTemplateDateLocked,
@@ -46,10 +44,7 @@ export type FixedSlotTemplateService = {
     FixedSlotTemplateRow,
     | FixedSlotTemplateStationNotFound
     | FixedSlotTemplateDateNotFuture
-    | FixedSlotTemplateConflict
-    | FixedSlotTemplateBillingConflict
-    | WalletNotFound
-    | InsufficientWalletBalance,
+    | FixedSlotTemplateConflict,
     Prisma
   >;
 
@@ -104,7 +99,7 @@ export type FixedSlotTemplateService = {
 
   /**
    * Cap nhat gio bat dau hoac danh sach ngay cua template.
-   * Ngay moi them vao se bi charge upfront ngay luc update.
+   * Ngay moi them vao chi cap nhat lich; billing se xay ra luc worker materialize reservation theo ngay.
    *
    * @param args Dau vao update template.
    * @param args.userId ID user so huu template.
@@ -126,10 +121,7 @@ export type FixedSlotTemplateService = {
     | FixedSlotTemplateDateNotFuture
     | FixedSlotTemplateDateLocked
     | FixedSlotTemplateConflict
-    | FixedSlotTemplateBillingConflict
-    | FixedSlotTemplateUpdateConflict
-    | WalletNotFound
-    | InsufficientWalletBalance,
+    | FixedSlotTemplateUpdateConflict,
     Prisma
   >;
 
@@ -155,10 +147,7 @@ export type FixedSlotTemplateService = {
     | FixedSlotTemplateDateLocked
     | FixedSlotTemplateDateNotFound
     | FixedSlotTemplateConflict
-    | FixedSlotTemplateBillingConflict
-    | FixedSlotTemplateUpdateConflict
-    | WalletNotFound
-    | InsufficientWalletBalance,
+    | FixedSlotTemplateUpdateConflict,
     Prisma
   >;
 };

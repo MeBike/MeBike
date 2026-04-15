@@ -120,7 +120,7 @@ export function makeReservationWriteRepository(
     );
 
   /**
-   * Tao fixed-slot template va snapshot billing cho tung ngay trong cung mot write call.
+   * Tao fixed-slot template va cac date row schedule-only trong cung mot write call.
    */
   const createFixedSlotTemplateWithClient = (
     tx: PrismaClient | PrismaTypes.TransactionClient,
@@ -132,17 +132,11 @@ export function makeReservationWriteRepository(
           data: {
             userId: input.userId,
             stationId: input.stationId,
-            pricingPolicyId: input.pricingPolicyId ?? null,
-            subscriptionId: input.subscriptionId ?? null,
             slotStart: input.slotStart,
-            prepaid: input.prepaid,
             status: "ACTIVE",
             updatedAt: input.updatedAt ?? new Date(),
             dates: {
               create: input.slotDates.map(slotDate => ({
-                pricingPolicyId: input.pricingPolicyId ?? null,
-                subscriptionId: input.subscriptionId ?? null,
-                prepaid: input.prepaid,
                 slotDate,
               })),
             },
