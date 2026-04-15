@@ -4,7 +4,7 @@ import type { SubscriptionsContracts } from "@mebike/shared";
 import { Effect, Match, Option } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
-import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
+import { SubscriptionQueryServiceTag } from "@/domain/subscriptions";
 import { toAdminSubscriptionDetail } from "@/http/presenters/subscriptions.presenter";
 
 import type { SubscriptionsRoutes } from "./shared";
@@ -18,7 +18,7 @@ const adminGetSubscription: RouteHandler<SubscriptionsRoutes["adminGetSubscripti
   const { subscriptionId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    Effect.flatMap(SubscriptionServiceTag, service => service.findAdminById(subscriptionId)),
+    Effect.flatMap(SubscriptionQueryServiceTag, service => service.getAdminById(subscriptionId)),
     "GET /v1/admin/subscriptions/{subscriptionId}",
   );
 
@@ -43,7 +43,7 @@ const adminListSubscriptions: RouteHandler<SubscriptionsRoutes["adminListSubscri
   const pageSize = query.pageSize ?? 50;
 
   const eff = withLoggedCause(
-    Effect.flatMap(SubscriptionServiceTag, service =>
+    Effect.flatMap(SubscriptionQueryServiceTag, service =>
       service.listAll({ status: query.status }, { page, pageSize })),
     "GET /v1/admin/subscriptions",
   );

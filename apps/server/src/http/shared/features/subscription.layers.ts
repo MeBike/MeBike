@@ -1,19 +1,27 @@
 import { Layer } from "effect";
 
 import {
-  SubscriptionRepositoryLive,
-  SubscriptionServiceLive,
+  SubscriptionCommandRepositoryLive,
+  SubscriptionCommandServiceLive,
+  SubscriptionQueryRepositoryLive,
+  SubscriptionQueryServiceLive,
 } from "@/domain/subscriptions";
 
 import { EmailLive, PrismaLive } from "../infra.layers";
 import { UserDepsLive } from "./user.layers";
 import { WalletDepsLive } from "./wallet.layers";
 
-export const SubscriptionReposLive = SubscriptionRepositoryLive.pipe(
+export const SubscriptionReposLive = Layer.mergeAll(
+  SubscriptionQueryRepositoryLive,
+  SubscriptionCommandRepositoryLive,
+).pipe(
   Layer.provide(PrismaLive),
 );
 
-export const SubscriptionServiceLayer = SubscriptionServiceLive.pipe(
+export const SubscriptionServiceLayer = Layer.mergeAll(
+  SubscriptionQueryServiceLive,
+  SubscriptionCommandServiceLive,
+).pipe(
   Layer.provide(SubscriptionReposLive),
 );
 

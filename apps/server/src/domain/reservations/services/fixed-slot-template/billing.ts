@@ -1,7 +1,7 @@
 import { Effect, Option } from "effect";
 
 import type { makePricingPolicyRepository } from "@/domain/pricing";
-import type { makeSubscriptionRepository } from "@/domain/subscriptions";
+import type { makeSubscriptionCommandRepository, makeSubscriptionQueryRepository } from "@/domain/subscriptions";
 import type { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 
 import { getReservationFeeMinor } from "@/domain/pricing";
@@ -20,7 +20,8 @@ import { FixedSlotTemplateBillingConflict } from "../../domain-errors";
  * @param args.userId ID user bi charge.
  * @param args.totalSlots So ngay can charge trong lan nay.
  * @param args.txPricingPolicyRepo Repo pricing trong transaction hien tai.
- * @param args.txSubscriptionRepo Repo subscription trong transaction hien tai.
+ * @param args.txSubscriptionQueryRepo Repo query subscription trong transaction hien tai.
+ * @param args.txSubscriptionCommandRepo Repo command subscription trong transaction hien tai.
  * @param args.txWalletRepo Repo wallet trong transaction hien tai.
  * @returns Effect tra ve billing snapshot de gan vao fixed-slot date hoac template.
  */
@@ -28,7 +29,8 @@ export function billFixedSlotDates(args: {
   userId: string;
   totalSlots: number;
   txPricingPolicyRepo: ReturnType<typeof makePricingPolicyRepository>;
-  txSubscriptionRepo: ReturnType<typeof makeSubscriptionRepository>;
+  txSubscriptionQueryRepo: ReturnType<typeof makeSubscriptionQueryRepository>;
+  txSubscriptionCommandRepo: ReturnType<typeof makeSubscriptionCommandRepository>;
   txWalletRepo: ReturnType<typeof makeWalletRepository>;
 }): Effect.Effect<
   FixedSlotBillingResult,
@@ -44,7 +46,7 @@ export function billFixedSlotDates(args: {
     let subscriptionId: string | null = null;
     let prepaid = toPrismaDecimal(prepaidMinor.toString());
 
-    const currentSubscriptionOpt = yield* args.txSubscriptionRepo.findCurrentForUser(
+    const currentSubscriptionOpt = yield* args.txSubscriptionQueryRepo.findCurrentForUser(
       args.userId,
       ["ACTIVE", "PENDING"],
     );
@@ -56,7 +58,7 @@ export function billFixedSlotDates(args: {
         : subscription.maxUsages - subscription.usageCount;
 
       if (remainingUsages === null || remainingUsages >= args.totalSlots) {
-        const incremented = yield* args.txSubscriptionRepo.incrementUsage(
+        const incremented = yield* args.txSubscriptionCommandRepo.incrementUsage(
           subscription.id,
           subscription.usageCount,
           args.totalSlots,

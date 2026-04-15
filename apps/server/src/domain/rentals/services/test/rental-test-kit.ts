@@ -2,7 +2,8 @@ import { Layer } from "effect";
 
 import type { ConfirmRentalReturnInput, StartRentalInput } from "@/domain/rentals/types";
 import type {
-  SubscriptionServiceTag,
+  SubscriptionCommandServiceTag,
+  SubscriptionQueryServiceTag,
 } from "@/domain/subscriptions";
 import type { PrismaClient } from "generated/prisma/client";
 
@@ -21,9 +22,12 @@ import {
   startRental,
 } from "@/domain/rentals";
 import {
-  makeSubscriptionRepository,
-  SubscriptionRepository,
-  SubscriptionServiceLive,
+  makeSubscriptionCommandRepository,
+  makeSubscriptionQueryRepository,
+  SubscriptionCommandRepository,
+  SubscriptionCommandServiceLive,
+  SubscriptionQueryRepository,
+  SubscriptionQueryServiceLive,
 } from "@/domain/subscriptions";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectEitherWithLayer, runEffectWithLayer } from "@/test/effect/run";
@@ -34,20 +38,33 @@ export type RentalDeps
     | ReturnSlotRepository
     | ReturnConfirmationRepository
     | BikeRepository
-    | SubscriptionRepository
-    | SubscriptionServiceTag;
+    | SubscriptionQueryRepository
+    | SubscriptionCommandRepository
+    | SubscriptionQueryServiceTag
+    | SubscriptionCommandServiceTag;
 
 export function makeRentalTestLayer(client: PrismaClient) {
   const rentalRepo = makeRentalRepository(client);
   const returnSlotRepo = makeReturnSlotRepository(client);
   const returnConfirmationRepo = makeReturnConfirmationRepository(client);
   const bikeRepo = makeBikeRepository(client);
-  const subscriptionRepo = makeSubscriptionRepository(client);
+  const subscriptionQueryRepo = makeSubscriptionQueryRepository(client);
+  const subscriptionCommandRepo = makeSubscriptionCommandRepository(client);
 
   const prismaLayer = Layer.succeed(Prisma, Prisma.make({ client }));
-  const subscriptionRepoLayer = Layer.succeed(SubscriptionRepository, subscriptionRepo);
-  const subscriptionServiceLayer = SubscriptionServiceLive.pipe(
-    Layer.provide(subscriptionRepoLayer),
+  const subscriptionQueryRepoLayer = Layer.succeed(
+    SubscriptionQueryRepository,
+    SubscriptionQueryRepository.make(subscriptionQueryRepo),
+  );
+  const subscriptionCommandRepoLayer = Layer.succeed(
+    SubscriptionCommandRepository,
+    SubscriptionCommandRepository.make(subscriptionCommandRepo),
+  );
+  const subscriptionQueryServiceLayer = SubscriptionQueryServiceLive.pipe(
+    Layer.provide(subscriptionQueryRepoLayer),
+  );
+  const subscriptionCommandServiceLayer = SubscriptionCommandServiceLive.pipe(
+    Layer.provide(Layer.mergeAll(subscriptionQueryRepoLayer, subscriptionCommandRepoLayer)),
   );
 
   return Layer.mergeAll(
@@ -59,8 +76,10 @@ export function makeRentalTestLayer(client: PrismaClient) {
       ReturnConfirmationRepository.make(returnConfirmationRepo),
     ),
     Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
-    subscriptionRepoLayer,
-    subscriptionServiceLayer,
+    subscriptionQueryRepoLayer,
+    subscriptionCommandRepoLayer,
+    subscriptionQueryServiceLayer,
+    subscriptionCommandServiceLayer,
   );
 }
 

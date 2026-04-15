@@ -2,6 +2,10 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type { AdminSubscriptionRow, SubscriptionRow } from "../models";
 
+/**
+ * Projection chuẩn cho subscription row thuần.
+ * Tất cả query thường của domain nên dùng chung projection này để tránh lệch shape.
+ */
 export const selectSubscriptionRow = {
   id: true,
   userId: true,
@@ -15,6 +19,9 @@ export const selectSubscriptionRow = {
   updatedAt: true,
 } as const satisfies PrismaTypes.SubscriptionSelect;
 
+/**
+ * Projection dành cho admin, mở rộng thêm owner summary.
+ */
 export const selectAdminSubscriptionRow = {
   ...selectSubscriptionRow,
   user: {
@@ -26,6 +33,9 @@ export const selectAdminSubscriptionRow = {
   },
 } as const satisfies PrismaTypes.SubscriptionSelect;
 
+/**
+ * Chuẩn hóa payload Prisma thành `SubscriptionRow` của domain.
+ */
 export function toSubscriptionRow(
   row: PrismaTypes.SubscriptionGetPayload<{ select: typeof selectSubscriptionRow }>,
 ): SubscriptionRow {
@@ -43,6 +53,9 @@ export function toSubscriptionRow(
   };
 }
 
+/**
+ * Chuẩn hóa payload Prisma có join user thành `AdminSubscriptionRow`.
+ */
 export function toAdminSubscriptionRow(
   row: PrismaTypes.SubscriptionGetPayload<{ select: typeof selectAdminSubscriptionRow }>,
 ): AdminSubscriptionRow {

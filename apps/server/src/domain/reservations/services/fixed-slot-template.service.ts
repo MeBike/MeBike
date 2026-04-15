@@ -6,7 +6,10 @@ import { makeBikeRepository } from "@/domain/bikes";
 import { makePricingPolicyRepository } from "@/domain/pricing";
 import { defectOn } from "@/domain/shared";
 import { makeStationRepository, StationRepository } from "@/domain/stations";
-import { makeSubscriptionRepository } from "@/domain/subscriptions";
+import {
+  makeSubscriptionCommandRepository,
+  makeSubscriptionQueryRepository,
+} from "@/domain/subscriptions";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -77,7 +80,8 @@ export function makeFixedSlotTemplateService(deps: {
             const txStationRepo = makeStationRepository(tx);
             const txReservationQueryRepo = makeReservationQueryRepository(tx);
             const txReservationCommandRepo = makeReservationCommandRepository(tx);
-            const txSubscriptionRepo = makeSubscriptionRepository(tx);
+            const txSubscriptionQueryRepo = makeSubscriptionQueryRepository(tx);
+            const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(tx);
             const txWalletRepo = makeWalletRepository(tx);
             const txPricingPolicyRepo = makePricingPolicyRepository(tx);
 
@@ -105,7 +109,8 @@ export function makeFixedSlotTemplateService(deps: {
               userId: args.userId,
               totalSlots: slotDates.length,
               txPricingPolicyRepo,
-              txSubscriptionRepo,
+              txSubscriptionQueryRepo,
+              txSubscriptionCommandRepo,
               txWalletRepo,
             });
 

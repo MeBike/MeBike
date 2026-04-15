@@ -5,7 +5,7 @@ import { Data, Effect, Match, Option } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import { activateSubscriptionUseCase, createSubscriptionUseCase } from "@/domain/subscriptions";
-import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
+import { SubscriptionQueryServiceTag } from "@/domain/subscriptions";
 import { UserQueryServiceTag } from "@/domain/users";
 import { toSubscriptionDetail } from "@/http/presenters/subscriptions.presenter";
 
@@ -30,7 +30,7 @@ const getSubscription: RouteHandler<SubscriptionsRoutes["getSubscription"]> = as
   const { subscriptionId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    Effect.flatMap(SubscriptionServiceTag, service => service.findById(subscriptionId)),
+    Effect.flatMap(SubscriptionQueryServiceTag, service => service.getById(subscriptionId)),
     "GET /v1/subscriptions/{subscriptionId}",
   );
 
@@ -69,7 +69,7 @@ const listSubscriptions: RouteHandler<SubscriptionsRoutes["listSubscriptions"]> 
   const pageSize = query.pageSize ?? 50;
 
   const eff = withLoggedCause(
-    Effect.flatMap(SubscriptionServiceTag, service =>
+    Effect.flatMap(SubscriptionQueryServiceTag, service =>
       service.listForUser(userId, { status: query.status }, { page, pageSize })),
     "GET /v1/subscriptions",
   );
