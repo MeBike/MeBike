@@ -47,13 +47,29 @@ function roundTo(value: number, digits: number): number {
   return Math.round((value + Number.EPSILON) * factor) / factor;
 }
 
-function readNumberFromSnapshot(
+function readIntegerFromSnapshot(
   snapshot: EnvironmentImpactRow["policySnapshot"],
-  key: "raw_rental_minutes" | "effective_ride_minutes",
+  key:
+    | "raw_rental_minutes"
+    | "effective_ride_minutes"
+    | "return_scan_buffer_minutes",
 ): number | null {
   const value = isRecord(snapshot) ? snapshot[key] : undefined;
   return typeof value === "number" && Number.isFinite(value)
     ? Math.trunc(value)
+    : null;
+}
+
+function readNumberFromSnapshot(
+  snapshot: EnvironmentImpactRow["policySnapshot"],
+  key:
+    | "average_speed_kmh"
+    | "co2_saved_per_km"
+    | "confidence_factor",
+): number | null {
+  const value = isRecord(snapshot) ? snapshot[key] : undefined;
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
     : null;
 }
 
@@ -62,6 +78,20 @@ function readDistanceSourceFromSnapshot(
 ): "TIME_SPEED" | null {
   const value = isRecord(snapshot) ? snapshot.distance_source : undefined;
   return value === "TIME_SPEED" ? value : null;
+}
+
+function readCo2SavedPerKmUnitFromSnapshot(
+  snapshot: EnvironmentImpactRow["policySnapshot"],
+): "gCO2e/km" | null {
+  const value = isRecord(snapshot) ? snapshot.co2_saved_per_km_unit : undefined;
+  return value === "gCO2e/km" ? value : null;
+}
+
+function readFormulaVersionFromSnapshot(
+  snapshot: EnvironmentImpactRow["policySnapshot"],
+): "PHASE_1_TIME_SPEED" | null {
+  const value = isRecord(snapshot) ? snapshot.formula_version : undefined;
+  return value === "PHASE_1_TIME_SPEED" ? value : null;
 }
 
 export function toContractEnvironmentPolicy(
@@ -114,14 +144,61 @@ export function toContractEnvironmentImpactHistoryItem(
     co2_saved: Math.round(impact.co2Saved.toNumber()),
     co2_saved_unit: "gCO2e",
     distance_source: readDistanceSourceFromSnapshot(impact.policySnapshot),
-    raw_rental_minutes: readNumberFromSnapshot(
+    raw_rental_minutes: readIntegerFromSnapshot(
       impact.policySnapshot,
       "raw_rental_minutes",
     ),
-    effective_ride_minutes: readNumberFromSnapshot(
+    effective_ride_minutes: readIntegerFromSnapshot(
       impact.policySnapshot,
       "effective_ride_minutes",
     ),
+    calculated_at: impact.calculatedAt.toISOString(),
+  };
+}
+
+export function toContractEnvironmentImpactDetail(
+  impact: EnvironmentImpactRow,
+): EnvironmentContracts.EnvironmentImpactDetail {
+  return {
+    id: impact.id,
+    rental_id: impact.rentalId,
+    policy_id: impact.policyId,
+    estimated_distance_km: roundTo(
+      impact.estimatedDistanceKm?.toNumber() ?? 0,
+      2,
+    ),
+    co2_saved: Math.round(impact.co2Saved.toNumber()),
+    co2_saved_unit: "gCO2e",
+    raw_rental_minutes: readIntegerFromSnapshot(
+      impact.policySnapshot,
+      "raw_rental_minutes",
+    ),
+    effective_ride_minutes: readIntegerFromSnapshot(
+      impact.policySnapshot,
+      "effective_ride_minutes",
+    ),
+    return_scan_buffer_minutes: readIntegerFromSnapshot(
+      impact.policySnapshot,
+      "return_scan_buffer_minutes",
+    ),
+    average_speed_kmh: readNumberFromSnapshot(
+      impact.policySnapshot,
+      "average_speed_kmh",
+    ),
+    co2_saved_per_km: readNumberFromSnapshot(
+      impact.policySnapshot,
+      "co2_saved_per_km",
+    ),
+    co2_saved_per_km_unit: readCo2SavedPerKmUnitFromSnapshot(
+      impact.policySnapshot,
+    ),
+    confidence_factor: readNumberFromSnapshot(
+      impact.policySnapshot,
+      "confidence_factor",
+    ),
+    distance_source: readDistanceSourceFromSnapshot(impact.policySnapshot),
+    formula_version: readFormulaVersionFromSnapshot(impact.policySnapshot),
+    policy_snapshot: impact.policySnapshot,
     calculated_at: impact.calculatedAt.toISOString(),
   };
 }

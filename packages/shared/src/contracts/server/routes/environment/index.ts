@@ -10,6 +10,7 @@ export {
 export {
   getMyEnvironmentSummary,
   getMyEnvironmentImpactHistory,
+  getMyEnvironmentImpactByRental,
   listEnvironmentPolicies,
   getActiveEnvironmentPolicy,
 } from "./queries";

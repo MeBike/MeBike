@@ -769,6 +769,134 @@ describe("environment policies routing e2e", () => {
     });
   });
 
+  it("returns detailed environment impact for a rental owned by the current user", async () => {
+    await insertActiveEnvironmentPolicy();
+    const rental = await createRentalForImpact({ duration: 23 });
+
+    await calculateEnvironmentImpact(rental.id);
+
+    const response = await fixture.app.request(
+      `http://test/environment/me/rentals/${rental.id}`,
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpactDetail;
+
+    expect(response.status).toBe(200);
+    expect(body).not.toHaveProperty("user_id");
+    expect(body).toMatchObject({
+      rental_id: rental.id,
+      policy_id: "018fa200-0000-7000-8000-000000000101",
+      estimated_distance_km: 4,
+      co2_saved: 255,
+      co2_saved_unit: "gCO2e",
+      raw_rental_minutes: 23,
+      effective_ride_minutes: 20,
+      return_scan_buffer_minutes: 3,
+      average_speed_kmh: 12,
+      co2_saved_per_km: 75,
+      co2_saved_per_km_unit: "gCO2e/km",
+      confidence_factor: 0.85,
+      distance_source: "TIME_SPEED",
+      formula_version: "PHASE_1_TIME_SPEED",
+      policy_snapshot: {
+        policy_id: "018fa200-0000-7000-8000-000000000101",
+        policy_name: "Default Environment Policy v1",
+        average_speed_kmh: 12,
+        co2_saved_per_km: 75,
+        co2_saved_per_km_unit: "gCO2e/km",
+        return_scan_buffer_minutes: 3,
+        confidence_factor: 0.85,
+        raw_rental_minutes: 23,
+        effective_ride_minutes: 20,
+        estimated_distance_km: 4,
+        co2_saved: 255,
+        co2_saved_unit: "gCO2e",
+        distance_source: "TIME_SPEED",
+        formula_version: "PHASE_1_TIME_SPEED",
+      },
+    });
+  });
+
+  it("returns 404 for environment impact detail when the rental has no impact record", async () => {
+    const rental = await createRentalForImpact({ duration: 23 });
+
+    const response = await fixture.app.request(
+      `http://test/environment/me/rentals/${rental.id}`,
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("Environment impact not found");
+    expect(body.details?.code).toBe("ENVIRONMENT_IMPACT_NOT_FOUND");
+  });
+
+  it("returns 404 for environment impact detail owned by another user", async () => {
+    await insertActiveEnvironmentPolicy();
+    const otherUserRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 23,
+    });
+
+    await calculateEnvironmentImpact(otherUserRental.id);
+
+    const response = await fixture.app.request(
+      `http://test/environment/me/rentals/${otherUserRental.id}`,
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("Environment impact not found");
+    expect(body.details?.code).toBe("ENVIRONMENT_IMPACT_NOT_FOUND");
+  });
+
+  it("rejects invalid rentalId params for environment impact detail", async () => {
+    const response = await fixture.app.request(
+      "http://test/environment/me/rentals/not-a-uuid",
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("rejects admin environment impact detail requests", async () => {
+    const response = await fixture.app.request(
+      "http://test/environment/me/rentals/018fa200-0000-7000-8000-000000000601",
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects unauthenticated environment impact detail requests", async () => {
+    const response = await fixture.app.request(
+      "http://test/environment/me/rentals/018fa200-0000-7000-8000-000000000602",
+      {
+        method: "GET",
+      },
+    );
+
+    expect(response.status).toBe(401);
+  });
+
   it("paginates, sorts, and date-filters environment impact history", async () => {
     await insertActiveEnvironmentPolicy();
     const firstRental = await createRentalForImpact({ duration: 12 });

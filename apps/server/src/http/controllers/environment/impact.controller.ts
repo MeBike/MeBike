@@ -11,6 +11,7 @@ import { Effect, Match } from "effect";
 import { EnvironmentImpactServiceTag } from "@/domain/environment";
 import {
   toContractEnvironmentImpact,
+  toContractEnvironmentImpactDetail,
   toContractEnvironmentImpactHistoryItem,
   toContractEnvironmentSummary,
 } from "@/http/presenters/environment.presenter";
@@ -57,6 +58,40 @@ const getMyHistory: RouteHandler<
     totalItems: result.total,
     totalPages: result.totalPages,
   }, 200);
+};
+
+const getMyRentalImpact: RouteHandler<
+  EnvironmentRoutes["getMyEnvironmentImpactByRental"]
+> = async (c) => {
+  const userId = c.var.currentUser!.userId;
+  const { rentalId } = c.req.valid("param");
+
+  const eff = Effect.flatMap(EnvironmentImpactServiceTag, service =>
+    service.getMyRentalImpact(userId, rentalId));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<EnvironmentContracts.EnvironmentImpactDetail, 200>(
+        toContractEnvironmentImpactDetail(right),
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("EnvironmentImpactNotFound", () =>
+          c.json<ServerErrorResponse, 404>({
+            error: environmentErrorMessages.ENVIRONMENT_IMPACT_NOT_FOUND,
+            details: {
+              code: EnvironmentErrorCodeSchema.enum.ENVIRONMENT_IMPACT_NOT_FOUND,
+            },
+          }, 404)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
 };
 
 const calculateFromRental: RouteHandler<
@@ -112,5 +147,6 @@ const calculateFromRental: RouteHandler<
 export const EnvironmentImpactController = {
   getMySummary,
   getMyHistory,
+  getMyRentalImpact,
   calculateFromRental,
 } as const;

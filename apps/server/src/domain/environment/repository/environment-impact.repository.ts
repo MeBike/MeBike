@@ -28,6 +28,10 @@ export type EnvironmentImpactRepo = {
   findImpactByRentalId: (
     rentalId: string,
   ) => Effect.Effect<Option.Option<EnvironmentImpactRow>>;
+  findUserImpactByRentalId: (
+    userId: string,
+    rentalId: string,
+  ) => Effect.Effect<Option.Option<EnvironmentImpactRow>>;
   getRentalForEnvironmentCalculation: (
     rentalId: string,
   ) => Effect.Effect<Option.Option<EnvironmentImpactRentalRow>>;
@@ -97,6 +101,19 @@ export function makeEnvironmentImpactRepository(
       return Effect.promise(async () => {
         const row = await client.environmentalImpactStat.findUnique({
           where: { rentalId },
+          select: environmentImpactSelect,
+        });
+
+        return Option.fromNullable(row).pipe(Option.map(toEnvironmentImpactRow));
+      });
+    },
+    findUserImpactByRentalId(userId, rentalId) {
+      return Effect.promise(async () => {
+        const row = await client.environmentalImpactStat.findFirst({
+          where: {
+            userId,
+            rentalId,
+          },
           select: environmentImpactSelect,
         });
 

@@ -5,6 +5,7 @@ import {
 } from "../../schemas";
 import {
   EnvironmentImpactSchema,
+  EnvironmentImpactDetailSchema,
   EnvironmentImpactHistoryResponseSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
@@ -14,6 +15,7 @@ import { AccountStatusSchema } from "../../users";
 
 export {
   EnvironmentImpactSchema,
+  EnvironmentImpactDetailSchema,
   EnvironmentImpactHistoryResponseSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
@@ -24,6 +26,7 @@ export {
 
 export const EnvironmentErrorCodeSchema = z.enum([
   "ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND",
+  "ENVIRONMENT_IMPACT_NOT_FOUND",
   "ENVIRONMENT_IMPACT_RENTAL_NOT_FOUND",
   "ENVIRONMENT_IMPACT_RENTAL_NOT_COMPLETED",
   "ENVIRONMENT_POLICY_NOT_FOUND",
@@ -32,6 +35,7 @@ export const EnvironmentErrorCodeSchema = z.enum([
 
 export const environmentErrorMessages = {
   ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND: "No active environment policy found",
+  ENVIRONMENT_IMPACT_NOT_FOUND: "Environment impact not found",
   ENVIRONMENT_IMPACT_RENTAL_NOT_FOUND: "Rental not found",
   ENVIRONMENT_IMPACT_RENTAL_NOT_COMPLETED:
     "Rental must be completed before calculating environment impact",
@@ -48,7 +52,7 @@ export const EnvironmentPolicyIdParamsSchema = z.object({
 
 export const EnvironmentImpactRentalIdParamsSchema = z.object({
   rentalId: z.uuid().openapi({
-    description: "Rental UUID to calculate Environment Impact for",
+    description: "Rental UUID for Environment Impact lookup or calculation",
     example: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
   }),
 }).openapi("EnvironmentImpactRentalIdParams");
@@ -89,6 +93,9 @@ export type CreateEnvironmentPolicyBody = z.infer<
 >;
 export type EnvironmentPolicyResponse = z.infer<typeof EnvironmentPolicySchema>;
 export type EnvironmentImpactResponse = z.infer<typeof EnvironmentImpactSchema>;
+export type EnvironmentImpactDetailResponse = z.infer<
+  typeof EnvironmentImpactDetailSchema
+>;
 export type EnvironmentImpactHistoryResponse = z.infer<
   typeof EnvironmentImpactHistoryResponseSchema
 >;

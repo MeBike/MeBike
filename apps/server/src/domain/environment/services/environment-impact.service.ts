@@ -5,6 +5,7 @@ import type {
   EnvironmentImpactHistoryPageResult,
   EnvironmentImpactPolicySnapshot,
   EnvironmentImpactRentalRow,
+  EnvironmentImpactRow,
   EnvironmentImpactSummaryRow,
   EnvironmentPolicyFormulaConfig,
   EnvironmentPolicyRow,
@@ -14,6 +15,7 @@ import type {
 import {
   ActiveEnvironmentPolicyNotFound,
   EnvironmentImpactAlreadyExists,
+  EnvironmentImpactNotFound,
   EnvironmentImpactRentalNotCompleted,
   EnvironmentImpactRentalNotFound,
 } from "../domain-errors";
@@ -39,6 +41,10 @@ export type EnvironmentImpactService = {
     userId: string,
     input: ListUserEnvironmentImpactHistoryInput,
   ) => Effect.Effect<EnvironmentImpactHistoryPageResult>;
+  getMyRentalImpact: (
+    userId: string,
+    rentalId: string,
+  ) => Effect.Effect<EnvironmentImpactRow, EnvironmentImpactNotFound>;
 };
 
 export class EnvironmentImpactServiceTag extends Context.Tag(
@@ -173,6 +179,21 @@ export const EnvironmentImpactServiceLive = Layer.effect(
             sortOrder: input.sortOrder ?? "desc",
           },
         ),
+      getMyRentalImpact: (userId, rentalId) =>
+        Effect.gen(function* () {
+          const impact = yield* impactRepo.findUserImpactByRentalId(
+            userId,
+            rentalId,
+          );
+
+          if (Option.isNone(impact)) {
+            return yield* Effect.fail(
+              new EnvironmentImpactNotFound({ userId, rentalId }),
+            );
+          }
+
+          return impact.value;
+        }),
       calculateFromRental: rentalId =>
         Effect.gen(function* () {
           const existing = yield* impactRepo.findImpactByRentalId(rentalId);

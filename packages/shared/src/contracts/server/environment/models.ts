@@ -173,6 +173,63 @@ export const EnvironmentImpactSchema = z.object({
   },
 });
 
+export const EnvironmentImpactDetailSchema = z.object({
+  id: z.uuid(),
+  rental_id: z.uuid(),
+  policy_id: z.uuid(),
+  estimated_distance_km: z.number(),
+  co2_saved: z.number(),
+  co2_saved_unit: z.literal("gCO2e"),
+  raw_rental_minutes: z.number().int().nonnegative().nullable(),
+  effective_ride_minutes: z.number().int().nonnegative().nullable(),
+  return_scan_buffer_minutes: z.number().int().nonnegative().nullable(),
+  average_speed_kmh: z.number().nullable(),
+  co2_saved_per_km: z.number().nullable(),
+  co2_saved_per_km_unit: z.literal("gCO2e/km").nullable(),
+  confidence_factor: z.number().min(0).max(1).nullable(),
+  distance_source: EnvironmentDistanceSourceSchema.nullable(),
+  formula_version: EnvironmentFormulaVersionSchema.nullable(),
+  policy_snapshot: EnvironmentImpactPolicySnapshotSchema,
+  calculated_at: z.string().datetime(),
+}).openapi("EnvironmentImpactDetail", {
+  description:
+    "Detailed calculated Environment Impact record for one authenticated user's rental. Reads only environmental_impact_stats.",
+  example: {
+    id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+    rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+    policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+    estimated_distance_km: 4,
+    co2_saved: 255,
+    co2_saved_unit: "gCO2e",
+    raw_rental_minutes: 23,
+    effective_ride_minutes: 20,
+    return_scan_buffer_minutes: 3,
+    average_speed_kmh: 12,
+    co2_saved_per_km: 75,
+    co2_saved_per_km_unit: "gCO2e/km",
+    confidence_factor: 0.85,
+    distance_source: "TIME_SPEED",
+    formula_version: "PHASE_1_TIME_SPEED",
+    policy_snapshot: {
+      policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+      policy_name: "Default Environment Policy v1",
+      average_speed_kmh: 12,
+      co2_saved_per_km: 75,
+      co2_saved_per_km_unit: "gCO2e/km",
+      return_scan_buffer_minutes: 3,
+      confidence_factor: 0.85,
+      raw_rental_minutes: 23,
+      effective_ride_minutes: 20,
+      estimated_distance_km: 4,
+      co2_saved: 255,
+      co2_saved_unit: "gCO2e",
+      distance_source: "TIME_SPEED",
+      formula_version: "PHASE_1_TIME_SPEED",
+    },
+    calculated_at: "2026-04-15T10:30:00.000Z",
+  },
+});
+
 export const EnvironmentImpactHistoryItemSchema = z.object({
   id: z.uuid(),
   rental_id: z.uuid(),
@@ -259,6 +316,9 @@ export type EnvironmentImpactPolicySnapshot = z.infer<
   typeof EnvironmentImpactPolicySnapshotSchema
 >;
 export type EnvironmentImpact = z.infer<typeof EnvironmentImpactSchema>;
+export type EnvironmentImpactDetail = z.infer<
+  typeof EnvironmentImpactDetailSchema
+>;
 export type EnvironmentImpactHistoryItem = z.infer<
   typeof EnvironmentImpactHistoryItemSchema
 >;

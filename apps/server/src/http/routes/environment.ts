@@ -39,6 +39,10 @@ export function registerEnvironmentRoutes(
     ...environment.getMyEnvironmentImpactHistory,
     middleware: [requireUserMiddleware] as const,
   } satisfies RouteConfig;
+  const getMyEnvironmentImpactByRentalRoute = {
+    ...environment.getMyEnvironmentImpactByRental,
+    middleware: [requireUserMiddleware] as const,
+  } satisfies RouteConfig;
   const calculateImpactFromRentalRoute = {
     ...environment.calculateEnvironmentImpactFromRental,
     middleware: [requireAdminMiddleware] as const,
@@ -51,6 +55,10 @@ export function registerEnvironmentRoutes(
   app.openapi(
     getMyEnvironmentImpactHistoryRoute,
     EnvironmentImpactController.getMyHistory,
+  );
+  app.openapi(
+    getMyEnvironmentImpactByRentalRoute,
+    EnvironmentImpactController.getMyRentalImpact,
   );
   app.openapi(listPoliciesRoute, EnvironmentPolicyController.listPolicies);
   app.openapi(createPolicyRoute, EnvironmentPolicyController.createPolicy);
