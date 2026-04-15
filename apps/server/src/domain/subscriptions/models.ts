@@ -13,6 +13,16 @@ export type SubscriptionRow = {
   readonly updatedAt: Date;
 };
 
+export type SubscriptionOwnerSummary = {
+  readonly id: string;
+  readonly fullName: string;
+  readonly email: string;
+};
+
+export type AdminSubscriptionRow = SubscriptionRow & {
+  readonly user: SubscriptionOwnerSummary;
+};
+
 export type SubscriptionSortField
   = | "updatedAt"
     | "expiresAt"

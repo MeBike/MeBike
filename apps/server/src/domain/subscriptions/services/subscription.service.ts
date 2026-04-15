@@ -4,10 +4,13 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import { env } from "@/config/env";
 
+import type { ActiveSubscriptionExists } from "../domain-errors";
 import type {
-  ActiveSubscriptionExists,
-} from "../domain-errors";
-import type { SubscriptionFilter, SubscriptionRow, SubscriptionSortField } from "../models";
+  AdminSubscriptionRow,
+  SubscriptionFilter,
+  SubscriptionRow,
+  SubscriptionSortField,
+} from "../models";
 import type { SubscriptionRepo } from "../repository/subscription.repository";
 
 import {
@@ -27,6 +30,10 @@ export type SubscriptionService = {
     subscriptionId: string,
   ) => Effect.Effect<Option.Option<SubscriptionRow>>;
 
+  findAdminById: (
+    subscriptionId: string,
+  ) => Effect.Effect<Option.Option<AdminSubscriptionRow>>;
+
   findCurrentForUser: (
     userId: string,
     statuses: Parameters<SubscriptionRepo["findCurrentForUser"]>[1],
@@ -37,6 +44,11 @@ export type SubscriptionService = {
     filter: SubscriptionFilter,
     pageReq: PageRequest<SubscriptionSortField>,
   ) => Effect.Effect<PageResult<SubscriptionRow>>;
+
+  listAll: (
+    filter: SubscriptionFilter,
+    pageReq: PageRequest<SubscriptionSortField>,
+  ) => Effect.Effect<PageResult<AdminSubscriptionRow>>;
 
   activate: (
     input: Parameters<SubscriptionRepo["activate"]>[0],
@@ -90,11 +102,17 @@ export const SubscriptionServiceLive = Layer.effect(
       findById: subscriptionId =>
         repo.findById(subscriptionId),
 
+      findAdminById: subscriptionId =>
+        repo.findAdminById(subscriptionId),
+
       findCurrentForUser: (userId, statuses) =>
         repo.findCurrentForUser(userId, statuses),
 
       listForUser: (userId, filter, pageReq) =>
         repo.listForUser(userId, filter, pageReq),
+
+      listAll: (filter, pageReq) =>
+        repo.listAll(filter, pageReq),
 
       activate: input =>
         Effect.gen(function* () {

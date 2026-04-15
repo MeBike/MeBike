@@ -13,10 +13,15 @@ import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
-import type { SubscriptionFilter, SubscriptionRow, SubscriptionSortField } from "../models";
+import type { AdminSubscriptionRow, SubscriptionFilter, SubscriptionRow, SubscriptionSortField } from "../models";
 
 import { ActiveSubscriptionExists, SubscriptionRepositoryError } from "../domain-errors";
-import { selectSubscriptionRow, toSubscriptionRow } from "./subscription.mappers";
+import {
+  selectAdminSubscriptionRow,
+  selectSubscriptionRow,
+  toAdminSubscriptionRow,
+  toSubscriptionRow,
+} from "./subscription.mappers";
 
 export type CreatePendingSubscriptionInput = {
   readonly userId: string;
@@ -40,6 +45,10 @@ export type SubscriptionRepo = {
     subscriptionId: string,
   ) => Effect.Effect<Option.Option<SubscriptionRow>>;
 
+  findAdminById: (
+    subscriptionId: string,
+  ) => Effect.Effect<Option.Option<AdminSubscriptionRow>>;
+
   findCurrentForUser: (
     userId: string,
     statuses: readonly SubscriptionStatus[],
@@ -50,6 +59,11 @@ export type SubscriptionRepo = {
     filter: SubscriptionFilter,
     pageReq: PageRequest<SubscriptionSortField>,
   ) => Effect.Effect<PageResult<SubscriptionRow>>;
+
+  listAll: (
+    filter: SubscriptionFilter,
+    pageReq: PageRequest<SubscriptionSortField>,
+  ) => Effect.Effect<PageResult<AdminSubscriptionRow>>;
 
   activate: (
     input: ActivateSubscriptionInput,
@@ -117,6 +131,28 @@ export function makeSubscriptionRepository(
       defectOn(SubscriptionRepositoryError),
     );
 
+  const findAdminByIdWithClient = (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    subscriptionId: string,
+  ) =>
+    Effect.tryPromise({
+      try: () =>
+        tx.subscription.findUnique({
+          where: { id: subscriptionId },
+          select: selectAdminSubscriptionRow,
+        }),
+      catch: err =>
+        new SubscriptionRepositoryError({
+          operation: "findAdminById",
+          cause: err,
+        }),
+    }).pipe(
+      Effect.map(row =>
+        Option.fromNullable(row).pipe(Option.map(toAdminSubscriptionRow)),
+      ),
+      defectOn(SubscriptionRepositoryError),
+    );
+
   return {
     createPending: input =>
       Effect.tryPromise({
@@ -142,6 +178,8 @@ export function makeSubscriptionRepository(
       ),
 
     findById: subscriptionId => findByIdWithClient(client, subscriptionId),
+
+    findAdminById: subscriptionId => findAdminByIdWithClient(client, subscriptionId),
 
     findCurrentForUser: (userId, statuses) =>
       Effect.tryPromise({
@@ -208,6 +246,50 @@ export function makeSubscriptionRepository(
         const mapped = items.map(toSubscriptionRow);
 
         return makePageResult(mapped, total, page, pageSize);
+      }).pipe(defectOn(SubscriptionRepositoryError)),
+
+    listAll: (filter, pageReq) =>
+      Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+
+        const where: PrismaTypes.SubscriptionWhereInput = {
+          ...(filter.status ? { status: filter.status } : {}),
+        };
+
+        const orderBy = toSubscriptionOrderBy(pageReq);
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.subscription.count({ where }),
+            catch: err =>
+              new SubscriptionRepositoryError({
+                operation: "listAll.count",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.subscription.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                select: selectAdminSubscriptionRow,
+              }),
+            catch: err =>
+              new SubscriptionRepositoryError({
+                operation: "listAll.findMany",
+                cause: err,
+              }),
+          }),
+        ]);
+
+        return makePageResult(
+          items.map(toAdminSubscriptionRow),
+          total,
+          page,
+          pageSize,
+        );
       }).pipe(defectOn(SubscriptionRepositoryError)),
 
     activate: input =>
