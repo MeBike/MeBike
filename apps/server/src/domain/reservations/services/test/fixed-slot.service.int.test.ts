@@ -285,7 +285,11 @@ describe("assignFixedSlotReservations integration", () => {
 
     const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
+    const outbox = await fixture.prisma.jobOutbox.findMany({
+      where: { dedupeKey: `fixed-slot:billing-failed:${template.id}:2026-04-17` },
+    });
     expect(wallet?.balance).toBe(1000n);
     expect(updatedBike?.status).toBe("AVAILABLE");
+    expect(outbox).toHaveLength(1);
   });
 });

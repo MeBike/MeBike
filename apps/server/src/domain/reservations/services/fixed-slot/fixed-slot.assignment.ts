@@ -1,4 +1,4 @@
-import { Cause, Effect, Exit, Option } from "effect";
+import { Cause, Effect, Either, Exit, Option } from "effect";
 
 import type {
   InsufficientWalletBalance,
@@ -18,6 +18,7 @@ import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import {
   buildFixedSlotAssignedEmail,
+  buildFixedSlotBillingFailedEmail,
   buildFixedSlotNoBikeEmail,
 } from "@/lib/email-templates";
 
@@ -40,17 +41,12 @@ class FixedSlotAssignmentConflict extends Error {
   }
 }
 
-function isFixedSlotBillingFailure(
-  err: unknown,
-): err is FixedSlotTemplateBillingConflict | WalletNotFound | InsufficientWalletBalance {
-  return typeof err === "object"
-    && err !== null
-    && "_tag" in err
-    && (
-      err._tag === "FixedSlotTemplateBillingConflict"
-      || err._tag === "WalletNotFound"
-      || err._tag === "InsufficientWalletBalance"
-    );
+function getBillingFailureReason(
+  err: FixedSlotTemplateBillingConflict | WalletNotFound | InsufficientWalletBalance,
+): "INSUFFICIENT_BALANCE" | "PAYMENT_UNAVAILABLE" {
+  return err._tag === "InsufficientWalletBalance"
+    ? "INSUFFICIENT_BALANCE"
+    : "PAYMENT_UNAVAILABLE";
 }
 
 /**
@@ -144,6 +140,35 @@ function enqueueAssignedEmail(
   });
 }
 
+function enqueueBillingFailedEmail(
+  tx: PrismaTypes.TransactionClient,
+  template: FixedSlotAssignmentTemplateRow,
+  labels: FixedSlotLabels,
+  context: FixedSlotAssignmentContext,
+  reason: "INSUFFICIENT_BALANCE" | "PAYMENT_UNAVAILABLE",
+) {
+  const email = buildFixedSlotBillingFailedEmail({
+    fullName: template.user.fullName,
+    stationName: template.station.name,
+    slotDateLabel: labels.slotDateLabel,
+    slotTimeLabel: labels.slotTimeLabel,
+    reason,
+  });
+
+  return enqueueEmailIdempotent(tx, {
+    type: JobTypes.EmailSend,
+    dedupeKey: `fixed-slot:billing-failed:${template.id}:${context.slotDateKey}`,
+    payload: {
+      version: 1,
+      to: template.user.email,
+      kind: "raw",
+      subject: email.subject,
+      html: email.html,
+    },
+    runAt: context.now,
+  });
+}
+
 /**
  * Chay transaction assignment cho mot fixed-slot template.
  *
@@ -188,7 +213,7 @@ async function runFixedSlotAssignmentTransaction(
       const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(tx);
       const txWalletRepo = makeWalletRepository(tx);
 
-      const billing = yield* billFixedSlotDates({
+      const billingResult = yield* billFixedSlotDates({
         userId: template.userId,
         totalSlots: 1,
         description: `Fixed-slot reservation ${labels.slotDateLabel} ${labels.slotTimeLabel}`,
@@ -196,7 +221,20 @@ async function runFixedSlotAssignmentTransaction(
         txSubscriptionQueryRepo,
         txSubscriptionCommandRepo,
         txWalletRepo,
-      });
+      }).pipe(Effect.either);
+
+      if (Either.isLeft(billingResult)) {
+        yield* enqueueBillingFailedEmail(
+          tx,
+          template,
+          labels,
+          context,
+          getBillingFailureReason(billingResult.left),
+        );
+        return "BILLING_FAILED" as const;
+      }
+
+      const billing = billingResult.right;
 
       const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, context.now);
       if (!bikeReserved) {
@@ -260,10 +298,6 @@ export function processFixedSlotTemplate(
     Effect.catchIf(
       (err): err is FixedSlotAssignmentConflict => err instanceof FixedSlotAssignmentConflict,
       () => Effect.succeed("CONFLICT" as const),
-    ),
-    Effect.catchIf(
-      isFixedSlotBillingFailure,
-      () => Effect.succeed("BILLING_FAILED" as const),
     ),
     Effect.catchAll(err => Effect.die(err)),
   );

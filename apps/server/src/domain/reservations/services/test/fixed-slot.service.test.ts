@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   billFixedSlotDates: vi.fn(),
   enqueueOutboxJobInTx: vi.fn(),
   buildFixedSlotAssignedEmail: vi.fn(() => ({ subject: "assigned", html: "assigned" })),
+  buildFixedSlotBillingFailedEmail: vi.fn(() => ({ subject: "billing-failed", html: "billing-failed" })),
   buildFixedSlotNoBikeEmail: vi.fn(() => ({ subject: "no-bike", html: "no-bike" })),
 }));
 
@@ -44,6 +45,7 @@ vi.mock("@/infrastructure/jobs/outbox-enqueue", () => ({
 
 vi.mock("@/lib/email-templates", () => ({
   buildFixedSlotAssignedEmail: mocks.buildFixedSlotAssignedEmail,
+  buildFixedSlotBillingFailedEmail: mocks.buildFixedSlotBillingFailedEmail,
   buildFixedSlotNoBikeEmail: mocks.buildFixedSlotNoBikeEmail,
 }));
 
@@ -427,6 +429,20 @@ describe("assignFixedSlotReservations", () => {
       noBike: 0,
       conflicts: 0,
     });
-    expect(mocks.enqueueOutboxJobInTx).not.toHaveBeenCalled();
+    expect(mocks.buildFixedSlotBillingFailedEmail).toHaveBeenCalledWith({
+      fullName: "Test User",
+      stationName: "Test Station",
+      slotDateLabel: "14/04/2026",
+      slotTimeLabel: "09:00",
+      reason: "INSUFFICIENT_BALANCE",
+    });
+    expect(mocks.enqueueOutboxJobInTx).toHaveBeenCalledTimes(1);
+    expect(mocks.enqueueOutboxJobInTx).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      dedupeKey: "fixed-slot:billing-failed:template-1:2026-04-14",
+      payload: expect.objectContaining({
+        to: "user@example.com",
+        subject: "billing-failed",
+      }),
+    }));
   });
 });
