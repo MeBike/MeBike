@@ -1,10 +1,9 @@
+import type { PageResult } from "@/domain/shared/pagination";
 import type {
   AccountStatus,
   Prisma as PrismaTypes,
   RentalStatus,
 } from "generated/prisma/client";
-
-import type { PageResult } from "@/domain/shared/pagination";
 
 export const DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG = {
   return_scan_buffer_minutes: 3,
@@ -53,11 +52,11 @@ export type CreateEnvironmentPolicyData = {
   formulaConfig: EnvironmentPolicyFormulaConfig;
 };
 
-export type EnvironmentPolicySortField =
-  | "created_at"
-  | "updated_at"
-  | "active_from"
-  | "name";
+export type EnvironmentPolicySortField
+  = | "created_at"
+    | "updated_at"
+    | "active_from"
+    | "name";
 
 export type EnvironmentPolicySortOrder = "asc" | "desc";
 
@@ -141,8 +140,8 @@ export type EnvironmentImpactHistoryPageRequest = {
   sortOrder: EnvironmentImpactHistorySortOrder;
 };
 
-export type EnvironmentImpactHistoryPageResult =
-  PageResult<EnvironmentImpactRow>;
+export type EnvironmentImpactHistoryPageResult
+  = PageResult<EnvironmentImpactRow>;
 
 export type EnvironmentImpactRentalRow = {
   id: string;
@@ -177,8 +176,8 @@ export type CompletedRentalMissingEnvironmentImpactRow = {
   id: string;
 };
 
-export type RepairMissingEnvironmentImpactJobsInput =
-  ListCompletedRentalsMissingEnvironmentImpactInput;
+export type RepairMissingEnvironmentImpactJobsInput
+  = ListCompletedRentalsMissingEnvironmentImpactInput;
 
 export type RepairMissingEnvironmentImpactJobsSummary = {
   scanned: number;

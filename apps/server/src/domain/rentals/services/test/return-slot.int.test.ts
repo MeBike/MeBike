@@ -1,6 +1,6 @@
-import { beforeAll, describe, expect, it } from "vitest";
 import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect } from "effect";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import {
   enqueueEnvironmentImpactCalculationJob,

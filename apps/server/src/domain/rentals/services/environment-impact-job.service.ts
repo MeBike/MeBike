@@ -7,12 +7,13 @@ import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import logger from "@/lib/logger";
 
-type EnvironmentImpactJobWriter = Pick<PrismaTypes.TransactionClient, "jobOutbox">;
+type EnvironmentImpactJobWriter
+  = Pick<PrismaTypes.TransactionClient, "jobOutbox">;
 
-export type EnvironmentImpactEnqueueResult =
-  | "enqueued"
-  | "already_queued"
-  | "failed";
+export type EnvironmentImpactEnqueueResult
+  = | "enqueued"
+    | "already_queued"
+    | "failed";
 
 export function environmentImpactRentalDedupeKey(rentalId: string): string {
   return `environment-impact:rental:${rentalId}`;

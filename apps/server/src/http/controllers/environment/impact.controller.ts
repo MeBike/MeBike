@@ -4,7 +4,6 @@ import type { EnvironmentContracts, ServerErrorResponse } from "@mebike/shared";
 import {
   EnvironmentErrorCodeSchema,
   environmentErrorMessages,
-  serverRoutes,
 } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
@@ -16,7 +15,7 @@ import {
   toContractEnvironmentSummary,
 } from "@/http/presenters/environment.presenter";
 
-type EnvironmentRoutes = typeof serverRoutes.environment;
+type EnvironmentRoutes = typeof import("@mebike/shared")["serverRoutes"]["environment"];
 
 const getMySummary: RouteHandler<
   EnvironmentRoutes["getMyEnvironmentSummary"]

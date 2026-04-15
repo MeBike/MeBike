@@ -6,11 +6,11 @@ import {
   enqueueEnvironmentImpactCalculationJob,
 } from "@/domain/rentals/services/environment-impact-job.service";
 
-import type { EnvironmentImpactRepairRepo } from "../repository/environment-impact-repair.repository";
 import type {
   RepairMissingEnvironmentImpactJobsInput,
   RepairMissingEnvironmentImpactJobsSummary,
 } from "../models";
+import type { EnvironmentImpactRepairRepo } from "../repository/environment-impact-repair.repository";
 
 type EnvironmentImpactRepairJobWriter = Pick<
   PrismaTypes.TransactionClient,

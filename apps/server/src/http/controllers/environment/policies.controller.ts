@@ -4,14 +4,13 @@ import type { EnvironmentContracts, ServerErrorResponse } from "@mebike/shared";
 import {
   EnvironmentErrorCodeSchema,
   environmentErrorMessages,
-  serverRoutes,
 } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import { EnvironmentPolicyServiceTag } from "@/domain/environment";
 import { toContractEnvironmentPolicy } from "@/http/presenters/environment.presenter";
 
-type EnvironmentRoutes = typeof serverRoutes.environment;
+type EnvironmentRoutes = typeof import("@mebike/shared")["serverRoutes"]["environment"];
 
 const createPolicy: RouteHandler<
   EnvironmentRoutes["createEnvironmentPolicy"]

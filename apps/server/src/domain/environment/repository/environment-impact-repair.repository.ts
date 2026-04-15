@@ -5,9 +5,8 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
-import { Prisma as PrismaNamespace } from "generated/prisma/client";
-
 import { Prisma } from "@/infrastructure/prisma";
+import { Prisma as PrismaNamespace } from "generated/prisma/client";
 
 import type {
   CompletedRentalMissingEnvironmentImpactRow,

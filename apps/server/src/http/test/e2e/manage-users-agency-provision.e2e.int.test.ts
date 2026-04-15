@@ -184,7 +184,7 @@ describe("manage-users agency provision e2e", () => {
       version: 1,
       kind: "raw",
       to: "agency-owner@example.com",
-      subject: "MeBike phe duyet tai khoan agency",
+      subject: "MeBike phê duyệt tài khoản Agency",
     });
     expect(savedApprovalEmailOutbox?.dedupeKey).toBeTruthy();
   });

@@ -1,6 +1,10 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type {
+  ActiveEnvironmentPolicyNotFound,
+  EnvironmentImpactAlreadyExists,
+} from "../domain-errors";
+import type {
   EnvironmentImpactCalculationResult,
   EnvironmentImpactHistoryPageResult,
   EnvironmentImpactPolicySnapshot,
@@ -13,8 +17,6 @@ import type {
 } from "../models";
 
 import {
-  ActiveEnvironmentPolicyNotFound,
-  EnvironmentImpactAlreadyExists,
   EnvironmentImpactNotFound,
   EnvironmentImpactRentalNotCompleted,
   EnvironmentImpactRentalNotFound,
@@ -86,8 +88,8 @@ function getRawRentalMinutes(rental: EnvironmentImpactRentalRow): number {
     ? Math.trunc(rental.durationMinutes)
     : rental.endTime
       ? Math.floor(
-        (rental.endTime.getTime() - rental.startTime.getTime()) / 60_000,
-      )
+          (rental.endTime.getTime() - rental.startTime.getTime()) / 60_000,
+        )
       : 0;
 
   return Math.max(0, rawMinutes);

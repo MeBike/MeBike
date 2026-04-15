@@ -1,6 +1,5 @@
-import process from "node:process";
-
 import { Effect } from "effect";
+import process from "node:process";
 
 import {
   makeEnvironmentImpactRepairRepository,
@@ -39,7 +38,7 @@ function parseLimit(value: string | undefined): number {
 
   const limit = Number.parseInt(value, 10);
   if (!Number.isFinite(limit) || limit <= 0) {
-    throw new Error(`Invalid repair limit: ${value}`);
+    throw new TypeError(`Invalid repair limit: ${value}`);
   }
 
   return limit;
@@ -55,7 +54,7 @@ function parseDateOption(
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    throw new Error(`Invalid ${name}: ${value}`);
+    throw new TypeError(`Invalid ${name}: ${value}`);
   }
 
   return date;
@@ -68,16 +67,16 @@ function parseOptions(): RepairCommandOptions {
   const completedFrom = parseDateOption(
     "completedFrom",
     readArgValue("completedFrom")
-      ?? process.env.ENVIRONMENT_REPAIR_COMPLETED_FROM,
+    ?? process.env.ENVIRONMENT_REPAIR_COMPLETED_FROM,
   );
   const completedTo = parseDateOption(
     "completedTo",
     readArgValue("completedTo")
-      ?? process.env.ENVIRONMENT_REPAIR_COMPLETED_TO,
+    ?? process.env.ENVIRONMENT_REPAIR_COMPLETED_TO,
   );
 
   if (completedFrom && completedTo && completedFrom > completedTo) {
-    throw new Error("completedFrom must be before or equal to completedTo");
+    throw new TypeError("completedFrom must be before or equal to completedTo");
   }
 
   return {

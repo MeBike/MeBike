@@ -1,20 +1,20 @@
 import { Context, Effect, Layer } from "effect";
 
 import type {
+  EnvironmentPolicyActivationBlocked,
+  EnvironmentPolicyNotFound,
+} from "../domain-errors";
+import type {
   CreateEnvironmentPolicyInput,
   EnvironmentPolicyPageResult,
   EnvironmentPolicyRow,
   ListEnvironmentPoliciesInput,
 } from "../models";
 
+import { ActiveEnvironmentPolicyNotFound } from "../domain-errors";
 import {
   DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG,
 } from "../models";
-import {
-  ActiveEnvironmentPolicyNotFound,
-  EnvironmentPolicyActivationBlocked,
-  EnvironmentPolicyNotFound,
-} from "../domain-errors";
 import { EnvironmentPolicyRepository } from "../repository/environment-policy.repository";
 
 export type EnvironmentPolicyService = {
@@ -62,11 +62,11 @@ export const EnvironmentPolicyServiceLive = Layer.effect(
           ...DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG,
           return_scan_buffer_minutes: Math.trunc(
             input.returnScanBufferMinutes
-              ?? DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG.return_scan_buffer_minutes,
+            ?? DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG.return_scan_buffer_minutes,
           ),
           confidence_factor: roundTo(
             input.confidenceFactor
-              ?? DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG.confidence_factor,
+            ?? DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG.confidence_factor,
             2,
           ),
         },

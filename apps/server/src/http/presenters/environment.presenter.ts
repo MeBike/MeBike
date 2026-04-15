@@ -1,11 +1,14 @@
 import type { EnvironmentContracts } from "@mebike/shared";
 
+import type {
+  EnvironmentImpactRow,
+  EnvironmentImpactSummaryRow,
+  EnvironmentPolicyFormulaConfig,
+  EnvironmentPolicyRow,
+} from "@/domain/environment";
+
 import {
   DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG,
-  type EnvironmentImpactRow,
-  type EnvironmentImpactSummaryRow,
-  type EnvironmentPolicyFormulaConfig,
-  type EnvironmentPolicyRow,
 } from "@/domain/environment";
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -1,18 +1,16 @@
 import { Context, Effect, Layer, Option } from "effect";
+import { uuidv7 } from "uuidv7";
 
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
-import { Prisma as PrismaNamespace } from "generated/prisma/client";
-import { uuidv7 } from "uuidv7";
-
 import { makePageResult } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+import { Prisma as PrismaNamespace } from "generated/prisma/client";
 
-import { EnvironmentImpactAlreadyExists } from "../domain-errors";
 import type {
   CreateEnvironmentImpactData,
   EnvironmentImpactHistoryFilter,
@@ -23,6 +21,8 @@ import type {
   EnvironmentImpactRow,
   EnvironmentImpactSummaryRow,
 } from "../models";
+
+import { EnvironmentImpactAlreadyExists } from "../domain-errors";
 
 export type EnvironmentImpactRepo = {
   findImpactByRentalId: (
