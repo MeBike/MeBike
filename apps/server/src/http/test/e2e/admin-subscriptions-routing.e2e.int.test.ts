@@ -11,8 +11,8 @@ const USER_TWO_ID = "018fa100-0000-7000-8000-000000000003";
 describe("admin subscriptions routing e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
-      const { SubscriptionDepsLive } = await import("@/http/shared/features/subscription.layers");
-      return SubscriptionDepsLive;
+      const { HttpDepsLive } = await import("@/http/shared/providers");
+      return HttpDepsLive;
     },
     seedBase: false,
     seedData: async (_db, prisma) => {

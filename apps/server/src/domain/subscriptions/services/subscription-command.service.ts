@@ -1,7 +1,5 @@
 import { Effect, Option } from "effect";
 
-import { env } from "@/config/env";
-
 import type { SubscriptionCommandRepo, SubscriptionQueryRepo } from "../repository/subscription.repository.types";
 import type { SubscriptionCommandService } from "./subscription.service.types";
 
@@ -13,6 +11,7 @@ import {
 } from "../domain-errors";
 import { makeSubscriptionCommandRepository } from "../repository/subscription-command.repository";
 import { makeSubscriptionQueryRepository } from "../repository/subscription-query.repository";
+import { computeExpiresAt } from "./subscription-flows.shared";
 
 /**
  * Tạo command service cho subscriptions.
@@ -115,9 +114,7 @@ export function makeSubscriptionCommandService(args: {
 
         let current = subscription;
         if (subscription.status === "PENDING") {
-          const expiresAt = new Date(
-            now.getTime() + env.EXPIRE_AFTER_DAYS * 24 * 60 * 60 * 1000,
-          );
+          const expiresAt = computeExpiresAt(now);
           const activated = yield* txCommandRepo.activate({
             subscriptionId: subscription.id,
             activatedAt: now,
