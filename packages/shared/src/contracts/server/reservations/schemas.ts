@@ -11,8 +11,8 @@ import {
   ReservationDetailSchema,
   ReservationExpandedDetailSchema,
   ReservationOptionSchema,
-  ReservationSummaryStatsSchema,
   ReservationStatusSchema,
+  ReservationSummaryStatsSchema,
 } from "./models";
 
 export const ReservationErrorCodeSchema = z
@@ -23,7 +23,7 @@ export const ReservationErrorCodeSchema = z
     "BIKE_NOT_FOUND",
     "BIKE_NOT_FOUND_IN_STATION",
     "BIKE_NOT_AVAILABLE",
-    "STATION_PICKUP_SLOT_LIMIT_EXCEEDED",
+    "STATION_RESERVATION_AVAILABILITY_TOO_LOW",
     "RESERVATION_OPTION_NOT_SUPPORTED",
     "SUBSCRIPTION_REQUIRED",
     "SUBSCRIPTION_NOT_FOUND",
@@ -46,7 +46,8 @@ export const reservationErrorMessages = {
   BIKE_NOT_FOUND: "Bike not found",
   BIKE_NOT_FOUND_IN_STATION: "Bike not found in station",
   BIKE_NOT_AVAILABLE: "Bike is not available",
-  STATION_PICKUP_SLOT_LIMIT_EXCEEDED: "Station pickup slot limit has been reached",
+  STATION_RESERVATION_AVAILABILITY_TOO_LOW:
+    "Station does not have enough available bikes to allow a reservation",
   RESERVATION_OPTION_NOT_SUPPORTED: "Reservation option not supported",
   SUBSCRIPTION_REQUIRED: "Subscription is required",
   SUBSCRIPTION_NOT_FOUND: "Subscription not found",
@@ -75,6 +76,9 @@ export const ReservationErrorDetailSchema = z.object({
   maxUsages: z.number().optional(),
   balance: z.number().optional(),
   attemptedDebit: z.number().optional(),
+  totalCapacity: z.number().optional(),
+  availableBikes: z.number().optional(),
+  requiredAvailableBikes: z.number().optional(),
 }).openapi("ReservationErrorDetail");
 
 export const ReservationErrorResponseSchema = z.object({
@@ -143,8 +147,8 @@ export {
   ReservationDetailSchema,
   ReservationExpandedDetailSchema,
   ReservationOptionSchema,
-  ReservationSummaryStatsSchema,
   ReservationStatusSchema,
+  ReservationSummaryStatsSchema,
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
   UnauthorizedErrorResponseSchema,

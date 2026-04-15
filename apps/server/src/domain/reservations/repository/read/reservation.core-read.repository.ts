@@ -27,7 +27,7 @@ const selectFixedSlotAssignmentTemplateRow = {
   stationId: true,
   slotStart: true,
   user: { select: { fullName: true, email: true } },
-  station: { select: { name: true } },
+  station: { select: { name: true, totalCapacity: true } },
 } as const;
 
 export type ReservationCoreReadRepo = Pick<

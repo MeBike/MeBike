@@ -30,6 +30,20 @@ export function makeBikeReadRepository(client: BikeDbClient): BikeQueryRepo {
         defectOn(BikeRepositoryError),
       ),
 
+    countAvailableByStation: stationId =>
+      Effect.tryPromise({
+        try: () =>
+          client.bike.count({
+            where: { stationId, status: "AVAILABLE" },
+          }),
+        catch: cause =>
+          new BikeRepositoryError({
+            operation: "countAvailableByStation",
+            cause,
+            message: "Failed to count available bikes by station",
+          }),
+      }).pipe(defectOn(BikeRepositoryError)),
+
     findAvailableByStation: stationId =>
       Effect.tryPromise({
         try: () =>

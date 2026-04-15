@@ -33,6 +33,7 @@ import type {
 import { makeReservationCommandRepository } from "../../repository/reservation-command.repository";
 import { makeReservationQueryRepository } from "../../repository/reservation-query.repository";
 import { billFixedSlotDates } from "../fixed-slot-template/billing";
+import { stationCanAcceptReservation } from "../reservation-availability-rule";
 import { buildFixedSlotLabels } from "./fixed-slot.helpers";
 
 class FixedSlotAssignmentConflict extends Error {
@@ -201,6 +202,15 @@ async function runFixedSlotAssignmentTransaction(
       }
       if (Option.isSome(existingReservationOpt)) {
         return yield* Effect.fail(new FixedSlotAssignmentConflict());
+      }
+
+      const availableBikes = yield* bikeRepo.countAvailableByStation(template.stationId);
+      if (!stationCanAcceptReservation({
+        totalCapacity: template.station.totalCapacity,
+        availableBikes,
+      })) {
+        yield* enqueueNoBikeEmail(tx, template, labels, context);
+        return "NO_BIKE" as const;
       }
 
       const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId);

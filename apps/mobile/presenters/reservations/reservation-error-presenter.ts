@@ -15,7 +15,8 @@ const reservationErrorMessages = {
   reservationNotFound: "Không tìm thấy lượt giữ chỗ này.",
   reservationNotOwned: "Bạn không thể thao tác với lượt giữ chỗ của người khác.",
   reservationOptionNotSupported: "Hình thức đặt chỗ này hiện chưa được hỗ trợ.",
-  stationPickupSlotLimitExceeded: "Trạm đã hết chỗ nhận xe trong khung giờ này, vui lòng chọn thời gian khác.",
+  stationReservationAvailabilityTooLow:
+    "Trạm này chỉ cho đặt trước khi số xe khả dụng còn trên 50% sức chứa.",
   subscriptionNotFound: "Không tìm thấy gói tháng đã chọn.",
   subscriptionNotUsable: "Gói tháng hiện chưa thể dùng để đặt xe.",
   subscriptionRequired: "Bạn cần có gói tháng để sử dụng lựa chọn này.",
@@ -67,8 +68,8 @@ function presentReservationApiError(error: Extract<ReservationError, { _tag: "Ap
       return reservationErrorMessages.reservationNotOwned;
     case "RESERVATION_OPTION_NOT_SUPPORTED":
       return reservationErrorMessages.reservationOptionNotSupported;
-    case "STATION_PICKUP_SLOT_LIMIT_EXCEEDED":
-      return reservationErrorMessages.stationPickupSlotLimitExceeded;
+    case "STATION_RESERVATION_AVAILABILITY_TOO_LOW":
+      return reservationErrorMessages.stationReservationAvailabilityTooLow;
     case "SUBSCRIPTION_NOT_FOUND":
       return reservationErrorMessages.subscriptionNotFound;
     case "SUBSCRIPTION_NOT_USABLE":

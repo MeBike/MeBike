@@ -96,12 +96,15 @@ const reserveBikeHandler: RouteHandler<ReservationsRoutes["reserveBike"]> = asyn
               status,
             },
           }, 400)),
-        Match.tag("StationPickupSlotLimitExceeded", ({ stationId }) =>
+        Match.tag("StationReservationAvailabilityTooLow", ({ stationId, totalCapacity, availableBikes, requiredAvailableBikes }) =>
           c.json<ReservationErrorResponse, 400>({
-            error: reservationErrorMessages.STATION_PICKUP_SLOT_LIMIT_EXCEEDED,
+            error: reservationErrorMessages.STATION_RESERVATION_AVAILABILITY_TOO_LOW,
             details: {
-              code: ReservationErrorCodeSchema.enum.STATION_PICKUP_SLOT_LIMIT_EXCEEDED,
+              code: ReservationErrorCodeSchema.enum.STATION_RESERVATION_AVAILABILITY_TOO_LOW,
               stationId,
+              totalCapacity,
+              availableBikes,
+              requiredAvailableBikes,
             },
           }, 400)),
         Match.tag("ReservationOptionNotSupported", ({ option }) =>

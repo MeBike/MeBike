@@ -32,10 +32,13 @@ import {
   BikeNotFound,
   BikeNotFoundInStation,
   ReservationOptionNotSupported,
-  StationPickupSlotLimitExceeded,
+  StationReservationAvailabilityTooLow,
   SubscriptionRequired,
 } from "../domain-errors";
-import { makeReservationQueryRepository } from "../repository/reservation-query.repository";
+import {
+  requiredAvailableBikesForReservation,
+  stationCanAcceptReservation,
+} from "./reservation-availability-rule";
 import { ReservationCommandServiceTag } from "./reservation-command.service";
 import { ReservationQueryServiceTag } from "./reservation-query.service";
 
@@ -143,7 +146,6 @@ export function reserveBike(
         }
 
         const txStationRepo = makeStationRepository(tx);
-        const txReservationQueryRepo = makeReservationQueryRepository(tx);
         const stationOpt = yield* txStationRepo.getById(input.stationId);
         if (Option.isNone(stationOpt)) {
           return yield* Effect.die(new Error(
@@ -151,12 +153,20 @@ export function reserveBike(
           ));
         }
 
-        const pendingReservations = yield* txReservationQueryRepo.countPendingByStationId(input.stationId);
-        if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
-          return yield* Effect.fail(new StationPickupSlotLimitExceeded({
+        const availableBikes = yield* bikeRepo.countAvailableByStation(input.stationId);
+        const requiredAvailableBikes = requiredAvailableBikesForReservation(
+          stationOpt.value.totalCapacity,
+        );
+
+        if (!stationCanAcceptReservation({
+          totalCapacity: stationOpt.value.totalCapacity,
+          availableBikes,
+        })) {
+          return yield* Effect.fail(new StationReservationAvailabilityTooLow({
             stationId: input.stationId,
-            pickupSlotLimit: stationOpt.value.pickupSlotLimit,
-            pendingReservations,
+            totalCapacity: stationOpt.value.totalCapacity,
+            availableBikes,
+            requiredAvailableBikes,
           }));
         }
 
