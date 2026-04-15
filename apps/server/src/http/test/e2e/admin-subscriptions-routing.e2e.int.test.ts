@@ -11,8 +11,37 @@ const USER_TWO_ID = "018fa100-0000-7000-8000-000000000003";
 describe("admin subscriptions routing e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
-      const { HttpDepsLive } = await import("@/http/shared/providers");
-      return HttpDepsLive;
+      const { Layer } = await import("effect");
+      const { PrismaLive } = await import("@/infrastructure/prisma");
+      const {
+        SubscriptionQueryRepositoryLive,
+        SubscriptionQueryServiceLive,
+      } = await import("@/domain/subscriptions");
+      const {
+        UserQueryRepositoryLive,
+        UserQueryServiceLive,
+      } = await import("@/domain/users");
+
+      const subscriptionQueryRepoLayer = SubscriptionQueryRepositoryLive.pipe(
+        Layer.provide(PrismaLive),
+      );
+      const subscriptionQueryLayer = SubscriptionQueryServiceLive.pipe(
+        Layer.provide(subscriptionQueryRepoLayer),
+      );
+      const userQueryRepoLayer = UserQueryRepositoryLive.pipe(
+        Layer.provide(PrismaLive),
+      );
+      const userQueryLayer = UserQueryServiceLive.pipe(
+        Layer.provide(userQueryRepoLayer),
+      );
+
+      return Layer.mergeAll(
+        PrismaLive,
+        subscriptionQueryRepoLayer,
+        subscriptionQueryLayer,
+        userQueryRepoLayer,
+        userQueryLayer,
+      );
     },
     seedBase: false,
     seedData: async (_db, prisma) => {
