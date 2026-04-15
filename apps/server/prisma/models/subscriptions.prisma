@@ -26,8 +26,6 @@ model Subscription {
 
   user         User          @relation(fields: [userId], references: [id])
   reservations Reservation[]
-  fixedSlotDates FixedSlotDate[]
-  fixedSlotTemplates FixedSlotTemplate[]
   rentals      Rental[]
 
   @@index([userId], name: "idx_subscriptions_user")

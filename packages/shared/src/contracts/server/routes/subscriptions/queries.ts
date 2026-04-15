@@ -1,6 +1,8 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
+  AdminListSubscriptionsResponseSchema,
+  AdminSubscriptionDetailResponseSchema,
   ListSubscriptionPackagesResponseSchema,
   ListSubscriptionsQuerySchema,
   ListSubscriptionsResponseSchema,
@@ -9,7 +11,7 @@ import {
   subscriptionErrorMessages,
   SubscriptionErrorResponseSchema,
 } from "../../subscriptions/schemas";
-import { unauthorizedResponse } from "../helpers";
+import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 
 export const getSubscriptionRoute = createRoute({
   method: "get",
@@ -68,6 +70,68 @@ export const listSubscriptionsRoute = createRoute({
       },
     },
     401: unauthorizedResponse(),
+  },
+});
+
+export const adminGetSubscriptionRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/subscriptions/{subscriptionId}",
+  tags: ["Subscriptions"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      subscriptionId: z.uuidv7(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Admin subscription detail",
+      content: {
+        "application/json": {
+          schema: AdminSubscriptionDetailResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+    404: {
+      description: "Subscription not found",
+      content: {
+        "application/json": {
+          schema: SubscriptionErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: subscriptionErrorMessages.SUBSCRIPTION_NOT_FOUND,
+                details: { code: SubscriptionErrorCodeSchema.enum.SUBSCRIPTION_NOT_FOUND },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const adminListSubscriptionsRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/subscriptions",
+  tags: ["Subscriptions"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ListSubscriptionsQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Admin list subscriptions",
+      content: {
+        "application/json": {
+          schema: AdminListSubscriptionsResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });
 

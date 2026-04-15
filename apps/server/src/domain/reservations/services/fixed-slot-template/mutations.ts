@@ -7,13 +7,8 @@ import type {
 } from "@/domain/reservations/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
-import { makePricingPolicyRepository } from "@/domain/pricing";
-import { makeSubscriptionRepository } from "@/domain/subscriptions";
-import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
-
 import type { ReservationCommandRepo } from "../../repository/reservation-command.repository";
 import type { ReservationQueryRepo } from "../../repository/reservation-query.repository";
-import type { FixedSlotBillingResult } from "./fixed-slot-template.types";
 
 import {
   FixedSlotTemplateConflict,
@@ -27,16 +22,14 @@ import {
   normalizeSlotDate,
   toSlotDateKey,
 } from "../fixed-slot/fixed-slot.helpers";
-import { billFixedSlotDates } from "./billing";
 
 /**
- * Tao cac ngay fixed-slot moi va gan billing snapshot cho tung ngay.
+ * Tao cac ngay fixed-slot moi o dang schedule-only.
  *
  * @param tx Prisma transaction client dang duoc dung.
  * @param args Dau vao tao date row.
  * @param args.templateId ID template so huu cac ngay moi.
  * @param args.slotDates Danh sach ngay can tao.
- * @param args.billing Billing snapshot se duoc copy vao tung ngay.
  * @returns Effect fail neu so row tao ra khong khop du kien.
  */
 function createFixedSlotDatesInTx(
@@ -44,7 +37,6 @@ function createFixedSlotDatesInTx(
   args: {
     templateId: string;
     slotDates: ReadonlyArray<Date>;
-    billing: FixedSlotBillingResult;
   },
 ) {
   if (args.slotDates.length === 0) {
@@ -56,9 +48,6 @@ function createFixedSlotDatesInTx(
       tx.fixedSlotDate.createMany({
         data: args.slotDates.map(slotDate => ({
           templateId: args.templateId,
-          pricingPolicyId: args.billing.pricingPolicyId,
-          subscriptionId: args.billing.subscriptionId,
-          prepaid: args.billing.prepaid,
           slotDate,
         })),
       }),
@@ -253,7 +242,7 @@ function cancelRemovedPendingReservations(args: {
 
 /**
  * Ap dung thay doi date/time cho template trong mot transaction.
- * Ham nay lo diff, charge them, huy ngay bo di, va cap nhat reservation pending.
+ * Ham nay lo diff schedule, huy ngay bo di, va cap nhat reservation pending.
  *
  * @param args Dau vao mutation.
  * @param args.userId ID user so huu template.
@@ -266,7 +255,7 @@ function cancelRemovedPendingReservations(args: {
  * @param args.txQueryRepo Repo query trong transaction hien tai.
  * @param args.txCommandRepo Repo command trong transaction hien tai.
  * @param args.bikeRepo Repo bike trong transaction hien tai.
- * @returns Effect tra ve template sau mutation, hoac fail neu conflict/billing/update khong an toan.
+ * @returns Effect tra ve template sau mutation, hoac fail neu conflict/update khong an toan.
  */
 export function applyTemplateMutation(args: {
   userId: string;
@@ -293,6 +282,8 @@ export function applyTemplateMutation(args: {
         futureNextDates,
         args.templateId,
       );
+      // FIX: Same read-then-write race as createForUser.
+      // Concurrent updates on different templates can both see zero conflicts and commit overlapping active schedules.
 
       if (conflictCount > 0) {
         return yield* Effect.fail(new FixedSlotTemplateConflict({
@@ -320,21 +311,9 @@ export function applyTemplateMutation(args: {
     });
 
     if (datesToAdd.length > 0) {
-      const txSubscriptionRepo = makeSubscriptionRepository(args.tx);
-      const txWalletRepo = makeWalletRepository(args.tx);
-      const txPricingPolicyRepo = makePricingPolicyRepository(args.tx);
-      const billing = yield* billFixedSlotDates({
-        userId: args.userId,
-        totalSlots: datesToAdd.length,
-        txPricingPolicyRepo,
-        txSubscriptionRepo,
-        txWalletRepo,
-      });
-
       yield* createFixedSlotDatesInTx(args.tx, {
         templateId: args.templateId,
         slotDates: datesToAdd,
-        billing,
       });
     }
 
@@ -362,6 +341,8 @@ export function applyTemplateMutation(args: {
       slotDates: datesToRemove,
     });
 
+    // FIX: Guard against stale status overwrite.
+    // Concurrent cancel can set template to CANCELLED first, then this stale write restores ACTIVE because it writes args.template.status from an old snapshot.
     return yield* updateFixedSlotTemplateInTx(args.tx, {
       templateId: args.templateId,
       slotStart: args.nextSlotStart,

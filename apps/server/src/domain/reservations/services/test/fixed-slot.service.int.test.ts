@@ -3,7 +3,6 @@ import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { BikeRepository } from "@/domain/bikes";
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
@@ -25,6 +24,7 @@ describe("assignFixedSlotReservations integration", () => {
     const slotDate = new Date(Date.UTC(2026, 3, 14));
     const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
     const user = await fixture.factories.user({ fullname: "Fixed Slot User" });
+    await fixture.factories.wallet({ userId: user.id, balance: 10000n });
     const station = await fixture.factories.station({ name: "Fixed Slot Station" });
     const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
@@ -33,9 +33,6 @@ describe("assignFixedSlotReservations integration", () => {
         id: uuidv7(),
         userId: user.id,
         stationId: station.id,
-        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
-        subscriptionId: null,
-        prepaid: toPrismaDecimal("2000"),
         slotStart,
         status: "ACTIVE",
         updatedAt: new Date(),
@@ -76,6 +73,9 @@ describe("assignFixedSlotReservations integration", () => {
     expect(reservation?.subscriptionId).toBeNull();
     expect(reservation?.prepaid.toString()).toBe("2000");
 
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    expect(wallet?.balance).toBe(8000n);
+
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("RESERVED");
 
@@ -89,6 +89,7 @@ describe("assignFixedSlotReservations integration", () => {
     const slotDate = new Date(Date.UTC(2026, 3, 20));
     const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 30, 0));
     const user = await fixture.factories.user({ fullname: "Fixed Slot Timezone User" });
+    await fixture.factories.wallet({ userId: user.id, balance: 10000n });
     const station = await fixture.factories.station({ name: "Fixed Slot Timezone Station" });
     await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
@@ -97,9 +98,6 @@ describe("assignFixedSlotReservations integration", () => {
         id: uuidv7(),
         userId: user.id,
         stationId: station.id,
-        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
-        subscriptionId: null,
-        prepaid: toPrismaDecimal("2000"),
         slotStart,
         status: "ACTIVE",
         updatedAt: new Date(),
@@ -131,6 +129,7 @@ describe("assignFixedSlotReservations integration", () => {
     const slotDate = new Date(Date.UTC(2026, 3, 15));
     const slotStart = new Date(Date.UTC(2000, 0, 1, 10, 30, 0));
     const user = await fixture.factories.user({ fullname: "Fixed Slot Rerun User" });
+    await fixture.factories.wallet({ userId: user.id, balance: 10000n });
     const station = await fixture.factories.station({ name: "Fixed Slot Rerun Station" });
     await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
@@ -139,9 +138,6 @@ describe("assignFixedSlotReservations integration", () => {
         id: uuidv7(),
         userId: user.id,
         stationId: station.id,
-        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
-        subscriptionId: null,
-        prepaid: toPrismaDecimal("2000"),
         slotStart,
         status: "ACTIVE",
         updatedAt: new Date(),
@@ -166,6 +162,7 @@ describe("assignFixedSlotReservations integration", () => {
       totalTemplates: 1,
       assigned: 0,
       alreadyAssigned: 1,
+      billingFailed: 0,
       noBike: 0,
       conflicts: 0,
     });
@@ -178,5 +175,121 @@ describe("assignFixedSlotReservations integration", () => {
       },
     });
     expect(reservations).toHaveLength(1);
+
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    expect(wallet?.balance).toBe(8000n);
+  });
+
+  it("uses current subscription when worker materializes reservation", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 16));
+    const slotStart = new Date(Date.UTC(2000, 0, 1, 8, 45, 0));
+    const user = await fixture.factories.user({ fullname: "Fixed Slot Subscription User" });
+    await fixture.factories.wallet({ userId: user.id, balance: 10000n });
+    const subscription = await fixture.factories.subscription({
+      userId: user.id,
+      status: "ACTIVE",
+      maxUsages: 3,
+      usageCount: 1,
+    });
+    const station = await fixture.factories.station({ name: "Fixed Slot Subscription Station" });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    const template = await fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        stationId: station.id,
+        slotStart,
+        status: "ACTIVE",
+        updatedAt: new Date(),
+        dates: {
+          create: [{ id: uuidv7(), slotDate }],
+        },
+      },
+      select: { id: true },
+    });
+
+    const summary = await runEffectWithLayer(
+      assignFixedSlotReservations({ slotDate, assignmentTime: slotDate, now: slotDate }),
+      layer,
+    );
+
+    expect(summary).toMatchObject({
+      totalTemplates: 1,
+      assigned: 1,
+      alreadyAssigned: 0,
+      billingFailed: 0,
+      noBike: 0,
+      conflicts: 0,
+    });
+
+    const reservation = await fixture.prisma.reservation.findFirst({
+      where: {
+        fixedSlotTemplateId: template.id,
+        reservationOption: "FIXED_SLOT",
+      },
+    });
+    expect(reservation?.subscriptionId).toBe(subscription.id);
+    expect(reservation?.prepaid.toString()).toBe("0");
+
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    const updatedSubscription = await fixture.prisma.subscription.findUnique({ where: { id: subscription.id } });
+    expect(wallet?.balance).toBe(10000n);
+    expect(updatedSubscription?.usageCount).toBe(2);
+  });
+
+  it("marks billing failure when worker cannot charge the user", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 17));
+    const slotStart = new Date(Date.UTC(2000, 0, 1, 7, 30, 0));
+    const user = await fixture.factories.user({ fullname: "Fixed Slot Low Balance User" });
+    await fixture.factories.wallet({ userId: user.id, balance: 1000n });
+    const station = await fixture.factories.station({ name: "Fixed Slot Low Balance Station" });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    const template = await fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        stationId: station.id,
+        slotStart,
+        status: "ACTIVE",
+        updatedAt: new Date(),
+        dates: {
+          create: [{ id: uuidv7(), slotDate }],
+        },
+      },
+      select: { id: true },
+    });
+
+    const summary = await runEffectWithLayer(
+      assignFixedSlotReservations({ slotDate, assignmentTime: slotDate, now: slotDate }),
+      layer,
+    );
+
+    expect(summary).toMatchObject({
+      totalTemplates: 1,
+      assigned: 0,
+      alreadyAssigned: 0,
+      billingFailed: 1,
+      noBike: 0,
+      conflicts: 0,
+    });
+
+    const reservation = await fixture.prisma.reservation.findFirst({
+      where: {
+        fixedSlotTemplateId: template.id,
+        reservationOption: "FIXED_SLOT",
+      },
+    });
+    expect(reservation).toBeNull();
+
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
+    const outbox = await fixture.prisma.jobOutbox.findMany({
+      where: { dedupeKey: `fixed-slot:billing-failed:${template.id}:2026-04-17` },
+    });
+    expect(wallet?.balance).toBe(1000n);
+    expect(updatedBike?.status).toBe("AVAILABLE");
+    expect(outbox).toHaveLength(1);
   });
 });

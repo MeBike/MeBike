@@ -3,11 +3,8 @@ import { Context, Effect, Layer, Option } from "effect";
 import type { StationRepo } from "@/domain/stations";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { makePricingPolicyRepository } from "@/domain/pricing";
 import { defectOn } from "@/domain/shared";
 import { makeStationRepository, StationRepository } from "@/domain/stations";
-import { makeSubscriptionRepository } from "@/domain/subscriptions";
-import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -26,7 +23,6 @@ import {
 } from "../domain-errors";
 import { makeReservationCommandRepository, ReservationCommandRepository } from "../repository/reservation-command.repository";
 import { makeReservationQueryRepository, ReservationQueryRepository } from "../repository/reservation-query.repository";
-import { billFixedSlotDates } from "./fixed-slot-template/billing";
 import {
   applyTemplateMutation,
   ensureTemplateMutationAllowed,
@@ -77,9 +73,6 @@ export function makeFixedSlotTemplateService(deps: {
             const txStationRepo = makeStationRepository(tx);
             const txReservationQueryRepo = makeReservationQueryRepository(tx);
             const txReservationCommandRepo = makeReservationCommandRepository(tx);
-            const txSubscriptionRepo = makeSubscriptionRepository(tx);
-            const txWalletRepo = makeWalletRepository(tx);
-            const txPricingPolicyRepo = makePricingPolicyRepository(tx);
 
             const stationOpt = yield* txStationRepo.getById(args.stationId);
             if (Option.isNone(stationOpt)) {
@@ -93,6 +86,8 @@ export function makeFixedSlotTemplateService(deps: {
               slotStart,
               slotDates,
             );
+            // FIX: Enforce active fixed-slot overlap at DB level.
+            // This read-then-write check races under concurrent create/update requests and can still admit duplicate active templates.
             if (conflictCount > 0) {
               return yield* Effect.fail(new FixedSlotTemplateConflict({
                 userId: args.userId,
@@ -101,21 +96,10 @@ export function makeFixedSlotTemplateService(deps: {
               }));
             }
 
-            const billing = yield* billFixedSlotDates({
-              userId: args.userId,
-              totalSlots: slotDates.length,
-              txPricingPolicyRepo,
-              txSubscriptionRepo,
-              txWalletRepo,
-            });
-
             return yield* txReservationCommandRepo.createFixedSlotTemplate({
               userId: args.userId,
               stationId: args.stationId,
-              pricingPolicyId: billing.pricingPolicyId,
-              subscriptionId: billing.subscriptionId,
               slotStart,
-              prepaid: billing.prepaid,
               slotDates,
               updatedAt: now,
             });

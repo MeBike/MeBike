@@ -3,7 +3,6 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Match } from "effect";
 
 import type {
-  FixedSlotTemplateBillingConflict,
   FixedSlotTemplateConflict,
   FixedSlotTemplateDateLocked,
   FixedSlotTemplateDateNotFound,
@@ -11,10 +10,6 @@ import type {
   FixedSlotTemplateNotFound,
   FixedSlotTemplateUpdateConflict,
 } from "@/domain/reservations";
-import type {
-  InsufficientWalletBalance,
-  WalletNotFound,
-} from "@/domain/wallets/domain-errors";
 
 import { FixedSlotTemplateServiceTag } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
@@ -36,14 +31,11 @@ import {
 } from "./shared";
 
 type UpdateFixedSlotTemplateError
-  = | FixedSlotTemplateBillingConflict
-    | FixedSlotTemplateConflict
+  = | FixedSlotTemplateConflict
     | FixedSlotTemplateDateLocked
     | FixedSlotTemplateDateNotFuture
     | FixedSlotTemplateNotFound
-    | FixedSlotTemplateUpdateConflict
-    | InsufficientWalletBalance
-    | WalletNotFound;
+    | FixedSlotTemplateUpdateConflict;
 
 type RemoveFixedSlotTemplateDateError
   = | FixedSlotTemplateDateLocked
@@ -104,29 +96,6 @@ const createFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["createFixe
           code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CONFLICT,
           slotStart,
           slotDates: [...slotDates],
-        },
-      }, 409)),
-    Match.tag("WalletNotFound", () =>
-      c.json<FixedSlotTemplateErrorResponse, 400>({
-        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_WALLET_NOT_FOUND,
-        details: {
-          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_WALLET_NOT_FOUND,
-        },
-      }, 400)),
-    Match.tag("InsufficientWalletBalance", ({ balance, attemptedDebit }) =>
-      c.json<FixedSlotTemplateErrorResponse, 400>({
-        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_INSUFFICIENT_BALANCE,
-        details: {
-          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_INSUFFICIENT_BALANCE,
-          balance: balance.toString(),
-          requiredAmount: attemptedDebit.toString(),
-        },
-      }, 400)),
-    Match.tag("FixedSlotTemplateBillingConflict", () =>
-      c.json<FixedSlotTemplateErrorResponse, 409>({
-        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_BILLING_CONFLICT,
-        details: {
-          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_BILLING_CONFLICT,
         },
       }, 409)),
     Match.orElse((error) => {
@@ -323,29 +292,6 @@ const updateFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["updateFixe
           code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CONFLICT,
           slotStart,
           slotDates: [...slotDates],
-        },
-      }, 409)),
-    Match.tag("WalletNotFound", () =>
-      c.json<FixedSlotTemplateErrorResponse, 400>({
-        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_WALLET_NOT_FOUND,
-        details: {
-          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_WALLET_NOT_FOUND,
-        },
-      }, 400)),
-    Match.tag("InsufficientWalletBalance", ({ balance, attemptedDebit }) =>
-      c.json<FixedSlotTemplateErrorResponse, 400>({
-        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_INSUFFICIENT_BALANCE,
-        details: {
-          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_INSUFFICIENT_BALANCE,
-          balance: balance.toString(),
-          requiredAmount: attemptedDebit.toString(),
-        },
-      }, 400)),
-    Match.tag("FixedSlotTemplateBillingConflict", () =>
-      c.json<FixedSlotTemplateErrorResponse, 409>({
-        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_BILLING_CONFLICT,
-        details: {
-          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_BILLING_CONFLICT,
         },
       }, 409)),
     Match.tag("FixedSlotTemplateUpdateConflict", () =>

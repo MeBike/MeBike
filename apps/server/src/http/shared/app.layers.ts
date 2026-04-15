@@ -4,6 +4,7 @@ import { AgencyRequestDepsLive } from "./features/agency-request.layers";
 import { AgencyDepsLive } from "./features/agency.layers";
 import { AuthDepsLive } from "./features/auth.layers";
 import { BikeDepsLive } from "./features/bike.layers";
+import { EnvironmentDepsLive } from "./features/environment.layers";
 import { IncidentDepsLive } from "./features/incident.layers";
 import { NotificationDepsLive } from "./features/notification.layers";
 import { RatingDepsLive } from "./features/rating.layers";
@@ -26,6 +27,7 @@ export const HttpDepsLive = Layer.mergeAll(
   AgencyDepsLive,
   AuthDepsLive,
   BikeDepsLive,
+  EnvironmentDepsLive,
   RatingDepsLive,
   RentalDepsLive,
   ReservationDepsLive,

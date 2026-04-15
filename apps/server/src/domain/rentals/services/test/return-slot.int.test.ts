@@ -1,5 +1,11 @@
+import { JobTypes } from "@mebike/shared/contracts/server/jobs";
+import { Effect } from "effect";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import {
+  enqueueEnvironmentImpactCalculationJob,
+  environmentImpactRentalDedupeKey,
+} from "@/domain/rentals";
 import { expectLeftTag, expectRight } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenActiveRental, givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
@@ -327,6 +333,125 @@ describe("return slot integration", () => {
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("AVAILABLE");
     expect(updatedBike?.stationId).toBe(station.id);
+  });
+
+  it("enqueues environment impact calculation after a rental is completed", async () => {
+    const { rental, station } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
+
+    const ended = expectRight(await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    }));
+
+    expect(ended.status).toBe("COMPLETED");
+
+    const outboxRows = await fixture.prisma.jobOutbox.findMany({
+      where: { dedupeKey: environmentImpactRentalDedupeKey(rental.id) },
+    });
+    expect(outboxRows).toHaveLength(1);
+    expect(outboxRows[0]?.type).toBe(JobTypes.EnvironmentImpactCalculateRental);
+    expect(outboxRows[0]?.payload).toEqual({
+      version: 1,
+      rentalId: rental.id,
+    });
+
+    const impactCount = await fixture.prisma.environmentalImpactStat.count({
+      where: { rentalId: rental.id },
+    });
+    expect(impactCount).toBe(0);
+  });
+
+  it("keeps rental completion successful when no active environment policy exists", async () => {
+    const { rental, station } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
+
+    await fixture.prisma.environmentalImpactPolicy.deleteMany({});
+
+    const ended = expectRight(await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    }));
+
+    expect(ended.status).toBe("COMPLETED");
+    await expect(
+      fixture.prisma.jobOutbox.findFirstOrThrow({
+        where: { dedupeKey: environmentImpactRentalDedupeKey(rental.id) },
+      }),
+    ).resolves.toMatchObject({
+      type: JobTypes.EnvironmentImpactCalculateRental,
+      status: "PENDING",
+    });
+  });
+
+  it("does not enqueue environment impact calculation when completion fails", async () => {
+    const { user } = await givenUserWithWallet(fixture);
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const rental = await fixture.factories.rental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      status: "CANCELLED",
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
+
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    expectLeftTag(result, "InvalidRentalState");
+
+    const outboxCount = await fixture.prisma.jobOutbox.count({
+      where: {
+        type: JobTypes.EnvironmentImpactCalculateRental,
+        dedupeKey: environmentImpactRentalDedupeKey(rental.id),
+      },
+    });
+    expect(outboxCount).toBe(0);
+  });
+
+  it("does not duplicate environment impact outbox jobs for the same rental", async () => {
+    const { rental, station } = await givenActiveRental(fixture, {
+      wallet: { balance: 5000n },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
+
+    expectRight(await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+    }));
+
+    await Effect.runPromise(
+      enqueueEnvironmentImpactCalculationJob(fixture.prisma, {
+        rentalId: rental.id,
+      }),
+    );
+
+    const outboxRows = await fixture.prisma.jobOutbox.findMany({
+      where: { dedupeKey: environmentImpactRentalDedupeKey(rental.id) },
+    });
+    expect(outboxRows).toHaveLength(1);
   });
 
   it("allows confirming a rental return without an active return slot when only the reservation limit is exhausted", async () => {

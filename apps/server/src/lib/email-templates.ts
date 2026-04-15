@@ -27,6 +27,10 @@ type FixedSlotAssignmentEmailParams = {
   readonly slotTimeLabel: string;
 };
 
+type FixedSlotBillingFailedEmailParams = FixedSlotAssignmentEmailParams & {
+  readonly reason: "INSUFFICIENT_BALANCE" | "PAYMENT_UNAVAILABLE";
+};
+
 type ReservationHoldEmailParams = {
   readonly fullName: string;
   readonly stationName: string;
@@ -245,6 +249,45 @@ export function buildFixedSlotNoBikeEmail({
   };
 }
 
+export function buildFixedSlotBillingFailedEmail({
+  fullName,
+  stationName,
+  slotDateLabel,
+  slotTimeLabel,
+  reason,
+}: FixedSlotBillingFailedEmailParams): { subject: string; html: string } {
+  const safeName = escapeHtml(fullName);
+  const safeStation = escapeHtml(stationName);
+  const safeDate = escapeHtml(slotDateLabel);
+  const safeTime = escapeHtml(slotTimeLabel);
+  const title = "Không thể giữ xe cho khung giờ cố định";
+  const guidance = reason === "INSUFFICIENT_BALANCE"
+    ? "Vui lòng kiểm tra ví MeBike và nạp thêm số dư trước khung giờ tiếp theo."
+    : "Vui lòng kiểm tra lại phương thức thanh toán hoặc thử lại sau trong ứng dụng.";
+
+  const body = `
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      Hệ thống chưa thể giữ xe cho khung giờ cố định của bạn vì thanh toán không hoàn tất.
+    </p>
+    <div style="background: #fef3f2; border: 1px solid #fecdca; color: #b42318; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
+      <strong>${safeDate}</strong> • ${safeTime} • Trạm ${safeStation}
+    </div>
+    <p style="margin: 0; color: ${MUTED_COLOR}; font-size: 14px;">
+      ${guidance}
+    </p>
+  `;
+
+  return {
+    subject: "Không thể thanh toán cho khung giờ cố định",
+    html: renderEmailShell({
+      title,
+      previewText: `${safeDate} lúc ${safeTime}`,
+      bodyHtml: body,
+    }),
+  };
+}
+
 export function buildReservationConfirmedEmail({
   fullName,
   stationName,
@@ -405,39 +448,39 @@ export function buildAgencyApprovedEmail({
   const safeAgencyName = escapeHtml(agencyName);
   const safeLoginEmail = escapeHtml(loginEmail);
   const safeTemporaryPassword = escapeHtml(temporaryPassword);
-  const title = "Yeu cau Agency da duoc phe duyet";
+  const title = "Yêu cầu Agency đã được phê duyệt";
 
   const body = `
-    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chao,</p>
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào,</p>
     <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
-      Yeu cau tao agency <strong>${safeAgencyName}</strong> da duoc MeBike phe duyet.
+      Yêu cầu tạo Agency <strong>${safeAgencyName}</strong> đã được MeBike phê duyệt.
     </p>
     <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
-      MeBike da tao mot tai khoan rieng cho vai tro <strong>AGENCY</strong>. Vui long dang nhap bang thong tin ben duoi:
+      MeBike đã tạo một tài khoản riêng cho vai trò <strong>AGENCY</strong>. Vui lòng đăng nhập bằng thông tin bên dưới:
     </p>
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: ${TEXT_COLOR}; background: #f8fafc; border-radius: 8px; overflow: hidden;">
       <tr>
-        <td style="padding: 12px; font-weight: 600; width: 180px;">Email dang nhap</td>
+        <td style="padding: 12px; font-weight: 600; width: 180px;">Email đăng nhập</td>
         <td style="padding: 12px;">${safeLoginEmail}</td>
       </tr>
       <tr>
-        <td style="padding: 12px; font-weight: 600;">Mat khau tam thoi</td>
+        <td style="padding: 12px; font-weight: 600;">Mật khẩu tạm thời</td>
         <td style="padding: 12px;">${safeTemporaryPassword}</td>
       </tr>
     </table>
     <p style="margin: 20px 0 0; color: ${TEXT_COLOR};">
-      Tai khoan nay doc lap voi tai khoan guest/user da gui request truoc do. Sau khi dang nhap, ban nen doi mat khau ngay.
+      Tài khoản này độc lập với tài khoản guest/user đã gửi request trước đó. Sau khi đăng nhập, bạn nên đổi mật khẩu ngay.
     </p>
     <p style="margin: 12px 0 0; color: ${MUTED_COLOR}; font-size: 14px;">
-      Neu ban can ho tro them, vui long lien he doi ngu MeBike.
+      Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ đội ngũ MeBike.
     </p>
   `;
 
   return {
-    subject: "MeBike phe duyet tai khoan agency",
+    subject: "MeBike phê duyệt tài khoản Agency",
     html: renderEmailShell({
       title,
-      previewText: `${agencyName} da duoc phe duyet`,
+      previewText: `${agencyName} đã được phê duyệt`,
       bodyHtml: body,
     }),
   };

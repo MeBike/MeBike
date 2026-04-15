@@ -19,6 +19,7 @@ import { registerAgencyRoutes } from "./routes/agencies";
 import { registerAgencyRequestRoutes } from "./routes/agency-requests";
 import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
+import { registerEnvironmentRoutes } from "./routes/environment";
 import { registerEventRoutes } from "./routes/events";
 import { registerFixedSlotTemplateRoutes } from "./routes/fixed-slot-templates";
 import { registerHealthRoutes } from "./routes/health";
@@ -122,6 +123,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerAgencyRoutes(app);
   registerAgencyRequestRoutes(app);
   registerBikeRoutes(app);
+  registerEnvironmentRoutes(app);
   registerEventRoutes(app);
   registerRentalRoutes(app);
   registerRedistributionRoutes(app);

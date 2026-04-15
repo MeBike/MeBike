@@ -4,7 +4,10 @@ import type {
   ReservationCommandServiceTag,
   ReservationQueryServiceTag,
 } from "@/domain/reservations";
-import type { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
+import type {
+  SubscriptionCommandServiceTag,
+  SubscriptionQueryServiceTag,
+} from "@/domain/subscriptions";
 import type { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
 import type { PrismaClient } from "generated/prisma/client";
 
@@ -22,9 +25,14 @@ import {
   reserveBike,
 } from "@/domain/reservations";
 import { makeStationRepository, StationRepository } from "@/domain/stations";
-import { SubscriptionRepository } from "@/domain/subscriptions";
-import { makeSubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
-import { SubscriptionServiceLive } from "@/domain/subscriptions/services/subscription.service";
+import {
+  makeSubscriptionCommandRepository,
+  makeSubscriptionQueryRepository,
+  SubscriptionCommandRepository,
+  SubscriptionCommandServiceLive,
+  SubscriptionQueryRepository,
+  SubscriptionQueryServiceLive,
+} from "@/domain/subscriptions";
 import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
 import { WalletServiceLive } from "@/domain/wallets/services/wallet.service";
 import { Prisma } from "@/infrastructure/prisma";
@@ -40,8 +48,10 @@ export type ReservationDeps
     | StationRepository
     | WalletRepository
     | WalletServiceTag
-    | SubscriptionRepository
-    | SubscriptionServiceTag
+    | SubscriptionQueryRepository
+    | SubscriptionCommandRepository
+    | SubscriptionQueryServiceTag
+    | SubscriptionCommandServiceTag
     | RentalRepository;
 
 export function makeReservationTestLayer(client: PrismaClient) {
@@ -50,7 +60,8 @@ export function makeReservationTestLayer(client: PrismaClient) {
   const bikeRepo = makeBikeRepository(client);
   const stationRepo = makeStationRepository(client);
   const walletRepo = makeWalletRepository(client);
-  const subscriptionRepo = makeSubscriptionRepository(client);
+  const subscriptionQueryRepo = makeSubscriptionQueryRepository(client);
+  const subscriptionCommandRepo = makeSubscriptionCommandRepository(client);
   const rentalRepo = makeRentalRepository(client);
 
   const prismaLayer = Layer.succeed(Prisma, Prisma.make({ client }));
@@ -72,9 +83,19 @@ export function makeReservationTestLayer(client: PrismaClient) {
   const walletServiceLayer = WalletServiceLive.pipe(
     Layer.provide(walletRepoLayer),
   );
-  const subscriptionRepoLayer = Layer.succeed(SubscriptionRepository, subscriptionRepo);
-  const subscriptionServiceLayer = SubscriptionServiceLive.pipe(
-    Layer.provide(subscriptionRepoLayer),
+  const subscriptionQueryRepoLayer = Layer.succeed(
+    SubscriptionQueryRepository,
+    SubscriptionQueryRepository.make(subscriptionQueryRepo),
+  );
+  const subscriptionCommandRepoLayer = Layer.succeed(
+    SubscriptionCommandRepository,
+    SubscriptionCommandRepository.make(subscriptionCommandRepo),
+  );
+  const subscriptionQueryServiceLayer = SubscriptionQueryServiceLive.pipe(
+    Layer.provide(subscriptionQueryRepoLayer),
+  );
+  const subscriptionCommandServiceLayer = SubscriptionCommandServiceLive.pipe(
+    Layer.provide(Layer.mergeAll(subscriptionQueryRepoLayer, subscriptionCommandRepoLayer)),
   );
 
   return Layer.mergeAll(
@@ -87,8 +108,10 @@ export function makeReservationTestLayer(client: PrismaClient) {
     Layer.succeed(StationRepository, StationRepository.make(stationRepo)),
     walletRepoLayer,
     walletServiceLayer,
-    subscriptionRepoLayer,
-    subscriptionServiceLayer,
+    subscriptionQueryRepoLayer,
+    subscriptionCommandRepoLayer,
+    subscriptionQueryServiceLayer,
+    subscriptionCommandServiceLayer,
     Layer.succeed(RentalRepository, RentalRepository.make(rentalRepo)),
   );
 }

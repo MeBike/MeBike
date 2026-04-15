@@ -7,9 +7,11 @@ import {
   UnauthorizedErrorResponseSchema,
 } from "../schemas";
 import {
+  AdminSubscriptionDetailSchema,
   SubscriptionDetailSchema,
   SubscriptionPackageDetailSchema,
   SubscriptionPackageSchema,
+  SubscriptionOwnerSchema,
   SubscriptionStatusSchema,
 } from "./models";
 
@@ -54,6 +56,8 @@ export const ActivateSubscriptionResponseSchema = SubscriptionDetailSchema.opena
 
 export const SubscriptionDetailResponseSchema = SubscriptionDetailSchema.openapi("SubscriptionDetailResponse");
 
+export const AdminSubscriptionDetailResponseSchema = AdminSubscriptionDetailSchema.openapi("AdminSubscriptionDetailResponse");
+
 export const ListSubscriptionsQuerySchema = z.object({
   ...paginationQueryFields,
   status: SubscriptionStatusSchema.optional(),
@@ -64,6 +68,11 @@ export const ListSubscriptionsResponseSchema = z.object({
   pagination: PaginationSchema,
 }).openapi("ListSubscriptionsResponse");
 
+export const AdminListSubscriptionsResponseSchema = z.object({
+  data: AdminSubscriptionDetailSchema.array(),
+  pagination: PaginationSchema,
+}).openapi("AdminListSubscriptionsResponse");
+
 export const ListSubscriptionPackagesResponseSchema = z.object({
   data: SubscriptionPackageDetailSchema.array(),
 }).openapi("ListSubscriptionPackagesResponse");
@@ -73,14 +82,18 @@ export type CreateSubscriptionRequest = z.infer<typeof CreateSubscriptionRequest
 export type CreateSubscriptionResponse = z.infer<typeof CreateSubscriptionResponseSchema>;
 export type ActivateSubscriptionResponse = z.infer<typeof ActivateSubscriptionResponseSchema>;
 export type SubscriptionDetailResponse = z.infer<typeof SubscriptionDetailResponseSchema>;
+export type AdminSubscriptionDetailResponse = z.infer<typeof AdminSubscriptionDetailResponseSchema>;
 export type ListSubscriptionsResponse = z.infer<typeof ListSubscriptionsResponseSchema>;
+export type AdminListSubscriptionsResponse = z.infer<typeof AdminListSubscriptionsResponseSchema>;
 export type ListSubscriptionPackagesResponse = z.infer<typeof ListSubscriptionPackagesResponseSchema>;
 export type SubscriptionPackageDetail = z.infer<typeof SubscriptionPackageDetailSchema>;
 
 export {
+  AdminSubscriptionDetailSchema,
   SubscriptionDetailSchema,
   SubscriptionPackageDetailSchema,
   SubscriptionPackageSchema,
+  SubscriptionOwnerSchema,
   SubscriptionStatusSchema,
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,

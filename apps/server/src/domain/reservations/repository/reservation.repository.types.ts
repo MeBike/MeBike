@@ -221,7 +221,7 @@ export type ReservationCommandRepo = {
 
   /**
    * Tạo fixed-slot template cùng toàn bộ date row đi kèm.
-   * Billing snapshot hiện tại cũng được copy xuống từng date ngay trong bước này.
+   * Flow hiện tại chỉ lưu schedule; billing sẽ xảy ra khi worker materialize reservation theo ngày.
    */
   createFixedSlotTemplate: (
     input: CreateFixedSlotTemplateInput,

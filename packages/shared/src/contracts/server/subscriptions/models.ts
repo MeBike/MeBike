@@ -28,4 +28,15 @@ export const SubscriptionDetailSchema = z.object({
   updatedAt: z.string().datetime(),
 }).openapi("SubscriptionDetail");
 
+export const SubscriptionOwnerSchema = z.object({
+  id: z.uuidv7(),
+  fullName: z.string(),
+  email: z.string().email(),
+}).openapi("SubscriptionOwner");
+
+export const AdminSubscriptionDetailSchema = SubscriptionDetailSchema.extend({
+  user: SubscriptionOwnerSchema,
+}).openapi("AdminSubscriptionDetail");
+
 export type SubscriptionDetail = z.infer<typeof SubscriptionDetailSchema>;
+export type AdminSubscriptionDetail = z.infer<typeof AdminSubscriptionDetailSchema>;

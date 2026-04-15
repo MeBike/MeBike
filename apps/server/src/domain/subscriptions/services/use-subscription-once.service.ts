@@ -9,20 +9,36 @@ import {
   SubscriptionNotUsable as SubscriptionNotUsableError,
   SubscriptionUsageExceeded as SubscriptionUsageExceededError,
 } from "../domain-errors";
-import { SubscriptionServiceTag } from "../services/subscription.service";
+import {
+  SubscriptionCommandServiceTag,
+} from "../services/subscription-command.live";
+import {
+  SubscriptionQueryServiceTag,
+} from "../services/subscription-query.live";
 import { computeExpiresAt } from "./subscription-flows.shared";
 
+/**
+ * Dùng đúng một lượt subscription ở lớp use case thông thường.
+ *
+ * Flow này làm các bước check rẻ trước, sau đó giao phần đổi trạng thái/ghi dữ liệu
+ * cho command service để caller khác có thể tái sử dụng mà không phải copy lại guard logic.
+ */
 export function useSubscriptionOnceUseCase(args: {
   subscriptionId: string;
   userId: string;
   now?: Date;
-}): Effect.Effect<SubscriptionRow, UseSubscriptionFailure, SubscriptionServiceTag> {
+}): Effect.Effect<
+  SubscriptionRow,
+  UseSubscriptionFailure,
+  SubscriptionQueryServiceTag | SubscriptionCommandServiceTag
+> {
   return Effect.gen(function* () {
-    const service = yield* SubscriptionServiceTag;
+    const queryService = yield* SubscriptionQueryServiceTag;
+    const commandService = yield* SubscriptionCommandServiceTag;
     const now = args.now ?? new Date();
     // TODO: add a small bounded retry when incrementUsage CAS fails due to concurrent usage.
 
-    const subOpt = yield* service.findById(args.subscriptionId);
+    const subOpt = yield* queryService.getById(args.subscriptionId);
     if (Option.isNone(subOpt)) {
       return yield* Effect.fail(
         new SubscriptionNotFoundError({ subscriptionId: args.subscriptionId }),
@@ -66,7 +82,7 @@ export function useSubscriptionOnceUseCase(args: {
     }
 
     const maybeActivated = sub.status === "PENDING"
-      ? yield* service.activate({
+      ? yield* commandService.activate({
         subscriptionId: sub.id,
         activatedAt: now,
         expiresAt: computeExpiresAt(now),
@@ -82,7 +98,7 @@ export function useSubscriptionOnceUseCase(args: {
       )
       : sub;
 
-    const incremented = yield* service.incrementUsage(
+    const incremented = yield* commandService.incrementUsage(
       maybeActivated.id,
       maybeActivated.usageCount,
       1,

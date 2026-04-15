@@ -19,10 +19,19 @@ import type { CreateSubscriptionFailure } from "./subscription-flows.shared";
 
 import { SubscriptionPendingOrActiveExists as SubscriptionPendingOrActiveExistsError } from "../domain-errors";
 import { getSubscriptionPackageConfig } from "../package-config";
-import { makeSubscriptionRepository } from "../repository/subscription.repository";
-import { SubscriptionServiceTag } from "../services/subscription.service";
+import { makeSubscriptionCommandRepository } from "../repository/subscription-command.repository";
+import { makeSubscriptionQueryRepository } from "../repository/subscription-query.repository";
 import { computeAutoActivateAt } from "./subscription-flows.shared";
 
+/**
+ * Tạo subscription mới ở trạng thái pending, trừ tiền ví ngay, rồi enqueue các side effect cần thiết.
+ *
+ * Toàn bộ flow được gói trong một transaction để các bước sau luôn đi cùng nhau:
+ * 1. kiểm tra user chưa có gói pending/active
+ * 2. tạo row subscription pending
+ * 3. trừ tiền ví
+ * 4. enqueue job auto-activate và email xác nhận
+ */
 export function createSubscriptionUseCase(args: {
   userId: string;
   packageName: SubscriptionPackage;
@@ -32,10 +41,9 @@ export function createSubscriptionUseCase(args: {
 }): Effect.Effect<
   SubscriptionRow,
   CreateSubscriptionFailure,
-  SubscriptionServiceTag | Prisma
+  Prisma
 > {
   return Effect.gen(function* () {
-    yield* SubscriptionServiceTag;
     const { client } = yield* Prisma;
     const now = args.now ?? new Date();
     const packageConfig = getSubscriptionPackageConfig(args.packageName);
@@ -51,9 +59,10 @@ export function createSubscriptionUseCase(args: {
 
     const created = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
-        const txRepo = makeSubscriptionRepository(tx);
+        const txSubscriptionQueryRepo = makeSubscriptionQueryRepository(tx);
+        const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(tx);
 
-        const existing = yield* txRepo.findCurrentForUser(
+        const existing = yield* txSubscriptionQueryRepo.findCurrentForUser(
           args.userId,
           ["PENDING", "ACTIVE"],
         );
@@ -63,7 +72,7 @@ export function createSubscriptionUseCase(args: {
           );
         }
 
-        const pending = yield* txRepo.createPending({
+        const pending = yield* txSubscriptionCommandRepo.createPending({
           userId: args.userId,
           packageName: args.packageName,
           maxUsages: packageConfig.maxUsages,
@@ -110,6 +119,9 @@ export function createSubscriptionUseCase(args: {
   });
 }
 
+/**
+ * Trừ tiền ví và map lỗi wallet sang lỗi domain của luồng mua subscription.
+ */
 function debitWallet(
   repo: ReturnType<typeof makeWalletRepository>,
   input: DecreaseBalanceInput,

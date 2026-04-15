@@ -53,15 +53,6 @@ export const createFixedSlotTemplateRoute = createRoute({
                 },
               },
             },
-            InsufficientBalance: {
-              value: {
-                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_INSUFFICIENT_BALANCE,
-                details: {
-                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_INSUFFICIENT_BALANCE,
-                  requiredAmount: "4000",
-                },
-              },
-            },
           },
         },
       },
@@ -87,7 +78,7 @@ export const createFixedSlotTemplateRoute = createRoute({
       },
     },
     409: {
-      description: "Fixed-slot conflict or billing race",
+      description: "Fixed-slot conflict",
       content: {
         "application/json": {
           schema: FixedSlotTemplateErrorResponseSchema,
@@ -99,14 +90,6 @@ export const createFixedSlotTemplateRoute = createRoute({
                   code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CONFLICT,
                   slotStart: "09:30",
                   slotDates: ["2026-04-20"],
-                },
-              },
-            },
-            BillingConflict: {
-              value: {
-                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_BILLING_CONFLICT,
-                details: {
-                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_BILLING_CONFLICT,
                 },
               },
             },
@@ -264,14 +247,6 @@ export const updateFixedSlotTemplateRoute = createRoute({
                   code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_TEMPLATE_CONFLICT,
                   slotStart: "09:30",
                   slotDates: ["2026-04-20"],
-                },
-              },
-            },
-            BillingConflict: {
-              value: {
-                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_BILLING_CONFLICT,
-                details: {
-                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_BILLING_CONFLICT,
                 },
               },
             },

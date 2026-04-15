@@ -1,16 +1,28 @@
-import { Cause, Effect, Exit, Option } from "effect";
+import { Cause, Effect, Either, Exit, Option } from "effect";
 
+import type {
+  InsufficientWalletBalance,
+  WalletNotFound,
+} from "@/domain/wallets/domain-errors";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
+import { makePricingPolicyRepository } from "@/domain/pricing";
+import {
+  makeSubscriptionCommandRepository,
+  makeSubscriptionQueryRepository,
+} from "@/domain/subscriptions";
+import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import {
   buildFixedSlotAssignedEmail,
+  buildFixedSlotBillingFailedEmail,
   buildFixedSlotNoBikeEmail,
 } from "@/lib/email-templates";
 
+import type { FixedSlotTemplateBillingConflict } from "../../domain-errors";
 import type {
   FixedSlotAssignmentContext,
   FixedSlotAssignmentOutcome,
@@ -20,12 +32,21 @@ import type {
 
 import { makeReservationCommandRepository } from "../../repository/reservation-command.repository";
 import { makeReservationQueryRepository } from "../../repository/reservation-query.repository";
+import { billFixedSlotDates } from "../fixed-slot-template/billing";
 import { buildFixedSlotLabels } from "./fixed-slot.helpers";
 
 class FixedSlotAssignmentConflict extends Error {
   constructor() {
     super("Fixed-slot assignment conflict");
   }
+}
+
+function getBillingFailureReason(
+  err: FixedSlotTemplateBillingConflict | WalletNotFound | InsufficientWalletBalance,
+): "INSUFFICIENT_BALANCE" | "PAYMENT_UNAVAILABLE" {
+  return err._tag === "InsufficientWalletBalance"
+    ? "INSUFFICIENT_BALANCE"
+    : "PAYMENT_UNAVAILABLE";
 }
 
 /**
@@ -119,6 +140,35 @@ function enqueueAssignedEmail(
   });
 }
 
+function enqueueBillingFailedEmail(
+  tx: PrismaTypes.TransactionClient,
+  template: FixedSlotAssignmentTemplateRow,
+  labels: FixedSlotLabels,
+  context: FixedSlotAssignmentContext,
+  reason: "INSUFFICIENT_BALANCE" | "PAYMENT_UNAVAILABLE",
+) {
+  const email = buildFixedSlotBillingFailedEmail({
+    fullName: template.user.fullName,
+    stationName: template.station.name,
+    slotDateLabel: labels.slotDateLabel,
+    slotTimeLabel: labels.slotTimeLabel,
+    reason,
+  });
+
+  return enqueueEmailIdempotent(tx, {
+    type: JobTypes.EmailSend,
+    dedupeKey: `fixed-slot:billing-failed:${template.id}:${context.slotDateKey}`,
+    payload: {
+      version: 1,
+      to: template.user.email,
+      kind: "raw",
+      subject: email.subject,
+      html: email.html,
+    },
+    runAt: context.now,
+  });
+}
+
 /**
  * Chay transaction assignment cho mot fixed-slot template.
  *
@@ -143,6 +193,8 @@ async function runFixedSlotAssignmentTransaction(
         template.id,
         labels.slotStartAt,
       );
+      // FIX: Serialize same template/day assignment or re-check after bike/billing step.
+      // Overlapping workers can both pass this early read, then one succeeds while the other emits stale NO_BIKE or BILLING_FAILED notifications.
 
       if (Option.isSome(existingReservationOpt) && existingReservationOpt.value.bikeId) {
         return "ALREADY_ASSIGNED" as const;
@@ -158,6 +210,34 @@ async function runFixedSlotAssignmentTransaction(
       }
       const bike = bikeOpt.value;
 
+      const txPricingPolicyRepo = makePricingPolicyRepository(tx);
+      const txSubscriptionQueryRepo = makeSubscriptionQueryRepository(tx);
+      const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(tx);
+      const txWalletRepo = makeWalletRepository(tx);
+
+      const billingResult = yield* billFixedSlotDates({
+        userId: template.userId,
+        totalSlots: 1,
+        description: `Fixed-slot reservation ${labels.slotDateLabel} ${labels.slotTimeLabel}`,
+        txPricingPolicyRepo,
+        txSubscriptionQueryRepo,
+        txSubscriptionCommandRepo,
+        txWalletRepo,
+      }).pipe(Effect.either);
+
+      if (Either.isLeft(billingResult)) {
+        yield* enqueueBillingFailedEmail(
+          tx,
+          template,
+          labels,
+          context,
+          getBillingFailureReason(billingResult.left),
+        );
+        return "BILLING_FAILED" as const;
+      }
+
+      const billing = billingResult.right;
+
       const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, context.now);
       if (!bikeReserved) {
         return yield* Effect.fail(new FixedSlotAssignmentConflict());
@@ -167,13 +247,13 @@ async function runFixedSlotAssignmentTransaction(
         userId: template.userId,
         bikeId: bike.id,
         stationId: template.stationId,
-        pricingPolicyId: template.pricingPolicyId,
+        pricingPolicyId: billing.pricingPolicyId,
         reservationOption: "FIXED_SLOT",
         fixedSlotTemplateId: template.id,
-        subscriptionId: template.subscriptionId,
+        subscriptionId: billing.subscriptionId,
         startTime: labels.slotStartAt,
         endTime: null,
-        prepaid: template.prepaid,
+        prepaid: billing.prepaid,
         status: "PENDING",
       }).pipe(
         Effect.catchTag("ReservationUniqueViolation", () =>
