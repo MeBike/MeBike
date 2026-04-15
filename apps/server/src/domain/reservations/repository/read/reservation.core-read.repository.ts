@@ -90,6 +90,15 @@ export function makeReservationCoreReadRepository(
         defectOn(ReservationRepositoryError),
       ),
 
+    /**
+     * Tim reservation PENDING cua fixed-slot theo template + startTime.
+     *
+     * Dung de worker tranh tao trung reservation cho cung mot slot ngay.
+     *
+     * @param templateId ID fixed-slot template.
+     * @param startTime Moc bat dau slot can doi chieu.
+     * @returns Effect tra ve reservation neu da ton tai.
+     */
     findPendingFixedSlotByTemplateAndStart: (templateId, startTime) =>
       Effect.tryPromise({
         try: () =>
@@ -180,6 +189,15 @@ export function makeReservationCoreReadRepository(
         defectOn(ReservationRepositoryError),
       ),
 
+    /**
+     * Dem so fixed-slot template ACTIVE bi trung user + gio + tap ngay.
+     *
+     * @param userId ID user so huu template.
+     * @param slotStart Gio bat dau cua slot.
+     * @param slotDates Tap ngay can kiem tra conflict.
+     * @param excludeTemplateId Template can bo qua khi dang update.
+     * @returns Effect tra ve so conflict tim thay.
+     */
     countActiveFixedSlotTemplateConflicts: (userId, slotStart, slotDates, excludeTemplateId) =>
       Effect.tryPromise({
         try: () =>

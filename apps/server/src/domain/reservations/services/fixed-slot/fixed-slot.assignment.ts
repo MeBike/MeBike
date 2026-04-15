@@ -45,6 +45,12 @@ class FixedSlotAssignmentConflict extends Error {
   }
 }
 
+/**
+ * Chuan hoa ly do gui email billing failed cho fixed-slot flow.
+ *
+ * @param err Loi business tra ve tu billing phase.
+ * @returns Ly do gon de render template email.
+ */
 function getBillingFailureReason(
   err: FixedSlotTemplateBillingConflict | WalletNotFound | InsufficientWalletBalance,
 ): "INSUFFICIENT_BALANCE" | "PAYMENT_UNAVAILABLE" {
@@ -144,6 +150,16 @@ function enqueueAssignedEmail(
   });
 }
 
+/**
+ * Enqueue email thong bao billing fail cho slot dang xu ly.
+ *
+ * @param tx Prisma transaction hien tai.
+ * @param template Template dang duoc assign.
+ * @param labels Label da build cho slot hien tai.
+ * @param context Context chung cua lan assignment.
+ * @param reason Ly do fail da duoc map cho email template.
+ * @returns Effect enqueue email voi dedupe key theo template + ngay.
+ */
 function enqueueBillingFailedEmail(
   tx: PrismaTypes.TransactionClient,
   template: FixedSlotAssignmentTemplateRow,
@@ -175,6 +191,13 @@ function enqueueBillingFailedEmail(
 
 /**
  * Chay transaction assignment cho mot fixed-slot template.
+ *
+ * Thu tu xu ly:
+ * - Chan duplicate reservation cho template + ngay.
+ * - Khoa row Station de serialize availability check.
+ * - Kiem tra nguong xe AVAILABLE theo rule reservation.
+ * - Thu billing truoc khi reserve bike.
+ * - Reserve bike, tao reservation, enqueue email thanh cong.
  *
  * @param client Prisma client goc de mo transaction.
  * @param template Template dang xu ly.

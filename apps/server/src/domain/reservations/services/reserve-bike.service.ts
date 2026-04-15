@@ -73,6 +73,19 @@ function formatReservationDateTime(value: Date): string {
   return value.toLocaleString("vi-VN", { timeZone: RESERVATION_TIME_ZONE });
 }
 
+/**
+ * Tao reservation hold cho user va reserve bike trong cung transaction.
+ *
+ * Thu tu xu ly chinh:
+ * - Chan user hoac bike da co hold dang active.
+ * - Validate bike thuoc dung tram va dang AVAILABLE.
+ * - Khoa row Station de serialize availability check theo rule 50%.
+ * - Thu prepaid qua wallet hoac tru usage subscription.
+ * - Tao reservation, cap nhat bike, enqueue outbox jobs va email xac nhan.
+ *
+ * @param input Du lieu reservation can tao.
+ * @returns Effect tra ve reservation PENDING neu thanh cong.
+ */
 export function reserveBike(
   input: ReserveBikeInput,
 ): Effect.Effect<
@@ -301,6 +314,13 @@ export function reserveBike(
   });
 }
 
+/**
+ * Tru tien vi cho prepaid reservation va map loi wallet ve domain error cua reservation flow.
+ *
+ * @param repo Wallet repository dang dung trong transaction.
+ * @param input Du lieu tru tien.
+ * @returns Effect thanh cong khi tru tien xong hoac fail voi wallet-related domain error.
+ */
 function debitWallet(
   repo: ReturnType<typeof makeWalletRepository>,
   input: DecreaseBalanceInput,

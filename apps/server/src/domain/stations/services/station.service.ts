@@ -45,6 +45,12 @@ import {
 import { StationRepository } from "../repository/station.repository";
 
 export type StationService = {
+  /**
+   * Tao tram moi sau khi validate suc chua, ownership va geo boundary.
+   *
+   * @param input Du lieu tao tram.
+   * @returns Effect tra ve tram vua tao neu hop le.
+   */
   createStation: (
     input: CreateStationInput,
   ) => Effect.Effect<
@@ -58,6 +64,13 @@ export type StationService = {
     | StationAgencyNotFound
     | StationAgencyAlreadyAssigned
   >;
+  /**
+   * Cap nhat tram hien co va bao ve cac invariant van hanh dang ton tai.
+   *
+   * @param id ID tram can cap nhat.
+   * @param input Du lieu cap nhat.
+   * @returns Effect tra ve tram sau cap nhat neu thanh cong.
+   */
   updateStation: (
     id: string,
     input: UpdateStationInput,
@@ -75,26 +88,68 @@ export type StationService = {
     | StationAgencyNotFound
     | StationAgencyAlreadyAssigned
   >;
+  /**
+   * Liet ke tram theo filter va phan trang offset.
+   *
+   * @param filter Dieu kien loc tram.
+   * @param pageReq Cau hinh phan trang va sort.
+   * @returns Effect tra ve danh sach tram co pagination.
+   */
   listStations: (
     filter: StationFilter,
     pageReq: PageRequest<StationSortField>,
   ) => Effect.Effect<PageResult<StationRow>>;
 
+  /**
+   * Lay chi tiet mot tram theo ID.
+   *
+   * @param id ID tram can lay.
+   * @returns Effect tra ve tram neu tim thay.
+   */
   getStationById: (id: string) => Effect.Effect<StationRow, StationNotFound>;
 
+  /**
+   * Tim tram gan nhat theo vi tri hien tai.
+   *
+   * @param args Toa do, ban kinh va pagination tim kiem.
+   * @returns Effect tra ve danh sach tram gan nhat.
+   */
   listNearestStations: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;
+  /**
+   * Tong hop doanh thu theo tram trong mot khoang thoi gian.
+   *
+   * @param args Moc thoi gian bat dau va ket thuc.
+   * @returns Effect tra ve tong hop doanh thu + xep hang tram.
+   */
   getRevenueByStation: (args: {
     from: Date;
     to: Date;
   }) => Effect.Effect<StationRevenueStats>;
 };
 
+/**
+ * Ghep business rule cho station domain tren top cua StationRepo.
+ *
+ * @param repo Repository thao tac du lieu tram.
+ * @param deps Phu thuoc domain khac can de validate ownership.
+ * @param deps.agencyRepo Repository agency can de validate ownership.
+ * @param deps.reservationRepo Cho de tuong thich voi caller cu, hien khong con duoc su dung.
+ * @returns StationService da bao gom validate va orchestration.
+ */
 export function makeStationService(repo: StationRepo, deps: {
   agencyRepo: Pick<AgencyRepo, "getById">;
   reservationRepo?: unknown;
 }): StationService {
+  /**
+   * Chuan hoa capacity split khi tao tram moi.
+   *
+   * @param input Input tao tram chua chac da co returnSlotLimit.
+   * @param input.totalCapacity Tong suc chua cua tram moi.
+   * @param input.returnSlotLimit Gioi han slot tra xe neu caller co truyen vao.
+   * @returns Cap total/return slot da duoc fill default.
+   */
   function resolveCapacitySplit(input: {
     totalCapacity: number;
     returnSlotLimit?: number;
@@ -105,6 +160,13 @@ export function makeStationService(repo: StationRepo, deps: {
     };
   }
 
+  /**
+   * Chuan hoa capacity split khi cap nhat de giu hanh vi default on dinh.
+   *
+   * @param current Tram hien tai trong DB.
+   * @param input Payload cap nhat.
+   * @returns Cap total/return slot sau khi merge voi gia tri cu.
+   */
   function resolveUpdatedCapacitySplit(current: StationRow, input: UpdateStationInput) {
     const totalCapacity = input.totalCapacity ?? current.totalCapacity;
 
@@ -119,6 +181,14 @@ export function makeStationService(repo: StationRepo, deps: {
     };
   }
 
+  /**
+   * Validate return slot limit co nam trong khoang hop le cua total capacity hay khong.
+   *
+   * @param args Cap total/return slot can kiem tra.
+   * @param args.totalCapacity Tong suc chua can doi chieu.
+   * @param args.returnSlotLimit Gioi han slot tra xe can validate.
+   * @returns `true` neu split hop le.
+   */
   function validateCapacitySplit(args: {
     totalCapacity: number;
     returnSlotLimit: number;
@@ -128,6 +198,15 @@ export function makeStationService(repo: StationRepo, deps: {
       && args.returnSlotLimit <= args.totalCapacity;
   }
 
+  /**
+   * Validate quan he giua station type va agency ownership.
+   *
+   * @param args Loai tram, agency va station dang bi exclude khi update.
+   * @param args.stationType Loai tram sau khi merge input.
+   * @param args.agencyId Agency duoc gan cho tram.
+   * @param args.excludeStationId Station can bo qua khi dang update chinh no.
+   * @returns Effect chi thanh cong khi ownership hop le va agency ton tai.
+   */
   const validateOwnership = (args: {
     stationType: CreateStationInput["stationType"];
     agencyId: string | null | undefined;
@@ -171,6 +250,15 @@ export function makeStationService(repo: StationRepo, deps: {
       }
     });
 
+  /**
+   * Chan cac cap nhat lam vi pham tai nguyen dang duoc su dung.
+   *
+   * @param current Trang thai tram hien tai.
+   * @param next Gia tri suc chua moi sau khi merge update.
+   * @param next.totalCapacity Tong suc chua sau cap nhat.
+   * @param next.returnSlotLimit Gioi han slot tra xe sau cap nhat.
+   * @returns Effect fail neu cap nhat lam vuot qua bike/return-slot dang active.
+   */
   const validateOperationalUpdate = (current: StationRow, next: {
     totalCapacity: number;
     returnSlotLimit: number;

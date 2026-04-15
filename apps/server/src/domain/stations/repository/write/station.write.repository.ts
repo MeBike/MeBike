@@ -29,9 +29,24 @@ import {
 
 export type StationWriteRepo = Pick<StationRepo, "create" | "update">;
 
+/**
+ * Tao write repository cho station domain.
+ *
+ * @param client Prisma client hoac transaction client.
+ * @returns Repository gom create/update voi validate geo boundary va hydrate counts.
+ */
 export function makeStationWriteRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): StationWriteRepo {
+  /**
+   * Dam bao toa do tram nam trong geo boundary duoc ho tro.
+   *
+   * @param args Toa do va loai thao tac dang thuc hien.
+   * @param args.latitude Vi do can kiem tra.
+   * @param args.longitude Kinh do can kiem tra.
+   * @param args.operation Ten thao tac dang thuc hien de gan vao error context.
+   * @returns Effect fail neu diem nam ngoai supported area hoac thieu boundary row.
+   */
   const assertWithinSupportedArea = (args: {
     latitude: number;
     longitude: number;
@@ -76,6 +91,12 @@ export function makeStationWriteRepository(
       }
     });
 
+  /**
+   * Doc lai tram va hydrate bike/return-slot counts sau khi ghi du lieu.
+   *
+   * @param id ID tram can hydrate.
+   * @returns Effect tra ve `Option.none` neu tram khong ton tai.
+   */
   const loadStationWithCounts = (id: string) =>
     Effect.gen(function* () {
       const row = yield* Effect.tryPromise({
