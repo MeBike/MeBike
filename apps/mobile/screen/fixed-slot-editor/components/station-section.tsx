@@ -1,5 +1,4 @@
 import { IconSymbol } from "@components/IconSymbol";
-import { Field } from "@ui/primitives/field";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
@@ -26,14 +25,8 @@ export function StationSection({
   const theme = useTheme();
 
   return (
-    <Field
-      description={canEdit
-        ? "Nhập ID trạm để áp dụng khung giờ cố định."
-        : isEditMode
-          ? "Khung giờ này chỉ chỉnh sửa trên đúng trạm đã tạo."
-          : undefined}
-      label="Trạm áp dụng"
-    >
+    <YStack gap="$2">
+      <AppText tone="muted" variant="eyebrow">Trạm nhận xe</AppText>
       {canEdit
         ? (
             <YStack gap="$2">
@@ -41,7 +34,7 @@ export function StationSection({
                 value={stationId}
                 onChangeText={onChangeStationId}
                 placeholder="Nhập ID trạm"
-                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="location" size="input" />}
+                leadingIcon={<IconSymbol color={theme.actionPrimary.val} name="location" size="input" />}
               />
               {stationName
                 ? (
@@ -55,31 +48,27 @@ export function StationSection({
           )
         : (
             <AppCard borderColor="$borderSubtle" borderWidth={1} chrome="flat" gap="$3" tone="muted">
-              <XStack alignItems="flex-start" gap="$3" justifyContent="space-between">
-                <YStack flex={1} gap="$1">
-                  <AppText numberOfLines={2} variant="cardTitle">
-                    {resolvedStationName ?? "Trạm chưa xác định"}
+              <XStack alignItems="center" gap="$3" justifyContent="space-between">
+                <XStack alignItems="center" flex={1} gap="$2">
+                  <IconSymbol color={theme.actionPrimary.val} name="location" size="input" />
+                  <AppText flex={1} numberOfLines={1} variant="bodyStrong">
+                    {resolvedStationName ?? stationName ?? "Chưa chọn trạm"}
                   </AppText>
-                  {stationId
-                    ? (
-                        <AppText numberOfLines={1} tone="subtle" variant="meta">
-                          ID: {stationId}
-                        </AppText>
-                      )
-                    : null}
-                </YStack>
-                <XStack
-                  alignItems="center"
-                  backgroundColor="$surfaceAccent"
-                  borderRadius="$round"
-                  paddingHorizontal="$3"
-                  paddingVertical="$2"
-                >
-                  <AppText tone="brand" variant="caption">Đã khóa trạm</AppText>
                 </XStack>
+                <IconSymbol color={theme.textTertiary.val} name="chevron-right" size="sm" />
               </XStack>
+              {stationId
+                ? (
+                    <AppText numberOfLines={1} tone="subtle" variant="meta">
+                      ID: {stationId}
+                    </AppText>
+                  )
+                : null}
+              {isEditMode
+                ? <AppText tone="muted" variant="caption">Chỉ chỉnh sửa trên trạm đã tạo khung giờ này.</AppText>
+                : null}
             </AppCard>
           )}
-    </Field>
+    </YStack>
   );
 }

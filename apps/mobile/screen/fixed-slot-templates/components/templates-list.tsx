@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { useTheme, YStack } from "tamagui";
 
+import { IconSymbol } from "@/components/IconSymbol";
 import type { FixedSlotTemplate } from "@/contracts/server";
 import { FixedSlotTemplateCard } from "./fixed-slot-template-card";
 
@@ -19,7 +20,6 @@ type FixedSlotTemplatesListProps = {
   containerHeight: number;
   onRefresh: () => void;
   onLoadMore: () => void;
-  onCancel: (templateId: string) => void;
   onSelect: (templateId: string) => void;
 };
 
@@ -32,7 +32,6 @@ export function FixedSlotTemplatesList({
   containerHeight,
   onRefresh,
   onLoadMore,
-  onCancel,
   onSelect,
 }: FixedSlotTemplatesListProps) {
   const theme = useTheme();
@@ -59,7 +58,7 @@ export function FixedSlotTemplatesList({
     <FlatList
       data={templates}
       keyExtractor={item => item.id}
-      contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ paddingBottom: 40, gap: 16 }}
       refreshing={refreshing}
       onRefresh={onRefresh}
       onEndReached={handleEndReached}
@@ -76,12 +75,13 @@ export function FixedSlotTemplatesList({
       }
       ListEmptyComponent={
         isLoading ? (
-          <YStack alignItems="center" gap="$3" padding="$7">
+          <YStack alignItems="center" backgroundColor="$surfaceDefault" borderColor="$borderSubtle" borderRadius="$5" borderWidth={1} gap="$3" padding="$7">
             <ActivityIndicator color={theme.actionPrimary.val} size="large" />
             <AppText tone="muted" variant="bodySmall">Đang tải khung giờ...</AppText>
           </YStack>
         ) : (
-          <YStack alignItems="center" gap="$2" padding="$7">
+          <YStack alignItems="center" backgroundColor="$surfaceDefault" borderColor="$borderSubtle" borderRadius="$5" borderWidth={1} gap="$3" padding="$7">
+            <IconSymbol color={theme.textTertiary.val} name="calendar" size="display" />
             <AppText variant="sectionTitle">Chưa có khung giờ nào</AppText>
             <AppText align="center" tone="muted" variant="bodySmall">
               Tạo khung giờ cố định để giữ nhịp thuê xe nhanh hơn tại trạm quen thuộc.
@@ -92,7 +92,6 @@ export function FixedSlotTemplatesList({
       renderItem={({ item }) => (
         <FixedSlotTemplateCard
           template={item}
-          onCancel={() => onCancel(item.id)}
           onSelect={() => onSelect(item.id)}
         />
       )}

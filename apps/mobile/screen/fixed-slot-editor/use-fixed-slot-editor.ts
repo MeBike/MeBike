@@ -56,10 +56,10 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
 
   const resolvedStationName = stationName ?? templateData?.station.name ?? fetchedStation?.name;
   const isMutating = createMutation.isPending || updateMutation.isPending;
-  const headerTitle = isEditMode ? "Chỉnh sửa khung giờ" : "Tạo khung giờ";
+  const headerTitle = isEditMode ? "Chỉnh sửa lịch đặt cố định" : "Tạo lịch đặt cố định";
   const submitLabel = isMutating
     ? (isEditMode ? "Đang lưu..." : "Đang tạo...")
-    : (isEditMode ? "Lưu thay đổi" : "Lưu khung giờ");
+    : (isEditMode ? "Lưu thay đổi" : "Xác nhận & thanh toán");
 
   useEffect(() => {
     if (templateData) {

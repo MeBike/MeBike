@@ -135,4 +135,21 @@ export const fixedSlotService = {
       return asNetworkError(error);
     }
   },
+
+  removeDate: async (id: string, slotDate: string): Promise<Result<FixedSlotTemplate, FixedSlotError>> => {
+    try {
+      const path = routePath(ServerRoutes.fixedSlotTemplates.removeFixedSlotTemplateDate, { id, slotDate });
+      const response = await kyClient.delete(path, { throwHttpErrors: false });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.fixedSlotTemplates.removeFixedSlotTemplateDate.responses[200].content["application/json"].schema;
+        return decodeFixedSlotResponse(response, okSchema as z.ZodType<FixedSlotTemplate>);
+      }
+
+      return err(await parseFixedSlotError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
 };
