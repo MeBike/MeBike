@@ -19,6 +19,16 @@ Muc tieu API:
 - Neu rental thuoc user khac, API cung tra `404` de khong leak rental co ton tai hay khong.
 - Client khong truyen `userId`; backend lay user tu access token.
 
+## Auto calculation after rental completed
+
+- Sau khi rental duoc confirm return thanh cong va status thanh `COMPLETED`, backend tu enqueue job tinh Environment Impact cho rental do.
+- Can chay worker (`pnpm worker` trong `apps/server`) de dispatch/process outbox job; neu chi chay HTTP server thi job co the van nam trong `job_outbox`.
+- Job goi truc tiep `EnvironmentImpactService.calculateFromRental(rentalId)`, khong goi HTTP vao `POST /internal/environment/calculate-from-rental/{rentalId}`.
+- API internal calculate van duoc giu lai de repair, test, hoac manual trigger khi can.
+- Summary/history/detail chi doc tu `environmental_impact_stats`, nen rental completed chi hien trong Environment sau khi job calculate chay thanh cong.
+- Neu chua co active environment policy, rental van `COMPLETED`, payment/billing khong rollback, va impact chua duoc tao.
+- Neu can kiem tra outbox: `dedupe_key = 'environment-impact:rental:<rental-id>'`.
+
 Quan trong:
 
 ```text

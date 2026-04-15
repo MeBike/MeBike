@@ -18,6 +18,15 @@ Muc tieu API:
 - User chi thay record co `user_id` bang user trong access token.
 - Client khong truyen `userId`.
 
+## Auto calculation after rental completed
+
+- Sau khi rental duoc confirm return thanh cong va status thanh `COMPLETED`, backend tu enqueue job tinh Environment Impact cho rental do.
+- Can chay worker (`pnpm worker` trong `apps/server`) de dispatch/process outbox job; neu chi chay HTTP server thi job co the van nam trong `job_outbox`.
+- Job goi truc tiep `EnvironmentImpactService.calculateFromRental(rentalId)`, khong goi HTTP vao `POST /internal/environment/calculate-from-rental/{rentalId}`.
+- API internal calculate van duoc giu lai de repair, test, hoac manual trigger khi can.
+- History chi doc tu `environmental_impact_stats`, nen rental completed chi xuat hien sau khi job calculate chay thanh cong.
+- Neu chua co active environment policy, rental van `COMPLETED`, payment/billing khong rollback, va impact chua duoc tao.
+
 Quan trong:
 
 ```text

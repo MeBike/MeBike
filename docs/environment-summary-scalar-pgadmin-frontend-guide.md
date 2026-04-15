@@ -15,6 +15,15 @@ Muc tieu API:
 - API khong tao row moi, khong update DB, khong cache.
 - Rental `COMPLETED` nhung chua chay calculate Environment Impact thi chua duoc tinh vao summary.
 
+## Auto calculation after rental completed
+
+- Sau khi rental duoc confirm return thanh cong va status thanh `COMPLETED`, backend tu enqueue job tinh Environment Impact cho rental do.
+- Can chay worker (`pnpm worker` trong `apps/server`) de dispatch/process outbox job; neu chi chay HTTP server thi job co the van nam trong `job_outbox`.
+- Job goi truc tiep `EnvironmentImpactService.calculateFromRental(rentalId)`, khong goi HTTP vao `POST /internal/environment/calculate-from-rental/{rentalId}`.
+- API internal calculate van duoc giu lai de repair, test, hoac manual trigger khi can.
+- Summary chi doc tu `environmental_impact_stats`, nen rental completed chi duoc cong vao summary sau khi job calculate chay thanh cong.
+- Neu chua co active environment policy, rental van `COMPLETED`, payment/billing khong rollback, va impact chua duoc tao.
+
 ## 1. Chuan bi moi truong
 
 Chay backend chinh trong `apps/server`, backend nay la service dang co Scalar:
@@ -1110,4 +1119,3 @@ Khong co row nao
 ```
 
 Neu co row, unique index hoac migration DB dang sai.
-
