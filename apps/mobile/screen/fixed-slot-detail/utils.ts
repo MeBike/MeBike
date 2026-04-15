@@ -3,5 +3,5 @@ export function formatDisplayDate(value: string) {
   if (!year || !month || !day)
     return value;
 
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 }

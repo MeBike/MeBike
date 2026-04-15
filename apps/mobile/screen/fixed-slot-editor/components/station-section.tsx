@@ -10,7 +10,6 @@ type Props = {
   stationName?: string;
   resolvedStationName?: string;
   canEdit: boolean;
-  isEditMode: boolean;
   onChangeStationId: (value: string) => void;
 };
 
@@ -19,7 +18,6 @@ export function StationSection({
   stationName,
   resolvedStationName,
   canEdit,
-  isEditMode,
   onChangeStationId,
 }: Props) {
   const theme = useTheme();
@@ -40,7 +38,6 @@ export function StationSection({
                 ? (
                     <AppText tone="muted" variant="caption">
                       Gợi ý: {stationName}
-                      {stationId ? ` (ID: ${stationId})` : ""}
                     </AppText>
                   )
                 : null}
@@ -57,16 +54,6 @@ export function StationSection({
                 </XStack>
                 <IconSymbol color={theme.textTertiary.val} name="chevron-right" size="sm" />
               </XStack>
-              {stationId
-                ? (
-                    <AppText numberOfLines={1} tone="subtle" variant="meta">
-                      ID: {stationId}
-                    </AppText>
-                  )
-                : null}
-              {isEditMode
-                ? <AppText tone="muted" variant="caption">Chỉ chỉnh sửa trên trạm đã tạo khung giờ này.</AppText>
-                : null}
             </AppCard>
           )}
     </YStack>

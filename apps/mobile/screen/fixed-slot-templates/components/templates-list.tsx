@@ -9,6 +9,7 @@ import { useTheme, YStack } from "tamagui";
 
 import { IconSymbol } from "@/components/IconSymbol";
 import type { FixedSlotTemplate } from "@/contracts/server";
+import { spaceScale } from "@theme/metrics";
 import { FixedSlotTemplateCard } from "./fixed-slot-template-card";
 
 type FixedSlotTemplatesListProps = {
@@ -58,7 +59,11 @@ export function FixedSlotTemplatesList({
     <FlatList
       data={templates}
       keyExtractor={item => item.id}
-      contentContainerStyle={{ paddingBottom: 40, gap: 16 }}
+      contentContainerStyle={{
+        paddingBottom: spaceScale[9],
+        paddingTop: spaceScale[5],
+        flexGrow: templates.length === 0 ? 1 : undefined,
+      }}
       refreshing={refreshing}
       onRefresh={onRefresh}
       onEndReached={handleEndReached}
@@ -75,25 +80,32 @@ export function FixedSlotTemplatesList({
       }
       ListEmptyComponent={
         isLoading ? (
-          <YStack alignItems="center" backgroundColor="$surfaceDefault" borderColor="$borderSubtle" borderRadius="$5" borderWidth={1} gap="$3" padding="$7">
-            <ActivityIndicator color={theme.actionPrimary.val} size="large" />
-            <AppText tone="muted" variant="bodySmall">Đang tải khung giờ...</AppText>
-          </YStack>
+          <View style={{ paddingHorizontal: spaceScale[5], paddingTop: spaceScale[5], flex: 1 }}>
+            <YStack alignItems="center" backgroundColor="$surfaceDefault" borderColor="$borderSubtle" borderRadius="$5" borderWidth={1} gap="$3" padding="$7">
+              <ActivityIndicator color={theme.actionPrimary.val} size="large" />
+              <AppText tone="muted" variant="bodySmall">Đang tải khung giờ...</AppText>
+            </YStack>
+          </View>
         ) : (
-          <YStack alignItems="center" backgroundColor="$surfaceDefault" borderColor="$borderSubtle" borderRadius="$5" borderWidth={1} gap="$3" padding="$7">
-            <IconSymbol color={theme.textTertiary.val} name="calendar" size="display" />
-            <AppText variant="sectionTitle">Chưa có khung giờ nào</AppText>
-            <AppText align="center" tone="muted" variant="bodySmall">
-              Tạo khung giờ cố định để giữ nhịp thuê xe nhanh hơn tại trạm quen thuộc.
-            </AppText>
-          </YStack>
+          <View style={{ paddingHorizontal: spaceScale[5], paddingTop: spaceScale[5], flex: 1 }}>
+            <YStack alignItems="center" backgroundColor="$surfaceDefault" borderColor="$borderSubtle" borderRadius="$5" borderWidth={1} gap="$3" padding="$7">
+              <IconSymbol color={theme.textTertiary.val} name="calendar" size="display" />
+              <AppText variant="sectionTitle">Chưa có khung giờ nào</AppText>
+              <AppText align="center" tone="muted" variant="bodySmall">
+                Tạo khung giờ cố định để giữ nhịp thuê xe nhanh hơn tại trạm quen thuộc.
+              </AppText>
+            </YStack>
+          </View>
         )
       }
+      ItemSeparatorComponent={() => <View style={{ height: spaceScale[4] }} />}
       renderItem={({ item }) => (
-        <FixedSlotTemplateCard
-          template={item}
-          onSelect={() => onSelect(item.id)}
-        />
+        <View style={{ paddingHorizontal: spaceScale[5] }}>
+          <FixedSlotTemplateCard
+            template={item}
+            onSelect={() => onSelect(item.id)}
+          />
+        </View>
       )}
     />
   );

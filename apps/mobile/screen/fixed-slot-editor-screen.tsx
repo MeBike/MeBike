@@ -5,6 +5,7 @@ import { AppText } from "@ui/primitives/app-text";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { Screen } from "@ui/primitives/screen";
 import React from "react";
+import { borderWidths, elevations, spacing, spaceScale } from "@theme/metrics";
 import {
   ActivityIndicator,
   Platform,
@@ -61,39 +62,48 @@ export default function FixedSlotEditorScreen() {
     stationName,
     canEditStation,
   } = useFixedSlotEditor({ navigation, routeParams: route.params });
-
-  const summaryTitle = isEditMode ? "Cập nhật lịch đặt" : "Tổng thanh toán";
-  const summarySubtitle = isEditMode
-    ? "Các ngày mới thêm sẽ được trừ lượt hoặc số dư ngay khi lưu."
-    : `${selectedDates.length} ngày đã chọn cho khung giờ này.`;
+  const contentBottomInset = insets.bottom + spacing.xxxxl + spacing.xxxl;
 
   return (
     <Screen tone="subtle">
-      <AppHeroHeader
-        onBack={() => navigation.goBack()}
-        size="compact"
-        subtitle={isEditMode ? resolvedStationName : stationName}
-        title={headerTitle}
-        variant="gradient"
-      />
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: contentBottomInset,
+        }}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+      >
+        <YStack>
+          <AppHeroHeader
+            onBack={() => navigation.goBack()}
+            size="compact"
+            subtitle={isEditMode ? resolvedStationName : stationName}
+            title={headerTitle}
+            variant="gradient"
+          />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 180 }} style={{ marginTop: -24 }}>
-        {isEditMode && isDetailLoading
-          ? (
-              <Screen alignItems="center" justifyContent="center" minHeight={320} tone="subtle">
-                <ActivityIndicator color={theme.actionPrimary.val} size="large" />
-                <AppText tone="muted" variant="bodySmall">Đang tải thông tin khung giờ...</AppText>
-              </Screen>
-            )
-          : (
-              <YStack gap="$4">
-                <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$5" chrome="card" gap="$4">
+          {isEditMode && isDetailLoading
+            ? (
+                <Screen alignItems="center" justifyContent="center" minHeight={320} tone="subtle">
+                  <ActivityIndicator color={theme.actionPrimary.val} size="large" />
+                  <AppText tone="muted" variant="bodySmall">Đang tải thông tin khung giờ...</AppText>
+                </Screen>
+              )
+            : (
+                <YStack gap="$4" marginTop={-spaceScale[6]} paddingHorizontal="$5">
+                  <AppCard
+                    borderColor="$borderSubtle"
+                    borderRadius="$5"
+                    borderWidth={borderWidths.subtle}
+                    chrome="flat"
+                    gap="$4"
+                    style={elevations.whisper}
+                  >
                   <StationSection
                     stationId={stationId}
                     stationName={stationName}
                     resolvedStationName={resolvedStationName}
                     canEdit={canEditStation}
-                    isEditMode={isEditMode}
                     onChangeStationId={setStationId}
                   />
 
@@ -107,36 +117,28 @@ export default function FixedSlotEditorScreen() {
                   onRemoveDate={removeDate}
                 />
 
-                <AppCard borderColor="$surfaceInverse" borderWidth={1} borderRadius="$5" chrome="flat" gap="$4" tone="inverse">
-                  <XStack alignItems="center" gap="$2">
-                    <IconSymbol color={theme.onSurfaceBrand.val} name="credit-card" size="sm" />
-                    <AppText tone="inverted" variant="bodyStrong">{summaryTitle}</AppText>
-                  </XStack>
-                  <XStack alignItems="flex-end" justifyContent="space-between">
-                    <YStack flex={1} gap="$1">
-                      <AppText opacity={0.86} tone="inverted" variant="bodySmall">{summarySubtitle}</AppText>
-                      <AppText opacity={0.72} tone="inverted" variant="caption">
-                        Thanh toán được xử lý ngay khi xác nhận tạo hoặc thêm ngày mới.
+                  <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$4" chrome="flat" gap="$3" tone="danger">
+                    <XStack alignItems="flex-start" gap="$3">
+                      <IconSymbol color={theme.textDanger.val} name="warning" size="md" />
+                      <AppText flex={1} tone="danger" variant="bodySmall">
+                        Lưu ý: Sau khi xác nhận, việc xóa ngày lẻ hoặc hủy các ngày đã đặt sẽ không được hoàn tiền.
                       </AppText>
-                    </YStack>
-                    <AppText tone="inverted" variant="headline">{selectedDates.length} ngày</AppText>
-                  </XStack>
-                </AppCard>
-
-                <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$4" chrome="flat" gap="$3" tone="danger">
-                  <XStack alignItems="flex-start" gap="$3">
-                    <IconSymbol color={theme.textDanger.val} name="warning" size="md" />
-                    <AppText flex={1} tone="danger" variant="bodySmall">
-                      Lưu ý: Sau khi xác nhận, việc xóa ngày lẻ hoặc hủy các ngày đã đặt sẽ không được hoàn tiền.
-                    </AppText>
-                  </XStack>
-                </AppCard>
-              </YStack>
-            )}
+                    </XStack>
+                  </AppCard>
+                </YStack>
+              )}
+        </YStack>
       </ScrollView>
 
       <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-        <AppCard borderTopColor="$borderSubtle" borderTopWidth={1} borderRadius="$0" chrome="flat" padding="$4" paddingBottom={insets.bottom + 16}>
+        <AppCard
+          borderTopColor="$borderSubtle"
+          borderTopWidth={1}
+          borderRadius="$0"
+          chrome="flat"
+          padding="$4"
+          paddingBottom={insets.bottom + spacing.lg}
+        >
           <AppButton
             disabled={isMutating || (isEditMode && isDetailLoading)}
             loading={isMutating}

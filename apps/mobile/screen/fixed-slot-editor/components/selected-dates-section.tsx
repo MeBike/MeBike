@@ -24,7 +24,7 @@ export function SelectedDatesSection({ selectedDates, pastDatesHidden, onAddDate
       <AppCard borderColor="$borderSubtle" borderWidth={1} chrome="flat" gap="$4">
         <YStack flex={1} gap="$1">
           <AppText tone="muted" variant="bodySmall">
-            Chỉ chọn các ngày trong tương lai. Hệ thống sẽ giữ đúng một khung giờ cho toàn bộ danh sách này.
+            Chọn các ngày trong tương lai bạn muốn sử dụng xe.
           </AppText>
         </YStack>
 

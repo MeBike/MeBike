@@ -25,13 +25,14 @@ export function TimeSelectionSection({ slotStart, onSelectTime }: Props) {
             opacity={pressed ? 0.97 : 1}
             tone="muted"
           >
-            <XStack alignItems="center" gap="$3">
+            <XStack alignItems="center" gap="$3" justifyContent="space-between">
+              <XStack alignItems="center" flex={1} gap="$3">
               <IconSymbol color={theme.actionPrimary.val} name="clock" size="input" />
-              <YStack flex={1} gap="$1">
+              <YStack flex={1}>
                 <AppText variant="bodyStrong">{slotStart}</AppText>
-                <AppText tone="muted" variant="caption">Giờ này sẽ áp dụng cho toàn bộ ngày đã chọn.</AppText>
               </YStack>
-              <IconSymbol color={theme.textTertiary.val} name="chevron-right" size="sm" />
+              </XStack>
+              <IconSymbol color={theme.textPrimary.val} name="clock" size="sm" />
             </XStack>
           </AppCard>
         )}

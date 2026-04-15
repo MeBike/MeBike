@@ -5,22 +5,14 @@ import React from "react";
 import { Pressable } from "react-native";
 import { useTheme, YStack } from "tamagui";
 
-import type { FixedSlotStatus } from "@/contracts/server";
 import { IconSymbol } from "@/components/IconSymbol";
 import type {
   FixedSlotTemplatesNavigationProp,
   FixedSlotTemplatesRouteProp,
 } from "@/types/navigation";
 
-import { FixedSlotFilterBar } from "./components/filter-bar";
 import { FixedSlotTemplatesList } from "./components/templates-list";
 import { useFixedSlotTemplatesScreen } from "./use-fixed-slot-templates-screen";
-
-const STATUS_FILTERS: Array<{ label: string; value?: FixedSlotStatus }> = [
-  { label: "Tất cả" },
-  { label: "Đang hoạt động", value: "ACTIVE" },
-  { label: "Đã hủy", value: "CANCELLED" },
-];
 
 export default function FixedSlotTemplatesScreen() {
   const navigation = useNavigation<FixedSlotTemplatesNavigationProp>();
@@ -28,8 +20,6 @@ export default function FixedSlotTemplatesScreen() {
   const theme = useTheme();
   const {
     headerTitle,
-    statusFilter,
-    setStatusFilter,
     listHeight,
     setListHeight,
     templates,
@@ -63,26 +53,16 @@ export default function FixedSlotTemplatesScreen() {
             )}
           </Pressable>
         )}
-        onBack={() => navigation.goBack()}
         size="compact"
-        subtitle="Quản lý lịch giữ xe theo trạm và giờ quen thuộc."
         title={headerTitle}
         variant="gradient"
       />
-      <YStack flex={1} marginTop={-24} paddingHorizontal="$4">
-        <YStack paddingBottom="$3">
-          <FixedSlotFilterBar
-            filters={STATUS_FILTERS}
-            activeFilter={statusFilter}
-            onFilterChange={setStatusFilter}
-          />
-        </YStack>
-        <Screen
+      <YStack flex={1}>
+        <YStack
           flex={1}
           onLayout={({ nativeEvent }) => {
             setListHeight(nativeEvent.layout.height);
           }}
-          tone="subtle"
         >
           <FixedSlotTemplatesList
             templates={templates}
@@ -95,7 +75,7 @@ export default function FixedSlotTemplatesScreen() {
             onLoadMore={handleLoadMore}
             onSelect={handleSelectTemplate}
           />
-        </Screen>
+        </YStack>
       </YStack>
     </Screen>
   );

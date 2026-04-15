@@ -5,6 +5,7 @@ import { AppText } from "@ui/primitives/app-text";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { Screen } from "@ui/primitives/screen";
 import React from "react";
+import { borderWidths, elevations, spacing, spaceScale } from "@theme/metrics";
 import {
   ActivityIndicator,
   Pressable,
@@ -42,30 +43,44 @@ export default function FixedSlotDetailScreen() {
     handleRemoveDate,
     handleCancelTemplate,
   } = useFixedSlotDetailScreen({ navigation, templateId });
+  const contentBottomInset = canMutate
+    ? insets.bottom + spacing.xxxxl + spacing.xxl
+    : spacing.xxxl;
 
   return (
     <Screen tone="subtle">
-      <AppHeroHeader
-        accessory={statusLabel && statusTone
-          ? <StatusBadge label={statusLabel} size="compact" tone={statusTone} withDot />
-          : undefined}
-        onBack={() => navigation.goBack()}
-        size="compact"
-        subtitle={`Mã: ${templateCode}`}
-        title="Chi tiết khung giờ"
-        variant="gradient"
-      />
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: contentBottomInset,
+        }}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+      >
+        <YStack>
+          <AppHeroHeader
+            onBack={() => navigation.goBack()}
+            size="compact"
+            subtitle={`Mã: ${templateCode}`}
+            title="Chi tiết lịch đặt"
+            variant="gradient"
+          />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: canMutate ? 144 : 32 }} style={{ marginTop: -24 }}>
-        {isLoading || !template
-          ? (
-              <Screen alignItems="center" justifyContent="center" minHeight={280} tone="subtle">
-                <ActivityIndicator color={theme.actionPrimary.val} size="large" />
-              </Screen>
-            )
-          : (
-              <YStack gap="$4">
-                <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$5" chrome="card" gap="$4">
+          {isLoading || !template
+            ? (
+                <Screen alignItems="center" justifyContent="center" minHeight={280} tone="subtle">
+                  <ActivityIndicator color={theme.actionPrimary.val} size="large" />
+                </Screen>
+              )
+            : (
+                <YStack gap="$4" marginTop={-spaceScale[6]} paddingHorizontal="$5">
+                  <AppCard
+                    borderColor="$borderSubtle"
+                    borderRadius="$5"
+                    borderWidth={borderWidths.subtle}
+                    chrome="flat"
+                    gap="$5"
+                    style={elevations.whisper}
+                  >
                   <StatusBadge
                     label={statusLabel?.toUpperCase() ?? ""}
                     pulseDot={canMutate}
@@ -83,16 +98,14 @@ export default function FixedSlotDetailScreen() {
                   </YStack>
 
                   <AppCard borderColor="$borderSubtle" borderWidth={1} chrome="flat" gap="$3" tone="accent">
-                    <XStack alignItems="center" gap="$3" justifyContent="space-between">
-                      <XStack alignItems="center" gap="$3">
-                        <XStack alignItems="center" backgroundColor="$surfaceDefault" borderRadius="$3" height={40} justifyContent="center" width={40}>
-                          <IconSymbol color={theme.actionPrimary.val} name="clock" size="md" />
-                        </XStack>
-                        <YStack gap="$1">
-                          <AppText tone="brand" variant="eyebrow">Giờ nhận xe</AppText>
-                          <AppText variant="headline">{template.slotStart}</AppText>
-                        </YStack>
+                    <XStack alignItems="center" gap="$3">
+                      <XStack alignItems="center" backgroundColor="$surfaceDefault" borderRadius="$3" height={40} justifyContent="center" width={40}>
+                        <IconSymbol color={theme.actionPrimary.val} name="clock" size="md" />
                       </XStack>
+                      <YStack flex={1} gap="$1" minWidth={0}>
+                        <AppText numberOfLines={1} tone="brand" variant="eyebrow">Giờ nhận xe</AppText>
+                        <AppText numberOfLines={1} variant="headline">{template.slotStart}</AppText>
+                      </YStack>
                     </XStack>
                   </AppCard>
 
@@ -104,7 +117,16 @@ export default function FixedSlotDetailScreen() {
                   </XStack>
                 </AppCard>
 
-                <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$5" chrome="card" gap="$0" overflow="hidden">
+                <AppCard
+                  borderColor="$borderSubtle"
+                  borderRadius="$5"
+                  borderWidth={borderWidths.subtle}
+                  chrome="flat"
+                  gap="$0"
+                  overflow="hidden"
+                  padding="$0"
+                  style={elevations.whisper}
+                >
                   <XStack alignItems="center" backgroundColor="$surfaceMuted" borderBottomColor="$borderSubtle" borderBottomWidth={1} justifyContent="space-between" paddingHorizontal="$5" paddingVertical="$4">
                     <XStack alignItems="center" gap="$2">
                       <IconSymbol color={theme.textPrimary.val} name="calendar" size="sm" />
@@ -123,53 +145,58 @@ export default function FixedSlotDetailScreen() {
                       : null}
                   </XStack>
 
-                  <YStack padding="$2">
+                  <YStack gap="$3">
                     {template.slotDates.length === 0
                       ? (
-                          <AppText align="center" tone="muted" variant="bodySmall" paddingVertical="$4">
-                            Không còn ngày nào.
-                          </AppText>
+                          <YStack padding="$4">
+                            <AppText align="center" tone="muted" variant="bodySmall">
+                              Không còn ngày nào.
+                            </AppText>
+                          </YStack>
                         )
-                      : template.slotDates.map((slotDate, index) => (
-                          <XStack
+                      : template.slotDates.map((slotDate) => (
+                          <AppCard
                             key={slotDate}
-                            alignItems="center"
-                            borderBottomColor={index === template.slotDates.length - 1 ? "transparent" : "$borderSubtle"}
-                            borderBottomWidth={1}
-                            justifyContent="space-between"
-                            paddingHorizontal="$3"
-                            paddingVertical="$3"
+                            backgroundColor="$surfaceDefault"
+                            borderColor="$borderSubtle"
+                            borderRadius="$4"
+                            borderWidth={1}
+                            chrome="flat"
+                            padding="$5"
                           >
-                            <AppText variant="bodyStrong">{formatDisplayDate(slotDate)}</AppText>
-                            {canMutate
-                              ? (
-                                  <Pressable onPress={() => handleRemoveDate(slotDate)}>
-                                    {({ pressed }) => (
-                                      <XStack opacity={pressed ? 0.7 : 1} padding="$2">
-                                        <IconSymbol color={theme.textTertiary.val} name="close" size="sm" />
-                                      </XStack>
-                                    )}
-                                  </Pressable>
-                                )
-                              : null}
-                          </XStack>
+                            <XStack alignItems="center" justifyContent="space-between">
+                              <AppText variant="bodyStrong">{formatDisplayDate(slotDate)}</AppText>
+                              {canMutate
+                                ? (
+                                    <Pressable onPress={() => handleRemoveDate(slotDate)}>
+                                      {({ pressed }) => (
+                                        <XStack opacity={pressed ? 0.7 : 1} padding="$2">
+                                          <IconSymbol color={theme.textTertiary.val} name="close" size="sm" />
+                                        </XStack>
+                                      )}
+                                    </Pressable>
+                                  )
+                                : null}
+                            </XStack>
+                          </AppCard>
                         ))}
                   </YStack>
                 </AppCard>
 
-                <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$5" chrome="flat" gap="$3" tone="warning">
-                  <XStack alignItems="flex-start" gap="$3">
-                    <IconSymbol color={theme.textWarning.val} name="warning" size="md" />
-                    <YStack flex={1} gap="$1">
-                      <AppText tone="warning" variant="bodyStrong">Chính sách phí & hoàn tiền</AppText>
-                      <AppText tone="warning" variant="bodySmall">
-                        Lịch cố định được thanh toán trước. Việc xóa ngày lẻ hoặc hủy toàn bộ lịch sẽ không được hoàn lại tiền cho các ngày đã thanh toán.
-                      </AppText>
-                    </YStack>
-                  </XStack>
-                </AppCard>
-              </YStack>
-            )}
+                  <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$5" chrome="flat" gap="$3" tone="warning">
+                    <XStack alignItems="flex-start" gap="$3">
+                      <IconSymbol color={theme.textWarning.val} name="warning" size="md" />
+                      <YStack flex={1} gap="$1">
+                        <AppText tone="warning" variant="bodyStrong">Chính sách phí & hoàn tiền</AppText>
+                        <AppText tone="warning" variant="bodySmall">
+                          Lịch cố định được thanh toán trước. Việc xóa ngày lẻ hoặc hủy toàn bộ lịch sẽ không được hoàn lại tiền cho các ngày đã thanh toán.
+                        </AppText>
+                      </YStack>
+                    </XStack>
+                  </AppCard>
+                </YStack>
+              )}
+        </YStack>
       </ScrollView>
 
       {canMutate
@@ -182,7 +209,7 @@ export default function FixedSlotDetailScreen() {
                 borderRadius={0}
                 chrome="flat"
                 padding="$4"
-                paddingBottom={insets.bottom + 16}
+                paddingBottom={insets.bottom + spacing.lg}
               >
                 <AppButton onPress={handleCancelTemplate} tone="danger">Hủy toàn bộ</AppButton>
               </AppCard>
