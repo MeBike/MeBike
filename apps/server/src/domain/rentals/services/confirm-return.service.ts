@@ -25,6 +25,7 @@ import {
   ReturnConfirmationRepository,
 } from "../repository/return-confirmation.repository";
 import { makeReturnSlotRepository, ReturnSlotRepository } from "../repository/return-slot.repository";
+import { enqueueEnvironmentImpactCalculationJob } from "./environment-impact-job.service";
 import { finalizeRentalReturnInTx } from "./finalize-rental-return";
 
 export function confirmRentalReturnByOperator(
@@ -45,7 +46,7 @@ export function confirmRentalReturnByOperator(
     yield* ReturnConfirmationRepository;
     yield* BikeRepository;
 
-    return yield* runPrismaTransaction(
+    const completedRental = yield* runPrismaTransaction(
       client,
       tx =>
         Effect.gen(function* () {
@@ -209,5 +210,11 @@ export function confirmRentalReturnByOperator(
     ).pipe(
       defectOn(PrismaTransactionError),
     );
+
+    yield* enqueueEnvironmentImpactCalculationJob(client, {
+      rentalId: completedRental.id,
+    });
+
+    return completedRental;
   });
 }

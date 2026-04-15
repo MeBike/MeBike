@@ -3,6 +3,7 @@ import type { PrismaClient } from "generated/prisma/client";
 export async function resetTestData(prisma: PrismaClient): Promise<void> {
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE
+      "job_outbox",
       "AuthEvent",
       "BikeSwapRequest",
       "FixedSlotDate",
