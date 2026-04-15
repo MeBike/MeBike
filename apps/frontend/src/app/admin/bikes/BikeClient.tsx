@@ -10,16 +10,16 @@ import { bikeColumn } from "@/columns/bike-colums";
 import { BikeStats } from "./components/bike-stats";
 import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
-import type { BikeStatus } from "@custom-types";
+import type { Bike, BikeStatus ,BikeStatistics , Pagination , Station , Supplier } from "@custom-types";
 
 // Định nghĩa cấu trúc Props
 interface BikeClientProps {
   data: {
-    bikes: any[];
-    statusCount: any;
-    paginationBikes: any;
-    stations: any[];
-    suppliers: any[];
+    bikes: Bike[];
+    statusCount?: BikeStatistics;
+    paginationBikes?: Pagination;
+    stations: Station[];
+    suppliers: Supplier[];
     isVisualLoading: boolean;
     isLoadingStatusCount: boolean;
   };

@@ -9,16 +9,15 @@ import { Button } from "@/components/ui/button";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { TableSkeleton } from "@/components/table-skeleton";
-import type { VerifyStatus } from "@custom-types";
-
+import type { DetailUser , Pagination ,VerifyStatus , GetUserDashboardStatsResponse} from "@custom-types";
 type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
 // Định nghĩa cấu trúc Props nhận từ Container (page.tsx)
 interface CustomersClientProps {
   data: {
-    users: any[];
-    dashboardStatsData: any;
-    paginationUser: any;
+    users: DetailUser[];
+    dashboardStatsData?: GetUserDashboardStatsResponse;
+    paginationUser?: Pagination;
     isVisualLoading: boolean;
   };
   filters: {

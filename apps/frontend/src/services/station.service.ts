@@ -102,10 +102,9 @@ export const stationService = {
     return response;
   },
   getStationRevenue: async (): Promise<
-    AxiosResponse<DetailApiResponse<StationStatisticsResponse>>
-  > => {
+    AxiosResponse<StationBikeRevenue>> => {
     const response = await fetchHttpClient.get<
-      DetailApiResponse<StationStatisticsResponse>
+      StationBikeRevenue
     >(ENDPOINT.STATION.STATION_REVENUE());
     return response;
   },

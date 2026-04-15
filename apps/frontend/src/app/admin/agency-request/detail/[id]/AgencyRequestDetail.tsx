@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import type { AgencyRequest } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import {
   MapPin, Phone, Mail, User, Building2, Warehouse,
@@ -31,10 +32,10 @@ const DetailRow = ({ label, value, icon: Icon }: { label: string, value?: React.
 );
 interface AgencyRequestDetailClientProps {
   id: string;
-  data: any;
+  data: AgencyRequest;
   isLoading: boolean;
-  onApprove: (payload: { id: string; description?: string }) => Promise<any>;
-  onReject: (payload: { id: string; reason?: string; description?: string }) => Promise<any>;
+  onApprove: (payload: { id: string; description?: string }) => Promise<void>;
+  onReject: (payload: { id: string; reason?: string; description?: string }) => Promise<void>;
 }
 export default function AgencyRequestDetailClient({
   id,

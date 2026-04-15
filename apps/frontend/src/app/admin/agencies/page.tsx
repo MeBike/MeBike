@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import AgencyClient from "./AgencyClient";
 import { useAgencyActions } from "@/hooks/use-agency";
-export default function page() {
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+export default function Page() {
   const [page, setPage] = useState(1);
   const { agencies, isLoadingAgencies, getAgencies } = useAgencyActions({
     hasToken: true,
@@ -23,15 +24,18 @@ export default function page() {
   useEffect(() => {
     getAgencies();
   }, [getAgencies]);
-  // if (!agencies) {
-  //   return (
-  //     <div className="flex min-h-[50vh] w-full items-center justify-center">
-  //       <p className="text-muted-foreground">
-  //         Không tìm thấy thông tin agency.
-  //       </p>
-  //     </div>
-  //   );
-  // }
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (agencies) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin agency.
+        </p>
+      </div>
+    );
+  }
   return (
     <>
       <AgencyClient

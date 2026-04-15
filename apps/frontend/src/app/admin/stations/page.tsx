@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import StationClient from "./StationClient";
 import { useStationActions } from "@/hooks/use-station";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page() {
   const [page, setPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,7 +29,7 @@ export default function Page() {
   useEffect(() => {
     setPage(1);
   }, [searchQuery]);
-  const [isVisualLoading, setIsVisualLoading] = useState(true);
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
     if (isLoadingGetAllStations) {
       setIsVisualLoading(true);
@@ -40,6 +40,9 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingGetAllStations]);
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
   const handleToggleRevenueReport = () => {
     if (!showRevenueReport) {
       getStationRevenue();

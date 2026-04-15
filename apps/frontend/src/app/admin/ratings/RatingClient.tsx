@@ -6,12 +6,11 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { ratingColumn } from "@/columns/rating-columns";
 import { TableSkeleton } from "@/components/table-skeleton";
-
-// Định nghĩa cấu trúc Props
+import type { Rating , Pagination } from "@/types";
 interface RatingClientProps {
   data: {
-    ratings: any[];
-    pagination: any;
+    ratings: Rating[];
+    pagination?: Pagination;
     isVisualLoading: boolean;
   };
   filters: {

@@ -8,11 +8,13 @@ import { RevenueReport } from "./components/revenue-report";
 import { StationTableSection } from "./components/station-table-section";
 import { ReportSkeleton } from "./components/loading-skeleton";
 import { TableSkeleton } from "@/components/table-skeleton";
+import { Pagination, Station ,StationStatisticsResponse} from "@custom-types";
+import type { StationBikeRevenue } from "@custom-types";
 interface StationClientProps {
   data: {
-    stations: any[];
-    paginationStations: any;
-    responseStationRevenue: any;
+    stations: Station[];
+    paginationStations?: Pagination;
+    responseStationRevenue?: StationBikeRevenue;
     showRevenueReport: boolean;
     isVisualLoading: boolean;
     isLoadingGetAllStations: boolean;

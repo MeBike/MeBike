@@ -3,27 +3,19 @@
 import { useState, useEffect } from "react";
 import RatingClient from "./RatingClient";
 import { useRatingAction } from "@/hooks/use-rating";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page() {
-  // 1. QUẢN LÝ STATE
   const [page, setPage] = useState<number>(1);
   const pageSize = 7;
-
-  // 2. GỌI API
-  const {
-    ratings,
-    isLoadingRatings,
-    getRating,
-  } = useRatingAction({ hasToken: true, page: page, pageSize: pageSize });
-
-  // 3. EFFECTS
+  const { ratings, isLoadingRatings, getRating } = useRatingAction({
+    hasToken: true,
+    page: page,
+    pageSize: pageSize,
+  });
   useEffect(() => {
     getRating();
   }, [page, getRating]);
-
-  // 4. XỬ LÝ LOADING MƯỢT MÀ
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
-
   useEffect(() => {
     if (isLoadingRatings) {
       setIsVisualLoading(true);
@@ -34,8 +26,18 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingRatings]);
-
-  // 5. TRUYỀN DATA XUỐNG UI
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!ratings) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin các đánh giá.
+        </p>
+      </div>
+    );
+  }
   return (
     <RatingClient
       data={{

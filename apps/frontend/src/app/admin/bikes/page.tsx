@@ -6,7 +6,7 @@ import { useBikeActions } from "@/hooks/use-bike";
 import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { BikeStatus } from "@custom-types";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page() {
   // 1. QUẢN LÝ STATE
   const [page, setPage] = useState(1);
@@ -54,8 +54,18 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingBikes]);
-
-  // 6. TRUYỀN DATA XUỐNG UI CLIENT
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!data) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin các xe đạp.
+        </p>
+      </div>
+    );
+  }
   return (
     <BikeClient
       data={{

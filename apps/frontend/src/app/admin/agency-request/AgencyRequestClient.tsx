@@ -54,7 +54,7 @@ export default function AgencyRequestClient() {
         });
       }
       setModalState({ isOpen: false, type: null, selectedId: null });
-      getAgencyRequest(); // Reload lại bảng
+      getAgencyRequest(); 
     } finally {
       setIsProcessing(false);
     }

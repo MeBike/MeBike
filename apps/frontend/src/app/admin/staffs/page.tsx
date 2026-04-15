@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import StaffClient from "./StaffClient";
 import { useUserActions } from "@/hooks/use-user";
 import type { VerifyStatus, UserRole } from "@custom-types";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
 export default function Page() {
@@ -18,7 +18,6 @@ export default function Page() {
     limit: limit,
     page: currentPage,
     fullName: searchQuery,
-    role: roleFilter,
   });
 
   // 3. EFFECTS
@@ -29,7 +28,8 @@ export default function Page() {
   useEffect(() => {
     setCurrentPage(1);
   }, [roleFilter]);
-  const [isVisualLoading, setIsVisualLoading] = useState(true);
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
+
   useEffect(() => {
     if (isLoadingStaffOnly) {
       setIsVisualLoading(true);
@@ -40,6 +40,18 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingStaffOnly]);
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!staffOnly) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin các nhân viên.
+        </p>
+      </div>
+    );
+  }
   const handleReset = () => {
     setSearchQuery("");
     setVerifyFilter("all");

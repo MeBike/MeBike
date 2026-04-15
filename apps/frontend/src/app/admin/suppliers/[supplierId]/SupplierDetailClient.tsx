@@ -55,12 +55,12 @@ export default function SupplierDetailClient({
       address: supplier.address || "",
       phoneNumber: supplier.phoneNumber || "",
       contractFee: supplier.contractFee || 0,
-      status: (supplier.status as any) || "INACTIVE",
+      status: (supplier.status) || "INACTIVE",
     },
   });
 
   const openEditForm = () => {
-    const currentStatus = (supplier.status as any) || "INACTIVE";
+    const currentStatus = (supplier.status) || "INACTIVE";
     reset({
       name: supplier.name || "",
       address: supplier.address || "",

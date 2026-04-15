@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import RentalClient from "./RentalClient";
 import { useRentalsActions } from "@/hooks/use-rental";
 import type { RentalStatus } from "@custom-types";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page() {
   // 1. QUẢN LÝ STATE
   const [page, setPage] = useState<number>(1);
@@ -48,6 +48,12 @@ export default function Page() {
   // 4. XỬ LÝ LOADING MƯỢT MÀ
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
 
+  // 5. CÁC HÀM XỬ LÝ SỰ KIỆN
+  const handleReset = () => {
+    setSearchQuery("");
+    setStatusFilter("");
+  };
+
   useEffect(() => {
     if (isAllRentalsLoading) {
       setIsVisualLoading(true);
@@ -59,13 +65,18 @@ export default function Page() {
     }
   }, [isAllRentalsLoading]);
 
-  // 5. CÁC HÀM XỬ LÝ SỰ KIỆN
-  const handleReset = () => {
-    setSearchQuery("");
-    setStatusFilter("");
-  };
-
-  // 6. TRUYỀN DATA XUỐNG UI
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!allRentalsData) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin các phiên thuê.
+        </p>
+      </div>
+    );
+  }
   return (
     <RentalClient
       data={{

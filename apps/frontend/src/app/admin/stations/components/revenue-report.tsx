@@ -1,32 +1,7 @@
 "use client";
 
 import { formatDateUTC } from "@/utils/formatDateTime";
-
-// 1. DEFINE LẠI TYPE CHO CHUẨN VỚI RESPONSE API
-export interface StationStatistic {
-  id: string; // API trả về "id" chứ không phải "_id"
-  name: string;
-  address: string;
-  totalRevenue?: number; // Back-end thường trả về số
-  stationTotalRevenue?: number; 
-  totalRentals?: number;
-  stationTotalRentals?: number;
-  totalDurationFormatted?: string; // Nếu không có, mình sẽ fallback "--"
-}
-
-export interface StationBikeRevenue {
-  period: {
-    from: string;
-    to: string;
-  };
-  summary: {
-    totalStations: number;
-    totalRevenue: number;
-    totalRentals: number;
-    avgRevenuePerStation: number;
-  };
-  stations: StationStatistic[];
-}
+import type { StationBikeRevenue , StationStatistic } from "@/types";
 
 interface RevenueReportProps {
   data: StationBikeRevenue;
@@ -48,8 +23,6 @@ export function RevenueReport({ data }: RevenueReportProps) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border rounded-2xl p-8 shadow-lg">
-        
-        {/* Header Doanh Thu */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg">
@@ -86,7 +59,7 @@ export function RevenueReport({ data }: RevenueReportProps) {
           />
           <SummaryCard 
             title="Trung Bình" 
-            value={formatCurrency(result.summary.avgRevenuePerStation)} 
+            value={formatCurrency(Number(result.summary.avgRevenuePerStation))} 
             color="orange" 
           />
         </div>
@@ -133,7 +106,6 @@ function SummaryCard({ title, value, color, isGradient }: SummaryCardProps) {
 }
 
 function StationDetailCard({ station, index }: { station: StationStatistic, index: number }) {
-  // Lấy giá trị tổng doanh thu & lượt thuê (Phòng trường hợp backend đổi key)
   const revenue = station.totalRevenue || station.stationTotalRevenue || 0;
   const rentals = station.totalRentals || station.stationTotalRentals || 0;
 

@@ -78,17 +78,15 @@ export function BikeDetailView({
   rentals,
   statisticData,
 }: {
-  bike: BikeType | null;
+  bike: BikeType;
   activity: BikeActivityStats | null;
   rentals: BikeRentalHistory[];
   statisticData: BikeStats | null;
 }) {
-  if (!bike) return null;
-
+  const router = useRouter();
   const totalHours = activity
     ? Math.floor(activity.totalMinutesActive / 60)
     : 0;
-  const router = useRouter();
   return (
     <>
       <div className=" bg-slate-50 p-6 dark:bg-background">

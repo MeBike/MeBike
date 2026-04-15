@@ -8,13 +8,11 @@ import { Button } from "@/components/ui/button";
 import { staffColumns } from "@/columns/staff-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { TableSkeleton } from "@/components/table-skeleton";
-import type { UserRole } from "@custom-types";
-import type { UserStatusFilter } from "./page"; // Import type từ file page.tsx
-
-// Định nghĩa cấu trúc Props
+import type { ApiResponse, DetailUser, UserRole } from "@custom-types";
+import type { UserStatusFilter } from "./page";
 interface StaffClientProps {
   data: {
-    staffOnly: any; // Thay bằng type cụ thể của response API nếu có
+    staffOnly?: ApiResponse<DetailUser[]>;
     isVisualLoading: boolean;
   };
   filters: {

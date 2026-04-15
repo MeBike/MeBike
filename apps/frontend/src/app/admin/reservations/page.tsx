@@ -5,20 +5,16 @@ import ReservationClient from "./ReservationClient";
 import { useReservationActions } from "@/hooks/use-reservation";
 import { useStationActions } from "@/hooks/use-station";
 import type { ReservationStatus, ReservationOption } from "@/types/Reservation";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page() {
-  // 1. QUẢN LÝ STATE
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "">("");
   const [option, setReservationOption] = useState<ReservationOption | "">("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 7;
-  const [selectedReservationId, setSelectedReservationId] = useState<string>("");
-
-  // 2. GỌI API TRẠM (STATIONS)
+  const [selectedReservationId, setSelectedReservationId] =
+    useState<string>("");
   const { stations, getAllStations } = useStationActions({ hasToken: true });
-
-  // 3. GỌI API ĐẶT TRƯỚC (RESERVATIONS)
   const {
     allReservations,
     fetchAllReservations,
@@ -50,15 +46,23 @@ export default function Page() {
     option,
   ]);
 
-  // Effect lấy chi tiết khi có ID (Mặc dù phần Modal đang comment out, vẫn giữ lại logic cho an toàn)
   useEffect(() => {
     if (selectedReservationId) {
       fetchDetailReservation();
     }
   }, [selectedReservationId, fetchDetailReservation]);
 
-  // 5. XỬ LÝ LOADING MƯỢT
-  const [isVisualLoading, setIsVisualLoading] = useState(true);
+  const handleReset = () => {
+    setSearchQuery("");
+    setStatusFilter("");
+    setReservationOption("");
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (isLoadingReservations) {
@@ -70,20 +74,18 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingReservations]);
-
-  // 6. CÁC HÀM XỬ LÝ SỰ KIỆN LỌC
-  const handleReset = () => {
-    setSearchQuery("");
-    setStatusFilter("");
-    setReservationOption("");
-    setCurrentPage(1);
-  };
-
-  const handleFilterChange = () => {
-    setCurrentPage(1);
-  };
-
-  // 7. TRUYỀN DATA XUỐNG CLIENT UI
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!allReservations) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin các đơn đặt trước.
+        </p>
+      </div>
+    );
+  }
   return (
     <ReservationClient
       data={{

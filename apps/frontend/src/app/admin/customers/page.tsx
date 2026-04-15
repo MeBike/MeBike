@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import CustomersClient from "./CustomerClient";
 import { useUserActions } from "@/hooks/use-user";
 import type { VerifyStatus, UserRole } from "@custom-types";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
 export default function Page() {
@@ -50,7 +50,16 @@ export default function Page() {
   useEffect(() => {
     setCurrentPage(1);
   }, [roleFilter]);
-  const [isVisualLoading, setIsVisualLoading] = useState(true);
+  const handleReset = () => {
+    setSearchQuery("");
+    setVerifyFilter("all");
+    setRoleFilter("all");
+    setCurrentPage(1);
+  };
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
     if (isLoading) {
       setIsVisualLoading(true);
@@ -61,16 +70,18 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
-  const handleReset = () => {
-    setSearchQuery("");
-    setVerifyFilter("all");
-    setRoleFilter("all");
-    setCurrentPage(1);
-  };
-
-  const handleFilterChange = () => {
-    setCurrentPage(1);
-  };
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!users) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin các người dùng.
+        </p>
+      </div>
+    );
+  }
   return (
     <CustomersClient
       data={{

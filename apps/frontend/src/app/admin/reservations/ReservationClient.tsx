@@ -8,14 +8,14 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { reservationColumn } from "@/columns/reservation-columns";
 import { ReservationStats } from "@/components/reservations/reservation-stats";
 import { TableSkeleton } from "@/components/table-skeleton";
-import type { ReservationStatus } from "@/types/Reservation";
+import type { Reservation, ReservationStatus ,ReservationOverview , Station} from "@custom-types";
+import { ApiResponse } from "@/types";
 
-// Định nghĩa cấu trúc Props
 interface ReservationClientProps {
   data: {
-    allReservations: any;
-    reservationStats: any;
-    stations: any[];
+    allReservations?: ApiResponse<Reservation[]>;
+    reservationStats?: ReservationOverview;
+    stations: Station[];
     isVisualLoading: boolean;
   };
   filters: {

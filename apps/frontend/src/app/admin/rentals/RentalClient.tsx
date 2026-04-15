@@ -9,13 +9,12 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { rentalColumn } from "@/columns/rental-columns";
 import { TableSkeleton } from "@/components/table-skeleton";
 import type { RentalStatus } from "@custom-types";
-
-// Định nghĩa cấu trúc Props
+import type { Rental , Pagination , SummaryRental} from "@custom-types";
 interface RentalClientProps {
   data: {
-    rentals: any[];
-    summaryRental: any;
-    pagination: any;
+    rentals: Rental[];
+    summaryRental?: SummaryRental;
+    pagination?: Pagination;
     isVisualLoading: boolean;
   };
   filters: {
@@ -57,7 +56,7 @@ export default function RentalClient({
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
-          onStatusChange={setStatusFilter as any}
+          onStatusChange={setStatusFilter}
           onReset={handleReset}
         />
 
