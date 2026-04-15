@@ -648,38 +648,13 @@ describe("environment policies routing e2e", () => {
     });
   });
 
-  it("lets an admin read only the admin account's own environment summary", async () => {
-    await insertActiveEnvironmentPolicy();
-    const regularRental = await createRentalForImpact();
-    const adminRental = await createRentalForImpact({
-      userId: ADMIN_USER_ID,
-      duration: 60,
-    });
-
-    for (const rentalId of [regularRental.id, adminRental.id]) {
-      const response = await fixture.app.request(
-        `http://test/internal/environment/calculate-from-rental/${rentalId}`,
-        {
-          method: "POST",
-          headers: adminHeaders(),
-        },
-      );
-      expect(response.status).toBe(200);
-    }
-
+  it("rejects admin environment summary requests", async () => {
     const response = await fixture.app.request("http://test/environment/me/summary", {
       method: "GET",
       headers: adminHeaders(),
     });
-    const body = await response.json() as EnvironmentContracts.EnvironmentSummary;
 
-    expect(response.status).toBe(200);
-    expect(body).toEqual({
-      total_trips_counted: 1,
-      total_estimated_distance_km: 11.4,
-      total_co2_saved: 727,
-      co2_saved_unit: "gCO2e",
-    });
+    expect(response.status).toBe(403);
   });
 
   it("rejects unauthenticated environment summary requests", async () => {

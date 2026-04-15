@@ -8,7 +8,7 @@ import {
 } from "@/http/controllers/environment";
 import {
   requireAdminMiddleware,
-  requireAuthMiddleware,
+  requireUserMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerEnvironmentRoutes(
@@ -33,7 +33,7 @@ export function registerEnvironmentRoutes(
   } satisfies RouteConfig;
   const getMyEnvironmentSummaryRoute = {
     ...environment.getMyEnvironmentSummary,
-    middleware: [requireAuthMiddleware] as const,
+    middleware: [requireUserMiddleware] as const,
   } satisfies RouteConfig;
   const calculateImpactFromRentalRoute = {
     ...environment.calculateEnvironmentImpactFromRental,

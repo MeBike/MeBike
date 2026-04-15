@@ -45,7 +45,7 @@ export const getMyEnvironmentSummary = createRoute({
       },
     },
     401: unauthorizedResponse(),
-    403: forbiddenResponse("Active account"),
+    403: forbiddenResponse("User"),
   },
 });
 
