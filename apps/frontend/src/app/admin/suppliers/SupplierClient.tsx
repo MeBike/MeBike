@@ -16,7 +16,7 @@ export default function SupplierClient() {
     "ACTIVE" | "INACTIVE" | "TERMINATED" | ""
   >("ACTIVE");
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(7);
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   const router = useRouter();
   const { changeStatusSupplier, isLoadingAllSuppliers, allSupplier } =

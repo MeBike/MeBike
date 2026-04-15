@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useBikeActions } from "@/hooks/use-bike";
-import { BikeDetailView } from "./BikeDetail"; 
+import { BikeDetailView } from "./BikeDetail";
 
 export default function BikeDetailPage({
   params,
@@ -14,7 +14,7 @@ export default function BikeDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  
+
   const {
     detailBike,
     getBikeByID,
@@ -25,7 +25,7 @@ export default function BikeDetailPage({
     getHistoryBike,
     statisticsBike,
     getStatsBike,
-isLoadingStatisticsBike,
+    isLoadingStatisticsBike,
     getStatisticsBike,
     bikeStats,
     getBikeStats,
@@ -36,7 +36,7 @@ isLoadingStatisticsBike,
     getBikeActivityStats();
     getHistoryBike();
     getStatisticsBike();
-    getBikeStats()
+    getBikeStats();
   }, [id]);
 
   if (isLoadingDetail || isLoadingStatisticsBike) {
@@ -65,14 +65,14 @@ isLoadingStatisticsBike,
             </h1>
           </div>
           <Button variant="outline" onClick={() => router.push("/admin/bikes")}>
-             Danh sách xe
+            Danh sách xe
           </Button>
         </div>
 
         {/* Content */}
-        <BikeDetailView 
-          bike={detailBike || null} 
-          activity={bikeActivityStats || null} 
+        <BikeDetailView
+          bike={detailBike || null}
+          activity={bikeActivityStats || null}
           rentals={bikeHistory?.data.data || []}
           statisticData={statisticsBike || null}
         />

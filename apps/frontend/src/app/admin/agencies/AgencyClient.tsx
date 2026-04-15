@@ -1,6 +1,6 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { Dispatch } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
@@ -9,29 +9,15 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { agencyColumn } from "@/columns/agency-column";
 import { AgencyActionProps, useAgencyActions } from "@/hooks/use-agency";
 import { TableSkeleton } from "@/components/table-skeleton";
-export default function AgencyClient() {
+import { ApiResponse } from "@/types";
+import type { Agency } from "@/types";
+interface AgencyClientProps {
+  isVisualLoading : boolean,
+  agencies ?: ApiResponse<Agency[]>,
+  setPage : Dispatch<SetStateAction<number>>,
+}
+export default function AgencyClient({isVisualLoading,agencies,setPage} : AgencyClientProps) {
   const router = useRouter();
-  const [page, setPage] = useState(1);
-  const { agencies, isLoadingAgencies, getAgencies } = useAgencyActions({
-    hasToken: true,
-    pageSize: 7,
-    page: page,
-  });
-  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
-  useEffect(() => {
-    if (isLoadingAgencies) {
-      setIsVisualLoading(true);
-    } else {
-      const timer = setTimeout(() => {
-        setIsVisualLoading(false);
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoadingAgencies]);
-  useEffect(() => {
-    getAgencies();
-  }, [getAgencies]);
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

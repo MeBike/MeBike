@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import type { DetailUser } from "@/types";
+import type { DetailUser, UserRole } from "@/types";
 import { CreateUserFormData, UserProfile ,UpdateStaffFormData , UpdateUserFormData} from "@/schemas/user-schema";
 import { ResetPasswordSchemaFormData } from "@schemas";
 import { ApiResponse } from "@/types";
@@ -47,7 +47,7 @@ export const userService = {
     );
     return response;
   },
-  getStaffOnly : async ({page , pageSize}: {page?: number; pageSize?: number}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+  getStaffOnly : async ({page , pageSize,role}: {page?: number; pageSize?: number,role?:UserRole}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
       ENDPOINT.USER.BASE,{
         roles : "STAFF,TECHNICIAN,AGENCY,MANAGER",

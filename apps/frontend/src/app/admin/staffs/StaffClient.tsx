@@ -1,61 +1,55 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { Button } from "@/components/ui/button";
-import type { VerifyStatus, UserRole } from "@custom-types";
-import { Plus } from "lucide-react";
-import { useUserActions } from "@/hooks/use-user";
 import { staffColumns } from "@/columns/staff-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { useRouter } from "next/navigation";
 import { TableSkeleton } from "@/components/table-skeleton";
-type UserStatusFilter = VerifyStatus | "BANNED" | "all";
+import type { UserRole } from "@custom-types";
+import type { UserStatusFilter } from "./page"; // Import type từ file page.tsx
 
-export default function StaffClient() {
+// Định nghĩa cấu trúc Props
+interface StaffClientProps {
+  data: {
+    staffOnly: any; // Thay bằng type cụ thể của response API nếu có
+    isVisualLoading: boolean;
+  };
+  filters: {
+    searchQuery: string;
+    verifyFilter: UserStatusFilter;
+    roleFilter: UserRole | "";
+    currentPage: number;
+  };
+  actions: {
+    setSearchQuery: Dispatch<SetStateAction<string>>;
+    setVerifyFilter: Dispatch<SetStateAction<UserStatusFilter>>;
+    setRoleFilter: Dispatch<SetStateAction<UserRole | "">>;
+    setCurrentPage: Dispatch<SetStateAction<number>>;
+    handleReset: () => void;
+    handleFilterChange: () => void;
+  };
+}
+
+export default function StaffClient({
+  data: { staffOnly, isVisualLoading },
+  filters: { searchQuery, verifyFilter, currentPage },
+  actions: {
+    setSearchQuery,
+    setVerifyFilter,
+    setCurrentPage,
+    handleReset,
+    handleFilterChange,
+  },
+}: StaffClientProps) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
-  const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState<number>(7);
-  const { staffOnly, isLoadingStaffOnly, getAllStaffs } = useUserActions({
-    hasToken: true,
-    limit: limit,
-    page: currentPage,
-    fullName: searchQuery,
-  });
-  
-  useEffect(() => {
-    getAllStaffs();
-  }, [searchQuery, verifyFilter, roleFilter, currentPage]);
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [roleFilter]);
-  const handleReset = () => {
-    setSearchQuery("");
-    setVerifyFilter("all");
-    setRoleFilter("all");
-    setCurrentPage(1);
-  };
-  const handleFilterChange = () => {
-    setCurrentPage(1);
-  };
-  const [isVisualLoading, setIsVisualLoading] = useState(false);
 
-  useEffect(() => {
-    if (isLoadingStaffOnly) {
-      setIsVisualLoading(true);
-    } else {
-      const timer = setTimeout(() => {
-        setIsVisualLoading(false);
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoadingStaffOnly]);
   const handleDetailUser = (id: string) => {
     router.push(`/admin/staffs/detail/${id}`);
   };
+
   return (
     <div>
       <div className="space-y-6">
@@ -64,7 +58,7 @@ export default function StaffClient() {
             <h1 className="text-3xl font-bold text-foreground">
               Quản lý nhân viên
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="mt-1 text-muted-foreground">
               Theo dõi và quản lý thông tin nhân viên hệ thống
             </p>
           </div>
@@ -74,12 +68,13 @@ export default function StaffClient() {
                 router.push("/admin/staffs/create");
               }}
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Thêm nhân viên
             </Button>
           </div>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+
+        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Bộ lọc</h3>
             <Button variant="ghost" size="sm" onClick={handleReset}>
@@ -87,7 +82,7 @@ export default function StaffClient() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <label className="text-sm font-medium">Trạng thái xác thực</label>
               <select
@@ -96,7 +91,7 @@ export default function StaffClient() {
                   setVerifyFilter(e.target.value as UserStatusFilter);
                   handleFilterChange();
                 }}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground"
               >
                 <option value="all">Tất cả</option>
                 <option value="VERIFIED">Đã xác thực</option>
@@ -104,32 +99,18 @@ export default function StaffClient() {
                 <option value="BANNED">Bị cấm</option>
               </select>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Vai trò</label>
-              <select
-                value={roleFilter}
-                onChange={(e) => {
-                  setRoleFilter(e.target.value as UserRole | "all");
-                  handleFilterChange();
-                }}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              >
-                <option value="all">Tất cả</option>
-                <option value="ADMIN">Admin</option>
-                <option value="STAFF">Staff</option>
-                <option value="USER">User</option>
-              </select>
-            </div>
+            
+            {/* Bạn có thể thêm Select cho roleFilter ở đây nếu cần thiết trong tương lai */}
           </div>
         </div>
+
         <div>
           <div className="min-h-[700px]">
             {isVisualLoading ? (
               <TableSkeleton />
             ) : (
               <>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="mb-4 text-sm text-muted-foreground">
                   Hiển thị {staffOnly?.pagination?.page ?? 1} /{" "}
                   {staffOnly?.pagination?.totalPages ?? 1} trang
                 </p>
@@ -145,6 +126,7 @@ export default function StaffClient() {
                   filterPlaceholder="Tìm kiếm nhân viên"
                   onSearchChange={setSearchQuery}
                 />
+                
                 <div className="pt-3">
                   <PaginationDemo
                     currentPage={currentPage}

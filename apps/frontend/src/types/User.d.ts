@@ -1,3 +1,5 @@
+import { UserRole } from "./Customer";
+
 export interface User {
   _id: string;
   fullname: string;
@@ -17,7 +19,7 @@ export interface User {
 export interface UserActionProps {
   hasToken: boolean;
   verify?: VerifyStatus;
-  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+  role?: UserRole;
   limit?: number;
   page?: number;
   searchQuery?: string;

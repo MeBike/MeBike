@@ -21,7 +21,6 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import type { AgencyStats , AgencyStatus } from "@custom-types";
 import { updateSchema, updateAgencyStatusSchema, UpdateAgencyFormData, UpdateAgencyStatusFormData } from "@/schemas";
 
-// --- UI Helpers ---
 const SectionCard = ({ icon: Icon, title, children }: {icon:LucideIcon,title:string,children:React.ReactNode}) => (
   <div className="rounded-xl border border-border/60 bg-card overflow-hidden flex flex-col shadow-sm">
     <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4 bg-muted/20">
@@ -49,8 +48,6 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { agency, period, operators, currentStation, pickups, returns, incidents } = stats;
-
-  // 1. Khởi tạo Form
   const infoForm = useForm<UpdateAgencyFormData>({
     resolver: zodResolver(updateSchema),
     defaultValues: { name: agency.name, contactPhone: agency.contactPhone || "" },
@@ -60,14 +57,10 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
     resolver: zodResolver(updateAgencyStatusSchema),
     defaultValues: { status: agency.status as AgencyStatus },
   });
-
-  // 2. ✅ Reset form khi chuyển sang Agency khác (Fix lỗi data cũ)
   useEffect(() => {
     infoForm.reset({ name: agency.name, contactPhone: agency.contactPhone || "" });
     statusForm.reset({ status: agency.status as AgencyStatus });
   }, [agency, infoForm, statusForm]);
-
-  // 3. ✅ Wrapper xử lý submit (Fix lỗi kẹt nút)
   const handleAction = async (task: () => Promise<void>, close: () => void) => {
     setIsSubmitting(true);
     try {
@@ -75,7 +68,6 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
       close();
     } catch (error) {
       console.error(error);
-      // Nút sẽ tự quay lại trạng thái bình thường nhờ finally
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +75,6 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-white p-6 sm:flex-row sm:items-center sm:justify-between shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -95,9 +86,7 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
             <span>SĐT: {agency.contactPhone}</span>
           </div>
         </div>
-
         <div className="flex gap-2">
-          {/* Status Dialog */}
           <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
             <DialogTrigger asChild><Button variant="outline" size="sm">Trạng thái</Button></DialogTrigger>
             <DialogContent>
@@ -140,8 +129,6 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
           </Dialog>
         </div>
       </div>
-
-      {/* Stats Grids */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <SectionCard icon={DollarSign} title="Tài chính">
           <p className="text-2xl font-bold text-primary">{pickups.totalRevenue.toLocaleString()}đ</p>

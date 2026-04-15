@@ -76,7 +76,8 @@ export const useUserActions = ({
     refetch : refetchStaff,
    } = useGetStaffOnlyQuery({
     page : page,
-    pageSize : limit
+    pageSize : limit,
+    role : role,
   });
   const pagination = data?.pagination as
     | { total?: number; totalRecords?: number }
@@ -119,7 +120,7 @@ export const useUserActions = ({
       return;
     }
     refetchStaff();
-  }, [hasToken, router, refetch]);
+  }, [hasToken, router, refetch,role]);
   const getAllStatistics = useCallback(() => {
     if (!hasToken) {
       router.push("/login");

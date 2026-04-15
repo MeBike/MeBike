@@ -19,48 +19,52 @@ export function PaginationDemo({
   currentPage,
   onPageChange,
 }: PaginationDemoProps) {
-  if (totalPages < 1) {
-    return null;
-  }
+  // 1. Ép totalPages tối thiểu là 1 để luôn render ra số 1 khi data rỗng
+  const safeTotalPages = Math.max(1, totalPages);
 
   const getPageNumbers = () => {
+    // Trả về duy nhất trang 1 nếu mảng trống
+    if (safeTotalPages === 1) return [1];
+
     const pageNumbers = [];
     const maxPagesToShow = 5;
     const halfPagesToShow = Math.floor(maxPagesToShow / 2);
 
-    if (totalPages > 1) {
-      pageNumbers.push(1);
-    }
+    pageNumbers.push(1);
 
     if (currentPage > halfPagesToShow + 2) {
       pageNumbers.push("...");
     }
 
     let startPage = Math.max(2, currentPage - halfPagesToShow);
-    let endPage = Math.min(totalPages - 1, currentPage + halfPagesToShow);
+    let endPage = Math.min(safeTotalPages - 1, currentPage + halfPagesToShow);
 
     if (currentPage <= halfPagesToShow + 1) {
-      endPage = Math.min(totalPages - 1, maxPagesToShow);
+      endPage = Math.min(safeTotalPages - 1, maxPagesToShow);
     }
 
-    if (currentPage >= totalPages - halfPagesToShow) {
-      startPage = Math.max(2, totalPages - maxPagesToShow + 1);
+    if (currentPage >= safeTotalPages - halfPagesToShow) {
+      startPage = Math.max(2, safeTotalPages - maxPagesToShow + 1);
     }
 
     for (let i = startPage; i <= endPage; i++) {
       pageNumbers.push(i);
     }
 
-    if (currentPage < totalPages - halfPagesToShow - 1) {
+    if (currentPage < safeTotalPages - halfPagesToShow - 1) {
       pageNumbers.push("...");
     }
 
-    pageNumbers.push(totalPages);
+    pageNumbers.push(safeTotalPages);
 
     return [...new Set(pageNumbers)];
   };
 
   const pageNumbers = getPageNumbers();
+  
+  // 2. Logic kiểm tra xem nút Trước/Sau có nên bị vô hiệu hóa hay không
+  const isPrevDisabled = currentPage <= 1;
+  const isNextDisabled = currentPage >= safeTotalPages;
 
   return (
     <Pagination>
@@ -70,13 +74,13 @@ export function PaginationDemo({
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              if (currentPage > 1) {
+              if (!isPrevDisabled) {
                 onPageChange(currentPage - 1);
               }
             }}
             style={{
-              pointerEvents: currentPage === 1 ? "none" : "auto",
-              opacity: currentPage === 1 ? 0.5 : 1,
+              pointerEvents: isPrevDisabled ? "none" : "auto",
+              opacity: isPrevDisabled ? 0.5 : 1,
             }}
           />
         </PaginationItem>
@@ -105,13 +109,13 @@ export function PaginationDemo({
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              if (currentPage < totalPages) {
+              if (!isNextDisabled) {
                 onPageChange(currentPage + 1);
               }
             }}
             style={{
-              pointerEvents: currentPage === totalPages ? "none" : "auto",
-              opacity: currentPage === totalPages ? 0.5 : 1,
+              pointerEvents: isNextDisabled ? "none" : "auto",
+              opacity: isNextDisabled ? 0.5 : 1,
             }}
           />
         </PaginationItem>
