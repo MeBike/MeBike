@@ -101,6 +101,9 @@ function parseHistoryDateBoundary(
     return undefined;
   }
 
+  // Environment history date-only filters are interpreted as UTC day
+  // boundaries. Clients that need local-day filtering must convert local
+  // ranges to UTC datetimes before calling this API.
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return new Date(
       `${value}T${boundary === "start" ? "00:00:00.000" : "23:59:59.999"}Z`,

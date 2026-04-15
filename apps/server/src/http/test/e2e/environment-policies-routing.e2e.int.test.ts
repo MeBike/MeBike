@@ -897,7 +897,7 @@ describe("environment policies routing e2e", () => {
     expect(response.status).toBe(401);
   });
 
-  it("paginates, sorts, and date-filters environment impact history", async () => {
+  it("paginates, sorts, and date-filters environment impact history with UTC date-only bounds", async () => {
     await insertActiveEnvironmentPolicy();
     const firstRental = await createRentalForImpact({ duration: 12 });
     const secondRental = await createRentalForImpact({ duration: 20 });
@@ -936,6 +936,144 @@ describe("environment policies routing e2e", () => {
     expect(body.totalPages).toBe(2);
     expect(body.items).toHaveLength(1);
     expect(body.items[0]?.rental_id).toBe(thirdRental.id);
+  });
+
+  it("interprets environment impact history date-only filters as UTC day boundaries", async () => {
+    await insertActiveEnvironmentPolicy();
+    const beforeUtcDayRental = await createRentalForImpact({ duration: 12 });
+    const startBoundaryRental = await createRentalForImpact({ duration: 20 });
+    const endBoundaryRental = await createRentalForImpact({ duration: 28 });
+    const afterUtcDayRental = await createRentalForImpact({ duration: 36 });
+
+    await calculateEnvironmentImpact(beforeUtcDayRental.id);
+    await calculateEnvironmentImpact(startBoundaryRental.id);
+    await calculateEnvironmentImpact(endBoundaryRental.id);
+    await calculateEnvironmentImpact(afterUtcDayRental.id);
+
+    await setImpactCalculatedAt(
+      beforeUtcDayRental.id,
+      new Date("2026-04-14T23:59:59.999Z"),
+    );
+    await setImpactCalculatedAt(
+      startBoundaryRental.id,
+      new Date("2026-04-15T00:00:00.000Z"),
+    );
+    await setImpactCalculatedAt(
+      endBoundaryRental.id,
+      new Date("2026-04-15T23:59:59.999Z"),
+    );
+    await setImpactCalculatedAt(
+      afterUtcDayRental.id,
+      new Date("2026-04-16T00:00:00.000Z"),
+    );
+
+    const response = await fixture.app.request(
+      "http://test/environment/me/history?sortOrder=asc&dateFrom=2026-04-15&dateTo=2026-04-15",
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.totalItems).toBe(2);
+    expect(body.items.map(item => item.rental_id)).toEqual([
+      startBoundaryRental.id,
+      endBoundaryRental.id,
+    ]);
+
+    const mixedBoundaryResponse = await fixture.app.request(
+      "http://test/environment/me/history?dateFrom=2026-04-15T23:59:59.999Z&dateTo=2026-04-15",
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const mixedBoundaryBody = await mixedBoundaryResponse.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
+
+    expect(mixedBoundaryResponse.status).toBe(200);
+    expect(mixedBoundaryBody.totalItems).toBe(1);
+    expect(mixedBoundaryBody.items[0]?.rental_id).toBe(endBoundaryRental.id);
+  });
+
+  it("supports Vietnam local-day environment impact history filtering when clients send converted UTC datetimes", async () => {
+    await insertActiveEnvironmentPolicy();
+    const beforeVietnamDayRental = await createRentalForImpact({ duration: 12 });
+    const vietnamDayStartRental = await createRentalForImpact({ duration: 20 });
+    const vietnamDayEndRental = await createRentalForImpact({ duration: 28 });
+    const afterVietnamDayRental = await createRentalForImpact({ duration: 36 });
+
+    await calculateEnvironmentImpact(beforeVietnamDayRental.id);
+    await calculateEnvironmentImpact(vietnamDayStartRental.id);
+    await calculateEnvironmentImpact(vietnamDayEndRental.id);
+    await calculateEnvironmentImpact(afterVietnamDayRental.id);
+
+    await setImpactCalculatedAt(
+      beforeVietnamDayRental.id,
+      new Date("2026-04-14T16:59:59.999Z"),
+    );
+    await setImpactCalculatedAt(
+      vietnamDayStartRental.id,
+      new Date("2026-04-14T17:00:00.000Z"),
+    );
+    await setImpactCalculatedAt(
+      vietnamDayEndRental.id,
+      new Date("2026-04-15T16:59:59.999Z"),
+    );
+    await setImpactCalculatedAt(
+      afterVietnamDayRental.id,
+      new Date("2026-04-15T17:00:00.000Z"),
+    );
+
+    const response = await fixture.app.request(
+      "http://test/environment/me/history?sortOrder=asc&dateFrom=2026-04-14T17:00:00.000Z&dateTo=2026-04-15T16:59:59.999Z",
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.totalItems).toBe(2);
+    expect(body.items.map(item => item.rental_id)).toEqual([
+      vietnamDayStartRental.id,
+      vietnamDayEndRental.id,
+    ]);
+  });
+
+  it("uses timezone-offset environment impact history datetimes as exact instants", async () => {
+    await insertActiveEnvironmentPolicy();
+    const beforeInstantRental = await createRentalForImpact({ duration: 12 });
+    const exactInstantRental = await createRentalForImpact({ duration: 20 });
+
+    await calculateEnvironmentImpact(beforeInstantRental.id);
+    await calculateEnvironmentImpact(exactInstantRental.id);
+
+    await setImpactCalculatedAt(
+      beforeInstantRental.id,
+      new Date("2026-04-14T16:59:59.999Z"),
+    );
+    await setImpactCalculatedAt(
+      exactInstantRental.id,
+      new Date("2026-04-14T17:00:00.000Z"),
+    );
+
+    const response = await fixture.app.request(
+      "http://test/environment/me/history?dateFrom=2026-04-15T00:00:00.000%2B07:00&dateTo=2026-04-15T00:00:00.000%2B07:00",
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.totalItems).toBe(1);
+    expect(body.items.map(item => item.rental_id)).toEqual([
+      exactInstantRental.id,
+    ]);
   });
 
   it("does not expose another user's environment impact history", async () => {

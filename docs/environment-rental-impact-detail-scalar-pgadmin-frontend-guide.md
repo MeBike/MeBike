@@ -1395,6 +1395,7 @@ Luu y:
 
 - History chi tra subset field de list nhanh.
 - Detail tra day du `policy_snapshot` va cac field top-level de render detail.
+- Date filter cua history dung UTC boundary; xem `docs/environment-history-scalar-pgadmin-frontend-guide.md` section `Date Filter Timezone Rule`.
 - Neu detail tra `404` cho item vua bam, co the do data bi xoa/reset trong dev, frontend nen refetch history.
 
 ## 14. Checklist test nhanh cho frontend

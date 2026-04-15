@@ -179,7 +179,10 @@ export type ListEnvironmentPoliciesQuery = z.infer<
   typeof ListEnvironmentPoliciesQuerySchema
 >;
 
-const optionalIsoDateOrDateTimeQuery = (field: string) =>
+const optionalIsoDateOrDateTimeQuery = (
+  description: string,
+  example: string,
+) =>
   z.preprocess(
     (value) => {
       if (value === undefined || value === null) {
@@ -191,11 +194,24 @@ const optionalIsoDateOrDateTimeQuery = (field: string) =>
       const trimmed = value.trim();
       return trimmed === "" ? undefined : trimmed;
     },
-    z.union([z.iso.date(), z.iso.datetime()]).optional(),
+    z.union([z.iso.date(), z.iso.datetime({ offset: true })]).optional(),
   ).openapi({
-    description: `${field} filter as an ISO date or datetime.`,
-    example: "2026-04-15T00:00:00.000Z",
+    description,
+    example,
   });
+
+function parseHistoryQueryDateBoundary(
+  value: string,
+  boundary: "start" | "end",
+): Date {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(
+      `${value}T${boundary === "start" ? "00:00:00.000" : "23:59:59.999"}Z`,
+    );
+  }
+
+  return new Date(value);
+}
 
 export const ListEnvironmentImpactHistoryQuerySchema = z.object({
   page: optionalIntegerQuery("page")
@@ -218,14 +234,23 @@ export const ListEnvironmentImpactHistoryQuerySchema = z.object({
     description: "Sort direction by calculated_at. Defaults to desc.",
     example: "desc",
   }),
-  dateFrom: optionalIsoDateOrDateTimeQuery("dateFrom"),
-  dateTo: optionalIsoDateOrDateTimeQuery("dateTo"),
+  dateFrom: optionalIsoDateOrDateTimeQuery(
+    "UTC lower bound for calculated_at. Date-only values are interpreted as 00:00:00.000Z. For Vietnam local-day filtering, convert the local range to UTC datetime before calling.",
+    "2026-04-14T17:00:00.000Z",
+  ),
+  dateTo: optionalIsoDateOrDateTimeQuery(
+    "UTC upper bound for calculated_at. Date-only values are interpreted as 23:59:59.999Z. For Vietnam local-day filtering, convert the local range to UTC datetime before calling.",
+    "2026-04-15T16:59:59.999Z",
+  ),
 }).superRefine((value, ctx) => {
-  if (
-    value.dateFrom
-    && value.dateTo
-    && new Date(value.dateFrom) > new Date(value.dateTo)
-  ) {
+  const dateFrom = value.dateFrom
+    ? parseHistoryQueryDateBoundary(value.dateFrom, "start")
+    : undefined;
+  const dateTo = value.dateTo
+    ? parseHistoryQueryDateBoundary(value.dateTo, "end")
+    : undefined;
+
+  if (dateFrom && dateTo && dateFrom > dateTo) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["dateFrom"],

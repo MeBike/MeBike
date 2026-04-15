@@ -221,14 +221,70 @@ Query params:
 | `page` | integer | `1` | min `1` |
 | `pageSize` | integer | `20` | min `1`, max `100` |
 | `sortOrder` | enum | `desc` | `asc` hoac `desc` |
-| `dateFrom` | ISO date/datetime | none | loc `calculated_at >= dateFrom` |
-| `dateTo` | ISO date/datetime | none | loc `calculated_at <= dateTo` |
+| `dateFrom` | ISO date/datetime | none | UTC lower bound cho `calculated_at` |
+| `dateTo` | ISO date/datetime | none | UTC upper bound cho `calculated_at` |
 
 Date note:
 
 - Co the gui date-only: `2026-04-15`.
 - Co the gui datetime: `2026-04-15T00:00:00.000Z`.
 - Neu gui ca `dateFrom` va `dateTo`, `dateFrom <= dateTo`.
+
+### 4.1. Date Filter Timezone Rule
+
+Environment history filter theo UTC instant cua field `calculated_at`.
+
+Business rule:
+
+- Backend luu va filter thoi gian theo UTC.
+- `calculated_at` la `TIMESTAMPTZ`, response tra ISO string, vi du `2026-04-15T10:30:00.000Z`.
+- `dateFrom` va `dateTo` nhan ISO date hoac ISO datetime.
+- ISO datetime co `Z` hoac timezone offset duoc backend dung dung instant da truyen.
+- Date-only `YYYY-MM-DD` la UTC day, khong phai ngay Viet Nam.
+- Backend khong tu cong/tru `+7` cho Viet Nam trong Environment Phase 1.
+
+Backend interpretation cho date-only:
+
+```text
+dateFrom=2026-04-15 -> 2026-04-15T00:00:00.000Z
+dateTo=2026-04-15   -> 2026-04-15T23:59:59.999Z
+```
+
+Neu frontend Viet Nam muon loc ngay `15/04/2026` theo gio Viet Nam, frontend phai convert local range `Asia/Saigon` sang UTC truoc khi goi API:
+
+```text
+Local range Asia/Saigon:
+2026-04-15 00:00:00.000 +07:00
+2026-04-15 23:59:59.999 +07:00
+
+API query nen gui:
+dateFrom=2026-04-14T17:00:00.000Z
+dateTo=2026-04-15T16:59:59.999Z
+```
+
+Neu frontend gui:
+
+```text
+dateFrom=2026-04-15&dateTo=2026-04-15
+```
+
+Backend hieu la ngay `2026-04-15` theo UTC:
+
+```text
+2026-04-15T00:00:00.000Z den 2026-04-15T23:59:59.999Z
+```
+
+Khoang nay tuong duong:
+
+```text
+07:00 ngay 15/04/2026 den 06:59:59.999 ngay 16/04/2026 o Viet Nam
+```
+
+Frontend rule:
+
+- Neu user chon ngay theo Viet Nam, convert local start/end sang UTC ISO string roi gui API.
+- Khong gui date-only neu muon loc dung ngay Viet Nam.
+- Chi gui date-only khi muon loc ngay UTC.
 
 ## 5. Response contract
 
@@ -592,7 +648,7 @@ Ky vong:
 - `calculated_at` tang dan.
 - Record nao calculate truoc se nam truoc.
 
-### 7.5. Date filter bang datetime
+### 7.5. Date filter bang UTC datetime
 
 Dung khoang ngay quanh luc test. Vi du neu `calculated_at` la ngay `2026-04-15`:
 
@@ -603,6 +659,7 @@ GET /environment/me/history?dateFrom=2026-04-15T00:00:00.000Z&dateTo=2026-04-15T
 Ky vong:
 
 - chi tra records co `calculated_at` trong khoang.
+- datetime co `Z` hoac timezone offset duoc dung dung instant da truyen.
 
 ### 7.6. Date filter bang date-only
 
@@ -613,6 +670,7 @@ GET /environment/me/history?dateFrom=2026-04-15&dateTo=2026-04-15
 Ky vong:
 
 - backend hieu la ca ngay UTC `2026-04-15`.
+- backend khong hieu day la ngay Viet Nam.
 - records trong ngay do duoc tra ve.
 
 ## 8. Test role va error cases
@@ -966,6 +1024,15 @@ export type EnvironmentImpactHistoryQuery = {
   dateFrom?: string;
   dateTo?: string;
 };
+
+export function vietnamLocalDayToUtcHistoryQuery(
+  vietnamDate: string,
+): Pick<EnvironmentImpactHistoryQuery, "dateFrom" | "dateTo"> {
+  return {
+    dateFrom: new Date(`${vietnamDate}T00:00:00.000+07:00`).toISOString(),
+    dateTo: new Date(`${vietnamDate}T23:59:59.999+07:00`).toISOString(),
+  };
+}
 
 export type ServerErrorResponse = {
   error: string;
