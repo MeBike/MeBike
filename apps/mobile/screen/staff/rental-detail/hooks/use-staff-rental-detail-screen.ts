@@ -1,10 +1,11 @@
 import { useStaffEndRentalMutation } from "@hooks/mutations/rentals/use-staff-end-rental-mutation";
 import { useStaffRentalDetailQuery } from "@hooks/query/rentals/use-staff-rental-detail-query";
+import { useGetStationListQuery } from "@hooks/query/stations/use-get-station-list-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 
 import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
-import { useAuthNext } from "@/providers/auth-provider-next";
 
 type EndRentalPayload = {
   stationId: string;
@@ -21,6 +22,12 @@ type EndRentalCallbacks = {
 export function useStaffRentalDetailScreen(rentalId: string) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { user } = useAuthNext();
+  const assignedStation = user?.orgAssignment?.station ?? null;
+  const agencyId = user?.role === "AGENCY" ? (user.orgAssignment?.agency?.id ?? null) : null;
+  const stationListQuery = useGetStationListQuery(Boolean(agencyId) && !assignedStation);
+  const managedStation = assignedStation
+    ?? stationListQuery.data?.find(station => station.agencyId === agencyId)
+    ?? null;
 
   const {
     data: booking,
@@ -30,7 +37,6 @@ export function useStaffRentalDetailScreen(rentalId: string) {
   } = useStaffRentalDetailQuery(rentalId, true);
 
   const endRentalMutation = useStaffEndRentalMutation();
-  const operatorStation = user?.orgAssignment?.station ?? null;
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -45,7 +51,7 @@ export function useStaffRentalDetailScreen(rentalId: string) {
   const handleEndRental = useCallback(
     ({ stationId, reason, confirmationMethod, confirmedAt }: EndRentalPayload, callbacks?: EndRentalCallbacks) => {
       const returnSlot = booking?.returnSlot;
-      const resolvedStationId = stationId || returnSlot?.station.id || operatorStation?.id || "";
+      const resolvedStationId = stationId || returnSlot?.station.id || managedStation?.id || "";
 
       if (!resolvedStationId) {
         Alert.alert("Thiếu thông tin", "Vui lòng chọn trạm kết thúc.");
@@ -80,7 +86,7 @@ export function useStaffRentalDetailScreen(rentalId: string) {
         },
       );
     },
-    [booking?.returnSlot, endRentalMutation, operatorStation?.id, rentalId],
+    [booking?.returnSlot, endRentalMutation, managedStation?.id, rentalId],
   );
 
   return {
@@ -89,7 +95,7 @@ export function useStaffRentalDetailScreen(rentalId: string) {
     isEndingRental: endRentalMutation.isPending,
     isError,
     isInitialLoading: isRentalLoading,
-    operatorStation,
+    managedStation,
     isRefreshing,
     onRefresh,
   };

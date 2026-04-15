@@ -22,7 +22,8 @@ function StationTabRedirectScreen() {
 }
 
 function MainTabNavigator() {
-  const { status, isAuthenticated, isStaff, isTechnician } = useAuthNext();
+  const { status, isAuthenticated, isTechnician, user } = useAuthNext();
+  const canUseStaffTools = user?.role === "STAFF" || user?.role === "AGENCY";
 
   if (status === "loading") {
     return <LoadingScreen />;
@@ -36,7 +37,7 @@ function MainTabNavigator() {
       }}
       tabBar={props => <BottomTabBar {...props} />}
     >
-      {isStaff || isTechnician
+      {canUseStaffTools || isTechnician
         ? (
             <>
               <Tab.Screen
