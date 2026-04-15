@@ -86,6 +86,8 @@ export function makeFixedSlotTemplateService(deps: {
               slotStart,
               slotDates,
             );
+            // FIX: Enforce active fixed-slot overlap at DB level.
+            // This read-then-write check races under concurrent create/update requests and can still admit duplicate active templates.
             if (conflictCount > 0) {
               return yield* Effect.fail(new FixedSlotTemplateConflict({
                 userId: args.userId,

@@ -193,6 +193,8 @@ async function runFixedSlotAssignmentTransaction(
         template.id,
         labels.slotStartAt,
       );
+      // FIX: Serialize same template/day assignment or re-check after bike/billing step.
+      // Overlapping workers can both pass this early read, then one succeeds while the other emits stale NO_BIKE or BILLING_FAILED notifications.
 
       if (Option.isSome(existingReservationOpt) && existingReservationOpt.value.bikeId) {
         return "ALREADY_ASSIGNED" as const;

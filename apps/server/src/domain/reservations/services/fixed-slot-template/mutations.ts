@@ -282,6 +282,8 @@ export function applyTemplateMutation(args: {
         futureNextDates,
         args.templateId,
       );
+      // FIX: Same read-then-write race as createForUser.
+      // Concurrent updates on different templates can both see zero conflicts and commit overlapping active schedules.
 
       if (conflictCount > 0) {
         return yield* Effect.fail(new FixedSlotTemplateConflict({
@@ -339,6 +341,8 @@ export function applyTemplateMutation(args: {
       slotDates: datesToRemove,
     });
 
+    // FIX: Guard against stale status overwrite.
+    // Concurrent cancel can set template to CANCELLED first, then this stale write restores ACTIVE because it writes args.template.status from an old snapshot.
     return yield* updateFixedSlotTemplateInTx(args.tx, {
       templateId: args.templateId,
       slotStart: args.nextSlotStart,
