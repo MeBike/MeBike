@@ -166,3 +166,25 @@ export type EnvironmentImpactCalculationResult = {
   impact: EnvironmentImpactRow;
   alreadyCalculated: boolean;
 };
+
+export type ListCompletedRentalsMissingEnvironmentImpactInput = {
+  limit: number;
+  completedFrom?: Date;
+  completedTo?: Date;
+};
+
+export type CompletedRentalMissingEnvironmentImpactRow = {
+  id: string;
+};
+
+export type RepairMissingEnvironmentImpactJobsInput =
+  ListCompletedRentalsMissingEnvironmentImpactInput;
+
+export type RepairMissingEnvironmentImpactJobsSummary = {
+  scanned: number;
+  found: number;
+  attempted: number;
+  enqueued: number;
+  alreadyQueued: number;
+  failed: number;
+};

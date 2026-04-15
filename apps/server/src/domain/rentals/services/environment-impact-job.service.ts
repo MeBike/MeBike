@@ -9,6 +9,11 @@ import logger from "@/lib/logger";
 
 type EnvironmentImpactJobWriter = Pick<PrismaTypes.TransactionClient, "jobOutbox">;
 
+export type EnvironmentImpactEnqueueResult =
+  | "enqueued"
+  | "already_queued"
+  | "failed";
+
 export function environmentImpactRentalDedupeKey(rentalId: string): string {
   return `environment-impact:rental:${rentalId}`;
 }
@@ -19,7 +24,7 @@ export function enqueueEnvironmentImpactCalculationJob(
     readonly rentalId: string;
     readonly now?: Date;
   },
-): Effect.Effect<void> {
+): Effect.Effect<EnvironmentImpactEnqueueResult> {
   return Effect.tryPromise({
     try: () =>
       enqueueOutboxJob(client, {
@@ -33,6 +38,7 @@ export function enqueueEnvironmentImpactCalculationJob(
       }),
     catch: err => err,
   }).pipe(
+    Effect.as("enqueued" as const),
     Effect.catchAll(err =>
       Effect.sync(() => {
         if (isPrismaUniqueViolation(err)) {
@@ -43,7 +49,7 @@ export function enqueueEnvironmentImpactCalculationJob(
             },
             "Environment impact calculation job already queued",
           );
-          return;
+          return "already_queued" as const;
         }
 
         logger.error(
@@ -54,6 +60,7 @@ export function enqueueEnvironmentImpactCalculationJob(
           },
           "Failed to enqueue environment impact calculation job",
         );
+        return "failed" as const;
       })),
   );
 }
