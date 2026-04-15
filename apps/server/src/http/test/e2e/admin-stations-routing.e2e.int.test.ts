@@ -184,5 +184,4 @@ describe("admin stations routing e2e", () => {
     expect(body.details?.returnSlotLimit).toBe(0);
     expect(body.details?.activeReturnSlots).toBe(1);
   });
-
 });
