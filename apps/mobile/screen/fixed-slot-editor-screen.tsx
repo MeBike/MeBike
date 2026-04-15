@@ -118,11 +118,11 @@ export default function FixedSlotEditorScreen() {
                     onRemoveDate={removeDate}
                   />
 
-                  <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$4" chrome="flat" gap="$3" tone="danger">
+                  <AppCard borderColor="$borderSubtle" borderWidth={1} borderRadius="$4" chrome="flat" gap="$3" tone="warning">
                     <XStack alignItems="flex-start" gap="$3">
-                      <IconSymbol color={theme.textDanger.val} name="warning" size="md" />
-                      <AppText flex={1} tone="danger" variant="bodySmall">
-                        Lưu ý: Sau khi xác nhận, việc xóa ngày lẻ hoặc hủy các ngày đã đặt sẽ không được hoàn tiền.
+                      <IconSymbol color={theme.textWarning.val} name="warning" size="md" />
+                      <AppText flex={1} tone="warning" variant="bodySmall">
+                        Lưu ý: Tạo lịch không trừ tiền ngay. Phí chỉ được trừ khi hệ thống tạo đặt trước cho từng ngày đã chọn.
                       </AppText>
                     </XStack>
                   </AppCard>

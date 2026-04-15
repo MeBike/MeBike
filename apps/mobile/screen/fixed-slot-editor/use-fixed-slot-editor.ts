@@ -60,7 +60,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
   const headerTitle = isEditMode ? "Chỉnh sửa lịch đặt cố định" : "Tạo lịch đặt cố định";
   const submitLabel = isMutating
     ? (isEditMode ? "Đang lưu..." : "Đang tạo...")
-    : (isEditMode ? "Lưu thay đổi" : "Xác nhận & thanh toán");
+    : (isEditMode ? "Lưu thay đổi" : "Tạo lịch cố định");
 
   useEffect(() => {
     if (templateData) {
@@ -198,7 +198,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
       {
         onSuccess: async () => {
           await queryClient.invalidateQueries({ queryKey: ["fixed-slots"] });
-          Alert.alert("Thành công", "Đã tạo khung giờ cố định.");
+          Alert.alert("Thành công", "Đã tạo lịch cố định. Phí sẽ chỉ được trừ khi hệ thống tạo đặt trước cho từng ngày.");
           AsyncStorage.removeItem("fixedSlots:lastCreated").catch(() => {});
           navigation.goBack();
         },
