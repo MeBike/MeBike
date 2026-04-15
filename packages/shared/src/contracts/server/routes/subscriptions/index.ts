@@ -3,6 +3,8 @@ import {
   createSubscriptionRoute,
 } from "./mutations";
 import {
+  adminGetSubscriptionRoute,
+  adminListSubscriptionsRoute,
   getSubscriptionRoute,
   listSubscriptionPackagesRoute,
   listSubscriptionsRoute,
@@ -17,5 +19,7 @@ export const subscriptionsRoutes = {
   activateSubscription: activateSubscriptionRoute,
   getSubscription: getSubscriptionRoute,
   listSubscriptions: listSubscriptionsRoute,
+  adminGetSubscription: adminGetSubscriptionRoute,
+  adminListSubscriptions: adminListSubscriptionsRoute,
   listSubscriptionPackages: listSubscriptionPackagesRoute,
 } as const;

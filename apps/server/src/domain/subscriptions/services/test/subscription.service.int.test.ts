@@ -2,10 +2,13 @@ import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import {
+  SubscriptionCommandServiceTag,
+  SubscriptionQueryServiceTag,
+} from "@/domain/subscriptions";
 import { expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { SubscriptionServiceTag } from "../subscription.service";
 import { makeSubscriptionRunners, makeSubscriptionTestLayer } from "./subscription-test-kit";
 
 describe("subscriptionService Integration", () => {
@@ -24,11 +27,11 @@ describe("subscriptionService Integration", () => {
     return { id: user.id };
   };
 
-  it("createPending + findById returns subscription", async () => {
+  it("createPending + getById returns subscription", async () => {
     const { id: userId } = await createUser();
 
     const created = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.createPending({
           userId,
           packageName: "basic",
@@ -38,8 +41,8 @@ describe("subscriptionService Integration", () => {
     );
 
     const found = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
-        service.findById(created.id)),
+      Effect.flatMap(SubscriptionQueryServiceTag, service =>
+        service.getById(created.id)),
     );
 
     if (Option.isNone(found)) {
@@ -52,7 +55,7 @@ describe("subscriptionService Integration", () => {
     const { id: userId } = await createUser();
 
     const created = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.createPending({
           userId,
           packageName: "basic",
@@ -65,7 +68,7 @@ describe("subscriptionService Integration", () => {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     const activated = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.activate({
           subscriptionId: created.id,
           activatedAt,
@@ -74,18 +77,18 @@ describe("subscriptionService Integration", () => {
     );
 
     const updated = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.incrementUsage(activated.id, 0, 1)),
     );
 
     expect(updated.usageCount).toBe(1);
   });
 
-  it("useOneInTx increments usage for PENDING subscription", async () => {
+  it("useOne increments usage for PENDING subscription", async () => {
     const { id: userId } = await createUser();
 
     const created = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.createPending({
           userId,
           packageName: "basic",
@@ -97,8 +100,8 @@ describe("subscriptionService Integration", () => {
     const used = await runInTxWithService(
       fixture.prisma,
       tx =>
-        Effect.flatMap(SubscriptionServiceTag, service =>
-          service.useOneInTx(tx, { subscriptionId: created.id, userId })),
+        Effect.flatMap(SubscriptionCommandServiceTag, service =>
+          service.useOne(tx, { subscriptionId: created.id, userId })),
     );
 
     expect(used.id).toBe(created.id);
@@ -107,25 +110,25 @@ describe("subscriptionService Integration", () => {
     expect(used.usageCount).toBe(1);
   });
 
-  it("useOneInTx fails with SubscriptionNotFound for missing id", async () => {
+  it("useOne fails with SubscriptionNotFound for missing id", async () => {
     const { id: userId } = await createUser();
 
     const result = await runInTxWithService(
       fixture.prisma,
       tx =>
-        Effect.flatMap(SubscriptionServiceTag, service =>
-          service.useOneInTx(tx, { subscriptionId: uuidv7(), userId }).pipe(Effect.either)),
+        Effect.flatMap(SubscriptionCommandServiceTag, service =>
+          service.useOne(tx, { subscriptionId: uuidv7(), userId }).pipe(Effect.either)),
     );
 
     expectLeftTag(result, "SubscriptionNotFound");
   });
 
-  it("useOneInTx fails with SubscriptionNotUsable for wrong user", async () => {
+  it("useOne fails with SubscriptionNotUsable for wrong user", async () => {
     const { id: userA } = await createUser();
     const { id: userB } = await createUser();
 
     const created = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.createPending({
           userId: userA,
           packageName: "basic",
@@ -137,18 +140,18 @@ describe("subscriptionService Integration", () => {
     const result = await runInTxWithService(
       fixture.prisma,
       tx =>
-        Effect.flatMap(SubscriptionServiceTag, service =>
-          service.useOneInTx(tx, { subscriptionId: created.id, userId: userB }).pipe(Effect.either)),
+        Effect.flatMap(SubscriptionCommandServiceTag, service =>
+          service.useOne(tx, { subscriptionId: created.id, userId: userB }).pipe(Effect.either)),
     );
 
     expectLeftTag(result, "SubscriptionNotUsable");
   });
 
-  it("useOneInTx fails with SubscriptionUsageExceeded when maxUsages is reached", async () => {
+  it("useOne fails with SubscriptionUsageExceeded when maxUsages is reached", async () => {
     const { id: userId } = await createUser();
 
     const created = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.createPending({
           userId,
           packageName: "basic",
@@ -160,15 +163,15 @@ describe("subscriptionService Integration", () => {
     await runInTxWithService(
       fixture.prisma,
       tx =>
-        Effect.flatMap(SubscriptionServiceTag, service =>
-          service.useOneInTx(tx, { subscriptionId: created.id, userId })),
+        Effect.flatMap(SubscriptionCommandServiceTag, service =>
+          service.useOne(tx, { subscriptionId: created.id, userId })),
     );
 
     const result = await runInTxWithService(
       fixture.prisma,
       tx =>
-        Effect.flatMap(SubscriptionServiceTag, service =>
-          service.useOneInTx(tx, { subscriptionId: created.id, userId }).pipe(Effect.either)),
+        Effect.flatMap(SubscriptionCommandServiceTag, service =>
+          service.useOne(tx, { subscriptionId: created.id, userId }).pipe(Effect.either)),
     );
 
     expectLeftTag(result, "SubscriptionUsageExceeded");
@@ -178,7 +181,7 @@ describe("subscriptionService Integration", () => {
     const { id: userId } = await createUser();
 
     const first = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.createPending({
           userId,
           packageName: "basic",
@@ -187,7 +190,7 @@ describe("subscriptionService Integration", () => {
         })),
     );
     const second = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.createPending({
           userId,
           packageName: "premium",
@@ -200,7 +203,7 @@ describe("subscriptionService Integration", () => {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.activate({
           subscriptionId: first.id,
           activatedAt,
@@ -209,7 +212,7 @@ describe("subscriptionService Integration", () => {
     );
 
     const result = await runWithService(
-      Effect.flatMap(SubscriptionServiceTag, service =>
+      Effect.flatMap(SubscriptionCommandServiceTag, service =>
         service.activate({
           subscriptionId: second.id,
           activatedAt,

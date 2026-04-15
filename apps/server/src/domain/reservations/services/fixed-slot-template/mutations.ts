@@ -8,7 +8,10 @@ import type {
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makePricingPolicyRepository } from "@/domain/pricing";
-import { makeSubscriptionRepository } from "@/domain/subscriptions";
+import {
+  makeSubscriptionCommandRepository,
+  makeSubscriptionQueryRepository,
+} from "@/domain/subscriptions";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 
 import type { ReservationCommandRepo } from "../../repository/reservation-command.repository";
@@ -320,14 +323,16 @@ export function applyTemplateMutation(args: {
     });
 
     if (datesToAdd.length > 0) {
-      const txSubscriptionRepo = makeSubscriptionRepository(args.tx);
+      const txSubscriptionQueryRepo = makeSubscriptionQueryRepository(args.tx);
+      const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(args.tx);
       const txWalletRepo = makeWalletRepository(args.tx);
       const txPricingPolicyRepo = makePricingPolicyRepository(args.tx);
       const billing = yield* billFixedSlotDates({
         userId: args.userId,
         totalSlots: datesToAdd.length,
         txPricingPolicyRepo,
-        txSubscriptionRepo,
+        txSubscriptionQueryRepo,
+        txSubscriptionCommandRepo,
         txWalletRepo,
       });
 

@@ -4,6 +4,9 @@ import { parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect } from "effect";
 import process from "node:process";
 
+import type {
+  SubscriptionQueryServiceTag,
+} from "@/domain/subscriptions";
 import type { JobScheduler, QueueJob } from "@/infrastructure/jobs/ports";
 import type { Prisma } from "@/infrastructure/prisma";
 
@@ -11,9 +14,11 @@ import { env } from "@/config/env";
 import { db } from "@/database";
 import {
   activateSubscriptionUseCase,
-  SubscriptionRepositoryLive,
-  SubscriptionServiceLive,
-  SubscriptionServiceTag,
+  SubscriptionCommandRepositoryLive,
+  SubscriptionCommandServiceLive,
+  SubscriptionCommandServiceTag,
+  SubscriptionQueryRepositoryLive,
+  SubscriptionQueryServiceLive,
 } from "@/domain/subscriptions";
 import { makeJobBackend } from "@/infrastructure/jobs/backend";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
@@ -32,14 +37,20 @@ import {
 import { handleWithdrawalExecute, handleWithdrawalSweep } from "./wallet-withdrawal-worker";
 import { attachJobRuntimeLogging, WorkerLog } from "./worker-logging";
 import { setupQueue } from "./worker-setup";
-// run effect with required dependencies
+
 function runSubscriptionEffect<A, E>(
-  eff: Effect.Effect<A, E, SubscriptionServiceTag | Prisma>,
+  eff: Effect.Effect<
+    A,
+    E,
+    SubscriptionQueryServiceTag | SubscriptionCommandServiceTag | Prisma
+  >,
 ): Promise<A> {
   return Effect.runPromise(
     eff.pipe(
-      Effect.provide(SubscriptionServiceLive),
-      Effect.provide(SubscriptionRepositoryLive),
+      Effect.provide(SubscriptionQueryServiceLive),
+      Effect.provide(SubscriptionCommandServiceLive),
+      Effect.provide(SubscriptionQueryRepositoryLive),
+      Effect.provide(SubscriptionCommandRepositoryLive),
       Effect.provide(PrismaLive),
     ),
   );
@@ -86,7 +97,7 @@ async function handleExpireSweep(job: QueueJob | undefined) {
   }
   const expiredCount = await runSubscriptionEffect(
     Effect.gen(function* () {
-      const service = yield* SubscriptionServiceTag;
+      const service = yield* SubscriptionCommandServiceTag;
       return yield* service.markExpiredNow(new Date());
     }),
   );

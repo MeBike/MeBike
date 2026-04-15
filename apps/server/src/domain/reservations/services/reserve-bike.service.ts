@@ -13,7 +13,7 @@ import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pr
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository } from "@/domain/stations";
-import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
+import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
 import { makeUserQueryRepository } from "@/domain/users";
 import { makeWalletRepository } from "@/domain/wallets";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
@@ -78,13 +78,13 @@ export function reserveBike(
   | ReservationQueryServiceTag
   | ReservationCommandServiceTag
   | BikeRepository
-  | SubscriptionServiceTag
+  | SubscriptionCommandServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const reservationQueryService = yield* ReservationQueryServiceTag;
     const reservationCommandService = yield* ReservationCommandServiceTag;
-    const subscriptionService = yield* SubscriptionServiceTag;
+    const subscriptionCommandService = yield* SubscriptionCommandServiceTag;
     const now = input.now ?? new Date();
 
     const reservation = yield* runPrismaTransaction(client, tx =>
@@ -173,7 +173,7 @@ export function reserveBike(
           if (!subscriptionId) {
             return yield* Effect.fail(new SubscriptionRequired({ userId: input.userId }));
           }
-          yield* subscriptionService.useOneInTx(tx, {
+          yield* subscriptionCommandService.useOne(tx, {
             subscriptionId,
             userId: input.userId,
             now,
