@@ -1,6 +1,5 @@
 import type { SubscriptionsContracts } from "@mebike/shared";
 
-import { Layer } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
@@ -13,9 +12,7 @@ describe("admin subscriptions routing e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
       const { SubscriptionDepsLive } = await import("@/http/shared/features/subscription.layers");
-      const { UserDepsLive } = await import("@/http/shared/features/user.layers");
-
-      return Layer.mergeAll(UserDepsLive, SubscriptionDepsLive);
+      return SubscriptionDepsLive;
     },
     seedBase: false,
     seedData: async (_db, prisma) => {
