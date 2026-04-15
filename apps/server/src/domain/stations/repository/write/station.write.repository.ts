@@ -12,7 +12,7 @@ import {
   isPrismaUniqueViolation,
 } from "@/infrastructure/prisma-errors";
 
-import type { StationRepo } from "../station.repository.types";
+import type { StationCommandRepo } from "../station.repository.types";
 
 import {
   StationNameAlreadyExists,
@@ -27,7 +27,7 @@ import {
   stationSelect,
 } from "../station.repository.helpers";
 
-export type StationWriteRepo = Pick<StationRepo, "create" | "update">;
+export type StationWriteRepo = Pick<StationCommandRepo, "create" | "update">;
 
 /**
  * Tao write repository cho station domain.

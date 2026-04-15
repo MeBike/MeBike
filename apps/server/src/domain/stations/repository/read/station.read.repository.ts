@@ -13,7 +13,7 @@ import type {
   NearestStationRow,
   StationRevenueRow,
 } from "../../models";
-import type { StationRepo } from "../station.repository.types";
+import type { StationQueryRepo } from "../station.repository.types";
 
 import { StationRepositoryError } from "../../errors";
 import {
@@ -33,7 +33,7 @@ type StationNearestRowDb = PrismaTypes.StationGetPayload<{
 };
 
 export type StationReadRepo = Pick<
-  StationRepo,
+  StationQueryRepo,
   | "listWithOffset"
   | "getById"
   | "getByAgencyId"
