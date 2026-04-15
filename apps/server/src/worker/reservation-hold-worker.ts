@@ -11,9 +11,9 @@ import {
   ReservationQueryRepositoryLive,
 } from "@/domain/reservations";
 import {
-  StationRepository,
-  StationRepositoryLive,
-} from "@/domain/stations/repository/station.repository";
+  StationQueryRepository,
+  StationQueryRepositoryLive,
+} from "@/domain/stations/repository/station-query.repository";
 import {
   UserQueryRepository,
   UserQueryRepositoryLive,
@@ -30,7 +30,7 @@ type ReservationWorkerDeps
   = | ReservationQueryRepository
     | BikeRepository
     | UserQueryRepository
-    | StationRepository
+    | StationQueryRepository
     | Prisma;
 
 function runReservationEffect<A, E>(
@@ -41,7 +41,7 @@ function runReservationEffect<A, E>(
       Effect.provide(ReservationQueryRepositoryLive),
       Effect.provide(BikeRepositoryLive),
       Effect.provide(UserQueryRepositoryLive),
-      Effect.provide(StationRepositoryLive),
+      Effect.provide(StationQueryRepositoryLive),
       Effect.provide(PrismaLive),
     ),
   );
@@ -70,7 +70,7 @@ export async function handleReservationNotifyNearExpiry(
     Effect.gen(function* () {
       const reservationRepo = yield* ReservationQueryRepository;
       const userRepo = yield* UserQueryRepository;
-      const stationRepo = yield* StationRepository;
+      const stationRepo = yield* StationQueryRepository;
       const now = new Date();
 
       const reservationOpt = yield* reservationRepo.findById(payload.reservationId);
@@ -187,7 +187,7 @@ export async function handleReservationExpireHold(
     Effect.gen(function* () {
       yield* BikeRepository;
       const userRepo = yield* UserQueryRepository;
-      const stationRepo = yield* StationRepository;
+      const stationRepo = yield* StationQueryRepository;
       const { client } = yield* Prisma;
       const now = new Date();
 

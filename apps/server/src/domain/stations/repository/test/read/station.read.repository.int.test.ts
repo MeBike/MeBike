@@ -10,10 +10,10 @@ import { setupStationRepositoryIntTestKit } from "../station.repository.int.test
 
 describe("stationReadRepository Integration", () => {
   const kit = setupStationRepositoryIntTestKit();
-  let repo: ReturnType<typeof kit.makeRepo>;
+  let repo: ReturnType<typeof kit.makeQueryRepo>;
 
   beforeAll(() => {
-    repo = kit.makeRepo();
+    repo = kit.makeQueryRepo();
   });
 
   it("listWithOffset returns stations", async () => {
@@ -173,7 +173,7 @@ describe("stationReadRepository Integration", () => {
   it("defects with StationRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
-      const brokenRepo = kit.makeRepo(broken.client);
+      const brokenRepo = kit.makeQueryRepo(broken.client);
 
       await expectDefect(
         brokenRepo.listWithOffset({}, { page: 1, pageSize: 10 }),

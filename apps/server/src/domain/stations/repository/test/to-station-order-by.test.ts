@@ -4,7 +4,7 @@ import type { PageRequest, SortDirection } from "@/domain/shared/pagination";
 
 import type { StationSortField } from "../../models";
 
-import { toStationOrderBy } from "../station.repository";
+import { toStationOrderBy } from "../station-query.repository";
 
 describe("toStationOrderBy", () => {
   it("should return default sorting when no sort parameters provided", () => {

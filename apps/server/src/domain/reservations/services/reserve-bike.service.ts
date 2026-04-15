@@ -12,7 +12,7 @@ import { makeBikeRepository } from "@/domain/bikes";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
-import { makeStationRepository } from "@/domain/stations";
+import { makeStationQueryRepository } from "@/domain/stations";
 import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
 import { makeUserQueryRepository } from "@/domain/users";
 import { makeWalletRepository } from "@/domain/wallets";
@@ -159,7 +159,7 @@ export function reserveBike(
           }));
         }
 
-        const txStationRepo = makeStationRepository(tx);
+        const txStationRepo = makeStationQueryRepository(tx);
         const stationOpt = yield* txStationRepo.getById(input.stationId);
         if (Option.isNone(stationOpt)) {
           return yield* Effect.die(new Error(

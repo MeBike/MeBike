@@ -14,7 +14,7 @@ import type {
 } from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
-import { StationNotFound, stationRepositoryFactory } from "@/domain/stations";
+import { makeStationQueryRepository, StationNotFound } from "@/domain/stations";
 import { MapboxRouting } from "@/infrastructure/mapbox";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -137,7 +137,7 @@ function createIncidentWithClient(
       = null;
 
     if (data.latitude && data.longitude) {
-      const stationRepo = stationRepositoryFactory(tx);
+      const stationRepo = makeStationQueryRepository(tx);
       const nearestStation = yield* stationRepo
         .listNearest({
           latitude: Number(data.latitude),
@@ -432,7 +432,7 @@ function rejectIncidentWithClient(
       return Option.none();
     }
 
-    const stationRepo = stationRepositoryFactory(tx);
+    const stationRepo = makeStationQueryRepository(tx);
     let foundTechnician:
       | { userId: string; technicianTeamId: string }
       | undefined;

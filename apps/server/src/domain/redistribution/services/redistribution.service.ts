@@ -9,7 +9,10 @@ import type {
 } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { makeStationRepository, StationServiceTag } from "@/domain/stations";
+import {
+  makeStationQueryRepository,
+  StationQueryServiceTag,
+} from "@/domain/stations";
 import { UserQueryServiceTag } from "@/domain/users";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -197,7 +200,7 @@ export type RedistributionService = {
 const makeRedistributionServiceEffect = Effect.gen(function* () {
   const repo = yield* RedistributionRepository;
   const userService = yield* UserQueryServiceTag;
-  const stationService = yield* StationServiceTag;
+  const stationService = yield* StationQueryServiceTag;
   const { client } = yield* Prisma;
   return makeRedistributionService(repo, userService, stationService, client);
 });
@@ -212,7 +215,7 @@ export class RedistributionServiceTag extends Effect.Service<RedistributionServi
 function makeRedistributionService(
   repo: RedistributionRepo,
   userService: UserQueryServiceTag,
-  stationService: StationServiceTag,
+  stationService: StationQueryServiceTag,
   client: PrismaClient,
 ): RedistributionService {
   const TERMINAL_STATUSES: RedistributionStatus[] = [
@@ -576,7 +579,7 @@ function makeRedistributionService(
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
-            const txStationRepo = makeStationRepository(tx);
+            const txStationRepo = makeStationQueryRepository(tx);
 
             const existingRequest = yield* txRedistributionRepo.findById(
               args.requestId,
@@ -788,7 +791,7 @@ function makeRedistributionService(
         return yield* runPrismaTransaction(client, (tx) => {
           const txRedistributionRepo = makeRedistributionRepository(tx);
           const txBikeRepo = makeBikeRepository(tx);
-          const txStationRepo = makeStationRepository(tx);
+          const txStationRepo = makeStationQueryRepository(tx);
 
           return Effect.gen(function* () {
             const reqOpt = yield* txRedistributionRepo.findAndPopulate({

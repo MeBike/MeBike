@@ -2,7 +2,10 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
-import { StationServiceTag } from "@/domain/stations";
+import {
+  StationCommandServiceTag,
+  StationQueryServiceTag,
+} from "@/domain/stations";
 import {
   toContractStationReadSummary,
   toContractStationSummary,
@@ -20,7 +23,7 @@ import { StationErrorCodeSchema, stationErrorMessages } from "./shared";
 const listStations: RouteHandler<StationsRoutes["adminListStations"]> = async (c) => {
   const query = c.req.valid("query");
 
-  const eff = Effect.flatMap(StationServiceTag, service =>
+  const eff = Effect.flatMap(StationQueryServiceTag, service =>
     service.listStations(
       {
         name: query.name,
@@ -63,7 +66,7 @@ const listStations: RouteHandler<StationsRoutes["adminListStations"]> = async (c
 const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) => {
   const body = c.req.valid("json");
 
-  const eff = Effect.flatMap(StationServiceTag, service =>
+  const eff = Effect.flatMap(StationCommandServiceTag, service =>
     service.createStation({
       name: body.name,
       address: body.address,
@@ -151,7 +154,7 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
   const params = c.req.valid("param");
   const body = c.req.valid("json");
 
-  const eff = Effect.flatMap(StationServiceTag, service =>
+  const eff = Effect.flatMap(StationCommandServiceTag, service =>
     service.updateStation(params.stationId, body));
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));

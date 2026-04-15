@@ -68,9 +68,11 @@ export {
   ReservationQueryServiceLayer,
 } from "./features/reservation.layers";
 export {
+  StationCommandReposLive,
+  StationCommandServiceLayer,
   StationDepsLive,
-  StationReposLive,
-  StationServiceLayer,
+  StationQueryReposLive,
+  StationQueryServiceLayer,
 } from "./features/station.layers";
 export {
   PaymentAttemptReposLive,

@@ -1,7 +1,7 @@
 import { Effect, Option } from "effect";
 
 import type { AgencyRepo } from "@/domain/agencies";
-import type { StationRepo } from "@/domain/stations";
+import type { StationQueryRepo } from "@/domain/stations";
 import type { TechnicianTeamQueryRepo } from "@/domain/technician-teams";
 
 import { AgencyRepositoryError } from "@/domain/agencies/domain-errors";
@@ -24,7 +24,7 @@ import {
 
 export function makeValidateOrgAssignmentTargetsExist(deps: {
   agencyRepo: Pick<AgencyRepo, "getById">;
-  stationRepo: Pick<StationRepo, "getById">;
+  stationRepo: Pick<StationQueryRepo, "getById">;
   technicianTeamQueryRepo: Pick<TechnicianTeamQueryRepo, "getById">;
 }) {
   return (args: {

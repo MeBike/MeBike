@@ -10,10 +10,10 @@ import {
 
 describe("stationWriteRepository Integration", () => {
   const kit = setupStationRepositoryIntTestKit();
-  let repo: ReturnType<typeof kit.makeRepo>;
+  let repo: ReturnType<typeof kit.makeCommandRepo>;
 
   beforeAll(() => {
-    repo = kit.makeRepo();
+    repo = kit.makeCommandRepo();
   });
 
   it("create inserts station with coordinates", async () => {
