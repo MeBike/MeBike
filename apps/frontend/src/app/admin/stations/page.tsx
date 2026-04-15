@@ -5,13 +5,10 @@ import StationClient from "./StationClient";
 import { useStationActions } from "@/hooks/use-station";
 
 export default function Page() {
-  // 1. QUẢN LÝ STATE
   const [page, setPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRevenueReport, setShowRevenueReport] = useState(false);
   const limit = 7;
-
-  // 2. GỌI API
   const {
     getAllStations,
     stations,
@@ -26,19 +23,13 @@ export default function Page() {
     limit: limit,
     name: searchQuery,
   });
-
-  // 3. EFFECTS
   useEffect(() => {
     getAllStations();
   }, [page, limit, searchQuery, getAllStations]);
-
   useEffect(() => {
     setPage(1);
   }, [searchQuery]);
-
-  // 4. XỬ LÝ LOADING MƯỢT MÀ
   const [isVisualLoading, setIsVisualLoading] = useState(true);
-
   useEffect(() => {
     if (isLoadingGetAllStations) {
       setIsVisualLoading(true);
@@ -49,20 +40,15 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingGetAllStations]);
-
-  // 5. CÁC HÀM XỬ LÝ SỰ KIỆN
   const handleToggleRevenueReport = () => {
     if (!showRevenueReport) {
       getStationRevenue();
     }
     setShowRevenueReport(!showRevenueReport);
   };
-
   const handleResetSearch = () => {
     setSearchQuery("");
   };
-
-  // 6. TRUYỀN DATA XUỐNG UI
   return (
     <StationClient
       data={{

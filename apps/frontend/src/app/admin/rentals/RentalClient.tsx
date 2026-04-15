@@ -57,7 +57,7 @@ export default function RentalClient({
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
-          onStatusChange={setStatusFilter as any} // Ép kiểu an toàn nếu Component con yêu cầu type riêng
+          onStatusChange={setStatusFilter as any}
           onReset={handleReset}
         />
 

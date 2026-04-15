@@ -170,7 +170,6 @@ export default function DetailUser({
                       Cập nhật role + trạng thái + phân công (station/team).
                     </DialogDescription>
                   </DialogHeader>
-
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Role</Label>

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { useUserActions } from "@/hooks/use-user";
 import { useWalletActions } from "@/hooks/use-wallet";
 import CustomerWalletDetail from "./CustomerWalletDetail";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page({
   params,
 }: {
@@ -14,12 +13,10 @@ export default function Page({
   const { userId } = React.use(params);
   const [transactionPage, setTransactionPage] = useState(1);
   const transactionPageSize = 10;
-
   const { detailUserData, isLoadingDetailUser } = useUserActions({
     hasToken: true,
     id: userId,
   });
-
   const {
     allWallets,
     manageTransactions,
@@ -33,23 +30,29 @@ export default function Page({
     transactionPage,
     transactionPageSize,
   });
-
-  if (isLoadingDetailUser) {
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+  useEffect(() => {
+    if (isLoadingDetailUser && isLoadingTransactions && isLoadingWallet) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingDetailUser,isLoadingTransactions,isLoadingWallet]);
+  if (!detailUserData) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin ví người dùng.
+        </p>
       </div>
     );
   }
-
-  if (!detailUserData?.data) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">User not found.</p>
-      </div>
-    );
-  }
-
+  if (isVisualLoading) {
+      return <LoadingScreen />;
+    }
   return (
     <CustomerWalletDetail
       user={detailUserData.data}

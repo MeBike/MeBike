@@ -33,10 +33,16 @@ export default function Page({
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetailUser]);
-  if (!detailUserData) {
-    return <div>Not found</div>;
+    if (!detailUserData) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin nhân viên.
+        </p>
+      </div>
+    );
   }
-    if (isVisualLoading) {
+  if (isVisualLoading) {
       return <LoadingScreen />;
     }
   const handleSubmit = ({ data }: { data: UpdateUserFormData }) => {

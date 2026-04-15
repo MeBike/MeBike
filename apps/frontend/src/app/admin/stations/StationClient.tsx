@@ -8,8 +8,6 @@ import { RevenueReport } from "./components/revenue-report";
 import { StationTableSection } from "./components/station-table-section";
 import { ReportSkeleton } from "./components/loading-skeleton";
 import { TableSkeleton } from "@/components/table-skeleton";
-
-// Định nghĩa cấu trúc Props
 interface StationClientProps {
   data: {
     stations: any[];
@@ -30,7 +28,6 @@ interface StationClientProps {
     deleteStation: (id: string) => void;
   };
 }
-
 export default function StationClient({
   data: {
     stations,
@@ -50,7 +47,6 @@ export default function StationClient({
   },
 }: StationClientProps) {
   const router = useRouter();
-
   return (
     <div>
       <div className="space-y-6">
@@ -95,11 +91,9 @@ export default function StationClient({
               <h2 className="mb-4 text-2xl font-bold">
                 Báo cáo doanh thu theo trạm
               </h2>
-              {/* Bạn có thể render RevenueReport component vào đây nếu cần thiết */}
-              {/* <RevenueReport data={responseStationRevenue} /> */}
+              <RevenueReport data={responseStationRevenue} /> 
             </div>
           ))}
-
         <div className="min-h-[400px] space-y-4">
           <h2 className="px-1 text-2xl font-bold">Danh sách vận hành</h2>
           

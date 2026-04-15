@@ -13,7 +13,6 @@ export default function AgencyDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const router = useRouter();
   const {
     agencyStats,
     getAgencyStat,
@@ -35,47 +34,26 @@ export default function AgencyDetailPage({
   useEffect(() => {
     getAgencyStat();
   }, [id, getAgencyStat]);
-
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-  return (
-    <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-      <div className="space-y-4">
-        {/* Khôi phục cụm nút điều hướng của bạn */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-lg font-semibold text-foreground">
-              Chi tiết Agency
-            </h1>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => router.push("/admin/agencies")}
-          >
-            Danh sách Agency
-          </Button>
-        </div>
-
-        <div className="pt-3">
-          {agencyStats && (
-            <AgencyStatsView
-              key={agencyStats.agency.id} // Thêm key để React tái tạo component khi đổi Agency
-              stats={agencyStats}
-              onUpdateInfo={(data) => updateAgency(data, id)}
-              onUpdateStatus={(data) => updateAgencyStatus(data, id)}
-            />
-          )}
-        </div>
+  if (!agencyStats) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin agency.
+        </p>
       </div>
-    </div>
+    );
+  }
+  return (
+    <>
+      <AgencyStatsView
+        key={agencyStats.agency.id}
+        stats={agencyStats}
+        onUpdateInfo={(data) => updateAgency(data, id)}
+        onUpdateStatus={(data) => updateAgencyStatus(data, id)}
+      />
+    </>
   );
 }

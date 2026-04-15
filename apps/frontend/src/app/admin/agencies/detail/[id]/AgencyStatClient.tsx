@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { getStatusColor } from "@/columns/agency-column";
+import { useRouter } from "next/navigation";
 import { 
   Settings2, Edit3, Loader2, Users, MapPin, Bike, 
   TrendingUp, AlertTriangle, Calendar, DollarSign, 
   ArrowUpRight, ArrowDownRight, CheckCircle2, Clock, 
-  LucideIcon
+  LucideIcon , ArrowLeft
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,7 +47,7 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const router = useRouter();
   const { agency, period, operators, currentStation, pickups, returns, incidents } = stats;
   const infoForm = useForm<UpdateAgencyFormData>({
     resolver: zodResolver(updateSchema),
@@ -74,7 +75,31 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-lg font-semibold text-foreground">
+              Chi tiết Agency
+            </h1>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/agencies")}
+          >
+            Danh sách Agency
+          </Button>
+        </div>
+            <div className="space-y-6">
+      
       <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-white p-6 sm:flex-row sm:items-center sm:justify-between shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -175,6 +200,8 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
           <StatRow label="Đang di chuyển" value={pickups.activeRentals} />
           <StatRow label="Xác nhận trả" value={returns.agencyConfirmedReturns} />
         </SectionCard>
+      </div>
+    </div>
       </div>
     </div>
   );

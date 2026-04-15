@@ -1,5 +1,5 @@
 export type UserRole = "ADMIN" | "STAFF" | "USER" | "AGENCY" | 
-"MANAGER" | "TECHNICIAN" | "";
+"MANAGER" | "TECHNICIAN";
 export type VerifyStatus = "VERIFIED" | "UNVERIFIED";
 export type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
 export interface OrgAssigment {

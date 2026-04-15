@@ -43,13 +43,10 @@ export default function Page({
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetailSupplier]);
-
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-
   const supplier = detailSupplier as unknown as Supplier | undefined;
-
   if (!supplier) {
     return (
       <div className="flex w-full items-center justify-center p-8">
@@ -57,7 +54,6 @@ export default function Page({
       </div>
     );
   }
-
   const handleSubmit = async (data: UpdateSupplierSchema) => {
     const result = await getUpdateSupplier({ id: supplierId, data });
     if (result) {

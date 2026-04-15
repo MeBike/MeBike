@@ -34,11 +34,14 @@ export default function Page({
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetailUser]);
-  if (isLoadingDetailUser) {
-    return <div>Loading...</div>;
-  }
   if (!detailUserData) {
-    return <div>Not found</div>;
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin người dùng.
+        </p>
+      </div>
+    );
   }
   if (isVisualLoading) {
     return <LoadingScreen />;
