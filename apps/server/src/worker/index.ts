@@ -27,6 +27,7 @@ import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
 
 import { handleEmailJob } from "./email-worker";
+import { handleEnvironmentImpactCalculateRental } from "./environment-impact-worker";
 import { handleFixedSlotAssign } from "./fixed-slot-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
 import { handlePushSend } from "./push-worker";
@@ -124,6 +125,7 @@ async function main() {
   await setupQueue(runtime, JobTypes.ReservationFixedSlotAssign);
   await setupQueue(runtime, JobTypes.ReservationNotifyNearExpiry);
   await setupQueue(runtime, JobTypes.ReservationExpireHold);
+  await setupQueue(runtime, JobTypes.EnvironmentImpactCalculateRental);
   await setupQueue(runtime, JobTypes.WalletWithdrawalExecute);
   await setupQueue(runtime, JobTypes.WalletWithdrawalSweep);
 
@@ -155,6 +157,12 @@ async function main() {
     async job => handleReservationExpireHold(job, producer),
   );
   WorkerLog.workerRegistered(JobTypes.ReservationExpireHold, expireWorkerId);
+
+  const environmentImpactWorkerId = await runtime.register(
+    JobTypes.EnvironmentImpactCalculateRental,
+    handleEnvironmentImpactCalculateRental,
+  );
+  WorkerLog.workerRegistered(JobTypes.EnvironmentImpactCalculateRental, environmentImpactWorkerId);
 
   const withdrawalWorkerId = await runtime.register(JobTypes.WalletWithdrawalExecute, handleWithdrawalExecute);
   WorkerLog.workerRegistered(JobTypes.WalletWithdrawalExecute, withdrawalWorkerId);

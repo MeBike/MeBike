@@ -393,6 +393,7 @@ export type EnvironmentalImpactPolicy = {
     status: Generated<AccountStatus>;
     active_from: Timestamp | null;
     active_to: Timestamp | null;
+    formula_config: unknown | null;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };

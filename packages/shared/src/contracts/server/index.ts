@@ -4,6 +4,8 @@ export * as AgencyRequestsContracts from "./agency-requests";
 export * from "./agency-requests";
 export * as AuthContracts from "./auth";
 export * as BikesContracts from "./bikes";
+export * as EnvironmentContracts from "./environment";
+export * from "./environment";
 export * as FixedSlotTemplatesContracts from "./fixed-slots";
 export * from "./fixed-slots";
 export * as IncidentsContracts from "./incidents";

@@ -24,6 +24,11 @@ export {
   BikeStatsServiceLayer,
 } from "./features/bike.layers";
 export {
+  EnvironmentDepsLive,
+  EnvironmentPolicyReposLive,
+  EnvironmentPolicyServiceLayer,
+} from "./features/environment.layers";
+export {
   IncidentDepsLive,
   IncidentReposLive,
   IncidentServiceLayer,

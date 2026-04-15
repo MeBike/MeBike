@@ -5,6 +5,7 @@ import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
 import {
+  AccountStatus,
   AssignmentStatus,
   BikeStatus,
   BikeSwapStatus,
@@ -26,6 +27,7 @@ import {
 } from "../generated/prisma/client";
 import { formatBikeNumber } from "../src/domain/bikes/bike-number";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
+import { toPrismaDecimal } from "../src/domain/shared/decimal";
 import logger from "../src/lib/logger";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
@@ -49,6 +51,15 @@ const LEGACY_DEMO_AGENCY_IDS = [
 ] as const;
 const DEMO_TECH_TEAM_A_ID = "019b17bd-d130-7e7d-be69-91ceef7b9005";
 const DEMO_TECH_TEAM_B_ID = "019b17bd-d130-7e7d-be69-91ceef7b9006";
+const DEMO_ENVIRONMENT_POLICY_ID = "019b17bd-d130-7e7d-be69-91ceef7b9010";
+
+const DEMO_ENVIRONMENT_FORMULA_CONFIG = {
+  return_scan_buffer_minutes: 3,
+  confidence_factor: 0.85,
+  display_unit: "gCO2e",
+  formula_version: "PHASE_1_TIME_SPEED",
+  distance_source: "TIME_SPEED",
+} as const;
 
 type DemoUser = {
   id: string;
@@ -180,6 +191,48 @@ async function seedStations(prisma: PrismaClient) {
         "updated_at" = EXCLUDED."updated_at"
     `;
   }
+}
+
+async function seedDemoEnvironmentPolicy(prisma: PrismaClient) {
+  const now = new Date();
+
+  await prisma.$transaction(async (tx) => {
+    await tx.environmentalImpactPolicy.updateMany({
+      where: {
+        status: AccountStatus.ACTIVE,
+        id: { not: DEMO_ENVIRONMENT_POLICY_ID },
+      },
+      data: {
+        status: AccountStatus.INACTIVE,
+        updatedAt: now,
+      },
+    });
+
+    await tx.environmentalImpactPolicy.upsert({
+      where: { id: DEMO_ENVIRONMENT_POLICY_ID },
+      update: {
+        name: "Default Phase 1 Demo Policy",
+        averageSpeedKmh: toPrismaDecimal("12.00"),
+        co2SavedPerKm: toPrismaDecimal("100.0000"),
+        status: AccountStatus.ACTIVE,
+        activeFrom: null,
+        activeTo: null,
+        formulaConfig: DEMO_ENVIRONMENT_FORMULA_CONFIG,
+        updatedAt: now,
+      },
+      create: {
+        id: DEMO_ENVIRONMENT_POLICY_ID,
+        name: "Default Phase 1 Demo Policy",
+        averageSpeedKmh: toPrismaDecimal("12.00"),
+        co2SavedPerKm: toPrismaDecimal("100.0000"),
+        status: AccountStatus.ACTIVE,
+        activeFrom: null,
+        activeTo: null,
+        formulaConfig: DEMO_ENVIRONMENT_FORMULA_CONFIG,
+        updatedAt: now,
+      },
+    });
+  });
 }
 
 function buildDemoUsers(technicianCount: number): DemoUser[] {
@@ -423,6 +476,7 @@ async function main() {
 
     await upsertVietnamBoundary(prisma);
     await seedDefaultPricingPolicy(prisma);
+    await seedDemoEnvironmentPolicy(prisma);
     await seedStations(prisma);
     await seedRatingReasons(prisma);
 

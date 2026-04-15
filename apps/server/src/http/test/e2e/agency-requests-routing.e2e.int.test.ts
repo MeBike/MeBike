@@ -642,7 +642,7 @@ describe("agency requests routing", () => {
       version: 1,
       kind: "raw",
       to: "approved-agency-request@example.com",
-      subject: "MeBike phe duyet tai khoan agency",
+      subject: "MeBike phê duyệt tài khoản Agency",
     });
   });
 

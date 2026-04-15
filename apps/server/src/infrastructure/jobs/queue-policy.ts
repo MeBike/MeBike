@@ -54,6 +54,12 @@ const DEFAULT_QUEUE_OPTIONS: Record<JobType, JobQueueOptions> = {
     retryBackoff: true,
     retryDelayMax: 10 * 60,
   },
+  [JobTypes.EnvironmentImpactCalculateRental]: {
+    retryLimit: 3,
+    retryDelay: 60,
+    retryBackoff: true,
+    retryDelayMax: 10 * 60,
+  },
   [JobTypes.WalletWithdrawalExecute]: {
     retryLimit: WITHDRAWAL_EXECUTE_RETRY_LIMIT,
     retryDelay: WITHDRAWAL_EXECUTE_RETRY_DELAY_SECONDS,
