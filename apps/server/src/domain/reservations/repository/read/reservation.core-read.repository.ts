@@ -25,9 +25,6 @@ const selectFixedSlotAssignmentTemplateRow = {
   id: true,
   userId: true,
   stationId: true,
-  pricingPolicyId: true,
-  subscriptionId: true,
-  prepaid: true,
   slotStart: true,
   user: { select: { fullName: true, email: true } },
   station: { select: { name: true } },
@@ -147,18 +144,7 @@ export function makeReservationCoreReadRepository(
               status: "ACTIVE",
               dates: { some: { slotDate } },
             },
-            select: {
-              ...selectFixedSlotAssignmentTemplateRow,
-              dates: {
-                where: { slotDate },
-                take: 1,
-                select: {
-                  pricingPolicyId: true,
-                  subscriptionId: true,
-                  prepaid: true,
-                },
-              },
-            },
+            select: selectFixedSlotAssignmentTemplateRow,
           }),
         catch: err =>
           new ReservationRepositoryError({
@@ -166,17 +152,7 @@ export function makeReservationCoreReadRepository(
             cause: err,
           }),
       }).pipe(
-        Effect.map(rows => rows.map(row => ({
-          id: row.id,
-          userId: row.userId,
-          stationId: row.stationId,
-          pricingPolicyId: row.dates[0]?.pricingPolicyId ?? row.pricingPolicyId,
-          subscriptionId: row.dates[0]?.subscriptionId ?? row.subscriptionId,
-          prepaid: row.dates[0]?.prepaid ?? row.prepaid,
-          slotStart: row.slotStart,
-          user: row.user,
-          station: row.station,
-        }))),
+        Effect.map(rows => rows),
         defectOn(ReservationRepositoryError),
       ),
 

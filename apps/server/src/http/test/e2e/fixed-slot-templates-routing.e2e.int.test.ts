@@ -63,9 +63,6 @@ describe("fixed-slot templates routing e2e", () => {
     });
     expect(created?.userId).toBe(user.id);
     expect(created?.stationId).toBe(station.id);
-    expect(created?.pricingPolicyId).toBeNull();
-    expect(created?.subscriptionId).toBeNull();
-    expect(created?.prepaid.toString()).toBe("0");
     expect(created?.dates.map(date => date.slotDate.toISOString().slice(0, 10))).toEqual([
       "2026-04-20",
       "2026-04-22",
@@ -142,8 +139,7 @@ describe("fixed-slot templates routing e2e", () => {
     const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
     const updatedSubscription = await fixture.prisma.subscription.findUnique({ where: { id: subscription.id } });
 
-    expect(created?.subscriptionId).toBeNull();
-    expect(created?.prepaid.toString()).toBe("0");
+    expect(created?.id).toBe(body.id);
     expect(wallet?.balance).toBe(10000n);
     expect(updatedSubscription?.usageCount).toBe(1);
   });
@@ -428,24 +424,9 @@ describe("fixed-slot templates routing e2e", () => {
     expect(updateResponse.status).toBe(200);
     expect(body.slotDates).toEqual(["2026-04-20", "2026-04-22"]);
     expect(wallet?.balance).toBe(10000n);
-    expect(updated?.dates.map(date => ({
-      slotDate: date.slotDate.toISOString().slice(0, 10),
-      pricingPolicyId: date.pricingPolicyId,
-      subscriptionId: date.subscriptionId,
-      prepaid: date.prepaid?.toString() ?? null,
-    }))).toEqual([
-      {
-        slotDate: "2026-04-20",
-        pricingPolicyId: null,
-        subscriptionId: null,
-        prepaid: "0",
-      },
-      {
-        slotDate: "2026-04-22",
-        pricingPolicyId: null,
-        subscriptionId: null,
-        prepaid: null,
-      },
+    expect(updated?.dates.map(date => date.slotDate.toISOString().slice(0, 10))).toEqual([
+      "2026-04-20",
+      "2026-04-22",
     ]);
   });
 
@@ -458,9 +439,7 @@ describe("fixed-slot templates routing e2e", () => {
       data: {
         userId: user.id,
         stationId: station.id,
-        pricingPolicyId: "11111111-1111-4111-8111-111111111111",
         slotStart: new Date(Date.UTC(2000, 0, 1, 9, 30, 0)),
-        prepaid: "2000",
         status: "ACTIVE",
         updatedAt: new Date("2026-04-10T10:00:00.000Z"),
         dates: {

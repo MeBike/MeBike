@@ -62,9 +62,6 @@ export type FixedSlotAssignmentTemplateRow = {
   readonly id: string;
   readonly userId: string;
   readonly stationId: string;
-  readonly pricingPolicyId: string | null;
-  readonly subscriptionId: string | null;
-  readonly prepaid: ReservationDecimal;
   readonly slotStart: Date;
   readonly user: {
     readonly fullName: string;
@@ -78,9 +75,6 @@ export type FixedSlotAssignmentTemplateRow = {
 export type FixedSlotTemplateRow = {
   readonly id: string;
   readonly userId: string;
-  readonly pricingPolicyId: string | null;
-  readonly subscriptionId: string | null;
-  readonly prepaid: ReservationDecimal;
   readonly station: {
     readonly id: string;
     readonly name: string;

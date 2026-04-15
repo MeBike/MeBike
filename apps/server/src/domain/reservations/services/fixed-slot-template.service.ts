@@ -4,7 +4,6 @@ import type { StationRepo } from "@/domain/stations";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import { defectOn } from "@/domain/shared";
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository, StationRepository } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -98,10 +97,7 @@ export function makeFixedSlotTemplateService(deps: {
             return yield* txReservationCommandRepo.createFixedSlotTemplate({
               userId: args.userId,
               stationId: args.stationId,
-              pricingPolicyId: null,
-              subscriptionId: null,
               slotStart,
-              prepaid: toPrismaDecimal("0"),
               slotDates,
               updatedAt: now,
             });

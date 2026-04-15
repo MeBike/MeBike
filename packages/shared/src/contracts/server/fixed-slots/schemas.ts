@@ -22,9 +22,6 @@ export const FixedSlotTemplateErrorCodeSchema = z
     "FIXED_SLOT_DATE_LOCKED",
     "FIXED_SLOT_DATE_NOT_FOUND",
     "FIXED_SLOT_TEMPLATE_CONFLICT",
-    "FIXED_SLOT_WALLET_NOT_FOUND",
-    "FIXED_SLOT_INSUFFICIENT_BALANCE",
-    "FIXED_SLOT_BILLING_CONFLICT",
     "FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT",
     "FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT",
   ])
@@ -38,9 +35,6 @@ export const fixedSlotTemplateErrorMessages = {
   FIXED_SLOT_DATE_LOCKED: "Fixed-slot date can no longer be changed",
   FIXED_SLOT_DATE_NOT_FOUND: "Fixed-slot date not found on template",
   FIXED_SLOT_TEMPLATE_CONFLICT: "An active fixed-slot template already exists for one or more selected dates at this time",
-  FIXED_SLOT_WALLET_NOT_FOUND: "Wallet not found",
-  FIXED_SLOT_INSUFFICIENT_BALANCE: "Insufficient balance for fixed-slot reservation payment",
-  FIXED_SLOT_BILLING_CONFLICT: "Fixed-slot reservation billing could not be completed safely",
   FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT: "Fixed-slot template could not be cancelled safely",
   FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT: "Fixed-slot template could not be updated safely",
 } as const;
@@ -54,8 +48,6 @@ export const FixedSlotTemplateErrorResponseSchema = z.object({
     slotDate: FixedSlotDateStringSchema.optional(),
     slotStart: FixedSlotTimeStringSchema.optional(),
     slotDates: z.array(FixedSlotDateStringSchema).optional(),
-    requiredAmount: z.string().optional(),
-    balance: z.string().optional(),
   }),
 }).openapi("FixedSlotTemplateErrorResponse");
 
