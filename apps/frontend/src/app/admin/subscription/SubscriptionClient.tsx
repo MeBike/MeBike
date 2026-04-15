@@ -9,14 +9,21 @@ import { TableSkeleton } from "@/components/table-skeleton";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { subscriptionColumns } from "@/columns/subscription-column";
+import { Subscription } from "@/types";
 export default function SubscriptionClient() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [pageSize] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRevenueReport, setShowRevenueReport] = useState(false);
-  const { getSubscriptions, isLoadingSubscriptions, subscriptionsData } =
-    useSubscriptionAction({ hasToken: true, page: page, pageSize: pageSize });
+  const {
+    getSubscriptions,
+    isLoadingSubscriptions,
+    subscriptionsData,
+    getSubscriptionDetail,
+    isLoadingSubscriptionDetail,
+    subscriptionDetail,
+  } = useSubscriptionAction({ hasToken: true, page: page, pageSize: pageSize });
   const [isVisualLoading, setIsVisualLoading] = useState(false);
 
   useEffect(() => {
@@ -92,12 +99,12 @@ export default function SubscriptionClient() {
                 title="Danh sách người dùng"
                 tableClassName="table-fixed"
                 columns={subscriptionColumns({
-                  onView: () => {},
+                  onView: ({ id }) => {
+                    router.push(`/admin/subscription/detail/${id}`);
+                  },
                 })}
                 data={subscriptionsData?.data || []}
                 searchValue={searchQuery}
-                filterPlaceholder="Tìm kiếm người dùng"
-                onSearchChange={setSearchQuery}
               />
 
               <div className="pt-3">

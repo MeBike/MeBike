@@ -8,16 +8,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
 
 export const getVerifyStatusColor = (status: SubscriptionStatus) => {
   switch (status) {
@@ -45,7 +35,7 @@ export const subscriptionColumns = ({
   {
     accessorKey: "maxUsages",
     header: "Tối đa",
-    cell: ({ row }) => row.original.maxUsages,
+    cell: ({ row }) => row.original.maxUsages || "Không có",
   },
   {
     accessorKey: "usageCount",

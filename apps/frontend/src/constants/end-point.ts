@@ -96,8 +96,8 @@ export const ENDPOINT = {
         CANCEL : (id:string) => `/admin/agency-requests/${id}/cancel`,
     },
     SUBSCRIPTION : {
-        BASE : "/subscriptions",
-        ID : (id:string) => `/subscriptions/${id}`,
+        BASE : "/admin/subscriptions",
+        ID : (id:string) => `/admin/subscriptions/${id}`,
     },
 
 } as const;

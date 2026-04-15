@@ -10,4 +10,9 @@ export interface Subscription {
   expiresAt: string;
   price: string;
   updatedAt: string;
+  user : {
+    id : string;
+    fullName : string;
+    email : string;
+  }
 }

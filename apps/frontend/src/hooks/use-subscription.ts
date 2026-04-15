@@ -9,13 +9,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 interface SubscriptionActionProps {
   hasToken: boolean;
-  subcription_id  ?: string;
-  page: number;
-  pageSize: number;
+  subscription_id  ?: string;
+  page?: number;
+  pageSize?: number;
 }
 export const useSubscriptionAction = ({
   hasToken,
-  subcription_id,
+  subscription_id,
   page,
   pageSize,
 }: SubscriptionActionProps) => {
@@ -37,7 +37,7 @@ export const useSubscriptionAction = ({
     data: subscriptionDetail,
     refetch: refetchSubscriptionDetail,
     isLoading: isLoadingSubscriptionDetail,
-  } = useGetSubscriptionDetailQuery({ id: subcription_id || ""});
+  } = useGetSubscriptionDetailQuery({ id: subscription_id || ""});
   const getSubscriptionDetail = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
