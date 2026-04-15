@@ -25,10 +25,17 @@ for example:
 - The process crashed after rental completion.
 - There was no active policy when an older rental completed.
 - Completed rental data existed before the Environment module was enabled.
+- Demo data was loaded with `pnpm seed:demo`.
 
 The command does not require an active Environment policy to enqueue repair jobs.
 If no active policy exists when the worker processes a job, the worker fails the
 job clearly with the existing active-policy error.
+
+For dev/demo databases, `pnpm seed:demo` creates one active Environment policy:
+`Default Phase 1 Demo Policy`. This lets the worker calculate impact, but it does
+not replace the repair command. Seeded completed rentals are inserted directly,
+so the repair command is still needed to enqueue `environment.impact.calculateRental`
+jobs for those rentals.
 
 ## Command
 
