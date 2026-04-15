@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   makeBikeRepository: vi.fn(),
   makeReservationQueryRepository: vi.fn(),
   makeReservationCommandRepository: vi.fn(),
+  billFixedSlotDates: vi.fn(),
   enqueueOutboxJobInTx: vi.fn(),
   buildFixedSlotAssignedEmail: vi.fn(() => ({ subject: "assigned", html: "assigned" })),
   buildFixedSlotNoBikeEmail: vi.fn(() => ({ subject: "no-bike", html: "no-bike" })),
@@ -33,6 +34,10 @@ vi.mock("../../repository/reservation-command.repository", () => ({
   makeReservationCommandRepository: mocks.makeReservationCommandRepository,
 }));
 
+vi.mock("../fixed-slot-template/billing", () => ({
+  billFixedSlotDates: mocks.billFixedSlotDates,
+}));
+
 vi.mock("@/infrastructure/jobs/outbox-enqueue", () => ({
   enqueueOutboxJobInTx: mocks.enqueueOutboxJobInTx,
 }));
@@ -51,6 +56,11 @@ describe("assignFixedSlotReservations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.enqueueOutboxJobInTx.mockImplementation(() => Effect.void);
+    mocks.billFixedSlotDates.mockImplementation(() => Effect.succeed({
+      pricingPolicyId: "policy-1",
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("2000"),
+    }));
   });
 
   it("creates and assigns daily fixed-slot reservation when bike is available", async () => {
@@ -135,6 +145,7 @@ describe("assignFixedSlotReservations", () => {
       totalTemplates: 1,
       assigned: 1,
       alreadyAssigned: 0,
+      billingFailed: 0,
       conflicts: 0,
       noBike: 0,
     });
@@ -205,6 +216,7 @@ describe("assignFixedSlotReservations", () => {
       totalTemplates: 1,
       assigned: 0,
       alreadyAssigned: 1,
+      billingFailed: 0,
       conflicts: 0,
       noBike: 0,
     });
@@ -287,6 +299,7 @@ describe("assignFixedSlotReservations", () => {
       totalTemplates: 1,
       assigned: 0,
       alreadyAssigned: 0,
+      billingFailed: 0,
       conflicts: 1,
       noBike: 0,
     });
@@ -356,8 +369,78 @@ describe("assignFixedSlotReservations", () => {
       totalTemplates: 1,
       assigned: 0,
       alreadyAssigned: 0,
+      billingFailed: 0,
       noBike: 0,
       conflicts: 1,
+    });
+    expect(mocks.enqueueOutboxJobInTx).not.toHaveBeenCalled();
+  });
+
+  it("counts billing failure without creating reservation", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 14));
+    const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
+    const bike = { id: "bike-1" };
+    const template = {
+      id: "template-1",
+      userId: "user-1",
+      stationId: "station-1",
+      pricingPolicyId: null,
+      subscriptionId: null,
+      prepaid: toPrismaDecimal("0"),
+      slotStart,
+      user: { fullName: "Test User", email: "user@example.com" },
+      station: { name: "Test Station" },
+    };
+
+    mocks.makeReservationQueryRepository.mockImplementation((client: { state?: DraftState }) => {
+      if (client.state) {
+        return {
+          findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(Option.none()),
+        };
+      }
+
+      return {
+        listActiveFixedSlotTemplatesByDate: () => Effect.succeed([template]),
+      };
+    });
+    mocks.makeReservationCommandRepository.mockReturnValue({
+      createReservation: vi.fn(),
+      assignBikeToPendingReservation: vi.fn(),
+    });
+    mocks.makeBikeRepository.mockReturnValue({
+      findAvailableByStation: () => Effect.succeed(Option.some(bike)),
+      reserveBikeIfAvailable: vi.fn(),
+    });
+    mocks.billFixedSlotDates.mockImplementation(() =>
+      Effect.fail({ _tag: "InsufficientWalletBalance" } as never));
+
+    const client = {
+      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) =>
+        callback({
+          state: {
+            reservationId: null,
+            bikeStatus: "AVAILABLE",
+          },
+        }),
+    };
+
+    const layer = Layer.mergeAll(
+      Layer.succeed(Prisma, Prisma.make({ client: client as never })),
+      Layer.succeed(BikeRepository, BikeRepository.make({} as never)),
+    );
+
+    const summary = await runEffectWithLayer(
+      assignFixedSlotReservations({ slotDate, assignmentTime: slotDate, now: slotDate }),
+      layer,
+    );
+
+    expect(summary).toMatchObject({
+      totalTemplates: 1,
+      assigned: 0,
+      alreadyAssigned: 0,
+      billingFailed: 1,
+      noBike: 0,
+      conflicts: 0,
     });
     expect(mocks.enqueueOutboxJobInTx).not.toHaveBeenCalled();
   });

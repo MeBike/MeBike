@@ -34,6 +34,7 @@ async function main() {
       assigned: summary.assigned,
       alreadyAssigned: summary.alreadyAssigned,
       noBike: summary.noBike,
+      billingFailed: summary.billingFailed,
       conflicts: summary.conflicts,
     },
     "fixed-slot-assign-once completed",

@@ -167,6 +167,9 @@ export function incrementFixedSlotCounts(
     case "ALREADY_ASSIGNED":
       counts.alreadyAssigned += 1;
       break;
+    case "BILLING_FAILED":
+      counts.billingFailed += 1;
+      break;
     case "NO_BIKE":
       counts.noBike += 1;
       break;

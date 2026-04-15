@@ -3,14 +3,9 @@ import { Context, Effect, Layer, Option } from "effect";
 import type { StationRepo } from "@/domain/stations";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { makePricingPolicyRepository } from "@/domain/pricing";
 import { defectOn } from "@/domain/shared";
+import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationRepository, StationRepository } from "@/domain/stations";
-import {
-  makeSubscriptionCommandRepository,
-  makeSubscriptionQueryRepository,
-} from "@/domain/subscriptions";
-import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -29,7 +24,6 @@ import {
 } from "../domain-errors";
 import { makeReservationCommandRepository, ReservationCommandRepository } from "../repository/reservation-command.repository";
 import { makeReservationQueryRepository, ReservationQueryRepository } from "../repository/reservation-query.repository";
-import { billFixedSlotDates } from "./fixed-slot-template/billing";
 import {
   applyTemplateMutation,
   ensureTemplateMutationAllowed,
@@ -80,10 +74,6 @@ export function makeFixedSlotTemplateService(deps: {
             const txStationRepo = makeStationRepository(tx);
             const txReservationQueryRepo = makeReservationQueryRepository(tx);
             const txReservationCommandRepo = makeReservationCommandRepository(tx);
-            const txSubscriptionQueryRepo = makeSubscriptionQueryRepository(tx);
-            const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(tx);
-            const txWalletRepo = makeWalletRepository(tx);
-            const txPricingPolicyRepo = makePricingPolicyRepository(tx);
 
             const stationOpt = yield* txStationRepo.getById(args.stationId);
             if (Option.isNone(stationOpt)) {
@@ -105,22 +95,13 @@ export function makeFixedSlotTemplateService(deps: {
               }));
             }
 
-            const billing = yield* billFixedSlotDates({
-              userId: args.userId,
-              totalSlots: slotDates.length,
-              txPricingPolicyRepo,
-              txSubscriptionQueryRepo,
-              txSubscriptionCommandRepo,
-              txWalletRepo,
-            });
-
             return yield* txReservationCommandRepo.createFixedSlotTemplate({
               userId: args.userId,
               stationId: args.stationId,
-              pricingPolicyId: billing.pricingPolicyId,
-              subscriptionId: billing.subscriptionId,
+              pricingPolicyId: null,
+              subscriptionId: null,
               slotStart,
-              prepaid: billing.prepaid,
+              prepaid: toPrismaDecimal("0"),
               slotDates,
               updatedAt: now,
             });

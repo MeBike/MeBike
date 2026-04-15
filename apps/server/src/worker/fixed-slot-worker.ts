@@ -44,6 +44,7 @@ export async function handleFixedSlotAssign(
       assigned: summary.assigned,
       alreadyAssigned: summary.alreadyAssigned,
       noBike: summary.noBike,
+      billingFailed: summary.billingFailed,
       conflicts: summary.conflicts,
     },
     "reservations.fixedSlotAssign completed",

@@ -1,8 +1,18 @@
 import { Cause, Effect, Exit, Option } from "effect";
 
+import type {
+  InsufficientWalletBalance,
+  WalletNotFound,
+} from "@/domain/wallets/domain-errors";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
+import { makePricingPolicyRepository } from "@/domain/pricing";
+import {
+  makeSubscriptionCommandRepository,
+  makeSubscriptionQueryRepository,
+} from "@/domain/subscriptions";
+import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -11,6 +21,7 @@ import {
   buildFixedSlotNoBikeEmail,
 } from "@/lib/email-templates";
 
+import type { FixedSlotTemplateBillingConflict } from "../../domain-errors";
 import type {
   FixedSlotAssignmentContext,
   FixedSlotAssignmentOutcome,
@@ -20,12 +31,26 @@ import type {
 
 import { makeReservationCommandRepository } from "../../repository/reservation-command.repository";
 import { makeReservationQueryRepository } from "../../repository/reservation-query.repository";
+import { billFixedSlotDates } from "../fixed-slot-template/billing";
 import { buildFixedSlotLabels } from "./fixed-slot.helpers";
 
 class FixedSlotAssignmentConflict extends Error {
   constructor() {
     super("Fixed-slot assignment conflict");
   }
+}
+
+function isFixedSlotBillingFailure(
+  err: unknown,
+): err is FixedSlotTemplateBillingConflict | WalletNotFound | InsufficientWalletBalance {
+  return typeof err === "object"
+    && err !== null
+    && "_tag" in err
+    && (
+      err._tag === "FixedSlotTemplateBillingConflict"
+      || err._tag === "WalletNotFound"
+      || err._tag === "InsufficientWalletBalance"
+    );
 }
 
 /**
@@ -158,6 +183,21 @@ async function runFixedSlotAssignmentTransaction(
       }
       const bike = bikeOpt.value;
 
+      const txPricingPolicyRepo = makePricingPolicyRepository(tx);
+      const txSubscriptionQueryRepo = makeSubscriptionQueryRepository(tx);
+      const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(tx);
+      const txWalletRepo = makeWalletRepository(tx);
+
+      const billing = yield* billFixedSlotDates({
+        userId: template.userId,
+        totalSlots: 1,
+        description: `Fixed-slot reservation ${labels.slotDateLabel} ${labels.slotTimeLabel}`,
+        txPricingPolicyRepo,
+        txSubscriptionQueryRepo,
+        txSubscriptionCommandRepo,
+        txWalletRepo,
+      });
+
       const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, context.now);
       if (!bikeReserved) {
         return yield* Effect.fail(new FixedSlotAssignmentConflict());
@@ -167,13 +207,13 @@ async function runFixedSlotAssignmentTransaction(
         userId: template.userId,
         bikeId: bike.id,
         stationId: template.stationId,
-        pricingPolicyId: template.pricingPolicyId,
+        pricingPolicyId: billing.pricingPolicyId,
         reservationOption: "FIXED_SLOT",
         fixedSlotTemplateId: template.id,
-        subscriptionId: template.subscriptionId,
+        subscriptionId: billing.subscriptionId,
         startTime: labels.slotStartAt,
         endTime: null,
-        prepaid: template.prepaid,
+        prepaid: billing.prepaid,
         status: "PENDING",
       }).pipe(
         Effect.catchTag("ReservationUniqueViolation", () =>
@@ -220,6 +260,10 @@ export function processFixedSlotTemplate(
     Effect.catchIf(
       (err): err is FixedSlotAssignmentConflict => err instanceof FixedSlotAssignmentConflict,
       () => Effect.succeed("CONFLICT" as const),
+    ),
+    Effect.catchIf(
+      isFixedSlotBillingFailure,
+      () => Effect.succeed("BILLING_FAILED" as const),
     ),
     Effect.catchAll(err => Effect.die(err)),
   );

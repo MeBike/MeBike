@@ -7,6 +7,7 @@ export type FixedSlotAssignmentSummary = {
   readonly assigned: number;
   readonly alreadyAssigned: number;
   readonly noBike: number;
+  readonly billingFailed: number;
   readonly conflicts: number;
 };
 
@@ -14,6 +15,7 @@ export type FixedSlotAssignmentSummary = {
 export type FixedSlotAssignmentOutcome
   = | "ASSIGNED"
     | "ALREADY_ASSIGNED"
+    | "BILLING_FAILED"
     | "NO_BIKE"
     | "CONFLICT";
 
@@ -36,6 +38,7 @@ export type FixedSlotCounts = {
   assigned: number;
   alreadyAssigned: number;
   noBike: number;
+  billingFailed: number;
   conflicts: number;
 };
 
