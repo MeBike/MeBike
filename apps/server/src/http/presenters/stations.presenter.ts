@@ -21,7 +21,7 @@ export function toContractStationReadSummary(
     },
     capacity: {
       total: station.totalCapacity,
-      pickupSlotLimit: station.pickupSlotLimit,
+      pickupSlotLimit: station.totalCapacity,
       returnSlotLimit: station.returnSlotLimit,
       emptyPhysicalSlots: station.emptySlots,
     },
@@ -40,6 +40,33 @@ export function toContractStationReadSummary(
     },
     createdAt: station.createdAt,
     updatedAt: station.updatedAt,
+  };
+}
+
+export function toContractStationSummary(
+  station: StationRow,
+): StationsContracts.StationSummary {
+  return {
+    id: station.id,
+    name: station.name,
+    address: station.address,
+    stationType: station.stationType,
+    agencyId: station.agencyId,
+    totalCapacity: station.totalCapacity,
+    pickupSlotLimit: station.totalCapacity,
+    returnSlotLimit: station.returnSlotLimit,
+    latitude: station.latitude,
+    longitude: station.longitude,
+    createdAt: station.createdAt,
+    updatedAt: station.updatedAt,
+    totalBikes: station.totalBikes,
+    availableBikes: station.availableBikes,
+    bookedBikes: station.bookedBikes,
+    brokenBikes: station.brokenBikes,
+    reservedBikes: station.reservedBikes,
+    maintainedBikes: station.maintainedBikes,
+    unavailableBikes: station.unavailableBikes,
+    emptySlots: station.emptySlots,
   };
 }
 

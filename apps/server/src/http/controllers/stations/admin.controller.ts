@@ -3,7 +3,10 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Match } from "effect";
 
 import { StationServiceTag } from "@/domain/stations";
-import { toContractStationReadSummary } from "@/http/presenters/stations.presenter";
+import {
+  toContractStationReadSummary,
+  toContractStationSummary,
+} from "@/http/presenters/stations.presenter";
 
 import type {
   StationErrorResponse,
@@ -67,7 +70,6 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
       stationType: body.stationType,
       agencyId: body.agencyId ?? null,
       totalCapacity: body.totalCapacity,
-      pickupSlotLimit: body.pickupSlotLimit,
       returnSlotLimit: body.returnSlotLimit,
       latitude: body.latitude,
       longitude: body.longitude,
@@ -76,7 +78,7 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) => c.json<StationSummary, 201>(right, 201)),
+    Match.tag("Right", ({ right }) => c.json<StationSummary, 201>(toContractStationSummary(right), 201)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("StationNameAlreadyExists", () =>
@@ -155,7 +157,7 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) => c.json<StationSummary, 200>(right, 200)),
+    Match.tag("Right", ({ right }) => c.json<StationSummary, 200>(toContractStationSummary(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("StationNotFound", ({ id }) =>
@@ -206,16 +208,6 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
               stationId,
               returnSlotLimit,
               activeReturnSlots,
-            },
-          }, 400)),
-        Match.tag("StationPickupSlotLimitBelowPendingReservations", ({ stationId, pickupSlotLimit, pendingReservations }) =>
-          c.json<StationErrorResponse, 400>({
-            error: stationErrorMessages.PICKUP_SLOT_LIMIT_BELOW_PENDING_RESERVATIONS,
-            details: {
-              code: StationErrorCodeSchema.enum.PICKUP_SLOT_LIMIT_BELOW_PENDING_RESERVATIONS,
-              stationId,
-              pickupSlotLimit,
-              pendingReservations,
             },
           }, 400)),
         Match.tag("StationOutsideSupportedArea", () =>

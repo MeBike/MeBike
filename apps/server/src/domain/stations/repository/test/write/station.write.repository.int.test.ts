@@ -31,7 +31,6 @@ describe("stationWriteRepository Integration", () => {
     expect(created.name).toBe("Create Station");
     expect(created.address).toBe("456 Create St");
     expect(created.totalCapacity).toBe(24);
-    expect(created.pickupSlotLimit).toBe(24);
     expect(created.returnSlotLimit).toBe(24);
     expect(created.latitude).toBeCloseTo(vietnamCoords.latitude, 10);
     expect(created.longitude).toBeCloseTo(vietnamCoords.longitude, 10);
@@ -97,7 +96,6 @@ describe("stationWriteRepository Integration", () => {
     expect(updated.name).toBe("Updated Station Name");
     expect(updated.address).toBe("New Address");
     expect(updated.totalCapacity).toBe(12);
-    expect(updated.pickupSlotLimit).toBe(12);
     expect(updated.returnSlotLimit).toBe(12);
     expect(updated.latitude).toBeCloseTo(21.3749, 10);
     expect(updated.longitude).toBeCloseTo(104.8411, 10);
@@ -191,13 +189,12 @@ describe("stationWriteRepository Integration", () => {
     expect(result.left._tag).toBe("StationOutsideSupportedArea");
   });
 
-  it("create supports explicit pickup and return slot limits", async () => {
+  it("create supports explicit return slot limit", async () => {
     const created = await Effect.runPromise(
       repo.create({
         name: `Capacity Split ${Date.now()}`,
         address: "Split Address",
         totalCapacity: 30,
-        pickupSlotLimit: 12,
         returnSlotLimit: 8,
         latitude: vietnamCoords.latitude,
         longitude: vietnamCoords.longitude,
@@ -205,7 +202,6 @@ describe("stationWriteRepository Integration", () => {
     );
 
     expect(created.totalCapacity).toBe(30);
-    expect(created.pickupSlotLimit).toBe(12);
     expect(created.returnSlotLimit).toBe(8);
   });
 });

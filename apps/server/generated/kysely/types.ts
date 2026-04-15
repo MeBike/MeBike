@@ -649,7 +649,6 @@ export type Station = {
     station_type: Generated<StationType>;
     agency_id: string | null;
     total_capacity: number;
-    pickup_slot_limit: Generated<number>;
     return_slot_limit: Generated<number>;
     latitude: number;
     longitude: number;

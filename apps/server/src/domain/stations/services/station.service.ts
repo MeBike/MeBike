@@ -1,12 +1,10 @@
 import { Effect, Layer, Option } from "effect";
 
 import type { AgencyRepo } from "@/domain/agencies";
-import type { ReservationQueryRepo } from "@/domain/reservations";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import { env } from "@/config/env";
 import { AgencyRepository, AgencyRepositoryError } from "@/domain/agencies";
-import { ReservationQueryRepository } from "@/domain/reservations";
 import { defectOn } from "@/domain/shared";
 
 import type {
@@ -19,7 +17,6 @@ import type {
   StationCapacitySplitInvalid,
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
-  StationPickupSlotLimitBelowPendingReservations,
   StationReturnSlotLimitBelowActiveReservations,
 } from "../errors";
 import type {
@@ -43,7 +40,6 @@ import {
   StationCapacityLimitExceeded as StationCapacityLimitExceededError,
   StationCapacitySplitInvalid as StationCapacitySplitInvalidError,
   StationNotFound,
-  StationPickupSlotLimitBelowPendingReservations as StationPickupSlotLimitBelowPendingReservationsError,
   StationReturnSlotLimitBelowActiveReservations as StationReturnSlotLimitBelowActiveReservationsError,
 } from "../errors";
 import { StationRepository } from "../repository/station.repository";
@@ -74,7 +70,6 @@ export type StationService = {
     | StationCapacitySplitInvalid
     | StationCapacityBelowActiveUsage
     | StationReturnSlotLimitBelowActiveReservations
-    | StationPickupSlotLimitBelowPendingReservations
     | StationAgencyRequired
     | StationAgencyForbidden
     | StationAgencyNotFound
@@ -98,27 +93,20 @@ export type StationService = {
 
 export function makeStationService(repo: StationRepo, deps: {
   agencyRepo: Pick<AgencyRepo, "getById">;
-  reservationRepo: Pick<ReservationQueryRepo, "countPendingByStationId">;
+  reservationRepo?: unknown;
 }): StationService {
   function resolveCapacitySplit(input: {
     totalCapacity: number;
-    pickupSlotLimit?: number;
     returnSlotLimit?: number;
   }) {
     return {
       totalCapacity: input.totalCapacity,
-      pickupSlotLimit: input.pickupSlotLimit ?? input.totalCapacity,
       returnSlotLimit: input.returnSlotLimit ?? input.totalCapacity,
     };
   }
 
   function resolveUpdatedCapacitySplit(current: StationRow, input: UpdateStationInput) {
     const totalCapacity = input.totalCapacity ?? current.totalCapacity;
-
-    const pickupSlotLimit = input.pickupSlotLimit
-      ?? (input.totalCapacity != null && current.pickupSlotLimit === current.totalCapacity
-        ? input.totalCapacity
-        : current.pickupSlotLimit);
 
     const returnSlotLimit = input.returnSlotLimit
       ?? (input.totalCapacity != null && current.returnSlotLimit === current.totalCapacity
@@ -127,20 +115,16 @@ export function makeStationService(repo: StationRepo, deps: {
 
     return {
       totalCapacity,
-      pickupSlotLimit,
       returnSlotLimit,
     };
   }
 
   function validateCapacitySplit(args: {
     totalCapacity: number;
-    pickupSlotLimit: number;
     returnSlotLimit: number;
   }) {
     return args.totalCapacity > 0
-      && args.pickupSlotLimit >= 0
       && args.returnSlotLimit >= 0
-      && args.pickupSlotLimit <= args.totalCapacity
       && args.returnSlotLimit <= args.totalCapacity;
   }
 
@@ -189,7 +173,6 @@ export function makeStationService(repo: StationRepo, deps: {
 
   const validateOperationalUpdate = (current: StationRow, next: {
     totalCapacity: number;
-    pickupSlotLimit: number;
     returnSlotLimit: number;
   }) =>
     Effect.gen(function* () {
@@ -213,19 +196,6 @@ export function makeStationService(repo: StationRepo, deps: {
           stationId: current.id,
           returnSlotLimit: next.returnSlotLimit,
           activeReturnSlots: current.activeReturnSlots,
-        }));
-      }
-
-      if (next.pickupSlotLimit === current.pickupSlotLimit) {
-        return;
-      }
-
-      const pendingReservations = yield* deps.reservationRepo.countPendingByStationId(current.id);
-      if (next.pickupSlotLimit < pendingReservations) {
-        return yield* Effect.fail(new StationPickupSlotLimitBelowPendingReservationsError({
-          stationId: current.id,
-          pickupSlotLimit: next.pickupSlotLimit,
-          pendingReservations,
         }));
       }
     });
@@ -330,8 +300,7 @@ export function makeStationService(repo: StationRepo, deps: {
 const makeStationServiceEffect = Effect.gen(function* () {
   const repo = yield* StationRepository;
   const agencyRepo = yield* AgencyRepository;
-  const reservationRepo = yield* ReservationQueryRepository;
-  return makeStationService(repo, { agencyRepo, reservationRepo });
+  return makeStationService(repo, { agencyRepo });
 });
 
 export class StationServiceTag extends Effect.Service<StationServiceTag>()(
