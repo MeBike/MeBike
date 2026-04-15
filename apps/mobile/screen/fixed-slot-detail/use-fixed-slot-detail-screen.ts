@@ -48,7 +48,7 @@ export function useFixedSlotDetailScreen({ navigation, templateId }: UseFixedSlo
   const handleRemoveDate = useCallback((slotDate: string) => {
     Alert.alert(
       "Xóa ngày áp dụng",
-      `Bạn có chắc muốn xóa ngày ${formatDisplayDate(slotDate)}? Sẽ không được hoàn tiền cho ngày đã xóa.`,
+      `Bạn có chắc muốn xóa ngày ${formatDisplayDate(slotDate)}? Ngày chưa được tạo đặt trước sẽ không bị trừ phí. Nếu hệ thống đã giữ xe cho ngày này, phí hiện chưa được hoàn tự động.`,
       [
         { text: "Đóng", style: "cancel" },
         {
@@ -71,7 +71,7 @@ export function useFixedSlotDetailScreen({ navigation, templateId }: UseFixedSlo
   const handleCancelTemplate = useCallback(() => {
     Alert.alert(
       "Hủy toàn bộ lịch đặt",
-      "Hủy toàn bộ lịch đặt này? Bạn sẽ không được hoàn lại tiền cho các ngày chưa sử dụng.",
+      "Hủy toàn bộ lịch đặt này? Các ngày chưa được tạo đặt trước sẽ không bị trừ phí. Những ngày đã được giữ xe hiện chưa được hoàn tự động.",
       [
         { text: "Đóng", style: "cancel" },
         {

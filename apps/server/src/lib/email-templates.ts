@@ -27,6 +27,10 @@ type FixedSlotAssignmentEmailParams = {
   readonly slotTimeLabel: string;
 };
 
+type FixedSlotBillingFailedEmailParams = FixedSlotAssignmentEmailParams & {
+  readonly reason: "INSUFFICIENT_BALANCE" | "PAYMENT_UNAVAILABLE";
+};
+
 type ReservationHoldEmailParams = {
   readonly fullName: string;
   readonly stationName: string;
@@ -237,6 +241,45 @@ export function buildFixedSlotNoBikeEmail({
 
   return {
     subject: "Không có xe khả dụng cho khung giờ cố định",
+    html: renderEmailShell({
+      title,
+      previewText: `${safeDate} lúc ${safeTime}`,
+      bodyHtml: body,
+    }),
+  };
+}
+
+export function buildFixedSlotBillingFailedEmail({
+  fullName,
+  stationName,
+  slotDateLabel,
+  slotTimeLabel,
+  reason,
+}: FixedSlotBillingFailedEmailParams): { subject: string; html: string } {
+  const safeName = escapeHtml(fullName);
+  const safeStation = escapeHtml(stationName);
+  const safeDate = escapeHtml(slotDateLabel);
+  const safeTime = escapeHtml(slotTimeLabel);
+  const title = "Không thể giữ xe cho khung giờ cố định";
+  const guidance = reason === "INSUFFICIENT_BALANCE"
+    ? "Vui lòng kiểm tra ví MeBike và nạp thêm số dư trước khung giờ tiếp theo."
+    : "Vui lòng kiểm tra lại phương thức thanh toán hoặc thử lại sau trong ứng dụng.";
+
+  const body = `
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      Hệ thống chưa thể giữ xe cho khung giờ cố định của bạn vì thanh toán không hoàn tất.
+    </p>
+    <div style="background: #fef3f2; border: 1px solid #fecdca; color: #b42318; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
+      <strong>${safeDate}</strong> • ${safeTime} • Trạm ${safeStation}
+    </div>
+    <p style="margin: 0; color: ${MUTED_COLOR}; font-size: 14px;">
+      ${guidance}
+    </p>
+  `;
+
+  return {
+    subject: "Không thể thanh toán cho khung giờ cố định",
     html: renderEmailShell({
       title,
       previewText: `${safeDate} lúc ${safeTime}`,

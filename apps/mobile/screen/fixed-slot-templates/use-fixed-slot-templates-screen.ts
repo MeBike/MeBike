@@ -35,7 +35,7 @@ export function useFixedSlotTemplatesScreen({ navigation, routeParams }: UseFixe
   const handleCreateTemplate = useCallback(() => {
     Alert.alert(
       "Tạo khung giờ mới",
-      "Việc tạo khung giờ sẽ trừ lượt sử dụng trong gói đăng ký tháng. Nếu đã hết lượt, số dư ví sẽ bị trừ tương ứng. Bạn có chắc chắn muốn tiếp tục?",
+      "Lịch chỉ bị trừ lượt gói hoặc số dư ví khi hệ thống tạo đặt trước cho từng ngày. Không trừ tiền ngay lúc tạo lịch. Bạn có muốn tiếp tục?",
       [
         { text: "Huỷ", style: "cancel" },
         {

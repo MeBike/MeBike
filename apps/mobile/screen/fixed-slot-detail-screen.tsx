@@ -191,9 +191,9 @@ export default function FixedSlotDetailScreen() {
                     <XStack alignItems="flex-start" gap="$3">
                       <IconSymbol color={theme.textWarning.val} name="warning" size="md" />
                       <YStack flex={1} gap="$1">
-                        <AppText tone="warning" variant="bodyStrong">Chính sách phí & hoàn tiền</AppText>
+                        <AppText tone="warning" variant="bodyStrong">Thanh toán theo từng ngày</AppText>
                         <AppText tone="warning" variant="bodySmall">
-                          Lịch cố định được thanh toán trước. Việc xóa ngày lẻ hoặc hủy toàn bộ lịch sẽ không được hoàn lại tiền cho các ngày đã thanh toán.
+                          Phí chỉ được trừ khi hệ thống tạo đặt trước cho từng ngày. Nếu một ngày đã được giữ xe thành công, việc xóa ngày hoặc hủy lịch hiện chưa hoàn phí tự động cho ngày đó.
                         </AppText>
                       </YStack>
                     </XStack>

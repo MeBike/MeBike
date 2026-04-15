@@ -43,11 +43,14 @@ export function assignFixedSlotReservations(args: {
     };
 
     const reservationQueryRepo = makeReservationQueryRepository(client);
+    // FIX: Re-validate template status/date membership inside assignment transaction.
+    // Current worker snapshots active templates here, so later cancel/remove-date/slotStart updates can still be billed/materialized from stale data.
     const templates = yield* reservationQueryRepo.listActiveFixedSlotTemplatesByDate(slotDate);
     const counts: FixedSlotCounts = {
       assigned: 0,
       alreadyAssigned: 0,
       noBike: 0,
+      billingFailed: 0,
       conflicts: 0,
     };
     // TODO(ops): Avoid "sequential death" — a single unexpected DB/infra failure currently dies the whole run.

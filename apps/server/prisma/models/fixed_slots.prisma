@@ -7,42 +7,28 @@ model FixedSlotTemplate {
   id        String          @id @default(uuid(7)) @db.Uuid
   userId    String          @map("user_id") @db.Uuid
   stationId String          @map("station_id") @db.Uuid
-  pricingPolicyId String?   @map("pricing_policy_id") @db.Uuid
-  subscriptionId  String?   @map("subscription_id") @db.Uuid
   slotStart DateTime        @map("slot_start") @db.Time
-  prepaid   Decimal         @default(0) @db.Decimal(12, 2)
   status    FixedSlotStatus @default(ACTIVE)
   updatedAt DateTime        @default(now()) @map("updated_at") @db.Timestamptz
 
   user         User            @relation(fields: [userId], references: [id])
   station      Station         @relation(fields: [stationId], references: [id])
-  pricingPolicy PricingPolicy? @relation(fields: [pricingPolicyId], references: [id])
-  subscription  Subscription?  @relation(fields: [subscriptionId], references: [id])
   dates        FixedSlotDate[]
   reservations Reservation[]
 
   @@index([userId], name: "idx_fixed_slot_user")
   @@index([stationId], name: "idx_fixed_slot_station")
-  @@index([pricingPolicyId], name: "idx_fixed_slot_pricing_policy")
-  @@index([subscriptionId], name: "idx_fixed_slot_subscription")
   @@index([status], name: "idx_fixed_slot_status")
 }
 
 model FixedSlotDate {
-  id              String        @id @default(uuid(7)) @db.Uuid
-  templateId      String        @map("template_id") @db.Uuid
-  pricingPolicyId String?       @map("pricing_policy_id") @db.Uuid
-  subscriptionId  String?       @map("subscription_id") @db.Uuid
-  slotDate        DateTime      @map("slot_date") @db.Date
-  prepaid         Decimal?      @db.Decimal(12, 2)
+  id         String   @id @default(uuid(7)) @db.Uuid
+  templateId String   @map("template_id") @db.Uuid
+  slotDate   DateTime @map("slot_date") @db.Date
 
-  template      FixedSlotTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  pricingPolicy PricingPolicy?   @relation(fields: [pricingPolicyId], references: [id])
-  subscription  Subscription?    @relation(fields: [subscriptionId], references: [id])
+  template FixedSlotTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@unique([templateId, slotDate], name: "uq_fixed_slot_date")
   @@index([templateId], name: "idx_fixed_slot_dates_template")
-  @@index([pricingPolicyId], name: "idx_fixed_slot_dates_pricing_policy")
-  @@index([subscriptionId], name: "idx_fixed_slot_dates_subscription")
   @@index([slotDate], name: "idx_fixed_slot_dates_date")
 }
