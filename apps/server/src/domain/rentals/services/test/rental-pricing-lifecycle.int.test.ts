@@ -44,7 +44,10 @@ describe("rental pricing lifecycle integration", () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 50_000n },
     });
-    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 3 },
+    });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
 
@@ -148,7 +151,10 @@ describe("rental pricing lifecycle integration", () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 50_000n },
     });
-    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 3 },
+    });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
 
