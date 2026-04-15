@@ -1,39 +1,21 @@
-import { FixedSlotTemplateCard } from "@components/reservation-flow/FixedSlotTemplateCard";
-import { BikeColors } from "@constants/BikeColors";
-import type { FixedSlotTemplateListItem } from "@/types/fixed-slot-types";
+import { spaceScale } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { useTheme, YStack } from "tamagui";
 
-const styles = StyleSheet.create({
-  list: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-    gap: 16,
-    paddingBottom: 40,
-  },
-  emptyState: {
-    padding: 32,
-    alignItems: "center",
-    gap: 12,
-  },
-  emptyText: {
-    color: BikeColors.textSecondary,
-  },
-  footerLoader: {
-    paddingVertical: 16,
-  },
-});
+import type { FixedSlotTemplate } from "@/contracts/server";
+
+import { IconSymbol } from "@/components/IconSymbol";
+
+import { FixedSlotTemplateCard } from "./fixed-slot-template-card";
 
 type FixedSlotTemplatesListProps = {
-  templates: FixedSlotTemplateListItem[];
+  templates: FixedSlotTemplate[];
   refreshing: boolean;
   isLoading: boolean;
   isFetchingMore: boolean;
@@ -41,7 +23,6 @@ type FixedSlotTemplatesListProps = {
   containerHeight: number;
   onRefresh: () => void;
   onLoadMore: () => void;
-  onCancel: (templateId: string) => void;
   onSelect: (templateId: string) => void;
 };
 
@@ -54,9 +35,9 @@ export function FixedSlotTemplatesList({
   containerHeight,
   onRefresh,
   onLoadMore,
-  onCancel,
   onSelect,
 }: FixedSlotTemplatesListProps) {
+  const theme = useTheme();
   const [contentHeight, setContentHeight] = useState(0);
 
   useEffect(() => {
@@ -78,10 +59,13 @@ export function FixedSlotTemplatesList({
 
   return (
     <FlatList
-      style={styles.list}
       data={templates}
-      keyExtractor={(item) => item._id}
-      contentContainerStyle={styles.content}
+      keyExtractor={item => item.id}
+      contentContainerStyle={{
+        paddingBottom: spaceScale[9],
+        paddingTop: spaceScale[5],
+        flexGrow: templates.length === 0 ? 1 : undefined,
+      }}
       refreshing={refreshing}
       onRefresh={onRefresh}
       onEndReached={handleEndReached}
@@ -90,30 +74,44 @@ export function FixedSlotTemplatesList({
         setContentHeight(height);
       }}
       ListFooterComponent={
-        isFetchingMore ? (
-          <View style={styles.footerLoader}>
-            <ActivityIndicator color={BikeColors.primary} />
-          </View>
-        ) : null
+        isFetchingMore
+          ? (
+              <View style={{ paddingVertical: 16 }}>
+                <ActivityIndicator color={theme.actionPrimary.val} />
+              </View>
+            )
+          : null
       }
       ListEmptyComponent={
-        isLoading ? (
-          <View style={styles.emptyState}>
-            <ActivityIndicator color={BikeColors.primary} size="large" />
-            <Text style={styles.emptyText}>Đang tải khung giờ...</Text>
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>Chưa có khung giờ nào.</Text>
-          </View>
-        )
+        isLoading
+          ? (
+              <View style={{ paddingHorizontal: spaceScale[5], paddingTop: spaceScale[5], flex: 1 }}>
+                <YStack alignItems="center" backgroundColor="$surfaceDefault" borderColor="$borderSubtle" borderRadius="$5" borderWidth={1} gap="$3" padding="$7">
+                  <ActivityIndicator color={theme.actionPrimary.val} size="large" />
+                  <AppText tone="muted" variant="bodySmall">Đang tải khung giờ...</AppText>
+                </YStack>
+              </View>
+            )
+          : (
+              <View style={{ paddingHorizontal: spaceScale[5], paddingTop: spaceScale[5], flex: 1 }}>
+                <YStack alignItems="center" backgroundColor="$surfaceDefault" borderColor="$borderSubtle" borderRadius="$5" borderWidth={1} gap="$3" padding="$7">
+                  <IconSymbol color={theme.textTertiary.val} name="calendar" size="display" />
+                  <AppText variant="sectionTitle">Chưa có khung giờ nào</AppText>
+                  <AppText align="center" tone="muted" variant="bodySmall">
+                    Tạo khung giờ cố định để giữ nhịp thuê xe nhanh hơn tại trạm quen thuộc.
+                  </AppText>
+                </YStack>
+              </View>
+            )
       }
+      ItemSeparatorComponent={() => <View style={{ height: spaceScale[4] }} />}
       renderItem={({ item }) => (
-        <FixedSlotTemplateCard
-          template={item}
-          onCancel={() => onCancel(item._id)}
-          onSelect={() => onSelect(item._id)}
-        />
+        <View style={{ paddingHorizontal: spaceScale[5] }}>
+          <FixedSlotTemplateCard
+            template={item}
+            onSelect={() => onSelect(item.id)}
+          />
+        </View>
       )}
     />
   );
