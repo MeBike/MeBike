@@ -5,6 +5,7 @@ import {
 } from "../../schemas";
 import {
   EnvironmentImpactSchema,
+  EnvironmentImpactHistoryResponseSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
   EnvironmentSummarySchema,
@@ -13,6 +14,7 @@ import { AccountStatusSchema } from "../../users";
 
 export {
   EnvironmentImpactSchema,
+  EnvironmentImpactHistoryResponseSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
   EnvironmentSummarySchema,
@@ -87,6 +89,9 @@ export type CreateEnvironmentPolicyBody = z.infer<
 >;
 export type EnvironmentPolicyResponse = z.infer<typeof EnvironmentPolicySchema>;
 export type EnvironmentImpactResponse = z.infer<typeof EnvironmentImpactSchema>;
+export type EnvironmentImpactHistoryResponse = z.infer<
+  typeof EnvironmentImpactHistoryResponseSchema
+>;
 export type EnvironmentSummaryResponse = z.infer<
   typeof EnvironmentSummarySchema
 >;
@@ -115,6 +120,7 @@ export const EnvironmentPolicySortFieldSchema = z.enum([
 ]);
 
 export const EnvironmentPolicySortOrderSchema = z.enum(["asc", "desc"]);
+export const EnvironmentImpactHistorySortOrderSchema = z.enum(["asc", "desc"]);
 
 export const ListEnvironmentPoliciesQuerySchema = z.object({
   page: optionalIntegerQuery("page")
@@ -164,4 +170,66 @@ export const ListEnvironmentPoliciesQuerySchema = z.object({
 
 export type ListEnvironmentPoliciesQuery = z.infer<
   typeof ListEnvironmentPoliciesQuerySchema
+>;
+
+const optionalIsoDateOrDateTimeQuery = (field: string) =>
+  z.preprocess(
+    (value) => {
+      if (value === undefined || value === null) {
+        return undefined;
+      }
+      if (typeof value !== "string") {
+        return value;
+      }
+      const trimmed = value.trim();
+      return trimmed === "" ? undefined : trimmed;
+    },
+    z.union([z.iso.date(), z.iso.datetime()]).optional(),
+  ).openapi({
+    description: `${field} filter as an ISO date or datetime.`,
+    example: "2026-04-15T00:00:00.000Z",
+  });
+
+export const ListEnvironmentImpactHistoryQuerySchema = z.object({
+  page: optionalIntegerQuery("page")
+    .pipe(z.number().int().min(1, { message: "page must be greater than or equal to 1" }))
+    .optional()
+    .openapi({
+      description: "Page number (1-based). Defaults to 1.",
+      example: 1,
+    }),
+  pageSize: optionalIntegerQuery("pageSize")
+    .pipe(z.number().int()
+      .min(1, { message: "pageSize must be greater than or equal to 1" })
+      .max(100, { message: "pageSize must be less than or equal to 100" }))
+    .optional()
+    .openapi({
+      description: "Number of impact records per page. Defaults to 20, max 100.",
+      example: 20,
+    }),
+  sortOrder: EnvironmentImpactHistorySortOrderSchema.optional().openapi({
+    description: "Sort direction by calculated_at. Defaults to desc.",
+    example: "desc",
+  }),
+  dateFrom: optionalIsoDateOrDateTimeQuery("dateFrom"),
+  dateTo: optionalIsoDateOrDateTimeQuery("dateTo"),
+}).superRefine((value, ctx) => {
+  if (
+    value.dateFrom
+    && value.dateTo
+    && new Date(value.dateFrom) > new Date(value.dateTo)
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["dateFrom"],
+      message: "dateFrom must not be after dateTo",
+    });
+  }
+}).openapi("ListEnvironmentImpactHistoryQuery", {
+  description:
+    "Optional pagination, sorting, and calculated_at filters for the authenticated user's Environment Impact history.",
+});
+
+export type ListEnvironmentImpactHistoryQuery = z.infer<
+  typeof ListEnvironmentImpactHistoryQuerySchema
 >;

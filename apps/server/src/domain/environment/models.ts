@@ -119,6 +119,31 @@ export type EnvironmentImpactSummaryRow = {
   totalCo2Saved: PrismaTypes.Decimal;
 };
 
+export type EnvironmentImpactHistorySortOrder = "asc" | "desc";
+
+export type ListUserEnvironmentImpactHistoryInput = {
+  page?: number;
+  pageSize?: number;
+  sortOrder?: EnvironmentImpactHistorySortOrder;
+  dateFrom?: string;
+  dateTo?: string;
+};
+
+export type EnvironmentImpactHistoryFilter = {
+  userId: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+};
+
+export type EnvironmentImpactHistoryPageRequest = {
+  page: number;
+  pageSize: number;
+  sortOrder: EnvironmentImpactHistorySortOrder;
+};
+
+export type EnvironmentImpactHistoryPageResult =
+  PageResult<EnvironmentImpactRow>;
+
 export type EnvironmentImpactRentalRow = {
   id: string;
   userId: string;

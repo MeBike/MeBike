@@ -2,11 +2,13 @@ import { Context, Effect, Layer, Option } from "effect";
 
 import type {
   EnvironmentImpactCalculationResult,
+  EnvironmentImpactHistoryPageResult,
   EnvironmentImpactPolicySnapshot,
   EnvironmentImpactRentalRow,
   EnvironmentImpactSummaryRow,
   EnvironmentPolicyFormulaConfig,
   EnvironmentPolicyRow,
+  ListUserEnvironmentImpactHistoryInput,
 } from "../models";
 
 import {
@@ -33,6 +35,10 @@ export type EnvironmentImpactService = {
   getMySummary: (
     userId: string,
   ) => Effect.Effect<EnvironmentImpactSummaryRow>;
+  getMyHistory: (
+    userId: string,
+    input: ListUserEnvironmentImpactHistoryInput,
+  ) => Effect.Effect<EnvironmentImpactHistoryPageResult>;
 };
 
 export class EnvironmentImpactServiceTag extends Context.Tag(
@@ -79,6 +85,23 @@ function getRawRentalMinutes(rental: EnvironmentImpactRentalRow): number {
       : 0;
 
   return Math.max(0, rawMinutes);
+}
+
+function parseHistoryDateBoundary(
+  value: string | undefined,
+  boundary: "start" | "end",
+): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(
+      `${value}T${boundary === "start" ? "00:00:00.000" : "23:59:59.999"}Z`,
+    );
+  }
+
+  return new Date(value);
 }
 
 function calculatePhaseOneImpact(
@@ -137,6 +160,19 @@ export const EnvironmentImpactServiceLive = Layer.effect(
 
     const service: EnvironmentImpactService = {
       getMySummary: userId => impactRepo.getUserEnvironmentSummary(userId),
+      getMyHistory: (userId, input) =>
+        impactRepo.listUserImpactHistory(
+          {
+            userId,
+            dateFrom: parseHistoryDateBoundary(input.dateFrom, "start"),
+            dateTo: parseHistoryDateBoundary(input.dateTo, "end"),
+          },
+          {
+            page: input.page ?? 1,
+            pageSize: input.pageSize ?? 20,
+            sortOrder: input.sortOrder ?? "desc",
+          },
+        ),
       calculateFromRental: rentalId =>
         Effect.gen(function* () {
           const existing = yield* impactRepo.findImpactByRentalId(rentalId);

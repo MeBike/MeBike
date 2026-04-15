@@ -9,6 +9,7 @@ export {
 
 export {
   getMyEnvironmentSummary,
+  getMyEnvironmentImpactHistory,
   listEnvironmentPolicies,
   getActiveEnvironmentPolicy,
 } from "./queries";

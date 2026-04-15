@@ -11,6 +11,7 @@ import { Effect, Match } from "effect";
 import { EnvironmentImpactServiceTag } from "@/domain/environment";
 import {
   toContractEnvironmentImpact,
+  toContractEnvironmentImpactHistoryItem,
   toContractEnvironmentSummary,
 } from "@/http/presenters/environment.presenter";
 
@@ -30,6 +31,32 @@ const getMySummary: RouteHandler<
     toContractEnvironmentSummary(summary),
     200,
   );
+};
+
+const getMyHistory: RouteHandler<
+  EnvironmentRoutes["getMyEnvironmentImpactHistory"]
+> = async (c) => {
+  const userId = c.var.currentUser!.userId;
+  const query = c.req.valid("query");
+
+  const eff = Effect.flatMap(EnvironmentImpactServiceTag, service =>
+    service.getMyHistory(userId, {
+      page: query.page,
+      pageSize: query.pageSize,
+      sortOrder: query.sortOrder,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+    }));
+
+  const result = await c.var.runPromise(eff);
+
+  return c.json<EnvironmentContracts.EnvironmentImpactHistoryResponse, 200>({
+    items: result.items.map(toContractEnvironmentImpactHistoryItem),
+    page: result.page,
+    pageSize: result.pageSize,
+    totalItems: result.total,
+    totalPages: result.totalPages,
+  }, 200);
 };
 
 const calculateFromRental: RouteHandler<
@@ -84,5 +111,6 @@ const calculateFromRental: RouteHandler<
 
 export const EnvironmentImpactController = {
   getMySummary,
+  getMyHistory,
   calculateFromRental,
 } as const;

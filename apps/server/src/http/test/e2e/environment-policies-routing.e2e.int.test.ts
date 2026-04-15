@@ -175,6 +175,26 @@ describe("environment policies routing e2e", () => {
     return rental;
   }
 
+  async function calculateEnvironmentImpact(rentalId: string) {
+    const response = await fixture.app.request(
+      `http://test/internal/environment/calculate-from-rental/${rentalId}`,
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    return await response.json() as EnvironmentContracts.EnvironmentImpact;
+  }
+
+  async function setImpactCalculatedAt(rentalId: string, calculatedAt: Date) {
+    await fixture.prisma.environmentalImpactStat.update({
+      where: { rentalId },
+      data: { calculatedAt },
+    });
+  }
+
   it("creates an inactive environment policy as admin", async () => {
     const response = await fixture.app.request("http://test/environment/policies", {
       method: "POST",
@@ -659,6 +679,197 @@ describe("environment policies routing e2e", () => {
 
   it("rejects unauthenticated environment summary requests", async () => {
     const response = await fixture.app.request("http://test/environment/me/summary", {
+      method: "GET",
+    });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns an empty environment impact history when the current user has no impact records", async () => {
+    const response = await fixture.app.request("http://test/environment/me/history", {
+      method: "GET",
+      headers: userHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      items: [],
+      page: 1,
+      pageSize: 20,
+      totalItems: 0,
+      totalPages: 0,
+    });
+  });
+
+  it("lists only calculated environment impact history for the current user", async () => {
+    await insertActiveEnvironmentPolicy();
+    const olderRental = await createRentalForImpact({ duration: 23 });
+    const newerRental = await createRentalForImpact({ duration: 10 });
+    const uncalculatedRental = await createRentalForImpact({ duration: 30 });
+    const otherUserRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 60,
+    });
+
+    await calculateEnvironmentImpact(olderRental.id);
+    await calculateEnvironmentImpact(newerRental.id);
+    await calculateEnvironmentImpact(otherUserRental.id);
+
+    await setImpactCalculatedAt(
+      olderRental.id,
+      new Date("2026-04-14T10:00:00.000Z"),
+    );
+    await setImpactCalculatedAt(
+      newerRental.id,
+      new Date("2026-04-15T10:00:00.000Z"),
+    );
+    await setImpactCalculatedAt(
+      otherUserRental.id,
+      new Date("2026-04-16T10:00:00.000Z"),
+    );
+
+    const response = await fixture.app.request("http://test/environment/me/history", {
+      method: "GET",
+      headers: userHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.page).toBe(1);
+    expect(body.pageSize).toBe(20);
+    expect(body.totalItems).toBe(2);
+    expect(body.totalPages).toBe(1);
+    expect(body.items.map(item => item.rental_id)).toEqual([
+      newerRental.id,
+      olderRental.id,
+    ]);
+    expect(body.items.map(item => item.rental_id)).not.toContain(
+      uncalculatedRental.id,
+    );
+    expect(body.items[0]).toMatchObject({
+      rental_id: newerRental.id,
+      estimated_distance_km: 1.4,
+      co2_saved: 89,
+      co2_saved_unit: "gCO2e",
+      distance_source: "TIME_SPEED",
+      raw_rental_minutes: 10,
+      effective_ride_minutes: 7,
+      calculated_at: "2026-04-15T10:00:00.000Z",
+    });
+    expect(body.items[1]).toMatchObject({
+      rental_id: olderRental.id,
+      estimated_distance_km: 4,
+      co2_saved: 255,
+      co2_saved_unit: "gCO2e",
+      distance_source: "TIME_SPEED",
+      raw_rental_minutes: 23,
+      effective_ride_minutes: 20,
+      calculated_at: "2026-04-14T10:00:00.000Z",
+    });
+  });
+
+  it("paginates, sorts, and date-filters environment impact history", async () => {
+    await insertActiveEnvironmentPolicy();
+    const firstRental = await createRentalForImpact({ duration: 12 });
+    const secondRental = await createRentalForImpact({ duration: 20 });
+    const thirdRental = await createRentalForImpact({ duration: 28 });
+
+    await calculateEnvironmentImpact(firstRental.id);
+    await calculateEnvironmentImpact(secondRental.id);
+    await calculateEnvironmentImpact(thirdRental.id);
+
+    await setImpactCalculatedAt(
+      firstRental.id,
+      new Date("2026-04-13T10:00:00.000Z"),
+    );
+    await setImpactCalculatedAt(
+      secondRental.id,
+      new Date("2026-04-14T10:00:00.000Z"),
+    );
+    await setImpactCalculatedAt(
+      thirdRental.id,
+      new Date("2026-04-15T10:00:00.000Z"),
+    );
+
+    const response = await fixture.app.request(
+      "http://test/environment/me/history?page=2&pageSize=1&sortOrder=asc&dateFrom=2026-04-14&dateTo=2026-04-15",
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.page).toBe(2);
+    expect(body.pageSize).toBe(1);
+    expect(body.totalItems).toBe(2);
+    expect(body.totalPages).toBe(2);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]?.rental_id).toBe(thirdRental.id);
+  });
+
+  it("does not expose another user's environment impact history", async () => {
+    await insertActiveEnvironmentPolicy();
+    const regularRental = await createRentalForImpact({ duration: 23 });
+    const otherUserRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 60,
+    });
+
+    await calculateEnvironmentImpact(regularRental.id);
+    await calculateEnvironmentImpact(otherUserRental.id);
+
+    const response = await fixture.app.request("http://test/environment/me/history", {
+      method: "GET",
+      headers: otherUserHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.totalItems).toBe(1);
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]?.rental_id).toBe(otherUserRental.id);
+  });
+
+  it("rejects invalid environment impact history query params", async () => {
+    const invalidQueries = [
+      "page=0",
+      "pageSize=0",
+      "pageSize=101",
+      "sortOrder=up",
+      "dateFrom=not-a-date",
+      "dateTo=not-a-date",
+      "dateFrom=2026-04-16T00:00:00.000Z&dateTo=2026-04-15T00:00:00.000Z",
+    ];
+
+    for (const query of invalidQueries) {
+      const response = await fixture.app.request(
+        `http://test/environment/me/history?${query}`,
+        {
+          method: "GET",
+          headers: userHeaders(),
+        },
+      );
+      const body = await response.json() as ServerErrorResponse;
+
+      expect(response.status).toBe(400);
+      expect(body.details?.code).toBe("VALIDATION_ERROR");
+    }
+  });
+
+  it("rejects admin environment impact history requests", async () => {
+    const response = await fixture.app.request("http://test/environment/me/history", {
+      method: "GET",
+      headers: adminHeaders(),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects unauthenticated environment impact history requests", async () => {
+    const response = await fixture.app.request("http://test/environment/me/history", {
       method: "GET",
     });
 

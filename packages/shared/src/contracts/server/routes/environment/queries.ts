@@ -3,9 +3,11 @@ import { createRoute } from "@hono/zod-openapi";
 import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   EnvironmentErrorCodeSchema,
+  EnvironmentImpactHistoryResponseSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
   EnvironmentSummarySchema,
+  ListEnvironmentImpactHistoryQuerySchema,
   ListEnvironmentPoliciesQuerySchema,
   ServerErrorResponseSchema,
   environmentErrorMessages,
@@ -41,6 +43,70 @@ export const getMyEnvironmentSummary = createRoute({
               },
             },
           },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("User"),
+  },
+});
+
+export const getMyEnvironmentImpactHistory = createRoute({
+  method: "get",
+  path: "/environment/me/history",
+  tags: ["Environment"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ListEnvironmentImpactHistoryQuerySchema,
+  },
+  responses: {
+    200: {
+      description:
+        "Get paginated calculated Environment Impact history for the authenticated account. This reads only environmental_impact_stats and does not calculate new impact.",
+      content: {
+        "application/json": {
+          schema: EnvironmentImpactHistoryResponseSchema,
+          examples: {
+            EnvironmentImpactHistoryWithData: {
+              value: {
+                items: [
+                  {
+                    id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+                    rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+                    policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+                    estimated_distance_km: 4,
+                    co2_saved: 255,
+                    co2_saved_unit: "gCO2e",
+                    distance_source: "TIME_SPEED",
+                    raw_rental_minutes: 23,
+                    effective_ride_minutes: 20,
+                    calculated_at: "2026-04-15T10:30:00.000Z",
+                  },
+                ],
+                page: 1,
+                pageSize: 20,
+                totalItems: 1,
+                totalPages: 1,
+              },
+            },
+            EmptyEnvironmentImpactHistory: {
+              value: {
+                items: [],
+                page: 1,
+                pageSize: 20,
+                totalItems: 0,
+                totalPages: 0,
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Invalid query parameters",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
         },
       },
     },
@@ -181,6 +247,7 @@ export const getActiveEnvironmentPolicy = createRoute({
 
 export const environmentQueries = {
   getMyEnvironmentSummary,
+  getMyEnvironmentImpactHistory,
   listEnvironmentPolicies,
   getActiveEnvironmentPolicy,
 } as const;

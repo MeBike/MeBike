@@ -8,12 +8,16 @@ import type {
 import { Prisma as PrismaNamespace } from "generated/prisma/client";
 import { uuidv7 } from "uuidv7";
 
+import { makePageResult } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import { EnvironmentImpactAlreadyExists } from "../domain-errors";
 import type {
   CreateEnvironmentImpactData,
+  EnvironmentImpactHistoryFilter,
+  EnvironmentImpactHistoryPageRequest,
+  EnvironmentImpactHistoryPageResult,
   EnvironmentImpactPolicySnapshot,
   EnvironmentImpactRentalRow,
   EnvironmentImpactRow,
@@ -33,6 +37,10 @@ export type EnvironmentImpactRepo = {
   getUserEnvironmentSummary: (
     userId: string,
   ) => Effect.Effect<EnvironmentImpactSummaryRow>;
+  listUserImpactHistory: (
+    filter: EnvironmentImpactHistoryFilter,
+    pageReq: EnvironmentImpactHistoryPageRequest,
+  ) => Effect.Effect<EnvironmentImpactHistoryPageResult>;
 };
 
 const environmentImpactSelect = {
@@ -62,6 +70,22 @@ function toEnvironmentImpactRow(
     co2Saved: row.co2Saved,
     policySnapshot: row.policySnapshot as EnvironmentImpactPolicySnapshot,
     calculatedAt: row.calculatedAt,
+  };
+}
+
+function toEnvironmentImpactHistoryWhere(
+  filter: EnvironmentImpactHistoryFilter,
+): PrismaTypes.EnvironmentalImpactStatWhereInput {
+  return {
+    userId: filter.userId,
+    ...(filter.dateFrom || filter.dateTo
+      ? {
+          calculatedAt: {
+            ...(filter.dateFrom ? { gte: filter.dateFrom } : {}),
+            ...(filter.dateTo ? { lte: filter.dateTo } : {}),
+          },
+        }
+      : {}),
   };
 }
 
@@ -156,6 +180,35 @@ export function makeEnvironmentImpactRepository(
           totalCo2Saved: aggregate._sum.co2Saved
             ?? new PrismaNamespace.Decimal(0),
         };
+      });
+    },
+    listUserImpactHistory(filter, pageReq) {
+      return Effect.promise(async () => {
+        const page = Math.max(1, pageReq.page);
+        const pageSize = Math.max(1, Math.min(100, pageReq.pageSize));
+        const skip = (page - 1) * pageSize;
+        const where = toEnvironmentImpactHistoryWhere(filter);
+
+        const [total, items] = await Promise.all([
+          client.environmentalImpactStat.count({ where }),
+          client.environmentalImpactStat.findMany({
+            where,
+            skip,
+            take: pageSize,
+            orderBy: [
+              { calculatedAt: pageReq.sortOrder },
+              { id: pageReq.sortOrder },
+            ],
+            select: environmentImpactSelect,
+          }),
+        ]);
+
+        return makePageResult(
+          items.map(toEnvironmentImpactRow),
+          total,
+          page,
+          pageSize,
+        );
       });
     },
   };

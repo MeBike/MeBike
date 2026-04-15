@@ -173,6 +173,65 @@ export const EnvironmentImpactSchema = z.object({
   },
 });
 
+export const EnvironmentImpactHistoryItemSchema = z.object({
+  id: z.uuid(),
+  rental_id: z.uuid(),
+  policy_id: z.uuid(),
+  estimated_distance_km: z.number(),
+  co2_saved: z.number(),
+  co2_saved_unit: z.literal("gCO2e"),
+  distance_source: EnvironmentDistanceSourceSchema.nullable(),
+  raw_rental_minutes: z.number().int().nonnegative().nullable(),
+  effective_ride_minutes: z.number().int().nonnegative().nullable(),
+  calculated_at: z.string().datetime(),
+}).openapi("EnvironmentImpactHistoryItem", {
+  description:
+    "One calculated Environment Impact record for the authenticated user's rental history.",
+  example: {
+    id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+    rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+    policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+    estimated_distance_km: 4,
+    co2_saved: 255,
+    co2_saved_unit: "gCO2e",
+    distance_source: "TIME_SPEED",
+    raw_rental_minutes: 23,
+    effective_ride_minutes: 20,
+    calculated_at: "2026-04-15T10:30:00.000Z",
+  },
+});
+
+export const EnvironmentImpactHistoryResponseSchema = z.object({
+  items: EnvironmentImpactHistoryItemSchema.array(),
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1).max(100),
+  totalItems: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
+}).openapi("EnvironmentImpactHistoryResponse", {
+  description:
+    "Paginated calculated Environment Impact history for the authenticated user. Reads only environmental_impact_stats.",
+  example: {
+    items: [
+      {
+        id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+        rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+        policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+        estimated_distance_km: 4,
+        co2_saved: 255,
+        co2_saved_unit: "gCO2e",
+        distance_source: "TIME_SPEED",
+        raw_rental_minutes: 23,
+        effective_ride_minutes: 20,
+        calculated_at: "2026-04-15T10:30:00.000Z",
+      },
+    ],
+    page: 1,
+    pageSize: 20,
+    totalItems: 1,
+    totalPages: 1,
+  },
+});
+
 export const EnvironmentSummarySchema = z.object({
   total_trips_counted: z.number().int().nonnegative(),
   total_estimated_distance_km: z.number().nonnegative(),
@@ -200,4 +259,10 @@ export type EnvironmentImpactPolicySnapshot = z.infer<
   typeof EnvironmentImpactPolicySnapshotSchema
 >;
 export type EnvironmentImpact = z.infer<typeof EnvironmentImpactSchema>;
+export type EnvironmentImpactHistoryItem = z.infer<
+  typeof EnvironmentImpactHistoryItemSchema
+>;
+export type EnvironmentImpactHistoryResponse = z.infer<
+  typeof EnvironmentImpactHistoryResponseSchema
+>;
 export type EnvironmentSummary = z.infer<typeof EnvironmentSummarySchema>;

@@ -47,6 +47,23 @@ function roundTo(value: number, digits: number): number {
   return Math.round((value + Number.EPSILON) * factor) / factor;
 }
 
+function readNumberFromSnapshot(
+  snapshot: EnvironmentImpactRow["policySnapshot"],
+  key: "raw_rental_minutes" | "effective_ride_minutes",
+): number | null {
+  const value = isRecord(snapshot) ? snapshot[key] : undefined;
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.trunc(value)
+    : null;
+}
+
+function readDistanceSourceFromSnapshot(
+  snapshot: EnvironmentImpactRow["policySnapshot"],
+): "TIME_SPEED" | null {
+  const value = isRecord(snapshot) ? snapshot.distance_source : undefined;
+  return value === "TIME_SPEED" ? value : null;
+}
+
 export function toContractEnvironmentPolicy(
   policy: EnvironmentPolicyRow,
 ): EnvironmentContracts.EnvironmentPolicy {
@@ -80,6 +97,32 @@ export function toContractEnvironmentImpact(
     policy_snapshot: impact.policySnapshot,
     calculated_at: impact.calculatedAt.toISOString(),
     already_calculated: alreadyCalculated,
+  };
+}
+
+export function toContractEnvironmentImpactHistoryItem(
+  impact: EnvironmentImpactRow,
+): EnvironmentContracts.EnvironmentImpactHistoryItem {
+  return {
+    id: impact.id,
+    rental_id: impact.rentalId,
+    policy_id: impact.policyId,
+    estimated_distance_km: roundTo(
+      impact.estimatedDistanceKm?.toNumber() ?? 0,
+      2,
+    ),
+    co2_saved: Math.round(impact.co2Saved.toNumber()),
+    co2_saved_unit: "gCO2e",
+    distance_source: readDistanceSourceFromSnapshot(impact.policySnapshot),
+    raw_rental_minutes: readNumberFromSnapshot(
+      impact.policySnapshot,
+      "raw_rental_minutes",
+    ),
+    effective_ride_minutes: readNumberFromSnapshot(
+      impact.policySnapshot,
+      "effective_ride_minutes",
+    ),
+    calculated_at: impact.calculatedAt.toISOString(),
   };
 }
 
