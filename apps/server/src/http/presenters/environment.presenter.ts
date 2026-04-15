@@ -3,6 +3,7 @@ import type { EnvironmentContracts } from "@mebike/shared";
 import {
   DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG,
   type EnvironmentImpactRow,
+  type EnvironmentImpactSummaryRow,
   type EnvironmentPolicyFormulaConfig,
   type EnvironmentPolicyRow,
 } from "@/domain/environment";
@@ -41,6 +42,11 @@ function normalizeFormulaConfig(
   };
 }
 
+function roundTo(value: number, digits: number): number {
+  const factor = 10 ** digits;
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
 export function toContractEnvironmentPolicy(
   policy: EnvironmentPolicyRow,
 ): EnvironmentContracts.EnvironmentPolicy {
@@ -74,5 +80,19 @@ export function toContractEnvironmentImpact(
     policy_snapshot: impact.policySnapshot,
     calculated_at: impact.calculatedAt.toISOString(),
     already_calculated: alreadyCalculated,
+  };
+}
+
+export function toContractEnvironmentSummary(
+  summary: EnvironmentImpactSummaryRow,
+): EnvironmentContracts.EnvironmentSummary {
+  return {
+    total_trips_counted: summary.totalTripsCounted,
+    total_estimated_distance_km: roundTo(
+      summary.totalEstimatedDistanceKm.toNumber(),
+      2,
+    ),
+    total_co2_saved: Math.round(summary.totalCo2Saved.toNumber()),
+    co2_saved_unit: "gCO2e",
   };
 }

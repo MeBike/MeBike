@@ -17,6 +17,7 @@ import type {
   EnvironmentImpactPolicySnapshot,
   EnvironmentImpactRentalRow,
   EnvironmentImpactRow,
+  EnvironmentImpactSummaryRow,
 } from "../models";
 
 export type EnvironmentImpactRepo = {
@@ -29,6 +30,9 @@ export type EnvironmentImpactRepo = {
   createImpact: (
     data: CreateEnvironmentImpactData,
   ) => Effect.Effect<EnvironmentImpactRow, EnvironmentImpactAlreadyExists>;
+  getUserEnvironmentSummary: (
+    userId: string,
+  ) => Effect.Effect<EnvironmentImpactSummaryRow>;
 };
 
 const environmentImpactSelect = {
@@ -132,6 +136,26 @@ export function makeEnvironmentImpactRepository(
 
           throw cause;
         },
+      });
+    },
+    getUserEnvironmentSummary(userId) {
+      return Effect.promise(async () => {
+        const aggregate = await client.environmentalImpactStat.aggregate({
+          where: { userId },
+          _count: { id: true },
+          _sum: {
+            estimatedDistanceKm: true,
+            co2Saved: true,
+          },
+        });
+
+        return {
+          totalTripsCounted: aggregate._count.id,
+          totalEstimatedDistanceKm: aggregate._sum.estimatedDistanceKm
+            ?? new PrismaNamespace.Decimal(0),
+          totalCo2Saved: aggregate._sum.co2Saved
+            ?? new PrismaNamespace.Decimal(0),
+        };
       });
     },
   };

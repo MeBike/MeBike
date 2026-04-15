@@ -9,9 +9,28 @@ import {
 import { Effect, Match } from "effect";
 
 import { EnvironmentImpactServiceTag } from "@/domain/environment";
-import { toContractEnvironmentImpact } from "@/http/presenters/environment.presenter";
+import {
+  toContractEnvironmentImpact,
+  toContractEnvironmentSummary,
+} from "@/http/presenters/environment.presenter";
 
 type EnvironmentRoutes = typeof serverRoutes.environment;
+
+const getMySummary: RouteHandler<
+  EnvironmentRoutes["getMyEnvironmentSummary"]
+> = async (c) => {
+  const userId = c.var.currentUser!.userId;
+
+  const eff = Effect.flatMap(EnvironmentImpactServiceTag, service =>
+    service.getMySummary(userId));
+
+  const summary = await c.var.runPromise(eff);
+
+  return c.json<EnvironmentContracts.EnvironmentSummary, 200>(
+    toContractEnvironmentSummary(summary),
+    200,
+  );
+};
 
 const calculateFromRental: RouteHandler<
   EnvironmentRoutes["calculateEnvironmentImpactFromRental"]
@@ -64,5 +83,6 @@ const calculateFromRental: RouteHandler<
 };
 
 export const EnvironmentImpactController = {
+  getMySummary,
   calculateFromRental,
 } as const;

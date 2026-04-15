@@ -6,7 +6,10 @@ import {
   EnvironmentImpactController,
   EnvironmentPolicyController,
 } from "@/http/controllers/environment";
-import { requireAdminMiddleware } from "@/http/middlewares/auth";
+import {
+  requireAdminMiddleware,
+  requireAuthMiddleware,
+} from "@/http/middlewares/auth";
 
 export function registerEnvironmentRoutes(
   app: import("@hono/zod-openapi").OpenAPIHono,
@@ -28,11 +31,19 @@ export function registerEnvironmentRoutes(
     ...environment.activateEnvironmentPolicy,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const getMyEnvironmentSummaryRoute = {
+    ...environment.getMyEnvironmentSummary,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
   const calculateImpactFromRentalRoute = {
     ...environment.calculateEnvironmentImpactFromRental,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
 
+  app.openapi(
+    getMyEnvironmentSummaryRoute,
+    EnvironmentImpactController.getMySummary,
+  );
   app.openapi(listPoliciesRoute, EnvironmentPolicyController.listPolicies);
   app.openapi(createPolicyRoute, EnvironmentPolicyController.createPolicy);
   app.openapi(getActivePolicyRoute, EnvironmentPolicyController.getActivePolicy);

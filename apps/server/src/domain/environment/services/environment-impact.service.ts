@@ -4,6 +4,7 @@ import type {
   EnvironmentImpactCalculationResult,
   EnvironmentImpactPolicySnapshot,
   EnvironmentImpactRentalRow,
+  EnvironmentImpactSummaryRow,
   EnvironmentPolicyFormulaConfig,
   EnvironmentPolicyRow,
 } from "../models";
@@ -29,6 +30,9 @@ export type EnvironmentImpactService = {
     | EnvironmentImpactRentalNotFound
     | EnvironmentImpactRentalNotCompleted
   >;
+  getMySummary: (
+    userId: string,
+  ) => Effect.Effect<EnvironmentImpactSummaryRow>;
 };
 
 export class EnvironmentImpactServiceTag extends Context.Tag(
@@ -132,6 +136,7 @@ export const EnvironmentImpactServiceLive = Layer.effect(
     const policyService = yield* EnvironmentPolicyServiceTag;
 
     const service: EnvironmentImpactService = {
+      getMySummary: userId => impactRepo.getUserEnvironmentSummary(userId),
       calculateFromRental: rentalId =>
         Effect.gen(function* () {
           const existing = yield* impactRepo.findImpactByRentalId(rentalId);

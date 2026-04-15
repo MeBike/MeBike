@@ -173,6 +173,22 @@ export const EnvironmentImpactSchema = z.object({
   },
 });
 
+export const EnvironmentSummarySchema = z.object({
+  total_trips_counted: z.number().int().nonnegative(),
+  total_estimated_distance_km: z.number().nonnegative(),
+  total_co2_saved: z.number().nonnegative(),
+  co2_saved_unit: z.literal("gCO2e"),
+}).openapi("EnvironmentSummary", {
+  description:
+    "Accumulated Environment Impact summary for the authenticated account. Values are aggregated only from environmental_impact_stats.",
+  example: {
+    total_trips_counted: 3,
+    total_estimated_distance_km: 7.4,
+    total_co2_saved: 472,
+    co2_saved_unit: "gCO2e",
+  },
+});
+
 export type EnvironmentPolicyFormulaConfig = z.infer<
   typeof EnvironmentPolicyFormulaConfigSchema
 >;
@@ -184,3 +200,4 @@ export type EnvironmentImpactPolicySnapshot = z.infer<
   typeof EnvironmentImpactPolicySnapshotSchema
 >;
 export type EnvironmentImpact = z.infer<typeof EnvironmentImpactSchema>;
+export type EnvironmentSummary = z.infer<typeof EnvironmentSummarySchema>;

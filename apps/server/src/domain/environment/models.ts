@@ -113,6 +113,12 @@ export type EnvironmentImpactRow = {
   calculatedAt: Date;
 };
 
+export type EnvironmentImpactSummaryRow = {
+  totalTripsCounted: number;
+  totalEstimatedDistanceKm: PrismaTypes.Decimal;
+  totalCo2Saved: PrismaTypes.Decimal;
+};
+
 export type EnvironmentImpactRentalRow = {
   id: string;
   userId: string;

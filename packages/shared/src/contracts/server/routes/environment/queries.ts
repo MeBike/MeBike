@@ -5,10 +5,49 @@ import {
   EnvironmentErrorCodeSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
+  EnvironmentSummarySchema,
   ListEnvironmentPoliciesQuerySchema,
   ServerErrorResponseSchema,
   environmentErrorMessages,
 } from "./shared";
+
+export const getMyEnvironmentSummary = createRoute({
+  method: "get",
+  path: "/environment/me/summary",
+  tags: ["Environment"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description:
+        "Get accumulated Environment Impact summary for the authenticated account. This reads only environmental_impact_stats and does not calculate new impact.",
+      content: {
+        "application/json": {
+          schema: EnvironmentSummarySchema,
+          examples: {
+            EnvironmentSummaryWithData: {
+              value: {
+                total_trips_counted: 3,
+                total_estimated_distance_km: 7.4,
+                total_co2_saved: 472,
+                co2_saved_unit: "gCO2e",
+              },
+            },
+            EmptyEnvironmentSummary: {
+              value: {
+                total_trips_counted: 0,
+                total_estimated_distance_km: 0,
+                total_co2_saved: 0,
+                co2_saved_unit: "gCO2e",
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Active account"),
+  },
+});
 
 export const listEnvironmentPolicies = createRoute({
   method: "get",
@@ -141,6 +180,7 @@ export const getActiveEnvironmentPolicy = createRoute({
 });
 
 export const environmentQueries = {
+  getMyEnvironmentSummary,
   listEnvironmentPolicies,
   getActiveEnvironmentPolicy,
 } as const;

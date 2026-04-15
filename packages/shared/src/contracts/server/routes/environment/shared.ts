@@ -7,6 +7,7 @@ import {
   EnvironmentImpactSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
+  EnvironmentSummarySchema,
 } from "../../environment";
 import { AccountStatusSchema } from "../../users";
 
@@ -14,6 +15,7 @@ export {
   EnvironmentImpactSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
+  EnvironmentSummarySchema,
   ServerErrorResponseSchema,
   UnauthorizedErrorResponseSchema,
 };
@@ -85,6 +87,9 @@ export type CreateEnvironmentPolicyBody = z.infer<
 >;
 export type EnvironmentPolicyResponse = z.infer<typeof EnvironmentPolicySchema>;
 export type EnvironmentImpactResponse = z.infer<typeof EnvironmentImpactSchema>;
+export type EnvironmentSummaryResponse = z.infer<
+  typeof EnvironmentSummarySchema
+>;
 export type EnvironmentPolicyListResponse = z.infer<
   typeof EnvironmentPolicyListResponseSchema
 >;

@@ -6,6 +6,7 @@ import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
 const ADMIN_USER_ID = "018fa100-0000-7000-8000-000000000001";
 const REGULAR_USER_ID = "018fa100-0000-7000-8000-000000000002";
+const OTHER_USER_ID = "018fa100-0000-7000-8000-000000000003";
 
 describe("environment policies routing e2e", () => {
   const fixture = setupHttpE2eFixture({
@@ -51,6 +52,20 @@ describe("environment policies routing e2e", () => {
             accountStatus: "ACTIVE",
             verifyStatus: "VERIFIED",
           },
+          {
+            id: OTHER_USER_ID,
+            fullName: "Other Environment User",
+            email: "other-environment-user@example.com",
+            passwordHash: "hash123",
+            phoneNumber: null,
+            username: null,
+            avatarUrl: null,
+            locationText: null,
+            nfcCardUid: null,
+            role: "USER",
+            accountStatus: "ACTIVE",
+            verifyStatus: "VERIFIED",
+          },
         ],
       });
     },
@@ -66,6 +81,13 @@ describe("environment policies routing e2e", () => {
   function userHeaders() {
     return {
       ...fixture.auth.makeAuthHeader({ userId: REGULAR_USER_ID, role: "USER" }),
+      "Content-Type": "application/json",
+    };
+  }
+
+  function otherUserHeaders() {
+    return {
+      ...fixture.auth.makeAuthHeader({ userId: OTHER_USER_ID, role: "USER" }),
       "Content-Type": "application/json",
     };
   }
@@ -130,6 +152,7 @@ describe("environment policies routing e2e", () => {
 
   async function createRentalForImpact(input: {
     id?: string;
+    userId?: string;
     status?: "RENTED" | "COMPLETED" | "CANCELLED";
     duration?: number | null;
     startTime?: Date;
@@ -139,7 +162,7 @@ describe("environment policies routing e2e", () => {
     const bike = await fixture.factories.bike({ stationId: station.id });
     const rental = await fixture.factories.rental({
       id: input.id,
-      userId: REGULAR_USER_ID,
+      userId: input.userId ?? REGULAR_USER_ID,
       bikeId: bike.id,
       startStationId: station.id,
       endStationId: input.status === "COMPLETED" ? station.id : null,
@@ -534,6 +557,137 @@ describe("environment policies routing e2e", () => {
     `;
 
     expect(Number(dbImpact?.count ?? 0)).toBe(1);
+  });
+
+  it("returns zero environment summary when the current user has no impact records", async () => {
+    const response = await fixture.app.request("http://test/environment/me/summary", {
+      method: "GET",
+      headers: userHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentSummary;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      total_trips_counted: 0,
+      total_estimated_distance_km: 0,
+      total_co2_saved: 0,
+      co2_saved_unit: "gCO2e",
+    });
+  });
+
+  it("summarizes only existing impact records for the current user", async () => {
+    await insertActiveEnvironmentPolicy();
+    const firstRental = await createRentalForImpact();
+    const secondRental = await createRentalForImpact({ duration: 10 });
+    const otherUserRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 60,
+    });
+
+    for (const rentalId of [
+      firstRental.id,
+      secondRental.id,
+      otherUserRental.id,
+    ]) {
+      const response = await fixture.app.request(
+        `http://test/internal/environment/calculate-from-rental/${rentalId}`,
+        {
+          method: "POST",
+          headers: adminHeaders(),
+        },
+      );
+      expect(response.status).toBe(200);
+    }
+
+    const response = await fixture.app.request("http://test/environment/me/summary", {
+      method: "GET",
+      headers: userHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentSummary;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      total_trips_counted: 2,
+      total_estimated_distance_km: 5.4,
+      total_co2_saved: 344,
+      co2_saved_unit: "gCO2e",
+    });
+  });
+
+  it("does not expose another user's environment summary", async () => {
+    await insertActiveEnvironmentPolicy();
+    const regularRental = await createRentalForImpact();
+    const otherUserRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 60,
+    });
+
+    for (const rentalId of [regularRental.id, otherUserRental.id]) {
+      const response = await fixture.app.request(
+        `http://test/internal/environment/calculate-from-rental/${rentalId}`,
+        {
+          method: "POST",
+          headers: adminHeaders(),
+        },
+      );
+      expect(response.status).toBe(200);
+    }
+
+    const response = await fixture.app.request("http://test/environment/me/summary", {
+      method: "GET",
+      headers: otherUserHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentSummary;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      total_trips_counted: 1,
+      total_estimated_distance_km: 11.4,
+      total_co2_saved: 727,
+      co2_saved_unit: "gCO2e",
+    });
+  });
+
+  it("lets an admin read only the admin account's own environment summary", async () => {
+    await insertActiveEnvironmentPolicy();
+    const regularRental = await createRentalForImpact();
+    const adminRental = await createRentalForImpact({
+      userId: ADMIN_USER_ID,
+      duration: 60,
+    });
+
+    for (const rentalId of [regularRental.id, adminRental.id]) {
+      const response = await fixture.app.request(
+        `http://test/internal/environment/calculate-from-rental/${rentalId}`,
+        {
+          method: "POST",
+          headers: adminHeaders(),
+        },
+      );
+      expect(response.status).toBe(200);
+    }
+
+    const response = await fixture.app.request("http://test/environment/me/summary", {
+      method: "GET",
+      headers: adminHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.EnvironmentSummary;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      total_trips_counted: 1,
+      total_estimated_distance_km: 11.4,
+      total_co2_saved: 727,
+      co2_saved_unit: "gCO2e",
+    });
+  });
+
+  it("rejects unauthenticated environment summary requests", async () => {
+    const response = await fixture.app.request("http://test/environment/me/summary", {
+      method: "GET",
+    });
+
+    expect(response.status).toBe(401);
   });
 
   it("keeps environment impact calculation idempotent by rentalId", async () => {

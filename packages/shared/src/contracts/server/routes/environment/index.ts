@@ -8,6 +8,7 @@ export {
 } from "./mutations";
 
 export {
+  getMyEnvironmentSummary,
   listEnvironmentPolicies,
   getActiveEnvironmentPolicy,
 } from "./queries";
