@@ -2,6 +2,7 @@ import type { EnvironmentContracts } from "@mebike/shared";
 
 import {
   DEFAULT_ENVIRONMENT_POLICY_FORMULA_CONFIG,
+  type EnvironmentImpactRow,
   type EnvironmentPolicyFormulaConfig,
   type EnvironmentPolicyRow,
 } from "@/domain/environment";
@@ -55,5 +56,23 @@ export function toContractEnvironmentPolicy(
     formula_config: normalizeFormulaConfig(policy.formulaConfig),
     created_at: policy.createdAt.toISOString(),
     updated_at: policy.updatedAt.toISOString(),
+  };
+}
+
+export function toContractEnvironmentImpact(
+  impact: EnvironmentImpactRow,
+  alreadyCalculated: boolean,
+): EnvironmentContracts.EnvironmentImpact {
+  return {
+    id: impact.id,
+    user_id: impact.userId,
+    rental_id: impact.rentalId,
+    policy_id: impact.policyId,
+    estimated_distance_km: impact.estimatedDistanceKm?.toNumber() ?? 0,
+    co2_saved: impact.co2Saved.toNumber(),
+    co2_saved_unit: "gCO2e",
+    policy_snapshot: impact.policySnapshot,
+    calculated_at: impact.calculatedAt.toISOString(),
+    already_calculated: alreadyCalculated,
   };
 }

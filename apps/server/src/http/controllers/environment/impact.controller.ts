@@ -1,0 +1,68 @@
+import type { RouteHandler } from "@hono/zod-openapi";
+import type { EnvironmentContracts, ServerErrorResponse } from "@mebike/shared";
+
+import {
+  EnvironmentErrorCodeSchema,
+  environmentErrorMessages,
+  serverRoutes,
+} from "@mebike/shared";
+import { Effect, Match } from "effect";
+
+import { EnvironmentImpactServiceTag } from "@/domain/environment";
+import { toContractEnvironmentImpact } from "@/http/presenters/environment.presenter";
+
+type EnvironmentRoutes = typeof serverRoutes.environment;
+
+const calculateFromRental: RouteHandler<
+  EnvironmentRoutes["calculateEnvironmentImpactFromRental"]
+> = async (c) => {
+  const { rentalId } = c.req.valid("param");
+
+  const eff = Effect.flatMap(EnvironmentImpactServiceTag, service =>
+    service.calculateFromRental(rentalId));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<EnvironmentContracts.EnvironmentImpact, 200>(
+        toContractEnvironmentImpact(
+          right.impact,
+          right.alreadyCalculated,
+        ),
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("EnvironmentImpactRentalNotFound", () =>
+          c.json<ServerErrorResponse, 404>({
+            error: environmentErrorMessages.ENVIRONMENT_IMPACT_RENTAL_NOT_FOUND,
+            details: {
+              code: EnvironmentErrorCodeSchema.enum.ENVIRONMENT_IMPACT_RENTAL_NOT_FOUND,
+            },
+          }, 404)),
+        Match.tag("EnvironmentImpactRentalNotCompleted", () =>
+          c.json<ServerErrorResponse, 409>({
+            error: environmentErrorMessages.ENVIRONMENT_IMPACT_RENTAL_NOT_COMPLETED,
+            details: {
+              code: EnvironmentErrorCodeSchema.enum.ENVIRONMENT_IMPACT_RENTAL_NOT_COMPLETED,
+            },
+          }, 409)),
+        Match.tag("ActiveEnvironmentPolicyNotFound", () =>
+          c.json<ServerErrorResponse, 404>({
+            error: environmentErrorMessages.ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND,
+            details: {
+              code: EnvironmentErrorCodeSchema.enum.ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND,
+            },
+          }, 404)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
+export const EnvironmentImpactController = {
+  calculateFromRental,
+} as const;

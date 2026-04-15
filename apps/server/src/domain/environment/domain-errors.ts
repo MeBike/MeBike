@@ -18,3 +18,22 @@ export class EnvironmentPolicyActivationBlocked extends Data.TaggedError(
   readonly policyId: string;
   readonly status: "SUSPENDED" | "BANNED";
 }> {}
+
+export class EnvironmentImpactRentalNotFound extends Data.TaggedError(
+  "EnvironmentImpactRentalNotFound",
+)<{
+  readonly rentalId: string;
+}> {}
+
+export class EnvironmentImpactRentalNotCompleted extends Data.TaggedError(
+  "EnvironmentImpactRentalNotCompleted",
+)<{
+  readonly rentalId: string;
+  readonly status: string;
+}> {}
+
+export class EnvironmentImpactAlreadyExists extends Data.TaggedError(
+  "EnvironmentImpactAlreadyExists",
+)<{
+  readonly rentalId: string;
+}> {}

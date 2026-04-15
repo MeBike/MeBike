@@ -1,4 +1,8 @@
-import type { AccountStatus, Prisma as PrismaTypes } from "generated/prisma/client";
+import type {
+  AccountStatus,
+  Prisma as PrismaTypes,
+  RentalStatus,
+} from "generated/prisma/client";
 
 import type { PageResult } from "@/domain/shared/pagination";
 
@@ -79,3 +83,55 @@ export type EnvironmentPolicyListPageRequest = {
 };
 
 export type EnvironmentPolicyPageResult = PageResult<EnvironmentPolicyRow>;
+
+export type EnvironmentImpactPolicySnapshot = {
+  policy_id: string;
+  policy_name: string;
+  average_speed_kmh: number;
+  co2_saved_per_km: number;
+  co2_saved_per_km_unit: "gCO2e/km";
+  return_scan_buffer_minutes: number;
+  confidence_factor: number;
+  raw_rental_minutes: number;
+  effective_ride_minutes: number;
+  estimated_distance_km: number;
+  co2_saved: number;
+  co2_saved_unit: "gCO2e";
+  distance_source: "TIME_SPEED";
+  formula_version: "PHASE_1_TIME_SPEED";
+  formula: string;
+};
+
+export type EnvironmentImpactRow = {
+  id: string;
+  userId: string;
+  rentalId: string;
+  policyId: string;
+  estimatedDistanceKm: PrismaTypes.Decimal | null;
+  co2Saved: PrismaTypes.Decimal;
+  policySnapshot: EnvironmentImpactPolicySnapshot;
+  calculatedAt: Date;
+};
+
+export type EnvironmentImpactRentalRow = {
+  id: string;
+  userId: string;
+  startTime: Date;
+  endTime: Date | null;
+  durationMinutes: number | null;
+  status: RentalStatus;
+};
+
+export type CreateEnvironmentImpactData = {
+  userId: string;
+  rentalId: string;
+  policyId: string;
+  estimatedDistanceKm: number;
+  co2Saved: number;
+  policySnapshot: EnvironmentImpactPolicySnapshot;
+};
+
+export type EnvironmentImpactCalculationResult = {
+  impact: EnvironmentImpactRow;
+  alreadyCalculated: boolean;
+};

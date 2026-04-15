@@ -2,7 +2,10 @@ import type { RouteConfig } from "@hono/zod-openapi";
 
 import { serverRoutes } from "@mebike/shared";
 
-import { EnvironmentPolicyController } from "@/http/controllers/environment";
+import {
+  EnvironmentImpactController,
+  EnvironmentPolicyController,
+} from "@/http/controllers/environment";
 import { requireAdminMiddleware } from "@/http/middlewares/auth";
 
 export function registerEnvironmentRoutes(
@@ -25,9 +28,17 @@ export function registerEnvironmentRoutes(
     ...environment.activateEnvironmentPolicy,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const calculateImpactFromRentalRoute = {
+    ...environment.calculateEnvironmentImpactFromRental,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
 
   app.openapi(listPoliciesRoute, EnvironmentPolicyController.listPolicies);
   app.openapi(createPolicyRoute, EnvironmentPolicyController.createPolicy);
   app.openapi(getActivePolicyRoute, EnvironmentPolicyController.getActivePolicy);
   app.openapi(activatePolicyRoute, EnvironmentPolicyController.activatePolicy);
+  app.openapi(
+    calculateImpactFromRentalRoute,
+    EnvironmentImpactController.calculateFromRental,
+  );
 }

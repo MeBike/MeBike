@@ -4,6 +4,7 @@ import * as queries from "./queries";
 export {
   createEnvironmentPolicy,
   activateEnvironmentPolicy,
+  calculateEnvironmentImpactFromRental,
 } from "./mutations";
 
 export {

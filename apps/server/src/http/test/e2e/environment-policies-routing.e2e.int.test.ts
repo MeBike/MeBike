@@ -11,23 +11,12 @@ describe("environment policies routing e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
       const { Layer } = await import("effect");
-      const { EnvironmentPolicyRepositoryLive } = await import("@/domain/environment/repository/environment-policy.repository");
-      const { EnvironmentPolicyServiceLive } = await import("@/domain/environment/services/environment-policy.service");
-      const { PrismaLive } = await import("@/infrastructure/prisma");
+      const { EnvironmentDepsLive } = await import("@/http/shared/features/environment.layers");
       const { UserDepsLive } = await import("@/http/shared/features/user.layers");
-
-      const environmentPolicyRepoLayer = EnvironmentPolicyRepositoryLive.pipe(
-        Layer.provide(PrismaLive),
-      );
-      const environmentPolicyServiceLayer = EnvironmentPolicyServiceLive.pipe(
-        Layer.provide(environmentPolicyRepoLayer),
-      );
 
       return Layer.mergeAll(
         UserDepsLive,
-        environmentPolicyRepoLayer,
-        environmentPolicyServiceLayer,
-        PrismaLive,
+        EnvironmentDepsLive,
       );
     },
     seedBase: false,
@@ -119,6 +108,48 @@ describe("environment policies routing e2e", () => {
           ${input.updatedAt}
         )
     `;
+  }
+
+  async function insertActiveEnvironmentPolicy() {
+    await insertEnvironmentPolicy({
+      id: "018fa200-0000-7000-8000-000000000101",
+      name: "Default Environment Policy v1",
+      status: "ACTIVE",
+      activeFrom: new Date(Date.now() - 60_000),
+      activeTo: null,
+      updatedAt: new Date(),
+      formulaConfig: {
+        return_scan_buffer_minutes: 3,
+        confidence_factor: 0.85,
+        display_unit: "gCO2e",
+        formula_version: "PHASE_1_TIME_SPEED",
+        distance_source: "TIME_SPEED",
+      },
+    });
+  }
+
+  async function createRentalForImpact(input: {
+    id?: string;
+    status?: "RENTED" | "COMPLETED" | "CANCELLED";
+    duration?: number | null;
+    startTime?: Date;
+    endTime?: Date | null;
+  } = {}) {
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id });
+    const rental = await fixture.factories.rental({
+      id: input.id,
+      userId: REGULAR_USER_ID,
+      bikeId: bike.id,
+      startStationId: station.id,
+      endStationId: input.status === "COMPLETED" ? station.id : null,
+      startTime: input.startTime ?? new Date("2026-04-15T01:00:00.000Z"),
+      endTime: input.endTime ?? new Date("2026-04-15T01:23:00.000Z"),
+      duration: input.duration ?? 23,
+      status: input.status ?? "COMPLETED",
+    });
+
+    return rental;
   }
 
   it("creates an inactive environment policy as admin", async () => {
@@ -455,6 +486,204 @@ describe("environment policies routing e2e", () => {
       formula_version: "PHASE_1_TIME_SPEED",
       distance_source: "TIME_SPEED",
     });
+  });
+
+  it("calculates environment impact for a completed rental as admin", async () => {
+    await insertActiveEnvironmentPolicy();
+    const rental = await createRentalForImpact();
+
+    const response = await fixture.app.request(
+      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpact;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      user_id: REGULAR_USER_ID,
+      rental_id: rental.id,
+      policy_id: "018fa200-0000-7000-8000-000000000101",
+      estimated_distance_km: 4,
+      co2_saved: 255,
+      co2_saved_unit: "gCO2e",
+      already_calculated: false,
+      policy_snapshot: {
+        policy_name: "Default Environment Policy v1",
+        average_speed_kmh: 12,
+        co2_saved_per_km: 75,
+        co2_saved_per_km_unit: "gCO2e/km",
+        return_scan_buffer_minutes: 3,
+        confidence_factor: 0.85,
+        raw_rental_minutes: 23,
+        effective_ride_minutes: 20,
+        estimated_distance_km: 4,
+        co2_saved: 255,
+        co2_saved_unit: "gCO2e",
+        distance_source: "TIME_SPEED",
+        formula_version: "PHASE_1_TIME_SPEED",
+      },
+    });
+
+    const [dbImpact] = await fixture.prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT COUNT(*) AS count
+      FROM "public"."environmental_impact_stats"
+      WHERE "rental_id" = ${rental.id}::uuid
+    `;
+
+    expect(Number(dbImpact?.count ?? 0)).toBe(1);
+  });
+
+  it("keeps environment impact calculation idempotent by rentalId", async () => {
+    await insertActiveEnvironmentPolicy();
+    const rental = await createRentalForImpact();
+
+    const firstResponse = await fixture.app.request(
+      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+    const firstBody = await firstResponse.json() as EnvironmentContracts.EnvironmentImpact;
+
+    const secondResponse = await fixture.app.request(
+      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+    const secondBody = await secondResponse.json() as EnvironmentContracts.EnvironmentImpact;
+
+    expect(firstResponse.status).toBe(200);
+    expect(secondResponse.status).toBe(200);
+    expect(firstBody.already_calculated).toBe(false);
+    expect(secondBody.already_calculated).toBe(true);
+    expect(secondBody.id).toBe(firstBody.id);
+
+    const [dbImpact] = await fixture.prisma.$queryRaw<Array<{ count: bigint }>>`
+      SELECT COUNT(*) AS count
+      FROM "public"."environmental_impact_stats"
+      WHERE "rental_id" = ${rental.id}::uuid
+    `;
+
+    expect(Number(dbImpact?.count ?? 0)).toBe(1);
+  });
+
+  it("returns 404 when calculating impact for a missing rental", async () => {
+    await insertActiveEnvironmentPolicy();
+
+    const response = await fixture.app.request(
+      "http://test/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000404",
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("Rental not found");
+    expect(body.details?.code).toBe("ENVIRONMENT_IMPACT_RENTAL_NOT_FOUND");
+  });
+
+  it("returns 409 when calculating impact for a non-completed rental", async () => {
+    await insertActiveEnvironmentPolicy();
+    const rental = await createRentalForImpact({
+      status: "RENTED",
+      endTime: null,
+      duration: null,
+    });
+
+    const response = await fixture.app.request(
+      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(409);
+    expect(body.error).toBe("Rental must be completed before calculating environment impact");
+    expect(body.details?.code).toBe("ENVIRONMENT_IMPACT_RENTAL_NOT_COMPLETED");
+  });
+
+  it("returns 404 when calculating impact without an active environment policy", async () => {
+    const rental = await createRentalForImpact();
+
+    const response = await fixture.app.request(
+      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("No active environment policy found");
+    expect(body.details?.code).toBe("ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND");
+  });
+
+  it("stores zero impact for abnormal non-positive rental duration", async () => {
+    await insertActiveEnvironmentPolicy();
+    const rental = await createRentalForImpact({ duration: 0 });
+
+    const response = await fixture.app.request(
+      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.EnvironmentImpact;
+
+    expect(response.status).toBe(200);
+    expect(body.estimated_distance_km).toBe(0);
+    expect(body.co2_saved).toBe(0);
+    expect(body.policy_snapshot.raw_rental_minutes).toBe(0);
+    expect(body.policy_snapshot.effective_ride_minutes).toBe(0);
+  });
+
+  it("rejects invalid rentalId params for environment impact calculation", async () => {
+    const response = await fixture.app.request(
+      "http://test/internal/environment/calculate-from-rental/not-a-uuid",
+      {
+        method: "POST",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("rejects unauthenticated environment impact calculation requests", async () => {
+    const response = await fixture.app.request(
+      "http://test/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000501",
+      {
+        method: "POST",
+      },
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  it("rejects non-admin environment impact calculation requests", async () => {
+    const response = await fixture.app.request(
+      "http://test/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000502",
+      {
+        method: "POST",
+        headers: userHeaders(),
+      },
+    );
+
+    expect(response.status).toBe(403);
   });
 
   it("falls back to the newest valid active policy when legacy data has multiple active rows", async () => {

@@ -4,12 +4,14 @@ import {
   UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
+  EnvironmentImpactSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
 } from "../../environment";
 import { AccountStatusSchema } from "../../users";
 
 export {
+  EnvironmentImpactSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
   ServerErrorResponseSchema,
@@ -18,12 +20,17 @@ export {
 
 export const EnvironmentErrorCodeSchema = z.enum([
   "ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND",
+  "ENVIRONMENT_IMPACT_RENTAL_NOT_FOUND",
+  "ENVIRONMENT_IMPACT_RENTAL_NOT_COMPLETED",
   "ENVIRONMENT_POLICY_NOT_FOUND",
   "ENVIRONMENT_POLICY_ACTIVATION_BLOCKED",
 ]).openapi("EnvironmentErrorCode");
 
 export const environmentErrorMessages = {
   ACTIVE_ENVIRONMENT_POLICY_NOT_FOUND: "No active environment policy found",
+  ENVIRONMENT_IMPACT_RENTAL_NOT_FOUND: "Rental not found",
+  ENVIRONMENT_IMPACT_RENTAL_NOT_COMPLETED:
+    "Rental must be completed before calculating environment impact",
   ENVIRONMENT_POLICY_NOT_FOUND: "Environment policy not found",
   ENVIRONMENT_POLICY_ACTIVATION_BLOCKED: "Cannot activate suspended or banned environment policy",
 } as const;
@@ -34,6 +41,13 @@ export const EnvironmentPolicyIdParamsSchema = z.object({
     example: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
   }),
 }).openapi("EnvironmentPolicyIdParams");
+
+export const EnvironmentImpactRentalIdParamsSchema = z.object({
+  rentalId: z.uuid().openapi({
+    description: "Rental UUID to calculate Environment Impact for",
+    example: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+  }),
+}).openapi("EnvironmentImpactRentalIdParams");
 
 export const CreateEnvironmentPolicyBodySchema = z.object({
   name: z.string().trim().min(1, {
@@ -70,6 +84,7 @@ export type CreateEnvironmentPolicyBody = z.infer<
   typeof CreateEnvironmentPolicyBodySchema
 >;
 export type EnvironmentPolicyResponse = z.infer<typeof EnvironmentPolicySchema>;
+export type EnvironmentImpactResponse = z.infer<typeof EnvironmentImpactSchema>;
 export type EnvironmentPolicyListResponse = z.infer<
   typeof EnvironmentPolicyListResponseSchema
 >;
