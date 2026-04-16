@@ -13,8 +13,13 @@ const getDetailReservation = async (id: string) => {
   }
 };
 export const useGetDetailReservationQuery = (id: string) => {
+  const isValidId = 
+    Boolean(id) && 
+    id !== "undefined" && 
+    id !== "null" && 
+    id.trim() !== "";
   return useQuery({
-    queryKey: QUERY_KEYS.RESERVATION.DETAIL_RESERVATION(id),
+    queryKey: ['ADMIN_RESERVATION_DETAIL', id],
     queryFn: () => getDetailReservation(id),
     staleTime: 5 * 60 * 1000,
     enabled: !!id,

@@ -20,14 +20,11 @@ export default function Page() {
     fetchAllReservations,
     reservationStats,
     fetchReservationStats,
-    detailReservation,
-    fetchDetailReservation,
     isLoadingReservations,
   } = useReservationActions({
     hasToken: true,
     page: currentPage,
     pageSize: pageSize,
-    id: selectedReservationId,
     status: statusFilter as ReservationStatus,
     option: option as ReservationOption,
   });
@@ -45,12 +42,6 @@ export default function Page() {
     statusFilter,
     option,
   ]);
-
-  useEffect(() => {
-    if (selectedReservationId) {
-      fetchDetailReservation();
-    }
-  }, [selectedReservationId, fetchDetailReservation]);
 
   const handleReset = () => {
     setSearchQuery("");

@@ -52,20 +52,6 @@ export const rentalColumn = ({
     ),
   },
   {
-    accessorKey: "created_at",
-    header: "Ngày tạo",
-    cell: ({ row }) => {
-      return formatToVNTime(row.original.createdAt);
-    },
-  },
-  {
-    accessorKey: "updated_at",
-    header: "Ngày cập nhật",
-    cell: ({ row }) => {
-      return formatToVNTime(row.original.updatedAt);
-    },
-  },
-  {
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (

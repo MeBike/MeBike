@@ -14,7 +14,14 @@ const getUserDisplayStatus = (user: {
 }) => {
   return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
 };
-
+export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Quản trị viên",
+  MANAGER: "Quản lý trạm",
+  STAFF: "Nhân viên trạm",
+  TECHNICIAN: "Kỹ thuật viên",
+  AGENCY: "Agency",
+  USER: "Khách hàng",
+};
 export const getVerifyStatusColor = (status: string) => {
   switch (status) {
     case "VERIFIED":
@@ -28,14 +35,20 @@ export const getVerifyStatusColor = (status: string) => {
   }
 };
 
-export const getRoleColor = (role: UserRole) => {
+export const getRoleColor = (role: string) => {
   switch (role) {
     case "ADMIN":
       return "bg-purple-100 text-purple-800";
+    case "MANAGER":
+      return "bg-teal-100 text-teal-800";
     case "STAFF":
       return "bg-blue-100 text-blue-800";
+    case "TECHNICIAN":
+      return "bg-orange-100 text-orange-800";
+    case "AGENCY":
+      return "bg-cyan-100 text-cyan-800";
     case "USER":
-      return "bg-gray-100 text-gray-800";
+      return "bg-indigo-100 text-indigo-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -109,7 +122,7 @@ export const userColumns = ({
           row.original.role,
         )}`}
       >
-        {row.original.role}
+        {ROLE_LABELS[row.original.role]}
       </span>
     ),
   },

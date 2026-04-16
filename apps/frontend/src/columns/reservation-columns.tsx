@@ -8,12 +8,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatToVNTime } from "@/lib/formatVNDate";
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
-
+export const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Đang chờ xử lý",
+  FULFILLED: "Thành công",
+  CANCELLED: "Đã hủy",
+  EXPIRED: "Hết hạn",
+};
 export const reservationColumn = ({
   onView,
   onUpdateStatus,
@@ -52,7 +56,7 @@ export const reservationColumn = ({
     cell: ({ row }) => (
       <span
         className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "ACTIVE"
+          row.original.status === "FULFILLED"
             ? "bg-green-100 text-green-800"
             : row.original.status === "PENDING"
               ? "bg-yellow-100 text-yellow-800"
@@ -63,7 +67,7 @@ export const reservationColumn = ({
                   : "bg-gray-100 text-gray-800"
         }`}
       >
-        {row.original.status}
+        {STATUS_LABELS[row.original.status]}
       </span>
     ),
   },
@@ -149,7 +153,7 @@ export const reservationColumnForStaff = ({
     cell: ({ row }) => (
       <span
         className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "ACTIVE"
+          row.original.status === "FULFILLED"
             ? "bg-green-100 text-green-800"
             : row.original.status === "PENDING"
               ? "bg-yellow-100 text-yellow-800"
