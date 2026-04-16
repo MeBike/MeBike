@@ -23,4 +23,24 @@ describe("technicianTeamWriteRepository Integration", () => {
     expect(created.availabilityStatus).toBe("AVAILABLE");
     expect(created.memberCount).toBe(0);
   });
+
+  it("update changes technician team mutable fields", async () => {
+    const station = await fixture.factories.station({ name: "Update Team Station" });
+    const team = await fixture.factories.technicianTeam({
+      name: "Update Team Alpha",
+      stationId: station.id,
+      availabilityStatus: "AVAILABLE",
+    });
+    const repo = makeTechnicianTeamCommandRepository(fixture.prisma);
+
+    const updated = await runEffect(repo.update(team.id, {
+      name: "Update Team Beta",
+      availabilityStatus: "UNAVAILABLE",
+    }));
+
+    expect(updated.id).toBe(team.id);
+    expect(updated.name).toBe("Update Team Beta");
+    expect(updated.stationId).toBe(station.id);
+    expect(updated.availabilityStatus).toBe("UNAVAILABLE");
+  });
 });

@@ -143,6 +143,67 @@ describe("admin technician teams routing e2e", () => {
     expect(body.details.stationType).toBe("AGENCY");
   });
 
+  it("updates technician team name and availability", async () => {
+    const station = await fixture.factories.station({ name: "Patch Team Station" });
+    const team = await fixture.factories.technicianTeam({
+      name: "Patch Team Alpha",
+      stationId: station.id,
+      availabilityStatus: "AVAILABLE",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/technician-teams/${team.id}`, {
+      method: "PATCH",
+      headers: authHeader(),
+      body: JSON.stringify({
+        name: "Patch Team Beta",
+        availabilityStatus: "UNAVAILABLE",
+      }),
+    });
+    const body = await response.json() as TechnicianTeamsContracts.TechnicianTeamSummary;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(team.id);
+    expect(body.name).toBe("Patch Team Beta");
+    expect(body.availabilityStatus).toBe("UNAVAILABLE");
+    expect(body.station.id).toBe(station.id);
+  });
+
+  it("returns 404 when updating missing technician team", async () => {
+    const response = await fixture.app.request(`http://test/v1/admin/technician-teams/${uuidv7()}`, {
+      method: "PATCH",
+      headers: authHeader(),
+      body: JSON.stringify({
+        availabilityStatus: "UNAVAILABLE",
+      }),
+    });
+    const body = await response.json() as TechnicianTeamsContracts.TechnicianTeamErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_NOT_FOUND");
+  });
+
+  it("returns 400 when update payload is empty", async () => {
+    const station = await fixture.factories.station({ name: "Patch Empty Station" });
+    const team = await fixture.factories.technicianTeam({
+      name: "Patch Empty Team",
+      stationId: station.id,
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/technician-teams/${team.id}`, {
+      method: "PATCH",
+      headers: authHeader(),
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: "Invalid request payload",
+      details: {
+        code: "VALIDATION_ERROR",
+      },
+    });
+  });
+
   it("rejects non-admin access", async () => {
     const staff = await fixture.factories.user({
       fullname: "Staff Route",
@@ -153,6 +214,29 @@ describe("admin technician teams routing e2e", () => {
     const response = await fixture.app.request("http://test/v1/admin/technician-teams", {
       method: "GET",
       headers: authHeader("STAFF", staff.id),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects non-admin update access", async () => {
+    const station = await fixture.factories.station({ name: "Patch Forbidden Station" });
+    const team = await fixture.factories.technicianTeam({
+      name: "Patch Forbidden Team",
+      stationId: station.id,
+    });
+    const staff = await fixture.factories.user({
+      fullname: "Patch Staff Route",
+      email: "patch-staff-route-technician-teams@example.com",
+      role: "STAFF",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/technician-teams/${team.id}`, {
+      method: "PATCH",
+      headers: authHeader("STAFF", staff.id),
+      body: JSON.stringify({
+        availabilityStatus: "UNAVAILABLE",
+      }),
     });
 
     expect(response.status).toBe(403);

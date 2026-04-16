@@ -23,7 +23,7 @@ export const TechnicianTeamQueryServiceLayer = TechnicianTeamQueryServiceLive.pi
 );
 
 export const TechnicianTeamCommandServiceLayer = TechnicianTeamCommandServiceLive.pipe(
-  Layer.provide(Layer.mergeAll(TechnicianTeamCommandReposLive, StationQueryReposLive)),
+  Layer.provide(Layer.mergeAll(TechnicianTeamCommandReposLive, TechnicianTeamQueryReposLive, StationQueryReposLive)),
 );
 
 export const TechnicianTeamDepsLive = Layer.mergeAll(

@@ -5,7 +5,9 @@ import {
   TechnicianTeamCreateBodySchema,
   TechnicianTeamErrorCodeSchema,
   TechnicianTeamErrorResponseSchema,
+  TechnicianTeamIdParamSchema,
   TechnicianTeamSummarySchema,
+  TechnicianTeamUpdateBodySchema,
 } from "./shared";
 
 export const adminCreateTechnicianTeamRoute = createRoute({
@@ -65,6 +67,55 @@ export const adminCreateTechnicianTeamRoute = createRoute({
   },
 });
 
+export const adminUpdateTechnicianTeamRoute = createRoute({
+  method: "patch",
+  path: "/v1/admin/technician-teams/{teamId}",
+  tags: ["Technician Teams"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: TechnicianTeamIdParamSchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: TechnicianTeamUpdateBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Technician team updated",
+      content: {
+        "application/json": {
+          schema: TechnicianTeamSummarySchema,
+        },
+      },
+    },
+    404: {
+      description: "Technician team not found",
+      content: {
+        "application/json": {
+          schema: TechnicianTeamErrorResponseSchema,
+          examples: {
+            TeamNotFound: {
+              value: {
+                error: "Technician team not found",
+                details: {
+                  code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_NOT_FOUND,
+                  teamId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
 export const technicianTeamMutations = {
   adminCreate: adminCreateTechnicianTeamRoute,
+  adminUpdate: adminUpdateTechnicianTeamRoute,
 } as const;

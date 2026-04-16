@@ -8,6 +8,11 @@ export type CreateTechnicianTeamInput = {
   readonly availabilityStatus?: TechnicianTeamAvailability;
 };
 
+export type UpdateTechnicianTeamInput = {
+  readonly name?: string;
+  readonly availabilityStatus?: TechnicianTeamAvailability;
+};
+
 export type TechnicianTeamFilter = {
   readonly stationId?: string;
   readonly availabilityStatus?: TechnicianTeamAvailability;

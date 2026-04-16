@@ -5,6 +5,7 @@ import type {
   TechnicianTeamAvailableOption,
   TechnicianTeamFilter,
   TechnicianTeamRow,
+  UpdateTechnicianTeamInput,
 } from "../models";
 
 export type TechnicianTeamQueryRepo = {
@@ -24,5 +25,9 @@ export type TechnicianTeamQueryRepo = {
 export type TechnicianTeamCommandRepo = {
   readonly create: (
     input: Required<CreateTechnicianTeamInput>,
+  ) => Effect.Effect<TechnicianTeamRow>;
+  readonly update: (
+    id: string,
+    input: UpdateTechnicianTeamInput,
   ) => Effect.Effect<TechnicianTeamRow>;
 };

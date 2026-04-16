@@ -14,3 +14,7 @@ export class TechnicianTeamInternalStationRequired extends Data.TaggedError("Tec
   readonly stationId: string;
   readonly stationType: "INTERNAL" | "AGENCY";
 }> {}
+
+export class TechnicianTeamNotFound extends Data.TaggedError("TechnicianTeamNotFound")<{
+  readonly id: string;
+}> {}

@@ -95,8 +95,40 @@ const createTechnicianTeam: RouteHandler<TechnicianTeamsRoutes["adminCreate"]> =
   );
 };
 
+const updateTechnicianTeam: RouteHandler<TechnicianTeamsRoutes["adminUpdate"]> = async (c) => {
+  const { teamId } = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  const eff = Effect.flatMap(TechnicianTeamCommandServiceTag, service =>
+    service.updateTechnicianTeam(teamId, {
+      name: body.name,
+      availabilityStatus: body.availabilityStatus,
+    }));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  if (result._tag === "Right") {
+    return c.json<TechnicianTeamSummary, 200>(toContractTechnicianTeamSummary(result.right), 200);
+  }
+
+  return Match.value(result.left).pipe(
+    Match.tag("TechnicianTeamNotFound", ({ id }) =>
+      c.json<TechnicianTeamErrorResponse, 404>({
+        error: technicianTeamErrorMessages.TECHNICIAN_TEAM_NOT_FOUND,
+        details: {
+          code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_NOT_FOUND,
+          teamId: id,
+        },
+      }, 404)),
+    Match.orElse((err) => {
+      throw err;
+    }),
+  );
+};
+
 export const TechnicianTeamAdminController = {
   createTechnicianTeam,
   listAvailableTechnicianTeams,
   listTechnicianTeams,
+  updateTechnicianTeam,
 } as const;

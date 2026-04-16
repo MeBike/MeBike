@@ -11,6 +11,10 @@ import {
   TechnicianTeamSummarySchema,
 } from "../../technician-teams";
 
+export const TechnicianTeamIdParamSchema = z.object({
+  teamId: z.uuidv7(),
+}).openapi("TechnicianTeamIdParam");
+
 export const TechnicianTeamListQuerySchema = z.object({
   stationId: z.uuidv7().optional(),
   availabilityStatus: TechnicianTeamAvailabilitySchema.optional(),
@@ -27,6 +31,24 @@ export const TechnicianTeamCreateBodySchema = z.object({
     availabilityStatus: "AVAILABLE",
   },
 });
+
+export const TechnicianTeamUpdateBodySchema = z
+  .object({
+    name: z.string().trim().min(1).optional(),
+    availabilityStatus: TechnicianTeamAvailabilitySchema.optional(),
+  })
+  .refine(
+    value => value.name !== undefined || value.availabilityStatus !== undefined,
+    {
+      message: "At least one field must be provided",
+    },
+  )
+  .openapi("TechnicianTeamUpdateBody", {
+    example: {
+      name: "Team Alpha Night Shift",
+      availabilityStatus: "UNAVAILABLE",
+    },
+  });
 
 export const TechnicianTeamListResponseSchema = z.object({
   data: z.array(TechnicianTeamSummarySchema),
