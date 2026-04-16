@@ -46,7 +46,7 @@ export function registerRentalRoutes(
 
   const staffGetRoute = {
     ...rentals.staffGetRental,
-    middleware: [requireStaffMiddleware] as const,
+    middleware: [requireRentalOperatorMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(staffGetRoute, RentalStaffController.staffGetRental);

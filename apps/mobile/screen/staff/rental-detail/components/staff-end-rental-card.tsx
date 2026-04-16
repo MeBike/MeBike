@@ -17,7 +17,7 @@ type Props = {
   isSubmitting: boolean;
   isVisible: boolean;
   note: string;
-  operatorStation: {
+  managedStation: {
     id: string;
     name: string;
   } | null;
@@ -39,14 +39,14 @@ export default function StaffEndRentalCard({
   isSubmitting,
   isVisible,
   note,
-  operatorStation,
+  managedStation,
   onChangeVisible,
   onNoteChange,
   onSubmit,
 }: Props) {
   const theme = useTheme();
   const activeReturnSlot = booking.returnSlot;
-  const endStation = activeReturnSlot?.station ?? operatorStation;
+  const endStation = activeReturnSlot?.station ?? managedStation;
   const canEndRental = booking.status === "RENTED" && Boolean(endStation);
 
   const handleConfirm = () => {
@@ -136,14 +136,14 @@ export default function StaffEndRentalCard({
                 <AppText variant="bodyStrong">
                   {activeReturnSlot
                     ? activeReturnSlot.station.name
-                    : (operatorStation?.name ?? "Chưa xác định được trạm trả xe")}
+                    : (managedStation?.name ?? "Chưa xác định được trạm trả xe")}
                 </AppText>
                 <AppText tone="muted" variant="bodySmall">
                   {activeReturnSlot
                     ? `Giữ chỗ từ ${formatVietnamDateTime(activeReturnSlot.reservedFrom)}`
-                    : operatorStation
+                    : managedStation
                       ? "Khách chưa giữ chỗ trước. Hệ thống sẽ kiểm tra chỗ trống hiện tại tại trạm của bạn khi xác nhận trả xe."
-                      : "Không tìm thấy trạm vận hành của bạn để xác nhận trả xe."}
+                      : "Không tìm thấy trạm được gán cho bạn để xác nhận trả xe."}
                 </AppText>
               </YStack>
             </XStack>
