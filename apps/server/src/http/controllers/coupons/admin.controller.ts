@@ -1,7 +1,7 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 import type { CouponsContracts } from "@mebike/shared";
 
-import { Effect } from "effect";
+import { Effect, Match } from "effect";
 
 import {
   CouponCommandServiceTag,
@@ -42,6 +42,51 @@ const adminCreateCouponRule: RouteHandler<
   );
 };
 
+const adminUpdateCouponRule: RouteHandler<
+  CouponRulesRoutes["adminUpdateCouponRule"]
+> = async (c) => {
+  const { ruleId } = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  const eff = Effect.flatMap(CouponCommandServiceTag, service =>
+    service.updateAdminCouponRule(ruleId, {
+      name: body.name,
+      triggerType: body.triggerType,
+      minRidingMinutes: body.minRidingMinutes,
+      discountType: body.discountType,
+      discountValue: body.discountValue,
+      priority: body.priority,
+      status: body.status,
+      activeFrom: body.activeFrom ? new Date(body.activeFrom) : null,
+      activeTo: body.activeTo ? new Date(body.activeTo) : null,
+    }));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<CouponsContracts.AdminCouponRule, 200>(
+        toContractAdminCouponRule(right),
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("CouponRuleNotFound", () =>
+          c.json<CouponsContracts.CouponRuleErrorResponse, 404>({
+            error: "Coupon rule not found",
+            details: {
+              code: "COUPON_RULE_NOT_FOUND",
+              ruleId,
+            },
+          }, 404)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 const adminListCouponRules: RouteHandler<
   CouponRulesRoutes["adminListCouponRules"]
 > = async (c) => {
@@ -73,5 +118,6 @@ const adminListCouponRules: RouteHandler<
 
 export const CouponRulesAdminController = {
   adminCreateCouponRule,
+  adminUpdateCouponRule,
   adminListCouponRules,
 } as const;

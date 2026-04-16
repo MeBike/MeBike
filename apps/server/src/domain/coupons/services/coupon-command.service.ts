@@ -1,5 +1,9 @@
+import { Effect, Option } from "effect";
+
 import type { CouponCommandRepo } from "../repository/coupon.repository.types";
 import type { CouponCommandService } from "./coupon.service.types";
+
+import { CouponRuleNotFound } from "../domain-errors";
 
 export function makeCouponCommandService(
   repo: CouponCommandRepo,
@@ -17,6 +21,27 @@ export function makeCouponCommandService(
         status: input.status ?? "INACTIVE",
         activeFrom: input.activeFrom ?? null,
         activeTo: input.activeTo ?? null,
+      }),
+    updateAdminCouponRule: (ruleId, input) =>
+      Effect.gen(function* () {
+        const updatedOpt = yield* repo.updateAdminCouponRule(ruleId, {
+          name: input.name.trim(),
+          triggerType: input.triggerType,
+          minRidingMinutes: input.minRidingMinutes,
+          minCompletedRentals: null,
+          discountType: input.discountType,
+          discountValue: input.discountValue,
+          priority: input.priority,
+          status: input.status,
+          activeFrom: input.activeFrom,
+          activeTo: input.activeTo,
+        });
+
+        if (Option.isNone(updatedOpt)) {
+          return yield* Effect.fail(new CouponRuleNotFound({ ruleId }));
+        }
+
+        return updatedOpt.value;
       }),
   };
 }

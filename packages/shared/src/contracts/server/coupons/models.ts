@@ -70,6 +70,15 @@ export const AdminCouponRuleSchema = z.object({
   },
 });
 
+export const CouponRuleIdParamSchema = z.object({
+  ruleId: z.uuidv7().openapi({
+    description: "Coupon rule identifier",
+    example: "019b17bd-d130-7e7d-be69-91ceef7b7202",
+  }),
+}).openapi("CouponRuleIdParam", {
+  description: "Path params for coupon rule id",
+});
+
 export const AdminCouponRuleWritableStatusSchema = z
   .enum(["ACTIVE", "INACTIVE"])
   .openapi("AdminCouponRuleWritableStatus");
@@ -117,6 +126,49 @@ export const CreateAdminCouponRuleBodySchema = z
     },
   });
 
+export const UpdateAdminCouponRuleBodySchema = z
+  .object({
+    name: z.string().trim().min(1),
+    triggerType: z.literal("RIDING_DURATION").openapi({
+      example: "RIDING_DURATION",
+    }),
+    minRidingMinutes: z.number().int().positive(),
+    discountType: z.literal("FIXED_AMOUNT").openapi({
+      example: "FIXED_AMOUNT",
+    }),
+    discountValue: z.number().int().positive(),
+    priority: z.number().int(),
+    status: AdminCouponRuleWritableStatusSchema,
+    activeFrom: z.iso.datetime().nullable(),
+    activeTo: z.iso.datetime().nullable(),
+  })
+  .superRefine((value, ctx) => {
+    if (
+      value.activeFrom
+      && value.activeTo
+      && new Date(value.activeFrom).getTime() > new Date(value.activeTo).getTime()
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["activeFrom"],
+        message: "activeFrom must be less than or equal to activeTo",
+      });
+    }
+  })
+  .openapi("UpdateAdminCouponRuleBody", {
+    example: {
+      name: "Ride 2h discount updated",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 2500,
+      priority: 90,
+      status: "INACTIVE",
+      activeFrom: null,
+      activeTo: null,
+    },
+  });
+
 export const AdminCouponRulesListQuerySchema = z.object({
   ...paginationQueryFields,
   status: AccountStatusSchema.optional(),
@@ -155,6 +207,24 @@ export const AdminCouponRulesListResponseSchema = z.object({
   },
 });
 
+export const CouponRuleErrorCodeSchema = z.enum([
+  "COUPON_RULE_NOT_FOUND",
+]).openapi("CouponRuleErrorCode");
+
+export const CouponRuleErrorDetailSchema = z.object({
+  code: CouponRuleErrorCodeSchema,
+  ruleId: z.uuidv7().optional(),
+}).openapi("CouponRuleErrorDetail");
+
+export const CouponRuleErrorResponseSchema = z.object({
+  error: z.string(),
+  details: CouponRuleErrorDetailSchema,
+}).openapi("CouponRuleErrorResponse");
+
+export const couponRuleErrorMessages = {
+  COUPON_RULE_NOT_FOUND: "Coupon rule not found",
+} as const;
+
 export type CouponDiscountType = z.infer<typeof CouponDiscountTypeSchema>;
 export type CouponTriggerType = z.infer<typeof CouponTriggerTypeSchema>;
 export type ActiveCouponRule = z.infer<typeof ActiveCouponRuleSchema>;
@@ -168,9 +238,15 @@ export type AdminCouponRule = z.infer<typeof AdminCouponRuleSchema>;
 export type CreateAdminCouponRuleBody = z.infer<
   typeof CreateAdminCouponRuleBodySchema
 >;
+export type UpdateAdminCouponRuleBody = z.infer<
+  typeof UpdateAdminCouponRuleBodySchema
+>;
 export type AdminCouponRulesListQuery = z.infer<
   typeof AdminCouponRulesListQuerySchema
 >;
 export type AdminCouponRulesListResponse = z.infer<
   typeof AdminCouponRulesListResponseSchema
+>;
+export type CouponRuleErrorResponse = z.infer<
+  typeof CouponRuleErrorResponseSchema
 >;

@@ -61,7 +61,32 @@ export type CreateAdminCouponRuleInput = {
   readonly activeTo?: Date | null;
 };
 
+export type UpdateAdminCouponRuleInput = {
+  readonly name: string;
+  readonly triggerType: "RIDING_DURATION";
+  readonly minRidingMinutes: number;
+  readonly discountType: "FIXED_AMOUNT";
+  readonly discountValue: number;
+  readonly priority: number;
+  readonly status: CouponRuleWritableStatus;
+  readonly activeFrom: Date | null;
+  readonly activeTo: Date | null;
+};
+
 export type CreateCouponRuleData = {
+  readonly name: string;
+  readonly triggerType: "RIDING_DURATION";
+  readonly minRidingMinutes: number;
+  readonly minCompletedRentals: null;
+  readonly discountType: "FIXED_AMOUNT";
+  readonly discountValue: number;
+  readonly priority: number;
+  readonly status: CouponRuleWritableStatus;
+  readonly activeFrom: Date | null;
+  readonly activeTo: Date | null;
+};
+
+export type UpdateCouponRuleData = {
   readonly name: string;
   readonly triggerType: "RIDING_DURATION";
   readonly minRidingMinutes: number;

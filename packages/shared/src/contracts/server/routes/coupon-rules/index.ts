@@ -7,6 +7,7 @@ export {
 } from "./queries";
 export {
   adminCreateCouponRule,
+  adminUpdateCouponRule,
 } from "./mutations";
 
 export const couponRulesRoutes = {

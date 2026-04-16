@@ -1,4 +1,4 @@
-import type { Effect } from "effect";
+import type { Effect, Option } from "effect";
 
 import type {
   ActiveCouponRuleRow,
@@ -7,6 +7,7 @@ import type {
   BillingPreviewDiscountRuleRow,
   CreateCouponRuleData,
   ListAdminCouponRulesFilter,
+  UpdateCouponRuleData,
 } from "../models";
 import type { PageRequest } from "@/domain/shared/pagination";
 
@@ -14,6 +15,10 @@ export type CouponCommandRepo = {
   createAdminCouponRule: (
     data: CreateCouponRuleData,
   ) => Effect.Effect<AdminCouponRuleRow>;
+  updateAdminCouponRule: (
+    ruleId: string,
+    data: UpdateCouponRuleData,
+  ) => Effect.Effect<Option.Option<AdminCouponRuleRow>>;
 };
 
 export type CouponQueryRepo = {

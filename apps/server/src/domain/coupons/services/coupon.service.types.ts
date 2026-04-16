@@ -7,13 +7,19 @@ import type {
   BillingPreviewDiscountRuleRow,
   CreateAdminCouponRuleInput,
   ListAdminCouponRulesFilter,
+  UpdateAdminCouponRuleInput,
 } from "../models";
 import type { PageRequest } from "@/domain/shared/pagination";
+import type { CouponRuleNotFound } from "../domain-errors";
 
 export type CouponCommandService = {
   createAdminCouponRule: (
     input: CreateAdminCouponRuleInput,
   ) => Effect.Effect<AdminCouponRuleRow>;
+  updateAdminCouponRule: (
+    ruleId: string,
+    input: UpdateAdminCouponRuleInput,
+  ) => Effect.Effect<AdminCouponRuleRow, CouponRuleNotFound>;
 };
 
 export type CouponQueryService = {

@@ -239,6 +239,73 @@ describe("admin coupon rules routing e2e", () => {
     ]);
   });
 
+  it("admin can update an existing global coupon rule and updatedAt changes", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      updatedAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+      status: "ACTIVE",
+      priority: 100,
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}`, {
+      method: "PUT",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount updated",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2500,
+        priority: 90,
+        status: "INACTIVE",
+        activeFrom: null,
+        activeTo: null,
+      }),
+    });
+    const body = await response.json() as CouponsContracts.AdminCouponRule;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: existing.id,
+      name: "Ride 2h discount updated",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      minBillableHours: 2,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 2500,
+      status: "INACTIVE",
+      priority: 90,
+      activeFrom: null,
+      activeTo: null,
+      createdAt: "2026-04-17T00:00:00.000Z",
+    });
+    expect(body.updatedAt).not.toBe("2026-04-17T00:00:00.000Z");
+
+    const updated = await fixture.prisma.couponRule.findUnique({
+      where: { id: existing.id },
+    });
+    expect(updated).not.toBeNull();
+    expect(updated).toMatchObject({
+      id: existing.id,
+      name: "Ride 2h discount updated",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      minCompletedRentals: null,
+      discountType: "FIXED_AMOUNT",
+      status: "INACTIVE",
+      priority: 90,
+      activeFrom: null,
+      activeTo: null,
+    });
+    expect(updated?.discountValue.toString()).toBe("2500");
+    expect(updated?.updatedAt.toISOString()).not.toBe("2026-04-17T00:00:00.000Z");
+    expect(await fixture.prisma.coupon.count()).toBe(0);
+    expect(await fixture.prisma.userCoupon.count()).toBe(0);
+  });
+
   it("returns 401 when token is missing", async () => {
     const response = await fixture.app.request("http://test/v1/admin/coupon-rules");
 
@@ -257,6 +324,35 @@ describe("admin coupon rules routing e2e", () => {
         minRidingMinutes: 120,
         discountType: "FIXED_AMOUNT",
         discountValue: 2000,
+      }),
+    });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 401 when updating without token", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "Ride 2h discount updated",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2500,
+        priority: 90,
+        status: "INACTIVE",
+        activeFrom: null,
+        activeTo: null,
       }),
     });
 
@@ -288,6 +384,63 @@ describe("admin coupon rules routing e2e", () => {
     expect(response.status).toBe(403);
   });
 
+  it("returns 403 when authenticated user is not admin for update", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}`, {
+      method: "PUT",
+      headers: jsonAuthHeader(USER_USER_ID, "USER"),
+      body: JSON.stringify({
+        name: "Ride 2h discount updated",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2500,
+        priority: 90,
+        status: "INACTIVE",
+        activeFrom: null,
+        activeTo: null,
+      }),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("returns 404 when updating a missing coupon rule", async () => {
+    const missingRuleId = "019b17bd-d130-7e7d-be69-91ceef7b7299";
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${missingRuleId}`, {
+      method: "PUT",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount updated",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2500,
+        priority: 90,
+        status: "INACTIVE",
+        activeFrom: null,
+        activeTo: null,
+      }),
+    });
+    const body = await response.json() as CouponsContracts.CouponRuleErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({
+      error: "Coupon rule not found",
+      details: {
+        code: "COUPON_RULE_NOT_FOUND",
+        ruleId: missingRuleId,
+      },
+    });
+  });
+
   it("returns validation error when discountValue is not positive", async () => {
     const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
       method: "POST",
@@ -307,6 +460,36 @@ describe("admin coupon rules routing e2e", () => {
     expect(body.details?.code).toBe("VALIDATION_ERROR");
   });
 
+  it("returns validation error when update discountValue is not positive", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}`, {
+      method: "PUT",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount updated",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 0,
+        priority: 90,
+        status: "INACTIVE",
+        activeFrom: null,
+        activeTo: null,
+      }),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
   it("returns validation error when minRidingMinutes is not positive", async () => {
     const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
       method: "POST",
@@ -317,6 +500,36 @@ describe("admin coupon rules routing e2e", () => {
         minRidingMinutes: 0,
         discountType: "FIXED_AMOUNT",
         discountValue: 2000,
+      }),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("returns validation error when update minRidingMinutes is not positive", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}`, {
+      method: "PUT",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount updated",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 0,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2500,
+        priority: 90,
+        status: "INACTIVE",
+        activeFrom: null,
+        activeTo: null,
       }),
     });
     const body = await response.json() as ServerErrorResponse;
@@ -347,6 +560,36 @@ describe("admin coupon rules routing e2e", () => {
     expect(body.details?.code).toBe("VALIDATION_ERROR");
   });
 
+  it("returns validation error when update activeFrom is after activeTo", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}`, {
+      method: "PUT",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount updated",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2500,
+        priority: 90,
+        status: "INACTIVE",
+        activeFrom: "2026-04-18T00:00:00.000Z",
+        activeTo: "2026-04-17T00:00:00.000Z",
+      }),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
   it("returns validation error when required fields are missing", async () => {
     const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
       method: "POST",
@@ -355,6 +598,31 @@ describe("admin coupon rules routing e2e", () => {
         triggerType: "RIDING_DURATION",
         minRidingMinutes: 120,
         discountType: "FIXED_AMOUNT",
+      }),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("returns validation error when update body is missing required fields", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}`, {
+      method: "PUT",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2500,
       }),
     });
     const body = await response.json() as ServerErrorResponse;

@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type {
   PrismaClient,
@@ -81,6 +81,56 @@ export function makeCouponCommandRepository(
           }),
       }).pipe(
         Effect.map(toAdminCouponRuleRow),
+        defectOn(CouponRepositoryError),
+      ),
+    updateAdminCouponRule: (ruleId, data) =>
+      Effect.gen(function* () {
+        const existing = yield* Effect.tryPromise({
+          try: () =>
+            client.couponRule.findUnique({
+              where: { id: ruleId },
+              select: { id: true },
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "updateAdminCouponRule.findExisting",
+              message: "Failed to find admin coupon rule before update",
+              cause: err,
+            }),
+        });
+
+        if (!existing) {
+          return Option.none();
+        }
+
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            client.couponRule.update({
+              where: { id: ruleId },
+              data: {
+                name: data.name,
+                triggerType: data.triggerType,
+                minRidingMinutes: data.minRidingMinutes,
+                minCompletedRentals: data.minCompletedRentals,
+                discountType: data.discountType,
+                discountValue: data.discountValue,
+                status: data.status,
+                priority: data.priority,
+                activeFrom: data.activeFrom,
+                activeTo: data.activeTo,
+              },
+              select: selectAdminCouponRuleRow,
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "updateAdminCouponRule",
+              message: "Failed to update admin coupon rule",
+              cause: err,
+            }),
+        });
+
+        return Option.some(toAdminCouponRuleRow(updated));
+      }).pipe(
         defectOn(CouponRepositoryError),
       ),
   };
