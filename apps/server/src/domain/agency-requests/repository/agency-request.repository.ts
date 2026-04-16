@@ -250,7 +250,6 @@ export function makeAgencyRequestRepository(
             stationLatitude: input.stationLatitude,
             stationLongitude: input.stationLongitude,
             stationTotalCapacity: input.stationTotalCapacity,
-            stationPickupSlotLimit: input.stationPickupSlotLimit ?? input.stationTotalCapacity,
             stationReturnSlotLimit: input.stationReturnSlotLimit ?? input.stationTotalCapacity,
             description: input.description ?? null,
           },

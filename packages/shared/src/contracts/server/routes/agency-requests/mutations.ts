@@ -26,20 +26,10 @@ const SubmitAgencyRequestRequestSchema = z.object({
   stationLatitude: z.number().min(-90).max(90),
   stationLongitude: z.number().min(-180).max(180),
   stationTotalCapacity: z.number().int().min(1),
-  stationPickupSlotLimit: z.number().int().min(0).optional(),
   stationReturnSlotLimit: z.number().int().min(0).optional(),
   description: OptionalTrimmedNullableStringSchema,
 }).superRefine((value, ctx) => {
-  const pickupSlotLimit = value.stationPickupSlotLimit ?? value.stationTotalCapacity;
   const returnSlotLimit = value.stationReturnSlotLimit ?? value.stationTotalCapacity;
-
-  if (pickupSlotLimit > value.stationTotalCapacity) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["stationPickupSlotLimit"],
-      message: "stationPickupSlotLimit must be less than or equal to stationTotalCapacity",
-    });
-  }
 
   if (returnSlotLimit > value.stationTotalCapacity) {
     ctx.addIssue({
@@ -102,7 +92,6 @@ export const submitAgencyRequestRoute = createRoute({
                 stationLatitude: 10.8421,
                 stationLongitude: 106.8284,
                 stationTotalCapacity: 20,
-                stationPickupSlotLimit: 12,
                 stationReturnSlotLimit: 18,
                 description: "Đề nghị mở điểm agency vận hành đầy đủ.",
               },

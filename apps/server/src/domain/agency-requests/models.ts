@@ -25,7 +25,6 @@ export type AgencyRequestRow = {
   readonly stationLatitude: number | null;
   readonly stationLongitude: number | null;
   readonly stationTotalCapacity: number | null;
-  readonly stationPickupSlotLimit: number | null;
   readonly stationReturnSlotLimit: number | null;
   readonly status: AgencyRequestStatus;
   readonly description: string | null;
@@ -53,7 +52,6 @@ export type SubmitAgencyRequestInput = {
   readonly stationLatitude: number;
   readonly stationLongitude: number;
   readonly stationTotalCapacity: number;
-  readonly stationPickupSlotLimit?: number | null;
   readonly stationReturnSlotLimit?: number | null;
   readonly description?: string | null;
 };

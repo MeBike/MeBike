@@ -311,7 +311,6 @@ export type AgencyRequest = {
     station_latitude: string | null;
     station_longitude: string | null;
     station_total_capacity: number | null;
-    station_pickup_slot_limit: number | null;
     station_return_slot_limit: number | null;
     status: Generated<AgencyRequestStatus>;
     description: string | null;
