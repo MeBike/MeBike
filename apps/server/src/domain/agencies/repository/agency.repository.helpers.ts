@@ -40,7 +40,6 @@ export function toAgencyRow(
           longitude: row.station.longitude,
           stationType: row.station.stationType,
           totalCapacity: row.station.totalCapacity,
-          pickupSlotLimit: row.station.totalCapacity,
           returnSlotLimit: row.station.returnSlotLimit,
         }
       : null,

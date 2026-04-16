@@ -177,14 +177,6 @@ export const CreateStationBodySchema = z.object({
     .min(1, {
       message: "totalCapacity must be greater than or equal to 1",
     }),
-  pickupSlotLimit: z.number()
-    .int({
-      message: "pickupSlotLimit must be an integer",
-    })
-    .min(0, {
-      message: "pickupSlotLimit must be greater than or equal to 0",
-    })
-    .optional(),
   returnSlotLimit: z.number()
     .int({
       message: "returnSlotLimit must be an integer",
@@ -224,14 +216,6 @@ export const UpdateStationBodySchema = z.object({
     })
     .min(1, {
       message: "totalCapacity must be greater than or equal to 1",
-    })
-    .optional(),
-  pickupSlotLimit: z.number()
-    .int({
-      message: "pickupSlotLimit must be an integer",
-    })
-    .min(0, {
-      message: "pickupSlotLimit must be greater than or equal to 0",
     })
     .optional(),
   returnSlotLimit: z.number()
@@ -318,7 +302,6 @@ export const StationListResponseSchema = z
           },
           capacity: {
             total: 20,
-            pickupSlotLimit: 10,
             returnSlotLimit: 10,
             emptyPhysicalSlots: 2,
           },

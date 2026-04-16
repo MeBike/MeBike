@@ -74,7 +74,7 @@ describe("admin user request validation", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects admin create agency payload when station capacity split exceeds total capacity", () => {
+  it("rejects admin create agency payload when return slot limit exceeds total capacity", () => {
     const result = UsersContracts.AdminCreateUserRequestSchema.safeParse({
       role: "AGENCY",
       requesterEmail: "agency@example.com",
@@ -84,7 +84,7 @@ describe("admin user request validation", () => {
       stationLatitude: 10.8486,
       stationLongitude: 106.7717,
       stationTotalCapacity: 20,
-      stationPickupSlotLimit: 21,
+      stationReturnSlotLimit: 21,
     });
 
     expect(result.success).toBe(false);

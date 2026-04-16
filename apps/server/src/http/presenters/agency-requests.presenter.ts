@@ -18,7 +18,6 @@ export function toAgencyRequest(
     stationLatitude: row.stationLatitude,
     stationLongitude: row.stationLongitude,
     stationTotalCapacity: row.stationTotalCapacity,
-    stationPickupSlotLimit: row.stationPickupSlotLimit,
     stationReturnSlotLimit: row.stationReturnSlotLimit,
     status: row.status,
     description: row.description,

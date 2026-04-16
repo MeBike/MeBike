@@ -9,7 +9,6 @@ export type AgencyStationRow = {
   readonly longitude: number;
   readonly stationType: StationType;
   readonly totalCapacity: number;
-  readonly pickupSlotLimit: number;
   readonly returnSlotLimit: number;
 };
 
@@ -35,7 +34,6 @@ export type AgencyOperatorStats = {
 
 export type AgencyCurrentStationStats = {
   readonly totalCapacity: number;
-  readonly pickupSlotLimit: number;
   readonly returnSlotLimit: number;
   readonly totalBikes: number;
   readonly availableBikes: number;

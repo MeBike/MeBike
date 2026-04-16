@@ -34,7 +34,6 @@ export const AgencyOperatorStatsSchema = z.object({
 
 export const AgencyCurrentStationStatsSchema = z.object({
   totalCapacity: z.number(),
-  pickupSlotLimit: z.number(),
   returnSlotLimit: z.number(),
   totalBikes: z.number(),
   availableBikes: z.number(),

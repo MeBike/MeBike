@@ -26,7 +26,6 @@ export type StationOverrides = {
   stationType?: "INTERNAL" | "AGENCY";
   agencyId?: string | null;
   capacity?: number;
-  pickupSlotLimit?: number;
   returnSlotLimit?: number;
   latitude?: number;
   longitude?: number;

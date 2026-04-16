@@ -115,17 +115,6 @@ export const updateStation = createRoute({
                 },
               },
             },
-            PickupSlotLimitBelowPendingReservations: {
-              value: {
-                error: "Pickup slot limit cannot be lower than pending reservations",
-                details: {
-                  code: StationErrorCodeSchema.enum.PICKUP_SLOT_LIMIT_BELOW_PENDING_RESERVATIONS,
-                  stationId: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
-                  pickupSlotLimit: 0,
-                  pendingReservations: 1,
-                },
-              },
-            },
           },
         },
       },

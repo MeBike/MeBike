@@ -241,7 +241,6 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
             stationLatitude: body.stationLatitude,
             stationLongitude: body.stationLongitude,
             stationTotalCapacity: body.stationTotalCapacity,
-            stationPickupSlotLimit: body.stationPickupSlotLimit ?? null,
             stationReturnSlotLimit: body.stationReturnSlotLimit ?? null,
             description: body.description ?? null,
             reviewedByUserId: c.var.currentUser!.userId,

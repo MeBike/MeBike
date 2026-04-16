@@ -11,7 +11,6 @@ const DEFAULT_STATION_REQUEST_FIELDS = {
   stationLatitude: 10.8231,
   stationLongitude: 106.7712,
   stationTotalCapacity: 20,
-  stationPickupSlotLimit: 12,
   stationReturnSlotLimit: 18,
 } as const;
 
@@ -455,7 +454,6 @@ describe("agency requests routing", () => {
         stationLatitude: 10.8235,
         stationLongitude: 106.7723,
         stationTotalCapacity: 24,
-        stationPickupSlotLimit: 16,
         stationReturnSlotLimit: 20,
         status: "APPROVED",
         description: "Approved after full review",
@@ -508,7 +506,6 @@ describe("agency requests routing", () => {
         stationLatitude: 10.8123,
         stationLongitude: 106.7456,
         stationTotalCapacity: 20,
-        stationPickupSlotLimit: 14,
         stationReturnSlotLimit: 20,
         status: "PENDING",
         description: "Original requester note",
