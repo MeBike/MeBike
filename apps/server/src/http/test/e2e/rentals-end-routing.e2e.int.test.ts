@@ -181,6 +181,23 @@ describe("rentals end routing e2e", () => {
     expect(body.returnSlot?.status).toBe("ACTIVE");
   });
 
+  it("allows an agency user to fetch rental detail from the staff route", async () => {
+    const { rental } = await createActiveRentalGraph();
+    const { token: agencyToken } = await createAgencyToken();
+
+    const response = await fixture.app.request(`http://test/v1/staff/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${agencyToken}`,
+      },
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.status).toBe("RENTED");
+  });
+
   it("lists my bike swap requests without being shadowed by the rental detail route", async () => {
     const { user, rental } = await createActiveRentalGraph();
     const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });

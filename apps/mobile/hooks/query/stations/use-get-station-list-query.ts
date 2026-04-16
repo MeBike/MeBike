@@ -12,8 +12,9 @@ async function fetchStationList() {
   return result.value;
 }
 
-export function useGetStationListQuery() {
+export function useGetStationListQuery(enabled: boolean = true) {
   return useQuery<Awaited<ReturnType<typeof fetchStationList>>, StationError>({
+    enabled,
     queryFn: fetchStationList,
     queryKey: ["stations", "list"],
   });
