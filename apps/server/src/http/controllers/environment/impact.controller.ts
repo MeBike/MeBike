@@ -14,6 +14,7 @@ import {
   toContractEnvironmentImpactHistoryItem,
   toContractEnvironmentSummary,
 } from "@/http/presenters/environment.presenter";
+import { toContractPage } from "@/http/shared/pagination";
 
 type EnvironmentRoutes = typeof import("@mebike/shared")["serverRoutes"]["environment"];
 
@@ -51,11 +52,8 @@ const getMyHistory: RouteHandler<
   const result = await c.var.runPromise(eff);
 
   return c.json<EnvironmentContracts.EnvironmentImpactHistoryResponse, 200>({
-    items: result.items.map(toContractEnvironmentImpactHistoryItem),
-    page: result.page,
-    pageSize: result.pageSize,
-    totalItems: result.total,
-    totalPages: result.totalPages,
+    data: result.items.map(toContractEnvironmentImpactHistoryItem),
+    pagination: toContractPage(result),
   }, 200);
 };
 
