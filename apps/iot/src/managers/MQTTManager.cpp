@@ -1,17 +1,37 @@
 #include "MQTTManager.h"
 #include <ArduinoLog.h>
 
-MQTTManager::MQTTManager(WiFiClient &wifiClient, std::string_view brokerIP, int port, std::string_view username, std::string_view password)
-    : _client(wifiClient), _brokerIP(brokerIP), _port(port), _username(username), _password(password)
+MQTTManager::MQTTManager(WiFiClient &wifiClient,
+                         std::string_view clientId,
+                         std::string_view brokerIP,
+                         int port,
+                         std::string_view username,
+                         std::string_view password)
+    : _client(wifiClient),
+      _clientId(clientId),
+      _brokerIP(brokerIP),
+      _port(port),
+      _username(username),
+      _password(password)
 {
     _client.setServer(_brokerIP.c_str(), _port);
 }
 
 bool MQTTManager::connect()
 {
-    if (_client.connect("ESP32Client", _username.c_str(), _password.c_str()))
+    bool connected = false;
+    if (_username.empty())
     {
-        Log.info("Connected to MQTT broker\n");
+        connected = _client.connect(_clientId.c_str());
+    }
+    else
+    {
+        connected = _client.connect(_clientId.c_str(), _username.c_str(), _password.c_str());
+    }
+
+    if (connected)
+    {
+        Log.info("Connected to MQTT broker as %s\n", _clientId.c_str());
         return true;
     }
     else
