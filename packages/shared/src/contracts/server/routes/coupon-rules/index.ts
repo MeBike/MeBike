@@ -1,6 +1,9 @@
 import * as queries from "./queries";
 
-export { listActiveCouponRules } from "./queries";
+export {
+  adminListCouponRules,
+  listActiveCouponRules,
+} from "./queries";
 
 export const couponRulesRoutes = {
   ...queries,

@@ -3,10 +3,15 @@ import { Effect, Layer } from "effect";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
+import {
+  makePageResult,
+  normalizedPage,
+} from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type {
   ActiveCouponRuleRow,
+  AdminCouponRuleRow,
   BillingPreviewDiscountRuleRow,
 } from "../models";
 import type { CouponQueryRepo } from "./coupon.repository.types";
@@ -38,12 +43,31 @@ const selectActiveCouponRuleRow = {
   createdAt: true,
 } satisfies PrismaTypes.CouponRuleSelect;
 
+const selectAdminCouponRuleRow = {
+  id: true,
+  name: true,
+  triggerType: true,
+  minRidingMinutes: true,
+  discountType: true,
+  discountValue: true,
+  status: true,
+  priority: true,
+  activeFrom: true,
+  activeTo: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies PrismaTypes.CouponRuleSelect;
+
 type BillingPreviewDiscountRuleRecord = PrismaTypes.CouponRuleGetPayload<{
   select: typeof selectBillingPreviewDiscountRuleRow;
 }>;
 
 type ActiveCouponRuleRecord = PrismaTypes.CouponRuleGetPayload<{
   select: typeof selectActiveCouponRuleRow;
+}>;
+
+type AdminCouponRuleRecord = PrismaTypes.CouponRuleGetPayload<{
+  select: typeof selectAdminCouponRuleRow;
 }>;
 
 function toBillingPreviewDiscountRuleRow(
@@ -85,6 +109,25 @@ function toActiveCouponRuleRow(
   };
 }
 
+function toAdminCouponRuleRow(
+  row: AdminCouponRuleRecord,
+): AdminCouponRuleRow {
+  return {
+    id: row.id,
+    name: row.name,
+    triggerType: row.triggerType,
+    minRidingMinutes: row.minRidingMinutes,
+    discountType: row.discountType,
+    discountValue: row.discountValue,
+    status: row.status,
+    priority: row.priority,
+    activeFrom: row.activeFrom,
+    activeTo: row.activeTo,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
 function activeGlobalRidingDurationFixedAmountWhere(
   now: Date,
   extraAnd: readonly PrismaTypes.CouponRuleWhereInput[] = [],
@@ -112,10 +155,65 @@ function activeGlobalRidingDurationFixedAmountWhere(
   };
 }
 
+function adminCouponRulesOrderBy(): PrismaTypes.CouponRuleOrderByWithRelationInput[] {
+  return [
+    { createdAt: "desc" },
+    { id: "desc" },
+  ];
+}
+
 export function makeCouponQueryRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): CouponQueryRepo {
   return {
+    listAdminCouponRules: (filter, pageReq) =>
+      Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage({
+          ...pageReq,
+          pageSize: Math.min(pageReq.pageSize, 100),
+        });
+
+        const where: PrismaTypes.CouponRuleWhereInput = {
+          ...(filter.status ? { status: filter.status } : {}),
+          ...(filter.triggerType ? { triggerType: filter.triggerType } : {}),
+          ...(filter.discountType ? { discountType: filter.discountType } : {}),
+        };
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.couponRule.count({ where }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "listAdminCouponRules.count",
+                message: "Failed to count admin coupon rules",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.couponRule.findMany({
+                where,
+                skip,
+                take,
+                orderBy: adminCouponRulesOrderBy(),
+                select: selectAdminCouponRuleRow,
+              }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "listAdminCouponRules.findMany",
+                message: "Failed to list admin coupon rules",
+                cause: err,
+              }),
+          }),
+        ]);
+
+        return makePageResult(
+          items.map(toAdminCouponRuleRow),
+          total,
+          page,
+          pageSize,
+        );
+      }).pipe(defectOn(CouponRepositoryError)),
     listActiveGlobalCouponRules: input =>
       Effect.gen(function* () {
         const rows = yield* Effect.tryPromise({

@@ -1,6 +1,14 @@
 import { createRoute } from "@hono/zod-openapi";
 
-import { ActiveCouponRulesResponseSchema } from "../../coupons";
+import {
+  ActiveCouponRulesResponseSchema,
+  AdminCouponRulesListQuerySchema,
+  AdminCouponRulesListResponseSchema,
+} from "../../coupons";
+import {
+  forbiddenResponse,
+  unauthorizedResponse,
+} from "../helpers";
 
 export const listActiveCouponRules = createRoute({
   method: "get",
@@ -15,5 +23,27 @@ export const listActiveCouponRules = createRoute({
         },
       },
     },
+  },
+});
+
+export const adminListCouponRules = createRoute({
+  method: "get",
+  path: "/v1/admin/coupon-rules",
+  tags: ["Admin", "Coupon Rules"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: AdminCouponRulesListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Admin list global coupon rules",
+      content: {
+        "application/json": {
+          schema: AdminCouponRulesListResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
   },
 });

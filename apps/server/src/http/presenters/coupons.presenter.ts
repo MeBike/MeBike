@@ -1,6 +1,9 @@
 import type { CouponsContracts } from "@mebike/shared";
 
-import type { ActiveCouponRuleRow } from "@/domain/coupons";
+import type {
+  ActiveCouponRuleRow,
+  AdminCouponRuleRow,
+} from "@/domain/coupons";
 
 import { toMinorUnit } from "@/domain/shared/money";
 
@@ -33,6 +36,28 @@ export function toContractActiveCouponRules(
         }),
       };
     }),
+  };
+}
+
+export function toContractAdminCouponRule(
+  row: AdminCouponRuleRow,
+): CouponsContracts.AdminCouponRule {
+  return {
+    id: row.id,
+    name: row.name,
+    triggerType: row.triggerType,
+    minRidingMinutes: row.minRidingMinutes,
+    minBillableHours: row.minRidingMinutes === null
+      ? null
+      : row.minRidingMinutes / 60,
+    discountType: row.discountType,
+    discountValue: Number(toMinorUnit(row.discountValue)),
+    status: row.status,
+    priority: row.priority,
+    activeFrom: row.activeFrom?.toISOString() ?? null,
+    activeTo: row.activeTo?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 
