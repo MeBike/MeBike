@@ -2,6 +2,8 @@ import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
   ConfirmationMethod,
+  CouponStatus,
+  DiscountType,
   HandoverStatus,
   RentalStatus,
   ReturnSlotStatus,
@@ -233,6 +235,35 @@ export type DashboardRevenueSnapshot = {
 export type HourlyRentalStat = {
   hour: number;
   totalRentals: number;
+};
+
+export type RentalBillingPreviewCouponRow = {
+  userCouponId: string;
+  couponId: string;
+  code: string;
+  discountType: DiscountType;
+  discountValue: number;
+  status: CouponStatus;
+};
+
+export type RentalBillingPreviewRow = {
+  rentalId: string;
+  previewedAt: Date;
+  pricingPolicyId: string;
+  rentalMinutes: number;
+  billableBlocks: number;
+  billableHours: number;
+  baseRentalAmount: number;
+  prepaidAmount: number;
+  eligibleRentalAmount: number;
+  subscriptionApplied: boolean;
+  subscriptionDiscountAmount: number;
+  bestCoupon: RentalBillingPreviewCouponRow | null;
+  couponDiscountAmount: number;
+  penaltyAmount: number;
+  depositForfeited: boolean;
+  payableRentalAmount: number;
+  totalPayableAmount: number;
 };
 
 export type RentalDashboardSummary = {

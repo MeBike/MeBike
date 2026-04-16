@@ -2,6 +2,7 @@ import { Layer } from "effect";
 
 import {
   RentalAnalyticsRepositoryLive,
+  RentalBillingPreviewServiceLive,
   RentalCommandServiceLive,
   RentalRepositoryLive,
   RentalServiceLive,
@@ -12,6 +13,7 @@ import {
 
 import { PrismaLive } from "../infra.layers";
 import { BikeDepsLive, BikeReposLive } from "./bike.layers";
+import { CouponServiceLayer } from "./coupon.layers";
 import { StationQueryReposLive } from "./station.layers";
 import {
   SubscriptionReposLive,
@@ -53,6 +55,11 @@ export const RentalStatsServiceLayer = RentalStatsServiceLive.pipe(
   Layer.provide(RentalAnalyticsReposLive),
 );
 
+export const RentalBillingPreviewServiceLayer = RentalBillingPreviewServiceLive.pipe(
+  Layer.provide(CouponServiceLayer),
+  Layer.provide(PrismaLive),
+);
+
 export const RentalDepsLive = Layer.mergeAll(
   RentalReposLive,
   ReturnSlotReposLive,
@@ -61,6 +68,7 @@ export const RentalDepsLive = Layer.mergeAll(
   RentalServiceLayer,
   RentalCommandServiceLayer,
   RentalStatsServiceLayer,
+  RentalBillingPreviewServiceLayer,
   BikeDepsLive,
   WalletDepsLive,
   SubscriptionReposLive,

@@ -26,6 +26,22 @@ export type UserCouponDetailRow = UserCouponListItemRow & {
   readonly couponRuleMinRidingMinutes: number | null;
 };
 
+export type BillingPreviewCouponCandidateRow = {
+  readonly userCouponId: string;
+  readonly couponId: string;
+  readonly code: string;
+  readonly status: CouponStatus;
+  readonly discountType: DiscountType;
+  readonly discountValue: PrismaTypes.Decimal;
+  readonly expiresAt: Date | null;
+  readonly assignedAt: Date;
+  readonly couponRuleId: string | null;
+  readonly couponRuleName: string | null;
+  readonly couponRulePriority: number | null;
+  readonly couponRuleTriggerType: CouponTriggerType | null;
+  readonly couponRuleMinRidingMinutes: number | null;
+};
+
 export type CouponSortField = "assignedAt";
 
 export type CouponFilter = {

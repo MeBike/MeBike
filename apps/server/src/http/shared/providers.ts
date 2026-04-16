@@ -57,6 +57,7 @@ export {
 } from "./features/redistribution.layers";
 export {
   RentalAnalyticsReposLive,
+  RentalBillingPreviewServiceLayer,
   RentalCommandServiceLayer,
   RentalDepsLive,
   RentalReposLive,

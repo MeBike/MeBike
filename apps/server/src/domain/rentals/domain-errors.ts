@@ -128,6 +128,13 @@ export class ReturnSlotRequiresActiveRental extends Data.TaggedError(
     readonly status: RentalStatus;
   }> {}
 
+export class BillingPreviewRequiresActiveRental extends Data.TaggedError(
+  "BillingPreviewRequiresActiveRental",
+)<{
+    readonly rentalId: string;
+    readonly status: RentalStatus;
+  }> {}
+
 export class ReturnSlotNotFound extends Data.TaggedError("ReturnSlotNotFound")<{
   readonly rentalId: string;
   readonly userId: string;
@@ -187,6 +194,7 @@ export type RentalServiceFailure
     | ReturnSlotRequiredForReturn
     | ReturnSlotStationMismatch
     | ReturnSlotRequiresActiveRental
+    | BillingPreviewRequiresActiveRental
     | ReturnSlotNotFound
     | ReturnSlotCapacityExceeded
     | ReturnAlreadyConfirmed

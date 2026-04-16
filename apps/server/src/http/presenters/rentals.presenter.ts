@@ -3,6 +3,7 @@ import type { RentalsContracts } from "@mebike/shared";
 import type {
   AdminRentalDetail,
   AdminRentalListItem,
+  RentalBillingPreviewRow,
   BikeSwapRequestRow,
   RentalRow,
   ReturnSlotRow,
@@ -58,6 +59,39 @@ export function toContractRentalWithPrice(
     ...toContractRentalDeposit(row),
     status: row.status,
     updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toContractRentalBillingPreview(
+  row: RentalBillingPreviewRow,
+): RentalsContracts.RentalBillingPreview {
+  return {
+    rentalId: row.rentalId,
+    previewedAt: row.previewedAt.toISOString(),
+    pricingPolicyId: row.pricingPolicyId,
+    rentalMinutes: row.rentalMinutes,
+    billableBlocks: row.billableBlocks,
+    billableHours: row.billableHours,
+    baseRentalAmount: row.baseRentalAmount,
+    prepaidAmount: row.prepaidAmount,
+    eligibleRentalAmount: row.eligibleRentalAmount,
+    subscriptionApplied: row.subscriptionApplied,
+    subscriptionDiscountAmount: row.subscriptionDiscountAmount,
+    bestCoupon: row.bestCoupon
+      ? {
+          userCouponId: row.bestCoupon.userCouponId,
+          couponId: row.bestCoupon.couponId,
+          code: row.bestCoupon.code,
+          discountType: row.bestCoupon.discountType,
+          discountValue: row.bestCoupon.discountValue,
+          status: row.bestCoupon.status,
+        }
+      : null,
+    couponDiscountAmount: row.couponDiscountAmount,
+    penaltyAmount: row.penaltyAmount,
+    depositForfeited: row.depositForfeited,
+    payableRentalAmount: row.payableRentalAmount,
+    totalPayableAmount: row.totalPayableAmount,
   };
 }
 

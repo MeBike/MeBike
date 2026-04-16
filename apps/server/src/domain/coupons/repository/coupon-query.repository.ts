@@ -11,6 +11,7 @@ import {
 import { Prisma } from "@/infrastructure/prisma";
 
 import type { CouponSortField } from "../models";
+import type { BillingPreviewCouponCandidateRow } from "../models";
 import type { CouponQueryRepo } from "./coupon.repository.types";
 
 import { CouponRepositoryError } from "../domain-errors";
@@ -25,6 +26,55 @@ function toCouponOrderBy(
   _req: PageRequest<CouponSortField>,
 ): PrismaTypes.UserCouponOrderByWithRelationInput {
   return { assignedAt: "desc" };
+}
+
+const selectBillingPreviewCandidateRow = {
+  id: true,
+  couponId: true,
+  assignedAt: true,
+  status: true,
+  coupon: {
+    select: {
+      code: true,
+      discountType: true,
+      discountValue: true,
+      expiresAt: true,
+      couponRuleId: true,
+      status: true,
+      couponRule: {
+        select: {
+          name: true,
+          priority: true,
+          triggerType: true,
+          minRidingMinutes: true,
+        },
+      },
+    },
+  },
+} satisfies PrismaTypes.UserCouponSelect;
+
+type BillingPreviewCandidateRecord = PrismaTypes.UserCouponGetPayload<{
+  select: typeof selectBillingPreviewCandidateRow;
+}>;
+
+function toBillingPreviewCouponCandidateRow(
+  row: BillingPreviewCandidateRecord,
+): BillingPreviewCouponCandidateRow {
+  return {
+    userCouponId: row.id,
+    couponId: row.couponId,
+    code: row.coupon.code,
+    status: row.status,
+    discountType: row.coupon.discountType,
+    discountValue: row.coupon.discountValue,
+    expiresAt: row.coupon.expiresAt,
+    assignedAt: row.assignedAt,
+    couponRuleId: row.coupon.couponRuleId,
+    couponRuleName: row.coupon.couponRule?.name ?? null,
+    couponRulePriority: row.coupon.couponRule?.priority ?? null,
+    couponRuleTriggerType: row.coupon.couponRule?.triggerType ?? null,
+    couponRuleMinRidingMinutes: row.coupon.couponRule?.minRidingMinutes ?? null,
+  };
 }
 
 export function makeCouponQueryRepository(
@@ -94,6 +144,63 @@ export function makeCouponQueryRepository(
         ]);
 
         return makePageResult(items.map(toUserCouponListItemRow), total, page, pageSize);
+      }).pipe(defectOn(CouponRepositoryError)),
+    listBillingPreviewCandidatesForUser: (userId, input) =>
+      Effect.gen(function* () {
+        const rows = yield* Effect.tryPromise({
+          try: () =>
+            client.userCoupon.findMany({
+              where: {
+                userId,
+                status: "ASSIGNED",
+                coupon: {
+                  status: "ACTIVE",
+                  discountType: "FIXED_AMOUNT",
+                  OR: [
+                    { expiresAt: null },
+                    { expiresAt: { gte: input.previewedAt } },
+                  ],
+                  couponRule: {
+                    is: {
+                      status: "ACTIVE",
+                      triggerType: "RIDING_DURATION",
+                      OR: [
+                        { minRidingMinutes: null },
+                        { minRidingMinutes: { lte: input.billableMinutes } },
+                      ],
+                      AND: [
+                        {
+                          OR: [
+                            { activeFrom: null },
+                            { activeFrom: { lte: input.previewedAt } },
+                          ],
+                        },
+                        {
+                          OR: [
+                            { activeTo: null },
+                            { activeTo: { gte: input.previewedAt } },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+              orderBy: [
+                { assignedAt: "desc" },
+                { id: "desc" },
+              ],
+              select: selectBillingPreviewCandidateRow,
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "listBillingPreviewCandidatesForUser.findMany",
+              message: `Failed to list billing preview coupons for user ${userId}`,
+              cause: err,
+            }),
+        });
+
+        return rows.map(toBillingPreviewCouponCandidateRow);
       }).pipe(defectOn(CouponRepositoryError)),
   };
 }

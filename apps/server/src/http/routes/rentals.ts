@@ -190,6 +190,16 @@ export function registerRentalRoutes(
     RentalMeController.getMyBikeSwapRequest,
   );
 
+  const myBillingPreviewRoute = {
+    ...rentals.getMyRentalBillingPreview,
+    middleware: [requireUserMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    myBillingPreviewRoute,
+    RentalMeController.getMyRentalBillingPreview,
+  );
+
   const agencyListSwapRequestsRoute = {
     ...rentals.agencyListBikeSwapRequests,
     middleware: [requireAgencyMiddleware] as const,

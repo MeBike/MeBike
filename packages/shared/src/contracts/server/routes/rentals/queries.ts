@@ -5,6 +5,7 @@ import {
   AdminRentalsListResponseSchema,
   BikeSwapRequestErrorResponseSchema,
   BikeSwapRequestListResponseSchema,
+  RentalBillingPreviewSchema,
   BikeSwapStatusSchema,
   ReturnSlotReservationSchema,
 } from "../../rentals";
@@ -146,6 +147,43 @@ export const getMyRental = createRoute({
               },
             },
           },
+        },
+      },
+    },
+  },
+});
+
+export const getMyRentalBillingPreview = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/{rentalId}/billing-preview",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Current user's rental billing preview",
+      content: {
+        "application/json": {
+          schema: RentalBillingPreviewSchema,
+        },
+      },
+    },
+    400: {
+      description: "Billing preview is not available for this rental state",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
         },
       },
     },
