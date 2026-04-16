@@ -23,7 +23,7 @@ import type { Station, Supplier, TechnicianTeam } from "@/types";
 interface CreateStaffProps {
   onSubmit: ({ data }: { data: UpdateStaffFormData }) => void;
   stations: Station[];
-  suppliers: Supplier[]; // Đang được dùng làm Technician Teams
+  suppliers: Supplier[]; 
   techTeam ?: TechnicianTeam[];
 }
 
@@ -34,8 +34,6 @@ export default function CreateStaff({
   techTeam,
 }: CreateStaffProps) {
   const navigate = useRouter();
-
-  // Khởi tạo Form. Vì stationId và technicianTeamId là field động nên mình khai báo thêm vào form type
   const {
     register,
     handleSubmit,
@@ -48,13 +46,12 @@ export default function CreateStaff({
       email: "",
       phoneNumber: "",
       password: "",
-      role: "STAFF", // Nên để mặc định là STAFF cho trang tạo nhân viên
+      role: "STAFF", 
       stationId: "",
       technicianTeamId: "",
     },
   });
 
-  // Lắng nghe sự thay đổi của role để render form Động
   const selectedRole = watch("role");
 
   const onFormSubmit = (formData: any) => {
@@ -107,8 +104,6 @@ export default function CreateStaff({
       <Card className="mx-auto max-w-4xl border-border/50 shadow-sm">
         <CardContent className="p-6 sm:p-8">
           <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
-            
-            {/* SECTION 1: THÔNG TIN CƠ BẢN */}
             <div className="space-y-6">
               <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground border-b border-border/50 pb-3">
                 <User className="h-5 w-5 text-primary" />
@@ -116,7 +111,6 @@ export default function CreateStaff({
               </h3>
               
               <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2">
-                {/* Field: Họ và tên */}
                 <div className="space-y-2">
                   <Label htmlFor="fullname" className="font-semibold text-muted-foreground">
                     Họ và tên <span className="text-destructive">*</span>
@@ -133,7 +127,6 @@ export default function CreateStaff({
                   {errors.fullname && <p className="text-xs text-destructive">{errors.fullname.message as string}</p>}
                 </div>
 
-                {/* Field: Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="font-semibold text-muted-foreground">
                     Email <span className="text-destructive">*</span>
@@ -214,7 +207,6 @@ export default function CreateStaff({
                             <SelectValue placeholder="Chọn chức vụ" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="ADMIN">Quản trị viên (ADMIN)</SelectItem>
                             <SelectItem value="MANAGER">Quản lý trạm (MANAGER)</SelectItem>
                             <SelectItem value="STAFF">Nhân viên trạm (STAFF)</SelectItem>
                             <SelectItem value="TECHNICIAN">Kỹ thuật viên (TECHNICIAN)</SelectItem>

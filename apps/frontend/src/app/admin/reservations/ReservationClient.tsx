@@ -77,16 +77,6 @@ export default function ReservationClient({
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tìm kiếm</label>
-              <input
-                type="text"
-                placeholder="Mã đặt trước, mã người dùng..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground"
-              />
-            </div>
-            <div className="space-y-2">
               <label className="text-sm font-medium">Trạng thái</label>
               <select
                 value={statusFilter}
@@ -115,7 +105,6 @@ export default function ReservationClient({
                 Hiển thị trang {currentPage} /{" "}
                 {allReservations?.pagination?.totalPages ?? 1}
               </p>
-              
               <DataTable
                 columns={reservationColumn({
                   onView: ({ id }) => {

@@ -45,7 +45,7 @@ export const bikeColumn = ({
     accessorKey: "chipId",
     header: "Tên chip",
     cell: ({ row }) => {
-      return shortenId(row.original.chipId) || "Không có";
+      return (row.original.chipId) || "Không có";
     },
   },
   {

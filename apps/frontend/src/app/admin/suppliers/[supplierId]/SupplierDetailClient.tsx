@@ -223,7 +223,7 @@ export default function SupplierDetailClient({
                   </div>
                 ) : (
                   <div className="rounded-md bg-muted/20 px-3 py-2 text-sm font-medium">
-                    {supplier.contractFee ? formatCurrency(supplier.contractFee) : "0 ₫"}
+                    {supplier.contractFee}
                   </div>
                 )}
               </FormField>
