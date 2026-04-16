@@ -9,7 +9,6 @@ export const StationSummarySchema = z.object({
   stationType: StationTypeSchema,
   agencyId: z.uuidv7().nullable(),
   totalCapacity: z.number(),
-  pickupSlotLimit: z.number(),
   returnSlotLimit: z.number(),
   latitude: z.number(),
   longitude: z.number(),
@@ -32,7 +31,6 @@ export const StationLocationSchema = z.object({
 
 export const StationCapacitySchema = z.object({
   total: z.number(),
-  pickupSlotLimit: z.number(),
   returnSlotLimit: z.number(),
   emptyPhysicalSlots: z.number(),
 });

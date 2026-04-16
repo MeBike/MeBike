@@ -59,7 +59,6 @@ describe("manage-users agency provision e2e", () => {
         stationLatitude: 10.8486,
         stationLongitude: 106.7717,
         stationTotalCapacity: 20,
-        stationPickupSlotLimit: 12,
         stationReturnSlotLimit: 18,
         description: "Admin tao truc tiep doi tac agency moi.",
       }),

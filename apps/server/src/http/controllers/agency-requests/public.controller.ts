@@ -32,7 +32,6 @@ const submit: RouteHandler<AgencyRequestsRoutes["submit"]> = async (c) => {
         stationLatitude: body.stationLatitude,
         stationLongitude: body.stationLongitude,
         stationTotalCapacity: body.stationTotalCapacity,
-        stationPickupSlotLimit: body.stationPickupSlotLimit ?? null,
         stationReturnSlotLimit: body.stationReturnSlotLimit ?? null,
         description: body.description ?? null,
       });

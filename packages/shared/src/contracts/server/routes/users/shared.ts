@@ -163,20 +163,10 @@ export const AdminCreateAgencyUserRequestSchema = z.object({
   stationLatitude: AgencyStationLatitudeSchema,
   stationLongitude: AgencyStationLongitudeSchema,
   stationTotalCapacity: z.number().int().min(1),
-  stationPickupSlotLimit: z.number().int().min(0).optional(),
   stationReturnSlotLimit: z.number().int().min(0).optional(),
   description: OptionalTrimmedNullableStringSchema,
 }).superRefine((value, ctx) => {
-  const pickupSlotLimit = value.stationPickupSlotLimit ?? value.stationTotalCapacity;
   const returnSlotLimit = value.stationReturnSlotLimit ?? value.stationTotalCapacity;
-
-  if (pickupSlotLimit > value.stationTotalCapacity) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["stationPickupSlotLimit"],
-      message: "stationPickupSlotLimit must be less than or equal to stationTotalCapacity",
-    });
-  }
 
   if (returnSlotLimit > value.stationTotalCapacity) {
     ctx.addIssue({
@@ -198,7 +188,6 @@ export const AdminCreateAgencyUserRequestSchema = z.object({
     stationLatitude: 10.8486,
     stationLongitude: 106.7717,
     stationTotalCapacity: 20,
-    stationPickupSlotLimit: 12,
     stationReturnSlotLimit: 18,
     description: "Admin tao truc tiep doi tac agency moi.",
   },

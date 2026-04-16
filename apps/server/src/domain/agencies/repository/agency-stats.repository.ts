@@ -42,7 +42,6 @@ export type AgencyStatsRepo = {
     agencyId: string;
     stationId: string;
     totalCapacity: number;
-    pickupSlotLimit: number;
     returnSlotLimit: number;
     period: AgencyStatsPeriod;
   }) => Effect.Effect<AgencyOperationalMetrics, AgencyRepositoryError>;
@@ -116,7 +115,6 @@ export function makeAgencyStatsRepository(
         agencyId,
         stationId,
         totalCapacity,
-        pickupSlotLimit,
         returnSlotLimit,
         period,
       } = args;
@@ -267,7 +265,6 @@ export function makeAgencyStatsRepository(
           operators,
           currentStation: {
             totalCapacity,
-            pickupSlotLimit,
             returnSlotLimit,
             totalBikes,
             availableBikes: bikeCounts.get(BikeStatus.AVAILABLE) ?? 0,

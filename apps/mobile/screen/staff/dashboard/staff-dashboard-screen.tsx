@@ -108,7 +108,8 @@ function DashboardActionRow({
 
 export default function StaffDashboardScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { isStaff } = useAuthNext();
+  const { user } = useAuthNext();
+  const canUseStaffTools = user?.role === "STAFF" || user?.role === "AGENCY";
   const pendingBikeSwapQuery = useStaffBikeSwapRequestsQuery(
     {
       status: "PENDING",
@@ -117,7 +118,7 @@ export default function StaffDashboardScreen() {
       sortBy: "createdAt",
       sortDir: "desc",
     },
-    isStaff,
+    canUseStaffTools,
   );
   const pendingRequestCount = pendingBikeSwapQuery.data?.pagination.total ?? 0;
 

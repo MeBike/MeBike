@@ -43,7 +43,7 @@ function resolvePeriod(input: AgencyStatsInput): AgencyStatsPeriod {
   return defaultPeriod(new Date());
 }
 
-function emptyMetrics(totalCapacity: number, pickupSlotLimit: number, returnSlotLimit: number) {
+function emptyMetrics(totalCapacity: number, returnSlotLimit: number) {
   return {
     operators: {
       totalOperators: 0,
@@ -51,7 +51,6 @@ function emptyMetrics(totalCapacity: number, pickupSlotLimit: number, returnSlot
     },
     currentStation: {
       totalCapacity,
-      pickupSlotLimit,
       returnSlotLimit,
       totalBikes: 0,
       availableBikes: 0,
@@ -111,7 +110,7 @@ export function makeAgencyStatsService(
           return {
             agency,
             period,
-            ...emptyMetrics(0, 0, 0),
+            ...emptyMetrics(0, 0),
             operators,
           };
         }
@@ -120,7 +119,6 @@ export function makeAgencyStatsService(
           agencyId,
           stationId: agency.station.id,
           totalCapacity: agency.station.totalCapacity ?? 0,
-          pickupSlotLimit: agency.station.pickupSlotLimit ?? agency.station.totalCapacity ?? 0,
           returnSlotLimit: agency.station.returnSlotLimit ?? agency.station.totalCapacity ?? 0,
           period,
         }).pipe(

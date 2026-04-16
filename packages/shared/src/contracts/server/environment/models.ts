@@ -1,4 +1,5 @@
 import { z } from "../../../zod";
+import { PaginationSchema } from "../schemas";
 import { AccountStatusSchema } from "../users";
 
 export const EnvironmentFormulaVersionSchema = z.enum(["PHASE_1_TIME_SPEED"]);
@@ -57,15 +58,12 @@ export const EnvironmentPolicySchema = z.object({
 });
 
 export const EnvironmentPolicyListResponseSchema = z.object({
-  items: EnvironmentPolicySchema.array(),
-  page: z.number().int().min(1),
-  pageSize: z.number().int().min(1).max(100),
-  totalItems: z.number().int().nonnegative(),
-  totalPages: z.number().int().nonnegative(),
+  data: EnvironmentPolicySchema.array(),
+  pagination: PaginationSchema,
 }).openapi("EnvironmentPolicyListResponse", {
   description: "Paginated Environment Policy listing for admin config/history screens.",
   example: {
-    items: [
+    data: [
       {
         id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
         name: "Default Environment Policy v1",
@@ -86,10 +84,12 @@ export const EnvironmentPolicyListResponseSchema = z.object({
         updated_at: "2026-04-15T01:00:00.000Z",
       },
     ],
-    page: 1,
-    pageSize: 20,
-    totalItems: 1,
-    totalPages: 1,
+    pagination: {
+      page: 1,
+      pageSize: 20,
+      total: 1,
+      totalPages: 1,
+    },
   },
 });
 
@@ -259,16 +259,13 @@ export const EnvironmentImpactHistoryItemSchema = z.object({
 });
 
 export const EnvironmentImpactHistoryResponseSchema = z.object({
-  items: EnvironmentImpactHistoryItemSchema.array(),
-  page: z.number().int().min(1),
-  pageSize: z.number().int().min(1).max(100),
-  totalItems: z.number().int().nonnegative(),
-  totalPages: z.number().int().nonnegative(),
+  data: EnvironmentImpactHistoryItemSchema.array(),
+  pagination: PaginationSchema,
 }).openapi("EnvironmentImpactHistoryResponse", {
   description:
     "Paginated calculated Environment Impact history for the authenticated user. Reads only environmental_impact_stats.",
   example: {
-    items: [
+    data: [
       {
         id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
         rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
@@ -282,10 +279,12 @@ export const EnvironmentImpactHistoryResponseSchema = z.object({
         calculated_at: "2026-04-15T10:30:00.000Z",
       },
     ],
-    page: 1,
-    pageSize: 20,
-    totalItems: 1,
-    totalPages: 1,
+    pagination: {
+      page: 1,
+      pageSize: 20,
+      total: 1,
+      totalPages: 1,
+    },
   },
 });
 

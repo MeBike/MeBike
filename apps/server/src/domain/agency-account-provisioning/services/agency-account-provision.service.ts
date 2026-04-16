@@ -137,8 +137,6 @@ export function makeAgencyAccountProvisionService(
         stationType: "AGENCY",
         agencyId: createdAgency.id,
         totalCapacity: agencyRequest.stationTotalCapacity,
-        pickupSlotLimit:
-          agencyRequest.stationPickupSlotLimit ?? agencyRequest.stationTotalCapacity,
         returnSlotLimit:
           agencyRequest.stationReturnSlotLimit ?? agencyRequest.stationTotalCapacity,
         latitude: agencyRequest.stationLatitude,
@@ -219,8 +217,6 @@ export function makeAgencyAccountProvisionService(
           stationLatitude: input.stationLatitude,
           stationLongitude: input.stationLongitude,
           stationTotalCapacity: input.stationTotalCapacity,
-          stationPickupSlotLimit:
-            input.stationPickupSlotLimit ?? null,
           stationReturnSlotLimit:
             input.stationReturnSlotLimit ?? null,
           description: input.description ?? null,

@@ -20,7 +20,6 @@ export const AgencyRequestSchema = z.object({
   stationLatitude: z.number().nullable(),
   stationLongitude: z.number().nullable(),
   stationTotalCapacity: z.number().int().nullable(),
-  stationPickupSlotLimit: z.number().int().nullable(),
   stationReturnSlotLimit: z.number().int().nullable(),
   status: AgencyRequestStatusSchema,
   description: z.string().nullable(),

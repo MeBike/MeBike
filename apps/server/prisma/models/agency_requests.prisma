@@ -18,7 +18,6 @@ model AgencyRequest {
   stationLatitude     Decimal?            @map("station_latitude") @db.Decimal(10, 7)
   stationLongitude    Decimal?            @map("station_longitude") @db.Decimal(10, 7)
   stationTotalCapacity Int?               @map("station_total_capacity")
-  stationPickupSlotLimit Int?             @map("station_pickup_slot_limit")
   stationReturnSlotLimit Int?             @map("station_return_slot_limit")
   status              AgencyRequestStatus @default(PENDING)
   description         String?
