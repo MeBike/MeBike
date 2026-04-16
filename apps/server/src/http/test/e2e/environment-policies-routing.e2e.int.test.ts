@@ -285,11 +285,13 @@ describe("environment policies routing e2e", () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({
-      items: [],
-      page: 1,
-      pageSize: 20,
-      totalItems: 0,
-      totalPages: 0,
+      data: [],
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: 0,
+        totalPages: 0,
+      },
     });
   });
 
@@ -324,15 +326,15 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentPolicyListResponse;
 
     expect(response.status).toBe(200);
-    expect(body.page).toBe(1);
-    expect(body.pageSize).toBe(20);
-    expect(body.totalItems).toBe(2);
-    expect(body.totalPages).toBe(1);
-    expect(body.items.map(policy => policy.name)).toEqual([
+    expect(body.pagination.page).toBe(1);
+    expect(body.pagination.pageSize).toBe(20);
+    expect(body.pagination.total).toBe(2);
+    expect(body.pagination.totalPages).toBe(1);
+    expect(body.data.map(policy => policy.name)).toEqual([
       "Newest Environment Policy",
       "Older Environment Policy",
     ]);
-    expect(body.items[0]).toMatchObject({
+    expect(body.data[0]).toMatchObject({
       id: "018fa200-0000-7000-8000-000000000012",
       status: "ACTIVE",
       co2_saved_per_km_unit: "gCO2e/km",
@@ -344,7 +346,7 @@ describe("environment policies routing e2e", () => {
         distance_source: "TIME_SPEED",
       },
     });
-    expect(body.items[1]?.formula_config).toEqual({
+    expect(body.data[1]?.formula_config).toEqual({
       return_scan_buffer_minutes: 3,
       confidence_factor: 0.85,
       display_unit: "gCO2e",
@@ -392,9 +394,9 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentPolicyListResponse;
 
     expect(response.status).toBe(200);
-    expect(body.totalItems).toBe(1);
-    expect(body.items).toHaveLength(1);
-    expect(body.items[0]?.name).toBe("Default Environment Policy");
+    expect(body.pagination.total).toBe(1);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.name).toBe("Default Environment Policy");
   });
 
   it("paginates and sorts environment policies by requested field and order", async () => {
@@ -436,12 +438,12 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentPolicyListResponse;
 
     expect(response.status).toBe(200);
-    expect(body.page).toBe(2);
-    expect(body.pageSize).toBe(1);
-    expect(body.totalItems).toBe(3);
-    expect(body.totalPages).toBe(3);
-    expect(body.items).toHaveLength(1);
-    expect(body.items[0]?.name).toBe("Bravo Environment Policy");
+    expect(body.pagination.page).toBe(2);
+    expect(body.pagination.pageSize).toBe(1);
+    expect(body.pagination.total).toBe(3);
+    expect(body.pagination.totalPages).toBe(3);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.name).toBe("Bravo Environment Policy");
   });
 
   it("rejects unauthenticated environment policy list reads", async () => {
@@ -694,11 +696,13 @@ describe("environment policies routing e2e", () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({
-      items: [],
-      page: 1,
-      pageSize: 20,
-      totalItems: 0,
-      totalPages: 0,
+      data: [],
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: 0,
+        totalPages: 0,
+      },
     });
   });
 
@@ -736,18 +740,18 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
 
     expect(response.status).toBe(200);
-    expect(body.page).toBe(1);
-    expect(body.pageSize).toBe(20);
-    expect(body.totalItems).toBe(2);
-    expect(body.totalPages).toBe(1);
-    expect(body.items.map(item => item.rental_id)).toEqual([
+    expect(body.pagination.page).toBe(1);
+    expect(body.pagination.pageSize).toBe(20);
+    expect(body.pagination.total).toBe(2);
+    expect(body.pagination.totalPages).toBe(1);
+    expect(body.data.map(item => item.rental_id)).toEqual([
       newerRental.id,
       olderRental.id,
     ]);
-    expect(body.items.map(item => item.rental_id)).not.toContain(
+    expect(body.data.map(item => item.rental_id)).not.toContain(
       uncalculatedRental.id,
     );
-    expect(body.items[0]).toMatchObject({
+    expect(body.data[0]).toMatchObject({
       rental_id: newerRental.id,
       estimated_distance_km: 1.4,
       co2_saved: 89,
@@ -757,7 +761,7 @@ describe("environment policies routing e2e", () => {
       effective_ride_minutes: 7,
       calculated_at: "2026-04-15T10:00:00.000Z",
     });
-    expect(body.items[1]).toMatchObject({
+    expect(body.data[1]).toMatchObject({
       rental_id: olderRental.id,
       estimated_distance_km: 4,
       co2_saved: 255,
@@ -930,12 +934,12 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
 
     expect(response.status).toBe(200);
-    expect(body.page).toBe(2);
-    expect(body.pageSize).toBe(1);
-    expect(body.totalItems).toBe(2);
-    expect(body.totalPages).toBe(2);
-    expect(body.items).toHaveLength(1);
-    expect(body.items[0]?.rental_id).toBe(thirdRental.id);
+    expect(body.pagination.page).toBe(2);
+    expect(body.pagination.pageSize).toBe(1);
+    expect(body.pagination.total).toBe(2);
+    expect(body.pagination.totalPages).toBe(2);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.rental_id).toBe(thirdRental.id);
   });
 
   it("interprets environment impact history date-only filters as UTC day boundaries", async () => {
@@ -977,8 +981,8 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
 
     expect(response.status).toBe(200);
-    expect(body.totalItems).toBe(2);
-    expect(body.items.map(item => item.rental_id)).toEqual([
+    expect(body.pagination.total).toBe(2);
+    expect(body.data.map(item => item.rental_id)).toEqual([
       startBoundaryRental.id,
       endBoundaryRental.id,
     ]);
@@ -993,8 +997,8 @@ describe("environment policies routing e2e", () => {
     const mixedBoundaryBody = await mixedBoundaryResponse.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
 
     expect(mixedBoundaryResponse.status).toBe(200);
-    expect(mixedBoundaryBody.totalItems).toBe(1);
-    expect(mixedBoundaryBody.items[0]?.rental_id).toBe(endBoundaryRental.id);
+    expect(mixedBoundaryBody.pagination.total).toBe(1);
+    expect(mixedBoundaryBody.data[0]?.rental_id).toBe(endBoundaryRental.id);
   });
 
   it("supports Vietnam local-day environment impact history filtering when clients send converted UTC datetimes", async () => {
@@ -1036,8 +1040,8 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
 
     expect(response.status).toBe(200);
-    expect(body.totalItems).toBe(2);
-    expect(body.items.map(item => item.rental_id)).toEqual([
+    expect(body.pagination.total).toBe(2);
+    expect(body.data.map(item => item.rental_id)).toEqual([
       vietnamDayStartRental.id,
       vietnamDayEndRental.id,
     ]);
@@ -1070,8 +1074,8 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
 
     expect(response.status).toBe(200);
-    expect(body.totalItems).toBe(1);
-    expect(body.items.map(item => item.rental_id)).toEqual([
+    expect(body.pagination.total).toBe(1);
+    expect(body.data.map(item => item.rental_id)).toEqual([
       exactInstantRental.id,
     ]);
   });
@@ -1094,9 +1098,9 @@ describe("environment policies routing e2e", () => {
     const body = await response.json() as EnvironmentContracts.EnvironmentImpactHistoryResponse;
 
     expect(response.status).toBe(200);
-    expect(body.totalItems).toBe(1);
-    expect(body.items).toHaveLength(1);
-    expect(body.items[0]?.rental_id).toBe(otherUserRental.id);
+    expect(body.pagination.total).toBe(1);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.rental_id).toBe(otherUserRental.id);
   });
 
   it("rejects invalid environment impact history query params", async () => {

@@ -71,7 +71,7 @@ export const getMyEnvironmentImpactHistory = createRoute({
           examples: {
             EnvironmentImpactHistoryWithData: {
               value: {
-                items: [
+                data: [
                   {
                     id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
                     rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
@@ -85,19 +85,23 @@ export const getMyEnvironmentImpactHistory = createRoute({
                     calculated_at: "2026-04-15T10:30:00.000Z",
                   },
                 ],
-                page: 1,
-                pageSize: 20,
-                totalItems: 1,
-                totalPages: 1,
+                pagination: {
+                  page: 1,
+                  pageSize: 20,
+                  total: 1,
+                  totalPages: 1,
+                },
               },
             },
             EmptyEnvironmentImpactHistory: {
               value: {
-                items: [],
-                page: 1,
-                pageSize: 20,
-                totalItems: 0,
-                totalPages: 0,
+                data: [],
+                pagination: {
+                  page: 1,
+                  pageSize: 20,
+                  total: 0,
+                  totalPages: 0,
+                },
               },
             },
           },
@@ -222,7 +226,7 @@ export const listEnvironmentPolicies = createRoute({
           examples: {
             EnvironmentPolicyList: {
               value: {
-                items: [
+                data: [
                   {
                     id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
                     name: "Default Environment Policy v1",
@@ -243,19 +247,23 @@ export const listEnvironmentPolicies = createRoute({
                     updated_at: "2026-04-15T01:00:00.000Z",
                   },
                 ],
-                page: 1,
-                pageSize: 20,
-                totalItems: 1,
-                totalPages: 1,
+                pagination: {
+                  page: 1,
+                  pageSize: 20,
+                  total: 1,
+                  totalPages: 1,
+                },
               },
             },
             EmptyEnvironmentPolicyList: {
               value: {
-                items: [],
-                page: 1,
-                pageSize: 20,
-                totalItems: 0,
-                totalPages: 0,
+                data: [],
+                pagination: {
+                  page: 1,
+                  pageSize: 20,
+                  total: 0,
+                  totalPages: 0,
+                },
               },
             },
           },
