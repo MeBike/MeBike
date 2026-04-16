@@ -22,9 +22,10 @@ import {
   CreateSupplierSchema,
   createSupplierSchema,
 } from "@/schemas/supplier-schema";
+import { AxiosResponse } from "axios";
 
 interface CreateSupplierClientProps {
-  onSubmitSupplier: (data: CreateSupplierSchema) => Promise<any>;
+onSubmitSupplier: (data: CreateSupplierSchema) => Promise<AxiosResponse>;
 }
 
 export default function CreateSupplierClient({ onSubmitSupplier }: CreateSupplierClientProps) {
