@@ -37,6 +37,16 @@ export const adminCreateTechnicianTeamRoute = createRoute({
         "application/json": {
           schema: TechnicianTeamErrorResponseSchema,
           examples: {
+            InternalStationRequired: {
+              value: {
+                error: "Technician teams require an internal station",
+                details: {
+                  code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_INTERNAL_STATION_REQUIRED,
+                  stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                  stationType: "AGENCY",
+                },
+              },
+            },
             StationNotFound: {
               value: {
                 error: "Station not found for technician team",

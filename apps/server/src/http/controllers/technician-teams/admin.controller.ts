@@ -72,6 +72,15 @@ const createTechnicianTeam: RouteHandler<TechnicianTeamsRoutes["adminCreate"]> =
   }
 
   return Match.value(result.left).pipe(
+    Match.tag("TechnicianTeamInternalStationRequired", ({ stationId, stationType }) =>
+      c.json<TechnicianTeamErrorResponse, 400>({
+        error: technicianTeamErrorMessages.TECHNICIAN_TEAM_INTERNAL_STATION_REQUIRED,
+        details: {
+          code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_INTERNAL_STATION_REQUIRED,
+          stationId,
+          stationType,
+        },
+      }, 400)),
     Match.tag("TechnicianTeamStationNotFound", ({ stationId }) =>
       c.json<TechnicianTeamErrorResponse, 400>({
         error: technicianTeamErrorMessages.TECHNICIAN_TEAM_STATION_NOT_FOUND,

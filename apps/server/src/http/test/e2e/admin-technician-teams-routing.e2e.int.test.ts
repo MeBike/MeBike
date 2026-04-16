@@ -122,6 +122,27 @@ describe("admin technician teams routing e2e", () => {
     expect(body.details.code).toBe("TECHNICIAN_TEAM_STATION_NOT_FOUND");
   });
 
+  it("rejects create for agency station", async () => {
+    const station = await fixture.factories.station({
+      name: "Agency Team Station",
+      stationType: "AGENCY",
+    });
+
+    const response = await fixture.app.request("http://test/v1/admin/technician-teams", {
+      method: "POST",
+      headers: authHeader(),
+      body: JSON.stringify({
+        name: "Agency Team",
+        stationId: station.id,
+      }),
+    });
+    const body = await response.json() as TechnicianTeamsContracts.TechnicianTeamErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_INTERNAL_STATION_REQUIRED");
+    expect(body.details.stationType).toBe("AGENCY");
+  });
+
   it("rejects non-admin access", async () => {
     const staff = await fixture.factories.user({
       fullname: "Staff Route",

@@ -5,7 +5,10 @@ import type { StationQueryRepo } from "@/domain/stations";
 import type { TechnicianTeamCommandRepo } from "../repository/technician-team.repository.types";
 import type { TechnicianTeamCommandService } from "./technician-team.service.types";
 
-import { TechnicianTeamStationNotFound } from "../domain-errors";
+import {
+  TechnicianTeamInternalStationRequired,
+  TechnicianTeamStationNotFound,
+} from "../domain-errors";
 
 export function makeTechnicianTeamCommandService(args: {
   commandRepo: TechnicianTeamCommandRepo;
@@ -17,6 +20,13 @@ export function makeTechnicianTeamCommandService(args: {
         const station = yield* args.stationRepo.getById(input.stationId);
         if (Option.isNone(station)) {
           return yield* Effect.fail(new TechnicianTeamStationNotFound({ stationId: input.stationId }));
+        }
+
+        if (station.value.stationType !== "INTERNAL") {
+          return yield* Effect.fail(new TechnicianTeamInternalStationRequired({
+            stationId: input.stationId,
+            stationType: station.value.stationType,
+          }));
         }
 
         return yield* args.commandRepo.create({

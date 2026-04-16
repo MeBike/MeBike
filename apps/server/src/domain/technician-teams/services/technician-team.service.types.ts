@@ -1,6 +1,9 @@
 import type { Effect } from "effect";
 
-import type { TechnicianTeamStationNotFound } from "../domain-errors";
+import type {
+  TechnicianTeamInternalStationRequired,
+  TechnicianTeamStationNotFound,
+} from "../domain-errors";
 import type {
   CreateTechnicianTeamInput,
   TechnicianTeamAvailableOption,
@@ -11,7 +14,10 @@ import type {
 export type TechnicianTeamCommandService = {
   createTechnicianTeam: (
     input: CreateTechnicianTeamInput,
-  ) => Effect.Effect<TechnicianTeamRow, TechnicianTeamStationNotFound>;
+  ) => Effect.Effect<
+    TechnicianTeamRow,
+    TechnicianTeamStationNotFound | TechnicianTeamInternalStationRequired
+  >;
 };
 
 export type TechnicianTeamQueryService = {
