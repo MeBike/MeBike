@@ -353,7 +353,6 @@ describe("rentals end routing e2e", () => {
     const confirmedAt = new Date("2026-03-21T08:30:00.000Z").toISOString();
     const station = await fixture.factories.station({
       capacity: 5,
-      pickupSlotLimit: 5,
       returnSlotLimit: 0,
     });
     const { token: staffToken } = await createStaffToken(station.id);
@@ -378,7 +377,6 @@ describe("rentals end routing e2e", () => {
     const { rental } = await createActiveRentalGraph();
     const fullStation = await fixture.factories.station({
       capacity: 1,
-      pickupSlotLimit: 1,
       returnSlotLimit: 1,
     });
     await fixture.factories.bike({ stationId: fullStation.id, status: "AVAILABLE" });

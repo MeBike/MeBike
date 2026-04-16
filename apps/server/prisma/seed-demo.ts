@@ -160,7 +160,6 @@ async function seedStations(prisma: PrismaClient) {
         "name",
         "address",
         "total_capacity",
-        "pickup_slot_limit",
         "return_slot_limit",
         "latitude",
         "longitude",
@@ -173,7 +172,6 @@ async function seedStations(prisma: PrismaClient) {
         ${station.address},
         ${station.capacity},
         ${station.capacity},
-        ${station.capacity},
         ${station.latitude},
         ${station.longitude},
         ST_GeogFromText(${`SRID=4326;POINT(${station.longitude} ${station.latitude})`} ),
@@ -183,7 +181,6 @@ async function seedStations(prisma: PrismaClient) {
       SET
         "address" = EXCLUDED."address",
         "total_capacity" = EXCLUDED."total_capacity",
-        "pickup_slot_limit" = EXCLUDED."pickup_slot_limit",
         "return_slot_limit" = EXCLUDED."return_slot_limit",
         "latitude" = EXCLUDED."latitude",
         "longitude" = EXCLUDED."longitude",

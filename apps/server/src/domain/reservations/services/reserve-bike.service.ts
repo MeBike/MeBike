@@ -12,7 +12,7 @@ import { makeBikeRepository } from "@/domain/bikes";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
 import { defectOn } from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
-import { makeStationRepository } from "@/domain/stations";
+import { makeStationQueryRepository } from "@/domain/stations";
 import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
 import { makeUserQueryRepository } from "@/domain/users";
 import { makeWalletRepository } from "@/domain/wallets";
@@ -32,10 +32,14 @@ import {
   BikeNotFound,
   BikeNotFoundInStation,
   ReservationOptionNotSupported,
-  StationPickupSlotLimitExceeded,
+  StationReservationAvailabilityTooLow,
   SubscriptionRequired,
 } from "../domain-errors";
-import { makeReservationQueryRepository } from "../repository/reservation-query.repository";
+import {
+  lockStationForReservationCheck,
+  requiredAvailableBikesForReservation,
+  stationCanAcceptReservation,
+} from "./reservation-availability-rule";
 import { ReservationCommandServiceTag } from "./reservation-command.service";
 import { ReservationQueryServiceTag } from "./reservation-query.service";
 
@@ -69,6 +73,19 @@ function formatReservationDateTime(value: Date): string {
   return value.toLocaleString("vi-VN", { timeZone: RESERVATION_TIME_ZONE });
 }
 
+/**
+ * Tao reservation hold cho user va reserve bike trong cung transaction.
+ *
+ * Thu tu xu ly chinh:
+ * - Chan user hoac bike da co hold dang active.
+ * - Validate bike thuoc dung tram va dang AVAILABLE.
+ * - Khoa row Station de serialize availability check theo rule 50%.
+ * - Thu prepaid qua wallet hoac tru usage subscription.
+ * - Tao reservation, cap nhat bike, enqueue outbox jobs va email xac nhan.
+ *
+ * @param input Du lieu reservation can tao.
+ * @returns Effect tra ve reservation PENDING neu thanh cong.
+ */
 export function reserveBike(
   input: ReserveBikeInput,
 ): Effect.Effect<
@@ -142,8 +159,7 @@ export function reserveBike(
           }));
         }
 
-        const txStationRepo = makeStationRepository(tx);
-        const txReservationQueryRepo = makeReservationQueryRepository(tx);
+        const txStationRepo = makeStationQueryRepository(tx);
         const stationOpt = yield* txStationRepo.getById(input.stationId);
         if (Option.isNone(stationOpt)) {
           return yield* Effect.die(new Error(
@@ -151,12 +167,22 @@ export function reserveBike(
           ));
         }
 
-        const pendingReservations = yield* txReservationQueryRepo.countPendingByStationId(input.stationId);
-        if (pendingReservations >= stationOpt.value.pickupSlotLimit) {
-          return yield* Effect.fail(new StationPickupSlotLimitExceeded({
+        yield* lockStationForReservationCheck(tx, input.stationId);
+
+        const availableBikes = yield* bikeRepo.countAvailableByStation(input.stationId);
+        const requiredAvailableBikes = requiredAvailableBikesForReservation(
+          stationOpt.value.totalCapacity,
+        );
+
+        if (!stationCanAcceptReservation({
+          totalCapacity: stationOpt.value.totalCapacity,
+          availableBikes,
+        })) {
+          return yield* Effect.fail(new StationReservationAvailabilityTooLow({
             stationId: input.stationId,
-            pickupSlotLimit: stationOpt.value.pickupSlotLimit,
-            pendingReservations,
+            totalCapacity: stationOpt.value.totalCapacity,
+            availableBikes,
+            requiredAvailableBikes,
           }));
         }
 
@@ -288,6 +314,13 @@ export function reserveBike(
   });
 }
 
+/**
+ * Tru tien vi cho prepaid reservation va map loi wallet ve domain error cua reservation flow.
+ *
+ * @param repo Wallet repository dang dung trong transaction.
+ * @param input Du lieu tru tien.
+ * @returns Effect thanh cong khi tru tien xong hoac fail voi wallet-related domain error.
+ */
 function debitWallet(
   repo: ReturnType<typeof makeWalletRepository>,
   input: DecreaseBalanceInput,

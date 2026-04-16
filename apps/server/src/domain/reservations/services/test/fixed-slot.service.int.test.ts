@@ -25,7 +25,7 @@ describe("assignFixedSlotReservations integration", () => {
     const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
     const user = await fixture.factories.user({ fullname: "Fixed Slot User" });
     await fixture.factories.wallet({ userId: user.id, balance: 10000n });
-    const station = await fixture.factories.station({ name: "Fixed Slot Station" });
+    const station = await fixture.factories.station({ name: "Fixed Slot Station", capacity: 1 });
     const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const template = await fixture.prisma.fixedSlotTemplate.create({
@@ -90,7 +90,7 @@ describe("assignFixedSlotReservations integration", () => {
     const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 30, 0));
     const user = await fixture.factories.user({ fullname: "Fixed Slot Timezone User" });
     await fixture.factories.wallet({ userId: user.id, balance: 10000n });
-    const station = await fixture.factories.station({ name: "Fixed Slot Timezone Station" });
+    const station = await fixture.factories.station({ name: "Fixed Slot Timezone Station", capacity: 1 });
     await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const template = await fixture.prisma.fixedSlotTemplate.create({
@@ -130,7 +130,7 @@ describe("assignFixedSlotReservations integration", () => {
     const slotStart = new Date(Date.UTC(2000, 0, 1, 10, 30, 0));
     const user = await fixture.factories.user({ fullname: "Fixed Slot Rerun User" });
     await fixture.factories.wallet({ userId: user.id, balance: 10000n });
-    const station = await fixture.factories.station({ name: "Fixed Slot Rerun Station" });
+    const station = await fixture.factories.station({ name: "Fixed Slot Rerun Station", capacity: 1 });
     await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const template = await fixture.prisma.fixedSlotTemplate.create({
@@ -191,7 +191,7 @@ describe("assignFixedSlotReservations integration", () => {
       maxUsages: 3,
       usageCount: 1,
     });
-    const station = await fixture.factories.station({ name: "Fixed Slot Subscription Station" });
+    const station = await fixture.factories.station({ name: "Fixed Slot Subscription Station", capacity: 1 });
     await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const template = await fixture.prisma.fixedSlotTemplate.create({
@@ -243,7 +243,7 @@ describe("assignFixedSlotReservations integration", () => {
     const slotStart = new Date(Date.UTC(2000, 0, 1, 7, 30, 0));
     const user = await fixture.factories.user({ fullname: "Fixed Slot Low Balance User" });
     await fixture.factories.wallet({ userId: user.id, balance: 1000n });
-    const station = await fixture.factories.station({ name: "Fixed Slot Low Balance Station" });
+    const station = await fixture.factories.station({ name: "Fixed Slot Low Balance Station", capacity: 1 });
     const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const template = await fixture.prisma.fixedSlotTemplate.create({

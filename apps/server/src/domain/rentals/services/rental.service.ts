@@ -2,12 +2,12 @@ import { Effect, Layer, Option } from "effect";
 
 import type { BikeRepo } from "@/domain/bikes/repository/bike.repository";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { StationRepo } from "@/domain/stations";
+import type { StationQueryRepo } from "@/domain/stations";
 
 import { BikeRepository } from "@/domain/bikes";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { defectOn } from "@/domain/shared";
-import { StationNotFound, StationRepository } from "@/domain/stations";
+import { StationNotFound, StationQueryRepository } from "@/domain/stations";
 
 import type {
   BikeSwapRequestNotFound,
@@ -100,7 +100,7 @@ export type RentalService = {
 const makeRentalServiceEffect = Effect.gen(function* () {
   const repo = yield* RentalRepository;
   const bikeRepo = yield* BikeRepository;
-  const stationRepo = yield* StationRepository;
+  const stationRepo = yield* StationQueryRepository;
   return makeRentalService(repo, bikeRepo, stationRepo);
 });
 
@@ -114,7 +114,7 @@ export class RentalServiceTag extends Effect.Service<RentalServiceTag>()(
 function makeRentalService(
   repo: RentalRepo,
   bikeRepo: BikeRepo,
-  stationRepo: StationRepo,
+  stationRepo: StationQueryRepo,
 ): RentalService {
   const service: RentalService = {
     listMyRentals(userId, filter, pageReq) {

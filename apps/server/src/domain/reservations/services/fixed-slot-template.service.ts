@@ -1,10 +1,10 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { StationRepo } from "@/domain/stations";
+import type { StationQueryRepo } from "@/domain/stations";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import { defectOn } from "@/domain/shared";
-import { makeStationRepository, StationRepository } from "@/domain/stations";
+import { makeStationQueryRepository, StationQueryRepository } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -49,7 +49,7 @@ export type { FixedSlotTemplateService } from "./fixed-slot-template/fixed-slot-
 export function makeFixedSlotTemplateService(deps: {
   reservationQueryRepo: ReservationQueryRepo;
   reservationCommandRepo: ReservationCommandRepo;
-  stationRepo: StationRepo;
+  stationRepo: StationQueryRepo;
 }): FixedSlotTemplateService {
   return {
     createForUser: args =>
@@ -70,7 +70,7 @@ export function makeFixedSlotTemplateService(deps: {
 
         return yield* runPrismaTransaction(client, tx =>
           Effect.gen(function* () {
-            const txStationRepo = makeStationRepository(tx);
+            const txStationRepo = makeStationQueryRepository(tx);
             const txReservationQueryRepo = makeReservationQueryRepository(tx);
             const txReservationCommandRepo = makeReservationCommandRepository(tx);
 
@@ -323,7 +323,7 @@ export const FixedSlotTemplateServiceLive = Layer.effect(
   Effect.gen(function* () {
     const reservationQueryRepo = yield* ReservationQueryRepository;
     const reservationCommandRepo = yield* ReservationCommandRepository;
-    const stationRepo = yield* StationRepository;
+    const stationRepo = yield* StationQueryRepository;
 
     return makeFixedSlotTemplateService({
       reservationQueryRepo,

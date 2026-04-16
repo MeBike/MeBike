@@ -6,7 +6,7 @@ import {
 } from "@/domain/redistribution";
 
 import { PrismaLive } from "../infra.layers";
-import { StationServiceLayer } from "./station.layers";
+import { StationQueryServiceLayer } from "./station.layers";
 import { UserQueryServiceLayer } from "./user.layers";
 
 export const RedistributionRequestReposLive = RedistributionRepositoryLive.pipe(
@@ -16,7 +16,7 @@ export const RedistributionRequestReposLive = RedistributionRepositoryLive.pipe(
 export const RedistributionRequestServiceLayer = RedistributionServiceLive.pipe(
   Layer.provide(RedistributionRequestReposLive),
   Layer.provide(UserQueryServiceLayer),
-  Layer.provide(StationServiceLayer),
+  Layer.provide(StationQueryServiceLayer),
   Layer.provide(PrismaLive),
 );
 

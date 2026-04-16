@@ -78,7 +78,6 @@ describe("admin agency stats routing e2e", () => {
       stationType: "AGENCY",
       agencyId: agency.id,
       capacity: 12,
-      pickupSlotLimit: 8,
       returnSlotLimit: 9,
     });
 
@@ -224,7 +223,7 @@ describe("admin agency stats routing e2e", () => {
     });
     expect(body.currentStation).toMatchObject({
       totalCapacity: 12,
-      pickupSlotLimit: 8,
+      pickupSlotLimit: 12,
       returnSlotLimit: 9,
       totalBikes: 4,
       availableBikes: 1,

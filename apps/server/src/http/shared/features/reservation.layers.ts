@@ -13,7 +13,7 @@ import {
 import { PrismaLive } from "../infra.layers";
 import { BikeReposLive } from "./bike.layers";
 import { RentalReposLive } from "./rental.layers";
-import { StationReposLive } from "./station.layers";
+import { StationQueryReposLive } from "./station.layers";
 import {
   SubscriptionReposLive,
   SubscriptionServiceLayer,
@@ -48,7 +48,7 @@ export const FixedSlotTemplateServiceLayer = FixedSlotTemplateServiceLive.pipe(
   Layer.provide(Layer.mergeAll(
     ReservationQueryReposLive,
     ReservationCommandReposLive,
-    StationReposLive,
+    StationQueryReposLive,
   )),
 );
 
@@ -61,7 +61,7 @@ export const ReservationDepsLive = Layer.mergeAll(
   ReservationStatsServiceLayer,
   FixedSlotTemplateServiceLayer,
   BikeReposLive,
-  StationReposLive,
+  StationQueryReposLive,
   RentalReposLive,
   WalletDepsLive,
   SubscriptionReposLive,

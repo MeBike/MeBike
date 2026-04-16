@@ -113,7 +113,6 @@ describe("manage-users agency provision e2e", () => {
         address: true,
         stationType: true,
         totalCapacity: true,
-        pickupSlotLimit: true,
         returnSlotLimit: true,
       },
     });
@@ -123,7 +122,6 @@ describe("manage-users agency provision e2e", () => {
       address: "01 Xa Lo Ha Noi, Thu Duc, TP.HCM",
       stationType: "AGENCY",
       totalCapacity: 20,
-      pickupSlotLimit: 12,
       returnSlotLimit: 18,
     });
 

@@ -27,7 +27,9 @@ describe("reservation use-cases integration", () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 50000n },
     });
-    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 1 },
+    });
 
     const now = new Date("2025-01-01T10:00:00.000Z");
     const startTime = new Date("2025-01-01T10:00:00.000Z");
@@ -90,7 +92,9 @@ describe("reservation use-cases integration", () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 600000n },
     });
-    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 1 },
+    });
 
     const now = new Date("2025-01-01T12:00:00.000Z");
 
@@ -145,7 +149,9 @@ describe("reservation use-cases integration", () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: initialBalance },
     });
-    const { station, bike } = await givenStationWithAvailableBike(fixture);
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 1 },
+    });
 
     const now = new Date("2025-01-01T13:00:00.000Z");
 
