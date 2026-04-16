@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest } from "@/domain/shared/pagination";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
@@ -15,7 +15,9 @@ import type { CouponQueryRepo } from "./coupon.repository.types";
 
 import { CouponRepositoryError } from "../domain-errors";
 import {
+  selectUserCouponDetailRow,
   selectUserCouponListItemRow,
+  toUserCouponDetailRow,
   toUserCouponListItemRow,
 } from "./coupon.mappers";
 
@@ -29,6 +31,29 @@ export function makeCouponQueryRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): CouponQueryRepo {
   return {
+    getForUserById: (userId, userCouponId) =>
+      Effect.gen(function* () {
+        const item = yield* Effect.tryPromise({
+          try: () =>
+            client.userCoupon.findFirst({
+              where: {
+                id: userCouponId,
+                userId,
+              },
+              select: selectUserCouponDetailRow,
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "getForUserById.findFirst",
+              message: `Failed to get coupon ${userCouponId} for user ${userId}`,
+              cause: err,
+            }),
+        });
+
+        return Option.fromNullable(item).pipe(
+          Option.map(toUserCouponDetailRow),
+        );
+      }).pipe(defectOn(CouponRepositoryError)),
     listForUser: (userId, filter, pageReq) =>
       Effect.gen(function* () {
         const { page, pageSize, skip, take } = normalizedPage(pageReq);

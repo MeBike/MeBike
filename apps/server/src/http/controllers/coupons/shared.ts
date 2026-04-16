@@ -6,7 +6,11 @@ import {
 
 export type CouponsRoutes = typeof import("@mebike/shared")["serverRoutes"]["coupons"];
 
-export const { CouponStatusSchema } = CouponsContracts;
+export const {
+  CouponErrorCodeSchema,
+  couponErrorMessages,
+  CouponStatusSchema,
+} = CouponsContracts;
 
 export const unauthorizedBody = {
   error: unauthorizedErrorMessages.UNAUTHORIZED,

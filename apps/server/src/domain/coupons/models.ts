@@ -1,5 +1,6 @@
 import type {
   CouponStatus,
+  CouponTriggerType,
   DiscountType,
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
@@ -18,6 +19,11 @@ export type UserCouponListItemRow = {
   readonly lockExpiresAt: Date | null;
   readonly couponRuleId: string | null;
   readonly couponRuleName: string | null;
+};
+
+export type UserCouponDetailRow = UserCouponListItemRow & {
+  readonly couponRuleTriggerType: CouponTriggerType | null;
+  readonly couponRuleMinRidingMinutes: number | null;
 };
 
 export type CouponSortField = "assignedAt";

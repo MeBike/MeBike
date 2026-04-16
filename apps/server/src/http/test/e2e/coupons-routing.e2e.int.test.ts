@@ -242,6 +242,150 @@ describe("coupons routing e2e", () => {
     ]);
   });
 
+  it("returns coupon detail for the current user", async () => {
+    const rule = await fixture.prisma.couponRule.create({
+      data: {
+        name: "Tier 2h Riding Coupon",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: "2000",
+        status: "ACTIVE",
+        priority: 90,
+      },
+    });
+    const coupon = await fixture.prisma.coupon.create({
+      data: {
+        couponRuleId: rule.id,
+        code: "DETAIL-COUPON",
+        discountType: "FIXED_AMOUNT",
+        discountValue: "2000",
+        expiresAt: new Date("2026-06-30T00:00:00.000Z"),
+        status: "ACTIVE",
+      },
+    });
+    const userCoupon = await fixture.prisma.userCoupon.create({
+      data: {
+        userId: USER_ONE_ID,
+        couponId: coupon.id,
+        status: "ASSIGNED",
+        assignedAt: new Date("2026-04-15T08:00:00.000Z"),
+      },
+    });
+
+    const response = await fixture.app.request(`http://test/v1/coupons/${userCoupon.id}`, {
+      method: "GET",
+      headers: authHeader(USER_ONE_ID, "USER"),
+    });
+    const body = await response.json() as CouponsContracts.CouponDetailResponse;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      userCouponId: userCoupon.id,
+      couponId: coupon.id,
+      couponRuleId: rule.id,
+      couponRuleName: "Tier 2h Riding Coupon",
+      code: "DETAIL-COUPON",
+      status: "ASSIGNED",
+      discountType: "FIXED_AMOUNT",
+      discountValue: "2000",
+      expiresAt: "2026-06-30T00:00:00.000Z",
+      assignedAt: "2026-04-15T08:00:00.000Z",
+      usedAt: null,
+      lockedAt: null,
+      lockExpiresAt: null,
+      description: null,
+      coupon: {
+        id: coupon.id,
+        code: "DETAIL-COUPON",
+        discountType: "FIXED_AMOUNT",
+        discountValue: "2000",
+        expiresAt: "2026-06-30T00:00:00.000Z",
+        rule: {
+          id: rule.id,
+          name: "Tier 2h Riding Coupon",
+          triggerType: "RIDING_DURATION",
+          minRidingMinutes: 120,
+          minBillableHours: "2",
+        },
+      },
+      conditions: {
+        requiresNoSubscription: true,
+        usesBillableHours: true,
+        billableMinutesPerBlock: 30,
+        billableHoursPerBlock: "0.5",
+        minimumBillableHours: "2",
+        appliesToPenalty: false,
+        appliesToDepositForfeited: false,
+        appliesToOtherFees: false,
+        maxCouponsPerRental: 1,
+      },
+    });
+  });
+
+  it("returns 404 when coupon detail does not exist", async () => {
+    const response = await fixture.app.request("http://test/v1/coupons/018fa100-0000-7000-8000-000000009999", {
+      method: "GET",
+      headers: authHeader(USER_ONE_ID, "USER"),
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      error: "Coupon not found",
+      details: {
+        code: "COUPON_NOT_FOUND",
+      },
+    });
+  });
+
+  it("returns 404 when user requests another user's coupon detail", async () => {
+    const coupon = await fixture.prisma.coupon.create({
+      data: {
+        code: "OTHER-DETAIL-COUPON",
+        discountType: "FIXED_AMOUNT",
+        discountValue: "1000",
+        status: "ACTIVE",
+      },
+    });
+    const otherUserCoupon = await fixture.prisma.userCoupon.create({
+      data: {
+        userId: USER_TWO_ID,
+        couponId: coupon.id,
+        status: "ASSIGNED",
+      },
+    });
+
+    const response = await fixture.app.request(`http://test/v1/coupons/${otherUserCoupon.id}`, {
+      method: "GET",
+      headers: authHeader(USER_ONE_ID, "USER"),
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      error: "Coupon not found",
+      details: {
+        code: "COUPON_NOT_FOUND",
+      },
+    });
+  });
+
+  it("returns 401 when coupon detail is requested without token", async () => {
+    const response = await fixture.app.request("http://test/v1/coupons/018fa100-0000-7000-8000-000000009999", {
+      method: "GET",
+    });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("forbids non-user roles from getting coupon detail", async () => {
+    const response = await fixture.app.request("http://test/v1/coupons/018fa100-0000-7000-8000-000000009999", {
+      method: "GET",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
   it("forbids non-user roles from listing coupons", async () => {
     const response = await fixture.app.request("http://test/v1/coupons", {
       method: "GET",

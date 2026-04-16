@@ -1,14 +1,19 @@
-import type { Effect } from "effect";
+import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import type {
   CouponFilter,
   CouponSortField,
+  UserCouponDetailRow,
   UserCouponListItemRow,
 } from "../models";
 
 export type CouponQueryService = {
+  getForUserById: (
+    userId: string,
+    userCouponId: string,
+  ) => Effect.Effect<Option.Option<UserCouponDetailRow>>;
   listForUser: (
     userId: string,
     filter: CouponFilter,
