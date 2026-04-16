@@ -29,6 +29,7 @@ import { formatBikeNumber } from "../src/domain/bikes/bike-number";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
 import { toPrismaDecimal } from "../src/domain/shared/decimal";
 import logger from "../src/lib/logger";
+import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
@@ -473,6 +474,7 @@ async function main() {
 
     await upsertVietnamBoundary(prisma);
     await seedDefaultPricingPolicy(prisma);
+    await seedDefaultGlobalCouponRules(prisma, { demoMode: true });
     await seedDemoEnvironmentPolicy(prisma);
     await seedStations(prisma);
     await seedRatingReasons(prisma);

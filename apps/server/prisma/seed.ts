@@ -4,6 +4,7 @@ import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
 import { PrismaClient } from "../generated/prisma/client";
+import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { seedRatingReasons } from "./seed/rating-reasons";
@@ -26,6 +27,7 @@ async function main() {
 
   await upsertVietnamBoundary(prisma);
   await seedDefaultPricingPolicy(prisma);
+  await seedDefaultGlobalCouponRules(prisma);
 
   // Use the actual table name as it exists in the DB ("Station")
   await prisma.$executeRaw`TRUNCATE TABLE "Station" RESTART IDENTITY CASCADE`;
