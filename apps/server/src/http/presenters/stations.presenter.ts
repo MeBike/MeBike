@@ -21,7 +21,6 @@ export function toContractStationReadSummary(
     },
     capacity: {
       total: station.totalCapacity,
-      pickupSlotLimit: station.totalCapacity,
       returnSlotLimit: station.returnSlotLimit,
       emptyPhysicalSlots: station.emptySlots,
     },
@@ -53,7 +52,6 @@ export function toContractStationSummary(
     stationType: station.stationType,
     agencyId: station.agencyId,
     totalCapacity: station.totalCapacity,
-    pickupSlotLimit: station.totalCapacity,
     returnSlotLimit: station.returnSlotLimit,
     latitude: station.latitude,
     longitude: station.longitude,
