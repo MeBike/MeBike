@@ -24,6 +24,11 @@ export {
   BikeStatsServiceLayer,
 } from "./features/bike.layers";
 export {
+  CouponDepsLive,
+  CouponReposLive,
+  CouponServiceLayer,
+} from "./features/coupon.layers";
+export {
   EnvironmentDepsLive,
   EnvironmentPolicyReposLive,
   EnvironmentPolicyServiceLayer,
