@@ -8,6 +8,8 @@ import {
   BookingHistoryDetailScreen,
   ChangePasswordScreen,
   EmailVerificationScreen,
+  EnvironmentImpactDetailScreen,
+  EnvironmentImpactScreen,
   FixedSlotDetailScreen,
   FixedSlotEditorScreen,
   FixedSlotTemplatesScreen,
@@ -144,6 +146,16 @@ function RootNavigator() {
       <Stack.Screen
         name="ReservationFlow"
         component={ReservationFlowScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="EnvironmentImpact"
+        component={EnvironmentImpactScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="EnvironmentImpactDetail"
+        component={EnvironmentImpactDetailScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen

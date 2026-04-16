@@ -111,6 +111,10 @@ export function useProfile() {
     navigation.navigate("Subscriptions" as never);
   };
 
+  const handleEnvironmentImpact = () => {
+    navigation.navigate("EnvironmentImpact" as never);
+  };
+
   const handleNotifications = () => {
     Alert.alert("Sắp ra mắt", "Quản lý thông báo sẽ sớm được cập nhật.");
   };
@@ -133,6 +137,7 @@ export function useProfile() {
     handleUpdateProfile,
     handleReservations,
     handleSubscriptions,
+    handleEnvironmentImpact,
     handleNotifications,
     handleResendOtp,
     handleVerifyEmail,

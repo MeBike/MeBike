@@ -73,6 +73,10 @@ export type RootStackParamList = {
     initialSubscriptionId?: string;
     lockPaymentSelection?: boolean;
   };
+  "EnvironmentImpact": undefined;
+  "EnvironmentImpactDetail": {
+    rentalId: string;
+  };
   "FixedSlotTemplates": {
     stationId?: string;
     stationName?: string;
@@ -189,6 +193,14 @@ export type ReservationFlowNavigationProp = StackNavigationProp<
   RootStackParamList,
   "ReservationFlow"
 >;
+export type EnvironmentImpactNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "EnvironmentImpact"
+>;
+export type EnvironmentImpactDetailNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "EnvironmentImpactDetail"
+>;
 export type FixedSlotTemplatesNavigationProp = StackNavigationProp<
   RootStackParamList,
   "FixedSlotTemplates"
@@ -208,6 +220,10 @@ export type ReservationDetailRouteProp = RouteProp<
 export type ReservationFlowRouteProp = RouteProp<
   RootStackParamList,
   "ReservationFlow"
+>;
+export type EnvironmentImpactDetailRouteProp = RouteProp<
+  RootStackParamList,
+  "EnvironmentImpactDetail"
 >;
 export type FixedSlotDetailRouteProp = RouteProp<
   RootStackParamList,
