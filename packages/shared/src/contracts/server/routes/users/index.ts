@@ -11,7 +11,6 @@ import {
 } from "./mutations";
 import {
   adminActiveUsersRoute,
-  adminAvailableTechnicianTeamsRoute,
   adminDashboardStatsRoute,
   adminListUsersRoute,
   adminNewUsersRoute,
@@ -39,7 +38,6 @@ export const usersRoutes = {
   adminList: adminListUsersRoute,
   adminSearch: adminSearchUsersRoute,
   adminTechnicians: adminTechnicianListRoute,
-  adminAvailableTechnicianTeams: adminAvailableTechnicianTeamsRoute,
   adminDetail: adminUserDetailRoute,
   adminUpdate: adminUpdateUserRoute,
   adminCreate: adminCreateUserRoute,

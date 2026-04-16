@@ -15,6 +15,7 @@ import { StationDepsLive } from "./features/station.layers";
 import { StripeTopupDepsLive } from "./features/stripe-topup.layers";
 import { SubscriptionDepsLive } from "./features/subscription.layers";
 import { SupplierDepsLive } from "./features/supplier.layers";
+import { TechnicianTeamDepsLive } from "./features/technician-team.layers";
 import { UserDepsLive, UserStatsDepsLive } from "./features/user.layers";
 import { WalletDepsLive } from "./features/wallet.layers";
 import {
@@ -36,6 +37,7 @@ export const HttpDepsLive = Layer.mergeAll(
   SubscriptionDepsLive,
   StationDepsLive,
   SupplierDepsLive,
+  TechnicianTeamDepsLive,
   AgencyRequestDepsLive,
   NotificationDepsLive,
   UserDepsLive,

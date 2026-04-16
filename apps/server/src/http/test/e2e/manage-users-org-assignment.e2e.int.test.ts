@@ -11,6 +11,7 @@ describe("manage-users org assignment e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
       const { Layer } = await import("effect");
+      const { TechnicianTeamDepsLive } = await import("@/http/shared/features/technician-team.layers");
       const { UserDepsLive } = await import("@/http/shared/features/user.layers");
       const { UserStatsRepositoryLive } = await import("@/domain/users/repository/user-stats.repository");
       const { UserStatsServiceLive } = await import("@/domain/users/services/user-stats.service");
@@ -18,6 +19,7 @@ describe("manage-users org assignment e2e", () => {
       const userStatsServiceLayer = UserStatsServiceLive.pipe(Layer.provide(UserStatsRepositoryLive));
 
       return Layer.mergeAll(
+        TechnicianTeamDepsLive,
         UserDepsLive,
         UserStatsRepositoryLive,
         userStatsServiceLayer,

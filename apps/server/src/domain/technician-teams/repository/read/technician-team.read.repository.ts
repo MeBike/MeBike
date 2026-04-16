@@ -17,6 +17,26 @@ import {
 export function makeTechnicianTeamReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): TechnicianTeamQueryRepo {
+  const mapRow = (row: {
+    id: string;
+    name: string;
+    stationId: string;
+    station: { name: string };
+    availabilityStatus: import("generated/prisma/client").TechnicianTeamAvailability;
+    createdAt: Date;
+    updatedAt: Date;
+    _count: { userAssignments: number };
+  }): TechnicianTeamRow => ({
+    id: row.id,
+    name: row.name,
+    stationId: row.stationId,
+    stationName: row.station.name,
+    availabilityStatus: row.availabilityStatus,
+    memberCount: row._count.userAssignments,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  });
+
   return {
     getById: id =>
       Effect.tryPromise({
@@ -27,7 +47,19 @@ export function makeTechnicianTeamReadRepository(
               id: true,
               name: true,
               stationId: true,
+              station: {
+                select: {
+                  name: true,
+                },
+              },
               availabilityStatus: true,
+              createdAt: true,
+              updatedAt: true,
+              _count: {
+                select: {
+                  userAssignments: true,
+                },
+              },
             },
           }),
         catch: cause =>
@@ -35,17 +67,52 @@ export function makeTechnicianTeamReadRepository(
             operation: "getById",
             cause,
           }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(
-            Option.map((item): TechnicianTeamRow => ({
-              id: item.id,
-              name: item.name,
-              stationId: item.stationId,
-              availabilityStatus: item.availabilityStatus,
-            })),
+        }).pipe(
+          Effect.map(row =>
+            Option.fromNullable(row).pipe(
+              Option.map(mapRow),
+            ),
           ),
+          defectOn(TechnicianTeamRepositoryError),
         ),
+
+    list: args =>
+      Effect.tryPromise({
+        try: () =>
+          client.technicianTeam.findMany({
+            where: pickDefined({
+              stationId: args?.stationId,
+              availabilityStatus: args?.availabilityStatus,
+            }),
+            orderBy: {
+              name: "asc",
+            },
+            select: {
+              id: true,
+              name: true,
+              stationId: true,
+              station: {
+                select: {
+                  name: true,
+                },
+              },
+              availabilityStatus: true,
+              createdAt: true,
+              updatedAt: true,
+              _count: {
+                select: {
+                  userAssignments: true,
+                },
+              },
+            },
+          }),
+        catch: cause =>
+          new TechnicianTeamRepositoryError({
+            operation: "list",
+            cause,
+          }),
+      }).pipe(
+        Effect.map(rows => rows.map(mapRow)),
         defectOn(TechnicianTeamRepositoryError),
       ),
 

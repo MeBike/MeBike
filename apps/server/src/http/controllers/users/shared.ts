@@ -55,16 +55,6 @@ export function mapUserSummary(
   };
 }
 
-export function mapAvailableTechnicianTeam(
-  row: import("@/domain/technician-teams").TechnicianTeamAvailableOption,
-) {
-  return {
-    id: row.id,
-    name: row.name,
-    stationId: row.stationId,
-  };
-}
-
 function maskPushToken(token: string): string {
   if (token.length <= 10) {
     return "**********";
