@@ -67,14 +67,14 @@ export function makeTechnicianTeamReadRepository(
             operation: "getById",
             cause,
           }),
-        }).pipe(
-          Effect.map(row =>
-            Option.fromNullable(row).pipe(
-              Option.map(mapRow),
-            ),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(
+            Option.map(mapRow),
           ),
-          defectOn(TechnicianTeamRepositoryError),
         ),
+        defectOn(TechnicianTeamRepositoryError),
+      ),
 
     list: args =>
       Effect.tryPromise({

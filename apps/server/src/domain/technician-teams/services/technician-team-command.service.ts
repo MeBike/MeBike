@@ -2,8 +2,7 @@ import { Effect, Option } from "effect";
 
 import type { StationQueryRepo } from "@/domain/stations";
 
-import type { TechnicianTeamQueryRepo } from "../repository/technician-team.repository.types";
-import type { TechnicianTeamCommandRepo } from "../repository/technician-team.repository.types";
+import type { TechnicianTeamCommandRepo, TechnicianTeamQueryRepo } from "../repository/technician-team.repository.types";
 import type { TechnicianTeamCommandService } from "./technician-team.service.types";
 
 import {

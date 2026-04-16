@@ -4,10 +4,10 @@ import {
   adminUpdateUserRoute,
   changePasswordRoute,
   registerPushTokenRoute,
-  uploadMyAvatarRoute,
   unregisterAllPushTokensRoute,
   unregisterPushTokenRoute,
   updateMeRoute,
+  uploadMyAvatarRoute,
 } from "./mutations";
 import {
   adminActiveUsersRoute,
