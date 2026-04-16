@@ -12,6 +12,10 @@ export function registerCouponRuleRoutes(
   app: import("@hono/zod-openapi").OpenAPIHono,
 ) {
   const couponRules = serverRoutes.couponRules;
+  const adminCreateCouponRuleRoute = {
+    ...couponRules.adminCreateCouponRule,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
   const adminListCouponRulesRoute = {
     ...couponRules.adminListCouponRules,
     middleware: [requireAdminMiddleware] as const,
@@ -20,6 +24,10 @@ export function registerCouponRuleRoutes(
   app.openapi(
     couponRules.listActiveCouponRules,
     CouponRulesPublicController.listActiveCouponRules,
+  );
+  app.openapi(
+    adminCreateCouponRuleRoute,
+    CouponRulesAdminController.adminCreateCouponRule,
   );
   app.openapi(
     adminListCouponRulesRoute,

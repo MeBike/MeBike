@@ -3,10 +3,18 @@ import type { Effect } from "effect";
 import type {
   ActiveCouponRuleRow,
   AdminCouponRulePageResult,
+  AdminCouponRuleRow,
   BillingPreviewDiscountRuleRow,
+  CreateAdminCouponRuleInput,
   ListAdminCouponRulesFilter,
 } from "../models";
 import type { PageRequest } from "@/domain/shared/pagination";
+
+export type CouponCommandService = {
+  createAdminCouponRule: (
+    input: CreateAdminCouponRuleInput,
+  ) => Effect.Effect<AdminCouponRuleRow>;
+};
 
 export type CouponQueryService = {
   listGlobalBillingPreviewDiscountRules: (
@@ -25,3 +33,5 @@ export type CouponQueryService = {
     pageReq: PageRequest,
   ) => Effect.Effect<AdminCouponRulePageResult>;
 };
+
+export type CouponService = CouponCommandService & CouponQueryService;

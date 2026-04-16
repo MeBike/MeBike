@@ -3,12 +3,44 @@ import type { CouponsContracts } from "@mebike/shared";
 
 import { Effect } from "effect";
 
-import { CouponQueryServiceTag } from "@/domain/coupons";
+import {
+  CouponCommandServiceTag,
+  CouponQueryServiceTag,
+} from "@/domain/coupons";
 import { withLoggedCause } from "@/domain/shared";
 import { toContractAdminCouponRule } from "@/http/presenters/coupons.presenter";
 import { toContractPage } from "@/http/shared/pagination";
 
 import type { CouponRulesRoutes } from "./shared";
+
+const adminCreateCouponRule: RouteHandler<
+  CouponRulesRoutes["adminCreateCouponRule"]
+> = async (c) => {
+  const body = c.req.valid("json");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(CouponCommandServiceTag, service =>
+      service.createAdminCouponRule({
+        name: body.name,
+        triggerType: body.triggerType,
+        minRidingMinutes: body.minRidingMinutes,
+        discountType: body.discountType,
+        discountValue: body.discountValue,
+        priority: body.priority,
+        status: body.status,
+        activeFrom: body.activeFrom ? new Date(body.activeFrom) : null,
+        activeTo: body.activeTo ? new Date(body.activeTo) : null,
+      })),
+    "POST /v1/admin/coupon-rules",
+  );
+
+  const created = await c.var.runPromise(eff);
+
+  return c.json<CouponsContracts.AdminCouponRule, 201>(
+    toContractAdminCouponRule(created),
+    201,
+  );
+};
 
 const adminListCouponRules: RouteHandler<
   CouponRulesRoutes["adminListCouponRules"]
@@ -40,5 +72,6 @@ const adminListCouponRules: RouteHandler<
 };
 
 export const CouponRulesAdminController = {
+  adminCreateCouponRule,
   adminListCouponRules,
 } as const;

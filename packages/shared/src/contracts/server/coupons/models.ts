@@ -70,6 +70,53 @@ export const AdminCouponRuleSchema = z.object({
   },
 });
 
+export const AdminCouponRuleWritableStatusSchema = z
+  .enum(["ACTIVE", "INACTIVE"])
+  .openapi("AdminCouponRuleWritableStatus");
+
+export const CreateAdminCouponRuleBodySchema = z
+  .object({
+    name: z.string().trim().min(1),
+    triggerType: z.literal("RIDING_DURATION").openapi({
+      example: "RIDING_DURATION",
+    }),
+    minRidingMinutes: z.number().int().positive(),
+    discountType: z.literal("FIXED_AMOUNT").openapi({
+      example: "FIXED_AMOUNT",
+    }),
+    discountValue: z.number().int().positive(),
+    priority: z.number().int().optional().default(100),
+    status: AdminCouponRuleWritableStatusSchema.optional().default("INACTIVE"),
+    activeFrom: z.iso.datetime().nullable().optional().default(null),
+    activeTo: z.iso.datetime().nullable().optional().default(null),
+  })
+  .superRefine((value, ctx) => {
+    if (
+      value.activeFrom
+      && value.activeTo
+      && new Date(value.activeFrom).getTime() > new Date(value.activeTo).getTime()
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["activeFrom"],
+        message: "activeFrom must be less than or equal to activeTo",
+      });
+    }
+  })
+  .openapi("CreateAdminCouponRuleBody", {
+    example: {
+      name: "Ride 2h discount",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 2000,
+      priority: 100,
+      status: "INACTIVE",
+      activeFrom: null,
+      activeTo: null,
+    },
+  });
+
 export const AdminCouponRulesListQuerySchema = z.object({
   ...paginationQueryFields,
   status: AccountStatusSchema.optional(),
@@ -114,7 +161,13 @@ export type ActiveCouponRule = z.infer<typeof ActiveCouponRuleSchema>;
 export type ActiveCouponRulesResponse = z.infer<
   typeof ActiveCouponRulesResponseSchema
 >;
+export type AdminCouponRuleWritableStatus = z.infer<
+  typeof AdminCouponRuleWritableStatusSchema
+>;
 export type AdminCouponRule = z.infer<typeof AdminCouponRuleSchema>;
+export type CreateAdminCouponRuleBody = z.infer<
+  typeof CreateAdminCouponRuleBodySchema
+>;
 export type AdminCouponRulesListQuery = z.infer<
   typeof AdminCouponRulesListQuerySchema
 >;

@@ -1,4 +1,7 @@
-import type { CouponsContracts } from "@mebike/shared";
+import type {
+  CouponsContracts,
+  ServerErrorResponse,
+} from "@mebike/shared";
 
 import { describe, expect, it } from "vitest";
 
@@ -13,6 +16,8 @@ describe("admin coupon rules routing e2e", () => {
       const { Layer } = await import("effect");
       const { PrismaLive } = await import("@/infrastructure/prisma");
       const {
+        CouponCommandRepositoryLive,
+        CouponCommandServiceLive,
         CouponQueryRepositoryLive,
         CouponQueryServiceLive,
       } = await import("@/domain/coupons");
@@ -21,6 +26,12 @@ describe("admin coupon rules routing e2e", () => {
         UserQueryServiceLive,
       } = await import("@/domain/users");
 
+      const couponCommandRepoLayer = CouponCommandRepositoryLive.pipe(
+        Layer.provide(PrismaLive),
+      );
+      const couponCommandLayer = CouponCommandServiceLive.pipe(
+        Layer.provide(couponCommandRepoLayer),
+      );
       const couponQueryRepoLayer = CouponQueryRepositoryLive.pipe(
         Layer.provide(PrismaLive),
       );
@@ -36,6 +47,8 @@ describe("admin coupon rules routing e2e", () => {
 
       return Layer.mergeAll(
         PrismaLive,
+        couponCommandRepoLayer,
+        couponCommandLayer,
         couponQueryRepoLayer,
         couponQueryLayer,
         userQueryRepoLayer,
@@ -83,6 +96,13 @@ describe("admin coupon rules routing e2e", () => {
     return fixture.auth.makeAuthHeader({ userId, role });
   }
 
+  function jsonAuthHeader(userId: string, role: "ADMIN" | "USER") {
+    return {
+      ...authHeader(userId, role),
+      "Content-Type": "application/json",
+    };
+  }
+
   async function createRule(input: {
     readonly name: string;
     readonly createdAt: string;
@@ -112,6 +132,61 @@ describe("admin coupon rules routing e2e", () => {
       },
     });
   }
+
+  it("admin can create a global coupon rule and defaults status to INACTIVE", async () => {
+    const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
+      method: "POST",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2000,
+        priority: 100,
+        activeFrom: null,
+        activeTo: null,
+      }),
+    });
+    const body = await response.json() as CouponsContracts.AdminCouponRule;
+
+    expect(response.status).toBe(201);
+    expect(body).toMatchObject({
+      name: "Ride 2h discount",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      minBillableHours: 2,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 2000,
+      status: "INACTIVE",
+      priority: 100,
+      activeFrom: null,
+      activeTo: null,
+    });
+    expect(typeof body.id).toBe("string");
+    expect(typeof body.createdAt).toBe("string");
+    expect(typeof body.updatedAt).toBe("string");
+
+    const created = await fixture.prisma.couponRule.findUnique({
+      where: { id: body.id },
+    });
+    expect(created).not.toBeNull();
+    expect(created).toMatchObject({
+      name: "Ride 2h discount",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      minCompletedRentals: null,
+      discountType: "FIXED_AMOUNT",
+      discountValue: expect.anything(),
+      status: "INACTIVE",
+      priority: 100,
+      activeFrom: null,
+      activeTo: null,
+    });
+    expect(created?.discountValue.toString()).toBe("2000");
+    expect(await fixture.prisma.coupon.count()).toBe(0);
+    expect(await fixture.prisma.userCoupon.count()).toBe(0);
+  });
 
   it("admin can list all coupon rules with pagination metadata", async () => {
     const newest = await createRule({
@@ -170,6 +245,24 @@ describe("admin coupon rules routing e2e", () => {
     expect(response.status).toBe(401);
   });
 
+  it("returns 401 when creating without token", async () => {
+    const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "Ride 2h discount",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2000,
+      }),
+    });
+
+    expect(response.status).toBe(401);
+  });
+
   it("returns 403 when authenticated user is not admin", async () => {
     const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
       method: "GET",
@@ -177,6 +270,98 @@ describe("admin coupon rules routing e2e", () => {
     });
 
     expect(response.status).toBe(403);
+  });
+
+  it("returns 403 when authenticated user is not admin for create", async () => {
+    const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
+      method: "POST",
+      headers: jsonAuthHeader(USER_USER_ID, "USER"),
+      body: JSON.stringify({
+        name: "Ride 2h discount",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2000,
+      }),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("returns validation error when discountValue is not positive", async () => {
+    const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
+      method: "POST",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 0,
+      }),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("returns validation error when minRidingMinutes is not positive", async () => {
+    const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
+      method: "POST",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 0,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2000,
+      }),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("returns validation error when activeFrom is after activeTo", async () => {
+    const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
+      method: "POST",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Ride 2h discount",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2000,
+        activeFrom: "2026-04-18T00:00:00.000Z",
+        activeTo: "2026-04-17T00:00:00.000Z",
+      }),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("returns validation error when required fields are missing", async () => {
+    const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
+      method: "POST",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+      }),
+    });
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Invalid request payload");
+    expect(body.details?.code).toBe("VALIDATION_ERROR");
   });
 
   it("filters by ACTIVE status", async () => {
