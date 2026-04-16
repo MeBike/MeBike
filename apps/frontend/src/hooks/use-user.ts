@@ -377,7 +377,7 @@ export const useUserActions = ({
   );
   const {data:techTeam , refetch : refetchTechTeam ,
     isLoading:isLoadingTechTeam
-  } = useGetTechTeamQuery({});
+  } = useGetTechTeamQuery();
     const getTechTeam = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
