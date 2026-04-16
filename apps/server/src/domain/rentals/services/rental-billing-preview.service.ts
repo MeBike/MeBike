@@ -1,12 +1,15 @@
 import { Effect, Layer, Option } from "effect";
 
-import type { CouponQueryService } from "@/domain/coupons";
+import type { GlobalAutoDiscountSelection } from "@/domain/coupons";
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
-import { CouponQueryServiceTag } from "@/domain/coupons";
+import {
+  CouponQueryServiceTag,
+  selectBestGlobalAutoDiscountRule,
+} from "@/domain/coupons";
 import {
   calculateUsageChargeMinor,
   isAfterLateReturnCutoff,
@@ -132,22 +135,22 @@ const makeRentalBillingPreviewServiceEffect = Effect.gen(function* () {
           ? remainingRentalAmountMinor - prepaidAmountMinor
           : 0n;
 
-        const bestCoupon = subscriptionApplied || eligibleRentalAmountMinor <= 0n
-          ? null
-          : yield* selectBestCoupon({
-              couponService,
-              userId: input.userId,
-              previewedAt: input.previewedAt,
-              billableMinutes,
-              eligibleRentalAmountMinor,
-            });
-
-        const couponDiscountAmountMinor = bestCoupon
-          ? minBigInt(
-              toMinorUnit(bestCoupon.discountValue),
-              eligibleRentalAmountMinor,
-            )
-          : 0n;
+        let discountSelection: GlobalAutoDiscountSelection = {
+          rule: null,
+          discountAmountMinor: 0n,
+        };
+        if (!subscriptionApplied && eligibleRentalAmountMinor > 0n) {
+          const discountRules = yield* couponService.listGlobalBillingPreviewDiscountRules({
+            previewedAt: input.previewedAt,
+            billableMinutes,
+          });
+          discountSelection = selectBestGlobalAutoDiscountRule(
+            discountRules,
+            eligibleRentalAmountMinor,
+          );
+        }
+        const bestDiscountRule = discountSelection.rule;
+        const couponDiscountAmountMinor = discountSelection.discountAmountMinor;
 
         const penaltyAmountMinor = yield* loadPenaltyAmountMinor(client, rental.id);
         const depositForfeited = Boolean(rental.depositHoldId)
@@ -169,14 +172,14 @@ const makeRentalBillingPreviewServiceEffect = Effect.gen(function* () {
           eligibleRentalAmount: Number(eligibleRentalAmountMinor),
           subscriptionApplied,
           subscriptionDiscountAmount: Number(subscriptionDiscountAmountMinor),
-          bestCoupon: bestCoupon
+          bestDiscountRule: bestDiscountRule
             ? {
-                userCouponId: bestCoupon.userCouponId,
-                couponId: bestCoupon.couponId,
-                code: bestCoupon.code,
-                discountType: bestCoupon.discountType,
-                discountValue: Number(toMinorUnit(bestCoupon.discountValue)),
-                status: bestCoupon.status,
+                ruleId: bestDiscountRule.ruleId,
+                name: bestDiscountRule.name,
+                triggerType: bestDiscountRule.triggerType,
+                minRidingMinutes: bestDiscountRule.minRidingMinutes ?? 0,
+                discountType: bestDiscountRule.discountType,
+                discountValue: Number(toMinorUnit(bestDiscountRule.discountValue)),
               }
             : null,
           couponDiscountAmount: Number(couponDiscountAmountMinor),
@@ -215,66 +218,6 @@ function loadPenaltyAmountMinor(
   }).pipe(
     Effect.catchAll(err => Effect.die(err)),
   );
-}
-
-function selectBestCoupon(args: {
-  readonly couponService: CouponQueryService;
-  readonly userId: string;
-  readonly previewedAt: Date;
-  readonly billableMinutes: number;
-  readonly eligibleRentalAmountMinor: bigint;
-}) {
-  return Effect.gen(function* () {
-    const candidates = yield* args.couponService.listBillingPreviewCandidatesForUser(
-      args.userId,
-      {
-        previewedAt: args.previewedAt,
-        billableMinutes: args.billableMinutes,
-      },
-    );
-
-    let best: (typeof candidates)[number] | null = null;
-    let bestDiscountMinor = 0n;
-
-    for (const candidate of candidates) {
-      const discountMinor = minBigInt(
-        toMinorUnit(candidate.discountValue),
-        args.eligibleRentalAmountMinor,
-      );
-
-      if (!best) {
-        best = candidate;
-        bestDiscountMinor = discountMinor;
-        continue;
-      }
-
-      const bestPriority = best.couponRulePriority ?? Number.MAX_SAFE_INTEGER;
-      const candidatePriority = candidate.couponRulePriority ?? Number.MAX_SAFE_INTEGER;
-
-      if (
-        discountMinor > bestDiscountMinor
-        || (discountMinor === bestDiscountMinor && candidatePriority < bestPriority)
-        || (
-          discountMinor === bestDiscountMinor
-          && candidatePriority === bestPriority
-          && candidate.assignedAt > best.assignedAt
-        )
-      ) {
-        best = candidate;
-        bestDiscountMinor = discountMinor;
-      }
-    }
-
-    if (!best) {
-      return null;
-    }
-
-    return best;
-  });
-}
-
-function minBigInt(left: bigint, right: bigint) {
-  return left < right ? left : right;
 }
 
 export class RentalBillingPreviewServiceTag extends Effect.Service<RentalBillingPreviewServiceTag>()(

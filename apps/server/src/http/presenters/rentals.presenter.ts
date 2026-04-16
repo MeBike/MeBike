@@ -77,14 +77,14 @@ export function toContractRentalBillingPreview(
     eligibleRentalAmount: row.eligibleRentalAmount,
     subscriptionApplied: row.subscriptionApplied,
     subscriptionDiscountAmount: row.subscriptionDiscountAmount,
-    bestCoupon: row.bestCoupon
+    bestDiscountRule: row.bestDiscountRule
       ? {
-          userCouponId: row.bestCoupon.userCouponId,
-          couponId: row.bestCoupon.couponId,
-          code: row.bestCoupon.code,
-          discountType: row.bestCoupon.discountType,
-          discountValue: row.bestCoupon.discountValue,
-          status: row.bestCoupon.status,
+          ruleId: row.bestDiscountRule.ruleId,
+          name: row.bestDiscountRule.name,
+          triggerType: row.bestDiscountRule.triggerType,
+          minRidingMinutes: row.bestDiscountRule.minRidingMinutes,
+          discountType: row.bestDiscountRule.discountType,
+          discountValue: row.bestDiscountRule.discountValue,
         }
       : null,
     couponDiscountAmount: row.couponDiscountAmount,

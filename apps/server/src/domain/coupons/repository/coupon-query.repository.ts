@@ -11,7 +11,7 @@ import {
 import { Prisma } from "@/infrastructure/prisma";
 
 import type { CouponSortField } from "../models";
-import type { BillingPreviewCouponCandidateRow } from "../models";
+import type { BillingPreviewDiscountRuleRow } from "../models";
 import type { CouponQueryRepo } from "./coupon.repository.types";
 
 import { CouponRepositoryError } from "../domain-errors";
@@ -28,52 +28,33 @@ function toCouponOrderBy(
   return { assignedAt: "desc" };
 }
 
-const selectBillingPreviewCandidateRow = {
+const selectBillingPreviewDiscountRuleRow = {
   id: true,
-  couponId: true,
-  assignedAt: true,
-  status: true,
-  coupon: {
-    select: {
-      code: true,
-      discountType: true,
-      discountValue: true,
-      expiresAt: true,
-      couponRuleId: true,
-      status: true,
-      couponRule: {
-        select: {
-          name: true,
-          priority: true,
-          triggerType: true,
-          minRidingMinutes: true,
-        },
-      },
-    },
-  },
-} satisfies PrismaTypes.UserCouponSelect;
+  name: true,
+  triggerType: true,
+  minRidingMinutes: true,
+  discountType: true,
+  discountValue: true,
+  priority: true,
+  createdAt: true,
+} satisfies PrismaTypes.CouponRuleSelect;
 
-type BillingPreviewCandidateRecord = PrismaTypes.UserCouponGetPayload<{
-  select: typeof selectBillingPreviewCandidateRow;
+type BillingPreviewDiscountRuleRecord = PrismaTypes.CouponRuleGetPayload<{
+  select: typeof selectBillingPreviewDiscountRuleRow;
 }>;
 
-function toBillingPreviewCouponCandidateRow(
-  row: BillingPreviewCandidateRecord,
-): BillingPreviewCouponCandidateRow {
+function toBillingPreviewDiscountRuleRow(
+  row: BillingPreviewDiscountRuleRecord,
+): BillingPreviewDiscountRuleRow {
   return {
-    userCouponId: row.id,
-    couponId: row.couponId,
-    code: row.coupon.code,
-    status: row.status,
-    discountType: row.coupon.discountType,
-    discountValue: row.coupon.discountValue,
-    expiresAt: row.coupon.expiresAt,
-    assignedAt: row.assignedAt,
-    couponRuleId: row.coupon.couponRuleId,
-    couponRuleName: row.coupon.couponRule?.name ?? null,
-    couponRulePriority: row.coupon.couponRule?.priority ?? null,
-    couponRuleTriggerType: row.coupon.couponRule?.triggerType ?? null,
-    couponRuleMinRidingMinutes: row.coupon.couponRule?.minRidingMinutes ?? null,
+    ruleId: row.id,
+    name: row.name,
+    triggerType: row.triggerType,
+    minRidingMinutes: row.minRidingMinutes,
+    discountType: row.discountType,
+    discountValue: row.discountValue,
+    priority: row.priority,
+    createdAt: row.createdAt,
   };
 }
 
@@ -145,62 +126,37 @@ export function makeCouponQueryRepository(
 
         return makePageResult(items.map(toUserCouponListItemRow), total, page, pageSize);
       }).pipe(defectOn(CouponRepositoryError)),
-    listBillingPreviewCandidatesForUser: (userId, input) =>
+    listGlobalBillingPreviewDiscountRules: input =>
       Effect.gen(function* () {
         const rows = yield* Effect.tryPromise({
           try: () =>
-            client.userCoupon.findMany({
+            client.couponRule.findMany({
               where: {
-                userId,
-                status: "ASSIGNED",
-                coupon: {
-                  status: "ACTIVE",
-                  discountType: "FIXED_AMOUNT",
-                  OR: [
-                    { expiresAt: null },
-                    { expiresAt: { gte: input.previewedAt } },
-                  ],
-                  couponRule: {
-                    is: {
-                      status: "ACTIVE",
-                      triggerType: "RIDING_DURATION",
-                      OR: [
-                        { minRidingMinutes: null },
-                        { minRidingMinutes: { lte: input.billableMinutes } },
-                      ],
-                      AND: [
-                        {
-                          OR: [
-                            { activeFrom: null },
-                            { activeFrom: { lte: input.previewedAt } },
-                          ],
-                        },
-                        {
-                          OR: [
-                            { activeTo: null },
-                            { activeTo: { gte: input.previewedAt } },
-                          ],
-                        },
-                      ],
-                    },
-                  },
+                status: "ACTIVE",
+                triggerType: "RIDING_DURATION",
+                discountType: "FIXED_AMOUNT",
+                minRidingMinutes: {
+                  lte: input.billableMinutes,
                 },
               },
               orderBy: [
-                { assignedAt: "desc" },
+                { priority: "asc" },
+                { discountValue: "desc" },
+                { minRidingMinutes: "desc" },
+                { createdAt: "desc" },
                 { id: "desc" },
               ],
-              select: selectBillingPreviewCandidateRow,
+              select: selectBillingPreviewDiscountRuleRow,
             }),
           catch: err =>
             new CouponRepositoryError({
-              operation: "listBillingPreviewCandidatesForUser.findMany",
-              message: `Failed to list billing preview coupons for user ${userId}`,
+              operation: "listGlobalBillingPreviewDiscountRules.findMany",
+              message: "Failed to list global billing preview discount rules",
               cause: err,
             }),
         });
 
-        return rows.map(toBillingPreviewCouponCandidateRow);
+        return rows.map(toBillingPreviewDiscountRuleRow);
       }).pipe(defectOn(CouponRepositoryError)),
   };
 }

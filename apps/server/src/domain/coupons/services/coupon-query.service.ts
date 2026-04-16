@@ -7,7 +7,7 @@ export function makeCouponQueryService(
   return {
     getForUserById: (userId, userCouponId) => repo.getForUserById(userId, userCouponId),
     listForUser: (userId, filter, pageReq) => repo.listForUser(userId, filter, pageReq),
-    listBillingPreviewCandidatesForUser: (userId, input) =>
-      repo.listBillingPreviewCandidatesForUser(userId, input),
+    listGlobalBillingPreviewDiscountRules: input =>
+      repo.listGlobalBillingPreviewDiscountRules(input),
   };
 }

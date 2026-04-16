@@ -2,7 +2,7 @@ import { z } from "../../../zod";
 import { BikeStatusSchema } from "../bikes";
 import {
   CouponDiscountTypeSchema,
-  CouponStatusSchema,
+  CouponTriggerTypeSchema,
 } from "../coupons";
 import { PaginationSchema } from "../schemas";
 import { UserRoleSchema, VerifyStatusSchema } from "../users";
@@ -168,14 +168,14 @@ export const RentalWithPricingSchema = RentalDetailSchema.extend({
   refundUsage: z.number().optional(),
 });
 
-export const RentalBillingPreviewCouponSchema = z.object({
-  userCouponId: z.uuidv7(),
-  couponId: z.uuidv7(),
-  code: z.string(),
+export const RentalBillingPreviewDiscountRuleSchema = z.object({
+  ruleId: z.uuidv7(),
+  name: z.string(),
+  triggerType: CouponTriggerTypeSchema,
+  minRidingMinutes: z.number().int().nonnegative(),
   discountType: CouponDiscountTypeSchema,
   discountValue: z.number(),
-  status: CouponStatusSchema,
-}).openapi("RentalBillingPreviewCoupon");
+}).openapi("RentalBillingPreviewDiscountRule");
 
 export const RentalBillingPreviewSchema = z.object({
   rentalId: z.uuidv7(),
@@ -189,7 +189,7 @@ export const RentalBillingPreviewSchema = z.object({
   eligibleRentalAmount: z.number().nonnegative(),
   subscriptionApplied: z.boolean(),
   subscriptionDiscountAmount: z.number().nonnegative(),
-  bestCoupon: RentalBillingPreviewCouponSchema.nullable(),
+  bestDiscountRule: RentalBillingPreviewDiscountRuleSchema.nullable(),
   couponDiscountAmount: z.number().nonnegative(),
   penaltyAmount: z.number().nonnegative(),
   depositForfeited: z.boolean(),
@@ -445,8 +445,8 @@ export type RentalWithPrice = z.infer<typeof RentalWithPriceSchema>;
 export type RentalListItem = z.infer<typeof RentalListItemSchema>;
 export type RentalDetail = z.infer<typeof RentalDetailSchema>;
 export type RentalWithPricing = z.infer<typeof RentalWithPricingSchema>;
-export type RentalBillingPreviewCoupon = z.infer<
-  typeof RentalBillingPreviewCouponSchema
+export type RentalBillingPreviewDiscountRule = z.infer<
+  typeof RentalBillingPreviewDiscountRuleSchema
 >;
 export type RentalBillingPreview = z.infer<typeof RentalBillingPreviewSchema>;
 export type RentalRevenueResponse = z.infer<typeof RentalRevenueResponseSchema>;

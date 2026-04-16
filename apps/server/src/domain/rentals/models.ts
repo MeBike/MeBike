@@ -2,8 +2,8 @@ import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
   ConfirmationMethod,
-  CouponStatus,
   DiscountType,
+  CouponTriggerType,
   HandoverStatus,
   RentalStatus,
   ReturnSlotStatus,
@@ -237,13 +237,13 @@ export type HourlyRentalStat = {
   totalRentals: number;
 };
 
-export type RentalBillingPreviewCouponRow = {
-  userCouponId: string;
-  couponId: string;
-  code: string;
+export type RentalBillingPreviewDiscountRuleRow = {
+  ruleId: string;
+  name: string;
+  triggerType: CouponTriggerType;
+  minRidingMinutes: number;
   discountType: DiscountType;
   discountValue: number;
-  status: CouponStatus;
 };
 
 export type RentalBillingPreviewRow = {
@@ -258,7 +258,7 @@ export type RentalBillingPreviewRow = {
   eligibleRentalAmount: number;
   subscriptionApplied: boolean;
   subscriptionDiscountAmount: number;
-  bestCoupon: RentalBillingPreviewCouponRow | null;
+  bestDiscountRule: RentalBillingPreviewDiscountRuleRow | null;
   couponDiscountAmount: number;
   penaltyAmount: number;
   depositForfeited: boolean;

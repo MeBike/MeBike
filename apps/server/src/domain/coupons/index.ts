@@ -1,4 +1,5 @@
 export * from "./domain-errors";
+export * from "./global-auto-discount.policy";
 export * from "./models";
 export * from "./repository/coupon-query.repository";
 export * from "./repository/coupon.repository.types";

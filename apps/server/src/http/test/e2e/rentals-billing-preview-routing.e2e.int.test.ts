@@ -80,8 +80,7 @@ describe("rentals billing preview routing e2e", () => {
     };
   }
 
-  async function assignDurationCoupon(input: {
-    readonly userId: string;
+  async function createDurationDiscountRule(input: {
     readonly code: string;
     readonly minRidingMinutes: number;
     readonly discountValue: string;
@@ -89,7 +88,7 @@ describe("rentals billing preview routing e2e", () => {
   }) {
     const rule = await fixture.prisma.couponRule.create({
       data: {
-        name: `${input.code}-rule`,
+        name: input.code,
         triggerType: "RIDING_DURATION",
         minRidingMinutes: input.minRidingMinutes,
         discountType: "FIXED_AMOUNT",
@@ -99,25 +98,7 @@ describe("rentals billing preview routing e2e", () => {
       },
     });
 
-    const coupon = await fixture.prisma.coupon.create({
-      data: {
-        couponRuleId: rule.id,
-        code: input.code,
-        discountType: "FIXED_AMOUNT",
-        discountValue: input.discountValue,
-        status: "ACTIVE",
-      },
-    });
-
-    const userCoupon = await fixture.prisma.userCoupon.create({
-      data: {
-        userId: input.userId,
-        couponId: coupon.id,
-        status: "ASSIGNED",
-      },
-    });
-
-    return { rule, coupon, userCoupon };
+    return { rule };
   }
 
   function getExpectedMinutes(previewedAt: string, startTime: Date) {
@@ -131,17 +112,15 @@ describe("rentals billing preview routing e2e", () => {
     return Math.max(1, Math.ceil(rentalMinutes / 30));
   }
 
-  it("previews billing with the best eligible coupon for an active rental", async () => {
+  it("previews billing with the best eligible global discount rule for an active rental", async () => {
     const graph = await createRentalGraph();
-    const lowTier = await assignDurationCoupon({
-      userId: graph.user.id,
+    const lowTier = await createDurationDiscountRule({
       code: "RIDE-1H",
       minRidingMinutes: 60,
       discountValue: "1000",
       priority: 100,
     });
-    const highTier = await assignDurationCoupon({
-      userId: graph.user.id,
+    const highTier = await createDurationDiscountRule({
       code: "RIDE-2H",
       minRidingMinutes: 120,
       discountValue: "2000",
@@ -173,15 +152,15 @@ describe("rentals billing preview routing e2e", () => {
     expect(body.eligibleRentalAmount).toBe(expectedBaseAmount);
     expect(body.subscriptionApplied).toBe(false);
     expect(body.subscriptionDiscountAmount).toBe(0);
-    expect(body.bestCoupon).toEqual({
-      userCouponId: highTier.userCoupon.id,
-      couponId: highTier.coupon.id,
-      code: "RIDE-2H",
+    expect(body.bestDiscountRule).toEqual({
+      ruleId: highTier.rule.id,
+      name: "RIDE-2H",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
       discountType: "FIXED_AMOUNT",
       discountValue: 2000,
-      status: "ASSIGNED",
     });
-    expect(body.bestCoupon?.userCouponId).not.toBe(lowTier.userCoupon.id);
+    expect(body.bestDiscountRule?.ruleId).not.toBe(lowTier.rule.id);
     expect(body.couponDiscountAmount).toBe(2000);
     expect(body.penaltyAmount).toBe(0);
     expect(body.depositForfeited).toBe(false);
@@ -189,10 +168,9 @@ describe("rentals billing preview routing e2e", () => {
     expect(body.totalPayableAmount).toBe(expectedBaseAmount - 2000);
   });
 
-  it("does not apply coupon when the rental has a subscription", async () => {
+  it("does not apply a global discount rule when the rental has a subscription", async () => {
     const graph = await createRentalGraph({ withSubscription: true });
-    await assignDurationCoupon({
-      userId: graph.user.id,
+    await createDurationDiscountRule({
       code: "SUB-BLOCKED",
       minRidingMinutes: 60,
       discountValue: "6000",
@@ -217,19 +195,18 @@ describe("rentals billing preview routing e2e", () => {
     expect(body.baseRentalAmount).toBe(expectedBaseAmount);
     expect(body.subscriptionDiscountAmount).toBe(expectedBaseAmount);
     expect(body.eligibleRentalAmount).toBe(0);
-    expect(body.bestCoupon).toBeNull();
+    expect(body.bestDiscountRule).toBeNull();
     expect(body.couponDiscountAmount).toBe(0);
     expect(body.payableRentalAmount).toBe(0);
     expect(body.totalPayableAmount).toBe(0);
   });
 
-  it("subtracts prepaid before applying coupon", async () => {
+  it("subtracts prepaid before applying the global discount rule", async () => {
     const graph = await createRentalGraph({
       prepaid: "2000",
       startOffsetMs: 245 * 60 * 1000 + 5000,
     });
-    const bestCoupon = await assignDurationCoupon({
-      userId: graph.user.id,
+    const bestRule = await createDurationDiscountRule({
       code: "PREPAID-4H",
       minRidingMinutes: 240,
       discountValue: "4000",
@@ -254,20 +231,20 @@ describe("rentals billing preview routing e2e", () => {
     expect(body.baseRentalAmount).toBe(expectedBaseAmount);
     expect(body.prepaidAmount).toBe(2000);
     expect(body.eligibleRentalAmount).toBe(expectedBaseAmount - 2000);
-    expect(body.bestCoupon).toEqual({
-      userCouponId: bestCoupon.userCoupon.id,
-      couponId: bestCoupon.coupon.id,
-      code: "PREPAID-4H",
+    expect(body.bestDiscountRule).toEqual({
+      ruleId: bestRule.rule.id,
+      name: "PREPAID-4H",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 240,
       discountType: "FIXED_AMOUNT",
       discountValue: 4000,
-      status: "ASSIGNED",
     });
     expect(body.couponDiscountAmount).toBe(4000);
     expect(body.payableRentalAmount).toBe(expectedBaseAmount - 2000 - 4000);
     expect(body.totalPayableAmount).toBe(expectedBaseAmount - 2000 - 4000);
   });
 
-  it("returns null bestCoupon when the user has no eligible coupon", async () => {
+  it("returns null bestDiscountRule when there is no eligible global rule", async () => {
     const graph = await createRentalGraph();
 
     const response = await fixture.app.request(
@@ -285,7 +262,7 @@ describe("rentals billing preview routing e2e", () => {
     const expectedBaseAmount = expectedBlocks * 2000;
 
     expect(response.status).toBe(200);
-    expect(body.bestCoupon).toBeNull();
+    expect(body.bestDiscountRule).toBeNull();
     expect(body.couponDiscountAmount).toBe(0);
     expect(body.payableRentalAmount).toBe(expectedBaseAmount);
     expect(body.totalPayableAmount).toBe(expectedBaseAmount);

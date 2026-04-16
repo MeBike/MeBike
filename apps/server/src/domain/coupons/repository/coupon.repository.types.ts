@@ -3,7 +3,7 @@ import type { Effect, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import type {
-  BillingPreviewCouponCandidateRow,
+  BillingPreviewDiscountRuleRow,
   CouponFilter,
   CouponSortField,
   UserCouponDetailRow,
@@ -20,11 +20,10 @@ export type CouponQueryRepo = {
     filter: CouponFilter,
     pageReq: PageRequest<CouponSortField>,
   ) => Effect.Effect<PageResult<UserCouponListItemRow>>;
-  listBillingPreviewCandidatesForUser: (
-    userId: string,
+  listGlobalBillingPreviewDiscountRules: (
     input: {
       readonly previewedAt: Date;
       readonly billableMinutes: number;
     },
-  ) => Effect.Effect<readonly BillingPreviewCouponCandidateRow[]>;
+  ) => Effect.Effect<readonly BillingPreviewDiscountRuleRow[]>;
 };
