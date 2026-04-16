@@ -15,6 +15,7 @@ import { statsRoutes } from "./stats";
 import { stripeRoutes } from "./stripe";
 import { subscriptionsRoutes } from "./subscriptions";
 import { suppliersRoutes } from "./suppliers";
+import { technicianTeamsRoutes } from "./technician-teams";
 import { usersRoutes } from "./users";
 import { walletsRoutes } from "./wallets";
 
@@ -35,6 +36,7 @@ export * from "./stats";
 export * from "./stripe";
 export * from "./subscriptions";
 export * from "./suppliers";
+export * from "./technician-teams";
 export * from "./users";
 export * from "./wallets";
 
@@ -58,6 +60,7 @@ export const serverRoutes = {
   stripe: stripeRoutes,
   incidents: incidentsRoutes,
   redistribution: redistributionRoutes,
+  technicianTeams: technicianTeamsRoutes,
 } as const;
 
 export type ServerRouteKey = keyof typeof serverRoutes;

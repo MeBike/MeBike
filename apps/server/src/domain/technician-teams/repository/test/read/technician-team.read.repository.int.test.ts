@@ -62,6 +62,41 @@ describe("technicianTeamReadRepository Integration", () => {
     expect(excludedCount).toBe(1);
   });
 
+  it("list returns technician teams with filters and member counts", async () => {
+    const stationA = await fixture.factories.station({ name: "List Team Station A" });
+    const stationB = await fixture.factories.station({ name: "List Team Station B" });
+    const availableTeam = await fixture.factories.technicianTeam({
+      name: "List Available Team",
+      stationId: stationA.id,
+    });
+    await fixture.factories.technicianTeam({
+      name: "List Unavailable Team",
+      stationId: stationB.id,
+      availabilityStatus: "UNAVAILABLE",
+    });
+    const technician = await fixture.factories.user({
+      role: "TECHNICIAN",
+      email: "list-team-tech@example.com",
+    });
+    const repo = makeTechnicianTeamQueryRepository(fixture.prisma);
+
+    await fixture.factories.userOrgAssignment({
+      userId: technician.id,
+      technicianTeamId: availableTeam.id,
+    });
+
+    const rows = await runEffect(repo.list({
+      stationId: stationA.id,
+      availabilityStatus: "AVAILABLE",
+    }));
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(availableTeam.id);
+    expect(rows[0]?.stationId).toBe(stationA.id);
+    expect(rows[0]?.stationName).toBe("List Team Station A");
+    expect(rows[0]?.memberCount).toBe(1);
+  });
+
   it("listAvailable omits full and unavailable teams and supports station filter", async () => {
     const stationA = await fixture.factories.station({ name: "Tech Team Station A" });
     const stationB = await fixture.factories.station({ name: "Tech Team Station B" });

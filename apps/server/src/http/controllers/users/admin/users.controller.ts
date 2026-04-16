@@ -9,7 +9,6 @@ import { Effect, Match } from "effect";
 import { adminCreateAgencyAccountUseCase } from "@/domain/agency-account-provisioning";
 import { hashPassword } from "@/domain/auth/services/auth.service";
 import { withLoggedCause } from "@/domain/shared";
-import { TechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import {
   adminCreateUserUseCase,
   UserCommandServiceTag,
@@ -18,7 +17,6 @@ import {
 import { routeContext } from "@/http/shared/route-context";
 
 import {
-  mapAvailableTechnicianTeam,
   mapUserDetail,
   mapUserSummary,
   pickDefined,
@@ -91,24 +89,6 @@ const adminTechnicians: RouteHandler<UsersRoutes["adminTechnicians"]> = async (c
 
   const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.AdminTechnicianListResponse, 200>({ data: data.map(mapUserSummary) }, 200);
-};
-
-const adminAvailableTechnicianTeams: RouteHandler<UsersRoutes["adminAvailableTechnicianTeams"]> = async (c) => {
-  const query = c.req.valid("query");
-  const eff = withLoggedCause(
-    Effect.gen(function* () {
-      const repo = yield* TechnicianTeamQueryRepository;
-      return yield* repo.listAvailable({
-        stationId: query.stationId,
-      });
-    }),
-    routeContext(users.adminAvailableTechnicianTeams),
-  );
-
-  const data = await c.var.runPromise(eff);
-  return c.json<UsersContracts.AdminAvailableTechnicianTeamListResponse, 200>({
-    data: data.map(mapAvailableTechnicianTeam),
-  }, 200);
 };
 
 const adminDetail: RouteHandler<UsersRoutes["adminDetail"]> = async (c) => {
@@ -389,7 +369,6 @@ export const AdminUsersController = {
   adminList,
   adminSearch,
   adminTechnicians,
-  adminAvailableTechnicianTeams,
   adminDetail,
   adminUpdate,
   adminCreate,

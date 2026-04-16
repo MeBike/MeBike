@@ -24,6 +24,7 @@ export * as StatsContracts from "./stats";
 export * as StripeContracts from "./stripe";
 export * as SubscriptionsContracts from "./subscriptions";
 export * as SuppliersContracts from "./suppliers";
+export * as TechnicianTeamsContracts from "./technician-teams";
 export * as UsersContracts from "./users";
 export * as WalletsContracts from "./wallets";
 

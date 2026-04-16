@@ -34,6 +34,7 @@ import { registerStripeConnectRoutes } from "./routes/stripe-connect.routes";
 import { registerStripeWebhookRoutes } from "./routes/stripe-webhook.routes";
 import { registerSubscriptionRoutes } from "./routes/subscriptions";
 import { registerSupplierRoutes } from "./routes/suppliers";
+import { registerTechnicianTeamRoutes } from "./routes/technician-teams";
 import { registerUserRoutes } from "./routes/users";
 import { registerWalletRoutes } from "./routes/wallets";
 
@@ -129,6 +130,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerRedistributionRoutes(app);
   registerReservationRoutes(app);
   registerSupplierRoutes(app);
+  registerTechnicianTeamRoutes(app);
   registerAuthRoutes(app);
   registerStripeConnectRoutes(app);
   registerStripeWebhookRoutes(app);
