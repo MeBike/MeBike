@@ -6,6 +6,10 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import {
+  makeCouponQueryRepository,
+  selectBestGlobalAutoDiscountRule,
+} from "@/domain/coupons";
+import {
   calculateUsageChargeMinor,
   isAfterLateReturnCutoff,
   makePricingPolicyRepository,
@@ -48,6 +52,7 @@ export function finalizeRentalReturnInTx(
   return Effect.gen(function* () {
     const { tx, rental, bikeId, endStationId, endTime } = input;
     const txBikeRepo = makeBikeRepository(tx);
+    const txCouponRepo = makeCouponQueryRepository(tx);
     const txRentalRepo = makeRentalRepository(tx);
     const txPricingPolicyRepo = makePricingPolicyRepository(tx);
     const txReturnSlotRepo = makeReturnSlotRepository(tx);
@@ -70,6 +75,9 @@ export function finalizeRentalReturnInTx(
       durationMinutes,
       policy: pricingPolicy,
     });
+    const billingUnitMinutes = Math.max(1, pricingPolicy.billingUnitMinutes);
+    const billableBlocks = Math.max(1, Math.ceil(durationMinutes / billingUnitMinutes));
+    const billableMinutes = billableBlocks * billingUnitMinutes;
     let basePriceMinor = fullBaseAmountMinor;
     let usageToAdd = 0;
     let prepaidMinor = 0n;
@@ -124,8 +132,24 @@ export function finalizeRentalReturnInTx(
       }
     }
 
-    const totalPriceMinor = basePriceMinor > prepaidMinor
+    const eligibleRentalAmountMinor = basePriceMinor > prepaidMinor
       ? basePriceMinor - prepaidMinor
+      : 0n;
+    let couponDiscountAmountMinor = 0n;
+
+    if (!rental.subscriptionId && eligibleRentalAmountMinor > 0n) {
+      const discountRules = yield* txCouponRepo.listGlobalBillingPreviewDiscountRules({
+        previewedAt: endTime,
+        billableMinutes,
+      });
+      couponDiscountAmountMinor = selectBestGlobalAutoDiscountRule(
+        discountRules,
+        eligibleRentalAmountMinor,
+      ).discountAmountMinor;
+    }
+
+    const totalPriceMinor = eligibleRentalAmountMinor > couponDiscountAmountMinor
+      ? eligibleRentalAmountMinor - couponDiscountAmountMinor
       : 0n;
 
     const depositForfeited = Boolean(rental.depositHoldId)
@@ -208,7 +232,7 @@ export function finalizeRentalReturnInTx(
             estimatedDistanceKm: null,
             baseAmount: toPrismaDecimal(fullBaseAmountMinor.toString()),
             overtimeAmount: toPrismaDecimal("0"),
-            couponDiscountAmount: toPrismaDecimal("0"),
+            couponDiscountAmount: toPrismaDecimal(couponDiscountAmountMinor.toString()),
             subscriptionDiscountAmount: toPrismaDecimal(subscriptionDiscountMinor.toString()),
             depositForfeited,
             totalAmount: toPrismaDecimal(totalPriceMinor.toString()),

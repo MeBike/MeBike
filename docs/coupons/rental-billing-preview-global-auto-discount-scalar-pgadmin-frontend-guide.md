@@ -12,6 +12,9 @@ File nay dung cho API moi:
 - discount tu dong lay tu global `coupon_rules`
 - ap dung MeBike Global Auto Discount Policy V1
 
+Luu y: endpoint preview khong ghi bill that, nhung cung policy global
+`coupon_rules` nay cung duoc dung khi finalize rental qua `PUT /v1/rentals/{rentalId}/end`.
+
 Guide nay duoc viet de frontend team co the:
 
 - login bang account demo that tu `seed:demo`

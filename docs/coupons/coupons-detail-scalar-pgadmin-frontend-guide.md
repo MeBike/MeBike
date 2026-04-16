@@ -1,5 +1,14 @@
 # Coupons Detail Scalar + pgAdmin + Frontend Guide
 
+> OBSOLETE as of Global Auto Discount Policy V1.
+>
+> `GET /v1/coupons/{userCouponId}` has been removed from the server contract.
+> V1 no longer supports "my coupons"; users do not own individual coupons in
+> `user_coupons`. Wallet rentals without `subscription_id` get the best eligible
+> global discount from `coupon_rules` automatically. Use
+> `docs/coupons/rental-billing-preview-global-auto-discount-scalar-pgadmin-frontend-guide.md`
+> for current coupon discount verification.
+
 File nay dung cho API moi:
 
 - `GET /v1/coupons/{userCouponId}`
