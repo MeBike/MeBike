@@ -5,7 +5,6 @@
 #include <algorithm>
 
 #include "HardwareConfig.h"
-#include "globals.h"
 
 NFCManager::NFCManager(uint8_t irqPin, uint8_t resetPin)
     : irqPin(irqPin), resetPin(resetPin), nfc(irqPin, resetPin) {}
@@ -111,7 +110,6 @@ void NFCManager::recoverTick()
         {
             const unsigned long duration = now - recoveryStartedAt;
             Log.info("PN532 recovery successful after %lu ms (attempt %lu)\n", duration, static_cast<unsigned long>(recoveryAttempts));
-            Global::logInfoBoth("PN532 recovery successful after %lu ms (attempt %lu)", duration, static_cast<unsigned long>(recoveryAttempts));
             healthState = HealthState::Healthy;
             recoveryBackoffMs = RECOVERY_BACKOFF_INITIAL_MS;
             recoveryStep = 0;
@@ -122,7 +120,6 @@ void NFCManager::recoverTick()
         else
         {
             Log.error("PN532 recovery failed (attempt %lu)\n", static_cast<unsigned long>(recoveryAttempts));
-            Global::logInfoLocal("PN532 recovery failed (attempt %lu)", static_cast<unsigned long>(recoveryAttempts));
             healthState = HealthState::Unhealthy;
             lastRecoveryAttemptAt = now;
             recoveryBackoffMs = std::min<unsigned long>(recoveryBackoffMs * 2, RECOVERY_BACKOFF_MAX_MS);
@@ -148,7 +145,6 @@ void NFCManager::markUnhealthy()
     recoveryAttempts = 0;
     recoveryStartedAt = 0;
     Log.warning("PN532 marked unhealthy, scheduling recovery\n");
-    Global::logInfoLocal("PN532 marked unhealthy, scheduling recovery");
     lastRecoveryAttemptAt = millis() - recoveryBackoffMs;
 }
 
@@ -188,7 +184,6 @@ void NFCManager::startRecovery()
     recoveryStartedAt = now;
     recoveryAttempts += 1;
     Log.warning("PN532 recovery attempt %lu starting\n", static_cast<unsigned long>(recoveryAttempts));
-    Global::logInfoLocal("PN532 recovery attempt %lu starting", static_cast<unsigned long>(recoveryAttempts));
     recoveryStep = 0;
     nextActionAt = now;
 }

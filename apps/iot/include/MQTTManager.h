@@ -9,7 +9,12 @@
 class MQTTManager
 {
 public:
-    MQTTManager(WiFiClient &wifiClient, std::string_view brokerIP, int port, std::string_view username, std::string_view password);
+    MQTTManager(WiFiClient &wifiClient,
+                std::string_view clientId,
+                std::string_view brokerIP,
+                int port,
+                std::string_view username,
+                std::string_view password);
     bool connect();
     void loop();
     bool publish(const char *topic, const char *message, bool retained = false);
@@ -21,6 +26,7 @@ public:
 
 private:
     PubSubClient _client;
+    std::string _clientId;
     std::string _brokerIP;
     int _port;
     std::string _username;
