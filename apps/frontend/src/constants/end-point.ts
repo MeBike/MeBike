@@ -44,6 +44,7 @@ export const ENDPOINT = {
         NEW_USER : "/users/manage-users/stats/new-users",
         RESET_PASSWORD : (id: string) => `/users/manage-users/admin-reset-password/${id}`,
         CREATE_USER : "/users/manage-users/create",
+        TECH_TEAM : "/admin/technician-teams/available",
     },
     BIKE : {
         BASE : "/bikes",

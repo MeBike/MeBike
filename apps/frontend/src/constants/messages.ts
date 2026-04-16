@@ -1,5 +1,6 @@
 export const USERS_MESSAGES = {
   // đăng ký messages
+  TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED : "Tech team trạm này đã đã số lượng là 3",
   INVALID_OTP: "OTP không hợp lệ hoặc đã hết hạn",
   VALIDATION_ERROR: 'Lỗi xác thực',
   INVALID_CREDENTIALS : 'Đăng nhập thất bại! Email hoặc mật khẩu không chính xác',
@@ -602,6 +603,7 @@ export const WITHDRAWLS_MESSAGE = {
 }
 
 export const STATIONS_MESSAGE = {
+  CAPACITY_BELOW_ACTIVE_USAGE : 'Sức chứa phải lớn hơn số xe đang có',
   STATION_ID_IS_REQUIRED: 'ID trạm là bắt buộc',
   INVALID_STATION_ID: 'ID trạm không hợp lệ',
   STATION_NOT_FOUND: 'Không tìm thấy trạm với ID được cung cấp',
