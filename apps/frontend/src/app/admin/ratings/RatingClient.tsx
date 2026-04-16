@@ -1,61 +1,63 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { Dispatch, SetStateAction } from "react";
+import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { ratingColumn } from "@/columns/rating-columns";
-import { useRatingAction } from "@/hooks/use-rating";
-import { useRouter } from "next/navigation";
 import { TableSkeleton } from "@/components/table-skeleton";
-export default function RatingClient() {
-  const [page, setPage] = useState<number>(1);
-  const [pageSize] = useState<number>(7);
-  const router = useRouter();
-  const {
-    ratings,
-    isLoadingRatings,
-    getRating,
-  } = useRatingAction({ hasToken: true, page: page, pageSize: pageSize });
-  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
-  const handleView = ({ id }: { id: string }) => {
-    router.push(`/admin/ratings/detail/${id}`)
+import type { Rating , Pagination } from "@/types";
+interface RatingClientProps {
+  data: {
+    ratings: Rating[];
+    pagination?: Pagination;
+    isVisualLoading: boolean;
   };
-  useEffect(() => {
-    getRating();
-  }, [page]);
-  useEffect(() => {
-    if (isLoadingRatings) {
-      setIsVisualLoading(true);
-    } else {
-      const timer = setTimeout(() => {
-        setIsVisualLoading(false);
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoadingRatings]);
+  filters: {
+    page: number;
+  };
+  actions: {
+    setPage: Dispatch<SetStateAction<number>>;
+  };
+}
+
+export default function RatingClient({
+  data: { ratings, pagination, isVisualLoading },
+  filters: { page },
+  actions: { setPage },
+}: RatingClientProps) {
+  const router = useRouter();
+
+  const handleView = ({ id }: { id: string }) => {
+    router.push(`/admin/ratings/detail/${id}`);
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Quản lý đánh giá</h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="mt-1 text-muted-foreground">
           Theo dõi và quản lý các đánh giá từ người dùng
         </p>
       </div>
-      <div className="w-full rounded-lg space-y-4 flex flex-col">
+      
+      <div className="flex w-full flex-col space-y-4 rounded-lg">
         {isVisualLoading ? (
           <TableSkeleton />
         ) : (
           <>
             <DataTable
               columns={ratingColumn({
-                onView: (rating) => handleView({id:rating.id}),
+                onView: (rating) => handleView({ id: rating.id }),
               })}
-              data={ratings?.data ?? []}
+              data={ratings}
             />
+            
             <div className="pt-3">
               <PaginationDemo
-                currentPage={ratings?.pagination.page ?? 1}
+                currentPage={pagination?.page ?? 1}
                 onPageChange={setPage}
-                totalPages={ratings?.pagination.totalPages ?? 1}
+                totalPages={pagination?.totalPages ?? 1}
               />
             </div>
           </>

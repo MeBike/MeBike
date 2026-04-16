@@ -8,12 +8,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatToVNTime } from "@/lib/formatVNDate";
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
-
+export const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Đang chờ xử lý",
+  FULFILLED: "Thành công",
+  CANCELLED: "Đã hủy",
+  EXPIRED: "Hết hạn",
+};
 export const reservationColumn = ({
   onView,
   onUpdateStatus,
@@ -52,7 +56,7 @@ export const reservationColumn = ({
     cell: ({ row }) => (
       <span
         className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "ACTIVE"
+          row.original.status === "FULFILLED"
             ? "bg-green-100 text-green-800"
             : row.original.status === "PENDING"
               ? "bg-yellow-100 text-yellow-800"
@@ -63,7 +67,7 @@ export const reservationColumn = ({
                   : "bg-gray-100 text-gray-800"
         }`}
       >
-        {row.original.status}
+        {STATUS_LABELS[row.original.status]}
       </span>
     ),
   },
@@ -87,42 +91,26 @@ export const reservationColumn = ({
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original.id });
-            }
-          }}
-        >
-          <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
-        {row.original.status !== "CANCELLED" &&
-        row.original.status !== "EXPIRED" &&
-        onEdit ? (
-          <div>
-            <button
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-              title="Chỉnh sửa"
-              onClick={() => {
-                if (onEdit) {
-                  onEdit({ data: row.original });
-                }
-              }}
-            >
-              <Edit2 className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <button
-              title="Cập nhật trạng thái"
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-              onClick={() => onUpdateStatus?.(row.original)}
-            >
-              <RefreshCw className="w-4 h-4 text-blue-500" />
-            </button>
-          </div>
-        ) : null}
+      <div className="flex items-center gap-0">
+        <div className="pl-4.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label="Xem chi tiết"
+                onClick={() => {
+                  onView?.({ id: row.original.id });
+                }}
+              >
+                <Eye className="text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xem chi tiết</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     ),
   },
@@ -165,7 +153,7 @@ export const reservationColumnForStaff = ({
     cell: ({ row }) => (
       <span
         className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "ACTIVE"
+          row.original.status === "FULFILLED"
             ? "bg-green-100 text-green-800"
             : row.original.status === "PENDING"
               ? "bg-yellow-100 text-yellow-800"

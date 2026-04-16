@@ -41,7 +41,7 @@ export function RentalFilters({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="space-y-2 lg:col-span-2">
+        {/* <div className="space-y-2 lg:col-span-2">
           <Label htmlFor="search">Tìm kiếm</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -53,7 +53,7 @@ export function RentalFilters({
               className="pl-9"
             />
           </div>
-        </div>
+        </div> */}
 
         <div className="space-y-2">
           <Label htmlFor="status">Trạng thái đơn</Label>

@@ -44,6 +44,7 @@ export const ENDPOINT = {
         NEW_USER : "/users/manage-users/stats/new-users",
         RESET_PASSWORD : (id: string) => `/users/manage-users/admin-reset-password/${id}`,
         CREATE_USER : "/users/manage-users/create",
+        TECH_TEAM : "/admin/technician-teams/available",
     },
     BIKE : {
         BASE : "/bikes",
@@ -94,6 +95,10 @@ export const ENDPOINT = {
         APPROVE : (id:string) => `/admin/agency-requests/${id}/approve`,
         REJECT : (id:string) => `/admin/agency-requests/${id}/reject`,
         CANCEL : (id:string) => `/admin/agency-requests/${id}/cancel`,
-    }
+    },
+    SUBSCRIPTION : {
+        BASE : "/admin/subscriptions",
+        ID : (id:string) => `/admin/subscriptions/${id}`,
+    },
 
 } as const;

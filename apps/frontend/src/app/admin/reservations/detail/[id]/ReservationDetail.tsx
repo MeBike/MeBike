@@ -1,7 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Bike,
@@ -16,9 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
-import { useReservationActions } from "@/hooks/use-reservation";
-import type { IUser, IBike, IStation, DetailReservation } from "@/types";
+import type { DetailReservation } from "@/types";
 
+// Các UI components phụ trợ giữ nguyên
 function statusBadgeVariant(
   status: string,
 ): "warning" | "pending" | "success" | "destructive" | "secondary" {
@@ -44,12 +43,7 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm",
-        className,
-      )}
-    >
+    <div className={cn("overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm", className)}>
       <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4">
         <Icon className="h-5 w-5 shrink-0 text-primary" />
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
@@ -60,18 +54,10 @@ function SectionCard({
   );
 }
 
-function Field({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: React.ReactNode;
-  className?: string;
-}) {
+function Field({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
   return (
     <div className={className}>
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
       <div className="mt-1 text-sm font-medium text-foreground">{value}</div>
@@ -79,35 +65,15 @@ function Field({
   );
 }
 
-export default function ReservationDetailClient() {
+// KHAI BÁO PROPS CHO COMPONENT CHÍNH
+interface ReservationDetailClientProps {
+  id: string;
+  data: DetailReservation; // Đảm bảo import type DetailReservation từ @/types
+}
+
+export default function ReservationDetailClient({ id, data }: ReservationDetailClientProps) {
   const router = useRouter();
-  const { id } = useParams() as { id: string };
-  const { detailReservation, fetchDetailReservation } = useReservationActions({
-    hasToken: true,
-    id: id,
-  });
-  useEffect(() => {
-    if (id) {
-      fetchDetailReservation();
-    }
-  }, [id, fetchDetailReservation]);
-  if (!detailReservation) {
-    return (
-      <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <div className="h-10 w-48 animate-pulse rounded bg-muted" />
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="h-64 animate-pulse rounded-xl bg-muted lg:col-span-2" />
-            <div className="h-64 animate-pulse rounded-xl bg-muted" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const data = detailReservation;
-  const isVerified = data.user?.role === "ADMIN" || data.user?.id; // Tùy chỉnh logic verify của bạn
-
+  const isVerified = data.user?.role === "ADMIN" || data.user?.id;
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -171,9 +137,7 @@ export default function ReservationDetailClient() {
               footer={
                 <div className="flex items-center gap-2 border-t border-border/60 bg-muted/30 px-5 py-3 text-sm">
                   <Info className="h-4 w-4 text-primary" />
-                  <span className="text-muted-foreground">
-                    Cập nhật lần cuối:
-                  </span>
+                  <span className="text-muted-foreground">Cập nhật lần cuối:</span>
                   <span className="font-medium">
                     {formatToVNTime(data.updatedAt)}
                   </span>
@@ -200,22 +164,19 @@ export default function ReservationDetailClient() {
                   </div>
                 </div>
 
-                {/* Trạm trả xe (Dự kiến hoặc thực tế) */}
+                {/* Trạm trả xe */}
                 <div className="relative pl-8">
                   <div className="absolute left-0 top-1 h-4 w-4 rounded-full border-4 border-muted-foreground/30 bg-background" />
                   <p className="text-xs font-bold uppercase text-muted-foreground">
                     Thời gian kết thúc
                   </p>
                   <p className="mt-1 text-base font-semibold">
-                    {data.endTime
-                      ? "Đã hoàn thành"
-                      : "Đang trong thời gian đặt"}
+                    {data.endTime ? "Đã hoàn thành" : "Đang trong thời gian đặt"}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span>
-                      Kết thúc:{" "}
-                      {data.endTime ? formatToVNTime(data.endTime) : "--:--"}
+                      Kết thúc: {data.endTime ? formatToVNTime(data.endTime) : "--:--"}
                     </span>
                   </div>
                 </div>
@@ -269,7 +230,7 @@ export default function ReservationDetailClient() {
 
             <SectionCard icon={CreditCard} title="Thanh toán">
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-6 text-center">
-                <p className="text-xs font-medium text-muted-foreground uppercase">
+                <p className="text-xs font-medium uppercase text-muted-foreground">
                   Tiền trả trước (Prepaid)
                 </p>
                 <p className="mt-2 text-3xl font-bold text-primary">

@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { CreateSupplierSchema } from "@schemas";
+import { CreateSupplierSchema ,UpdateSupplierSchema } from "@schemas";
 import { toast } from "sonner";
 import {useUpdateSupplierMutation,useChangeStatusSupplierMutation,useCreateSupplierMutation} from "@mutations"
 import {useGetSupplierByIDQuery,useGetBikeStatsSupplierQuery,useGetAllSupplierQuery,useGetAllStatsSupplierQuery} from "@queries"
@@ -45,7 +45,7 @@ export const useSupplierActions = ({hasToken,supplier_id,page,pageSize}: Supplie
     async (supplierData: CreateSupplierSchema) => {
       if (!hasToken) {
         router.push("/login");
-        return;
+        throw new Error("Unauthorized");
       }
       try {
         const result = await useCreateSupplier.mutateAsync(supplierData);
@@ -90,7 +90,7 @@ export const useSupplierActions = ({hasToken,supplier_id,page,pageSize}: Supplie
     },
     [hasToken, router, queryClient, useChangeStatusSupplier]
   );
-  const getUpdateSupplier = useCallback(async ({ data, id }: { data: Partial<CreateSupplierSchema>; id: string }) => {
+  const getUpdateSupplier = useCallback(async ({ data, id }: { data: Partial<UpdateSupplierSchema>; id: string }) => {
     if (!hasToken) {
       router.push("/login");
       return;

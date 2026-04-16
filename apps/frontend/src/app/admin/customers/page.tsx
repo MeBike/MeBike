@@ -1,9 +1,107 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import CustomersClient from "./CustomerClient";
-import React from 'react'
+import { useUserActions } from "@/hooks/use-user";
+import type { VerifyStatus, UserRole } from "@custom-types";
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+type UserStatusFilter = VerifyStatus | "BANNED" | "all";
+
 export default function Page() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
+  const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+  const verifyQuery =
+    verifyFilter === "VERIFIED" || verifyFilter === "UNVERIFIED"
+      ? verifyFilter
+      : "";
+  const accountStatusQuery = verifyFilter === "BANNED" ? "BANNED" : "";
+  const {
+    users,
+    getAllUsers,
+    isLoading,
+    getAllStatistics,
+    paginationUser,
+    dashboardStatsData,
+    getRefetchDashboardStats,
+  } = useUserActions({
+    hasToken: true,
+    limit: limit,
+    page: currentPage,
+    verify: verifyFilter === "all" ? "" : verifyQuery,
+    accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
+    fullName: searchQuery,
+  });
+  useEffect(() => {
+    getAllUsers();
+    getAllStatistics();
+    getRefetchDashboardStats();
+  }, [
+    searchQuery,
+    verifyFilter,
+    roleFilter,
+    currentPage,
+    getAllUsers,
+    getAllStatistics,
+    getRefetchDashboardStats,
+  ]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [roleFilter]);
+  const handleReset = () => {
+    setSearchQuery("");
+    setVerifyFilter("all");
+    setRoleFilter("all");
+    setCurrentPage(1);
+  };
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
+  useEffect(() => {
+    if (isLoading) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!users) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin các người dùng.
+        </p>
+      </div>
+    );
+  }
   return (
-    <>
-      <CustomersClient />
-    </>
+    <CustomersClient
+      data={{
+        users: users || [],
+        dashboardStatsData,
+        paginationUser,
+        isVisualLoading,
+      }}
+      filters={{
+        searchQuery,
+        verifyFilter,
+        currentPage,
+      }}
+      actions={{
+        setSearchQuery,
+        setVerifyFilter,
+        setCurrentPage,
+        handleReset,
+        handleFilterChange,
+      }}
+    />
   );
 }

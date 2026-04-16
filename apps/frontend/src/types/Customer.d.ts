@@ -1,20 +1,25 @@
-export type UserRole = "ADMIN" | "STAFF" | "USER" | "AGENCY" | 
-"MANAGER" | "TECHNICIAN";
+export type UserRole =
+  | "ADMIN"
+  | "STAFF"
+  | "USER"
+  | "AGENCY"
+  | "MANAGER"
+  | "TECHNICIAN";
 export type VerifyStatus = "VERIFIED" | "UNVERIFIED";
 export type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
 export interface OrgAssigment {
-  station : {
-    id : string;
-    name : string;
-  }
-  agency : {
-    id : string;
-    name : string;
-  }
-  technicianTeam : {
-    id : string;
-    name : string;
-  }
+  station: {
+    id: string;
+    name: string;
+  };
+  agency: {
+    id: string;
+    name: string;
+  };
+  technicianTeam: {
+    id: string;
+    name: string;
+  };
 }
 export interface DetailUser {
   id: string;
@@ -28,7 +33,7 @@ export interface DetailUser {
   avatar: string | null;
   role: UserRole;
   nfcCardUid: string | null;
-  orgAssignment : OrgAssigment;
+  orgAssignment: OrgAssigment;
   createdAt: string;
   updatedAt: string;
 }
@@ -80,7 +85,7 @@ export interface GetUserDashboardStatsResponse {
     fullName: string;
     totalDuration: number;
   } | null;
-  averageSpending : number;
+  averageSpending: number;
   totalRevenue: number;
 }
 export interface GetTopRentersResponse {
@@ -93,4 +98,10 @@ export interface GetTopRentersResponse {
     phoneNumber: string | null;
     location: string | null;
   };
+}
+export interface TechnicianTeam {
+  id: string;
+  name: string;
+  stationId: string;
+  ß;
 }

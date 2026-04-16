@@ -186,24 +186,6 @@ export const agencyRequestColumn = ({
     ),
   },
   {
-    accessorKey: "createdAt",
-    header: "Ngày tạo",
-    cell: ({ row }) => {
-      return row.original.createdAt
-        ? formatToVNTime(row.original.createdAt)
-        : "Không có";
-    },
-  },
-  {
-    accessorKey: "updatedAt",
-    header: "Ngày cập nhật",
-    cell: ({ row }) => {
-      return row.original.updatedAt
-        ? formatToVNTime(row.original.updatedAt)
-        : "Không có";
-    },
-  },
-  {
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
@@ -225,23 +207,6 @@ export const agencyRequestColumn = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Xem chi tiết</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="shrink-0"
-                aria-label="Chấp nhận đơn"
-                onClick={() => {
-                  onApprove?.({ id: row.original.id });
-                }}
-              >
-                <Check className="text-muted-foreground" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Chấp nhận</TooltipContent>
           </Tooltip>
         </div>        
       </div>

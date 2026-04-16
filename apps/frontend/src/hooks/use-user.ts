@@ -11,9 +11,11 @@ import {
   useGetTopRenterQuery,
   useGetSearchUserQuery,
   useGetDashboardStatsQuery,
-  useGetStaffOnlyQuery
+  useGetStaffOnlyQuery,
+  useGetTechTeamQuery,
 } from "@queries";
 import {
+  useCreateStationMutation,
   useCreateUserMutation,
   useResetPasswordUserMutation,
   useUpdateProfileStaffMutation,
@@ -32,6 +34,7 @@ import {
   getAxiosErrorCodeMessage,
 } from "@utils";
 import type { UserActionProps } from "@custom-types";
+import { useCreateStaffMutation } from "./mutations/User/useCreateStaffMutation";
 
 type UserActionArgs = UserActionProps & {
   accountStatus?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED" | "";
@@ -58,6 +61,7 @@ export const useUserActions = ({
 }: UserActionArgs) => {
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();
+  const useCreateStaff = useCreateStaffMutation();
   const queryClient = useQueryClient();
   const {
     data: detailUserData,
@@ -76,7 +80,8 @@ export const useUserActions = ({
     refetch : refetchStaff,
    } = useGetStaffOnlyQuery({
     page : page,
-    pageSize : limit
+    pageSize : limit,
+    role : role,
   });
   const pagination = data?.pagination as
     | { total?: number; totalRecords?: number }
@@ -119,7 +124,7 @@ export const useUserActions = ({
       return;
     }
     refetchStaff();
-  }, [hasToken, router, refetch]);
+  }, [hasToken, router, refetch,role]);
   const getAllStatistics = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -181,6 +186,48 @@ export const useUserActions = ({
       }
       try {
         const result = await useCreateUser.mutateAsync(userData);
+        if (result?.status === HTTP_STATUS.CREATED) {
+          queryClient.invalidateQueries({
+            queryKey: ["user", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["user", "statistics"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["user", "dashboard-stats"],
+          });
+          toast.success("Tạo người dùng thành công");
+        }
+        return result;
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
+        toast.error(errorMessage);
+        throw error;
+      }
+    },
+    [
+      hasToken,
+      router,
+      queryClient,
+      useCreateUser,
+      searchQuery,
+      refetch,
+      refetchSearch,
+      limit,
+      page,
+      role,
+      verify,
+    ],
+  );
+  const createStaff = useCallback(
+    async (userData: UpdateStaffFormData) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useCreateStaff.mutateAsync(userData);
         if (result?.status === HTTP_STATUS.CREATED) {
           queryClient.invalidateQueries({
             queryKey: ["user", "all"],
@@ -328,6 +375,16 @@ export const useUserActions = ({
       role,
     ],
   );
+  const {data:techTeam , refetch : refetchTechTeam ,
+    isLoading:isLoadingTechTeam
+  } = useGetTechTeamQuery();
+    const getTechTeam = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchTechTeam();
+  }, [hasToken, router, refetchTechTeam]);
   return {
     users: users,
     refetch,
@@ -365,6 +422,10 @@ export const useUserActions = ({
     staffOnly,
     updateProfileUser,
     isLoadingStaffOnly,
-    getAllStaffs
+    getAllStaffs,
+    getTechTeam,
+    techTeam,
+    isLoadingTechTeam,
+    createStaff
   };
 };

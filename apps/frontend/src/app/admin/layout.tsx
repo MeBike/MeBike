@@ -17,7 +17,17 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
   const [showUnauthorized, setShowUnauthorized] = useState(false);
   const queryClient = useQueryClient();
   const [hasAlreadyRedirected, setHasAlreadyRedirected] = useState(false);
-
+  const [isVisualLoading,setIsVisualLoading] = useState<boolean>(false);
+    useEffect(() => {
+      if (isLoading) {
+        setIsVisualLoading(true);
+      } else {
+        const timer = setTimeout(() => {
+          setIsVisualLoading(false);
+        }, 600);
+        return () => clearTimeout(timer);
+      }
+    }, [isLoading]);
   useEffect(() => {
     if (
       !isLoading &&
@@ -48,7 +58,7 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
     queryClient,
   ]);
 
-  if (isLoading) {
+  if (isVisualLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">

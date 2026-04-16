@@ -12,7 +12,7 @@ export interface Reservation {
   updatedAt: string;
 }
 export type ReservationOption = "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION" | "";
-export type ReservationStatus = "PENDING" | "ACTIVE" | "CANCELLED" | "EXPIRED" | "";
+export type ReservationStatus = "PENDING" | "FULFILLED" | "CANCELLED" | "EXPIRED" | "";
 export interface IUser {
   id: string;
   fullName: string;

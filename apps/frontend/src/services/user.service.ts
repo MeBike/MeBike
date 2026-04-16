@@ -1,12 +1,10 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import type { DetailUser } from "@/types";
 import { CreateUserFormData, UserProfile ,UpdateStaffFormData , UpdateUserFormData} from "@/schemas/user-schema";
 import { ResetPasswordSchemaFormData } from "@schemas";
 import { ApiResponse } from "@/types";
 import {ENDPOINT} from "@/constants/end-point";
-import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse } from "@/types";
-import page from "@/app/admin/bikes/page";
+import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse,DetailUser, UserRole,TechnicianTeam } from "@/types";
 interface DetailUserResponse<T> {
   message: string;
   result: T;
@@ -47,7 +45,7 @@ export const userService = {
     );
     return response;
   },
-  getStaffOnly : async ({page , pageSize}: {page?: number; pageSize?: number}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+  getStaffOnly : async ({page , pageSize,role}: {page?: number; pageSize?: number,role?:UserRole}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
       ENDPOINT.USER.BASE,{
         roles : "STAFF,TECHNICIAN,AGENCY,MANAGER",
@@ -127,6 +125,15 @@ export const userService = {
     );
     return response;
   },
+  createStaff: async (
+    data: UpdateStaffFormData
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.post<DetailUser>(
+      ENDPOINT.USER.CREATE_USER,
+      data
+    );
+    return response;
+  },
   getNewRegistrationStats: async (): Promise<
     AxiosResponse<GetNewRegistrationStats>
   > => {
@@ -174,6 +181,10 @@ export const userService = {
     const response = await fetchHttpClient.patch<
       DetailUser
     >(ENDPOINT.USER.UPDATE(id), data);
+    return response;
+  },
+  getTechTeam : async() : Promise<AxiosResponse<ApiResponse<TechnicianTeam[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<TechnicianTeam[]>>(ENDPOINT.USER.TECH_TEAM);
     return response;
   }
 };

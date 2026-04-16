@@ -45,7 +45,7 @@ export const bikeColumn = ({
     accessorKey: "chipId",
     header: "Tên chip",
     cell: ({ row }) => {
-      return shortenId(row.original.chipId) || "Không có";
+      return (row.original.chipId) || "Không có";
     },
   },
   {
@@ -95,36 +95,26 @@ export const bikeColumn = ({
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original.id });
-            }
-          }}
-        >
-          <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Chỉnh sửa"
-          onClick={() => {
-            if (onEdit) {
-              onEdit({ id: row.original.id });
-            }
-          }}
-        >
-          <Pencil className="w-4 h-4 text-blue-500" />
-        </button>
-        <button
-          title="Cập nhật trạng thái"
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          onClick={() => {}}
-        >
-          <RefreshCw className="w-4 h-4 text-blue-500" />
-        </button>
+      <div className="flex items-center gap-0">
+        <div className="pl-4.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label="Xem chi tiết"
+                onClick={() => {
+                  onView?.({ id: row.original.id });
+                }}
+              >
+                <Eye className="text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xem chi tiết</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     ),
   },

@@ -66,22 +66,6 @@ export const columns = ({
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title={
-            row.original.status === "ACTIVE" ? "Ngưng hoạt động" : "Kích hoạt"
-          }
-          onClick={() => {
-            if (onChangeStatus) {
-              onChangeStatus(
-                row.original.id,
-                row.original.status === "ACTIVE" ? "INACTIVE" : "ACTIVE"
-              );
-            }
-          }}
-        >
-          <Recycle className="w-4 h-4 text-blue-500" />
-        </button>
       </div>
     ),
   },

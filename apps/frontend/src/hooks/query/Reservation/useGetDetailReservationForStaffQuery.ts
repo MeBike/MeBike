@@ -13,10 +13,18 @@ const getDetailReservation = async (id: string) => {
   }
 };
 export const useGetDetailReservationForStaffQuery = (id: string) => {
+  // Lọc sạch ID rỗng, undefined, null
+  const isValidId = 
+    Boolean(id) && 
+    id !== "undefined" && 
+    id !== "null" && 
+    id.trim() !== "";
+
   return useQuery({
-    queryKey: QUERY_KEYS.RESERVATION.DETAIL_RESERVATION(id),
+    queryKey: ['STAFF_RESERVATION_DETAIL', id], // Hoặc QUERY_KEYS tương ứng của bạn
     queryFn: () => getDetailReservation(id),
     staleTime: 5 * 60 * 1000,
-    enabled: !!id,
+    // THÊM DÒNG NÀY VÀO LÀ HẾT BỆNH:
+    enabled: !!id, 
   });
 };

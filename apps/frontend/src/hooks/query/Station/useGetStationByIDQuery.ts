@@ -15,7 +15,7 @@ const fetchStationByID = async (id: string) => {
 };
 export const useGetStationByIDQuery = (stationId: string) => {
   return useQuery({
-    queryKey: QUERY_KEYS.STATION.DETAIL(stationId),
+    queryKey:["detail","station",stationId],
     queryFn: () => fetchStationByID(stationId),
     enabled: !!stationId,
   });

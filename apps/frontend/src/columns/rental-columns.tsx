@@ -43,8 +43,8 @@ export const rentalColumn = ({
           row.original.status === "RENTED"
             ? "bg-blue-100 text-blue-800"
             : row.original.status === "COMPLETED"
-            ? "bg-green-100 text-green-800"
-            : "bg-red-100 text-red-800"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
         }`}
       >
         {row.original.status}
@@ -52,57 +52,29 @@ export const rentalColumn = ({
     ),
   },
   {
-    accessorKey: "created_at",
-    header: "Ngày tạo",
-    cell: ({ row }) => {
-      return formatToVNTime(row.original.createdAt);
-    },
-  },
-  {
-    accessorKey: "updated_at",
-    header: "Ngày cập nhật",
-    cell: ({ row }) => {
-      return formatToVNTime(row.original.updatedAt);
-    },
-  },
-  {
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original.id });
-            }
-          }}
-        >
-          <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
-        {row.original.status !== "COMPLETED" &&
-        row.original.status !== "CANCELLED" &&
-        onEdit ? (
-          <button
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-            title="Xem chi tiết"
-            onClick={() => {
-              if (onEdit) {
-                onEdit({ data: row.original });
-              }
-            }}
-          >
-            <Edit2 className="w-4 h-4 text-muted-foreground" />
-          </button>
-        ) : null}
-        <button
-          title="Cập nhật trạng thái"
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          onClick={() => onUpdateStatus?.(row.original)}
-        >
-          <RefreshCw className="w-4 h-4 text-blue-500" />
-        </button>
+      <div className="flex items-center gap-0">
+        <div className="pl-4.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label="Xem chi tiết"
+                onClick={() => {
+                  onView?.({ id: row.original.id });
+                }}
+              >
+                <Eye className="text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xem chi tiết</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     ),
   },
@@ -140,8 +112,8 @@ export const rentalColumnForStaff = ({
           row.original.status === "RENTED"
             ? "bg-blue-100 text-blue-800"
             : row.original.status === "COMPLETED"
-            ? "bg-green-100 text-green-800"
-            : "bg-red-100 text-red-800"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
         }`}
       >
         {row.original.status}
@@ -166,7 +138,7 @@ export const rentalColumnForStaff = ({
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-            <div className="flex items-center gap-0">
+      <div className="flex items-center gap-0">
         <div className="pl-4.5">
           <Tooltip>
             <TooltipTrigger asChild>

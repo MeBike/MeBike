@@ -30,6 +30,17 @@ export interface Station {
   createdAt: string;
   updatedAt: string;
 }
+export interface StationStatistic {
+  id: string; // API trả về "id" chứ không phải "_id"
+  name: string;
+  address: string;
+  totalRevenue?: number; // Back-end thường trả về số
+  stationTotalRevenue?: number; 
+  totalRentals?: number;
+  stationTotalRentals?: number;
+  totalDurationFormatted?: string; // Nếu không có, mình sẽ fallback "--"
+}
+
 export interface StationBikeRevenue {
   period: {
     from: string;
@@ -38,12 +49,12 @@ export interface StationBikeRevenue {
   summary: {
     totalStations: number;
     totalRevenue: number;
-    totalRevenueFormatted: string;
     totalRentals: number;
-     avgRevenuePerStationFormatted: string;
+    avgRevenuePerStation: number;
   };
-  stations: StationWithBikes[];
+  stations: StationStatistic[];
 }
+
 export interface StationWithBikes {
   _id: string;
   name: string;

@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import { CreateSupplierSchema } from "@/schemas/supplier-schema";
+import { CreateSupplierSchema , UpdateSupplierSchema} from "@/schemas/supplier-schema";
 import type { StatsSupplierBike , Supplier} from "@custom-types";
 import { ApiResponse  } from "@custom-types";
 import { ENDPOINT } from "@/constants/end-point";
@@ -40,7 +40,7 @@ export const supplierService = {
     return response;
   },
   updateSupplier: async (
-    {id,data} : {id: string, data: Partial<CreateSupplierSchema>}
+    {id,data} : {id: string, data: Partial<UpdateSupplierSchema>}
   ): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.put(
       ENDPOINT.SUPPLIER.DETAIL(id),

@@ -47,13 +47,13 @@ export const useReservationActions = ({ hasToken, page, pageSize, id , status ,o
       return;
     } 
     refetchDetailReservation()
-  }, [queryClient, hasToken, id,refetchDetailReservation()]);
+  }, [queryClient, hasToken, id,refetchDetailReservation]);
   const fetchDetailReservationForStaff = useCallback(() => {
     if (!hasToken || !id) {
       return;
     } 
     refetchDetailReservationForStaff()
-  }, [queryClient, hasToken, id,refetchDetailReservationForStaff()]);
+  }, [queryClient, hasToken, id,refetchDetailReservationForStaff]);
   return {
     allReservations,
     fetchAllReservations,

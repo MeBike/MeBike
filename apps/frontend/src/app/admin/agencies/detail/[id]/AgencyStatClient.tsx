@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { getStatusColor } from "@/columns/agency-column";
+import { useRouter } from "next/navigation";
 import { 
   Settings2, Edit3, Loader2, Users, MapPin, Bike, 
   TrendingUp, AlertTriangle, Calendar, DollarSign, 
   ArrowUpRight, ArrowDownRight, CheckCircle2, Clock, 
-  LucideIcon
+  LucideIcon , ArrowLeft
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +22,6 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import type { AgencyStats , AgencyStatus } from "@custom-types";
 import { updateSchema, updateAgencyStatusSchema, UpdateAgencyFormData, UpdateAgencyStatusFormData } from "@/schemas";
 
-// --- UI Helpers ---
 const SectionCard = ({ icon: Icon, title, children }: {icon:LucideIcon,title:string,children:React.ReactNode}) => (
   <div className="rounded-xl border border-border/60 bg-card overflow-hidden flex flex-col shadow-sm">
     <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4 bg-muted/20">
@@ -47,10 +47,8 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const router = useRouter();
   const { agency, period, operators, currentStation, pickups, returns, incidents } = stats;
-
-  // 1. Khởi tạo Form
   const infoForm = useForm<UpdateAgencyFormData>({
     resolver: zodResolver(updateSchema),
     defaultValues: { name: agency.name, contactPhone: agency.contactPhone || "" },
@@ -60,14 +58,10 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
     resolver: zodResolver(updateAgencyStatusSchema),
     defaultValues: { status: agency.status as AgencyStatus },
   });
-
-  // 2. ✅ Reset form khi chuyển sang Agency khác (Fix lỗi data cũ)
   useEffect(() => {
     infoForm.reset({ name: agency.name, contactPhone: agency.contactPhone || "" });
     statusForm.reset({ status: agency.status as AgencyStatus });
   }, [agency, infoForm, statusForm]);
-
-  // 3. ✅ Wrapper xử lý submit (Fix lỗi kẹt nút)
   const handleAction = async (task: () => Promise<void>, close: () => void) => {
     setIsSubmitting(true);
     try {
@@ -75,15 +69,37 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
       close();
     } catch (error) {
       console.error(error);
-      // Nút sẽ tự quay lại trạng thái bình thường nhờ finally
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-lg font-semibold text-foreground">
+              Chi tiết Agency
+            </h1>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/agencies")}
+          >
+            Danh sách Agency
+          </Button>
+        </div>
+            <div className="space-y-6">
+      
       <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-white p-6 sm:flex-row sm:items-center sm:justify-between shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -95,9 +111,7 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
             <span>SĐT: {agency.contactPhone}</span>
           </div>
         </div>
-
         <div className="flex gap-2">
-          {/* Status Dialog */}
           <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
             <DialogTrigger asChild><Button variant="outline" size="sm">Trạng thái</Button></DialogTrigger>
             <DialogContent>
@@ -140,8 +154,6 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
           </Dialog>
         </div>
       </div>
-
-      {/* Stats Grids */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <SectionCard icon={DollarSign} title="Tài chính">
           <p className="text-2xl font-bold text-primary">{pickups.totalRevenue.toLocaleString()}đ</p>
@@ -188,6 +200,8 @@ export function AgencyStatsView({ stats, onUpdateInfo, onUpdateStatus }: {
           <StatRow label="Đang di chuyển" value={pickups.activeRentals} />
           <StatRow label="Xác nhận trả" value={returns.agencyConfirmedReturns} />
         </SectionCard>
+      </div>
+    </div>
       </div>
     </div>
   );

@@ -109,6 +109,7 @@ export const useStationActions = ({
           queryClient.invalidateQueries({
             queryKey: ["stations", "all"],
           });
+          queryClient.invalidateQueries({queryKey:["detail","station",stationId]})
         }
         return result;
       } catch (error) {

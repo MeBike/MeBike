@@ -18,12 +18,11 @@ export const bikeSchema = z.object({
   ] as BikeStatus[]),
   supplierId: z
     .string()
+    .min(1, "Mã nhà cung cấp không được để trống")
     .refine(isValidUUID, {
       message: "Mã nhà cung cấp phải là một UUID hợp lệ",
-    })
-    .optional()
-    .or(z.literal("")),
-  chipId: z.string(),
+    }),
+  chipId: z.string().optional().or(z.literal("")),
 });
 export const updateBikeSchema = z.object({
   stationId: z
