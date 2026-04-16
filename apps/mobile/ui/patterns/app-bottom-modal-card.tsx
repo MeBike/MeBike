@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
 import type { ModalProps, StyleProp, ViewStyle } from "react-native";
 
-import { Modal, Pressable, StyleSheet, View } from "react-native";
-import { useTheme } from "tamagui";
-
 import { elevations, radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { useTheme } from "tamagui";
 
 type SheetDimension = number | `${number}%`;
 
@@ -68,22 +67,33 @@ export function AppBottomModalCard({
       transparent
       visible={isVisible}
     >
-      <Pressable
-        onPress={onClose}
+      <View
         style={{
           flex: 1,
-          backgroundColor: theme.overlayScrim.val,
           justifyContent: "flex-end",
         }}
       >
         <Pressable
-          onPress={() => {}}
+          onPress={onClose}
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              backgroundColor: theme.overlayScrim.val,
+            },
+          ]}
+        />
+
+        <View
+          pointerEvents="box-none"
           style={isSheet
             ? {
                 flex: 1,
                 justifyContent: "flex-end",
               }
-            : undefined}
+            : {
+                flex: 1,
+                justifyContent: "flex-end",
+              }}
         >
           <View style={resolvedContainerStyle}>
             <AppCard
@@ -101,8 +111,8 @@ export function AppBottomModalCard({
               {children}
             </AppCard>
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }

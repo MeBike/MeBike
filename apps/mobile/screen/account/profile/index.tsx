@@ -72,6 +72,7 @@ function ProfileScreen() {
     handleUpdateProfile,
     handleReservations,
     handleSubscriptions,
+    handleEnvironmentImpact,
     handleNotifications,
     handleVerifyEmail,
   } = useProfile();
@@ -101,8 +102,26 @@ function ProfileScreen() {
       onPress: handleSubscriptions,
     });
 
+    items.push({
+      icon: "footprints",
+      title: "Tác động môi trường",
+      subtitle: "Theo dõi CO2 và quãng đường đã tiết kiệm",
+      iconColor: theme.statusSuccess.val,
+      iconBackground: theme.surfaceSuccess.val,
+      onPress: handleEnvironmentImpact,
+    });
+
     return items;
-  }, [handleReservations, handleSubscriptions, isCustomer, theme.actionPrimary.val, theme.surfaceAccent.val]);
+  }, [
+    handleEnvironmentImpact,
+    handleReservations,
+    handleSubscriptions,
+    isCustomer,
+    theme.actionPrimary.val,
+    theme.statusSuccess.val,
+    theme.surfaceAccent.val,
+    theme.surfaceSuccess.val,
+  ]);
 
   const accountItems = useMemo<MenuItem[]>(() => [
     {

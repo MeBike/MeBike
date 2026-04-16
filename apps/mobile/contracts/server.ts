@@ -60,3 +60,11 @@ export type CreateFixedSlotTemplatePayload = z.output<
 export type UpdateFixedSlotTemplatePayload = z.output<
   typeof serverRoutes.fixedSlotTemplates.updateFixedSlotTemplate.request.body.content["application/json"]["schema"]
 >;
+
+export type EnvironmentSummary = ServerContracts.EnvironmentContracts.EnvironmentSummary;
+export type EnvironmentImpactHistoryItem = ServerContracts.EnvironmentContracts.EnvironmentImpactHistoryItem;
+export type EnvironmentImpactHistoryResponse = ServerContracts.EnvironmentContracts.EnvironmentImpactHistoryResponse;
+export type EnvironmentImpactDetail = ServerContracts.EnvironmentContracts.EnvironmentImpactDetail;
+export type EnvironmentImpactHistoryQuery = z.output<
+  typeof serverRoutes.environment.getMyEnvironmentImpactHistory.request.query
+>;
