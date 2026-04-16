@@ -22,6 +22,7 @@ export type BikeUpdatePatch = Partial<{
 
 export type BikeQueryRepo = {
   getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
+  countAvailableByStation: (stationId: string) => Effect.Effect<number>;
   findAvailableByStation: (
     stationId: string,
   ) => Effect.Effect<Option.Option<BikeRow>>;

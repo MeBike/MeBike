@@ -11,25 +11,32 @@ describe("admin stations routing e2e", () => {
     buildLayer: async () => {
       const { Layer } = await import("effect");
       const { AgencyRepositoryLive } = await import("@/domain/agencies/repository/agency.repository");
-      const { ReservationQueryRepositoryLive } = await import("@/domain/reservations/repository/reservation-query.repository");
       const { PrismaLive } = await import("@/infrastructure/prisma");
-      const { StationRepositoryLive } = await import("@/domain/stations/repository/station.repository");
-      const { StationServiceLive } = await import("@/domain/stations/services/station.service");
+      const {
+        StationCommandRepositoryLive,
+        StationCommandServiceLive,
+        StationQueryRepositoryLive,
+        StationQueryServiceLive,
+      } = await import("@/domain/stations");
       const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
       const agencyRepoLayer = AgencyRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const reservationQueryRepoLayer = ReservationQueryRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const stationRepoLayer = StationRepositoryLive.pipe(Layer.provide(PrismaLive));
-      const stationServiceLayer = StationServiceLive.pipe(
-        Layer.provide(Layer.mergeAll(stationRepoLayer, agencyRepoLayer, reservationQueryRepoLayer)),
+      const stationQueryRepoLayer = StationQueryRepositoryLive.pipe(Layer.provide(PrismaLive));
+      const stationCommandRepoLayer = StationCommandRepositoryLive.pipe(Layer.provide(PrismaLive));
+      const stationQueryServiceLayer = StationQueryServiceLive.pipe(
+        Layer.provide(stationQueryRepoLayer),
+      );
+      const stationCommandServiceLayer = StationCommandServiceLive.pipe(
+        Layer.provide(Layer.mergeAll(stationCommandRepoLayer, stationQueryRepoLayer, agencyRepoLayer)),
       );
 
       return Layer.mergeAll(
         UserDepsLive,
         agencyRepoLayer,
-        reservationQueryRepoLayer,
-        stationRepoLayer,
-        stationServiceLayer,
+        stationQueryRepoLayer,
+        stationQueryServiceLayer,
+        stationCommandRepoLayer,
+        stationCommandServiceLayer,
         PrismaLive,
       );
     },
@@ -183,35 +190,5 @@ describe("admin stations routing e2e", () => {
     expect(body.details?.code).toBe("RETURN_SLOT_LIMIT_BELOW_ACTIVE_RESERVATIONS");
     expect(body.details?.returnSlotLimit).toBe(0);
     expect(body.details?.activeReturnSlots).toBe(1);
-  });
-
-  it("rejects lowering pickup slot limit below pending reservations", async () => {
-    const station = await fixture.factories.station({
-      capacity: 6,
-      pickupSlotLimit: 2,
-    });
-    const reserver = await fixture.factories.user({
-      fullname: "Reservation User",
-      email: "reservation-user@example.com",
-      role: "USER",
-    });
-
-    await fixture.factories.reservation({
-      userId: reserver.id,
-      stationId: station.id,
-      status: "PENDING",
-    });
-
-    const response = await fixture.app.request(`http://test/v1/stations/${station.id}`, {
-      method: "PATCH",
-      headers: adminAuthHeader(),
-      body: JSON.stringify({ pickupSlotLimit: 0 }),
-    });
-    const body = await response.json() as StationsContracts.StationErrorResponse;
-
-    expect(response.status).toBe(400);
-    expect(body.details?.code).toBe("PICKUP_SLOT_LIMIT_BELOW_PENDING_RESERVATIONS");
-    expect(body.details?.pickupSlotLimit).toBe(0);
-    expect(body.details?.pendingReservations).toBe(1);
   });
 });

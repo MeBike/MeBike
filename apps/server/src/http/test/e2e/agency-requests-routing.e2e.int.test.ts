@@ -551,7 +551,6 @@ describe("agency requests routing", () => {
         latitude: true,
         longitude: true,
         totalCapacity: true,
-        pickupSlotLimit: true,
         returnSlotLimit: true,
       },
     });
@@ -564,7 +563,6 @@ describe("agency requests routing", () => {
       latitude: expect.anything(),
       longitude: expect.anything(),
       totalCapacity: 20,
-      pickupSlotLimit: 14,
       returnSlotLimit: 20,
     });
 

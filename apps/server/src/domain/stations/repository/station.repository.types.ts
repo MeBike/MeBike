@@ -2,10 +2,7 @@ import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
-import type {
-  StationNameAlreadyExists,
-  StationOutsideSupportedArea,
-} from "../errors";
+import type { StationNameAlreadyExists, StationOutsideSupportedArea } from "../errors";
 import type {
   CreateStationInput,
   NearestSearchArgs,
@@ -17,7 +14,7 @@ import type {
   UpdateStationInput,
 } from "../models";
 
-export type StationRepo = {
+export type StationCommandRepo = {
   create: (
     input: CreateStationInput,
   ) => Effect.Effect<
@@ -31,6 +28,9 @@ export type StationRepo = {
     Option.Option<StationRow>,
     StationNameAlreadyExists | StationOutsideSupportedArea
   >;
+};
+
+export type StationQueryRepo = {
   listWithOffset: (
     filter: StationFilter,
     pageReq: PageRequest<StationSortField>,
@@ -52,3 +52,5 @@ export type StationRepo = {
     to: Date;
   }) => Effect.Effect<readonly StationRevenueRow[]>;
 };
+
+export type StationRepo = StationCommandRepo & StationQueryRepo;

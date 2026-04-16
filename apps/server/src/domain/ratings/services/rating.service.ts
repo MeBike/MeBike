@@ -5,7 +5,7 @@ import type { PageResult } from "@/domain/shared/pagination";
 import type { StationNotFound } from "@/domain/stations";
 
 import { BikeNotFound as BikeNotFoundError, BikeRepository } from "@/domain/bikes";
-import { StationNotFound as StationNotFoundError, StationRepository } from "@/domain/stations";
+import { StationNotFound as StationNotFoundError, StationQueryRepository } from "@/domain/stations";
 
 import type { RatingAlreadyExists, RatingRepositoryError } from "../domain-errors";
 import type {
@@ -73,7 +73,7 @@ export const RatingServiceLive = Layer.effect(
     const repo = yield* RatingRepository;
     const reasonRepo = yield* RatingReasonRepository;
     const bikeRepo = yield* BikeRepository;
-    const stationRepo = yield* StationRepository;
+    const stationRepo = yield* StationQueryRepository;
 
     const service: RatingService = {
       create: input =>

@@ -149,7 +149,6 @@ describe("return slot integration", () => {
     const second = await givenActiveRental(fixture);
     const station = await fixture.factories.station({
       capacity: 10,
-      pickupSlotLimit: 10,
       returnSlotLimit: 1,
     });
     await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
@@ -460,7 +459,6 @@ describe("return slot integration", () => {
     });
     const station = await fixture.factories.station({
       capacity: 5,
-      pickupSlotLimit: 5,
       returnSlotLimit: 0,
     });
 
@@ -488,7 +486,6 @@ describe("return slot integration", () => {
     });
     const fullStation = await fixture.factories.station({
       capacity: 1,
-      pickupSlotLimit: 1,
       returnSlotLimit: 1,
     });
     await fixture.factories.bike({ stationId: fullStation.id, status: "AVAILABLE" });

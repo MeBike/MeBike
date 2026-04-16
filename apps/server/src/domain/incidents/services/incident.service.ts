@@ -10,7 +10,7 @@ import type { IncidentStatus, UserRole } from "generated/kysely/types";
 import { BikeNotFound, BikeRepository } from "@/domain/bikes";
 import { AdminRentalNotFound, RentalRepository } from "@/domain/rentals";
 import { BikeNotAvailable } from "@/domain/reservations";
-import { StationNotFound, StationRepository } from "@/domain/stations";
+import { StationNotFound, StationQueryRepository } from "@/domain/stations";
 import { MapboxRouting } from "@/infrastructure/mapbox";
 import { IncidentSeverity, IncidentSource } from "generated/kysely/types";
 
@@ -180,7 +180,7 @@ export const IncidentServiceLive = Layer.effect(
     const repo = yield* IncidentRepository;
     const rentalRepo = yield* RentalRepository;
     const bikeRepo = yield* BikeRepository;
-    const stationRepo = yield* StationRepository;
+    const stationRepo = yield* StationQueryRepository;
     const mapbox = yield* MapboxRouting;
 
     const service: IncidentService = {

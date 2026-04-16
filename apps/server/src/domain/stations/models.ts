@@ -10,7 +10,6 @@ export type StationRow = {
   stationType: StationType;
   agencyId: string | null;
   totalCapacity: number;
-  pickupSlotLimit: number;
   returnSlotLimit: number;
   latitude: number;
   longitude: number;
@@ -46,7 +45,6 @@ export type UpdateStationInput = {
   stationType?: StationType;
   agencyId?: string | null;
   totalCapacity?: number;
-  pickupSlotLimit?: number;
   returnSlotLimit?: number;
   latitude?: number;
   longitude?: number;

@@ -13,7 +13,7 @@ import type {
   NearestStationRow,
   StationRevenueRow,
 } from "../../models";
-import type { StationRepo } from "../station.repository.types";
+import type { StationQueryRepo } from "../station.repository.types";
 
 import { StationRepositoryError } from "../../errors";
 import {
@@ -33,7 +33,7 @@ type StationNearestRowDb = PrismaTypes.StationGetPayload<{
 };
 
 export type StationReadRepo = Pick<
-  StationRepo,
+  StationQueryRepo,
   | "listWithOffset"
   | "getById"
   | "getByAgencyId"
@@ -208,7 +208,6 @@ export function makeStationReadRepository(
                     station_type AS "stationType",
                     agency_id AS "agencyId",
                     total_capacity AS "totalCapacity",
-                    pickup_slot_limit AS "pickupSlotLimit",
                     return_slot_limit AS "returnSlotLimit",
                     latitude,
                     longitude,
@@ -246,7 +245,6 @@ export function makeStationReadRepository(
                     station_type AS "stationType",
                     agency_id AS "agencyId",
                     total_capacity AS "totalCapacity",
-                    pickup_slot_limit AS "pickupSlotLimit",
                     return_slot_limit AS "returnSlotLimit",
                     latitude,
                     longitude,

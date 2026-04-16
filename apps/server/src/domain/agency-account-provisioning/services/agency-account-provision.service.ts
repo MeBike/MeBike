@@ -28,8 +28,11 @@ import type {
 import { makeAgencyRepository, makeAgencyService } from "@/domain/agencies";
 import { makeAgencyRequestRepository } from "@/domain/agency-requests/repository/agency-request.repository";
 import { hashPassword } from "@/domain/auth/services/auth.service";
-import { makeReservationQueryRepository } from "@/domain/reservations";
-import { makeStationRepository, makeStationService } from "@/domain/stations";
+import {
+  makeStationCommandRepository,
+  makeStationCommandService,
+  makeStationQueryRepository,
+} from "@/domain/stations";
 import { makeTechnicianTeamQueryRepository } from "@/domain/technician-teams";
 import { makeUserCommandRepository } from "@/domain/users/repository/user-command.repository";
 import { makeUserQueryRepository } from "@/domain/users/repository/user-query.repository";
@@ -95,16 +98,16 @@ export function makeAgencyAccountProvisionService(
       const txAgencyRequestRepo = makeAgencyRequestRepository(tx);
       const txAgencyRepo = makeAgencyRepository(tx);
       const txAgencyService = makeAgencyService(txAgencyRepo);
-      const txReservationRepo = makeReservationQueryRepository(tx);
-      const txStationService = makeStationService(makeStationRepository(tx), {
+      const txStationService = makeStationCommandService({
         agencyRepo: txAgencyRepo,
-        reservationRepo: txReservationRepo,
+        commandRepo: makeStationCommandRepository(tx),
+        queryRepo: makeStationQueryRepository(tx),
       });
       const txUserCommandService = makeUserCommandService({
         agencyRepo: txAgencyRepo,
         commandRepo: makeUserCommandRepository(tx),
         queryRepo: makeUserQueryRepository(tx),
-        stationRepo: makeStationRepository(tx),
+        stationRepo: makeStationQueryRepository(tx),
         technicianTeamQueryRepo: makeTechnicianTeamQueryRepository(tx),
       });
 
