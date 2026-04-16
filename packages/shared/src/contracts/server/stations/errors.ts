@@ -31,7 +31,6 @@ export const StationErrorDetailSchema = ServerErrorDetailSchema.extend({
   returnSlotLimit: z.number().int().nonnegative().optional(),
   totalBikes: z.number().int().nonnegative().optional(),
   activeReturnSlots: z.number().int().nonnegative().optional(),
-  pendingReservations: z.number().int().nonnegative().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
 }).openapi({
@@ -53,7 +52,7 @@ export const stationErrorMessages: Record<StationErrorCode, string> = {
   STATION_NOT_FOUND: "Station not found",
   STATION_NAME_ALREADY_EXISTS: "Station name already exists",
   CAPACITY_LIMIT_EXCEEDED: "Station capacity exceeds configured limit",
-  CAPACITY_SPLIT_INVALID: "Station pickup and return slot limits are invalid for the configured capacity",
+  CAPACITY_SPLIT_INVALID: "Station return slot limit must be between 0 and total capacity",
   CAPACITY_BELOW_ACTIVE_USAGE: "Station capacity cannot be lower than bikes and active return slots already assigned",
   RETURN_SLOT_LIMIT_BELOW_ACTIVE_RESERVATIONS: "Return slot limit cannot be lower than active return slots",
   OUTSIDE_SUPPORTED_AREA: "Coordinates are outside supported service area",
