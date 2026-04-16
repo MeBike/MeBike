@@ -39,7 +39,7 @@ const VALID_STATUSES: BikeStatus[] = [
 ];
 
 interface CreateBikeClientProps {
-  onSubmitBike: (data: BikeSchemaFormData) => Promise<any>;
+  onSubmitBike: (data: BikeSchemaFormData) => Promise<void>;
   stations: Station[] | null;
   suppliers: Supplier[] | undefined;
 }

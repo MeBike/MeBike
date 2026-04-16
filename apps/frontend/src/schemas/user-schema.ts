@@ -60,7 +60,7 @@ export const createUserSchema = z.discriminatedUnion("role",[
 ])
 const updateBaseUserSchema = z.object({
   fullname: z.string().optional(),
-  email: z.string().email("Email không hợp lệ").optional(),
+  email: z.email("Email không hợp lệ").optional(),
   phoneNumber: z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự").optional(),
   accountStatus: z.enum(["ACTIVE", "INACTIVE", "SUSPENDED", "BANNED"]).optional(),
   verify: z.enum(["VERIFIED", "UNVERIFIED"]).optional(),

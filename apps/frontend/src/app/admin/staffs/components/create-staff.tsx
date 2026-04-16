@@ -17,8 +17,19 @@ import {
 import { User, Mail, Phone, Lock, Shield, MapPin, Wrench, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
-import type { UpdateStaffFormData } from "@/schemas/user-schema";
+import type { UpdateStaffFormData } from "@schemas";
 import type { Station, Supplier, TechnicianTeam } from "@/types";
+
+// Định nghĩa interface cho dữ liệu nội bộ của Form
+interface InternalFormData {
+  fullname: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  role: string;
+  stationId: string;
+  technicianTeamId: string;
+}
 
 interface CreateStaffProps {
   onSubmit: ({ data }: { data: UpdateStaffFormData }) => void;
@@ -34,13 +45,14 @@ export default function CreateStaff({
   techTeam,
 }: CreateStaffProps) {
   const navigate = useRouter();
+  
   const {
     register,
     handleSubmit,
     control,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm({
+  } = useForm<InternalFormData>({
     defaultValues: {
       fullname: "",
       email: "",
@@ -54,16 +66,19 @@ export default function CreateStaff({
 
   const selectedRole = watch("role");
 
-  const onFormSubmit = (formData: any) => {
-    const role = formData.role.toUpperCase();
+  // Thay formData: any bằng InternalFormData
+  const onFormSubmit = (formData: InternalFormData) => {
+    const role = formData.role;
     const baseData = {
       fullname: formData.fullname,
       email: formData.email,
       phoneNumber: formData.phoneNumber,
       password: formData.password,
+      accountStatus: "ACTIVE" as const, // Fix cứng active
     };
 
-    let finalData: any; // Format lại data giống logic cũ của bạn
+    // Khởi tạo biến chứa kết quả cuối cùng với kiểu chuẩn từ Schema
+    let finalData: UpdateStaffFormData;
 
     switch (role) {
       case "STAFF":
@@ -71,26 +86,23 @@ export default function CreateStaff({
       case "AGENCY":
         finalData = {
           ...baseData,
-          role,
+          role: role as "STAFF" | "MANAGER" | "AGENCY",
           orgAssignment: { stationId: formData.stationId },
         };
         break;
       case "TECHNICIAN":
         finalData = {
           ...baseData,
-          role,
+          role: "TECHNICIAN",
           orgAssignment: { technicianTeamId: formData.technicianTeamId },
         };
         break;
-      case "ADMIN":
-      case "USER":
-        finalData = { ...baseData, role };
-        break;
       default:
-        finalData = { ...baseData, role };
+        // Fallback cho các trường hợp khác nếu có
+        finalData = { ...baseData, role: "STAFF", orgAssignment: { stationId: formData.stationId } } as UpdateStaffFormData;
     }
 
-    onSubmit({ data: finalData as UpdateStaffFormData });
+    onSubmit({ data: finalData });
   };
 
   return (
@@ -124,7 +136,7 @@ export default function CreateStaff({
                       className={`pl-10 ${errors.fullname ? "border-destructive" : ""}`}
                     />
                   </div>
-                  {errors.fullname && <p className="text-xs text-destructive">{errors.fullname.message as string}</p>}
+                  {errors.fullname && <p className="text-xs text-destructive">{errors.fullname.message}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -141,10 +153,9 @@ export default function CreateStaff({
                       className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
                     />
                   </div>
-                  {errors.email && <p className="text-xs text-destructive">{errors.email.message as string}</p>}
+                  {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                 </div>
 
-                {/* Field: Số điện thoại */}
                 <div className="space-y-2">
                   <Label htmlFor="phoneNumber" className="font-semibold text-muted-foreground">
                     Số điện thoại <span className="text-destructive">*</span>
@@ -158,16 +169,14 @@ export default function CreateStaff({
                       className={`pl-10 ${errors.phoneNumber ? "border-destructive" : ""}`}
                     />
                   </div>
-                  {errors.phoneNumber && <p className="text-xs text-destructive">{errors.phoneNumber.message as string}</p>}
+                  {errors.phoneNumber && <p className="text-xs text-destructive">{errors.phoneNumber.message}</p>}
                 </div>
 
-                {/* Field: Mật khẩu */}
                 <div className="space-y-2">
                   <Label htmlFor="password" className="font-semibold text-muted-foreground">
                     Mật khẩu <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
-                    {/* Đã sửa icon thành Lock */}
                     <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="password"
@@ -177,12 +186,11 @@ export default function CreateStaff({
                       className={`pl-10 ${errors.password ? "border-destructive" : ""}`}
                     />
                   </div>
-                  {errors.password && <p className="text-xs text-destructive">{errors.password.message as string}</p>}
+                  {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
                 </div>
               </div>
             </div>
 
-            {/* SECTION 2: PHÂN QUYỀN VÀ ĐƠN VỊ */}
             <div className="space-y-6">
               <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground border-b border-border/50 pb-3 mt-6">
                 <Shield className="h-5 w-5 text-primary" />
@@ -190,8 +198,6 @@ export default function CreateStaff({
               </h3>
               
               <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2">
-                
-                {/* Field: Chức vụ */}
                 <div className="space-y-2">
                   <Label htmlFor="role" className="font-semibold text-muted-foreground">
                     Chức vụ <span className="text-destructive">*</span>
@@ -202,14 +208,14 @@ export default function CreateStaff({
                       name="role"
                       control={control}
                       render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <SelectTrigger className="pl-10">
                             <SelectValue placeholder="Chọn chức vụ" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="MANAGER">Quản lý trạm (MANAGER)</SelectItem>
-                            <SelectItem value="STAFF">Nhân viên trạm (STAFF)</SelectItem>
-                            <SelectItem value="TECHNICIAN">Kỹ thuật viên (TECHNICIAN)</SelectItem>
+                            <SelectItem value="MANAGER">Quản lý trạm</SelectItem>
+                            <SelectItem value="STAFF">Nhân viên trạm</SelectItem>
+                            <SelectItem value="TECHNICIAN">Kỹ thuật viên</SelectItem>
                           </SelectContent>
                         </Select>
                       )}
@@ -217,7 +223,6 @@ export default function CreateStaff({
                   </div>
                 </div>
 
-                {/* Field: Chọn Trạm (Chỉ hiện khi là STAFF, MANAGER, AGENCY) */}
                 {["STAFF", "MANAGER", "AGENCY"].includes(selectedRole) && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                     <Label className="font-semibold text-muted-foreground">
@@ -230,7 +235,7 @@ export default function CreateStaff({
                         control={control}
                         rules={{ required: "Vui lòng chọn trạm phân công" }}
                         render={({ field }) => (
-                          <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <SelectTrigger className={`pl-10 ${errors.stationId ? "border-destructive" : ""}`}>
                               <SelectValue placeholder="Chọn trạm làm việc" />
                             </SelectTrigger>
@@ -247,11 +252,10 @@ export default function CreateStaff({
                         )}
                       />
                     </div>
-                    {errors.stationId && <p className="text-xs text-destructive">{errors.stationId.message as string}</p>}
+                    {errors.stationId && <p className="text-xs text-destructive">{errors.stationId.message}</p>}
                   </div>
                 )}
 
-                {/* Field: Chọn Đội kỹ thuật (Chỉ hiện khi là TECHNICIAN) */}
                 {selectedRole === "TECHNICIAN" && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                     <Label className="font-semibold text-muted-foreground">
@@ -264,7 +268,7 @@ export default function CreateStaff({
                         control={control}
                         rules={{ required: "Vui lòng chọn đội kỹ thuật" }}
                         render={({ field }) => (
-                          <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <SelectTrigger className={`pl-10 ${errors.technicianTeamId ? "border-destructive" : ""}`}>
                               <SelectValue placeholder="Chọn nhóm kỹ thuật viên" />
                             </SelectTrigger>
@@ -281,16 +285,14 @@ export default function CreateStaff({
                         )}
                       />
                     </div>
-                    {errors.technicianTeamId && <p className="text-xs text-destructive">{errors.technicianTeamId.message as string}</p>}
+                    {errors.technicianTeamId && <p className="text-xs text-destructive">{errors.technicianTeamId.message}</p>}
                   </div>
                 )}
-
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-3 pt-6 border-t border-border/50">
-              <Button type="submit" disabled={isSubmitting} className="min-w-[120px] gradient-primary shadow-glow">
+              <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -309,7 +311,6 @@ export default function CreateStaff({
                 Hủy bỏ
               </Button>
             </div>
-            
           </form>
         </CardContent>
       </Card>

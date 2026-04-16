@@ -45,12 +45,6 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
     console.log("Dữ liệu hợp lệ:", data);
     onSubmit({ data });
   };
-
-  // Hàm này siêu hữu ích: Nếu form bị Zod chặn (chọn role lạ), nó sẽ log ra nguyên nhân ở đây!
-  const onFormError = (error: any) => {
-    console.error("Lỗi Validation từ Zod chặn Submit:", error);
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <PageHeader
@@ -60,7 +54,7 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
       />
       <Card className="mx-auto max-w-4xl border-border/50 shadow-sm">
         <CardContent className="p-6 sm:p-8">
-          <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="space-y-8">
+          <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
             
             <div className="space-y-6">
               <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground border-b border-border/50 pb-3">

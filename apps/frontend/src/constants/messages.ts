@@ -1,8 +1,8 @@
 export const USERS_MESSAGES = {
   // đăng ký messages
+  VALIDATION_ERROR : "Vui lòng kiểm tra lại thông tin nhập",
   TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED : "Tech team trạm này đã đã số lượng là 3",
   INVALID_OTP: "OTP không hợp lệ hoặc đã hết hạn",
-  VALIDATION_ERROR: 'Lỗi xác thực',
   INVALID_CREDENTIALS : 'Đăng nhập thất bại! Email hoặc mật khẩu không chính xác',
   FULL_NAME_IS_REQUIRED: 'Họ và tên là bắt buộc',
   FULL_NAME_MUST_BE_A_STRING: 'Họ và tên phải là chuỗi',
