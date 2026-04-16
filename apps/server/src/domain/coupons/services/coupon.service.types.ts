@@ -1,6 +1,9 @@
 import type { Effect } from "effect";
 
-import type { BillingPreviewDiscountRuleRow } from "../models";
+import type {
+  ActiveCouponRuleRow,
+  BillingPreviewDiscountRuleRow,
+} from "../models";
 
 export type CouponQueryService = {
   listGlobalBillingPreviewDiscountRules: (
@@ -9,4 +12,9 @@ export type CouponQueryService = {
       readonly billableMinutes: number;
     },
   ) => Effect.Effect<readonly BillingPreviewDiscountRuleRow[]>;
+  listActiveGlobalCouponRules: (
+    input: {
+      readonly now: Date;
+    },
+  ) => Effect.Effect<readonly ActiveCouponRuleRow[]>;
 };

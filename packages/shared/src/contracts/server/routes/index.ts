@@ -2,6 +2,7 @@ import { agenciesRoutes } from "./agencies";
 import { agencyRequestsRoutes } from "./agency-requests";
 import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
+import { couponRulesRoutes } from "./coupon-rules";
 import { environmentRoutes } from "./environment";
 import { fixedSlotTemplatesRoutes } from "./fixed-slots";
 import { healthRoutes } from "./health";
@@ -23,6 +24,7 @@ export * from "./agencies";
 export * from "./agency-requests";
 export * from "./auth";
 export * from "./bikes";
+export * from "./coupon-rules";
 export * from "./environment";
 export * from "./fixed-slots";
 export * from "./health";
@@ -52,6 +54,7 @@ export const serverRoutes = {
   stats: statsRoutes,
   stations: stationsRoutes,
   bikes: bikesRoutes,
+  couponRules: couponRulesRoutes,
   suppliers: suppliersRoutes,
   subscriptions: subscriptionsRoutes,
   users: usersRoutes,

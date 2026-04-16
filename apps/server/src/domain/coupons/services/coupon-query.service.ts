@@ -5,6 +5,8 @@ export function makeCouponQueryService(
   repo: CouponQueryRepo,
 ): CouponQueryService {
   return {
+    listActiveGlobalCouponRules: input =>
+      repo.listActiveGlobalCouponRules(input),
     listGlobalBillingPreviewDiscountRules: input =>
       repo.listGlobalBillingPreviewDiscountRules(input),
   };
