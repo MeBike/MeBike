@@ -14,7 +14,91 @@ import {
   IncidentIdParamSchema,
   IncidentSummarySchema,
   IncidentUpdateBodySchema,
+  UploadIncidentImagesRequestSchema,
+  UploadIncidentImagesResponseSchema,
 } from "./shared";
+
+export const uploadIncidentImages = createRoute({
+  method: "post",
+  path: "/v1/incidents/images",
+  tags: ["Incidents"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": { schema: UploadIncidentImagesRequestSchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Incident images uploaded",
+      content: {
+        "application/json": {
+          schema: UploadIncidentImagesResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid incident image",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            InvalidIncidentImage: {
+              value: {
+                error: incidentErrorMessages.INVALID_INCIDENT_IMAGE,
+                details: { code: IncidentErrorCodeSchema.enum.INVALID_INCIDENT_IMAGE },
+              },
+            },
+            IncidentDimensionsTooLarge: {
+              value: {
+                error: incidentErrorMessages.INCIDENT_IMAGE_DIMENSIONS_TOO_LARGE,
+                details: {
+                  code: IncidentErrorCodeSchema.enum.INCIDENT_IMAGE_DIMENSIONS_TOO_LARGE,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    413: {
+      description: "Incident image exceeds request size limit",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            IncidentTooLarge: {
+              value: {
+                error: incidentErrorMessages.INCIDENT_IMAGE_TOO_LARGE,
+                details: { code: IncidentErrorCodeSchema.enum.INCIDENT_IMAGE_TOO_LARGE },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: unauthorizedResponse(),
+    503: {
+      description: "Incident image upload storage is unavailable",
+      content: {
+        "application/json": {
+          schema: IncidentErrorResponseSchema,
+          examples: {
+            IncidentUploadUnavailable: {
+              value: {
+                error: incidentErrorMessages.INCIDENT_IMAGE_UPLOAD_UNAVAILABLE,
+                details: { code: IncidentErrorCodeSchema.enum.INCIDENT_IMAGE_UPLOAD_UNAVAILABLE },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
 
 export const createIncident = createRoute({
   method: "post",
@@ -441,6 +525,7 @@ export const resolveIncident = createRoute({
 });
 
 export const incidentsMutations = {
+  uploadIncidentImages,
   createIncident,
   updateIncident,
   acceptIncident,

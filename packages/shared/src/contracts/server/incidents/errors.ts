@@ -14,6 +14,10 @@ export const incidentErrorCodes = [
   "UNAUTHORIZED_INCIDENT_ACCESS",
   "ACTIVE_INCIDENT_ALREADY_EXISTS",
   "INCIDENT_INTERNAL_STATION_REQUIRED",
+  "INCIDENT_IMAGE_TOO_LARGE",
+  "INVALID_INCIDENT_IMAGE",
+  "INCIDENT_IMAGE_DIMENSIONS_TOO_LARGE",
+  "INCIDENT_IMAGE_UPLOAD_UNAVAILABLE",
 ] as const;
 
 export const IncidentErrorCodeSchema = z.enum(incidentErrorCodes);
@@ -77,4 +81,8 @@ export const incidentErrorMessages: Record<IncidentErrorCode, string> = {
   UNAUTHORIZED_INCIDENT_ACCESS: "Unauthorized incident access",
   ACTIVE_INCIDENT_ALREADY_EXISTS: "An active incident already exists for this bike, rental, or station",
   INCIDENT_INTERNAL_STATION_REQUIRED: "Incidents are only supported at internal stations",
+  INCIDENT_IMAGE_TOO_LARGE: "Incident image is too large",
+  INVALID_INCIDENT_IMAGE: "Incident image is invalid or unsupported",
+  INCIDENT_IMAGE_DIMENSIONS_TOO_LARGE: "Incident image dimensions are too large",
+  INCIDENT_IMAGE_UPLOAD_UNAVAILABLE: "Incident image upload is temporarily unavailable",
 };

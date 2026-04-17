@@ -406,7 +406,10 @@ function createIncidentWithClient(
       });
     }
 
-    return incident as IncidentRow;
+    return {
+      ...incident,
+      fileUrls: data.fileUrls,
+    } as IncidentRow;
   });
 }
 
@@ -729,6 +732,14 @@ export function makeIncidentRepository(
                   : {}),
                 ...(patch.longitude !== undefined
                   ? { longitude: patch.longitude }
+                  : {}),
+                ...(patch.fileUrls !== undefined
+                  ? {
+                      attachments: {
+                        deleteMany: {},
+                        create: patch.fileUrls.map(url => ({ fileUrl: url })),
+                      },
+                    }
                   : {}),
                 ...(patch.bikeLocked !== undefined
                   ? { bikeLocked: patch.bikeLocked }

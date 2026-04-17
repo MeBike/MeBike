@@ -21,6 +21,7 @@ export type IncidentRow = {
   description: string | null;
   latitude: IncidentDecimal | null;
   longitude: IncidentDecimal | null;
+  fileUrls: string[];
   bikeLocked: boolean;
   status: IncidentStatus;
   reportedAt: Date;
@@ -70,6 +71,7 @@ export type IncidentDetail = {
   description: string | null;
   latitude: number | null;
   longitude: number | null;
+  fileUrls: string[];
   bikeLocked: boolean;
   status: IncidentStatus;
   reportedAt: Date;

@@ -17,6 +17,7 @@ export function toIncidentSummary(
     description: row.description,
     latitude: row.latitude ? Number(row.latitude) : null,
     longitude: row.longitude ? Number(row.longitude) : null,
+    fileUrls: row.fileUrls,
     bikeLocked: row.bikeLocked,
     status: row.status,
     reportedAt: row.reportedAt.toISOString(),
