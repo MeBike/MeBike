@@ -14,6 +14,7 @@ import { withLoggedCause } from "@/domain/shared";
 import {
   toContractAdminCouponRule,
   toContractAdminCouponStats,
+  toContractAdminCouponUsageLog,
 } from "@/http/presenters/coupons.presenter";
 import { toContractPage } from "@/http/shared/pagination";
 import { routeContext } from "@/http/shared/route-context";
@@ -228,9 +229,42 @@ const adminCouponStats: RouteHandler<
   );
 };
 
+const adminCouponUsageLogs: RouteHandler<
+  CouponRulesRoutes["adminCouponUsageLogs"]
+> = async (c) => {
+  const query = c.req.valid("query");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(CouponQueryServiceTag, service =>
+      service.listAdminCouponUsageLogs(
+        {
+          from: query.from ? parseCouponStatsBound(query.from, "from") : undefined,
+          to: query.to ? parseCouponStatsBound(query.to, "to") : undefined,
+          userId: query.userId,
+          rentalId: query.rentalId,
+          discountAmount: query.discountAmount,
+          subscriptionApplied: query.subscriptionApplied,
+        },
+        {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 20,
+        },
+      )),
+    routeContext(couponRules.adminCouponUsageLogs),
+  );
+
+  const result = await c.var.runPromise(eff);
+
+  return c.json<CouponsContracts.AdminCouponUsageLogsResponse, 200>({
+    data: result.items.map(toContractAdminCouponUsageLog),
+    pagination: toContractPage(result),
+  }, 200);
+};
+
 export const CouponRulesAdminController = {
   adminActivateCouponRule,
   adminCouponStats,
+  adminCouponUsageLogs,
   adminCreateCouponRule,
   adminDeactivateCouponRule,
   adminUpdateCouponRule,

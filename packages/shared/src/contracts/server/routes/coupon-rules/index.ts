@@ -3,6 +3,7 @@ import * as queries from "./queries";
 
 export {
   adminCouponStats,
+  adminCouponUsageLogs,
   adminListCouponRules,
   listActiveCouponRules,
 } from "./queries";

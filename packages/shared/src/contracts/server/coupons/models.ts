@@ -218,6 +218,100 @@ export const AdminCouponStatsQuerySchema = z
     },
   });
 
+const optionalPositiveIntegerQuery = (field: string) =>
+  z.preprocess(
+    value =>
+      value === undefined || value === null
+        ? undefined
+        : typeof value === "string"
+          ? Number(value)
+          : value,
+    z.number().int().positive({
+      message: `${field} must be a positive integer`,
+    }).optional(),
+  );
+
+const optionalBooleanQuery = (field: string) =>
+  z.preprocess(
+    (value) => {
+      if (value === undefined || value === null) {
+        return undefined;
+      }
+
+      if (typeof value === "boolean") {
+        return value;
+      }
+
+      if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true") {
+          return true;
+        }
+        if (normalized === "false") {
+          return false;
+        }
+      }
+
+      return value;
+    },
+    z.boolean({
+      message: `${field} must be true or false`,
+    }).optional(),
+  );
+
+export const CouponUsageDerivedTierSchema = z
+  .enum([
+    "TIER_1H_2H",
+    "TIER_2H_4H",
+    "TIER_4H_6H",
+    "TIER_6H_PLUS",
+  ])
+  .openapi("CouponUsageDerivedTier");
+
+export const CouponUsageLogRentalStatusSchema = z
+  .enum(["RENTED", "COMPLETED", "CANCELLED"])
+  .openapi("CouponUsageLogRentalStatus");
+
+export const AdminCouponUsageLogsQuerySchema = z
+  .object({
+    ...paginationQueryFields,
+    from: CouponStatsBoundSchema.optional(),
+    to: CouponStatsBoundSchema.optional(),
+    userId: z.uuidv7().optional(),
+    rentalId: z.uuidv7().optional(),
+    discountAmount: optionalPositiveIntegerQuery("discountAmount").openapi({
+      description: "Exact coupon discount amount in VND recorded in finalized billing",
+      example: 2000,
+    }),
+    subscriptionApplied: optionalBooleanQuery("subscriptionApplied").openapi({
+      description:
+        "Filter by whether the finalized rental has a subscription_id. Useful for anomaly auditing because global auto discount should normally have false here.",
+      example: false,
+    }),
+  })
+  .superRefine((value, ctx) => {
+    if (value.from && value.to && new Date(value.from) > new Date(value.to)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["from"],
+        message: "from must not be after to",
+      });
+    }
+  })
+  .openapi("AdminCouponUsageLogsQuery", {
+    description:
+      "Optional pagination and filters for finalized global auto discount usage logs. from/to are applied against billing record creation time (appliedAt).",
+    example: {
+      page: 1,
+      pageSize: 20,
+      from: "2026-04-01T00:00:00.000Z",
+      to: "2026-04-30T23:59:59.999Z",
+      userId: "018fa100-0000-7000-8000-000000000111",
+      discountAmount: 2000,
+      subscriptionApplied: false,
+    },
+  });
+
 export const AdminCouponRulesListResponseSchema = z.object({
   data: z.array(AdminCouponRuleSchema),
   pagination: PaginationSchema,
@@ -331,6 +425,75 @@ export const AdminCouponStatsResponseSchema = z.object({
   },
 });
 
+export const AdminCouponUsageLogSchema = z.object({
+  rentalId: z.uuidv7(),
+  userId: z.uuidv7(),
+  pricingPolicyId: z.uuidv7(),
+  rentalStatus: CouponUsageLogRentalStatusSchema,
+  startTime: z.iso.datetime(),
+  endTime: z.iso.datetime().nullable(),
+  totalDurationMinutes: z.number().int().positive(),
+  baseAmount: z.number().nonnegative(),
+  prepaidAmount: z.number().nonnegative(),
+  subscriptionApplied: z.boolean(),
+  subscriptionDiscountAmount: z.number().nonnegative(),
+  couponDiscountAmount: z.number().positive(),
+  totalAmount: z.number().nonnegative(),
+  appliedAt: z.iso.datetime(),
+  derivedTier: CouponUsageDerivedTierSchema.nullable(),
+}).openapi("AdminCouponUsageLog", {
+  example: {
+    rentalId: "018fa100-0000-7000-8000-000000000201",
+    userId: "018fa100-0000-7000-8000-000000000202",
+    pricingPolicyId: "018fa100-0000-7000-8000-000000000203",
+    rentalStatus: "COMPLETED",
+    startTime: "2026-04-17T08:00:00.000Z",
+    endTime: "2026-04-17T09:35:00.000Z",
+    totalDurationMinutes: 95,
+    baseAmount: 8000,
+    prepaidAmount: 0,
+    subscriptionApplied: false,
+    subscriptionDiscountAmount: 0,
+    couponDiscountAmount: 2000,
+    totalAmount: 6000,
+    appliedAt: "2026-04-17T09:35:10.000Z",
+    derivedTier: "TIER_2H_4H",
+  },
+});
+
+export const AdminCouponUsageLogsResponseSchema = z.object({
+  data: z.array(AdminCouponUsageLogSchema),
+  pagination: PaginationSchema,
+}).openapi("AdminCouponUsageLogsResponse", {
+  example: {
+    data: [
+      {
+        rentalId: "018fa100-0000-7000-8000-000000000201",
+        userId: "018fa100-0000-7000-8000-000000000202",
+        pricingPolicyId: "018fa100-0000-7000-8000-000000000203",
+        rentalStatus: "COMPLETED",
+        startTime: "2026-04-17T08:00:00.000Z",
+        endTime: "2026-04-17T09:35:00.000Z",
+        totalDurationMinutes: 95,
+        baseAmount: 8000,
+        prepaidAmount: 0,
+        subscriptionApplied: false,
+        subscriptionDiscountAmount: 0,
+        couponDiscountAmount: 2000,
+        totalAmount: 6000,
+        appliedAt: "2026-04-17T09:35:10.000Z",
+        derivedTier: "TIER_2H_4H",
+      },
+    ],
+    pagination: {
+      page: 1,
+      pageSize: 20,
+      total: 1,
+      totalPages: 1,
+    },
+  },
+});
+
 export const CouponRuleErrorCodeSchema = z.enum([
   "COUPON_RULE_NOT_FOUND",
 ]).openapi("CouponRuleErrorCode");
@@ -380,6 +543,18 @@ export type CouponStatsByDiscountAmount = z.infer<
 export type CouponTopAppliedRule = z.infer<typeof CouponTopAppliedRuleSchema>;
 export type AdminCouponStatsResponse = z.infer<
   typeof AdminCouponStatsResponseSchema
+>;
+export type CouponUsageDerivedTier = z.infer<
+  typeof CouponUsageDerivedTierSchema
+>;
+export type AdminCouponUsageLogsQuery = z.infer<
+  typeof AdminCouponUsageLogsQuerySchema
+>;
+export type AdminCouponUsageLog = z.infer<
+  typeof AdminCouponUsageLogSchema
+>;
+export type AdminCouponUsageLogsResponse = z.infer<
+  typeof AdminCouponUsageLogsResponseSchema
 >;
 export type CouponRuleErrorResponse = z.infer<
   typeof CouponRuleErrorResponseSchema

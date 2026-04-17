@@ -9,6 +9,8 @@ export function makeCouponQueryService(
       repo.listAdminCouponRules(filter, pageReq),
     getAdminCouponStats: input =>
       repo.getAdminCouponStats(input),
+    listAdminCouponUsageLogs: (filter, pageReq) =>
+      repo.listAdminCouponUsageLogs(filter, pageReq),
     listActiveGlobalCouponRules: input =>
       repo.listActiveGlobalCouponRules(input),
     listGlobalBillingPreviewDiscountRules: input =>

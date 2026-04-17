@@ -3,6 +3,7 @@ import type {
   CouponTriggerType,
   DiscountType,
   Prisma as PrismaTypes,
+  RentalStatus,
 } from "generated/prisma/client";
 
 import type { PageResult } from "@/domain/shared/pagination";
@@ -144,3 +145,38 @@ export type AdminCouponStatsRow = {
   readonly statsByDiscountAmount: readonly CouponStatsByDiscountAmountRow[];
   readonly topAppliedRule: CouponTopAppliedRuleRow | null;
 };
+
+export type CouponUsageDerivedTier =
+  | "TIER_1H_2H"
+  | "TIER_2H_4H"
+  | "TIER_4H_6H"
+  | "TIER_6H_PLUS";
+
+export type AdminCouponUsageLogRow = {
+  readonly rentalId: string;
+  readonly userId: string;
+  readonly pricingPolicyId: string;
+  readonly rentalStatus: RentalStatus;
+  readonly startTime: Date;
+  readonly endTime: Date | null;
+  readonly totalDurationMinutes: number;
+  readonly baseAmount: number;
+  readonly prepaidAmount: number;
+  readonly subscriptionApplied: boolean;
+  readonly subscriptionDiscountAmount: number;
+  readonly couponDiscountAmount: number;
+  readonly totalAmount: number;
+  readonly appliedAt: Date;
+  readonly derivedTier: CouponUsageDerivedTier | null;
+};
+
+export type ListAdminCouponUsageLogsFilter = {
+  readonly from?: Date;
+  readonly to?: Date;
+  readonly userId?: string;
+  readonly rentalId?: string;
+  readonly discountAmount?: number;
+  readonly subscriptionApplied?: boolean;
+};
+
+export type AdminCouponUsageLogPageResult = PageResult<AdminCouponUsageLogRow>;

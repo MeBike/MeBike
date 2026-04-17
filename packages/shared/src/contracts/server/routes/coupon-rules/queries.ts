@@ -3,6 +3,8 @@ import { createRoute } from "@hono/zod-openapi";
 import {
   AdminCouponStatsQuerySchema,
   AdminCouponStatsResponseSchema,
+  AdminCouponUsageLogsQuerySchema,
+  AdminCouponUsageLogsResponseSchema,
   ActiveCouponRulesResponseSchema,
   AdminCouponRulesListQuerySchema,
   AdminCouponRulesListResponseSchema,
@@ -65,6 +67,36 @@ export const adminCouponStats = createRoute({
       content: {
         "application/json": {
           schema: AdminCouponStatsResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid query parameters",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
+export const adminCouponUsageLogs = createRoute({
+  method: "get",
+  path: "/v1/admin/coupon-usage-logs",
+  tags: ["Admin", "Coupon Rules"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: AdminCouponUsageLogsQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Admin usage logs for finalized global auto discount applications",
+      content: {
+        "application/json": {
+          schema: AdminCouponUsageLogsResponseSchema,
         },
       },
     },

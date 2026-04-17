@@ -3,6 +3,7 @@ import type { CouponsContracts } from "@mebike/shared";
 import type {
   ActiveCouponRuleRow,
   AdminCouponStatsRow,
+  AdminCouponUsageLogRow,
   AdminCouponRuleRow,
 } from "@/domain/coupons";
 
@@ -87,6 +88,28 @@ export function toContractAdminCouponStats(
           inferredFrom: stats.topAppliedRule.inferredFrom,
         }
       : null,
+  };
+}
+
+export function toContractAdminCouponUsageLog(
+  row: AdminCouponUsageLogRow,
+): CouponsContracts.AdminCouponUsageLog {
+  return {
+    rentalId: row.rentalId,
+    userId: row.userId,
+    pricingPolicyId: row.pricingPolicyId,
+    rentalStatus: row.rentalStatus,
+    startTime: row.startTime.toISOString(),
+    endTime: row.endTime?.toISOString() ?? null,
+    totalDurationMinutes: row.totalDurationMinutes,
+    baseAmount: row.baseAmount,
+    prepaidAmount: row.prepaidAmount,
+    subscriptionApplied: row.subscriptionApplied,
+    subscriptionDiscountAmount: row.subscriptionDiscountAmount,
+    couponDiscountAmount: row.couponDiscountAmount,
+    totalAmount: row.totalAmount,
+    appliedAt: row.appliedAt.toISOString(),
+    derivedTier: row.derivedTier,
   };
 }
 

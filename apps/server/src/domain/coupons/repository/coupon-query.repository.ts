@@ -13,6 +13,7 @@ import { Prisma } from "@/infrastructure/prisma";
 import type {
   ActiveCouponRuleRow,
   AdminCouponStatsRow,
+  AdminCouponUsageLogRow,
   AdminCouponRuleRow,
   BillingPreviewDiscountRuleRow,
 } from "../models";
@@ -60,6 +61,32 @@ const selectAdminCouponRuleRow = {
   updatedAt: true,
 } satisfies PrismaTypes.CouponRuleSelect;
 
+const selectAdminCouponUsageLogRow = {
+  rentalId: true,
+  pricingPolicyId: true,
+  totalDurationMinutes: true,
+  baseAmount: true,
+  couponDiscountAmount: true,
+  subscriptionDiscountAmount: true,
+  totalAmount: true,
+  createdAt: true,
+  rental: {
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      startTime: true,
+      endTime: true,
+      subscriptionId: true,
+      reservation: {
+        select: {
+          prepaid: true,
+        },
+      },
+    },
+  },
+} satisfies PrismaTypes.RentalBillingRecordSelect;
+
 type BillingPreviewDiscountRuleRecord = PrismaTypes.CouponRuleGetPayload<{
   select: typeof selectBillingPreviewDiscountRuleRow;
 }>;
@@ -70,6 +97,10 @@ type ActiveCouponRuleRecord = PrismaTypes.CouponRuleGetPayload<{
 
 type AdminCouponRuleRecord = PrismaTypes.CouponRuleGetPayload<{
   select: typeof selectAdminCouponRuleRow;
+}>;
+
+type AdminCouponUsageLogRecord = PrismaTypes.RentalBillingRecordGetPayload<{
+  select: typeof selectAdminCouponUsageLogRow;
 }>;
 
 function toBillingPreviewDiscountRuleRow(
@@ -130,6 +161,30 @@ function toAdminCouponRuleRow(
   };
 }
 
+function toAdminCouponUsageLogRow(
+  row: AdminCouponUsageLogRecord,
+): AdminCouponUsageLogRow {
+  const couponDiscountAmount = Number(toMinorUnit(row.couponDiscountAmount));
+
+  return {
+    rentalId: row.rentalId,
+    userId: row.rental.userId,
+    pricingPolicyId: row.pricingPolicyId,
+    rentalStatus: row.rental.status,
+    startTime: row.rental.startTime,
+    endTime: row.rental.endTime,
+    totalDurationMinutes: row.totalDurationMinutes,
+    baseAmount: Number(toMinorUnit(row.baseAmount)),
+    prepaidAmount: Number(toMinorUnit(row.rental.reservation?.prepaid)),
+    subscriptionApplied: Boolean(row.rental.subscriptionId),
+    subscriptionDiscountAmount: Number(toMinorUnit(row.subscriptionDiscountAmount)),
+    couponDiscountAmount,
+    totalAmount: Number(toMinorUnit(row.totalAmount)),
+    appliedAt: row.createdAt,
+    derivedTier: deriveCouponUsageTier(couponDiscountAmount),
+  };
+}
+
 function activeGlobalRidingDurationFixedAmountWhere(
   now: Date,
   extraAnd: readonly PrismaTypes.CouponRuleWhereInput[] = [],
@@ -162,6 +217,30 @@ function adminCouponRulesOrderBy(): PrismaTypes.CouponRuleOrderByWithRelationInp
     { createdAt: "desc" },
     { id: "desc" },
   ];
+}
+
+function adminCouponUsageLogsOrderBy(): PrismaTypes.RentalBillingRecordOrderByWithRelationInput[] {
+  return [
+    { createdAt: "desc" },
+    { id: "desc" },
+  ];
+}
+
+function deriveCouponUsageTier(
+  discountAmount: number,
+): AdminCouponUsageLogRow["derivedTier"] {
+  switch (discountAmount) {
+    case 1000:
+      return "TIER_1H_2H";
+    case 2000:
+      return "TIER_2H_4H";
+    case 4000:
+      return "TIER_4H_6H";
+    case 6000:
+      return "TIER_6H_PLUS";
+    default:
+      return null;
+  }
 }
 
 export function makeCouponQueryRepository(
@@ -361,6 +440,77 @@ export function makeCouponQueryRepository(
             totalDiscountAmount: Number(toMinorUnit(row._sum.couponDiscountAmount)),
           })),
         });
+      }).pipe(defectOn(CouponRepositoryError)),
+    listAdminCouponUsageLogs: (filter, pageReq) =>
+      Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage({
+          ...pageReq,
+          pageSize: Math.min(pageReq.pageSize, 100),
+        });
+
+        const where: PrismaTypes.RentalBillingRecordWhereInput = {
+          couponDiscountAmount: {
+            gt: "0",
+            ...(filter.discountAmount !== undefined
+              ? { equals: filter.discountAmount.toString() }
+              : {}),
+          },
+          ...(filter.from || filter.to
+            ? {
+                createdAt: {
+                  ...(filter.from ? { gte: filter.from } : {}),
+                  ...(filter.to ? { lte: filter.to } : {}),
+                },
+              }
+            : {}),
+          rental: {
+            is: {
+              status: "COMPLETED",
+              ...(filter.userId ? { userId: filter.userId } : {}),
+              ...(filter.rentalId ? { id: filter.rentalId } : {}),
+              ...(filter.subscriptionApplied === undefined
+                ? {}
+                : filter.subscriptionApplied
+                  ? { subscriptionId: { not: null } }
+                  : { subscriptionId: null }),
+            },
+          },
+        };
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.rentalBillingRecord.count({ where }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "listAdminCouponUsageLogs.count",
+                message: "Failed to count admin coupon usage logs",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.rentalBillingRecord.findMany({
+                where,
+                skip,
+                take,
+                orderBy: adminCouponUsageLogsOrderBy(),
+                select: selectAdminCouponUsageLogRow,
+              }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "listAdminCouponUsageLogs.findMany",
+                message: "Failed to list admin coupon usage logs",
+                cause: err,
+              }),
+          }),
+        ]);
+
+        return makePageResult(
+          items.map(toAdminCouponUsageLogRow),
+          total,
+          page,
+          pageSize,
+        );
       }).pipe(defectOn(CouponRepositoryError)),
     listActiveGlobalCouponRules: input =>
       Effect.gen(function* () {

@@ -3,10 +3,12 @@ import type { Effect, Option } from "effect";
 import type {
   ActiveCouponRuleRow,
   AdminCouponStatsRow,
+  AdminCouponUsageLogPageResult,
   AdminCouponRulePageResult,
   AdminCouponRuleRow,
   BillingPreviewDiscountRuleRow,
   CreateCouponRuleData,
+  ListAdminCouponUsageLogsFilter,
   ListAdminCouponRulesFilter,
   UpdateCouponRuleData,
 } from "../models";
@@ -50,4 +52,8 @@ export type CouponQueryRepo = {
       readonly to?: Date;
     },
   ) => Effect.Effect<AdminCouponStatsRow>;
+  listAdminCouponUsageLogs: (
+    filter: ListAdminCouponUsageLogsFilter,
+    pageReq: PageRequest,
+  ) => Effect.Effect<AdminCouponUsageLogPageResult>;
 };
