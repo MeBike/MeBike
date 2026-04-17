@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "Config.h"
 #include "NFCManager.h"
 #include "app/DeviceContext.h"
 #include "app/RuntimeState.h"
@@ -10,6 +11,8 @@
 #include "services/CommandConsumer.h"
 #include "services/ConnectivityService.h"
 #include "services/FeedbackController.h"
+#include "services/ProvisioningService.h"
+#include "services/RuntimeStatusPublisher.h"
 #include "services/TapPublisher.h"
 
 class App
@@ -21,12 +24,14 @@ public:
     void loop();
 
 private:
+    void initializeLogging();
+    bool loadRuntimeConfig();
+    void initializeRuntimeServices();
+    void applyFeedback();
     void setRuntimeState(RuntimeState state);
-    void publishStatusIfNeeded(bool force = false);
-    bool configLooksValid() const;
 
+    AppConfig config;
     RuntimeState runtimeState = RuntimeState::Booting;
-    RuntimeState lastPublishedState = RuntimeState::Booting;
     DeviceContext deviceContext;
     LedController ledController;
     std::unique_ptr<NFCManager> nfcManager;
@@ -34,7 +39,8 @@ private:
     std::unique_ptr<TapPublisher> tapPublisher;
     std::unique_ptr<CommandConsumer> commandConsumer;
     std::unique_ptr<FeedbackController> feedbackController;
-    unsigned long lastStatusPublishAt = 0;
+    std::unique_ptr<ProvisioningService> provisioningService;
+    std::unique_ptr<RuntimeStatusPublisher> statusPublisher;
     bool setupFailed = false;
 };
 

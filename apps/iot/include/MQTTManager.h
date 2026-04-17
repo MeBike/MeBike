@@ -17,8 +17,8 @@ public:
                 std::string_view password);
     bool connect();
     void loop();
-    bool publish(const char *topic, const char *message, bool retained = false);
-    bool publish(std::string_view topic, std::string_view message, bool retained = false);
+    bool publish(const char *topic, const char *message, bool retained = false, bool logMessage = true);
+    bool publish(std::string_view topic, std::string_view message, bool retained = false, bool logMessage = true);
     bool subscribe(const char *topic);
     bool subscribe(std::string_view topic);
     void setCallback(void (*callback)(char *, byte *, unsigned int));

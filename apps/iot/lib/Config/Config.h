@@ -15,5 +15,7 @@ struct AppConfig
 };
 
 AppConfig loadConfig();
+bool saveConfig(const AppConfig &config);
+bool isConfigValid(const AppConfig &config);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef SERVICES_CONNECTIVITY_SERVICE_H
 #define SERVICES_CONNECTIVITY_SERVICE_H
 
-#include <memory>
+#include <optional>
 #include <string>
 
 #include <WiFiClient.h>
@@ -32,7 +32,7 @@ private:
     DeviceContext deviceContext;
     WiFiClient wifiClient;
     MQTTManager mqttManager;
-    std::string commandTopic;
+    std::optional<std::string> commandTopic;
     unsigned long lastWifiAttemptAt = 0;
     unsigned long lastMqttAttemptAt = 0;
     bool wifiStarted = false;

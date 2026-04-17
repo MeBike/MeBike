@@ -46,11 +46,14 @@ void MQTTManager::loop()
     _client.loop();
 }
 
-bool MQTTManager::publish(const char *topic, const char *message, bool retained)
+bool MQTTManager::publish(const char *topic, const char *message, bool retained, bool logMessage)
 {
     if (_client.publish(topic, message, retained))
     {
-        Log.info("Published to %s: %s\n", topic, message);
+        if (logMessage)
+        {
+            Log.info("Published to %s: %s\n", topic, message);
+        }
         return true;
     }
     else
@@ -60,11 +63,11 @@ bool MQTTManager::publish(const char *topic, const char *message, bool retained)
     }
 }
 
-bool MQTTManager::publish(std::string_view topic, std::string_view message, bool retained)
+bool MQTTManager::publish(std::string_view topic, std::string_view message, bool retained, bool logMessage)
 {
     std::string topicBuffer(topic);
     std::string messageBuffer(message);
-    return publish(topicBuffer.c_str(), messageBuffer.c_str(), retained);
+    return publish(topicBuffer.c_str(), messageBuffer.c_str(), retained, logMessage);
 }
 
 bool MQTTManager::subscribe(const char *topic)
