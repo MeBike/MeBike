@@ -53,6 +53,7 @@ const LEGACY_DEMO_AGENCY_IDS = [
 const DEMO_TECH_TEAM_A_ID = "019b17bd-d130-7e7d-be69-91ceef7b9005";
 const DEMO_TECH_TEAM_B_ID = "019b17bd-d130-7e7d-be69-91ceef7b9006";
 const DEMO_ENVIRONMENT_POLICY_ID = "019b17bd-d130-7e7d-be69-91ceef7b9010";
+const DEMO_COUPON_PREVIEW_RENTAL_ID = "019b17bd-d130-7e7d-be69-91ceef7b9021";
 
 const DEMO_ENVIRONMENT_FORMULA_CONFIG = {
   return_scan_buffer_minutes: 3,
@@ -410,10 +411,14 @@ function buildRentals(params: {
 
   const rentedUsers = normalUsers.slice(0, 8);
   const rentedBikes = bikes.slice(0, 8);
+  const rentedStartOffsetsMinutes = [185, 125, 95, 75, 50, 35, 20, 10] as const;
+
   for (let i = 0; i < 8; i++) {
-    const start = toUtcDate(0, 6 + i, (i * 8) % 60);
+    const startOffsetMinutes = rentedStartOffsetsMinutes[i] ?? Math.max(5, 185 - i * 20);
+    const start = new Date(Date.now() - startOffsetMinutes * 60 * 1000);
+
     rentals.push({
-      id: uuidv7(),
+      id: i === 1 ? DEMO_COUPON_PREVIEW_RENTAL_ID : uuidv7(),
       userId: rentedUsers[i]!.id,
       bikeId: rentedBikes[i]!.id,
       startStationId: rentedBikes[i]!.stationId ?? pick(stationIds, i),
@@ -1262,6 +1267,16 @@ async function main() {
         password: DEMO_PASSWORD,
       },
       "Demo logins",
+    );
+
+    logger.info(
+      {
+        email: "user02@mebike.local",
+        rentalId: DEMO_COUPON_PREVIEW_RENTAL_ID,
+        expectedMinRidingMinutes: 120,
+        deactivateRuleId: "019b17bd-d130-7e7d-be69-91ceef7b7202",
+      },
+      "Demo coupon deactivate test target",
     );
   }
   finally {
