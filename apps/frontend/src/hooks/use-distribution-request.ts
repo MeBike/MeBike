@@ -1,3 +1,4 @@
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { RedistributionRequestStatus } from "@/types/DistributionRequest";
@@ -12,8 +13,13 @@ import {
   useGetAgencyViewDistributionRequestDetailQuery,
   useGetManagerViewDistributionRequestDetailQuery,
 } from "@queries";
+import {
+  useApproveDistributionRequestMutation,
+  useRejectDistributionRequestMutation,
+} from "@mutations"
 import { useRouter } from "next/navigation";
 import { HTTP_STATUS } from "@/constants";
+import { getErrorMessageFromDistributionRequestCode, getAxiosErrorCodeMessage } from "@utils";
 interface DistributionRequestActionProps {
   page?: number;
   pageSize?: number;
@@ -134,6 +140,74 @@ export const useDistributionRequest = ({
     }
     refetchManagerViewDistributionRequestDetail();
   }, [refetchManagerViewDistributionRequestDetail, id]);
+  const useApproveDistributeRequest = useApproveDistributionRequestMutation();
+  const useRejectDistributeRequest = useRejectDistributionRequestMutation();
+  const approveDistributeRequest = useCallback(
+    async (id:string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useApproveDistributeRequest.mutateAsync(id);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Duyệt yêu cầu phân bổ thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["distribution-request", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["manager","distribution-request-data","detail",id],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useApproveDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
+  const rejectDistributeRequest = useCallback(
+    async (id:string , data : {reason:string}) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useRejectDistributeRequest.mutateAsync({id,data});
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Từ chối yêu cầu phân bổ thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["distribution-request", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["manager","distribution-request-data","detail",id],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useRejectDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
   return {
     adminViewDistributionRequest,
     refetchAdminViewDistributionRequest,
@@ -167,5 +241,7 @@ export const useDistributionRequest = ({
     refetchManagerViewDistributionRequestDetail,
     isLoadingManagerViewDistributionRequestDetail,
     getManagerViewDistributionRequestDetail,
+    approveDistributeRequest,
+    rejectDistributeRequest,
   };
 };

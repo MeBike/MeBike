@@ -176,9 +176,10 @@ export const distributionRequestService = {
     );
     return response;
   },
-  rejectDistributionRequest: async ({ id }: { id: string }) : Promise<AxiosResponse<RedistributionRequestDetailForApprove>> => {
+  rejectDistributionRequest: async ({ id , data  }: { id: string , data : {reason : string} }) : Promise<AxiosResponse<RedistributionRequestDetailForApprove>> => {
     const response = await fetchHttpClient.post<RedistributionRequestDetailForApprove>(
       ENDPOINT.DISTRIBUTION_REQUEST.REJECT(id),
+      data
     );
     return response;
   },
