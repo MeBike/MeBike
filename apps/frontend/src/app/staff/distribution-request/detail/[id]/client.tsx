@@ -76,7 +76,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
               <CardContent className="space-y-4 text-sm">
                 <div className="flex flex-col gap-1">
                   <span className="text-muted-foreground font-medium">Lý do điều phối:</span>
-                  <span className="text-slate-900 italic">"{data.reason || "Không có lý do cụ thể"}"</span>
+                  <span className="text-slate-900 italic">{data.reason || "Không có lý do cụ thể"}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 border-t pt-4">
                   <div>
