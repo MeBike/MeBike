@@ -20,6 +20,7 @@ export type UserReadRepo = Pick<
   UserRepo,
   | "findById"
   | "findByEmail"
+  | "findByNfcCardUid"
   | "findByStripeConnectedAccountId"
   | "listWithOffset"
   | "searchByQuery"
@@ -60,6 +61,25 @@ export function makeUserReadRepository(
         catch: err =>
           new UserRepositoryError({
             operation: "findByEmail",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toUserRow)),
+        ),
+        defectOn(UserRepositoryError),
+      ),
+
+    findByNfcCardUid: nfcCardUid =>
+      Effect.tryPromise({
+        try: () =>
+          client.user.findFirst({
+            where: { nfcCardUid },
+            select: selectUserRow,
+          }),
+        catch: err =>
+          new UserRepositoryError({
+            operation: "findByNfcCardUid",
             cause: err,
           }),
       }).pipe(

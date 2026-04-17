@@ -5,6 +5,7 @@
 
 struct AppConfig
 {
+    std::string bikeId;
     std::string wifiSsid;
     std::string wifiPass;
     std::string mqttBrokerIP;

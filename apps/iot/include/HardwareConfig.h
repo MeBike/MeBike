@@ -6,6 +6,8 @@
 namespace HardwareConfig {
 constexpr uint8_t I2C_SDA_PIN = 21;
 constexpr uint8_t I2C_SCL_PIN = 22;
+// Optional PN532 pins. Firmware now only relies on I2C for normal operation.
+// Leaving these defined keeps Adafruit_PN532 happy even when IRQ/RST are not wired.
 constexpr uint8_t PN532_IRQ_PIN = 4;
 constexpr uint8_t PN532_RESET_PIN = 5;
 constexpr uint8_t LED_RED_PIN = 16;

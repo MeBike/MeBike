@@ -7,7 +7,7 @@
 class NFCManager
 {
 public:
-    NFCManager(uint8_t irqPin, uint8_t resetPin);
+    NFCManager();
     bool begin();
     void recoverTick();
     void markUnhealthy();
@@ -26,11 +26,8 @@ private:
 
     void startRecovery();
     bool performReinitialization();
-    void driveResetPulse();
 
     static constexpr unsigned long I2C_RESTART_DELAY_MS = 10;
-    static constexpr unsigned long PN532_RESET_LOW_MS = 30;
-    static constexpr unsigned long PN532_RESET_STABILIZE_MS = 150;
     static constexpr unsigned long RECOVERY_BACKOFF_INITIAL_MS = 1000;
     static constexpr unsigned long RECOVERY_BACKOFF_MAX_MS = 15000;
 
@@ -42,8 +39,6 @@ private:
     unsigned long recoveryStartedAt = 0;
     uint32_t recoveryAttempts = 0;
 
-    const uint8_t irqPin;
-    const uint8_t resetPin;
     Adafruit_PN532 nfc;
 };
 
