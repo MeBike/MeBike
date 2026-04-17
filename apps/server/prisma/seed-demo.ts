@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt";
+import { Either } from "effect";
 import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
@@ -9,8 +10,6 @@ import {
   AssignmentStatus,
   BikeStatus,
   BikeSwapStatus,
-  ConfirmationMethod,
-  HandoverStatus,
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
@@ -26,12 +25,13 @@ import {
   WalletStatus,
 } from "../generated/prisma/client";
 import { formatBikeNumber } from "../src/domain/bikes/bike-number";
+import { makeReservationRentalFlowTestKit } from "../src/domain/rentals/services/test/reservation-rental-flow-test-kit";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
 import { toPrismaDecimal } from "../src/domain/shared/decimal";
 import logger from "../src/lib/logger";
 import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
-import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
+import { DEFAULT_PRICING_POLICY_ID, seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
 import { seedDemoRatings } from "./seed/demo-ratings";
 import { seedRatingReasons } from "./seed/rating-reasons";
@@ -41,7 +41,6 @@ import { stations } from "./seed/stations.data";
 const DEMO_PASSWORD = "Demo@123456";
 
 const USERS_TARGET = 32;
-const RENTALS_TARGET = 120;
 const DEMO_NON_CUSTOMER_USERS = 7;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
@@ -111,6 +110,30 @@ type DemoOrgAssignment = {
   readonly technicianTeamId: string | null;
 };
 
+type DemoLifecycleReturnTarget = {
+  readonly stationId: string;
+  readonly operatorUserId: string;
+  readonly operatorRole: "STAFF" | "AGENCY";
+  readonly operatorStationId: string | null;
+  readonly operatorAgencyId: string | null;
+};
+
+type DemoCompletedRentalSeedSpec = {
+  readonly stationId: string;
+  readonly userId: string;
+  readonly reservationOption: ReservationOption;
+  readonly subscriptionId: string | null;
+  readonly reserveAt: Date;
+  readonly startTime: Date;
+  readonly endTime: Date;
+  readonly expectedDiscountAmount: number;
+  readonly returnTarget: DemoLifecycleReturnTarget;
+};
+
+type DemoCompletedRentalSeedPlan = DemoCompletedRentalSeedSpec & {
+  readonly bikeId: string;
+};
+
 function getConnectionString() {
   const url = process.env.DATABASE_URL;
   if (!url) {
@@ -138,6 +161,17 @@ function toUtcDateInMonth(year: number, month: number, day: number, hour: number
 
 function pick<T>(arr: readonly T[], idx: number): T {
   return arr[idx % arr.length]!;
+}
+
+function unwrapEitherRight<A, E extends { _tag?: string }>(
+  result: Either.Either<A, E>,
+  context: string,
+): A {
+  if (Either.isLeft(result)) {
+    throw new Error(`${context}: ${result.left._tag ?? JSON.stringify(result.left)}`);
+  }
+
+  return result.right;
 }
 
 function getDemoTechnicianTeamId(index: number) {
@@ -330,63 +364,6 @@ function buildRentals(params: {
   const normalUsers = users.filter(u => u.role === UserRole.USER);
   const rentals: DemoRental[] = [];
 
-  const now = new Date();
-  const currentYear = now.getUTCFullYear();
-  const currentMonth = now.getUTCMonth();
-  const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-  const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const daysInCurrentMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0)).getUTCDate();
-  const daysInPrevMonth = new Date(Date.UTC(prevMonthYear, prevMonth + 1, 0)).getUTCDate();
-
-  const pushCompleted = (count: number, dateFactory: (idx: number) => Date, startIdx = 0) => {
-    for (let i = 0; i < count; i++) {
-      const idx = startIdx + i;
-      const user = pick(normalUsers, idx);
-      const bike = pick(bikes, idx);
-      const end = dateFactory(i);
-      const duration = 20 + (idx % 12) * 10;
-      const start = new Date(end.getTime() - duration * 60 * 1000);
-      const startStation = bike.stationId ?? pick(stationIds, idx);
-      const endStation = pick(stationIds, idx + 3);
-      const subscriptionId = idx % 3 === 0 ? (subscriptionIdsByUserId.get(user.id) ?? null) : null;
-
-      rentals.push({
-        id: uuidv7(),
-        userId: user.id,
-        bikeId: bike.id,
-        startStationId: startStation,
-        endStationId: endStation,
-        createdAt: new Date(start.getTime() - 5 * 60 * 1000),
-        startTime: start,
-        endTime: end,
-        duration,
-        totalPrice: 8000 + duration * 220,
-        subscriptionId,
-        status: RentalStatus.COMPLETED,
-        updatedAt: end,
-      });
-    }
-  };
-
-  pushCompleted(12, idx => toUtcDate(0, 8 + (idx % 12), (idx * 7) % 60), 0);
-  pushCompleted(9, idx => toUtcDate(-1, 9 + (idx % 9), (idx * 9) % 60), 100);
-  pushCompleted(
-    36,
-    (idx) => {
-      const day = ((idx % Math.max(1, daysInCurrentMonth - 2)) + 1);
-      return toUtcDateInMonth(currentYear, currentMonth, day, 6 + (idx % 14), (idx * 11) % 60);
-    },
-    200,
-  );
-  pushCompleted(
-    27,
-    (idx) => {
-      const day = ((idx % daysInPrevMonth) + 1);
-      return toUtcDateInMonth(prevMonthYear, prevMonth, day, 7 + (idx % 12), (idx * 13) % 60);
-    },
-    300,
-  );
-
   for (let i = 0; i < 18; i++) {
     const idx = 400 + i;
     const user = pick(normalUsers, idx);
@@ -434,7 +411,7 @@ function buildRentals(params: {
     });
   }
 
-  return rentals.slice(0, RENTALS_TARGET);
+  return rentals;
 }
 
 function buildReservations(params: {
@@ -467,6 +444,190 @@ function buildReservations(params: {
       updatedAt: new Date(startTime.getTime() - 20 * 60 * 1000),
     };
   });
+}
+
+function expectedDiscountAmountForDuration(
+  durationMinutes: number,
+  reservationOption: ReservationOption,
+): number {
+  if (reservationOption === ReservationOption.SUBSCRIPTION) {
+    return 0;
+  }
+
+  const billableMinutes = Math.max(30, Math.ceil(durationMinutes / 30) * 30);
+
+  if (billableMinutes >= 360) {
+    return 6000;
+  }
+  if (billableMinutes >= 240) {
+    return 4000;
+  }
+  if (billableMinutes >= 120) {
+    return 2000;
+  }
+  if (billableMinutes >= 60) {
+    return 1000;
+  }
+
+  return 0;
+}
+
+function buildCompletedRentalSeedSpecs(params: {
+  users: readonly DemoUser[];
+  subscriptionIdsByUserId: ReadonlyMap<string, string>;
+  returnTargets: readonly DemoLifecycleReturnTarget[];
+}): DemoCompletedRentalSeedSpec[] {
+  const { users, subscriptionIdsByUserId, returnTargets } = params;
+  const normalUsers = users.filter(user => user.role === UserRole.USER);
+  const walletUsers = normalUsers;
+  const subscriptionUsers = normalUsers.filter(user => subscriptionIdsByUserId.has(user.id));
+
+  if (returnTargets.length === 0) {
+    return [];
+  }
+
+  const now = new Date();
+  const currentYear = now.getUTCFullYear();
+  const currentMonth = now.getUTCMonth();
+  const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const previousMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+  const durations = [
+    ...Array.from({ length: 12 }, (_, idx) => [30, 40, 45, 50][idx % 4]!),
+    ...Array.from({ length: 12 }, (_, idx) => [60, 75, 90, 105][idx % 4]!),
+    ...Array.from({ length: 12 }, (_, idx) => [120, 150, 180, 210][idx % 4]!),
+    ...Array.from({ length: 12 }, (_, idx) => [240, 270, 300, 330][idx % 4]!),
+    ...Array.from({ length: 8 }, (_, idx) => [360, 390, 420, 450][idx % 4]!),
+    60,
+    120,
+    240,
+    360,
+  ];
+
+  return durations.map((durationMinutes, index) => {
+    const returnTarget = pick(returnTargets, index);
+    const reservationOption = index >= 56
+      ? ReservationOption.SUBSCRIPTION
+      : ReservationOption.ONE_TIME;
+    const userPool = reservationOption === ReservationOption.SUBSCRIPTION
+      ? subscriptionUsers
+      : walletUsers;
+    const user = pick(userPool, index);
+    const subscriptionId = reservationOption === ReservationOption.SUBSCRIPTION
+      ? (subscriptionIdsByUserId.get(user.id) ?? null)
+      : null;
+    const endTime = index < 30
+      ? toUtcDateInMonth(
+          currentYear,
+          currentMonth,
+          (index % 15) + 1,
+          8 + (index % 10),
+          (index * 7) % 60,
+        )
+      : toUtcDateInMonth(
+          previousMonthYear,
+          previousMonth,
+          ((index - 30) % 15) + 1,
+          9 + (index % 9),
+          (index * 11) % 60,
+        );
+    const startTime = new Date(endTime.getTime() - durationMinutes * 60 * 1000);
+    const reserveAt = new Date(startTime.getTime() - 20 * 60 * 1000);
+
+    return {
+      stationId: returnTarget.stationId,
+      userId: user.id,
+      reservationOption,
+      subscriptionId,
+      reserveAt,
+      startTime,
+      endTime,
+      expectedDiscountAmount: expectedDiscountAmountForDuration(durationMinutes, reservationOption),
+      returnTarget,
+    } satisfies DemoCompletedRentalSeedSpec;
+  });
+}
+
+async function seedCompletedRentalsViaLifecycle(
+  prisma: PrismaClient,
+  plans: readonly DemoCompletedRentalSeedPlan[],
+) {
+  const flow = makeReservationRentalFlowTestKit(prisma);
+  const completedRentals: DemoRental[] = [];
+
+  for (const plan of plans) {
+    const reservation = unwrapEitherRight(
+      await flow.reserve({
+        userId: plan.userId,
+        bikeId: plan.bikeId,
+        stationId: plan.stationId,
+        startTime: plan.startTime,
+        now: plan.reserveAt,
+        reservationOption: plan.reservationOption,
+        subscriptionId: plan.subscriptionId,
+      }),
+      `Failed to reserve lifecycle rental for user ${plan.userId}`,
+    );
+
+    unwrapEitherRight(
+      await flow.confirm({
+        reservationId: reservation.id,
+        userId: plan.userId,
+        now: plan.startTime,
+      }),
+      `Failed to confirm reservation ${reservation.id}`,
+    );
+
+    const rental = await prisma.rental.findFirstOrThrow({
+      where: { reservationId: reservation.id },
+      select: {
+        id: true,
+        bikeId: true,
+      },
+    });
+
+    unwrapEitherRight(
+      await flow.createReturnSlot({
+        rentalId: rental.id,
+        userId: plan.userId,
+        stationId: plan.stationId,
+        now: new Date(plan.startTime.getTime() + 5 * 60 * 1000),
+      }),
+      `Failed to create return slot for rental ${rental.id}`,
+    );
+
+    const completedRental = unwrapEitherRight(
+      await flow.confirmReturn({
+        rentalId: rental.id,
+        stationId: plan.stationId,
+        confirmedByUserId: plan.returnTarget.operatorUserId,
+        operatorRole: plan.returnTarget.operatorRole,
+        operatorStationId: plan.returnTarget.operatorStationId,
+        operatorAgencyId: plan.returnTarget.operatorAgencyId,
+        confirmationMethod: "MANUAL",
+        confirmedAt: plan.endTime,
+      }),
+      `Failed to finalize rental ${rental.id}`,
+    );
+
+    completedRentals.push({
+      id: completedRental.id,
+      userId: completedRental.userId,
+      bikeId: completedRental.bikeId,
+      startStationId: completedRental.startStationId,
+      endStationId: completedRental.endStationId,
+      createdAt: plan.reserveAt,
+      startTime: plan.startTime,
+      endTime: plan.endTime,
+      duration: completedRental.duration,
+      totalPrice: completedRental.totalPrice,
+      subscriptionId: completedRental.subscriptionId,
+      status: RentalStatus.COMPLETED,
+      updatedAt: plan.endTime,
+    });
+  }
+
+  return completedRentals;
 }
 
 async function main() {
@@ -592,6 +753,37 @@ async function main() {
         },
       },
     });
+    await prisma.environmentalImpactStat.deleteMany({
+      where: {
+        user: {
+          email: {
+            in: userEmails,
+          },
+        },
+      },
+    });
+    await prisma.rentalPenalty.deleteMany({
+      where: {
+        rental: {
+          user: {
+            email: {
+              in: userEmails,
+            },
+          },
+        },
+      },
+    });
+    await prisma.rentalBillingRecord.deleteMany({
+      where: {
+        rental: {
+          user: {
+            email: {
+              in: userEmails,
+            },
+          },
+        },
+      },
+    });
     await prisma.rental.deleteMany({
       where: {
         user: {
@@ -615,6 +807,28 @@ async function main() {
         user: {
           email: {
             in: userEmails,
+          },
+        },
+      },
+    });
+    await prisma.walletHold.deleteMany({
+      where: {
+        wallet: {
+          user: {
+            email: {
+              in: userEmails,
+            },
+          },
+        },
+      },
+    });
+    await prisma.walletTransaction.deleteMany({
+      where: {
+        wallet: {
+          user: {
+            email: {
+              in: userEmails,
+            },
           },
         },
       },
@@ -831,8 +1045,8 @@ async function main() {
         .map((u, idx) => ({
           id: uuidv7(),
           userId: u.id,
-          balance: BigInt(250000 + idx * 15000),
-          reservedBalance: BigInt(idx % 4 === 0 ? 10000 : 0),
+          balance: BigInt(2000000 + idx * 100000),
+          reservedBalance: BigInt(0),
           status: WalletStatus.ACTIVE,
           updatedAt: new Date(),
         })),
@@ -847,9 +1061,6 @@ async function main() {
       status: BikeStatus.AVAILABLE,
       updatedAt: new Date(),
     }));
-
-    await prisma.bike.createMany({ data: bikesToCreate });
-    await setBikeNumberSequence(prisma, bikesToCreate.length);
 
     const subscriptionUsers = users.filter(u => u.role === UserRole.USER).slice(0, 12);
     const subscriptions = subscriptionUsers.map((user, idx) => ({
@@ -872,6 +1083,85 @@ async function main() {
 
     const subscriptionIdsByUserId = new Map<string, string>(
       subscriptions.map(s => [s.userId, s.id]),
+    );
+
+    const staff1 = userByEmail.get("staff1@mebike.local");
+    const staff2 = userByEmail.get("staff2@mebike.local");
+    const agency1 = userByEmail.get("agency1@mebike.local");
+    const agency2 = userByEmail.get("agency2@mebike.local");
+
+    const lifecycleReturnTargets = [
+      staff1 && pick(stationIds, 2)
+        ? {
+            stationId: pick(stationIds, 2),
+            operatorUserId: staff1.id,
+            operatorRole: "STAFF" as const,
+            operatorStationId: pick(stationIds, 2),
+            operatorAgencyId: null,
+          }
+        : null,
+      staff2 && pick(stationIds, 3)
+        ? {
+            stationId: pick(stationIds, 3),
+            operatorUserId: staff2.id,
+            operatorRole: "STAFF" as const,
+            operatorStationId: pick(stationIds, 3),
+            operatorAgencyId: null,
+          }
+        : null,
+      agency1 && agencyOwnedStations[0]?.stationId
+        ? {
+            stationId: agencyOwnedStations[0].stationId,
+            operatorUserId: agency1.id,
+            operatorRole: "AGENCY" as const,
+            operatorStationId: null,
+            operatorAgencyId: mainAgency.id,
+          }
+        : null,
+      agency2 && agencyOwnedStations[1]?.stationId
+        ? {
+            stationId: agencyOwnedStations[1].stationId,
+            operatorUserId: agency2.id,
+            operatorRole: "AGENCY" as const,
+            operatorStationId: null,
+            operatorAgencyId: eastAgency.id,
+          }
+        : null,
+    ].filter((target): target is DemoLifecycleReturnTarget => target !== null);
+
+    if (lifecycleReturnTargets.length === 0) {
+      throw new Error("Expected at least one lifecycle return target for demo seed");
+    }
+
+    const completedRentalSeedSpecs = buildCompletedRentalSeedSpecs({
+      users,
+      subscriptionIdsByUserId,
+      returnTargets: lifecycleReturnTargets,
+    });
+
+    const lifecycleBikesToCreate = completedRentalSeedSpecs.map((spec, idx) => ({
+      id: uuidv7(),
+      bikeNumber: formatBikeNumber(bikesToCreate.length + idx + 1),
+      chipId: `DEMO-LIFECYCLE-${String(idx + 1).padStart(3, "0")}`,
+      stationId: spec.stationId,
+      supplierId: suppliers[idx % suppliers.length]!.id,
+      status: BikeStatus.AVAILABLE,
+      updatedAt: new Date(),
+    }));
+
+    await prisma.bike.createMany({
+      data: [...bikesToCreate, ...lifecycleBikesToCreate],
+    });
+    await setBikeNumberSequence(prisma, bikesToCreate.length + lifecycleBikesToCreate.length);
+
+    const completedRentalSeedPlans = completedRentalSeedSpecs.map((spec, idx) => ({
+      ...spec,
+      bikeId: lifecycleBikesToCreate[idx]!.id,
+    }));
+
+    const completedLifecycleRentals = await seedCompletedRentalsViaLifecycle(
+      prisma,
+      completedRentalSeedPlans,
     );
 
     const rentals = buildRentals({
@@ -955,173 +1245,25 @@ async function main() {
       });
     }
 
-    const agencyStatsRentals: DemoRental[] = [];
-    const agencyStatsMainBike = bikesToCreate.find(b => b.stationId === agencyOwnedStations[0]?.stationId);
-    const agencyStatsEastBike = bikesToCreate.find(b => b.stationId === agencyOwnedStations[1]?.stationId);
-    const agencyStatsMainUser = userByEmail.get("user01@mebike.local");
-    const agencyStatsEastUser = userByEmail.get("user02@mebike.local");
-    const agencyStatsMainOperator = userByEmail.get("agency1@mebike.local");
-    const agencyStatsEastOperator = userByEmail.get("agency2@mebike.local");
-
-    if (
-      agencyOwnedStations[0]?.stationId
-      && agencyStatsMainBike
-      && agencyStatsMainUser
-      && agencyStatsMainOperator
-    ) {
-      const endTime = toUtcDate(-3, 11, 15);
-      const startTime = new Date(endTime.getTime() - 52 * 60 * 1000);
-      const rental = {
-        id: uuidv7(),
-        userId: agencyStatsMainUser.id,
-        bikeId: agencyStatsMainBike.id,
-        startStationId: agencyOwnedStations[0].stationId,
-        endStationId: agencyOwnedStations[0].stationId,
-        createdAt: new Date(startTime.getTime() - 5 * 60 * 1000),
-        startTime,
-        endTime,
-        duration: 52,
-        totalPrice: 36000,
-        subscriptionId: null,
-        status: RentalStatus.COMPLETED,
-        updatedAt: endTime,
-      } satisfies DemoRental;
-
-      agencyStatsRentals.push(rental);
-
-      await prisma.rental.create({
-        data: {
-          id: rental.id,
-          userId: rental.userId,
-          bikeId: rental.bikeId,
-          startStationId: rental.startStationId,
-          endStationId: rental.endStationId,
-          createdAt: rental.createdAt,
-          startTime: rental.startTime,
-          endTime: rental.endTime,
-          duration: rental.duration,
-          totalPrice: rental.totalPrice,
-          subscriptionId: rental.subscriptionId,
-          status: rental.status,
-          updatedAt: rental.updatedAt,
-        },
-      });
-
-      await prisma.returnConfirmation.create({
-        data: {
-          id: uuidv7(),
-          rentalId: rental.id,
-          stationId: agencyOwnedStations[0].stationId,
-          confirmedByUserId: agencyStatsMainOperator.id,
-          confirmationMethod: ConfirmationMethod.MANUAL,
-          handoverStatus: HandoverStatus.UNDER_AGENCY_CARE,
-          confirmedAt: new Date(endTime.getTime() + 5 * 60 * 1000),
-        },
-      });
-
-      await prisma.incidentReport.createMany({
-        data: [
-          {
-            id: uuidv7(),
-            reporterUserId: agencyStatsMainUser.id,
-            rentalId: rental.id,
-            bikeId: agencyStatsMainBike.id,
-            stationId: agencyOwnedStations[0].stationId,
-            source: IncidentSource.POST_RETURN,
-            incidentType: "BRAKE",
-            severity: IncidentSeverity.CRITICAL,
-            description: "Demo critical agency incident",
-            bikeLocked: true,
-            status: IncidentStatus.OPEN,
-            reportedAt: new Date(endTime.getTime() + 30 * 60 * 1000),
-          },
-        ],
-      });
-    }
-
-    if (
-      agencyOwnedStations[1]?.stationId
-      && agencyStatsEastBike
-      && agencyStatsEastUser
-      && agencyStatsEastOperator
-    ) {
-      const endTime = toUtcDate(-5, 15, 10);
-      const startTime = new Date(endTime.getTime() - 38 * 60 * 1000);
-      const rental = {
-        id: uuidv7(),
-        userId: agencyStatsEastUser.id,
-        bikeId: agencyStatsEastBike.id,
-        startStationId: agencyOwnedStations[1].stationId,
-        endStationId: agencyOwnedStations[1].stationId,
-        createdAt: new Date(startTime.getTime() - 5 * 60 * 1000),
-        startTime,
-        endTime,
-        duration: 38,
-        totalPrice: 29000,
-        subscriptionId: null,
-        status: RentalStatus.COMPLETED,
-        updatedAt: endTime,
-      } satisfies DemoRental;
-
-      agencyStatsRentals.push(rental);
-
-      await prisma.rental.create({
-        data: {
-          id: rental.id,
-          userId: rental.userId,
-          bikeId: rental.bikeId,
-          startStationId: rental.startStationId,
-          endStationId: rental.endStationId,
-          createdAt: rental.createdAt,
-          startTime: rental.startTime,
-          endTime: rental.endTime,
-          duration: rental.duration,
-          totalPrice: rental.totalPrice,
-          subscriptionId: rental.subscriptionId,
-          status: rental.status,
-          updatedAt: rental.updatedAt,
-        },
-      });
-
-      await prisma.returnConfirmation.create({
-        data: {
-          id: uuidv7(),
-          rentalId: rental.id,
-          stationId: agencyOwnedStations[1].stationId,
-          confirmedByUserId: agencyStatsEastOperator.id,
-          confirmationMethod: ConfirmationMethod.QR_CODE,
-          handoverStatus: HandoverStatus.UNDER_AGENCY_CARE,
-          confirmedAt: new Date(endTime.getTime() + 3 * 60 * 1000),
-        },
-      });
-
-      await prisma.incidentReport.create({
-        data: {
-          id: uuidv7(),
-          reporterUserId: agencyStatsEastUser.id,
-          rentalId: rental.id,
-          bikeId: agencyStatsEastBike.id,
-          stationId: agencyOwnedStations[1].stationId,
-          source: IncidentSource.DURING_RENTAL,
-          incidentType: "CHAIN",
-          severity: IncidentSeverity.MEDIUM,
-          description: "Demo resolved agency incident",
-          bikeLocked: false,
-          status: IncidentStatus.RESOLVED,
-          reportedAt: new Date(startTime.getTime() + 10 * 60 * 1000),
-          resolvedAt: new Date(endTime.getTime() + 20 * 60 * 1000),
-        },
-      });
-    }
-
     const tech1 = users.find(user => user.email === "tech1@mebike.local");
     const tech1Assignment = orgAssignments.find(item => item.user.email === "tech1@mebike.local");
     const user01 = users.find(user => user.email === "user01@mebike.local");
-    const staff1 = users.find(user => user.email === "staff1@mebike.local");
     const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
     const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
     const user01IncidentStation = stationRows.find(station => station.id === user01ActiveRental?.startStationId);
+    const mainAgencyCompletedRental = completedLifecycleRentals.find(
+      rental => rental.endStationId === agencyOwnedStations[0]?.stationId,
+    );
+    const eastAgencyCompletedRental = completedLifecycleRentals.find(
+      rental => rental.endStationId === agencyOwnedStations[1]?.stationId,
+    );
+    const mainAgencyCompletedUser = users.find(
+      user => user.id === mainAgencyCompletedRental?.userId,
+    );
+    const eastAgencyCompletedUser = users.find(
+      user => user.id === eastAgencyCompletedRental?.userId,
+    );
 
     if (user01 && tech1 && tech1Assignment?.technicianTeamId && user01ActiveRental?.bikeId) {
       const reportedAt = new Date(Date.now() - 12 * 60 * 1000);
@@ -1203,6 +1345,45 @@ async function main() {
       );
     }
 
+    if (mainAgencyCompletedRental && mainAgencyCompletedUser && agencyOwnedStations[0]?.stationId) {
+      await prisma.incidentReport.create({
+        data: {
+          id: uuidv7(),
+          reporterUserId: mainAgencyCompletedUser.id,
+          rentalId: mainAgencyCompletedRental.id,
+          bikeId: mainAgencyCompletedRental.bikeId,
+          stationId: agencyOwnedStations[0].stationId,
+          source: IncidentSource.POST_RETURN,
+          incidentType: "BRAKE",
+          severity: IncidentSeverity.CRITICAL,
+          description: "Demo critical agency incident",
+          bikeLocked: true,
+          status: IncidentStatus.OPEN,
+          reportedAt: new Date(mainAgencyCompletedRental.endTime!.getTime() + 30 * 60 * 1000),
+        },
+      });
+    }
+
+    if (eastAgencyCompletedRental && eastAgencyCompletedUser && agencyOwnedStations[1]?.stationId) {
+      await prisma.incidentReport.create({
+        data: {
+          id: uuidv7(),
+          reporterUserId: eastAgencyCompletedUser.id,
+          rentalId: eastAgencyCompletedRental.id,
+          bikeId: eastAgencyCompletedRental.bikeId,
+          stationId: agencyOwnedStations[1].stationId,
+          source: IncidentSource.DURING_RENTAL,
+          incidentType: "CHAIN",
+          severity: IncidentSeverity.MEDIUM,
+          description: "Demo resolved agency incident",
+          bikeLocked: false,
+          status: IncidentStatus.RESOLVED,
+          reportedAt: new Date(eastAgencyCompletedRental.startTime.getTime() + 10 * 60 * 1000),
+          resolvedAt: new Date(eastAgencyCompletedRental.endTime!.getTime() + 20 * 60 * 1000),
+        },
+      });
+    }
+
     if (user01 && staff1 && (mainAgencyStationId ?? staff1Assignment?.stationId) && user01ActiveRental?.bikeId) {
       const bikeSwapStationId = mainAgencyStationId ?? staff1Assignment!.stationId!;
 
@@ -1230,16 +1411,32 @@ async function main() {
       );
     }
 
-    await seedDemoRatings(prisma, rentals);
+    await seedDemoRatings(prisma, [
+      ...completedLifecycleRentals,
+      ...rentals,
+    ]);
+
+    const discountBuckets = completedRentalSeedPlans.reduce<Map<number, number>>((acc, plan) => {
+      acc.set(
+        plan.expectedDiscountAmount,
+        (acc.get(plan.expectedDiscountAmount) ?? 0) + 1,
+      );
+      return acc;
+    }, new Map());
+    const totalDiscountAmount = completedRentalSeedPlans.reduce(
+      (sum, plan) => sum + plan.expectedDiscountAmount,
+      0,
+    );
+    const discountedRentalsCount = completedRentalSeedPlans.filter(
+      plan => plan.expectedDiscountAmount > 0,
+    ).length;
 
     logger.info("Demo seed completed");
     logger.info({ users: users.length }, "Demo users seeded");
-    logger.info({ rentals: rentals.length + agencyStatsRentals.length }, "Demo rentals seeded");
+    logger.info({ rentals: rentals.length + completedLifecycleRentals.length }, "Demo rentals seeded");
     logger.info(
       {
-        completed:
-          rentals.filter(r => r.status === RentalStatus.COMPLETED).length
-          + agencyStatsRentals.filter(r => r.status === RentalStatus.COMPLETED).length,
+        completed: completedLifecycleRentals.length,
       },
       "Completed rentals seeded",
     );
@@ -1267,6 +1464,25 @@ async function main() {
         password: DEMO_PASSWORD,
       },
       "Demo logins",
+    );
+
+    logger.info(
+      {
+        pricingPolicyId: DEFAULT_PRICING_POLICY_ID,
+        totalCompletedRentals: completedLifecycleRentals.length,
+        discountedRentalsCount,
+        nonDiscountedRentalsCount: completedLifecycleRentals.length - discountedRentalsCount,
+        totalDiscountAmount,
+        statsByDiscountAmount: Array.from(discountBuckets.entries())
+          .filter(([discountAmount]) => discountAmount > 0)
+          .sort((a, b) => a[0] - b[0])
+          .map(([discountAmount, rentalsCount]) => ({
+            discountAmount,
+            rentalsCount,
+            totalDiscountAmount: discountAmount * rentalsCount,
+          })),
+      },
+      "Demo coupon stats baseline",
     );
 
     logger.info(
