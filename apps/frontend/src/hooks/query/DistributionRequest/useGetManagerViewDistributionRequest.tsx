@@ -33,5 +33,6 @@ export const useGetManagerViewDistributionRequestQuery = ({
   return useQuery({
     queryKey: ["manager","distribution-request-data"],
     queryFn: () => getManagerViewDistributionRequest(page, pageSize, status),
+    enabled:false,
   });
 };

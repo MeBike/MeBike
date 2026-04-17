@@ -33,5 +33,6 @@ export const useGetAgencyViewDistributionRequestQuery = ({
   return useQuery({
     queryKey: ["agency","distribution-request-data"],
     queryFn: () => getAgencyViewDistributionRequest(page, pageSize, status),
+    enabled:false,
   });
 };

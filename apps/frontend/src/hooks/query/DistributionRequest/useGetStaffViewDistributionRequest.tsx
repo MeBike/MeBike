@@ -33,5 +33,6 @@ export const useGetStaffViewDistributionRequestQuery = ({
   return useQuery({
     queryKey: ["staff","distribution-request-data"],
     queryFn: () => getStaffViewDistributionRequest(page, pageSize, status),
+    enabled:false,
   });
 };

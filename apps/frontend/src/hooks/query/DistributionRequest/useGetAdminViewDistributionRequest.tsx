@@ -14,7 +14,7 @@ const getAdminViewDistributionRequest = async (
     if(status) query.status = status;
     const response = await distributionRequestService.getAdminViewDistributionRequest(query);
     if (response.status === 200) {
-      return response.data;
+      return response;
     }
   } catch (error) {
     console.error(error);
@@ -31,7 +31,8 @@ export const useGetAdminViewDistributionRequestQuery = ({
   status?: RedistributionRequestStatus;
 }) => {
   return useQuery({
-    queryKey: ["admin","distribution-request-data"],
+    queryKey: ["admin","distribution-request-data",page,pageSize],
     queryFn: () => getAdminViewDistributionRequest(page, pageSize, status),
+    enabled:false,
   });
 };

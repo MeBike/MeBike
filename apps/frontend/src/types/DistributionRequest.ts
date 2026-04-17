@@ -8,7 +8,7 @@ export type RedistributionRequest = {
   startedAt: string;
   completedAt: string;
   createdAt: string;
-  updatedat: string;
+  updatedAt: string;
   requestedByUser: {
     id: string;
     fullName: string;
@@ -39,7 +39,7 @@ export type RedistributionRequestDetail = {
   startedAt: string;
   completedAt: string;
   createdAt: string;
-  updatedat: string;
+  updatedAt: string;
   requestedByUser: User;
   approvedByUser?: User;
   sourceStation: Station;
@@ -135,7 +135,7 @@ export interface RedistributionRequestDetailForApprove {
   startedAt: string | null;
   completedAt: string | null;
   createdAt: string;
-  updatedat: string; // Giữ nguyên chữ 'a' thường theo JSON của bạn
+  updatedAt: string; // Giữ nguyên chữ 'a' thường theo JSON của bạn
   requestedByUser: UserProfile;
   approvedByUser: UserProfile | null; // Có thể null nếu chưa được duyệt
   sourceStation: StationDetail;
