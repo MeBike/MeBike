@@ -3,7 +3,9 @@
 
 #include <Arduino.h>
 
+#include <optional>
 #include <string>
+#include <string_view>
 
 #include "app/DeviceContext.h"
 
@@ -14,7 +16,7 @@ struct DeviceCommand
 {
     std::string action;
     std::string requestId;
-    std::string reason;
+    std::optional<std::string> reason;
     uint32_t durationMs = 0;
 };
 
@@ -33,7 +35,7 @@ private:
     void publishAck(MQTTManager &mqttManager,
                     const DeviceCommand &command,
                     const char *status,
-                    const char *detail = nullptr);
+                    std::optional<std::string_view> detail = std::nullopt);
 
     static CommandConsumer *activeInstance;
 

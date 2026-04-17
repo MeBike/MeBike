@@ -6,6 +6,26 @@
 #include "MQTTManager.h"
 #include "services/FeedbackController.h"
 
+namespace
+{
+std::optional<std::string> readOptionalStringField(const JsonDocument &doc, const char *key)
+{
+    JsonVariantConst value = doc[key];
+    if (value.isUnbound() || value.isNull())
+    {
+        return std::nullopt;
+    }
+
+    const char *text = value.as<const char *>();
+    if (text == nullptr || text[0] == '\0')
+    {
+        return std::nullopt;
+    }
+
+    return std::string(text);
+}
+}
+
 CommandConsumer *CommandConsumer::activeInstance = nullptr;
 
 CommandConsumer::CommandConsumer(const DeviceContext &deviceContext)
@@ -29,7 +49,7 @@ bool CommandConsumer::processPending(MQTTManager &mqttManager, FeedbackControlle
     DeviceCommand command;
     if (!parsePendingCommand(command))
     {
-        const DeviceCommand invalidCommand{"invalid", "", "invalid_payload", 0};
+        const DeviceCommand invalidCommand{"invalid", "", std::nullopt, 0};
         publishAck(mqttManager, invalidCommand, "rejected", "invalid_payload");
         feedbackController.signalCommandFailed();
         hasPendingMessage = false;
@@ -51,7 +71,10 @@ bool CommandConsumer::processPending(MQTTManager &mqttManager, FeedbackControlle
     if (command.action == "deny")
     {
         feedbackController.signalAccessDenied();
-        publishAck(mqttManager, command, "done", command.reason.empty() ? "denied" : command.reason.c_str());
+        publishAck(mqttManager,
+                   command,
+                   "done",
+                   command.reason.has_value() ? std::optional<std::string_view>(*command.reason) : std::optional<std::string_view>("denied"));
         Log.notice("Executed deny command %s\n", command.requestId.c_str());
         return true;
     }
@@ -101,7 +124,7 @@ bool CommandConsumer::parsePendingCommand(DeviceCommand &command)
     {
         command.action = pendingPayload;
         command.requestId = "";
-        command.reason = "";
+        command.reason = std::nullopt;
         command.durationMs = 0;
         return !command.action.empty();
     }
@@ -109,7 +132,7 @@ bool CommandConsumer::parsePendingCommand(DeviceCommand &command)
     const char *action = doc["action"] | "";
     command.action = action;
     command.requestId = doc["requestId"] | "";
-    command.reason = doc["reason"] | "";
+    command.reason = readOptionalStringField(doc, "reason");
     command.durationMs = doc["durationMs"] | 0;
     return !command.action.empty();
 }
@@ -117,16 +140,17 @@ bool CommandConsumer::parsePendingCommand(DeviceCommand &command)
 void CommandConsumer::publishAck(MQTTManager &mqttManager,
                                  const DeviceCommand &command,
                                  const char *status,
-                                 const char *detail)
+                                 std::optional<std::string_view> detail)
 {
     StaticJsonDocument<192> doc;
     doc["deviceId"] = deviceContext.deviceId.c_str();
     doc["requestId"] = command.requestId.c_str();
     doc["action"] = command.action.c_str();
     doc["status"] = status;
-    if (detail != nullptr)
+    if (detail.has_value())
     {
-        doc["detail"] = detail;
+        const std::string detailText(detail->data(), detail->size());
+        doc["detail"] = detailText.c_str();
     }
 
     char payload[192];
