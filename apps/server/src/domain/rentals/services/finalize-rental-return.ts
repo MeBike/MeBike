@@ -148,7 +148,7 @@ export function finalizeRentalReturnInTx(
     if (!rental.subscriptionId && eligibleRentalAmountMinor > 0n) {
       const discountRules = yield* txCouponRepo.listGlobalBillingPreviewDiscountRules({
         previewedAt: endTime,
-        ridingDurationMinutes: durationMinutes,
+        billableMinutes,
       });
       discountSelection = selectBestGlobalAutoDiscountRule(
         discountRules,

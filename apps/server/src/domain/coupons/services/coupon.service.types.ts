@@ -56,7 +56,7 @@ export type CouponQueryService = {
   listGlobalBillingPreviewDiscountRules: (
     input: {
       readonly previewedAt: Date;
-      readonly ridingDurationMinutes: number;
+      readonly billableMinutes: number;
     },
   ) => Effect.Effect<readonly BillingPreviewDiscountRuleRow[]>;
   listActiveGlobalCouponRules: (

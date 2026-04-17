@@ -142,7 +142,7 @@ const makeRentalBillingPreviewServiceEffect = Effect.gen(function* () {
         if (!subscriptionApplied && eligibleRentalAmountMinor > 0n) {
           const discountRules = yield* couponService.listGlobalBillingPreviewDiscountRules({
             previewedAt: input.previewedAt,
-            ridingDurationMinutes: rentalMinutes,
+            billableMinutes,
           });
           discountSelection = selectBestGlobalAutoDiscountRule(
             discountRules,

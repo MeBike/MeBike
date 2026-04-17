@@ -168,6 +168,52 @@ describe("rentals billing preview routing e2e", () => {
     expect(body.totalPayableAmount).toBe(expectedBaseAmount - 2000);
   });
 
+  it("selects a global discount rule by billable minutes, not raw rental minutes", async () => {
+    const graph = await createRentalGraph({
+      startOffsetMs: 90 * 60 * 1000 + 1000,
+    });
+    await createDurationDiscountRule({
+      code: "BILLABLE-1H",
+      minRidingMinutes: 60,
+      discountValue: "1000",
+      priority: 100,
+    });
+    const billableTwoHourRule = await createDurationDiscountRule({
+      code: "BILLABLE-2H",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+      priority: 100,
+    });
+
+    const response = await fixture.app.request(
+      `http://test/v1/rentals/me/${graph.rental.id}/billing-preview`,
+      {
+        headers: {
+          Authorization: `Bearer ${graph.token}`,
+        },
+      },
+    );
+
+    const body = await response.json() as RentalsContracts.RentalBillingPreview;
+    const expectedMinutes = getExpectedMinutes(body.previewedAt, graph.startTime);
+    const expectedBlocks = getExpectedBlocks(expectedMinutes);
+    const expectedBaseAmount = expectedBlocks * 2000;
+
+    expect(response.status).toBe(200);
+    expect(body.rentalMinutes).toBeGreaterThanOrEqual(91);
+    expect(body.billableBlocks).toBe(4);
+    expect(body.billableHours).toBe(2);
+    expect(body.baseRentalAmount).toBe(expectedBaseAmount);
+    expect(body.bestDiscountRule).toMatchObject({
+      ruleId: billableTwoHourRule.rule.id,
+      name: "BILLABLE-2H",
+      minRidingMinutes: 120,
+      discountValue: 2000,
+    });
+    expect(body.couponDiscountAmount).toBe(2000);
+    expect(body.payableRentalAmount).toBe(expectedBaseAmount - 2000);
+  });
+
   it("does not apply a global discount rule when the rental has a subscription", async () => {
     const graph = await createRentalGraph({ withSubscription: true });
     await createDurationDiscountRule({

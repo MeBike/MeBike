@@ -7,11 +7,20 @@ import type {
 
 import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
+import {
+  getPrismaUniqueViolationTarget,
+  isPrismaRawUniqueViolation,
+} from "@/infrastructure/prisma-errors";
 
 import type { AdminCouponRuleRow } from "../models";
 import type { CouponCommandRepo } from "./coupon.repository.types";
 
-import { CouponRepositoryError } from "../domain-errors";
+import {
+  CouponRepositoryError,
+  CouponRuleActiveTierConflict,
+} from "../domain-errors";
+
+const ACTIVE_TIER_UNIQUE_INDEX = "uq_coupon_rules_active_min_riding_minutes";
 
 const selectAdminCouponRuleRow = {
   id: true,
@@ -49,6 +58,81 @@ function toAdminCouponRuleRow(
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+function isActiveTierUniqueViolation(error: unknown): boolean {
+  const target = getPrismaUniqueViolationTarget(error);
+
+  if (typeof target === "string") {
+    return target === ACTIVE_TIER_UNIQUE_INDEX
+      || target.includes(ACTIVE_TIER_UNIQUE_INDEX)
+      || target.includes("min_riding_minutes")
+      || target.includes("minRidingMinutes");
+  }
+
+  if (Array.isArray(target)) {
+    return target.some(field =>
+      field === "min_riding_minutes"
+      || field === "minRidingMinutes",
+    );
+  }
+
+  return isPrismaRawUniqueViolation(error);
+}
+
+function failActiveTierUniqueViolation(input: {
+  readonly client: PrismaClient | PrismaTypes.TransactionClient;
+  readonly minRidingMinutes: number;
+  readonly excludeRuleId?: string;
+  readonly operation: string;
+  readonly cause: unknown;
+}) {
+  if (!isActiveTierUniqueViolation(input.cause)) {
+    return Effect.fail(new CouponRepositoryError({
+      operation: input.operation,
+      message: `Failed to ${input.operation}`,
+      cause: input.cause,
+    }));
+  }
+
+  return Effect.gen(function* () {
+    const conflicting = yield* Effect.tryPromise({
+      try: () =>
+        input.client.couponRule.findFirst({
+          where: {
+            status: "ACTIVE",
+            triggerType: "RIDING_DURATION",
+            discountType: "FIXED_AMOUNT",
+            minRidingMinutes: input.minRidingMinutes,
+            ...(input.excludeRuleId ? { id: { not: input.excludeRuleId } } : {}),
+          },
+          select: { id: true },
+          orderBy: [
+            { createdAt: "asc" },
+            { id: "asc" },
+          ],
+        }),
+      catch: err =>
+        new CouponRepositoryError({
+          operation: `${input.operation}.findConflict`,
+          message: "Failed to resolve active coupon tier conflict",
+          cause: err,
+        }),
+    });
+
+    if (conflicting) {
+      return yield* Effect.fail(new CouponRuleActiveTierConflict({
+        minRidingMinutes: input.minRidingMinutes,
+        conflictingRuleId: conflicting.id,
+      }));
+    }
+
+    return yield* Effect.fail(new CouponRepositoryError({
+      operation: input.operation,
+      message: "Failed to resolve active coupon tier conflict",
+      cause: input.cause,
+    }));
+  });
 }
 
 export function makeCouponCommandRepository(
@@ -149,13 +233,15 @@ export function makeCouponCommandRepository(
             },
             select: selectAdminCouponRuleRow,
           }),
-        catch: err =>
-          new CouponRepositoryError({
-            operation: "createAdminCouponRule",
-            message: "Failed to create admin coupon rule",
-            cause: err,
-          }),
+        catch: err => err,
       }).pipe(
+        Effect.catchAll(err =>
+          failActiveTierUniqueViolation({
+            client,
+            minRidingMinutes: data.minRidingMinutes,
+            operation: "createAdminCouponRule",
+            cause: err,
+          })),
         Effect.map(toAdminCouponRuleRow),
         defectOn(CouponRepositoryError),
       ),
@@ -192,13 +278,23 @@ export function makeCouponCommandRepository(
               },
               select: selectAdminCouponRuleRow,
             }),
-          catch: err =>
-            new CouponRepositoryError({
-              operation: "activateAdminCouponRule",
-              message: "Failed to activate admin coupon rule",
-              cause: err,
-            }),
-        });
+          catch: err => err,
+        }).pipe(
+          Effect.catchAll(err =>
+            existing.minRidingMinutes === null
+              ? Effect.fail(new CouponRepositoryError({
+                  operation: "activateAdminCouponRule",
+                  message: "Failed to activate admin coupon rule",
+                  cause: err,
+                }))
+              : failActiveTierUniqueViolation({
+                  client,
+                  minRidingMinutes: existing.minRidingMinutes,
+                  excludeRuleId: ruleId,
+                  operation: "activateAdminCouponRule",
+                  cause: err,
+                })),
+        );
 
         return Option.some(toAdminCouponRuleRow(activated));
       }).pipe(
@@ -287,13 +383,17 @@ export function makeCouponCommandRepository(
               },
               select: selectAdminCouponRuleRow,
             }),
-          catch: err =>
-            new CouponRepositoryError({
+          catch: err => err,
+        }).pipe(
+          Effect.catchAll(err =>
+            failActiveTierUniqueViolation({
+              client,
+              minRidingMinutes: data.minRidingMinutes,
+              excludeRuleId: ruleId,
               operation: "updateAdminCouponRule",
-              message: "Failed to update admin coupon rule",
               cause: err,
-            }),
-        });
+            })),
+        );
 
         return Option.some(toAdminCouponRuleRow(updated));
       }).pipe(

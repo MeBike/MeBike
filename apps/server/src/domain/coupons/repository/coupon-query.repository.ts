@@ -118,6 +118,12 @@ type AdminCouponUsageLogRecord = PrismaTypes.RentalBillingRecordGetPayload<{
   select: typeof selectAdminCouponUsageLogRow;
 }>;
 
+type CouponRuleUsageAggregate = {
+  readonly ruleId: string;
+  readonly appliedCount: number;
+  readonly totalDiscountAmount: number;
+};
+
 type CouponRuleIdentity = {
   readonly ruleId: string;
   readonly name: string;
@@ -355,36 +361,44 @@ function deriveCouponUsageTier(
   }
 }
 
-function buildCouponStatsByRule(
-  records: readonly AdminCouponUsageLogRecord[],
-): CouponStatsByRuleRow[] {
-  const grouped = new Map<string, CouponStatsByRuleRow>();
+function buildCouponStatsByRule(input: {
+  readonly aggregates: readonly CouponRuleUsageAggregate[];
+  readonly representativeRecords: readonly AdminCouponUsageLogRecord[];
+}): CouponStatsByRuleRow[] {
+  const identityByRuleId = new Map<string, CouponRuleIdentity>();
 
-  for (const record of records) {
+  for (const record of input.representativeRecords) {
     const identity = readCouponRuleIdentity(record);
     if (!identity) {
       continue;
     }
 
-    const previous = grouped.get(identity.ruleId);
-    const discountAmount = Number(toMinorUnit(record.couponDiscountAmount));
+    identityByRuleId.set(record.couponRuleId ?? identity.ruleId, identity);
+    identityByRuleId.set(identity.ruleId, identity);
+  }
 
-    grouped.set(identity.ruleId, {
+  const rows: CouponStatsByRuleRow[] = [];
+
+  for (const aggregate of input.aggregates) {
+    const identity = identityByRuleId.get(aggregate.ruleId);
+    if (!identity) {
+      continue;
+    }
+
+    rows.push({
       ruleId: identity.ruleId,
       name: identity.name,
       triggerType: identity.triggerType,
       minRidingMinutes: identity.minRidingMinutes,
       discountType: identity.discountType,
       discountValue: identity.discountValue,
-      appliedCount: (previous?.appliedCount ?? 0) + 1,
-      totalDiscountAmount: (previous?.totalDiscountAmount ?? 0) + discountAmount,
-      source: previous?.source === "BILLING_RECORD_SNAPSHOT"
-        ? previous.source
-        : identity.source,
+      appliedCount: aggregate.appliedCount,
+      totalDiscountAmount: aggregate.totalDiscountAmount,
+      source: identity.source,
     });
   }
 
-  return [...grouped.values()].sort((left, right) =>
+  return rows.sort((left, right) =>
     right.appliedCount - left.appliedCount
     || right.totalDiscountAmount - left.totalDiscountAmount
     || (left.minRidingMinutes ?? 0) - (right.minRidingMinutes ?? 0)
@@ -521,7 +535,7 @@ export function makeCouponQueryRepository(
           totalCompletedRentals,
           discountedAggregate,
           groupedDiscountAmounts,
-          ruleUsageRecords,
+          groupedRuleUsage,
         ] = yield* Effect.all([
           Effect.tryPromise({
             try: () =>
@@ -591,7 +605,8 @@ export function makeCouponQueryRepository(
           }),
           Effect.tryPromise({
             try: () =>
-              client.rentalBillingRecord.findMany({
+              client.rentalBillingRecord.groupBy({
+                by: ["couponRuleId"],
                 where: {
                   rental: {
                     is: rentalWhere,
@@ -599,17 +614,65 @@ export function makeCouponQueryRepository(
                   couponDiscountAmount: {
                     gt: "0",
                   },
+                  couponRuleId: {
+                    not: null,
+                  },
                 },
-                select: selectAdminCouponUsageLogRow,
+                _count: {
+                  _all: true,
+                },
+                _sum: {
+                  couponDiscountAmount: true,
+                },
               }),
             catch: err =>
               new CouponRepositoryError({
-                operation: "getAdminCouponStats.findRuleUsageRecords",
-                message: "Failed to load coupon rule usage records for stats",
+                operation: "getAdminCouponStats.groupByRule",
+                message: "Failed to group coupon stats by coupon rule",
                 cause: err,
               }),
           }),
         ]);
+
+        const ruleUsageAggregates: CouponRuleUsageAggregate[] = [];
+        for (const row of groupedRuleUsage) {
+          if (row.couponRuleId === null) {
+            continue;
+          }
+
+          ruleUsageAggregates.push({
+            ruleId: row.couponRuleId,
+            appliedCount: row._count._all,
+            totalDiscountAmount: Number(toMinorUnit(row._sum.couponDiscountAmount)),
+          });
+        }
+
+        const ruleUsageRepresentativeRecords = yield* Effect.all(
+          ruleUsageAggregates.map(aggregate =>
+            Effect.tryPromise({
+              try: () =>
+                client.rentalBillingRecord.findFirst({
+                  where: {
+                    rental: {
+                      is: rentalWhere,
+                    },
+                    couponDiscountAmount: {
+                      gt: "0",
+                    },
+                    couponRuleId: aggregate.ruleId,
+                  },
+                  orderBy: adminCouponUsageLogsOrderBy(),
+                  select: selectAdminCouponUsageLogRow,
+                }),
+              catch: err =>
+                new CouponRepositoryError({
+                  operation: "getAdminCouponStats.findRuleRepresentative",
+                  message: "Failed to load coupon rule representative record for stats",
+                  cause: err,
+                }),
+            }),
+          ),
+        );
 
         const totalDiscountAmount = Number(
           toMinorUnit(discountedAggregate._sum.couponDiscountAmount),
@@ -621,7 +684,12 @@ export function makeCouponQueryRepository(
           totalCompletedRentals,
           discountedRentalsCount: discountedAggregate._count._all,
           totalDiscountAmount,
-          statsByRule: buildCouponStatsByRule(ruleUsageRecords),
+          statsByRule: buildCouponStatsByRule({
+            aggregates: ruleUsageAggregates,
+            representativeRecords: ruleUsageRepresentativeRecords.filter(
+              (record): record is AdminCouponUsageLogRecord => record !== null,
+            ),
+          }),
           statsByDiscountAmount: groupedDiscountAmounts.map(row => ({
             discountAmount: Number(toMinorUnit(row.couponDiscountAmount)),
             rentalsCount: row._count._all,
@@ -731,7 +799,7 @@ export function makeCouponQueryRepository(
             client.couponRule.findMany({
               where: activeGlobalRidingDurationFixedAmountWhere(
                 input.previewedAt,
-                [{ minRidingMinutes: { lte: input.ridingDurationMinutes } }],
+                [{ minRidingMinutes: { lte: input.billableMinutes } }],
               ),
               orderBy: [
                 { priority: "asc" },
