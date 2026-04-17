@@ -2,7 +2,11 @@ import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
-import type { StationNameAlreadyExists, StationOutsideSupportedArea } from "../errors";
+import type {
+  StationLocationAlreadyExists,
+  StationNameAlreadyExists,
+  StationOutsideSupportedArea,
+} from "../errors";
 import type {
   CreateStationInput,
   NearestSearchArgs,
@@ -19,14 +23,14 @@ export type StationCommandRepo = {
     input: CreateStationInput,
   ) => Effect.Effect<
     StationRow,
-    StationNameAlreadyExists | StationOutsideSupportedArea
+    StationNameAlreadyExists | StationLocationAlreadyExists | StationOutsideSupportedArea
   >;
   update: (
     id: string,
     input: UpdateStationInput,
   ) => Effect.Effect<
     Option.Option<StationRow>,
-    StationNameAlreadyExists | StationOutsideSupportedArea
+    StationNameAlreadyExists | StationLocationAlreadyExists | StationOutsideSupportedArea
   >;
 };
 

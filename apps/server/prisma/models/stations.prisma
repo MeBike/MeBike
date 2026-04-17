@@ -37,6 +37,7 @@ model Station {
   targetRedistributionRequests RedistributionRequest[] @relation("RedistributionRequestTargetStation")
 
   @@map("Station")
+  @@unique([address, latitude, longitude], name: "uq_station_exact_location", map: "uq_station_exact_location")
 }
 
 model GeoBoundary {
