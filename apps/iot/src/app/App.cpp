@@ -43,7 +43,7 @@ void App::setup()
 
     Wire.begin(HardwareConfig::I2C_SDA_PIN, HardwareConfig::I2C_SCL_PIN);
 
-    nfcManager = std::make_unique<NFCManager>(HardwareConfig::PN532_IRQ_PIN, HardwareConfig::PN532_RESET_PIN);
+    nfcManager = std::make_unique<NFCManager>();
     if (!nfcManager->begin())
     {
         Log.warning("PN532 not available at boot; recovery will continue in background\n");
