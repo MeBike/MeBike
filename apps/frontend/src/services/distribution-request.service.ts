@@ -189,9 +189,10 @@ export const distributionRequestService = {
     );
     return response;
   },
-  cancelDistributionRequest: async ({ id }: { id: string }) : Promise<AxiosResponse<RedistributionRequestDetailForApprove>> => {
+  cancelDistributionRequest: async ({ id, data }: { id: string ,data : {reason : string} }) : Promise<AxiosResponse<RedistributionRequestDetailForApprove>> => {
     const response = await fetchHttpClient.post<RedistributionRequestDetailForApprove>(
       ENDPOINT.DISTRIBUTION_REQUEST.CANCEL_DISTRIBUTION_REQUEST(id),
+      data
     );
     return response;
   },

@@ -1,3 +1,4 @@
+import { useCancelAgencyRequestMutation } from './mutations/Agency/useCancelAgencyRequest';
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -17,7 +18,8 @@ import {
 import {
   useApproveDistributionRequestMutation,
   useRejectDistributionRequestMutation,
-  useCreateistributionRequestMutation
+  useCreateistributionRequestMutation,
+  useCancelDistributionRequestMutation,
 } from "@mutations"
 import { useRouter } from "next/navigation";
 import { HTTP_STATUS } from "@/constants";
@@ -144,6 +146,7 @@ export const useDistributionRequest = ({
   }, [refetchManagerViewDistributionRequestDetail, id]);
   const useApproveDistributeRequest = useApproveDistributionRequestMutation();
   const useRejectDistributeRequest = useRejectDistributionRequestMutation();
+  const useCancelDistributionRequest = useCancelDistributionRequestMutation();
   const useCreateDistributeRequest = useCreateistributionRequestMutation();
   const approveDistributeRequest = useCallback(
     async (id:string) => {
@@ -211,6 +214,39 @@ export const useDistributionRequest = ({
       queryClient,
     ],
   );
+  const cancelDistributeRequest = useCallback(
+    async (id:string , data : {reason:string}) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useCancelDistributionRequest.mutateAsync({id,data});
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Hủy bỏ yêu điều phối xe thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["distribution-request", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["manager","distribution-request-data","detail",id],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useRejectDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
   const createDistributeRequest = useCallback(
     async (data:CreateRedistributionRequestInput) => {
       if (!hasToken) {
@@ -220,7 +256,7 @@ export const useDistributionRequest = ({
       try {
         const result = await useCreateDistributeRequest.mutateAsync(data);
         if (result.status === HTTP_STATUS.OK) {
-          toast.success("Tạo yêu cầu phân bổ thành công");
+          toast.success("Tạo yêu cầu điều phối xe thành công");
           queryClient.invalidateQueries({
             queryKey: ["distribution-request", "all"],
           });
@@ -279,6 +315,7 @@ export const useDistributionRequest = ({
     getManagerViewDistributionRequestDetail,
     approveDistributeRequest,
     rejectDistributeRequest,
+    cancelDistributeRequest,
     createDistributeRequest,
   };
 };
