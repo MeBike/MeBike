@@ -183,9 +183,10 @@ export const distributionRequestService = {
     );
     return response;
   },
-  confirmCompletionDistributionRequest: async ({ id }: { id: string }) : Promise<AxiosResponse<RedistributionRequestDetailForApprove>> => {
+  confirmCompletionDistributionRequest: async ({ id , data  }: { id: string , data : { completedBikeIds: string[] } }) : Promise<AxiosResponse<RedistributionRequestDetailForApprove>> => {
     const response = await fetchHttpClient.post<RedistributionRequestDetailForApprove>(
       ENDPOINT.DISTRIBUTION_REQUEST.CONFIRM_COMPLETION(id),
+      data
     );
     return response;
   },

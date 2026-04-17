@@ -20,6 +20,8 @@ import {
   useRejectDistributionRequestMutation,
   useCreateistributionRequestMutation,
   useCancelDistributionRequestMutation,
+  useStartTransitDistributionRequestMutation,
+  useCompleteTransitDistributionRequestMutation,
 } from "@mutations"
 import { useRouter } from "next/navigation";
 import { HTTP_STATUS } from "@/constants";
@@ -148,6 +150,41 @@ export const useDistributionRequest = ({
   const useRejectDistributeRequest = useRejectDistributionRequestMutation();
   const useCancelDistributionRequest = useCancelDistributionRequestMutation();
   const useCreateDistributeRequest = useCreateistributionRequestMutation();
+  const useStartTransit = useStartTransitDistributionRequestMutation();
+  const useCompleteTransit = useCompleteTransitDistributionRequestMutation();
+  const completeDistributeRequest = useCallback(
+    async (id:string , data : {completedBikeIds:string[]}) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useCompleteTransit.mutateAsync({id,data});
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Nhận xe được điều phối tới trạm thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["distribution-request", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["manager","distribution-request-data","detail",id],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useApproveDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
   const approveDistributeRequest = useCallback(
     async (id:string) => {
       if (!hasToken) {
@@ -158,6 +195,39 @@ export const useDistributionRequest = ({
         const result = await useApproveDistributeRequest.mutateAsync(id);
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Duyệt yêu cầu phân bổ thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["distribution-request", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["manager","distribution-request-data","detail",id],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useApproveDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
+  const startTransitDistributionRequest = useCallback(
+    async (id:string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useStartTransit.mutateAsync(id);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Bắt đầu điều phối xe thành công");
           queryClient.invalidateQueries({
             queryKey: ["distribution-request", "all"],
           });
@@ -317,5 +387,7 @@ export const useDistributionRequest = ({
     rejectDistributeRequest,
     cancelDistributeRequest,
     createDistributeRequest,
+    startTransitDistributionRequest,
+    completeDistributeRequest
   };
 };
