@@ -82,3 +82,56 @@ export function isPrismaRawUniqueViolation(error: unknown): boolean {
     ?.originalCode;
   return originalCode === "23505";
 }
+
+function extractConstraintName(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const direct = /constraint\s+"([^"]+)"/i.exec(value)?.[1];
+  if (direct) {
+    return direct;
+  }
+
+  const quoted = /unique constraint\s+"([^"]+)"/i.exec(value)?.[1];
+  if (quoted) {
+    return quoted;
+  }
+
+  return undefined;
+}
+
+export function getPrismaRawUniqueViolationConstraint(error: unknown): string | undefined {
+  if (!isPrismaRawUniqueViolation(error)) {
+    return undefined;
+  }
+
+  const rawError = error as PrismaTypes.PrismaClientKnownRequestError & { code: "P2010" };
+
+  const meta = rawError.meta as {
+    driverAdapterError?: {
+      cause?: {
+        constraint?: unknown;
+        detail?: unknown;
+        message?: unknown;
+      };
+      message?: unknown;
+    };
+    database_error?: unknown;
+    message?: unknown;
+  } | undefined;
+
+  const directConstraint = meta?.driverAdapterError?.cause?.constraint;
+  if (typeof directConstraint === "string" && directConstraint.length > 0) {
+    return directConstraint;
+  }
+
+  const errorMessage = rawError.message;
+
+  return extractConstraintName(meta?.driverAdapterError?.cause?.detail)
+    ?? extractConstraintName(meta?.driverAdapterError?.cause?.message)
+    ?? extractConstraintName(meta?.driverAdapterError?.message)
+    ?? extractConstraintName(meta?.database_error)
+    ?? extractConstraintName(meta?.message)
+    ?? extractConstraintName(errorMessage);
+}

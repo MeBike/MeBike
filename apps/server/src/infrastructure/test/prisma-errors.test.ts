@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { isPrismaRawUniqueViolation } from "@/infrastructure/prisma-errors";
+import {
+  getPrismaRawUniqueViolationConstraint,
+  isPrismaRawUniqueViolation,
+} from "@/infrastructure/prisma-errors";
 import { Prisma as PrismaTypes } from "generated/prisma/client";
 
 function makeKnownRequestError(args: {
@@ -74,5 +77,54 @@ describe("isPrismaRawUniqueViolation", () => {
   it("returns false when raw meta shape is missing", () => {
     const error = makeKnownRequestError({ code: "P2010", meta: {} });
     expect(isPrismaRawUniqueViolation(error)).toBe(false);
+  });
+});
+
+describe("getPrismaRawUniqueViolationConstraint", () => {
+  it("returns direct constraint name when available", () => {
+    const error = makeKnownRequestError({
+      code: "P2010",
+      meta: {
+        driverAdapterError: {
+          cause: {
+            originalCode: "23505",
+            constraint: "uq_station_exact_location",
+          },
+        },
+      },
+    });
+
+    expect(getPrismaRawUniqueViolationConstraint(error)).toBe("uq_station_exact_location");
+  });
+
+  it("extracts constraint name from raw postgres detail text", () => {
+    const error = makeKnownRequestError({
+      code: "P2010",
+      meta: {
+        driverAdapterError: {
+          cause: {
+            originalCode: "23505",
+            detail: "duplicate key value violates unique constraint \"uq_station_exact_location\"",
+          },
+        },
+      },
+    });
+
+    expect(getPrismaRawUniqueViolationConstraint(error)).toBe("uq_station_exact_location");
+  });
+
+  it("returns undefined when raw unique constraint cannot be determined", () => {
+    const error = makeKnownRequestError({
+      code: "P2010",
+      meta: {
+        driverAdapterError: {
+          cause: {
+            originalCode: "23505",
+          },
+        },
+      },
+    });
+
+    expect(getPrismaRawUniqueViolationConstraint(error)).toBeUndefined();
   });
 });

@@ -91,6 +91,16 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
               code: StationErrorCodeSchema.enum.STATION_NAME_ALREADY_EXISTS,
             },
           }, 400)),
+        Match.tag("StationLocationAlreadyExists", ({ address, latitude, longitude }) =>
+          c.json({
+            error: stationErrorMessages.STATION_LOCATION_ALREADY_EXISTS,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+              address,
+              latitude,
+              longitude,
+            },
+          }, 400)),
         Match.tag("StationCapacityLimitExceeded", () =>
           c.json({
             error: stationErrorMessages.CAPACITY_LIMIT_EXCEEDED,
@@ -176,6 +186,16 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
             error: stationErrorMessages.STATION_NAME_ALREADY_EXISTS,
             details: {
               code: StationErrorCodeSchema.enum.STATION_NAME_ALREADY_EXISTS,
+            },
+          }, 400)),
+        Match.tag("StationLocationAlreadyExists", ({ address, latitude, longitude }) =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_LOCATION_ALREADY_EXISTS,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+              address,
+              latitude,
+              longitude,
             },
           }, 400)),
         Match.tag("StationCapacityLimitExceeded", () =>

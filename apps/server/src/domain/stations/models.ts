@@ -3,6 +3,14 @@ import type { StationType } from "generated/prisma/client";
 
 export type StationSortField = "name" | "totalCapacity" | "updatedAt";
 
+export type StationWorkerRow = {
+  userId: string;
+  fullName: string;
+  role: "STAFF" | "MANAGER" | "TECHNICIAN";
+  technicianTeamId: string | null;
+  technicianTeamName: string | null;
+};
+
 export type StationRow = {
   id: string;
   name: string;
@@ -25,6 +33,7 @@ export type StationRow = {
   activeReturnSlots: number;
   availableReturnSlots: number;
   emptySlots: number;
+  workers?: readonly StationWorkerRow[];
 };
 
 export type CreateStationInput = {

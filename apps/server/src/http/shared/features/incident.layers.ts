@@ -1,11 +1,12 @@
 import { Effect, Layer } from "effect";
 
 import {
+  IncidentImageUploadServiceLive,
   IncidentRepositoryLive,
   IncidentServiceLive,
 } from "@/domain/incidents";
 
-import { MapboxRoutingLive, PrismaLive } from "../infra.layers";
+import { FirebaseStorageLive, MapboxRoutingLive, PrismaLive } from "../infra.layers";
 import { BikeReposLive } from "./bike.layers";
 import { RentalReposLive } from "./rental.layers";
 import { StationQueryReposLive } from "./station.layers";
@@ -23,9 +24,14 @@ export const IncidentServiceLayer = IncidentServiceLive.pipe(
   Layer.provide(MapboxRoutingLive),
 );
 
+export const IncidentImageUploadServiceLayer = IncidentImageUploadServiceLive.pipe(
+  Layer.provide(FirebaseStorageLive),
+);
+
 export const IncidentDepsLive = Layer.mergeAll(
   IncidentReposLive,
   IncidentServiceLayer,
+  IncidentImageUploadServiceLayer,
   PrismaLive,
 );
 

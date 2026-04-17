@@ -17,6 +17,7 @@ import {
   getIncidentSeverityTone,
   getIncidentStatusLabel,
   getIncidentStatusTone,
+  getIncidentTypeLabel,
   presentIncidentError,
 } from "@/screen/incidents/incident-presenters";
 import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
@@ -28,7 +29,11 @@ import { StatusBadge } from "@/ui/primitives/status-badge";
 type IncidentTab = "ACTIVE" | "HISTORY";
 
 function formatIncidentTitle(incidentType: string) {
-  return incidentType.replaceAll("_", " ");
+  return getIncidentTypeLabel(incidentType);
+}
+
+function getIncidentHeadline(incidentType: string) {
+  return formatIncidentTitle(incidentType);
 }
 
 function formatReportedAt(value: Date | string) {
@@ -116,10 +121,17 @@ function IncidentRow({
         >
           <XStack alignItems="flex-start" justifyContent="space-between" gap="$3">
             <YStack flex={1} gap="$2">
-              <AppText variant="cardTitle">{formatIncidentTitle(incident.incidentType)}</AppText>
+              <AppText variant="cardTitle">{getIncidentHeadline(incident.incidentType)}</AppText>
               <AppText tone="muted" variant="subhead">
                 {formatIncidentCode(incident.id)}
               </AppText>
+              {incident.description
+                ? (
+                    <AppText numberOfLines={2} tone="muted" variant="bodySmall">
+                      {incident.description}
+                    </AppText>
+                  )
+                : null}
             </YStack>
             <StatusBadge
               label={getIncidentStatusLabel(incident.status).toUpperCase()}

@@ -37,6 +37,17 @@ export function toContractStationReadSummary(
       active: station.activeReturnSlots,
       available: station.availableReturnSlots,
     },
+    ...(station.workers
+      ? {
+          workers: station.workers.map(worker => ({
+            userId: worker.userId,
+            fullName: worker.fullName,
+            role: worker.role,
+            technicianTeamId: worker.technicianTeamId,
+            technicianTeamName: worker.technicianTeamName,
+          })),
+        }
+      : {}),
     createdAt: station.createdAt,
     updatedAt: station.updatedAt,
   };

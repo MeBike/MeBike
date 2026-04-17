@@ -9,6 +9,7 @@ import type {
   StationAgencyRequired,
   StationCapacityLimitExceeded,
   StationCapacitySplitInvalid,
+  StationLocationAlreadyExists,
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
 } from "@/domain/stations/errors";
@@ -63,6 +64,7 @@ export type ProvisionAgencyAccountError
     | TechnicianTeamMemberLimitExceeded
     | StationRoleAssignmentLimitExceeded
     | StationNameAlreadyExists
+    | StationLocationAlreadyExists
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
     | StationCapacitySplitInvalid

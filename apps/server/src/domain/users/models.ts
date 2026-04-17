@@ -10,10 +10,14 @@ export type AgencyOrgUnitRef = OrgUnitRef & {
   readonly stationId: string | null;
 };
 
+export type TechnicianTeamOrgUnitRef = OrgUnitRef & {
+  readonly stationId: string;
+};
+
 export type UserOrgAssignment = {
   readonly station: OrgUnitRef | null;
   readonly agency: AgencyOrgUnitRef | null;
-  readonly technicianTeam: OrgUnitRef | null;
+  readonly technicianTeam: TechnicianTeamOrgUnitRef | null;
 };
 
 export type UserOrgAssignmentPatch = {

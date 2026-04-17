@@ -1,15 +1,24 @@
+import type { UploadIncidentImagePayload } from "@services/incidents";
+
 import { log } from "@lib/log";
+import { incidentService } from "@services/incidents";
 import * as Location from "expo-location";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
 
+import { useCurrentLocation } from "@/providers/location-provider";
 import { useCreateIncidentMutation } from "@/screen/incidents/hooks/use-create-incident-mutation";
 import { useRentalIncidentQuery } from "@/screen/incidents/hooks/use-rental-incident-query";
 import { isIncidentTerminalStatus, presentIncidentError } from "@/screen/incidents/incident-presenters";
 
-async function resolveIncidentCoordinates() {
+type Coordinates = {
+  latitude: number;
+  longitude: number;
+};
+
+async function resolveIncidentCoordinates(cachedLocation: Coordinates | null) {
   const currentPermission = await Location.getForegroundPermissionsAsync();
   log.debug("Incident location permission", {
     canAskAgain: currentPermission.canAskAgain,
@@ -67,6 +76,39 @@ async function resolveIncidentCoordinates() {
   }
   catch (currentPositionError) {
     log.warn("Incident current position failed", currentPositionError);
+
+    const lastKnown = await Location.getLastKnownPositionAsync({
+      maxAge: 2 * 60 * 1000,
+      requiredAccuracy: 500,
+    });
+
+    const isRecentLastKnown = lastKnown
+      ? Date.now() - lastKnown.timestamp <= 2 * 60 * 1000
+      : false;
+
+    log.debug("Incident last known lookup", {
+      accuracy: lastKnown?.coords.accuracy,
+      ageMs: lastKnown ? Date.now() - lastKnown.timestamp : null,
+      found: Boolean(lastKnown),
+      isRecentLastKnown,
+      latitude: lastKnown?.coords.latitude,
+      longitude: lastKnown?.coords.longitude,
+      mocked: lastKnown?.mocked,
+      timestamp: lastKnown?.timestamp,
+    });
+
+    if (lastKnown && isRecentLastKnown) {
+      return {
+        latitude: lastKnown.coords.latitude,
+        longitude: lastKnown.coords.longitude,
+      };
+    }
+
+    if (cachedLocation) {
+      log.debug("Incident falling back to cached provider location", cachedLocation);
+      return cachedLocation;
+    }
+
     return null;
   }
 }
@@ -80,6 +122,7 @@ export function useBookingIncidentState({
   bookingId,
   booking,
 }: UseBookingIncidentStateOptions) {
+  const { location: currentLocation } = useCurrentLocation();
   const isOngoing = booking?.status === "RENTED";
   const [isIncidentSheetOpen, setIncidentSheetOpen] = useState(false);
   const [isSubmittingIncidentReport, setSubmittingIncidentReport] = useState(false);
@@ -102,7 +145,13 @@ export function useBookingIncidentState({
     setIncidentSheetOpen(false);
   }, [isReportingIncident]);
 
-  const handleSelectIncidentType = useCallback(async (incidentType: string) => {
+  const handleSelectIncidentType = useCallback(async (
+    params: {
+      description: string;
+      imageUploads: UploadIncidentImagePayload[];
+      incidentType: string;
+    },
+  ) => {
     if (!booking || isReportingIncident) {
       return;
     }
@@ -110,7 +159,8 @@ export function useBookingIncidentState({
     setSubmittingIncidentReport(true);
 
     try {
-      const coordinates = await resolveIncidentCoordinates();
+      const coordinates = await resolveIncidentCoordinates(currentLocation);
+      let fileUrls: string[] = [];
 
       if (!coordinates) {
         Alert.alert(
@@ -120,12 +170,23 @@ export function useBookingIncidentState({
         return;
       }
 
+      if (params.imageUploads.length > 0) {
+        const uploadResult = await incidentService.uploadIncidentImages(params.imageUploads);
+        if (!uploadResult.ok) {
+          throw uploadResult.error;
+        }
+
+        fileUrls = uploadResult.value.fileUrls;
+      }
+
       await createIncidentMutation.mutateAsync({
         rentalId: booking.id,
         bikeId: booking.bikeId,
-        incidentType,
+        incidentType: params.incidentType,
+        description: params.description,
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
+        fileUrls,
       });
 
       setIncidentSheetOpen(false);
@@ -136,7 +197,7 @@ export function useBookingIncidentState({
     finally {
       setSubmittingIncidentReport(false);
     }
-  }, [booking, createIncidentMutation, isReportingIncident]);
+  }, [booking, createIncidentMutation, currentLocation, isReportingIncident]);
 
   return {
     handleCloseIncidentSheet,

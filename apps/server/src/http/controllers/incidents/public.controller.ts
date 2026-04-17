@@ -9,7 +9,10 @@ import { Effect, Match } from "effect";
 
 import type { IncidentStatus } from "generated/kysely/types";
 
-import { IncidentServiceTag } from "@/domain/incidents";
+import {
+  IncidentImageUploadServiceTag,
+  IncidentServiceTag,
+} from "@/domain/incidents";
 import { withLoggedCause } from "@/domain/shared";
 import { toIncidentSummary } from "@/http/presenters/incidents.presenter";
 import { Prisma } from "generated/prisma/client";
@@ -27,6 +30,125 @@ function respondUnauthorized(c: Parameters<RouteHandler<any>>[0]) {
     c.var.authFailure === "forbidden" ? 403 : 401,
   );
 }
+
+function pickIncidentImageFiles(
+  value: string | File | Array<string | File> | undefined,
+) {
+  if (value instanceof File) {
+    return [value];
+  }
+
+  if (Array.isArray(value)) {
+    return value.filter((entry): entry is File => entry instanceof File);
+  }
+
+  return [];
+}
+
+const uploadIncidentImages: RouteHandler<IncidentRoutes["uploadIncidentImages"]> = async (
+  c,
+) => {
+  const userId = c.var.currentUser?.userId;
+  if (!userId) {
+    return respondUnauthorized(c);
+  }
+
+  const form = await c.req.parseBody({ all: true });
+  const files = pickIncidentImageFiles(form.files);
+
+  if (files.length === 0) {
+    return c.json<IncidentsContracts.IncidentErrorResponse, 400>(
+      {
+        error: incidentErrorMessages.INVALID_INCIDENT_IMAGE,
+        details: { code: IncidentErrorCodeSchema.enum.INVALID_INCIDENT_IMAGE },
+      },
+      400,
+    );
+  }
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* IncidentImageUploadServiceTag;
+
+      return yield* service.uploadForUser({
+        userId,
+        files: yield* Effect.forEach(files, file =>
+          Effect.promise(async () => ({
+            bytes: new Uint8Array(await file.arrayBuffer()),
+            originalFilename: file.name,
+          }))),
+      });
+    }),
+    "POST /v1/incidents/images",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) => c.json<IncidentsContracts.UploadIncidentImagesResponse, 200>(right, 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("IncidentImageTooLarge", () =>
+          c.json<IncidentsContracts.IncidentErrorResponse, 400>(
+            {
+              error: incidentErrorMessages.INCIDENT_IMAGE_TOO_LARGE,
+              details: { code: IncidentErrorCodeSchema.enum.INCIDENT_IMAGE_TOO_LARGE },
+            },
+            400,
+          )),
+        Match.tag("IncidentImageUnsupportedType", () =>
+          c.json<IncidentsContracts.IncidentErrorResponse, 400>(
+            {
+              error: incidentErrorMessages.INVALID_INCIDENT_IMAGE,
+              details: { code: IncidentErrorCodeSchema.enum.INVALID_INCIDENT_IMAGE },
+            },
+            400,
+          )),
+        Match.tag("IncidentImageInvalid", () =>
+          c.json<IncidentsContracts.IncidentErrorResponse, 400>(
+            {
+              error: incidentErrorMessages.INVALID_INCIDENT_IMAGE,
+              details: { code: IncidentErrorCodeSchema.enum.INVALID_INCIDENT_IMAGE },
+            },
+            400,
+          )),
+        Match.tag("IncidentImageDimensionsExceeded", () =>
+          c.json<IncidentsContracts.IncidentErrorResponse, 400>(
+            {
+              error: incidentErrorMessages.INCIDENT_IMAGE_DIMENSIONS_TOO_LARGE,
+              details: {
+                code: IncidentErrorCodeSchema.enum.INCIDENT_IMAGE_DIMENSIONS_TOO_LARGE,
+              },
+            },
+            400,
+          )),
+        Match.tag("FirebaseStorageInitError", () =>
+          c.json<IncidentsContracts.IncidentErrorResponse, 503>(
+            {
+              error: incidentErrorMessages.INCIDENT_IMAGE_UPLOAD_UNAVAILABLE,
+              details: {
+                code: IncidentErrorCodeSchema.enum.INCIDENT_IMAGE_UPLOAD_UNAVAILABLE,
+              },
+            },
+            503,
+          )),
+        Match.tag("FirebaseStorageUploadError", () =>
+          c.json<IncidentsContracts.IncidentErrorResponse, 503>(
+            {
+              error: incidentErrorMessages.INCIDENT_IMAGE_UPLOAD_UNAVAILABLE,
+              details: {
+                code: IncidentErrorCodeSchema.enum.INCIDENT_IMAGE_UPLOAD_UNAVAILABLE,
+              },
+            },
+            503,
+          )),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
 
 const listIncidents: RouteHandler<IncidentRoutes["listIncidents"]> = async (
   c,
@@ -345,6 +467,7 @@ const updateIncident: RouteHandler<IncidentRoutes["updateIncident"]> = async (
 export const IncidentPublicController = {
   listIncidents,
   getIncident,
+  uploadIncidentImages,
   createIncident,
   updateIncident,
 } as const;
