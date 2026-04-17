@@ -2,10 +2,33 @@ import type { BillingPreviewDiscountRuleRow } from "./models";
 
 import { toMinorUnit } from "@/domain/shared/money";
 
+export const GLOBAL_AUTO_DISCOUNT_TIERS = [
+  { minRidingMinutes: 60, discountValue: 1000 },
+  { minRidingMinutes: 120, discountValue: 2000 },
+  { minRidingMinutes: 240, discountValue: 4000 },
+  { minRidingMinutes: 360, discountValue: 6000 },
+] as const;
+
 export type GlobalAutoDiscountSelection = {
   readonly rule: BillingPreviewDiscountRuleRow | null;
   readonly discountAmountMinor: bigint;
 };
+
+export function getGlobalAutoDiscountTierValue(
+  minRidingMinutes: number,
+): number | null {
+  return GLOBAL_AUTO_DISCOUNT_TIERS.find(
+    tier => tier.minRidingMinutes === minRidingMinutes,
+  )?.discountValue ?? null;
+}
+
+export function isAllowedGlobalAutoDiscountTier(input: {
+  readonly minRidingMinutes: number;
+  readonly discountValue: number;
+}) {
+  return getGlobalAutoDiscountTierValue(input.minRidingMinutes)
+    === input.discountValue;
+}
 
 export function selectBestGlobalAutoDiscountRule(
   candidates: readonly BillingPreviewDiscountRuleRow[],

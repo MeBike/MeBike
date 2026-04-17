@@ -51,6 +51,8 @@ model RentalBillingRecord {
   estimatedDistanceKm        Decimal? @map("estimated_distance_km") @db.Decimal(8, 2)
   baseAmount                 Decimal  @default(0) @map("base_amount") @db.Decimal(12, 2)
   overtimeAmount             Decimal  @default(0) @map("overtime_amount") @db.Decimal(12, 2)
+  couponRuleId               String?  @map("coupon_rule_id") @db.Uuid
+  couponRuleSnapshot         Json?    @map("coupon_rule_snapshot") @db.JsonB
   couponDiscountAmount       Decimal  @default(0) @map("coupon_discount_amount") @db.Decimal(12, 2)
   subscriptionDiscountAmount Decimal  @default(0) @map("subscription_discount_amount") @db.Decimal(12, 2)
   depositForfeited           Boolean  @default(false) @map("deposit_forfeited")
@@ -59,8 +61,10 @@ model RentalBillingRecord {
 
   rental        Rental        @relation(fields: [rentalId], references: [id])
   pricingPolicy PricingPolicy @relation(fields: [pricingPolicyId], references: [id])
+  couponRule    CouponRule?   @relation(fields: [couponRuleId], references: [id])
 
   @@index([pricingPolicyId], name: "idx_rental_billing_records_pricing_policy")
+  @@index([couponRuleId], name: "idx_rental_billing_records_coupon_rule")
   @@map("rental_billing_records")
 }
 

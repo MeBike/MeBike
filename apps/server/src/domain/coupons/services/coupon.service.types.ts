@@ -13,29 +13,50 @@ import type {
   UpdateAdminCouponRuleInput,
 } from "../models";
 import type { PageRequest } from "@/domain/shared/pagination";
-import type { CouponRuleNotFound } from "../domain-errors";
+import type {
+  CouponRuleActiveTierConflict,
+  CouponRuleAlreadyUsed,
+  CouponRuleInvalidActiveWindow,
+  CouponRuleInvalidTier,
+  CouponRuleNotFound,
+} from "../domain-errors";
+
+export type CouponCommandValidationFailure =
+  | CouponRuleInvalidTier
+  | CouponRuleInvalidActiveWindow
+  | CouponRuleActiveTierConflict
+  | CouponRuleAlreadyUsed;
 
 export type CouponCommandService = {
   createAdminCouponRule: (
     input: CreateAdminCouponRuleInput,
-  ) => Effect.Effect<AdminCouponRuleRow>;
+  ) => Effect.Effect<AdminCouponRuleRow, CouponCommandValidationFailure>;
   activateAdminCouponRule: (
     ruleId: string,
-  ) => Effect.Effect<AdminCouponRuleRow, CouponRuleNotFound>;
+  ) => Effect.Effect<
+    AdminCouponRuleRow,
+    | CouponRuleNotFound
+    | CouponRuleInvalidTier
+    | CouponRuleInvalidActiveWindow
+    | CouponRuleActiveTierConflict
+  >;
   deactivateAdminCouponRule: (
     ruleId: string,
   ) => Effect.Effect<AdminCouponRuleRow, CouponRuleNotFound>;
   updateAdminCouponRule: (
     ruleId: string,
     input: UpdateAdminCouponRuleInput,
-  ) => Effect.Effect<AdminCouponRuleRow, CouponRuleNotFound>;
+  ) => Effect.Effect<
+    AdminCouponRuleRow,
+    CouponRuleNotFound | CouponCommandValidationFailure
+  >;
 };
 
 export type CouponQueryService = {
   listGlobalBillingPreviewDiscountRules: (
     input: {
       readonly previewedAt: Date;
-      readonly billableMinutes: number;
+      readonly ridingDurationMinutes: number;
     },
   ) => Effect.Effect<readonly BillingPreviewDiscountRuleRow[]>;
   listActiveGlobalCouponRules: (

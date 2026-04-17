@@ -28,13 +28,23 @@ export type CouponCommandRepo = {
     ruleId: string,
     data: UpdateCouponRuleData,
   ) => Effect.Effect<Option.Option<AdminCouponRuleRow>>;
+  findAdminCouponRule: (
+    ruleId: string,
+  ) => Effect.Effect<Option.Option<AdminCouponRuleRow>>;
+  findActiveRuleWithMinRidingMinutes: (
+    minRidingMinutes: number,
+    excludeRuleId?: string,
+  ) => Effect.Effect<Option.Option<{ readonly id: string }>>;
+  hasRentalBillingRecordForRule: (
+    ruleId: string,
+  ) => Effect.Effect<boolean>;
 };
 
 export type CouponQueryRepo = {
   listGlobalBillingPreviewDiscountRules: (
     input: {
       readonly previewedAt: Date;
-      readonly billableMinutes: number;
+      readonly ridingDurationMinutes: number;
     },
   ) => Effect.Effect<readonly BillingPreviewDiscountRuleRow[]>;
   listActiveGlobalCouponRules: (

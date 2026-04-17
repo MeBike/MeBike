@@ -128,6 +128,31 @@ export type CouponStatsByDiscountAmountRow = {
   readonly totalDiscountAmount: number;
 };
 
+export type CouponRuleSnapshot = {
+  readonly ruleId: string;
+  readonly name: string;
+  readonly triggerType: "RIDING_DURATION";
+  readonly minRidingMinutes: number;
+  readonly discountType: "FIXED_AMOUNT";
+  readonly discountValue: number;
+  readonly priority: number;
+  readonly billableMinutes: number;
+  readonly billableHours: number;
+  readonly appliedAt: string;
+};
+
+export type CouponStatsByRuleRow = {
+  readonly ruleId: string;
+  readonly name: string;
+  readonly triggerType: "RIDING_DURATION";
+  readonly minRidingMinutes: number | null;
+  readonly discountType: "FIXED_AMOUNT";
+  readonly discountValue: number;
+  readonly appliedCount: number;
+  readonly totalDiscountAmount: number;
+  readonly source: "BILLING_RECORD_RULE" | "BILLING_RECORD_SNAPSHOT";
+};
+
 export type CouponTopAppliedRuleRow = {
   readonly ruleId: string;
   readonly name: string;
@@ -136,12 +161,13 @@ export type CouponTopAppliedRuleRow = {
   readonly discountType: "FIXED_AMOUNT";
   readonly discountValue: number;
   readonly appliedCount: number;
-  readonly inferredFrom: "BILLING_AMOUNT";
+  readonly inferredFrom: "BILLING_RECORD_RULE" | "BILLING_RECORD_SNAPSHOT";
 };
 
 export type AdminCouponStatsRow = {
   readonly range: CouponStatsRange;
   readonly summary: CouponStatsSummaryRow;
+  readonly statsByRule: readonly CouponStatsByRuleRow[];
   readonly statsByDiscountAmount: readonly CouponStatsByDiscountAmountRow[];
   readonly topAppliedRule: CouponTopAppliedRuleRow | null;
 };
@@ -164,6 +190,11 @@ export type AdminCouponUsageLogRow = {
   readonly prepaidAmount: number;
   readonly subscriptionApplied: boolean;
   readonly subscriptionDiscountAmount: number;
+  readonly couponRuleId: string | null;
+  readonly couponRuleName: string | null;
+  readonly couponRuleMinRidingMinutes: number | null;
+  readonly couponRuleDiscountType: "FIXED_AMOUNT" | null;
+  readonly couponRuleDiscountValue: number | null;
   readonly couponDiscountAmount: number;
   readonly totalAmount: number;
   readonly appliedAt: Date;

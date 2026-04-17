@@ -65,9 +65,34 @@ describe("admin coupon usage logs routing e2e", () => {
     return fixture.auth.makeAuthHeader({ userId, role });
   }
 
+  async function createCouponRule(input: {
+    readonly name: string;
+    readonly minRidingMinutes: number;
+    readonly discountValue: string;
+  }) {
+    return fixture.prisma.couponRule.create({
+      data: {
+        name: input.name,
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: input.minRidingMinutes,
+        discountType: "FIXED_AMOUNT",
+        discountValue: input.discountValue,
+        status: "ACTIVE",
+        priority: 100,
+      },
+    });
+  }
+
   async function createCompletedRentalWithBilling(input: {
     readonly appliedAt: string;
     readonly couponDiscountAmount: string;
+    readonly couponRule?: {
+      readonly id: string;
+      readonly name: string;
+      readonly minRidingMinutes: number | null;
+      readonly discountValue: { toString: () => string };
+      readonly priority: number;
+    };
     readonly totalDurationMinutes?: number;
     readonly baseAmount?: string;
     readonly prepaidAmount?: string;
@@ -144,6 +169,21 @@ describe("admin coupon usage logs routing e2e", () => {
         estimatedDistanceKm: null,
         baseAmount: input.baseAmount ?? "10000",
         overtimeAmount: "0",
+        couponRuleId: input.couponRule?.id,
+        couponRuleSnapshot: input.couponRule
+          ? {
+              ruleId: input.couponRule.id,
+              name: input.couponRule.name,
+              triggerType: "RIDING_DURATION",
+              minRidingMinutes: input.couponRule.minRidingMinutes ?? 0,
+              discountType: "FIXED_AMOUNT",
+              discountValue: Number(input.couponRule.discountValue.toString()),
+              priority: input.couponRule.priority,
+              billableMinutes: totalDurationMinutes,
+              billableHours: totalDurationMinutes / 60,
+              appliedAt: appliedAt.toISOString(),
+            }
+          : undefined,
         couponDiscountAmount: input.couponDiscountAmount,
         subscriptionDiscountAmount: input.subscriptionDiscountAmount ?? "0",
         depositForfeited: false,
@@ -180,9 +220,31 @@ describe("admin coupon usage logs routing e2e", () => {
   });
 
   it("admin gets finalized usage logs ordered by billing createdAt desc with derived tiers", async () => {
+    const tier1Rule = await createCouponRule({
+      name: "Usage Snapshot 1h",
+      minRidingMinutes: 60,
+      discountValue: "1000",
+    });
+    const tier2Rule = await createCouponRule({
+      name: "Usage Snapshot 2h",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+    const tier4Rule = await createCouponRule({
+      name: "Usage Snapshot 4h",
+      minRidingMinutes: 240,
+      discountValue: "4000",
+    });
+    const tier6Rule = await createCouponRule({
+      name: "Usage Snapshot 6h",
+      minRidingMinutes: 360,
+      discountValue: "6000",
+    });
+
     const tier1 = await createCompletedRentalWithBilling({
       appliedAt: "2026-04-17T09:01:00.000Z",
       couponDiscountAmount: "1000",
+      couponRule: tier1Rule,
       totalAmount: "9000",
     });
     await createCompletedRentalWithBilling({
@@ -193,6 +255,7 @@ describe("admin coupon usage logs routing e2e", () => {
     const tier2 = await createCompletedRentalWithBilling({
       appliedAt: "2026-04-17T09:03:00.000Z",
       couponDiscountAmount: "2000",
+      couponRule: tier2Rule,
       totalAmount: "6000",
       baseAmount: "8000",
       prepaidAmount: "0",
@@ -201,12 +264,14 @@ describe("admin coupon usage logs routing e2e", () => {
     const tier4 = await createCompletedRentalWithBilling({
       appliedAt: "2026-04-17T09:04:00.000Z",
       couponDiscountAmount: "4000",
+      couponRule: tier4Rule,
       totalAmount: "5000",
       baseAmount: "9000",
     });
     const tier6 = await createCompletedRentalWithBilling({
       appliedAt: "2026-04-17T09:05:00.000Z",
       couponDiscountAmount: "6000",
+      couponRule: tier6Rule,
       totalAmount: "4000",
       baseAmount: "10000",
       prepaidAmount: "2000",
@@ -251,6 +316,11 @@ describe("admin coupon usage logs routing e2e", () => {
       prepaidAmount: 2000,
       subscriptionApplied: false,
       subscriptionDiscountAmount: 0,
+      couponRuleId: tier6Rule.id,
+      couponRuleName: "Usage Snapshot 6h",
+      couponRuleMinRidingMinutes: 360,
+      couponRuleDiscountType: "FIXED_AMOUNT",
+      couponRuleDiscountValue: 6000,
       couponDiscountAmount: 6000,
       totalAmount: 4000,
       appliedAt: "2026-04-17T09:05:00.000Z",
@@ -259,19 +329,37 @@ describe("admin coupon usage logs routing e2e", () => {
 
   it("supports from/to, userId, rentalId, discountAmount, and subscriptionApplied filters", async () => {
     const filteredUser = await fixture.factories.user();
+    const tier1Rule = await createCouponRule({
+      name: "Filter Snapshot 1h",
+      minRidingMinutes: 60,
+      discountValue: "1000",
+    });
+    const tier2Rule = await createCouponRule({
+      name: "Filter Snapshot 2h",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+    const tier4Rule = await createCouponRule({
+      name: "Filter Snapshot 4h",
+      minRidingMinutes: 240,
+      discountValue: "4000",
+    });
 
     const outsideRange = await createCompletedRentalWithBilling({
       appliedAt: "2026-04-01T00:00:00.000Z",
       couponDiscountAmount: "1000",
+      couponRule: tier1Rule,
     });
     const inRange = await createCompletedRentalWithBilling({
       appliedAt: "2026-04-10T08:00:00.000Z",
       couponDiscountAmount: "2000",
+      couponRule: tier2Rule,
       userId: filteredUser.id,
     });
     const anomalyWithSubscription = await createCompletedRentalWithBilling({
       appliedAt: "2026-04-10T09:00:00.000Z",
       couponDiscountAmount: "4000",
+      couponRule: tier4Rule,
       subscriptionApplied: true,
       subscriptionDiscountAmount: "1000",
       totalAmount: "3000",

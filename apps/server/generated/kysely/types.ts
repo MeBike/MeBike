@@ -590,6 +590,8 @@ export type RentalBillingRecord = {
     estimated_distance_km: string | null;
     base_amount: Generated<string>;
     overtime_amount: Generated<string>;
+    coupon_rule_id: string | null;
+    coupon_rule_snapshot: unknown | null;
     coupon_discount_amount: Generated<string>;
     subscription_discount_amount: Generated<string>;
     deposit_forfeited: Generated<boolean>;

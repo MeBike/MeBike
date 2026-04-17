@@ -41,27 +41,31 @@ const adminCreateCouponRule: RouteHandler<
 > = async (c) => {
   const body = c.req.valid("json");
 
-  const eff = withLoggedCause(
-    Effect.flatMap(CouponCommandServiceTag, service =>
-      service.createAdminCouponRule({
-        name: body.name,
-        triggerType: body.triggerType,
-        minRidingMinutes: body.minRidingMinutes,
-        discountType: body.discountType,
-        discountValue: body.discountValue,
-        priority: body.priority,
-        status: body.status,
-        activeFrom: body.activeFrom ? new Date(body.activeFrom) : null,
-        activeTo: body.activeTo ? new Date(body.activeTo) : null,
-      })),
-    "POST /v1/admin/coupon-rules",
+  const eff = Effect.flatMap(CouponCommandServiceTag, service =>
+    service.createAdminCouponRule({
+      name: body.name,
+      triggerType: body.triggerType,
+      minRidingMinutes: body.minRidingMinutes,
+      discountType: body.discountType,
+      discountValue: body.discountValue,
+      priority: body.priority,
+      status: body.status,
+      activeFrom: body.activeFrom ? new Date(body.activeFrom) : null,
+      activeTo: body.activeTo ? new Date(body.activeTo) : null,
+    }));
+
+  const result = await c.var.runPromise(
+    withLoggedCause(eff, "POST /v1/admin/coupon-rules").pipe(Effect.either),
   );
 
-  const created = await c.var.runPromise(eff);
-
-  return c.json<CouponsContracts.AdminCouponRule, 201>(
-    toContractAdminCouponRule(created),
-    201,
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<CouponsContracts.AdminCouponRule, 201>(
+        toContractAdminCouponRule(right),
+        201,
+      )),
+    Match.tag("Left", ({ left }) => toCouponRuleCommandErrorResponse(c, left)),
+    Match.exhaustive,
   );
 };
 
@@ -102,13 +106,57 @@ const adminUpdateCouponRule: RouteHandler<
               ruleId,
             },
           }, 404)),
-        Match.orElse(() => {
-          throw left;
-        }),
+        Match.orElse(err => toCouponRuleCommandErrorResponse(c, err)),
       )),
     Match.exhaustive,
   );
 };
+
+function toCouponRuleCommandErrorResponse(
+  c: Parameters<RouteHandler<CouponRulesRoutes[keyof CouponRulesRoutes]>>[0],
+  error: unknown,
+) {
+  return Match.value(error).pipe(
+    Match.tag("CouponRuleInvalidTier", err =>
+      c.json<CouponsContracts.CouponRuleErrorResponse, 400>({
+        error: "Coupon rule tier is not allowed",
+        details: {
+          code: "COUPON_RULE_INVALID_TIER",
+          minRidingMinutes: err.minRidingMinutes,
+          discountValue: err.discountValue,
+        },
+      }, 400)),
+    Match.tag("CouponRuleInvalidActiveWindow", err =>
+      c.json<CouponsContracts.CouponRuleErrorResponse, 400>({
+        error: "Coupon rule active window is invalid",
+        details: {
+          code: "COUPON_RULE_INVALID_ACTIVE_WINDOW",
+          activeFrom: err.activeFrom.toISOString(),
+          activeTo: err.activeTo.toISOString(),
+        },
+      }, 400)),
+    Match.tag("CouponRuleActiveTierConflict", err =>
+      c.json<CouponsContracts.CouponRuleErrorResponse, 409>({
+        error: "An active coupon rule already exists for this riding duration tier",
+        details: {
+          code: "COUPON_RULE_ACTIVE_TIER_CONFLICT",
+          minRidingMinutes: err.minRidingMinutes,
+          conflictingRuleId: err.conflictingRuleId,
+        },
+      }, 409)),
+    Match.tag("CouponRuleAlreadyUsed", err =>
+      c.json<CouponsContracts.CouponRuleErrorResponse, 409>({
+        error: "Coupon rule has already been used",
+        details: {
+          code: "COUPON_RULE_ALREADY_USED",
+          ruleId: err.ruleId,
+        },
+      }, 409)),
+    Match.orElse((err) => {
+      throw err;
+    }),
+  );
+}
 
 const adminActivateCouponRule: RouteHandler<
   CouponRulesRoutes["adminActivateCouponRule"]
@@ -136,9 +184,7 @@ const adminActivateCouponRule: RouteHandler<
               ruleId,
             },
           }, 404)),
-        Match.orElse(() => {
-          throw left;
-        }),
+        Match.orElse(err => toCouponRuleCommandErrorResponse(c, err)),
       )),
     Match.exhaustive,
   );

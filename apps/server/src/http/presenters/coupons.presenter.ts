@@ -72,6 +72,20 @@ export function toContractAdminCouponStats(
       to: stats.range.to?.toISOString() ?? null,
     },
     summary: stats.summary,
+    statsByRule: stats.statsByRule.map(rule => ({
+      ruleId: rule.ruleId,
+      name: rule.name,
+      triggerType: rule.triggerType,
+      minRidingMinutes: rule.minRidingMinutes,
+      minBillableHours: rule.minRidingMinutes === null
+        ? null
+        : rule.minRidingMinutes / 60,
+      discountType: rule.discountType,
+      discountValue: rule.discountValue,
+      appliedCount: rule.appliedCount,
+      totalDiscountAmount: rule.totalDiscountAmount,
+      source: rule.source,
+    })),
     statsByDiscountAmount: [...stats.statsByDiscountAmount],
     topAppliedRule: stats.topAppliedRule
       ? {
@@ -106,6 +120,11 @@ export function toContractAdminCouponUsageLog(
     prepaidAmount: row.prepaidAmount,
     subscriptionApplied: row.subscriptionApplied,
     subscriptionDiscountAmount: row.subscriptionDiscountAmount,
+    couponRuleId: row.couponRuleId,
+    couponRuleName: row.couponRuleName,
+    couponRuleMinRidingMinutes: row.couponRuleMinRidingMinutes,
+    couponRuleDiscountType: row.couponRuleDiscountType,
+    couponRuleDiscountValue: row.couponRuleDiscountValue,
     couponDiscountAmount: row.couponDiscountAmount,
     totalAmount: row.totalAmount,
     appliedAt: row.appliedAt.toISOString(),

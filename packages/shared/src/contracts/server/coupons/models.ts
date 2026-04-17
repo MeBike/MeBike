@@ -19,6 +19,23 @@ export const CouponTriggerTypeSchema = z
   ])
   .openapi("CouponTriggerType");
 
+const GLOBAL_AUTO_DISCOUNT_TIERS = [
+  { minRidingMinutes: 60, discountValue: 1000 },
+  { minRidingMinutes: 120, discountValue: 2000 },
+  { minRidingMinutes: 240, discountValue: 4000 },
+  { minRidingMinutes: 360, discountValue: 6000 },
+] as const;
+
+function isAllowedGlobalAutoDiscountTier(value: {
+  readonly minRidingMinutes: number;
+  readonly discountValue: number;
+}) {
+  return GLOBAL_AUTO_DISCOUNT_TIERS.some(tier =>
+    tier.minRidingMinutes === value.minRidingMinutes
+    && tier.discountValue === value.discountValue,
+  );
+}
+
 export const ActiveCouponRuleSchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
@@ -100,6 +117,15 @@ export const CreateAdminCouponRuleBodySchema = z
     activeTo: z.iso.datetime().nullable().optional().default(null),
   })
   .superRefine((value, ctx) => {
+    if (!isAllowedGlobalAutoDiscountTier(value)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["discountValue"],
+        message:
+          "discountValue must match one of the fixed coupon tiers: 60->1000, 120->2000, 240->4000, 360->6000",
+      });
+    }
+
     if (
       value.activeFrom
       && value.activeTo
@@ -143,6 +169,15 @@ export const UpdateAdminCouponRuleBodySchema = z
     activeTo: z.iso.datetime().nullable(),
   })
   .superRefine((value, ctx) => {
+    if (!isAllowedGlobalAutoDiscountTier(value)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["discountValue"],
+        message:
+          "discountValue must match one of the fixed coupon tiers: 60->1000, 120->2000, 240->4000, 360->6000",
+      });
+    }
+
     if (
       value.activeFrom
       && value.activeTo
@@ -161,7 +196,7 @@ export const UpdateAdminCouponRuleBodySchema = z
       triggerType: "RIDING_DURATION",
       minRidingMinutes: 120,
       discountType: "FIXED_AMOUNT",
-      discountValue: 2500,
+      discountValue: 2000,
       priority: 90,
       status: "INACTIVE",
       activeFrom: null,
@@ -368,6 +403,19 @@ export const CouponStatsByDiscountAmountSchema = z.object({
   totalDiscountAmount: z.number().nonnegative(),
 }).openapi("CouponStatsByDiscountAmount");
 
+export const CouponStatsByRuleSchema = z.object({
+  ruleId: z.uuidv7(),
+  name: z.string(),
+  triggerType: CouponTriggerTypeSchema,
+  minRidingMinutes: z.number().int().nonnegative().nullable(),
+  minBillableHours: z.number().nonnegative().nullable(),
+  discountType: CouponDiscountTypeSchema,
+  discountValue: z.number().nonnegative(),
+  appliedCount: z.number().int().nonnegative(),
+  totalDiscountAmount: z.number().nonnegative(),
+  source: z.enum(["BILLING_RECORD_RULE", "BILLING_RECORD_SNAPSHOT"]),
+}).openapi("CouponStatsByRule");
+
 export const CouponTopAppliedRuleSchema = z.object({
   ruleId: z.uuidv7(),
   name: z.string(),
@@ -377,12 +425,13 @@ export const CouponTopAppliedRuleSchema = z.object({
   discountType: CouponDiscountTypeSchema,
   discountValue: z.number().nonnegative(),
   appliedCount: z.number().int().nonnegative(),
-  inferredFrom: z.literal("BILLING_AMOUNT"),
+  inferredFrom: z.enum(["BILLING_RECORD_RULE", "BILLING_RECORD_SNAPSHOT"]),
 }).openapi("CouponTopAppliedRule");
 
 export const AdminCouponStatsResponseSchema = z.object({
   range: CouponStatsRangeSchema,
   summary: CouponStatsSummarySchema,
+  statsByRule: z.array(CouponStatsByRuleSchema),
   statsByDiscountAmount: z.array(CouponStatsByDiscountAmountSchema),
   topAppliedRule: CouponTopAppliedRuleSchema.nullable(),
 }).openapi("AdminCouponStatsResponse", {
@@ -421,7 +470,31 @@ export const AdminCouponStatsResponseSchema = z.object({
         totalDiscountAmount: 42000,
       },
     ],
-    topAppliedRule: null,
+    statsByRule: [
+      {
+        ruleId: "018fa100-0000-7000-8000-000000000010",
+        name: "Ride 2h discount",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        minBillableHours: 2,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2000,
+        appliedCount: 20,
+        totalDiscountAmount: 40000,
+        source: "BILLING_RECORD_SNAPSHOT",
+      },
+    ],
+    topAppliedRule: {
+      ruleId: "018fa100-0000-7000-8000-000000000010",
+      name: "Ride 2h discount",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      minBillableHours: 2,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 2000,
+      appliedCount: 20,
+      inferredFrom: "BILLING_RECORD_SNAPSHOT",
+    },
   },
 });
 
@@ -437,6 +510,11 @@ export const AdminCouponUsageLogSchema = z.object({
   prepaidAmount: z.number().nonnegative(),
   subscriptionApplied: z.boolean(),
   subscriptionDiscountAmount: z.number().nonnegative(),
+  couponRuleId: z.uuidv7().nullable(),
+  couponRuleName: z.string().nullable(),
+  couponRuleMinRidingMinutes: z.number().int().nonnegative().nullable(),
+  couponRuleDiscountType: CouponDiscountTypeSchema.nullable(),
+  couponRuleDiscountValue: z.number().nonnegative().nullable(),
   couponDiscountAmount: z.number().positive(),
   totalAmount: z.number().nonnegative(),
   appliedAt: z.iso.datetime(),
@@ -454,6 +532,11 @@ export const AdminCouponUsageLogSchema = z.object({
     prepaidAmount: 0,
     subscriptionApplied: false,
     subscriptionDiscountAmount: 0,
+    couponRuleId: "018fa100-0000-7000-8000-000000000010",
+    couponRuleName: "Ride 2h discount",
+    couponRuleMinRidingMinutes: 120,
+    couponRuleDiscountType: "FIXED_AMOUNT",
+    couponRuleDiscountValue: 2000,
     couponDiscountAmount: 2000,
     totalAmount: 6000,
     appliedAt: "2026-04-17T09:35:10.000Z",
@@ -479,6 +562,11 @@ export const AdminCouponUsageLogsResponseSchema = z.object({
         prepaidAmount: 0,
         subscriptionApplied: false,
         subscriptionDiscountAmount: 0,
+        couponRuleId: "018fa100-0000-7000-8000-000000000010",
+        couponRuleName: "Ride 2h discount",
+        couponRuleMinRidingMinutes: 120,
+        couponRuleDiscountType: "FIXED_AMOUNT",
+        couponRuleDiscountValue: 2000,
         couponDiscountAmount: 2000,
         totalAmount: 6000,
         appliedAt: "2026-04-17T09:35:10.000Z",
@@ -496,11 +584,20 @@ export const AdminCouponUsageLogsResponseSchema = z.object({
 
 export const CouponRuleErrorCodeSchema = z.enum([
   "COUPON_RULE_NOT_FOUND",
+  "COUPON_RULE_INVALID_TIER",
+  "COUPON_RULE_INVALID_ACTIVE_WINDOW",
+  "COUPON_RULE_ACTIVE_TIER_CONFLICT",
+  "COUPON_RULE_ALREADY_USED",
 ]).openapi("CouponRuleErrorCode");
 
 export const CouponRuleErrorDetailSchema = z.object({
   code: CouponRuleErrorCodeSchema,
   ruleId: z.uuidv7().optional(),
+  conflictingRuleId: z.uuidv7().optional(),
+  minRidingMinutes: z.number().int().nonnegative().optional(),
+  discountValue: z.number().int().positive().optional(),
+  activeFrom: z.iso.datetime().optional(),
+  activeTo: z.iso.datetime().optional(),
 }).openapi("CouponRuleErrorDetail");
 
 export const CouponRuleErrorResponseSchema = z.object({
@@ -510,6 +607,11 @@ export const CouponRuleErrorResponseSchema = z.object({
 
 export const couponRuleErrorMessages = {
   COUPON_RULE_NOT_FOUND: "Coupon rule not found",
+  COUPON_RULE_INVALID_TIER: "Coupon rule tier is not allowed",
+  COUPON_RULE_INVALID_ACTIVE_WINDOW: "Coupon rule active window is invalid",
+  COUPON_RULE_ACTIVE_TIER_CONFLICT:
+    "An active coupon rule already exists for this riding duration tier",
+  COUPON_RULE_ALREADY_USED: "Coupon rule has already been used",
 } as const;
 
 export type CouponDiscountType = z.infer<typeof CouponDiscountTypeSchema>;
@@ -540,6 +642,7 @@ export type CouponStatsSummary = z.infer<typeof CouponStatsSummarySchema>;
 export type CouponStatsByDiscountAmount = z.infer<
   typeof CouponStatsByDiscountAmountSchema
 >;
+export type CouponStatsByRule = z.infer<typeof CouponStatsByRuleSchema>;
 export type CouponTopAppliedRule = z.infer<typeof CouponTopAppliedRuleSchema>;
 export type AdminCouponStatsResponse = z.infer<
   typeof AdminCouponStatsResponseSchema

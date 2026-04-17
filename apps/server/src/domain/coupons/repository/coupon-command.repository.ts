@@ -55,6 +55,82 @@ export function makeCouponCommandRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): CouponCommandRepo {
   return {
+    findAdminCouponRule: ruleId =>
+      Effect.gen(function* () {
+        const existing = yield* Effect.tryPromise({
+          try: () =>
+            client.couponRule.findUnique({
+              where: { id: ruleId },
+              select: selectAdminCouponRuleRow,
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "findAdminCouponRule",
+              message: "Failed to find admin coupon rule",
+              cause: err,
+            }),
+        });
+
+        return existing
+          ? Option.some(toAdminCouponRuleRow(existing))
+          : Option.none();
+      }).pipe(defectOn(CouponRepositoryError)),
+    findActiveRuleWithMinRidingMinutes: (minRidingMinutes, excludeRuleId) =>
+      Effect.gen(function* () {
+        const existing = yield* Effect.tryPromise({
+          try: () =>
+            client.couponRule.findFirst({
+              where: {
+                status: "ACTIVE",
+                triggerType: "RIDING_DURATION",
+                discountType: "FIXED_AMOUNT",
+                minRidingMinutes,
+                ...(excludeRuleId ? { id: { not: excludeRuleId } } : {}),
+              },
+              select: { id: true },
+              orderBy: [
+                { createdAt: "asc" },
+                { id: "asc" },
+              ],
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "findActiveRuleWithMinRidingMinutes",
+              message: "Failed to find active coupon rule by tier",
+              cause: err,
+            }),
+        });
+
+        return existing ? Option.some(existing) : Option.none();
+      }).pipe(defectOn(CouponRepositoryError)),
+    hasRentalBillingRecordForRule: ruleId =>
+      Effect.gen(function* () {
+        const existing = yield* Effect.tryPromise({
+          try: () =>
+            client.rentalBillingRecord.findFirst({
+              where: {
+                OR: [
+                  { couponRuleId: ruleId },
+                  {
+                    couponRuleSnapshot: {
+                      path: ["ruleId"],
+                      equals: ruleId,
+                    },
+                  },
+                ],
+              },
+              select: { id: true },
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "hasRentalBillingRecordForRule",
+              message: "Failed to check coupon rule billing usage",
+              cause: err,
+            }),
+        });
+
+        return Boolean(existing);
+      }).pipe(defectOn(CouponRepositoryError)),
     createAdminCouponRule: data =>
       Effect.tryPromise({
         try: () =>

@@ -215,7 +215,7 @@ describe("rentals billing preview routing e2e", () => {
         triggerType: "RIDING_DURATION",
         minRidingMinutes: 120,
         discountType: "FIXED_AMOUNT",
-        discountValue: "3000",
+        discountValue: "2000",
         status: "INACTIVE",
         priority: 10,
       },

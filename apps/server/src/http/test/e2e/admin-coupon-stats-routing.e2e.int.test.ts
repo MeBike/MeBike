@@ -65,9 +65,34 @@ describe("admin coupon stats routing e2e", () => {
     return fixture.auth.makeAuthHeader({ userId, role });
   }
 
+  async function createCouponRule(input: {
+    readonly name: string;
+    readonly minRidingMinutes: number;
+    readonly discountValue: string;
+  }) {
+    return fixture.prisma.couponRule.create({
+      data: {
+        name: input.name,
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: input.minRidingMinutes,
+        discountType: "FIXED_AMOUNT",
+        discountValue: input.discountValue,
+        status: "ACTIVE",
+        priority: 100,
+      },
+    });
+  }
+
   async function createCompletedRentalWithBilling(input: {
     readonly endTime: string;
     readonly couponDiscountAmount: string;
+    readonly couponRule?: {
+      readonly id: string;
+      readonly name: string;
+      readonly minRidingMinutes: number | null;
+      readonly discountValue: { toString: () => string };
+      readonly priority: number;
+    };
     readonly totalAmount?: string;
     readonly totalPrice?: string;
   }) {
@@ -111,6 +136,21 @@ describe("admin coupon stats routing e2e", () => {
         estimatedDistanceKm: null,
         baseAmount: "10000",
         overtimeAmount: "0",
+        couponRuleId: input.couponRule?.id,
+        couponRuleSnapshot: input.couponRule
+          ? {
+              ruleId: input.couponRule.id,
+              name: input.couponRule.name,
+              triggerType: "RIDING_DURATION",
+              minRidingMinutes: input.couponRule.minRidingMinutes ?? 0,
+              discountType: "FIXED_AMOUNT",
+              discountValue: Number(input.couponRule.discountValue.toString()),
+              priority: input.couponRule.priority,
+              billableMinutes: 60,
+              billableHours: 1,
+              appliedAt: endTime.toISOString(),
+            }
+          : undefined,
         couponDiscountAmount: input.couponDiscountAmount,
         subscriptionDiscountAmount: "0",
         depositForfeited: false,
@@ -143,25 +183,40 @@ describe("admin coupon stats routing e2e", () => {
         totalDiscountAmount: 0,
         avgDiscountAmount: 0,
       },
+      statsByRule: [],
       statsByDiscountAmount: [],
       topAppliedRule: null,
     });
   });
 
   it("admin gets summary stats and discount breakdown from finalized billing data", async () => {
+    const tier1Rule = await createCouponRule({
+      name: "Snapshot Ride 1h",
+      minRidingMinutes: 60,
+      discountValue: "1000",
+    });
+    const tier2Rule = await createCouponRule({
+      name: "Snapshot Ride 2h",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
     await createCompletedRentalWithBilling({
       endTime: "2026-04-10T08:00:00.000Z",
       couponDiscountAmount: "1000",
+      couponRule: tier1Rule,
       totalPrice: "9000",
     });
     await createCompletedRentalWithBilling({
       endTime: "2026-04-11T08:00:00.000Z",
       couponDiscountAmount: "2000",
+      couponRule: tier2Rule,
       totalPrice: "8000",
     });
     await createCompletedRentalWithBilling({
       endTime: "2026-04-12T08:00:00.000Z",
       couponDiscountAmount: "2000",
+      couponRule: tier2Rule,
       totalPrice: "8000",
     });
     await createCompletedRentalWithBilling({
@@ -201,7 +256,43 @@ describe("admin coupon stats routing e2e", () => {
         totalDiscountAmount: 4000,
       },
     ]);
-    expect(body.topAppliedRule).toBeNull();
+    expect(body.statsByRule).toEqual([
+      {
+        ruleId: tier2Rule.id,
+        name: "Snapshot Ride 2h",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        minBillableHours: 2,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2000,
+        appliedCount: 2,
+        totalDiscountAmount: 4000,
+        source: "BILLING_RECORD_SNAPSHOT",
+      },
+      {
+        ruleId: tier1Rule.id,
+        name: "Snapshot Ride 1h",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 60,
+        minBillableHours: 1,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 1000,
+        appliedCount: 1,
+        totalDiscountAmount: 1000,
+        source: "BILLING_RECORD_SNAPSHOT",
+      },
+    ]);
+    expect(body.topAppliedRule).toEqual({
+      ruleId: tier2Rule.id,
+      name: "Snapshot Ride 2h",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      minBillableHours: 2,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 2000,
+      appliedCount: 2,
+      inferredFrom: "BILLING_RECORD_SNAPSHOT",
+    });
   });
 
   it("completed rentals without discount stay in non-discounted counts", async () => {
@@ -227,22 +318,42 @@ describe("admin coupon stats routing e2e", () => {
       avgDiscountAmount: 0,
     });
     expect(body.statsByDiscountAmount).toEqual([]);
+    expect(body.statsByRule).toEqual([]);
   });
 
   it("supports from/to filters against completed rental end time", async () => {
+    const tier1Rule = await createCouponRule({
+      name: "Range Ride 1h",
+      minRidingMinutes: 60,
+      discountValue: "1000",
+    });
+    const tier4Rule = await createCouponRule({
+      name: "Range Ride 4h",
+      minRidingMinutes: 240,
+      discountValue: "4000",
+    });
+    const tier6Rule = await createCouponRule({
+      name: "Range Ride 6h",
+      minRidingMinutes: 360,
+      discountValue: "6000",
+    });
+
     await createCompletedRentalWithBilling({
       endTime: "2026-03-31T23:59:59.999Z",
       couponDiscountAmount: "1000",
+      couponRule: tier1Rule,
       totalPrice: "9000",
     });
     await createCompletedRentalWithBilling({
       endTime: "2026-04-10T08:00:00.000Z",
       couponDiscountAmount: "4000",
+      couponRule: tier4Rule,
       totalPrice: "6000",
     });
     await createCompletedRentalWithBilling({
       endTime: "2026-05-01T00:00:00.000Z",
       couponDiscountAmount: "6000",
+      couponRule: tier6Rule,
       totalPrice: "4000",
     });
 
@@ -273,6 +384,20 @@ describe("admin coupon stats routing e2e", () => {
         discountAmount: 4000,
         rentalsCount: 1,
         totalDiscountAmount: 4000,
+      },
+    ]);
+    expect(body.statsByRule).toEqual([
+      {
+        ruleId: tier4Rule.id,
+        name: "Range Ride 4h",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 240,
+        minBillableHours: 4,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 4000,
+        appliedCount: 1,
+        totalDiscountAmount: 4000,
+        source: "BILLING_RECORD_SNAPSHOT",
       },
     ]);
   });

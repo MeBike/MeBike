@@ -16,6 +16,15 @@ import {
 } from "../helpers";
 import { ServerErrorResponseSchema } from "../../schemas";
 
+const couponRuleConflictResponse = {
+  description: "Coupon rule business conflict",
+  content: {
+    "application/json": {
+      schema: CouponRuleErrorResponseSchema,
+    },
+  },
+} as const;
+
 export const adminCreateCouponRule = createRoute({
   method: "post",
   path: "/v1/admin/coupon-rules",
@@ -49,6 +58,7 @@ export const adminCreateCouponRule = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Admin"),
+    409: couponRuleConflictResponse,
   },
 });
 
@@ -86,6 +96,7 @@ export const adminUpdateCouponRule = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Admin"),
+    409: couponRuleConflictResponse,
     404: notFoundResponse({
       description: "Coupon rule not found",
       schema: CouponRuleErrorResponseSchema,
@@ -127,6 +138,7 @@ export const adminActivateCouponRule = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Admin"),
+    409: couponRuleConflictResponse,
     404: notFoundResponse({
       description: "Coupon rule not found",
       schema: CouponRuleErrorResponseSchema,

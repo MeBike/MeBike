@@ -16,10 +16,13 @@ import type {
   AdminCouponUsageLogRow,
   AdminCouponRuleRow,
   BillingPreviewDiscountRuleRow,
+  CouponRuleSnapshot,
+  CouponStatsByRuleRow,
 } from "../models";
 import type { CouponQueryRepo } from "./coupon.repository.types";
 
 import { CouponRepositoryError } from "../domain-errors";
+import { GLOBAL_AUTO_DISCOUNT_TIERS } from "../global-auto-discount.policy";
 
 const selectBillingPreviewDiscountRuleRow = {
   id: true,
@@ -66,10 +69,22 @@ const selectAdminCouponUsageLogRow = {
   pricingPolicyId: true,
   totalDurationMinutes: true,
   baseAmount: true,
+  couponRuleId: true,
+  couponRuleSnapshot: true,
   couponDiscountAmount: true,
   subscriptionDiscountAmount: true,
   totalAmount: true,
   createdAt: true,
+  couponRule: {
+    select: {
+      id: true,
+      name: true,
+      triggerType: true,
+      minRidingMinutes: true,
+      discountType: true,
+      discountValue: true,
+    },
+  },
   rental: {
     select: {
       id: true,
@@ -102,6 +117,16 @@ type AdminCouponRuleRecord = PrismaTypes.CouponRuleGetPayload<{
 type AdminCouponUsageLogRecord = PrismaTypes.RentalBillingRecordGetPayload<{
   select: typeof selectAdminCouponUsageLogRow;
 }>;
+
+type CouponRuleIdentity = {
+  readonly ruleId: string;
+  readonly name: string;
+  readonly triggerType: "RIDING_DURATION";
+  readonly minRidingMinutes: number | null;
+  readonly discountType: "FIXED_AMOUNT";
+  readonly discountValue: number;
+  readonly source: "BILLING_RECORD_RULE" | "BILLING_RECORD_SNAPSHOT";
+};
 
 function toBillingPreviewDiscountRuleRow(
   row: BillingPreviewDiscountRuleRecord,
@@ -165,6 +190,7 @@ function toAdminCouponUsageLogRow(
   row: AdminCouponUsageLogRecord,
 ): AdminCouponUsageLogRow {
   const couponDiscountAmount = Number(toMinorUnit(row.couponDiscountAmount));
+  const couponRuleIdentity = readCouponRuleIdentity(row);
 
   return {
     rentalId: row.rentalId,
@@ -178,10 +204,90 @@ function toAdminCouponUsageLogRow(
     prepaidAmount: Number(toMinorUnit(row.rental.reservation?.prepaid)),
     subscriptionApplied: Boolean(row.rental.subscriptionId),
     subscriptionDiscountAmount: Number(toMinorUnit(row.subscriptionDiscountAmount)),
+    couponRuleId: couponRuleIdentity?.ruleId ?? row.couponRuleId,
+    couponRuleName: couponRuleIdentity?.name ?? null,
+    couponRuleMinRidingMinutes: couponRuleIdentity?.minRidingMinutes ?? null,
+    couponRuleDiscountType: couponRuleIdentity?.discountType ?? null,
+    couponRuleDiscountValue: couponRuleIdentity?.discountValue ?? null,
     couponDiscountAmount,
     totalAmount: Number(toMinorUnit(row.totalAmount)),
     appliedAt: row.createdAt,
     derivedTier: deriveCouponUsageTier(couponDiscountAmount),
+  };
+}
+
+function readCouponRuleIdentity(
+  row: Pick<
+    AdminCouponUsageLogRecord,
+    "couponRuleId" | "couponRuleSnapshot" | "couponRule"
+  >,
+): CouponRuleIdentity | null {
+  const snapshot = readCouponRuleSnapshot(row.couponRuleSnapshot);
+  if (snapshot) {
+    return {
+      ruleId: snapshot.ruleId,
+      name: snapshot.name,
+      triggerType: snapshot.triggerType,
+      minRidingMinutes: snapshot.minRidingMinutes,
+      discountType: snapshot.discountType,
+      discountValue: snapshot.discountValue,
+      source: "BILLING_RECORD_SNAPSHOT",
+    };
+  }
+
+  if (
+    row.couponRule
+    && row.couponRule.triggerType === "RIDING_DURATION"
+    && row.couponRule.discountType === "FIXED_AMOUNT"
+  ) {
+    return {
+      ruleId: row.couponRule.id,
+      name: row.couponRule.name,
+      triggerType: row.couponRule.triggerType,
+      minRidingMinutes: row.couponRule.minRidingMinutes,
+      discountType: row.couponRule.discountType,
+      discountValue: Number(toMinorUnit(row.couponRule.discountValue)),
+      source: "BILLING_RECORD_RULE",
+    };
+  }
+
+  return null;
+}
+
+function readCouponRuleSnapshot(
+  value: PrismaTypes.JsonValue | null,
+): CouponRuleSnapshot | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const snapshot = value as Record<string, unknown>;
+  if (
+    typeof snapshot.ruleId !== "string"
+    || typeof snapshot.name !== "string"
+    || snapshot.triggerType !== "RIDING_DURATION"
+    || typeof snapshot.minRidingMinutes !== "number"
+    || snapshot.discountType !== "FIXED_AMOUNT"
+    || typeof snapshot.discountValue !== "number"
+    || typeof snapshot.priority !== "number"
+    || typeof snapshot.billableMinutes !== "number"
+    || typeof snapshot.billableHours !== "number"
+    || typeof snapshot.appliedAt !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    ruleId: snapshot.ruleId,
+    name: snapshot.name,
+    triggerType: snapshot.triggerType,
+    minRidingMinutes: snapshot.minRidingMinutes,
+    discountType: snapshot.discountType,
+    discountValue: snapshot.discountValue,
+    priority: snapshot.priority,
+    billableMinutes: snapshot.billableMinutes,
+    billableHours: snapshot.billableHours,
+    appliedAt: snapshot.appliedAt,
   };
 }
 
@@ -206,6 +312,12 @@ function activeGlobalRidingDurationFixedAmountWhere(
           { activeTo: null },
           { activeTo: { gte: now } },
         ],
+      },
+      {
+        OR: GLOBAL_AUTO_DISCOUNT_TIERS.map(tier => ({
+          minRidingMinutes: tier.minRidingMinutes,
+          discountValue: tier.discountValue.toString(),
+        })),
       },
       ...extraAnd,
     ],
@@ -243,6 +355,43 @@ function deriveCouponUsageTier(
   }
 }
 
+function buildCouponStatsByRule(
+  records: readonly AdminCouponUsageLogRecord[],
+): CouponStatsByRuleRow[] {
+  const grouped = new Map<string, CouponStatsByRuleRow>();
+
+  for (const record of records) {
+    const identity = readCouponRuleIdentity(record);
+    if (!identity) {
+      continue;
+    }
+
+    const previous = grouped.get(identity.ruleId);
+    const discountAmount = Number(toMinorUnit(record.couponDiscountAmount));
+
+    grouped.set(identity.ruleId, {
+      ruleId: identity.ruleId,
+      name: identity.name,
+      triggerType: identity.triggerType,
+      minRidingMinutes: identity.minRidingMinutes,
+      discountType: identity.discountType,
+      discountValue: identity.discountValue,
+      appliedCount: (previous?.appliedCount ?? 0) + 1,
+      totalDiscountAmount: (previous?.totalDiscountAmount ?? 0) + discountAmount,
+      source: previous?.source === "BILLING_RECORD_SNAPSHOT"
+        ? previous.source
+        : identity.source,
+    });
+  }
+
+  return [...grouped.values()].sort((left, right) =>
+    right.appliedCount - left.appliedCount
+    || right.totalDiscountAmount - left.totalDiscountAmount
+    || (left.minRidingMinutes ?? 0) - (right.minRidingMinutes ?? 0)
+    || left.ruleId.localeCompare(right.ruleId),
+  );
+}
+
 export function makeCouponQueryRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): CouponQueryRepo {
@@ -269,6 +418,7 @@ export function makeCouponQueryRepository(
     readonly totalCompletedRentals: number;
     readonly discountedRentalsCount: number;
     readonly totalDiscountAmount: number;
+    readonly statsByRule: readonly CouponStatsByRuleRow[];
     readonly statsByDiscountAmount: readonly {
       readonly discountAmount: number;
       readonly rentalsCount: number;
@@ -298,7 +448,19 @@ export function makeCouponQueryRepository(
           : Number((input.totalDiscountAmount / input.discountedRentalsCount).toFixed(2)),
       },
       statsByDiscountAmount: input.statsByDiscountAmount,
-      topAppliedRule: null,
+      statsByRule: input.statsByRule,
+      topAppliedRule: input.statsByRule[0]
+        ? {
+            ruleId: input.statsByRule[0].ruleId,
+            name: input.statsByRule[0].name,
+            triggerType: input.statsByRule[0].triggerType,
+            minRidingMinutes: input.statsByRule[0].minRidingMinutes,
+            discountType: input.statsByRule[0].discountType,
+            discountValue: input.statsByRule[0].discountValue,
+            appliedCount: input.statsByRule[0].appliedCount,
+            inferredFrom: input.statsByRule[0].source,
+          }
+        : null,
     };
   }
 
@@ -355,7 +517,12 @@ export function makeCouponQueryRepository(
       Effect.gen(function* () {
         const rentalWhere = couponStatsRentalWhere(input);
 
-        const [totalCompletedRentals, discountedAggregate, groupedDiscountAmounts] = yield* Effect.all([
+        const [
+          totalCompletedRentals,
+          discountedAggregate,
+          groupedDiscountAmounts,
+          ruleUsageRecords,
+        ] = yield* Effect.all([
           Effect.tryPromise({
             try: () =>
               client.rental.count({
@@ -422,6 +589,26 @@ export function makeCouponQueryRepository(
                 cause: err,
               }),
           }),
+          Effect.tryPromise({
+            try: () =>
+              client.rentalBillingRecord.findMany({
+                where: {
+                  rental: {
+                    is: rentalWhere,
+                  },
+                  couponDiscountAmount: {
+                    gt: "0",
+                  },
+                },
+                select: selectAdminCouponUsageLogRow,
+              }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "getAdminCouponStats.findRuleUsageRecords",
+                message: "Failed to load coupon rule usage records for stats",
+                cause: err,
+              }),
+          }),
         ]);
 
         const totalDiscountAmount = Number(
@@ -434,6 +621,7 @@ export function makeCouponQueryRepository(
           totalCompletedRentals,
           discountedRentalsCount: discountedAggregate._count._all,
           totalDiscountAmount,
+          statsByRule: buildCouponStatsByRule(ruleUsageRecords),
           statsByDiscountAmount: groupedDiscountAmounts.map(row => ({
             discountAmount: Number(toMinorUnit(row.couponDiscountAmount)),
             rentalsCount: row._count._all,
@@ -543,7 +731,7 @@ export function makeCouponQueryRepository(
             client.couponRule.findMany({
               where: activeGlobalRidingDurationFixedAmountWhere(
                 input.previewedAt,
-                [{ minRidingMinutes: { lte: input.billableMinutes } }],
+                [{ minRidingMinutes: { lte: input.ridingDurationMinutes } }],
               ),
               orderBy: [
                 { priority: "asc" },

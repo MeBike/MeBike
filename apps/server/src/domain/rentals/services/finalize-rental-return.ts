@@ -3,6 +3,11 @@ import { Effect, Option } from "effect";
 import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
+import type {
+  BillingPreviewDiscountRuleRow,
+  CouponRuleSnapshot,
+  GlobalAutoDiscountSelection,
+} from "@/domain/coupons";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import {
@@ -135,18 +140,31 @@ export function finalizeRentalReturnInTx(
     const eligibleRentalAmountMinor = basePriceMinor > prepaidMinor
       ? basePriceMinor - prepaidMinor
       : 0n;
-    let couponDiscountAmountMinor = 0n;
+    let discountSelection: GlobalAutoDiscountSelection = {
+      rule: null,
+      discountAmountMinor: 0n,
+    };
 
     if (!rental.subscriptionId && eligibleRentalAmountMinor > 0n) {
       const discountRules = yield* txCouponRepo.listGlobalBillingPreviewDiscountRules({
         previewedAt: endTime,
-        billableMinutes,
+        ridingDurationMinutes: durationMinutes,
       });
-      couponDiscountAmountMinor = selectBestGlobalAutoDiscountRule(
+      discountSelection = selectBestGlobalAutoDiscountRule(
         discountRules,
         eligibleRentalAmountMinor,
-      ).discountAmountMinor;
+      );
     }
+    const selectedCouponRule = discountSelection.rule;
+    const couponDiscountAmountMinor = discountSelection.discountAmountMinor;
+    const couponRuleSnapshot = selectedCouponRule
+      ? buildCouponRuleSnapshot({
+          rule: selectedCouponRule,
+          billableMinutes,
+          billableHours: billableMinutes / 60,
+          appliedAt: endTime,
+        })
+      : null;
 
     const totalPriceMinor = eligibleRentalAmountMinor > couponDiscountAmountMinor
       ? eligibleRentalAmountMinor - couponDiscountAmountMinor
@@ -232,6 +250,12 @@ export function finalizeRentalReturnInTx(
             estimatedDistanceKm: null,
             baseAmount: toPrismaDecimal(fullBaseAmountMinor.toString()),
             overtimeAmount: toPrismaDecimal("0"),
+            couponRuleId: selectedCouponRule?.ruleId ?? null,
+            ...(couponRuleSnapshot
+              ? {
+                  couponRuleSnapshot: couponRuleSnapshot as unknown as PrismaTypes.InputJsonValue,
+                }
+              : {}),
             couponDiscountAmount: toPrismaDecimal(couponDiscountAmountMinor.toString()),
             subscriptionDiscountAmount: toPrismaDecimal(subscriptionDiscountMinor.toString()),
             depositForfeited,
@@ -245,6 +269,26 @@ export function finalizeRentalReturnInTx(
 
     return updatedRental.value;
   });
+}
+
+function buildCouponRuleSnapshot(input: {
+  readonly rule: BillingPreviewDiscountRuleRow;
+  readonly billableMinutes: number;
+  readonly billableHours: number;
+  readonly appliedAt: Date;
+}): CouponRuleSnapshot {
+  return {
+    ruleId: input.rule.ruleId,
+    name: input.rule.name,
+    triggerType: "RIDING_DURATION",
+    minRidingMinutes: input.rule.minRidingMinutes ?? 0,
+    discountType: "FIXED_AMOUNT",
+    discountValue: Number(toMinorUnit(input.rule.discountValue)),
+    priority: input.rule.priority,
+    billableMinutes: input.billableMinutes,
+    billableHours: input.billableHours,
+    appliedAt: input.appliedAt.toISOString(),
+  };
 }
 
 function debitWallet(
