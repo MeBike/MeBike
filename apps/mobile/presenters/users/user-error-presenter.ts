@@ -12,6 +12,7 @@ const userErrorMessages = {
   avatarImageDimensionsTooLarge: "Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn để tiếp tục.",
   avatarUploadUnavailable: "Dịch vụ tải ảnh tạm thời không khả dụng. Vui lòng thử lại sau.",
   duplicatePhoneNumber: "Số điện thoại đã được sử dụng.",
+  invalidCurrentPassword: "Mật khẩu hiện tại không đúng.",
   invalidAvatarImage: "Ảnh đại diện không hợp lệ. Hãy chọn ảnh JPG, PNG hoặc WEBP.",
   networkError: "Không thể kết nối tới máy chủ. Vui lòng thử lại.",
   unauthorized: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
@@ -35,6 +36,8 @@ export function presentUserError(
         return userErrorMessages.avatarUploadUnavailable;
       case "DUPLICATE_PHONE_NUMBER":
         return userErrorMessages.duplicatePhoneNumber;
+      case "INVALID_CURRENT_PASSWORD":
+        return userErrorMessages.invalidCurrentPassword;
       case "USER_NOT_FOUND":
         return userErrorMessages.userNotFound;
       case "UNAUTHORIZED":

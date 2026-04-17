@@ -1,320 +1,105 @@
-import { Ionicons } from "@expo/vector-icons";
-import fetchHttpClient from "@lib/httpClient";
-import { useAuthNext } from "@providers/auth-provider-next";
-import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { borderWidths, spaceScale } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { AppButton } from "@ui/primitives/app-button";
+import { AppCard } from "@ui/primitives/app-card";
+import { Screen } from "@ui/primitives/screen";
+import { StatusBar } from "expo-status-bar";
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { YStack } from "tamagui";
 
-import type { ChangePasswordNavigationProp } from "../../../types/navigation";
+import { ChangePasswordForm } from "./components/change-password-form";
+import { useChangePassword } from "./hooks/use-change-password";
 
-import { IconSymbol } from "../../../components/IconSymbol";
-import { BikeColors } from "../../../constants/BikeColors";
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BikeColors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: 20,
-  },
-  headerContent: {
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "white",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-  },
-  formContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: BikeColors.textPrimary,
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: BikeColors.lightGray,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    marginBottom: 16,
-    backgroundColor: "white",
-  },
-  input: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: BikeColors.textPrimary,
-  },
-  eyeButton: {
-    padding: 4,
-  },
-  button: {
-    backgroundColor: BikeColors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-});
+const actionBarPaddingTop = spaceScale[4];
+const actionBarGap = spaceScale[3];
+const actionButtonHeight = spaceScale[7];
+const actionBarMinBottomPadding = spaceScale[5];
+const actionBarReservedHeight = actionBarPaddingTop + actionBarGap + actionButtonHeight * 2;
 
 function ChangePasswordScreen() {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<ChangePasswordNavigationProp>();
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const { status, isAuthenticated } = useAuthNext();
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const handleChangePassword = async () => {
-    if (status === "loading") {
-      return;
-    }
+  const {
+    control,
+    errors,
+    goBack,
+    isSubmitting,
+    submit,
+    toggleFieldVisibility,
+    visibleFields,
+  } = useChangePassword();
 
-    if (!isAuthenticated) {
-      navigation.navigate("Login");
-      return;
-    }
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      Alert.alert("Lỗi", "Mật khẩu mới và xác nhận không khớp");
-      return;
-    }
-    try {
-      setIsChangingPassword(true);
-      const response = await fetchHttpClient.put<{ message?: string }>(
-        "/users/change-password",
-        {
-          old_password: oldPassword,
-          password: newPassword,
-          confirm_password: confirmPassword,
-        },
-      );
-
-      if (response.status === 200) {
-        Alert.alert("Thành công", response.data?.message ?? "Đổi mật khẩu thành công");
-      }
-      else {
-        Alert.alert("Lỗi", response.data?.message ?? "Đổi mật khẩu thất bại");
-        return;
-      }
-      // Chỉ quay lại khi changePassword thành công
-      navigation.goBack();
-    }
-    catch (error) {
-      const message = error instanceof Error ? error.message : "Đổi mật khẩu thất bại";
-      Alert.alert("Lỗi", message);
-    }
-    finally {
-      setIsChangingPassword(false);
-    }
-  };
+  const contentBottomPadding = actionBarReservedHeight + Math.max(insets.bottom, actionBarMinBottomPadding);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <Screen backgroundColor="$actionPrimary" tone="canvas">
+      <StatusBar style="light" />
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <LinearGradient
-          colors={[BikeColors.primary, BikeColors.secondary]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            paddingTop: insets.top + 32,
-            paddingBottom: 38,
-            paddingHorizontal: 24,
-            borderBottomLeftRadius: 32,
-            borderBottomRightRadius: 32,
-            marginBottom: 8,
-            alignItems: "center",
-            elevation: 8,
-            shadowColor: BikeColors.primary,
-          }}
-        >
-          {/* Nút back nổi, căn vị trí xa nội dung */}
-          <TouchableOpacity
-            style={{
-              position: "absolute",
-              top: insets.top + 10,
-              left: 16,
-              zIndex: 12,
-              borderRadius: 30,
-              padding: 6,
-            }}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={20} color="#fff" />
-          </TouchableOpacity>
+        <YStack backgroundColor="$actionPrimary" flex={1}>
+          <AppHeroHeader
+            onBack={goBack}
+            size="compact"
+            subtitle="Cập nhật mật khẩu để giữ tài khoản của bạn an toàn."
+            title="Bảo mật & Mật khẩu"
+          />
 
-          {/* Text header căn giữa, spacing đều */}
-          <View style={{ alignItems: "center", marginTop: 14 }}>
-            <Text
-              style={{
-                fontSize: 24, // to hơn cho đều với profile
-                color: "#fff",
-                fontWeight: "700",
-                marginBottom: 6,
-                letterSpacing: 0.5,
-              }}
+          <YStack flex={1} marginTop="$-5" position="relative">
+            <AppCard
+              borderBottomLeftRadius="$0"
+              borderBottomRightRadius="$0"
+              borderTopLeftRadius="$5"
+              borderTopRightRadius="$5"
+              elevated={false}
+              flex={1}
+              overflow="hidden"
+              padding="$0"
             >
-              Đổi mật khẩu
-            </Text>
-            <Text
-              style={{
-                fontSize: 15,
-                color: "#e0eaff",
-                fontWeight: "500",
-                marginBottom: 4,
-                textAlign: "center",
-              }}
-            >
-              Vui lòng nhập thông tin để đổi mật khẩu
-            </Text>
-          </View>
-        </LinearGradient>
+              <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <YStack
+                  gap="$6"
+                  paddingBottom={contentBottomPadding}
+                  paddingHorizontal="$6"
+                  paddingTop="$6"
+                >
+                  <ChangePasswordForm
+                    control={control}
+                    errors={errors}
+                    onSubmit={submit}
+                    onToggleFieldVisibility={toggleFieldVisibility}
+                    visibleFields={visibleFields}
+                  />
+                </YStack>
+              </ScrollView>
+            </AppCard>
 
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <IconSymbol
-              name="lock"
-              size="md"
-              color={BikeColors.textSecondary}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập mật khẩu cũ"
-              placeholderTextColor={BikeColors.textSecondary}
-              secureTextEntry={!showOldPassword}
-              value={oldPassword}
-              onChangeText={setOldPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Pressable
-              onPress={() => setShowOldPassword(!showOldPassword)}
-              style={styles.eyeButton}
+            <YStack
+              backgroundColor="$surfaceDefault"
+              borderTopColor="$borderSubtle"
+              borderTopWidth={borderWidths.subtle}
+              bottom={0}
+              gap="$3"
+              left={0}
+              paddingBottom={Math.max(insets.bottom, spaceScale[5])}
+              paddingHorizontal="$5"
+              paddingTop="$4"
+              position="absolute"
+              right={0}
             >
-              <IconSymbol
-                name={showOldPassword ? "eye-off" : "eye"}
-                size="md"
-                color={BikeColors.textSecondary}
-              />
-            </Pressable>
-          </View>
-          <View style={styles.inputContainer}>
-            <IconSymbol
-              name="lock"
-              size="md"
-              color={BikeColors.textSecondary}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập mật khẩu mới"
-              placeholderTextColor={BikeColors.textSecondary}
-              secureTextEntry={!showPassword}
-              value={newPassword}
-              onChangeText={setNewPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Pressable
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeButton}
-            >
-              <IconSymbol
-                name={showPassword ? "eye-off" : "eye"}
-                size="md"
-                color={BikeColors.textSecondary}
-              />
-            </Pressable>
-          </View>
-          <View style={styles.inputContainer}>
-            <IconSymbol
-              name="lock"
-              size="md"
-              color={BikeColors.textSecondary}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập lại mật khẩu mới"
-              placeholderTextColor={BikeColors.textSecondary}
-              secureTextEntry={!showConfirmPassword}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Pressable
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              style={styles.eyeButton}
-            >
-              <IconSymbol
-                name={showConfirmPassword ? "eye-off" : "eye"}
-                size="md"
-                color={BikeColors.textSecondary}
-              />
-            </Pressable>
-          </View>
-          <Pressable
-            disabled={isChangingPassword}
-            onPress={handleChangePassword}
-            style={[styles.button, isChangingPassword ? styles.buttonDisabled : null]}
-          >
-            <Text style={styles.buttonText}>{isChangingPassword ? "Đang xử lý..." : "Xác nhận"}</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+              <AppButton buttonSize="large" loading={isSubmitting} onPress={submit}>
+                Xác nhận thay đổi
+              </AppButton>
+              <AppButton buttonSize="large" disabled={isSubmitting} onPress={goBack} tone="outline">
+                Quay lại
+              </AppButton>
+            </YStack>
+          </YStack>
+        </YStack>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
