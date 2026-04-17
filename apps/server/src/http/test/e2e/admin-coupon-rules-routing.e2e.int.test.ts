@@ -306,6 +306,130 @@ describe("admin coupon rules routing e2e", () => {
     expect(await fixture.prisma.userCoupon.count()).toBe(0);
   });
 
+  it("admin can activate an inactive global coupon rule", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      updatedAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+      status: "INACTIVE",
+      priority: 100,
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}/activate`, {
+      method: "PATCH",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+    });
+    const body = await response.json() as CouponsContracts.AdminCouponRule;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: existing.id,
+      name: "Ride 2h discount",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      minBillableHours: 2,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 2000,
+      status: "ACTIVE",
+      priority: 100,
+      activeFrom: null,
+      activeTo: null,
+      createdAt: "2026-04-17T00:00:00.000Z",
+    });
+    expect(body.updatedAt).not.toBe("2026-04-17T00:00:00.000Z");
+
+    const activated = await fixture.prisma.couponRule.findUnique({
+      where: { id: existing.id },
+    });
+    expect(activated).not.toBeNull();
+    expect(activated?.status).toBe("ACTIVE");
+    expect(activated?.updatedAt.toISOString()).not.toBe("2026-04-17T00:00:00.000Z");
+    expect(await fixture.prisma.coupon.count()).toBe(0);
+    expect(await fixture.prisma.userCoupon.count()).toBe(0);
+  });
+
+  it("activate is idempotent when the rule is already active", async () => {
+    const existing = await createRule({
+      name: "Ride 4h discount",
+      createdAt: "2026-04-17T02:00:00.000Z",
+      updatedAt: "2026-04-17T03:00:00.000Z",
+      minRidingMinutes: 240,
+      discountValue: "4000",
+      status: "ACTIVE",
+      priority: 100,
+      activeFrom: new Date("2026-04-18T00:00:00.000Z"),
+      activeTo: new Date("2026-04-19T00:00:00.000Z"),
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}/activate`, {
+      method: "PATCH",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+    });
+    const body = await response.json() as CouponsContracts.AdminCouponRule;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      id: existing.id,
+      name: "Ride 4h discount",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 240,
+      minBillableHours: 4,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 4000,
+      status: "ACTIVE",
+      priority: 100,
+      activeFrom: "2026-04-18T00:00:00.000Z",
+      activeTo: "2026-04-19T00:00:00.000Z",
+      createdAt: "2026-04-17T02:00:00.000Z",
+      updatedAt: "2026-04-17T03:00:00.000Z",
+    });
+
+    const activated = await fixture.prisma.couponRule.findUnique({
+      where: { id: existing.id },
+    });
+    expect(activated?.status).toBe("ACTIVE");
+    expect(activated?.updatedAt.toISOString()).toBe("2026-04-17T03:00:00.000Z");
+    expect(await fixture.prisma.coupon.count()).toBe(0);
+    expect(await fixture.prisma.userCoupon.count()).toBe(0);
+  });
+
+  it("admin can activate a rule before its active window starts", async () => {
+    const existing = await createRule({
+      name: "Ride 6h discount",
+      createdAt: "2026-04-17T04:00:00.000Z",
+      updatedAt: "2026-04-17T04:00:00.000Z",
+      minRidingMinutes: 360,
+      discountValue: "6000",
+      status: "INACTIVE",
+      priority: 100,
+      activeFrom: new Date("2026-04-18T00:00:00.000Z"),
+      activeTo: new Date("2026-04-19T00:00:00.000Z"),
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}/activate`, {
+      method: "PATCH",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+    });
+    const body = await response.json() as CouponsContracts.AdminCouponRule;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: existing.id,
+      status: "ACTIVE",
+      activeFrom: "2026-04-18T00:00:00.000Z",
+      activeTo: "2026-04-19T00:00:00.000Z",
+    });
+
+    const activated = await fixture.prisma.couponRule.findUnique({
+      where: { id: existing.id },
+    });
+    expect(activated?.status).toBe("ACTIVE");
+    expect(activated?.activeFrom?.toISOString()).toBe("2026-04-18T00:00:00.000Z");
+    expect(activated?.activeTo?.toISOString()).toBe("2026-04-19T00:00:00.000Z");
+  });
+
   it("returns 401 when token is missing", async () => {
     const response = await fixture.app.request("http://test/v1/admin/coupon-rules");
 
@@ -354,6 +478,22 @@ describe("admin coupon rules routing e2e", () => {
         activeFrom: null,
         activeTo: null,
       }),
+    });
+
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 401 when activating without token", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+      status: "INACTIVE",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}/activate`, {
+      method: "PATCH",
     });
 
     expect(response.status).toBe(401);
@@ -411,6 +551,23 @@ describe("admin coupon rules routing e2e", () => {
     expect(response.status).toBe(403);
   });
 
+  it("returns 403 when authenticated user is not admin for activate", async () => {
+    const existing = await createRule({
+      name: "Ride 2h discount",
+      createdAt: "2026-04-17T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+      status: "INACTIVE",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${existing.id}/activate`, {
+      method: "PATCH",
+      headers: authHeader(USER_USER_ID, "USER"),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
   it("returns 404 when updating a missing coupon rule", async () => {
     const missingRuleId = "019b17bd-d130-7e7d-be69-91ceef7b7299";
 
@@ -428,6 +585,25 @@ describe("admin coupon rules routing e2e", () => {
         activeFrom: null,
         activeTo: null,
       }),
+    });
+    const body = await response.json() as CouponsContracts.CouponRuleErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({
+      error: "Coupon rule not found",
+      details: {
+        code: "COUPON_RULE_NOT_FOUND",
+        ruleId: missingRuleId,
+      },
+    });
+  });
+
+  it("returns 404 when activating a missing coupon rule", async () => {
+    const missingRuleId = "019b17bd-d130-7e7d-be69-91ceef7b7299";
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${missingRuleId}/activate`, {
+      method: "PATCH",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
     });
     const body = await response.json() as CouponsContracts.CouponRuleErrorResponse;
 

@@ -99,3 +99,44 @@ export const adminUpdateCouponRule = createRoute({
     }),
   },
 });
+
+export const adminActivateCouponRule = createRoute({
+  method: "patch",
+  path: "/v1/admin/coupon-rules/{ruleId}/activate",
+  tags: ["Admin", "Coupon Rules"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: CouponRuleIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Admin activated a global coupon rule. Idempotent when the rule is already active.",
+      content: {
+        "application/json": {
+          schema: AdminCouponRuleSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid path parameter",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+    404: notFoundResponse({
+      description: "Coupon rule not found",
+      schema: CouponRuleErrorResponseSchema,
+      example: {
+        error: couponRuleErrorMessages.COUPON_RULE_NOT_FOUND,
+        details: {
+          code: CouponRuleErrorCodeSchema.enum.COUPON_RULE_NOT_FOUND,
+          ruleId: "019b17bd-d130-7e7d-be69-91ceef7b7299",
+        },
+      },
+    }),
+  },
+});

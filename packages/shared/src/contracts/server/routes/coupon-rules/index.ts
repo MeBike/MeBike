@@ -6,6 +6,7 @@ export {
   listActiveCouponRules,
 } from "./queries";
 export {
+  adminActivateCouponRule,
   adminCreateCouponRule,
   adminUpdateCouponRule,
 } from "./mutations";

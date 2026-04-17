@@ -22,6 +22,16 @@ export function makeCouponCommandService(
         activeFrom: input.activeFrom ?? null,
         activeTo: input.activeTo ?? null,
       }),
+    activateAdminCouponRule: ruleId =>
+      Effect.gen(function* () {
+        const activatedOpt = yield* repo.activateAdminCouponRule(ruleId);
+
+        if (Option.isNone(activatedOpt)) {
+          return yield* Effect.fail(new CouponRuleNotFound({ ruleId }));
+        }
+
+        return activatedOpt.value;
+      }),
     updateAdminCouponRule: (ruleId, input) =>
       Effect.gen(function* () {
         const updatedOpt = yield* repo.updateAdminCouponRule(ruleId, {

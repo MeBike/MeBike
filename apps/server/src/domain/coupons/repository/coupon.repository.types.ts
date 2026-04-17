@@ -15,6 +15,9 @@ export type CouponCommandRepo = {
   createAdminCouponRule: (
     data: CreateCouponRuleData,
   ) => Effect.Effect<AdminCouponRuleRow>;
+  activateAdminCouponRule: (
+    ruleId: string,
+  ) => Effect.Effect<Option.Option<AdminCouponRuleRow>>;
   updateAdminCouponRule: (
     ruleId: string,
     data: UpdateCouponRuleData,
