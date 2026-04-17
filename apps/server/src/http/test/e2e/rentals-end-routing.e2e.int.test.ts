@@ -57,6 +57,19 @@ describe("rentals end routing e2e", () => {
     };
   }
 
+  async function createManagerToken(stationId?: string) {
+    const manager = await fixture.factories.user({ role: "MANAGER" });
+
+    if (stationId) {
+      await fixture.factories.userOrgAssignment({ userId: manager.id, stationId });
+    }
+
+    return {
+      manager,
+      token: fixture.auth.makeAccessToken({ userId: manager.id, role: "MANAGER" }),
+    };
+  }
+
   async function createAgencyToken() {
     const agencyUser = await fixture.factories.user({ role: "AGENCY" });
     const agency = await fixture.prisma.agency.create({
@@ -196,6 +209,36 @@ describe("rentals end routing e2e", () => {
     expect(response.status).toBe(200);
     expect(body.id).toBe(rental.id);
     expect(body.status).toBe("RENTED");
+  });
+
+  it("allows a manager to fetch rental detail from the staff route for their station", async () => {
+    const { rental, startStation } = await createActiveRentalGraph();
+    const { token: managerToken } = await createManagerToken(startStation.id);
+
+    const response = await fixture.app.request(`http://test/v1/staff/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${managerToken}`,
+      },
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+  });
+
+  it("hides rental detail from manager when the rental is outside their station", async () => {
+    const { rental } = await createActiveRentalGraph();
+    const otherStation = await fixture.factories.station({ capacity: 5 });
+    const { token: managerToken } = await createManagerToken(otherStation.id);
+
+    const response = await fixture.app.request(`http://test/v1/staff/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${managerToken}`,
+      },
+    });
+
+    expect(response.status).toBe(404);
   });
 
   it("lists my bike swap requests without being shadowed by the rental detail route", async () => {

@@ -123,6 +123,75 @@ describe("admin stations routing e2e", () => {
     expect(body.data.map(station => station.id)).not.toContain(hiddenStation.id);
   });
 
+  it("includes staff, manager, and technicians in station detail workers", async () => {
+    const station = await fixture.factories.station({
+      name: "Worker Station",
+      address: "11 Worker Street, Thu Duc, TP.HCM",
+      latitude: 10.7604,
+      longitude: 106.6604,
+    });
+    const staff = await fixture.factories.user({
+      fullname: "Staff Worker",
+      email: "worker-staff@example.com",
+      role: "STAFF",
+    });
+    const manager = await fixture.factories.user({
+      fullname: "Manager Worker",
+      email: "worker-manager@example.com",
+      role: "MANAGER",
+    });
+    const technician = await fixture.factories.user({
+      fullname: "Technician Worker",
+      email: "worker-technician@example.com",
+      role: "TECHNICIAN",
+    });
+    const technicianTeam = await fixture.factories.technicianTeam({
+      name: "Worker Team",
+      stationId: station.id,
+    });
+
+    await fixture.factories.userOrgAssignment({
+      userId: staff.id,
+      stationId: station.id,
+    });
+    await fixture.factories.userOrgAssignment({
+      userId: manager.id,
+      stationId: station.id,
+    });
+    await fixture.factories.userOrgAssignment({
+      userId: technician.id,
+      technicianTeamId: technicianTeam.id,
+    });
+
+    const response = await fixture.app.request(`http://test/v1/stations/${station.id}`);
+    const body = await response.json() as StationsContracts.StationReadSummary;
+
+    expect(response.status).toBe(200);
+    expect(body.workers).toEqual([
+      {
+        userId: manager.id,
+        fullName: "Manager Worker",
+        role: "MANAGER",
+        technicianTeamId: null,
+        technicianTeamName: null,
+      },
+      {
+        userId: staff.id,
+        fullName: "Staff Worker",
+        role: "STAFF",
+        technicianTeamId: null,
+        technicianTeamName: null,
+      },
+      {
+        userId: technician.id,
+        fullName: "Technician Worker",
+        role: "TECHNICIAN",
+        technicianTeamId: technicianTeam.id,
+        technicianTeamName: "Worker Team",
+      },
+    ]);
+  });
+
   it("rejects creating a station with duplicate exact location", async () => {
     await fixture.factories.station({
       name: "Existing Exact Location",
