@@ -103,9 +103,9 @@ void ConnectivityService::ensureMqttConnected()
 {
     if (mqttManager.isConnected())
     {
-        if (!commandTopicSubscribed && !commandTopic.empty())
+        if (!commandTopicSubscribed && commandTopic.has_value())
         {
-            commandTopicSubscribed = mqttManager.subscribe(commandTopic);
+            commandTopicSubscribed = mqttManager.subscribe(*commandTopic);
         }
         return;
     }
@@ -123,9 +123,9 @@ void ConnectivityService::ensureMqttConnected()
     }
 
     commandTopicSubscribed = false;
-    if (!commandTopic.empty())
+    if (commandTopic.has_value())
     {
-        commandTopicSubscribed = mqttManager.subscribe(commandTopic);
+        commandTopicSubscribed = mqttManager.subscribe(*commandTopic);
     }
     Log.notice("Device MQTT session ready on %s\n", deviceContext.topics.commandTopic.c_str());
 }

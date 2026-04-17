@@ -58,7 +58,7 @@ Chay Postgres + Redis, set env, migrate + seed, sau do chay server.
 
 #### Cach 1: Docker Compose (khuyen dung)
 
-Repo da co file `apps/server/compose.dev.yml` (Postgres + Redis + pgAdmin).
+Repo da co file `apps/server/compose.dev.yml` (Postgres + Redis + pgAdmin + Mosquitto).
 Chay tu `apps/server`:
 
 ```bash
@@ -69,6 +69,7 @@ Dung stack:
 
 - Postgres: `localhost:5432` (`mebike/mebike`, db: `mebike_dev`)
 - Redis: `localhost:6379`
+- Mosquitto MQTT broker: `localhost:1883`
 - pgAdmin: `http://localhost:5050` (email: `admin@example.com`, pass: `adminadmin`)
 
 Dung xong thi tat:
@@ -134,8 +135,21 @@ Toi thieu can co (dev local):
 
 - `DATABASE_URL`
 - `REDIS_URL` (defaults to `redis://localhost:6379`)
+- `IOT_MQTT_URL` (defaults to `mqtt://localhost:1883`)
 - `JWT_SECRET`
 - `EMAIL_APP` / `EMAIL_PASSWORD_APP` (bat buoc theo env schema; neu khong dung email flow thi co the set gia tri gia)
+
+MQTT local dev:
+
+- Broker local dang dung `eclipse-mosquitto:latest`
+- Luu y: release stable cua Mosquitto va exact Docker tag khong phai luc nao cung trung nhau
+- Config nam o `apps/server/infra/mosquitto/mosquitto.conf`
+- Compose dev dang mo anonymous access de local test nhanh
+- Neu worker IoT dang chay local, co the dung:
+
+```bash
+pnpm worker:iot
+```
 
 Optional (chi can neu dung Stripe):
 

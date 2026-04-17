@@ -108,7 +108,7 @@ export function toContractRedistributionRequest(
     startedAt: row.startedAt ? row.startedAt.toISOString() : null,
     completedAt: row.completedAt ? row.completedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
-    updatedat: row.updatedAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 
@@ -128,7 +128,7 @@ export function toContractRedistributionRequestListItem(
     startedAt: row.startedAt ? row.startedAt.toISOString() : null,
     completedAt: row.completedAt ? row.completedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
-    updatedat: row.updatedAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 
@@ -148,6 +148,6 @@ export function toContractRedistributionRequestDetail(
     startedAt: row.startedAt ? row.startedAt.toISOString() : null,
     completedAt: row.completedAt ? row.completedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
-    updatedat: row.updatedAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }

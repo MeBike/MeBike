@@ -9,6 +9,9 @@ export * from "./contracts/iot-service";
 export * as ServerContracts from "./contracts/server";
 export * from "./contracts/server";
 
+export * as IotDeviceRuntime from "./iot/device-runtime";
+export * from "./iot/device-runtime";
+
 export * as IotTopics from "./iot/topics";
 export * from "./iot/topics";
 

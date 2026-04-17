@@ -5,6 +5,7 @@
 
 struct AppConfig
 {
+    std::string bikeId;
     std::string wifiSsid;
     std::string wifiPass;
     std::string mqttBrokerIP;
@@ -14,5 +15,7 @@ struct AppConfig
 };
 
 AppConfig loadConfig();
+bool saveConfig(const AppConfig &config);
+bool isConfigValid(const AppConfig &config);
 
 #endif
