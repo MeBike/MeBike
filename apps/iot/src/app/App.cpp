@@ -5,7 +5,6 @@
 #include <Wire.h>
 
 #include "Config.h"
-#include "DeviceUtils.h"
 #include "HardwareConfig.h"
 #include "NFCManager.h"
 #include "services/CommandConsumer.h"
@@ -30,17 +29,17 @@ void App::setup()
 
     setRuntimeState(RuntimeState::Booting);
 
-    deviceContext = makeDeviceContext(getMacAddress());
-    Log.notice("Device adapter booting as %s\n", deviceContext.deviceId.c_str());
-
     const AppConfig config = loadConfig();
-    if (config.wifiSsid.empty() || config.mqttBrokerIP.empty() || config.mqttPort <= 0)
+    if (config.bikeId.empty() || config.wifiSsid.empty() || config.mqttBrokerIP.empty() || config.mqttPort <= 0)
     {
-        Log.error("Missing required WiFi or MQTT configuration\n");
+        Log.error("Missing required bike, WiFi, or MQTT configuration\n");
         setupFailed = true;
         setRuntimeState(RuntimeState::Error);
         return;
     }
+
+    deviceContext = makeDeviceContext(config.bikeId);
+    Log.notice("Device adapter booting as bike %s\n", deviceContext.deviceId.c_str());
 
     Wire.begin(HardwareConfig::I2C_SDA_PIN, HardwareConfig::I2C_SCL_PIN);
 
