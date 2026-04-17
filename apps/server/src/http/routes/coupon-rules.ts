@@ -32,6 +32,10 @@ export function registerCouponRuleRoutes(
     ...couponRules.adminListCouponRules,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const adminCouponStatsRoute = {
+    ...couponRules.adminCouponStats,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
 
   app.openapi(
     couponRules.listActiveCouponRules,
@@ -56,5 +60,9 @@ export function registerCouponRuleRoutes(
   app.openapi(
     adminListCouponRulesRoute,
     CouponRulesAdminController.adminListCouponRules,
+  );
+  app.openapi(
+    adminCouponStatsRoute,
+    CouponRulesAdminController.adminCouponStats,
   );
 }

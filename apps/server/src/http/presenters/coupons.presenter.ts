@@ -2,6 +2,7 @@ import type { CouponsContracts } from "@mebike/shared";
 
 import type {
   ActiveCouponRuleRow,
+  AdminCouponStatsRow,
   AdminCouponRuleRow,
 } from "@/domain/coupons";
 
@@ -58,6 +59,34 @@ export function toContractAdminCouponRule(
     activeTo: row.activeTo?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toContractAdminCouponStats(
+  stats: AdminCouponStatsRow,
+): CouponsContracts.AdminCouponStatsResponse {
+  return {
+    range: {
+      from: stats.range.from?.toISOString() ?? null,
+      to: stats.range.to?.toISOString() ?? null,
+    },
+    summary: stats.summary,
+    statsByDiscountAmount: [...stats.statsByDiscountAmount],
+    topAppliedRule: stats.topAppliedRule
+      ? {
+          ruleId: stats.topAppliedRule.ruleId,
+          name: stats.topAppliedRule.name,
+          triggerType: stats.topAppliedRule.triggerType,
+          minRidingMinutes: stats.topAppliedRule.minRidingMinutes,
+          minBillableHours: stats.topAppliedRule.minRidingMinutes === null
+            ? null
+            : stats.topAppliedRule.minRidingMinutes / 60,
+          discountType: stats.topAppliedRule.discountType,
+          discountValue: stats.topAppliedRule.discountValue,
+          appliedCount: stats.topAppliedRule.appliedCount,
+          inferredFrom: stats.topAppliedRule.inferredFrom,
+        }
+      : null,
   };
 }
 

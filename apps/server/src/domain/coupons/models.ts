@@ -106,3 +106,41 @@ export type ListAdminCouponRulesFilter = {
 };
 
 export type AdminCouponRulePageResult = PageResult<AdminCouponRuleRow>;
+
+export type CouponStatsRange = {
+  readonly from: Date | null;
+  readonly to: Date | null;
+};
+
+export type CouponStatsSummaryRow = {
+  readonly totalCompletedRentals: number;
+  readonly discountedRentalsCount: number;
+  readonly nonDiscountedRentalsCount: number;
+  readonly discountRate: number;
+  readonly totalDiscountAmount: number;
+  readonly avgDiscountAmount: number;
+};
+
+export type CouponStatsByDiscountAmountRow = {
+  readonly discountAmount: number;
+  readonly rentalsCount: number;
+  readonly totalDiscountAmount: number;
+};
+
+export type CouponTopAppliedRuleRow = {
+  readonly ruleId: string;
+  readonly name: string;
+  readonly triggerType: "RIDING_DURATION";
+  readonly minRidingMinutes: number | null;
+  readonly discountType: "FIXED_AMOUNT";
+  readonly discountValue: number;
+  readonly appliedCount: number;
+  readonly inferredFrom: "BILLING_AMOUNT";
+};
+
+export type AdminCouponStatsRow = {
+  readonly range: CouponStatsRange;
+  readonly summary: CouponStatsSummaryRow;
+  readonly statsByDiscountAmount: readonly CouponStatsByDiscountAmountRow[];
+  readonly topAppliedRule: CouponTopAppliedRuleRow | null;
+};

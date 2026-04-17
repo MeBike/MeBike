@@ -1,5 +1,8 @@
 import type { RouteHandler } from "@hono/zod-openapi";
-import type { CouponsContracts } from "@mebike/shared";
+import {
+  serverRoutes,
+  type CouponsContracts,
+} from "@mebike/shared";
 
 import { Effect, Match } from "effect";
 
@@ -8,10 +11,29 @@ import {
   CouponQueryServiceTag,
 } from "@/domain/coupons";
 import { withLoggedCause } from "@/domain/shared";
-import { toContractAdminCouponRule } from "@/http/presenters/coupons.presenter";
+import {
+  toContractAdminCouponRule,
+  toContractAdminCouponStats,
+} from "@/http/presenters/coupons.presenter";
 import { toContractPage } from "@/http/shared/pagination";
+import { routeContext } from "@/http/shared/route-context";
 
 import type { CouponRulesRoutes } from "./shared";
+
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const couponRules = serverRoutes.couponRules;
+
+function parseCouponStatsBound(value: string, bound: "from" | "to") {
+  if (DATE_ONLY_REGEX.test(value)) {
+    return new Date(
+      bound === "from"
+        ? `${value}T00:00:00.000Z`
+        : `${value}T23:59:59.999Z`,
+    );
+  }
+
+  return new Date(value);
+}
 
 const adminCreateCouponRule: RouteHandler<
   CouponRulesRoutes["adminCreateCouponRule"]
@@ -184,8 +206,31 @@ const adminListCouponRules: RouteHandler<
   }, 200);
 };
 
+const adminCouponStats: RouteHandler<
+  CouponRulesRoutes["adminCouponStats"]
+> = async (c) => {
+  const query = c.req.valid("query");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(CouponQueryServiceTag, service =>
+      service.getAdminCouponStats({
+        from: query.from ? parseCouponStatsBound(query.from, "from") : undefined,
+        to: query.to ? parseCouponStatsBound(query.to, "to") : undefined,
+      })),
+    routeContext(couponRules.adminCouponStats),
+  );
+
+  const result = await c.var.runPromise(eff);
+
+  return c.json<CouponsContracts.AdminCouponStatsResponse, 200>(
+    toContractAdminCouponStats(result),
+    200,
+  );
+};
+
 export const CouponRulesAdminController = {
   adminActivateCouponRule,
+  adminCouponStats,
   adminCreateCouponRule,
   adminDeactivateCouponRule,
   adminUpdateCouponRule,

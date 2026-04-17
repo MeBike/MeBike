@@ -2,6 +2,7 @@ import * as mutations from "./mutations";
 import * as queries from "./queries";
 
 export {
+  adminCouponStats,
   adminListCouponRules,
   listActiveCouponRules,
 } from "./queries";

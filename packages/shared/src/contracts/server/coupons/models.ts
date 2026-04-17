@@ -176,6 +176,48 @@ export const AdminCouponRulesListQuerySchema = z.object({
   discountType: CouponDiscountTypeSchema.optional(),
 }).openapi("AdminCouponRulesListQuery");
 
+const CouponStatsBoundSchema = z
+  .union([
+    z.iso.datetime(),
+    z.iso.date(),
+  ])
+  .openapi({
+    description:
+      "ISO datetime or date. Date-only values are normalized to UTC day bounds on the server.",
+    example: "2026-04-01T00:00:00.000Z",
+  });
+
+export const AdminCouponStatsQuerySchema = z
+  .object({
+    from: CouponStatsBoundSchema.optional(),
+    to: CouponStatsBoundSchema.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if ((value.from && !value.to) || (!value.from && value.to)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [value.from ? "to" : "from"],
+        message: "from and to must be provided together",
+      });
+    }
+
+    if (value.from && value.to && new Date(value.from) > new Date(value.to)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["from"],
+        message: "from must not be after to",
+      });
+    }
+  })
+  .openapi("AdminCouponStatsQuery", {
+    description:
+      "Optional completed-rental end time range. Provide both from and to, or omit both for all-time statistics.",
+    example: {
+      from: "2026-04-01T00:00:00.000Z",
+      to: "2026-04-30T23:59:59.999Z",
+    },
+  });
+
 export const AdminCouponRulesListResponseSchema = z.object({
   data: z.array(AdminCouponRuleSchema),
   pagination: PaginationSchema,
@@ -204,6 +246,88 @@ export const AdminCouponRulesListResponseSchema = z.object({
       total: 1,
       totalPages: 1,
     },
+  },
+});
+
+export const CouponStatsRangeSchema = z.object({
+  from: z.iso.datetime().nullable(),
+  to: z.iso.datetime().nullable(),
+}).openapi("CouponStatsRange", {
+  example: {
+    from: "2026-04-01T00:00:00.000Z",
+    to: "2026-04-30T23:59:59.999Z",
+  },
+});
+
+export const CouponStatsSummarySchema = z.object({
+  totalCompletedRentals: z.number().int().nonnegative(),
+  discountedRentalsCount: z.number().int().nonnegative(),
+  nonDiscountedRentalsCount: z.number().int().nonnegative(),
+  discountRate: z.number().nonnegative(),
+  totalDiscountAmount: z.number().nonnegative(),
+  avgDiscountAmount: z.number().nonnegative(),
+}).openapi("CouponStatsSummary");
+
+export const CouponStatsByDiscountAmountSchema = z.object({
+  discountAmount: z.number().nonnegative(),
+  rentalsCount: z.number().int().nonnegative(),
+  totalDiscountAmount: z.number().nonnegative(),
+}).openapi("CouponStatsByDiscountAmount");
+
+export const CouponTopAppliedRuleSchema = z.object({
+  ruleId: z.uuidv7(),
+  name: z.string(),
+  triggerType: CouponTriggerTypeSchema,
+  minRidingMinutes: z.number().int().nonnegative().nullable(),
+  minBillableHours: z.number().nonnegative().nullable(),
+  discountType: CouponDiscountTypeSchema,
+  discountValue: z.number().nonnegative(),
+  appliedCount: z.number().int().nonnegative(),
+  inferredFrom: z.literal("BILLING_AMOUNT"),
+}).openapi("CouponTopAppliedRule");
+
+export const AdminCouponStatsResponseSchema = z.object({
+  range: CouponStatsRangeSchema,
+  summary: CouponStatsSummarySchema,
+  statsByDiscountAmount: z.array(CouponStatsByDiscountAmountSchema),
+  topAppliedRule: CouponTopAppliedRuleSchema.nullable(),
+}).openapi("AdminCouponStatsResponse", {
+  example: {
+    range: {
+      from: "2026-04-01T00:00:00.000Z",
+      to: "2026-04-30T23:59:59.999Z",
+    },
+    summary: {
+      totalCompletedRentals: 120,
+      discountedRentalsCount: 52,
+      nonDiscountedRentalsCount: 68,
+      discountRate: 0.4333,
+      totalDiscountAmount: 138000,
+      avgDiscountAmount: 2653.85,
+    },
+    statsByDiscountAmount: [
+      {
+        discountAmount: 1000,
+        rentalsCount: 10,
+        totalDiscountAmount: 10000,
+      },
+      {
+        discountAmount: 2000,
+        rentalsCount: 20,
+        totalDiscountAmount: 40000,
+      },
+      {
+        discountAmount: 4000,
+        rentalsCount: 15,
+        totalDiscountAmount: 60000,
+      },
+      {
+        discountAmount: 6000,
+        rentalsCount: 7,
+        totalDiscountAmount: 42000,
+      },
+    ],
+    topAppliedRule: null,
   },
 });
 
@@ -246,6 +370,16 @@ export type AdminCouponRulesListQuery = z.infer<
 >;
 export type AdminCouponRulesListResponse = z.infer<
   typeof AdminCouponRulesListResponseSchema
+>;
+export type AdminCouponStatsQuery = z.infer<typeof AdminCouponStatsQuerySchema>;
+export type CouponStatsRange = z.infer<typeof CouponStatsRangeSchema>;
+export type CouponStatsSummary = z.infer<typeof CouponStatsSummarySchema>;
+export type CouponStatsByDiscountAmount = z.infer<
+  typeof CouponStatsByDiscountAmountSchema
+>;
+export type CouponTopAppliedRule = z.infer<typeof CouponTopAppliedRuleSchema>;
+export type AdminCouponStatsResponse = z.infer<
+  typeof AdminCouponStatsResponseSchema
 >;
 export type CouponRuleErrorResponse = z.infer<
   typeof CouponRuleErrorResponseSchema

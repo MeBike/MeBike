@@ -3,6 +3,7 @@ import { Effect, Layer } from "effect";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
+import { toMinorUnit } from "@/domain/shared/money";
 import {
   makePageResult,
   normalizedPage,
@@ -11,6 +12,7 @@ import { Prisma } from "@/infrastructure/prisma";
 
 import type {
   ActiveCouponRuleRow,
+  AdminCouponStatsRow,
   AdminCouponRuleRow,
   BillingPreviewDiscountRuleRow,
 } from "../models";
@@ -165,6 +167,62 @@ function adminCouponRulesOrderBy(): PrismaTypes.CouponRuleOrderByWithRelationInp
 export function makeCouponQueryRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): CouponQueryRepo {
+  function couponStatsRentalWhere(input: {
+    readonly from?: Date;
+    readonly to?: Date;
+  }): PrismaTypes.RentalWhereInput {
+    return {
+      status: "COMPLETED",
+      ...(input.from && input.to
+        ? {
+            endTime: {
+              gte: input.from,
+              lte: input.to,
+            },
+          }
+        : {}),
+    };
+  }
+
+  function toCouponStats(input: {
+    readonly from?: Date;
+    readonly to?: Date;
+    readonly totalCompletedRentals: number;
+    readonly discountedRentalsCount: number;
+    readonly totalDiscountAmount: number;
+    readonly statsByDiscountAmount: readonly {
+      readonly discountAmount: number;
+      readonly rentalsCount: number;
+      readonly totalDiscountAmount: number;
+    }[];
+  }): AdminCouponStatsRow {
+    const nonDiscountedRentalsCount = Math.max(
+      input.totalCompletedRentals - input.discountedRentalsCount,
+      0,
+    );
+
+    return {
+      range: {
+        from: input.from ?? null,
+        to: input.to ?? null,
+      },
+      summary: {
+        totalCompletedRentals: input.totalCompletedRentals,
+        discountedRentalsCount: input.discountedRentalsCount,
+        nonDiscountedRentalsCount,
+        discountRate: input.totalCompletedRentals === 0
+          ? 0
+          : Number((input.discountedRentalsCount / input.totalCompletedRentals).toFixed(4)),
+        totalDiscountAmount: input.totalDiscountAmount,
+        avgDiscountAmount: input.discountedRentalsCount === 0
+          ? 0
+          : Number((input.totalDiscountAmount / input.discountedRentalsCount).toFixed(2)),
+      },
+      statsByDiscountAmount: input.statsByDiscountAmount,
+      topAppliedRule: null,
+    };
+  }
+
   return {
     listAdminCouponRules: (filter, pageReq) =>
       Effect.gen(function* () {
@@ -213,6 +271,96 @@ export function makeCouponQueryRepository(
           page,
           pageSize,
         );
+      }).pipe(defectOn(CouponRepositoryError)),
+    getAdminCouponStats: input =>
+      Effect.gen(function* () {
+        const rentalWhere = couponStatsRentalWhere(input);
+
+        const [totalCompletedRentals, discountedAggregate, groupedDiscountAmounts] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () =>
+              client.rental.count({
+                where: rentalWhere,
+              }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "getAdminCouponStats.countCompletedRentals",
+                message: "Failed to count completed rentals for coupon stats",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.rentalBillingRecord.aggregate({
+                where: {
+                  rental: {
+                    is: rentalWhere,
+                  },
+                  couponDiscountAmount: {
+                    gt: "0",
+                  },
+                },
+                _count: {
+                  _all: true,
+                },
+                _sum: {
+                  couponDiscountAmount: true,
+                },
+              }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "getAdminCouponStats.aggregateDiscountedRentals",
+                message: "Failed to aggregate discounted rentals for coupon stats",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.rentalBillingRecord.groupBy({
+                by: ["couponDiscountAmount"],
+                where: {
+                  rental: {
+                    is: rentalWhere,
+                  },
+                  couponDiscountAmount: {
+                    gt: "0",
+                  },
+                },
+                _count: {
+                  _all: true,
+                },
+                _sum: {
+                  couponDiscountAmount: true,
+                },
+                orderBy: {
+                  couponDiscountAmount: "asc",
+                },
+              }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "getAdminCouponStats.groupByDiscountAmount",
+                message: "Failed to group coupon stats by discount amount",
+                cause: err,
+              }),
+          }),
+        ]);
+
+        const totalDiscountAmount = Number(
+          toMinorUnit(discountedAggregate._sum.couponDiscountAmount),
+        );
+
+        return toCouponStats({
+          from: input.from,
+          to: input.to,
+          totalCompletedRentals,
+          discountedRentalsCount: discountedAggregate._count._all,
+          totalDiscountAmount,
+          statsByDiscountAmount: groupedDiscountAmounts.map(row => ({
+            discountAmount: Number(toMinorUnit(row.couponDiscountAmount)),
+            rentalsCount: row._count._all,
+            totalDiscountAmount: Number(toMinorUnit(row._sum.couponDiscountAmount)),
+          })),
+        });
       }).pipe(defectOn(CouponRepositoryError)),
     listActiveGlobalCouponRules: input =>
       Effect.gen(function* () {

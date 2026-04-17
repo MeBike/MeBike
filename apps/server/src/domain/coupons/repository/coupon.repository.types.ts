@@ -2,6 +2,7 @@ import type { Effect, Option } from "effect";
 
 import type {
   ActiveCouponRuleRow,
+  AdminCouponStatsRow,
   AdminCouponRulePageResult,
   AdminCouponRuleRow,
   BillingPreviewDiscountRuleRow,
@@ -43,4 +44,10 @@ export type CouponQueryRepo = {
     filter: ListAdminCouponRulesFilter,
     pageReq: PageRequest,
   ) => Effect.Effect<AdminCouponRulePageResult>;
+  getAdminCouponStats: (
+    input: {
+      readonly from?: Date;
+      readonly to?: Date;
+    },
+  ) => Effect.Effect<AdminCouponStatsRow>;
 };
