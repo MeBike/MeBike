@@ -11,6 +11,12 @@ export type StationWorkerRow = {
   technicianTeamName: string | null;
 };
 
+export type StationContextRow = {
+  id: string;
+  name: string;
+  address: string;
+};
+
 export type StationRow = {
   id: string;
   name: string;

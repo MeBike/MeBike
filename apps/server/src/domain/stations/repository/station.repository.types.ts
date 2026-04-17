@@ -11,6 +11,7 @@ import type {
   CreateStationInput,
   NearestSearchArgs,
   NearestStationRow,
+  StationContextRow,
   StationFilter,
   StationRevenueRow,
   StationRow,
@@ -48,6 +49,9 @@ export type StationQueryRepo = {
   findIdNameAddressByIds: (
     ids: readonly string[],
   ) => Effect.Effect<readonly { id: string; name: string; address: string }[]>;
+  listContextExcludingId: (
+    excludedId: string,
+  ) => Effect.Effect<readonly StationContextRow[]>;
   listNearest: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;

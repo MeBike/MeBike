@@ -26,6 +26,9 @@ export function makeStationQueryService(repo: StationQueryRepo): StationQuerySer
         return maybe.value;
       }),
 
+    listContextExcludingId: excludedId =>
+      repo.listContextExcludingId(excludedId),
+
     listNearestStations: args =>
       repo.listNearest(args),
 
