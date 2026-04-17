@@ -1,4 +1,5 @@
 import { z } from "../../../zod";
+import { UserRoleSchema } from "../users";
 
 export const StationTypeSchema = z.enum(["INTERNAL", "AGENCY"]);
 
@@ -60,6 +61,13 @@ export const StationReadSummarySchema = z.object({
   capacity: StationCapacitySchema,
   bikes: StationBikesSchema,
   returnSlots: StationReturnSlotsSchema,
+  workers: z.array(z.object({
+    userId: z.uuidv7(),
+    fullName: z.string(),
+    role: UserRoleSchema,
+    technicianTeamId: z.uuidv7().nullable(),
+    technicianTeamName: z.string().nullable(),
+  })).optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

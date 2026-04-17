@@ -22,10 +22,37 @@ import {
   reservationErrorMessages,
 } from "./shared";
 
+function getStationScopedRoleScope(currentUser: {
+  role: string;
+  operatorStationId?: string;
+}) {
+  if (currentUser.role === "STAFF" || currentUser.role === "MANAGER") {
+    return currentUser.operatorStationId ?? null;
+  }
+
+  return undefined;
+}
+
 const staffListReservations: RouteHandler<
   ReservationsRoutes["staffListReservations"]
 > = async (c) => {
   const query = c.req.valid("query");
+  const stationScopeId = getStationScopedRoleScope(c.var.currentUser!);
+
+  if (stationScopeId === null) {
+    return c.json<ListStaffReservationsResponse, 200>(
+      {
+        data: [],
+        pagination: {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+          total: 0,
+          totalPages: 0,
+        },
+      },
+      200,
+    );
+  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -35,7 +62,7 @@ const staffListReservations: RouteHandler<
           userId: query.userId,
           bikeId: query.bikeId,
           status: query.status,
-          stationId: query.stationId,
+          stationId: stationScopeId ?? query.stationId,
           reservationOption: query.reservationOption,
         },
         {
@@ -63,6 +90,20 @@ const staffGetReservation: RouteHandler<
   ReservationsRoutes["staffGetReservation"]
 > = async (c) => {
   const { reservationId } = c.req.valid("param");
+  const stationScopeId = getStationScopedRoleScope(c.var.currentUser!);
+
+  if (stationScopeId === null) {
+    return c.json<ReservationErrorResponse, 404>(
+      {
+        error: reservationErrorMessages.RESERVATION_NOT_FOUND,
+        details: {
+          code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND,
+          reservationId,
+        },
+      },
+      404,
+    );
+  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -77,6 +118,19 @@ const staffGetReservation: RouteHandler<
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
       if (Option.isNone(right)) {
+        return c.json<ReservationErrorResponse, 404>(
+          {
+            error: reservationErrorMessages.RESERVATION_NOT_FOUND,
+            details: {
+              code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND,
+              reservationId,
+            },
+          },
+          404,
+        );
+      }
+
+      if (stationScopeId && right.value.station.id !== stationScopeId) {
         return c.json<ReservationErrorResponse, 404>(
           {
             error: reservationErrorMessages.RESERVATION_NOT_FOUND,

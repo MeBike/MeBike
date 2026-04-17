@@ -26,10 +26,47 @@ import {
   rentalErrorMessages,
 } from "./shared";
 
+function getStationScopedRoleScope(currentUser: {
+  role: string;
+  operatorStationId?: string;
+}) {
+  if (currentUser.role === "STAFF" || currentUser.role === "MANAGER") {
+    return currentUser.operatorStationId ?? null;
+  }
+
+  return undefined;
+}
+
+function canAccessRentalInStationScope(
+  rental: { startStation: { id: string }; endStation: { id: string } | null },
+  stationScopeId: string | null | undefined,
+) {
+  if (!stationScopeId) {
+    return stationScopeId === undefined;
+  }
+
+  return rental.startStation.id === stationScopeId || rental.endStation?.id === stationScopeId;
+}
+
 const staffListRentals: RouteHandler<
   RentalsRoutes["staffListRentals"]
 > = async (c) => {
   const query = c.req.valid("query");
+  const stationScopeId = getStationScopedRoleScope(c.var.currentUser!);
+
+  if (stationScopeId === null) {
+    const response: RentalsContracts.AdminRentalsListResponse = {
+      data: [],
+      pagination: {
+        page: Number(query.page ?? 1),
+        pageSize: Number(query.pageSize ?? 50),
+        total: 0,
+        totalPages: 0,
+      },
+    };
+
+    return c.json<RentalsContracts.AdminRentalsListResponse, 200>(response, 200);
+  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -40,6 +77,7 @@ const staffListRentals: RouteHandler<
           bikeId: query.bikeId,
           startStationId: query.startStation,
           endStationId: query.endStation,
+          stationScopeId,
           status: query.status,
         },
         {
@@ -66,6 +104,20 @@ const staffGetRental: RouteHandler<RentalsRoutes["staffGetRental"]> = async (
   c,
 ) => {
   const { rentalId } = c.req.valid("param");
+  const stationScopeId = getStationScopedRoleScope(c.var.currentUser!);
+
+  if (stationScopeId === null) {
+    return c.json(
+      {
+        error: rentalErrorMessages.RENTAL_NOT_FOUND,
+        details: {
+          code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+          rentalId,
+        },
+      },
+      404,
+    );
+  }
 
   const eff = withLoggedCause(
     adminGetRentalDetail(rentalId),
@@ -75,8 +127,22 @@ const staffGetRental: RouteHandler<RentalsRoutes["staffGetRental"]> = async (
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) =>
-      c.json(toContractAdminRentalDetail(right), 200)),
+    Match.tag("Right", ({ right }) => {
+      if (!canAccessRentalInStationScope(right, stationScopeId)) {
+        return c.json(
+          {
+            error: rentalErrorMessages.RENTAL_NOT_FOUND,
+            details: {
+              code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+              rentalId,
+            },
+          },
+          404,
+        );
+      }
+
+      return c.json(toContractAdminRentalDetail(right), 200);
+    }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("AdminRentalNotFound", () =>

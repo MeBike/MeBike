@@ -2,6 +2,8 @@ import type { PageRequest } from "@/domain/shared/pagination";
 import type { BikeSwapStatus } from "generated/kysely/types";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { pickDefined } from "@/domain/shared";
+
 import type {
   AdminRentalFilter,
   BikeSwapRequestRow,
@@ -29,12 +31,28 @@ export function toMyRentalsWhere(
 export function toAdminRentalsWhere(
   filter: AdminRentalFilter,
 ): PrismaTypes.RentalWhereInput {
+  const baseWhere = pickDefined({
+    userId: filter.userId,
+    bikeId: filter.bikeId,
+    startStationId: filter.startStationId,
+    endStationId: filter.endStationId,
+    status: filter.status,
+  });
+
+  const stationScope = filter.stationScopeId
+    ? {
+        OR: [
+          { startStationId: filter.stationScopeId },
+          { endStationId: filter.stationScopeId },
+        ],
+      }
+    : undefined;
+
   return {
-    ...(filter.userId ? { userId: filter.userId } : {}),
-    ...(filter.bikeId ? { bikeId: filter.bikeId } : {}),
-    ...(filter.startStationId ? { startStationId: filter.startStationId } : {}),
-    ...(filter.endStationId ? { endStationId: filter.endStationId } : {}),
-    ...(filter.status ? { status: filter.status } : {}),
+    AND: [
+      baseWhere,
+      ...(stationScope ? [stationScope] : []),
+    ],
   };
 }
 

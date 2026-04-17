@@ -48,6 +48,7 @@ export type AdminRentalFilter = {
   bikeId?: string;
   startStationId?: string;
   endStationId?: string;
+  stationScopeId?: string;
   status?: RentalStatus;
 };
 
