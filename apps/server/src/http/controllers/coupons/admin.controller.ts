@@ -121,6 +121,40 @@ const adminActivateCouponRule: RouteHandler<
   );
 };
 
+const adminDeactivateCouponRule: RouteHandler<
+  CouponRulesRoutes["adminDeactivateCouponRule"]
+> = async (c) => {
+  const { ruleId } = c.req.valid("param");
+
+  const eff = Effect.flatMap(CouponCommandServiceTag, service =>
+    service.deactivateAdminCouponRule(ruleId));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<CouponsContracts.AdminCouponRule, 200>(
+        toContractAdminCouponRule(right),
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("CouponRuleNotFound", () =>
+          c.json<CouponsContracts.CouponRuleErrorResponse, 404>({
+            error: "Coupon rule not found",
+            details: {
+              code: "COUPON_RULE_NOT_FOUND",
+              ruleId,
+            },
+          }, 404)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 const adminListCouponRules: RouteHandler<
   CouponRulesRoutes["adminListCouponRules"]
 > = async (c) => {
@@ -153,6 +187,7 @@ const adminListCouponRules: RouteHandler<
 export const CouponRulesAdminController = {
   adminActivateCouponRule,
   adminCreateCouponRule,
+  adminDeactivateCouponRule,
   adminUpdateCouponRule,
   adminListCouponRules,
 } as const;

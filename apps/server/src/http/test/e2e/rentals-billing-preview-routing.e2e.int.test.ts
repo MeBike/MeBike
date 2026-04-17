@@ -201,6 +201,55 @@ describe("rentals billing preview routing e2e", () => {
     expect(body.totalPayableAmount).toBe(0);
   });
 
+  it("ignores an inactive global rule even when it would otherwise be the best discount", async () => {
+    const graph = await createRentalGraph();
+    const fallbackRule = await createDurationDiscountRule({
+      code: "ACTIVE-1H",
+      minRidingMinutes: 60,
+      discountValue: "1000",
+      priority: 100,
+    });
+    await fixture.prisma.couponRule.create({
+      data: {
+        name: "INACTIVE-2H",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: "3000",
+        status: "INACTIVE",
+        priority: 10,
+      },
+    });
+
+    const response = await fixture.app.request(
+      `http://test/v1/rentals/me/${graph.rental.id}/billing-preview`,
+      {
+        headers: {
+          Authorization: `Bearer ${graph.token}`,
+        },
+      },
+    );
+
+    const body = await response.json() as RentalsContracts.RentalBillingPreview;
+    const expectedMinutes = getExpectedMinutes(body.previewedAt, graph.startTime);
+    const expectedBlocks = getExpectedBlocks(expectedMinutes);
+    const expectedBaseAmount = expectedBlocks * 2000;
+
+    expect(response.status).toBe(200);
+    expect(body.baseRentalAmount).toBe(expectedBaseAmount);
+    expect(body.bestDiscountRule).toEqual({
+      ruleId: fallbackRule.rule.id,
+      name: "ACTIVE-1H",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 60,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 1000,
+    });
+    expect(body.couponDiscountAmount).toBe(1000);
+    expect(body.payableRentalAmount).toBe(expectedBaseAmount - 1000);
+    expect(body.totalPayableAmount).toBe(expectedBaseAmount - 1000);
+  });
+
   it("subtracts prepaid before applying the global discount rule", async () => {
     const graph = await createRentalGraph({
       prepaid: "2000",

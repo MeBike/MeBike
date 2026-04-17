@@ -227,6 +227,99 @@ describe("rental pricing lifecycle integration", () => {
     expect(billingRecord?.totalAmount.toString()).toBe("3000");
   });
 
+  it("ignores inactive coupon rules when finalizing a wallet rental", async () => {
+    await fixture.prisma.pricingPolicy.updateMany({
+      data: { status: "INACTIVE" },
+    });
+
+    await fixture.factories.pricingPolicy({
+      name: "Global Coupon Inactive Finalize Policy",
+      baseRate: "4000",
+      reservationFee: "3000",
+      depositRequired: "2000",
+      status: "ACTIVE",
+    });
+
+    await fixture.prisma.couponRule.createMany({
+      data: [
+        {
+          name: "Finalize Active Discount",
+          triggerType: "RIDING_DURATION",
+          minRidingMinutes: 30,
+          discountType: "FIXED_AMOUNT",
+          discountValue: "1000",
+          status: "ACTIVE",
+          priority: 100,
+        },
+        {
+          name: "Finalize Inactive Better Discount",
+          triggerType: "RIDING_DURATION",
+          minRidingMinutes: 30,
+          discountType: "FIXED_AMOUNT",
+          discountValue: "3000",
+          status: "INACTIVE",
+          priority: 10,
+        },
+      ],
+    });
+
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 50_000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 3 },
+    });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
+
+    const reserveNow = new Date("2026-03-22T09:00:00.000Z");
+    const reservation = expectRight(await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: reserveNow,
+      now: reserveNow,
+    }));
+
+    const confirmNow = new Date("2026-03-22T09:05:00.000Z");
+    expectRight(await runConfirm({
+      reservationId: reservation.id,
+      userId: user.id,
+      now: confirmNow,
+    }));
+
+    const rental = await fixture.prisma.rental.findFirst({
+      where: { reservationId: reservation.id },
+    });
+
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental!.id,
+      userId: user.id,
+      stationId: station.id,
+      now: confirmNow,
+    }));
+
+    const returnConfirmedAt = new Date("2026-03-22T09:45:00.000Z");
+    const completedRental = expectRight(await runConfirmReturn({
+      rentalId: rental!.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: returnConfirmedAt,
+    }));
+
+    expect(completedRental.totalPrice).toBe(4000);
+
+    const billingRecord = await fixture.prisma.rentalBillingRecord.findUnique({
+      where: { rentalId: rental!.id },
+    });
+    expect(billingRecord?.baseAmount.toString()).toBe("8000");
+    expect(billingRecord?.couponDiscountAmount.toString()).toBe("1000");
+    expect(billingRecord?.subscriptionDiscountAmount.toString()).toBe("0");
+    expect(billingRecord?.totalAmount.toString()).toBe("4000");
+  });
+
   it("forfeits the deposit when return confirmation happens after the late cutoff", async () => {
     await fixture.prisma.pricingPolicy.updateMany({
       data: { status: "INACTIVE" },

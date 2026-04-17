@@ -8,6 +8,7 @@ export {
 export {
   adminActivateCouponRule,
   adminCreateCouponRule,
+  adminDeactivateCouponRule,
   adminUpdateCouponRule,
 } from "./mutations";
 

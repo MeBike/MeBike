@@ -128,6 +128,51 @@ export function makeCouponCommandRepository(
       }).pipe(
         defectOn(CouponRepositoryError),
       ),
+    deactivateAdminCouponRule: ruleId =>
+      Effect.gen(function* () {
+        const existing = yield* Effect.tryPromise({
+          try: () =>
+            client.couponRule.findUnique({
+              where: { id: ruleId },
+              select: selectAdminCouponRuleRow,
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "deactivateAdminCouponRule.findExisting",
+              message: "Failed to find admin coupon rule before deactivate",
+              cause: err,
+            }),
+        });
+
+        if (!existing) {
+          return Option.none();
+        }
+
+        if (existing.status === "INACTIVE") {
+          return Option.some(toAdminCouponRuleRow(existing));
+        }
+
+        const deactivated = yield* Effect.tryPromise({
+          try: () =>
+            client.couponRule.update({
+              where: { id: ruleId },
+              data: {
+                status: "INACTIVE",
+              },
+              select: selectAdminCouponRuleRow,
+            }),
+          catch: err =>
+            new CouponRepositoryError({
+              operation: "deactivateAdminCouponRule",
+              message: "Failed to deactivate admin coupon rule",
+              cause: err,
+            }),
+        });
+
+        return Option.some(toAdminCouponRuleRow(deactivated));
+      }).pipe(
+        defectOn(CouponRepositoryError),
+      ),
     updateAdminCouponRule: (ruleId, data) =>
       Effect.gen(function* () {
         const existing = yield* Effect.tryPromise({

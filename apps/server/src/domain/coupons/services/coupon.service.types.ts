@@ -19,6 +19,9 @@ export type CouponCommandService = {
   activateAdminCouponRule: (
     ruleId: string,
   ) => Effect.Effect<AdminCouponRuleRow, CouponRuleNotFound>;
+  deactivateAdminCouponRule: (
+    ruleId: string,
+  ) => Effect.Effect<AdminCouponRuleRow, CouponRuleNotFound>;
   updateAdminCouponRule: (
     ruleId: string,
     input: UpdateAdminCouponRuleInput,
