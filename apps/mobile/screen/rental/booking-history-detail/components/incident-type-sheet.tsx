@@ -1,19 +1,32 @@
+import type { UploadIncidentImagePayload } from "@services/incidents";
+
 import { IconSymbol } from "@components/IconSymbol";
 import { fontSizes, fontWeights } from "@theme/typography";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Field } from "@ui/primitives/field";
+import * as ImagePicker from "expo-image-picker";
 import { useEffect, useRef, useState } from "react";
-import { Modal, Pressable, TextInput, View } from "react-native";
+import { Image, Modal, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
+
+function createIncidentImageUploadPayload(asset: ImagePicker.ImagePickerAsset): UploadIncidentImagePayload {
+  const extension = asset.fileName?.split(".").pop() ?? asset.mimeType?.split("/").pop() ?? "jpg";
+
+  return {
+    uri: asset.uri,
+    name: asset.fileName ?? `incident.${extension}`,
+    type: asset.mimeType ?? "image/jpeg",
+  };
+}
 
 type IncidentTypeSheetProps = {
   visible: boolean;
   bottomInset: number;
   isSubmitting: boolean;
   onClose: () => void;
-  onSelect: (incidentType: string) => Promise<void> | void;
+  onSelect: (params: { incidentType: string; imageUploads: UploadIncidentImagePayload[] }) => Promise<void> | void;
 };
 
 export function IncidentTypeSheet({
@@ -28,19 +41,48 @@ export function IncidentTypeSheet({
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [inputHeight, setInputHeight] = useState(112);
   const [isStartingSubmit, setStartingSubmit] = useState(false);
+  const [isPickingImages, setPickingImages] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<UploadIncidentImagePayload[]>([]);
   const submitLockRef = useRef(false);
 
   const trimmedIncidentType = incidentType.trim();
   const showError = hasSubmitted && trimmedIncidentType.length === 0;
-  const isBusy = isSubmitting || isStartingSubmit;
+  const isBusy = isSubmitting || isStartingSubmit || isPickingImages;
 
   useEffect(() => {
     if (!visible && !isBusy) {
       setIncidentType("");
       setHasSubmitted(false);
       setInputHeight(112);
+      setSelectedImages([]);
     }
   }, [isBusy, visible]);
+
+  const handlePickImages = async () => {
+    if (isBusy) {
+      return;
+    }
+
+    setPickingImages(true);
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsMultipleSelection: true,
+        mediaTypes: ["images"],
+        quality: 1,
+        selectionLimit: 5,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      setSelectedImages(result.assets.map(createIncidentImageUploadPayload));
+    }
+    finally {
+      setPickingImages(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (submitLockRef.current || isBusy) {
@@ -57,7 +99,10 @@ export function IncidentTypeSheet({
     setStartingSubmit(true);
 
     try {
-      await onSelect(trimmedIncidentType);
+      await onSelect({
+        incidentType: trimmedIncidentType,
+        imageUploads: selectedImages,
+      });
     }
     finally {
       submitLockRef.current = false;
@@ -158,6 +203,55 @@ export function IncidentTypeSheet({
                 />
               </XStack>
             </Field>
+
+            <YStack gap="$3">
+              <XStack alignItems="center" justifyContent="space-between">
+                <YStack gap="$1" flex={1}>
+                  <AppText variant="subhead">Hình ảnh sự cố</AppText>
+                  <AppText tone="muted" variant="bodySmall">
+                    Có thể thêm tối đa 5 ảnh để kỹ thuật viên dễ đánh giá hơn.
+                  </AppText>
+                </YStack>
+
+                <AppButton buttonSize="compact" disabled={isBusy} onPress={() => { void handlePickImages(); }} tone="outline">
+                  {selectedImages.length > 0 ? "Chọn lại" : "Thêm ảnh"}
+                </AppButton>
+              </XStack>
+
+              {selectedImages.length > 0
+                ? (
+                    <YStack gap="$2">
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <XStack gap="$3">
+                          {selectedImages.map(image => (
+                            <YStack
+                              key={image.uri}
+                              borderColor="$borderSubtle"
+                              borderRadius="$4"
+                              borderWidth={1}
+                              overflow="hidden"
+                            >
+                              <Image
+                                source={{ uri: image.uri }}
+                                style={{
+                                  width: 88,
+                                  height: 88,
+                                }}
+                              />
+                            </YStack>
+                          ))}
+                        </XStack>
+                      </ScrollView>
+
+                      <AppButton disabled={isBusy} onPress={() => setSelectedImages([])} tone="ghost">
+                        <AppText tone="muted" variant="bodySmall">
+                          Xóa tất cả ảnh đã chọn
+                        </AppText>
+                      </AppButton>
+                    </YStack>
+                  )
+                : null}
+            </YStack>
 
             <AppButton disabled={isBusy} loading={isBusy} onPress={() => { void handleSubmit(); }} tone="primary">
               {isBusy ? "Đang gửi yêu cầu hỗ trợ..." : "Gửi yêu cầu hỗ trợ"}

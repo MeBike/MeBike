@@ -89,6 +89,22 @@ const incidentCreateBase = z.object({
   fileUrls: z.array(z.url()).optional(),
 });
 
+export const UploadIncidentImagesRequestSchema = z.object({
+  files: z.any().openapi({
+    type: "array",
+    items: {
+      type: "string",
+      format: "binary",
+    },
+  }),
+}).openapi("UploadIncidentImagesRequest");
+
+export const UploadIncidentImagesResponseSchema = z.object({
+  fileUrls: z.array(z.url()),
+}).openapi("UploadIncidentImagesResponse", {
+  description: "Uploaded incident image URLs",
+});
+
 export const IncidentCreateBodySchema = incidentCreateBase
   .refine(data => data.bikeId || data.rentalId, {
     message: "Either bikeId or rentalId must be provided",
@@ -142,3 +158,4 @@ export {
 };
 
 export type IncidentListResponse = z.infer<typeof IncidentListResponseSchema>;
+export type UploadIncidentImagesResponse = z.infer<typeof UploadIncidentImagesResponseSchema>;

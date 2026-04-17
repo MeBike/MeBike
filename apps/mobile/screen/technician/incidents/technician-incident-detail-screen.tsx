@@ -41,7 +41,15 @@ function formatCoordinates(latitude: number | null, longitude: number | null) {
 }
 
 function formatIncidentTitle(incidentType: string) {
+  if (incidentType === "GENERAL_REPORT") {
+    return "Báo cáo chung";
+  }
+
   return incidentType.replaceAll("_", " ");
+}
+
+function getIncidentHeadline(incidentType: string) {
+  return formatIncidentTitle(incidentType);
 }
 
 function SectionCard({
@@ -301,7 +309,7 @@ export default function TechnicianIncidentDetailScreen() {
             </XStack>
 
             <YStack gap="$3">
-              <AppText variant="sectionTitle">{formatIncidentTitle(incident.incidentType)}</AppText>
+              <AppText variant="sectionTitle">{getIncidentHeadline(incident.incidentType)}</AppText>
               {incident.description
                 ? (
                     <AppCard borderRadius="$5" chrome="flat" tone="muted" padding="$4">

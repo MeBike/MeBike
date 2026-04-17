@@ -152,6 +152,14 @@ export function presentIncidentError(error: IncidentError) {
         return "Không tìm thấy thông tin xe hoặc chuyến thuê để tạo sự cố.";
       case "STATION_NOT_FOUND":
         return "Không tìm thấy trạm liên quan đến sự cố này.";
+      case "INCIDENT_IMAGE_TOO_LARGE":
+        return "Ảnh sự cố quá lớn. Vui lòng chọn ảnh nhỏ hơn 5MB.";
+      case "INVALID_INCIDENT_IMAGE":
+        return "Ảnh sự cố không hợp lệ hoặc chưa được hỗ trợ.";
+      case "INCIDENT_IMAGE_DIMENSIONS_TOO_LARGE":
+        return "Kích thước ảnh sự cố quá lớn. Vui lòng chọn ảnh nhỏ hơn để tiếp tục.";
+      case "INCIDENT_IMAGE_UPLOAD_UNAVAILABLE":
+        return "Dịch vụ tải ảnh sự cố tạm thời không khả dụng. Vui lòng thử lại sau.";
       case "UNAUTHORIZED_INCIDENT_ACCESS":
         return "Không có quyền truy cập sự cố này.";
       case "VALIDATION_ERROR":
