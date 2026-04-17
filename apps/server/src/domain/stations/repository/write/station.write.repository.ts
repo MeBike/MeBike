@@ -8,6 +8,8 @@ import type {
 
 import { defectOn } from "@/domain/shared";
 import {
+  getPrismaRawUniqueViolationConstraint,
+  getPrismaUniqueViolationTarget,
   isPrismaRawUniqueViolation,
   isPrismaUniqueViolation,
 } from "@/infrastructure/prisma-errors";
@@ -15,6 +17,7 @@ import {
 import type { StationCommandRepo } from "../station.repository.types";
 
 import {
+  StationLocationAlreadyExists,
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
   StationRepositoryError,
@@ -38,6 +41,47 @@ export type StationWriteRepo = Pick<StationCommandRepo, "create" | "update">;
 export function makeStationWriteRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): StationWriteRepo {
+  const EXACT_LOCATION_CONSTRAINT = "uq_station_exact_location";
+
+  const isLocationConstraintTarget = (target: string | string[] | undefined) => {
+    if (typeof target === "string") {
+      return target === EXACT_LOCATION_CONSTRAINT;
+    }
+
+    return Array.isArray(target)
+      && target.length === 3
+      && target.includes("address")
+      && target.includes("latitude")
+      && target.includes("longitude");
+  };
+
+  const mapStationUniqueViolation = (cause: unknown, args: {
+    name: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+  }) => {
+    const target = getPrismaUniqueViolationTarget(cause);
+    const rawConstraint = getPrismaRawUniqueViolationConstraint(cause);
+
+    if (isLocationConstraintTarget(target) || rawConstraint === EXACT_LOCATION_CONSTRAINT) {
+      return new StationLocationAlreadyExists({
+        address: args.address,
+        latitude: args.latitude,
+        longitude: args.longitude,
+      });
+    }
+
+    if (isPrismaUniqueViolation(cause) || isPrismaRawUniqueViolation(cause)) {
+      return new StationNameAlreadyExists({ name: args.name });
+    }
+
+    return new StationRepositoryError({
+      operation: "unknown",
+      cause,
+    });
+  };
+
   /**
    * Dam bao toa do tram nam trong geo boundary duoc ho tro.
    *
@@ -200,13 +244,30 @@ export function makeStationWriteRepository(
                 "created_at" AS "createdAt",
                 "updated_at" AS "updatedAt"
             `,
-          catch: cause =>
-            isPrismaUniqueViolation(cause) || isPrismaRawUniqueViolation(cause)
-              ? new StationNameAlreadyExists({ name: input.name })
-              : new StationRepositoryError({
+          catch: (cause) => {
+            if (isPrismaUniqueViolation(cause) || isPrismaRawUniqueViolation(cause)) {
+              const mapped = mapStationUniqueViolation(cause, {
+                name: input.name,
+                address: input.address,
+                latitude: input.latitude,
+                longitude: input.longitude,
+              });
+
+              if (mapped instanceof StationRepositoryError) {
+                return new StationRepositoryError({
                   operation: "create",
                   cause,
-                }),
+                });
+              }
+
+              return mapped;
+            }
+
+            return new StationRepositoryError({
+              operation: "create",
+              cause,
+            });
+          },
         });
 
         const created = rows[0];
@@ -302,13 +363,30 @@ export function makeStationWriteRepository(
                 "created_at" AS "createdAt",
                 "updated_at" AS "updatedAt"
             `,
-          catch: cause =>
-            isPrismaUniqueViolation(cause) || isPrismaRawUniqueViolation(cause)
-              ? new StationNameAlreadyExists({ name: input.name ?? "unknown" })
-              : new StationRepositoryError({
+          catch: (cause) => {
+            if (isPrismaUniqueViolation(cause) || isPrismaRawUniqueViolation(cause)) {
+              const mapped = mapStationUniqueViolation(cause, {
+                name: input.name ?? existing.name,
+                address: input.address ?? existing.address,
+                latitude: nextLatitude,
+                longitude: nextLongitude,
+              });
+
+              if (mapped instanceof StationRepositoryError) {
+                return new StationRepositoryError({
                   operation: "update",
                   cause,
-                }),
+                });
+              }
+
+              return mapped;
+            }
+
+            return new StationRepositoryError({
+              operation: "update",
+              cause,
+            });
+          },
         });
 
         const updated = rows[0];

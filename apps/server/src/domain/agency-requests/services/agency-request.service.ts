@@ -214,6 +214,13 @@ function makeAgencyRequestService(
               cause: err,
             }),
           )),
+        Effect.catchTag("StationLocationAlreadyExists", err =>
+          Effect.fail(
+            new AgencyRequestRepositoryErrorData({
+              operation: "approve.createStation",
+              cause: err,
+            }),
+          )),
         Effect.catchTag("StationOutsideSupportedArea", err =>
           Effect.fail(
             new AgencyRequestRepositoryErrorData({

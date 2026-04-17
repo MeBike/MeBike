@@ -67,6 +67,38 @@ describe("stationWriteRepository Integration", () => {
     expect(result.left._tag).toBe("StationNameAlreadyExists");
   });
 
+  it("create maps duplicate exact location to StationLocationAlreadyExists", async () => {
+    const address = `Dup Exact Address ${Date.now()}`;
+    const latitude = vietnamCoords.latitude;
+    const longitude = vietnamCoords.longitude;
+
+    await Effect.runPromise(
+      repo.create({
+        name: `First Location ${Date.now()}`,
+        address,
+        totalCapacity: 10,
+        latitude,
+        longitude,
+      }),
+    );
+
+    const result = await Effect.runPromise(
+      repo.create({
+        name: `Second Location ${Date.now()}`,
+        address,
+        totalCapacity: 12,
+        latitude,
+        longitude,
+      }).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected duplicate-location failure but got success");
+    }
+
+    expect(result.left._tag).toBe("StationLocationAlreadyExists");
+  });
+
   it("update modifies station fields and keeps position in sync", async () => {
     const created = await Effect.runPromise(
       repo.create({
@@ -144,6 +176,46 @@ describe("stationWriteRepository Integration", () => {
     }
 
     expect(result.left._tag).toBe("StationNameAlreadyExists");
+  });
+
+  it("update maps duplicate exact location to StationLocationAlreadyExists", async () => {
+    const address = `Update Dup Address ${Date.now()}`;
+    const targetLatitude = vietnamCoords.latitude;
+    const targetLongitude = vietnamCoords.longitude;
+
+    await Effect.runPromise(
+      repo.create({
+        name: `Location Target ${Date.now()}`,
+        address,
+        totalCapacity: 10,
+        latitude: targetLatitude,
+        longitude: targetLongitude,
+      }),
+    );
+
+    const source = await Effect.runPromise(
+      repo.create({
+        name: `Location Source ${Date.now()}`,
+        address: `${address} Source`,
+        totalCapacity: 10,
+        latitude: 10.8,
+        longitude: 106.8,
+      }),
+    );
+
+    const result = await Effect.runPromise(
+      repo.update(source.id, {
+        address,
+        latitude: targetLatitude,
+        longitude: targetLongitude,
+      }).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected duplicate-location failure but got success");
+    }
+
+    expect(result.left._tag).toBe("StationLocationAlreadyExists");
   });
 
   it("create returns StationOutsideSupportedArea for coordinates outside VN boundary", async () => {
