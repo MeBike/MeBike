@@ -17,7 +17,7 @@ export const distributionRequestService = {
   }: {
     page?: number;
     pageSize?: number;
-    status: RedistributionRequestStatus;
+    status?: RedistributionRequestStatus;
   }): Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>> => {
     const response = await fetchHttpClient.get<
       ApiResponse<RedistributionRequest[]>
@@ -45,7 +45,7 @@ export const distributionRequestService = {
   }: {
     page?: number;
     pageSize?: number;
-    status: RedistributionRequestStatus;
+    status?: RedistributionRequestStatus;
   }) : Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<RedistributionRequest[]>>(
       ENDPOINT.DISTRIBUTION_REQUEST.MANAGER_VIEW,
@@ -89,7 +89,7 @@ export const distributionRequestService = {
   }: {
     page?: number;
     pageSize?: number;
-    status: RedistributionRequestStatus;
+    status?: RedistributionRequestStatus;
   }) : Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>>=> {
     const response = await fetchHttpClient.get<ApiResponse<RedistributionRequest[]>>(
       ENDPOINT.DISTRIBUTION_REQUEST.AGENCY_VIEW,
@@ -133,7 +133,7 @@ export const distributionRequestService = {
   }: {
     page?: number;
     pageSize?: number;
-    status: RedistributionRequestStatus;
+    status?: RedistributionRequestStatus;
   }) : Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<RedistributionRequest[]>>(
       ENDPOINT.DISTRIBUTION_REQUEST.STAFF_VIEW,
