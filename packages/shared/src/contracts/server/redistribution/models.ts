@@ -34,7 +34,7 @@ export const RedistributionRequestSchema = z.object({
   startedAt: z.iso.datetime().nullable(),
   completedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
-  updatedat: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
 // User info for redistribution
@@ -105,7 +105,7 @@ export const RedistributionRequestDetailBaseSchema = z.object({
   startedAt: z.iso.datetime().nullable(),
   completedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
-  updatedat: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
 export const RedistributionRequestDetailSchema =
