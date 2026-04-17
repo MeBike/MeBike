@@ -47,6 +47,10 @@ AppConfig loadConfig()
             {
                 config.wifiSsid = value.c_str();
             }
+            else if (key == "BIKE_ID")
+            {
+                config.bikeId = value.c_str();
+            }
             else if (key == "WIFI_PASS")
             {
                 config.wifiPass = value.c_str();

@@ -6,14 +6,11 @@
 
 #include "HardwareConfig.h"
 
-NFCManager::NFCManager(uint8_t irqPin, uint8_t resetPin)
-    : irqPin(irqPin), resetPin(resetPin), nfc(irqPin, resetPin) {}
+NFCManager::NFCManager()
+    : nfc(HardwareConfig::PN532_IRQ_PIN, HardwareConfig::PN532_RESET_PIN) {}
 
 bool NFCManager::begin()
 {
-    pinMode(resetPin, OUTPUT);
-    digitalWrite(resetPin, HIGH);
-
     Wire.setTimeout(50);
     Wire.setClock(100000);
 
@@ -96,16 +93,6 @@ void NFCManager::recoverTick()
         recoveryStep = 2;
         break;
     case 2:
-        driveResetPulse();
-        nextActionAt = now + PN532_RESET_LOW_MS;
-        recoveryStep = 3;
-        break;
-    case 3:
-        digitalWrite(resetPin, HIGH);
-        nextActionAt = now + PN532_RESET_STABILIZE_MS;
-        recoveryStep = 4;
-        break;
-    case 4:
         if (performReinitialization())
         {
             const unsigned long duration = now - recoveryStartedAt;
@@ -177,8 +164,6 @@ bool NFCManager::healthCheck()
 
 void NFCManager::startRecovery()
 {
-    pinMode(resetPin, OUTPUT);
-    digitalWrite(resetPin, HIGH);
     const unsigned long now = millis();
     lastRecoveryAttemptAt = now;
     recoveryStartedAt = now;
@@ -199,9 +184,4 @@ bool NFCManager::performReinitialization()
     nfc.SAMConfig();
     Serial.println("PN532 reinitialized");
     return true;
-}
-
-void NFCManager::driveResetPulse()
-{
-    digitalWrite(resetPin, LOW);
 }

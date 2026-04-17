@@ -5,6 +5,7 @@ export function makeUserQueryService(repo: UserQueryRepo): UserQueryService {
   return {
     getById: id => repo.findById(id),
     getByEmail: email => repo.findByEmail(email),
+    findByNfcCardUid: nfcCardUid => repo.findByNfcCardUid(nfcCardUid),
     findByStripeConnectedAccountId: accountId => repo.findByStripeConnectedAccountId(accountId),
     listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
     searchByQuery: query => repo.searchByQuery(query),

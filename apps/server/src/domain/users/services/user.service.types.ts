@@ -25,6 +25,9 @@ export type UserQueryService = {
   getByEmail: (
     email: string,
   ) => Effect.Effect<Option.Option<UserRow>>;
+  findByNfcCardUid: (
+    nfcCardUid: string,
+  ) => Effect.Effect<Option.Option<UserRow>>;
   findByStripeConnectedAccountId: (
     accountId: string,
   ) => Effect.Effect<Option.Option<UserRow>>;

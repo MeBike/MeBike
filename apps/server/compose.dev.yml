@@ -37,7 +37,19 @@ services:
     volumes:
       - redis-data:/data
 
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mebike_mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+
 volumes:
   postgres-data:
   pgadmin-data:
   redis-data:
+  mosquitto-data:
+  mosquitto-log:
