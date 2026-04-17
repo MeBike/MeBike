@@ -216,4 +216,41 @@ describe("manage-users agency provision e2e", () => {
       },
     });
   });
+
+  it("returns station provisioning error when admin creates agency with duplicate exact location", async () => {
+    await fixture.factories.station({
+      name: "Ga Metro Thu Duc Existing",
+      address: "02 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+      latitude: 10.8486,
+      longitude: 106.7717,
+    });
+
+    const response = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        role: "AGENCY",
+        requesterEmail: "duplicate-location-owner@example.com",
+        agencyName: "Duplicate Location Agency",
+        stationName: "Ga Metro Thu Duc New Name",
+        stationAddress: "02 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+        stationLatitude: 10.8486,
+        stationLongitude: 106.7717,
+        stationTotalCapacity: 20,
+      }),
+    });
+
+    const body = await response.json() as UsersContracts.UserErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Station address and coordinates already exist",
+      details: {
+        code: "STATION_LOCATION_ALREADY_EXISTS",
+        address: "02 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+        latitude: 10.8486,
+        longitude: 106.7717,
+      },
+    });
+  });
 });

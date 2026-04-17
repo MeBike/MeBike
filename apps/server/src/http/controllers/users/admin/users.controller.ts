@@ -278,6 +278,19 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
             },
             400,
           )),
+        Match.tag("StationLocationAlreadyExists", ({ address, latitude, longitude }) =>
+          c.json<UsersContracts.UserErrorResponse, 400>(
+            {
+              error: UsersContracts.userErrorMessages.STATION_LOCATION_ALREADY_EXISTS,
+              details: {
+                code: UsersContracts.UserErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+                address,
+                latitude,
+                longitude,
+              },
+            },
+            400,
+          )),
         Match.tag("StationCapacityLimitExceeded", () =>
           c.json<UsersContracts.UserErrorResponse, 400>(
             {

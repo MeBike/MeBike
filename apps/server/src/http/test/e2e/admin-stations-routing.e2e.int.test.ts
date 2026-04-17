@@ -41,6 +41,9 @@ describe("admin stations routing e2e", () => {
       );
     },
     seedData: async (_db, prisma) => {
+      const { upsertVietnamBoundary } = await import("../../../../prisma/seed-geo-boundary");
+      await upsertVietnamBoundary(prisma);
+
       await prisma.user.create({
         data: {
           id: ADMIN_USER_ID,
@@ -69,9 +72,24 @@ describe("admin stations routing e2e", () => {
   }
 
   it("returns only stations without assigned staff", async () => {
-    const visibleStation = await fixture.factories.station({ name: "Visible Station" });
-    const hiddenStation = await fixture.factories.station({ name: "Hidden Staff Station" });
-    const technicianStation = await fixture.factories.station({ name: "Technician Station" });
+    const visibleStation = await fixture.factories.station({
+      name: "Visible Station",
+      address: "10 Visible Street, Thu Duc, TP.HCM",
+      latitude: 10.7601,
+      longitude: 106.6601,
+    });
+    const hiddenStation = await fixture.factories.station({
+      name: "Hidden Staff Station",
+      address: "20 Hidden Street, Thu Duc, TP.HCM",
+      latitude: 10.7602,
+      longitude: 106.6602,
+    });
+    const technicianStation = await fixture.factories.station({
+      name: "Technician Station",
+      address: "30 Technician Street, Thu Duc, TP.HCM",
+      latitude: 10.7603,
+      longitude: 106.6603,
+    });
 
     const staff = await fixture.factories.user({
       fullname: "Station Staff",
@@ -105,10 +123,83 @@ describe("admin stations routing e2e", () => {
     expect(body.data.map(station => station.id)).not.toContain(hiddenStation.id);
   });
 
+  it("rejects creating a station with duplicate exact location", async () => {
+    await fixture.factories.station({
+      name: "Existing Exact Location",
+      address: "371 Duong Doan Ket, Binh Tho, Thu Duc, TP.HCM",
+      latitude: 10.762622,
+      longitude: 106.660172,
+    });
+
+    const response = await fixture.app.request("http://test/v1/stations", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        name: "New Station Same Spot",
+        address: "371 Duong Doan Ket, Binh Tho, Thu Duc, TP.HCM",
+        totalCapacity: 20,
+        latitude: 10.762622,
+        longitude: 106.660172,
+      }),
+    });
+    const body = await response.json() as StationsContracts.StationErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Station address and coordinates already exist",
+      details: {
+        code: "STATION_LOCATION_ALREADY_EXISTS",
+        address: "371 Duong Doan Ket, Binh Tho, Thu Duc, TP.HCM",
+        latitude: 10.762622,
+        longitude: 106.660172,
+      },
+    });
+  });
+
+  it("rejects updating a station to duplicate exact location", async () => {
+    await fixture.factories.station({
+      name: "Target Exact Location",
+      address: "500 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+      latitude: 10.8486,
+      longitude: 106.7717,
+    });
+    const source = await fixture.factories.station({
+      name: "Source Exact Location",
+      address: "12 Le Loi, Ben Nghe, District 1, TP.HCM",
+      latitude: 10.775,
+      longitude: 106.699,
+    });
+
+    const response = await fixture.app.request(`http://test/v1/stations/${source.id}`, {
+      method: "PATCH",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        address: "500 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+        latitude: 10.8486,
+        longitude: 106.7717,
+      }),
+    });
+    const body = await response.json() as StationsContracts.StationErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Station address and coordinates already exist",
+      details: {
+        code: "STATION_LOCATION_ALREADY_EXISTS",
+        address: "500 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+        latitude: 10.8486,
+        longitude: 106.7717,
+      },
+    });
+  });
+
   it("rejects lowering capacity below current bikes and active return slots", async () => {
     const station = await fixture.factories.station({
+      address: "40 Capacity Street, Thu Duc, TP.HCM",
       capacity: 6,
       returnSlotLimit: 6,
+      latitude: 10.761,
+      longitude: 106.661,
     });
     await fixture.factories.bike({ stationId: station.id });
     await fixture.factories.bike({ stationId: station.id });
@@ -118,7 +209,12 @@ describe("admin stations routing e2e", () => {
       email: "return-rider@example.com",
       role: "USER",
     });
-    const startStation = await fixture.factories.station({ name: "Origin Station" });
+    const startStation = await fixture.factories.station({
+      name: "Origin Station",
+      address: "50 Origin Street, Thu Duc, TP.HCM",
+      latitude: 10.762,
+      longitude: 106.662,
+    });
     const rentedBike = await fixture.factories.bike({ stationId: null });
     const rental = await fixture.factories.rental({
       userId: rider.id,
@@ -152,8 +248,11 @@ describe("admin stations routing e2e", () => {
 
   it("rejects lowering return slot limit below active return slots", async () => {
     const station = await fixture.factories.station({
+      address: "60 Return Slot Street, Thu Duc, TP.HCM",
       capacity: 6,
       returnSlotLimit: 2,
+      latitude: 10.763,
+      longitude: 106.663,
     });
 
     const rider = await fixture.factories.user({
@@ -161,7 +260,12 @@ describe("admin stations routing e2e", () => {
       email: "return-slot-rider@example.com",
       role: "USER",
     });
-    const startStation = await fixture.factories.station({ name: "Return Slot Origin" });
+    const startStation = await fixture.factories.station({
+      name: "Return Slot Origin",
+      address: "70 Return Slot Origin Street, Thu Duc, TP.HCM",
+      latitude: 10.764,
+      longitude: 106.664,
+    });
     const rentedBike = await fixture.factories.bike({ stationId: null });
     const rental = await fixture.factories.rental({
       userId: rider.id,

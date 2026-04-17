@@ -26,6 +26,9 @@ export const UserErrorResponseSchema = z.object({
   error: z.string(),
   details: z.object({
     code: UserErrorCodeSchema,
+    address: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
   }),
 }).openapi("UserErrorResponse");
 
@@ -312,5 +315,8 @@ export type UserErrorResponse = {
   error: string;
   details: {
     code: z.infer<typeof UserErrorCodeSchema>;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
   };
 };

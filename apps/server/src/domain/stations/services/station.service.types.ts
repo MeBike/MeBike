@@ -10,6 +10,7 @@ import type {
   StationCapacityBelowActiveUsage,
   StationCapacityLimitExceeded,
   StationCapacitySplitInvalid,
+  StationLocationAlreadyExists,
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
   StationReturnSlotLimitBelowActiveReservations,
@@ -37,6 +38,7 @@ export type StationCommandService = {
   ) => Effect.Effect<
     StationRow,
     | StationNameAlreadyExists
+    | StationLocationAlreadyExists
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
     | StationCapacitySplitInvalid
@@ -60,6 +62,7 @@ export type StationCommandService = {
     StationRow,
     | import("../errors").StationNotFound
     | StationNameAlreadyExists
+    | StationLocationAlreadyExists
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
     | StationCapacitySplitInvalid

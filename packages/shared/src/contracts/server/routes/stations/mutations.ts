@@ -43,6 +43,17 @@ export const createStation = createRoute({
                 },
               },
             },
+            DuplicateLocation: {
+              value: {
+                error: "Station address and coordinates already exist",
+                details: {
+                  code: StationErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+                  address: "371 Doan Ket, Binh Tho, Thu Duc, TP.HCM",
+                  latitude: 10.762622,
+                  longitude: 106.660172,
+                },
+              },
+            },
             CapacityLimitExceeded: {
               value: {
                 error: "Station capacity exceeds configured limit",
@@ -112,6 +123,17 @@ export const updateStation = createRoute({
                   stationId: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
                   returnSlotLimit: 0,
                   activeReturnSlots: 1,
+                },
+              },
+            },
+            DuplicateLocation: {
+              value: {
+                error: "Station address and coordinates already exist",
+                details: {
+                  code: StationErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+                  address: "371 Doan Ket, Binh Tho, Thu Duc, TP.HCM",
+                  latitude: 10.762622,
+                  longitude: 106.660172,
                 },
               },
             },
