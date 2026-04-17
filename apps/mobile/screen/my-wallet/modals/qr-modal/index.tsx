@@ -40,6 +40,18 @@ const QUICK_AMOUNTS = ["50000", "100000", "200000", "500000"] as const;
 const SHEET_OPEN_DURATION = 260;
 const SHEET_CLOSE_DURATION = 220;
 
+function getTopupUnavailableMessage() {
+  return "Tính năng nạp tiền hiện chưa sẵn sàng. Vui lòng thử lại sau.";
+}
+
+function getPaymentInitializationMessage() {
+  return "Không thể khởi tạo thanh toán lúc này. Vui lòng thử lại sau.";
+}
+
+function getPaymentFailureMessage() {
+  return "Thanh toán chưa hoàn tất. Vui lòng thử lại hoặc chọn phương thức khác.";
+}
+
 export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
   const theme = useTheme();
   const themePalette = useMemo(() => ({
@@ -124,8 +136,8 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
   const handleStartTopup = useCallback(async () => {
     if (!hasStripePublishableKey()) {
       Alert.alert(
-        "Chưa cấu hình Stripe",
-        "Cần thiết lập EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY và build lại dev client trước khi nạp tiền.",
+        "Chưa thể nạp tiền",
+        getTopupUnavailableMessage(),
       );
       return;
     }
@@ -161,7 +173,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
 
     if (initialized.error) {
       setIsSubmitting(false);
-      Alert.alert("Không thể khởi tạo thanh toán", initialized.error.message);
+      Alert.alert("Không thể khởi tạo thanh toán", getPaymentInitializationMessage());
       return;
     }
 
@@ -173,7 +185,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
         return;
       }
 
-      Alert.alert("Thanh toán thất bại", presented.error.message);
+      Alert.alert("Thanh toán thất bại", getPaymentFailureMessage());
       return;
     }
 
@@ -284,7 +296,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
             >
               {isSubmitting
                 ? <ActivityIndicator color={theme.onActionPrimary.val} />
-                : <AppText tone="inverted" variant="sectionTitle">Mở Stripe PaymentSheet</AppText>}
+                : <AppText tone="inverted" variant="sectionTitle">Tiếp tục thanh toán</AppText>}
             </Pressable>
           </Animated.View>
         </KeyboardAvoidingView>
