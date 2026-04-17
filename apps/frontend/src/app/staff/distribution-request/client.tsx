@@ -57,7 +57,7 @@ export default function DistributionRequestClient({
             </div>
             <DataTable
               columns={redistributionColumn({
-                onView: ({ id }) => router.push(`/admin/distribution-request/detail/${id}`),
+                onView: ({ id }) => router.push(`/staff/distribution-request/detail/${id}`),
               })}
               data={requests}
             />

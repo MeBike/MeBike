@@ -1,75 +1,171 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { RedistributionRequestStatus } from "@/types/DistributionRequest";
-import {toast} from "sonner";
+import { toast } from "sonner";
 import {
-    useGetAdminViewDistributionRequestQuery,
-    useGetStaffViewDistributionRequestQuery,
-    useGetAgencyViewDistributionRequestQuery,
-    useGetManagerViewDistributionRequestQuery
-} from "@queries"
+  useGetAdminViewDistributionRequestQuery,
+  useGetStaffViewDistributionRequestQuery,
+  useGetAgencyViewDistributionRequestQuery,
+  useGetManagerViewDistributionRequestQuery,
+  useGetAdminViewDistributionRequestDetailQuery,
+  useGetStaffViewDistributionRequestDetailQuery,
+  useGetAgencyViewDistributionRequestDetailQuery,
+  useGetManagerViewDistributionRequestDetailQuery,
+} from "@queries";
 import { useRouter } from "next/navigation";
 import { HTTP_STATUS } from "@/constants";
 interface DistributionRequestActionProps {
-    page ?: number;
-    pageSize ?: number;
-    status ?: RedistributionRequestStatus;
-    id ?: string;
-    hasToken : boolean;
+  page?: number;
+  pageSize?: number;
+  status?: RedistributionRequestStatus;
+  id?: string;
+  hasToken: boolean;
 }
 export const useDistributionRequest = ({
-    page,
-    pageSize,
-    status,
-    id,
-    hasToken
-} : DistributionRequestActionProps) => {
-    const router = useRouter();
-    const queryClient = useQueryClient();
-    const {data : adminViewDistributionRequest, refetch : refetchAdminViewDistributionRequest, isFetching : isFetchingAdminViewDistributionRequest} = useGetAdminViewDistributionRequestQuery({page:page,pageSize:pageSize,status:status});
-    const {data : staffViewDistributionRequest, refetch : refetchStaffViewDistributionRequest, isFetching : isFetchingStaffViewDistributionRequest} = useGetStaffViewDistributionRequestQuery({page:page,pageSize:pageSize,status:status});
-    const {data : agencyViewDistributionRequest, refetch : refetchAgencyViewDistributionRequest, isFetching : isFetchingAgencyViewDistributionRequest} = useGetAgencyViewDistributionRequestQuery({page:page,pageSize:pageSize,status:status});
-    const {data : managerViewDistributionRequest, refetch : refetchManagerViewDistributionRequest, isFetching : isFetchingManagerViewDistributionRequest} = useGetManagerViewDistributionRequestQuery({page:page,pageSize:pageSize,status:status});
-    const getAdminViewDistributionRequest = useCallback(() => {
-        if(!hasToken){
-            router.push("/login");
-            return;
-        }
-        refetchAdminViewDistributionRequest();
-    }, [refetchAdminViewDistributionRequest,page,pageSize]);
-    const getStaffViewDistributionRequest = useCallback(() => {
-        if(!hasToken){
-            router.push("/login");
-            return;
-        }
-        refetchStaffViewDistributionRequest();
-    }, [refetchStaffViewDistributionRequest]);
-    const getAgencyViewDistributionRequest = useCallback(() => {
-        if(!hasToken){
-            router.push("/login");
-            return;
-        }
-        refetchAgencyViewDistributionRequest();
-    }, [refetchAgencyViewDistributionRequest]);
-    const getManagerViewDistributionRequest = useCallback(() => {
-        refetchManagerViewDistributionRequest();
-    }, [refetchManagerViewDistributionRequest]);
-    return {
-        adminViewDistributionRequest,
-        refetchAdminViewDistributionRequest,
-        isFetchingAdminViewDistributionRequest,
-        getAdminViewDistributionRequest,
-        staffViewDistributionRequest,
-        refetchStaffViewDistributionRequest,
-        isFetchingStaffViewDistributionRequest,
-        getStaffViewDistributionRequest,
-        agencyViewDistributionRequest,
-        refetchAgencyViewDistributionRequest,
-        isFetchingAgencyViewDistributionRequest,
-        getAgencyViewDistributionRequest,
-        managerViewDistributionRequest,
-        refetchManagerViewDistributionRequest,
-        isFetchingManagerViewDistributionRequest,
-        getManagerViewDistributionRequest,
+  page,
+  pageSize,
+  status,
+  id,
+  hasToken,
+}: DistributionRequestActionProps) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const {
+    data: adminViewDistributionRequest,
+    refetch: refetchAdminViewDistributionRequest,
+    isFetching: isFetchingAdminViewDistributionRequest,
+  } = useGetAdminViewDistributionRequestQuery({
+    page: page,
+    pageSize: pageSize,
+    status: status,
+  });
+  const {
+    data: staffViewDistributionRequest,
+    refetch: refetchStaffViewDistributionRequest,
+    isFetching: isFetchingStaffViewDistributionRequest,
+  } = useGetStaffViewDistributionRequestQuery({
+    page: page,
+    pageSize: pageSize,
+    status: status,
+  });
+  const {
+    data: agencyViewDistributionRequest,
+    refetch: refetchAgencyViewDistributionRequest,
+    isFetching: isFetchingAgencyViewDistributionRequest,
+  } = useGetAgencyViewDistributionRequestQuery({
+    page: page,
+    pageSize: pageSize,
+    status: status,
+  });
+  const {
+    data: managerViewDistributionRequest,
+    refetch: refetchManagerViewDistributionRequest,
+    isFetching: isFetchingManagerViewDistributionRequest,
+  } = useGetManagerViewDistributionRequestQuery({
+    page: page,
+    pageSize: pageSize,
+    status: status,
+  });
+  const getAdminViewDistributionRequest = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
     }
-}
+    refetchAdminViewDistributionRequest();
+  }, [refetchAdminViewDistributionRequest, page, pageSize, status]);
+  const getStaffViewDistributionRequest = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchStaffViewDistributionRequest();
+  }, [refetchStaffViewDistributionRequest, page, pageSize, status]);
+  const getAgencyViewDistributionRequest = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchAgencyViewDistributionRequest();
+  }, [refetchAgencyViewDistributionRequest, page, pageSize, status]);
+  const getManagerViewDistributionRequest = useCallback(() => {
+    refetchManagerViewDistributionRequest();
+  }, [refetchManagerViewDistributionRequest, page, pageSize, status]);
+  const {
+    data: adminViewDistributionRequestDetail,
+    refetch: refetchAdminViewDistributionRequestDetail,
+    isLoading: isLoadingAdminViewDistributionRequestDetail,
+  } = useGetAdminViewDistributionRequestDetailQuery({ id: id || "" });
+  const {
+    data: staffViewDistributionRequestDetail,
+    refetch: refetchStaffViewDistributionRequestDetail,
+    isLoading: isLoadingStaffViewDistributionRequestDetail,
+  } = useGetStaffViewDistributionRequestDetailQuery({ id: id || "" });
+  const {
+    data: agencyViewDistributionRequestDetail,
+    refetch: refetchAgencyViewDistributionRequestDetail,
+    isLoading: isLoadingAgencyViewDistributionRequestDetail,
+  } = useGetAgencyViewDistributionRequestDetailQuery({ id: id || "" });
+  const {
+    data: managerViewDistributionRequestDetail,
+    refetch: refetchManagerViewDistributionRequestDetail,
+    isLoading: isLoadingManagerViewDistributionRequestDetail,
+  } = useGetManagerViewDistributionRequestDetailQuery({ id: id || "" });
+  const getAdminViewDistributionRequestDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchAdminViewDistributionRequestDetail();
+  }, [refetchAdminViewDistributionRequestDetail, id]);
+  const getStaffViewDistributionRequestDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchStaffViewDistributionRequestDetail();
+  }, [refetchStaffViewDistributionRequestDetail, id]);
+  const getAgencyViewDistributionRequestDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchAgencyViewDistributionRequestDetail();
+  }, [refetchAgencyViewDistributionRequestDetail, id]);
+  const getManagerViewDistributionRequestDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchManagerViewDistributionRequestDetail();
+  }, [refetchManagerViewDistributionRequestDetail, id]);
+  return {
+    adminViewDistributionRequest,
+    refetchAdminViewDistributionRequest,
+    isFetchingAdminViewDistributionRequest,
+    getAdminViewDistributionRequest,
+    staffViewDistributionRequest,
+    refetchStaffViewDistributionRequest,
+    isFetchingStaffViewDistributionRequest,
+    getStaffViewDistributionRequest,
+    agencyViewDistributionRequest,
+    refetchAgencyViewDistributionRequest,
+    isFetchingAgencyViewDistributionRequest,
+    getAgencyViewDistributionRequest,
+    managerViewDistributionRequest,
+    refetchManagerViewDistributionRequest,
+    isFetchingManagerViewDistributionRequest,
+    getManagerViewDistributionRequest,
+    adminViewDistributionRequestDetail,
+    refetchAdminViewDistributionRequestDetail,
+    isLoadingAdminViewDistributionRequestDetail,
+    getAdminViewDistributionRequestDetail,
+    staffViewDistributionRequestDetail,
+    refetchStaffViewDistributionRequestDetail,
+    isLoadingStaffViewDistributionRequestDetail,
+    getStaffViewDistributionRequestDetail,
+    agencyViewDistributionRequestDetail,
+    refetchAgencyViewDistributionRequestDetail,
+    isLoadingAgencyViewDistributionRequestDetail,
+    getAgencyViewDistributionRequestDetail,
+    managerViewDistributionRequestDetail,
+    refetchManagerViewDistributionRequestDetail,
+    isLoadingManagerViewDistributionRequestDetail,
+    getManagerViewDistributionRequestDetail,
+  };
+};

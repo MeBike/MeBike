@@ -10,16 +10,16 @@ const DistributionRequestDetailPage = () => {
   const id = params.id as string;
   const hasToken = true; 
   const {
-    adminViewDistributionRequestDetail,
-    isLoadingAdminViewDistributionRequestDetail,
-    getAdminViewDistributionRequestDetail,
+    staffViewDistributionRequestDetail,
+    isLoadingStaffViewDistributionRequestDetail,
+    getStaffViewDistributionRequestDetail,
   } = useDistributionRequest({
     id: id,
     hasToken: hasToken,
   });
   const [isVisualLoading,setIsVisualLoading] = useState<boolean>(false);
     useEffect(() => {
-      if (isLoadingAdminViewDistributionRequestDetail) {
+      if (isLoadingStaffViewDistributionRequestDetail) {
         setIsVisualLoading(true);
       } else {
         const timer = setTimeout(() => {
@@ -27,17 +27,17 @@ const DistributionRequestDetailPage = () => {
         }, 600);
         return () => clearTimeout(timer);
       }
-    }, [isLoadingAdminViewDistributionRequestDetail]);
+    }, [isLoadingStaffViewDistributionRequestDetail]);
   useEffect(() => {
     if (id) {
-      getAdminViewDistributionRequestDetail();
+      getStaffViewDistributionRequestDetail();
     }
-  }, [id, getAdminViewDistributionRequestDetail]);
+  }, [id, getStaffViewDistributionRequestDetail]);
 
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-  if (!adminViewDistributionRequestDetail?.data) {
+  if (!staffViewDistributionRequestDetail?.data) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>Không tìm thấy thông tin yêu cầu điều phối.</p>
@@ -47,7 +47,7 @@ const DistributionRequestDetailPage = () => {
 
   return (
     <DistributionRequestDetailClient 
-      data={adminViewDistributionRequestDetail.data} 
+      data={staffViewDistributionRequestDetail.data} 
     />
   );
 };

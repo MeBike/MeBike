@@ -14,7 +14,7 @@ const getStaffViewDistributionRequest = async (
     if(status) query.status = status;
     const response = await distributionRequestService.getStaffViewDistributionRequest(query);
     if (response.status === 200) {
-      return response.data;
+      return response;
     }
   } catch (error) {
     console.error(error);

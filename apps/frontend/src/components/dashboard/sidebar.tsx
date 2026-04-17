@@ -127,11 +127,11 @@ export function Sidebar() {
           href: "/admin/staffs",
           roles: ["ADMIN", "MANAGER"],
         },
-                {
+        {
           title: "Quản lý điều phối xe",
           icon: Users,
-          href: "/admin/distribution-request",
-          roles: ["ADMIN", "MANAGER"],
+          href: `/${role.toLowerCase()}/distribution-request`,
+          roles: ["ADMIN", "MANAGER","STAFF","AGENCY"],
         },
         {
           title: "Quản lý Agency",
