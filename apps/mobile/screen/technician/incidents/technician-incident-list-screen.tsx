@@ -17,6 +17,7 @@ import {
   getIncidentSeverityTone,
   getIncidentStatusLabel,
   getIncidentStatusTone,
+  getIncidentTypeLabel,
   presentIncidentError,
 } from "@/screen/incidents/incident-presenters";
 import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
@@ -28,11 +29,7 @@ import { StatusBadge } from "@/ui/primitives/status-badge";
 type IncidentTab = "ACTIVE" | "HISTORY";
 
 function formatIncidentTitle(incidentType: string) {
-  if (incidentType === "GENERAL_REPORT") {
-    return "Báo cáo chung";
-  }
-
-  return incidentType.replaceAll("_", " ");
+  return getIncidentTypeLabel(incidentType);
 }
 
 function getIncidentHeadline(incidentType: string) {

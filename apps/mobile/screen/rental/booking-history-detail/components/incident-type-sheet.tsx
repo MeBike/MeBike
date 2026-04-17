@@ -1,6 +1,7 @@
 import type { UploadIncidentImagePayload } from "@services/incidents";
 
 import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths } from "@theme/metrics";
 import { fontSizes, fontWeights } from "@theme/typography";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
@@ -10,6 +11,11 @@ import * as ImagePicker from "expo-image-picker";
 import { useEffect, useRef, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
+
+import {
+  getIncidentTypeLabel,
+  incidentTypeOptions,
+} from "@/screen/incidents/incident-presenters";
 
 function createIncidentImageUploadPayload(asset: ImagePicker.ImagePickerAsset): UploadIncidentImagePayload {
   const extension = asset.fileName?.split(".").pop() ?? asset.mimeType?.split("/").pop() ?? "jpg";
@@ -26,8 +32,45 @@ type IncidentTypeSheetProps = {
   bottomInset: number;
   isSubmitting: boolean;
   onClose: () => void;
-  onSelect: (params: { incidentType: string; imageUploads: UploadIncidentImagePayload[] }) => Promise<void> | void;
+  onSelect: (params: { description: string; imageUploads: UploadIncidentImagePayload[]; incidentType: string }) => Promise<void> | void;
 };
+
+type IncidentTypeChipProps = {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+};
+
+function IncidentTypeChip({ label, onPress, selected }: IncidentTypeChipProps) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.84 : 1,
+        transform: [{ scale: pressed ? 0.985 : 1 }],
+      })}
+    >
+      <XStack
+        alignItems="center"
+        backgroundColor={selected ? "$surfaceAccent" : "$surfaceDefault"}
+        borderColor={selected ? "$borderFocus" : "$borderSubtle"}
+        borderRadius="$round"
+        borderWidth={borderWidths.subtle}
+        gap="$2"
+        paddingHorizontal="$4"
+        paddingVertical="$3"
+      >
+        {selected
+          ? <IconSymbol color="#2563eb" name="check-circle" size="caption" />
+          : null}
+        <AppText tone={selected ? "brand" : "muted"} variant="bodySmall">
+          {label}
+        </AppText>
+      </XStack>
+    </Pressable>
+  );
+}
 
 export function IncidentTypeSheet({
   visible,
@@ -37,7 +80,8 @@ export function IncidentTypeSheet({
   onSelect,
 }: IncidentTypeSheetProps) {
   const theme = useTheme();
-  const [incidentType, setIncidentType] = useState("");
+  const [incidentDescription, setIncidentDescription] = useState("");
+  const [selectedIncidentType, setSelectedIncidentType] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [inputHeight, setInputHeight] = useState(112);
   const [isStartingSubmit, setStartingSubmit] = useState(false);
@@ -45,13 +89,15 @@ export function IncidentTypeSheet({
   const [selectedImages, setSelectedImages] = useState<UploadIncidentImagePayload[]>([]);
   const submitLockRef = useRef(false);
 
-  const trimmedIncidentType = incidentType.trim();
-  const showError = hasSubmitted && trimmedIncidentType.length === 0;
+  const trimmedIncidentDescription = incidentDescription.trim();
+  const showDescriptionError = hasSubmitted && trimmedIncidentDescription.length === 0;
+  const showTypeError = hasSubmitted && !selectedIncidentType;
   const isBusy = isSubmitting || isStartingSubmit || isPickingImages;
 
   useEffect(() => {
     if (!visible && !isBusy) {
-      setIncidentType("");
+      setIncidentDescription("");
+      setSelectedIncidentType(null);
       setHasSubmitted(false);
       setInputHeight(112);
       setSelectedImages([]);
@@ -91,7 +137,7 @@ export function IncidentTypeSheet({
 
     setHasSubmitted(true);
 
-    if (trimmedIncidentType.length === 0) {
+    if (!selectedIncidentType || trimmedIncidentDescription.length === 0) {
       return;
     }
 
@@ -100,8 +146,9 @@ export function IncidentTypeSheet({
 
     try {
       await onSelect({
-        incidentType: trimmedIncidentType,
+        description: trimmedIncidentDescription,
         imageUploads: selectedImages,
+        incidentType: selectedIncidentType,
       });
     }
     finally {
@@ -152,20 +199,37 @@ export function IncidentTypeSheet({
                   Báo cáo sự cố
                 </AppText>
                 <AppText tone="muted" variant="body">
-                  Mô tả ngắn vấn đề đang gặp. Ứng dụng sẽ dùng vị trí hiện tại để điều phối hỗ trợ.
+                  Chọn loại sự cố rồi thêm mô tả ngắn. Ứng dụng sẽ dùng vị trí hiện tại để điều phối hỗ trợ.
                 </AppText>
               </YStack>
             </YStack>
 
             <Field
+              description="Chọn loại phù hợp nhất để kỹ thuật viên ưu tiên đúng vấn đề cần xử lý."
+              error={showTypeError ? "Cần chọn loại sự cố." : undefined}
+              label="Loại sự cố"
+            >
+              <XStack flexWrap="wrap" gap="$3">
+                {incidentTypeOptions.map(option => (
+                  <IncidentTypeChip
+                    key={option}
+                    label={getIncidentTypeLabel(option)}
+                    onPress={() => setSelectedIncidentType(option)}
+                    selected={selectedIncidentType === option}
+                  />
+                ))}
+              </XStack>
+            </Field>
+
+            <Field
               description="Ví dụ: phanh bị kẹt, xích tuột, xe va chạm, bánh xe khó đạp..."
-              error={showError ? "Cần nhập mô tả ngắn về sự cố." : undefined}
-              label="Sự cố đang gặp"
+              error={showDescriptionError ? "Cần nhập mô tả ngắn về sự cố." : undefined}
+              label="Mô tả chi tiết"
             >
               <XStack
                 alignItems="flex-start"
                 backgroundColor="$surfaceDefault"
-                borderColor={showError ? "$borderDanger" : "$borderDefault"}
+                borderColor={showDescriptionError ? "$borderDanger" : "$borderDefault"}
                 borderRadius="$4"
                 borderWidth={1}
                 gap="$3"
@@ -180,7 +244,7 @@ export function IncidentTypeSheet({
                 <TextInput
                   autoFocus
                   multiline
-                  onChangeText={setIncidentType}
+                  onChangeText={setIncidentDescription}
                   onContentSizeChange={(event) => {
                     const nextHeight = Math.min(180, Math.max(112, event.nativeEvent.contentSize.height + 12));
                     setInputHeight(nextHeight);
@@ -199,7 +263,7 @@ export function IncidentTypeSheet({
                     paddingBottom: 0,
                     textAlignVertical: "top",
                   }}
-                  value={incidentType}
+                  value={incidentDescription}
                 />
               </XStack>
             </Field>

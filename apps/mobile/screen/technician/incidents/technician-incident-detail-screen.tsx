@@ -1,7 +1,7 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { borderWidths, spaceScale } from "@theme/metrics";
 import React, { useState } from "react";
-import { Linking, RefreshControl, ScrollView, StatusBar } from "react-native";
+import { Image, Linking, Modal, Pressable, RefreshControl, ScrollView, StatusBar } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type {
@@ -20,6 +20,7 @@ import {
   getIncidentSourceLabel,
   getIncidentStatusLabel,
   getIncidentStatusTone,
+  getIncidentTypeLabel,
   presentIncidentError,
 } from "@/screen/incidents/incident-presenters";
 import { AppHeroHeader } from "@/ui/patterns/app-hero-header";
@@ -41,11 +42,7 @@ function formatCoordinates(latitude: number | null, longitude: number | null) {
 }
 
 function formatIncidentTitle(incidentType: string) {
-  if (incidentType === "GENERAL_REPORT") {
-    return "Báo cáo chung";
-  }
-
-  return incidentType.replaceAll("_", " ");
+  return getIncidentTypeLabel(incidentType);
 }
 
 function getIncidentHeadline(incidentType: string) {
@@ -182,6 +179,7 @@ export default function TechnicianIncidentDetailScreen() {
   const incident = incidentQuery.data;
   const [contentHeight, setContentHeight] = useState(0);
   const [footerHeight, setFooterHeight] = useState(0);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const {
     actionKind,
@@ -259,6 +257,10 @@ export default function TechnicianIncidentDetailScreen() {
     if (coordinates) {
       void Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${incident.latitude},${incident.longitude}`);
     }
+  };
+
+  const handleCloseImagePreview = () => {
+    setPreviewImageUrl(null);
   };
 
   const needsFooterSpacer = Boolean(actionKind)
@@ -348,6 +350,44 @@ export default function TechnicianIncidentDetailScreen() {
             />
           </SectionCard>
 
+          {incident.fileUrls.length > 0
+            ? (
+                <SectionCard accentTone="accent" icon="tools" title="Hình ảnh sự cố">
+                  <YStack gap="$3" paddingHorizontal="$5" paddingVertical="$4">
+                    <AppText tone="muted" variant="bodySmall">
+                      Chạm vào ảnh để xem chi tiết rõ hơn.
+                    </AppText>
+
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <XStack gap="$3">
+                        {incident.fileUrls.map(fileUrl => (
+                          <Pressable key={fileUrl} onPress={() => setPreviewImageUrl(fileUrl)}>
+                            {({ pressed }) => (
+                              <YStack
+                                borderColor="$borderSubtle"
+                                borderRadius="$5"
+                                borderWidth={borderWidths.subtle}
+                                opacity={pressed ? 0.9 : 1}
+                                overflow="hidden"
+                              >
+                                <Image
+                                  source={{ uri: fileUrl }}
+                                  style={{
+                                    width: 112,
+                                    height: 112,
+                                  }}
+                                />
+                              </YStack>
+                            )}
+                          </Pressable>
+                        ))}
+                      </XStack>
+                    </ScrollView>
+                  </YStack>
+                </SectionCard>
+              )
+            : null}
+
           <SectionCard icon="tools" title="Thông tin kỹ thuật viên ">
             <DetailRow emptyLabel="Chưa điều phối" label="Kỹ thuật viên" value={incident.assignments?.technician?.fullName ?? ""} />
             <DetailRow emptyLabel="Chưa có nhóm" label="Nhóm kỹ thuật" value={incident.assignments?.team?.name ?? ""} />
@@ -375,6 +415,38 @@ export default function TechnicianIncidentDetailScreen() {
         onResolve={handleResolve}
         onStart={handleStart}
       />
+
+      <Modal
+        animationType="fade"
+        onRequestClose={handleCloseImagePreview}
+        statusBarTranslucent
+        transparent
+        visible={Boolean(previewImageUrl)}
+      >
+        <Pressable
+          onPress={handleCloseImagePreview}
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0, 0, 0, 0.88)",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          {previewImageUrl
+            ? (
+                <Image
+                  resizeMode="contain"
+                  source={{ uri: previewImageUrl }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                  }}
+                />
+              )
+            : null}
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }

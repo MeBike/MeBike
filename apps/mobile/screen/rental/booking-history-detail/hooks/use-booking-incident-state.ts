@@ -13,8 +13,6 @@ import { useCreateIncidentMutation } from "@/screen/incidents/hooks/use-create-i
 import { useRentalIncidentQuery } from "@/screen/incidents/hooks/use-rental-incident-query";
 import { isIncidentTerminalStatus, presentIncidentError } from "@/screen/incidents/incident-presenters";
 
-const MANUAL_INCIDENT_TYPE = "GENERAL_REPORT";
-
 type Coordinates = {
   latitude: number;
   longitude: number;
@@ -149,8 +147,9 @@ export function useBookingIncidentState({
 
   const handleSelectIncidentType = useCallback(async (
     params: {
-      incidentType: string;
+      description: string;
       imageUploads: UploadIncidentImagePayload[];
+      incidentType: string;
     },
   ) => {
     if (!booking || isReportingIncident) {
@@ -183,8 +182,8 @@ export function useBookingIncidentState({
       await createIncidentMutation.mutateAsync({
         rentalId: booking.id,
         bikeId: booking.bikeId,
-        incidentType: MANUAL_INCIDENT_TYPE,
-        description: params.incidentType,
+        incidentType: params.incidentType,
+        description: params.description,
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         fileUrls,

@@ -10,6 +10,17 @@ import type {
 
 type BadgeTone = "success" | "warning" | "danger" | "neutral";
 
+export const incidentTypeOptions = [
+  "BRAKE",
+  "CHAIN",
+  "FLAT_TIRE",
+  "LOCK",
+  "ACCIDENT",
+  "GENERAL_REPORT",
+] as const;
+
+export type IncidentTypeOption = (typeof incidentTypeOptions)[number];
+
 const terminalStatuses = new Set<IncidentStatus>(["RESOLVED", "CLOSED", "CANCELLED"]);
 
 export function isIncidentTerminalStatus(status: IncidentStatus) {
@@ -94,6 +105,25 @@ export function getIncidentSourceLabel(source: IncidentSource) {
       return "Kiểm tra kỹ thuật";
     default:
       return "Nguồn không xác định";
+  }
+}
+
+export function getIncidentTypeLabel(incidentType: string) {
+  switch (incidentType) {
+    case "BRAKE":
+      return "Phanh";
+    case "CHAIN":
+      return "Xích xe";
+    case "FLAT_TIRE":
+      return "Lốp xe";
+    case "LOCK":
+      return "Khóa xe";
+    case "ACCIDENT":
+      return "Va chạm";
+    case "GENERAL_REPORT":
+      return "Báo cáo chung";
+    default:
+      return incidentType.replaceAll("_", " ");
   }
 }
 
