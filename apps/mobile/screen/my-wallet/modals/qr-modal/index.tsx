@@ -45,7 +45,7 @@ function getTopupUnavailableMessage() {
 }
 
 function getPaymentInitializationMessage() {
-  return "Không thể khởi tạo thanh toán lúc này. Vui lòng thử lại sau.";
+  return "Không thể thực hiện thanh toán lúc này. Vui lòng thử lại sau.";
 }
 
 function getPaymentFailureMessage() {
@@ -173,7 +173,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
 
     if (initialized.error) {
       setIsSubmitting(false);
-      Alert.alert("Không thể khởi tạo thanh toán", getPaymentInitializationMessage());
+      Alert.alert("Chưa thể thanh toán", getPaymentInitializationMessage());
       return;
     }
 
