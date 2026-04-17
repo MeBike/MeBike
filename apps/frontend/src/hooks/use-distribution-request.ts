@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { RedistributionRequestStatus } from "@/types/DistributionRequest";
 import { toast } from "sonner";
+import { CreateRedistributionRequestInput } from "@/schemas/distribution-request-schema";
 import {
   useGetAdminViewDistributionRequestQuery,
   useGetStaffViewDistributionRequestQuery,
@@ -16,6 +17,7 @@ import {
 import {
   useApproveDistributionRequestMutation,
   useRejectDistributionRequestMutation,
+  useCreateistributionRequestMutation
 } from "@mutations"
 import { useRouter } from "next/navigation";
 import { HTTP_STATUS } from "@/constants";
@@ -142,6 +144,7 @@ export const useDistributionRequest = ({
   }, [refetchManagerViewDistributionRequestDetail, id]);
   const useApproveDistributeRequest = useApproveDistributionRequestMutation();
   const useRejectDistributeRequest = useRejectDistributionRequestMutation();
+  const useCreateDistributeRequest = useCreateistributionRequestMutation();
   const approveDistributeRequest = useCallback(
     async (id:string) => {
       if (!hasToken) {
@@ -208,6 +211,39 @@ export const useDistributionRequest = ({
       queryClient,
     ],
   );
+  const createDistributeRequest = useCallback(
+    async (data:CreateRedistributionRequestInput) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useCreateDistributeRequest.mutateAsync(data);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Tạo yêu cầu phân bổ thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["distribution-request", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["manager","distribution-request-data","detail",id],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useCreateDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
   return {
     adminViewDistributionRequest,
     refetchAdminViewDistributionRequest,
@@ -243,5 +279,6 @@ export const useDistributionRequest = ({
     getManagerViewDistributionRequestDetail,
     approveDistributeRequest,
     rejectDistributeRequest,
+    createDistributeRequest,
   };
 };
