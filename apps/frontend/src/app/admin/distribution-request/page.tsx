@@ -6,12 +6,10 @@ import DistributionRequestClient from "./client";
 import { RedistributionRequestStatus } from "@/types/DistributionRequest";
 
 export default function Page() {
-  // 1. Quản lý filters
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<RedistributionRequestStatus | "all">("all");
   const pageSize = 10;
 
-  // 2. Lấy dữ liệu từ Hook (Sử dụng view của Admin)
   const { 
     adminViewDistributionRequest, 
     isFetchingAdminViewDistributionRequest,
@@ -22,16 +20,13 @@ export default function Page() {
     status: statusFilter === "all" ? undefined : statusFilter,
     hasToken: true,
   });
+
+  // Cập nhật dependency để gọi lại API khi Page hoặc Status thay đổi
   useEffect(() => {
     getAdminViewDistributionRequest();
-  },[page,pageSize])
-  // 3. Chuẩn bị dữ liệu để truyền xuống Client Component
+  }, [page, statusFilter, getAdminViewDistributionRequest]); 
+
   const requests = adminViewDistributionRequest?.data?.data || [];
-  const pagination = adminViewDistributionRequest?.data?.pagination || {
-    page: 1,
-    totalPages: 1,
-    totalElements: 0
-  };
 
   return (
     <DistributionRequestClient

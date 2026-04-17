@@ -9,6 +9,7 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<RedistributionRequestStatus | "all">("all");
   const pageSize = 10;
+
   const { 
     managerViewDistributionRequest, 
     isFetchingManagerViewDistributionRequest,
@@ -19,10 +20,14 @@ export default function Page() {
     status: statusFilter === "all" ? undefined : statusFilter,
     hasToken: true,
   });
+
+  // Cập nhật dependency để gọi lại API khi Page hoặc Status thay đổi
   useEffect(() => {
     getManagerViewDistributionRequest();
-  },[page,pageSize])
+  }, [page, statusFilter, getManagerViewDistributionRequest]); 
+
   const requests = managerViewDistributionRequest?.data?.data || [];
+
   return (
     <DistributionRequestClient
       data={{

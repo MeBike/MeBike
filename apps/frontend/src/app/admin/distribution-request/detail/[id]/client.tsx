@@ -17,25 +17,27 @@ interface Props {
 export const DistributionRequestDetailClient = ({ data }: Props) => {
   const router = useRouter();
 
+  // Hàm xử lý màu sắc Badge dựa trên status
   const getStatusStyle = (status: RedistributionRequestStatus) => {
-      switch (status) {
-        case "PENDING_APPROVAL":
-          return "bg-amber-100 text-amber-800 border-amber-200";
-        case "APPROVED":
-          return "bg-blue-100 text-blue-800 border-blue-200";
-        case "IN_TRANSIT":
-          return "bg-purple-100 text-purple-800 border-purple-200";
-        case "PARTIALLY_COMPLETED":
-          return "bg-indigo-100 text-indigo-800 border-indigo-200";
-        case "COMPLETED":
-          return "bg-green-100 text-green-800 border-green-200";
-        case "REJECTED":
-        case "CANCELLED":
-          return "bg-red-100 text-red-800 border-red-200";
-        default:
-          return "bg-gray-100 text-gray-800 border-gray-200";
-      }
-    };
+    switch (status) {
+      case "PENDING_APPROVAL":
+        return "bg-amber-100 text-amber-800 border-amber-200";
+      case "APPROVED":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "IN_TRANSIT":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "PARTIALLY_COMPLETED":
+        return "bg-indigo-100 text-indigo-800 border-indigo-200";
+      case "COMPLETED":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "REJECTED":
+      case "CANCELLED":
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+  
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
