@@ -59,7 +59,7 @@ export function finalizeRentalReturnInTx(
 
     const durationMinutes = Math.max(
       1,
-      Math.floor((endTime.getTime() - new Date(rental.startTime).getTime()) / 60000),
+      Math.ceil((endTime.getTime() - new Date(rental.startTime).getTime()) / 60000),
     );
 
     const pricingPolicy = rental.pricingPolicyId
