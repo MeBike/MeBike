@@ -8,19 +8,15 @@ import { View } from "react-native";
 import { Input, XStack } from "tamagui";
 
 type AppInputProps = GetProps<typeof Input> & {
+  fieldSize?: "default" | "large";
   leadingIcon?: ReactNode;
   trailingIcon?: ReactNode;
   invalid?: boolean;
   readOnly?: boolean;
 };
 
-const iconSlotStyle = {
-  width: 24,
-  alignItems: "center" as const,
-  justifyContent: "center" as const,
-};
-
 export function AppInput({
+  fieldSize = "default",
   leadingIcon,
   trailingIcon,
   invalid = false,
@@ -33,6 +29,12 @@ export function AppInput({
 }: AppInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const isReadOnly = readOnly || props.disabled === true;
+  const isLarge = fieldSize === "large";
+  const iconSlotStyle = {
+    width: isLarge ? 28 : 24,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  };
 
   const borderColor = invalid
     ? "$borderDanger"
@@ -41,6 +43,7 @@ export function AppInput({
       : isReadOnly
         ? "$borderSubtle"
         : "$borderDefault";
+  const isEmphasized = (isFocused && !isReadOnly) || invalid;
   const shadowColor = invalid ? "$borderDanger" : isFocused && !isReadOnly ? "$actionPrimary" : "transparent";
 
   return (
@@ -48,15 +51,15 @@ export function AppInput({
       alignItems="center"
       backgroundColor={isReadOnly ? "$surfaceMuted" : "$surfaceDefault"}
       borderColor={borderColor}
-      borderRadius="$3"
-      borderWidth={isFocused && !isReadOnly || invalid ? borderWidths.strong : borderWidths.subtle}
+      borderRadius={isLarge ? "$4" : "$3"}
+      borderWidth={isEmphasized ? borderWidths.strong : borderWidths.subtle}
       gap="$3"
-      minHeight="$6"
-      paddingHorizontal="$4"
+      minHeight={isLarge ? "$7" : "$6"}
+      paddingHorizontal={isLarge ? "$5" : "$4"}
       shadowColor={shadowColor}
-      shadowOffset={isFocused && !isReadOnly || invalid ? { width: 0, height: 0 } : { width: 0, height: 0 }}
-      shadowOpacity={isFocused && !isReadOnly || invalid ? 0.14 : 0}
-      shadowRadius={isFocused && !isReadOnly || invalid ? 10 : 0}
+      shadowOffset={isEmphasized ? { width: 0, height: 0 } : { width: 0, height: 0 }}
+      shadowOpacity={isEmphasized ? 0.14 : 0}
+      shadowRadius={isEmphasized ? 10 : 0}
     >
       {leadingIcon
         ? (
@@ -71,7 +74,7 @@ export function AppInput({
         color={isReadOnly ? "$textSecondary" : "$textPrimary"}
         flex={1}
         fontFamily="$body"
-        fontSize={typographyTokens.bodySmall}
+        fontSize={isLarge ? typographyTokens.body : typographyTokens.bodySmall}
         fontWeight="$5"
         readOnly={isReadOnly}
         onBlur={(event) => {

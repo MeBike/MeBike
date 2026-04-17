@@ -54,8 +54,10 @@ export function ChangePasswordForm({
               <AppInput
                 autoCapitalize="none"
                 autoCorrect={false}
+                fieldSize="large"
+                fontWeight="400"
                 invalid={Boolean(errors.oldPassword?.message)}
-                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="lock" size="input" />}
+                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="lock" size="md" />}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 placeholder="Nhập mật khẩu hiện tại"
@@ -76,8 +78,10 @@ export function ChangePasswordForm({
               <AppInput
                 autoCapitalize="none"
                 autoCorrect={false}
+                fieldSize="large"
+                fontWeight="400"
                 invalid={Boolean(errors.newPassword?.message)}
-                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="lock" size="input" />}
+                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="lock" size="md" />}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 placeholder="Nhập mật khẩu mới"
@@ -102,8 +106,10 @@ export function ChangePasswordForm({
               <AppInput
                 autoCapitalize="none"
                 autoCorrect={false}
+                fieldSize="large"
+                fontWeight="400"
                 invalid={Boolean(errors.confirmPassword?.message)}
-                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="lock" size="input" />}
+                leadingIcon={<IconSymbol color={theme.textSecondary.val} name="lock" size="md" />}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 onSubmitEditing={onSubmit}

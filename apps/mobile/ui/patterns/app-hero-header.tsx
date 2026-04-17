@@ -8,7 +8,7 @@ import { Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, XStack, YStack } from "tamagui";
 
-type AppHeroHeaderSize = "default" | "compact";
+type AppHeroHeaderSize = "default" | "compact" | "prominent";
 type AppHeroHeaderVariant = "gradient" | "surface";
 
 type AppHeroHeaderProps = {
@@ -23,16 +23,32 @@ type AppHeroHeaderProps = {
 };
 
 const sizeStyles: Record<AppHeroHeaderSize, {
+  backButtonSize: number;
   bottomPadding: number;
+  contentGap: "$3" | "$4";
+  subtitleVariant: "body" | "bodySmall";
   titleVariant: "title" | "xlTitle";
 }> = {
   default: {
+    backButtonSize: 40,
     bottomPadding: spacingRules.hero.paddingBottomDefault,
+    contentGap: "$3",
+    subtitleVariant: "bodySmall",
     titleVariant: "title",
   },
   compact: {
+    backButtonSize: 40,
     bottomPadding: spacingRules.hero.paddingBottomCompact,
+    contentGap: "$3",
+    subtitleVariant: "bodySmall",
     titleVariant: "xlTitle",
+  },
+  prominent: {
+    backButtonSize: 48,
+    bottomPadding: spacingRules.hero.paddingBottomDefault + spacingRules.hero.paddingBottomCompact,
+    contentGap: "$4",
+    subtitleVariant: "body",
+    titleVariant: "title",
   },
 };
 
@@ -59,19 +75,20 @@ export function AppHeroHeader({
 
   const headerContent = (
     <>
-      <XStack alignItems="center" gap="$3" justifyContent="space-between">
-        <XStack alignItems="center" flex={1} gap="$3" paddingRight={accessory ? "$2" : "$0"}>
+      <XStack alignItems={size === "prominent" ? "flex-start" : "center"} gap={sizeStyle.contentGap} justifyContent="space-between">
+        <XStack alignItems={size === "prominent" ? "flex-start" : "center"} flex={1} gap={sizeStyle.contentGap} paddingRight={accessory ? "$2" : "$0"}>
           {onBack
             ? (
                 <Pressable
                   onPress={onBack}
                   style={{
-                    width: 40,
-                    height: 40,
+                    width: sizeStyle.backButtonSize,
+                    height: sizeStyle.backButtonSize,
                     borderRadius: radii.round,
                     alignItems: "center",
                     justifyContent: "center",
                     backgroundColor: isSurface ? "transparent" : theme.overlayGlass.val,
+                    marginTop: size === "prominent" ? 4 : 0,
                   }}
                 >
                   <IconSymbol
@@ -83,10 +100,9 @@ export function AppHeroHeader({
               )
             : null}
 
-          <YStack flex={1} gap="$1">
+          <YStack flex={1} gap={size === "prominent" ? "$2" : "$1"}>
             <AppText
               selectable
-              numberOfLines={1}
               tone={isSurface ? "default" : "inverted"}
               variant={resolvedTitleVariant}
             >
@@ -96,9 +112,10 @@ export function AppHeroHeader({
               ? (
                   <AppText
                     selectable
+                    maxWidth={size === "prominent" ? 320 : undefined}
                     opacity={isSurface ? 1 : 0.9}
                     tone={isSurface ? "muted" : "inverted"}
-                    variant="bodySmall"
+                    variant={sizeStyle.subtitleVariant}
                   >
                     {subtitle}
                   </AppText>
