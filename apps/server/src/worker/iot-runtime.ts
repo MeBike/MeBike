@@ -1,10 +1,14 @@
+import type { DeviceAcknowledgement, DeviceRuntimeStatus, DeviceTapEvent } from "@mebike/shared";
+import type { Buffer } from "node:buffer";
+
 import {
   DEVICE_TOPIC_PATTERNS,
+
   DeviceAcknowledgementSchema,
   DeviceRuntimeStatusSchema,
   DeviceTapEventSchema,
 } from "@mebike/shared";
-import { Effect, Layer, ManagedRuntime } from "effect";
+import { Effect, Layer, ManagedRuntime, Queue } from "effect";
 import process from "node:process";
 
 import {
@@ -48,6 +52,21 @@ const DeviceRuntimeWorkerLive = Layer.mergeAll(
   ),
 );
 
+const MESSAGE_QUEUE_CAPACITY = 256;
+const MESSAGE_WORKER_CONCURRENCY = 4;
+const SHUTDOWN_DRAIN_TIMEOUT_MS = 5000;
+
+type IncomingDeviceRuntimeMessage
+  = | { kind: "tap"; topic: string; payload: DeviceTapEvent }
+    | { kind: "status"; topic: string; payload: DeviceRuntimeStatus }
+    | { kind: "ack"; topic: string; payload: DeviceAcknowledgement };
+
+type WorkerDrainState = {
+  readonly stopIntake: () => void;
+  queuedMessages: number;
+  inFlightMessages: number;
+};
+
 /**
  * Phân loại topic để route message vào đúng nhánh xử lý.
  */
@@ -72,7 +91,27 @@ function topicKind(topic: string): "tap" | "status" | "ack" | null {
  */
 async function main() {
   const runtime = ManagedRuntime.make(DeviceRuntimeWorkerLive);
-  const runPromise = runtime.runPromise.bind(runtime);
+  let drainState: WorkerDrainState | null = null;
+
+  const waitForDrain = async () => {
+    const deadline = Date.now() + SHUTDOWN_DRAIN_TIMEOUT_MS;
+
+    while (true) {
+      if (!drainState || (drainState.queuedMessages === 0 && drainState.inFlightMessages === 0)) {
+        return;
+      }
+
+      if (Date.now() >= deadline) {
+        logger.warn({
+          queuedMessages: drainState.queuedMessages,
+          inFlightMessages: drainState.inFlightMessages,
+        }, "Timed out waiting for IoT runtime queue to drain");
+        return;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  };
 
   /**
    * Effect chính của worker:
@@ -84,6 +123,55 @@ async function main() {
   const startIotRuntime = Effect.gen(function* () {
     const mqtt = yield* Mqtt;
     const deviceTapService = yield* DeviceTapServiceTag;
+    const messageQueue = yield* Queue.dropping<IncomingDeviceRuntimeMessage>(MESSAGE_QUEUE_CAPACITY);
+
+    const processMessage = (message: IncomingDeviceRuntimeMessage) => {
+      switch (message.kind) {
+        case "tap":
+          return deviceTapService.handleTapEvent(message.payload).pipe(
+            Effect.tap(result =>
+              Effect.sync(() => {
+                logger.info({ topic: message.topic, tap: message.payload, result }, "Processed device tap event");
+              })),
+            Effect.catchAll(error =>
+              Effect.sync(() => {
+                logger.error({ err: error, topic: message.topic, tap: message.payload }, "Failed to process device tap event");
+              })),
+            Effect.asVoid,
+          );
+        case "status":
+          return Effect.sync(() => {
+            logger.info({ topic: message.topic, status: message.payload }, "Received device runtime status");
+          });
+        case "ack":
+          return Effect.sync(() => {
+            logger.info({ topic: message.topic, acknowledgement: message.payload }, "Received device acknowledgement");
+          });
+      }
+    };
+
+    const worker = Queue.take(messageQueue).pipe(
+      Effect.tap(() => Effect.sync(() => {
+        if (drainState) {
+          drainState.queuedMessages -= 1;
+          drainState.inFlightMessages += 1;
+        }
+      })),
+      Effect.flatMap(message =>
+        processMessage(message).pipe(
+          Effect.ensuring(Effect.sync(() => {
+            if (drainState) {
+              drainState.inFlightMessages -= 1;
+            }
+          })),
+        )),
+      Effect.forever,
+    );
+
+    yield* Effect.all(
+      Array.from({ length: MESSAGE_WORKER_CONCURRENCY }, () => worker.pipe(Effect.forkScoped)),
+      { concurrency: "unbounded" },
+    );
 
     yield* mqtt.subscribe([
       DEVICE_TOPIC_PATTERNS.tapEvents,
@@ -91,61 +179,88 @@ async function main() {
       DEVICE_TOPIC_PATTERNS.acknowledgements,
     ]);
 
-    yield* Effect.sync(() => {
-      mqtt.client.on("message", (topic, payloadBuffer) => {
-        const payloadText = payloadBuffer.toString("utf8");
-        const kind = topicKind(topic);
+    const enqueueMessage = (message: IncomingDeviceRuntimeMessage) => {
+      const offered = messageQueue.unsafeOffer(message);
+      if (!offered) {
+        logger.warn({
+          topic: message.topic,
+          kind: message.kind,
+          capacity: MESSAGE_QUEUE_CAPACITY,
+        }, "Dropped IoT runtime message because queue is full or shutdown");
+        return;
+      }
 
-        try {
-          const payload = JSON.parse(payloadText) as unknown;
+      if (drainState) {
+        drainState.queuedMessages += 1;
+      }
+    };
 
-          switch (kind) {
-            case "tap": {
-              const parsed = DeviceTapEventSchema.safeParse(payload);
-              if (!parsed.success) {
-                logger.warn({ topic, issues: parsed.error.flatten() }, "Discarded invalid device tap event");
-                return;
-              }
+    const onMessage = (topic: string, payloadBuffer: Buffer) => {
+      const payloadText = payloadBuffer.toString("utf8");
+      const kind = topicKind(topic);
 
-              void runPromise(deviceTapService.handleTapEvent(parsed.data)).then(
-                (result) => {
-                  logger.info({ topic, tap: parsed.data, result }, "Processed device tap event");
-                },
-                (error) => {
-                  logger.error({ err: error, topic, tap: parsed.data }, "Failed to process device tap event");
-                },
-              );
+      try {
+        const payload = JSON.parse(payloadText) as unknown;
+
+        switch (kind) {
+          case "tap": {
+            const parsed = DeviceTapEventSchema.safeParse(payload);
+            if (!parsed.success) {
+              logger.warn({ topic, issues: parsed.error.flatten() }, "Discarded invalid device tap event");
               return;
             }
-            case "status": {
-              const parsed = DeviceRuntimeStatusSchema.safeParse(payload);
-              if (!parsed.success) {
-                logger.warn({ topic, issues: parsed.error.flatten() }, "Discarded invalid device runtime status");
-                return;
-              }
 
-              logger.info({ topic, status: parsed.data }, "Received device runtime status");
-              return;
-            }
-            case "ack": {
-              const parsed = DeviceAcknowledgementSchema.safeParse(payload);
-              if (!parsed.success) {
-                logger.warn({ topic, issues: parsed.error.flatten() }, "Discarded invalid device acknowledgement");
-                return;
-              }
-
-              logger.info({ topic, acknowledgement: parsed.data }, "Received device acknowledgement");
-              return;
-            }
-            case null:
-              logger.debug({ topic }, "Ignored MQTT message outside device runtime topics");
+            enqueueMessage({ kind: "tap", topic, payload: parsed.data });
+            return;
           }
+          case "status": {
+            const parsed = DeviceRuntimeStatusSchema.safeParse(payload);
+            if (!parsed.success) {
+              logger.warn({ topic, issues: parsed.error.flatten() }, "Discarded invalid device runtime status");
+              return;
+            }
+
+            enqueueMessage({ kind: "status", topic, payload: parsed.data });
+            return;
+          }
+          case "ack": {
+            const parsed = DeviceAcknowledgementSchema.safeParse(payload);
+            if (!parsed.success) {
+              logger.warn({ topic, issues: parsed.error.flatten() }, "Discarded invalid device acknowledgement");
+              return;
+            }
+
+            enqueueMessage({ kind: "ack", topic, payload: parsed.data });
+            return;
+          }
+          case null:
+            logger.debug({ topic }, "Ignored MQTT message outside device runtime topics");
         }
-        catch (error) {
-          logger.error({ err: error, topic, payloadText }, "Failed to parse device runtime payload");
-        }
-      });
+      }
+      catch (error) {
+        logger.error({ err: error, topic, payloadText }, "Failed to parse device runtime payload");
+      }
+    };
+
+    yield* Effect.sync(() => {
+      const stopIntake = () => {
+        mqtt.client.off("message", onMessage);
+      };
+
+      drainState = {
+        stopIntake,
+        queuedMessages: 0,
+        inFlightMessages: 0,
+      };
+
+      mqtt.client.on("message", onMessage);
     });
+
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        drainState?.stopIntake();
+        drainState = null;
+      }).pipe(Effect.zipRight(messageQueue.shutdown)));
 
     logger.info({
       topics: [
@@ -163,6 +278,9 @@ async function main() {
       logger.info({ signal }, "IoT runtime shutdown initiated");
     }
 
+    drainState?.stopIntake();
+    await waitForDrain();
+
     await runtime.dispose();
   };
 
@@ -171,7 +289,7 @@ async function main() {
   process.on("SIGTERM", () =>
     void shutdown("SIGTERM").finally(() => process.exit(0)));
 
-  await runPromise(startIotRuntime);
+  await runtime.runPromise(Effect.scoped(startIotRuntime));
 }
 
 /**
