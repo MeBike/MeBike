@@ -26,20 +26,17 @@ export const useDistributionRequest = ({
 } : DistributionRequestActionProps) => {
     const router = useRouter();
     const queryClient = useQueryClient();
-    const {data : adminViewDistributionRequest, refetch : refetchAdminViewDistributionRequest, isFetching : isFetchingAdminViewDistributionRequest} = useGetAdminViewDistributionRequestQuery({page,pageSize,status});
-    const {data : staffViewDistributionRequest, refetch : refetchStaffViewDistributionRequest, isFetching : isFetchingStaffViewDistributionRequest} = useGetStaffViewDistributionRequestQuery({page,pageSize,status});
-    const {data : agencyViewDistributionRequest, refetch : refetchAgencyViewDistributionRequest, isFetching : isFetchingAgencyViewDistributionRequest} = useGetAgencyViewDistributionRequestQuery({page,pageSize,status});
-    const {data : managerViewDistributionRequest, refetch : refetchManagerViewDistributionRequest, isFetching : isFetchingManagerViewDistributionRequest} = useGetManagerViewDistributionRequestQuery({page,pageSize,status});
-    // const getAdminViewDistributionRequest = useCallback(() => {
-    //     if(!hasToken){
-    //         router.push("/login");
-    //         return;
-    //     }
-    //     refetchAdminViewDistributionRequest();
-    // }, [refetchAdminViewDistributionRequest]);
-    const getAdminViewDistributionRequest = () => {
+    const {data : adminViewDistributionRequest, refetch : refetchAdminViewDistributionRequest, isFetching : isFetchingAdminViewDistributionRequest} = useGetAdminViewDistributionRequestQuery({page:page,pageSize:pageSize,status:status});
+    const {data : staffViewDistributionRequest, refetch : refetchStaffViewDistributionRequest, isFetching : isFetchingStaffViewDistributionRequest} = useGetStaffViewDistributionRequestQuery({page:page,pageSize:pageSize,status:status});
+    const {data : agencyViewDistributionRequest, refetch : refetchAgencyViewDistributionRequest, isFetching : isFetchingAgencyViewDistributionRequest} = useGetAgencyViewDistributionRequestQuery({page:page,pageSize:pageSize,status:status});
+    const {data : managerViewDistributionRequest, refetch : refetchManagerViewDistributionRequest, isFetching : isFetchingManagerViewDistributionRequest} = useGetManagerViewDistributionRequestQuery({page:page,pageSize:pageSize,status:status});
+    const getAdminViewDistributionRequest = useCallback(() => {
+        if(!hasToken){
+            router.push("/login");
+            return;
+        }
         refetchAdminViewDistributionRequest();
-    }
+    }, [refetchAdminViewDistributionRequest,page,pageSize]);
     const getStaffViewDistributionRequest = useCallback(() => {
         if(!hasToken){
             router.push("/login");
