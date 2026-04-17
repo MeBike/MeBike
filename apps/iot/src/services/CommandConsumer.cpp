@@ -143,14 +143,15 @@ void CommandConsumer::publishAck(MQTTManager &mqttManager,
                                  std::optional<std::string_view> detail)
 {
     StaticJsonDocument<192> doc;
+    std::optional<std::string> ownedDetail;
     doc["deviceId"] = deviceContext.deviceId.c_str();
     doc["requestId"] = command.requestId.c_str();
     doc["action"] = command.action.c_str();
     doc["status"] = status;
     if (detail.has_value())
     {
-        const std::string detailText(detail->data(), detail->size());
-        doc["detail"] = detailText.c_str();
+        ownedDetail.emplace(detail->data(), detail->size());
+        doc["detail"] = ownedDetail->c_str();
     }
 
     char payload[192];
