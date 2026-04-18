@@ -210,8 +210,8 @@ Tat ca query params deu optional:
 | --- | --- | --- |
 | `page` | integer | mac dinh `1` |
 | `pageSize` | integer | mac dinh `20` |
-| `from` | date hoac datetime | lower bound theo `appliedAt = rental_billing_records.created_at` |
-| `to` | date hoac datetime | upper bound theo `appliedAt = rental_billing_records.created_at` |
+| `from` | date hoac datetime | lower bound theo `"Rental".end_time` |
+| `to` | date hoac datetime | upper bound theo `"Rental".end_time` |
 | `userId` | uuid v7 | filter theo `"Rental".user_id` |
 | `rentalId` | uuid v7 | filter theo `rental_billing_records.rental_id` |
 | `discountAmount` | integer > 0 | filter exact theo `coupon_discount_amount` |
@@ -226,15 +226,14 @@ GET /v1/admin/coupon-usage-logs?discountAmount=2000
 GET /v1/admin/coupon-usage-logs?subscriptionApplied=false
 GET /v1/admin/coupon-usage-logs?userId=<uuid>
 GET /v1/admin/coupon-usage-logs?rentalId=<uuid>
-GET /v1/admin/coupon-usage-logs?from=2026-04-17T15:00:00.000Z&to=2026-04-17T15:05:00.000Z
+GET /v1/admin/coupon-usage-logs?from=2026-03-01&to=2026-03-31
 ```
 
 Luu y rat quan trong:
 
-- `from/to` cua API nay khong filter theo `Rental.end_time`
-- `from/to` filter theo `appliedAt = rental_billing_records.created_at`
-- sau `seed:demo`, tat ca billing records duoc tao trong luc seed chay, nen `appliedAt` se nam quanh thoi diem seed run
-- vi vay frontend khong nen dung moc `2026-03-01` hoac `2026-04-01` de test usage logs theo month nhu stats API
+- `from/to` filter theo ngay rental ket thuc: `"Rental".end_time`
+- `appliedAt` van la thoi diem billing record duoc tao, dung de audit/sort, nhung khong phai moc filter date range
+- cach nay giup `GET /v1/admin/coupon-stats` va `GET /v1/admin/coupon-usage-logs` cung dung mot y nghia ngay: ngay chuyen xe ket thuc
 
 ### 5.3. Response shape
 
@@ -562,25 +561,27 @@ Ky vong:
 - `error = Invalid request payload`
 - `details.code = VALIDATION_ERROR`
 
-### 8.12. Filter `from/to` theo `appliedAt` that
+### 8.12. Filter `from/to` theo ngay rental ket thuc
 
-Do `appliedAt` la timestamp thuc te luc seed chay, frontend nen lay khoang ngay that trong pgAdmin truoc.
+`from/to` cua API nay filter theo `"Rental".end_time`, khong filter theo `rental_billing_records.created_at`.
+Sau `seed:demo`, frontend nen lay khoang `end_time` that trong pgAdmin truoc.
 
 Chay SQL:
 
 ```sql
 SELECT
-  MIN(rb.created_at) AS min_applied_at,
-  MAX(rb.created_at) AS max_applied_at,
+  MIN(r.end_time) AS min_end_time,
+  MAX(r.end_time) AS max_end_time,
   COUNT(*) AS total_logs
 FROM rental_billing_records rb
+JOIN "Rental" r ON r.id = rb.rental_id
 WHERE rb.coupon_discount_amount > 0;
 ```
 
 Sau do goi:
 
 ```text
-GET /v1/admin/coupon-usage-logs?from=<min_applied_at>&to=<max_applied_at>
+GET /v1/admin/coupon-usage-logs?from=<min_end_time>&to=<max_end_time>
 ```
 
 Ky vong:
@@ -854,7 +855,8 @@ Frontend admin audit screen cho usage logs co the chia nhu sau:
 
 UI note:
 
-- `appliedAt` la field quan trong nhat cho audit sort
+- `endTime` la field quan trong nhat cho filter ngay bao cao
+- `appliedAt` la field audit/sort cho thoi diem billing record duoc tao
 - `couponDiscountAmount` nen format VND
 - `derivedTier` co the render bang badge
 - `subscriptionApplied=true` la anomaly filter, frontend co the dat label ro de tranh hieu nham
@@ -987,6 +989,6 @@ Neu chi can test nhanh:
 5. mo pgAdmin va chay SQL breakdown de doi chieu
 6. dung `user01` va `user02` de test `userId` filter
 7. dung `rental_id` lay tu SQL de test `rentalId` filter
-8. dung khoang `appliedAt` that lay tu SQL de test `from/to`
+8. dung khoang `end_time` that lay tu SQL de test `from/to`
 
 Neu UI list, filter, pagination, empty state va formatting VND hien thi dung bo so tren thi frontend da bam dung contract hien tai cua backend cho usage logs.

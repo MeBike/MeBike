@@ -718,17 +718,17 @@ export function makeCouponQueryRepository(
               ? { equals: filter.discountAmount.toString() }
               : {}),
           },
-          ...(filter.from || filter.to
-            ? {
-                createdAt: {
-                  ...(filter.from ? { gte: filter.from } : {}),
-                  ...(filter.to ? { lte: filter.to } : {}),
-                },
-              }
-            : {}),
           rental: {
             is: {
               status: "COMPLETED",
+              ...(filter.from || filter.to
+                ? {
+                    endTime: {
+                      ...(filter.from ? { gte: filter.from } : {}),
+                      ...(filter.to ? { lte: filter.to } : {}),
+                    },
+                  }
+                : {}),
               ...(filter.userId ? { userId: filter.userId } : {}),
               ...(filter.rentalId ? { id: filter.rentalId } : {}),
               ...(filter.subscriptionApplied === undefined

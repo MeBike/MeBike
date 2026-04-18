@@ -384,18 +384,21 @@ describe("admin coupon usage logs routing e2e", () => {
     });
 
     const outsideRange = await createCompletedRentalWithBilling({
-      appliedAt: "2026-04-01T00:00:00.000Z",
+      appliedAt: "2026-04-10T07:00:00.000Z",
+      endTime: "2026-04-01T00:00:00.000Z",
       couponDiscountAmount: "1000",
       couponRule: tier1Rule,
     });
     const inRange = await createCompletedRentalWithBilling({
-      appliedAt: "2026-04-10T08:00:00.000Z",
+      appliedAt: "2026-04-11T08:00:00.000Z",
+      endTime: "2026-04-10T08:00:00.000Z",
       couponDiscountAmount: "2000",
       couponRule: tier2Rule,
       userId: filteredUser.id,
     });
     const anomalyWithSubscription = await createCompletedRentalWithBilling({
-      appliedAt: "2026-04-10T09:00:00.000Z",
+      appliedAt: "2026-04-11T09:00:00.000Z",
+      endTime: "2026-04-10T09:00:00.000Z",
       couponDiscountAmount: "4000",
       couponRule: tier4Rule,
       subscriptionApplied: true,
