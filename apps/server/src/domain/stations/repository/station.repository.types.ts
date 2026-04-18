@@ -46,6 +46,13 @@ export type StationQueryRepo = {
   getByAgencyId: (
     agencyId: string,
   ) => Effect.Effect<Option.Option<StationRow>>;
+  existsByExactLocation: (
+    args: {
+      readonly address: string;
+      readonly latitude: number;
+      readonly longitude: number;
+    },
+  ) => Effect.Effect<boolean>;
   findIdNameAddressByIds: (
     ids: readonly string[],
   ) => Effect.Effect<readonly { id: string; name: string; address: string }[]>;

@@ -69,6 +69,7 @@ export const AgencyRequestErrorCodeSchema = z.enum([
   "AGENCY_REQUEST_NOT_FOUND",
   "AGENCY_REQUEST_NOT_OWNED",
   "INVALID_AGENCY_REQUEST_STATUS_TRANSITION",
+  "STATION_LOCATION_ALREADY_EXISTS",
 ]).openapi("AgencyRequestErrorCode");
 
 export const AgencyRequestErrorDetailSchema = z
@@ -78,6 +79,9 @@ export const AgencyRequestErrorDetailSchema = z
     userId: z.uuidv7().optional(),
     currentStatus: AgencyRequestStatusSchema.optional(),
     nextStatus: AgencyRequestStatusSchema.optional(),
+    address: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
   })
   .openapi("AgencyRequestErrorDetail");
 
@@ -92,6 +96,7 @@ export const agencyRequestErrorMessages = {
   AGENCY_REQUEST_NOT_FOUND: "Agency request not found",
   AGENCY_REQUEST_NOT_OWNED: "Agency request does not belong to user",
   INVALID_AGENCY_REQUEST_STATUS_TRANSITION: "Invalid agency request status transition",
+  STATION_LOCATION_ALREADY_EXISTS: "Station address and coordinates already exist",
 } as const;
 
 export {

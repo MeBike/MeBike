@@ -241,6 +241,41 @@ describe("agency requests routing", () => {
     });
   });
 
+  it("rejects submitting an agency request when station exact location already exists", async () => {
+    await fixture.factories.station({
+      name: "Existing Agency Request Location",
+      address: "02 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+      latitude: 10.8486,
+      longitude: 106.7717,
+    });
+
+    const beforeCount = await fixture.prisma.agencyRequest.count();
+
+    const response = await submitAgencyRequest({
+      requesterEmail: "duplicate-submit-location@example.com",
+      agencyName: "Duplicate Submit Location Agency",
+      stationName: "Ga Duplicate Submit Location",
+      stationAddress: "02 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+      stationLatitude: 10.8486,
+      stationLongitude: 106.7717,
+      stationTotalCapacity: 20,
+      stationReturnSlotLimit: 18,
+    });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Station address and coordinates already exist",
+      details: {
+        code: "STATION_LOCATION_ALREADY_EXISTS",
+        address: "02 Xa Lo Ha Noi, Thu Duc, TP.HCM",
+        latitude: 10.8486,
+        longitude: 106.7717,
+      },
+    });
+    expect(await fixture.prisma.agencyRequest.count()).toBe(beforeCount);
+  });
+
   it("rejects invalid requester email", async () => {
     const beforeCount = await fixture.prisma.agencyRequest.count();
 
@@ -639,6 +674,126 @@ describe("agency requests routing", () => {
       to: "approved-agency-request@example.com",
       subject: "MeBike phê duyệt tài khoản Agency",
     });
+  });
+
+  it("returns duplicate station location when approving a pending request whose location already exists", async () => {
+    await fixture.factories.station({
+      name: "Existing Legacy Request Location",
+      address: "88 Nguyen Hue, Ben Nghe, District 1, TP.HCM",
+      latitude: 10.775,
+      longitude: 106.699,
+    });
+
+    const agencyRequest = await fixture.prisma.agencyRequest.create({
+      data: {
+        requesterEmail: "legacy-duplicate-location@example.com",
+        agencyName: "Legacy Duplicate Location Agency",
+        agencyAddress: "88 Nguyen Hue, Ben Nghe, District 1, TP.HCM",
+        agencyContactPhone: "0987654321",
+        stationName: "Ga Legacy Duplicate Location",
+        stationAddress: "88 Nguyen Hue, Ben Nghe, District 1, TP.HCM",
+        stationLatitude: 10.775,
+        stationLongitude: 106.699,
+        stationTotalCapacity: 20,
+        stationReturnSlotLimit: 18,
+        status: "PENDING",
+      },
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await approveAgencyRequest(agencyRequest.id, {}, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Station address and coordinates already exist",
+      details: {
+        code: "STATION_LOCATION_ALREADY_EXISTS",
+        address: "88 Nguyen Hue, Ben Nghe, District 1, TP.HCM",
+        latitude: 10.775,
+        longitude: 106.699,
+      },
+    });
+
+    const savedRequest = await fixture.prisma.agencyRequest.findUnique({
+      where: { id: agencyRequest.id },
+      select: {
+        status: true,
+        reviewedByUserId: true,
+        approvedAgencyId: true,
+        createdAgencyUserId: true,
+      },
+    });
+
+    expect(savedRequest).toEqual({
+      status: "PENDING",
+      reviewedByUserId: null,
+      approvedAgencyId: null,
+      createdAgencyUserId: null,
+    });
+    expect(await fixture.prisma.agency.findFirst({
+      where: { name: "Legacy Duplicate Location Agency" },
+    })).toBeNull();
+  });
+
+  it("returns duplicate station location when a station is created after request submit but before approve", async () => {
+    const submitResponse = await submitAgencyRequest({
+      requesterEmail: "race-duplicate-location@example.com",
+      agencyName: "Race Duplicate Location Agency",
+      agencyAddress: "77 Race Street, Thu Duc, TP.HCM",
+      agencyContactPhone: "0987654321",
+      stationName: "Ga Race Duplicate Location",
+      stationAddress: "77 Race Street, Thu Duc, TP.HCM",
+      stationLatitude: 10.8421,
+      stationLongitude: 106.8284,
+      stationTotalCapacity: 20,
+      stationReturnSlotLimit: 18,
+    });
+    const submitted = await submitResponse.json() as AgencyRequestsContracts.SubmitAgencyRequestResponse;
+
+    expect(submitResponse.status).toBe(201);
+
+    await fixture.factories.station({
+      name: "Station Created After Agency Request Submit",
+      address: "77 Race Street, Thu Duc, TP.HCM",
+      latitude: 10.8421,
+      longitude: 106.8284,
+    });
+
+    const token = fixture.auth.makeAccessToken({ userId: ADMIN_USER_ID, role: "ADMIN" });
+    const response = await approveAgencyRequest(submitted.id, {}, { token });
+    const body = await response.json() as AgencyRequestsContracts.AgencyRequestErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: "Station address and coordinates already exist",
+      details: {
+        code: "STATION_LOCATION_ALREADY_EXISTS",
+        address: "77 Race Street, Thu Duc, TP.HCM",
+        latitude: 10.8421,
+        longitude: 106.8284,
+      },
+    });
+
+    const savedRequest = await fixture.prisma.agencyRequest.findUnique({
+      where: { id: submitted.id },
+      select: {
+        status: true,
+        reviewedByUserId: true,
+        approvedAgencyId: true,
+        createdAgencyUserId: true,
+      },
+    });
+
+    expect(savedRequest).toEqual({
+      status: "PENDING",
+      reviewedByUserId: null,
+      approvedAgencyId: null,
+      createdAgencyUserId: null,
+    });
+    expect(await fixture.prisma.agency.findFirst({
+      where: { name: "Race Duplicate Location Agency" },
+    })).toBeNull();
   });
 
   it("returns 404 when admin approves an unknown agency request", async () => {

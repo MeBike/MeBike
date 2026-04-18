@@ -4,6 +4,10 @@ import type { PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { makeAgencyAccountProvisionService } from "@/domain/agency-account-provisioning";
+import {
+  StationLocationAlreadyExists,
+  makeStationQueryRepository,
+} from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type {
@@ -58,7 +62,10 @@ export type AgencyRequestService = {
   >;
   submit: (
     input: SubmitAgencyRequestInput,
-  ) => Effect.Effect<AgencyRequestRow, AgencyRequestRepositoryError>;
+  ) => Effect.Effect<
+    AgencyRequestRow,
+    AgencyRequestRepositoryError | StationLocationAlreadyExists
+  >;
   approve: (
     agencyRequestId: string,
     input: ApproveAgencyRequestInput,
@@ -67,6 +74,7 @@ export type AgencyRequestService = {
     | AgencyRequestRepositoryError
     | AgencyRequestNotFound
     | InvalidAgencyRequestStatusTransition
+    | StationLocationAlreadyExists
   >;
   reject: (
     agencyRequestId: string,
@@ -103,6 +111,7 @@ function makeAgencyRequestService(
   client: PrismaClient,
 ): AgencyRequestService {
   const provisionService = makeAgencyAccountProvisionService(client);
+  const stationQueryRepo = makeStationQueryRepository(client);
 
   return {
     getById: id => repo.findById(id),
@@ -118,7 +127,26 @@ function makeAgencyRequestService(
       }),
     list: filter => repo.list(filter),
     listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),
-    submit: input => repo.submit(input),
+    submit: input =>
+      Effect.gen(function* () {
+        const stationExists = yield* stationQueryRepo.existsByExactLocation({
+          address: input.stationAddress,
+          latitude: input.stationLatitude,
+          longitude: input.stationLongitude,
+        });
+
+        if (stationExists) {
+          return yield* Effect.fail(
+            new StationLocationAlreadyExists({
+              address: input.stationAddress,
+              latitude: input.stationLatitude,
+              longitude: input.stationLongitude,
+            }),
+          );
+        }
+
+        return yield* repo.submit(input);
+      }),
     approve: (agencyRequestId, input) =>
       Effect.gen(function* () {
         const txAgencyRequestRepo = makeAgencyRequestRepository(client);
@@ -208,13 +236,6 @@ function makeAgencyRequestService(
             }),
           )),
         Effect.catchTag("StationNameAlreadyExists", err =>
-          Effect.fail(
-            new AgencyRequestRepositoryErrorData({
-              operation: "approve.createStation",
-              cause: err,
-            }),
-          )),
-        Effect.catchTag("StationLocationAlreadyExists", err =>
           Effect.fail(
             new AgencyRequestRepositoryErrorData({
               operation: "approve.createStation",

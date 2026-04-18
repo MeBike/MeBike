@@ -1184,8 +1184,7 @@ Body:
   "stationLatitude": 10.8495,
   "stationLongitude": 106.7712,
   "stationTotalCapacity": 20,
-  "stationPickupSlotLimit": 10,
-  "stationReturnSlotLimit": 10,
+  "stationReturnSlotLimit": 18,
   "description": "New agency request for VINCOM Thu Duc"
 }
 ```
@@ -1195,6 +1194,7 @@ Ky vong:
 - `201`
 - `status = "PENDING"`
 - response co day du `requesterEmail`, `agencyName`, `stationName`, `stationAddress`
+- chua tao `Agency`, `Station`, hay account `AGENCY`
 
 Kiem tra DB:
 
@@ -1208,7 +1208,6 @@ SELECT
   station_latitude,
   station_longitude,
   station_total_capacity,
-  station_pickup_slot_limit,
   station_return_slot_limit,
   status
 FROM "AgencyRequest"
@@ -1216,6 +1215,12 @@ ORDER BY created_at DESC;
 ```
 
 Lay `agencyRequestId` vua tao.
+
+Luu y exact station location uniqueness:
+
+- submit se bi chan som neu da co `Station` cung exact `address + latitude + longitude`
+- loi tra ve HTTP `400` voi `details.code = "STATION_LOCATION_ALREADY_EXISTS"`
+- rule nay khong lien quan `pickupSlotLimit`; agency request chi dung `stationReturnSlotLimit`
 
 ## 21. Admin approve agency request va auto-create station
 
@@ -1273,6 +1278,361 @@ Ky vong:
 
 - agency moi da co station moi
 - station moi co `station_type = 'AGENCY'`
+- station moi dung `return_slot_limit` tu `stationReturnSlotLimit`
+
+Luu y duplicate location khi approve:
+
+- approve van phai handle `STATION_LOCATION_ALREADY_EXISTS` du submit da pre-check
+- ly do: pending request cu co the da ton tai truoc rule moi, hoac race condition xay ra giua submit va approve
+- neu approve fail vi duplicate location thi transaction rollback, request van `PENDING`, khong tao `Agency`, `Station`, hay account `AGENCY`
+
+## 21A. Verify exact station location uniqueness cho agency request
+
+Section nay verify phan moi sua: agency request submit va agency request approve
+dong bo duplicate exact station location voi station/admin agency provisioning flow.
+
+Rule duplicate location la exact match tren:
+
+```text
+Station.address + Station.latitude + Station.longitude
+```
+
+Response duplicate ky vong:
+
+```json
+{
+  "error": "Station address and coordinates already exist",
+  "details": {
+    "code": "STATION_LOCATION_ALREADY_EXISTS",
+    "address": "20 Demo Duplicate Submit Street, Thu Duc, TP.HCM",
+    "latitude": 10.848601,
+    "longitude": 106.771701
+  }
+}
+```
+
+### 21A.1. Submit agency request bi reject neu station exact location da ton tai
+
+Tao station truoc bang Scalar:
+
+```text
+POST /v1/stations
+```
+
+Body:
+
+```json
+{
+  "name": "Demo Existing Exact Location 01",
+  "address": "20 Demo Duplicate Submit Street, Thu Duc, TP.HCM",
+  "stationType": "INTERNAL",
+  "totalCapacity": 20,
+  "returnSlotLimit": 20,
+  "latitude": 10.848601,
+  "longitude": 106.771701
+}
+```
+
+Ky vong: HTTP `201`.
+
+Submit agency request cung exact location:
+
+```text
+POST /v1/agency-requests
+```
+
+Body:
+
+```json
+{
+  "requesterEmail": "demo-submit-dup-01@example.com",
+  "agencyName": "Demo Submit Duplicate Agency 01",
+  "stationName": "Ga Demo Submit Duplicate 01",
+  "stationAddress": "20 Demo Duplicate Submit Street, Thu Duc, TP.HCM",
+  "stationLatitude": 10.848601,
+  "stationLongitude": 106.771701,
+  "stationTotalCapacity": 20,
+  "stationReturnSlotLimit": 18
+}
+```
+
+Ky vong:
+
+- HTTP `400`
+- `details.code = "STATION_LOCATION_ALREADY_EXISTS"`
+- response co `address`, `latitude`, `longitude`
+
+Kiem tra DB:
+
+```sql
+SELECT id, status, requester_email, agency_name
+FROM "AgencyRequest"
+WHERE requester_email = 'demo-submit-dup-01@example.com';
+```
+
+Ky vong: `0 rows`.
+
+### 21A.2. Exact match phai trung ca address + latitude + longitude
+
+Cung address nhung khac toa do van duoc submit:
+
+```json
+{
+  "requesterEmail": "demo-same-address-diff-coord-01@example.com",
+  "agencyName": "Demo Same Address Diff Coord Agency 01",
+  "stationName": "Ga Same Address Diff Coord 01",
+  "stationAddress": "20 Demo Duplicate Submit Street, Thu Duc, TP.HCM",
+  "stationLatitude": 10.848602,
+  "stationLongitude": 106.771702,
+  "stationTotalCapacity": 20,
+  "stationReturnSlotLimit": 18
+}
+```
+
+Khac address nhung cung toa do van duoc submit:
+
+```json
+{
+  "requesterEmail": "demo-diff-address-same-coord-01@example.com",
+  "agencyName": "Demo Diff Address Same Coord Agency 01",
+  "stationName": "Ga Diff Address Same Coord 01",
+  "stationAddress": "21 Demo Different Address Street, Thu Duc, TP.HCM",
+  "stationLatitude": 10.848601,
+  "stationLongitude": 106.771701,
+  "stationTotalCapacity": 20,
+  "stationReturnSlotLimit": 18
+}
+```
+
+Ky vong: ca 2 request deu HTTP `201`, `status = "PENDING"`.
+
+Kiem tra DB:
+
+```sql
+SELECT requester_email, status, station_address, station_latitude, station_longitude
+FROM "AgencyRequest"
+WHERE requester_email IN (
+  'demo-same-address-diff-coord-01@example.com',
+  'demo-diff-address-same-coord-01@example.com'
+)
+ORDER BY requester_email;
+```
+
+Ky vong: 2 rows `PENDING`.
+
+### 21A.3. Approve pending request cu bi reject neu location da co station
+
+Case nay mo phong pending request cu, vi public submit hien da chan duplicate
+truoc khi tao request.
+
+Tao station truoc bang Scalar:
+
+```text
+POST /v1/stations
+```
+
+Body:
+
+```json
+{
+  "name": "Demo Existing Legacy Approve Location 01",
+  "address": "30 Demo Legacy Duplicate Street, Thu Duc, TP.HCM",
+  "stationType": "INTERNAL",
+  "totalCapacity": 20,
+  "returnSlotLimit": 20,
+  "latitude": 10.775001,
+  "longitude": 106.699001
+}
+```
+
+Tao legacy pending request bang pgAdmin. Luu y phai set `id` thu cong vi
+`@default(uuid(7))` la Prisma-side default, insert truc tiep SQL se khong tu
+sinh id.
+
+```sql
+DELETE FROM "AgencyRequest"
+WHERE id = '019b17bd-d130-7e7d-be69-91ceef7d1001'::uuid
+   OR requester_email = 'demo-legacy-approve-dup-01@example.com';
+
+INSERT INTO "AgencyRequest" (
+  id,
+  requester_email,
+  requester_phone,
+  agency_name,
+  agency_address,
+  agency_contact_phone,
+  station_name,
+  station_address,
+  station_latitude,
+  station_longitude,
+  station_total_capacity,
+  station_return_slot_limit,
+  status,
+  description,
+  updated_at
+)
+VALUES (
+  '019b17bd-d130-7e7d-be69-91ceef7d1001'::uuid,
+  'demo-legacy-approve-dup-01@example.com',
+  '0912345678',
+  'Demo Legacy Approve Duplicate Agency 01',
+  '30 Demo Legacy Duplicate Street, Thu Duc, TP.HCM',
+  '0987654321',
+  'Ga Demo Legacy Approve Duplicate 01',
+  '30 Demo Legacy Duplicate Street, Thu Duc, TP.HCM',
+  10.775001,
+  106.699001,
+  20,
+  18,
+  'PENDING',
+  'Legacy pending request for duplicate approve demo',
+  now()
+)
+RETURNING id;
+```
+
+Approve bang Scalar:
+
+```text
+POST /v1/admin/agency-requests/019b17bd-d130-7e7d-be69-91ceef7d1001/approve
+```
+
+Body:
+
+```json
+{}
+```
+
+Ky vong:
+
+- HTTP `400`
+- `details.code = "STATION_LOCATION_ALREADY_EXISTS"`
+- request van `PENDING`
+- khong tao `Agency`, `Station`, hay account `AGENCY` moi
+
+Kiem tra DB:
+
+```sql
+SELECT id, status, reviewed_by_user_id, reviewed_at,
+       approved_agency_id, created_agency_user_id
+FROM "AgencyRequest"
+WHERE id = '019b17bd-d130-7e7d-be69-91ceef7d1001'::uuid;
+```
+
+Ky vong: `status = 'PENDING'`, cac cot review/approve/user la `NULL`.
+
+```sql
+SELECT id, name
+FROM "Agency"
+WHERE name = 'Demo Legacy Approve Duplicate Agency 01';
+```
+
+Ky vong: `0 rows`.
+
+### 21A.4. Race condition: request tao truoc, station trung tao sau
+
+Submit request truoc khi location co station:
+
+```text
+POST /v1/agency-requests
+```
+
+Body:
+
+```json
+{
+  "requesterEmail": "demo-race-approve-dup-01@example.com",
+  "requesterPhone": "0912345678",
+  "agencyName": "Demo Race Approve Duplicate Agency 01",
+  "agencyAddress": "40 Demo Race Duplicate Street, Thu Duc, TP.HCM",
+  "agencyContactPhone": "0987654321",
+  "stationName": "Ga Demo Race Approve Duplicate 01",
+  "stationAddress": "40 Demo Race Duplicate Street, Thu Duc, TP.HCM",
+  "stationLatitude": 10.842201,
+  "stationLongitude": 106.828501,
+  "stationTotalCapacity": 20,
+  "stationReturnSlotLimit": 18
+}
+```
+
+Ky vong: HTTP `201`, copy `id`.
+
+Tao station trung exact location:
+
+```text
+POST /v1/stations
+```
+
+Body:
+
+```json
+{
+  "name": "Demo Station Created During Race 01",
+  "address": "40 Demo Race Duplicate Street, Thu Duc, TP.HCM",
+  "stationType": "INTERNAL",
+  "totalCapacity": 20,
+  "returnSlotLimit": 20,
+  "latitude": 10.842201,
+  "longitude": 106.828501
+}
+```
+
+Approve request vua tao:
+
+```text
+POST /v1/admin/agency-requests/{id}/approve
+```
+
+Body:
+
+```json
+{}
+```
+
+Ky vong: HTTP `400`, `details.code = "STATION_LOCATION_ALREADY_EXISTS"`.
+
+Kiem tra DB:
+
+```sql
+SELECT id, status, reviewed_by_user_id, reviewed_at,
+       approved_agency_id, created_agency_user_id
+FROM "AgencyRequest"
+WHERE requester_email = 'demo-race-approve-dup-01@example.com';
+```
+
+Ky vong: request van `PENDING`, cac cot review/approve/user la `NULL`.
+
+```sql
+SELECT id, name, address, station_type, agency_id, latitude, longitude
+FROM "Station"
+WHERE address = '40 Demo Race Duplicate Street, Thu Duc, TP.HCM'
+  AND latitude = 10.842201
+  AND longitude = 106.828501;
+```
+
+Ky vong: chi co station tao de mo phong race; khong co agency station moi tu
+approve.
+
+### 21A.5. Kiem tra DB unique constraint
+
+```sql
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE tablename = 'Station'
+  AND indexname = 'uq_station_exact_location';
+```
+
+Ky vong: co index `uq_station_exact_location` tren `address`, `latitude`,
+`longitude`.
+
+```sql
+SELECT address, latitude, longitude, COUNT(*) AS total
+FROM "Station"
+GROUP BY address, latitude, longitude
+HAVING COUNT(*) > 1;
+```
+
+Ky vong: `0 rows`.
 
 ## 22. Verify agency API khong con dung address o root
 
@@ -1391,12 +1751,17 @@ Thu tu khuyen nghi:
 13. test incident bi chan o agency station
 14. test submit agency request
 15. test approve agency request va auto-create station
+16. test submit agency request duplicate exact station location
+17. test approve agency request duplicate exact station location va race condition
 
 ## 25. Ghi chu khi test
 
 - Khong hardcode UUID tu lan seed truoc. Moi lan reset DB nen lay lai ID bang SQL baseline.
 - Neu da approve bike swap request roi thi muon test reject phai reset lai DB hoac tao request pending moi.
 - `POST /v1/agency-requests` bat buoc co `requesterEmail`.
+- `POST /v1/agency-requests` se reject neu da co `Station` cung exact `address + latitude + longitude`.
+- `POST /v1/admin/agency-requests/{id}/approve` van phai handle duplicate exact station location de chong pending request cu va race condition.
+- Loi duplicate station location phai la HTTP `400` voi `details.code = "STATION_LOCATION_ALREADY_EXISTS"`.
 - `PUT /v1/rentals/{rentalId}/end` hien tai chi hop le cho `STAFF` hoac `AGENCY`, khong con `ADMIN`.
 - `incident` khong con ho tro `AGENCY` role va khong duoc tao o station `AGENCY`.
 - `bike swap` da duoc gop thanh operator routes chung `/v1/operators/bike-swap-requests...`; quyen duoc resolve theo role dang dang nhap va owner cua station.

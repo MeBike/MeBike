@@ -39,6 +39,7 @@ export type StationReadRepo = Pick<
   | "listWithOffset"
   | "getById"
   | "getByAgencyId"
+  | "existsByExactLocation"
   | "findIdNameAddressByIds"
   | "listContextExcludingId"
   | "listNearest"
@@ -232,6 +233,28 @@ export function makeStationReadRepository(
 
         return Option.some(station);
       }).pipe(defectOn(StationRepositoryError));
+    },
+
+    existsByExactLocation({ address, latitude, longitude }) {
+      return Effect.tryPromise({
+        try: () =>
+          client.station.findFirst({
+            where: {
+              address,
+              latitude,
+              longitude,
+            },
+            select: { id: true },
+          }),
+        catch: cause =>
+          new StationRepositoryError({
+            operation: "existsByExactLocation",
+            cause,
+          }),
+      }).pipe(
+        Effect.map(row => row !== null),
+        defectOn(StationRepositoryError),
+      );
     },
 
     findIdNameAddressByIds(ids) {
