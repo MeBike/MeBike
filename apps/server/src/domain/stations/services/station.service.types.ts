@@ -19,6 +19,7 @@ import type {
   CreateStationInput,
   NearestSearchArgs,
   NearestStationRow,
+  StationContextRow,
   StationFilter,
   StationRevenueStats,
   StationRow,
@@ -95,6 +96,10 @@ export type StationQueryService = {
    * @returns Effect tra ve tram neu tim thay.
    */
   getStationById: (id: string) => Effect.Effect<StationRow, import("../errors").StationNotFound>;
+
+  listContextExcludingId: (
+    excludedId: string,
+  ) => Effect.Effect<readonly StationContextRow[]>;
 
   /**
    * Tim tram gan nhat theo vi tri hien tai.

@@ -6,6 +6,7 @@ import { environmentRoutes } from "./environment";
 import { fixedSlotTemplatesRoutes } from "./fixed-slots";
 import { healthRoutes } from "./health";
 import { incidentsRoutes } from "./incidents";
+import { operatorsRoutes } from "./operators";
 import { ratingsRoutes } from "./ratings";
 import { redistributionRoutes } from "./redistribution";
 import { rentalsRoutes } from "./rentals";
@@ -27,6 +28,7 @@ export * from "./environment";
 export * from "./fixed-slots";
 export * from "./health";
 export * from "./incidents";
+export * from "./operators";
 export * from "./ratings";
 export * from "./redistribution";
 export * from "./rentals";
@@ -59,6 +61,7 @@ export const serverRoutes = {
   wallets: walletsRoutes,
   stripe: stripeRoutes,
   incidents: incidentsRoutes,
+  operators: operatorsRoutes,
   redistribution: redistributionRoutes,
   technicianTeams: technicianTeamsRoutes,
 } as const;

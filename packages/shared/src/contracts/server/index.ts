@@ -11,6 +11,8 @@ export * from "./fixed-slots";
 export * as IncidentsContracts from "./incidents";
 export * as JobsContracts from "./jobs";
 export * from "./jobs";
+export * as OperatorsContracts from "./operators";
+export * from "./operators";
 export * as RatingsContracts from "./ratings";
 export * as RedistributionContracts from "./redistribution";
 export * as RentalsContracts from "./rentals";
