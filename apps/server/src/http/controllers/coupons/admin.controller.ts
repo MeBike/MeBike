@@ -5,6 +5,7 @@ import { serverRoutes } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import {
+  type CouponCommandValidationFailure,
   CouponCommandServiceTag,
   CouponQueryServiceTag,
 } from "@/domain/coupons";
@@ -112,7 +113,7 @@ const adminUpdateCouponRule: RouteHandler<
 
 function toCouponRuleCommandErrorResponse(
   c: Parameters<RouteHandler<CouponRulesRoutes[keyof CouponRulesRoutes]>>[0],
-  error: unknown,
+  error: CouponCommandValidationFailure,
 ) {
   return Match.value(error).pipe(
     Match.tag("CouponRuleInvalidTier", err =>

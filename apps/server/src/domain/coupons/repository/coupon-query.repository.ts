@@ -127,6 +127,27 @@ type CouponRuleUsageAggregate = {
   readonly totalDiscountAmount: number;
 };
 
+type AggregateCount = true | {
+  readonly _all?: number | null;
+} | null | undefined;
+
+type CouponDiscountSum = {
+  readonly couponDiscountAmount?:
+    | PrismaTypes.Decimal
+    | bigint
+    | number
+    | string
+    | null;
+} | null | undefined;
+
+function readAggregateAllCount(count: AggregateCount): number {
+  return count && count !== true ? Number(count._all ?? 0) : 0;
+}
+
+function readCouponDiscountSum(sum: CouponDiscountSum): number {
+  return Number(toMinorUnit(sum?.couponDiscountAmount));
+}
+
 function toBillingPreviewDiscountRuleRow(
   row: BillingPreviewDiscountRuleRecord,
 ): BillingPreviewDiscountRuleRow {
@@ -612,8 +633,8 @@ export function makeCouponQueryRepository(
 
           upsertCouponRuleUsageAggregate(ruleUsageAggregatesByRuleId, {
             ruleId: row.couponRuleId,
-            appliedCount: row._count._all,
-            totalDiscountAmount: Number(toMinorUnit(row._sum.couponDiscountAmount)),
+            appliedCount: readAggregateAllCount(row._count),
+            totalDiscountAmount: readCouponDiscountSum(row._sum),
           });
         }
 
@@ -659,15 +680,13 @@ export function makeCouponQueryRepository(
           ),
         );
 
-        const totalDiscountAmount = Number(
-          toMinorUnit(discountedAggregate._sum.couponDiscountAmount),
-        );
+        const totalDiscountAmount = readCouponDiscountSum(discountedAggregate._sum);
 
         return toCouponStats({
           from: input.from,
           to: input.to,
           totalCompletedRentals,
-          discountedRentalsCount: discountedAggregate._count._all,
+          discountedRentalsCount: readAggregateAllCount(discountedAggregate._count),
           totalDiscountAmount,
           statsByRule: buildCouponStatsByRule({
             aggregates: ruleUsageAggregates,
@@ -680,8 +699,8 @@ export function makeCouponQueryRepository(
           }),
           statsByDiscountAmount: groupedDiscountAmounts.map(row => ({
             discountAmount: Number(toMinorUnit(row.couponDiscountAmount)),
-            rentalsCount: row._count._all,
-            totalDiscountAmount: Number(toMinorUnit(row._sum.couponDiscountAmount)),
+            rentalsCount: readAggregateAllCount(row._count),
+            totalDiscountAmount: readCouponDiscountSum(row._sum),
           })),
         });
       }).pipe(defectOn(CouponRepositoryError)),
