@@ -2,6 +2,8 @@ export * as AgenciesContracts from "./agencies";
 export * from "./agencies";
 export * as AgencyRequestsContracts from "./agency-requests";
 export * from "./agency-requests";
+export * as AiContracts from "./ai";
+export * from "./ai";
 export * as AuthContracts from "./auth";
 export * as BikesContracts from "./bikes";
 export * as CouponsContracts from "./coupons";

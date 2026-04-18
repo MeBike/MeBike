@@ -1,5 +1,6 @@
 import { agenciesRoutes } from "./agencies";
 import { agencyRequestsRoutes } from "./agency-requests";
+import { aiRoutes } from "./ai";
 import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
 import { couponRulesRoutes } from "./coupon-rules";
@@ -23,6 +24,7 @@ import { walletsRoutes } from "./wallets";
 
 export * from "./agencies";
 export * from "./agency-requests";
+export * from "./ai";
 export * from "./auth";
 export * from "./bikes";
 export * from "./coupon-rules";
@@ -47,6 +49,7 @@ export * from "./wallets";
 export type ServerRoutes = {
   readonly agencies: typeof agenciesRoutes;
   readonly agencyRequests: typeof agencyRequestsRoutes;
+  readonly ai: typeof aiRoutes;
   readonly auth: typeof authRoutes;
   readonly environment: typeof environmentRoutes;
   readonly fixedSlotTemplates: typeof fixedSlotTemplatesRoutes;
@@ -72,6 +75,7 @@ export type ServerRoutes = {
 export const serverRoutes: ServerRoutes = {
   agencies: agenciesRoutes,
   agencyRequests: agencyRequestsRoutes,
+  ai: aiRoutes,
   auth: authRoutes,
   environment: environmentRoutes,
   fixedSlotTemplates: fixedSlotTemplatesRoutes,
