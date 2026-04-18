@@ -12,3 +12,4 @@ export * from "./Staff/index";
 export * from "./Rating/index";
 export * from "./Agency/index";
 export * from "./DistributionRequest/index";
+export * from "./EnvironmentPolicy/index";
