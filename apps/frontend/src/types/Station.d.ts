@@ -4,6 +4,13 @@ export interface LocationGeo {
   type: "Point";
   coordinates: [number, number]; // [longitude, latitude]
 }
+export interface Worker {
+  userId : string;
+  fullName : string;
+  role : string;
+  technicianTeamId : string | null;
+  technicianTeamName : string | null;
+}
 export interface Station {
   id: string;
   name: string;
@@ -12,6 +19,7 @@ export interface Station {
     latitude : number;
     longitude : number;
   }
+  stationType: "INTERNAL" | "AGENCY";
   capacity: {
     total : number;
     returnSlotLimit : number;
@@ -26,6 +34,7 @@ export interface Station {
     maintained: number,
     unavailable: number
   }
+  workers : Worker[],
   createdAt: string;pickupSlotLimit
   updatedAt: string;
 }
