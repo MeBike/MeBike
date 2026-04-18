@@ -5,8 +5,12 @@ import { serverRoutes } from "@mebike/shared";
 import {
   StationAdminController,
   StationPublicController,
+  StationStaffController,
 } from "@/http/controllers/stations";
-import { requireAdminMiddleware } from "@/http/middlewares/auth";
+import {
+  requireAdminMiddleware,
+  requireStationScopedOperatorMiddleware,
+} from "@/http/middlewares/auth";
 
 export function registerStationRoutes(
   app: import("@hono/zod-openapi").OpenAPIHono,
@@ -31,9 +35,23 @@ export function registerStationRoutes(
 
   app.openapi(stations.listStations, StationPublicController.listStations);
 
+  const staffListStationsRoute = {
+    ...stations.staffListStations,
+    middleware: [requireStationScopedOperatorMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(staffListStationsRoute, StationStaffController.staffListStations);
+
   app.openapi(stations.getAllStationsRevenue, StationPublicController.getAllStationsRevenue);
 
   app.openapi(stations.getNearbyStations, StationPublicController.getNearbyStations);
 
   app.openapi(stations.getStation, StationPublicController.getStation);
+
+  const staffGetStationRoute = {
+    ...stations.staffGetStation,
+    middleware: [requireStationScopedOperatorMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(staffGetStationRoute, StationStaffController.staffGetStation);
 }

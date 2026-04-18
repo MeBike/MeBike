@@ -13,6 +13,7 @@ import {
   StationDateRangeQuerySchema,
   StationErrorCodeSchema,
   StationErrorDetailSchema,
+  StationListQuerySchema,
   StationReadSummarySchema,
   StationRevenueResponseSchema,
   StationStatsResponseSchema,
@@ -26,6 +27,7 @@ export {
   SortDirectionSchema,
   StationDateRangeQuerySchema,
   StationErrorCodeSchema,
+  StationListQuerySchema,
 };
 
 export const StationSortFieldSchema = z.enum(["name", "totalCapacity", "updatedAt"]);
@@ -141,29 +143,6 @@ export const StationIdParamSchema = z
   })
   .openapi("StationIdParam", {
     description: "Path params for station id",
-  });
-
-export const StationListQuerySchema = z
-  .object({
-    name: z.string().optional(),
-    address: z.string().optional(),
-    stationType: StationTypeSchema.optional(),
-    agencyId: z.uuidv7().optional(),
-    latitude: optionalLatitudeQuery(),
-    longitude: optionalLongitudeQuery(),
-    totalCapacity: optionalNumberQuery("totalCapacity", 20),
-    ...paginationQueryFields,
-    sortBy: StationSortFieldSchema.optional().openapi({
-      description: "Sort field",
-      example: "name",
-    }),
-    sortDir: SortDirectionSchema.optional().openapi({
-      description: "Sort direction",
-      example: "asc",
-    }),
-  })
-  .openapi("StationListQuery", {
-    description: "Optional filters for listing stations",
   });
 
 export const CreateStationBodySchema = z.object({
