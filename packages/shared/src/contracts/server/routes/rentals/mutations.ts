@@ -466,7 +466,7 @@ export const processCardTapRental = createRoute({
               value: {
                 error: "Bike not found or unavailable",
                 details: {
-                  code: RentalErrorCodeSchema.enum.BIKE_NOT_FOUND_FOR_CHIP,
+                  code: RentalErrorCodeSchema.enum.BIKE_NOT_FOUND_FOR_BIKE_ID,
                   bikeId: "019b17bd-d130-7e7d-be69-91ceef7b6888",
                 },
               },
