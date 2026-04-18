@@ -11,6 +11,7 @@ import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import type {
   NearestSearchArgs,
   NearestStationRow,
+  StationContextRow,
   StationRevenueRow,
   StationWorkerRow,
 } from "../../models";
@@ -39,6 +40,7 @@ export type StationReadRepo = Pick<
   | "getById"
   | "getByAgencyId"
   | "findIdNameAddressByIds"
+  | "listContextExcludingId"
   | "listNearest"
   | "getRevenueByStation"
 >;
@@ -253,6 +255,29 @@ export function makeStationReadRepository(
             cause,
           }),
       }).pipe(defectOn(StationRepositoryError));
+    },
+
+    listContextExcludingId(excludedId) {
+      return Effect.tryPromise({
+        try: () =>
+          client.station.findMany({
+            where: { id: { not: excludedId } },
+            orderBy: { name: "asc" },
+            select: {
+              id: true,
+              name: true,
+              address: true,
+            },
+          }),
+        catch: cause =>
+          new StationRepositoryError({
+            operation: "listContextExcludingId",
+            cause,
+          }),
+      }).pipe(
+        Effect.map((rows): StationContextRow[] => rows),
+        defectOn(StationRepositoryError),
+      );
     },
 
     listNearest({

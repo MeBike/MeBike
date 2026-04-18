@@ -131,6 +131,7 @@ export const requireStaffMiddleware = requireRoles("STAFF");
 export const requireStaffOrManagerMiddleware = requireRoles("STAFF", "MANAGER");
 export const requireUserMiddleware = requireRoles("USER");
 export const requireTechnicianMiddleware = requireRoles("TECHNICIAN");
+export const requireOperatorMiddleware = requireRoles("STAFF", "MANAGER", "AGENCY", "TECHNICIAN");
 export const requireBackofficeMiddleware = requireRoles("ADMIN", "STAFF");
 export const requireRentalOperatorMiddleware = requireRoles("STAFF", "AGENCY");
 export const requireRentalOperatorManagerMiddleware = requireRoles("STAFF", "MANAGER", "AGENCY");

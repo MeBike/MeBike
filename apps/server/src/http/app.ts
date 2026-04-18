@@ -24,6 +24,7 @@ import { registerEventRoutes } from "./routes/events";
 import { registerFixedSlotTemplateRoutes } from "./routes/fixed-slot-templates";
 import { registerHealthRoutes } from "./routes/health";
 import { registerIncidentRoutes } from "./routes/incidents";
+import { registerOperatorRoutes } from "./routes/operators";
 import { registerRatingRoutes } from "./routes/ratings";
 import { registerRedistributionRoutes } from "./routes/redistribution";
 import { registerRentalRoutes } from "./routes/rentals";
@@ -139,6 +140,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerWalletRoutes(app);
   registerSubscriptionRoutes(app);
   registerIncidentRoutes(app);
+  registerOperatorRoutes(app);
 
   app.onError((err, c) => {
     const isProd = env.NODE_ENV === "production";
