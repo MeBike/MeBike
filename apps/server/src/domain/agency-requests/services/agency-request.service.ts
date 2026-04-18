@@ -5,8 +5,8 @@ import type { PrismaClient } from "generated/prisma/client";
 
 import { makeAgencyAccountProvisionService } from "@/domain/agency-account-provisioning";
 import {
-  StationLocationAlreadyExists,
   makeStationQueryRepository,
+  StationLocationAlreadyExists,
 } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
