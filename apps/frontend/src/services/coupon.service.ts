@@ -46,19 +46,9 @@ export const couponService = {
     );
     return response;
   },
-  getCouponStats: async ({
-    page,
-    pageSize,
-  }: {
-    page?: number;
-    pageSize?: number;
-  }): Promise<AxiosResponse<CouponStat[]>> => {
-    const response = await fetchHttpClient.get<CouponStat[]>(
+  getCouponStats: async () => {
+    const response = await fetchHttpClient.get<CouponStat>(
       ENDPOINT.COUPON.COUPON_STATS,
-      {
-        page: page,
-        pageSize: pageSize,
-      },
     );
     return response;
   },

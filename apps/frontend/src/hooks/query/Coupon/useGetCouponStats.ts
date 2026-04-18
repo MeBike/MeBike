@@ -1,18 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { couponService } from "@/services/coupon.service";
 import { HTTP_STATUS } from "@constants";
-const getCouponStats = async ({
-  page,
-  pageSize,
-}: {
-  page?: number;
-  pageSize?: number;
-}) => {
+const getCouponStats = async () => {
   try {
-    const response = await couponService.getCouponStats({
-      page: page,
-      pageSize: pageSize,
-    });
+    const response = await couponService.getCouponStats();
     if (response.status === HTTP_STATUS.OK) {
         return response.data
     }
@@ -21,10 +12,10 @@ const getCouponStats = async ({
     throw new Error("Failed to fetch coupon");
   }
 };
-export const useGetCouponStats = ({page,pageSize}:{page?:number,pageSize?:number}) => {
+export const useGetCouponStats = () => {
     return useQuery({
         queryKey:["data","coupon-stats"],
-        queryFn : () => getCouponStats({page:page,pageSize:pageSize}),
+        queryFn : () => getCouponStats(),
         enabled:false,
     })
 }

@@ -7,56 +7,47 @@ import { Plus } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { TableSkeleton } from "@/components/table-skeleton";
-import { useCoupon } from "@/hooks/use-coupon"; // Giả định tên hook của bạn
-import { couponColumns } from "@/columns/coupon-column"; // Bạn cần tạo file này
+import { useCoupon } from "@/hooks/use-coupon";
+import { couponColumns } from "@/columns/coupon-column";
+import { CouponStatsView } from "./components/CouponStatsView"; // Component thống kê
 
 export default function CouponPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   
   const {
-    dataCoupons,
-    isLoadingCoupons,
-    getCoupons,
-  } = useCoupon({
-    hasToken: true,
-    pageSize: 10,
-    page: page,
-  });
+    dataCoupons, isLoadingCoupons, getCoupons,
+    dataCouponStats, getCouponStats // Thêm hook gọi stats
+  } = useCoupon({ hasToken: true, pageSize: 10, page: page });
 
   useEffect(() => {
     getCoupons();
-  }, [page, getCoupons]);
-
-  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
-  useEffect(() => {
-    if (isLoadingCoupons) {
-      setIsVisualLoading(true);
-    } else {
-      const timer = setTimeout(() => setIsVisualLoading(false), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoadingCoupons]);
+    getCouponStats(); // Gọi luôn khi trang load
+  }, [page, getCoupons, getCouponStats]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* 1. Tiêu đề và Thêm mới */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Quản lý Coupon</h1>
+        <h1 className="text-3xl font-bold">Quản lý Coupon & Thống kê</h1>
         <Button onClick={() => router.push("/admin/coupons/create")}>
           <Plus className="w-4 h-4 mr-2" /> Thêm Coupon
         </Button>
       </div>
 
-      <div className="min-h-[700px]">
-        {isVisualLoading ? (
+      {/* 2. Phần Thống kê (Hiện ngay trên đầu) */}
+      <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <h2 className="text-xl font-semibold mb-4">Tổng quan thống kê</h2>
+        <CouponStatsView data={dataCouponStats} />
+      </div>
+
+      {/* 3. Phần Danh sách Coupon */}
+      <div className="min-h-[500px]">
+        <h2 className="text-xl font-semibold mb-4">Danh sách Coupon</h2>
+        {isLoadingCoupons ? (
           <TableSkeleton />
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">
-              Trang {dataCoupons?.pagination?.page ?? 1} /{" "}
-              {dataCoupons?.pagination?.totalPages ?? 1}
-            </p>
-            
             <DataTable
               columns={couponColumns({
                 onView: ({ id }) => router.push(`/admin/coupons/detail/${id}`),
@@ -64,7 +55,6 @@ export default function CouponPage() {
               })}
               data={dataCoupons?.data || []}
             />
-            
             <div className="pt-3">
               <PaginationDemo
                 currentPage={dataCoupons?.pagination?.page ?? 1}

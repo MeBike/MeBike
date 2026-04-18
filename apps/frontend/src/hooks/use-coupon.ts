@@ -45,7 +45,7 @@ export const useCoupon = ({
     data: dataCouponStats,
     isLoading: isLoadingCouponStats,
     refetch: refetchCouponStats,
-  } = useGetCouponStats({ page, pageSize });
+  } = useGetCouponStats();
   const {
     data: dataUsageCouponLog,
     isLoading: isLoadingUsageCouponLog,
