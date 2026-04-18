@@ -5,11 +5,13 @@ import { serverRoutes } from "@mebike/shared";
 import {
   BikeAdminController,
   BikePublicController,
+  BikeStaffController,
   BikeStatsController,
 } from "@/http/controllers/bikes";
 import {
   requireAdminMiddleware,
   requireBackofficeMiddleware,
+  requireStationScopedOperatorMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
@@ -22,6 +24,13 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(createBikeRoute, BikeAdminController.createBike);
 
   app.openapi(bikes.listBikes, BikePublicController.listBikes);
+
+  const staffListBikesRoute = {
+    ...bikes.staffListBikes,
+    middleware: [requireStationScopedOperatorMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(staffListBikesRoute, BikeStaffController.staffListBikes);
 
   app.openapi(bikes.updateBike, BikeAdminController.updateBike);
 
@@ -74,6 +83,13 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   // Keep single-segment dynamic route last to avoid accidental shadowing
   // if future static endpoints are added under /v1/bikes/*.
   app.openapi(bikes.getBike, BikePublicController.getBike);
+
+  const staffGetBikeRoute = {
+    ...bikes.staffGetBike,
+    middleware: [requireStationScopedOperatorMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(staffGetBikeRoute, BikeStaffController.staffGetBike);
 
   // Analytics endpoints implemented above.
 }

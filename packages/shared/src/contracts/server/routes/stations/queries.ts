@@ -198,6 +198,93 @@ export const getStation = createRoute({
   },
 });
 
+export const staffListStations = createRoute({
+  method: "get",
+  path: "/v1/staff/stations",
+  tags: ["Staff", "Stations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: StationListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "List current operator station only",
+      content: {
+        "application/json": { schema: StationListResponseSchema },
+      },
+    },
+    400: {
+      description: "Invalid query",
+      content: {
+        "application/json": { schema: StationErrorResponseSchema },
+      },
+    },
+    404: {
+      description: "Assigned station not found",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff, Manager, or Technician"),
+  },
+});
+
+export const staffGetStation = createRoute({
+  method: "get",
+  path: "/v1/staff/stations/{stationId}",
+  tags: ["Staff", "Stations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: StationIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get station details for current operator station",
+      content: {
+        "application/json": { schema: StationReadSummarySchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid path parameter",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+          examples: {
+            InvalidStationId: {
+              value: {
+                error: "Invalid request payload",
+                details: {
+                  code: "VALIDATION_ERROR",
+                  issues: [
+                    {
+                      path: "params.stationId",
+                      message: "stationId must be a UUID",
+                      code: "invalid_uuid",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Station not found",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff, Manager, or Technician"),
+  },
+});
+
 export const getStationStats = createRoute({
   method: "get",
   path: "/v1/stations/{stationId}/stats",

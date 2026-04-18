@@ -129,6 +129,7 @@ export const requireAgencyMiddleware = requireRoles("AGENCY");
 export const requireManagerMiddleware = requireRoles("MANAGER");
 export const requireStaffMiddleware = requireRoles("STAFF");
 export const requireStaffOrManagerMiddleware = requireRoles("STAFF", "MANAGER");
+export const requireStationScopedOperatorMiddleware = requireRoles("STAFF", "MANAGER", "TECHNICIAN");
 export const requireUserMiddleware = requireRoles("USER");
 export const requireTechnicianMiddleware = requireRoles("TECHNICIAN");
 export const requireOperatorMiddleware = requireRoles("STAFF", "MANAGER", "AGENCY", "TECHNICIAN");
