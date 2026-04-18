@@ -2,14 +2,19 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import type { AgencyRequestsContracts } from "@mebike/shared";
 
 import { serverRoutes } from "@mebike/shared";
-import { Effect } from "effect";
+import { Effect, Match } from "effect";
 
 import { AgencyRequestServiceTag } from "@/domain/agency-requests";
 import { withLoggedCause } from "@/domain/shared";
 import { toAgencyRequest } from "@/http/presenters/agency-requests.presenter";
 import { routeContext } from "@/http/shared/route-context";
 
-import type { AgencyRequestsRoutes } from "./shared";
+import type {
+  AgencyRequestErrorResponse,
+  AgencyRequestsRoutes,
+} from "./shared";
+
+import { AgencyRequestErrorCodeSchema, agencyRequestErrorMessages } from "./shared";
 
 const agencyRequests = serverRoutes.agencyRequests;
 
@@ -39,10 +44,31 @@ const submit: RouteHandler<AgencyRequestsRoutes["submit"]> = async (c) => {
     routeContext(agencyRequests.submit),
   );
 
-  const result = await c.var.runPromise(eff);
-  return c.json<AgencyRequestsContracts.SubmitAgencyRequestResponse, 201>(
-    toAgencyRequest(result),
-    201,
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<AgencyRequestsContracts.SubmitAgencyRequestResponse, 201>(
+        toAgencyRequest(right),
+        201,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("StationLocationAlreadyExists", ({ address, latitude, longitude }) =>
+          c.json<AgencyRequestErrorResponse, 400>({
+            error: agencyRequestErrorMessages.STATION_LOCATION_ALREADY_EXISTS,
+            details: {
+              code: AgencyRequestErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+              address,
+              latitude,
+              longitude,
+            },
+          }, 400)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
   );
 };
 

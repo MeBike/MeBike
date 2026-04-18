@@ -3,7 +3,6 @@ import { createRoute, z } from "@hono/zod-openapi";
 import {
   OptionalPhoneNumberNullableSchema,
   OptionalTrimmedNullableStringSchema,
-  ServerErrorResponseSchema,
 } from "../../schemas";
 import { AgencyRequestSchema } from "../../agency-requests/models";
 import { forbiddenResponse, unauthorizedResponse } from "../helpers";
@@ -111,10 +110,23 @@ export const submitAgencyRequestRoute = createRoute({
       },
     },
     400: {
-      description: "Invalid request payload",
+      description: "Invalid request payload or duplicate station location",
       content: {
         "application/json": {
-          schema: ServerErrorResponseSchema,
+          schema: AgencyRequestErrorResponseSchema,
+          examples: {
+            DuplicateLocation: {
+              value: {
+                error: agencyRequestErrorMessages.STATION_LOCATION_ALREADY_EXISTS,
+                details: {
+                  code: AgencyRequestErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+                  address: "371 Doan Ket, Binh Tho, Thu Duc, TP.HCM",
+                  latitude: 10.762622,
+                  longitude: 106.660172,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -237,6 +249,17 @@ export const approveAgencyRequestRoute = createRoute({
                   agencyRequestId: "0195e4f7-f7d3-7b7a-8fd8-5f2df87fd301",
                   currentStatus: "APPROVED",
                   nextStatus: "APPROVED",
+                },
+              },
+            },
+            DuplicateLocation: {
+              value: {
+                error: agencyRequestErrorMessages.STATION_LOCATION_ALREADY_EXISTS,
+                details: {
+                  code: AgencyRequestErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+                  address: "371 Doan Ket, Binh Tho, Thu Duc, TP.HCM",
+                  latitude: 10.762622,
+                  longitude: 106.660172,
                 },
               },
             },
