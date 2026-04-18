@@ -118,6 +118,10 @@ export const ENDPOINT = {
         AGENCY_VIEW : "/agency/redistribution-requests",
         AGENCY_VIEW_HISTORY : "/agency/redistribution-requests/history",
         AGENCY_VIEW_DETAIL : (id:string) => `/agency/redistribution-requests/${id}`,
+    },
+    ENVIRONMENT : {
+        POLICY : "/environment/policies",
+        ACTIVE : "/environment/policies/active",
+        ACTIVE_ID : (id:string) => `/environment/policies/${id}/activate`,
     }
-
 } as const;
