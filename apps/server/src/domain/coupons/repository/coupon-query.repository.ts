@@ -1,7 +1,7 @@
 import { Effect, Layer } from "effect";
 
-import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 import type { CouponRuleIdentity } from "@/domain/coupons/coupon-rule-identity";
+import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import {
   readCouponRuleIdentity as resolveCouponRuleIdentity,

@@ -170,8 +170,8 @@ export type AdminCouponStatsRow = {
   readonly topAppliedRule: CouponTopAppliedRuleRow | null;
 };
 
-export type CouponUsageDerivedTier =
-  | "TIER_1H_2H"
+export type CouponUsageDerivedTier
+  = "TIER_1H_2H"
   | "TIER_2H_4H"
   | "TIER_4H_6H"
   | "TIER_6H_PLUS";

@@ -1,7 +1,7 @@
 import { Effect, Layer, Option } from "effect";
 
-import type { RentalRepo } from "../repository/rental.repository";
 import type { RentalBillingDetailRow } from "../models";
+import type { RentalRepo } from "../repository/rental.repository";
 
 import {
   BillingDetailNotReady,
