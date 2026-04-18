@@ -755,3 +755,6 @@ export const DISTRIBUTION_REQUEST = {
 export const ENVIRONMENT_POLICY_REQUEST = {
   
 }
+export const COUPON_REQUEST = {
+  
+}
