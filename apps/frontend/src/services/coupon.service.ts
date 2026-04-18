@@ -2,7 +2,7 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { ENDPOINT } from "@/constants/end-point";
 import { ApiResponse } from "@custom-types";
-import { Coupon , CouponStat , CouponUsageLog} from "@/types/Coupon";
+import { Coupon, CouponStat, CouponUsageLog } from "@/types/Coupon";
 export const couponService = {
   getCoupons: async ({
     page,
@@ -46,32 +46,36 @@ export const couponService = {
     );
     return response;
   },
-  getCouponStats : async () : Promise<AxiosResponse<CouponStat>> => {
-    const response = await fetchHttpClient.get<CouponStat>(ENDPOINT.COUPON.COUPON_STATS)
-    return response;
-  },
-  getCouponStatsLog : async ({
+  getCouponStats: async ({
     page,
     pageSize,
   }: {
     page?: number;
     pageSize?: number;
-  }) : Promise<AxiosResponse<CouponStat[]>> => {
-    const response = await fetchHttpClient.get<CouponStat[]>(ENDPOINT.COUPON.COUPON_STATS,
-        {
-            page:page,
-            pageSize : pageSize,
-        }
-    )
+  }): Promise<AxiosResponse<CouponStat[]>> => {
+    const response = await fetchHttpClient.get<CouponStat[]>(
+      ENDPOINT.COUPON.COUPON_STATS,
+      {
+        page: page,
+        pageSize: pageSize,
+      },
+    );
     return response;
   },
-  getUsageCouponLog : async ({page,pageSize}:{page?:number,pageSize?:number}) : Promise<AxiosResponse<CouponUsageLog[]>> => {
-    const response = await fetchHttpClient.get<CouponUsageLog[]>(ENDPOINT.COUPON.USAGE_COUPON_STATS_LOG,
-        {
-            page:page,
-            pageSize : pageSize,
-        }
-    )
+  getUsageCouponLog: async ({
+    page,
+    pageSize,
+  }: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<AxiosResponse<CouponUsageLog[]>> => {
+    const response = await fetchHttpClient.get<CouponUsageLog[]>(
+      ENDPOINT.COUPON.USAGE_COUPON_STATS_LOG,
+      {
+        page: page,
+        pageSize: pageSize,
+      },
+    );
     return response;
-  }
+  },
 };
