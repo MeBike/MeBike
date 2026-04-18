@@ -1,5 +1,6 @@
 import { agenciesRoutes } from "./agencies";
 import { agencyRequestsRoutes } from "./agency-requests";
+import { aiRoutes } from "./ai";
 import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
 import { environmentRoutes } from "./environment";
@@ -22,6 +23,7 @@ import { walletsRoutes } from "./wallets";
 
 export * from "./agencies";
 export * from "./agency-requests";
+export * from "./ai";
 export * from "./auth";
 export * from "./bikes";
 export * from "./environment";
@@ -45,6 +47,7 @@ export * from "./wallets";
 export const serverRoutes = {
   agencies: agenciesRoutes,
   agencyRequests: agencyRequestsRoutes,
+  ai: aiRoutes,
   auth: authRoutes,
   environment: environmentRoutes,
   fixedSlotTemplates: fixedSlotTemplatesRoutes,
