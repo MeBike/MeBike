@@ -11,7 +11,7 @@ const getEnvironmentPolicies = async (
     };
     const response = await environmentService.getEnvironmentPolices(query);
     if (response.status === 200) {
-      return response;
+      return response.data;
     }
   } catch (error) {
     console.error(error);
