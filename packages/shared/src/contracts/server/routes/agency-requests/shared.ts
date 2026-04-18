@@ -7,6 +7,7 @@ import {
 } from "../../schemas";
 import {
   AdminAgencyRequestListItemSchema,
+  AgencyRequestSchema,
   AgencyRequestStatusSchema,
 } from "../../agency-requests/models";
 
@@ -49,6 +50,23 @@ export const AgencyRequestListQuerySchema = z
     description: "Optional filters for listing agency registration requests",
   });
 
+export const AgencyRequestUserListQuerySchema = z
+  .object({
+    status: AgencyRequestStatusSchema.optional(),
+    ...paginationQueryFields,
+    sortBy: AgencyRequestSortFieldSchema.optional().openapi({
+      description: "Sort field",
+      example: "createdAt",
+    }),
+    sortDir: SortDirectionSchema.optional().openapi({
+      description: "Sort direction",
+      example: "desc",
+    }),
+  })
+  .openapi("AgencyRequestUserListQuery", {
+    description: "Optional filters for listing the current user's agency registration requests",
+  });
+
 export const AgencyRequestListResponseSchema = z
   .object({
     data: AdminAgencyRequestListItemSchema.array(),
@@ -58,10 +76,26 @@ export const AgencyRequestListResponseSchema = z
     description: "Paginated agency request listing for admin review",
   });
 
+export const AgencyRequestUserListResponseSchema = z
+  .object({
+    data: AgencyRequestSchema.array(),
+    pagination: PaginationSchema,
+  })
+  .openapi("AgencyRequestUserListResponse", {
+    description: "Paginated agency request listing for the current user",
+  });
+
 export const AgencyRequestDetailResponseSchema = AdminAgencyRequestListItemSchema.openapi(
   "AgencyRequestDetailResponse",
   {
     description: "Detailed agency request for admin review",
+  },
+);
+
+export const AgencyRequestUserDetailResponseSchema = AgencyRequestSchema.openapi(
+  "AgencyRequestUserDetailResponse",
+  {
+    description: "Detailed agency request for the current user",
   },
 );
 
@@ -105,5 +139,7 @@ export {
 };
 
 export type AgencyRequestListResponse = z.infer<typeof AgencyRequestListResponseSchema>;
+export type AgencyRequestUserListResponse = z.infer<typeof AgencyRequestUserListResponseSchema>;
 export type AgencyRequestDetailResponse = z.infer<typeof AgencyRequestDetailResponseSchema>;
+export type AgencyRequestUserDetailResponse = z.infer<typeof AgencyRequestUserDetailResponseSchema>;
 export type AgencyRequestErrorResponse = z.infer<typeof AgencyRequestErrorResponseSchema>;

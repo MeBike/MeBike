@@ -11,6 +11,9 @@ export {
   getMyEnvironmentSummary,
   getMyEnvironmentImpactHistory,
   getMyEnvironmentImpactByRental,
+  listAdminEnvironmentImpacts,
+  getAdminEnvironmentImpactDetail,
+  getAdminEnvironmentUserSummary,
   listEnvironmentPolicies,
   getActiveEnvironmentPolicy,
 } from "./queries";

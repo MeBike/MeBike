@@ -8,3 +8,5 @@ export type AgencyRequest = AgencyRequestsContracts.AgencyRequest;
 export type AgencyRequestDetailResponse = AgencyRequestsContracts.AgencyRequestDetailResponse;
 export type AgencyRequestErrorResponse = AgencyRequestsContracts.AgencyRequestErrorResponse;
 export type AgencyRequestListResponse = AgencyRequestsContracts.AgencyRequestListResponse;
+export type AgencyRequestUserDetailResponse = AgencyRequestsContracts.AgencyRequestUserDetailResponse;
+export type AgencyRequestUserListResponse = AgencyRequestsContracts.AgencyRequestUserListResponse;

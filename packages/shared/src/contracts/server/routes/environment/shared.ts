@@ -4,6 +4,9 @@ import {
   UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
+  AdminEnvironmentImpactDetailSchema,
+  AdminEnvironmentImpactListResponseSchema,
+  AdminEnvironmentUserSummarySchema,
   EnvironmentImpactSchema,
   EnvironmentImpactDetailSchema,
   EnvironmentImpactHistoryResponseSchema,
@@ -14,6 +17,9 @@ import {
 import { AccountStatusSchema } from "../../users";
 
 export {
+  AdminEnvironmentImpactDetailSchema,
+  AdminEnvironmentImpactListResponseSchema,
+  AdminEnvironmentUserSummarySchema,
   EnvironmentImpactSchema,
   EnvironmentImpactDetailSchema,
   EnvironmentImpactHistoryResponseSchema,
@@ -56,6 +62,20 @@ export const EnvironmentImpactRentalIdParamsSchema = z.object({
     example: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
   }),
 }).openapi("EnvironmentImpactRentalIdParams");
+
+export const EnvironmentImpactIdParamsSchema = z.object({
+  impactId: z.uuid().openapi({
+    description: "Environment Impact UUID",
+    example: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+  }),
+}).openapi("EnvironmentImpactIdParams");
+
+export const EnvironmentUserIdParamsSchema = z.object({
+  userId: z.uuid().openapi({
+    description: "User UUID for admin Environment Impact summary lookup",
+    example: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+  }),
+}).openapi("EnvironmentUserIdParams");
 
 export const CreateEnvironmentPolicyBodySchema = z.object({
   name: z.string().trim().min(1, {
@@ -101,6 +121,15 @@ export type EnvironmentImpactHistoryResponse = z.infer<
 >;
 export type EnvironmentSummaryResponse = z.infer<
   typeof EnvironmentSummarySchema
+>;
+export type AdminEnvironmentImpactListResponse = z.infer<
+  typeof AdminEnvironmentImpactListResponseSchema
+>;
+export type AdminEnvironmentImpactDetailResponse = z.infer<
+  typeof AdminEnvironmentImpactDetailSchema
+>;
+export type AdminEnvironmentUserSummaryResponse = z.infer<
+  typeof AdminEnvironmentUserSummarySchema
 >;
 export type EnvironmentPolicyListResponse = z.infer<
   typeof EnvironmentPolicyListResponseSchema
@@ -200,6 +229,27 @@ const optionalIsoDateOrDateTimeQuery = (
     example,
   });
 
+const optionalUuidQuery = (
+  description: string,
+  example: string,
+) =>
+  z.preprocess(
+    (value) => {
+      if (value === undefined || value === null) {
+        return undefined;
+      }
+      if (typeof value !== "string") {
+        return value;
+      }
+      const trimmed = value.trim();
+      return trimmed === "" ? undefined : trimmed;
+    },
+    z.uuid().optional(),
+  ).openapi({
+    description,
+    example,
+  });
+
 function parseHistoryQueryDateBoundary(
   value: string,
   boundary: "start" | "end",
@@ -264,4 +314,69 @@ export const ListEnvironmentImpactHistoryQuerySchema = z.object({
 
 export type ListEnvironmentImpactHistoryQuery = z.infer<
   typeof ListEnvironmentImpactHistoryQuerySchema
+>;
+
+export const ListAdminEnvironmentImpactsQuerySchema = z.object({
+  page: optionalIntegerQuery("page")
+    .pipe(z.number().int().min(1, { message: "page must be greater than or equal to 1" }))
+    .optional()
+    .openapi({
+      description: "Page number (1-based). Defaults to 1.",
+      example: 1,
+    }),
+  pageSize: optionalIntegerQuery("pageSize")
+    .pipe(z.number().int()
+      .min(1, { message: "pageSize must be greater than or equal to 1" })
+      .max(100, { message: "pageSize must be less than or equal to 100" }))
+    .optional()
+    .openapi({
+      description: "Number of impact records per page. Defaults to 20, max 100.",
+      example: 20,
+    }),
+  userId: optionalUuidQuery(
+    "Filter by user_id in environmental_impact_stats.",
+    "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+  ).optional(),
+  rentalId: optionalUuidQuery(
+    "Filter by rental_id in environmental_impact_stats.",
+    "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+  ).optional(),
+  policyId: optionalUuidQuery(
+    "Filter by policy_id in environmental_impact_stats.",
+    "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+  ).optional(),
+  sortOrder: EnvironmentImpactHistorySortOrderSchema.optional().openapi({
+    description: "Sort direction by calculated_at and id. Defaults to desc.",
+    example: "desc",
+  }),
+  dateFrom: optionalIsoDateOrDateTimeQuery(
+    "UTC lower bound for calculated_at. Date-only values are interpreted as 00:00:00.000Z. For Vietnam local-day filtering, convert the local range to UTC datetime before calling.",
+    "2026-04-14T17:00:00.000Z",
+  ),
+  dateTo: optionalIsoDateOrDateTimeQuery(
+    "UTC upper bound for calculated_at. Date-only values are interpreted as 23:59:59.999Z. For Vietnam local-day filtering, convert the local range to UTC datetime before calling.",
+    "2026-04-15T16:59:59.999Z",
+  ),
+}).superRefine((value, ctx) => {
+  const dateFrom = value.dateFrom
+    ? parseHistoryQueryDateBoundary(value.dateFrom, "start")
+    : undefined;
+  const dateTo = value.dateTo
+    ? parseHistoryQueryDateBoundary(value.dateTo, "end")
+    : undefined;
+
+  if (dateFrom && dateTo && dateFrom > dateTo) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["dateFrom"],
+      message: "dateFrom must not be after dateTo",
+    });
+  }
+}).openapi("ListAdminEnvironmentImpactsQuery", {
+  description:
+    "Optional filters, pagination, sorting, and calculated_at filters for admin Environment Impact listing. Reads only environmental_impact_stats.",
+});
+
+export type ListAdminEnvironmentImpactsQuery = z.infer<
+  typeof ListAdminEnvironmentImpactsQuerySchema
 >;

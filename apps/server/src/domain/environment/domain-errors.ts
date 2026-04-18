@@ -28,8 +28,9 @@ export class EnvironmentImpactRentalNotFound extends Data.TaggedError(
 export class EnvironmentImpactNotFound extends Data.TaggedError(
   "EnvironmentImpactNotFound",
 )<{
-    readonly rentalId: string;
-    readonly userId: string;
+    readonly impactId?: string;
+    readonly rentalId?: string;
+    readonly userId?: string;
   }> {}
 
 export class EnvironmentImpactRentalNotCompleted extends Data.TaggedError(

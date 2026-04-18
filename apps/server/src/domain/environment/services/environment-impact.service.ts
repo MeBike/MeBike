@@ -13,6 +13,7 @@ import type {
   EnvironmentImpactSummaryRow,
   EnvironmentPolicyFormulaConfig,
   EnvironmentPolicyRow,
+  ListAdminEnvironmentImpactHistoryInput,
   ListUserEnvironmentImpactHistoryInput,
 } from "../models";
 
@@ -47,6 +48,15 @@ export type EnvironmentImpactService = {
     userId: string,
     rentalId: string,
   ) => Effect.Effect<EnvironmentImpactRow, EnvironmentImpactNotFound>;
+  listAdminImpactHistory: (
+    input: ListAdminEnvironmentImpactHistoryInput,
+  ) => Effect.Effect<EnvironmentImpactHistoryPageResult>;
+  getAdminImpactDetail: (
+    impactId: string,
+  ) => Effect.Effect<EnvironmentImpactRow, EnvironmentImpactNotFound>;
+  getAdminUserSummary: (
+    userId: string,
+  ) => Effect.Effect<EnvironmentImpactSummaryRow>;
 };
 
 export class EnvironmentImpactServiceTag extends Context.Tag(
@@ -199,6 +209,35 @@ export const EnvironmentImpactServiceLive = Layer.effect(
 
           return impact.value;
         }),
+      listAdminImpactHistory: input =>
+        impactRepo.listAdminImpactHistory(
+          {
+            userId: input.userId,
+            rentalId: input.rentalId,
+            policyId: input.policyId,
+            dateFrom: parseHistoryDateBoundary(input.dateFrom, "start"),
+            dateTo: parseHistoryDateBoundary(input.dateTo, "end"),
+          },
+          {
+            page: input.page ?? 1,
+            pageSize: input.pageSize ?? 20,
+            sortOrder: input.sortOrder ?? "desc",
+          },
+        ),
+      getAdminImpactDetail: impactId =>
+        Effect.gen(function* () {
+          const impact = yield* impactRepo.findImpactById(impactId);
+
+          if (Option.isNone(impact)) {
+            return yield* Effect.fail(
+              new EnvironmentImpactNotFound({ impactId }),
+            );
+          }
+
+          return impact.value;
+        }),
+      getAdminUserSummary: userId =>
+        impactRepo.getUserEnvironmentSummary(userId),
       calculateFromRental: rentalId =>
         Effect.gen(function* () {
           const existing = yield* impactRepo.findImpactByRentalId(rentalId);

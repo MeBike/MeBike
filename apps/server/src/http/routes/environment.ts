@@ -43,6 +43,18 @@ export function registerEnvironmentRoutes(
     ...environment.getMyEnvironmentImpactByRental,
     middleware: [requireUserMiddleware] as const,
   } satisfies RouteConfig;
+  const listAdminEnvironmentImpactsRoute = {
+    ...environment.listAdminEnvironmentImpacts,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+  const getAdminEnvironmentImpactDetailRoute = {
+    ...environment.getAdminEnvironmentImpactDetail,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+  const getAdminEnvironmentUserSummaryRoute = {
+    ...environment.getAdminEnvironmentUserSummary,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
   const calculateImpactFromRentalRoute = {
     ...environment.calculateEnvironmentImpactFromRental,
     middleware: [requireAdminMiddleware] as const,
@@ -59,6 +71,18 @@ export function registerEnvironmentRoutes(
   app.openapi(
     getMyEnvironmentImpactByRentalRoute,
     EnvironmentImpactController.getMyRentalImpact,
+  );
+  app.openapi(
+    getAdminEnvironmentUserSummaryRoute,
+    EnvironmentImpactController.getAdminUserSummary,
+  );
+  app.openapi(
+    listAdminEnvironmentImpactsRoute,
+    EnvironmentImpactController.listAdminImpacts,
+  );
+  app.openapi(
+    getAdminEnvironmentImpactDetailRoute,
+    EnvironmentImpactController.getAdminImpactDetail,
   );
   app.openapi(listPoliciesRoute, EnvironmentPolicyController.listPolicies);
   app.openapi(createPolicyRoute, EnvironmentPolicyController.createPolicy);
