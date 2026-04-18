@@ -335,7 +335,7 @@ export const AdminCouponUsageLogsQuerySchema = z
   })
   .openapi("AdminCouponUsageLogsQuery", {
     description:
-      "Optional pagination and filters for finalized global auto discount usage logs. from/to are applied against billing record creation time (appliedAt).",
+      "Optional pagination and filters for finalized global auto discount usage logs. from/to are applied against rental end time.",
     example: {
       page: 1,
       pageSize: 20,
