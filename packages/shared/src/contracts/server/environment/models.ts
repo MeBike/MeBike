@@ -258,6 +258,103 @@ export const EnvironmentImpactHistoryItemSchema = z.object({
   },
 });
 
+export const AdminEnvironmentImpactListItemSchema = EnvironmentImpactHistoryItemSchema
+  .extend({
+    user_id: z.uuid(),
+  })
+  .openapi("AdminEnvironmentImpactListItem", {
+    description:
+      "One calculated Environment Impact record for admin operations/debug screens. Reads only environmental_impact_stats.",
+    example: {
+      id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+      user_id: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+      rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+      policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+      estimated_distance_km: 4,
+      co2_saved: 255,
+      co2_saved_unit: "gCO2e",
+      distance_source: "TIME_SPEED",
+      raw_rental_minutes: 23,
+      effective_ride_minutes: 20,
+      calculated_at: "2026-04-15T10:30:00.000Z",
+    },
+  });
+
+export const AdminEnvironmentImpactListResponseSchema = z.object({
+  data: AdminEnvironmentImpactListItemSchema.array(),
+  pagination: PaginationSchema,
+}).openapi("AdminEnvironmentImpactListResponse", {
+  description:
+    "Paginated Environment Impact records across all users for admin operations/debug screens. CO2 saved values are grams of CO2e. Reads only environmental_impact_stats and does not trigger calculation.",
+  example: {
+    data: [
+      {
+        id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+        user_id: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+        rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+        policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+        estimated_distance_km: 4,
+        co2_saved: 255,
+        co2_saved_unit: "gCO2e",
+        distance_source: "TIME_SPEED",
+        raw_rental_minutes: 23,
+        effective_ride_minutes: 20,
+        calculated_at: "2026-04-15T10:30:00.000Z",
+      },
+    ],
+    pagination: {
+      page: 1,
+      pageSize: 20,
+      total: 1,
+      totalPages: 1,
+    },
+  },
+});
+
+export const AdminEnvironmentImpactDetailSchema = EnvironmentImpactDetailSchema
+  .extend({
+    user_id: z.uuid(),
+  })
+  .openapi("AdminEnvironmentImpactDetail", {
+    description:
+      "Detailed calculated Environment Impact record for admin operations/debug screens. Reads only environmental_impact_stats and does not trigger calculation.",
+    example: {
+      id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+      user_id: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+      rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+      policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+      estimated_distance_km: 4,
+      co2_saved: 255,
+      co2_saved_unit: "gCO2e",
+      raw_rental_minutes: 23,
+      effective_ride_minutes: 20,
+      return_scan_buffer_minutes: 3,
+      average_speed_kmh: 12,
+      co2_saved_per_km: 75,
+      co2_saved_per_km_unit: "gCO2e/km",
+      confidence_factor: 0.85,
+      distance_source: "TIME_SPEED",
+      formula_version: "PHASE_1_TIME_SPEED",
+      policy_snapshot: {
+        policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+        policy_name: "Default Environment Policy v1",
+        average_speed_kmh: 12,
+        co2_saved_per_km: 75,
+        co2_saved_per_km_unit: "gCO2e/km",
+        return_scan_buffer_minutes: 3,
+        confidence_factor: 0.85,
+        raw_rental_minutes: 23,
+        effective_ride_minutes: 20,
+        estimated_distance_km: 4,
+        co2_saved: 255,
+        co2_saved_unit: "gCO2e",
+        distance_source: "TIME_SPEED",
+        formula_version: "PHASE_1_TIME_SPEED",
+      },
+      calculated_at: "2026-04-15T10:30:00.000Z",
+    },
+  });
+
 export const EnvironmentImpactHistoryResponseSchema = z.object({
   data: EnvironmentImpactHistoryItemSchema.array(),
   pagination: PaginationSchema,
@@ -304,6 +401,22 @@ export const EnvironmentSummarySchema = z.object({
   },
 });
 
+export const AdminEnvironmentUserSummarySchema = EnvironmentSummarySchema
+  .extend({
+    user_id: z.uuid(),
+  })
+  .openapi("AdminEnvironmentUserSummary", {
+    description:
+      "Accumulated Environment Impact summary for one user requested by admin. Values are aggregated only from environmental_impact_stats.",
+    example: {
+      user_id: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+      total_trips_counted: 3,
+      total_estimated_distance_km: 7.4,
+      total_co2_saved: 472,
+      co2_saved_unit: "gCO2e",
+    },
+  });
+
 export type EnvironmentPolicyFormulaConfig = z.infer<
   typeof EnvironmentPolicyFormulaConfigSchema
 >;
@@ -325,3 +438,15 @@ export type EnvironmentImpactHistoryResponse = z.infer<
   typeof EnvironmentImpactHistoryResponseSchema
 >;
 export type EnvironmentSummary = z.infer<typeof EnvironmentSummarySchema>;
+export type AdminEnvironmentImpactListItem = z.infer<
+  typeof AdminEnvironmentImpactListItemSchema
+>;
+export type AdminEnvironmentImpactListResponse = z.infer<
+  typeof AdminEnvironmentImpactListResponseSchema
+>;
+export type AdminEnvironmentImpactDetail = z.infer<
+  typeof AdminEnvironmentImpactDetailSchema
+>;
+export type AdminEnvironmentUserSummary = z.infer<
+  typeof AdminEnvironmentUserSummarySchema
+>;

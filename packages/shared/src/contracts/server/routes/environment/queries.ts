@@ -2,12 +2,18 @@ import { createRoute } from "@hono/zod-openapi";
 
 import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
+  AdminEnvironmentImpactDetailSchema,
+  AdminEnvironmentImpactListResponseSchema,
+  AdminEnvironmentUserSummarySchema,
   EnvironmentErrorCodeSchema,
+  EnvironmentImpactIdParamsSchema,
   EnvironmentImpactDetailSchema,
   EnvironmentImpactRentalIdParamsSchema,
   EnvironmentImpactHistoryResponseSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
+  EnvironmentUserIdParamsSchema,
+  ListAdminEnvironmentImpactsQuerySchema,
   EnvironmentSummarySchema,
   ListEnvironmentImpactHistoryQuerySchema,
   ListEnvironmentPoliciesQuerySchema,
@@ -209,6 +215,214 @@ export const getMyEnvironmentImpactByRental = createRoute({
   },
 });
 
+export const listAdminEnvironmentImpacts = createRoute({
+  method: "get",
+  path: "/environment/impacts",
+  tags: ["Environment"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ListAdminEnvironmentImpactsQuerySchema,
+  },
+  responses: {
+    200: {
+      description:
+        "Admin list of calculated Environment Impact records across all users. Reads only environmental_impact_stats, reports co2_saved in grams gCO2e, uses UTC calculated_at filters, and does not calculate new impact or trigger repair jobs.",
+      content: {
+        "application/json": {
+          schema: AdminEnvironmentImpactListResponseSchema,
+          examples: {
+            AdminEnvironmentImpactList: {
+              value: {
+                data: [
+                  {
+                    id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+                    user_id: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+                    rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+                    policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+                    estimated_distance_km: 4,
+                    co2_saved: 255,
+                    co2_saved_unit: "gCO2e",
+                    distance_source: "TIME_SPEED",
+                    raw_rental_minutes: 23,
+                    effective_ride_minutes: 20,
+                    calculated_at: "2026-04-15T10:30:00.000Z",
+                  },
+                ],
+                pagination: {
+                  page: 1,
+                  pageSize: 20,
+                  total: 1,
+                  totalPages: 1,
+                },
+              },
+            },
+            EmptyAdminEnvironmentImpactList: {
+              value: {
+                data: [],
+                pagination: {
+                  page: 1,
+                  pageSize: 20,
+                  total: 0,
+                  totalPages: 0,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Invalid query parameters",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
+export const getAdminEnvironmentImpactDetail = createRoute({
+  method: "get",
+  path: "/environment/impacts/{impactId}",
+  tags: ["Environment"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: EnvironmentImpactIdParamsSchema,
+  },
+  responses: {
+    200: {
+      description:
+        "Admin detail for one calculated Environment Impact record. Reads only environmental_impact_stats, reports co2_saved in grams gCO2e, and does not calculate new impact or trigger repair jobs.",
+      content: {
+        "application/json": {
+          schema: AdminEnvironmentImpactDetailSchema,
+          examples: {
+            AdminEnvironmentImpactDetail: {
+              value: {
+                id: "018fa0f9-8f3b-752c-8f3d-2c9000000001",
+                user_id: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+                rental_id: "018fa0f9-8f3b-752c-8f3d-2c9000000003",
+                policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+                estimated_distance_km: 4,
+                co2_saved: 255,
+                co2_saved_unit: "gCO2e",
+                raw_rental_minutes: 23,
+                effective_ride_minutes: 20,
+                return_scan_buffer_minutes: 3,
+                average_speed_kmh: 12,
+                co2_saved_per_km: 75,
+                co2_saved_per_km_unit: "gCO2e/km",
+                confidence_factor: 0.85,
+                distance_source: "TIME_SPEED",
+                formula_version: "PHASE_1_TIME_SPEED",
+                policy_snapshot: {
+                  policy_id: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+                  policy_name: "Default Environment Policy v1",
+                  average_speed_kmh: 12,
+                  co2_saved_per_km: 75,
+                  co2_saved_per_km_unit: "gCO2e/km",
+                  return_scan_buffer_minutes: 3,
+                  confidence_factor: 0.85,
+                  raw_rental_minutes: 23,
+                  effective_ride_minutes: 20,
+                  estimated_distance_km: 4,
+                  co2_saved: 255,
+                  co2_saved_unit: "gCO2e",
+                  distance_source: "TIME_SPEED",
+                  formula_version: "PHASE_1_TIME_SPEED",
+                },
+                calculated_at: "2026-04-15T10:30:00.000Z",
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Invalid impactId path parameter",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+    404: {
+      description: "Environment impact not found",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+          examples: {
+            EnvironmentImpactNotFound: {
+              value: {
+                error: environmentErrorMessages.ENVIRONMENT_IMPACT_NOT_FOUND,
+                details: {
+                  code: EnvironmentErrorCodeSchema.enum.ENVIRONMENT_IMPACT_NOT_FOUND,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const getAdminEnvironmentUserSummary = createRoute({
+  method: "get",
+  path: "/environment/users/{userId}/summary",
+  tags: ["Environment"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: EnvironmentUserIdParamsSchema,
+  },
+  responses: {
+    200: {
+      description:
+        "Admin Environment summary for one user. Aggregates only environmental_impact_stats, reports co2_saved in grams gCO2e, and does not calculate new impact or trigger repair jobs.",
+      content: {
+        "application/json": {
+          schema: AdminEnvironmentUserSummarySchema,
+          examples: {
+            AdminEnvironmentUserSummaryWithData: {
+              value: {
+                user_id: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+                total_trips_counted: 3,
+                total_estimated_distance_km: 7.4,
+                total_co2_saved: 472,
+                co2_saved_unit: "gCO2e",
+              },
+            },
+            EmptyAdminEnvironmentUserSummary: {
+              value: {
+                user_id: "018fa0f9-8f3b-752c-8f3d-2c9000000002",
+                total_trips_counted: 0,
+                total_estimated_distance_km: 0,
+                total_co2_saved: 0,
+                co2_saved_unit: "gCO2e",
+              },
+            },
+          },
+        },
+      },
+    },
+    400: {
+      description: "Invalid userId path parameter",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
 export const listEnvironmentPolicies = createRoute({
   method: "get",
   path: "/environment/policies",
@@ -347,6 +561,9 @@ export const environmentQueries = {
   getMyEnvironmentSummary,
   getMyEnvironmentImpactHistory,
   getMyEnvironmentImpactByRental,
+  listAdminEnvironmentImpacts,
+  getAdminEnvironmentImpactDetail,
+  getAdminEnvironmentUserSummary,
   listEnvironmentPolicies,
   getActiveEnvironmentPolicy,
 } as const;
