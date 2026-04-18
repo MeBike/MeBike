@@ -153,10 +153,6 @@ export default function StationDetailPage() {
                         <p className="text-xl font-bold text-foreground">{station.capacity.total}</p>
                     </div>
                     <div className="rounded-lg bg-muted/30 p-3 border border-border/40 text-center">
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Lấy xe tối đa</p>
-                        <p className="text-xl font-bold text-foreground">{station.capacity.pickupSlotLimit}</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/30 p-3 border border-border/40 text-center">
                         <p className="text-[10px] text-muted-foreground uppercase font-bold">Trả xe tối đa</p>
                         <p className="text-xl font-bold text-foreground">{station.capacity.returnSlotLimit}</p>
                     </div>

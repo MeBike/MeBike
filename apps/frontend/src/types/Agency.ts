@@ -30,7 +30,6 @@ export interface AgencyStats {
   },
   currentStation : {
     totalCapacity: number,
-    pickupSlotLimit: number,
     returnSlotLimit: number,
     totalBikes: number,
     availableBikes: number,

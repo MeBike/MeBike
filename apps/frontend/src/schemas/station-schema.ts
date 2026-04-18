@@ -7,6 +7,8 @@ export const stationSchema = z.object({
   address: z.string().min(10, "Địa chỉ không được để trống"),
   latitude: z.number(),
   longitude: z.number(),
-  totalCapacity: z.number().min(1,"Sức chứa không được để trống").max(20,"Không được quá 20 chiếc"),
+  totalCapacity: z.number().min(1,"Sức chứa không được để trống").max(40,"Không được quá 40 chiếc"),
+  stationType: z.enum(["INTERNAL","AGENCY"]),
+  returnSlotLimit : z.number().min(1,"Số lượng trả xe tối đa không được để trống"),
 });
 export type StationSchemaFormData = z.infer<typeof stationSchema>;

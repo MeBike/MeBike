@@ -12,24 +12,34 @@ import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { StationInfoForm } from "../components/station-infor-form";
 const StationMapDynamic = dynamic(
-  () => import("@/app/admin/stations/components/station-map").then((mod) => mod.StationMap),
+  () =>
+    import("@/app/admin/stations/components/station-map").then(
+      (mod) => mod.StationMap,
+    ),
   {
-    ssr: false, // Chốt chặn quan trọng nhất!
+    ssr: false,
     loading: () => (
       <div className="w-full h-full min-h-[500px] bg-muted/50 animate-pulse flex flex-col items-center justify-center text-muted-foreground">
         <Loader2 className="h-6 w-6 animate-spin mb-2" />
         <p className="text-sm">Đang khởi tạo bản đồ TomTom...</p>
       </div>
-    )
-  }
+    ),
+  },
 );
 export default function CreateStationPage() {
   const router = useRouter();
   const { createStation } = useStationActions({ hasToken: true });
-
   const form = useForm<StationSchemaFormData>({
     resolver: zodResolver(stationSchema),
-    defaultValues: { name: "", address: "", latitude: 0, longitude: 0, totalCapacity: 0 },
+    defaultValues: {
+      name: "",
+      address: "",
+      latitude: 0,
+      longitude: 0,
+      totalCapacity: 0,
+      stationType: "INTERNAL", // Thêm vào đây
+      returnSlotLimit: 10, // Thêm vào đây
+    },
   });
 
   const onLocationSelect = (lat: number, lng: number) => {
@@ -57,18 +67,23 @@ export default function CreateStationPage() {
 
       <header className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight">Tạo trạm xe mới</h1>
-        <p className="text-muted-foreground mt-2 text-lg">Điền thông tin và chọn vị trí trên bản đồ để thêm trạm xe.</p>
+        <p className="text-muted-foreground mt-2 text-lg">
+          Điền thông tin và chọn vị trí trên bản đồ để thêm trạm xe.
+        </p>
       </header>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-8 lg:grid-cols-3">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="grid gap-8 lg:grid-cols-3"
+      >
         <div className="lg:col-span-1">
-          <StationInfoForm 
-            form={form} 
-            onSubmit={onSubmit} 
-            onCancel={() => router.push("/admin/stations")} 
+          <StationInfoForm
+            form={form}
+            onSubmit={onSubmit}
+            onCancel={() => router.push("/admin/stations")}
           />
         </div>
-        
+
         <div className="lg:col-span-2 min-h-[500px]">
           <StationMapDynamic onLocationSelect={onLocationSelect} />
         </div>
