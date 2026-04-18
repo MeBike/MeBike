@@ -58,6 +58,9 @@ export const rentalErrorCodes = [
   "RETURN_SLOT_STATION_MISMATCH",
   "RETURN_SLOT_NOT_FOUND",
   "RETURN_SLOT_REQUIRES_ACTIVE_RENTAL",
+  "BILLING_PREVIEW_REQUIRES_ACTIVE_RENTAL",
+  "BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL",
+  "BILLING_DETAIL_NOT_READY",
   "RETURN_SLOT_CAPACITY_EXCEEDED",
   "RETURN_ALREADY_CONFIRMED",
 
@@ -216,6 +219,9 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   RETURN_SLOT_STATION_MISMATCH: "The rental can only end at the station reserved by the active return slot",
   RETURN_SLOT_NOT_FOUND: "Return slot not found",
   RETURN_SLOT_REQUIRES_ACTIVE_RENTAL: "Return slot requires an active rental",
+  BILLING_PREVIEW_REQUIRES_ACTIVE_RENTAL: "Billing preview requires an active rental",
+  BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL: "Billing detail requires a completed rental",
+  BILLING_DETAIL_NOT_READY: "Billing detail is not ready",
   RETURN_SLOT_CAPACITY_EXCEEDED: "Station does not have enough capacity for another return slot",
   RETURN_ALREADY_CONFIRMED: "Rental return has already been confirmed",
 

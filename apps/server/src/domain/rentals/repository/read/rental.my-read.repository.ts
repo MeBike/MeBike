@@ -12,7 +12,9 @@ import type { RentalRepo } from "../rental.repository.types";
 
 import { RentalRepositoryError } from "../../domain-errors";
 import {
+  mapToRentalBillingDetailRow,
   mapToRentalRow,
+  rentalBillingDetailSelect,
   rentalSelect,
   toMyRentalsWhere,
   toRentalOrderBy,
@@ -20,7 +22,11 @@ import {
 
 export type RentalMyReadRepo = Pick<
   RentalRepo,
-  "listMyRentals" | "listMyCurrentRentals" | "getMyRentalById" | "getMyRentalCounts"
+  | "listMyRentals"
+  | "listMyCurrentRentals"
+  | "getMyRentalById"
+  | "getMyRentalBillingDetail"
+  | "getMyRentalCounts"
 >;
 
 export function makeRentalMyReadRepository(
@@ -123,6 +129,35 @@ export function makeRentalMyReadRepository(
         });
 
         return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
+      }).pipe(defectOn(RentalRepositoryError));
+    },
+
+    getMyRentalBillingDetail(userId, rentalId) {
+      return Effect.gen(function* () {
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            client.rentalBillingRecord.findFirst({
+              where: {
+                rentalId,
+                rental: {
+                  is: {
+                    id: rentalId,
+                    userId,
+                  },
+                },
+              },
+              select: rentalBillingDetailSelect,
+            }),
+          catch: e =>
+            new RentalRepositoryError({
+              operation: "getMyRentalBillingDetail",
+              cause: e,
+            }),
+        });
+
+        return Option.fromNullable(raw).pipe(
+          Option.map(mapToRentalBillingDetailRow),
+        );
       }).pipe(defectOn(RentalRepositoryError));
     },
 
