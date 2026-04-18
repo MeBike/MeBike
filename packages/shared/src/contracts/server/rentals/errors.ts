@@ -95,7 +95,7 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   subscriptionId: z.uuidv7().optional(),
   sosId: z.uuidv7().optional(),
   cardUid: z.string().optional(),
-  chipId: z.string().optional(),
+  bikeIdLookup: z.uuidv7().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
   endTime: z.string().optional(),

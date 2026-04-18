@@ -80,7 +80,6 @@ export const RentalUserDetailSchema = z.object({
 export const RentalBikeSchema = z.object({
   id: z.uuidv7(),
   bikeNumber: z.string(),
-  chipId: z.string(),
   status: BikeStatusSchema,
   supplierId: z.uuidv7().optional(),
   updatedAt: z.iso.datetime(),
@@ -263,7 +262,7 @@ export const StaffCreateRentalRequestSchema = CreateRentalRequestSchema.extend({
 });
 
 export const CardTapRentalRequestSchema = z.object({
-  chipId: z.string(),
+  bikeId: z.uuidv7(),
   cardUid: z.string(),
 });
 
@@ -328,7 +327,6 @@ export const BikeSwapSupplierSchema = z.object({
 export const BikeSwapBikeSchema = z.object({
   id: z.uuidv7(),
   bikeNumber: z.string(),
-  chipId: z.string(),
   station: BikeSwapStationSchema,
   supplier: BikeSwapSupplierSchema,
 });

@@ -34,7 +34,6 @@ export type StationOverrides = {
 export type BikeOverrides = {
   id?: string;
   bikeNumber?: string;
-  chipId?: string;
   stationId?: string | null;
   supplierId?: string | null;
   status?: "AVAILABLE" | "BOOKED" | "BROKEN" | "RESERVED" | "MAINTAINED" | "UNAVAILABLE";
@@ -151,7 +150,6 @@ export type CreatedStation = {
 export type CreatedBike = {
   id: string;
   bikeNumber: string;
-  chipId: string;
 };
 
 export type CreatedSupplier = {

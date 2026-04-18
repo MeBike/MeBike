@@ -10,7 +10,6 @@ export type BikeDbClient = PrismaClient | PrismaTypes.TransactionClient;
 export const bikeSelect = {
   id: true,
   bikeNumber: true,
-  chipId: true,
   stationId: true,
   supplierId: true,
   status: true,

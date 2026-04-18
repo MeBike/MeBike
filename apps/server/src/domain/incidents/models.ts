@@ -42,7 +42,7 @@ export type IncidentDetail = {
   } | null;
   bike: {
     id: string;
-    chipId: string;
+    bikeNumber: string;
   };
   station: {
     id: string;

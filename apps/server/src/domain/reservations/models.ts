@@ -40,7 +40,6 @@ export type ReservationDetailUserRow = {
 export type ReservationDetailBikeRow = {
   readonly id: string;
   readonly bikeNumber: string;
-  readonly chipId: string;
   readonly status: BikeStatus;
 };
 

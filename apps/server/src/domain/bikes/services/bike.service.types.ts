@@ -9,7 +9,6 @@ import type {
   BikeNotFound,
   BikeStationNotFound,
   BikeSupplierNotFound,
-  DuplicateChipId,
 } from "../domain-errors";
 import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 import type { BikeUpdatePatch } from "../repository/bike.repository.types";
@@ -17,14 +16,13 @@ import type { BikeUpdatePatch } from "../repository/bike.repository.types";
 export type BikeService = {
   createBike: (
     input: {
-      chipId: string;
       stationId: string;
       supplierId: string;
       status?: BikeStatus;
     },
   ) => Effect.Effect<
     BikeRow,
-    DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
+    BikeStationNotFound | BikeSupplierNotFound
   >;
 
   listBikes: (
@@ -44,7 +42,6 @@ export type BikeService = {
     | BikeCurrentlyRented
     | BikeCurrentlyReserved
     | BikeNotFound
-    | DuplicateChipId
     | BikeStationNotFound
     | BikeSupplierNotFound
   >;

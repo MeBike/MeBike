@@ -40,7 +40,6 @@ export const ReservationDetailUserSchema = z.object({
 export const ReservationDetailBikeSchema = z.object({
   id: z.uuidv7(),
   bikeNumber: z.string(),
-  chipId: z.string(),
   status: BikeStatusSchema,
 }).openapi("ReservationDetailBike");
 

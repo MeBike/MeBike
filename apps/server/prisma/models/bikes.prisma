@@ -10,7 +10,6 @@ enum BikeStatus {
 model Bike {
   id         String     @id @default(uuid(7)) @db.Uuid
   bikeNumber String     @unique @map("bike_number")
-  chipId     String     @unique @map("chip_id")
   stationId  String?    @db.Uuid
   supplierId String?    @db.Uuid
   status     BikeStatus

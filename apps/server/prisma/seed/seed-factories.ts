@@ -29,7 +29,7 @@ export type SeedSupplierInput = {
 };
 
 export type SeedBikeInput = {
-  readonly chipId: string;
+  readonly bikeNumber: string;
   readonly stationId: string;
   readonly supplierId?: string | null;
   readonly status?: BikeStatus;
@@ -112,13 +112,13 @@ export async function upsertSeedSupplier(prisma: PrismaClient, input: SeedSuppli
 
 export async function upsertSeedBike(prisma: PrismaClient, input: SeedBikeInput) {
   const existing = await prisma.bike.findUnique({
-    where: { chipId: input.chipId },
+    where: { bikeNumber: input.bikeNumber },
     select: { id: true },
   });
 
   if (existing) {
     return prisma.bike.update({
-      where: { chipId: input.chipId },
+      where: { bikeNumber: input.bikeNumber },
       data: {
         stationId: input.stationId,
         status: input.status ?? BikeStatus.AVAILABLE,
@@ -140,8 +140,7 @@ export async function upsertSeedBike(prisma: PrismaClient, input: SeedBikeInput)
   return prisma.bike.create({
     data: {
       id: uuidv7(),
-      bikeNumber: formatBikeNumber(Number(counter.value)),
-      chipId: input.chipId,
+      bikeNumber: input.bikeNumber || formatBikeNumber(Number(counter.value)),
       stationId: input.stationId,
       status: input.status ?? BikeStatus.AVAILABLE,
       supplierId: input.supplierId ?? null,

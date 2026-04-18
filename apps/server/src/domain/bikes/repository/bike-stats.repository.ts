@@ -135,7 +135,7 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
           .leftJoin("Station", "Station.id", "Bike.stationId")
           .select([
             "Bike.id as bike_id",
-            "Bike.chip_id as chip_id",
+            "Bike.bike_number as bike_number",
             "Station.id as station_id",
             "Station.name as station_name",
             sql<number>`sum("Rental"."total_price"::numeric)`.as("total_revenue"),
@@ -145,7 +145,7 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
           .where("Rental.total_price", "is not", null)
           .groupBy([
             "Bike.id",
-            "Bike.chip_id",
+            "Bike.bike_number",
             "Station.id",
             "Station.name",
           ])
@@ -159,7 +159,7 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
 
         return {
           bikeId: row.bike_id,
-          bikeChipId: row.chip_id,
+          bikeNumber: row.bike_number,
           totalRevenue: Number(row.total_revenue ?? 0),
           rentalCount: Number(row.rental_count ?? 0),
           station: row.station_id

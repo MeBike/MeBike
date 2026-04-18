@@ -142,7 +142,7 @@ export const StationRevenueResponseSchema = z.object({
 
 export const BikeRevenueItemSchema = z.object({
   _id: z.uuidv7(),
-  chipId: z.string(),
+  bikeNumber: z.string(),
   totalRevenue: z.number(),
   totalRevenueFormatted: z.string(),
   totalRentals: z.number(),
@@ -202,7 +202,7 @@ export const NearbyStationSchema = StationReadSummarySchema.extend({
 
 export const NearestAvailableBikeSchema = z.object({
   bikeId: z.uuidv7(),
-  chipId: z.string(),
+  bikeNumber: z.string(),
   status: z.string(),
   stationId: z.uuidv7(),
   stationName: z.string(),
