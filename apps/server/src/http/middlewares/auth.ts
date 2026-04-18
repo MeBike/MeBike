@@ -9,6 +9,7 @@ import { createMiddleware } from "hono/factory";
 import jwt from "jsonwebtoken";
 
 import type { AccessTokenPayload } from "@/domain/auth";
+import type { UserRow } from "@/domain/users";
 import type { RunPromise } from "@/http/shared/runtime";
 
 import { hasActiveAgencyAccess, requireJwtSecret } from "@/domain/auth";
@@ -39,6 +40,13 @@ function requireRoles(...allowedRoles: readonly Role[]) {
     }
     await next();
   });
+}
+
+function resolveOperatorStationId(row: UserRow) {
+  return row.orgAssignment?.station?.id
+    ?? row.orgAssignment?.technicianTeam?.stationId
+    ?? row.orgAssignment?.agency?.stationId
+    ?? undefined;
 }
 
 function parseBearerToken(header: string | null | undefined): string | null {
@@ -91,9 +99,7 @@ export const currentUserMiddleware = createMiddleware(async (c, next) => {
       }
       else {
         const user = userOpt.value;
-        const operatorStationId = user.orgAssignment?.station?.id
-          ?? user.orgAssignment?.agency?.stationId
-          ?? undefined;
+        const operatorStationId = resolveOperatorStationId(user);
 
         c.set("currentUser", {
           userId: user.id,
@@ -122,10 +128,13 @@ export const requireAdminMiddleware = requireRoles("ADMIN");
 export const requireAgencyMiddleware = requireRoles("AGENCY");
 export const requireManagerMiddleware = requireRoles("MANAGER");
 export const requireStaffMiddleware = requireRoles("STAFF");
+export const requireStaffOrManagerMiddleware = requireRoles("STAFF", "MANAGER");
 export const requireUserMiddleware = requireRoles("USER");
 export const requireTechnicianMiddleware = requireRoles("TECHNICIAN");
+export const requireOperatorMiddleware = requireRoles("STAFF", "MANAGER", "AGENCY", "TECHNICIAN");
 export const requireBackofficeMiddleware = requireRoles("ADMIN", "STAFF");
 export const requireRentalOperatorMiddleware = requireRoles("STAFF", "AGENCY");
+export const requireRentalOperatorManagerMiddleware = requireRoles("STAFF", "MANAGER", "AGENCY");
 export const requireRentalSupportMiddleware = requireRoles(
   "ADMIN",
   "STAFF",

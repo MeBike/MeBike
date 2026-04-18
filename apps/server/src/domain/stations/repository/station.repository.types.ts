@@ -2,11 +2,16 @@ import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
-import type { StationNameAlreadyExists, StationOutsideSupportedArea } from "../errors";
+import type {
+  StationLocationAlreadyExists,
+  StationNameAlreadyExists,
+  StationOutsideSupportedArea,
+} from "../errors";
 import type {
   CreateStationInput,
   NearestSearchArgs,
   NearestStationRow,
+  StationContextRow,
   StationFilter,
   StationRevenueRow,
   StationRow,
@@ -19,14 +24,14 @@ export type StationCommandRepo = {
     input: CreateStationInput,
   ) => Effect.Effect<
     StationRow,
-    StationNameAlreadyExists | StationOutsideSupportedArea
+    StationNameAlreadyExists | StationLocationAlreadyExists | StationOutsideSupportedArea
   >;
   update: (
     id: string,
     input: UpdateStationInput,
   ) => Effect.Effect<
     Option.Option<StationRow>,
-    StationNameAlreadyExists | StationOutsideSupportedArea
+    StationNameAlreadyExists | StationLocationAlreadyExists | StationOutsideSupportedArea
   >;
 };
 
@@ -44,6 +49,9 @@ export type StationQueryRepo = {
   findIdNameAddressByIds: (
     ids: readonly string[],
   ) => Effect.Effect<readonly { id: string; name: string; address: string }[]>;
+  listContextExcludingId: (
+    excludedId: string,
+  ) => Effect.Effect<readonly StationContextRow[]>;
   listNearest: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;

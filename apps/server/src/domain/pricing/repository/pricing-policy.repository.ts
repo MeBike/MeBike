@@ -31,7 +31,6 @@ const pricingPolicySelect = {
   name: true,
   baseRate: true,
   billingUnitMinutes: true,
-  overtimeRate: true,
   reservationFee: true,
   depositRequired: true,
   lateReturnCutoff: true,

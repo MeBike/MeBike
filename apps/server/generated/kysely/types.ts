@@ -179,13 +179,6 @@ export const HandoverStatus = {
     DISPUTED: "DISPUTED"
 } as const;
 export type HandoverStatus = (typeof HandoverStatus)[keyof typeof HandoverStatus];
-export const RentalPenaltyType = {
-    LATE_RETURN: "LATE_RETURN",
-    LOSS: "LOSS",
-    DAMAGE: "DAMAGE",
-    OTHER: "OTHER"
-} as const;
-export type RentalPenaltyType = (typeof RentalPenaltyType)[keyof typeof RentalPenaltyType];
 export const RentalStatus = {
     RENTED: "RENTED",
     COMPLETED: "COMPLETED",
@@ -495,7 +488,6 @@ export type PricingPolicy = {
     name: string;
     base_rate: string;
     billing_unit_minutes: number;
-    overtime_rate: string | null;
     reservation_fee: Generated<string>;
     deposit_required: Generated<string>;
     late_return_cutoff: Generated<Timestamp>;
@@ -589,22 +581,12 @@ export type RentalBillingRecord = {
     total_duration_minutes: number;
     estimated_distance_km: string | null;
     base_amount: Generated<string>;
-    overtime_amount: Generated<string>;
     coupon_rule_id: string | null;
     coupon_rule_snapshot: unknown | null;
     coupon_discount_amount: Generated<string>;
     subscription_discount_amount: Generated<string>;
     deposit_forfeited: Generated<boolean>;
     total_amount: string;
-    created_at: Generated<Timestamp>;
-};
-export type RentalPenalty = {
-    id: string;
-    rental_id: string;
-    wallet_hold_id: string | null;
-    penalty_type: RentalPenaltyType;
-    amount: string;
-    description: string | null;
     created_at: Generated<Timestamp>;
 };
 export type Reservation = {
@@ -820,7 +802,6 @@ export type DB = {
     redistribution_requests: RedistributionRequest;
     Rental: Rental;
     rental_billing_records: RentalBillingRecord;
-    rental_penalties: RentalPenalty;
     Reservation: Reservation;
     return_confirmations: ReturnConfirmation;
     return_slot_reservations: ReturnSlotReservation;

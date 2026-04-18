@@ -9,7 +9,7 @@ import {
 } from "@/http/controllers/reservations";
 import {
   requireAdminMiddleware,
-  requireStaffMiddleware,
+  requireStaffOrManagerMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
@@ -37,14 +37,14 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
 
   const staffListRoute = {
     ...reservations.staffListReservations,
-    middleware: [requireStaffMiddleware] as const,
+    middleware: [requireStaffOrManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(staffListRoute, ReservationStaffController.staffListReservations);
 
   const staffGetRoute = {
     ...reservations.staffGetReservation,
-    middleware: [requireStaffMiddleware] as const,
+    middleware: [requireStaffOrManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(staffGetRoute, ReservationStaffController.staffGetReservation);

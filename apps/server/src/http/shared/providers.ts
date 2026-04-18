@@ -136,6 +136,7 @@ export {
   ExternalInfraLive,
   FirebaseStorageLive,
   MapboxRoutingLive,
+  MqttLive,
   PersistenceInfraLive,
   PrismaLive,
   RedisLive,

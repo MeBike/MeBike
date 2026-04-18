@@ -15,15 +15,6 @@ enum HandoverStatus {
   @@map("handover_status")
 }
 
-enum RentalPenaltyType {
-  LATE_RETURN
-  LOSS
-  DAMAGE
-  OTHER
-
-  @@map("rental_penalty_type")
-}
-
 model ReturnConfirmation {
   id                 String             @id @default(uuid(7)) @db.Uuid
   rentalId           String             @unique @map("rental_id") @db.Uuid
@@ -50,7 +41,6 @@ model RentalBillingRecord {
   totalDurationMinutes       Int      @map("total_duration_minutes")
   estimatedDistanceKm        Decimal? @map("estimated_distance_km") @db.Decimal(8, 2)
   baseAmount                 Decimal  @default(0) @map("base_amount") @db.Decimal(12, 2)
-  overtimeAmount             Decimal  @default(0) @map("overtime_amount") @db.Decimal(12, 2)
   couponRuleId               String?  @map("coupon_rule_id") @db.Uuid
   couponRuleSnapshot         Json?    @map("coupon_rule_snapshot") @db.JsonB
   couponDiscountAmount       Decimal  @default(0) @map("coupon_discount_amount") @db.Decimal(12, 2)
@@ -66,21 +56,4 @@ model RentalBillingRecord {
   @@index([pricingPolicyId], name: "idx_rental_billing_records_pricing_policy")
   @@index([couponRuleId], name: "idx_rental_billing_records_coupon_rule")
   @@map("rental_billing_records")
-}
-
-model RentalPenalty {
-  id           String            @id @default(uuid(7)) @db.Uuid
-  rentalId     String            @map("rental_id") @db.Uuid
-  walletHoldId String?           @map("wallet_hold_id") @db.Uuid
-  penaltyType  RentalPenaltyType @map("penalty_type")
-  amount       Decimal           @db.Decimal(12, 2)
-  description  String?
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz
-
-  rental     Rental      @relation(fields: [rentalId], references: [id])
-  walletHold WalletHold? @relation(fields: [walletHoldId], references: [id])
-
-  @@index([rentalId], name: "idx_rental_penalties_rental")
-  @@index([walletHoldId], name: "idx_rental_penalties_wallet_hold")
-  @@map("rental_penalties")
 }

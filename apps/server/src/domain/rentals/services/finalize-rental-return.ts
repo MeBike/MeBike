@@ -249,7 +249,6 @@ export function finalizeRentalReturnInTx(
             totalDurationMinutes: durationMinutes,
             estimatedDistanceKm: null,
             baseAmount: toPrismaDecimal(fullBaseAmountMinor.toString()),
-            overtimeAmount: toPrismaDecimal("0"),
             couponRuleId: selectedCouponRule?.ruleId ?? null,
             ...(couponRuleSnapshot
               ? {

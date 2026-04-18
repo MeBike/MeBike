@@ -10,6 +10,17 @@ import type {
 
 type BadgeTone = "success" | "warning" | "danger" | "neutral";
 
+export const incidentTypeOptions = [
+  "BRAKE",
+  "CHAIN",
+  "FLAT_TIRE",
+  "LOCK",
+  "ACCIDENT",
+  "GENERAL_REPORT",
+] as const;
+
+export type IncidentTypeOption = (typeof incidentTypeOptions)[number];
+
 const terminalStatuses = new Set<IncidentStatus>(["RESOLVED", "CLOSED", "CANCELLED"]);
 
 export function isIncidentTerminalStatus(status: IncidentStatus) {
@@ -97,6 +108,25 @@ export function getIncidentSourceLabel(source: IncidentSource) {
   }
 }
 
+export function getIncidentTypeLabel(incidentType: string) {
+  switch (incidentType) {
+    case "BRAKE":
+      return "Phanh";
+    case "CHAIN":
+      return "Xích xe";
+    case "FLAT_TIRE":
+      return "Lốp xe";
+    case "LOCK":
+      return "Khóa xe";
+    case "ACCIDENT":
+      return "Va chạm";
+    case "GENERAL_REPORT":
+      return "Báo cáo chung";
+    default:
+      return incidentType.replaceAll("_", " ");
+  }
+}
+
 export function formatIncidentDistance(distanceMeters: number | null) {
   if (!distanceMeters || distanceMeters <= 0) {
     return null;
@@ -152,6 +182,14 @@ export function presentIncidentError(error: IncidentError) {
         return "Không tìm thấy thông tin xe hoặc chuyến thuê để tạo sự cố.";
       case "STATION_NOT_FOUND":
         return "Không tìm thấy trạm liên quan đến sự cố này.";
+      case "INCIDENT_IMAGE_TOO_LARGE":
+        return "Ảnh sự cố quá lớn. Vui lòng chọn ảnh nhỏ hơn 5MB.";
+      case "INVALID_INCIDENT_IMAGE":
+        return "Ảnh sự cố không hợp lệ hoặc chưa được hỗ trợ.";
+      case "INCIDENT_IMAGE_DIMENSIONS_TOO_LARGE":
+        return "Kích thước ảnh sự cố quá lớn. Vui lòng chọn ảnh nhỏ hơn để tiếp tục.";
+      case "INCIDENT_IMAGE_UPLOAD_UNAVAILABLE":
+        return "Dịch vụ tải ảnh sự cố tạm thời không khả dụng. Vui lòng thử lại sau.";
       case "UNAUTHORIZED_INCIDENT_ACCESS":
         return "Không có quyền truy cập sự cố này.";
       case "VALIDATION_ERROR":

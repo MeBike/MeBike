@@ -1,6 +1,7 @@
 import type { RouteConfig } from "@hono/zod-openapi";
 
-import { serverRoutes } from "@mebike/shared";
+import { IncidentsContracts, serverRoutes } from "@mebike/shared";
+import { bodyLimit } from "hono/body-limit";
 
 import { IncidentPublicController } from "../controllers/incidents";
 import { IncidentTechnicianController } from "../controllers/incidents/technican.controller";
@@ -14,6 +15,19 @@ export function registerIncidentRoutes(
   app: import("@hono/zod-openapi").OpenAPIHono,
 ) {
   const incidents = serverRoutes.incidents;
+  const INCIDENT_IMAGE_REQUEST_MAX_BYTES = 26 * 1024 * 1024;
+
+  function incidentImageTooLargeResponse(c: import("hono").Context) {
+    return c.json(
+      {
+        error: IncidentsContracts.incidentErrorMessages.INCIDENT_IMAGE_TOO_LARGE,
+        details: {
+          code: IncidentsContracts.IncidentErrorCodeSchema.enum.INCIDENT_IMAGE_TOO_LARGE,
+        },
+      },
+      413,
+    );
+  }
 
   const listIncidentsRoute = {
     ...incidents.listIncidents,
@@ -33,6 +47,31 @@ export function registerIncidentRoutes(
     ...incidents.createIncident,
     middleware: [requireIncidentActorMiddleware] as const,
   } satisfies RouteConfig;
+
+  const uploadIncidentImagesRoute = {
+    ...incidents.uploadIncidentImages,
+    middleware: [requireIncidentActorMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.use(incidents.uploadIncidentImages.path, async (c, next) => {
+    const contentLength = c.req.header("content-length");
+    const parsedLength = contentLength ? Number(contentLength) : null;
+
+    if (
+      parsedLength !== null
+      && Number.isFinite(parsedLength)
+      && parsedLength > INCIDENT_IMAGE_REQUEST_MAX_BYTES
+    ) {
+      return incidentImageTooLargeResponse(c);
+    }
+
+    await next();
+  });
+  app.use(incidents.uploadIncidentImages.path, bodyLimit({
+    maxSize: INCIDENT_IMAGE_REQUEST_MAX_BYTES,
+    onError: c => incidentImageTooLargeResponse(c),
+  }));
+  app.openapi(uploadIncidentImagesRoute, IncidentPublicController.uploadIncidentImages);
 
   app.openapi(createIncidentRoute, IncidentPublicController.createIncident);
 

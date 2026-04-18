@@ -11,7 +11,9 @@ import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import type {
   NearestSearchArgs,
   NearestStationRow,
+  StationContextRow,
   StationRevenueRow,
+  StationWorkerRow,
 } from "../../models";
 import type { StationQueryRepo } from "../station.repository.types";
 
@@ -38,6 +40,7 @@ export type StationReadRepo = Pick<
   | "getById"
   | "getByAgencyId"
   | "findIdNameAddressByIds"
+  | "listContextExcludingId"
   | "listNearest"
   | "getRevenueByStation"
 >;
@@ -66,6 +69,73 @@ export function makeStationReadRepository(
           }),
         ));
     });
+
+  const loadWorkers = (stationId: string) =>
+    Effect.tryPromise({
+      try: () =>
+        client.userOrgAssignment.findMany({
+          where: {
+            OR: [
+              {
+                stationId,
+                user: {
+                  role: { in: ["STAFF", "MANAGER"] },
+                },
+              },
+              {
+                technicianTeam: { stationId },
+                user: {
+                  role: "TECHNICIAN",
+                },
+              },
+            ],
+          },
+          select: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                role: true,
+              },
+            },
+            technicianTeam: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        }),
+      catch: cause =>
+        new StationRepositoryError({
+          operation: "getById.loadWorkers",
+          cause,
+        }),
+    }).pipe(
+      Effect.map((rows): StationWorkerRow[] => {
+        const roleRank = {
+          MANAGER: 0,
+          STAFF: 1,
+          TECHNICIAN: 2,
+        } as const;
+
+        return rows
+          .map(row => ({
+            userId: row.user.id,
+            fullName: row.user.fullName,
+            role: row.user.role as StationWorkerRow["role"],
+            technicianTeamId: row.technicianTeam?.id ?? null,
+            technicianTeamName: row.technicianTeam?.name ?? null,
+          }))
+          .sort((left, right) => {
+            const rankDiff = roleRank[left.role] - roleRank[right.role];
+
+            return rankDiff !== 0
+              ? rankDiff
+              : left.fullName.localeCompare(right.fullName);
+          });
+      }),
+    );
 
   return {
     listWithOffset(filter, pageReq) {
@@ -126,10 +196,15 @@ export function makeStationReadRepository(
           return Option.none();
         }
 
-        const [station] = yield* attachCounts([row], (item, counts) =>
-          applyCounts(item, counts));
+        const [[station], workers] = yield* Effect.all([
+          attachCounts([row], (item, counts) => applyCounts(item, counts)),
+          loadWorkers(id),
+        ]);
 
-        return Option.some(station);
+        return Option.some({
+          ...station,
+          workers,
+        });
       }).pipe(defectOn(StationRepositoryError));
     },
 
@@ -180,6 +255,29 @@ export function makeStationReadRepository(
             cause,
           }),
       }).pipe(defectOn(StationRepositoryError));
+    },
+
+    listContextExcludingId(excludedId) {
+      return Effect.tryPromise({
+        try: () =>
+          client.station.findMany({
+            where: { id: { not: excludedId } },
+            orderBy: { name: "asc" },
+            select: {
+              id: true,
+              name: true,
+              address: true,
+            },
+          }),
+        catch: cause =>
+          new StationRepositoryError({
+            operation: "listContextExcludingId",
+            cause,
+          }),
+      }).pipe(
+        Effect.map((rows): StationContextRow[] => rows),
+        defectOn(StationRepositoryError),
+      );
     },
 
     listNearest({

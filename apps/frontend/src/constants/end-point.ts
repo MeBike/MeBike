@@ -100,5 +100,24 @@ export const ENDPOINT = {
         BASE : "/admin/subscriptions",
         ID : (id:string) => `/admin/subscriptions/${id}`,
     },
+    DISTRIBUTION_REQUEST : {
+        ADMIN_VIEW : "/admin/redistribution-requests",
+        DETAIL_ADMIN_VIEW : (id:string) => `/admin/redistribution-requests/${id}`,
+        CREATE_DISTRIBUTION_REQUEST : "/redistribution-requests",
+        CANCEL_DISTRIBUTION_REQUEST : (id:string) => `/redistribution-requests/${id}/cancel`,
+        START_TRANSIT : (id:string) => `/redistribution-requests/${id}/start-transit`,
+        STAFF_VIEW : "/staff/redistribution-requests",
+        STAFF_VIEW_HISTORY : "/staff/redistribution-requests/history",
+        STAFF_VIEW_DETAIL : (id:string) => `/staff/redistribution-requests/${id}`,
+        MANAGER_VIEW : "/manager/redistribution-requests",
+        MANAGER_VIEW_HISTORY : "/manager/redistribution-requests/history",
+        MANAGER_VIEW_DETAIL : (id:string) => `/manager/redistribution-requests/${id}`,
+        APPROVE : (id:string) => `/redistribution-requests/${id}/approve`,
+        REJECT : (id:string) => `/redistribution-requests/${id}/reject`,
+        CONFIRM_COMPLETION : (id:string) => `/redistribution-requests/${id}/confirm-completion`,
+        AGENCY_VIEW : "/agency/redistribution-requests",
+        AGENCY_VIEW_HISTORY : "/agency/redistribution-requests/history",
+        AGENCY_VIEW_DETAIL : (id:string) => `/agency/redistribution-requests/${id}`,
+    }
 
 } as const;

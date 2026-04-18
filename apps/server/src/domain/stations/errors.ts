@@ -14,6 +14,12 @@ export class StationNameAlreadyExists extends Data.TaggedError("StationNameAlrea
   readonly name: string;
 }> {}
 
+export class StationLocationAlreadyExists extends Data.TaggedError("StationLocationAlreadyExists")<{
+  readonly address: string;
+  readonly latitude: number;
+  readonly longitude: number;
+}> {}
+
 export class StationOutsideSupportedArea extends Data.TaggedError("StationOutsideSupportedArea")<{
   readonly latitude: number;
   readonly longitude: number;

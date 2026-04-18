@@ -646,6 +646,17 @@ export const adminCreateUserRoute = createRoute({
                 details: { code: UserErrorCodeSchema.enum.STATION_NAME_ALREADY_EXISTS },
               },
             },
+            StationLocationAlreadyExists: {
+              value: {
+                error: userErrorMessages.STATION_LOCATION_ALREADY_EXISTS,
+                details: {
+                  code: UserErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+                  address: "371 Doan Ket, Binh Tho, Thu Duc, TP.HCM",
+                  latitude: 10.762622,
+                  longitude: 106.660172,
+                },
+              },
+            },
             CapacityLimitExceeded: {
               value: {
                 error: userErrorMessages.CAPACITY_LIMIT_EXCEEDED,

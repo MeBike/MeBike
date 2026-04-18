@@ -61,6 +61,11 @@ export const incidentDetailSelect = {
   description: true,
   latitude: true,
   longitude: true,
+  attachments: {
+    select: {
+      fileUrl: true,
+    },
+  },
   bikeLocked: true,
   status: true,
   reportedAt: true,
@@ -115,6 +120,7 @@ export function mapToIncidentDetail(raw: IncidentDetailSelect) {
     description: raw.description,
     latitude: raw.latitude ? Number(raw.latitude) : null,
     longitude: raw.longitude ? Number(raw.longitude) : null,
+    fileUrls: raw.attachments.map(attachment => attachment.fileUrl),
     bikeLocked: raw.bikeLocked,
     status: raw.status as IncidentStatus,
     reportedAt: raw.reportedAt,

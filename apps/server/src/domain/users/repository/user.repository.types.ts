@@ -23,6 +23,9 @@ export type UserQueryRepo = {
   readonly findByEmail: (
     email: string,
   ) => Effect.Effect<Option.Option<UserRow>>;
+  readonly findByNfcCardUid: (
+    nfcCardUid: string,
+  ) => Effect.Effect<Option.Option<UserRow>>;
   readonly findByStripeConnectedAccountId: (
     accountId: string,
   ) => Effect.Effect<Option.Option<UserRow>>;

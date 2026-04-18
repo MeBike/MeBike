@@ -10,6 +10,7 @@ import type {
   StationCapacityBelowActiveUsage,
   StationCapacityLimitExceeded,
   StationCapacitySplitInvalid,
+  StationLocationAlreadyExists,
   StationNameAlreadyExists,
   StationOutsideSupportedArea,
   StationReturnSlotLimitBelowActiveReservations,
@@ -18,6 +19,7 @@ import type {
   CreateStationInput,
   NearestSearchArgs,
   NearestStationRow,
+  StationContextRow,
   StationFilter,
   StationRevenueStats,
   StationRow,
@@ -37,6 +39,7 @@ export type StationCommandService = {
   ) => Effect.Effect<
     StationRow,
     | StationNameAlreadyExists
+    | StationLocationAlreadyExists
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
     | StationCapacitySplitInvalid
@@ -60,6 +63,7 @@ export type StationCommandService = {
     StationRow,
     | import("../errors").StationNotFound
     | StationNameAlreadyExists
+    | StationLocationAlreadyExists
     | StationOutsideSupportedArea
     | StationCapacityLimitExceeded
     | StationCapacitySplitInvalid
@@ -92,6 +96,10 @@ export type StationQueryService = {
    * @returns Effect tra ve tram neu tim thay.
    */
   getStationById: (id: string) => Effect.Effect<StationRow, import("../errors").StationNotFound>;
+
+  listContextExcludingId: (
+    excludedId: string,
+  ) => Effect.Effect<readonly StationContextRow[]>;
 
   /**
    * Tim tram gan nhat theo vi tri hien tai.

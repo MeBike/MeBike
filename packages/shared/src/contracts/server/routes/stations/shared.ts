@@ -109,6 +109,7 @@ export const StationErrorResponseSchema = ServerErrorResponseSchema.extend({
 
 export const CreateStationErrorCodeSchema = z.enum([
   "STATION_NAME_ALREADY_EXISTS",
+  "STATION_LOCATION_ALREADY_EXISTS",
   "CAPACITY_LIMIT_EXCEEDED",
   "CAPACITY_SPLIT_INVALID",
   "OUTSIDE_SUPPORTED_AREA",

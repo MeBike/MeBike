@@ -36,7 +36,6 @@ model Rental {
   returnConfirmation      ReturnConfirmation?
   returnSlotReservations  ReturnSlotReservation[]
   rentalBillingRecord     RentalBillingRecord?
-  rentalPenalties         RentalPenalty[]
   walletHolds             WalletHold[]             @relation("WalletHoldRental")
   incidentReports         IncidentReport[]
   environmentalImpactStat EnvironmentalImpactStat?

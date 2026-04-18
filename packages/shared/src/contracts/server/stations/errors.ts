@@ -4,6 +4,7 @@ import { ServerErrorDetailSchema } from "../schemas";
 export const stationErrorCodes = [
   "STATION_NOT_FOUND",
   "STATION_NAME_ALREADY_EXISTS",
+  "STATION_LOCATION_ALREADY_EXISTS",
   "CAPACITY_LIMIT_EXCEEDED",
   "CAPACITY_SPLIT_INVALID",
   "CAPACITY_BELOW_ACTIVE_USAGE",
@@ -27,6 +28,9 @@ export const StationErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: StationErrorCodeSchema,
   stationId: z.uuidv7().optional(),
   agencyId: z.uuidv7().optional(),
+  address: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   totalCapacity: z.number().int().nonnegative().optional(),
   returnSlotLimit: z.number().int().nonnegative().optional(),
   totalBikes: z.number().int().nonnegative().optional(),
@@ -51,6 +55,7 @@ export type StationErrorResponse = {
 export const stationErrorMessages: Record<StationErrorCode, string> = {
   STATION_NOT_FOUND: "Station not found",
   STATION_NAME_ALREADY_EXISTS: "Station name already exists",
+  STATION_LOCATION_ALREADY_EXISTS: "Station address and coordinates already exist",
   CAPACITY_LIMIT_EXCEEDED: "Station capacity exceeds configured limit",
   CAPACITY_SPLIT_INVALID: "Station return slot limit must be between 0 and total capacity",
   CAPACITY_BELOW_ACTIVE_USAGE: "Station capacity cannot be lower than bikes and active return slots already assigned",

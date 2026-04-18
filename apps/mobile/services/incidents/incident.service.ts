@@ -21,6 +21,12 @@ import type { IncidentError } from "./incident-error";
 
 import { asNetworkError, parseIncidentError } from "./incident-error";
 
+export type UploadIncidentImagePayload = {
+  name?: string | null;
+  type?: string | null;
+  uri: string;
+};
+
 export type IncidentListParams = z.infer<
   typeof ServerRoutes.incidents.listIncidents.request.query
 >;
@@ -40,6 +46,37 @@ async function decodeIncidentResponse<TValue>(
 }
 
 export const incidentService = {
+  uploadIncidentImages: async (
+    payloads: ReadonlyArray<UploadIncidentImagePayload>,
+  ): Promise<Result<{ fileUrls: string[] }, IncidentError>> => {
+    try {
+      const formData = new FormData();
+
+      for (const payload of payloads) {
+        formData.append("files", {
+          uri: payload.uri,
+          name: payload.name ?? "incident-image.jpg",
+          type: payload.type ?? "image/jpeg",
+        } as never);
+      }
+
+      const response = await kyClient.post(routePath(ServerRoutes.incidents.uploadIncidentImages), {
+        body: formData,
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.incidents.uploadIncidentImages.responses[200].content["application/json"].schema;
+        return decodeIncidentResponse(response, okSchema as z.ZodType<{ fileUrls: string[] }>);
+      }
+
+      return err(await parseIncidentError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
   listIncidents: async (
     params: IncidentListParams = {},
   ): Promise<Result<IncidentListResponse, IncidentError>> => {

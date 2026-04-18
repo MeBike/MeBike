@@ -12,9 +12,9 @@ import {
 import {
   requireAdminMiddleware,
   requireAgencyMiddleware,
-  requireRentalOperatorMiddleware,
+  requireRentalOperatorManagerMiddleware,
   requireRentalSupportMiddleware,
-  requireStaffMiddleware,
+  requireStaffOrManagerMiddleware,
   requireUserMiddleware,
 } from "@/http/middlewares/auth";
 
@@ -46,21 +46,21 @@ export function registerRentalRoutes(
 
   const staffGetRoute = {
     ...rentals.staffGetRental,
-    middleware: [requireRentalOperatorMiddleware] as const,
+    middleware: [requireRentalOperatorManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(staffGetRoute, RentalStaffController.staffGetRental);
 
   const staffListRoute = {
     ...rentals.staffListRentals,
-    middleware: [requireStaffMiddleware] as const,
+    middleware: [requireStaffOrManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(staffListRoute, RentalStaffController.staffListRentals);
 
   const confirmReturnByOperatorRoute = {
     ...rentals.confirmRentalReturnByOperator,
-    middleware: [requireRentalOperatorMiddleware] as const,
+    middleware: [requireRentalOperatorManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
@@ -122,7 +122,7 @@ export function registerRentalRoutes(
 
   const operatorListSwapRequestsRoute = {
     ...rentals.operatorListBikeSwapRequests,
-    middleware: [requireRentalOperatorMiddleware] as const,
+    middleware: [requireRentalOperatorManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
@@ -132,7 +132,7 @@ export function registerRentalRoutes(
 
   const operatorApproveSwapRoute = {
     ...rentals.operatorApproveBikeSwapRequest,
-    middleware: [requireRentalOperatorMiddleware] as const,
+    middleware: [requireRentalOperatorManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
@@ -142,7 +142,7 @@ export function registerRentalRoutes(
 
   const operatorRejectSwapRequestRoute = {
     ...rentals.operatorRejectBikeSwapRequest,
-    middleware: [requireRentalOperatorMiddleware] as const,
+    middleware: [requireRentalOperatorManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
@@ -152,7 +152,7 @@ export function registerRentalRoutes(
 
   const operatorGetSwapRequestRoute = {
     ...rentals.operatorGetBikeSwapRequests,
-    middleware: [requireRentalOperatorMiddleware] as const,
+    middleware: [requireRentalOperatorManagerMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(
