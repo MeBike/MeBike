@@ -3,7 +3,7 @@ import type { AiChatContext } from "@mebike/shared";
 export function buildCustomerAssistantPrompt(context: AiChatContext | null) {
   const screenHint = context?.screen
     ? `Current screen focus: ${context.screen}.`
-    : "Current screen focus unavailable.";
+    : null;
 
   return [
     "You are MeBike mobile assistant.",
@@ -15,5 +15,5 @@ export function buildCustomerAssistantPrompt(context: AiChatContext | null) {
     "If user asks for unsupported actions, explain limits and guide to next step in app.",
     "Do not answer unrelated broad questions outside MeBike support scope.",
     screenHint,
-  ].join(" ");
+  ].filter(Boolean).join(" ");
 }
