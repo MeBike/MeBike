@@ -50,6 +50,13 @@ export type AgencyRequestService = {
     AgencyRequestRow,
     AgencyRequestRepositoryError | AgencyRequestNotFound
   >;
+  getByIdAsRequester: (
+    agencyRequestId: string,
+    requesterUserId: string,
+  ) => Effect.Effect<
+    AgencyRequestRow,
+    AgencyRequestRepositoryError | AgencyRequestNotFound | AgencyRequestNotOwned
+  >;
   list: (
     filter?: AgencyRequestFilter,
   ) => Effect.Effect<readonly AgencyRequestRow[], AgencyRequestRepositoryError>;
@@ -124,6 +131,28 @@ function makeAgencyRequestService(
           );
         }
         return found.value;
+      }),
+    getByIdAsRequester: (agencyRequestId, requesterUserId) =>
+      Effect.gen(function* () {
+        const found = yield* repo.findById(agencyRequestId);
+        if (Option.isNone(found)) {
+          return yield* Effect.fail(
+            new AgencyRequestNotFoundError({ agencyRequestId }),
+          );
+        }
+
+        const agencyRequest = found.value;
+
+        if (agencyRequest.requesterUserId !== requesterUserId) {
+          return yield* Effect.fail(
+            new AgencyRequestNotOwnedError({
+              agencyRequestId: agencyRequest.id,
+              userId: requesterUserId,
+            }),
+          );
+        }
+
+        return agencyRequest;
       }),
     list: filter => repo.list(filter),
     listWithOffset: (filter, pageReq) => repo.listWithOffset(filter, pageReq),

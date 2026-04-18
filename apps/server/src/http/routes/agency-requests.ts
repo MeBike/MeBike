@@ -30,6 +30,14 @@ export function registerAgencyRequestRoutes(app: import("@hono/zod-openapi").Ope
     ...agencyRequests.adminReject,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const listMyAgencyRequestsRoute = {
+    ...agencyRequests.listMine,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+  const getMyAgencyRequestRoute = {
+    ...agencyRequests.getMine,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
   const cancelAgencyRequestRoute = {
     ...agencyRequests.cancel,
     middleware: [requireAuthMiddleware] as const,
@@ -40,5 +48,7 @@ export function registerAgencyRequestRoutes(app: import("@hono/zod-openapi").Ope
   app.openapi(adminApproveAgencyRequestRoute, AgencyRequestsAdminController.approveAgencyRequest);
   app.openapi(adminRejectAgencyRequestRoute, AgencyRequestsAdminController.rejectAgencyRequest);
   app.openapi(agencyRequests.submit, AgencyRequestsPublicController.submit);
+  app.openapi(listMyAgencyRequestsRoute, AgencyRequestsMeController.listMyAgencyRequests);
+  app.openapi(getMyAgencyRequestRoute, AgencyRequestsMeController.getMyAgencyRequestById);
   app.openapi(cancelAgencyRequestRoute, AgencyRequestsMeController.cancelAgencyRequest);
 }
