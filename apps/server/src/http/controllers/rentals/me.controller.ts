@@ -18,8 +18,8 @@ import { withLoggedCause } from "@/domain/shared";
 import {
   toContractBikeSwapRequest,
   toContractBikeSwapRequestDetail,
-  toContractRentalBillingDetail,
   toContractRental,
+  toContractRentalBillingDetail,
   toContractRentalBillingPreview,
   toContractRentalWithPrice,
   toContractReturnSlot,
@@ -456,7 +456,7 @@ const getMyRentalBillingDetail: RouteHandler<
             },
             400,
           )),
-        Match.orElse(err => {
+        Match.orElse((err) => {
           throw err;
         }),
       )),

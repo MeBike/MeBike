@@ -22,8 +22,8 @@ import type {
   UpdateAdminCouponRuleInput,
 } from "../models";
 
-export type CouponCommandValidationFailure
-  = | CouponRuleInvalidTier
+export type CouponCommandValidationFailure =
+  | CouponRuleInvalidTier
   | CouponRuleInvalidActiveWindow
   | CouponRuleActiveTierConflict
   | CouponRuleAlreadyUsed;

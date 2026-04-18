@@ -326,6 +326,45 @@ describe("admin coupon usage logs routing e2e", () => {
     });
   });
 
+  it("derives tier from coupon rule identity instead of capped discount amount", async () => {
+    const tier2Rule = await createCouponRule({
+      name: "Capped Snapshot 2h",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
+    const cappedTier2 = await createCompletedRentalWithBilling({
+      appliedAt: "2026-04-17T10:00:00.000Z",
+      couponDiscountAmount: "1000",
+      couponRule: tier2Rule,
+      baseAmount: "8000",
+      prepaidAmount: "7000",
+      totalAmount: "0",
+      totalDurationMinutes: 95,
+    });
+
+    const response = await fixture.app.request(
+      `http://test/v1/admin/coupon-usage-logs?rentalId=${cappedTier2.rentalId}`,
+      {
+        method: "GET",
+        headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+      },
+    );
+    const body = await response.json() as CouponsContracts.AdminCouponUsageLogsResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]).toMatchObject({
+      rentalId: cappedTier2.rentalId,
+      couponRuleId: tier2Rule.id,
+      couponRuleName: "Capped Snapshot 2h",
+      couponRuleMinRidingMinutes: 120,
+      couponDiscountAmount: 1000,
+      derivedTier: "TIER_2H_4H",
+      rentalStatus: "COMPLETED",
+    });
+  });
+
   it("supports from/to, userId, rentalId, discountAmount, and subscriptionApplied filters", async () => {
     const filteredUser = await fixture.factories.user();
     const tier1Rule = await createCouponRule({

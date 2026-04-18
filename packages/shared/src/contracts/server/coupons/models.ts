@@ -304,7 +304,7 @@ export const CouponUsageDerivedTierSchema = z
   .openapi("CouponUsageDerivedTier");
 
 export const CouponUsageLogRentalStatusSchema = z
-  .enum(["RENTED", "COMPLETED", "CANCELLED"])
+  .literal("COMPLETED")
   .openapi("CouponUsageLogRentalStatus");
 
 export const AdminCouponUsageLogsQuerySchema = z

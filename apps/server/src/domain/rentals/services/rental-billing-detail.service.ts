@@ -1,13 +1,13 @@
 import { Effect, Layer, Option } from "effect";
 
 import type { RentalRepo } from "../repository/rental.repository";
+import type { RentalBillingDetailRow } from "../models";
 
 import {
   BillingDetailNotReady,
   BillingDetailRequiresCompletedRental,
   RentalNotFound,
 } from "../domain-errors";
-import type { RentalBillingDetailRow } from "../models";
 import { RentalRepository } from "../repository/rental.repository";
 
 type RentalBillingDetailInput = {

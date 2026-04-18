@@ -1,10 +1,10 @@
 import { Effect, Layer } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
+import type { CouponRuleIdentity } from "@/domain/coupons/coupon-rule-identity";
 
 import {
   readCouponRuleIdentity as resolveCouponRuleIdentity,
-  type CouponRuleIdentity,
 } from "@/domain/coupons/coupon-rule-identity";
 import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
@@ -198,7 +198,7 @@ function toAdminCouponUsageLogRow(
     rentalId: row.rentalId,
     userId: row.rental.userId,
     pricingPolicyId: row.pricingPolicyId,
-    rentalStatus: row.rental.status,
+    rentalStatus: "COMPLETED",
     startTime: row.rental.startTime,
     endTime: row.rental.endTime,
     totalDurationMinutes: row.totalDurationMinutes,
@@ -214,7 +214,7 @@ function toAdminCouponUsageLogRow(
     couponDiscountAmount,
     totalAmount: Number(toMinorUnit(row.totalAmount)),
     appliedAt: row.createdAt,
-    derivedTier: deriveCouponUsageTier(couponDiscountAmount),
+    derivedTier: deriveCouponUsageTier(couponRuleIdentity?.minRidingMinutes ?? null),
   };
 }
 
@@ -278,16 +278,16 @@ function adminCouponUsageLogsOrderBy(): PrismaTypes.RentalBillingRecordOrderByWi
 }
 
 function deriveCouponUsageTier(
-  discountAmount: number,
+  minRidingMinutes: number | null,
 ): AdminCouponUsageLogRow["derivedTier"] {
-  switch (discountAmount) {
-    case 1000:
+  switch (minRidingMinutes) {
+    case 60:
       return "TIER_1H_2H";
-    case 2000:
+    case 120:
       return "TIER_2H_4H";
-    case 4000:
+    case 240:
       return "TIER_4H_6H";
-    case 6000:
+    case 360:
       return "TIER_6H_PLUS";
     default:
       return null;
