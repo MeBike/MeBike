@@ -34,8 +34,13 @@ export type CouponCommandRepo = {
     ruleId: string,
   ) => Effect.Effect<Option.Option<AdminCouponRuleRow>>;
   findActiveRuleWithMinRidingMinutes: (
-    minRidingMinutes: number,
-    excludeRuleId?: string,
+    input: {
+      readonly minRidingMinutes: number;
+      readonly activeFrom: Date | null;
+      readonly activeTo: Date | null;
+      readonly now: Date;
+      readonly excludeRuleId?: string;
+    },
   ) => Effect.Effect<Option.Option<{ readonly id: string }>>;
   hasRentalBillingRecordForRule: (
     ruleId: string,

@@ -172,9 +172,9 @@ export type AdminCouponStatsRow = {
 
 export type CouponUsageDerivedTier
   = "TIER_1H_2H"
-  | "TIER_2H_4H"
-  | "TIER_4H_6H"
-  | "TIER_6H_PLUS";
+    | "TIER_2H_4H"
+    | "TIER_4H_6H"
+    | "TIER_6H_PLUS";
 
 export type AdminCouponUsageLogRow = {
   readonly rentalId: string;

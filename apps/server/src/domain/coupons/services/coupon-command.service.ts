@@ -43,19 +43,19 @@ export function makeCouponCommandService(
       }
     });
 
-  const ensureNoActiveTierConflict = (
-    minRidingMinutes: number,
-    excludeRuleId?: string,
-  ) =>
+  const ensureNoActiveTierConflict = (input: {
+    readonly minRidingMinutes: number;
+    readonly activeFrom: Date | null;
+    readonly activeTo: Date | null;
+    readonly now: Date;
+    readonly excludeRuleId?: string;
+  }) =>
     Effect.gen(function* () {
-      const conflicting = yield* repo.findActiveRuleWithMinRidingMinutes(
-        minRidingMinutes,
-        excludeRuleId,
-      );
+      const conflicting = yield* repo.findActiveRuleWithMinRidingMinutes(input);
 
       if (Option.isSome(conflicting)) {
         return yield* Effect.fail(new CouponRuleActiveTierConflict({
-          minRidingMinutes,
+          minRidingMinutes: input.minRidingMinutes,
           conflictingRuleId: conflicting.value.id,
         }));
       }
@@ -67,7 +67,12 @@ export function makeCouponCommandService(
         const status = input.status ?? "INACTIVE";
         yield* validateCouponRuleInput(input);
         if (status === "ACTIVE") {
-          yield* ensureNoActiveTierConflict(input.minRidingMinutes);
+          yield* ensureNoActiveTierConflict({
+            minRidingMinutes: input.minRidingMinutes,
+            activeFrom: input.activeFrom ?? null,
+            activeTo: input.activeTo ?? null,
+            now: new Date(),
+          });
         }
 
         return yield* repo.createAdminCouponRule({
@@ -105,7 +110,13 @@ export function makeCouponCommandService(
           activeFrom: existing.activeFrom,
           activeTo: existing.activeTo,
         });
-        yield* ensureNoActiveTierConflict(existing.minRidingMinutes, ruleId);
+        yield* ensureNoActiveTierConflict({
+          minRidingMinutes: existing.minRidingMinutes,
+          activeFrom: existing.activeFrom,
+          activeTo: existing.activeTo,
+          now: new Date(),
+          excludeRuleId: ruleId,
+        });
 
         const activatedOpt = yield* repo.activateAdminCouponRule(ruleId);
 
@@ -140,7 +151,13 @@ export function makeCouponCommandService(
         }
 
         if (input.status === "ACTIVE") {
-          yield* ensureNoActiveTierConflict(input.minRidingMinutes, ruleId);
+          yield* ensureNoActiveTierConflict({
+            minRidingMinutes: input.minRidingMinutes,
+            activeFrom: input.activeFrom,
+            activeTo: input.activeTo,
+            now: new Date(),
+            excludeRuleId: ruleId,
+          });
         }
 
         const updatedOpt = yield* repo.updateAdminCouponRule(ruleId, {

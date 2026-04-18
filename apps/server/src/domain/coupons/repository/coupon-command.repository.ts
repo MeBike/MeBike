@@ -80,9 +80,59 @@ function isActiveTierUniqueViolation(error: unknown): boolean {
   return isPrismaRawUniqueViolation(error);
 }
 
+function hasFutureOverlap(input: {
+  readonly activeFrom: Date | null;
+  readonly activeTo: Date | null;
+  readonly now: Date;
+}): boolean {
+  return !input.activeTo || input.activeTo.getTime() >= input.now.getTime();
+}
+
+function futureOverlapWhere(input: {
+  readonly activeFrom: Date | null;
+  readonly activeTo: Date | null;
+  readonly now: Date;
+}): PrismaTypes.CouponRuleWhereInput[] {
+  if (!hasFutureOverlap(input)) {
+    return [{ minRidingMinutes: -1 }];
+  }
+
+  const effectiveStart = input.activeFrom && input.activeFrom.getTime() > input.now.getTime()
+    ? input.activeFrom
+    : input.now;
+
+  return [
+    {
+      OR: [
+        { activeTo: null },
+        { activeTo: { gte: input.now } },
+      ],
+    },
+    {
+      OR: [
+        { activeTo: null },
+        { activeTo: { gte: effectiveStart } },
+      ],
+    },
+    ...(input.activeTo
+      ? [
+          {
+            OR: [
+              { activeFrom: null },
+              { activeFrom: { lte: input.activeTo } },
+            ],
+          },
+        ]
+      : []),
+  ];
+}
+
 function failActiveTierUniqueViolation(input: {
   readonly client: PrismaClient | PrismaTypes.TransactionClient;
   readonly minRidingMinutes: number;
+  readonly activeFrom: Date | null;
+  readonly activeTo: Date | null;
+  readonly now: Date;
   readonly excludeRuleId?: string;
   readonly operation: string;
   readonly cause: unknown;
@@ -105,6 +155,7 @@ function failActiveTierUniqueViolation(input: {
             discountType: "FIXED_AMOUNT",
             minRidingMinutes: input.minRidingMinutes,
             ...(input.excludeRuleId ? { id: { not: input.excludeRuleId } } : {}),
+            AND: futureOverlapWhere(input),
           },
           select: { id: true },
           orderBy: [
@@ -159,8 +210,12 @@ export function makeCouponCommandRepository(
           ? Option.some(toAdminCouponRuleRow(existing))
           : Option.none();
       }).pipe(defectOn(CouponRepositoryError)),
-    findActiveRuleWithMinRidingMinutes: (minRidingMinutes, excludeRuleId) =>
+    findActiveRuleWithMinRidingMinutes: input =>
       Effect.gen(function* () {
+        if (!hasFutureOverlap(input)) {
+          return Option.none<{ readonly id: string }>();
+        }
+
         const existing = yield* Effect.tryPromise({
           try: () =>
             client.couponRule.findFirst({
@@ -168,8 +223,9 @@ export function makeCouponCommandRepository(
                 status: "ACTIVE",
                 triggerType: "RIDING_DURATION",
                 discountType: "FIXED_AMOUNT",
-                minRidingMinutes,
-                ...(excludeRuleId ? { id: { not: excludeRuleId } } : {}),
+                minRidingMinutes: input.minRidingMinutes,
+                ...(input.excludeRuleId ? { id: { not: input.excludeRuleId } } : {}),
+                AND: futureOverlapWhere(input),
               },
               select: { id: true },
               orderBy: [
@@ -239,6 +295,9 @@ export function makeCouponCommandRepository(
           failActiveTierUniqueViolation({
             client,
             minRidingMinutes: data.minRidingMinutes,
+            activeFrom: data.activeFrom,
+            activeTo: data.activeTo,
+            now: new Date(),
             operation: "createAdminCouponRule",
             cause: err,
           })),
@@ -290,6 +349,9 @@ export function makeCouponCommandRepository(
               : failActiveTierUniqueViolation({
                   client,
                   minRidingMinutes: existing.minRidingMinutes,
+                  activeFrom: existing.activeFrom,
+                  activeTo: existing.activeTo,
+                  now: new Date(),
                   excludeRuleId: ruleId,
                   operation: "activateAdminCouponRule",
                   cause: err,
@@ -389,6 +451,9 @@ export function makeCouponCommandRepository(
             failActiveTierUniqueViolation({
               client,
               minRidingMinutes: data.minRidingMinutes,
+              activeFrom: data.activeFrom,
+              activeTo: data.activeTo,
+              now: new Date(),
               excludeRuleId: ruleId,
               operation: "updateAdminCouponRule",
               cause: err,

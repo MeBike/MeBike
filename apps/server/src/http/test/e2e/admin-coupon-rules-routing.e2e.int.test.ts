@@ -1048,6 +1048,40 @@ describe("admin coupon rules routing e2e", () => {
     expect(body.details.minRidingMinutes).toBe(120);
   });
 
+  it("allows creating an active rule when the same tier has only expired active rules", async () => {
+    await createRule({
+      name: "Expired active 2h discount",
+      createdAt: "2026-04-01T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+      status: "ACTIVE",
+      activeFrom: new Date("2026-04-01T00:00:00.000Z"),
+      activeTo: new Date("2026-04-02T00:00:00.000Z"),
+    });
+
+    const response = await fixture.app.request("http://test/v1/admin/coupon-rules", {
+      method: "POST",
+      headers: jsonAuthHeader(ADMIN_USER_ID, "ADMIN"),
+      body: JSON.stringify({
+        name: "Replacement active 2h discount",
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: 120,
+        discountType: "FIXED_AMOUNT",
+        discountValue: 2000,
+        priority: 90,
+        status: "ACTIVE",
+        activeFrom: null,
+        activeTo: null,
+      }),
+    });
+    const body = await response.json() as CouponsContracts.AdminCouponRule;
+
+    expect(response.status).toBe(201);
+    expect(body.name).toBe("Replacement active 2h discount");
+    expect(body.status).toBe("ACTIVE");
+    expect(body.minRidingMinutes).toBe(120);
+  });
+
   it("rejects activating a rule when another active rule already owns the tier", async () => {
     const activeRule = await createRule({
       name: "Active 2h discount",
@@ -1076,6 +1110,35 @@ describe("admin coupon rules routing e2e", () => {
       minRidingMinutes: 120,
       conflictingRuleId: activeRule.id,
     });
+  });
+
+  it("allows activating a rule when the same tier conflict is already expired", async () => {
+    await createRule({
+      name: "Expired active 2h discount",
+      createdAt: "2026-04-01T00:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+      status: "ACTIVE",
+      activeFrom: new Date("2026-04-01T00:00:00.000Z"),
+      activeTo: new Date("2026-04-02T00:00:00.000Z"),
+    });
+    const inactiveRule = await createRule({
+      name: "Inactive replacement 2h discount",
+      createdAt: "2026-04-17T01:00:00.000Z",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+      status: "INACTIVE",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/coupon-rules/${inactiveRule.id}/activate`, {
+      method: "PATCH",
+      headers: authHeader(ADMIN_USER_ID, "ADMIN"),
+    });
+    const body = await response.json() as CouponsContracts.AdminCouponRule;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(inactiveRule.id);
+    expect(body.status).toBe("ACTIVE");
   });
 
   it("rejects updating a rule to ACTIVE when another active rule already owns the tier", async () => {

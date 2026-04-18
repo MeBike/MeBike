@@ -24,9 +24,9 @@ import type {
 
 export type CouponCommandValidationFailure
   = CouponRuleInvalidTier
-  | CouponRuleInvalidActiveWindow
-  | CouponRuleActiveTierConflict
-  | CouponRuleAlreadyUsed;
+    | CouponRuleInvalidActiveWindow
+    | CouponRuleActiveTierConflict
+    | CouponRuleAlreadyUsed;
 
 export type CouponCommandService = {
   createAdminCouponRule: (
