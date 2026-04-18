@@ -1,6 +1,6 @@
-import type { BillingPreviewDiscountRuleRow } from "./models";
-
 import { toMinorUnit } from "@/domain/shared/money";
+
+import type { BillingPreviewDiscountRuleRow } from "./models";
 
 export const GLOBAL_AUTO_DISCOUNT_TIERS = [
   { minRidingMinutes: 60, discountValue: 1000 },

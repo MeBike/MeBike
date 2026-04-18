@@ -1,3 +1,4 @@
+import type { PageResult } from "@/domain/shared/pagination";
 import type {
   AccountStatus,
   CouponTriggerType,
@@ -5,8 +6,6 @@ import type {
   Prisma as PrismaTypes,
   RentalStatus,
 } from "generated/prisma/client";
-
-import type { PageResult } from "@/domain/shared/pagination";
 
 export type BillingPreviewDiscountRuleRow = {
   readonly ruleId: string;
@@ -172,8 +171,8 @@ export type AdminCouponStatsRow = {
   readonly topAppliedRule: CouponTopAppliedRuleRow | null;
 };
 
-export type CouponUsageDerivedTier =
-  | "TIER_1H_2H"
+export type CouponUsageDerivedTier
+  = | "TIER_1H_2H"
   | "TIER_2H_4H"
   | "TIER_4H_6H"
   | "TIER_6H_PLUS";

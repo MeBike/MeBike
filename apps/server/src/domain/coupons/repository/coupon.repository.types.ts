@@ -1,19 +1,20 @@
 import type { Effect, Option } from "effect";
 
+import type { PageRequest } from "@/domain/shared/pagination";
+
+import type { CouponRuleActiveTierConflict } from "../domain-errors";
 import type {
   ActiveCouponRuleRow,
-  AdminCouponStatsRow,
-  AdminCouponUsageLogPageResult,
   AdminCouponRulePageResult,
   AdminCouponRuleRow,
+  AdminCouponStatsRow,
+  AdminCouponUsageLogPageResult,
   BillingPreviewDiscountRuleRow,
   CreateCouponRuleData,
-  ListAdminCouponUsageLogsFilter,
   ListAdminCouponRulesFilter,
+  ListAdminCouponUsageLogsFilter,
   UpdateCouponRuleData,
 } from "../models";
-import type { CouponRuleActiveTierConflict } from "../domain-errors";
-import type { PageRequest } from "@/domain/shared/pagination";
 
 export type CouponCommandRepo = {
   createAdminCouponRule: (

@@ -27,9 +27,9 @@ export {
   CouponCommandReposLive,
   CouponCommandServiceLayer,
   CouponDepsLive,
-  CouponReposLive,
   CouponQueryReposLive,
   CouponQueryServiceLayer,
+  CouponReposLive,
   CouponServiceLayer,
 } from "./features/coupon.layers";
 export {

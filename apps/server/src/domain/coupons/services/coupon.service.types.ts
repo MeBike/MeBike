@@ -1,18 +1,7 @@
 import type { Effect } from "effect";
 
-import type {
-  ActiveCouponRuleRow,
-  AdminCouponStatsRow,
-  AdminCouponUsageLogPageResult,
-  AdminCouponRulePageResult,
-  AdminCouponRuleRow,
-  BillingPreviewDiscountRuleRow,
-  CreateAdminCouponRuleInput,
-  ListAdminCouponUsageLogsFilter,
-  ListAdminCouponRulesFilter,
-  UpdateAdminCouponRuleInput,
-} from "../models";
 import type { PageRequest } from "@/domain/shared/pagination";
+
 import type {
   CouponRuleActiveTierConflict,
   CouponRuleAlreadyUsed,
@@ -20,9 +9,21 @@ import type {
   CouponRuleInvalidTier,
   CouponRuleNotFound,
 } from "../domain-errors";
+import type {
+  ActiveCouponRuleRow,
+  AdminCouponRulePageResult,
+  AdminCouponRuleRow,
+  AdminCouponStatsRow,
+  AdminCouponUsageLogPageResult,
+  BillingPreviewDiscountRuleRow,
+  CreateAdminCouponRuleInput,
+  ListAdminCouponRulesFilter,
+  ListAdminCouponUsageLogsFilter,
+  UpdateAdminCouponRuleInput,
+} from "../models";
 
-export type CouponCommandValidationFailure =
-  | CouponRuleInvalidTier
+export type CouponCommandValidationFailure
+  = | CouponRuleInvalidTier
   | CouponRuleInvalidActiveWindow
   | CouponRuleActiveTierConflict
   | CouponRuleAlreadyUsed;

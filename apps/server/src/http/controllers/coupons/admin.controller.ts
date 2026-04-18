@@ -1,9 +1,7 @@
 import type { RouteHandler } from "@hono/zod-openapi";
-import {
-  serverRoutes,
-  type CouponsContracts,
-} from "@mebike/shared";
+import type { CouponsContracts } from "@mebike/shared";
 
+import { serverRoutes } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import {

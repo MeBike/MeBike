@@ -3,8 +3,8 @@ import type { RentalsContracts } from "@mebike/shared";
 import type {
   AdminRentalDetail,
   AdminRentalListItem,
-  RentalBillingPreviewRow,
   BikeSwapRequestRow,
+  RentalBillingPreviewRow,
   RentalRow,
   ReturnSlotRow,
   StaffBikeSwapRequestRow,

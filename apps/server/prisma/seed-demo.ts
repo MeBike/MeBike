@@ -25,8 +25,8 @@ import {
   WalletStatus,
 } from "../generated/prisma/client";
 import { formatBikeNumber } from "../src/domain/bikes/bike-number";
-import { makeReservationRentalFlowTestKit } from "../src/domain/rentals/services/test/reservation-rental-flow-test-kit";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
+import { makeReservationRentalFlowTestKit } from "../src/domain/rentals/services/test/reservation-rental-flow-test-kit";
 import { toPrismaDecimal } from "../src/domain/shared/decimal";
 import logger from "../src/lib/logger";
 import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";

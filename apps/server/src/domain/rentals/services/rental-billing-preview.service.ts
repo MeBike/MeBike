@@ -1,6 +1,8 @@
 import { Effect, Layer, Option } from "effect";
 
 import type { GlobalAutoDiscountSelection } from "@/domain/coupons";
+import type { SubscriptionNotUsable } from "@/domain/subscriptions/domain-errors";
+
 import {
   CouponQueryServiceTag,
   selectBestGlobalAutoDiscountRule,
@@ -12,10 +14,7 @@ import {
 } from "@/domain/pricing";
 import { makeReservationQueryRepository } from "@/domain/reservations/repository/reservation-query.repository";
 import { toMinorUnit } from "@/domain/shared/money";
-import {
-  SubscriptionNotFound,
-  SubscriptionNotUsable,
-} from "@/domain/subscriptions/domain-errors";
+import { SubscriptionNotFound } from "@/domain/subscriptions/domain-errors";
 import { makeSubscriptionQueryRepository } from "@/domain/subscriptions/repository/subscription-query.repository";
 import { Prisma } from "@/infrastructure/prisma";
 
@@ -40,9 +39,9 @@ export type RentalBillingPreviewService = {
   ) => Effect.Effect<
     RentalBillingPreviewRow,
     RentalNotFound
-      | BillingPreviewRequiresActiveRental
-      | SubscriptionNotFound
-      | SubscriptionNotUsable
+    | BillingPreviewRequiresActiveRental
+    | SubscriptionNotFound
+    | SubscriptionNotUsable
   >;
 };
 
@@ -77,12 +76,12 @@ const makeRentalBillingPreviewServiceEffect = Effect.gen(function* () {
 
         const pricingPolicy = rental.pricingPolicyId
           ? yield* pricingPolicyRepo.getById(rental.pricingPolicyId).pipe(
-              Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
-            )
+            Effect.catchTag("PricingPolicyNotFound", err => Effect.die(err)),
+          )
           : yield* pricingPolicyRepo.getActive().pipe(
-              Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
-              Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
-            );
+            Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
+            Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
+          );
 
         const rentalMinutes = calculatePreviewRentalMinutes(rental, input.previewedAt);
         const billingUnitMinutes = Math.max(1, pricingPolicy.billingUnitMinutes);

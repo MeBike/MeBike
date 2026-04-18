@@ -2,9 +2,9 @@ import type { CouponsContracts } from "@mebike/shared";
 
 import type {
   ActiveCouponRuleRow,
+  AdminCouponRuleRow,
   AdminCouponStatsRow,
   AdminCouponUsageLogRow,
-  AdminCouponRuleRow,
 } from "@/domain/coupons";
 
 import { toMinorUnit } from "@/domain/shared/money";

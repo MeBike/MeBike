@@ -12,9 +12,9 @@ import { Prisma } from "@/infrastructure/prisma";
 
 import type {
   ActiveCouponRuleRow,
+  AdminCouponRuleRow,
   AdminCouponStatsRow,
   AdminCouponUsageLogRow,
-  AdminCouponRuleRow,
   BillingPreviewDiscountRuleRow,
   CouponRuleSnapshot,
   CouponStatsByRuleRow,

@@ -2,8 +2,8 @@ import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
   ConfirmationMethod,
-  DiscountType,
   CouponTriggerType,
+  DiscountType,
   HandoverStatus,
   RentalStatus,
   ReturnSlotStatus,

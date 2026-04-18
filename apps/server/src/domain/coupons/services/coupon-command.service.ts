@@ -1,8 +1,5 @@
 import { Effect, Option } from "effect";
 
-import {
-  isAllowedGlobalAutoDiscountTier,
-} from "../global-auto-discount.policy";
 import type { CouponCommandRepo } from "../repository/coupon.repository.types";
 import type { CouponCommandService } from "./coupon.service.types";
 
@@ -13,6 +10,9 @@ import {
   CouponRuleInvalidTier,
   CouponRuleNotFound,
 } from "../domain-errors";
+import {
+  isAllowedGlobalAutoDiscountTier,
+} from "../global-auto-discount.policy";
 
 export function makeCouponCommandService(
   repo: CouponCommandRepo,

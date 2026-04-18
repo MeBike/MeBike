@@ -1,13 +1,13 @@
 import { Effect, Option } from "effect";
 
-import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
-import type { DecreaseBalanceInput } from "@/domain/wallets/models";
-import type { Prisma as PrismaTypes } from "generated/prisma/client";
 import type {
   BillingPreviewDiscountRuleRow,
   CouponRuleSnapshot,
   GlobalAutoDiscountSelection,
 } from "@/domain/coupons";
+import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
+import type { DecreaseBalanceInput } from "@/domain/wallets/models";
+import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import {

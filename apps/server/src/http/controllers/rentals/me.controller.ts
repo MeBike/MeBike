@@ -384,7 +384,7 @@ const getMyRentalBillingPreview: RouteHandler<
             },
             400,
           )),
-        Match.orElse(err => {
+        Match.orElse((err) => {
           throw err;
         }),
       )),
