@@ -65,6 +65,7 @@ export type UpdateStationInput = {
 };
 
 export type StationFilter = {
+  id?: string;
   name?: string;
   address?: string;
   stationType?: StationType;

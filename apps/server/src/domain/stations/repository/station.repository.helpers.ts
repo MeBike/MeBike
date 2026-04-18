@@ -139,6 +139,7 @@ export function toStationOrderBy(
 export function toStationWhere(filter: StationFilter): PrismaTypes.StationWhereInput {
   return {
     ...pickDefined({
+      id: filter.id,
       name: filter.name
         ? { contains: filter.name, mode: "insensitive" }
         : undefined,
