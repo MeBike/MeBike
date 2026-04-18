@@ -45,7 +45,7 @@ MeBike Global Auto Discount Policy V1:
 - neu rental co `subscription_id` thi khong ap discount, ke ca con phan tien du phai tra bang wallet
 - moi rental toi da 1 discount
 - neu nhieu rule active cung hop le khi tinh bill, he thong chon rule co discount tot nhat
-- discount chi ap vao `eligibleRentalAmount`, khong ap vao penalty, deposit forfeited, phi ngoai rental hoac phi phat sinh khac
+- discount chi ap vao `eligibleRentalAmount`, khong ap vao deposit forfeited, phi ngoai rental hoac phi phat sinh khac; V1 hien tai khong co penalty rieng
 - preview va finalize rental end dung chung logic global rules
 
 Luu y:
@@ -781,12 +781,12 @@ INSERT INTO coupon_rules (
 )
 VALUES (
   '019b17bd-d130-7e7d-be69-91ceef7b7299',
-  'Ride 8h inactive discount',
+  'Ride 6h inactive test discount',
   'RIDING_DURATION'::coupon_trigger_type,
-  480,
+  360,
   NULL,
   'FIXED_AMOUNT'::discount_type,
-  8000,
+  6000,
   'INACTIVE'::"AccountStatus",
   100,
   NULL,
@@ -816,7 +816,7 @@ GET /v1/admin/coupon-rules?status=INACTIVE
 Ky vong:
 
 - `data.length >= 1`
-- co item `Ride 8h inactive discount`
+- co item `Ride 6h inactive test discount`
 
 ### 7.6. Xoa rule test sau khi QA xong
 

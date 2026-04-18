@@ -20,7 +20,7 @@ Guide nay duoc viet de frontend team co the:
 - login bang account demo that tu `seed:demo`
 - test API bang Scalar
 - doi chieu data bang pgAdmin
-- setup data cho day du case discount/prepaid/subscription/penalty
+- setup data cho day du case discount/prepaid/subscription/deposit forfeited
 - code tiep UI billing preview va flow hien thi bill truoc khi tra xe
 
 ## 1. Chuan bi moi truong
@@ -71,7 +71,7 @@ Luu y:
 
 - `user.id` va `rental.id` duoc seed moi moi lan reset DB, khong hardcode UUID tu lan chay cu.
 - SQL trong guide nay resolve user/rental theo email nen frontend team chi can copy chay.
-- Cac UUID `019b17bd-...` trong SQL la data test bo sung deterministic cho `coupon_rules`, `reservation`, `subscription`, `rental_penalties`.
+- Cac UUID `019b17bd-...` trong SQL la data test bo sung deterministic cho `coupon_rules`, `reservation`, `subscription`.
 
 ## 3. Login trong Scalar
 
@@ -184,10 +184,10 @@ Neu rental co subscription:
 - `subscriptionDiscountAmount`: phan subscription da cover.
 - `bestDiscountRule`: rule global duoc chon, null neu khong co discount.
 - `couponDiscountAmount`: so tien giam thuc te sau cap theo eligible amount.
-- `penaltyAmount`: penalty rieng, khong bi discount.
+- `penaltyAmount`: hien tai luon la `0` trong V1 vi khong con penalty rieng.
 - `depositForfeited`: flag canh bao mat deposit, khong cong vao `totalPayableAmount` trong preview hien tai.
 - `payableRentalAmount`: tien rental phai tra sau prepaid/subscription/discount.
-- `totalPayableAmount`: `payableRentalAmount + penaltyAmount`.
+- `totalPayableAmount`: bang `payableRentalAmount` trong V1.
 
 ### 4.4. Error frontend can xu ly
 
@@ -240,7 +240,8 @@ Global Auto Discount Policy V1:
 - Moi rental chi toi da 1 discount.
 - Neu nhieu rule hop le, chon rule co discount tot nhat.
 - Discount khong lam tien thue am.
-- Discount chi ap vao `eligibleRentalAmount`, khong ap vao penalty/deposit/phi khac.
+- Discount chi ap vao `eligibleRentalAmount`, khong ap vao deposit forfeited/phi khac.
+- V1 hien tai khong con penalty rieng; `penaltyAmount` luon la `0`.
 
 Cong thuc:
 
@@ -252,7 +253,7 @@ baseRentalAmount = billableBlocks * baseRate
 eligibleRentalAmount = max(baseRentalAmount - prepaidAmount, 0)
 couponDiscountAmount = min(bestDiscountRule.discountValue, eligibleRentalAmount)
 payableRentalAmount = eligibleRentalAmount - couponDiscountAmount
-totalPayableAmount = payableRentalAmount + penaltyAmount
+totalPayableAmount = payableRentalAmount
 ```
 
 Voi pricing default MeBike V1:
@@ -282,7 +283,6 @@ SQL nay se:
 - lay active rental cua `user01@mebike.local`
 - tao reservation prepaid test
 - tao subscription test
-- clear penalty cu cho rental nay
 - khong tao route/API moi
 
 ```sql
@@ -396,8 +396,6 @@ BEGIN
     status = 'FULFILLED',
     updated_at = now();
 
-  DELETE FROM rental_penalties WHERE rental_id = active_rental_id;
-
   UPDATE "Rental"
   SET pricing_policy_id = active_pricing_policy_id,
       reservation_id = NULL,
@@ -443,17 +441,14 @@ SELECT
   s.package_name,
   s."maxUsages",
   s.usage_count,
-  r.deposit_hold_id,
-  COALESCE(SUM(rp.amount), 0) AS penalty_amount
+  r.deposit_hold_id
 FROM "Rental" r
 JOIN users u ON u.id = r.user_id
 LEFT JOIN pricing_policies pp ON pp.id = r.pricing_policy_id
 LEFT JOIN "Reservation" rv ON rv.id = r.reservation_id
 LEFT JOIN "Subscription" s ON s.id = r.subscription_id
-LEFT JOIN rental_penalties rp ON rp.rental_id = r.id
 WHERE u.email = 'user01@mebike.local'
   AND r.status = 'RENTED'
-GROUP BY r.id, u.email, pp.id, rv.id, s.id
 ORDER BY r.created_at DESC;
 ```
 
@@ -474,21 +469,22 @@ WHERE trigger_type = 'RIDING_DURATION'
 ORDER BY min_riding_minutes;
 ```
 
-Dung query nay de xem penalty:
+Dung query nay de xem deposit hold neu can kiem tra case sau 23:00:
 
 ```sql
 SELECT
-  rp.id,
-  rp.rental_id,
-  rp.penalty_type,
-  rp.amount,
-  rp.description,
-  rp.created_at
-FROM rental_penalties rp
-JOIN "Rental" r ON r.id = rp.rental_id
+  wh.id,
+  wh.rental_id,
+  wh.amount,
+  wh.status,
+  wh.released_at,
+  wh.forfeited_at,
+  wh.settled_at
+FROM wallet_holds wh
+JOIN "Rental" r ON r.deposit_hold_id = wh.id
 JOIN users u ON u.id = r.user_id
 WHERE u.email = 'user01@mebike.local'
-ORDER BY rp.created_at DESC;
+ORDER BY wh.created_at DESC;
 ```
 
 ## 8. Test API trong Scalar
@@ -537,12 +533,6 @@ WHERE u.id = r.user_id
   AND u.email = 'user01@mebike.local'
   AND r.status = 'RENTED';
 
-DELETE FROM rental_penalties rp
-USING "Rental" r, users u
-WHERE rp.rental_id = r.id
-  AND r.user_id = u.id
-  AND u.email = 'user01@mebike.local'
-  AND r.status = 'RENTED';
 ```
 
 Expected Scalar:
@@ -574,12 +564,6 @@ WHERE u.id = r.user_id
   AND u.email = 'user01@mebike.local'
   AND r.status = 'RENTED';
 
-DELETE FROM rental_penalties rp
-USING "Rental" r, users u
-WHERE rp.rental_id = r.id
-  AND r.user_id = u.id
-  AND u.email = 'user01@mebike.local'
-  AND r.status = 'RENTED';
 ```
 
 Expected Scalar:
@@ -612,12 +596,6 @@ WHERE u.id = r.user_id
   AND u.email = 'user01@mebike.local'
   AND r.status = 'RENTED';
 
-DELETE FROM rental_penalties rp
-USING "Rental" r, users u
-WHERE rp.rental_id = r.id
-  AND r.user_id = u.id
-  AND u.email = 'user01@mebike.local'
-  AND r.status = 'RENTED';
 ```
 
 Expected Scalar:
@@ -650,12 +628,6 @@ WHERE u.id = r.user_id
   AND u.email = 'user01@mebike.local'
   AND r.status = 'RENTED';
 
-DELETE FROM rental_penalties rp
-USING "Rental" r, users u
-WHERE rp.rental_id = r.id
-  AND r.user_id = u.id
-  AND u.email = 'user01@mebike.local'
-  AND r.status = 'RENTED';
 ```
 
 Expected Scalar:
@@ -688,12 +660,6 @@ WHERE u.id = r.user_id
   AND u.email = 'user01@mebike.local'
   AND r.status = 'RENTED';
 
-DELETE FROM rental_penalties rp
-USING "Rental" r, users u
-WHERE rp.rental_id = r.id
-  AND r.user_id = u.id
-  AND u.email = 'user01@mebike.local'
-  AND r.status = 'RENTED';
 ```
 
 Expected Scalar:
@@ -726,12 +692,6 @@ WHERE u.id = r.user_id
   AND u.email = 'user01@mebike.local'
   AND r.status = 'RENTED';
 
-DELETE FROM rental_penalties rp
-USING "Rental" r, users u
-WHERE rp.rental_id = r.id
-  AND r.user_id = u.id
-  AND u.email = 'user01@mebike.local'
-  AND r.status = 'RENTED';
 ```
 
 Expected Scalar:
@@ -804,7 +764,6 @@ BEGIN
       updated_at = now()
   WHERE id = active_rental_id;
 
-  DELETE FROM rental_penalties WHERE rental_id = active_rental_id;
 END $$;
 ```
 
@@ -818,61 +777,7 @@ Expected Scalar:
 - `payableRentalAmount = 4000`
 - `totalPayableAmount = 4000`
 
-### Case 8: Co penalty, discount khong giam penalty
-
-SQL:
-
-```sql
-DO $$
-DECLARE
-  active_rental_id uuid;
-BEGIN
-  SELECT r.id INTO active_rental_id
-  FROM "Rental" r
-  JOIN users u ON u.id = r.user_id
-  WHERE u.email = 'user01@mebike.local'
-    AND r.status = 'RENTED'
-  ORDER BY r.created_at DESC
-  LIMIT 1;
-
-  UPDATE "Rental"
-  SET start_time = now() - interval '95 minutes',
-      reservation_id = NULL,
-      subscription_id = NULL,
-      deposit_hold_id = NULL,
-      status = 'RENTED',
-      end_time = NULL,
-      duration = NULL,
-      total_price = NULL,
-      updated_at = now()
-  WHERE id = active_rental_id;
-
-  DELETE FROM rental_penalties WHERE rental_id = active_rental_id;
-
-  INSERT INTO rental_penalties (
-    id, rental_id, wallet_hold_id, penalty_type, amount, description, created_at
-  )
-  VALUES (
-    '019b17bd-d130-7e7d-be69-91ceef7b7801',
-    active_rental_id,
-    NULL,
-    'DAMAGE',
-    5000,
-    'Scalar penalty test',
-    now()
-  );
-END $$;
-```
-
-Expected Scalar:
-
-- `baseRentalAmount = 8000`
-- `couponDiscountAmount = 2000`
-- `penaltyAmount = 5000`
-- `payableRentalAmount = 6000`
-- `totalPayableAmount = 11000`
-
-### Case 9: Rental khong thuoc user hien tai
+### Case 8: Rental khong thuoc user hien tai
 
 Login `user01@mebike.local`, nhung lay rental cua `user02@mebike.local`.
 
@@ -1002,8 +907,8 @@ Man hinh billing preview nen co cac block:
   - label nen la "Auto discount", khong goi la "My coupon"
   - khong yeu cau user chon coupon
 - Penalty:
-  - hien rieng `penaltyAmount`
-  - copy nen noi ro discount khong giam penalty
+  - V1 hien tai khong con penalty rieng.
+  - neu frontend van hien field `penaltyAmount`, gia tri expected la `0`.
 - Deposit:
   - neu `depositForfeited = true`, hien warning mat deposit
   - khong cong field nay vao `totalPayableAmount` o UI neu backend response chua cong

@@ -44,7 +44,7 @@ MeBike Global Auto Discount Policy V1:
 - neu rental co `subscription_id` thi khong ap discount, ke ca con phan tien du phai tra bang wallet
 - moi rental toi da 1 discount
 - neu nhieu rule active cung hop le khi tinh bill, he thong chon rule co discount tot nhat
-- discount chi ap vao `eligibleRentalAmount`, khong ap vao penalty, deposit forfeited, phi ngoai rental hoac phi phat sinh khac
+- discount chi ap vao `eligibleRentalAmount`, khong ap vao deposit forfeited, phi ngoai rental hoac phi phat sinh khac; V1 hien tai khong co penalty rieng
 - preview va finalize rental end dung chung logic global rules
 
 Luu y cho frontend:
@@ -209,7 +209,7 @@ Body toi thieu theo semantics `PUT`:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": null,
@@ -229,21 +229,23 @@ Backend validate chat nhu sau:
 - `minRidingMinutes` phai la so nguyen `> 0`
 - `discountType` chi nhan `FIXED_AMOUNT`
 - `discountValue` phai la so nguyen `> 0`
+- `minRidingMinutes` va `discountValue` phai dung 1 trong 4 cap V1: `60->1000`, `120->2000`, `240->4000`, `360->6000`
 - `priority` phai la so nguyen
 - `status` chi nhan `ACTIVE` hoac `INACTIVE`
 - neu `activeFrom` va `activeTo` cung co gia tri thi `activeFrom <= activeTo`
+- neu rule da tung duoc ap vao `rental_billing_records` thi khong duoc update nua, muon doi campaign thi tao rule moi
 - update chi ghi vao `coupon_rules`
 
-### 6.6. Note quan trong khi sua rule dang `ACTIVE`
+### 6.6. Note quan trong khi sua rule
 
-Implementation hien tai **cho phep sua truc tiep rule dang `ACTIVE`**.
+Implementation hien tai chi cho update rule **chua tung duoc ap dung**.
 
 Frontend can hieu ro impact:
 
-- thay doi co hieu luc ngay cho cac lan doc/tinh tiep theo
-- `GET /v1/coupon-rules/active` co the thay doi ngay sau update
-- billing preview sau update se doc rule moi
-- neu QA muon test an toan hon, co the update thanh `INACTIVE` truoc
+- neu rule da co billing record su dung, backend tra `409 COUPON_RULE_ALREADY_USED`
+- neu rule chua duoc dung va van `ACTIVE`, thay doi co hieu luc cho cac lan preview/finalize tiep theo
+- billing cu khong bi tinh lai vi da co `coupon_rule_snapshot`
+- neu muon doi business rule da tung dung, admin nen deactivate rule cu va tao rule moi
 
 ### 6.7. Response shape thanh cong
 
@@ -257,7 +259,7 @@ Response mau:
   "minRidingMinutes": 120,
   "minBillableHours": 2,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "status": "INACTIVE",
   "priority": 90,
   "activeFrom": null,
@@ -341,7 +343,7 @@ Body:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": null,
@@ -362,11 +364,16 @@ Ky vong:
 - HTTP `200`
 - `id` van la `019b17bd-d130-7e7d-be69-91ceef7b7202`
 - `name = Ride 2h discount updated`
-- `discountValue = 2500`
+- `discountValue = 2000`
 - `priority = 90`
 - `status = INACTIVE`
 - `minBillableHours = 2`
 - `updatedAt` khac gia tri cu
+
+Luu y:
+
+- case nay chi thanh cong neu rule 2h chua tung duoc ap vao billing record
+- neu truoc do da test finalize rental va rule nay da duoc dung, backend se tra `409 COUPON_RULE_ALREADY_USED`; luc do hay tao rule draft moi de test update hoac reset seed demo
 
 ### 7.2. Case 2: happy path update rule dang `ACTIVE` nhung van giu `ACTIVE`
 
@@ -380,11 +387,11 @@ Body:
 
 ```json
 {
-  "name": "Ride 4h discount boosted",
+  "name": "Ride 4h discount priority update",
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 240,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 4500,
+  "discountValue": 4000,
   "priority": 80,
   "status": "ACTIVE",
   "activeFrom": null,
@@ -396,8 +403,8 @@ Ky vong:
 
 - HTTP `200`
 - response van `status = ACTIVE`
-- `GET /v1/coupon-rules/active` sau do co the thay `Ride 4h discount boosted`
-- frontend can hieu day la thay doi co hieu luc ngay
+- `GET /v1/coupon-rules/active` sau do co the thay `Ride 4h discount priority update`
+- neu rule da tung duoc dung thi ky vong dung la `409 COUPON_RULE_ALREADY_USED`
 
 ### 7.3. Case 3: update voi active window
 
@@ -415,7 +422,7 @@ Body:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 60,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 1500,
+  "discountValue": 1000,
   "priority": 100,
   "status": "INACTIVE",
   "activeFrom": "2026-04-20T00:00:00.000Z",
@@ -492,7 +499,7 @@ Body:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": null,
@@ -539,7 +546,7 @@ Body:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 0,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 1000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": null,
@@ -562,7 +569,7 @@ Body:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": "2026-04-18T00:00:00.000Z",
@@ -584,7 +591,7 @@ Do semantics `PUT` la full update, body sau la khong hop le:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500
+  "discountValue": 2000
 }
 ```
 
@@ -603,7 +610,7 @@ Body sai `triggerType`:
   "triggerType": "CAMPAIGN",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": null,
@@ -725,7 +732,7 @@ Ky vong sau update:
 - `trigger_type` van la `RIDING_DURATION`
 - `min_riding_minutes` van la `120`
 - `discount_type` van la `FIXED_AMOUNT`
-- `discount_value` doi thanh `2500.00`
+- `discount_value` van la `2000.00`
 - `status` doi thanh `INACTIVE`
 - `priority` doi thanh `90`
 - `active_from IS NULL`
@@ -740,8 +747,7 @@ Sau 1 lan update thanh cong:
 Field phai doi neu body doi:
 
 - `name`
-- `min_riding_minutes`
-- `discount_value`
+- `min_riding_minutes` va `discount_value` chi duoc doi neu van dung cap fixed tier V1
 - `status`
 - `priority`
 - `active_from`
@@ -819,7 +825,7 @@ Body:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": null,
@@ -833,6 +839,7 @@ Dung case nay de test:
 - submit full body thanh cong
 - list refetch xong thay data moi
 - filter `INACTIVE` sau do co thay rule nay
+- neu rule da tung duoc dung trong billing record thi case dung la `409 COUPON_RULE_ALREADY_USED`
 
 ### 9.2. Mau update giu ACTIVE va co hieu luc ngay
 
@@ -850,7 +857,7 @@ Body:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 360,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 6500,
+  "discountValue": 6000,
   "priority": 70,
   "status": "ACTIVE",
   "activeFrom": null,
@@ -860,9 +867,9 @@ Body:
 
 Dung case nay de test:
 
-- update rule dang active
-- active list public thay doi ngay
-- frontend can hieu risk operational
+- update metadata/priority cua rule active chua tung duoc dung
+- active list public thay doi ngay neu update thanh cong
+- neu rule da tung duoc dung thi backend tra `409 COUPON_RULE_ALREADY_USED`
 
 ### 9.3. Mau update co active window
 
@@ -880,7 +887,7 @@ Body:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 60,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 1200,
+  "discountValue": 1000,
   "priority": 95,
   "status": "INACTIVE",
   "activeFrom": "2026-04-20T00:00:00.000Z",
@@ -934,6 +941,7 @@ Frontend nen validate som:
 - `name.trim().length > 0`
 - `minRidingMinutes > 0`
 - `discountValue > 0`
+- `minRidingMinutes` va `discountValue` phai dung 1 trong 4 cap V1: `60->1000`, `120->2000`, `240->4000`, `360->6000`
 - `priority` la integer
 - neu `activeFrom` va `activeTo` cung co thi `activeFrom <= activeTo`
 
@@ -981,6 +989,11 @@ Neu `404 COUPON_RULE_NOT_FOUND`:
 - hien thong bao rule khong ton tai
 - co the redirect ve man list
 
+Neu `409 COUPON_RULE_ALREADY_USED`:
+
+- hien thong bao rule da tung duoc ap dung nen khong the sua
+- goi y admin deactivate rule cu va tao rule moi neu muon doi campaign
+
 ### 10.7. Frontend khong nen suy luan sai
 
 Frontend update screen khong nen:
@@ -997,10 +1010,11 @@ Sau `pnpm seed:demo`:
 - [ ] login admin demo thanh cong
 - [ ] authorize trong Scalar
 - [ ] `PUT /v1/admin/coupon-rules/{ruleId}` voi rule seed demo va body hop le tra `200`
-- [ ] update rule `019b17bd-d130-7e7d-be69-91ceef7b7202` xong thi `discountValue = 2500`
+- [ ] update rule `019b17bd-d130-7e7d-be69-91ceef7b7202` xong thi `discountValue = 2000`
 - [ ] `updatedAt` thay doi sau update
 - [ ] `id` khong doi
 - [ ] `createdAt` khong doi
+- [ ] rule da tung duoc ap vao billing record thi update tra `409 COUPON_RULE_ALREADY_USED`
 - [ ] khong co token thi `401`
 - [ ] user token thi `403`
 - [ ] `ruleId` khong ton tai thi `404`
@@ -1074,7 +1088,7 @@ Neu chi can test nhanh:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": null,

@@ -94,7 +94,7 @@ Frontend khong nen suy ra tu endpoint nay rang:
 
 - user chac chan se duoc giam trong moi rental
 - discount se apply khi co `subscription_id`
-- discount ap dung cho penalty hay phi khac
+- discount ap dung cho deposit forfeited hay phi khac
 
 Nhung rule nghiep vu can hien thi hoac note trong UI:
 
@@ -102,7 +102,7 @@ Nhung rule nghiep vu can hien thi hoac note trong UI:
 - chi ap dung khi rental khong co `subscription_id`
 - moi rental toi da 1 discount
 - neu co nhieu rule hop le khi tinh bill, he thong chon rule giam tot nhat
-- discount chi ap vao `eligibleRentalAmount`, khong ap vao penalty, deposit forfeited hay phi khac
+- discount chi ap vao `eligibleRentalAmount`, khong ap vao deposit forfeited hay phi khac; V1 hien tai khong co penalty rieng
 
 ## 4. Contract API ma frontend can bam theo
 

@@ -44,7 +44,7 @@ MeBike Global Auto Discount Policy V1:
 - neu rental co `subscription_id` thi khong ap discount, ke ca con phan tien du phai tra bang wallet
 - moi rental toi da 1 discount
 - neu nhieu rule active cung hop le khi tinh bill, he thong chon rule co discount tot nhat
-- discount chi ap vao `eligibleRentalAmount`, khong ap vao penalty, deposit forfeited, phi ngoai rental hoac phi phat sinh khac
+- discount chi ap vao `eligibleRentalAmount`, khong ap vao deposit forfeited, phi ngoai rental hoac phi phat sinh khac; V1 hien tai khong co penalty rieng
 - preview va finalize rental end dung chung logic global rules
 
 Luu y:
@@ -355,17 +355,17 @@ Ky vong:
 - HTTP `201`
 - response `status = INACTIVE`
 
-### 7.3. Case 3: happy path, body truyen explicit `status = ACTIVE`
+### 7.3. Case 3: body truyen explicit `status = ACTIVE` sau seed demo
 
 Body:
 
 ```json
 {
-  "name": "Ride 8h active discount",
+  "name": "Ride 6h active duplicate discount",
   "triggerType": "RIDING_DURATION",
-  "minRidingMinutes": 480,
+  "minRidingMinutes": 360,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 8000,
+  "discountValue": 6000,
   "priority": 100,
   "status": "ACTIVE",
   "activeFrom": null,
@@ -375,13 +375,14 @@ Body:
 
 Ky vong:
 
-- HTTP `201`
-- response `status = ACTIVE`
+- HTTP `409`
+- `details.code = COUPON_RULE_ACTIVE_TIER_CONFLICT`
 
 Luu y:
 
 - flow business uu tien create draft `INACTIVE`
-- nhung implementation hien tai cho phep frontend gui explicit `ACTIVE`
+- sau `pnpm seed:demo`, 4 tier mac dinh da co rule `ACTIVE`, nen tao them rule `ACTIVE` cung tier se bi chan
+- neu muon tao `ACTIVE` thanh cong, admin phai deactivate rule active cung tier truoc, hoac tao draft `INACTIVE` roi activate sau
 
 ### 7.4. Case 4: khong co token
 
@@ -689,11 +690,11 @@ Neu frontend create body:
 
 ```json
 {
-  "name": "Ride 8h active discount",
+  "name": "Ride 6h active duplicate discount",
   "triggerType": "RIDING_DURATION",
-  "minRidingMinutes": 480,
+  "minRidingMinutes": 360,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 8000,
+  "discountValue": 6000,
   "priority": 100,
   "status": "ACTIVE",
   "activeFrom": null,
@@ -713,13 +714,14 @@ SELECT
   active_from,
   active_to
 FROM coupon_rules
-WHERE name = 'Ride 8h active discount'
+WHERE name = 'Ride 6h active duplicate discount'
 ORDER BY created_at DESC;
 ```
 
 Ky vong:
 
-- dong moi nhat co `status = ACTIVE`
+- sau seed demo khong co dong moi vi request phai bi `409`
+- neu da deactivate rule 6h active truoc khi create thi dong moi nhat moi co `status = ACTIVE`
 
 ## 9. Du lieu mau de frontend test ngay
 
@@ -729,11 +731,11 @@ Dung body nay de test form tao draft:
 
 ```json
 {
-  "name": "Ride 8h discount",
+  "name": "Ride 6h draft discount",
   "triggerType": "RIDING_DURATION",
-  "minRidingMinutes": 480,
+  "minRidingMinutes": 360,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 8000,
+  "discountValue": 6000,
   "priority": 100,
   "activeFrom": null,
   "activeTo": null
@@ -750,11 +752,11 @@ Ky vong:
 
 ```json
 {
-  "name": "Ride 10h promo window",
+  "name": "Ride 4h promo window",
   "triggerType": "RIDING_DURATION",
-  "minRidingMinutes": 600,
+  "minRidingMinutes": 240,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 10000,
+  "discountValue": 4000,
   "priority": 50,
   "status": "INACTIVE",
   "activeFrom": "2026-04-20T00:00:00.000Z",
@@ -777,7 +779,7 @@ Vi backend khong unique `name`, frontend co the test:
   "triggerType": "RIDING_DURATION",
   "minRidingMinutes": 120,
   "discountType": "FIXED_AMOUNT",
-  "discountValue": 2500,
+  "discountValue": 2000,
   "priority": 90,
   "status": "INACTIVE",
   "activeFrom": null,
@@ -821,6 +823,7 @@ Frontend nen validate som:
 - `discountValue > 0`
 - `priority` la integer neu co nhap
 - neu `activeFrom` va `activeTo` cung co thi `activeFrom <= activeTo`
+- `minRidingMinutes` va `discountValue` phai dung 1 trong 4 cap V1: `60->1000`, `120->2000`, `240->4000`, `360->6000`
 
 Validation client-side khong thay the backend validation.
 
@@ -866,7 +869,8 @@ Sau `pnpm seed:demo`:
 - [ ] authorize trong Scalar
 - [ ] `POST /v1/admin/coupon-rules` voi body hop le tra `201`
 - [ ] body khong truyen `status` thi response `status = INACTIVE`
-- [ ] body truyen `status = ACTIVE` thi response `status = ACTIVE`
+- [ ] body truyen `status = ACTIVE` trung tier dang active thi `409`
+- [ ] body truyen cap ngoai 4 tier V1 thi `400`
 - [ ] khong co token thi `401`
 - [ ] user token thi `403`
 - [ ] `discountValue <= 0` thi `400`
@@ -884,9 +888,9 @@ Neu QA muon xoa cac rule vua tao thu cong:
 ```sql
 DELETE FROM coupon_rules
 WHERE name IN (
-  'Ride 8h discount',
-  'Ride 10h promo window',
-  'Ride 8h active discount'
+  'Ride 6h draft discount',
+  'Ride 4h promo window',
+  'Ride 6h active duplicate discount'
 );
 ```
 

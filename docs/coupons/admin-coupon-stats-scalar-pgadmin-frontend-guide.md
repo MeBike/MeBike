@@ -44,7 +44,7 @@ MeBike Global Auto Discount Policy V1:
 - neu rental co `subscription_id` thi khong ap discount, ke ca con phan tien du phai tra bang wallet
 - moi rental toi da 1 discount
 - neu nhieu rule active cung hop le khi tinh bill, he thong chon rule co discount tot nhat
-- discount chi ap vao `eligibleRentalAmount`, khong ap vao penalty, deposit forfeited, phi ngoai rental hoac phi phat sinh khac
+- discount chi ap vao `eligibleRentalAmount`, khong ap vao deposit forfeited, phi ngoai rental hoac phi phat sinh khac; V1 hien tai khong co penalty rieng
 - preview va finalize rental end dung chung logic global rules
 
 Luu y quan trong cho frontend:

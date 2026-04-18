@@ -87,12 +87,11 @@ Dieu kien apply:
 
 - rental phai khong co `subscription_id`
 - neu rental co `subscription_id` thi khong ap coupon, ke ca phan con lai phai tra bang wallet
-- eligibility dung riding duration that: `rentalMinutes` / `totalDurationMinutes`
-- khong dung `billableMinutes` hoac `billableHours` de xet tier nua
-- `minBillableHours` trong API chi la field hien thi suy ra tu `minRidingMinutes / 60`
+- eligibility dung `billableMinutes` / `billableHours`, khong dung raw riding duration de xet tier
+- `minBillableHours` trong API la field hien thi suy ra tu `minRidingMinutes / 60`
 - coupon chi ap vao tien thue xe eligible sau prepaid/subscription
 - coupon khong ap vao deposit forfeited 500k
-- coupon khong ap vao penalty
+- V1 hien tai khong co penalty rieng; `penaltyAmount` luon la `0`
 - moi rental toi da 1 coupon
 - preview va finalize dung cung logic chon rule
 
@@ -762,7 +761,7 @@ Frontend formula hien thi:
 eligibleRentalAmount = max(rental amount after subscription - prepaidAmount, 0)
 couponDiscountAmount = discount backend tra ve
 payableRentalAmount = eligibleRentalAmount - couponDiscountAmount
-totalPayableAmount = payableRentalAmount + penaltyAmount
+totalPayableAmount = payableRentalAmount
 ```
 
 Khong tu tinh lai coupon o frontend.

@@ -454,16 +454,18 @@ function expectedDiscountAmountForDuration(
     return 0;
   }
 
-  if (durationMinutes >= 360) {
+  const billableMinutes = Math.max(1, Math.ceil(durationMinutes / 30)) * 30;
+
+  if (billableMinutes >= 360) {
     return 6000;
   }
-  if (durationMinutes >= 240) {
+  if (billableMinutes >= 240) {
     return 4000;
   }
-  if (durationMinutes >= 120) {
+  if (billableMinutes >= 120) {
     return 2000;
   }
-  if (durationMinutes >= 60) {
+  if (billableMinutes >= 60) {
     return 1000;
   }
 
