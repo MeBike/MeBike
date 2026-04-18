@@ -207,7 +207,6 @@ export function finalizeRentalReturnInTx(
             totalDurationMinutes: durationMinutes,
             estimatedDistanceKm: null,
             baseAmount: toPrismaDecimal(fullBaseAmountMinor.toString()),
-            overtimeAmount: toPrismaDecimal("0"),
             couponDiscountAmount: toPrismaDecimal("0"),
             subscriptionDiscountAmount: toPrismaDecimal(subscriptionDiscountMinor.toString()),
             depositForfeited,

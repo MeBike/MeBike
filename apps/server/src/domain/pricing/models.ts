@@ -7,7 +7,6 @@ export type PricingPolicyRow = {
   readonly name: string;
   readonly baseRate: PricingDecimal;
   readonly billingUnitMinutes: number;
-  readonly overtimeRate: PricingDecimal | null;
   readonly reservationFee: PricingDecimal;
   readonly depositRequired: PricingDecimal;
   readonly lateReturnCutoff: Date;

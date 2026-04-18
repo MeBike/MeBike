@@ -14,7 +14,6 @@ export async function resetTestData(prisma: PrismaClient): Promise<void> {
       "environmental_impact_stats",
       "environmental_impact_policies",
       "rental_billing_records",
-      "rental_penalties",
       "Rental",
       "Reservation",
       "pricing_policies",

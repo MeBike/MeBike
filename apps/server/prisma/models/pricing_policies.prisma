@@ -3,7 +3,6 @@ model PricingPolicy {
   name               String
   baseRate           Decimal       @map("base_rate") @db.Decimal(12, 2)
   billingUnitMinutes Int           @map("billing_unit_minutes")
-  overtimeRate       Decimal?      @map("overtime_rate") @db.Decimal(12, 2)
   reservationFee     Decimal       @default(2000) @map("reservation_fee") @db.Decimal(12, 2)
   depositRequired    Decimal       @default(500000) @map("deposit_required") @db.Decimal(12, 2)
   lateReturnCutoff   DateTime      @default(dbgenerated("'23:00:00'::time without time zone")) @map("late_return_cutoff") @db.Time

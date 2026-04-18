@@ -27,7 +27,6 @@ model WalletHold {
   withdrawal      WalletWithdrawal? @relation(fields: [withdrawalId], references: [id])
   rental          Rental?           @relation("WalletHoldRental", fields: [rentalId], references: [id])
   depositRental   Rental?           @relation("RentalDepositHold")
-  rentalPenalties RentalPenalty[]
 
   @@index([walletId], name: "idx_wallet_holds_wallet")
   @@index([rentalId], name: "idx_wallet_holds_rental")
