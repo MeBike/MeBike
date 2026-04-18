@@ -14,7 +14,6 @@ export interface Station {
   }
   capacity: {
     total : number;
-    pickupSlotLimit : number;
     returnSlotLimit : number;
     emptyPhysicalSlots : number;
   };
@@ -27,7 +26,7 @@ export interface Station {
     maintained: number,
     unavailable: number
   }
-  createdAt: string;
+  createdAt: string;pickupSlotLimit
   updatedAt: string;
 }
 export interface StationStatistic {
