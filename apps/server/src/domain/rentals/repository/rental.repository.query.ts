@@ -2,12 +2,15 @@ import type { PageRequest } from "@/domain/shared/pagination";
 import type { BikeSwapStatus } from "generated/kysely/types";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { readCouponRuleIdentity } from "@/domain/coupons/coupon-rule-identity";
 import { pickDefined } from "@/domain/shared";
+import { toMinorUnit } from "@/domain/shared/money";
 
 import type {
   AdminRentalFilter,
   BikeSwapRequestRow,
   MyBikeSwapRequestFilter,
+  RentalBillingDetailRow,
   MyRentalFilter,
   RentalRow,
   RentalSortField,
@@ -177,6 +180,66 @@ export function mapToRentalRow(raw: RentalSelectRow): RentalRow {
     subscriptionId: raw.subscriptionId,
     status: raw.status,
     updatedAt: raw.updatedAt,
+  };
+}
+
+export const rentalBillingDetailSelect = {
+  rentalId: true,
+  baseAmount: true,
+  couponRuleId: true,
+  couponRuleSnapshot: true,
+  couponDiscountAmount: true,
+  subscriptionDiscountAmount: true,
+  totalAmount: true,
+  createdAt: true,
+  couponRule: {
+    select: {
+      id: true,
+      name: true,
+      triggerType: true,
+      minRidingMinutes: true,
+      discountType: true,
+      discountValue: true,
+    },
+  },
+  rental: {
+    select: {
+      subscriptionId: true,
+      reservation: {
+        select: {
+          prepaid: true,
+        },
+      },
+    },
+  },
+} as const;
+
+type RentalBillingDetailSelectRow = PrismaTypes.RentalBillingRecordGetPayload<{
+  select: typeof rentalBillingDetailSelect;
+}>;
+
+export function mapToRentalBillingDetailRow(
+  raw: RentalBillingDetailSelectRow,
+): RentalBillingDetailRow {
+  const couponRuleIdentity = readCouponRuleIdentity({
+    couponRuleSnapshot: raw.couponRuleSnapshot,
+    couponRule: raw.couponRule,
+  });
+
+  return {
+    rentalId: raw.rentalId,
+    baseAmount: Number(toMinorUnit(raw.baseAmount)),
+    prepaidAmount: Number(toMinorUnit(raw.rental.reservation?.prepaid)),
+    subscriptionApplied: Boolean(raw.rental.subscriptionId),
+    subscriptionDiscountAmount: Number(toMinorUnit(raw.subscriptionDiscountAmount)),
+    couponRuleId: couponRuleIdentity?.ruleId ?? raw.couponRuleId,
+    couponRuleName: couponRuleIdentity?.name ?? null,
+    couponRuleMinRidingMinutes: couponRuleIdentity?.minRidingMinutes ?? null,
+    couponRuleDiscountType: couponRuleIdentity?.discountType ?? null,
+    couponRuleDiscountValue: couponRuleIdentity?.discountValue ?? null,
+    couponDiscountAmount: Number(toMinorUnit(raw.couponDiscountAmount)),
+    totalAmount: Number(toMinorUnit(raw.totalAmount)),
+    appliedAt: raw.createdAt,
   };
 }
 

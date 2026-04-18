@@ -2,6 +2,7 @@ import { Layer } from "effect";
 
 import {
   RentalAnalyticsRepositoryLive,
+  RentalBillingDetailServiceLive,
   RentalBillingPreviewServiceLive,
   RentalCommandServiceLive,
   RentalRepositoryLive,
@@ -60,6 +61,10 @@ export const RentalBillingPreviewServiceLayer = RentalBillingPreviewServiceLive.
   Layer.provide(PrismaLive),
 );
 
+export const RentalBillingDetailServiceLayer = RentalBillingDetailServiceLive.pipe(
+  Layer.provide(RentalReposLive),
+);
+
 export const RentalDepsLive = Layer.mergeAll(
   RentalReposLive,
   ReturnSlotReposLive,
@@ -68,6 +73,7 @@ export const RentalDepsLive = Layer.mergeAll(
   RentalServiceLayer,
   RentalCommandServiceLayer,
   RentalStatsServiceLayer,
+  RentalBillingDetailServiceLayer,
   RentalBillingPreviewServiceLayer,
   BikeDepsLive,
   WalletDepsLive,

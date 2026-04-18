@@ -4,6 +4,7 @@ import type {
   AdminRentalDetail,
   AdminRentalListItem,
   BikeSwapRequestRow,
+  RentalBillingDetailRow,
   RentalBillingPreviewRow,
   RentalRow,
   ReturnSlotRow,
@@ -92,6 +93,57 @@ export function toContractRentalBillingPreview(
     depositForfeited: row.depositForfeited,
     payableRentalAmount: row.payableRentalAmount,
     totalPayableAmount: row.totalPayableAmount,
+  };
+}
+
+function buildBillingDetailExplanation(
+  row: RentalBillingDetailRow,
+): string | undefined {
+  const parts: string[] = [];
+
+  if (row.prepaidAmount > 0) {
+    parts.push(`Prepaid amount ${row.prepaidAmount} was applied before final billing`);
+  }
+
+  if (row.subscriptionApplied && row.subscriptionDiscountAmount > 0) {
+    parts.push(`Subscription reduced this rental by ${row.subscriptionDiscountAmount}`);
+  }
+
+  if (row.couponDiscountAmount > 0) {
+    const couponName = row.couponRuleName
+      ? `"${row.couponRuleName}"`
+      : "an automatic coupon";
+    const tier = row.couponRuleMinRidingMinutes !== null
+      ? ` after meeting the ${row.couponRuleMinRidingMinutes}-minute tier`
+      : "";
+    parts.push(`${couponName} reduced this rental by ${row.couponDiscountAmount}${tier}`);
+  }
+
+  if (parts.length === 0) {
+    return "No prepaid amount, subscription discount, or coupon discount was applied to this rental.";
+  }
+
+  return `${parts.join(". ")}.`;
+}
+
+export function toContractRentalBillingDetail(
+  row: RentalBillingDetailRow,
+): RentalsContracts.RentalBillingDetail {
+  return {
+    rentalId: row.rentalId,
+    baseAmount: row.baseAmount,
+    prepaidAmount: row.prepaidAmount,
+    subscriptionApplied: row.subscriptionApplied,
+    subscriptionDiscountAmount: row.subscriptionDiscountAmount,
+    couponRuleId: row.couponRuleId,
+    couponRuleName: row.couponRuleName,
+    couponRuleMinRidingMinutes: row.couponRuleMinRidingMinutes,
+    couponRuleDiscountType: row.couponRuleDiscountType,
+    couponRuleDiscountValue: row.couponRuleDiscountValue,
+    couponDiscountAmount: row.couponDiscountAmount,
+    totalAmount: row.totalAmount,
+    appliedAt: row.appliedAt.toISOString(),
+    explanation: buildBillingDetailExplanation(row),
   };
 }
 

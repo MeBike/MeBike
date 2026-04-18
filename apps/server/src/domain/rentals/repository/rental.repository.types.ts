@@ -18,6 +18,7 @@ import type {
   AdminRentalListItem,
   BikeSwapRequestRow,
   MyBikeSwapRequestFilter,
+  RentalBillingDetailRow,
   MyRentalFilter,
   RentalCountsRow,
   RentalRow,
@@ -70,6 +71,11 @@ export type RentalRepo = {
     userId: string,
     rentalId: string,
   ) => Effect.Effect<Option.Option<RentalRow>>;
+
+  getMyRentalBillingDetail: (
+    userId: string,
+    rentalId: string,
+  ) => Effect.Effect<Option.Option<RentalBillingDetailRow>>;
 
   getMyRentalCounts: (
     userId: string,

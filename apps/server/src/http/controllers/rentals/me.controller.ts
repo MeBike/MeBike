@@ -8,6 +8,7 @@ import {
 import { Effect, Match, Option } from "effect";
 
 import {
+  RentalBillingDetailServiceTag,
   RentalBillingPreviewServiceTag,
   RentalCommandServiceTag,
   RentalServiceTag,
@@ -17,6 +18,7 @@ import { withLoggedCause } from "@/domain/shared";
 import {
   toContractBikeSwapRequest,
   toContractBikeSwapRequestDetail,
+  toContractRentalBillingDetail,
   toContractRental,
   toContractRentalBillingPreview,
   toContractRentalWithPrice,
@@ -385,6 +387,76 @@ const getMyRentalBillingPreview: RouteHandler<
             400,
           )),
         Match.orElse((err) => {
+          throw err;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
+const getMyRentalBillingDetail: RouteHandler<
+  RentalsRoutes["getMyRentalBillingDetail"]
+> = async (c) => {
+  const userId = c.var.currentUser!.userId;
+  const { rentalId } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RentalBillingDetailServiceTag;
+      return yield* service.getForUser({
+        rentalId,
+        userId,
+      });
+    }),
+    "GET /v1/rentals/me/{rentalId}/billing-detail",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<RentalsContracts.RentalBillingDetail, 200>(
+        toContractRentalBillingDetail(right),
+        200,
+      )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("RentalNotFound", () =>
+          c.json<RentalsContracts.RentalErrorResponse, 404>(
+            {
+              error: rentalErrorMessages.RENTAL_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                rentalId,
+              },
+            },
+            404,
+          )),
+        Match.tag("BillingDetailRequiresCompletedRental", ({ status }) =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>(
+            {
+              error: rentalErrorMessages.BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL,
+              details: {
+                code: RentalErrorCodeSchema.enum.BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL,
+                rentalId,
+                status,
+              },
+            },
+            400,
+          )),
+        Match.tag("BillingDetailNotReady", ({ status }) =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>(
+            {
+              error: rentalErrorMessages.BILLING_DETAIL_NOT_READY,
+              details: {
+                code: RentalErrorCodeSchema.enum.BILLING_DETAIL_NOT_READY,
+                rentalId,
+                status,
+              },
+            },
+            400,
+          )),
+        Match.orElse(err => {
           throw err;
         }),
       )),
@@ -825,6 +897,7 @@ export const RentalMeController = {
   getMyCurrentRentals,
   getMyCurrentReturnSlot,
   getMyRental,
+  getMyRentalBillingDetail,
   getMyRentalBillingPreview,
   getMyRentalCounts,
   requestBikeSwap,

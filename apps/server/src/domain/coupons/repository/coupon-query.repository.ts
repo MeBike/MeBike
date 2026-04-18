@@ -2,6 +2,10 @@ import { Effect, Layer } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import {
+  readCouponRuleIdentity as resolveCouponRuleIdentity,
+  type CouponRuleIdentity,
+} from "@/domain/coupons/coupon-rule-identity";
 import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import {
@@ -16,7 +20,6 @@ import type {
   AdminCouponStatsRow,
   AdminCouponUsageLogRow,
   BillingPreviewDiscountRuleRow,
-  CouponRuleSnapshot,
   CouponStatsByRuleRow,
 } from "../models";
 import type { CouponQueryRepo } from "./coupon.repository.types";
@@ -124,16 +127,6 @@ type CouponRuleUsageAggregate = {
   readonly totalDiscountAmount: number;
 };
 
-type CouponRuleIdentity = {
-  readonly ruleId: string;
-  readonly name: string;
-  readonly triggerType: "RIDING_DURATION";
-  readonly minRidingMinutes: number | null;
-  readonly discountType: "FIXED_AMOUNT";
-  readonly discountValue: number;
-  readonly source: "BILLING_RECORD_RULE" | "BILLING_RECORD_SNAPSHOT";
-};
-
 function toBillingPreviewDiscountRuleRow(
   row: BillingPreviewDiscountRuleRecord,
 ): BillingPreviewDiscountRuleRow {
@@ -196,7 +189,10 @@ function toAdminCouponUsageLogRow(
   row: AdminCouponUsageLogRecord,
 ): AdminCouponUsageLogRow {
   const couponDiscountAmount = Number(toMinorUnit(row.couponDiscountAmount));
-  const couponRuleIdentity = readCouponRuleIdentity(row);
+  const couponRuleIdentity = resolveCouponRuleIdentity({
+    couponRuleSnapshot: row.couponRuleSnapshot,
+    couponRule: row.couponRule,
+  });
 
   return {
     rentalId: row.rentalId,
@@ -222,79 +218,16 @@ function toAdminCouponUsageLogRow(
   };
 }
 
-function readCouponRuleIdentity(
+function readAdminCouponRuleIdentity(
   row: Pick<
     AdminCouponUsageLogRecord,
-    "couponRuleId" | "couponRuleSnapshot" | "couponRule"
+    "couponRuleSnapshot" | "couponRule"
   >,
 ): CouponRuleIdentity | null {
-  const snapshot = readCouponRuleSnapshot(row.couponRuleSnapshot);
-  if (snapshot) {
-    return {
-      ruleId: snapshot.ruleId,
-      name: snapshot.name,
-      triggerType: snapshot.triggerType,
-      minRidingMinutes: snapshot.minRidingMinutes,
-      discountType: snapshot.discountType,
-      discountValue: snapshot.discountValue,
-      source: "BILLING_RECORD_SNAPSHOT",
-    };
-  }
-
-  if (
-    row.couponRule
-    && row.couponRule.triggerType === "RIDING_DURATION"
-    && row.couponRule.discountType === "FIXED_AMOUNT"
-  ) {
-    return {
-      ruleId: row.couponRule.id,
-      name: row.couponRule.name,
-      triggerType: row.couponRule.triggerType,
-      minRidingMinutes: row.couponRule.minRidingMinutes,
-      discountType: row.couponRule.discountType,
-      discountValue: Number(toMinorUnit(row.couponRule.discountValue)),
-      source: "BILLING_RECORD_RULE",
-    };
-  }
-
-  return null;
-}
-
-function readCouponRuleSnapshot(
-  value: PrismaTypes.JsonValue | null,
-): CouponRuleSnapshot | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-
-  const snapshot = value as Record<string, unknown>;
-  if (
-    typeof snapshot.ruleId !== "string"
-    || typeof snapshot.name !== "string"
-    || snapshot.triggerType !== "RIDING_DURATION"
-    || typeof snapshot.minRidingMinutes !== "number"
-    || snapshot.discountType !== "FIXED_AMOUNT"
-    || typeof snapshot.discountValue !== "number"
-    || typeof snapshot.priority !== "number"
-    || typeof snapshot.billableMinutes !== "number"
-    || typeof snapshot.billableHours !== "number"
-    || typeof snapshot.appliedAt !== "string"
-  ) {
-    return null;
-  }
-
-  return {
-    ruleId: snapshot.ruleId,
-    name: snapshot.name,
-    triggerType: snapshot.triggerType,
-    minRidingMinutes: snapshot.minRidingMinutes,
-    discountType: snapshot.discountType,
-    discountValue: snapshot.discountValue,
-    priority: snapshot.priority,
-    billableMinutes: snapshot.billableMinutes,
-    billableHours: snapshot.billableHours,
-    appliedAt: snapshot.appliedAt,
-  };
+  return resolveCouponRuleIdentity({
+    couponRuleSnapshot: row.couponRuleSnapshot,
+    couponRule: row.couponRule,
+  });
 }
 
 function activeGlobalRidingDurationFixedAmountWhere(
@@ -368,7 +301,7 @@ function buildCouponStatsByRule(input: {
   const identityByRuleId = new Map<string, CouponRuleIdentity>();
 
   for (const record of input.representativeRecords) {
-    const identity = readCouponRuleIdentity(record);
+    const identity = readAdminCouponRuleIdentity(record);
     if (!identity) {
       continue;
     }
@@ -685,7 +618,7 @@ export function makeCouponQueryRepository(
         }
 
         for (const record of snapshotFallbackRecords) {
-          const identity = readCouponRuleIdentity(record);
+          const identity = readAdminCouponRuleIdentity(record);
           if (!identity) {
             continue;
           }

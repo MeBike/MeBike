@@ -267,6 +267,22 @@ export type RentalBillingPreviewRow = {
   totalPayableAmount: number;
 };
 
+export type RentalBillingDetailRow = {
+  rentalId: string;
+  baseAmount: number;
+  prepaidAmount: number;
+  subscriptionApplied: boolean;
+  subscriptionDiscountAmount: number;
+  couponRuleId: string | null;
+  couponRuleName: string | null;
+  couponRuleMinRidingMinutes: number | null;
+  couponRuleDiscountType: DiscountType | null;
+  couponRuleDiscountValue: number | null;
+  couponDiscountAmount: number;
+  totalAmount: number;
+  appliedAt: Date;
+};
+
 export type RentalDashboardSummary = {
   revenueSummary: {
     today: DashboardRevenueSnapshot;

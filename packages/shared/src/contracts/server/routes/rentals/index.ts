@@ -34,6 +34,7 @@ export {
   getAllRentals,
   getDashboardSummary,
   getMyCurrentRentals,
+  getMyRentalBillingDetail,
   getMyRentalBillingPreview,
   getMyCurrentReturnSlot,
   getMyRental,

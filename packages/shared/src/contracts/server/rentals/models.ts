@@ -197,6 +197,23 @@ export const RentalBillingPreviewSchema = z.object({
   totalPayableAmount: z.number().nonnegative(),
 }).openapi("RentalBillingPreview");
 
+export const RentalBillingDetailSchema = z.object({
+  rentalId: z.uuidv7(),
+  baseAmount: z.number().nonnegative(),
+  prepaidAmount: z.number().nonnegative(),
+  subscriptionApplied: z.boolean(),
+  subscriptionDiscountAmount: z.number().nonnegative(),
+  couponRuleId: z.uuidv7().nullable(),
+  couponRuleName: z.string().nullable(),
+  couponRuleMinRidingMinutes: z.number().int().nonnegative().nullable(),
+  couponRuleDiscountType: CouponDiscountTypeSchema.nullable(),
+  couponRuleDiscountValue: z.number().nonnegative().nullable(),
+  couponDiscountAmount: z.number().nonnegative(),
+  totalAmount: z.number().nonnegative(),
+  appliedAt: z.iso.datetime(),
+  explanation: z.string().optional(),
+}).openapi("RentalBillingDetail");
+
 // Revenue analytics models
 export const RentalRevenueItemSchema = z.object({
   date: z.iso.datetime(),
@@ -449,6 +466,7 @@ export type RentalBillingPreviewDiscountRule = z.infer<
   typeof RentalBillingPreviewDiscountRuleSchema
 >;
 export type RentalBillingPreview = z.infer<typeof RentalBillingPreviewSchema>;
+export type RentalBillingDetail = z.infer<typeof RentalBillingDetailSchema>;
 export type RentalRevenueResponse = z.infer<typeof RentalRevenueResponseSchema>;
 export type StationActivityResponse = z.infer<
   typeof StationActivityResponseSchema
