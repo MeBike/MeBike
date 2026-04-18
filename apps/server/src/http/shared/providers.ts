@@ -24,6 +24,15 @@ export {
   BikeStatsServiceLayer,
 } from "./features/bike.layers";
 export {
+  CouponCommandReposLive,
+  CouponCommandServiceLayer,
+  CouponDepsLive,
+  CouponQueryReposLive,
+  CouponQueryServiceLayer,
+  CouponReposLive,
+  CouponServiceLayer,
+} from "./features/coupon.layers";
+export {
   EnvironmentDepsLive,
   EnvironmentPolicyReposLive,
   EnvironmentPolicyServiceLayer,
@@ -52,6 +61,8 @@ export {
 } from "./features/redistribution.layers";
 export {
   RentalAnalyticsReposLive,
+  RentalBillingDetailServiceLayer,
+  RentalBillingPreviewServiceLayer,
   RentalCommandServiceLayer,
   RentalDepsLive,
   RentalReposLive,

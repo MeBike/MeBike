@@ -39,6 +39,25 @@ describe("rentals end routing e2e", () => {
     return { user, startStation, bike, rental };
   }
 
+  async function createActiveDurationDiscountRule(input: {
+    readonly name: string;
+    readonly minRidingMinutes: number;
+    readonly discountValue: string;
+    readonly priority?: number;
+  }) {
+    return fixture.prisma.couponRule.create({
+      data: {
+        name: input.name,
+        triggerType: "RIDING_DURATION",
+        minRidingMinutes: input.minRidingMinutes,
+        discountType: "FIXED_AMOUNT",
+        discountValue: input.discountValue,
+        status: "ACTIVE",
+        priority: input.priority ?? 100,
+      },
+    });
+  }
+
   async function createAdminToken() {
     const admin = await fixture.factories.user({ role: "ADMIN" });
     return fixture.auth.makeAccessToken({ userId: admin.id, role: "ADMIN" });
@@ -336,6 +355,82 @@ describe("rentals end routing e2e", () => {
     const persistedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(persistedBike?.status).toBe("AVAILABLE");
     expect(persistedBike?.stationId).toBe(targetStation.id);
+  });
+
+  it("applies the best global coupon rule by billable minutes when ending a wallet rental", async () => {
+    const { user, rental } = await createActiveRentalGraph();
+    const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+    const targetStation = await fixture.factories.station({ capacity: 5 });
+    const { token: staffToken } = await createStaffToken(targetStation.id);
+    const confirmedAt = new Date("2026-03-21T09:30:01.000Z").toISOString();
+    const billableTwoHourRule = await createActiveDurationDiscountRule({
+      name: "E2E Billable 2h Discount",
+      minRidingMinutes: 120,
+      discountValue: "2000",
+    });
+
+    const slotResponse = await createReturnSlot(userToken, rental.id, targetStation.id);
+    expect(slotResponse.status).toBe(200);
+
+    const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${staffToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ stationId: targetStation.id, confirmationMethod: "MANUAL", confirmedAt }),
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.status).toBe("COMPLETED");
+    expect(body.duration).toBe(91);
+    expect(body.totalPrice).toBe(6000);
+
+    const wallet = await fixture.prisma.wallet.findUnique({
+      where: { userId: user.id },
+      select: { balance: true },
+    });
+    expect(wallet?.balance.toString()).toBe("94000");
+
+    const walletTransaction = await fixture.prisma.walletTransaction.findFirst({
+      where: { hash: `rental:${rental.id}` },
+      select: {
+        amount: true,
+        type: true,
+        status: true,
+      },
+    });
+    expect(walletTransaction).toMatchObject({
+      amount: 6000n,
+      type: "DEBIT",
+      status: "SUCCESS",
+    });
+
+    const billingRecord = await fixture.prisma.rentalBillingRecord.findUnique({
+      where: { rentalId: rental.id },
+    });
+    expect(billingRecord?.totalDurationMinutes).toBe(91);
+    expect(billingRecord?.baseAmount.toString()).toBe("8000");
+    expect(billingRecord?.couponRuleId).toBe(billableTwoHourRule.id);
+    expect(billingRecord?.couponRuleSnapshot).toMatchObject({
+      ruleId: billableTwoHourRule.id,
+      name: "E2E Billable 2h Discount",
+      triggerType: "RIDING_DURATION",
+      minRidingMinutes: 120,
+      discountType: "FIXED_AMOUNT",
+      discountValue: 2000,
+      priority: 100,
+      billableMinutes: 120,
+      billableHours: 2,
+      appliedAt: confirmedAt,
+    });
+    expect(billingRecord?.couponDiscountAmount.toString()).toBe("2000");
+    expect(billingRecord?.subscriptionDiscountAmount.toString()).toBe("0");
+    expect(billingRecord?.depositForfeited).toBe(false);
+    expect(billingRecord?.totalAmount.toString()).toBe("6000");
   });
 
   it("rejects staff confirmation when the staff assignment does not match the reserved return station", async () => {

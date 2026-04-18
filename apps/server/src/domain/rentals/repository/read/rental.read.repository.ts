@@ -14,6 +14,7 @@ export type RentalReadRepo = Pick<
   | "listMyRentals"
   | "listMyCurrentRentals"
   | "getMyRentalById"
+  | "getMyRentalBillingDetail"
   | "getMyRentalCounts"
   | "findActiveByBikeId"
   | "findActiveByUserId"

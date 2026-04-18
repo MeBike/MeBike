@@ -2,6 +2,7 @@ import { agenciesRoutes } from "./agencies";
 import { agencyRequestsRoutes } from "./agency-requests";
 import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
+import { couponRulesRoutes } from "./coupon-rules";
 import { environmentRoutes } from "./environment";
 import { fixedSlotTemplatesRoutes } from "./fixed-slots";
 import { healthRoutes } from "./health";
@@ -24,6 +25,7 @@ export * from "./agencies";
 export * from "./agency-requests";
 export * from "./auth";
 export * from "./bikes";
+export * from "./coupon-rules";
 export * from "./environment";
 export * from "./fixed-slots";
 export * from "./health";
@@ -42,7 +44,32 @@ export * from "./technician-teams";
 export * from "./users";
 export * from "./wallets";
 
-export const serverRoutes = {
+export type ServerRoutes = {
+  readonly agencies: typeof agenciesRoutes;
+  readonly agencyRequests: typeof agencyRequestsRoutes;
+  readonly auth: typeof authRoutes;
+  readonly environment: typeof environmentRoutes;
+  readonly fixedSlotTemplates: typeof fixedSlotTemplatesRoutes;
+  readonly health: typeof healthRoutes;
+  readonly rentals: typeof rentalsRoutes;
+  readonly reservations: typeof reservationsRoutes;
+  readonly stats: typeof statsRoutes;
+  readonly stations: typeof stationsRoutes;
+  readonly bikes: typeof bikesRoutes;
+  readonly couponRules: typeof couponRulesRoutes;
+  readonly suppliers: typeof suppliersRoutes;
+  readonly subscriptions: typeof subscriptionsRoutes;
+  readonly users: typeof usersRoutes;
+  readonly ratings: typeof ratingsRoutes;
+  readonly wallets: typeof walletsRoutes;
+  readonly stripe: typeof stripeRoutes;
+  readonly incidents: typeof incidentsRoutes;
+  readonly operators: typeof operatorsRoutes;
+  readonly redistribution: typeof redistributionRoutes;
+  readonly technicianTeams: typeof technicianTeamsRoutes;
+};
+
+export const serverRoutes: ServerRoutes = {
   agencies: agenciesRoutes,
   agencyRequests: agencyRequestsRoutes,
   auth: authRoutes,
@@ -54,6 +81,7 @@ export const serverRoutes = {
   stats: statsRoutes,
   stations: stationsRoutes,
   bikes: bikesRoutes,
+  couponRules: couponRulesRoutes,
   suppliers: suppliersRoutes,
   subscriptions: subscriptionsRoutes,
   users: usersRoutes,
@@ -64,6 +92,6 @@ export const serverRoutes = {
   operators: operatorsRoutes,
   redistribution: redistributionRoutes,
   technicianTeams: technicianTeamsRoutes,
-} as const;
+};
 
 export type ServerRouteKey = keyof typeof serverRoutes;
