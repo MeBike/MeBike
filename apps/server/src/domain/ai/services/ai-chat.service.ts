@@ -1,7 +1,6 @@
 import type { AiChatContext } from "@mebike/shared";
-import type { UIMessage } from "ai";
 
-import { convertToModelMessages, stepCountIs, streamText } from "ai";
+import { convertToModelMessages, stepCountIs, streamText, validateUIMessages } from "ai";
 import { Context, Effect, Layer } from "effect";
 
 import { env } from "@/config/env";
@@ -11,21 +10,36 @@ import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
 import { getOpenRouterChatModel } from "@/infrastructure/ai/openrouter";
 import logger from "@/lib/logger";
 
-import { AiConfigurationError, AiUnavailableError } from "../errors";
+import type { CustomerAssistantUIMessage } from "../messages/customer-assistant-ui";
+
+import {
+  AiConfigurationError,
+  AiInvalidRequestError,
+  AiUnavailableError,
+} from "../errors";
+import {
+  convertCustomerAssistantDataPart,
+  customerAssistantDataSchemas,
+  CustomerAssistantMessageMetadataSchema,
+
+} from "../messages/customer-assistant-ui";
 import { buildCustomerAssistantPrompt } from "../prompts/customer-assistant.prompt";
 import { createCustomerTools, getActiveCustomerTools } from "../tools/customer-tools";
 
 type AiChatArgs = {
   readonly chatId: string | null;
   readonly context: AiChatContext | null;
-  readonly messages: UIMessage[];
+  readonly messages: unknown;
   readonly userId: string;
 };
 
 export type AiChatService = {
   readonly streamCustomerAssistant: (
     args: AiChatArgs,
-  ) => Effect.Effect<Response, AiConfigurationError | AiUnavailableError>;
+  ) => Effect.Effect<
+    Response,
+    AiConfigurationError | AiInvalidRequestError | AiUnavailableError
+  >;
 };
 
 const makeAiChatService = Effect.gen(function* () {
@@ -41,8 +55,32 @@ const makeAiChatService = Effect.gen(function* () {
         }));
       }
 
+      const tools = createCustomerTools({
+        context: args.context,
+        reservationQueryService,
+        rentalService,
+        userId: args.userId,
+        walletService,
+      });
+
+      const validatedMessages = yield* Effect.tryPromise({
+        try: () => validateUIMessages<CustomerAssistantUIMessage>({
+          messages: args.messages,
+          metadataSchema: CustomerAssistantMessageMetadataSchema,
+          dataSchemas: customerAssistantDataSchemas,
+          tools,
+        }),
+        catch: error =>
+          new AiInvalidRequestError({
+            message: error instanceof Error ? error.message : "Invalid AI chat message payload",
+          }),
+      });
+
       const modelMessages = yield* Effect.tryPromise({
-        try: () => convertToModelMessages(args.messages),
+        try: () => convertToModelMessages(validatedMessages, {
+          tools,
+          convertDataPart: convertCustomerAssistantDataPart,
+        }),
         catch: cause =>
           new AiUnavailableError({
             message: "Failed to prepare AI request messages.",
@@ -58,16 +96,11 @@ const makeAiChatService = Effect.gen(function* () {
         system: buildCustomerAssistantPrompt(args.context),
         messages: modelMessages,
         activeTools: getActiveCustomerTools(args.context?.screen),
-        tools: createCustomerTools({
-          reservationQueryService,
-          rentalService,
-          userId: args.userId,
-          walletService,
-        }),
+        tools,
       });
 
       return result.toUIMessageStreamResponse({
-        originalMessages: args.messages,
+        originalMessages: validatedMessages,
         onError: (error) => {
           logger.error({ error }, "AI stream failed");
           return "Assistant unavailable right now. Please try again.";

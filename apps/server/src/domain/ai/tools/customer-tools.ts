@@ -4,11 +4,31 @@ import { tool } from "ai";
 import { Effect, Either, Option } from "effect";
 import { z } from "zod";
 
-import type { RentalService } from "@/domain/rentals/services/rental.service";
+import type { RentalService } from "@/domain/rentals";
 import type { ReservationQueryService } from "@/domain/reservations";
 import type { WalletService } from "@/domain/wallets/services/wallet.service";
 
+import { toContractRental } from "@/http/presenters/rentals.presenter";
+import {
+  toContractReservation,
+  toContractReservationExpanded,
+} from "@/http/presenters/reservations.presenter";
+import {
+  toWalletDetail,
+  toWalletTransactionDetail,
+} from "@/http/presenters/wallets.presenter";
+
+import {
+  CurrentRentalSummaryToolOutputSchema,
+  RentalDetailToolOutputSchema,
+  ReservationDetailToolOutputSchema,
+  ReservationSummaryToolOutputSchema,
+  WalletSummaryToolOutputSchema,
+  WalletTransactionDetailToolOutputSchema,
+} from "./customer-tool-schemas";
+
 type CreateCustomerToolsArgs = {
+  readonly context: AiChatContext | null;
   readonly reservationQueryService: ReservationQueryService;
   readonly rentalService: RentalService;
   readonly userId: string;
@@ -17,8 +37,26 @@ type CreateCustomerToolsArgs = {
 
 export type CustomerToolName
   = | "getCurrentRentalSummary"
+    | "getRentalDetail"
     | "getReservationSummary"
-    | "getWalletSummary";
+    | "getReservationDetail"
+    | "getWalletSummary"
+    | "getWalletTransactionDetail";
+
+const RentalDetailInputSchema = z.object({
+  rentalId: z.string().optional(),
+  reference: z.enum(["context", "current", "latest", "id"]).default("context"),
+});
+
+const ReservationDetailInputSchema = z.object({
+  reservationId: z.string().optional(),
+  reference: z.enum(["context", "latestPendingOrActive", "id"]).default("context"),
+});
+
+const WalletTransactionDetailInputSchema = z.object({
+  transactionId: z.string().optional(),
+  reference: z.enum(["latest", "id"]).default("latest"),
+});
 
 const rentalToolPage = {
   page: 1,
@@ -41,16 +79,19 @@ export function getActiveCustomerTools(
 ): CustomerToolName[] {
   switch (screen) {
     case "rental":
-      return ["getCurrentRentalSummary"];
+      return ["getCurrentRentalSummary", "getRentalDetail"];
     case "reservation":
-      return ["getReservationSummary"];
+      return ["getReservationSummary", "getReservationDetail"];
     case "wallet":
-      return ["getWalletSummary"];
+      return ["getWalletSummary", "getWalletTransactionDetail"];
     default:
       return [
         "getCurrentRentalSummary",
+        "getRentalDetail",
         "getReservationSummary",
+        "getReservationDetail",
         "getWalletSummary",
+        "getWalletTransactionDetail",
       ];
   }
 }
@@ -60,7 +101,8 @@ export function createCustomerTools(args: CreateCustomerToolsArgs) {
     getCurrentRentalSummary: tool({
       description: "Get the current user's active rental summary and rental counts.",
       inputSchema: z.object({}),
-      execute: async () => {
+      outputSchema: CurrentRentalSummaryToolOutputSchema,
+      execute: async (): Promise<z.infer<typeof CurrentRentalSummaryToolOutputSchema>> => {
         const [rentals, counts] = await Promise.all([
           Effect.runPromise(
             args.rentalService.listMyCurrentRentals(args.userId, rentalToolPage),
@@ -74,25 +116,68 @@ export function createCustomerTools(args: CreateCustomerToolsArgs) {
           activeRentalCount: rentals.total,
           counts,
           rentals: rentals.items.map(rental => ({
-            id: rental.id,
-            bikeId: rental.bikeId,
-            bikeNumber: rental.bikeNumber,
-            status: rental.status,
-            startStationId: rental.startStationId,
-            endStationId: rental.endStationId,
-            startTime: rental.startTime.toISOString(),
-            endTime: rental.endTime?.toISOString() ?? null,
-            durationMinutes: rental.durationMinutes,
-            totalPriceMinor: rental.totalPrice?.toString() ?? null,
+            ...toContractRental(rental),
             totalPriceDisplay: formatMinorVnd(rental.totalPrice),
           })),
+        };
+      },
+    }),
+    getRentalDetail: tool({
+      description: "Get one user-owned rental detail. Prefer current screen context or current or latest rental instead of raw ids unless an id is already available.",
+      inputSchema: RentalDetailInputSchema,
+      outputSchema: RentalDetailToolOutputSchema,
+      execute: async (input): Promise<z.infer<typeof RentalDetailToolOutputSchema>> => {
+        let rentalId = input.rentalId ?? null;
+
+        if (!rentalId && input.reference === "context") {
+          rentalId = args.context?.rentalId ?? null;
+        }
+
+        if (!rentalId && input.reference === "current") {
+          const rentals = await Effect.runPromise(
+            args.rentalService.listMyCurrentRentals(args.userId, {
+              ...rentalToolPage,
+              pageSize: 1,
+            }),
+          );
+          rentalId = rentals.items[0]?.id ?? null;
+        }
+
+        if (!rentalId && input.reference === "latest") {
+          const rentals = await Effect.runPromise(
+            args.rentalService.listMyRentals(args.userId, {}, {
+              ...rentalToolPage,
+              pageSize: 1,
+            }),
+          );
+          rentalId = rentals.items[0]?.id ?? null;
+        }
+
+        if (!rentalId) {
+          return { reference: input.reference, detail: null };
+        }
+
+        const rental = await Effect.runPromise(
+          args.rentalService.getMyRentalById(args.userId, rentalId),
+        );
+
+        return {
+          reference: input.reference,
+          detail: Option.isSome(rental)
+            ? {
+                ...toContractRental(rental.value),
+                totalPriceDisplay: formatMinorVnd(rental.value.totalPrice),
+                depositAmountDisplay: formatMinorVnd(rental.value.depositAmount),
+              }
+            : null,
         };
       },
     }),
     getReservationSummary: tool({
       description: "Get the current user's latest active or pending reservation plus recent reservation history.",
       inputSchema: z.object({}),
-      execute: async () => {
+      outputSchema: ReservationSummaryToolOutputSchema,
+      execute: async (): Promise<z.infer<typeof ReservationSummaryToolOutputSchema>> => {
         const [latestPendingOrActive, reservations] = await Promise.all([
           Effect.runPromise(
             args.reservationQueryService.getLatestPendingOrActiveForUser(args.userId),
@@ -109,35 +194,59 @@ export function createCustomerTools(args: CreateCustomerToolsArgs) {
         return {
           latestPendingOrActive: Option.isSome(latestPendingOrActive)
             ? {
-                id: latestPendingOrActive.value.id,
-                bikeId: latestPendingOrActive.value.bikeId,
-                bikeNumber: latestPendingOrActive.value.bikeNumber,
-                stationId: latestPendingOrActive.value.stationId,
-                reservationOption: latestPendingOrActive.value.reservationOption,
-                status: latestPendingOrActive.value.status,
-                startTime: latestPendingOrActive.value.startTime.toISOString(),
-                endTime: latestPendingOrActive.value.endTime?.toISOString() ?? null,
-                prepaidMinor: latestPendingOrActive.value.prepaid.toString(),
+                ...toContractReservation(latestPendingOrActive.value),
+                prepaidDisplay: formatMinorVnd(Number(latestPendingOrActive.value.prepaid.toString())),
               }
             : null,
           reservations: reservations.items.map(reservation => ({
-            id: reservation.id,
-            bikeId: reservation.bikeId,
-            bikeNumber: reservation.bikeNumber,
-            stationId: reservation.stationId,
-            reservationOption: reservation.reservationOption,
-            status: reservation.status,
-            startTime: reservation.startTime.toISOString(),
-            endTime: reservation.endTime?.toISOString() ?? null,
-            prepaidMinor: reservation.prepaid.toString(),
+            ...toContractReservation(reservation),
+            prepaidDisplay: formatMinorVnd(Number(reservation.prepaid.toString())),
           })),
+        };
+      },
+    }),
+    getReservationDetail: tool({
+      description: "Get one user-owned reservation detail. Prefer current screen context or the latest pending or active reservation before raw ids.",
+      inputSchema: ReservationDetailInputSchema,
+      outputSchema: ReservationDetailToolOutputSchema,
+      execute: async (input): Promise<z.infer<typeof ReservationDetailToolOutputSchema>> => {
+        let reservationId = input.reservationId ?? null;
+
+        if (!reservationId && input.reference === "context") {
+          reservationId = args.context?.reservationId ?? null;
+        }
+
+        if (!reservationId && input.reference === "latestPendingOrActive") {
+          const latest = await Effect.runPromise(
+            args.reservationQueryService.getLatestPendingOrActiveForUser(args.userId),
+          );
+          reservationId = Option.isSome(latest) ? latest.value.id : null;
+        }
+
+        if (!reservationId) {
+          return { reference: input.reference, detail: null };
+        }
+
+        const detail = await Effect.runPromise(
+          args.reservationQueryService.getExpandedDetailById(reservationId),
+        );
+
+        return {
+          reference: input.reference,
+          detail: Option.isSome(detail) && detail.value.user.id === args.userId
+            ? {
+                ...toContractReservationExpanded(detail.value),
+                prepaidDisplay: formatMinorVnd(Number(detail.value.prepaid.toString())),
+              }
+            : null,
         };
       },
     }),
     getWalletSummary: tool({
       description: "Get the current user's wallet summary and recent wallet transactions.",
       inputSchema: z.object({}),
-      execute: async () => {
+      outputSchema: WalletSummaryToolOutputSchema,
+      execute: async (): Promise<z.infer<typeof WalletSummaryToolOutputSchema>> => {
         const walletResult = await Effect.runPromise(
           args.walletService.getByUserId(args.userId).pipe(Effect.either),
         );
@@ -166,26 +275,68 @@ export function createCustomerTools(args: CreateCustomerToolsArgs) {
         return {
           hasWallet: true,
           wallet: {
-            id: wallet.id,
-            status: wallet.status,
-            balanceMinor: wallet.balance.toString(),
+            ...toWalletDetail(wallet),
             balanceDisplay: formatMinorVnd(wallet.balance),
-            reservedBalanceMinor: wallet.reservedBalance.toString(),
+            availableBalanceDisplay: formatMinorVnd(wallet.balance - wallet.reservedBalance),
             reservedBalanceDisplay: formatMinorVnd(wallet.reservedBalance),
           },
           recentTransactions: transactions.items.map(transaction => ({
-            id: transaction.id,
-            type: transaction.type,
-            status: transaction.status,
-            amountMinor: transaction.amount.toString(),
+            ...toWalletTransactionDetail(transaction),
             amountDisplay: formatMinorVnd(transaction.amount),
-            feeMinor: transaction.fee.toString(),
             feeDisplay: formatMinorVnd(transaction.fee),
-            description: transaction.description,
-            createdAt: transaction.createdAt.toISOString(),
           })),
+        };
+      },
+    }),
+    getWalletTransactionDetail: tool({
+      description: "Get one wallet transaction detail. Prefer the latest transaction unless a known transaction id is already available from prior results.",
+      inputSchema: WalletTransactionDetailInputSchema,
+      outputSchema: WalletTransactionDetailToolOutputSchema,
+      execute: async (input): Promise<z.infer<typeof WalletTransactionDetailToolOutputSchema>> => {
+        let transactionId = input.transactionId ?? null;
+
+        if (!transactionId && input.reference === "latest") {
+          const transactions = await Effect.runPromise(
+            args.walletService.listTransactionsForUser({
+              userId: args.userId,
+              pageReq: {
+                page: 1,
+                pageSize: 1,
+                sortBy: "createdAt",
+                sortDir: "desc",
+              },
+            }).pipe(Effect.either),
+          );
+
+          if (Either.isRight(transactions)) {
+            transactionId = transactions.right.items[0]?.id ?? null;
+          }
+        }
+
+        if (!transactionId) {
+          return { reference: input.reference, detail: null };
+        }
+
+        const transaction = await Effect.runPromise(
+          args.walletService.getTransactionByIdForUser({
+            userId: args.userId,
+            transactionId,
+          }).pipe(Effect.either),
+        );
+
+        return {
+          reference: input.reference,
+          detail: Either.isRight(transaction) && Option.isSome(transaction.right)
+            ? {
+                ...toWalletTransactionDetail(transaction.right.value),
+                amountDisplay: formatMinorVnd(transaction.right.value.amount),
+                feeDisplay: formatMinorVnd(transaction.right.value.fee),
+              }
+            : null,
         };
       },
     }),
   } as const;
 }
+
+export type CustomerToolSet = ReturnType<typeof createCustomerTools>;

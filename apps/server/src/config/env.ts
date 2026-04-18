@@ -4,6 +4,43 @@ import { z } from "zod";
 
 dotenv.config();
 
+const CsvStringArraySchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const items = value
+      .split(",")
+      .map(item => item.trim())
+      .filter(Boolean);
+
+    return items.length > 0 ? items : undefined;
+  },
+  z.array(z.string().min(1)).optional(),
+);
+
+const BooleanStringSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized === "true") {
+      return true;
+    }
+
+    if (normalized === "false") {
+      return false;
+    }
+
+    return value;
+  },
+  z.boolean(),
+);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(4000),
@@ -23,7 +60,9 @@ const envSchema = z.object({
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_SITE_URL: z.string().url().optional(),
   OPENROUTER_APP_NAME: z.string().default("MeBike"),
-  AI_MODEL: z.string().default("openai/gpt-5.3-chat"),
+  AI_MODEL: z.string().default("moonshotai/kimi-k2.5"),
+  OPENROUTER_PROVIDER_ONLY: CsvStringArraySchema.default(["cloudflare"]),
+  OPENROUTER_ALLOW_FALLBACKS: BooleanStringSchema.default(false),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(4).default(10),
   LOG_LEVEL: z.string().default("info"),

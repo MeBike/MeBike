@@ -1,9 +1,8 @@
 import type { RouteHandler } from "@hono/zod-openapi";
 
-import { validateUIMessages } from "ai";
 import { Effect, Match } from "effect";
 
-import { AiChatServiceTag, AiInvalidRequestError } from "@/domain/ai";
+import { AiChatServiceTag } from "@/domain/ai";
 import { withLoggedCause } from "@/domain/shared";
 
 import type { AiErrorResponse, AiRoutes } from "./shared";
@@ -19,21 +18,12 @@ export const chat: RouteHandler<AiRoutes["chat"]> = async (c) => {
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    Effect.tryPromise({
-      try: () => validateUIMessages({ messages: body.messages }),
-      catch: error =>
-        new AiInvalidRequestError({
-          message: error instanceof Error ? error.message : "Invalid AI chat message payload",
-        }),
-    }).pipe(
-      Effect.flatMap(messages =>
-        Effect.flatMap(AiChatServiceTag, service => service.streamCustomerAssistant({
-          userId,
-          chatId: body.id ?? null,
-          context: body.context ?? null,
-          messages,
-        }))),
-    ),
+    Effect.flatMap(AiChatServiceTag, service => service.streamCustomerAssistant({
+      userId,
+      chatId: body.id ?? null,
+      context: body.context ?? null,
+      messages: body.messages,
+    })),
     "POST /v1/ai/chat",
   );
 

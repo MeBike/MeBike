@@ -10,9 +10,7 @@ export const AiChatScreenSchema = z
   .openapi("AiChatScreen");
 
 export const AiChatMessageSchema = z.object({
-  id: z.string(),
-  role: z.enum(["system", "user", "assistant", "tool"]),
-}).passthrough().openapi("AiChatMessage");
+}).catchall(z.unknown()).openapi("AiChatMessage");
 
 export const AiChatContextSchema = z.object({
   screen: AiChatScreenSchema.nullable().optional(),

@@ -11,5 +11,10 @@ const openrouter = createOpenRouter({
 });
 
 export function getOpenRouterChatModel() {
-  return openrouter.chat(env.AI_MODEL);
+  return openrouter.chat(env.AI_MODEL, {
+    provider: {
+      only: env.OPENROUTER_PROVIDER_ONLY,
+      allow_fallbacks: env.OPENROUTER_ALLOW_FALLBACKS,
+    },
+  });
 }
