@@ -97,7 +97,6 @@ export type PricingPolicyOverrides = {
   name?: string;
   baseRate?: string;
   billingUnitMinutes?: number;
-  overtimeRate?: string | null;
   reservationFee?: string;
   depositRequired?: string;
   lateReturnCutoff?: Date;

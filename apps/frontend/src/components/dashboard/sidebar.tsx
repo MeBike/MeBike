@@ -112,7 +112,7 @@ export function Sidebar() {
         {
           title: "Quản lý khách hàng",
           icon: Users,
-          href: "/admin/customers",
+          href: `/${role.toLowerCase()}/customers`,
           roles: ["ADMIN", "MANAGER"],
         },
         {
@@ -124,8 +124,14 @@ export function Sidebar() {
         {
           title: "Quản lý nhân viên",
           icon: Users,
-          href: "/admin/staffs",
+          href: `/${role.toLowerCase()}/staffs`,
           roles: ["ADMIN", "MANAGER"],
+        },
+        {
+          title: "Quản lý điều phối xe",
+          icon: Users,
+          href: `/${role.toLowerCase()}/distribution-request`,
+          roles: ["ADMIN", "MANAGER","STAFF","AGENCY"],
         },
         {
           title: "Quản lý Agency",
@@ -143,7 +149,7 @@ export function Sidebar() {
           title: "Quản lý đơn đặt trước",
           icon: CalendarCheck2,
           href: `/${role.toLowerCase()}/reservations`,
-          roles: ["ADMIN", "STAFF"],
+          roles: ["ADMIN", "STAFF","MANAGER"],
         },
         {
           title: "Quản lý phiên thuê",
@@ -203,7 +209,7 @@ export function Sidebar() {
           title: "Hồ sơ cá nhân",
           icon: User2,
           href: `/${role.toLowerCase()}/profile`,
-          roles: ["ADMIN", "STAFF", "AGENCY", "TECHNICIAN", "USER", "SOS"],
+          roles: ["ADMIN", "STAFF", "AGENCY", "TECHNICIAN", "USER", "SOS" , "MANAGER"],
         },
       ].filter((item) => item.roles.includes(role)),
     [role],
