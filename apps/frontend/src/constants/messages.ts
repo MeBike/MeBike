@@ -752,3 +752,6 @@ export const DISTRIBUTION_REQUEST = {
   USER_NOT_FOUND : "Không tìm thấy người dùng",
   
 }
+export const ENVIRONMENT_POLICY_REQUEST = {
+  
+}
