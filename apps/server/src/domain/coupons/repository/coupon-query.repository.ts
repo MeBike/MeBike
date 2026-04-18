@@ -406,6 +406,20 @@ function buildCouponStatsByRule(input: {
   );
 }
 
+function upsertCouponRuleUsageAggregate(
+  aggregatesByRuleId: Map<string, CouponRuleUsageAggregate>,
+  aggregate: CouponRuleUsageAggregate,
+) {
+  const existing = aggregatesByRuleId.get(aggregate.ruleId);
+  aggregatesByRuleId.set(aggregate.ruleId, existing
+    ? {
+        ruleId: aggregate.ruleId,
+        appliedCount: existing.appliedCount + aggregate.appliedCount,
+        totalDiscountAmount: existing.totalDiscountAmount + aggregate.totalDiscountAmount,
+      }
+    : aggregate);
+}
+
 export function makeCouponQueryRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): CouponQueryRepo {
@@ -536,6 +550,7 @@ export function makeCouponQueryRepository(
           discountedAggregate,
           groupedDiscountAmounts,
           groupedRuleUsage,
+          snapshotFallbackRecords,
         ] = yield* Effect.all([
           Effect.tryPromise({
             try: () =>
@@ -632,20 +647,57 @@ export function makeCouponQueryRepository(
                 cause: err,
               }),
           }),
+          Effect.tryPromise({
+            try: () =>
+              client.rentalBillingRecord.findMany({
+                where: {
+                  rental: {
+                    is: rentalWhere,
+                  },
+                  couponDiscountAmount: {
+                    gt: "0",
+                  },
+                  couponRuleId: null,
+                },
+                orderBy: adminCouponUsageLogsOrderBy(),
+                select: selectAdminCouponUsageLogRow,
+              }),
+            catch: err =>
+              new CouponRepositoryError({
+                operation: "getAdminCouponStats.findSnapshotFallbackRecords",
+                message: "Failed to load snapshot fallback records for coupon stats",
+                cause: err,
+              }),
+          }),
         ]);
 
-        const ruleUsageAggregates: CouponRuleUsageAggregate[] = [];
+        const ruleUsageAggregatesByRuleId = new Map<string, CouponRuleUsageAggregate>();
         for (const row of groupedRuleUsage) {
           if (row.couponRuleId === null) {
             continue;
           }
 
-          ruleUsageAggregates.push({
+          upsertCouponRuleUsageAggregate(ruleUsageAggregatesByRuleId, {
             ruleId: row.couponRuleId,
             appliedCount: row._count._all,
             totalDiscountAmount: Number(toMinorUnit(row._sum.couponDiscountAmount)),
           });
         }
+
+        for (const record of snapshotFallbackRecords) {
+          const identity = readCouponRuleIdentity(record);
+          if (!identity) {
+            continue;
+          }
+
+          upsertCouponRuleUsageAggregate(ruleUsageAggregatesByRuleId, {
+            ruleId: identity.ruleId,
+            appliedCount: 1,
+            totalDiscountAmount: Number(toMinorUnit(record.couponDiscountAmount)),
+          });
+        }
+
+        const ruleUsageAggregates = Array.from(ruleUsageAggregatesByRuleId.values());
 
         const ruleUsageRepresentativeRecords = yield* Effect.all(
           ruleUsageAggregates.map(aggregate =>
@@ -686,9 +738,12 @@ export function makeCouponQueryRepository(
           totalDiscountAmount,
           statsByRule: buildCouponStatsByRule({
             aggregates: ruleUsageAggregates,
-            representativeRecords: ruleUsageRepresentativeRecords.filter(
-              (record): record is AdminCouponUsageLogRecord => record !== null,
-            ),
+            representativeRecords: [
+              ...ruleUsageRepresentativeRecords.filter(
+                (record): record is AdminCouponUsageLogRecord => record !== null,
+              ),
+              ...snapshotFallbackRecords,
+            ],
           }),
           statsByDiscountAmount: groupedDiscountAmounts.map(row => ({
             discountAmount: Number(toMinorUnit(row.couponDiscountAmount)),

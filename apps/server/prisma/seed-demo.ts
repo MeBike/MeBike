@@ -760,17 +760,6 @@ async function main() {
         },
       },
     });
-    await prisma.rentalPenalty.deleteMany({
-      where: {
-        rental: {
-          user: {
-            email: {
-              in: userEmails,
-            },
-          },
-        },
-      },
-    });
     await prisma.rentalBillingRecord.deleteMany({
       where: {
         rental: {

@@ -1,11 +1,6 @@
 import { Effect, Layer, Option } from "effect";
 
 import type { GlobalAutoDiscountSelection } from "@/domain/coupons";
-import type {
-  PrismaClient,
-  Prisma as PrismaTypes,
-} from "generated/prisma/client";
-
 import {
   CouponQueryServiceTag,
   selectBestGlobalAutoDiscountRule,
@@ -152,13 +147,11 @@ const makeRentalBillingPreviewServiceEffect = Effect.gen(function* () {
         const bestDiscountRule = discountSelection.rule;
         const couponDiscountAmountMinor = discountSelection.discountAmountMinor;
 
-        const penaltyAmountMinor = yield* loadPenaltyAmountMinor(client, rental.id);
         const depositForfeited = Boolean(rental.depositHoldId)
           && isAfterLateReturnCutoff(input.previewedAt, pricingPolicy.lateReturnCutoff);
         const payableRentalAmountMinor = eligibleRentalAmountMinor > couponDiscountAmountMinor
           ? eligibleRentalAmountMinor - couponDiscountAmountMinor
           : 0n;
-        const totalPayableAmountMinor = payableRentalAmountMinor + penaltyAmountMinor;
 
         return {
           rentalId: rental.id,
@@ -183,10 +176,10 @@ const makeRentalBillingPreviewServiceEffect = Effect.gen(function* () {
               }
             : null,
           couponDiscountAmount: Number(couponDiscountAmountMinor),
-          penaltyAmount: Number(penaltyAmountMinor),
+          penaltyAmount: 0,
           depositForfeited,
           payableRentalAmount: Number(payableRentalAmountMinor),
-          totalPayableAmount: Number(totalPayableAmountMinor),
+          totalPayableAmount: Number(payableRentalAmountMinor),
         };
       }),
   };
@@ -198,25 +191,6 @@ function calculatePreviewRentalMinutes(rental: RentalRow, previewedAt: Date) {
   return Math.max(
     1,
     Math.ceil((previewedAt.getTime() - new Date(rental.startTime).getTime()) / 60000),
-  );
-}
-
-function loadPenaltyAmountMinor(
-  client: PrismaClient | PrismaTypes.TransactionClient,
-  rentalId: string,
-) {
-  return Effect.tryPromise({
-    try: async () => {
-      const result = await client.rentalPenalty.aggregate({
-        where: { rentalId },
-        _sum: { amount: true },
-      });
-
-      return result._sum.amount ? toMinorUnit(result._sum.amount) : 0n;
-    },
-    catch: err => err,
-  }).pipe(
-    Effect.catchAll(err => Effect.die(err)),
   );
 }
 

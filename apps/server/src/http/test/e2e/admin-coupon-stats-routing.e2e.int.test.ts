@@ -135,7 +135,6 @@ describe("admin coupon stats routing e2e", () => {
         totalDurationMinutes: 60,
         estimatedDistanceKm: null,
         baseAmount: "10000",
-        overtimeAmount: "0",
         couponRuleId: input.couponRule?.id,
         couponRuleSnapshot: input.couponRule
           ? {
