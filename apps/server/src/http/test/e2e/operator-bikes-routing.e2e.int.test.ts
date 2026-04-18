@@ -6,12 +6,20 @@ describe("operator bikes routing e2e", () => {
   const fixture = setupHttpE2eFixture({
     buildLayer: async () => {
       const { Layer } = await import("effect");
-      const { BikeDepsLive } = await import("@/http/shared/providers");
+      const {
+        BikeDepsLive,
+        RatingDepsLive,
+        StationDepsLive,
+        SupplierDepsLive,
+      } = await import("@/http/shared/providers");
       const { UserDepsLive } = await import("@/http/shared/features/user.layers");
 
       return Layer.mergeAll(
         UserDepsLive,
         BikeDepsLive,
+        RatingDepsLive,
+        StationDepsLive,
+        SupplierDepsLive,
       );
     },
   });
