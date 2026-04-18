@@ -1,6 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { BikeNotFoundResponseSchema } from "../../bikes";
+import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   BikeActivityStatsResponseSchema,
   BikeErrorCodeSchema,
@@ -15,6 +16,7 @@ import {
   BikeStatsResponseSchema,
   BikeSummarySchemaOpenApi,
   HighestRevenueBikeResponseSchema,
+  ServerErrorResponseSchema,
 } from "./shared";
 
 export const listBikes = createRoute({
@@ -98,6 +100,68 @@ export const getBike = createRoute({
         "application/json": { schema: BikeNotFoundResponseSchema },
       },
     },
+  },
+});
+
+export const staffListBikes = createRoute({
+  method: "get",
+  path: "/v1/staff/bikes",
+  tags: ["Staff", "Bikes"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: BikeListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "List bikes for staff station scope",
+      content: {
+        "application/json": { schema: BikeListResponseSchema },
+      },
+    },
+    400: {
+      description: "Invalid query",
+      content: {
+        "application/json": {
+          schema: BikeErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff, Manager, or Technician"),
+  },
+});
+
+export const staffGetBike = createRoute({
+  method: "get",
+  path: "/v1/staff/bikes/{id}",
+  tags: ["Staff", "Bikes"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get bike details for staff station scope",
+      content: {
+        "application/json": { schema: BikeSummarySchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid path parameter",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Bike not found",
+      content: {
+        "application/json": { schema: BikeNotFoundResponseSchema },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff, Manager, or Technician"),
   },
 });
 
