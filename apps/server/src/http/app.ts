@@ -17,6 +17,7 @@ import logger from "@/lib/logger";
 
 import { registerAgencyRoutes } from "./routes/agencies";
 import { registerAgencyRequestRoutes } from "./routes/agency-requests";
+import { registerAiRoutes } from "./routes/ai";
 import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
 import { registerCouponRuleRoutes } from "./routes/coupon-rules";
@@ -108,6 +109,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/events", requireAuthMiddleware);
   app.use("/v1/incidents", requireAuthMiddleware);
   app.use("/v1/incidents/*", requireAuthMiddleware);
+  app.use("/v1/ai/*", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
@@ -120,6 +122,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   );
 
   registerStationRoutes(app);
+  registerAiRoutes(app);
   registerStatsRoutes(app);
   registerHealthRoutes(app);
   registerFixedSlotTemplateRoutes(app);

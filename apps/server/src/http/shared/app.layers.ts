@@ -2,6 +2,7 @@ import { Layer } from "effect";
 
 import { AgencyRequestDepsLive } from "./features/agency-request.layers";
 import { AgencyDepsLive } from "./features/agency.layers";
+import { AiDepsLive } from "./features/ai.layers";
 import { AuthDepsLive } from "./features/auth.layers";
 import { BikeDepsLive } from "./features/bike.layers";
 import { CouponDepsLive } from "./features/coupon.layers";
@@ -27,6 +28,7 @@ import { AppInfraLive } from "./infra.layers";
 
 export const HttpDepsLive = Layer.mergeAll(
   AgencyDepsLive,
+  AiDepsLive,
   AuthDepsLive,
   BikeDepsLive,
   CouponDepsLive,

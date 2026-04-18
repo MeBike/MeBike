@@ -12,6 +12,10 @@ export {
   AgencyStatsServiceLayer,
 } from "./features/agency.layers";
 export {
+  AiDepsLive,
+  AiServiceLayer,
+} from "./features/ai.layers";
+export {
   AuthDepsLive,
   AuthReposLive,
   AuthServiceLayer,
