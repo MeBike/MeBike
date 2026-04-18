@@ -16,7 +16,6 @@ function makePolicy(overrides: Partial<PricingPolicyRow> = {}): PricingPolicyRow
     name: "Policy A",
     baseRate: toPrismaDecimal("2000"),
     billingUnitMinutes: 30,
-    overtimeRate: null,
     reservationFee: toPrismaDecimal("3000"),
     depositRequired: toPrismaDecimal("500000"),
     lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
