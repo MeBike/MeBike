@@ -163,7 +163,7 @@ function IncidentRow({
               Xe:
               {" "}
               <AppText tone="default" variant="bodyStrong">
-                {incident.bike.chipId}
+                {incident.bike.bikeNumber}
               </AppText>
             </AppText>
             <AppText tone="muted" variant="bodySmall">

@@ -1,7 +1,7 @@
 import { z } from "../../../zod";
 import { BikeStatusSchema } from "../bikes";
-import { UserRoleSchema, VerifyStatusSchema } from "../users";
 import { PaginationSchema } from "../schemas";
+import { UserRoleSchema, VerifyStatusSchema } from "../users";
 
 export const RedistributionStatusSchema = z.enum([
   "PENDING_APPROVAL",
@@ -82,7 +82,7 @@ export const RedistributionStationSummarySchema = z.object({
 // Bike info for redistribution
 export const RedistributionBikeSchema = z.object({
   id: z.uuidv7(),
-  chipId: z.string(),
+  bikeNumber: z.string(),
   status: BikeStatusSchema,
   supplierId: z.uuidv7().optional(),
   updatedAt: z.iso.datetime(),
@@ -108,8 +108,8 @@ export const RedistributionRequestDetailBaseSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
-export const RedistributionRequestDetailSchema =
-  RedistributionRequestDetailBaseSchema.extend({
+export const RedistributionRequestDetailSchema
+  = RedistributionRequestDetailBaseSchema.extend({
     requestedByUser: RedistributionUserDetailSchema,
     approvedByUser: RedistributionUserDetailSchema.nullable(),
     sourceStation: RedistributionStationSchema,
@@ -118,8 +118,8 @@ export const RedistributionRequestDetailSchema =
   });
 
 // Redistribution list item (for paginated lists)
-export const RedistributionRequestListItemSchema =
-  RedistributionRequestDetailBaseSchema.extend({
+export const RedistributionRequestListItemSchema
+  = RedistributionRequestDetailBaseSchema.extend({
     requestedByUser: RedistributionUserSummarySchema,
     approvedByUser: RedistributionUserSummarySchema.nullable(),
     sourceStation: RedistributionStationSummarySchema,

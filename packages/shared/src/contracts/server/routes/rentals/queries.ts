@@ -595,7 +595,7 @@ export const adminGetRental = createRoute({
                 },
                 bike: {
                   id: "019b17bd-d130-7e7d-be69-91ceef7b6888",
-                  chipId: "CHIP-001",
+                  bikeNumber: "MB-000001",
                   status: "AVAILABLE",
                   supplierId: "019b17bd-d130-7e7d-be69-91ceef7b6777",
                   updatedAt: "2026-03-10T09:05:00.000Z",
@@ -678,7 +678,7 @@ export const staffGetRental = createRoute({
                 },
                 bike: {
                   id: "019b17bd-d130-7e7d-be69-91ceef7b6888",
-                  chipId: "CHIP-001",
+                  bikeNumber: "MB-000001",
                   status: "AVAILABLE",
                   supplierId: "019b17bd-d130-7e7d-be69-91ceef7b6777",
                   updatedAt: "2026-03-10T09:05:00.000Z",

@@ -200,7 +200,7 @@ export const adminListRatingsRoute = createRoute({
                     },
                     bike: {
                       id: "0195f9d8-7f4a-7b21-b12a-8c3b5a5d0004",
-                      chipId: "MB-8821",
+                      bikeNumber: "MB-8821",
                     },
                     station: {
                       id: "0195f9d8-7f4a-7b21-b12a-8c3b5a5d0005",
@@ -266,7 +266,7 @@ export const adminGetRatingRoute = createRoute({
                 },
                 bike: {
                   id: "0195f9d8-7f4a-7b21-b12a-8c3b5a5d0004",
-                  chipId: "MB-3342",
+                  bikeNumber: "MB-3342",
                 },
                 station: {
                   id: "0195f9d8-7f4a-7b21-b12a-8c3b5a5d0005",

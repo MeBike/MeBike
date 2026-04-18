@@ -42,7 +42,6 @@ function makeBikeService(
         }
 
         return yield* repo.create({
-          chipId: input.chipId,
           stationId: input.stationId,
           supplierId: input.supplierId,
           status: input.status ?? "AVAILABLE",

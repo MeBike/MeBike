@@ -86,7 +86,6 @@ export function StaffPartyCard({ booking }: StaffPartyCardProps) {
         iconName="bike"
         label="Xe đạp"
         primary={getBikeDisplayLabel(booking.bike)}
-        secondary={booking.bike.chipId}
       />
 
       <YStack borderTopColor="$borderSubtle" borderTopWidth={borderWidths.subtle}>

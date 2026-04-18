@@ -9,7 +9,7 @@ export type RatedRentalScenario = {
     readonly phoneNumber: string;
   };
   readonly bike: {
-    readonly chipId: string;
+    readonly bikeNumber: string;
   };
   readonly rental: {
     readonly id: string;
@@ -39,7 +39,7 @@ export async function seedRatedRentalScenario(
 ) {
   const user = await upsertSeedUser(prisma, scenario.user);
   const bike = await upsertSeedBike(prisma, {
-    chipId: scenario.bike.chipId,
+    bikeNumber: scenario.bike.bikeNumber,
     stationId: context.stationId,
     supplierId: context.supplierId,
   });

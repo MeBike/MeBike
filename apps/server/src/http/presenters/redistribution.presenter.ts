@@ -61,7 +61,7 @@ function mapBikeDetail(bike: any) {
     return null;
   return {
     id: bike.id,
-    chipId: bike.chipId,
+    bikeNumber: bike.bikeNumber,
     status: bike.status,
     supplierId: bike.supplierId,
     updatedAt: bike.updatedAt.toISOString(),

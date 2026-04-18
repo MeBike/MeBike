@@ -9,7 +9,7 @@ const SEEDED_SUPPLIER_ID = "11111111-1111-4111-8111-111111111112";
 
 const seededRatings = [
   {
-    bike: { chipId: "SEED-RATE-001" },
+    bike: { bikeNumber: "MB-900001" },
     rating: { bikeScore: 5, stationScore: 4, comment: "Trai nghiem tot, xe van hanh on dinh." },
     rental: {
       id: "11111111-1111-4111-8111-111111111201",
@@ -23,7 +23,7 @@ const seededRatings = [
     },
   },
   {
-    bike: { chipId: "SEED-RATE-002" },
+    bike: { bikeNumber: "MB-900002" },
     rating: { bikeScore: 3, stationScore: 5, comment: "Xe di duoc nhung phanh hoi yeu." },
     rental: {
       id: "11111111-1111-4111-8111-111111111202",
@@ -37,7 +37,7 @@ const seededRatings = [
     },
   },
   {
-    bike: { chipId: "SEED-RATE-003" },
+    bike: { bikeNumber: "MB-900003" },
     rating: { bikeScore: 4, stationScore: 5, comment: "Tram de tim va tra xe nhanh." },
     rental: {
       id: "11111111-1111-4111-8111-111111111203",

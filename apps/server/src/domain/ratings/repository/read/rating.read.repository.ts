@@ -119,7 +119,7 @@ export function makeRatingReadRepository(
         ? Promise.resolve([])
         : client.bike.findMany({
             where: { id: { in: bikeIds } },
-            select: { id: true, chipId: true },
+            select: { id: true, bikeNumber: true },
           }),
       stationIds.length === 0
         ? Promise.resolve([])
@@ -130,7 +130,7 @@ export function makeRatingReadRepository(
     ]);
 
     return {
-      bikeMap: new Map(bikes.map(bike => [bike.id, { id: bike.id, chipId: bike.chipId }])),
+      bikeMap: new Map(bikes.map(bike => [bike.id, { id: bike.id, bikeNumber: bike.bikeNumber }])),
       stationMap: new Map(stations.map(station => [
         station.id,
         { id: station.id, name: station.name, address: station.address },

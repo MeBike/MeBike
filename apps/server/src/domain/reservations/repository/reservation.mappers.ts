@@ -43,7 +43,6 @@ export const selectReservationExpandedDetailRow = {
     select: {
       id: true,
       bikeNumber: true,
-      chipId: true,
       status: true,
     },
   },
@@ -155,7 +154,6 @@ export function toReservationExpandedDetailRow(row: {
   bike: {
     id: string;
     bikeNumber: string;
-    chipId: string;
     status: string;
   } | null;
   station: {
@@ -181,7 +179,6 @@ export function toReservationExpandedDetailRow(row: {
       ? {
           id: row.bike.id,
           bikeNumber: row.bike.bikeNumber,
-          chipId: row.bike.chipId,
           status: row.bike.status as NonNullable<ReservationExpandedDetailRow["bike"]>["status"],
         }
       : null,

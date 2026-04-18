@@ -3,18 +3,15 @@ import type { Effect, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { BikeStatus } from "generated/prisma/client";
 
-import type { DuplicateChipId } from "../domain-errors";
 import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 
 export type BikeCreateInput = {
-  chipId: string;
   stationId: string;
   supplierId: string;
   status: BikeStatus;
 };
 
 export type BikeUpdatePatch = Partial<{
-  chipId: string;
   stationId: string;
   status: BikeStatus;
   supplierId: string | null;
@@ -34,7 +31,7 @@ export type BikeQueryRepo = {
 };
 
 export type BikeCommandRepo = {
-  create: (input: BikeCreateInput) => Effect.Effect<BikeRow, DuplicateChipId>;
+  create: (input: BikeCreateInput) => Effect.Effect<BikeRow>;
   updateStatus: (
     bikeId: string,
     status: BikeStatus,
@@ -85,7 +82,7 @@ export type BikeCommandRepo = {
   updateById: (
     bikeId: string,
     patch: BikeUpdatePatch,
-  ) => Effect.Effect<Option.Option<BikeRow>, DuplicateChipId>;
+  ) => Effect.Effect<Option.Option<BikeRow>>;
 };
 
 export type BikeRepo = BikeQueryRepo & BikeCommandRepo;

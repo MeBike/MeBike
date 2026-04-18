@@ -42,7 +42,7 @@ export const IncidentDetailSchema = z.object({
     .nullable(),
   bike: z.object({
     id: z.uuidv7(),
-    chipId: z.string(),
+    bikeNumber: z.string(),
   }),
   station: z
     .object({

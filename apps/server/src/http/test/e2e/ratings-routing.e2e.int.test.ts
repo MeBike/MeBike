@@ -122,7 +122,7 @@ describe("ratings routing e2e", () => {
       name: "Tram Nguyen Hue, Quan 1",
     });
     const bike = await fixture.factories.bike({
-      chipId: "MB-8821",
+      bikeNumber: "MB-8821",
       stationId: station.id,
     });
     const rental = await fixture.factories.rental({
@@ -177,7 +177,7 @@ describe("ratings routing e2e", () => {
     expect(body.data).toHaveLength(1);
     expect(body.data[0]).toMatchObject({
       bike: {
-        chipId: "MB-8821",
+        bikeNumber: "MB-8821",
       },
       bikeScore: 4,
       comment: "Xe on nhung khoa hoi cham",
@@ -210,7 +210,7 @@ describe("ratings routing e2e", () => {
       name: "Tram Le Loi",
     });
     const bike = await fixture.factories.bike({
-      chipId: "MB-3342",
+      bikeNumber: "MB-3342",
       stationId: station.id,
     });
     const rental = await fixture.factories.rental({
@@ -263,7 +263,7 @@ describe("ratings routing e2e", () => {
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
       bike: {
-        chipId: "MB-3342",
+        bikeNumber: "MB-3342",
       },
       bikeScore: 5,
       comment: "Rat hai long",

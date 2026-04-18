@@ -84,7 +84,7 @@ export const redistributionRequestItemSelect = {
   bike: {
     select: {
       id: true,
-      chipId: true,
+      bikeNumber: true,
       status: true,
       supplierId: true,
       updatedAt: true,

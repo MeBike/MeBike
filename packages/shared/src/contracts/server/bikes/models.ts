@@ -20,7 +20,6 @@ export const BikeRatingSchema = z.object({
 export const BikeSummarySchema = z.object({
   id: z.uuidv7(),
   bikeNumber: z.string(),
-  chipId: z.string(),
   stationId: z.uuidv7().nullable(),
   station: BikeStationSchema.nullable(),
   supplier: BikeSupplierSchema.nullable(),
@@ -92,7 +91,7 @@ export const BikeStatsSchema = z.object({
 
 export const HighestRevenueBikeSchema = z.object({
   bikeId: z.uuidv7(),
-  bikeChipId: z.string(),
+  bikeNumber: z.string(),
   totalRevenue: z.number(),
   rentalCount: z.number(),
   station: z.object({
