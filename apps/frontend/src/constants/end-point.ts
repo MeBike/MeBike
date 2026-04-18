@@ -123,5 +123,13 @@ export const ENDPOINT = {
         POLICY : "/environment/policies",
         ACTIVE : "/environment/policies/active",
         ACTIVE_ID : (id:string) => `/environment/policies/${id}/activate`,
+    },
+    COUPON : {
+        BASE : "/admin/coupon-rules",
+        UPDATE : (id:string) => `/admin/coupon-rules/${id}`,
+        ACTIVE : (id:string) => `/admin/coupon-rules/${id}/activate`,
+        DEACTIVE : (id:string) => `/admin/coupon-rules/${id}/deactivate`,
+        COUPON_STATS : "/admin/coupon-stats",
+        USAGE_COUPON_STATS_LOG : "/admin/coupon-usage-logs",
     }
 } as const;
