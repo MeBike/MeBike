@@ -11,3 +11,4 @@ export * from "./Supplier/index";
 export * from "./User/index";
 export * from "./Withdrawal/index";
 export * from "./Agency/index";
+export * from "./DistributionRequest/index";

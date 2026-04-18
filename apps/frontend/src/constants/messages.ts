@@ -745,3 +745,10 @@ export const DASHBOARD_MESSAGES = {
 export const AGENCY_MESSAGES = {
   VALIDATION_ERROR : 'Thông tin số điện thoại chỉ có 10 chữ số'
 }
+export const DISTRIBUTION_REQUEST = {
+  INSUFFICIENT_AVAILABLE_BIKES : "Số lượng xe có sẵn không đủ để đáp ứng yêu cầu",
+  EXCEEDED_MIN_BIKES_AT_STATION : "Thao tác vượt quá giới hạn tối thiểu xe tại trạm (10 xe)",
+  STATION_NOT_FOUND : "Không tìm thấy trạm",
+  USER_NOT_FOUND : "Không tìm thấy người dùng",
+  
+}

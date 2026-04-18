@@ -45,7 +45,7 @@ export const useSupplierActions = ({hasToken,supplier_id,page,pageSize}: Supplie
     async (supplierData: CreateSupplierSchema) => {
       if (!hasToken) {
         router.push("/login");
-        throw new Error("Unauthorized");
+        // throw new Error("Unauthorized");
       }
       try {
         const result = await useCreateSupplier.mutateAsync(supplierData);
