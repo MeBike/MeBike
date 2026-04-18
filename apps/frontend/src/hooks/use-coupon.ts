@@ -21,7 +21,7 @@ interface CouponActionProps {
   pageSize?: number;
 }
 
-export const useEnvironmentPolicy = ({
+export const useCoupon = ({
   hasToken,
   id,
   page,
