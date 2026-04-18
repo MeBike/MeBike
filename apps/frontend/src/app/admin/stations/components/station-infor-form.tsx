@@ -5,7 +5,7 @@ import { StationSchemaFormData } from "@/schemas/station-schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 interface StationInfoFormProps {
   form: UseFormReturn<StationSchemaFormData>;
   onSubmit: (data: StationSchemaFormData) => void;
@@ -32,6 +32,29 @@ export function StationInfoForm({ form, onSubmit, onCancel }: StationInfoFormPro
 
         <FormField label="Sức chứa" error={errors.totalCapacity?.message} required>
           <Input type="number" {...register("totalCapacity", { valueAsNumber: true })} className="h-11" />
+        </FormField>
+
+        <FormField label="Loại trạm" error={errors.stationType?.message} required>
+          <Select
+            onValueChange={(value) => form.setValue("stationType", value as "INTERNAL" | "AGENCY")}
+            defaultValue={form.getValues("stationType")}
+          >
+            <SelectTrigger className="h-11 w-full">
+              <SelectValue placeholder="Chọn loại trạm" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="INTERNAL">Trạm nội bộ</SelectItem>
+              <SelectItem value="AGENCY">Trạm đại lý</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormField>
+
+        <FormField label="Số lượng trả xe tối đa" error={errors.returnSlotLimit?.message} required>
+          <Input
+            type="number"
+            {...register("returnSlotLimit", { valueAsNumber: true })}
+            className="h-11"
+          />
         </FormField>
 
         <div className="border-t pt-5 space-y-4">

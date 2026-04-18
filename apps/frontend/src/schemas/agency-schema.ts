@@ -14,25 +14,19 @@ const AgencyStationLongitudeSchema = z.number()
     .min(-180).max(180);
 
 export const registerToAgencySchema = z.object({
-  // Thông tin liên hệ
   requesterEmail: z.string().email("Email không hợp lệ"),
   requesterPhone: z.string().regex(/^\d{10}$/, "Số điện thoại phải có 10 chữ số"),
-  
-  // Thông tin Agency
   agencyName: z.string().min(1, "Tên Agency là bắt buộc"),
   agencyAddress: z.string().min(1, "Địa chỉ Agency là bắt buộc"),
   agencyContactPhone: z.string().regex(/^\d{10}$/, "SĐT Agency phải có 10 chữ số"),
-  
-  // Thông tin Trạm
   stationName: z.string().min(1, "Tên trạm là bắt buộc"),
   stationAddress: z.string().min(1, "Địa chỉ trạm là bắt buộc"),
-  stationTotalCapacity: z.number().int().min(1).max(20, "Tối đa 20 xe"),
+  stationTotalCapacity: z.number().int().min(1).max(40, "Tối đa 40 xe"),
+  stationReturnSlotLimit :z.number().int().min(1).max(40, "Tối đa 40 xe"),
   stationLatitude: z.number().min(8.1, "Vĩ độ không thuộc VN").max(23.4, "Vĩ độ không thuộc VN"),
   stationLongitude: z.number().min(102.1, "Kinh độ không thuộc VN").max(109.5, "Kinh độ không thuộc VN"),
-  
   description: z.string().optional().nullable(),
 });
-
 export type RegisterAgencyFormData = z.infer<typeof registerToAgencySchema>;
 
 export const adminCreateAgencyUserRequestSchema = z.object({

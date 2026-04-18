@@ -157,10 +157,6 @@ export default function AgencyRequestDetailClient({
                 <Bike className="h-4 w-4" /> {data.stationTotalCapacity}
               </p>
             </div>
-            <div className="rounded-lg bg-muted/30 p-3">
-              <p className="text-[10px] font-bold uppercase text-muted-foreground">Lượt Pick/Return</p>
-              <p className="text-sm font-bold">{data.stationPickupSlotLimit} / {data.stationReturnSlotLimit}</p>
-            </div>
           </div>
         </DetailSection>
       </div>
