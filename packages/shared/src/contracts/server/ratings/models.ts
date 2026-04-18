@@ -23,7 +23,7 @@ export const AdminRatingUserSchema = z.object({
 
 export const AdminRatingBikeSchema = z.object({
   id: z.uuidv7(),
-  chipId: z.string(),
+  bikeNumber: z.string(),
 }).nullable();
 
 export const AdminRatingStationSchema = z.object({

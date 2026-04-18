@@ -154,7 +154,6 @@ async function main() {
         data: {
           id: uuidv7(),
           bikeNumber: formatBikeNumber(bikeIndex + 1),
-          chipId: bike.chip_id,
           stationId,
           supplierId: supplier.id,
           status,
@@ -179,7 +178,7 @@ async function main() {
       },
       orderBy: [
         { stationId: "asc" },
-        { chipId: "asc" },
+        { bikeNumber: "asc" },
       ],
     });
 

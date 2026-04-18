@@ -123,7 +123,6 @@ export function toContractAdminRentalDetail(
     bike: {
       id: detail.bike.id,
       bikeNumber: detail.bike.bikeNumber,
-      chipId: detail.bike.chipId,
       status: detail.bike.status,
       supplierId: detail.bike.supplierId ?? undefined,
       updatedAt: detail.bike.updatedAt.toISOString(),
@@ -200,7 +199,6 @@ export function toContractBikeSwapRequestDetail(
     oldBike: {
       id: row.oldBike.id,
       bikeNumber: row.oldBike.bikeNumber,
-      chipId: row.oldBike.chipId,
       station: {
         id: row.oldBike.station.id,
         name: row.oldBike.station.name,
@@ -215,7 +213,6 @@ export function toContractBikeSwapRequestDetail(
       ? {
           id: row.newBike.id,
           bikeNumber: row.newBike.bikeNumber,
-          chipId: row.newBike.chipId,
           station: {
             id: row.newBike.station.id,
             name: row.newBike.station.name,

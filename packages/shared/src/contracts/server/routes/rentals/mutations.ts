@@ -18,7 +18,6 @@ import {
 import { unauthorizedResponse } from "../helpers";
 import {
   BikeSwapRequestDetailSchemaOpenApi,
-  BikeSwapRequestIdParamSchema,
   BikeSwapRequestSchemaOpenApi,
   createSuccessResponse,
   RentalDetailSchemaOpenApi,
@@ -331,10 +330,10 @@ export const confirmRentalReturnByOperator = createRoute({
       },
     },
   },
-    responses: {
-      200: {
-        description: "Rental return confirmed by staff or agency operator",
-        content: {
+  responses: {
+    200: {
+      description: "Rental return confirmed by staff or agency operator",
+      content: {
         "application/json": {
           schema: RentalDetailSchemaOpenApi,
         },
@@ -465,10 +464,10 @@ export const processCardTapRental = createRoute({
             },
             BikeNotFound: {
               value: {
-                error: "Bike with chipId not found or unavailable",
+                error: "Bike not found or unavailable",
                 details: {
-                  code: RentalErrorCodeSchema.enum.BIKE_NOT_FOUND_FOR_CHIP,
-                  chipId: "CHIP123456",
+                  code: RentalErrorCodeSchema.enum.BIKE_NOT_FOUND_FOR_BIKE_ID,
+                  bikeId: "019b17bd-d130-7e7d-be69-91ceef7b6888",
                 },
               },
             },

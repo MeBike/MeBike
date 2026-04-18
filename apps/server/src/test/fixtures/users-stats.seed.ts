@@ -99,7 +99,6 @@ export const bikes: BikeSeed[] = [
   {
     id: BIKE_ONE_ID,
     bike_number: "MB-000001",
-    chip_id: "TEST-BIKE-001",
     stationId: STATION_ID,
     supplierId: null,
     status: "AVAILABLE",
@@ -108,7 +107,6 @@ export const bikes: BikeSeed[] = [
   {
     id: BIKE_TWO_ID,
     bike_number: "MB-000002",
-    chip_id: "TEST-BIKE-002",
     stationId: STATION_ID,
     supplierId: null,
     status: "AVAILABLE",

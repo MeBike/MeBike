@@ -21,11 +21,10 @@ describe("bikeService Integration", () => {
     runAdminUpdateBikeEither = runners.adminUpdateBikeEither;
   });
 
-  const createBike = (args: { stationId: string; supplierId: string; chipId?: string }) =>
+  const createBike = (args: { stationId: string; supplierId: string }) =>
     fixture.factories.bike({
       stationId: args.stationId,
       supplierId: args.supplierId,
-      chipId: args.chipId,
       status: "AVAILABLE",
     });
 
@@ -33,7 +32,6 @@ describe("bikeService Integration", () => {
     const supplier = await fixture.factories.supplier();
 
     const result = await runCreateBikeEither({
-      chipId: `chip-${uuidv7()}`,
       stationId: uuidv7(),
       supplierId: supplier.id,
       status: "AVAILABLE",
@@ -46,7 +44,6 @@ describe("bikeService Integration", () => {
     const station = await fixture.factories.station();
 
     const result = await runCreateBikeEither({
-      chipId: `chip-${uuidv7()}`,
       stationId: station.id,
       supplierId: uuidv7(),
       status: "AVAILABLE",
@@ -60,7 +57,6 @@ describe("bikeService Integration", () => {
     const supplier = await fixture.factories.supplier();
 
     const created = await runCreateBike({
-      chipId: `chip-${uuidv7()}`,
       stationId: station.id,
       supplierId: supplier.id,
       status: "AVAILABLE",
@@ -93,19 +89,6 @@ describe("bikeService Integration", () => {
     });
 
     expectLeftTag(result, "BikeSupplierNotFound");
-  });
-
-  it("update fails with DuplicateChipId when chipId already exists", async () => {
-    const station = await fixture.factories.station();
-    const supplier = await fixture.factories.supplier();
-    const primaryBike = await createBike({ stationId: station.id, supplierId: supplier.id });
-    const existingBike = await createBike({ stationId: station.id, supplierId: supplier.id });
-
-    const result = await runAdminUpdateBikeEither(primaryBike.id, {
-      chipId: existingBike.chipId,
-    });
-
-    expectLeftTag(result, "DuplicateChipId");
   });
 
   it("update succeeds when changing to another valid station and supplier", async () => {

@@ -34,7 +34,7 @@ export type AdminRatingUserRow = {
 
 export type AdminRatingBikeRow = {
   readonly id: string;
-  readonly chipId: string;
+  readonly bikeNumber: string;
 };
 
 export type AdminRatingStationRow = {

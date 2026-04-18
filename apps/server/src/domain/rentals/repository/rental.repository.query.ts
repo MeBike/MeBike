@@ -227,7 +227,6 @@ export const staffBikeSwapRequestSelect = {
     select: {
       id: true,
       bikeNumber: true,
-      chipId: true,
       station: {
         select: {
           id: true,
@@ -247,7 +246,6 @@ export const staffBikeSwapRequestSelect = {
     select: {
       id: true,
       bikeNumber: true,
-      chipId: true,
       station: {
         select: {
           id: true,
@@ -286,7 +284,6 @@ function mapBikeInfo(bike: any) {
   return {
     id: bike.id,
     bikeNumber: bike.bikeNumber,
-    chipId: bike.chipId,
     station: {
       id: bike.station?.id,
       name: bike.station?.name,

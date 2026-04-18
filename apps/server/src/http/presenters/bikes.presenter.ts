@@ -28,7 +28,6 @@ export function toBikeSummary(
   return {
     id: row.id,
     bikeNumber: row.bikeNumber,
-    chipId: row.chipId,
     stationId: row.stationId,
     station,
     supplier,
@@ -78,7 +77,7 @@ export function toHighestRevenueBike(
 ): BikesContracts.HighestRevenueBike {
   return {
     bikeId: row.bikeId,
-    bikeChipId: row.bikeChipId,
+    bikeNumber: row.bikeNumber,
     totalRevenue: row.totalRevenue,
     rentalCount: row.rentalCount,
     station: row.station

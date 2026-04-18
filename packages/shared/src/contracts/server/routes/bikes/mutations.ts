@@ -34,20 +34,10 @@ export const createBike = createRoute({
       },
     },
     400: {
-      description: "Invalid input or duplicate chip ID",
+      description: "Invalid input",
       content: {
         "application/json": {
           schema: BikeUpdateConflictResponseSchema,
-          examples: {
-            DuplicateChipId: {
-              value: {
-                error: "Duplicate Chip ID",
-                details: {
-                  code: BikeErrorCodeSchema.enum.DUPLICATE_CHIP_ID,
-                },
-              },
-            },
-          },
         },
       },
     },

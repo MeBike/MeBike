@@ -107,7 +107,6 @@ export type AdminRentalDetail = {
   bike: {
     id: string;
     bikeNumber: string;
-    chipId: string;
     status: BikeStatus;
     supplierId: string | null;
     updatedAt: Date;
@@ -271,7 +270,6 @@ export type StaffBikeSwapRequestRow = {
   oldBike: {
     id: string;
     bikeNumber: string;
-    chipId: string;
     station: {
       id: string;
       name: string;
@@ -285,7 +283,6 @@ export type StaffBikeSwapRequestRow = {
   newBike: {
     id: string;
     bikeNumber: string;
-    chipId: string;
     station: {
       id: string;
       name: string;

@@ -62,7 +62,6 @@ describe("reservation hold worker integration", () => {
       longitude: 106.699018,
     });
     const bike = await fixture.factories.bike({
-      chipId: "bike-near-expiry",
       stationId: station.id,
       status: "RESERVED",
     });
@@ -118,7 +117,6 @@ describe("reservation hold worker integration", () => {
       longitude: 106.700424,
     });
     const bike = await fixture.factories.bike({
-      chipId: "bike-expired-hold",
       stationId: station.id,
       status: "RESERVED",
     });

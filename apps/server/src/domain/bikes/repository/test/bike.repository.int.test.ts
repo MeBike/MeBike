@@ -3,8 +3,8 @@ import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectDefect, expectLeftTag } from "@/test/effect/assertions";
-import { runEffect, runEffectEither } from "@/test/effect/run";
+import { expectDefect } from "@/test/effect/assertions";
+import { runEffect } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { BikeRepositoryError } from "../../domain-errors";
@@ -36,7 +36,6 @@ describe("bikeRepository Integration", () => {
 
     const created = await runEffect(
       repo.create({
-        chipId: `chip-${uuidv7()}`,
         stationId: station.id,
         supplierId: supplier.id,
         status: "AVAILABLE",
@@ -54,7 +53,6 @@ describe("bikeRepository Integration", () => {
 
     const first = await runEffect(
       repo.create({
-        chipId: `chip-${uuidv7()}`,
         stationId: station.id,
         supplierId: supplier.id,
         status: "AVAILABLE",
@@ -63,7 +61,6 @@ describe("bikeRepository Integration", () => {
 
     const second = await runEffect(
       repo.create({
-        chipId: `chip-${uuidv7()}`,
         stationId: station.id,
         supplierId: supplier.id,
         status: "AVAILABLE",
@@ -73,32 +70,6 @@ describe("bikeRepository Integration", () => {
     expect(first.bikeNumber).toMatch(/^MB-\d{6}$/);
     expect(second.bikeNumber).toMatch(/^MB-\d{6}$/);
     expect(first.bikeNumber).not.toBe(second.bikeNumber);
-  });
-
-  it("create rejects duplicate chipId", async () => {
-    const station = await fixture.factories.station();
-    const supplier = await fixture.factories.supplier();
-    const chipId = `chip-${uuidv7()}`;
-
-    await runEffect(
-      repo.create({
-        chipId,
-        stationId: station.id,
-        supplierId: supplier.id,
-        status: "AVAILABLE",
-      }),
-    );
-
-    const result = await runEffectEither(
-      repo.create({
-        chipId,
-        stationId: station.id,
-        supplierId: supplier.id,
-        status: "AVAILABLE",
-      }),
-    );
-
-    expectLeftTag(result, "DuplicateChipId");
   });
 
   it("getById returns Option.none for missing bike", async () => {

@@ -9,7 +9,7 @@ const rentalErrorMessages = {
   bikeMissingStation: "Xe này đang thiếu thông tin trạm, vui lòng thử lại sau.",
   bikeNotAvailableForRental: "Xe hiện chưa sẵn sàng để bắt đầu chuyến đi.",
   bikeNotFound: "Không tìm thấy xe phù hợp.",
-  bikeNotFoundForChip: "Không tìm thấy xe tương ứng với chip được quét.",
+  bikeNotFoundForBikeId: "Không tìm thấy xe tương ứng với mã xe được gửi lên.",
   bikeNotFoundInStation: "Không tìm thấy xe này tại trạm đã chọn.",
   bikeSwapRequestAlreadyPending: "Yêu cầu đổi xe cho chuyến đi này đang chờ xử lý.",
   cannotApproveSwapThisRentalWithStatus: "Không thể duyệt đổi xe ở trạng thái chuyến đi hiện tại.",
@@ -85,8 +85,8 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.bikeNotAvailableForRental;
     case "BIKE_NOT_FOUND":
       return rentalErrorMessages.bikeNotFound;
-    case "BIKE_NOT_FOUND_FOR_CHIP":
-      return rentalErrorMessages.bikeNotFoundForChip;
+    case "BIKE_NOT_FOUND_FOR_BIKE_ID":
+      return rentalErrorMessages.bikeNotFoundForBikeId;
     case "BIKE_NOT_FOUND_IN_STATION":
       return rentalErrorMessages.bikeNotFoundInStation;
     case "BIKE_SWAP_REQUEST_ALREADY_PENDING":

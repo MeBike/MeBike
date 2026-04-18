@@ -52,7 +52,7 @@ export function toAdminRatingListItem(
     bike: row.bike
       ? {
           id: row.bike.id,
-          chipId: row.bike.chipId,
+          bikeNumber: row.bike.bikeNumber,
         }
       : null,
     station: row.station

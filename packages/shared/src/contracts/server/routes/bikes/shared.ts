@@ -84,14 +84,12 @@ export const BikeRentalHistoryQuerySchema = z
   });
 
 export const CreateBikeBodySchema = z.object({
-  chipId: z.string().min(1),
   stationId: z.uuidv7(),
   supplierId: z.uuidv7(),
   status: BikeStatusSchema.optional(),
 }).openapi("CreateBikeBody");
 
 export const UpdateBikeBodySchema = z.object({
-  chipId: z.string().optional(),
   stationId: z.uuidv7().optional(),
   supplierId: z.uuidv7().optional(),
   status: BikeStatusSchema.optional(),
