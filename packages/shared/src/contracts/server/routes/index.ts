@@ -49,6 +49,7 @@ export * from "./wallets";
 export type ServerRoutes = {
   readonly agencies: typeof agenciesRoutes;
   readonly agencyRequests: typeof agencyRequestsRoutes;
+  readonly ai: typeof aiRoutes;
   readonly auth: typeof authRoutes;
   readonly environment: typeof environmentRoutes;
   readonly fixedSlotTemplates: typeof fixedSlotTemplatesRoutes;
