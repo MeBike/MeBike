@@ -4,8 +4,9 @@ import type { CouponsContracts } from "@mebike/shared";
 import { serverRoutes } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
+import type { CouponCommandValidationFailure } from "@/domain/coupons";
+
 import {
-  type CouponCommandValidationFailure,
   CouponCommandServiceTag,
   CouponQueryServiceTag,
 } from "@/domain/coupons";
