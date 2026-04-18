@@ -42,7 +42,6 @@ export function toContractReservationExpanded(
       ? {
           id: row.bike.id,
           bikeNumber: row.bike.bikeNumber,
-          chipId: row.bike.chipId,
           status: row.bike.status,
         }
       : null,

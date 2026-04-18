@@ -10,10 +10,6 @@ export class BikeNotFound extends Data.TaggedError("BikeNotFound")<{
   readonly id: string;
 }> {}
 
-export class DuplicateChipId extends Data.TaggedError("DuplicateChipId")<{
-  readonly chipId: string;
-}> {}
-
 export class BikeStationNotFound extends Data.TaggedError("BikeStationNotFound")<{
   readonly stationId: string;
 }> {}

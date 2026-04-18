@@ -1,5 +1,9 @@
 import { z } from "../../../zod";
 import { BikeStatusSchema } from "../bikes";
+import {
+  CouponDiscountTypeSchema,
+  CouponTriggerTypeSchema,
+} from "../coupons";
 import { PaginationSchema } from "../schemas";
 import { UserRoleSchema, VerifyStatusSchema } from "../users";
 
@@ -80,7 +84,6 @@ export const RentalUserDetailSchema = z.object({
 export const RentalBikeSchema = z.object({
   id: z.uuidv7(),
   bikeNumber: z.string(),
-  chipId: z.string(),
   status: BikeStatusSchema,
   supplierId: z.uuidv7().optional(),
   updatedAt: z.iso.datetime(),
@@ -163,6 +166,52 @@ export const RentalWithPricingSchema = RentalDetailSchema.extend({
   penaltyAmount: z.number().optional(),
   refundUsage: z.number().optional(),
 });
+
+export const RentalBillingPreviewDiscountRuleSchema = z.object({
+  ruleId: z.uuidv7(),
+  name: z.string(),
+  triggerType: CouponTriggerTypeSchema,
+  minRidingMinutes: z.number().int().nonnegative(),
+  discountType: CouponDiscountTypeSchema,
+  discountValue: z.number(),
+}).openapi("RentalBillingPreviewDiscountRule");
+
+export const RentalBillingPreviewSchema = z.object({
+  rentalId: z.uuidv7(),
+  previewedAt: z.iso.datetime(),
+  pricingPolicyId: z.uuid(),
+  rentalMinutes: z.number().int().positive(),
+  billableBlocks: z.number().int().positive(),
+  billableHours: z.number().positive(),
+  baseRentalAmount: z.number().nonnegative(),
+  prepaidAmount: z.number().nonnegative(),
+  eligibleRentalAmount: z.number().nonnegative(),
+  subscriptionApplied: z.boolean(),
+  subscriptionDiscountAmount: z.number().nonnegative(),
+  bestDiscountRule: RentalBillingPreviewDiscountRuleSchema.nullable(),
+  couponDiscountAmount: z.number().nonnegative(),
+  penaltyAmount: z.number().nonnegative(),
+  depositForfeited: z.boolean(),
+  payableRentalAmount: z.number().nonnegative(),
+  totalPayableAmount: z.number().nonnegative(),
+}).openapi("RentalBillingPreview");
+
+export const RentalBillingDetailSchema = z.object({
+  rentalId: z.uuidv7(),
+  baseAmount: z.number().nonnegative(),
+  prepaidAmount: z.number().nonnegative(),
+  subscriptionApplied: z.boolean(),
+  subscriptionDiscountAmount: z.number().nonnegative(),
+  couponRuleId: z.uuidv7().nullable(),
+  couponRuleName: z.string().nullable(),
+  couponRuleMinRidingMinutes: z.number().int().nonnegative().nullable(),
+  couponRuleDiscountType: CouponDiscountTypeSchema.nullable(),
+  couponRuleDiscountValue: z.number().nonnegative().nullable(),
+  couponDiscountAmount: z.number().nonnegative(),
+  totalAmount: z.number().nonnegative(),
+  appliedAt: z.iso.datetime(),
+  explanation: z.string().optional(),
+}).openapi("RentalBillingDetail");
 
 // Revenue analytics models
 export const RentalRevenueItemSchema = z.object({
@@ -263,7 +312,7 @@ export const StaffCreateRentalRequestSchema = CreateRentalRequestSchema.extend({
 });
 
 export const CardTapRentalRequestSchema = z.object({
-  chipId: z.string(),
+  bikeId: z.uuidv7(),
   cardUid: z.string(),
 });
 
@@ -328,7 +377,6 @@ export const BikeSwapSupplierSchema = z.object({
 export const BikeSwapBikeSchema = z.object({
   id: z.uuidv7(),
   bikeNumber: z.string(),
-  chipId: z.string(),
   station: BikeSwapStationSchema,
   supplier: BikeSwapSupplierSchema,
 });
@@ -412,6 +460,11 @@ export type RentalWithPrice = z.infer<typeof RentalWithPriceSchema>;
 export type RentalListItem = z.infer<typeof RentalListItemSchema>;
 export type RentalDetail = z.infer<typeof RentalDetailSchema>;
 export type RentalWithPricing = z.infer<typeof RentalWithPricingSchema>;
+export type RentalBillingPreviewDiscountRule = z.infer<
+  typeof RentalBillingPreviewDiscountRuleSchema
+>;
+export type RentalBillingPreview = z.infer<typeof RentalBillingPreviewSchema>;
+export type RentalBillingDetail = z.infer<typeof RentalBillingDetailSchema>;
 export type RentalRevenueResponse = z.infer<typeof RentalRevenueResponseSchema>;
 export type StationActivityResponse = z.infer<
   typeof StationActivityResponseSchema

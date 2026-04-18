@@ -5,6 +5,8 @@ import {
   AdminRentalsListResponseSchema,
   BikeSwapRequestErrorResponseSchema,
   BikeSwapRequestListResponseSchema,
+  RentalBillingDetailSchema,
+  RentalBillingPreviewSchema,
   BikeSwapStatusSchema,
   ReturnSlotReservationSchema,
 } from "../../rentals";
@@ -146,6 +148,80 @@ export const getMyRental = createRoute({
               },
             },
           },
+        },
+      },
+    },
+  },
+});
+
+export const getMyRentalBillingPreview = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/{rentalId}/billing-preview",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Current user's rental billing preview",
+      content: {
+        "application/json": {
+          schema: RentalBillingPreviewSchema,
+        },
+      },
+    },
+    400: {
+      description: "Billing preview is not available for this rental state",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const getMyRentalBillingDetail = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/{rentalId}/billing-detail",
+  tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Current user's finalized rental billing detail",
+      content: {
+        "application/json": {
+          schema: RentalBillingDetailSchema,
+        },
+      },
+    },
+    400: {
+      description: "Billing detail is not available for this rental state",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
         },
       },
     },
@@ -519,7 +595,7 @@ export const adminGetRental = createRoute({
                 },
                 bike: {
                   id: "019b17bd-d130-7e7d-be69-91ceef7b6888",
-                  chipId: "CHIP-001",
+                  bikeNumber: "MB-000001",
                   status: "AVAILABLE",
                   supplierId: "019b17bd-d130-7e7d-be69-91ceef7b6777",
                   updatedAt: "2026-03-10T09:05:00.000Z",
@@ -602,7 +678,7 @@ export const staffGetRental = createRoute({
                 },
                 bike: {
                   id: "019b17bd-d130-7e7d-be69-91ceef7b6888",
-                  chipId: "CHIP-001",
+                  bikeNumber: "MB-000001",
                   status: "AVAILABLE",
                   supplierId: "019b17bd-d130-7e7d-be69-91ceef7b6777",
                   updatedAt: "2026-03-10T09:05:00.000Z",

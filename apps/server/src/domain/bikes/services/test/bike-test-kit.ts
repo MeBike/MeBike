@@ -28,7 +28,6 @@ export function makeBikeTestLayer(client: PrismaClient) {
 export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
   return {
     createBike(input: {
-      chipId: string;
       stationId: string;
       supplierId: string;
       status: "AVAILABLE";
@@ -39,7 +38,6 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
       );
     },
     createBikeEither(input: {
-      chipId: string;
       stationId: string;
       supplierId: string;
       status: "AVAILABLE";
@@ -52,7 +50,6 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
     adminUpdateBike(bikeId: string, input: {
       stationId?: string;
       supplierId?: string;
-      chipId?: string;
     }) {
       return runEffectWithLayer(
         Effect.flatMap(BikeServiceTag, service => service.adminUpdateBike(bikeId, input)),
@@ -62,7 +59,6 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
     adminUpdateBikeEither(bikeId: string, input: {
       stationId?: string;
       supplierId?: string;
-      chipId?: string;
     }) {
       return runEffectEitherWithLayer(
         Effect.flatMap(BikeServiceTag, service => service.adminUpdateBike(bikeId, input)),

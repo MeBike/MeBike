@@ -89,7 +89,6 @@ export const adminRentalDetailSelect = {
     select: {
       id: true,
       bikeNumber: true,
-      chipId: true,
       status: true,
       supplierId: true,
       updatedAt: true,
@@ -161,7 +160,6 @@ export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRe
     bike: {
       id: raw.bike.id,
       bikeNumber: raw.bike.bikeNumber,
-      chipId: raw.bike.chipId,
       status: raw.bike.status,
       supplierId: raw.bike.supplierId,
       updatedAt: raw.bike.updatedAt,

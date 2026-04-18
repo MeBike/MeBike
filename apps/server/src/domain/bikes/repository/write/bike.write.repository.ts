@@ -4,12 +4,12 @@ import type { BikeStatus } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
 import { pickDefined } from "@/domain/shared/pick-defined";
-import { isPrismaRecordNotFound, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+import { isPrismaRecordNotFound } from "@/infrastructure/prisma-errors";
 
 import type { BikeDbClient } from "../bike.repository.shared";
-import type { BikeCommandRepo, BikeCreateInput, BikeUpdatePatch } from "../bike.repository.types";
+import type { BikeCommandRepo, BikeCreateInput } from "../bike.repository.types";
 
-import { BikeRepositoryError, DuplicateChipId } from "../../domain-errors";
+import { BikeRepositoryError } from "../../domain-errors";
 import { bikeSelect, buildStatusUpdate, findBikeById, getNextBikeNumber } from "../bike.repository.shared";
 
 export function makeBikeWriteRepository(client: BikeDbClient): BikeCommandRepo {
@@ -46,7 +46,7 @@ export function makeBikeWriteRepository(client: BikeDbClient): BikeCommandRepo {
     create: input =>
       Effect.tryPromise({
         try: () => createBike(client, input),
-        catch: cause => handleCreateError(cause, input.chipId),
+        catch: cause => handleCreateError(cause),
       }).pipe(defectOn(BikeRepositoryError)),
 
     updateStatus: (bikeId, status) =>
@@ -125,7 +125,6 @@ export function makeBikeWriteRepository(client: BikeDbClient): BikeCommandRepo {
             where: { id: bikeId },
             data: {
               ...pickDefined({
-                chipId: patch.chipId,
                 stationId: patch.stationId,
                 status: patch.status,
                 supplierId: patch.supplierId,
@@ -136,7 +135,7 @@ export function makeBikeWriteRepository(client: BikeDbClient): BikeCommandRepo {
           }),
         catch: err => err as unknown,
       }).pipe(
-        Effect.catchAll(cause => handleUpdateError(cause, patch)),
+        Effect.catchAll(cause => handleUpdateError(cause)),
         Effect.map(row => Option.fromNullable(row)),
         defectOn(BikeRepositoryError),
       ),
@@ -150,7 +149,6 @@ async function createBike(client: BikeDbClient, input: BikeCreateInput) {
     return tx.bike.create({
       data: {
         bikeNumber,
-        chipId: input.chipId,
         stationId: input.stationId,
         supplierId: input.supplierId,
         status: input.status,
@@ -165,11 +163,7 @@ async function createBike(client: BikeDbClient, input: BikeCreateInput) {
     : createWithClient(client);
 }
 
-function handleCreateError(cause: unknown, chipId: string) {
-  if (isPrismaUniqueViolation(cause)) {
-    return new DuplicateChipId({ chipId });
-  }
-
+function handleCreateError(cause: unknown) {
   return new BikeRepositoryError({
     operation: "create",
     cause,
@@ -179,14 +173,9 @@ function handleCreateError(cause: unknown, chipId: string) {
 
 function handleUpdateError(
   cause: unknown,
-  patch: BikeUpdatePatch,
-): Effect.Effect<null, BikeRepositoryError | DuplicateChipId> {
+): Effect.Effect<null, BikeRepositoryError> {
   if (isPrismaRecordNotFound(cause)) {
     return Effect.succeed(null);
-  }
-
-  if (isPrismaUniqueViolation(cause) && patch.chipId) {
-    return Effect.fail(new DuplicateChipId({ chipId: patch.chipId }));
   }
 
   return Effect.fail(new BikeRepositoryError({

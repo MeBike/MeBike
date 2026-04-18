@@ -58,6 +58,9 @@ export const rentalErrorCodes = [
   "RETURN_SLOT_STATION_MISMATCH",
   "RETURN_SLOT_NOT_FOUND",
   "RETURN_SLOT_REQUIRES_ACTIVE_RENTAL",
+  "BILLING_PREVIEW_REQUIRES_ACTIVE_RENTAL",
+  "BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL",
+  "BILLING_DETAIL_NOT_READY",
   "RETURN_SLOT_CAPACITY_EXCEEDED",
   "RETURN_ALREADY_CONFIRMED",
 
@@ -70,7 +73,7 @@ export const rentalErrorCodes = [
 
   // Card Tap Specific Errors
   "USER_NOT_FOUND_FOR_CARD",
-  "BIKE_NOT_FOUND_FOR_CHIP",
+  "BIKE_NOT_FOUND_FOR_BIKE_ID",
   "BIKE_MISSING_STATION",
   "BIKE_NOT_AVAILABLE_FOR_RENTAL",
   "BIKE_SWAP_REQUEST_ALREADY_PENDING",
@@ -95,7 +98,6 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   subscriptionId: z.uuidv7().optional(),
   sosId: z.uuidv7().optional(),
   cardUid: z.string().optional(),
-  chipId: z.string().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
   endTime: z.string().optional(),
@@ -217,6 +219,9 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   RETURN_SLOT_STATION_MISMATCH: "The rental can only end at the station reserved by the active return slot",
   RETURN_SLOT_NOT_FOUND: "Return slot not found",
   RETURN_SLOT_REQUIRES_ACTIVE_RENTAL: "Return slot requires an active rental",
+  BILLING_PREVIEW_REQUIRES_ACTIVE_RENTAL: "Billing preview requires an active rental",
+  BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL: "Billing detail requires a completed rental",
+  BILLING_DETAIL_NOT_READY: "Billing detail is not ready",
   RETURN_SLOT_CAPACITY_EXCEEDED: "Station does not have enough capacity for another return slot",
   RETURN_ALREADY_CONFIRMED: "Rental return has already been confirmed",
 
@@ -226,7 +231,7 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   BIKE_UPDATE_FAILED: "Bike update failed",
 
   USER_NOT_FOUND_FOR_CARD: "User not found for the provided card",
-  BIKE_NOT_FOUND_FOR_CHIP: "Bike not found for the provided chip",
+  BIKE_NOT_FOUND_FOR_BIKE_ID: "Bike not found for the provided bike ID",
   BIKE_MISSING_STATION: "Bike is missing station information",
   BIKE_NOT_AVAILABLE_FOR_RENTAL: "Bike is not available for rental",
   BIKE_SWAP_REQUEST_ALREADY_PENDING: "A bike swap request is already pending for this rental",

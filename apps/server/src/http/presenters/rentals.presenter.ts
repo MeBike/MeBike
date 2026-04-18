@@ -4,6 +4,8 @@ import type {
   AdminRentalDetail,
   AdminRentalListItem,
   BikeSwapRequestRow,
+  RentalBillingDetailRow,
+  RentalBillingPreviewRow,
   RentalRow,
   ReturnSlotRow,
   StaffBikeSwapRequestRow,
@@ -58,6 +60,90 @@ export function toContractRentalWithPrice(
     ...toContractRentalDeposit(row),
     status: row.status,
     updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toContractRentalBillingPreview(
+  row: RentalBillingPreviewRow,
+): RentalsContracts.RentalBillingPreview {
+  return {
+    rentalId: row.rentalId,
+    previewedAt: row.previewedAt.toISOString(),
+    pricingPolicyId: row.pricingPolicyId,
+    rentalMinutes: row.rentalMinutes,
+    billableBlocks: row.billableBlocks,
+    billableHours: row.billableHours,
+    baseRentalAmount: row.baseRentalAmount,
+    prepaidAmount: row.prepaidAmount,
+    eligibleRentalAmount: row.eligibleRentalAmount,
+    subscriptionApplied: row.subscriptionApplied,
+    subscriptionDiscountAmount: row.subscriptionDiscountAmount,
+    bestDiscountRule: row.bestDiscountRule
+      ? {
+          ruleId: row.bestDiscountRule.ruleId,
+          name: row.bestDiscountRule.name,
+          triggerType: row.bestDiscountRule.triggerType,
+          minRidingMinutes: row.bestDiscountRule.minRidingMinutes,
+          discountType: row.bestDiscountRule.discountType,
+          discountValue: row.bestDiscountRule.discountValue,
+        }
+      : null,
+    couponDiscountAmount: row.couponDiscountAmount,
+    penaltyAmount: row.penaltyAmount,
+    depositForfeited: row.depositForfeited,
+    payableRentalAmount: row.payableRentalAmount,
+    totalPayableAmount: row.totalPayableAmount,
+  };
+}
+
+function buildBillingDetailExplanation(
+  row: RentalBillingDetailRow,
+): string | undefined {
+  const parts: string[] = [];
+
+  if (row.prepaidAmount > 0) {
+    parts.push(`Prepaid amount ${row.prepaidAmount} was applied before final billing`);
+  }
+
+  if (row.subscriptionApplied && row.subscriptionDiscountAmount > 0) {
+    parts.push(`Subscription reduced this rental by ${row.subscriptionDiscountAmount}`);
+  }
+
+  if (row.couponDiscountAmount > 0) {
+    const couponName = row.couponRuleName
+      ? `"${row.couponRuleName}"`
+      : "an automatic coupon";
+    const tier = row.couponRuleMinRidingMinutes !== null
+      ? ` after meeting the ${row.couponRuleMinRidingMinutes}-minute tier`
+      : "";
+    parts.push(`${couponName} reduced this rental by ${row.couponDiscountAmount}${tier}`);
+  }
+
+  if (parts.length === 0) {
+    return "No prepaid amount, subscription discount, or coupon discount was applied to this rental.";
+  }
+
+  return `${parts.join(". ")}.`;
+}
+
+export function toContractRentalBillingDetail(
+  row: RentalBillingDetailRow,
+): RentalsContracts.RentalBillingDetail {
+  return {
+    rentalId: row.rentalId,
+    baseAmount: row.baseAmount,
+    prepaidAmount: row.prepaidAmount,
+    subscriptionApplied: row.subscriptionApplied,
+    subscriptionDiscountAmount: row.subscriptionDiscountAmount,
+    couponRuleId: row.couponRuleId,
+    couponRuleName: row.couponRuleName,
+    couponRuleMinRidingMinutes: row.couponRuleMinRidingMinutes,
+    couponRuleDiscountType: row.couponRuleDiscountType,
+    couponRuleDiscountValue: row.couponRuleDiscountValue,
+    couponDiscountAmount: row.couponDiscountAmount,
+    totalAmount: row.totalAmount,
+    appliedAt: row.appliedAt.toISOString(),
+    explanation: buildBillingDetailExplanation(row),
   };
 }
 
@@ -123,7 +209,6 @@ export function toContractAdminRentalDetail(
     bike: {
       id: detail.bike.id,
       bikeNumber: detail.bike.bikeNumber,
-      chipId: detail.bike.chipId,
       status: detail.bike.status,
       supplierId: detail.bike.supplierId ?? undefined,
       updatedAt: detail.bike.updatedAt.toISOString(),
@@ -200,7 +285,6 @@ export function toContractBikeSwapRequestDetail(
     oldBike: {
       id: row.oldBike.id,
       bikeNumber: row.oldBike.bikeNumber,
-      chipId: row.oldBike.chipId,
       station: {
         id: row.oldBike.station.id,
         name: row.oldBike.station.name,
@@ -215,7 +299,6 @@ export function toContractBikeSwapRequestDetail(
       ? {
           id: row.newBike.id,
           bikeNumber: row.newBike.bikeNumber,
-          chipId: row.newBike.chipId,
           station: {
             id: row.newBike.station.id,
             name: row.newBike.station.name,

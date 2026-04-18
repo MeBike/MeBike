@@ -25,7 +25,6 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
     Effect.gen(function* () {
       const service = yield* BikeServiceTag;
       const bike = yield* service.createBike({
-        chipId: body.chipId,
         stationId: body.stationId,
         supplierId: body.supplierId,
         status: body.status,
@@ -41,11 +40,6 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
     Match.tag("Right", ({ right }) =>
       c.json<BikeSummary, 201>(right, 201)),
     Match.tag("Left", ({ left }) => Match.value(left).pipe(
-      Match.tag("DuplicateChipId", () =>
-        c.json<BikeUpdateConflictResponse, 400>({
-          error: bikeErrorMessages.DUPLICATE_CHIP_ID,
-          details: { code: BikeErrorCodeSchema.enum.DUPLICATE_CHIP_ID },
-        }, 400)),
       Match.tag("BikeStationNotFound", ({ stationId }) =>
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_STATION_NOT_FOUND,
@@ -111,11 +105,6 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
           error: bikeErrorMessages.BIKE_NOT_FOUND,
           details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
         }, 404)),
-      Match.tag("DuplicateChipId", () =>
-        c.json<BikeUpdateConflictResponse, 400>({
-          error: bikeErrorMessages.DUPLICATE_CHIP_ID,
-          details: { code: BikeErrorCodeSchema.enum.DUPLICATE_CHIP_ID },
-        }, 400)),
       Match.tag("BikeStationNotFound", ({ stationId }) =>
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_STATION_NOT_FOUND,

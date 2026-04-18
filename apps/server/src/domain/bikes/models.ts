@@ -3,7 +3,6 @@ import type { BikeStatus } from "generated/prisma/enums";
 export type BikeRow = {
   id: string;
   bikeNumber: string;
-  chipId: string;
   stationId: string | null;
   supplierId: string | null;
   status: BikeStatus;
@@ -91,7 +90,7 @@ export type BikeStats = {
 
 export type HighestRevenueBike = {
   bikeId: string;
-  bikeChipId: string;
+  bikeNumber: string;
   totalRevenue: number;
   rentalCount: number;
   station: {

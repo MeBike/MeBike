@@ -48,6 +48,10 @@ export type WalletService = {
     args: { userId: string; pageReq: PageRequest<"createdAt">; status?: WalletTransactionStatus },
   ) => Effect.Effect<PageResult<WalletTransactionRow>, WalletNotFound>;
 
+  getTransactionByIdForUser: (
+    args: { userId: string; transactionId: string },
+  ) => Effect.Effect<Option.Option<WalletTransactionRow>, WalletNotFound>;
+
   adminListTransactionsForUser: (
     args: { userId: string; pageReq: PageRequest<"createdAt">; status?: WalletTransactionStatus },
   ) => Effect.Effect<{
@@ -118,6 +122,15 @@ export const WalletServiceLive = Layer.effect(
         return yield* repo.listTransactions(wallet.id, pageReq, { status });
       });
 
+    const getTransactionByIdForUser: WalletService["getTransactionByIdForUser"] = ({
+      userId,
+      transactionId,
+    }) =>
+      Effect.gen(function* () {
+        const wallet = yield* getByUserId(userId);
+        return yield* repo.findTransactionById(wallet.id, transactionId);
+      });
+
     const adminListTransactionsForUser: WalletService["adminListTransactionsForUser"] = ({
       userId,
       pageReq,
@@ -148,6 +161,7 @@ export const WalletServiceLive = Layer.effect(
       creditWallet,
       debitWallet,
       listTransactionsForUser,
+      getTransactionByIdForUser,
       adminListTransactionsForUser,
     };
 

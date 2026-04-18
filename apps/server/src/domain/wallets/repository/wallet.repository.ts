@@ -60,6 +60,10 @@ export type WalletRepo = {
     pageReq: PageRequest<"createdAt">,
     filter?: { readonly status?: WalletTransactionStatus },
   ) => Effect.Effect<PageResult<WalletTransactionRow>>;
+  findTransactionById: (
+    walletId: string,
+    transactionId: string,
+  ) => Effect.Effect<Option.Option<WalletTransactionRow>>;
 };
 
 export class WalletRepository extends Context.Tag("WalletRepository")<
@@ -343,6 +347,23 @@ export function makeWalletRepository(
         return makePageResult(rows.map(toWalletTransactionRow), total, page, pageSize);
       }).pipe(defectOn(WalletRepositoryError));
     },
+
+    findTransactionById: (walletId, transactionId) =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.walletTransaction.findFirst({
+            where: { id: transactionId, walletId },
+            select: selectWalletTransactionRow,
+          });
+
+          return Option.fromNullable(row).pipe(Option.map(toWalletTransactionRow));
+        },
+        catch: err =>
+          new WalletRepositoryError({
+            operation: "findTransactionById",
+            cause: err,
+          }),
+      }).pipe(defectOn(WalletRepositoryError)),
   };
 }
 

@@ -336,7 +336,7 @@ export default function TechnicianIncidentDetailScreen() {
           </SectionCard>
 
           <SectionCard accentTone="success" icon="bike" title="Thông tin xe & Vị trí">
-            <DetailRow label="Mã xe" value={incident.bike.chipId} />
+            <DetailRow label="Mã xe" value={incident.bike.bikeNumber} />
             <DetailRow label="Khóa xe đang bật" value={incident.bikeLocked ? "Có" : "Không"} valueTone={incident.bikeLocked ? "danger" : "success"} />
             <DetailRow emptyLabel="Không gắn với trạm" label="Trạm liên quan" value={incident.station?.name ?? ""} />
             <DetailRow

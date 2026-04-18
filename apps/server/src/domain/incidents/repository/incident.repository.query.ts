@@ -19,7 +19,7 @@ export const incidentDetailSelect = {
   bike: {
     select: {
       id: true,
-      chipId: true,
+      bikeNumber: true,
     },
   },
   station: {

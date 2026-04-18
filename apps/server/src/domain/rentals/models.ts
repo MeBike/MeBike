@@ -2,6 +2,8 @@ import type { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
   ConfirmationMethod,
+  CouponTriggerType,
+  DiscountType,
   HandoverStatus,
   RentalStatus,
   ReturnSlotStatus,
@@ -107,7 +109,6 @@ export type AdminRentalDetail = {
   bike: {
     id: string;
     bikeNumber: string;
-    chipId: string;
     status: BikeStatus;
     supplierId: string | null;
     updatedAt: Date;
@@ -236,6 +237,51 @@ export type HourlyRentalStat = {
   totalRentals: number;
 };
 
+export type RentalBillingPreviewDiscountRuleRow = {
+  ruleId: string;
+  name: string;
+  triggerType: CouponTriggerType;
+  minRidingMinutes: number;
+  discountType: DiscountType;
+  discountValue: number;
+};
+
+export type RentalBillingPreviewRow = {
+  rentalId: string;
+  previewedAt: Date;
+  pricingPolicyId: string;
+  rentalMinutes: number;
+  billableBlocks: number;
+  billableHours: number;
+  baseRentalAmount: number;
+  prepaidAmount: number;
+  eligibleRentalAmount: number;
+  subscriptionApplied: boolean;
+  subscriptionDiscountAmount: number;
+  bestDiscountRule: RentalBillingPreviewDiscountRuleRow | null;
+  couponDiscountAmount: number;
+  penaltyAmount: number;
+  depositForfeited: boolean;
+  payableRentalAmount: number;
+  totalPayableAmount: number;
+};
+
+export type RentalBillingDetailRow = {
+  rentalId: string;
+  baseAmount: number;
+  prepaidAmount: number;
+  subscriptionApplied: boolean;
+  subscriptionDiscountAmount: number;
+  couponRuleId: string | null;
+  couponRuleName: string | null;
+  couponRuleMinRidingMinutes: number | null;
+  couponRuleDiscountType: DiscountType | null;
+  couponRuleDiscountValue: number | null;
+  couponDiscountAmount: number;
+  totalAmount: number;
+  appliedAt: Date;
+};
+
 export type RentalDashboardSummary = {
   revenueSummary: {
     today: DashboardRevenueSnapshot;
@@ -271,7 +317,6 @@ export type StaffBikeSwapRequestRow = {
   oldBike: {
     id: string;
     bikeNumber: string;
-    chipId: string;
     station: {
       id: string;
       name: string;
@@ -285,7 +330,6 @@ export type StaffBikeSwapRequestRow = {
   newBike: {
     id: string;
     bikeNumber: string;
-    chipId: string;
     station: {
       id: string;
       name: string;

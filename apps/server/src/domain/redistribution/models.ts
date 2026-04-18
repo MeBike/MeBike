@@ -41,7 +41,7 @@ export type StationDetail = {
 
 export type BikeDetail = {
   id: string;
-  chipId: string;
+  bikeNumber: string;
   status: BikeStatus;
   supplierId: string | null;
   updatedAt: Date;
