@@ -19,6 +19,12 @@ import {
   ServerErrorResponseSchema,
 } from "./shared";
 
+const agencyBikeListQuerySchema = BikeListQuerySchema.omit({
+  stationId: true,
+}).openapi("AgencyBikeListQuery", {
+  description: "Optional filters for listing bikes in current agency station scope",
+});
+
 export const listBikes = createRoute({
   method: "get",
   path: "/v1/bikes",
@@ -131,6 +137,34 @@ export const staffListBikes = createRoute({
   },
 });
 
+export const agencyListBikes = createRoute({
+  method: "get",
+  path: "/v1/agency/bikes",
+  tags: ["Agency", "Bikes"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: agencyBikeListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "List bikes for agency station scope",
+      content: {
+        "application/json": { schema: BikeListResponseSchema },
+      },
+    },
+    400: {
+      description: "Invalid query",
+      content: {
+        "application/json": {
+          schema: BikeErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
+  },
+});
+
 export const staffGetBike = createRoute({
   method: "get",
   path: "/v1/staff/bikes/{id}",
@@ -162,6 +196,40 @@ export const staffGetBike = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Staff, Manager, or Technician"),
+  },
+});
+
+export const agencyGetBike = createRoute({
+  method: "get",
+  path: "/v1/agency/bikes/{id}",
+  tags: ["Agency", "Bikes"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get bike details for agency station scope",
+      content: {
+        "application/json": { schema: BikeSummarySchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid path parameter",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Bike not found",
+      content: {
+        "application/json": { schema: BikeNotFoundResponseSchema },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
   },
 });
 

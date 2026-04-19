@@ -17,7 +17,6 @@ type SubscriptionCreatedEmailParams = {
   readonly price: number;
   readonly maxUsages: number | null;
   readonly createdOn: string;
-  readonly callBackUrl?: string;
 };
 
 type FixedSlotAssignmentEmailParams = {
@@ -45,7 +44,6 @@ type ReservationNearExpiryEmailParams = {
   readonly stationName: string;
   readonly bikeId: string;
   readonly minutesRemaining: number;
-  readonly callBackUrl?: string;
 };
 
 type ReservationExpiredEmailParams = {
@@ -53,7 +51,6 @@ type ReservationExpiredEmailParams = {
   readonly stationName: string;
   readonly bikeId: string;
   readonly endTimeLabel: string;
-  readonly callBackUrl?: string;
 };
 
 type AgencyApprovedEmailParams = {
@@ -123,7 +120,6 @@ export function buildSubscriptionCreatedEmail({
   price,
   maxUsages,
   createdOn,
-  callBackUrl,
 }: SubscriptionCreatedEmailParams): { subject: string; html: string } {
   const safeName = escapeHtml(fullName);
   const safePackage = escapeHtml(packageName);
@@ -131,7 +127,6 @@ export function buildSubscriptionCreatedEmail({
   const safePrice = escapeHtml(price.toLocaleString("vi-VN"));
   const usageLine
     = maxUsages === null ? "<strong>Không giới hạn</strong>" : escapeHtml(String(maxUsages));
-  const safeUrl = callBackUrl ? escapeHtml(callBackUrl) : "#";
 
   const body = `
     <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
@@ -162,11 +157,6 @@ export function buildSubscriptionCreatedEmail({
     <p style="margin: 20px 0 0; color: ${TEXT_COLOR};">
       Sau khi thanh toán được xác nhận, gói thuê xe của bạn sẽ được kích hoạt tự động theo lịch.
     </p>
-    <div style="text-align: center; margin: 24px 0 0;">
-      <a href="${safeUrl}" style="background: ${BRAND_COLOR}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
-        Kiểm tra trạng thái gói
-      </a>
-    </div>
   `;
 
   return {
@@ -294,14 +284,12 @@ export function buildReservationConfirmedEmail({
   bikeId,
   startTimeLabel,
   endTimeLabel,
-  callBackUrl,
 }: ReservationHoldEmailParams): { subject: string; html: string } {
   const safeName = escapeHtml(fullName);
   const safeStation = escapeHtml(stationName);
   const safeBikeId = escapeHtml(bikeId);
   const safeStart = escapeHtml(startTimeLabel);
   const safeEnd = escapeHtml(endTimeLabel);
-  const safeUrl = callBackUrl ? escapeHtml(callBackUrl) : "#";
   const title = "Đặt trước xe đạp thành công";
 
   const body = `
@@ -336,11 +324,6 @@ export function buildReservationConfirmedEmail({
     <p style="margin: 12px 0 0; color: ${TEXT_COLOR};">
       Nếu không mở khóa kịp thời, phiên đặt trước sẽ <strong>tự động bị hủy</strong> và xe sẽ được giải phóng.
     </p>
-    <div style="text-align: center; margin: 24px 0 0;">
-      <a href="${safeUrl}" style="background: ${BRAND_COLOR}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
-        Mở ứng dụng để mở khóa
-      </a>
-    </div>
     <p style="margin: 20px 0 0; color: ${MUTED_COLOR}; font-size: 14px;">
       <strong>Mẹo:</strong> Mở ứng dụng để xem vị trí trạm xe và hướng dẫn chi tiết.
     </p>
@@ -361,13 +344,11 @@ export function buildReservationNearExpiryEmail({
   stationName,
   bikeId,
   minutesRemaining,
-  callBackUrl,
 }: ReservationNearExpiryEmailParams): { subject: string; html: string } {
   const safeName = escapeHtml(fullName);
   const safeStation = escapeHtml(stationName);
   const safeBikeId = escapeHtml(bikeId);
   const safeMinutes = Math.max(1, Math.floor(minutesRemaining));
-  const safeUrl = callBackUrl ? escapeHtml(callBackUrl) : "#";
   const title = "Phiên đặt trước sắp hết hạn";
 
   const body = `
@@ -381,11 +362,6 @@ export function buildReservationNearExpiryEmail({
     <p style="margin: 0; color: ${TEXT_COLOR};">
       Nếu bạn không mở khóa trước khi hết hạn, phiên đặt trước sẽ tự động bị hủy.
     </p>
-    <div style="text-align: center; margin: 24px 0 0;">
-      <a href="${safeUrl}" style="background: ${BRAND_COLOR}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
-        Mở ứng dụng để mở khóa
-      </a>
-    </div>
   `;
 
   return {
@@ -403,13 +379,11 @@ export function buildReservationExpiredEmail({
   stationName,
   bikeId,
   endTimeLabel,
-  callBackUrl,
 }: ReservationExpiredEmailParams): { subject: string; html: string } {
   const safeName = escapeHtml(fullName);
   const safeStation = escapeHtml(stationName);
   const safeBikeId = escapeHtml(bikeId);
   const safeEnd = escapeHtml(endTimeLabel);
-  const safeUrl = callBackUrl ? escapeHtml(callBackUrl) : "#";
   const title = "Phiên đặt trước đã hết hạn";
 
   const body = `
@@ -423,11 +397,6 @@ export function buildReservationExpiredEmail({
     <p style="margin: 0; color: ${TEXT_COLOR};">
       Nếu bạn vẫn muốn thuê xe, vui lòng đặt trước lại trên ứng dụng.
     </p>
-    <div style="text-align: center; margin: 24px 0 0;">
-      <a href="${safeUrl}" style="background: ${BRAND_COLOR}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
-        Mở ứng dụng
-      </a>
-    </div>
   `;
 
   return {

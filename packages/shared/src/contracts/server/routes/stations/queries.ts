@@ -19,6 +19,13 @@ import {
   StationStatsResponseSchemaOpenApi,
 } from "./shared";
 
+const agencyStationListQuerySchema = StationListQuerySchema.omit({
+  latitude: true,
+  longitude: true,
+}).openapi("AgencyStationListQuery", {
+  description: "Optional filters for listing current agency station",
+});
+
 export const listStations = createRoute({
   method: "get",
   path: "/v1/stations",
@@ -232,6 +239,40 @@ export const staffListStations = createRoute({
   },
 });
 
+export const agencyListStations = createRoute({
+  method: "get",
+  path: "/v1/agency/stations",
+  tags: ["Agency", "Stations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: agencyStationListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "List current agency station only",
+      content: {
+        "application/json": { schema: StationListResponseSchema },
+      },
+    },
+    400: {
+      description: "Invalid query",
+      content: {
+        "application/json": { schema: StationErrorResponseSchema },
+      },
+    },
+    404: {
+      description: "Assigned station not found",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
+  },
+});
+
 export const staffGetStation = createRoute({
   method: "get",
   path: "/v1/staff/stations/{stationId}",
@@ -282,6 +323,42 @@ export const staffGetStation = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Staff, Manager, or Technician"),
+  },
+});
+
+export const agencyGetStation = createRoute({
+  method: "get",
+  path: "/v1/agency/stations/{stationId}",
+  tags: ["Agency", "Stations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: StationIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get station details for current agency station",
+      content: {
+        "application/json": { schema: StationReadSummarySchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid path parameter",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Station not found",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
   },
 });
 

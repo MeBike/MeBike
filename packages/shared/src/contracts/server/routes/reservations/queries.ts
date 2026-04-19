@@ -19,6 +19,12 @@ import {
 } from "../helpers";
 import { ReservationIdParamSchema } from "./shared";
 
+const agencyListReservationsQuerySchema = ListAdminReservationsQuerySchema.omit({
+  stationId: true,
+}).openapi("AgencyListReservationsQuery", {
+  description: "Query parameters for listing reservations in current agency station scope",
+});
+
 export const listMyReservationsRoute = createRoute({
   method: "get",
   path: "/v1/reservations/me",
@@ -138,6 +144,21 @@ export const staffListReservationsRoute = createRoute({
   },
 });
 
+export const agencyListReservationsRoute = createRoute({
+  method: "get",
+  path: "/v1/agency/reservations",
+  tags: ["Agency", "Reservations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: agencyListReservationsQuerySchema,
+  },
+  responses: {
+    200: paginatedResponse(ListStaffReservationsResponseSchema, "List reservations for agency"),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
+  },
+});
+
 export const staffGetReservationRoute = createRoute({
   method: "get",
   path: "/v1/staff/reservations/{reservationId}",
@@ -157,6 +178,36 @@ export const staffGetReservationRoute = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Staff"),
+    404: notFoundResponse({
+      description: "Reservation not found",
+      schema: ReservationErrorResponseSchema,
+      example: {
+        error: "Reservation not found",
+        details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_FOUND },
+      },
+    }),
+  },
+});
+
+export const agencyGetReservationRoute = createRoute({
+  method: "get",
+  path: "/v1/agency/reservations/{reservationId}",
+  tags: ["Agency", "Reservations"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: ReservationIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Get reservation detail for agency",
+      content: {
+        "application/json": {
+          schema: ReservationExpandedDetailResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
     404: notFoundResponse({
       description: "Reservation not found",
       schema: ReservationErrorResponseSchema,

@@ -227,6 +227,56 @@ export const agencyUpdateBikeStatus = createRoute({
   },
 });
 
+export const technicianUpdateBikeStatus = createRoute({
+  method: "patch",
+  path: "/v1/technician/bikes/{id}/status",
+  tags: ["Technician", "Bikes"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeIdParamSchema,
+    body: {
+      content: {
+        "application/json": { schema: BikeStatusUpdateBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Bike status updated successfully",
+      content: {
+        "application/json": { schema: BikeSummarySchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid bike status transition",
+      content: {
+        "application/json": {
+          schema: BikeUpdateConflictResponseSchema,
+          examples: {
+            InvalidTransition: {
+              value: {
+                error: "Invalid bike status transition",
+                details: {
+                  code: BikeErrorCodeSchema.enum.INVALID_BIKE_STATUS,
+                  status: "BROKEN",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Bike not found in technician scope",
+      content: {
+        "application/json": { schema: BikeNotFoundResponseSchema },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Technician"),
+  },
+});
+
 export const reportBrokenBike = createRoute({
   method: "post",
   path: "/v1/bikes/{id}/report-broken",

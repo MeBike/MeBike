@@ -728,6 +728,36 @@ export const staffGetRental = createRoute({
   },
 });
 
+export const agencyGetRental = createRoute({
+  method: "get",
+  path: "/v1/agency/rentals/{rentalId}",
+  tags: ["Agency", "Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Detailed rental with all populated data (agency view)",
+      content: {
+        "application/json": {
+          schema: RentalDetailSchemaOpenApi,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
 export const staffListRentals = createRoute({
   method: "get",
   path: "/v1/staff/rentals",
@@ -758,6 +788,39 @@ export const staffListRentals = createRoute({
     ),
     401: unauthorizedResponse(),
     403: forbiddenResponse("Staff"),
+  },
+});
+
+export const agencyListRentals = createRoute({
+  method: "get",
+  path: "/v1/agency/rentals",
+  tags: ["Agency", "Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z
+      .object({
+        userId: z.uuidv7().optional(),
+        bikeId: z.uuidv7().optional(),
+        startStation: z.uuidv7().optional(),
+        endStation: z.uuidv7().optional(),
+        status: RentalStatusSchema.optional(),
+        ...paginationQueryFields,
+        sortBy: z
+          .enum(["startTime", "endTime", "status", "updatedAt"])
+          .optional(),
+        sortDir: SortDirectionSchema.optional(),
+      })
+      .openapi("AgencyRentalsListQuery", {
+        description: "Query parameters for agency rental listing",
+      }),
+  },
+  responses: {
+    200: paginatedResponse(
+      AdminRentalsListResponseSchema,
+      "Paginated list of rentals visible to agency",
+    ),
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
   },
 });
 

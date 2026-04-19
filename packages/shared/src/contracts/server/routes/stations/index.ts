@@ -8,6 +8,8 @@ export {
 } from "./mutations";
 
 export {
+  agencyGetStation,
+  agencyListStations,
   adminListStations,
   getAllStationsRevenue,
   getBikeRevenueByStation,
