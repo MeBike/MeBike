@@ -1,5 +1,6 @@
 // Common navigation hook types
 import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
+import type { AiChatContext } from "@mebike/shared";
 import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
@@ -33,6 +34,10 @@ export type RootStackParamList = {
   "FormSheet": undefined;
   "TransparentModal": undefined;
   "Wallet": undefined;
+  "AiAssistant": {
+    context?: AiChatContext | null;
+    initialPrompt?: string;
+  } | undefined;
   "BookingHistoryDetail": { bookingId: string };
   "BikeDetail": {
     bike: BikeSummary;
@@ -107,6 +112,14 @@ export type ProfileScreenNavigationProp = StackNavigationProp<
 export type WalletNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Wallet"
+>;
+export type AiAssistantNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "AiAssistant"
+>;
+export type AiAssistantRouteProp = RouteProp<
+  RootStackParamList,
+  "AiAssistant"
 >;
 export type BikeDetailNavigationProp = StackNavigationProp<
   RootStackParamList,

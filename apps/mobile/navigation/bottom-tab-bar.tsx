@@ -1,10 +1,13 @@
 import type { BottomTabBarProps, BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 import type { LucideIcon } from "lucide-react-native";
 
+import { borderWidths, iconSizes, spaceScale } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 import {
   CalendarDays,
   House,
   Map,
+  Sparkles,
   UserRound,
   Wallet,
   Wrench,
@@ -12,12 +15,10 @@ import {
 import React from "react";
 import { Button, useTheme, View, XStack, YStack } from "tamagui";
 
-import { borderWidths, iconSizes, spaceScale } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
-
 const routeIcons: Record<string, LucideIcon> = {
   "Nhà": House,
   "Trạm": Map,
+  "AiAssistant": Sparkles,
   "Booking": CalendarDays,
   "Ví": Wallet,
   "Tôi": UserRound,

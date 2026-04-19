@@ -6,6 +6,7 @@ import React from "react";
 import type { RootStackParamList } from "../types/navigation";
 
 import {
+  AiAssistantScreen,
   BookingHistoryScreen,
   HomeScreen,
   MyWalletScreen,
@@ -59,7 +60,16 @@ function MainTabNavigator() {
                     navigation.getParent()?.navigate("StationSelectFlow");
                   },
                 })}
-              />
+                />
+              {isAuthenticated
+                ? (
+                    <Tab.Screen
+                      name="AiAssistant"
+                      component={AiAssistantScreen}
+                      options={{ tabBarLabel: "Trợ lý" }}
+                    />
+                  )
+                : null}
               {isAuthenticated
                 ? <Tab.Screen name="Booking" component={BookingHistoryScreen} />
                 : null}
