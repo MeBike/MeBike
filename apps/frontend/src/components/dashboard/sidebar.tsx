@@ -161,13 +161,13 @@ export function Sidebar() {
           title: "Quản lý đơn đặt trước",
           icon: CalendarCheck2,
           href: `/${role.toLowerCase()}/reservations`,
-          roles: ["ADMIN", "STAFF","MANAGER","AGENCY","TECHNICIAN"],
+          roles: ["ADMIN", "STAFF","MANAGER","AGENCY"],
         },
         {
           title: "Quản lý phiên thuê",
           icon: Timer,
           href: `/${role.toLowerCase()}/rentals`,
-          roles: ["STAFF", "ADMIN", "MANAGER","AGENCY","TECHNICIAN"],
+          roles: ["STAFF", "ADMIN", "MANAGER","AGENCY"],
         },
         {
           title: "Quản lý xe đạp",
