@@ -31,6 +31,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyAgencyRequestDetail]);
+    if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
   if (!myAgencyRequestDetail) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
@@ -39,9 +42,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         </p>
       </div>
     );
-  }
-  if (isVisualLoading) {
-    return <LoadingScreen />;
   }
   return (
     <AgencyRequestDetailClient
