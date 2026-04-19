@@ -41,6 +41,19 @@ export type BikeCommandRepo = {
     status: BikeStatus,
     updatedAt: Date,
   ) => Effect.Effect<Option.Option<BikeRow>>;
+  transitionStatusAt: (
+    bikeId: string,
+    from: BikeStatus,
+    to: BikeStatus,
+    updatedAt: Date,
+  ) => Effect.Effect<Option.Option<BikeRow>>;
+  transitionStatusInStationAt: (
+    bikeId: string,
+    stationId: string,
+    from: BikeStatus,
+    to: BikeStatus,
+    updatedAt: Date,
+  ) => Effect.Effect<Option.Option<BikeRow>>;
   updateStatusAndStationAt: (
     bikeId: string,
     status: BikeStatus,

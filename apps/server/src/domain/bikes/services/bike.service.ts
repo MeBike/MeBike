@@ -1,9 +1,11 @@
 import { Effect, Layer, Option } from "effect";
 
+import type { BikeStatus } from "generated/prisma/client";
+
 import { Prisma } from "@/infrastructure/prisma";
 
 import type { BikeRepo } from "../repository/bike.repository";
-import type { BikeService } from "./bike.service.types";
+import type { BikeManageableStatus, BikeService } from "./bike.service.types";
 
 import {
   BikeCurrentlyRented,
@@ -11,8 +13,21 @@ import {
   BikeNotFound,
   BikeStationNotFound,
   BikeSupplierNotFound,
+  InvalidBikeStatus,
 } from "../domain-errors";
 import { BikeRepository } from "../repository/bike.repository";
+
+function getScopedStatusTransitions(currentStatus: BikeStatus): readonly BikeManageableStatus[] {
+  if (currentStatus === "AVAILABLE") {
+    return ["BROKEN"] as const;
+  }
+
+  if (currentStatus === "BROKEN") {
+    return ["AVAILABLE"] as const;
+  }
+
+  return [] as const;
+}
 
 function makeBikeService(
   repo: BikeRepo,
@@ -117,6 +132,45 @@ function makeBikeService(
         }
 
         return updated;
+      }),
+
+    updateBikeStatusInStationScope: (bikeId, input) =>
+      Effect.gen(function* () {
+        const current = yield* repo.getById(bikeId);
+
+        if (Option.isNone(current) || current.value.stationId !== input.stationId) {
+          return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
+        }
+
+        const allowed = getScopedStatusTransitions(current.value.status);
+        if (!allowed.includes(input.status)) {
+          return yield* Effect.fail(new InvalidBikeStatus({
+            status: input.status,
+            allowed,
+          }));
+        }
+
+        const updated = yield* repo.transitionStatusInStationAt(
+          bikeId,
+          input.stationId,
+          current.value.status,
+          input.status,
+          new Date(),
+        );
+
+        if (Option.isSome(updated)) {
+          return updated.value;
+        }
+
+        const latest = yield* repo.getById(bikeId);
+        if (Option.isNone(latest) || latest.value.stationId !== input.stationId) {
+          return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
+        }
+
+        return yield* Effect.fail(new InvalidBikeStatus({
+          status: input.status,
+          allowed: getScopedStatusTransitions(latest.value.status),
+        }));
       }),
 
   };

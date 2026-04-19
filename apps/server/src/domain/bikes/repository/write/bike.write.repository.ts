@@ -55,6 +55,20 @@ export function makeBikeWriteRepository(client: BikeDbClient): BikeCommandRepo {
     updateStatusAt: (bikeId, status, updatedAt) =>
       updateAndReloadBike(client, bikeId, buildStatusUpdate(status, updatedAt), "updateStatusAt"),
 
+    transitionStatusAt: (bikeId, from, to, updatedAt) =>
+      transitionAndReloadBike(client, bikeId, from, to, updatedAt, "transitionStatusAt"),
+
+    transitionStatusInStationAt: (bikeId, stationId, from, to, updatedAt) =>
+      transitionAndReloadBikeInStation(
+        client,
+        bikeId,
+        stationId,
+        from,
+        to,
+        updatedAt,
+        "transitionStatusInStationAt",
+      ),
+
     updateStatusAndStationAt: (bikeId, status, stationId, updatedAt) =>
       updateAndReloadBike(
         client,
@@ -249,5 +263,89 @@ function transitionBikeStatus(
         cause,
         message: "Failed to transition bike status",
       }),
+  }).pipe(defectOn(BikeRepositoryError));
+}
+
+function transitionAndReloadBike(
+  client: BikeDbClient,
+  bikeId: string,
+  from: BikeStatus,
+  to: BikeStatus,
+  updatedAt: Date,
+  operation: string,
+) {
+  return Effect.gen(function* () {
+    const transitioned = yield* transitionBikeStatus(client, {
+      bikeId,
+      from,
+      to,
+      updatedAt,
+      operation,
+    });
+
+    if (!transitioned) {
+      return Option.none();
+    }
+
+    const row = yield* Effect.tryPromise({
+      try: () => findBikeById(client, bikeId),
+      catch: cause =>
+        new BikeRepositoryError({
+          operation: `${operation}.findUnique`,
+          cause,
+          message: "Failed to fetch bike after status transition",
+        }),
+    });
+
+    return Option.fromNullable(row);
+  }).pipe(defectOn(BikeRepositoryError));
+}
+
+function transitionAndReloadBikeInStation(
+  client: BikeDbClient,
+  bikeId: string,
+  stationId: string,
+  from: BikeStatus,
+  to: BikeStatus,
+  updatedAt: Date,
+  operation: string,
+) {
+  return Effect.gen(function* () {
+    const transitioned = yield* Effect.tryPromise({
+      try: async () => {
+        const updated = await client.bike.updateMany({
+          where: {
+            id: bikeId,
+            stationId,
+            status: from,
+          },
+          data: buildStatusUpdate(to, updatedAt),
+        });
+
+        return updated.count > 0;
+      },
+      catch: cause =>
+        new BikeRepositoryError({
+          operation,
+          cause,
+          message: "Failed to transition bike status in station scope",
+        }),
+    });
+
+    if (!transitioned) {
+      return Option.none();
+    }
+
+    const row = yield* Effect.tryPromise({
+      try: () => findBikeById(client, bikeId),
+      catch: cause =>
+        new BikeRepositoryError({
+          operation: `${operation}.findUnique`,
+          cause,
+          message: "Failed to fetch bike after station-scoped status transition",
+        }),
+    });
+
+    return Option.fromNullable(row);
   }).pipe(defectOn(BikeRepositoryError));
 }

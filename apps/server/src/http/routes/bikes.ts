@@ -4,13 +4,16 @@ import { serverRoutes } from "@mebike/shared";
 
 import {
   BikeAdminController,
+  BikeManagementController,
   BikePublicController,
   BikeStaffController,
   BikeStatsController,
 } from "@/http/controllers/bikes";
 import {
   requireAdminMiddleware,
+  requireAgencyMiddleware,
   requireBackofficeMiddleware,
+  requireManagerMiddleware,
   requireStationScopedOperatorMiddleware,
 } from "@/http/middlewares/auth";
 
@@ -33,6 +36,20 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(staffListBikesRoute, BikeStaffController.staffListBikes);
 
   app.openapi(bikes.updateBike, BikeAdminController.updateBike);
+
+  const managerUpdateBikeStatusRoute = {
+    ...bikes.managerUpdateBikeStatus,
+    middleware: [requireManagerMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(managerUpdateBikeStatusRoute, BikeManagementController.managerUpdateBikeStatus);
+
+  const agencyUpdateBikeStatusRoute = {
+    ...bikes.agencyUpdateBikeStatus,
+    middleware: [requireAgencyMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(agencyUpdateBikeStatusRoute, BikeManagementController.agencyUpdateBikeStatus);
 
   app.openapi(bikes.reportBrokenBike, BikePublicController.reportBrokenBike);
 
