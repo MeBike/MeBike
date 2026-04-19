@@ -62,7 +62,7 @@ const agencyListReservations: RouteHandler<
           userId: query.userId,
           bikeId: query.bikeId,
           status: query.status,
-          stationId: stationScopeId ?? query.stationId,
+          stationId: stationScopeId,
           reservationOption: query.reservationOption,
         },
         {

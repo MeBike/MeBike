@@ -47,7 +47,7 @@ const agencyListBikes: RouteHandler<BikesRoutes["agencyListBikes"]> = async (c) 
       const page = yield* service.listBikes(
         {
           id: query.id,
-          stationId: stationScopeId ?? query.stationId,
+          stationId: stationScopeId,
           supplierId: query.supplierId,
           status: query.status,
         },
