@@ -219,7 +219,7 @@ export type SubscriptionStatus = (typeof SubscriptionStatus)[keyof typeof Subscr
 export const SubscriptionPackage = {
     basic: "basic",
     premium: "premium",
-    unlimited: "unlimited"
+    ultra: "ultra"
 } as const;
 export type SubscriptionPackage = (typeof SubscriptionPackage)[keyof typeof SubscriptionPackage];
 export const SupplierStatus = {

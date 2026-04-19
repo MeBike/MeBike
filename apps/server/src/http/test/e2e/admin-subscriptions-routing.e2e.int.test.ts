@@ -159,8 +159,8 @@ describe("admin subscriptions routing e2e", () => {
     const subscription = await fixture.prisma.subscription.create({
       data: {
         userId: USER_ONE_ID,
-        packageName: "unlimited",
-        maxUsages: null,
+        packageName: "ultra",
+        maxUsages: 90,
         usageCount: 1,
         status: "ACTIVE",
         activatedAt: new Date("2026-04-10T00:00:00.000Z"),
@@ -179,7 +179,7 @@ describe("admin subscriptions routing e2e", () => {
     expect(body).toMatchObject({
       id: subscription.id,
       userId: USER_ONE_ID,
-      packageName: "unlimited",
+      packageName: "ultra",
       user: {
         id: USER_ONE_ID,
         fullName: "Alice Rider",

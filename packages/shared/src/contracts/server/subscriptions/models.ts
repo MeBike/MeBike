@@ -5,7 +5,7 @@ export const SubscriptionStatusSchema = z
   .openapi("SubscriptionStatus");
 
 export const SubscriptionPackageSchema = z
-  .enum(["basic", "premium", "unlimited"])
+  .enum(["basic", "premium", "ultra"])
   .openapi("SubscriptionPackage");
 
 export const SubscriptionPackageDetailSchema = z.object({

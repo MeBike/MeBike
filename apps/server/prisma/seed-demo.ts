@@ -847,12 +847,12 @@ async function main() {
       id: uuidv7(),
       userId: user.id,
       packageName: idx % 3 === 0
-        ? SubscriptionPackage.unlimited
+        ? SubscriptionPackage.ultra
         : idx % 3 === 1
           ? SubscriptionPackage.premium
           : SubscriptionPackage.basic,
-      maxUsages: idx % 3 === 0 ? null : idx % 3 === 1 ? 60 : 30,
-      usageCount: idx % 3 === 0 ? 0 : idx % 3 === 1 ? 8 : 5,
+      maxUsages: idx % 3 === 0 ? 90 : idx % 3 === 1 ? 60 : 30,
+      usageCount: idx % 3 === 0 ? 12 : idx % 3 === 1 ? 8 : 5,
       status: SubscriptionStatus.ACTIVE,
       activatedAt: toUtcDate(-20 + idx, 9, 0),
       expiresAt: toUtcDate(45 + idx, 23, 0),

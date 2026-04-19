@@ -24,10 +24,10 @@ const PACKAGE_CONFIG: Record<SubscriptionPackage, SubscriptionPackageConfig> = {
     maxUsages: 60,
     currency: "usd",
   },
-  unlimited: {
-    packageName: "unlimited",
+  ultra: {
+    packageName: "ultra",
     price: 2990n,
-    maxUsages: null,
+    maxUsages: 90,
     currency: "usd",
   },
 };

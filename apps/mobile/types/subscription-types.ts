@@ -1,6 +1,6 @@
 export type SubscriptionStatus = "PENDING" | "ACTIVE" | "EXPIRED" | "CANCELLED";
 
-export type SubscriptionPackage = "basic" | "premium" | "unlimited";
+export type SubscriptionPackage = "basic" | "premium" | "ultra";
 
 export type Subscription = {
   id: string;

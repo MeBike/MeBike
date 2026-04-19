@@ -82,7 +82,7 @@ export type ReservationOverrides = {
 export type SubscriptionOverrides = {
   id?: string;
   userId?: string;
-  packageName?: "basic" | "premium" | "unlimited";
+  packageName?: "basic" | "premium" | "ultra";
   maxUsages?: number | null;
   usageCount?: number;
   status?: "PENDING" | "ACTIVE" | "EXPIRED" | "CANCELLED";
