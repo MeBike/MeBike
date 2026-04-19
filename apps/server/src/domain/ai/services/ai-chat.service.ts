@@ -1,7 +1,7 @@
 import type { AiChatContext } from "@mebike/shared";
+import type { OpenRouterUsageAccounting } from "@openrouter/ai-sdk-provider";
 
 import { convertToModelMessages, stepCountIs, streamText, validateUIMessages } from "ai";
-import type { OpenRouterUsageAccounting } from "@openrouter/ai-sdk-provider";
 import { Context, Effect, Layer } from "effect";
 
 import { env } from "@/config/env";
