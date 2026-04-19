@@ -84,6 +84,8 @@ export const ENDPOINT = {
     },
     AGENCY : {
         BASE : "/admin/agencies",
+        MY_AGENCY : "/agency-requests",
+        MY_DETAIL_AGENCY : (id:string) => `/agency-requests/${id}`,
         ID : (id : string) => `/admin/agencies/${id}`,
         STATUS : (id : string) => `/admin/agencies/${id}/status`,
         STATS : (id:string) => `/admin/agencies/${id}/stats`,
@@ -94,7 +96,7 @@ export const ENDPOINT = {
         ID : (id : string) => `/admin/agency-requests/${id}`,
         APPROVE : (id:string) => `/admin/agency-requests/${id}/approve`,
         REJECT : (id:string) => `/admin/agency-requests/${id}/reject`,
-        CANCEL : (id:string) => `/admin/agency-requests/${id}/cancel`,
+        CANCEL : (id:string) => `/agency-requests/${id}/cancel`,
     },
     SUBSCRIPTION : {
         BASE : "/admin/subscriptions",

@@ -52,20 +52,15 @@ export const adminCreateAgencyUserRequestSchema = z.object({
     .number()
     .int("Phải là số nguyên")
     .min(1, "Tối thiểu là 1")
-    .max(20, "Sức chứa tối đa của trạm chỉ được 20 xe"),
-  stationPickupSlotLimit: z.number().int().min(0).optional(),
-  stationReturnSlotLimit: z.number().int().min(0).optional(),
+    .max(40, "Sức chứa tối đa của trạm chỉ được 40 xe"),
+  stationReturnSlotLimit:z
+    .number()
+    .int("Phải là số nguyên")
+    .min(1, "Tối thiểu là 1")
+    .max(40, "Sức chứa tối đa của trạm chỉ được 40 xe"),
   description: z.string().trim().optional(),
 }).superRefine((value, ctx) => {
-  const pickupSlotLimit = value.stationPickupSlotLimit ?? value.stationTotalCapacity;
   const returnSlotLimit = value.stationReturnSlotLimit ?? value.stationTotalCapacity;
-  if (pickupSlotLimit > value.stationTotalCapacity) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["stationPickupSlotLimit"],
-      message: "stationPickupSlotLimit must be less than or equal to stationTotalCapacity",
-    });
-  }
   if (returnSlotLimit > value.stationTotalCapacity) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,

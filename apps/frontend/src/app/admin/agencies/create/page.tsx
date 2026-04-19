@@ -1,8 +1,15 @@
-"use client"
+"use client";
+
+import React from "react";
+import CreateAgencyClient from "./Client";
+import { useAgencyActions } from "@/hooks/use-agency";
+
 export default function Page() {
-    return (
-        <>
-        <h1>Hello world</h1>
-        </>
-    )
+  const { createAgency } = useAgencyActions({ hasToken: true });
+
+  return (
+    <CreateAgencyClient 
+      onCreateAgency={createAgency}
+    />
+  );
 }

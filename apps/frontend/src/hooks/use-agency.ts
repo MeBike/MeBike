@@ -1,9 +1,12 @@
+
 import {
   useGetAgencies,
   useGetAgencyDetail,
   useGetAgencyStat,
   useGetAgencyRequests,
   useGetAgencyRequestDetail,
+  useGetMyAgencyRequests,
+  useGetMyAgencyRequestDetail,
 } from "@queries";
 import {
   useUpdateAgencyStatusMutation,
@@ -12,6 +15,7 @@ import {
   useCancelAgencyRequestMutation,
   useRegisterAgencyRequestMutation,
   useRejectAgencyRequestMutation,
+  useCreateAgencyMutation
 } from "@mutations";
 import { toast } from "sonner";
 import { useCallback } from "react";
@@ -34,14 +38,14 @@ export interface AgencyActionProps {
   agency_id?: string;
   page?: number;
   pageSize?: number;
-  agency_request_id?:string;
+  agency_request_id?: string;
 }
 export const useAgencyActions = ({
   hasToken,
   agency_id,
   page,
   pageSize,
-  agency_request_id
+  agency_request_id,
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -57,11 +61,23 @@ export const useAgencyActions = ({
     }
     refetchGetAgencyRequest();
   }, [refetchGetAgencyRequest, hasToken, router, page]);
-    const {
+  const {
+    data: myAgencyRequest,
+    refetch: refetchGetMyAgencyRequest,
+    isLoading: isLoadingMyAgencyRequest,
+  } = useGetMyAgencyRequests({ page: page, pageSize: pageSize });
+  const getMyAgencyRequest = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchGetMyAgencyRequest();
+  }, [refetchGetMyAgencyRequest, hasToken, router, page]);
+  const {
     data: agencyRequestDetail,
     refetch: refetchGetAgencyRequestDetail,
     isLoading: isLoadingAgencyRequestDetail,
-  } = useGetAgencyRequestDetail({ id:agency_request_id || ""});
+  } = useGetAgencyRequestDetail({ id: agency_request_id || "" });
   const getAgencyRequestDetail = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -69,6 +85,18 @@ export const useAgencyActions = ({
     }
     refetchGetAgencyRequestDetail();
   }, [refetchGetAgencyRequestDetail, hasToken, router, page]);
+  const {
+    data: myAgencyRequestDetail,
+    refetch: refetchGetMyAgencyRequestDetail,
+    isLoading: isLoadingMyAgencyRequestDetail,
+  } = useGetMyAgencyRequestDetail({ id: agency_request_id || "" });
+  const getMyAgencyRequestDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchGetMyAgencyRequestDetail();
+  }, [refetchGetMyAgencyRequestDetail, hasToken, router, page]);
   const {
     data: agencies,
     refetch: refetchGetAgencies,
@@ -111,6 +139,7 @@ export const useAgencyActions = ({
   const rejectAgencyRequestMutation = useRejectAgencyRequestMutation();
   const cancelAgencyRequestMutation = useCancelAgencyRequestMutation();
   const registerAgencyRequestMutation = useRegisterAgencyRequestMutation();
+  const createAgencyMutation = useCreateAgencyMutation();
   const updateAgency = useCallback(
     async (data: UpdateAgencyFormData, id: string) => {
       if (!hasToken) {
@@ -138,6 +167,28 @@ export const useAgencyActions = ({
       }
     },
     [hasToken, updateAgencyMutation],
+  );
+  const createAgency = useCallback(
+    async (data: AdminCreateAgencyUserRequest) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await createAgencyMutation.mutateAsync(data);
+        if (result.status === HTTP_STATUS.CREATED) {
+          toast.success("Tạo agency thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["data", "agencies"],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromAgencyCode(error_code));
+        throw error;
+      }
+    },
+    [hasToken, createAgencyMutation],
   );
   const updateAgencyStatus = useCallback(
     async (data: UpdateAgencyStatusFormData, id: string) => {
@@ -319,6 +370,13 @@ export const useAgencyActions = ({
     isLoadingAgencyRequest,
     getAgencyRequestDetail,
     agencyRequestDetail,
-    isLoadingAgencyRequestDetail
+    isLoadingAgencyRequestDetail,
+    myAgencyRequest,
+    getMyAgencyRequest,
+    isLoadingMyAgencyRequest,
+    myAgencyRequestDetail,
+    getMyAgencyRequestDetail,
+    isLoadingMyAgencyRequestDetail,
+    createAgency,
   };
 };

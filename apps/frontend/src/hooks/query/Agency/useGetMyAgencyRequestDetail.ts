@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { agencyService } from "@/services/agency.service";
 import { HTTP_STATUS } from "@constants";
-const getAgencyRequestDetail = async ({ id }: { id: string }) => {
+const getMyAgencyRequestDetail = async ({ id }: { id: string }) => {
   try {
-    const response = await agencyService.getAgencyRequestDetail({
+    const response = await agencyService.getMyAgencyRequestDetail({
       id: id,
     });
     if (response.status === HTTP_STATUS.OK) {
@@ -14,14 +14,14 @@ const getAgencyRequestDetail = async ({ id }: { id: string }) => {
     throw new Error("Failed to fetch agency request detail");
   }
 };
-export const useGetAgencyRequestDetail = ({
+export const useGetMyAgencyRequestDetail = ({
   id
 }: {
   id : string
 }) => {
   return useQuery({
-    queryKey: ["detail", "agency-request"],
-    queryFn: () => getAgencyRequestDetail({ id : id }),
-    enabled : false,
+    queryKey: ["detail", "my-agency-request",id],
+    queryFn: () => getMyAgencyRequestDetail({ id : id }),
+    enabled : !!id,
   });
 };
