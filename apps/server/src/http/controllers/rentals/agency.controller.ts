@@ -23,10 +23,10 @@ import { toContractPage } from "@/http/shared/pagination";
 import type { RentalsRoutes } from "./shared";
 
 import {
-  RentalErrorCodeSchema,
-  rentalErrorMessages,
   BikeSwapRequestErrorCodeSchema,
   bikeSwapRequestErrorMessages,
+  RentalErrorCodeSchema,
+  rentalErrorMessages,
 } from "./shared";
 
 function getAgencyStationScope(currentUser: {

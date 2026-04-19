@@ -54,7 +54,6 @@ export function createSubscriptionUseCase(args: {
       price: Number(packageConfig.price.toString()),
       maxUsages: packageConfig.maxUsages,
       createdOn,
-      // TODO: Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.
     });
 
     const created = yield* runPrismaTransaction(client, tx =>

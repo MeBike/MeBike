@@ -3,8 +3,8 @@ import type { RouteConfig } from "@hono/zod-openapi";
 import { serverRoutes } from "@mebike/shared";
 
 import {
-  BikeAgencyController,
   BikeAdminController,
+  BikeAgencyController,
   BikeManagementController,
   BikePublicController,
   BikeStaffController,
