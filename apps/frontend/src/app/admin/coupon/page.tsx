@@ -54,7 +54,7 @@ export default function CouponPage() {
           <div className="bg-white rounded-xl border p-2">
             <DataTable
               columns={couponColumns({
-                onView: ({ id }) => router.push(`/admin/coupons/detail/${id}`),
+                onView: ({ id }) => router.push(`/admin/coupon/detail/${id}`),
                 onActive: ({ id }) => activeCoupon(id),
                 onDeactive: ({ id }) => deactiveCoupon(id),
               })}
@@ -81,7 +81,7 @@ export default function CouponPage() {
           <div className="bg-white rounded-xl border p-2">
             <DataTable
               columns={couponUsageLogColumns({
-                onView: (log) => router.push(`/admin/coupons/usage/${log.rentalId}`),
+                onView: (log) => router.push(`/admin/coupon/usage/${log.rentalId}`),
               })}
               data={dataUsageCouponLog?.data || []}
             />

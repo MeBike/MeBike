@@ -1,4 +1,4 @@
-import { CreateCouponRuleData } from "./../../../server/src/domain/coupons/models";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useCallback } from "react";
