@@ -1,11 +1,8 @@
 import type { BottomTabBarProps, BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 import type { LucideIcon } from "lucide-react-native";
 
-import { borderWidths, iconSizes, spaceScale } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 import {
   CalendarDays,
-  House,
   Map,
   Sparkles,
   UserRound,
@@ -15,8 +12,10 @@ import {
 import React from "react";
 import { Button, useTheme, View, XStack, YStack } from "tamagui";
 
+import { borderWidths, iconSizes, spaceScale } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
+
 const routeIcons: Record<string, LucideIcon> = {
-  "Nhà": House,
   "Trạm": Map,
   "AiAssistant": Sparkles,
   "Booking": CalendarDays,
@@ -72,7 +71,7 @@ export function BottomTabBar({ state, descriptors, navigation, insets }: BottomT
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
           const label = resolveTabLabel(options, route.name);
-          const Icon = routeIcons[route.name] ?? House;
+          const Icon = routeIcons[route.name] ?? Map;
           const iconColor = isFocused ? theme.actionPrimary.val : theme.textSecondary.val;
 
           const onPress = () => {
