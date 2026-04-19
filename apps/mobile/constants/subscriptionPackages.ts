@@ -29,11 +29,11 @@ export const SUBSCRIPTION_PACKAGES: Record<SubscriptionPackage, SubscriptionPack
     gradient: ["#9333EA", "#F472B6"],
     description: "Phù hợp cho người dùng thường xuyên cần linh hoạt.",
   },
-  unlimited: {
-    id: "unlimited",
-    title: "Gói Không Giới Hạn",
+  ultra: {
+    id: "ultra",
+    title: "Gói Ultra",
     price: 299000,
-    monthlyLimit: null,
+    monthlyLimit: 90,
     accent: "#16A34A",
     gradient: ["#16A34A", "#4ADE80"],
     description: "Trải nghiệm cao cấp nhất cho người dùng trung thành.",

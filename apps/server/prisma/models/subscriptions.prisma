@@ -8,7 +8,7 @@ enum SubscriptionStatus {
 enum SubscriptionPackage {
   basic
   premium
-  unlimited
+  ultra
 }
 
 model Subscription {

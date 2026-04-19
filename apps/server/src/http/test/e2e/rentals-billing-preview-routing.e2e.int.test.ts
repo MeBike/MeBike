@@ -54,7 +54,8 @@ describe("rentals billing preview routing e2e", () => {
     if (options?.withSubscription) {
       const subscription = await fixture.factories.subscription({
         userId: user.id,
-        maxUsages: null,
+        packageName: "ultra",
+        maxUsages: 90,
         status: "ACTIVE",
       });
       subscriptionId = subscription.id;

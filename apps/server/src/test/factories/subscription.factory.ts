@@ -4,7 +4,7 @@ import type { CreatedSubscription, FactoryContext, SubscriptionOverrides } from 
 
 const defaults = {
   packageName: "basic" as const,
-  maxUsages: null,
+  maxUsages: 30,
   usageCount: 0,
   status: "ACTIVE" as const,
   activatedAt: () => new Date(),

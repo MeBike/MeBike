@@ -50,9 +50,9 @@ describe("subscriptionRepository Integration", () => {
     await Effect.runPromise(
       commandRepo.createPending({
         userId,
-        packageName: "premium",
-        maxUsages: null,
-        price: 2000n,
+        packageName: "ultra",
+        maxUsages: 90,
+        price: 3000n,
       }),
     );
 
