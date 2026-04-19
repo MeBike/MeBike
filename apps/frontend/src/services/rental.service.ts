@@ -250,7 +250,48 @@ export const rentalService = {
       ENDPOINT.RENTAL.GET_SUMMARY
     );
     return response;
-  }
+  },
+  getRentalInMyStation: async ({
+    page,
+    pageSize,
+    startStation,
+    endStation,
+    status,
+    userId,
+    bikeId,
+  }: {
+    page ?: number,
+    pageSize ?: number,
+    startStation ?: string,
+    endStation ?: string,
+    status ?: RentalStatus,
+    userId ?: string,
+    bikeId ?: string,
+  }): Promise<
+    AxiosResponse<ApiResponse<Rental[]>>
+  > => {
+    const response = await fetchHttpClient.get<ApiResponse<Rental[]>>(
+      ENDPOINT.STAFF.RENTAL,
+      {
+        page : page,
+        pageSize : pageSize,
+        startStation : startStation,
+        endStation : endStation,
+        status : status,
+        userId : userId,
+        bikeId : bikeId
+      }
+    );
+    return response;
+  },
+  getRentalDetailInMyStation: async (
+    id: string
+  ): Promise<AxiosResponse<RentalRecord>> => {
+    const response = await fetchHttpClient.get<RentalRecord>(
+      ENDPOINT.STAFF.RENTAL_DETAIL(id)
+    );
+    return response;
+  },
   // staffAdminUpdateDetailRental: async (
   //   id: string,
   //   data: any

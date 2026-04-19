@@ -61,10 +61,8 @@ function bikeStatusVariant(status: string) {
 
 export function BikeDetailView({ 
   bike, 
-  rentals,
 }: { 
   bike: BikeType | null; // Sử dụng Extended để dùng được bike.name, bike.station...
-  rentals: BikeRentalHistory[];
 }) {
   if (!bike) return null;
 
@@ -88,7 +86,7 @@ export function BikeDetailView({
         <div className="space-y-6 lg:col-span-2">
           <SectionCard icon={BikeIcon} title="Thông tin cơ bản">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <Field label="Tên xe / Model" value={`Bike #${bike.chipId.slice(-4)}`} />
+            
               <Field 
                 label="Trạng thái hiện tại" 
                 value={
@@ -134,63 +132,6 @@ export function BikeDetailView({
           </SectionCard> */}
         </div>
       </div>
-
-      <SectionCard icon={History} title="Lịch sử thuê xe gần đây">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs font-medium uppercase text-muted-foreground">
-              <tr className="border-b border-border/60">
-                <th className="pb-3 pr-4 font-semibold">Khách hàng</th>
-                <th className="pb-3 pr-4 font-semibold">Hành trình</th>
-                <th className="pb-3 pr-4 font-semibold">Thời gian</th>
-                <th className="pb-3 text-right font-semibold">Tổng tiền</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40">
-              {rentals.length > 0 ? (
-                rentals.map((rental) => (
-                  <tr key={rental.id} className="group transition-colors hover:bg-muted/30">
-                    <td className="py-4 pr-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary uppercase text-[10px] font-bold">
-                          {rental.user.fullname.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{rental.user.fullname}</p>
-                          <p className="text-[10px] font-mono text-muted-foreground">{rental.id.slice(0, 8)}...</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 pr-4">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <span className="font-medium text-foreground">{rental.startStation.name}</span>
-                          <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                          <span className="font-medium text-foreground">{rental.endStation.name}</span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground italic">Thời lượng: {rental.duration} phút</p>
-                      </div>
-                    </td>
-                    <td className="py-4 pr-4">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {formatToVNTime(rental.startTime)}
-                      </div>
-                    </td>
-                    <td className="py-4 text-right">
-                      <span className="font-bold text-primary">{rental.totalPrice.toLocaleString("vi-VN")}đ</span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-muted-foreground italic">Chưa có lịch sử thuê.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </SectionCard>
     </div>
   );
 }

@@ -76,4 +76,34 @@ export const reservationService = {
     );
     return response;
   },
+  getReservationInMyStation: async ({
+    page,
+    pageSize,
+    status,
+    option,
+  }: {
+    page?: number;
+    pageSize?: number;
+    status ?: "PENDING" | "FULFILLED" | "CANCELLED" | "EXPIRED";
+    option ?: "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION";
+  }): Promise<AxiosResponse<ApiResponse<Reservation[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Reservation[]>>(
+      ENDPOINT.STAFF.RESERVATION,
+      {
+        page : page,
+        pageSize : pageSize,
+        status : status,
+        reservationOption : option,
+      },
+    );
+    return response;
+  },
+  getReservationDetailInMyStation: async (
+    id: string,
+  ): Promise<AxiosResponse<DetailReservation>> => {
+    const response = await fetchHttpClient.get<DetailReservation>(
+      ENDPOINT.STAFF.RESERVATION_DETAIL(id),
+    );
+    return response;
+  },
 };

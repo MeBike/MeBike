@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LucideIcon } from "lucide-react";
@@ -23,9 +23,7 @@ import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// --- REUSABLE COMPONENTS ---
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 function SectionCard({
   icon: Icon,
   title,
@@ -62,30 +60,47 @@ function Field({ label, value, className }: { label: string; value: React.ReactN
 export default function StationDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
+  
+  // State visual loading ảo
+  const [isVisualLoading, setIsVisualLoading] = useState(true);
 
   const {
-    getStationByID,
-    responseStationDetail,
-    isLoadingGetStationByID,
+    getMyStationDetail,
+    myStationDetail,
+    isLoadingMyStationDetail,
   } = useStationActions({
     hasToken: true,
     stationId: id,
   });
+  
+  // Effect để xử lý loading ảo 600ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisualLoading(false);
+    }, 600);
 
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Effect fetch data
   useEffect(() => {
     if (id) {
-      getStationByID();
+      getMyStationDetail();
     }
-  }, [id, getStationByID]);
+  }, [id, getMyStationDetail]);
 
-  if (isLoadingGetStationByID) return <StationDetailSkeleton />;
+  // Hiển thị LoadingScreen ảo trước
+  if (isVisualLoading) return <LoadingScreen />;
   
-  if (!responseStationDetail && !isLoadingGetStationByID) {
+  // Sau đó nếu API vẫn đang gọi thì hiển thị Skeleton như cũ
+  if (isLoadingMyStationDetail) return <StationDetailSkeleton />;
+  
+  if (!myStationDetail && !isLoadingMyStationDetail) {
     notFound();
     return null;
   }
 
-  const station = responseStationDetail as Station;
+  const station = myStationDetail as Station;
 
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">

@@ -1,3 +1,4 @@
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { StationSchemaFormData } from "@schemas";
@@ -5,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { QUERY_KEYS , HTTP_STATUS } from "@constants";
 import { useCreateStationMutation,useSoftDeleteStationMutation,useUpdateStationMutation} from "@mutations"
-import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationByIDQuery,useGetAllStation, useGetSelectStation} from "@queries";
+import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationByIDQuery,useGetAllStation, useGetSelectStation,useGetMyStations,useGetMyStationDetail} from "@queries";
 import {getAxiosErrorCodeMessage , getErrorMessageFromStationCode} from "@utils";
 import type { StationActionProps } from "@custom-types";
 export const useStationActions = ({
@@ -152,6 +153,20 @@ export const useStationActions = ({
     }
     refetchNearestAvailableBike();
   }, [refetchNearestAvailableBike, hasToken]);
+  const {data:myStation,refetch:refetchMyStation,isLoading:isLoadingMyStation} = useGetMyStations({page:page,pageSize:limit});
+  const getMyStation = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchMyStation();
+  }, [refetchMyStation, hasToken,page,limit]);
+  const {data:myStationDetail,refetch:refetchMyStationDetail,isLoading:isLoadingMyStationDetail} = useGetMyStationDetail({stationId:stationId || ""});
+  const getMyStationDetail = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchMyStationDetail();
+  }, [refetchMyStationDetail, hasToken,stationId]);
   return {
     getAllStations,
     getStationByID,
@@ -174,6 +189,14 @@ export const useStationActions = ({
     getNearestAvailableBike,
     selectedDataStation : selectedDataStation?.data || [],
     isLoadingGetSelectStation,
-    refetchingGetSelectStation
+    refetchingGetSelectStation,
+    myStation : myStation?.data || [],
+    paginationMyStation : myStation?.pagination,
+    isLoadingMyStation,
+    getMyStation,
+    myStationDetail,
+    getMyStationDetail,
+    isLoadingMyStationDetail
+
   };
 };

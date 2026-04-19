@@ -16,13 +16,10 @@ export default function StationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showRevenueReport, setShowRevenueReport] = useState(false);
   const {
-    getAllStations,
-    stations,
-    paginationStations,
-    deleteStation,
-    getStationRevenue,
-    responseStationRevenue,
-    isLoadingGetAllStations,
+    getMyStation,
+    myStation,
+    paginationMyStation,
+    isLoadingMyStation,
   } = useStationActions({
     hasToken: true,
     page: page,
@@ -32,7 +29,7 @@ export default function StationsPage() {
   const [isVisualLoading, setIsVisualLoading] = useState(false);
 
   useEffect(() => {
-    if (isLoadingGetAllStations) {
+    if (isLoadingMyStation) {
       setIsVisualLoading(true);
     } else {
       // Khi API xong, đợi thêm một chút rồi mới tắt Skeleton
@@ -41,11 +38,11 @@ export default function StationsPage() {
       }, 600); // 600ms là khoảng "vàng" để UI mượt mà
       return () => clearTimeout(timer);
     }
-  }, [isLoadingGetAllStations]);
+  }, [isLoadingMyStation]);
 
   useEffect(() => {
-    getAllStations();
-  }, [page, getAllStations, limit]);
+    getMyStation();
+  }, [page, getMyStation, limit]);
   useEffect(() => {
     setPage(1);
   }, [searchQuery]);
@@ -61,44 +58,7 @@ export default function StationsPage() {
             Hệ thống giám sát và vận hành trạm xe đạp thông minh.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            size="lg"
-            variant={showRevenueReport ? "secondary" : "outline"}
-            onClick={() => {
-              if (!showRevenueReport) getStationRevenue();
-              setShowRevenueReport(!showRevenueReport);
-            }}
-            className="rounded-full"
-          >
-            {showRevenueReport ? (
-              <ChevronUp className="w-4 h-4 mr-2" />
-            ) : (
-              <BarChart3 className="w-4 h-4 mr-2" />
-            )}
-            {showRevenueReport ? "Ẩn báo cáo" : "Báo cáo doanh thu"}
-          </Button>
-          <Button
-            size="lg"
-            onClick={() => router.push("/admin/stations/create")}
-            className="rounded-full shadow-md"
-          >
-            <Plus className="w-5 h-5 mr-2" /> Thêm trạm
-          </Button>
-        </div>
       </div>
-
-      {showRevenueReport &&
-        (!responseStationRevenue ? (
-          <ReportSkeleton />
-        ) : (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">
-              Báo cáo doanh thu theo trạm
-            </h2>
-          </div>
-        ))}
-
       <div className="space-y-4 min-h-[400px]">
         <h2 className="text-2xl font-bold px-1">Danh sách vận hành</h2>
         <div className="bg-card border border-border rounded-lg p-4 flex items-center gap-4 shadow-sm">
@@ -132,19 +92,12 @@ export default function StationsPage() {
           <TableSkeleton />
         ) : (
           <StationTableSection
-            stations={stations}
-            pagination={paginationStations}
+            stations={myStation}
+            pagination={paginationMyStation}
             setPage={setPage}
-            isLoading={isLoadingGetAllStations}
+            isLoading={isLoadingMyStation}
             onView={(id) => {
               router.push(`/staff/stations/detail/${id}`)
-            }}
-            onDelete={(id) => {
-              if (confirm("Bạn có chắc chắn muốn xóa trạm này?"))
-                deleteStation(id);
-            }}
-            onEdit={(id) => {
-              router.push(`/admin/stations/${id}`);
             }}
           />
         )}

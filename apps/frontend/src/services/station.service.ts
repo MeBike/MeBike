@@ -43,6 +43,48 @@ export const stationService = {
     );
     return response;
   },
+  getMyStations : async ({
+    page,
+    pageSize,
+    name,
+    address,
+    latitude,
+    longitude,
+    sortBy,
+    sortDir,   
+  }: {
+    page?: number;
+    pageSize?: number;
+    name?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    sortBy?: "name" | "capacity" | "updatedAt";
+    sortDir?: "asc" | "desc";
+  }): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
+      ENDPOINT.STAFF.STATION,
+      {
+        page,
+        pageSize,
+        name,
+        address,
+        latitude,
+        longitude,
+        sortBy,
+        sortDir,
+      }
+    );
+    return response;
+  },
+  getMyStationDetail: async (
+    stationId: string
+  ): Promise<AxiosResponse<Station>> => {
+    const response = await fetchHttpClient.get<Station>(
+      ENDPOINT.STAFF.STATION_DETAIL(stationId)
+    );
+    return response;
+  },
   getSelectStations : async () : Promise<AxiosResponse<ApiResponse<Station[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
       ENDPOINT.STATION.SELECT_STATION,

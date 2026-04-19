@@ -16,5 +16,6 @@ export const useGetSelectStation = () => {
     return useQuery({
         queryKey : ["select","stations"],
         queryFn : () => fetchSelectStaions(),
+        enabled:false,
     });
 }

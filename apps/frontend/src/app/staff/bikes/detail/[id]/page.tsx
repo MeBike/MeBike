@@ -16,19 +16,16 @@ export default function BikeDetailPage({
   const router = useRouter();
   
   const {
-    detailBike,
-    getBikeByID,
-    isLoadingDetail,
-    bikeHistory,
-    getHistoryBike,
+    myBikeInStationDetail,
+    getMyBikeInStationDetail,
+    isLoadingMyBikeInStationDetail,
   } = useBikeActions({ hasToken: true, bike_detail_id: id });
 
   useEffect(() => {
-    getBikeByID();
-    getHistoryBike();
+    getMyBikeInStationDetail();
   }, [id]);
 
-  if (isLoadingDetail) {
+  if (isLoadingMyBikeInStationDetail) {
     return (
       <div className="flex h-[60vh] w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -50,9 +47,6 @@ export default function BikeDetailPage({
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              Chi tiết xe: {detailBike?.chipId || "N/A"}
-            </h1>
           </div>
           <Button variant="outline" onClick={() => router.push("/staff/bikes")}>
              Danh sách xe
@@ -61,8 +55,7 @@ export default function BikeDetailPage({
 
         {/* Content */}
         <BikeDetailView 
-          bike={detailBike || null} 
-          rentals={bikeHistory?.data.data || []}
+          bike={myBikeInStationDetail || null} 
         />
       </div>
     </div>

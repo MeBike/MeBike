@@ -18,10 +18,13 @@ import {
   useGetRentalBikeQuery,
   useGetStatusCountQuery,
   useGetHistoryByIdQuery,
-  useGetStatisticsBikeQuery
+  useGetStatisticsBikeQuery,
+  useGetBikeInMyStationQuery,
+  useGetBikeDetailInMyStationQuery,
 } from "@queries";
 import { HTTP_STATUS } from "@constants";
 import { getErrorMessageFromBikeCode, getAxiosErrorCodeMessage } from "@utils";
+import { id } from "date-fns/locale";
 export const useBikeActions = ({
   hasToken,
   bike_detail_id,
@@ -32,10 +35,12 @@ export const useBikeActions = ({
   page,
 }: BikeActionProps) => {
   const router = useRouter();
-  const {data : bikeHistory , refetch : refetchGetBikeHistory ,
-    isLoading : isLoadingGetBikeHistory
+  const {
+    data: bikeHistory,
+    refetch: refetchGetBikeHistory,
+    isLoading: isLoadingGetBikeHistory,
   } = useGetHistoryByIdQuery(bike_detail_id || "");
-   const getHistoryBike = useCallback(() => {
+  const getHistoryBike = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
@@ -230,13 +235,35 @@ export const useBikeActions = ({
     }
   }, [getDetailBike, bike_detail_id]);
   const {
-    data : statisticsBike,
-    refetch : refetchStatisticBike,
-    isLoading : isLoadingStatisticsBike,
+    data: statisticsBike,
+    refetch: refetchStatisticBike,
+    isLoading: isLoadingStatisticsBike,
   } = useGetStatisticsBikeQuery(bike_detail_id || "");
   const getStatsBike = useCallback(() => {
     refetchStatisticBike();
   }, [bike_detail_id]);
+  const {
+    data: myBikeInStation,
+    refetch: refetchMyBikeInStation,
+    isLoading: isLoadingMyBikeInStation,
+  } = useGetBikeInMyStationQuery({ page: page, pageSize: pageSize });
+  const getMyBikeInStation = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchMyBikeInStation();
+  }, [refetchMyBikeInStation, hasToken, page, pageSize]);
+  const {
+    data: myBikeInStationDetail,
+    refetch: refetchMyBikeInStationDetail,
+    isLoading: isLoadingMyBikeInStationDetail,
+  } = useGetBikeDetailInMyStationQuery(bike_detail_id || "");
+  const getMyBikeInStationDetail = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchMyBikeInStationDetail();
+  }, [refetchMyBikeInStationDetail, hasToken, stationId]);
   return {
     getBikes,
     createBike,
@@ -270,10 +297,16 @@ export const useBikeActions = ({
     totalRecord: data?.pagination.totalRecords || 0,
     isLoadingBikes,
     getHistoryBike,
-    bikeHistory:bikeHistory,
+    bikeHistory: bikeHistory,
     isLoadingGetBikeHistory,
     statisticsBike,
     getStatsBike,
-isLoadingStatisticsBike,
+    isLoadingStatisticsBike,
+    myBikeInStation,
+    isLoadingMyBikeInStation,
+    isLoadingMyBikeInStationDetail,
+    myBikeInStationDetail,
+    getMyBikeInStation,
+    getMyBikeInStationDetail
   };
 };
