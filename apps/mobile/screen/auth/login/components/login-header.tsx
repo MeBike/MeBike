@@ -3,15 +3,16 @@ import { AuthHeader } from "@ui/patterns/auth-header";
 import BackendStatusIndicator from "./backend-status";
 
 type LoginHeaderProps = {
-  onBack: () => void;
+  canGoBack?: boolean;
+  onBack?: () => void;
   backendStatus: "checking" | "online" | "offline";
 };
 
-function LoginHeader({ onBack, backendStatus }: LoginHeaderProps) {
+function LoginHeader({ canGoBack = false, onBack, backendStatus }: LoginHeaderProps) {
   return (
     <AuthHeader
       accessory={__DEV__ ? <BackendStatusIndicator backendStatus={backendStatus} /> : undefined}
-      onBack={onBack}
+      onBack={canGoBack ? onBack : undefined}
       subtitle="Chào mừng bạn trở lại"
       title="Đăng nhập"
     />

@@ -1,15 +1,19 @@
 import type { ScrollView as ScrollViewType } from "react-native";
 
-import { useAiAssistantChat } from "@hooks/ai/use-ai-assistant-chat";
-import { mapAiAssistantMessagesToFeed } from "@services/ai";
-import { borderWidths, radii, spaceScale, spacingRules } from "@theme/metrics";
-import { AppComposerInput } from "@ui/primitives/app-composer-input";
-import { AppText } from "@ui/primitives/app-text";
-import { Screen } from "@ui/primitives/screen";
+import { useRoute } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StatusBar } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XStack, YStack } from "tamagui";
+
+import type { AiAssistantRouteProp } from "@/types/navigation";
+
+import { useAiAssistantChat } from "@hooks/ai/use-ai-assistant-chat";
+import { mapAiAssistantMessagesToFeed } from "@services/ai";
+import { borderWidths, radii, spacingRules } from "@theme/metrics";
+import { AppComposerInput } from "@ui/primitives/app-composer-input";
+import { AppText } from "@ui/primitives/app-text";
+import { Screen } from "@ui/primitives/screen";
 
 import {
   AssistantBubble,
@@ -25,17 +29,21 @@ import { INTRO_MARKDOWN, SUGGESTED_PROMPTS } from "./constants";
 import { getAiAssistantErrorMessage } from "./helpers";
 
 export default function AiAssistantScreen() {
+  const route = useRoute<AiAssistantRouteProp>();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollViewType | null>(null);
   const [composerText, setComposerText] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const routeContext = route.params?.context ?? null;
   const {
     error,
     isBusy,
     messages,
     sendTextMessage,
     stop,
-  } = useAiAssistantChat();
+  } = useAiAssistantChat({
+    context: routeContext,
+  });
 
   const feedMessages = useMemo(() => mapAiAssistantMessagesToFeed(messages), [messages]);
   const hasRunningToolActivity = useMemo(() => {
@@ -75,7 +83,8 @@ export default function AiAssistantScreen() {
 
     try {
       await sendTextMessage(trimmedText);
-    } finally {
+    }
+    finally {
       setIsSending(false);
     }
   }, [sendTextMessage]);

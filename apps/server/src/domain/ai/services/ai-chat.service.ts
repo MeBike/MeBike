@@ -5,8 +5,11 @@ import { convertToModelMessages, stepCountIs, streamText, validateUIMessages } f
 import { Context, Effect, Layer } from "effect";
 
 import { env } from "@/config/env";
+import { BikeServiceTag } from "@/domain/bikes";
+import { RentalCommandServiceTag } from "@/domain/rentals";
 import { RentalServiceTag } from "@/domain/rentals/services/rental.service";
 import { ReservationQueryServiceTag } from "@/domain/reservations";
+import { StationQueryServiceTag } from "@/domain/stations";
 import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
 import { getOpenRouterChatModel } from "@/infrastructure/ai/openrouter";
 import logger from "@/lib/logger";
@@ -85,8 +88,11 @@ export type AiChatService = {
 };
 
 const makeAiChatService = Effect.gen(function* () {
+  const bikeService = yield* BikeServiceTag;
+  const rentalCommandService = yield* RentalCommandServiceTag;
   const rentalService = yield* RentalServiceTag;
   const reservationQueryService = yield* ReservationQueryServiceTag;
+  const stationQueryService = yield* StationQueryServiceTag;
   const walletService = yield* WalletServiceTag;
 
   const streamCustomerAssistant: AiChatService["streamCustomerAssistant"] = args =>
@@ -98,9 +104,12 @@ const makeAiChatService = Effect.gen(function* () {
       }
 
       const tools = createCustomerTools({
+        bikeService,
         context: args.context,
+        rentalCommandService,
         reservationQueryService,
         rentalService,
+        stationQueryService,
         userId: args.userId,
         walletService,
       });

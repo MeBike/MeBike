@@ -1,14 +1,14 @@
-import type { UserDetail } from "@services/users/user-service";
-
-import { useMyRentalCountsQuery } from "@hooks/query/rentals/use-my-rental-counts-query";
-import { invalidateMyRentalCountsQuery } from "@hooks/rentals/rental-cache";
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
+import type { UserDetail } from "@services/users/user-service";
+
 import { authQueryKeys } from "@/hooks/query/auth-next/auth-query-keys";
+import { useMyRentalCountsQuery } from "@hooks/query/rentals/use-my-rental-counts-query";
+import { invalidateMyRentalCountsQuery } from "@hooks/rentals/rental-cache";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 import { useProfileEmailVerification } from "./use-profile-email-verification";
 
@@ -89,7 +89,6 @@ export function useProfile() {
         text: "Đăng xuất",
         onPress: async () => {
           await logout();
-          navigation.navigate("Login" as never);
         },
       },
     ]);

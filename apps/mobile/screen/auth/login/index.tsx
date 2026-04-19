@@ -9,6 +9,7 @@ import { useLogin } from "./hooks/use-login";
 
 function LoginScreen() {
   const {
+    canGoBack,
     control,
     errors,
     showPassword,
@@ -22,7 +23,7 @@ function LoginScreen() {
   } = useLogin();
 
   return (
-    <AuthScreen header={<LoginHeader backendStatus={backendStatus} onBack={goBack} />}>
+    <AuthScreen header={<LoginHeader backendStatus={backendStatus} canGoBack={canGoBack} onBack={goBack} />}>
       <View style={{ paddingHorizontal: spaceScale[6], paddingTop: spaceScale[4], paddingBottom: spaceScale[7] }}>
         <LoginForm
           control={control}

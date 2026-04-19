@@ -1,3 +1,9 @@
+import { Check, SendHorizontal, Sparkles, TriangleAlert } from "lucide-react-native";
+import { Fragment } from "react";
+import { ActivityIndicator, Pressable, useColorScheme } from "react-native";
+import { useMarkdown } from "react-native-marked";
+import { useTheme, XStack, YStack } from "tamagui";
+
 import type {
   AiAssistantFeedMessage,
   AiAssistantToolActivity,
@@ -6,14 +12,9 @@ import type {
 
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, spaceScale } from "@theme/metrics";
-import { fontFaces, fontSizes, fontWeights, lineHeights } from "@theme/typography";
+import { fontFaces, fontSizes, lineHeights } from "@theme/typography";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
-import { Check, SendHorizontal, Sparkles, TriangleAlert } from "lucide-react-native";
-import { Fragment } from "react";
-import { ActivityIndicator, Pressable, useColorScheme } from "react-native";
-import { useMarkdown } from "react-native-marked";
-import { useTheme, XStack, YStack } from "tamagui";
 
 function getToolColors(state: AiAssistantToolActivityState) {
   switch (state) {
@@ -88,58 +89,53 @@ export function AssistantMarkdown({ markdown }: { markdown: string }) {
       text: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.regular,
-        fontSize: fontSizes.base,
-        fontWeight: fontWeights.regular,
-        lineHeight: lineHeights.base,
+        fontSize: fontSizes.md,
+        lineHeight: lineHeights.md,
       },
       paragraph: {
-        marginBottom: spaceScale[1],
+        marginBottom: spaceScale[2],
+        paddingVertical: 0,
       },
       strong: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.semibold,
-        fontWeight: fontWeights.semibold,
       },
       em: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.medium,
-        fontWeight: fontWeights.medium,
       },
       link: {
         color: theme.textBrand.val,
         fontFamily: fontFaces.medium,
-        fontWeight: fontWeights.medium,
       },
       h1: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.bold,
         fontSize: fontSizes.xxl,
-        fontWeight: fontWeights.bold,
         lineHeight: lineHeights.xxl,
       },
       h2: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.bold,
         fontSize: fontSizes.xl,
-        fontWeight: fontWeights.bold,
         lineHeight: lineHeights.xl,
       },
       h3: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.semibold,
         fontSize: fontSizes.lg,
-        fontWeight: fontWeights.semibold,
         lineHeight: lineHeights.lg,
       },
       li: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.regular,
-        fontSize: fontSizes.base,
-        fontWeight: fontWeights.regular,
-        lineHeight: lineHeights.base,
+        flexShrink: 1,
+        fontSize: fontSizes.md,
+        lineHeight: lineHeights.md,
+        marginBottom: spaceScale[2],
       },
       list: {
-        marginBottom: spaceScale[2],
+        marginBottom: 0,
       },
       blockquote: {
         borderLeftColor: theme.borderFocus.val,
@@ -151,7 +147,6 @@ export function AssistantMarkdown({ markdown }: { markdown: string }) {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.medium,
         fontSize: fontSizes.sm,
-        fontWeight: fontWeights.medium,
       },
     },
   });

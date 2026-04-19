@@ -74,6 +74,11 @@ const TOOL_ACTIVITY_COPY: Record<string, ToolActivityCopy> = {
     error: "Không thể kiểm tra chuyến thuê hiện tại",
     running: "Đang kiểm tra chuyến thuê hiện tại",
   },
+  getCurrentReturnSlot: {
+    done: "Đã kiểm tra giữ chỗ trả xe hiện tại",
+    error: "Không thể kiểm tra giữ chỗ trả xe hiện tại",
+    running: "Đang kiểm tra giữ chỗ trả xe hiện tại",
+  },
   getRentalDetail: {
     done: "Đã lấy chi tiết chuyến thuê",
     error: "Không thể tải chi tiết chuyến thuê",
@@ -88,6 +93,36 @@ const TOOL_ACTIVITY_COPY: Record<string, ToolActivityCopy> = {
     done: "Đã kiểm tra đặt chỗ",
     error: "Không thể kiểm tra đặt chỗ",
     running: "Đang kiểm tra đặt chỗ",
+  },
+  getStationDetail: {
+    done: "Đã lấy thông tin trạm",
+    error: "Không thể tải thông tin trạm",
+    running: "Đang lấy thông tin trạm",
+  },
+  searchStations: {
+    done: "Đã tìm trạm phù hợp",
+    error: "Không thể tìm trạm phù hợp",
+    running: "Đang tìm trạm phù hợp",
+  },
+  getNearbyStations: {
+    done: "Đã tìm các trạm lân cận",
+    error: "Không thể tìm các trạm lân cận",
+    running: "Đang tìm các trạm lân cận",
+  },
+  getNearbyStationsFromLocation: {
+    done: "Đã tìm các trạm gần vị trí hiện tại",
+    error: "Không thể tìm các trạm gần vị trí hiện tại",
+    running: "Đang tìm các trạm gần vị trí hiện tại",
+  },
+  getStationAvailableBikes: {
+    done: "Đã kiểm tra xe có sẵn tại trạm",
+    error: "Không thể kiểm tra xe có sẵn tại trạm",
+    running: "Đang kiểm tra xe có sẵn tại trạm",
+  },
+  getBikeDetail: {
+    done: "Đã lấy thông tin xe",
+    error: "Không thể tải thông tin xe",
+    running: "Đang lấy thông tin xe",
   },
   getWalletSummary: {
     done: "Đã kiểm tra ví",

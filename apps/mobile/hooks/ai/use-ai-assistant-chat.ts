@@ -1,9 +1,12 @@
-import type { AiAssistantChatContext, AiAssistantMessage } from "@services/ai";
 import type { ChatRequestOptions, ChatStatus } from "ai";
 
 import { useChat } from "@ai-sdk/react";
-import { createAiAssistantChatTransport } from "@services/ai";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+
+import type { AiAssistantChatContext, AiAssistantMessage } from "@services/ai";
+
+import { useCurrentLocation } from "@providers/location-provider";
+import { createAiAssistantChatTransport } from "@services/ai";
 
 export type UseAiAssistantChatOptions = {
   chatId?: string;
@@ -23,11 +26,22 @@ export function useAiAssistantChat({
   onError,
 }: UseAiAssistantChatOptions = {}) {
   const stableChatId = useRef(chatId ?? createChatId());
-  const contextRef = useRef(context);
+  const { location, status: locationStatus } = useCurrentLocation();
+  const mergedContext = useMemo(() => {
+    if (locationStatus !== "ready" || !location) {
+      return context ?? null;
+    }
+
+    return {
+      ...(context ?? {}),
+      location,
+    };
+  }, [context, location, locationStatus]);
+  const contextRef = useRef(mergedContext);
 
   useEffect(() => {
-    contextRef.current = context;
-  }, [context]);
+    contextRef.current = mergedContext;
+  }, [mergedContext]);
 
   const transport = useMemo(() => {
     return createAiAssistantChatTransport({

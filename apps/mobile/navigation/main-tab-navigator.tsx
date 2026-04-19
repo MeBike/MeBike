@@ -1,5 +1,4 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { useNavigation } from "@react-navigation/native";
 import React from "react";
 
 import { LoadingScreen } from "@components/LoadingScreen";
@@ -15,23 +14,19 @@ import {
   StaffDashboardScreen,
   TechnicianDashboardScreen,
 } from "../screen";
+import StationSelectScreen from "../styles/StationSelect";
 import { BottomTabBar } from "./bottom-tab-bar";
 
 const Tab = createBottomTabNavigator<RootStackParamList>();
 
-function StationTabRedirectScreen() {
-  const navigation = useNavigation();
-
-  React.useEffect(() => {
-    navigation.getParent()?.navigate("StationSelectFlow");
-  }, [navigation]);
-
-  return null;
-}
-
 function MainTabNavigator() {
   const { status, isAuthenticated, isTechnician, user } = useAuthNext();
   const canUseStaffTools = user?.role === "STAFF" || user?.role === "AGENCY";
+  const initialRouteName = canUseStaffTools || isTechnician
+    ? "Công cụ"
+    : isAuthenticated
+      ? "Booking"
+      : "Trạm";
 
   if (status === "loading") {
     return <LoadingScreen />;
@@ -39,6 +34,7 @@ function MainTabNavigator() {
 
   return (
     <Tab.Navigator
+      initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,
@@ -57,19 +53,19 @@ function MainTabNavigator() {
           )
         : (
             <>
+              {isAuthenticated
+                ? (
+                    <Tab.Screen
+                      name="Booking"
+                      component={BookingHistoryScreen}
+                      options={{ tabBarLabel: "Chuyến đi" }}
+                    />
+                  )
+                : null}
               <Tab.Screen
                 name="Trạm"
-                component={StationTabRedirectScreen}
-                listeners={({ navigation }) => ({
-                  tabPress: (event) => {
-                    event.preventDefault();
-                    navigation.getParent()?.navigate("StationSelectFlow");
-                  },
-                })}
+                component={StationSelectScreen}
               />
-              {isAuthenticated
-                ? <Tab.Screen name="Booking" component={BookingHistoryScreen} />
-                : null}
               {isAuthenticated
                 ? (
                     <Tab.Screen
