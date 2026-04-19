@@ -30,7 +30,7 @@ export default function CouponPage() {
       {/* 1. Tiêu đề và Thêm mới */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Quản lý Coupon & Thống kê</h1>
-        <Button onClick={() => router.push("/admin/coupons/create")}>
+        <Button onClick={() => router.push("/admin/coupon/create")}>
           <Plus className="w-4 h-4 mr-2" /> Thêm Coupon
         </Button>
       </div>

@@ -3,6 +3,7 @@ import type { AxiosResponse } from "axios";
 import { ENDPOINT } from "@/constants/end-point";
 import { ApiResponse } from "@custom-types";
 import { Coupon, CouponStat, CouponUsageLog } from "@/types/Coupon";
+import { CreateAdminCouponRuleBody } from "@/schemas/coupon-schema";
 export const couponService = {
   getCoupons: async ({
     page,
@@ -17,7 +18,7 @@ export const couponService = {
     );
     return response;
   },
-  createCoupon: async (data: Coupon): Promise<AxiosResponse<Coupon>> => {
+  createCoupon: async (data: CreateAdminCouponRuleBody): Promise<AxiosResponse<Coupon>> => {
     const response = await fetchHttpClient.post<Coupon>(
       ENDPOINT.COUPON.BASE,
       data,
