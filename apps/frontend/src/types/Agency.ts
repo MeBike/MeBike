@@ -83,7 +83,6 @@ export type AgencyRequest = {
   stationLatitude: number;
   stationLongitude: number;
   stationTotalCapacity: number;
-  stationPickupSlotLimit: number;
   stationReturnSlotLimit: number;
   status: "PENDING" | "APPROVED" | "REJECTED";
   description: string;
