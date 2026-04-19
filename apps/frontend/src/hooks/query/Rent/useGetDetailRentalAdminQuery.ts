@@ -17,6 +17,6 @@ export const useGetDetailRentalAdminQuery = (id: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.RENTAL.DETAIL_ADMIN(id),
     queryFn: () => fetchDetailRentalAdmin(id),
-    enabled: !!id,
+    enabled: false,
   });
 };
