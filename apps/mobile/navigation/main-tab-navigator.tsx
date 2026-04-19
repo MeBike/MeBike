@@ -1,14 +1,15 @@
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useNavigation } from "@react-navigation/native";
+import React from "react";
+
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useAuthNext } from "@providers/auth-provider-next";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import React from "react";
 
 import type { RootStackParamList } from "../types/navigation";
 
 import {
   AiAssistantScreen,
   BookingHistoryScreen,
-  HomeScreen,
   MyWalletScreen,
   ProfileScreen,
   StaffDashboardScreen,
@@ -19,6 +20,12 @@ import { BottomTabBar } from "./bottom-tab-bar";
 const Tab = createBottomTabNavigator<RootStackParamList>();
 
 function StationTabRedirectScreen() {
+  const navigation = useNavigation();
+
+  React.useEffect(() => {
+    navigation.getParent()?.navigate("StationSelectFlow");
+  }, [navigation]);
+
   return null;
 }
 
@@ -50,7 +57,6 @@ function MainTabNavigator() {
           )
         : (
             <>
-              <Tab.Screen name="Nhà" component={HomeScreen} />
               <Tab.Screen
                 name="Trạm"
                 component={StationTabRedirectScreen}
@@ -60,7 +66,10 @@ function MainTabNavigator() {
                     navigation.getParent()?.navigate("StationSelectFlow");
                   },
                 })}
-                />
+              />
+              {isAuthenticated
+                ? <Tab.Screen name="Booking" component={BookingHistoryScreen} />
+                : null}
               {isAuthenticated
                 ? (
                     <Tab.Screen
@@ -69,9 +78,6 @@ function MainTabNavigator() {
                       options={{ tabBarLabel: "Trợ lý" }}
                     />
                   )
-                : null}
-              {isAuthenticated
-                ? <Tab.Screen name="Booking" component={BookingHistoryScreen} />
                 : null}
               {isAuthenticated
                 ? <Tab.Screen name="Ví" component={MyWalletScreen} />

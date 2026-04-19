@@ -1,7 +1,7 @@
 export { default as ChangePasswordScreen } from "./account/change-password";
-export { default as AiAssistantScreen } from "./ai-assistant";
 export { default as ProfileScreen } from "./account/profile";
 export { default as UpdateProfileScreen } from "./account/update-profile";
+export { default as AiAssistantScreen } from "./ai-assistant";
 export { default as EmailVerificationScreen } from "./auth/email-verification";
 export { default as ForgotPasswordScreen } from "./auth/forgot-password";
 export { default as LoginScreen } from "./auth/login";
@@ -13,7 +13,6 @@ export { default as EnvironmentImpactScreen } from "./environment/environment-im
 export { default as FixedSlotDetailScreen } from "./fixed-slot-detail-screen";
 export { default as FixedSlotEditorScreen } from "./fixed-slot-editor-screen";
 export { default as FixedSlotTemplatesScreen } from "./fixed-slot-templates";
-export { default as HomeScreen } from "./Home";
 export { default as IntroScreen } from "./Intro";
 export { default as MyWalletScreen } from "./my-wallet";
 export { default as QRScannerScreen } from "./QRScannerScreen";

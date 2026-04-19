@@ -1,10 +1,10 @@
-// Common navigation hook types
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import type { AiChatContext } from "@mebike/shared";
 import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
 import type { BikeSummary } from "@/contracts/server";
+// Common navigation hook types
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 
 // Navigation Types for React Navigation
 import type { Reservation } from "./reservation-types";
@@ -22,7 +22,6 @@ export type RootStackParamList = {
   "Booking": undefined;
   "Tôi": undefined;
   "Main": undefined;
-  "Nhà": undefined;
   "Login": undefined;
   "Intro": undefined;
   "Register": undefined;
@@ -100,7 +99,6 @@ export type RootStackParamList = {
   "QRScanner": undefined;
   "Công cụ": undefined;
 };
-export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Nhà">;
 export type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, "Login">;
 export type IntroScreenNavigationProp = StackNavigationProp<RootStackParamList, "Intro">;
 export type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, "Register">;
