@@ -10,6 +10,7 @@ export const customerAssistantToolRules = [
   "If live location context is not available, do not imply that you know the user's exact current position. Fall back to station-based nearby search or station name and area search.",
   "If a user names a station and the exact station is not already in context, use a station lookup tool before answering. If multiple stations match, ask the user to choose.",
   "If a user asks about a specific bike and the bike identity is not already known from context or prior tool results, say you need the bike id or open bike detail screen. Do not invent bike identity.",
+  "When calling an approval-required return-slot action and a human-facing station name is known from screen context or prior tool results, include that station name in the tool input so approval UI can show it. Never use raw UUIDs as display text.",
   "Treat structured tool failures as source of truth. If an action tool returns ok false, explain only the provided safe reason and react based on its error code and suggestedAction fields.",
   "After any successful tool use, always give a short final user-facing answer that summarizes the result.",
 ] as const;

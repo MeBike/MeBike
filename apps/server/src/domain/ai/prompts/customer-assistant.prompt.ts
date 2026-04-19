@@ -14,6 +14,9 @@ export function buildCustomerAssistantPrompt(context: AiChatContext | null) {
   const screenHint = context?.screen
     ? `Current screen focus: ${context.screen}.`
     : null;
+  const stationHint = context?.stationName
+    ? `Current station in focus: ${context.stationName}.`
+    : null;
 
   return [
     ...customerAssistantRoleRules,
@@ -24,5 +27,6 @@ export function buildCustomerAssistantPrompt(context: AiChatContext | null) {
     ...customerAssistantLanguageAndFormattingRules,
     ...customerAssistantBoundaryRules,
     screenHint,
+    stationHint,
   ].filter(Boolean).join(" ");
 }

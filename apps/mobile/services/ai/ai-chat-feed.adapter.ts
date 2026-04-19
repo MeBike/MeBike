@@ -295,12 +295,16 @@ function getActionToolApprovalDescription(toolName: string) {
 }
 
 function getStationSummaryValue(input: ToolInputRecord) {
+  if (typeof input.stationName === "string" && input.stationName.trim().length > 0) {
+    return input.stationName.trim();
+  }
+
   if (typeof input.stationReference === "string" && input.stationReference === "context") {
     return "Theo trạm đang mở";
   }
 
   if (typeof input.stationId === "string" && input.stationId.trim().length > 0) {
-    return `Mã trạm ${input.stationId}`;
+    return "Trạm đã chọn";
   }
 
   return null;
@@ -321,7 +325,7 @@ function getRentalSummaryValue(input: ToolInputRecord) {
   }
 
   if (typeof input.rentalId === "string" && input.rentalId.trim().length > 0) {
-    return `Mã chuyến ${input.rentalId}`;
+    return "Chuyến thuê đã chọn";
   }
 
   return null;

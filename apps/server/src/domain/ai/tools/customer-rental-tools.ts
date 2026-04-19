@@ -34,6 +34,7 @@ const ReturnSlotMutationInputSchema = z.object({
   rentalId: z.string().optional(),
   rentalReference: z.enum(["context", "current", "latest", "id"]).default("current"),
   stationId: z.string().optional(),
+  stationName: z.string().trim().min(1).optional().describe("User-facing station name when known from current context or prior tool results. Never put raw ids here."),
   stationReference: StationReferenceSchema.default("context"),
 });
 

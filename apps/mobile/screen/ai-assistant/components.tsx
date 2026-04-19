@@ -5,7 +5,6 @@ import { useMarkdown } from "react-native-marked";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type {
-  AiAssistantActionCard,
   AiAssistantFeedMessage,
   AiAssistantToolActivity,
   AiAssistantToolActivityState,
@@ -17,6 +16,8 @@ import { fontFaces, fontSizes, lineHeights } from "@theme/typography";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+
+import { ActionToolCard } from "./action-tool-card";
 
 function getToolColors(state: AiAssistantToolActivityState) {
   switch (state) {
@@ -224,170 +225,6 @@ export function ToolApprovalActions({
         Từ chối
       </AppButton>
     </XStack>
-  );
-}
-
-function getActionCardAccent(state: AiAssistantActionCard["state"]) {
-  switch (state) {
-    case "success":
-      return {
-        iconColorKey: "statusSuccess" as const,
-        titleTone: "default" as const,
-      };
-    case "failure":
-    case "denied":
-      return {
-        iconColorKey: "statusDanger" as const,
-        titleTone: "danger" as const,
-      };
-    default:
-      return {
-        iconColorKey: "actionPrimary" as const,
-        titleTone: "default" as const,
-      };
-  }
-}
-
-function getActionCardStateLabel(state: AiAssistantActionCard["state"]) {
-  switch (state) {
-    case "approval":
-      return "Yêu cầu xác nhận";
-    case "success":
-      return "Thực hiện thành công";
-    case "failure":
-      return "Không thể thực hiện";
-    case "denied":
-      return "Đã từ chối";
-    default:
-      return "Trạng thái thao tác";
-  }
-}
-
-function ActionCardIcon({ state }: { state: AiAssistantActionCard["state"] }) {
-  const theme = useTheme();
-  const accent = getActionCardAccent(state);
-  const color = theme[accent.iconColorKey].val;
-
-  if (state === "success") {
-    return <Check color={color} size={18} />;
-  }
-
-  if (state === "failure" || state === "denied") {
-    return <TriangleAlert color={color} size={18} />;
-  }
-
-  return <Sparkles color={color} size={18} />;
-}
-
-function ActionCardSummary({ items }: { items: AiAssistantActionCard["summaryItems"] }) {
-  if (items.length === 0) {
-    return null;
-  }
-
-  return (
-    <YStack
-      backgroundColor="$surfaceSubtle"
-      borderColor="$borderSubtle"
-      borderRadius="$4"
-      borderWidth={borderWidths.subtle}
-      gap="$3"
-      padding="$4"
-      width="100%"
-    >
-      {items.map(item => (
-        <YStack key={`${item.label}:${item.value}`} gap="$1">
-          <AppText tone="subtle" variant="bodySmall">
-            {item.label}
-          </AppText>
-          <AppText variant="bodyStrong">
-            {item.value}
-          </AppText>
-        </YStack>
-      ))}
-    </YStack>
-  );
-}
-
-export function ActionToolCard({
-  approvalBusy,
-  card,
-  onApprove,
-  onDeny,
-}: {
-  approvalBusy: boolean;
-  card: AiAssistantActionCard;
-  onApprove: (approvalId: string) => void;
-  onDeny: (approvalId: string) => void;
-}) {
-  const accent = getActionCardAccent(card.state);
-
-  return (
-    <AppCard
-      alignSelf="flex-start"
-      backgroundColor="$surfaceDefault"
-      borderColor="$borderSubtle"
-      borderTopLeftRadius="$2"
-      borderWidth={borderWidths.subtle}
-      chrome="flat"
-      gap="$4"
-      maxWidth="92%"
-      padding="$4"
-      size="default"
-    >
-      <XStack alignItems="center" gap="$3">
-        <XStack
-          alignItems="center"
-          backgroundColor="$surfaceSubtle"
-          borderRadius="$round"
-          height={44}
-          justifyContent="center"
-          width={44}
-        >
-          <ActionCardIcon state={card.state} />
-        </XStack>
-
-        <YStack flex={1} gap="$1">
-          <AppText tone={accent.titleTone} variant="bodyStrong">
-            {getActionCardStateLabel(card.state)}
-          </AppText>
-          <AppText variant="label">{card.title}</AppText>
-        </YStack>
-      </XStack>
-
-      {card.description
-        ? (
-            <AppText variant="bodySmall">{card.description}</AppText>
-          )
-        : null}
-
-      <ActionCardSummary items={card.summaryItems} />
-
-      {card.state === "approval" && card.approvalId
-        ? (
-            <XStack gap="$2">
-              <AppButton
-                buttonSize="compact"
-                disabled={approvalBusy}
-                flex={1}
-                onPress={() => onDeny(card.approvalId!)}
-                tone="outline"
-              >
-                Từ chối
-              </AppButton>
-              <AppButton
-                buttonSize="compact"
-                disabled={approvalBusy}
-                flex={1}
-                onPress={() => onApprove(card.approvalId!)}
-                tone="primary"
-              >
-                Xác nhận
-              </AppButton>
-            </XStack>
-          )
-        : null}
-
-    </AppCard>
   );
 }
 
