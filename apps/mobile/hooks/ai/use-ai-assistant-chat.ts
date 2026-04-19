@@ -1,9 +1,13 @@
-import type { AiAssistantChatContext, AiAssistantMessage } from "@services/ai";
 import type { ChatRequestOptions, ChatStatus } from "ai";
 
 import { useChat } from "@ai-sdk/react";
-import { createAiAssistantChatTransport } from "@services/ai";
+import { lastAssistantMessageIsCompleteWithApprovalResponses } from "ai";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+
+import type { AiAssistantChatContext, AiAssistantMessage } from "@services/ai";
+
+import { useCurrentLocation } from "@providers/location-provider";
+import { createAiAssistantChatTransport } from "@services/ai";
 
 export type UseAiAssistantChatOptions = {
   chatId?: string;
@@ -23,11 +27,22 @@ export function useAiAssistantChat({
   onError,
 }: UseAiAssistantChatOptions = {}) {
   const stableChatId = useRef(chatId ?? createChatId());
-  const contextRef = useRef(context);
+  const { location, status: locationStatus } = useCurrentLocation();
+  const mergedContext = useMemo(() => {
+    if (locationStatus !== "ready" || !location) {
+      return context ?? null;
+    }
+
+    return {
+      ...(context ?? {}),
+      location,
+    };
+  }, [context, location, locationStatus]);
+  const contextRef = useRef(mergedContext);
 
   useEffect(() => {
-    contextRef.current = context;
-  }, [context]);
+    contextRef.current = mergedContext;
+  }, [mergedContext]);
 
   const transport = useMemo(() => {
     return createAiAssistantChatTransport({
@@ -36,6 +51,7 @@ export function useAiAssistantChat({
   }, []);
 
   const {
+    addToolApprovalResponse,
     error,
     id,
     messages,
@@ -46,6 +62,7 @@ export function useAiAssistantChat({
   } = useChat<AiAssistantMessage>({
     id: stableChatId.current,
     messages: initialMessages ?? [],
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     transport,
     onError,
   });
@@ -69,7 +86,15 @@ export function useAiAssistantChat({
     void stop();
   }, [stop]);
 
+  const respondToToolApproval = useCallback((id: string, approved: boolean) => {
+    addToolApprovalResponse({
+      approved,
+      id,
+    });
+  }, [addToolApprovalResponse]);
+
   return {
+    addToolApprovalResponse: respondToToolApproval,
     error,
     id,
     isBusy: status === "submitted" || status === "streaming",

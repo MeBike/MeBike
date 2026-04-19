@@ -6,11 +6,16 @@ import {
 } from "../schemas";
 
 export const AiChatScreenSchema = z
-  .enum(["rental", "reservation", "wallet"])
+  .enum(["rental", "reservation", "station", "bike", "wallet"])
   .openapi("AiChatScreen");
 
 export const AiChatMessageSchema = z.object({
 }).catchall(z.unknown()).openapi("AiChatMessage");
+
+export const AiChatLocationSchema = z.object({
+  latitude: z.number(),
+  longitude: z.number(),
+}).openapi("AiChatLocation");
 
 export const AiChatContextSchema = z.object({
   screen: AiChatScreenSchema.nullable().optional(),
@@ -18,6 +23,8 @@ export const AiChatContextSchema = z.object({
   reservationId: z.string().nullable().optional(),
   bikeId: z.string().nullable().optional(),
   stationId: z.string().nullable().optional(),
+  stationName: z.string().nullable().optional(),
+  location: AiChatLocationSchema.nullable().optional(),
 }).openapi("AiChatContext");
 
 export const AiChatRequestSchema = z.object({

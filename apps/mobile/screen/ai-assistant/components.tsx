@@ -1,3 +1,9 @@
+import { Check, SendHorizontal, Sparkles, TriangleAlert } from "lucide-react-native";
+import { Fragment } from "react";
+import { ActivityIndicator, Pressable, useColorScheme } from "react-native";
+import { useMarkdown } from "react-native-marked";
+import { useTheme, XStack, YStack } from "tamagui";
+
 import type {
   AiAssistantFeedMessage,
   AiAssistantToolActivity,
@@ -6,14 +12,12 @@ import type {
 
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, spaceScale } from "@theme/metrics";
-import { fontFaces, fontSizes, fontWeights, lineHeights } from "@theme/typography";
+import { fontFaces, fontSizes, lineHeights } from "@theme/typography";
+import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
-import { Check, SendHorizontal, Sparkles, TriangleAlert } from "lucide-react-native";
-import { Fragment } from "react";
-import { ActivityIndicator, Pressable, useColorScheme } from "react-native";
-import { useMarkdown } from "react-native-marked";
-import { useTheme, XStack, YStack } from "tamagui";
+
+import { ActionToolCard } from "./action-tool-card";
 
 function getToolColors(state: AiAssistantToolActivityState) {
   switch (state) {
@@ -88,58 +92,53 @@ export function AssistantMarkdown({ markdown }: { markdown: string }) {
       text: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.regular,
-        fontSize: fontSizes.base,
-        fontWeight: fontWeights.regular,
-        lineHeight: lineHeights.base,
+        fontSize: fontSizes.md,
+        lineHeight: lineHeights.md,
       },
       paragraph: {
-        marginBottom: spaceScale[1],
+        marginBottom: spaceScale[2],
+        paddingVertical: 0,
       },
       strong: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.semibold,
-        fontWeight: fontWeights.semibold,
       },
       em: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.medium,
-        fontWeight: fontWeights.medium,
       },
       link: {
         color: theme.textBrand.val,
         fontFamily: fontFaces.medium,
-        fontWeight: fontWeights.medium,
       },
       h1: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.bold,
         fontSize: fontSizes.xxl,
-        fontWeight: fontWeights.bold,
         lineHeight: lineHeights.xxl,
       },
       h2: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.bold,
         fontSize: fontSizes.xl,
-        fontWeight: fontWeights.bold,
         lineHeight: lineHeights.xl,
       },
       h3: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.semibold,
         fontSize: fontSizes.lg,
-        fontWeight: fontWeights.semibold,
         lineHeight: lineHeights.lg,
       },
       li: {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.regular,
-        fontSize: fontSizes.base,
-        fontWeight: fontWeights.regular,
-        lineHeight: lineHeights.base,
+        flexShrink: 1,
+        fontSize: fontSizes.md,
+        lineHeight: lineHeights.md,
+        marginBottom: spaceScale[2],
       },
       list: {
-        marginBottom: spaceScale[2],
+        marginBottom: 0,
       },
       blockquote: {
         borderLeftColor: theme.borderFocus.val,
@@ -151,7 +150,6 @@ export function AssistantMarkdown({ markdown }: { markdown: string }) {
         color: theme.textPrimary.val,
         fontFamily: fontFaces.medium,
         fontSize: fontSizes.sm,
-        fontWeight: fontWeights.medium,
       },
     },
   });
@@ -193,6 +191,43 @@ export function ToolActivityRow({ activity }: { activity: AiAssistantToolActivit
   );
 }
 
+export function ToolApprovalActions({
+  activity,
+  disabled,
+  onApprove,
+  onDeny,
+}: {
+  activity: AiAssistantToolActivity;
+  disabled: boolean;
+  onApprove: (approvalId: string) => void;
+  onDeny: (approvalId: string) => void;
+}) {
+  if (activity.rawState !== "approval-requested" || !activity.approvalId) {
+    return null;
+  }
+
+  return (
+    <XStack gap="$2">
+      <AppButton
+        buttonSize="compact"
+        disabled={disabled}
+        onPress={() => onApprove(activity.approvalId!)}
+        tone="primary"
+      >
+        Xác nhận
+      </AppButton>
+      <AppButton
+        buttonSize="compact"
+        disabled={disabled}
+        onPress={() => onDeny(activity.approvalId!)}
+        tone="outline"
+      >
+        Từ chối
+      </AppButton>
+    </XStack>
+  );
+}
+
 export function AssistantBubble({ markdown }: { markdown: string }) {
   return (
     <AppCard
@@ -212,16 +247,49 @@ export function AssistantBubble({ markdown }: { markdown: string }) {
   );
 }
 
-export function AssistantMessageBlock({ message }: { message: AiAssistantFeedMessage }) {
+export function AssistantMessageBlock({
+  approvalBusy,
+  message,
+  onApproveTool,
+  onDenyTool,
+}: {
+  approvalBusy: boolean;
+  message: AiAssistantFeedMessage;
+  onApproveTool: (approvalId: string) => void;
+  onDenyTool: (approvalId: string) => void;
+}) {
   return (
     <YStack alignItems="flex-start" gap="$2">
-      {message.toolActivities.map((activity, index) => (
-        <YStack key={activity.key} marginTop={index > 0 ? -spaceScale[1] : 0}>
-          <ToolActivityRow activity={activity} />
-        </YStack>
-      ))}
-
-      {message.hasTextContent ? <AssistantBubble markdown={message.markdown} /> : null}
+      {message.contentBlocks.map((block, index) => {
+        switch (block.kind) {
+          case "action-card":
+            return (
+              <ActionToolCard
+                approvalBusy={approvalBusy}
+                card={block.card}
+                key={block.key}
+                onApprove={onApproveTool}
+                onDeny={onDenyTool}
+              />
+            );
+          case "tool-activity":
+            return (
+              <YStack gap="$2" key={block.key} marginTop={index > 0 ? -spaceScale[1] : 0}>
+                <ToolActivityRow activity={block.activity} />
+                <ToolApprovalActions
+                  activity={block.activity}
+                  disabled={approvalBusy}
+                  onApprove={onApproveTool}
+                  onDeny={onDenyTool}
+                />
+              </YStack>
+            );
+          case "text":
+            return <AssistantBubble key={block.key} markdown={block.markdown} />;
+          default:
+            return null;
+        }
+      })}
     </YStack>
   );
 }

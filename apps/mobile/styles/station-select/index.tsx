@@ -5,9 +5,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import StationMap from "@/components/station-map";
+import { useAuthNext } from "@/providers/auth-provider-next";
 import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { borderWidths } from "@theme/metrics";
+import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
@@ -21,6 +23,8 @@ export default function StationSelectScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const { isAuthenticated } = useAuthNext();
+  const showsBackButton = navigation.canGoBack();
 
   const {
     stations,
@@ -75,23 +79,42 @@ export default function StationSelectScreen() {
         right={0}
         top={0}
         zIndex="$3"
-        style={{ paddingTop: insets.top + 12, paddingLeft: 16 }}
+        style={{ paddingTop: insets.top + 12, paddingHorizontal: 16 }}
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <AppCard
-            alignItems="center"
-            borderColor="$borderSubtle"
-            borderRadius="$round"
-            borderWidth={borderWidths.subtle}
-            chrome="flat"
-            height={44}
-            justifyContent="center"
-            padding="$0"
-            width={44}
-          >
-            <IconSymbol color={theme.textPrimary.val} name="chevron-left" size="input" />
-          </AppCard>
-        </Pressable>
+        <XStack alignItems="center" justifyContent="space-between">
+          {showsBackButton
+            ? (
+                <Pressable onPress={() => navigation.goBack()}>
+                  <AppCard
+                    alignItems="center"
+                    borderColor="$borderSubtle"
+                    borderRadius="$round"
+                    borderWidth={borderWidths.subtle}
+                    chrome="flat"
+                    height={44}
+                    justifyContent="center"
+                    padding="$0"
+                    width={44}
+                  >
+                    <IconSymbol color={theme.textPrimary.val} name="chevron-left" size="input" />
+                  </AppCard>
+                </Pressable>
+              )
+            : <View style={{ width: 44, height: 44 }} />}
+
+          {!isAuthenticated
+            ? (
+                <AppButton
+                  buttonSize="compact"
+                  borderRadius="$round"
+                  onPress={() => navigation.navigate("Login" as never)}
+                  tone="primary"
+                >
+                  Đăng nhập
+                </AppButton>
+              )
+            : null}
+        </XStack>
       </YStack>
 
       <StationSelectMapOverlay

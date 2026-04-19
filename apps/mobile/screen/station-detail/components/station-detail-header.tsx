@@ -1,10 +1,11 @@
+import { useTheme, XStack } from "tamagui";
+
+import type { StationReadSummary } from "@/contracts/server";
+
 import { IconSymbol } from "@components/IconSymbol";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
-import { useTheme, XStack } from "tamagui";
-
-import type { StationReadSummary } from "@/contracts/server";
 
 type StationDetailHeaderProps = {
   onBack: () => void;

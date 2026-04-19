@@ -71,11 +71,7 @@ export default function BikeDetailScreen() {
         )}
         showsVerticalScrollIndicator={false}
       >
-        <AppHeroHeader
-          onBack={() => navigation.goBack()}
-          size="default"
-          title="Chi tiết xe"
-        />
+        <AppHeroHeader onBack={() => navigation.goBack()} size="default" title="Chi tiết xe" />
 
         <View
           style={{

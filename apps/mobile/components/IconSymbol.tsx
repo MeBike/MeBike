@@ -2,7 +2,6 @@
 
 import type { ColorValue, StyleProp, ViewStyle } from "react-native";
 
-import { iconSizes } from "@theme/metrics";
 import {
   ArrowDown,
   ArrowLeft,
@@ -56,6 +55,8 @@ import {
   X,
 } from "lucide-react-native";
 import React from "react";
+
+import { iconSizes } from "@theme/metrics";
 
 type LucideIconComponent = typeof ArrowLeft;
 
