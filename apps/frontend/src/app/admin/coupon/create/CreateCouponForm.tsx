@@ -87,7 +87,7 @@ export default function CreateCouponForm() {
 
               <div className="space-y-2">
                 <Label>Ngày bắt đầu</Label>
-                <Input type="date" {...form.register("activeFrom")} min={today} />
+                <Input type="date" {...form.register("activeFrom")} />
               </div>
 
               <div className="space-y-2">

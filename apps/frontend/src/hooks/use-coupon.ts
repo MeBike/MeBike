@@ -102,9 +102,7 @@ export const useCoupon = ({
         const result = await useActiveCoupon.mutateAsync(id);
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Active coupon thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["data", "coupons"],
-          });
+          getCoupons();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -124,9 +122,10 @@ export const useCoupon = ({
         const result = await useDeactiveCoupon.mutateAsync(id);
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Deactive coupon thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["data", "coupons"],
-          });
+          // queryClient.invalidateQueries({
+          //   queryKey: ["data", "coupons"],
+          // });
+          getCoupons();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
