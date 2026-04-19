@@ -1,3 +1,4 @@
+
 import {
   useGetAgencies,
   useGetAgencyDetail,
@@ -14,6 +15,7 @@ import {
   useCancelAgencyRequestMutation,
   useRegisterAgencyRequestMutation,
   useRejectAgencyRequestMutation,
+  useCreateAgencyMutation
 } from "@mutations";
 import { toast } from "sonner";
 import { useCallback } from "react";
@@ -137,6 +139,7 @@ export const useAgencyActions = ({
   const rejectAgencyRequestMutation = useRejectAgencyRequestMutation();
   const cancelAgencyRequestMutation = useCancelAgencyRequestMutation();
   const registerAgencyRequestMutation = useRegisterAgencyRequestMutation();
+  const createAgencyMutation = useCreateAgencyMutation();
   const updateAgency = useCallback(
     async (data: UpdateAgencyFormData, id: string) => {
       if (!hasToken) {
@@ -164,6 +167,28 @@ export const useAgencyActions = ({
       }
     },
     [hasToken, updateAgencyMutation],
+  );
+  const createAgency = useCallback(
+    async (data: AdminCreateAgencyUserRequest) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await createAgencyMutation.mutateAsync(data);
+        if (result.status === HTTP_STATUS.CREATED) {
+          toast.success("Tạo agency thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["data", "agencies"],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromAgencyCode(error_code));
+        throw error;
+      }
+    },
+    [hasToken, createAgencyMutation],
   );
   const updateAgencyStatus = useCallback(
     async (data: UpdateAgencyStatusFormData, id: string) => {
@@ -352,5 +377,6 @@ export const useAgencyActions = ({
     myAgencyRequestDetail,
     getMyAgencyRequestDetail,
     isLoadingMyAgencyRequestDetail,
+    createAgency,
   };
 };

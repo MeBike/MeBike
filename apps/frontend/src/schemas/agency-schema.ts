@@ -52,8 +52,12 @@ export const adminCreateAgencyUserRequestSchema = z.object({
     .number()
     .int("Phải là số nguyên")
     .min(1, "Tối thiểu là 1")
-    .max(20, "Sức chứa tối đa của trạm chỉ được 20 xe"),
-  stationReturnSlotLimit: z.number().int().min(0).optional(),
+    .max(40, "Sức chứa tối đa của trạm chỉ được 40 xe"),
+  stationReturnSlotLimit:z
+    .number()
+    .int("Phải là số nguyên")
+    .min(1, "Tối thiểu là 1")
+    .max(40, "Sức chứa tối đa của trạm chỉ được 40 xe"),
   description: z.string().trim().optional(),
 }).superRefine((value, ctx) => {
   const returnSlotLimit = value.stationReturnSlotLimit ?? value.stationTotalCapacity;

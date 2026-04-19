@@ -5,3 +5,4 @@ export * from "./useGetAgencyRequests";
 export * from "./useGetAgencyRequestDetail";
 export * from "./useGetMyAgencyRequest";
 export * from "./useGetMyAgencyRequestDetail";
+export * from "./useGetAgencyRequestDetail";

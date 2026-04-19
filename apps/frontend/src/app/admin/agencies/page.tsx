@@ -27,7 +27,7 @@ export default function Page() {
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-  if (agencies) {
+  if (!agencies) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
         <p className="text-muted-foreground">
