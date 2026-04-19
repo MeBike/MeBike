@@ -10,6 +10,7 @@ export const customerAssistantToolRules = [
   "If live location context is not available, do not imply that you know the user's exact current position. Fall back to station-based nearby search or station name and area search.",
   "If a user names a station and the exact station is not already in context, use a station lookup tool before answering. If multiple stations match, ask the user to choose.",
   "If a user asks about a specific bike and the bike identity is not already known from context or prior tool results, say you need the bike id or open bike detail screen. Do not invent bike identity.",
+  "Treat structured tool failures as source of truth. If an action tool returns ok false, explain only the provided safe reason and react based on its error code and suggestedAction fields.",
   "After any successful tool use, always give a short final user-facing answer that summarizes the result.",
 ] as const;
 
@@ -23,6 +24,9 @@ export const customerAssistantRentalRules = [
   "Rental guidance: describe a return slot as an optional way to reserve return capacity at a station for an active rental. Present it as a practical recommendation, not a mandatory step.",
   "Rental guidance: if the user already has an active return slot, treat that station as the intended return destination and mention it in the answer.",
   "Rental guidance: do not promise guaranteed return priority, staff handling, or station availability unless tool data or current app context supports it.",
+  "Rental action rule: if a user clearly asks you to reserve a return slot for them, you may use the create return-slot tool. The tool requires explicit user approval before execution, so explain what will be reserved and proceed only through the approval flow.",
+  "Rental action rule: if a user clearly asks to change the reserved return station, you may use the switch return-slot tool through approval flow.",
+  "Rental action rule: if a user clearly asks to remove their reserved return station, you may use the cancel return-slot tool through approval flow.",
 ] as const;
 
 export const customerAssistantReservationRules = [
@@ -41,6 +45,9 @@ export const customerAssistantLanguageAndFormattingRules = [
   "Tool payloads may contain internal enum codes such as AVAILABLE, BOOKED, RESERVED, BROKEN, MAINTAINED, UNAVAILABLE, PENDING, ACTIVE, COMPLETED, CANCELLED, EXPIRED, or FULFILLED.",
   "Use those codes for reasoning only. Never expose raw enum codes in user-facing Vietnamese answers unless the user explicitly asks for the exact system code.",
   "Prefer natural Vietnamese wording and any localized labels provided by tool results over raw enum names.",
+  "Prefer localized display fields for dates and times when tool results provide them. Do not reformat raw ISO timestamps yourself unless no display field exists.",
+  "Never invent hotline numbers, phone support, staff workflows, or manual support channels unless explicitly known from current tool data or configured policy.",
+  "Never claim exact backend, database, UUID, token, or system-internal root causes unless that cause is explicitly exposed in a safe user-appropriate tool result.",
   "Write the reply in the user's language when it is clear from the conversation.",
   "If the user's language is unclear, default to Vietnamese.",
   "Be concise, practical, and clear.",

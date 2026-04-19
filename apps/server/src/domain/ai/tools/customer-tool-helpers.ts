@@ -4,7 +4,7 @@ import { Effect, Either, Option } from "effect";
 import { z } from "zod";
 
 import type { BikeRow, BikeService } from "@/domain/bikes";
-import type { RentalCommandService, RentalService } from "@/domain/rentals";
+import type { RentalCommandService, RentalService, ReturnSlotRow } from "@/domain/rentals";
 import type { ReservationQueryService } from "@/domain/reservations";
 import type { StationQueryService } from "@/domain/stations";
 import type { WalletService } from "@/domain/wallets/services/wallet.service";
@@ -26,6 +26,9 @@ export type CreateCustomerToolsArgs = {
 export type CustomerToolName
   = | "getCurrentRentalSummary"
     | "getCurrentReturnSlot"
+    | "createReturnSlot"
+    | "switchReturnSlot"
+    | "cancelReturnSlot"
     | "getRentalDetail"
     | "getReservationSummary"
     | "getReservationDetail"
@@ -156,6 +159,30 @@ export function formatMinorVnd(value: bigint | number | null): string | null {
   return `${new Intl.NumberFormat("vi-VN").format(numeric)} VND`;
 }
 
+const AI_TIME_ZONE = "Asia/Ho_Chi_Minh";
+
+export function formatLocalDateTime(value: Date | string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toLocaleString("vi-VN", {
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    month: "2-digit",
+    timeZone: AI_TIME_ZONE,
+    year: "numeric",
+  });
+}
+
 export function toStationAiDetail(station: Parameters<typeof toContractStationReadSummary>[0]) {
   return {
     ...toContractStationReadSummary(station),
@@ -198,6 +225,27 @@ export function getReturnSlotStatusLabel(status: keyof typeof returnSlotStatusLa
   return returnSlotStatusLabels[status];
 }
 
+export function toReturnSlotAiDetail(
+  returnSlot: ReturnSlotRow,
+  station: { id: string; name: string; address: string } | null,
+) {
+  return {
+    id: returnSlot.id,
+    rentalId: returnSlot.rentalId,
+    userId: returnSlot.userId,
+    stationId: returnSlot.stationId,
+    reservedFrom: returnSlot.reservedFrom.toISOString(),
+    reservedFromDisplay: formatLocalDateTime(returnSlot.reservedFrom),
+    status: returnSlot.status,
+    statusLabel: getReturnSlotStatusLabel(returnSlot.status),
+    createdAt: returnSlot.createdAt.toISOString(),
+    createdAtDisplay: formatLocalDateTime(returnSlot.createdAt),
+    updatedAt: returnSlot.updatedAt.toISOString(),
+    updatedAtDisplay: formatLocalDateTime(returnSlot.updatedAt),
+    station,
+  };
+}
+
 function getBikeRentabilityReason(bike: {
   stationId: BikeRow["stationId"];
   status: BikeRow["status"];
@@ -233,6 +281,7 @@ export function toBikeAiDetail(bike: {
   const rentabilityReason = getBikeRentabilityReason(bike);
 
   return {
+    createdAtDisplay: formatLocalDateTime(bike.createdAt),
     id: bike.id,
     bikeNumber: bike.bikeNumber,
     stationId: bike.stationId,
@@ -242,6 +291,7 @@ export function toBikeAiDetail(bike: {
     rentabilityReason,
     rentabilityLabel: bikeRentabilityLabels[rentabilityReason],
     createdAt: bike.createdAt.toISOString(),
+    updatedAtDisplay: formatLocalDateTime(bike.updatedAt),
     updatedAt: bike.updatedAt.toISOString(),
   };
 }

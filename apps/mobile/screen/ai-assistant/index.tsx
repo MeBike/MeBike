@@ -36,6 +36,7 @@ export default function AiAssistantScreen() {
   const [isSending, setIsSending] = useState(false);
   const routeContext = route.params?.context ?? null;
   const {
+    addToolApprovalResponse,
     error,
     isBusy,
     messages,
@@ -47,7 +48,7 @@ export default function AiAssistantScreen() {
 
   const feedMessages = useMemo(() => mapAiAssistantMessagesToFeed(messages), [messages]);
   const hasRunningToolActivity = useMemo(() => {
-    return feedMessages.some(message => message.toolActivities.some(activity => activity.state === "running"));
+    return feedMessages.some(message => message.toolActivities.some(activity => activity.state === "running" && activity.rawState !== "approval-requested"));
   }, [feedMessages]);
   const hasConversation = feedMessages.length > 0;
   const canSend = composerText.trim().length > 0;
@@ -98,6 +99,14 @@ export default function AiAssistantScreen() {
     void handleSend(composerText);
   }, [composerText, handleSend, isBusy, stop]);
 
+  const handleApproveTool = useCallback((approvalId: string) => {
+    addToolApprovalResponse(approvalId, true);
+  }, [addToolApprovalResponse]);
+
+  const handleDenyTool = useCallback((approvalId: string) => {
+    addToolApprovalResponse(approvalId, false);
+  }, [addToolApprovalResponse]);
+
   return (
     <Screen tone="subtle">
       <StatusBar barStyle="light-content" />
@@ -139,7 +148,14 @@ export default function AiAssistantScreen() {
                 <YStack key={message.id}>
                   {message.role === "user"
                     ? <UserMessageBlock message={message} />
-                    : <AssistantMessageBlock message={message} />}
+                    : (
+                        <AssistantMessageBlock
+                          approvalBusy={isAssistantWorking}
+                          message={message}
+                          onApproveTool={handleApproveTool}
+                          onDenyTool={handleDenyTool}
+                        />
+                      )}
                 </YStack>
               ))}
 

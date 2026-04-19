@@ -10,7 +10,7 @@ import {
 import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
 
 import {
-
+  formatLocalDateTime,
   formatMinorVnd,
   WalletTransactionDetailInputSchema,
 } from "./customer-tool-helpers";
@@ -57,11 +57,14 @@ export function createCustomerWalletTools(args: CreateCustomerToolsArgs) {
             ...toWalletDetail(wallet),
             balanceDisplay: formatMinorVnd(wallet.balance),
             availableBalanceDisplay: formatMinorVnd(wallet.balance - wallet.reservedBalance),
+            createdAtDisplay: formatLocalDateTime(wallet.createdAt),
             reservedBalanceDisplay: formatMinorVnd(wallet.reservedBalance),
+            updatedAtDisplay: formatLocalDateTime(wallet.updatedAt),
           },
           recentTransactions: transactions.items.map(transaction => ({
             ...toWalletTransactionDetail(transaction),
             amountDisplay: formatMinorVnd(transaction.amount),
+            createdAtDisplay: formatLocalDateTime(transaction.createdAt),
             feeDisplay: formatMinorVnd(transaction.fee),
           })),
         };
@@ -109,6 +112,7 @@ export function createCustomerWalletTools(args: CreateCustomerToolsArgs) {
             ? {
                 ...toWalletTransactionDetail(transaction.right.value),
                 amountDisplay: formatMinorVnd(transaction.right.value.amount),
+                createdAtDisplay: formatLocalDateTime(transaction.right.value.createdAt),
                 feeDisplay: formatMinorVnd(transaction.right.value.fee),
               }
             : null,

@@ -23,6 +23,12 @@ const returnSlotTools = [
   "getCurrentReturnSlot",
 ] as const satisfies readonly CustomerToolName[];
 
+const returnSlotMutationTools = [
+  "createReturnSlot",
+  "switchReturnSlot",
+  "cancelReturnSlot",
+] as const satisfies readonly CustomerToolName[];
+
 const locationTools = [
   "getNearbyStationsFromLocation",
 ] as const satisfies readonly CustomerToolName[];
@@ -32,11 +38,11 @@ export function getActiveCustomerTools(
 ): CustomerToolName[] {
   switch (screen) {
     case "rental":
-      return ["getCurrentRentalSummary", ...returnSlotTools, "getRentalDetail", ...locationTools, ...stationTools, ...bikeTools];
+      return ["getCurrentRentalSummary", ...returnSlotTools, ...returnSlotMutationTools, "getRentalDetail", ...locationTools, ...stationTools, ...bikeTools];
     case "reservation":
       return ["getReservationSummary", "getReservationDetail", ...locationTools, ...stationTools, ...bikeTools];
     case "station":
-      return [...returnSlotTools, ...locationTools, ...stationTools, ...bikeTools];
+      return [...returnSlotTools, ...returnSlotMutationTools, ...locationTools, ...stationTools, ...bikeTools];
     case "bike":
       return [...bikeTools, ...locationTools, ...stationTools];
     case "wallet":
@@ -45,6 +51,7 @@ export function getActiveCustomerTools(
       return [
         "getCurrentRentalSummary",
         ...returnSlotTools,
+        ...returnSlotMutationTools,
         "getRentalDetail",
         "getReservationSummary",
         "getReservationDetail",

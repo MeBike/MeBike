@@ -10,7 +10,7 @@ import {
 import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
 
 import {
-
+  formatLocalDateTime,
   formatMinorVnd,
   getReservationStatusLabel,
   rentalToolPage,
@@ -45,14 +45,22 @@ export function createCustomerReservationTools(args: CreateCustomerToolsArgs) {
           latestPendingOrActive: Option.isSome(latestPendingOrActive)
             ? {
                 ...toContractReservation(latestPendingOrActive.value),
+                createdAtDisplay: formatLocalDateTime(latestPendingOrActive.value.createdAt),
+                endTimeDisplay: formatLocalDateTime(latestPendingOrActive.value.endTime),
                 prepaidDisplay: formatMinorVnd(Number(latestPendingOrActive.value.prepaid.toString())),
+                startTimeDisplay: formatLocalDateTime(latestPendingOrActive.value.startTime),
                 statusLabel: getReservationStatusLabel(latestPendingOrActive.value.status),
+                updatedAtDisplay: formatLocalDateTime(latestPendingOrActive.value.updatedAt),
               }
             : null,
           reservations: reservations.items.map(reservation => ({
             ...toContractReservation(reservation),
+            createdAtDisplay: formatLocalDateTime(reservation.createdAt),
+            endTimeDisplay: formatLocalDateTime(reservation.endTime),
             prepaidDisplay: formatMinorVnd(Number(reservation.prepaid.toString())),
+            startTimeDisplay: formatLocalDateTime(reservation.startTime),
             statusLabel: getReservationStatusLabel(reservation.status),
+            updatedAtDisplay: formatLocalDateTime(reservation.updatedAt),
           })),
         };
       },
@@ -88,8 +96,12 @@ export function createCustomerReservationTools(args: CreateCustomerToolsArgs) {
           detail: Option.isSome(detail) && detail.value.user.id === args.userId
             ? {
                 ...toContractReservationExpanded(detail.value),
+                createdAtDisplay: formatLocalDateTime(detail.value.createdAt),
+                endTimeDisplay: formatLocalDateTime(detail.value.endTime),
                 prepaidDisplay: formatMinorVnd(Number(detail.value.prepaid.toString())),
+                startTimeDisplay: formatLocalDateTime(detail.value.startTime),
                 statusLabel: getReservationStatusLabel(detail.value.status),
+                updatedAtDisplay: formatLocalDateTime(detail.value.updatedAt),
               }
             : null,
         };

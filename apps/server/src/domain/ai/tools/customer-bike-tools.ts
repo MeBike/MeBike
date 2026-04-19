@@ -7,7 +7,7 @@ import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
 
 import {
   BikeDetailInputSchema,
-
+  formatLocalDateTime,
   toBikeAiDetail,
 } from "./customer-tool-helpers";
 import { BikeDetailToolOutputSchema } from "./customer-tool-schemas";
@@ -35,7 +35,13 @@ export function createCustomerBikeTools(args: CreateCustomerToolsArgs) {
 
         return {
           reference: input.reference,
-          detail: Option.isSome(bike) ? toBikeAiDetail(bike.value) : null,
+          detail: Option.isSome(bike)
+            ? {
+                ...toBikeAiDetail(bike.value),
+                createdAtDisplay: formatLocalDateTime(bike.value.createdAt),
+                updatedAtDisplay: formatLocalDateTime(bike.value.updatedAt),
+              }
+            : null,
         };
       },
     }),

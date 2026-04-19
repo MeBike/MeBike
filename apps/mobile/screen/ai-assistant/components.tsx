@@ -5,6 +5,7 @@ import { useMarkdown } from "react-native-marked";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type {
+  AiAssistantActionCard,
   AiAssistantFeedMessage,
   AiAssistantToolActivity,
   AiAssistantToolActivityState,
@@ -13,6 +14,7 @@ import type {
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, spaceScale } from "@theme/metrics";
 import { fontFaces, fontSizes, lineHeights } from "@theme/typography";
+import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 
@@ -188,6 +190,207 @@ export function ToolActivityRow({ activity }: { activity: AiAssistantToolActivit
   );
 }
 
+export function ToolApprovalActions({
+  activity,
+  disabled,
+  onApprove,
+  onDeny,
+}: {
+  activity: AiAssistantToolActivity;
+  disabled: boolean;
+  onApprove: (approvalId: string) => void;
+  onDeny: (approvalId: string) => void;
+}) {
+  if (activity.rawState !== "approval-requested" || !activity.approvalId) {
+    return null;
+  }
+
+  return (
+    <XStack gap="$2">
+      <AppButton
+        buttonSize="compact"
+        disabled={disabled}
+        onPress={() => onApprove(activity.approvalId!)}
+        tone="primary"
+      >
+        Xác nhận
+      </AppButton>
+      <AppButton
+        buttonSize="compact"
+        disabled={disabled}
+        onPress={() => onDeny(activity.approvalId!)}
+        tone="outline"
+      >
+        Từ chối
+      </AppButton>
+    </XStack>
+  );
+}
+
+function getActionCardAccent(state: AiAssistantActionCard["state"]) {
+  switch (state) {
+    case "success":
+      return {
+        iconColorKey: "statusSuccess" as const,
+        titleTone: "default" as const,
+      };
+    case "failure":
+    case "denied":
+      return {
+        iconColorKey: "statusDanger" as const,
+        titleTone: "danger" as const,
+      };
+    default:
+      return {
+        iconColorKey: "actionPrimary" as const,
+        titleTone: "default" as const,
+      };
+  }
+}
+
+function getActionCardStateLabel(state: AiAssistantActionCard["state"]) {
+  switch (state) {
+    case "approval":
+      return "Yêu cầu xác nhận";
+    case "success":
+      return "Thực hiện thành công";
+    case "failure":
+      return "Không thể thực hiện";
+    case "denied":
+      return "Đã từ chối";
+    default:
+      return "Trạng thái thao tác";
+  }
+}
+
+function ActionCardIcon({ state }: { state: AiAssistantActionCard["state"] }) {
+  const theme = useTheme();
+  const accent = getActionCardAccent(state);
+  const color = theme[accent.iconColorKey].val;
+
+  if (state === "success") {
+    return <Check color={color} size={18} />;
+  }
+
+  if (state === "failure" || state === "denied") {
+    return <TriangleAlert color={color} size={18} />;
+  }
+
+  return <Sparkles color={color} size={18} />;
+}
+
+function ActionCardSummary({ items }: { items: AiAssistantActionCard["summaryItems"] }) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <YStack
+      backgroundColor="$surfaceSubtle"
+      borderColor="$borderSubtle"
+      borderRadius="$4"
+      borderWidth={borderWidths.subtle}
+      gap="$3"
+      padding="$4"
+      width="100%"
+    >
+      {items.map(item => (
+        <YStack key={`${item.label}:${item.value}`} gap="$1">
+          <AppText tone="subtle" variant="bodySmall">
+            {item.label}
+          </AppText>
+          <AppText variant="bodyStrong">
+            {item.value}
+          </AppText>
+        </YStack>
+      ))}
+    </YStack>
+  );
+}
+
+export function ActionToolCard({
+  approvalBusy,
+  card,
+  onApprove,
+  onDeny,
+}: {
+  approvalBusy: boolean;
+  card: AiAssistantActionCard;
+  onApprove: (approvalId: string) => void;
+  onDeny: (approvalId: string) => void;
+}) {
+  const accent = getActionCardAccent(card.state);
+
+  return (
+    <AppCard
+      alignSelf="flex-start"
+      backgroundColor="$surfaceDefault"
+      borderColor="$borderSubtle"
+      borderTopLeftRadius="$2"
+      borderWidth={borderWidths.subtle}
+      chrome="flat"
+      gap="$4"
+      maxWidth="92%"
+      padding="$4"
+      size="default"
+    >
+      <XStack alignItems="center" gap="$3">
+        <XStack
+          alignItems="center"
+          backgroundColor="$surfaceSubtle"
+          borderRadius="$round"
+          height={44}
+          justifyContent="center"
+          width={44}
+        >
+          <ActionCardIcon state={card.state} />
+        </XStack>
+
+        <YStack flex={1} gap="$1">
+          <AppText tone={accent.titleTone} variant="bodyStrong">
+            {getActionCardStateLabel(card.state)}
+          </AppText>
+          <AppText variant="label">{card.title}</AppText>
+        </YStack>
+      </XStack>
+
+      {card.description
+        ? (
+            <AppText variant="bodySmall">{card.description}</AppText>
+          )
+        : null}
+
+      <ActionCardSummary items={card.summaryItems} />
+
+      {card.state === "approval" && card.approvalId
+        ? (
+            <XStack gap="$2">
+              <AppButton
+                buttonSize="compact"
+                disabled={approvalBusy}
+                flex={1}
+                onPress={() => onDeny(card.approvalId!)}
+                tone="outline"
+              >
+                Từ chối
+              </AppButton>
+              <AppButton
+                buttonSize="compact"
+                disabled={approvalBusy}
+                flex={1}
+                onPress={() => onApprove(card.approvalId!)}
+                tone="primary"
+              >
+                Xác nhận
+              </AppButton>
+            </XStack>
+          )
+        : null}
+
+    </AppCard>
+  );
+}
+
 export function AssistantBubble({ markdown }: { markdown: string }) {
   return (
     <AppCard
@@ -207,16 +410,49 @@ export function AssistantBubble({ markdown }: { markdown: string }) {
   );
 }
 
-export function AssistantMessageBlock({ message }: { message: AiAssistantFeedMessage }) {
+export function AssistantMessageBlock({
+  approvalBusy,
+  message,
+  onApproveTool,
+  onDenyTool,
+}: {
+  approvalBusy: boolean;
+  message: AiAssistantFeedMessage;
+  onApproveTool: (approvalId: string) => void;
+  onDenyTool: (approvalId: string) => void;
+}) {
   return (
     <YStack alignItems="flex-start" gap="$2">
-      {message.toolActivities.map((activity, index) => (
-        <YStack key={activity.key} marginTop={index > 0 ? -spaceScale[1] : 0}>
-          <ToolActivityRow activity={activity} />
-        </YStack>
-      ))}
-
-      {message.hasTextContent ? <AssistantBubble markdown={message.markdown} /> : null}
+      {message.contentBlocks.map((block, index) => {
+        switch (block.kind) {
+          case "action-card":
+            return (
+              <ActionToolCard
+                approvalBusy={approvalBusy}
+                card={block.card}
+                key={block.key}
+                onApprove={onApproveTool}
+                onDeny={onDenyTool}
+              />
+            );
+          case "tool-activity":
+            return (
+              <YStack gap="$2" key={block.key} marginTop={index > 0 ? -spaceScale[1] : 0}>
+                <ToolActivityRow activity={block.activity} />
+                <ToolApprovalActions
+                  activity={block.activity}
+                  disabled={approvalBusy}
+                  onApprove={onApproveTool}
+                  onDeny={onDenyTool}
+                />
+              </YStack>
+            );
+          case "text":
+            return <AssistantBubble key={block.key} markdown={block.markdown} />;
+          default:
+            return null;
+        }
+      })}
     </YStack>
   );
 }
