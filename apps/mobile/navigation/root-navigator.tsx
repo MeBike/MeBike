@@ -4,6 +4,7 @@ import React from "react";
 import type { RootStackParamList } from "../types/navigation";
 
 import {
+  AiAssistantScreen,
   BikeDetailScreen,
   BookingHistoryDetailScreen,
   ChangePasswordScreen,
@@ -47,6 +48,11 @@ function RootNavigator() {
         name="Main"
         component={MainTabNavigator}
         options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="AiAssistant"
+        component={AiAssistantScreen}
+        options={{ headerShown: false, gestureEnabled: true }}
       />
       <Stack.Screen
         name="Login"
