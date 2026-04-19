@@ -1,6 +1,7 @@
 import type { AiChatContext } from "@mebike/shared";
 
 import { convertToModelMessages, stepCountIs, streamText, validateUIMessages } from "ai";
+import type { OpenRouterUsageAccounting } from "@openrouter/ai-sdk-provider";
 import { Context, Effect, Layer } from "effect";
 
 import { env } from "@/config/env";
@@ -32,6 +33,47 @@ type AiChatArgs = {
   readonly messages: unknown;
   readonly userId: string;
 };
+
+function getOpenRouterUsageAccounting(providerMetadata: unknown): OpenRouterUsageAccounting | null {
+  if (!providerMetadata || typeof providerMetadata !== "object") {
+    return null;
+  }
+
+  const openrouter = (providerMetadata as { openrouter?: { usage?: OpenRouterUsageAccounting } }).openrouter;
+  return openrouter?.usage ?? null;
+}
+
+function formatAiUsageMetrics(usage: OpenRouterUsageAccounting | null) {
+  if (!usage) {
+    return null;
+  }
+
+  const promptTokens = usage.promptTokens;
+  const completionTokens = usage.completionTokens;
+  const totalTokens = usage.totalTokens;
+  const cachedTokens = usage.promptTokensDetails?.cachedTokens ?? 0;
+  const upstreamCost = usage.costDetails?.upstreamInferenceCost;
+  const billedCost = usage.cost;
+  const cacheHitRate = promptTokens > 0 ? cachedTokens / promptTokens : 0;
+  const savings = upstreamCost !== undefined && billedCost !== undefined
+    ? upstreamCost - billedCost
+    : undefined;
+  const savingsRate = upstreamCost && upstreamCost > 0 && savings !== undefined
+    ? savings / upstreamCost
+    : undefined;
+
+  return {
+    billedCost,
+    cacheHitRate,
+    cachedTokens,
+    completionTokens,
+    promptTokens,
+    savings,
+    savingsRate,
+    totalTokens,
+    upstreamCost,
+  };
+}
 
 export type AiChatService = {
   readonly streamCustomerAssistant: (
@@ -97,6 +139,34 @@ const makeAiChatService = Effect.gen(function* () {
         messages: modelMessages,
         activeTools: getActiveCustomerTools(args.context?.screen),
         tools,
+        onAbort: () => {
+          logger.info({
+            chatId: args.chatId,
+            context: args.context,
+            model: env.AI_MODEL,
+            providerOnly: env.OPENROUTER_PROVIDER_ONLY,
+            quantizations: env.OPENROUTER_PROVIDER_QUANTIZATIONS,
+            userId: args.userId,
+          }, "AI stream aborted");
+        },
+        onFinish: (event) => {
+          const usage = getOpenRouterUsageAccounting(event.providerMetadata);
+
+          logger.info({
+            chatId: args.chatId,
+            context: args.context,
+            finishReason: event.finishReason,
+            model: env.AI_MODEL,
+            providerOnly: env.OPENROUTER_PROVIDER_ONLY,
+            quantizations: env.OPENROUTER_PROVIDER_QUANTIZATIONS,
+            rawFinishReason: event.rawFinishReason,
+            responseId: event.response.id,
+            steps: event.steps.length,
+            usage: formatAiUsageMetrics(usage),
+            userId: args.userId,
+            warnings: event.warnings,
+          }, "AI stream finished");
+        },
       });
 
       return result.toUIMessageStreamResponse({
