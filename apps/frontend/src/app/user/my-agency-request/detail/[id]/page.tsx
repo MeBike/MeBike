@@ -31,7 +31,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyAgencyRequestDetail]);
-    if (isVisualLoading) {
+  if (isVisualLoading) {
     return <LoadingScreen />;
   }
   if (!myAgencyRequestDetail) {
