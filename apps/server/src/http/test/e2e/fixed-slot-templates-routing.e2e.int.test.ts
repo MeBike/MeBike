@@ -20,13 +20,13 @@ describe("fixed-slot templates routing e2e", () => {
     },
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-10T00:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("user can create fixed-slot template", async () => {
