@@ -50,10 +50,6 @@ export function useAiAssistantChat({
     onError,
   });
 
-  useEffect(() => {
-    setMessages(initialMessages ?? []);
-  }, [initialMessages, setMessages]);
-
   const sendTextMessage = useCallback(async (text: string, options?: ChatRequestOptions) => {
     const trimmedText = text.trim();
 
