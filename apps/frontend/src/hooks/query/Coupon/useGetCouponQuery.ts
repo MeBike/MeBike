@@ -14,17 +14,23 @@ const getCoupon = async ({
       pageSize: pageSize,
     });
     if (response.status === HTTP_STATUS.OK) {
-        return response.data
+      return response.data;
     }
   } catch (error) {
     console.error(error);
     throw new Error("Failed to fetch coupon");
   }
 };
-export const useGetCoupons = ({page,pageSize}:{page?:number,pageSize?:number}) => {
-    return useQuery({
-        queryKey:["data","coupons"],
-        queryFn : () => getCoupon({page:page,pageSize:pageSize}),
-        enabled:false,
-    })
-}
+export const useGetCoupons = ({
+  page,
+  pageSize,
+}: {
+  page?: number;
+  pageSize?: number;
+}) => {
+  return useQuery({
+    queryKey: ["data", "coupons"],
+    queryFn: () => getCoupon({ page: page, pageSize: pageSize }),
+    enabled: false,
+  });
+};

@@ -7,10 +7,11 @@ import { Eye, Edit } from "lucide-react";
 
 interface CouponColumnProps {
   onView: (coupon: Coupon) => void;
-  onEdit: (coupon: Coupon) => void;
+  onActive: (coupon: Coupon) => void;
+  onDeactive: (coupon: Coupon) => void;
 }
 
-export const couponColumns = ({ onView, onEdit }: CouponColumnProps): ColumnDef<Coupon>[] => [
+export const couponColumns = ({ onView, onActive, onDeactive }: CouponColumnProps): ColumnDef<Coupon>[] => [
   {
     accessorKey: "name",
     header: "Tên Coupon",
@@ -38,9 +39,15 @@ export const couponColumns = ({ onView, onEdit }: CouponColumnProps): ColumnDef<
         <Button variant="ghost" size="icon" onClick={() => onView(row.original)}>
           <Eye className="w-4 h-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => onEdit(row.original)}>
-          <Edit className="w-4 h-4" />
-        </Button>
+        {row.original.status === "ACTIVE" ? (
+          <Button variant="ghost" size="icon" onClick={() => onDeactive(row.original)}>
+            <Edit className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button variant="ghost" size="icon" onClick={() => onActive(row.original)}>
+            <Edit className="w-4 h-4" />
+          </Button>
+        )}
       </div>
     ),
   },

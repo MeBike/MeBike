@@ -2,7 +2,7 @@ import { CreateCouponRuleData } from "./../../../server/src/domain/coupons/model
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useCallback } from "react";
-import { useCreateCouponMutation } from "@mutations";
+import { useCreateCouponMutation,useActiveCouponMutation,useDeactiveCouponMutation} from "@mutations";
 import {
   useGetCouponStats,
   useGetCoupons,
@@ -68,6 +68,8 @@ export const useCoupon = ({
     refetchUsageCouponLog();
   }, [hasToken, router, refetchUsageCouponLog, page, pageSize]);
   const useCreateCoupon = useCreateCouponMutation();
+  const useActiveCoupon = useActiveCouponMutation();
+  const useDeactiveCoupon = useDeactiveCouponMutation();
   const createCoupon = useCallback(
     async (data: CreateAdminCouponRuleBody) => {
       if (!hasToken) {
@@ -90,7 +92,50 @@ export const useCoupon = ({
     },
     [useCreateCoupon, hasToken, router, page, pageSize, queryClient],
   );
-
+  const activeCoupon = useCallback(
+    async (id:string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useActiveCoupon.mutateAsync(id);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Active coupon thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["data", "coupons"],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromCouponCode(error_code));
+        throw error;
+      }
+    },
+    [useCreateCoupon, hasToken, router, page, pageSize, queryClient],
+  );
+  const deactiveCoupon = useCallback(
+    async (id:string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useDeactiveCoupon.mutateAsync(id);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Deactive coupon thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["data", "coupons"],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromCouponCode(error_code));
+        throw error;
+      }
+    },
+    [useCreateCoupon, hasToken, router, page, pageSize, queryClient],
+  );
   return {
     dataCoupons,
     isLoadingCoupons,
@@ -105,5 +150,7 @@ export const useCoupon = ({
     getCouponStats,
     getUsageCouponLog,
     createCoupon,
+    activeCoupon,
+    deactiveCoupon,
   };
 };

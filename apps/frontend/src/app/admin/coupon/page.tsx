@@ -17,7 +17,7 @@ export default function CouponPage() {
   
   const {
     dataCoupons, isLoadingCoupons, getCoupons,
-    dataCouponStats, getCouponStats // Thêm hook gọi stats
+    dataCouponStats, getCouponStats,activeCoupon,deactiveCoupon 
   } = useCoupon({ hasToken: true, pageSize: 10, page: page });
 
   useEffect(() => {
@@ -51,7 +51,8 @@ export default function CouponPage() {
             <DataTable
               columns={couponColumns({
                 onView: ({ id }) => router.push(`/admin/coupons/detail/${id}`),
-                onEdit: ({ id }) => router.push(`/admin/coupons/edit/${id}`),
+                onActive: ({ id }) => activeCoupon(id),
+                onDeactive: ({ id }) => deactiveCoupon(id),
               })}
               data={dataCoupons?.data || []}
             />

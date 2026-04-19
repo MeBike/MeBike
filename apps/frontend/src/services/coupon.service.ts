@@ -36,13 +36,13 @@ export const couponService = {
     return response;
   },
   activeCoupon: async (id: string): Promise<AxiosResponse<Coupon>> => {
-    const response = await fetchHttpClient.put<Coupon>(
+    const response = await fetchHttpClient.patch<Coupon>(
       ENDPOINT.COUPON.ACTIVE(id),
     );
     return response;
   },
   deactiveCoupon: async (id: string): Promise<AxiosResponse<Coupon>> => {
-    const response = await fetchHttpClient.put<Coupon>(
+    const response = await fetchHttpClient.patch<Coupon>(
       ENDPOINT.COUPON.DEACTIVE(id),
     );
     return response;
