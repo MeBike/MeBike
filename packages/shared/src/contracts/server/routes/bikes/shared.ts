@@ -95,6 +95,12 @@ export const UpdateBikeBodySchema = z.object({
   status: BikeStatusSchema.optional(),
 }).openapi("UpdateBikeBody");
 
+export const BikeManageableStatusSchema = z.enum(["AVAILABLE", "BROKEN"]).openapi("BikeManageableStatus");
+
+export const BikeStatusUpdateBodySchema = z.object({
+  status: BikeManageableStatusSchema,
+}).openapi("BikeStatusUpdateBody");
+
 export const BikeSummarySchemaOpenApi = BikeSummarySchema.openapi("BikeSummary", {
   description: "Bike summary details",
 });

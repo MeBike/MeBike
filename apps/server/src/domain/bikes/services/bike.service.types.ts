@@ -9,9 +9,12 @@ import type {
   BikeNotFound,
   BikeStationNotFound,
   BikeSupplierNotFound,
+  InvalidBikeStatus,
 } from "../domain-errors";
 import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 import type { BikeUpdatePatch } from "../repository/bike.repository.types";
+
+export type BikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN">;
 
 export type BikeService = {
   createBike: (
@@ -44,5 +47,17 @@ export type BikeService = {
     | BikeNotFound
     | BikeStationNotFound
     | BikeSupplierNotFound
+  >;
+
+  updateBikeStatusInStationScope: (
+    bikeId: string,
+    input: {
+      stationId: string;
+      status: BikeManageableStatus;
+    },
+  ) => Effect.Effect<
+    BikeRow,
+    | BikeNotFound
+    | InvalidBikeStatus
   >;
 };

@@ -7,8 +7,10 @@ import {
   BikeReportForbiddenResponseSchema,
   BikeUpdateConflictResponseSchema,
 } from "../../bikes";
+import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   BikeIdParamSchema,
+  BikeStatusUpdateBodySchema,
   BikeSummarySchemaOpenApi,
   CreateBikeBodySchema,
   UpdateBikeBodySchema,
@@ -122,6 +124,106 @@ export const deleteBike = createRoute({
         "application/json": { schema: BikeNotFoundResponseSchema },
       },
     },
+  },
+});
+
+export const managerUpdateBikeStatus = createRoute({
+  method: "patch",
+  path: "/v1/manager/bikes/{id}/status",
+  tags: ["Manager", "Bikes"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeIdParamSchema,
+    body: {
+      content: {
+        "application/json": { schema: BikeStatusUpdateBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Bike status updated successfully",
+      content: {
+        "application/json": { schema: BikeSummarySchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid bike status transition",
+      content: {
+        "application/json": {
+          schema: BikeUpdateConflictResponseSchema,
+          examples: {
+            InvalidTransition: {
+              value: {
+                error: "Invalid bike status transition",
+                details: {
+                  code: BikeErrorCodeSchema.enum.INVALID_BIKE_STATUS,
+                  status: "AVAILABLE",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Bike not found in manager scope",
+      content: {
+        "application/json": { schema: BikeNotFoundResponseSchema },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Manager"),
+  },
+});
+
+export const agencyUpdateBikeStatus = createRoute({
+  method: "patch",
+  path: "/v1/agency/bikes/{id}/status",
+  tags: ["Agency", "Bikes"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeIdParamSchema,
+    body: {
+      content: {
+        "application/json": { schema: BikeStatusUpdateBodySchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Bike status updated successfully",
+      content: {
+        "application/json": { schema: BikeSummarySchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid bike status transition",
+      content: {
+        "application/json": {
+          schema: BikeUpdateConflictResponseSchema,
+          examples: {
+            InvalidTransition: {
+              value: {
+                error: "Invalid bike status transition",
+                details: {
+                  code: BikeErrorCodeSchema.enum.INVALID_BIKE_STATUS,
+                  status: "BROKEN",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "Bike not found in agency scope",
+      content: {
+        "application/json": { schema: BikeNotFoundResponseSchema },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
   },
 });
 
