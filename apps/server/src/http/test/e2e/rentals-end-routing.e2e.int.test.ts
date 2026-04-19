@@ -246,6 +246,122 @@ describe("rentals end routing e2e", () => {
     expect(body.id).toBe(rental.id);
   });
 
+  it("lets agency use the agency rentals list but only for its station", async () => {
+    const { agency, token: agencyToken, station } = await createAgencyToken();
+    const riderA = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: riderA.id, balance: 100_000n });
+    const visibleBike = await fixture.factories.bike({ stationId: station.id, status: "BOOKED" });
+    const visibleRental = await fixture.factories.rental({
+      userId: riderA.id,
+      bikeId: visibleBike.id,
+      startStationId: station.id,
+      startTime: new Date("2026-03-21T08:00:00.000Z"),
+      status: "RENTED",
+    });
+
+    const otherAgency = await fixture.prisma.agency.create({
+      data: {
+        name: `Other Agency ${agency.id}`,
+        contactPhone: "0287654321",
+        status: "ACTIVE",
+      },
+    });
+    const hiddenStation = await fixture.factories.station({
+      capacity: 5,
+      stationType: "AGENCY",
+      agencyId: otherAgency.id,
+    });
+    const riderB = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: riderB.id, balance: 100_000n });
+    const hiddenBike = await fixture.factories.bike({ stationId: hiddenStation.id, status: "BOOKED" });
+    await fixture.factories.rental({
+      userId: riderB.id,
+      bikeId: hiddenBike.id,
+      startStationId: hiddenStation.id,
+      startTime: new Date("2026-03-21T09:00:00.000Z"),
+      status: "RENTED",
+    });
+
+    const response = await fixture.app.request("http://test/v1/agency/rentals?page=1&pageSize=20", {
+      headers: {
+        Authorization: `Bearer ${agencyToken}`,
+      },
+    });
+
+    const body = await response.json() as RentalsContracts.AdminRentalsListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.id).toBe(visibleRental.id);
+  });
+
+  it("allows agency to fetch rental detail from the agency route for its station", async () => {
+    const { token: agencyToken, station } = await createAgencyToken();
+    const rider = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: rider.id, balance: 100_000n });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "BOOKED" });
+    const rental = await fixture.factories.rental({
+      userId: rider.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime: new Date("2026-03-21T08:00:00.000Z"),
+      status: "RENTED",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/agency/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${agencyToken}`,
+      },
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+  });
+
+  it("allows agency to fetch rental detail when its station is the end station", async () => {
+    const { token: agencyToken, station } = await createAgencyToken();
+    const rider = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: rider.id, balance: 100_000n });
+    const startStation = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    const rental = await fixture.factories.rental({
+      userId: rider.id,
+      bikeId: bike.id,
+      startStationId: startStation.id,
+      endStationId: station.id,
+      startTime: new Date("2026-03-21T08:00:00.000Z"),
+      endTime: new Date("2026-03-21T09:00:00.000Z"),
+      status: "COMPLETED",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/agency/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${agencyToken}`,
+      },
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.endStation?.id).toBe(station.id);
+  });
+
+  it("hides rental detail from agency when the rental is outside its station", async () => {
+    const { token: agencyToken } = await createAgencyToken();
+    const { rental } = await createActiveRentalGraph();
+
+    const response = await fixture.app.request(`http://test/v1/agency/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${agencyToken}`,
+      },
+    });
+
+    expect(response.status).toBe(404);
+  });
+
   it("hides rental detail from manager when the rental is outside their station", async () => {
     const { rental } = await createActiveRentalGraph();
     const otherStation = await fixture.factories.station({ capacity: 5 });

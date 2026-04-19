@@ -28,6 +28,24 @@ describe("operator stations routing e2e", () => {
     return fixture.auth.makeAccessToken({ userId: user.id, role });
   }
 
+  async function createAgencyToken() {
+    const agencyUser = await fixture.factories.user({ role: "AGENCY" });
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        name: `Agency ${agencyUser.id}`,
+        contactPhone: "0281234567",
+        status: "ACTIVE",
+      },
+    });
+
+    await fixture.factories.userOrgAssignment({ userId: agencyUser.id, agencyId: agency.id });
+
+    return {
+      agency,
+      token: fixture.auth.makeAccessToken({ userId: agencyUser.id, role: "AGENCY" }),
+    };
+  }
+
   it("lists only the assigned station for staff", async () => {
     const currentStation = await fixture.factories.station({ capacity: 5, name: "Current Station" });
     await fixture.factories.station({ capacity: 5, name: "Hidden Station" });
@@ -52,6 +70,47 @@ describe("operator stations routing e2e", () => {
     const token = await createOperatorToken("TECHNICIAN", currentStation.id);
 
     const response = await fixture.app.request(`http://test/v1/staff/stations/${hiddenStation.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.status).toBe(404);
+  });
+
+  it("lists only the assigned station for agency", async () => {
+    const { agency, token } = await createAgencyToken();
+    const currentStation = await fixture.factories.station({
+      capacity: 5,
+      name: "Agency Station",
+      stationType: "AGENCY",
+      agencyId: agency.id,
+    });
+    await fixture.factories.station({ capacity: 5, name: "Hidden Station" });
+
+    const response = await fixture.app.request("http://test/v1/agency/stations?page=1&pageSize=20", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const body = await response.json() as StationsContracts.StationListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.id).toBe(currentStation.id);
+  });
+
+  it("returns 404 when agency requests a different station detail", async () => {
+    const { agency, token } = await createAgencyToken();
+    await fixture.factories.station({
+      capacity: 5,
+      stationType: "AGENCY",
+      agencyId: agency.id,
+    });
+    const hiddenStation = await fixture.factories.station({ capacity: 5 });
+
+    const response = await fixture.app.request(`http://test/v1/agency/stations/${hiddenStation.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

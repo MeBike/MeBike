@@ -58,6 +58,13 @@ export function registerRentalRoutes(
 
   app.openapi(staffListRoute, RentalStaffController.staffListRentals);
 
+  const agencyListRoute = {
+    ...rentals.agencyListRentals,
+    middleware: [requireAgencyMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(agencyListRoute, RentalAgencyController.agencyListRentals);
+
   const confirmReturnByOperatorRoute = {
     ...rentals.confirmRentalReturnByOperator,
     middleware: [requireRentalOperatorManagerMiddleware] as const,
@@ -229,6 +236,13 @@ export function registerRentalRoutes(
     agencyGetSwapRequestRoute,
     RentalAgencyController.agencyGetBikeSwapRequests,
   );
+
+  const agencyGetRoute = {
+    ...rentals.agencyGetRental,
+    middleware: [requireAgencyMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(agencyGetRoute, RentalAgencyController.agencyGetRental);
 
   const agencyApproveSwapRoute = {
     ...rentals.agencyApproveBikeSwapRequest,

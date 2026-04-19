@@ -88,6 +88,71 @@ describe("operator bikes routing e2e", () => {
     expect(response.status).toBe(404);
   });
 
+  it("lists only bikes from the assigned station for agency", async () => {
+    const { agency, token } = await createAgencyContext();
+    const visibleStation = await fixture.factories.station({
+      stationType: "AGENCY",
+      capacity: 5,
+      agencyId: agency.id,
+    });
+    const otherAgency = await fixture.prisma.agency.create({
+      data: {
+        name: `Other Agency ${agency.id}`,
+        contactPhone: "0287654321",
+        status: "ACTIVE",
+      },
+    });
+    const hiddenStation = await fixture.factories.station({
+      stationType: "AGENCY",
+      capacity: 5,
+      agencyId: otherAgency.id,
+    });
+    const visibleBike = await fixture.factories.bike({ stationId: visibleStation.id, status: "AVAILABLE" });
+    await fixture.factories.bike({ stationId: hiddenStation.id, status: "AVAILABLE" });
+
+    const response = await fixture.app.request("http://test/v1/agency/bikes?page=1&pageSize=20", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const body = await response.json() as { data: Array<{ id: string }> };
+
+    expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.id).toBe(visibleBike.id);
+  });
+
+  it("returns 404 when agency requests bike detail outside its station", async () => {
+    const { agency, token } = await createAgencyContext();
+    await fixture.factories.station({
+      stationType: "AGENCY",
+      capacity: 5,
+      agencyId: agency.id,
+    });
+    const otherAgency = await fixture.prisma.agency.create({
+      data: {
+        name: `Hidden Agency ${agency.id}`,
+        contactPhone: "0287000000",
+        status: "ACTIVE",
+      },
+    });
+    const hiddenStation = await fixture.factories.station({
+      stationType: "AGENCY",
+      capacity: 5,
+      agencyId: otherAgency.id,
+    });
+    const hiddenBike = await fixture.factories.bike({ stationId: hiddenStation.id, status: "AVAILABLE" });
+
+    const response = await fixture.app.request(`http://test/v1/agency/bikes/${hiddenBike.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.status).toBe(404);
+  });
+
   it("allows manager to toggle an in-scope bike from available to broken", async () => {
     const station = await fixture.factories.station({ capacity: 5 });
     const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
@@ -151,6 +216,64 @@ describe("operator bikes routing e2e", () => {
     const token = await createOperatorToken("MANAGER", station.id);
 
     const response = await fixture.app.request(`http://test/v1/manager/bikes/${bike.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "BROKEN" }),
+    });
+
+    expect(response.status).toBe(404);
+  });
+
+  it("allows technician to toggle an in-scope bike from available to broken", async () => {
+    const station = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+    const token = await createOperatorToken("TECHNICIAN", station.id);
+
+    const response = await fixture.app.request(`http://test/v1/technician/bikes/${bike.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "BROKEN" }),
+    });
+
+    const body = await response.json() as { status: string };
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("BROKEN");
+  });
+
+  it("returns 400 when technician requests an invalid status transition", async () => {
+    const station = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "BROKEN" });
+    const token = await createOperatorToken("TECHNICIAN", station.id);
+
+    const response = await fixture.app.request(`http://test/v1/technician/bikes/${bike.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "BROKEN" }),
+    });
+
+    const body = await response.json() as { details?: { code?: string } };
+
+    expect(response.status).toBe(400);
+    expect(body.details?.code).toBe("INVALID_BIKE_STATUS");
+  });
+
+  it("returns 404 when technician updates a bike outside station scope", async () => {
+    const visibleStation = await fixture.factories.station({ capacity: 5 });
+    const hiddenStation = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: hiddenStation.id, status: "AVAILABLE" });
+    const token = await createOperatorToken("TECHNICIAN", visibleStation.id);
+
+    const response = await fixture.app.request(`http://test/v1/technician/bikes/${bike.id}/status`, {
       method: "PATCH",
       headers: {
         "Authorization": `Bearer ${token}`,

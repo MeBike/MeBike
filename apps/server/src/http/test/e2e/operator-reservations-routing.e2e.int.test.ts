@@ -38,6 +38,24 @@ describe("operator reservations routing e2e", () => {
     return fixture.auth.makeAccessToken({ userId: manager.id, role: "MANAGER" });
   }
 
+  async function createAgencyToken() {
+    const agencyUser = await fixture.factories.user({ role: "AGENCY" });
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        name: `Agency ${agencyUser.id}`,
+        contactPhone: "0281234567",
+        status: "ACTIVE",
+      },
+    });
+
+    await fixture.factories.userOrgAssignment({ userId: agencyUser.id, agencyId: agency.id });
+
+    return {
+      agency,
+      token: fixture.auth.makeAccessToken({ userId: agencyUser.id, role: "AGENCY" }),
+    };
+  }
+
   it("lets manager use the staff reservations list but only for their station", async () => {
     const visibleStation = await fixture.factories.station({ capacity: 5 });
     const hiddenStation = await fixture.factories.station({ capacity: 5 });
@@ -87,6 +105,60 @@ describe("operator reservations routing e2e", () => {
     const response = await fixture.app.request(`http://test/v1/staff/reservations/${reservation.id}`, {
       headers: {
         Authorization: `Bearer ${staffToken}`,
+      },
+    });
+
+    expect(response.status).toBe(404);
+  });
+
+  it("lets agency use the agency reservations list but only for its station", async () => {
+    const { agency, token } = await createAgencyToken();
+    const visibleStation = await fixture.factories.station({ capacity: 5, stationType: "AGENCY", agencyId: agency.id });
+    const hiddenStation = await fixture.factories.station({ capacity: 5 });
+    const riderA = await fixture.factories.user({ role: "USER" });
+    const riderB = await fixture.factories.user({ role: "USER" });
+    const bikeA = await fixture.factories.bike({ stationId: visibleStation.id, status: "RESERVED" });
+    const bikeB = await fixture.factories.bike({ stationId: hiddenStation.id, status: "RESERVED" });
+
+    const visibleReservation = await fixture.factories.reservation({
+      userId: riderA.id,
+      bikeId: bikeA.id,
+      stationId: visibleStation.id,
+    });
+    await fixture.factories.reservation({
+      userId: riderB.id,
+      bikeId: bikeB.id,
+      stationId: hiddenStation.id,
+    });
+
+    const response = await fixture.app.request("http://test/v1/agency/reservations?page=1&pageSize=20", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const body = await response.json() as ReservationsContracts.ListStaffReservationsResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.id).toBe(visibleReservation.id);
+  });
+
+  it("returns 404 when agency requests reservation detail outside its station", async () => {
+    const { agency, token } = await createAgencyToken();
+    await fixture.factories.station({ capacity: 5, stationType: "AGENCY", agencyId: agency.id });
+    const hiddenStation = await fixture.factories.station({ capacity: 5 });
+    const rider = await fixture.factories.user({ role: "USER" });
+    const hiddenBike = await fixture.factories.bike({ stationId: hiddenStation.id, status: "RESERVED" });
+    const reservation = await fixture.factories.reservation({
+      userId: rider.id,
+      bikeId: hiddenBike.id,
+      stationId: hiddenStation.id,
+    });
+
+    const response = await fixture.app.request(`http://test/v1/agency/reservations/${reservation.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
     });
 
