@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Table as TableIcon, History } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { useCoupon } from "@/hooks/use-coupon";
 import { couponColumns } from "@/columns/coupon-column";
-import { CouponStatsView } from "./components/CouponStatsView"; // Component thống kê
+import { couponUsageLogColumns } from "@/columns/coupon-usage-column";
+import { CouponStatsView } from "./components/CouponStatsView";
 
 export default function CouponPage() {
   const router = useRouter();
@@ -17,17 +18,19 @@ export default function CouponPage() {
   
   const {
     dataCoupons, isLoadingCoupons, getCoupons,
-    dataCouponStats, getCouponStats,activeCoupon,deactiveCoupon 
+    dataCouponStats, getCouponStats, activeCoupon, deactiveCoupon,
+    dataUsageCouponLog, isLoadingUsageCouponLog, getUsageCouponLog 
   } = useCoupon({ hasToken: true, pageSize: 10, page: page });
 
   useEffect(() => {
     getCoupons();
-    getCouponStats(); // Gọi luôn khi trang load
-  }, [page, getCoupons, getCouponStats]);
+    getCouponStats();
+    getUsageCouponLog();
+  }, [page, getCoupons, getCouponStats, getUsageCouponLog]);
 
   return (
-    <div className="space-y-8">
-      {/* 1. Tiêu đề và Thêm mới */}
+    <div className="space-y-10">
+      {/* 1. Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Quản lý Coupon & Thống kê</h1>
         <Button onClick={() => router.push("/admin/coupon/create")}>
@@ -35,19 +38,20 @@ export default function CouponPage() {
         </Button>
       </div>
 
-      {/* 2. Phần Thống kê (Hiện ngay trên đầu) */}
+      {/* 2. Thống kê */}
       <div className="bg-white p-6 rounded-xl border shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Tổng quan thống kê</h2>
         <CouponStatsView data={dataCouponStats} />
       </div>
 
-      {/* 3. Phần Danh sách Coupon */}
-      <div className="min-h-[500px]">
-        <h2 className="text-xl font-semibold mb-4">Danh sách Coupon</h2>
-        {isLoadingCoupons ? (
-          <TableSkeleton />
-        ) : (
-          <>
+      {/* 3. Danh sách Coupon */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <TableIcon className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-semibold">Danh sách Coupon</h2>
+        </div>
+        {isLoadingCoupons ? <TableSkeleton /> : (
+          <div className="bg-white rounded-xl border p-2">
             <DataTable
               columns={couponColumns({
                 onView: ({ id }) => router.push(`/admin/coupons/detail/${id}`),
@@ -56,16 +60,41 @@ export default function CouponPage() {
               })}
               data={dataCoupons?.data || []}
             />
-            <div className="pt-3">
+            <div className="mt-4">
               <PaginationDemo
                 currentPage={dataCoupons?.pagination?.page ?? 1}
                 onPageChange={setPage}
                 totalPages={dataCoupons?.pagination?.totalPages ?? 1}
               />
             </div>
-          </>
+          </div>
         )}
-      </div>
+      </section>
+
+      {/* 4. Lịch sử sử dụng */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <History className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-semibold">Lịch sử sử dụng Coupon</h2>
+        </div>
+        {isLoadingUsageCouponLog ? <TableSkeleton /> : (
+          <div className="bg-white rounded-xl border p-2">
+            <DataTable
+              columns={couponUsageLogColumns({
+                onView: (log) => router.push(`/admin/coupons/usage/${log.rentalId}`),
+              })}
+              data={dataUsageCouponLog?.data || []}
+            />
+            <div className="mt-4">
+              <PaginationDemo
+                currentPage={dataUsageCouponLog?.pagination?.page ?? 1}
+                onPageChange={setPage}
+                totalPages={dataUsageCouponLog?.pagination?.totalPages ?? 1}
+              />
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

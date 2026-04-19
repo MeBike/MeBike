@@ -59,8 +59,8 @@ export const couponService = {
   }: {
     page?: number;
     pageSize?: number;
-  }): Promise<AxiosResponse<CouponUsageLog[]>> => {
-    const response = await fetchHttpClient.get<CouponUsageLog[]>(
+  }): Promise<AxiosResponse<ApiResponse<CouponUsageLog[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<CouponUsageLog[]>>(
       ENDPOINT.COUPON.USAGE_COUPON_STATS_LOG,
       {
         page: page,
