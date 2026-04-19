@@ -33,20 +33,13 @@ function invalidStatusResponse(status: string): BikeUpdateConflictResponse {
   };
 }
 
-async function runScopedBikeStatusUpdate(args: {
-  id: string;
-  status: "AVAILABLE" | "BROKEN";
-  stationId: string | undefined;
-  context: string;
-  runPromise: <A, E, R>(effect: Effect.Effect<A, E, R>) => Promise<A>;
-}) {
-  const { id, status, stationId, context } = args;
+const managerUpdateBikeStatus: RouteHandler<BikesRoutes["managerUpdateBikeStatus"]> = async (c) => {
+  const { id } = c.req.valid("param");
+  const body = c.req.valid("json");
+  const stationId = c.var.currentUser?.operatorStationId;
 
   if (!stationId) {
-    return {
-      _tag: "NotFound" as const,
-      response: notFoundResponse(id),
-    };
+    return c.json<BikeNotFoundResponse, 404>(notFoundResponse(id), 404);
   }
 
   const eff = withLoggedCause(
@@ -54,102 +47,107 @@ async function runScopedBikeStatusUpdate(args: {
       const service = yield* BikeServiceTag;
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
-        status,
+        status: body.status,
       });
 
       return yield* loadBikeSummary(bike);
     }),
-    context,
+    "PATCH /v1/manager/bikes/{id}/status",
   );
 
-  const result = await args.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) => ({
-      _tag: "Success" as const,
-      response: right,
-    })),
-    Match.tag("Left", ({ left }) =>
-      Match.value(left).pipe(
-        Match.tag("BikeNotFound", ({ id: bikeId }) => ({
-          _tag: "NotFound" as const,
-          response: notFoundResponse(bikeId),
-        })),
-        Match.tag("InvalidBikeStatus", ({ status: invalidStatus }) => ({
-          _tag: "InvalidStatus" as const,
-          response: invalidStatusResponse(invalidStatus),
-        })),
-        Match.orElse((err) => {
-          throw err;
-        }),
-      )),
+    Match.tag("Right", ({ right }) =>
+      c.json<BikeSummary, 200>(right, 200)),
+    Match.tag("Left", ({ left }) => Match.value(left).pipe(
+      Match.tag("BikeNotFound", ({ id: bikeId }) =>
+        c.json<BikeNotFoundResponse, 404>(notFoundResponse(bikeId), 404)),
+      Match.tag("InvalidBikeStatus", ({ status }) =>
+        c.json<BikeUpdateConflictResponse, 400>(invalidStatusResponse(status), 400)),
+      Match.orElse((err) => {
+        throw err;
+      }),
+    )),
     Match.exhaustive,
   );
-}
-
-const managerUpdateBikeStatus: RouteHandler<BikesRoutes["managerUpdateBikeStatus"]> = async (c) => {
-  const { id } = c.req.valid("param");
-  const body = c.req.valid("json");
-  const result = await runScopedBikeStatusUpdate({
-    id,
-    status: body.status,
-    stationId: c.var.currentUser?.operatorStationId,
-    context: "PATCH /v1/manager/bikes/{id}/status",
-    runPromise: c.var.runPromise,
-  });
-
-  if (result._tag === "Success") {
-    return c.json<BikeSummary, 200>(result.response, 200);
-  }
-
-  if (result._tag === "InvalidStatus") {
-    return c.json<BikeUpdateConflictResponse, 400>(result.response, 400);
-  }
-
-  return c.json<BikeNotFoundResponse, 404>(result.response, 404);
 };
 
 const agencyUpdateBikeStatus: RouteHandler<BikesRoutes["agencyUpdateBikeStatus"]> = async (c) => {
   const { id } = c.req.valid("param");
   const body = c.req.valid("json");
-  const result = await runScopedBikeStatusUpdate({
-    id,
-    status: body.status,
-    stationId: c.var.currentUser?.operatorStationId,
-    context: "PATCH /v1/agency/bikes/{id}/status",
-    runPromise: c.var.runPromise,
-  });
+  const stationId = c.var.currentUser?.operatorStationId;
 
-  if (result._tag === "Success") {
-    return c.json<BikeSummary, 200>(result.response, 200);
+  if (!stationId) {
+    return c.json<BikeNotFoundResponse, 404>(notFoundResponse(id), 404);
   }
 
-  if (result._tag === "InvalidStatus") {
-    return c.json<BikeUpdateConflictResponse, 400>(result.response, 400);
-  }
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* BikeServiceTag;
+      const bike = yield* service.updateBikeStatusInStationScope(id, {
+        stationId,
+        status: body.status,
+      });
 
-  return c.json<BikeNotFoundResponse, 404>(result.response, 404);
+      return yield* loadBikeSummary(bike);
+    }),
+    "PATCH /v1/agency/bikes/{id}/status",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<BikeSummary, 200>(right, 200)),
+    Match.tag("Left", ({ left }) => Match.value(left).pipe(
+      Match.tag("BikeNotFound", ({ id: bikeId }) =>
+        c.json<BikeNotFoundResponse, 404>(notFoundResponse(bikeId), 404)),
+      Match.tag("InvalidBikeStatus", ({ status }) =>
+        c.json<BikeUpdateConflictResponse, 400>(invalidStatusResponse(status), 400)),
+      Match.orElse((err) => {
+        throw err;
+      }),
+    )),
+    Match.exhaustive,
+  );
 };
 
 const technicianUpdateBikeStatus: RouteHandler<BikesRoutes["technicianUpdateBikeStatus"]> = async (c) => {
   const { id } = c.req.valid("param");
   const body = c.req.valid("json");
-  const result = await runScopedBikeStatusUpdate({
-    id,
-    status: body.status,
-    stationId: c.var.currentUser?.operatorStationId,
-    context: "PATCH /v1/technician/bikes/{id}/status",
-    runPromise: c.var.runPromise,
-  });
+  const stationId = c.var.currentUser?.operatorStationId;
 
-  if (result._tag === "Success") {
-    return c.json<BikeSummary, 200>(result.response, 200);
+  if (!stationId) {
+    return c.json<BikeNotFoundResponse, 404>(notFoundResponse(id), 404);
   }
 
-  if (result._tag === "InvalidStatus") {
-    return c.json<BikeUpdateConflictResponse, 400>(result.response, 400);
-  }
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* BikeServiceTag;
+      const bike = yield* service.updateBikeStatusInStationScope(id, {
+        stationId,
+        status: body.status,
+      });
 
-  return c.json<BikeNotFoundResponse, 404>(result.response, 404);
+      return yield* loadBikeSummary(bike);
+    }),
+    "PATCH /v1/technician/bikes/{id}/status",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<BikeSummary, 200>(right, 200)),
+    Match.tag("Left", ({ left }) => Match.value(left).pipe(
+      Match.tag("BikeNotFound", ({ id: bikeId }) =>
+        c.json<BikeNotFoundResponse, 404>(notFoundResponse(bikeId), 404)),
+      Match.tag("InvalidBikeStatus", ({ status }) =>
+        c.json<BikeUpdateConflictResponse, 400>(invalidStatusResponse(status), 400)),
+      Match.orElse((err) => {
+        throw err;
+      }),
+    )),
+    Match.exhaustive,
+  );
 };
 
 export const BikeManagementController = {
