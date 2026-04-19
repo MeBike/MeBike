@@ -4,6 +4,8 @@ import {
   useGetAgencyStat,
   useGetAgencyRequests,
   useGetAgencyRequestDetail,
+  useGetMyAgencyRequests,
+  useGetMyAgencyRequestDetail,
 } from "@queries";
 import {
   useUpdateAgencyStatusMutation,
@@ -34,14 +36,14 @@ export interface AgencyActionProps {
   agency_id?: string;
   page?: number;
   pageSize?: number;
-  agency_request_id?:string;
+  agency_request_id?: string;
 }
 export const useAgencyActions = ({
   hasToken,
   agency_id,
   page,
   pageSize,
-  agency_request_id
+  agency_request_id,
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -57,11 +59,23 @@ export const useAgencyActions = ({
     }
     refetchGetAgencyRequest();
   }, [refetchGetAgencyRequest, hasToken, router, page]);
-    const {
+  const {
+    data: myAgencyRequest,
+    refetch: refetchGetMyAgencyRequest,
+    isLoading: isLoadingMyAgencyRequest,
+  } = useGetMyAgencyRequests({ page: page, pageSize: pageSize });
+  const getMyAgencyRequest = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchGetMyAgencyRequest();
+  }, [refetchGetMyAgencyRequest, hasToken, router, page]);
+  const {
     data: agencyRequestDetail,
     refetch: refetchGetAgencyRequestDetail,
     isLoading: isLoadingAgencyRequestDetail,
-  } = useGetAgencyRequestDetail({ id:agency_request_id || ""});
+  } = useGetAgencyRequestDetail({ id: agency_request_id || "" });
   const getAgencyRequestDetail = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -69,6 +83,18 @@ export const useAgencyActions = ({
     }
     refetchGetAgencyRequestDetail();
   }, [refetchGetAgencyRequestDetail, hasToken, router, page]);
+  const {
+    data: myAgencyRequestDetail,
+    refetch: refetchGetMyAgencyRequestDetail,
+    isLoading: isLoadingMyAgencyRequestDetail,
+  } = useGetMyAgencyRequestDetail({ id: agency_request_id || "" });
+  const getMyAgencyRequestDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchGetMyAgencyRequestDetail();
+  }, [refetchGetMyAgencyRequestDetail, hasToken, router, page]);
   const {
     data: agencies,
     refetch: refetchGetAgencies,
@@ -319,6 +345,12 @@ export const useAgencyActions = ({
     isLoadingAgencyRequest,
     getAgencyRequestDetail,
     agencyRequestDetail,
-    isLoadingAgencyRequestDetail
+    isLoadingAgencyRequestDetail,
+    myAgencyRequest,
+    getMyAgencyRequest,
+    isLoadingMyAgencyRequest,
+    myAgencyRequestDetail,
+    getMyAgencyRequestDetail,
+    isLoadingMyAgencyRequestDetail,
   };
 };

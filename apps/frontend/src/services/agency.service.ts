@@ -140,5 +140,31 @@ export const agencyService = {
   adminCreateAgency : async({data}:{data:Partial<AdminCreateAgencyUserRequest>}) => {
     const response = await fetchHttpClient.post<Agency>(ENDPOINT.USER.CREATE_USER,data);
     return response
-  }
+  },
+  getMyAgencyRequest: async ({
+    page,
+    pageSize,
+  }: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<AxiosResponse<ApiResponse<AgencyRequest[]>>> => {
+    const response = fetchHttpClient.get<ApiResponse<AgencyRequest[]>>(
+      ENDPOINT.AGENCY.MY_AGENCY,
+      {
+        page: page,
+        pageSize: pageSize,
+      },
+    );
+    return response;
+  },  
+  getMyAgencyRequestDetail: async ({
+    id,
+  }: {
+    id: string;
+  }): Promise<AxiosResponse<AgencyRequest>> => {
+    const response = fetchHttpClient.get<AgencyRequest>(
+      ENDPOINT.AGENCY.MY_DETAIL_AGENCY(id),
+    );
+    return response;
+  },
 };

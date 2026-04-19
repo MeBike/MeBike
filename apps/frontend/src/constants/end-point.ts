@@ -84,6 +84,8 @@ export const ENDPOINT = {
     },
     AGENCY : {
         BASE : "/admin/agencies",
+        MY_AGENCY : "/agency-requests",
+        MY_DETAIL_AGENCY : (id:string) => `/agency-requests/${id}`,
         ID : (id : string) => `/admin/agencies/${id}`,
         STATUS : (id : string) => `/admin/agencies/${id}/status`,
         STATS : (id:string) => `/admin/agencies/${id}/stats`,
