@@ -1,4 +1,5 @@
 export { default as ChangePasswordScreen } from "./account/change-password";
+export { default as AiAssistantScreen } from "./ai-assistant";
 export { default as ProfileScreen } from "./account/profile";
 export { default as UpdateProfileScreen } from "./account/update-profile";
 export { default as EmailVerificationScreen } from "./auth/email-verification";

@@ -1,5 +1,6 @@
 import { registerRootComponent } from "expo";
 
+import "./lib/ai-sdk-polyfills";
 import App from "./app";
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
