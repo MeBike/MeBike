@@ -129,9 +129,22 @@ export type ListUserEnvironmentImpactHistoryInput = {
 };
 
 export type EnvironmentImpactHistoryFilter = {
-  userId: string;
+  userId?: string;
+  rentalId?: string;
+  policyId?: string;
   dateFrom?: Date;
   dateTo?: Date;
+};
+
+export type ListAdminEnvironmentImpactHistoryInput = {
+  page?: number;
+  pageSize?: number;
+  sortOrder?: EnvironmentImpactHistorySortOrder;
+  userId?: string;
+  rentalId?: string;
+  policyId?: string;
+  dateFrom?: string;
+  dateTo?: string;
 };
 
 export type EnvironmentImpactHistoryPageRequest = {

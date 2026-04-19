@@ -1146,6 +1146,399 @@ describe("environment policies routing e2e", () => {
     expect(response.status).toBe(401);
   });
 
+  it("lists admin environment impacts across users and excludes uncalculated rentals", async () => {
+    await insertActiveEnvironmentPolicy();
+    const regularRental = await createRentalForImpact({ duration: 23 });
+    const otherUserRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 60,
+    });
+    const uncalculatedRental = await createRentalForImpact({ duration: 30 });
+
+    await calculateEnvironmentImpact(regularRental.id);
+    await calculateEnvironmentImpact(otherUserRental.id);
+
+    await setImpactCalculatedAt(
+      regularRental.id,
+      new Date("2026-04-15T10:00:00.000Z"),
+    );
+    await setImpactCalculatedAt(
+      otherUserRental.id,
+      new Date("2026-04-16T10:00:00.000Z"),
+    );
+
+    const response = await fixture.app.request("http://test/environment/impacts", {
+      method: "GET",
+      headers: adminHeaders(),
+    });
+    const body = await response.json() as EnvironmentContracts.AdminEnvironmentImpactListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.pagination).toEqual({
+      page: 1,
+      pageSize: 20,
+      total: 2,
+      totalPages: 1,
+    });
+    expect(body.data.map(item => item.rental_id)).toEqual([
+      otherUserRental.id,
+      regularRental.id,
+    ]);
+    expect(body.data.map(item => item.rental_id)).not.toContain(
+      uncalculatedRental.id,
+    );
+    expect(body.data[0]).toMatchObject({
+      user_id: OTHER_USER_ID,
+      rental_id: otherUserRental.id,
+      policy_id: "018fa200-0000-7000-8000-000000000101",
+      estimated_distance_km: 11.4,
+      co2_saved: 727,
+      co2_saved_unit: "gCO2e",
+      distance_source: "TIME_SPEED",
+      raw_rental_minutes: 60,
+      effective_ride_minutes: 57,
+      calculated_at: "2026-04-16T10:00:00.000Z",
+    });
+  });
+
+  it("filters admin environment impacts by userId, rentalId, and policyId", async () => {
+    await insertActiveEnvironmentPolicy();
+    const regularRental = await createRentalForImpact({ duration: 23 });
+    const otherUserRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 60,
+    });
+
+    await calculateEnvironmentImpact(regularRental.id);
+    await calculateEnvironmentImpact(otherUserRental.id);
+
+    const byUserResponse = await fixture.app.request(
+      `http://test/environment/impacts?userId=${OTHER_USER_ID}`,
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const byUserBody = await byUserResponse.json() as EnvironmentContracts.AdminEnvironmentImpactListResponse;
+
+    expect(byUserResponse.status).toBe(200);
+    expect(byUserBody.pagination.total).toBe(1);
+    expect(byUserBody.data.map(item => item.rental_id)).toEqual([
+      otherUserRental.id,
+    ]);
+
+    const byRentalResponse = await fixture.app.request(
+      `http://test/environment/impacts?rentalId=${regularRental.id}`,
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const byRentalBody = await byRentalResponse.json() as EnvironmentContracts.AdminEnvironmentImpactListResponse;
+
+    expect(byRentalResponse.status).toBe(200);
+    expect(byRentalBody.pagination.total).toBe(1);
+    expect(byRentalBody.data[0]?.rental_id).toBe(regularRental.id);
+
+    const byPolicyResponse = await fixture.app.request(
+      "http://test/environment/impacts?policyId=018fa200-0000-7000-8000-000000000101",
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const byPolicyBody = await byPolicyResponse.json() as EnvironmentContracts.AdminEnvironmentImpactListResponse;
+
+    expect(byPolicyResponse.status).toBe(200);
+    expect(byPolicyBody.pagination.total).toBe(2);
+    expect(byPolicyBody.data.every(
+      item => item.policy_id === "018fa200-0000-7000-8000-000000000101",
+    )).toBe(true);
+  });
+
+  it("paginates and date-filters admin environment impacts with UTC date-only bounds", async () => {
+    await insertActiveEnvironmentPolicy();
+    const beforeRental = await createRentalForImpact({ duration: 12 });
+    const startBoundaryRental = await createRentalForImpact({ duration: 20 });
+    const endBoundaryRental = await createRentalForImpact({ duration: 28 });
+    const afterRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 36,
+    });
+
+    await calculateEnvironmentImpact(beforeRental.id);
+    await calculateEnvironmentImpact(startBoundaryRental.id);
+    await calculateEnvironmentImpact(endBoundaryRental.id);
+    await calculateEnvironmentImpact(afterRental.id);
+
+    await setImpactCalculatedAt(
+      beforeRental.id,
+      new Date("2026-04-14T23:59:59.999Z"),
+    );
+    await setImpactCalculatedAt(
+      startBoundaryRental.id,
+      new Date("2026-04-15T00:00:00.000Z"),
+    );
+    await setImpactCalculatedAt(
+      endBoundaryRental.id,
+      new Date("2026-04-15T23:59:59.999Z"),
+    );
+    await setImpactCalculatedAt(
+      afterRental.id,
+      new Date("2026-04-16T00:00:00.000Z"),
+    );
+
+    const response = await fixture.app.request(
+      "http://test/environment/impacts?page=2&pageSize=1&sortOrder=asc&dateFrom=2026-04-15&dateTo=2026-04-15",
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.AdminEnvironmentImpactListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.pagination).toEqual({
+      page: 2,
+      pageSize: 1,
+      total: 2,
+      totalPages: 2,
+    });
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.rental_id).toBe(endBoundaryRental.id);
+  });
+
+  it("rejects unauthorized, non-admin, and invalid admin environment impact list requests", async () => {
+    const unauthenticatedResponse = await fixture.app.request(
+      "http://test/environment/impacts",
+      {
+        method: "GET",
+      },
+    );
+
+    expect(unauthenticatedResponse.status).toBe(401);
+
+    const userResponse = await fixture.app.request("http://test/environment/impacts", {
+      method: "GET",
+      headers: userHeaders(),
+    });
+
+    expect(userResponse.status).toBe(403);
+
+    const invalidQueries = [
+      "page=0",
+      "pageSize=0",
+      "pageSize=101",
+      "sortOrder=up",
+      "userId=not-a-uuid",
+      "rentalId=not-a-uuid",
+      "policyId=not-a-uuid",
+      "dateFrom=not-a-date",
+      "dateTo=not-a-date",
+      "dateFrom=2026-04-16T00:00:00.000Z&dateTo=2026-04-15T00:00:00.000Z",
+    ];
+
+    for (const query of invalidQueries) {
+      const response = await fixture.app.request(
+        `http://test/environment/impacts?${query}`,
+        {
+          method: "GET",
+          headers: adminHeaders(),
+        },
+      );
+      const body = await response.json() as ServerErrorResponse;
+
+      expect(response.status).toBe(400);
+      expect(body.details?.code).toBe("VALIDATION_ERROR");
+    }
+  });
+
+  it("returns admin environment impact detail with user_id and policy_snapshot", async () => {
+    await insertActiveEnvironmentPolicy();
+    const rental = await createRentalForImpact({ duration: 23 });
+    const impact = await calculateEnvironmentImpact(rental.id);
+
+    const response = await fixture.app.request(
+      `http://test/environment/impacts/${impact.id}`,
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.AdminEnvironmentImpactDetail;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      id: impact.id,
+      user_id: REGULAR_USER_ID,
+      rental_id: rental.id,
+      policy_id: "018fa200-0000-7000-8000-000000000101",
+      estimated_distance_km: 4,
+      co2_saved: 255,
+      co2_saved_unit: "gCO2e",
+      raw_rental_minutes: 23,
+      effective_ride_minutes: 20,
+      return_scan_buffer_minutes: 3,
+      average_speed_kmh: 12,
+      co2_saved_per_km: 75,
+      co2_saved_per_km_unit: "gCO2e/km",
+      confidence_factor: 0.85,
+      distance_source: "TIME_SPEED",
+      formula_version: "PHASE_1_TIME_SPEED",
+      policy_snapshot: {
+        policy_id: "018fa200-0000-7000-8000-000000000101",
+        policy_name: "Default Environment Policy v1",
+        average_speed_kmh: 12,
+        co2_saved_per_km: 75,
+        co2_saved_per_km_unit: "gCO2e/km",
+        return_scan_buffer_minutes: 3,
+        confidence_factor: 0.85,
+        raw_rental_minutes: 23,
+        effective_ride_minutes: 20,
+        estimated_distance_km: 4,
+        co2_saved: 255,
+        co2_saved_unit: "gCO2e",
+        distance_source: "TIME_SPEED",
+        formula_version: "PHASE_1_TIME_SPEED",
+      },
+    });
+  });
+
+  it("returns 404 for a missing admin environment impact detail", async () => {
+    const response = await fixture.app.request(
+      "http://test/environment/impacts/018fa200-0000-7000-8000-000000000404",
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as ServerErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("Environment impact not found");
+    expect(body.details?.code).toBe("ENVIRONMENT_IMPACT_NOT_FOUND");
+  });
+
+  it("rejects unauthenticated, invalid, and non-admin admin environment impact detail requests", async () => {
+    const unauthenticatedResponse = await fixture.app.request(
+      "http://test/environment/impacts/018fa200-0000-7000-8000-000000000001",
+      {
+        method: "GET",
+      },
+    );
+
+    expect(unauthenticatedResponse.status).toBe(401);
+
+    const invalidResponse = await fixture.app.request(
+      "http://test/environment/impacts/not-a-uuid",
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const invalidBody = await invalidResponse.json() as ServerErrorResponse;
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidBody.details?.code).toBe("VALIDATION_ERROR");
+
+    const userResponse = await fixture.app.request(
+      "http://test/environment/impacts/018fa200-0000-7000-8000-000000000001",
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+
+    expect(userResponse.status).toBe(403);
+  });
+
+  it("returns admin environment user summary for one user only", async () => {
+    await insertActiveEnvironmentPolicy();
+    const firstRental = await createRentalForImpact({ duration: 23 });
+    const secondRental = await createRentalForImpact({ duration: 10 });
+    const otherUserRental = await createRentalForImpact({
+      userId: OTHER_USER_ID,
+      duration: 60,
+    });
+
+    await calculateEnvironmentImpact(firstRental.id);
+    await calculateEnvironmentImpact(secondRental.id);
+    await calculateEnvironmentImpact(otherUserRental.id);
+
+    const response = await fixture.app.request(
+      `http://test/environment/users/${REGULAR_USER_ID}/summary`,
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.AdminEnvironmentUserSummary;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      user_id: REGULAR_USER_ID,
+      total_trips_counted: 2,
+      total_estimated_distance_km: 5.4,
+      total_co2_saved: 344,
+      co2_saved_unit: "gCO2e",
+    });
+  });
+
+  it("returns zero admin environment user summary for a user without impact records", async () => {
+    const userWithoutImpactId = "018fa100-0000-7000-8000-000000000099";
+
+    const response = await fixture.app.request(
+      `http://test/environment/users/${userWithoutImpactId}/summary`,
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const body = await response.json() as EnvironmentContracts.AdminEnvironmentUserSummary;
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({
+      user_id: userWithoutImpactId,
+      total_trips_counted: 0,
+      total_estimated_distance_km: 0,
+      total_co2_saved: 0,
+      co2_saved_unit: "gCO2e",
+    });
+  });
+
+  it("rejects unauthenticated, non-admin, and invalid admin environment user summary requests", async () => {
+    const unauthenticatedResponse = await fixture.app.request(
+      `http://test/environment/users/${REGULAR_USER_ID}/summary`,
+      {
+        method: "GET",
+      },
+    );
+
+    expect(unauthenticatedResponse.status).toBe(401);
+
+    const userResponse = await fixture.app.request(
+      `http://test/environment/users/${REGULAR_USER_ID}/summary`,
+      {
+        method: "GET",
+        headers: userHeaders(),
+      },
+    );
+
+    expect(userResponse.status).toBe(403);
+
+    const invalidResponse = await fixture.app.request(
+      "http://test/environment/users/not-a-uuid/summary",
+      {
+        method: "GET",
+        headers: adminHeaders(),
+      },
+    );
+    const invalidBody = await invalidResponse.json() as ServerErrorResponse;
+
+    expect(invalidResponse.status).toBe(400);
+    expect(invalidBody.details?.code).toBe("VALIDATION_ERROR");
+  });
+
   it("keeps environment impact calculation idempotent by rentalId", async () => {
     await insertActiveEnvironmentPolicy();
     const rental = await createRentalForImpact();

@@ -159,6 +159,15 @@ export function toContractEnvironmentImpactHistoryItem(
   };
 }
 
+export function toContractAdminEnvironmentImpactListItem(
+  impact: EnvironmentImpactRow,
+): EnvironmentContracts.AdminEnvironmentImpactListItem {
+  return {
+    ...toContractEnvironmentImpactHistoryItem(impact),
+    user_id: impact.userId,
+  };
+}
+
 export function toContractEnvironmentImpactDetail(
   impact: EnvironmentImpactRow,
 ): EnvironmentContracts.EnvironmentImpactDetail {
@@ -206,6 +215,15 @@ export function toContractEnvironmentImpactDetail(
   };
 }
 
+export function toContractAdminEnvironmentImpactDetail(
+  impact: EnvironmentImpactRow,
+): EnvironmentContracts.AdminEnvironmentImpactDetail {
+  return {
+    ...toContractEnvironmentImpactDetail(impact),
+    user_id: impact.userId,
+  };
+}
+
 export function toContractEnvironmentSummary(
   summary: EnvironmentImpactSummaryRow,
 ): EnvironmentContracts.EnvironmentSummary {
@@ -217,5 +235,15 @@ export function toContractEnvironmentSummary(
     ),
     total_co2_saved: Math.round(summary.totalCo2Saved.toNumber()),
     co2_saved_unit: "gCO2e",
+  };
+}
+
+export function toContractAdminEnvironmentUserSummary(
+  userId: string,
+  summary: EnvironmentImpactSummaryRow,
+): EnvironmentContracts.AdminEnvironmentUserSummary {
+  return {
+    user_id: userId,
+    ...toContractEnvironmentSummary(summary),
   };
 }

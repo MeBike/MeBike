@@ -125,6 +125,16 @@ const approveAgencyRequest: RouteHandler<AgencyRequestsRoutes["adminApprove"]> =
               nextStatus,
             },
           }, 400)),
+        Match.tag("StationLocationAlreadyExists", ({ address, latitude, longitude }) =>
+          c.json<AgencyRequestErrorResponse, 400>({
+            error: agencyRequestErrorMessages.STATION_LOCATION_ALREADY_EXISTS,
+            details: {
+              code: AgencyRequestErrorCodeSchema.enum.STATION_LOCATION_ALREADY_EXISTS,
+              address,
+              latitude,
+              longitude,
+            },
+          }, 400)),
         Match.orElse(() => {
           throw left;
         }),

@@ -25,6 +25,9 @@ import type {
 import { EnvironmentImpactAlreadyExists } from "../domain-errors";
 
 export type EnvironmentImpactRepo = {
+  findImpactById: (
+    impactId: string,
+  ) => Effect.Effect<Option.Option<EnvironmentImpactRow>>;
   findImpactByRentalId: (
     rentalId: string,
   ) => Effect.Effect<Option.Option<EnvironmentImpactRow>>;
@@ -42,6 +45,10 @@ export type EnvironmentImpactRepo = {
     userId: string,
   ) => Effect.Effect<EnvironmentImpactSummaryRow>;
   listUserImpactHistory: (
+    filter: EnvironmentImpactHistoryFilter,
+    pageReq: EnvironmentImpactHistoryPageRequest,
+  ) => Effect.Effect<EnvironmentImpactHistoryPageResult>;
+  listAdminImpactHistory: (
     filter: EnvironmentImpactHistoryFilter,
     pageReq: EnvironmentImpactHistoryPageRequest,
   ) => Effect.Effect<EnvironmentImpactHistoryPageResult>;
@@ -82,6 +89,8 @@ function toEnvironmentImpactHistoryWhere(
 ): PrismaTypes.EnvironmentalImpactStatWhereInput {
   return {
     userId: filter.userId,
+    rentalId: filter.rentalId,
+    policyId: filter.policyId,
     ...(filter.dateFrom || filter.dateTo
       ? {
           calculatedAt: {
@@ -97,6 +106,16 @@ export function makeEnvironmentImpactRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): EnvironmentImpactRepo {
   return {
+    findImpactById(impactId) {
+      return Effect.promise(async () => {
+        const row = await client.environmentalImpactStat.findUnique({
+          where: { id: impactId },
+          select: environmentImpactSelect,
+        });
+
+        return Option.fromNullable(row).pipe(Option.map(toEnvironmentImpactRow));
+      });
+    },
     findImpactByRentalId(rentalId) {
       return Effect.promise(async () => {
         const row = await client.environmentalImpactStat.findUnique({
@@ -200,6 +219,35 @@ export function makeEnvironmentImpactRepository(
       });
     },
     listUserImpactHistory(filter, pageReq) {
+      return Effect.promise(async () => {
+        const page = Math.max(1, pageReq.page);
+        const pageSize = Math.max(1, Math.min(100, pageReq.pageSize));
+        const skip = (page - 1) * pageSize;
+        const where = toEnvironmentImpactHistoryWhere(filter);
+
+        const [total, items] = await Promise.all([
+          client.environmentalImpactStat.count({ where }),
+          client.environmentalImpactStat.findMany({
+            where,
+            skip,
+            take: pageSize,
+            orderBy: [
+              { calculatedAt: pageReq.sortOrder },
+              { id: pageReq.sortOrder },
+            ],
+            select: environmentImpactSelect,
+          }),
+        ]);
+
+        return makePageResult(
+          items.map(toEnvironmentImpactRow),
+          total,
+          page,
+          pageSize,
+        );
+      });
+    },
+    listAdminImpactHistory(filter, pageReq) {
       return Effect.promise(async () => {
         const page = Math.max(1, pageReq.page);
         const pageSize = Math.max(1, Math.min(100, pageReq.pageSize));
