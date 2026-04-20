@@ -6,10 +6,7 @@ import { uuidv7 } from "uuidv7";
 import {
   BikeStatus,
   PrismaClient,
-  RentalStatus,
   SupplierStatus,
-  UserRole,
-  UserVerifyStatus,
 } from "../generated/prisma/client";
 import { formatBikeNumber } from "../src/domain/bikes/bike-number";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
@@ -17,7 +14,17 @@ import logger from "../src/lib/logger";
 import bikes from "./seed/bike.json";
 import { STATION_IDS } from "./seed/station-ids";
 
-const stationNameMap: Record<string, string> = {
+type LegacyObjectId = { readonly $oid: string };
+type LegacyDate = { readonly $date: string };
+
+type LegacyBikeSeed = {
+  readonly station_id?: LegacyObjectId | string | null;
+  readonly status?: string | null;
+  readonly created_at?: LegacyDate | string | null;
+  readonly updated_at?: LegacyDate | string | null;
+};
+
+const LEGACY_STATION_NAME_BY_ID: Record<string, string> = {
   "68e0b2ae63beb4054de09d10": "Ga An Phú",
   "68e0b2ae63beb4054de09d16": "Ga Phước Long",
   "68e0b2ae63beb4054de09d18": "Ga Thủ Đức",
@@ -34,22 +41,8 @@ const stationNameMap: Record<string, string> = {
 };
 
 const DEFAULT_SUPPLIER_NAME = "YADEA Ho Chi Minh";
-const SEED_BIKES_USER_EMAIL = "seed-bikes@mebike.local";
-const SEED_BIKES_USER_PHONE = "0900000999";
-const SEED_BIKES_PASSWORD_HASH = "seed-bikes-not-for-login";
 
-const bikeRatingPresets: ReadonlyArray<{
-  readonly bikeScore: number;
-  readonly stationScore: number;
-  readonly comment: string;
-}> = [
-  { bikeScore: 5, stationScore: 5, comment: "Xe chay em va giu toc do tot." },
-  { bikeScore: 4, stationScore: 5, comment: "Xe on dinh, tram lay xe de dang." },
-  { bikeScore: 5, stationScore: 4, comment: "Xe sach se, pin con tot." },
-  { bikeScore: 4, stationScore: 4, comment: "Trai nghiem tot cho chuyen di ngan." },
-] as const;
-
-const statusMap: Record<string, BikeStatus> = {
+const STATUS_BY_LEGACY_LABEL: Record<string, BikeStatus> = {
   "CÓ SẴN": BikeStatus.AVAILABLE,
   "ĐANG ĐƯỢC THUÊ": BikeStatus.BOOKED,
   "BỊ HỎNG": BikeStatus.BROKEN,
@@ -66,8 +59,64 @@ function getConnectionString() {
   return url;
 }
 
-function pickBikeRatings(index: number) {
-  return bikeRatingPresets[index % bikeRatingPresets.length];
+function readLegacyObjectId(value: LegacyObjectId | string | null | undefined) {
+  if (!value) {
+    return undefined;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return value.$oid;
+}
+
+function readLegacyDate(value: LegacyDate | string | null | undefined, fallback: Date) {
+  if (!value) {
+    return fallback;
+  }
+
+  const raw = typeof value === "string" ? value : value.$date;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? fallback : parsed;
+}
+
+async function ensureStationsExist(prisma: PrismaClient) {
+  const stationCount = await prisma.station.count();
+
+  if (stationCount === 0) {
+    throw new Error("No stations found. Run `pnpm seed` before `pnpm seed:bikes`.");
+  }
+}
+
+async function ensureDefaultSupplier(prisma: PrismaClient) {
+  const supplier = await prisma.supplier.findFirst({
+    where: { name: DEFAULT_SUPPLIER_NAME },
+    select: { id: true },
+  });
+
+  if (supplier) {
+    return supplier;
+  }
+
+  return prisma.supplier.create({
+    data: {
+      id: uuidv7(),
+      name: DEFAULT_SUPPLIER_NAME,
+      status: SupplierStatus.ACTIVE,
+      updatedAt: new Date(),
+    },
+    select: { id: true },
+  });
+}
+
+function readManagedBikeNumberValue(bikeNumber: string) {
+  if (!bikeNumber.startsWith("MB-")) {
+    return undefined;
+  }
+
+  const value = Number.parseInt(bikeNumber.slice(3), 10);
+  return Number.isNaN(value) ? undefined : value;
 }
 
 async function main() {
@@ -76,182 +125,115 @@ async function main() {
   const prisma = new PrismaClient({ adapter });
 
   try {
-    const seedUser = await prisma.user.upsert({
-      where: { email: SEED_BIKES_USER_EMAIL },
-      create: {
-        id: uuidv7(),
-        fullName: "Seed Bikes Demo User",
-        email: SEED_BIKES_USER_EMAIL,
-        phoneNumber: SEED_BIKES_USER_PHONE,
-        passwordHash: SEED_BIKES_PASSWORD_HASH,
-        role: UserRole.USER,
-        verifyStatus: UserVerifyStatus.VERIFIED,
-      },
-      update: {
-        fullName: "Seed Bikes Demo User",
-        phoneNumber: SEED_BIKES_USER_PHONE,
-        passwordHash: SEED_BIKES_PASSWORD_HASH,
-        role: UserRole.USER,
-        verifyStatus: UserVerifyStatus.VERIFIED,
-        updatedAt: new Date(),
-      },
-    });
+    await ensureStationsExist(prisma);
 
-    await prisma.ratingReasonLink.deleteMany({
+    const stationRows = await prisma.station.findMany({
+      select: { id: true, name: true },
+    });
+    const seededStationIds = new Set(stationRows.map(station => station.id));
+    const supplier = await ensureDefaultSupplier(prisma);
+    const existingManagedBikes = await prisma.bike.findMany({
       where: {
-        rating: {
-          userId: seedUser.id,
-        },
+        supplierId: supplier.id,
+        bikeNumber: { startsWith: "MB-" },
       },
+      select: { bikeNumber: true },
     });
-    await prisma.rating.deleteMany({
-      where: {
-        userId: seedUser.id,
-      },
-    });
-    await prisma.rental.deleteMany({
-      where: {
-        userId: seedUser.id,
-      },
-    });
+    const maxExistingManagedBikeNumber = existingManagedBikes.reduce((max, bike) => {
+      const numericValue = readManagedBikeNumberValue(bike.bikeNumber);
+      return numericValue && numericValue > max ? numericValue : max;
+    }, 0);
 
-    let supplier = await prisma.supplier.findFirst({
-      where: { name: DEFAULT_SUPPLIER_NAME },
-    });
-    if (!supplier) {
-      supplier = await prisma.supplier.create({
-        data: {
-          id: uuidv7(),
-          name: DEFAULT_SUPPLIER_NAME,
-          status: SupplierStatus.ACTIVE,
-          updatedAt: new Date(),
-        },
-      });
-    }
-    if (!supplier) {
-      throw new Error("Default supplier not found");
-    }
+    logger.info("Upserting bikes from legacy import dataset...");
 
-    logger.info("Clearing existing bikes...");
-    await prisma.bike.deleteMany();
+    let importedCount = 0;
+    let createdCount = 0;
+    let updatedCount = 0;
+    let skippedMissingStationCount = 0;
+    let skippedMissingSeedStationCount = 0;
+    let normalizedUnknownStatusCount = 0;
 
-    logger.info("Inserting bikes...");
-    let maxBikeNumber = 0;
-    for (const [bikeIndex, bike] of (bikes as any[]).entries()) {
-      const oldStationId = bike.station_id?.$oid || bike.station_id;
-      const stationName = oldStationId ? stationNameMap[oldStationId] : undefined;
+    for (const bike of bikes as LegacyBikeSeed[]) {
+      const legacyStationId = readLegacyObjectId(bike.station_id);
+      const stationName = legacyStationId ? LEGACY_STATION_NAME_BY_ID[legacyStationId] : undefined;
       const stationId = stationName ? STATION_IDS[stationName] : undefined;
 
       if (!stationId) {
-        logger.warn({ oldStationId, stationName }, "No station mapping found, skipping bike");
+        skippedMissingStationCount += 1;
+        logger.warn({ legacyStationId, stationName }, "Skipping bike with unmapped legacy station");
         continue;
       }
 
-      const status = statusMap[bike.status] || BikeStatus.UNAVAILABLE;
-      const updatedAt = new Date(bike.updated_at.$date || bike.updated_at);
+      if (!seededStationIds.has(stationId)) {
+        skippedMissingSeedStationCount += 1;
+        logger.warn({ legacyStationId, stationId, stationName }, "Skipping bike because target station is missing in current seed data");
+        continue;
+      }
 
-      await prisma.bike.create({
-        data: {
-          id: uuidv7(),
-          bikeNumber: formatBikeNumber(bikeIndex + 1),
+      const sourceStatus = bike.status?.trim() ?? "";
+      const status = STATUS_BY_LEGACY_LABEL[sourceStatus] ?? BikeStatus.UNAVAILABLE;
+      if (!(sourceStatus in STATUS_BY_LEGACY_LABEL)) {
+        normalizedUnknownStatusCount += 1;
+      }
+
+      const createdAt = readLegacyDate(bike.created_at, new Date());
+      const updatedAt = readLegacyDate(bike.updated_at, createdAt);
+      importedCount += 1;
+      const bikeNumber = formatBikeNumber(importedCount);
+
+      const existing = await prisma.bike.findUnique({
+        where: { bikeNumber },
+        select: { id: true },
+      });
+
+      await prisma.bike.upsert({
+        where: { bikeNumber },
+        update: {
           stationId,
           supplierId: supplier.id,
           status,
+          createdAt,
+          updatedAt,
+        },
+        create: {
+          id: uuidv7(),
+          bikeNumber,
+          stationId,
+          supplierId: supplier.id,
+          status,
+          createdAt,
           updatedAt,
         },
       });
 
-      maxBikeNumber = bikeIndex + 1;
-    }
-
-    if (maxBikeNumber > 0) {
-      await setBikeNumberSequence(prisma, maxBikeNumber);
-    }
-
-    const seededAvailableBikes = await prisma.bike.findMany({
-      where: {
-        status: BikeStatus.AVAILABLE,
-      },
-      select: {
-        id: true,
-        stationId: true,
-      },
-      orderBy: [
-        { stationId: "asc" },
-        { bikeNumber: "asc" },
-      ],
-    });
-
-    const bikesByStation = new Map<string, Array<{ id: string; stationId: string }>>();
-    for (const bike of seededAvailableBikes) {
-      if (!bike.stationId) {
-        continue;
+      if (existing) {
+        updatedCount += 1;
       }
-
-      const current = bikesByStation.get(bike.stationId) ?? [];
-      if (current.length < 4) {
-        current.push({ id: bike.id, stationId: bike.stationId });
-        bikesByStation.set(bike.stationId, current);
+      else {
+        createdCount += 1;
       }
     }
 
-    const bikesToRate = Array.from(bikesByStation.values()).flat();
-
-    const now = Date.now();
-    const rentalsToCreate = bikesToRate.flatMap((bike, bikeIndex) => {
-      return Array.from({ length: 2 }, (_, ratingIndex) => {
-        const hoursAgo = bikeIndex * 6 + ratingIndex * 18 + 24;
-        const startTime = new Date(now - hoursAgo * 60 * 60 * 1000);
-        const endTime = new Date(startTime.getTime() + 22 * 60 * 1000);
-        const preset = pickBikeRatings(bikeIndex + ratingIndex);
-
-        return {
-          rental: {
-            id: uuidv7(),
-            userId: seedUser.id,
-            bikeId: bike.id,
-            startStationId: bike.stationId,
-            endStationId: bike.stationId,
-            startTime,
-            endTime,
-            duration: 22,
-            totalPrice: 12000,
-            status: RentalStatus.COMPLETED,
-            createdAt: new Date(startTime.getTime() - 5 * 60 * 1000),
-            updatedAt: endTime,
-          },
-          rating: {
-            id: uuidv7(),
-            userId: seedUser.id,
-            bikeId: bike.id,
-            stationId: bike.stationId,
-            bikeScore: preset.bikeScore,
-            stationScore: preset.stationScore,
-            comment: preset.comment,
-            updatedAt: endTime,
-          },
-        };
-      });
-    });
-
-    if (rentalsToCreate.length > 0) {
-      await prisma.rental.createMany({
-        data: rentalsToCreate.map(item => item.rental),
-      });
-
-      await prisma.rating.createMany({
-        data: rentalsToCreate.map(item => ({
-          ...item.rating,
-          rentalId: item.rental.id,
-        })),
-      });
+    const nextSequenceValue = Math.max(importedCount, maxExistingManagedBikeNumber);
+    if (nextSequenceValue > 0) {
+      await setBikeNumberSequence(prisma, nextSequenceValue);
     }
 
-    logger.info({ count: (bikes as any[]).length }, "Successfully inserted bikes");
-    logger.info({ ratedBikes: bikesToRate.length, ratings: rentalsToCreate.length }, "Seeded demo bike ratings");
+    logger.info(
+      {
+        importedCount,
+        createdCount,
+        updatedCount,
+        nextSequenceValue,
+        skippedMissingStationCount,
+        skippedMissingSeedStationCount,
+        normalizedUnknownStatusCount,
+      },
+      "Legacy bike import completed",
+    );
   }
   catch (error) {
-    logger.error({ err: error }, "Error during seeding");
+    logger.error({ err: error }, "Error during seeding bikes from legacy import");
     throw error;
   }
   finally {

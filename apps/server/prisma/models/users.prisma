@@ -44,7 +44,6 @@ model User {
   paymentAttempts                 PaymentAttempt[]
   withdrawals                     WalletWithdrawal[]
   bikeSwapRequests                BikeSwapRequest[]
-  pushTokens                      PushToken[]
   orgAssignment                   UserOrgAssignment?
   userCoupons                     UserCoupon[]
   returnConfirmations             ReturnConfirmation[]

@@ -48,11 +48,6 @@ export {
   withIncidentDeps,
 } from "./features/incident.layers";
 export {
-  NotificationDepsLive,
-  PushNotificationServiceLayer,
-  PushTokenReposLive,
-} from "./features/notification.layers";
-export {
   RatingDepsLive,
   RatingReposLive,
   RatingServiceLayer,

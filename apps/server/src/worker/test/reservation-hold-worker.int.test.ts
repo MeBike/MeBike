@@ -49,7 +49,7 @@ describe("reservation hold worker integration", () => {
     process.env.TEST_DATABASE_URL = fixture.url;
   });
 
-  it("enqueues push job for near-expiry reservation", async () => {
+  it("enqueues near-expiry email job", async () => {
     const user = await fixture.factories.user({
       fullname: "Near Expiry User",
       email: "near-expiry-user@example.com",
@@ -84,27 +84,22 @@ describe("reservation hold worker integration", () => {
       producer,
     );
 
-    expect(send).toHaveBeenCalledTimes(2);
+    expect(send).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenNthCalledWith(
-      2,
-      JobTypes.PushSend,
+      1,
+      JobTypes.EmailSend,
       expect.objectContaining({
         version: 1,
-        userId: user.id,
-        event: "reservations.nearExpiry",
-        channelId: "default",
-        data: expect.objectContaining({
-          reservationId: reservation.id,
-          event: "reservations.nearExpiry",
-        }),
+        kind: "raw",
+        to: user.email,
       }),
       expect.objectContaining({
-        dedupeKey: `reservation:near-expiry:push:${reservation.id}`,
+        dedupeKey: `reservation:near-expiry:${reservation.id}`,
       }),
     );
   });
 
-  it("expires hold and enqueues expired push job", async () => {
+  it("expires hold and enqueues expired email job", async () => {
     const user = await fixture.factories.user({
       fullname: "Expired User",
       email: "expired-user@example.com",
@@ -138,22 +133,17 @@ describe("reservation hold worker integration", () => {
       producer,
     );
 
-    expect(send).toHaveBeenCalledTimes(2);
+    expect(send).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenNthCalledWith(
-      2,
-      JobTypes.PushSend,
+      1,
+      JobTypes.EmailSend,
       expect.objectContaining({
         version: 1,
-        userId: user.id,
-        event: "reservations.expired",
-        channelId: "default",
-        data: expect.objectContaining({
-          reservationId: reservation.id,
-          event: "reservations.expired",
-        }),
+        kind: "raw",
+        to: user.email,
       }),
       expect.objectContaining({
-        dedupeKey: `reservation:expired:push:${reservation.id}`,
+        dedupeKey: `reservation:expired:${reservation.id}`,
       }),
     );
 

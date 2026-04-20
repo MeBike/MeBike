@@ -17,13 +17,8 @@ type MeStatus = keyof typeof ServerRoutes.users.me.responses;
 type ChangePasswordStatus = keyof typeof ServerRoutes.users.changePassword.responses;
 type UpdateMeStatus = keyof typeof ServerRoutes.users.updateMe.responses;
 type UploadMyAvatarStatus = keyof typeof ServerRoutes.users.uploadMyAvatar.responses;
-type RegisterPushTokenStatus = keyof typeof ServerRoutes.users.registerPushToken.responses;
-type UnregisterPushTokenStatus = keyof typeof ServerRoutes.users.unregisterPushToken.responses;
-type UnregisterAllPushTokensStatus = keyof typeof ServerRoutes.users.unregisterAllPushTokens.responses;
 export type UpdateMeRequest = z.output<typeof UsersContracts.UpdateMeRequestSchema>;
 export type ChangePasswordRequest = z.output<typeof UsersContracts.ChangePasswordRequestSchema>;
-export type RegisterPushTokenRequest = z.output<typeof UsersContracts.RegisterPushTokenRequestSchema>;
-export type PushTokenSummary = z.output<typeof UsersContracts.PushTokenSummarySchema>;
 export type UploadAvatarPayload = {
   uri: string;
   name?: string | null;
@@ -151,77 +146,6 @@ export const userService = {
         case StatusCodes.NOT_FOUND:
         case StatusCodes.REQUEST_TOO_LONG:
         case StatusCodes.SERVICE_UNAVAILABLE:
-          return err(await parseUserError(response));
-        default:
-          return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
-      }
-    }
-    catch (error) {
-      return asNetworkError(error);
-    }
-  },
-
-  registerPushToken: async (
-    payload: RegisterPushTokenRequest,
-  ): Promise<Result<PushTokenSummary, UserError>> => {
-    try {
-      const response = await kyClient.post(routePath(ServerRoutes.users.registerPushToken), {
-        json: payload,
-        throwHttpErrors: false,
-      });
-
-      const status = response.status as RegisterPushTokenStatus | number;
-      switch (status) {
-        case StatusCodes.OK: {
-          const okSchema = ServerRoutes.users.registerPushToken.responses[200].content["application/json"].schema;
-          return decodeResponse(response, okSchema as z.ZodType<PushTokenSummary>);
-        }
-        case StatusCodes.UNAUTHORIZED:
-        case StatusCodes.BAD_REQUEST:
-          return err(await parseUserError(response));
-        default:
-          return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
-      }
-    }
-    catch (error) {
-      return asNetworkError(error);
-    }
-  },
-
-  unregisterPushToken: async (token: string): Promise<Result<void, UserError>> => {
-    try {
-      const response = await kyClient.delete(routePath(ServerRoutes.users.unregisterPushToken), {
-        json: { token },
-        throwHttpErrors: false,
-      });
-
-      const status = response.status as UnregisterPushTokenStatus | number;
-      switch (status) {
-        case StatusCodes.NO_CONTENT:
-          return ok(undefined);
-        case StatusCodes.UNAUTHORIZED:
-        case StatusCodes.BAD_REQUEST:
-          return err(await parseUserError(response));
-        default:
-          return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
-      }
-    }
-    catch (error) {
-      return asNetworkError(error);
-    }
-  },
-
-  unregisterAllPushTokens: async (): Promise<Result<void, UserError>> => {
-    try {
-      const response = await kyClient.delete(routePath(ServerRoutes.users.unregisterAllPushTokens), {
-        throwHttpErrors: false,
-      });
-
-      const status = response.status as UnregisterAllPushTokensStatus | number;
-      switch (status) {
-        case StatusCodes.NO_CONTENT:
-          return ok(undefined);
-        case StatusCodes.UNAUTHORIZED:
           return err(await parseUserError(response));
         default:
           return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });

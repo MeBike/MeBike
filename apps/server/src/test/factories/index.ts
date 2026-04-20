@@ -9,7 +9,6 @@ import { PrismaClient } from "generated/prisma/client";
 
 import type { BikeFactory } from "./bike.factory";
 import type { PricingPolicyFactory } from "./pricing-policy.factory";
-import type { PushTokenFactory } from "./push-token.factory";
 import type { RentalFactory } from "./rental.factory";
 import type { ReservationFactory } from "./reservation.factory";
 import type { StationFactory } from "./station.factory";
@@ -19,7 +18,6 @@ import type { TechnicianTeamFactory } from "./technician-team.factory";
 import type {
   CreatedBike,
   CreatedPricingPolicy,
-  CreatedPushToken,
   CreatedRental,
   CreatedReservation,
   CreatedStation,
@@ -37,7 +35,6 @@ import type { WalletFactory } from "./wallet.factory";
 
 import { createBikeFactory } from "./bike.factory";
 import { createPricingPolicyFactory } from "./pricing-policy.factory";
-import { createPushTokenFactory } from "./push-token.factory";
 import { createRentalFactory } from "./rental.factory";
 import { createReservationFactory } from "./reservation.factory";
 import { createStationFactory } from "./station.factory";
@@ -51,7 +48,6 @@ import { createWalletFactory } from "./wallet.factory";
 export type {
   CreatedBike,
   CreatedPricingPolicy,
-  CreatedPushToken,
   CreatedRental,
   CreatedReservation,
   CreatedStation,
@@ -65,7 +61,6 @@ export type {
 export type {
   BikeOverrides,
   PricingPolicyOverrides,
-  PushTokenOverrides,
   RentalOverrides,
   ReservationOverrides,
   StationOverrides,
@@ -88,7 +83,6 @@ export type TestFactories = {
   technicianTeam: TechnicianTeamFactory;
   userOrgAssignment: UserOrgAssignmentFactory;
   pricingPolicy: PricingPolicyFactory;
-  pushToken: PushTokenFactory;
   wallet: WalletFactory;
 };
 
@@ -109,7 +103,6 @@ export function createTestFactories(ctx: FactoryContext): TestFactories {
     subscription: createSubscriptionFactory(ctx),
     technicianTeam: createTechnicianTeamFactory(ctx),
     userOrgAssignment: createUserOrgAssignmentFactory(ctx),
-    pushToken: createPushTokenFactory(ctx),
     pricingPolicy: createPricingPolicyFactory(ctx),
     wallet: createWalletFactory(ctx),
   };
