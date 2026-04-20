@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect , useState} from "react";
 import {
   ArrowLeft,
   Bike,
@@ -12,13 +12,14 @@ import {
   User,
   Info,
 } from "lucide-react";
+import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { useReservationActions } from "@/hooks/use-reservation";
 import type { IUser, IBike, IStation, DetailReservation } from "@/types";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 function statusBadgeVariant(
   status: string,
 ): "warning" | "pending" | "success" | "destructive" | "secondary" {
@@ -82,29 +83,32 @@ function Field({
 export default function ReservationDetailClient() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  const { detailReservationForStaff, fetchDetailReservationForStaff } = useReservationActions({
+  const { detailReservationForStaff, fetchDetailReservationForStaff,
+    isLoadingReservationsStaff
+   } = useReservationActions({
     hasToken: true,
     id: id,
   });
-  useEffect(() => {
-    if (id) {
-      fetchDetailReservationForStaff();
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
+    useEffect(() => {
+      if (isLoadingReservationsStaff) {
+        setIsVisualLoading(true);
+      } else {
+        const timer = setTimeout(() => {
+          setIsVisualLoading(false);
+        }, 600);
+        return () => clearTimeout(timer);
+      }
+    }, [isLoadingReservationsStaff]);
+    useEffect(() => {
+      if (id) {
+        fetchDetailReservationForStaff();
+      }
+    }, [id, fetchDetailReservationForStaff]);
+    if (isVisualLoading) return <LoadingScreen />;
+    if (!detailReservationForStaff) {
+      notFound();
     }
-  }, [id, fetchDetailReservationForStaff]);
-  if (!detailReservationForStaff) {
-    return (
-      <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <div className="h-10 w-48 animate-pulse rounded bg-muted" />
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="h-64 animate-pulse rounded-xl bg-muted lg:col-span-2" />
-            <div className="h-64 animate-pulse rounded-xl bg-muted" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const data = detailReservationForStaff;
   const isVerified = data.user?.role === "ADMIN" || data.user?.id; // Tùy chỉnh logic verify của bạn
 

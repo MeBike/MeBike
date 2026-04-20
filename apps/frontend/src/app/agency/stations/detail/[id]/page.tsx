@@ -75,12 +75,12 @@ function Field({
 export default function StationDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  const [isVisualLoading, setIsVisualLoading] = useState(true);
   const { myStationDetail, getMyStationDetail, isLoadingMyStationDetail } =
     useAgencyActions({
       hasToken: true,
       station_id: id,
     });
+    const [isVisualLoading, setIsVisualLoading] = useState(true);
   useEffect(() => {
     if (isLoadingMyStationDetail) {
       setIsVisualLoading(true);

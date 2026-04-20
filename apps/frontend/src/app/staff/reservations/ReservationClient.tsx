@@ -93,16 +93,6 @@ export default function ReservationClient() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tìm kiếm</label>
-              <input
-                type="text"
-                placeholder="Mã đặt trước, mã người dùng..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              />
-            </div>
-            <div className="space-y-2">
               <label className="text-sm font-medium">Trạng thái</label>
               <select
                 value={statusFilter}

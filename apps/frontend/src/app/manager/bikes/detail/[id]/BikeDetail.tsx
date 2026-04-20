@@ -77,12 +77,10 @@ export function BikeDetailView({
           <span className="text-foreground">{formatToVNTime(bike.updatedAt)}</span>
         </div>
       </div>
-
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <SectionCard icon={BikeIcon} title="Thông tin cơ bản">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            
               <Field 
                 label="Trạng thái hiện tại" 
                 value={
@@ -95,37 +93,17 @@ export function BikeDetailView({
               <Field label="Nhà cung cấp" value={bike.supplier.name} />
             </div>
           </SectionCard>
-
-          <SectionCard icon={Cpu} title="Thông số kỹ thuật & Chip">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <Field label="Mã Chip (Chip ID)" value={<code className="text-primary font-bold">{bike.chipId}</code>} />
-            </div>
-          </SectionCard>
         </div>
 
         <div className="space-y-6">
           <SectionCard icon={MapPin} title="Vị trí hiện tại">
             <div className="space-y-4">
-              {/* Đã sửa lỗi: Truy cập vào bike.station.name */}
               <Field 
                 label="Trạm hiện tại" 
                 value={bike.station?.name || `Tên trạm: ${bike.station.name}` || "Đang di chuyển"} 
               />
             </div>
           </SectionCard>
-
-          {/* <SectionCard icon={Activity} title="Thống kê hoạt động">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b pb-2">
-                <span className="text-sm text-muted-foreground">Tổng số chuyến</span>
-                <span className="font-bold text-foreground">{statisticData?.totalRentals || 0}</span>
-              </div>
-              <div className="flex justify-between items-center border-b pb-2">
-                <span className="text-sm text-muted-foreground">Doanh thu tạo ra</span>
-                <span className="font-bold text-primary">{(statisticData?.totalRevenue || 0).toLocaleString('vi-VN')}đ</span>
-              </div>
-            </div>
-          </SectionCard> */}
         </div>
       </div>
     </div>
