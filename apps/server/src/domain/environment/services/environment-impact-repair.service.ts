@@ -4,7 +4,7 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import {
   enqueueEnvironmentImpactCalculationJob,
-} from "@/domain/rentals/services/environment-impact-job.service";
+} from "@/domain/rentals/services/workers/environment-impact-job.service";
 
 import type {
   RepairMissingEnvironmentImpactJobsInput,

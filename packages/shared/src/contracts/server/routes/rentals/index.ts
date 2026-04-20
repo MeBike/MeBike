@@ -6,7 +6,6 @@ export {
   agencyApproveBikeSwapRequest,
   agencyRejectBikeSwapRequest,
   cancelMyReturnSlot,
-  cancelRental,
   confirmRentalReturnByOperator,
   createMyReturnSlot,
   createRental,

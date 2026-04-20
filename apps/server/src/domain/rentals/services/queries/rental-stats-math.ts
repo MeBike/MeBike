@@ -1,4 +1,4 @@
-import type { DashboardTrend, RevenueDelta } from "../models";
+import type { DashboardTrend, RevenueDelta } from "../../models";
 
 export function compareRevenue(current: number, previous: number): RevenueDelta {
   const difference = current - previous;

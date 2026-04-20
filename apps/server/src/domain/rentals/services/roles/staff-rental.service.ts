@@ -8,16 +8,16 @@ import type {
   InvalidBikeSwapRequestStatus,
   NoAvailableBike,
   RentalRepositoryError,
-} from "../domain-errors";
-import type { StaffBikeSwapRequestRow } from "../models";
+} from "../../domain-errors";
+import type { StaffBikeSwapRequestRow } from "../../models";
 
 import {
   makeRentalRepository,
   RentalRepository,
-} from "../repository/rental.repository";
+} from "../../repository/rental.repository";
 
-export class OperatorBikeSwapRequestNotFound extends Data.TaggedError(
-  "OperatorBikeSwapRequestNotFound",
+export class StaffBikeRequestNotFound extends Data.TaggedError(
+  "StaffBikeRequestNotFound",
 )<{
     readonly bikeSwapRequestId: string;
   }> {
@@ -26,12 +26,12 @@ export class OperatorBikeSwapRequestNotFound extends Data.TaggedError(
   }
 }
 
-export function getOperatorBikeSwapRequestDetail(
+export function staffGetChangeBikeDetail(
   userId: string,
   bikeSwapRequestId: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,
-  RentalRepositoryError | OperatorBikeSwapRequestNotFound,
+  RentalRepositoryError | StaffBikeRequestNotFound,
   RentalRepository
 > {
   return Effect.gen(function* () {
@@ -44,7 +44,7 @@ export function getOperatorBikeSwapRequestDetail(
 
     if (Option.isNone(result)) {
       return yield* Effect.fail(
-        new OperatorBikeSwapRequestNotFound(bikeSwapRequestId),
+        new StaffBikeRequestNotFound(bikeSwapRequestId),
       );
     }
 
@@ -52,13 +52,13 @@ export function getOperatorBikeSwapRequestDetail(
   });
 }
 
-export function approveOperatorBikeSwapRequest(
+export function staffApproveBikeSwapRequest(
   userId: string,
   bikeSwapRequestId: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,
   | RentalRepositoryError
-  | OperatorBikeSwapRequestNotFound
+  | StaffBikeRequestNotFound
   | NoAvailableBike
   | InvalidBikeSwapRequestStatus
   | BikeSwapRequestNotFound
@@ -75,7 +75,7 @@ export function approveOperatorBikeSwapRequest(
 
     if (Option.isNone(result)) {
       return yield* Effect.fail(
-        new OperatorBikeSwapRequestNotFound(bikeSwapRequestId),
+        new StaffBikeRequestNotFound(bikeSwapRequestId),
       );
     }
 
@@ -83,14 +83,14 @@ export function approveOperatorBikeSwapRequest(
   });
 }
 
-export function rejectOperatorBikeSwapRequest(
+export function staffRejectBikeSwapRequest(
   userId: string,
   bikeSwapRequestId: string,
   reason: string,
 ): Effect.Effect<
   StaffBikeSwapRequestRow,
   | RentalRepositoryError
-  | OperatorBikeSwapRequestNotFound
+  | StaffBikeRequestNotFound
   | InvalidBikeSwapRequestStatus
   | BikeSwapRequestNotFound,
   RentalRepository
@@ -106,7 +106,7 @@ export function rejectOperatorBikeSwapRequest(
 
     if (Option.isNone(result)) {
       return yield* Effect.fail(
-        new OperatorBikeSwapRequestNotFound(bikeSwapRequestId),
+        new StaffBikeRequestNotFound(bikeSwapRequestId),
       );
     }
 

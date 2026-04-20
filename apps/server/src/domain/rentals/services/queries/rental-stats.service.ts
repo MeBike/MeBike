@@ -1,14 +1,14 @@
 import { Context, Effect, Layer } from "effect";
 
-import type { RentalRepositoryError } from "../domain-errors";
+import type { RentalRepositoryError } from "../../domain-errors";
 import type {
   RentalDashboardSummary,
   RentalRevenueGroupBy,
   RentalRevenueStats,
   RentalSummaryStats,
-} from "../models";
+} from "../../models";
 
-import { RentalAnalyticsRepository } from "../repository/rental-analytics.repository";
+import { RentalAnalyticsRepository } from "../../repository/rental-analytics.repository";
 import { aggregateRentalStatusCounts } from "./rental-counts";
 import {
   comparePercentage,
@@ -74,7 +74,6 @@ export const RentalStatsServiceLive = Layer.effect(
             rentalList: {
               Rented: counts.RENTED,
               Completed: counts.COMPLETED,
-              Cancelled: counts.CANCELLED,
             },
             dailyRevenue: compareRevenue(dailyCurrent, dailyPrevious),
             monthlyRevenue: compareRevenue(monthlyCurrent, monthlyPrevious),

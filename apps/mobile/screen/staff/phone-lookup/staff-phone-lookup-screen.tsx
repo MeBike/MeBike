@@ -20,8 +20,6 @@ function getStatusTone(status: string) {
       return "warning" as const;
     case "COMPLETED":
       return "success" as const;
-    case "CANCELLED":
-      return "danger" as const;
     case "RESERVED":
       return "neutral" as const;
     default:
@@ -35,8 +33,6 @@ function getStatusText(status: string) {
       return "Đang thuê";
     case "COMPLETED":
       return "Hoàn thành";
-    case "CANCELLED":
-      return "Đã hủy";
     case "RESERVED":
       return "Đã đặt trước";
     default:

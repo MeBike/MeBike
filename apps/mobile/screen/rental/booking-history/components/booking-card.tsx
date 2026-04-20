@@ -198,15 +198,6 @@ function getStatusMeta(status: RentalStatus, theme: ReturnType<typeof useTheme>)
         destinationTone: "warning" as const,
         routeAccentColor: theme.statusWarning.val,
       };
-    case "CANCELLED":
-      return {
-        label: "ĐÃ HỦY",
-        tone: "danger" as const,
-        pulseDot: false,
-        withDot: false,
-        destinationTone: "danger" as const,
-        routeAccentColor: theme.statusDanger.val,
-      };
     default:
       return {
         label: status,

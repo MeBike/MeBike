@@ -2,7 +2,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
-import { previousUtcMonthFullRange } from "@/domain/rentals/services/rental-stats-time";
+import { previousUtcMonthFullRange } from "@/domain/rentals/services/queries/rental-stats-time";
 import { withLoggedCause } from "@/domain/shared";
 import { StationQueryServiceTag } from "@/domain/stations";
 import {

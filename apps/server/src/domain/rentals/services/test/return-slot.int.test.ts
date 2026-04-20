@@ -402,7 +402,11 @@ describe("return slot integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: station.id,
-      status: "CANCELLED",
+      status: "COMPLETED",
+      endStationId: station.id,
+      endTime: new Date(Date.now() - 30 * 60 * 1000),
+      duration: 30,
+      totalPrice: "12000",
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
@@ -424,6 +428,29 @@ describe("return slot integration", () => {
       },
     });
     expect(outboxCount).toBe(0);
+  });
+
+  it("rejects confirming a rental after the late return cutoff", async () => {
+    const { rental, station } = await givenActiveRental(fixture, {
+      rental: {
+        startTime: new Date("2026-03-22T10:00:00.000Z"),
+      },
+    });
+    const operator = await fixture.factories.user({ role: "STAFF" });
+    await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
+
+    const result = await runConfirmReturn({
+      rentalId: rental.id,
+      stationId: station.id,
+      confirmedByUserId: operator.id,
+      confirmationMethod: "MANUAL",
+      confirmedAt: new Date("2026-03-22T16:05:00.000Z"),
+    });
+
+    expectLeftTag(result, "InvalidRentalState");
+
+    const found = await fixture.prisma.rental.findUnique({ where: { id: rental.id } });
+    expect(found?.status).toBe("RENTED");
   });
 
   it("does not duplicate environment impact outbox jobs for the same rental", async () => {

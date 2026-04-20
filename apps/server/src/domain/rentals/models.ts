@@ -158,7 +158,7 @@ export type RentalCountsRow = {
 export type RentalStatusCounts = {
   RENTED: number;
   COMPLETED: number;
-  CANCELLED: number;
+  OVERDUE_UNRETURNED: number;
 };
 
 export type RentalRevenueGroupBy = "DAY" | "MONTH" | "YEAR";
@@ -189,7 +189,6 @@ export type RentalSummaryStats = {
   rentalList: {
     Rented: number;
     Completed: number;
-    Cancelled: number;
   };
   dailyRevenue: RevenueDelta;
   monthlyRevenue: RevenueDelta;

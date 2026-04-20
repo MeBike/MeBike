@@ -1,59 +1,15 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-
-import type { BikeRepositoryError } from "../domain-errors";
 import type {
   BikeActivityStats,
-  BikeRentalHistoryItem,
-  BikeRentalHistorySortField,
-  BikeRentalStats,
-  BikeStatistics,
-  BikeStats,
-  HighestRevenueBike,
-} from "../models";
-import type { BikeStatsRepo } from "../repository/bike-stats.repository";
-import type { BikeRepo } from "../repository/bike.repository";
+} from "../../models";
+import type { BikeStatsRepo } from "../../repository/bike-stats.repository";
+import type { BikeRepo } from "../../repository/bike.repository";
+import type { BikeStatsService } from "./bike-stats.service.types";
 
-import { BikeNotFound } from "../domain-errors";
-import {
-
-  BikeStatsRepository,
-} from "../repository/bike-stats.repository";
-import {
-
-  BikeRepository,
-} from "../repository/bike.repository";
-
-export type BikeStatsService = {
-  readonly getRentalStats: () => Effect.Effect<
-    BikeRentalStats,
-    BikeRepositoryError
-  >;
-  readonly getBikeStatistics: () => Effect.Effect<
-    BikeStatistics,
-    BikeRepositoryError
-  >;
-  readonly getBikeStatsById: (bikeId: string) => Effect.Effect<
-    BikeStats,
-    BikeRepositoryError | BikeNotFound
-  >;
-  readonly getHighestRevenueBike: () => Effect.Effect<
-    HighestRevenueBike | null,
-    BikeRepositoryError
-  >;
-  readonly getBikeActivityStats: (args: {
-    bikeId: string;
-    now?: Date;
-  }) => Effect.Effect<BikeActivityStats, BikeRepositoryError | BikeNotFound>;
-  readonly getBikeRentalHistory: (
-    bikeId: string,
-    pageReq: PageRequest<BikeRentalHistorySortField>,
-  ) => Effect.Effect<
-    PageResult<BikeRentalHistoryItem>,
-    BikeRepositoryError | BikeNotFound
-  >;
-};
+import { BikeNotFound } from "../../domain-errors";
+import { BikeStatsRepository } from "../../repository/bike-stats.repository";
+import { BikeRepository } from "../../repository/bike.repository";
 
 export class BikeStatsServiceTag extends Context.Tag("BikeStatsServiceTag")<
   BikeStatsServiceTag,

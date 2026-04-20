@@ -10,7 +10,7 @@ import {
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 
-import { makeRentalRepository } from "../repository/rental.repository";
+import { makeRentalRepository } from "../../repository/rental.repository";
 
 type CreateRentalDepositHoldInput = {
   tx: PrismaTypes.TransactionClient;

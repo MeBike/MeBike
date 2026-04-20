@@ -10,7 +10,7 @@ import { UserRoleSchema, VerifyStatusSchema } from "../users";
 export const RentalStatusSchema = z.enum([
   "RENTED",
   "COMPLETED",
-  "CANCELLED",
+  "OVERDUE_UNRETURNED",
 ]);
 
 export const BikeSwapStatusSchema = z.enum([
@@ -277,7 +277,6 @@ export const DashboardResponseSchema = z.object({
 export const RentalStatusCountsSchema = z.object({
   RENTED: z.number(),
   COMPLETED: z.number(),
-  CANCELLED: z.number(),
 });
 
 export const RentalCountsResponseSchema = RentalStatusCountsSchema;
@@ -293,7 +292,6 @@ export const RentalSummaryStatsSchema = z.object({
   rentalList: z.object({
     Rented: z.number(),
     Completed: z.number(),
-    Cancelled: z.number(),
   }),
   dailyRevenue: RevenueDeltaSchema,
   monthlyRevenue: RevenueDeltaSchema,
@@ -327,11 +325,6 @@ export const UpdateRentalRequestSchema = z.object({
   endTime: z.iso.datetime().optional(),
   status: RentalStatusSchema.optional(),
   totalPrice: z.number().optional(),
-  reason: z.string(),
-});
-
-export const CancelRentalRequestSchema = z.object({
-  bikeStatus: BikeStatusSchema.optional(),
   reason: z.string(),
 });
 
@@ -482,7 +475,6 @@ export type StaffCreateRentalRequest = z.infer<
 export type CardTapRentalRequest = z.infer<typeof CardTapRentalRequestSchema>;
 export type EndRentalRequest = z.infer<typeof EndRentalRequestSchema>;
 export type UpdateRentalRequest = z.infer<typeof UpdateRentalRequestSchema>;
-export type CancelRentalRequest = z.infer<typeof CancelRentalRequestSchema>;
 export type CreateReturnSlotRequest = z.infer<typeof CreateReturnSlotRequestSchema>;
 export type RentalListResponse = z.infer<typeof RentalListResponseSchema>;
 export type AdminRentalsListResponse = z.infer<

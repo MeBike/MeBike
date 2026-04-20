@@ -7,25 +7,40 @@ import type {
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
+  BikeRepositoryError,
   BikeStationNotFound,
+  BikeStationPlacementCapacityExceeded,
   BikeSupplierNotFound,
   InvalidBikeStatus,
-} from "../domain-errors";
-import type { BikeFilter, BikeRow, BikeSortField } from "../models";
-import type { BikeUpdatePatch } from "../repository/bike.repository.types";
+} from "../../domain-errors";
+import type { BikeFilter, BikeRow, BikeSortField } from "../../models";
 
 export type BikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN">;
+export type AdminBikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN" | "MAINTAINED" | "UNAVAILABLE">;
+
+export type CreateBikeInput = {
+  stationId: string;
+  supplierId: string;
+  status?: BikeStatus;
+};
+
+export type BikeStationScopedStatusUpdateInput = {
+  stationId: string;
+  status: BikeManageableStatus;
+};
+
+export type AdminBikeUpdatePatch = Partial<{
+  stationId: string;
+  status: AdminBikeManageableStatus;
+  supplierId: string | null;
+}>;
 
 export type BikeService = {
   createBike: (
-    input: {
-      stationId: string;
-      supplierId: string;
-      status?: BikeStatus;
-    },
+    input: CreateBikeInput,
   ) => Effect.Effect<
     BikeRow,
-    BikeStationNotFound | BikeSupplierNotFound
+    BikeRepositoryError | BikeStationNotFound | BikeStationPlacementCapacityExceeded | BikeSupplierNotFound
   >;
 
   listBikes: (
@@ -35,26 +50,24 @@ export type BikeService = {
 
   getBikeDetail: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
 
-  reportBrokenBike: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
-
   adminUpdateBike: (
     bikeId: string,
-    patch: BikeUpdatePatch,
+    patch: AdminBikeUpdatePatch,
   ) => Effect.Effect<
     Option.Option<BikeRow>,
     | BikeCurrentlyRented
     | BikeCurrentlyReserved
     | BikeNotFound
+    | BikeRepositoryError
+    | InvalidBikeStatus
+    | BikeStationPlacementCapacityExceeded
     | BikeStationNotFound
     | BikeSupplierNotFound
   >;
 
   updateBikeStatusInStationScope: (
     bikeId: string,
-    input: {
-      stationId: string;
-      status: BikeManageableStatus;
-    },
+    input: BikeStationScopedStatusUpdateInput,
   ) => Effect.Effect<
     BikeRow,
     | BikeNotFound

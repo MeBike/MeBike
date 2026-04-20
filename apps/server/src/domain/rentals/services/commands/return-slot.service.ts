@@ -5,19 +5,19 @@ import { StationNotFound } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { ReturnSlotRow } from "../models";
+import type { ReturnSlotRow } from "../../models";
 
 import {
   RentalNotFound,
   ReturnSlotCapacityExceeded,
   ReturnSlotNotFound,
   ReturnSlotRequiresActiveRental,
-} from "../domain-errors";
-import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
+} from "../../domain-errors";
+import { makeRentalRepository, RentalRepository } from "../../repository/rental.repository";
 import {
   makeReturnSlotRepository,
   ReturnSlotRepository,
-} from "../repository/return-slot.repository";
+} from "../../repository/return-slot.repository";
 
 export type ReturnSlotFailure
   = | RentalNotFound

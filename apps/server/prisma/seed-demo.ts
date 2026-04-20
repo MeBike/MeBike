@@ -28,6 +28,7 @@ import {
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
 import { toPrismaDecimal } from "../src/domain/shared/decimal";
 import logger from "../src/lib/logger";
+import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
@@ -384,28 +385,6 @@ function buildRentals(params: {
     300,
   );
 
-  for (let i = 0; i < 18; i++) {
-    const idx = 400 + i;
-    const user = pick(normalUsers, idx);
-    const bike = pick(bikes, idx);
-    const start = toUtcDate(-2 - (i % 25), 10 + (i % 10), (i * 5) % 60);
-    rentals.push({
-      id: uuidv7(),
-      userId: user.id,
-      bikeId: bike.id,
-      startStationId: bike.stationId ?? pick(stationIds, idx),
-      endStationId: null,
-      createdAt: new Date(start.getTime() - 10 * 60 * 1000),
-      startTime: start,
-      endTime: null,
-      duration: null,
-      totalPrice: null,
-      subscriptionId: null,
-      status: RentalStatus.CANCELLED,
-      updatedAt: new Date(start.getTime() + 5 * 60 * 1000),
-    });
-  }
-
   const rentedUsers = normalUsers.slice(0, 8);
   const rentedBikes = bikes.slice(0, 8);
   for (let i = 0; i < 8; i++) {
@@ -472,6 +451,7 @@ async function main() {
 
     await upsertVietnamBoundary(prisma);
     await seedDefaultPricingPolicy(prisma);
+    await seedDefaultGlobalCouponRules(prisma, { demoMode: true });
     await seedDemoEnvironmentPolicy(prisma);
     await seedStations(prisma);
     await seedRatingReasons(prisma);
@@ -1233,10 +1213,6 @@ async function main() {
           + agencyStatsRentals.filter(r => r.status === RentalStatus.COMPLETED).length,
       },
       "Completed rentals seeded",
-    );
-    logger.info(
-      { cancelled: rentals.filter(r => r.status === RentalStatus.CANCELLED).length },
-      "Cancelled rentals seeded",
     );
     logger.info(
       { pending: reservations.filter(r => r.status === ReservationStatus.PENDING).length },

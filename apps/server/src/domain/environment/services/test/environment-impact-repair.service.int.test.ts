@@ -8,7 +8,7 @@ import {
 } from "@/domain/environment";
 import {
   environmentImpactRentalDedupeKey,
-} from "@/domain/rentals/services/environment-impact-job.service";
+} from "@/domain/rentals/services/workers/environment-impact-job.service";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import {
   givenStationWithAvailableBike,
@@ -35,7 +35,7 @@ describe("environment impact repair jobs integration", () => {
   }
 
   async function createRental(input: {
-    status: "RENTED" | "COMPLETED" | "CANCELLED";
+    status: "RENTED" | "COMPLETED";
     startTime?: Date;
     endTime?: Date | null;
   }) {
@@ -155,9 +155,8 @@ describe("environment impact repair jobs integration", () => {
     expect(outboxCount).toBe(0);
   });
 
-  it("does not enqueue jobs for rented or cancelled rentals", async () => {
+  it("does not enqueue jobs for rented rentals", async () => {
     await createRental({ status: "RENTED", endTime: null });
-    await createRental({ status: "CANCELLED" });
 
     const summary = await runRepair({ limit: 100 });
 

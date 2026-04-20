@@ -34,7 +34,7 @@ export const AdminRatingStationSchema = z.object({
 
 export const AdminRatingRentalSchema = z.object({
   id: z.uuidv7(),
-  status: z.enum(["RENTED", "COMPLETED", "CANCELLED"]),
+  status: z.enum(["RENTED", "COMPLETED", "OVERDUE_UNRETURNED"]),
   startTime: z.iso.datetime(),
   endTime: z.iso.datetime().nullable(),
 });

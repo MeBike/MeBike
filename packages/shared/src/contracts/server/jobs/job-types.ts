@@ -7,6 +7,7 @@ export const JobTypes = {
   ReservationNotifyNearExpiry: "reservations.notifyNearExpiry",
   ReservationExpireHold: "reservations.expireHold",
   EnvironmentImpactCalculateRental: "environment.impact.calculateRental",
+  RentalOverdueSweep: "rentals.overdueSweep",
   WalletWithdrawalExecute: "wallets.withdraw.execute",
   WalletWithdrawalSweep: "wallets.withdraw.sweep",
 } as const;

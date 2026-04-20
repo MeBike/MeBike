@@ -134,17 +134,6 @@ describe("stationReadRepository Integration", () => {
       totalPrice: "5000",
       status: "COMPLETED",
     });
-    await kit.fixture.factories.rental({
-      userId: userB.id,
-      bikeId: bikeB.id,
-      startStationId: stationB.id,
-      startTime: new Date("2026-02-15T09:00:00.000Z"),
-      endTime: new Date("2026-02-15T09:15:00.000Z"),
-      duration: 15,
-      totalPrice: "9000",
-      status: "CANCELLED",
-    });
-
     const result = await Effect.runPromise(repo.getRevenueByStation({ from, to }));
 
     expect(result).toHaveLength(2);

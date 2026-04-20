@@ -1,7 +1,7 @@
 enum RentalStatus {
   RENTED
   COMPLETED
-  CANCELLED
+  OVERDUE_UNRETURNED
 }
 
 model Rental {

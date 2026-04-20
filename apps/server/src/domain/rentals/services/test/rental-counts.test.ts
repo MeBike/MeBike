@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { RentalCountsRow } from "../../models";
 
-import { aggregateRentalStatusCounts } from "../rental-counts";
+import { aggregateRentalStatusCounts } from "../queries/rental-counts";
 
 describe("aggregateRentalStatusCounts", () => {
   it("fills missing statuses with zeros", () => {
@@ -14,21 +14,21 @@ describe("aggregateRentalStatusCounts", () => {
     expect(aggregateRentalStatusCounts(rows)).toEqual({
       RENTED: 2,
       COMPLETED: 5,
-      CANCELLED: 0,
+      OVERDUE_UNRETURNED: 0,
     });
   });
 
   it("overwrites counts per status", () => {
     const rows: RentalCountsRow[] = [
       { status: "RENTED", count: 1 },
+      { status: "COMPLETED", count: 2 },
       { status: "RENTED", count: 3 },
-      { status: "CANCELLED", count: 4 },
     ];
 
     expect(aggregateRentalStatusCounts(rows)).toEqual({
       RENTED: 3,
-      COMPLETED: 0,
-      CANCELLED: 4,
+      COMPLETED: 2,
+      OVERDUE_UNRETURNED: 0,
     });
   });
 });

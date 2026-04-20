@@ -24,7 +24,7 @@ describe("rentals billing preview routing e2e", () => {
     readonly startOffsetMs?: number;
     readonly prepaid?: string;
     readonly withSubscription?: boolean;
-    readonly rentalStatus?: "RENTED" | "COMPLETED" | "CANCELLED";
+    readonly rentalStatus?: "RENTED" | "COMPLETED";
   }) {
     const user = await fixture.factories.user({ role: "USER" });
     await fixture.factories.wallet({ userId: user.id, balance: 100_000n });

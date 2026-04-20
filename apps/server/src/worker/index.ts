@@ -31,6 +31,7 @@ import { handleEnvironmentImpactCalculateRental } from "./environment-impact-wor
 import { handleFixedSlotAssign } from "./fixed-slot-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
 import { handlePushSend } from "./push-worker";
+import { handleRentalOverdueSweep } from "./rental-overdue-worker";
 import {
   handleReservationExpireHold,
   handleReservationNotifyNearExpiry,
@@ -126,6 +127,7 @@ async function main() {
   await setupQueue(runtime, JobTypes.ReservationNotifyNearExpiry);
   await setupQueue(runtime, JobTypes.ReservationExpireHold);
   await setupQueue(runtime, JobTypes.EnvironmentImpactCalculateRental);
+  await setupQueue(runtime, JobTypes.RentalOverdueSweep);
   await setupQueue(runtime, JobTypes.WalletWithdrawalExecute);
   await setupQueue(runtime, JobTypes.WalletWithdrawalSweep);
 
@@ -163,6 +165,12 @@ async function main() {
     handleEnvironmentImpactCalculateRental,
   );
   WorkerLog.workerRegistered(JobTypes.EnvironmentImpactCalculateRental, environmentImpactWorkerId);
+
+  const overdueSweepWorkerId = await runtime.register(
+    JobTypes.RentalOverdueSweep,
+    handleRentalOverdueSweep,
+  );
+  WorkerLog.workerRegistered(JobTypes.RentalOverdueSweep, overdueSweepWorkerId);
 
   const withdrawalWorkerId = await runtime.register(JobTypes.WalletWithdrawalExecute, handleWithdrawalExecute);
   WorkerLog.workerRegistered(JobTypes.WalletWithdrawalExecute, withdrawalWorkerId);
@@ -229,4 +237,12 @@ async function ensureSchedules(scheduler: JobScheduler) {
     { version: 1 },
   );
   WorkerLog.scheduleEnsured(JobTypes.WalletWithdrawalSweep, env.WITHDRAWAL_SWEEP_CRON);
+
+  await scheduler.schedule(
+    JobTypes.RentalOverdueSweep,
+    "* * * * *",
+    { version: 1 },
+    { tz: fixedSlotScheduleTz },
+  );
+  WorkerLog.scheduleEnsured(JobTypes.RentalOverdueSweep, `* * * * * (${fixedSlotScheduleTz})`);
 }

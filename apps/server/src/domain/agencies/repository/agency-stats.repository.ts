@@ -280,7 +280,6 @@ export function makeAgencyStatsRepository(
             totalRentals,
             activeRentals: pickupCounts.get(RentalStatus.RENTED) ?? 0,
             completedRentals: pickupCounts.get(RentalStatus.COMPLETED) ?? 0,
-            cancelledRentals: pickupCounts.get(RentalStatus.CANCELLED) ?? 0,
             totalRevenue: Number(pickupCompletedAggregate._sum.totalPrice ?? 0),
             avgDurationMinutes: Number(
               pickupCompletedAggregate._avg.duration?.toFixed(2) ?? 0,

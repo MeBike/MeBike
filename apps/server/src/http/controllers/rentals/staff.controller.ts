@@ -8,7 +8,7 @@ import {
   staffApproveBikeSwapRequest,
   staffGetChangeBikeDetail,
   staffRejectBikeSwapRequest,
-} from "@/domain/rentals/services/staff-rental.service";
+} from "@/domain/rentals/services/roles/staff-rental.service";
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractAdminRentalDetail,

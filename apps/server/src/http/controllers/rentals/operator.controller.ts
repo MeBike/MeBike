@@ -8,7 +8,7 @@ import {
   approveOperatorBikeSwapRequest,
   getOperatorBikeSwapRequestDetail,
   rejectOperatorBikeSwapRequest,
-} from "@/domain/rentals/services/operator-rental.service";
+} from "@/domain/rentals/services/roles/operator-rental.service";
 import { withLoggedCause } from "@/domain/shared";
 import { toContractBikeSwapRequestDetail } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";

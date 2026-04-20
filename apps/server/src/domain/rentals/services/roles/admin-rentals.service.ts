@@ -1,9 +1,9 @@
 import { Data, Effect, Option } from "effect";
 
-import type { RentalRepositoryError } from "../domain-errors";
-import type { AdminRentalDetail, StaffBikeSwapRequestRow } from "../models";
+import type { RentalRepositoryError } from "../../domain-errors";
+import type { AdminRentalDetail, StaffBikeSwapRequestRow } from "../../models";
 
-import { RentalRepository } from "../repository/rental.repository";
+import { RentalRepository } from "../../repository/rental.repository";
 
 export class AdminRentalNotFound extends Data.TaggedError(
   "AdminRentalNotFound",

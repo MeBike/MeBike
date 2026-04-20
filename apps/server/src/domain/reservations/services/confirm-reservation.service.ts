@@ -9,8 +9,8 @@ import {
   RentalRepository,
 } from "@/domain/rentals";
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
-import { createRentalDepositHoldInTx } from "@/domain/rentals/services/rental-deposit-hold.service";
-import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/unique-violation-mapper";
+import { createRentalDepositHoldInTx } from "@/domain/rentals/services/commands/rental-deposit-hold.service";
+import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/shared/unique-violation-mapper";
 import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import { Prisma } from "@/infrastructure/prisma";

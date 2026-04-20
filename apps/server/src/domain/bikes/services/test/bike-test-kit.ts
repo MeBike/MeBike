@@ -7,7 +7,7 @@ import { Prisma } from "@/infrastructure/prisma";
 import { runEffectEitherWithLayer, runEffectWithLayer } from "@/test/effect/run";
 
 import { bikeRepositoryFactory } from "../../repository/bike.repository";
-import { BikeServiceLive, BikeServiceTag } from "../bike.service";
+import { BikeServiceLive, BikeServiceTag } from "../commands/bike-command.service";
 
 export type BikeDeps = BikeServiceTag | BikeRepository | Prisma;
 
@@ -49,6 +49,7 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
     },
     adminUpdateBike(bikeId: string, input: {
       stationId?: string;
+      status?: "AVAILABLE" | "BROKEN" | "MAINTAINED" | "UNAVAILABLE";
       supplierId?: string;
     }) {
       return runEffectWithLayer(
@@ -58,6 +59,7 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
     },
     adminUpdateBikeEither(bikeId: string, input: {
       stationId?: string;
+      status?: "AVAILABLE" | "BROKEN" | "MAINTAINED" | "UNAVAILABLE";
       supplierId?: string;
     }) {
       return runEffectEitherWithLayer(

@@ -7,7 +7,7 @@ import { Context, Effect, Layer } from "effect";
 import { env } from "@/config/env";
 import { BikeServiceTag } from "@/domain/bikes";
 import { RentalCommandServiceTag } from "@/domain/rentals";
-import { RentalServiceTag } from "@/domain/rentals/services/rental.service";
+import { RentalServiceTag } from "@/domain/rentals/services/queries/rental.service";
 import { ReservationQueryServiceTag } from "@/domain/reservations";
 import { StationQueryServiceTag } from "@/domain/stations";
 import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";

@@ -4,7 +4,6 @@ import { z } from "../../../../zod";
 import {
   BikeSwapRequestErrorCodeSchema,
   BikeSwapRequestErrorResponseSchema,
-  CancelRentalRequestSchema,
   CardTapRentalRequestSchema,
   CreateRentalRequestSchema,
   CreateReturnSlotRequestSchema,
@@ -372,53 +371,6 @@ export const confirmRentalReturnByOperator = createRoute({
 
 // Legacy alias kept so existing generated route consumers do not break immediately.
 export const endRentalByAdmin = confirmRentalReturnByOperator;
-
-export const cancelRental = createRoute({
-  method: "post",
-  path: "/v1/rentals/{rentalId}/cancel",
-  tags: ["Rentals"],
-  request: {
-    params: RentalIdParamSchema,
-    body: {
-      content: {
-        "application/json": {
-          schema: CancelRentalRequestSchema.openapi("CancelRentalRequest"),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: "Rental cancelled successfully",
-      content: {
-        "application/json": {
-          schema: RentalDetailSchemaOpenApi,
-        },
-      },
-    },
-    400: {
-      description: "Cannot cancel rental",
-      content: {
-        "application/json": {
-          schema: RentalErrorResponseSchema,
-          examples: {
-            CannotCancelWithStatus: {
-              value: {
-                error: "Cannot cancel rental in this status",
-                details: {
-                  code: RentalErrorCodeSchema.enum
-                    .CANNOT_CANCEL_THIS_RENTAL_WITH_STATUS,
-                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                  status: "COMPLETED",
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-});
 
 export const processCardTapRental = createRoute({
   method: "post",
