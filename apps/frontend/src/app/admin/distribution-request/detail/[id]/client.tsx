@@ -166,7 +166,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                       <TableCell className="text-center font-medium text-slate-500">{index + 1}</TableCell>
                       <TableCell>
                         <code className="px-2 py-1 bg-slate-100 rounded text-blue-700 font-bold text-xs">
-                          {item.bike.chipId}
+                          {item.bike.id}
                         </code>
                       </TableCell>
                       <TableCell>

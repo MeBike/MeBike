@@ -43,13 +43,6 @@ export const bikeColumn = ({
   //  onUpdateStatus?: ((data: ) => void) | undefined;
 }): ColumnDef<Bike>[] => [
   {
-    accessorKey: "chipId",
-    header: "Tên chip",
-    cell: ({ row }) => {
-      return row.original.chipId || "Không có";
-    },
-  },
-  {
     accessorKey: "station",
     header: "Tên trạm",
     cell: ({ row }) => {
@@ -136,13 +129,6 @@ export const bikeColumnForStaff = ({
   suppliers?: Supplier[];
   //  onUpdateStatus?: ((data: ) => void) | undefined;
 }): ColumnDef<Bike>[] => [
-  {
-    accessorKey: "chipId",
-    header: "Tên chip",
-    cell: ({ row }) => {
-      return shortenId(row.original.chipId) || "Không có";
-    },
-  },
   {
     accessorKey: "stationId",
     header: "Tên trạm",

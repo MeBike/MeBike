@@ -6,7 +6,6 @@ export interface IUserRating{
 }
 export interface IBikeRating {
   id : string;
-  chipId : string;
 }
 export interface IStationRating { 
   id : string;

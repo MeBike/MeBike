@@ -65,7 +65,6 @@ type Item = {
   id: string;
   bike: {
     id: string;
-    chipId: string;
     status: string;
   };
   deliveredAt: string;
@@ -104,7 +103,6 @@ interface StationDetail {
 
 interface BikeDetail {
   id: string;
-  chipId: string;
   status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'LOST'; // Enum tùy hệ thống của bạn
   supplierId: string;
   updatedAt: string;

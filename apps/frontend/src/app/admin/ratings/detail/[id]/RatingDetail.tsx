@@ -111,7 +111,7 @@ export default function DetailRating({ rating }: DetailRatingProps) {
                   </div>
                   <div>
                     <p className="text-sm font-bold">Đánh giá Xe</p>
-                    <p className="text-xs text-muted-foreground">Chip ID: <span className="font-mono font-medium">{rating.bike.chipId}</span></p>
+                  
                   </div>
                 </div>
                 <div className="space-y-3">

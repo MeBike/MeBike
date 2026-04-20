@@ -22,7 +22,6 @@ export const bikeSchema = z.object({
     .refine(isValidUUID, {
       message: "Mã nhà cung cấp phải là một UUID hợp lệ",
     }),
-  chipId: z.string().optional().or(z.literal("")),
 });
 export const updateBikeSchema = z.object({
   stationId: z
@@ -39,7 +38,6 @@ export const updateBikeSchema = z.object({
     })
     .optional()
     .or(z.literal("")),
-  chipId: z.string(),
 });
 export type BikeSchemaFormData = z.infer<typeof bikeSchema>;
 export type UpdateBikeSchemaFormData = z.infer<typeof updateBikeSchema>;

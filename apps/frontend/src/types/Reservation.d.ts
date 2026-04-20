@@ -24,7 +24,6 @@ export interface IUser {
 }
 export interface IBike {
   id: string;
-  chipId: string;
   status: string;
 }
 export interface IStation {

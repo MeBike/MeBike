@@ -197,7 +197,6 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
                     </Badge>
                   }
                 />
-                <Field label="Mã Chip" value={data.bike?.chipId || "N/A"} />
                 <Field label="ID Trạm hiện tại" value={data.stationId} />
               </div>
             </SectionCard>

@@ -154,7 +154,6 @@ interface RentalRecord {
   };
   bike: {
     id: string;
-    chipId: string;
     status: string;
     supplierId: string;
     updatedAt: string;

@@ -288,10 +288,6 @@ export default function AdminRentalDetailClient({
                   value={data.bike?.status || "Chưa có dữ liệu"}
                 />
                 <Field
-                  label="Mã Chip"
-                  value={data.bike?.chipId || "Chưa có dữ liệu"}
-                />
-                <Field
                   label="Nhà cung cấp"
                   value={data.bike?.supplierId || "Chưa có dữ liệu"}
                 />

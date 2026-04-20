@@ -116,13 +116,6 @@ export const redistributionColumn = ({
 // 3. Column hiển thị danh sách xe (Items) trong chi tiết yêu cầu
 export const redistributionItemColumn = (): ColumnDef<any>[] => [
   {
-    accessorKey: "bike.chipId",
-    header: "Mã Chip",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.bike.chipId}</span>
-    ),
-  },
-  {
     accessorKey: "bike.status",
     header: "Tình trạng xe",
     cell: ({ row }) => (
