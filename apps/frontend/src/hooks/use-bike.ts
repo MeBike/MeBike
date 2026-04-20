@@ -9,6 +9,7 @@ import {
   useReportBike,
   useSoftDeleteBikeMutation,
   useUpdateBike,
+  useUpdateBikeStatus,
 } from "@mutations";
 import { useRouter } from "next/navigation";
 import {
@@ -103,6 +104,7 @@ export const useBikeActions = ({
   } = useGetStatusCountQuery();
   const deleteBikeMutation = useSoftDeleteBikeMutation();
   const reportBikeMutation = useReportBike();
+  const useUpdateBikeStatusMutation = useUpdateBikeStatus();
   const {
     data: detailBike,
     refetch: getDetailBike,
@@ -177,6 +179,38 @@ export const useBikeActions = ({
     },
     [
       updateBikeMutation,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      stationId,
+      supplierId,
+      status,
+      queryClient,
+    ],
+  );
+  const updateBikeStatus = useCallback(
+    async (id: string, status: "AVAILABLE" | "BROKEN") => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useUpdateBikeStatusMutation.mutateAsync({ id, status });
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Cập nhật trạng thái xe đạp thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["bikes", "all"],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromBikeCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useUpdateBikeStatusMutation,
       hasToken,
       router,
       page,
@@ -306,6 +340,8 @@ export const useBikeActions = ({
     isLoadingMyBikeInStationDetail,
     myBikeInStationDetail,
     getMyBikeInStation,
-    getMyBikeInStationDetail
+    getMyBikeInStationDetail,
+    updateBikeStatus,
+    isUpdateStatusBike : useUpdateBikeStatusMutation.isPending,
   };
 };

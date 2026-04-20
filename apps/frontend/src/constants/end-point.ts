@@ -56,6 +56,7 @@ export const ENDPOINT = {
         RENTAL_HISTORY : (id : string) => `/bikes/${id}/rental-history`,
         ACTIVITY_STATS : (id : string) => `/bikes/${id}/activity-stats`,
         REPORT_BROKEN : (id : string) => `/bikes/report-broken/${id}`,
+        MANAGER_UPDATE : (id:string) => `/manager/bikes/${id}/status`,
     },
     DASHBOARD : {
         STATS : "/stats/summary",
