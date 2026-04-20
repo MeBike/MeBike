@@ -4,7 +4,12 @@ import { HTTP_STATUS } from "@/constants";
 import type { ReservationStatus } from "@/types";
 const fetchMyReservation = async ({page,pageSize,reservation_status} : {page ?: number , pageSize ?: number , reservation_status ?: ReservationStatus}) => {
   try {
-    const response = await agencyService.getReservationInMyStation({page,pageSize,status:reservation_status});
+    const query: Record<string, number | string | undefined> = {
+      page: page ?? 1,
+      pageSize: pageSize ?? 5,
+    };
+    if(reservation_status!=="") query.status = reservation_status;
+    const response = await agencyService.getReservationInMyStation(query);
     if (response.status === HTTP_STATUS.OK) {
       return response.data; 
     }

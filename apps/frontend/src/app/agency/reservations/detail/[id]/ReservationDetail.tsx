@@ -88,7 +88,7 @@ export default function ReservationDetailClient() {
     hasToken: true,
     reservation_id: id,
   });
-  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
     if (isLoadingDetailReservationForAgency) {
       setIsVisualLoading(true);
@@ -99,12 +99,12 @@ export default function ReservationDetailClient() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetailReservationForAgency]);
-  if (isVisualLoading) return <LoadingScreen />;
   useEffect(() => {
     if (id) {
       getDetailReservationForAgency();
     }
   }, [id, getDetailReservationForAgency]);
+  if (isVisualLoading) return <LoadingScreen />;
   if (!detailReservationForAgency) {
     notFound();
   }

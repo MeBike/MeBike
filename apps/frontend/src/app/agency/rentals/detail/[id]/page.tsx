@@ -86,7 +86,7 @@ export default function AdminRentalDetailPage() {
     hasToken: true,
     rental_id: id,
   });
-  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
     if (isDetailRentalLoadingForAgency) {
       setIsVisualLoading(true);
@@ -97,39 +97,12 @@ export default function AdminRentalDetailPage() {
       return () => clearTimeout(timer);
     }
   }, [isDetailRentalLoadingForAgency]);
-  if (isVisualLoading) return <LoadingScreen />;
   useEffect(() => {
     if (id) {
       getDetailRentalForAgency();
     }
   }, [id, getDetailRentalForAgency]);
-  if (!detailData) {
-    return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Không tìm thấy thông tin phiên thuê.
-        </p>
-      </div>
-    );
-  }
-  const loadingShell = (
-    <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="h-9 w-48 animate-pulse rounded-md bg-muted" />
-          <div className="h-9 w-40 animate-pulse rounded-md bg-muted" />
-        </div>
-        <div className="h-14 animate-pulse rounded-lg bg-muted" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="h-80 animate-pulse rounded-xl bg-muted lg:col-span-2" />
-          <div className="h-64 animate-pulse rounded-xl bg-muted" />
-        </div>
-      </div>
-    </div>
-  );
-  if (isDetailRentalLoadingForAgency) {
-    return loadingShell;
-  }
+  if (isVisualLoading) return <LoadingScreen />;
   if (!detailData) {
     notFound();
   }

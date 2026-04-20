@@ -78,7 +78,7 @@ export default function RentalClient() {
               <DataTable
                 columns={rentalColumnForStaff({
                   onView: ({ id }) => {
-                    router.push(`/staff/rentals/detail/${id}`);
+                    router.push(`/agency/rentals/detail/${id}`);
                   },
                 })}
                 data={rentals}

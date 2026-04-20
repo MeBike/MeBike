@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { BikeDetailView } from "./BikeDetail";
 import { useAgencyActions } from "@/hooks/use-agency";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-export default function BikeDetailPage({
+export default function Page({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -35,9 +35,6 @@ export default function BikeDetailPage({
   }, [id]);
   if (isVisualLoading) {
     return <LoadingScreen />;
-  }
-  if (!myAgencyBikeInStationDetail) {
-    notFound();
   }
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
