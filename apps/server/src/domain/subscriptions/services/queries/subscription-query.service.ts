@@ -1,9 +1,11 @@
-import type { SubscriptionQueryRepo } from "../repository/subscription.repository.types";
-import type { SubscriptionQueryService } from "./subscription.service.types";
+import type { SubscriptionQueryRepo } from "../../repository/subscription.repository.types";
+import type { SubscriptionQueryService } from "../subscription.service.types";
 
 /**
- * Tạo query service mỏng cho subscriptions.
- * Service này chủ yếu forward sang query repo để phần đọc vẫn đơn giản và dễ lần theo.
+ * Tao query service mong cho subscriptions.
+ * Service nay chu yeu forward sang query repo de phan doc van don gian va de lan theo.
+ *
+ * @param repo Query repository cho cac luong doc subscriptions.
  */
 export function makeSubscriptionQueryService(
   repo: SubscriptionQueryRepo,

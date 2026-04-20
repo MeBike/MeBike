@@ -1,27 +1,31 @@
 import { Effect, Option } from "effect";
 
-import type { SubscriptionRow } from "../models";
-import type { UseSubscriptionFailure } from "./subscription-flows.shared";
+import type { SubscriptionRow } from "../../models";
+import type { UseSubscriptionFailure } from "../shared/subscription-flow.shared";
 
 import {
   SubscriptionExpired as SubscriptionExpiredError,
   SubscriptionNotFound as SubscriptionNotFoundError,
   SubscriptionNotUsable as SubscriptionNotUsableError,
   SubscriptionUsageExceeded as SubscriptionUsageExceededError,
-} from "../domain-errors";
+} from "../../domain-errors";
 import {
   SubscriptionCommandServiceTag,
-} from "../services/subscription-command.live";
+} from "./subscription-command.live";
 import {
   SubscriptionQueryServiceTag,
-} from "../services/subscription-query.live";
-import { computeExpiresAt } from "./subscription-flows.shared";
+} from "../queries/subscription-query.live";
+import { computeExpiresAt } from "../shared/subscription-flow.shared";
 
 /**
- * Dùng đúng một lượt subscription ở lớp use case thông thường.
+ * Dung dung mot luot subscription o lop use case thong thuong.
  *
- * Flow này làm các bước check rẻ trước, sau đó giao phần đổi trạng thái/ghi dữ liệu
- * cho command service để caller khác có thể tái sử dụng mà không phải copy lại guard logic.
+ * Flow nay lam cac buoc check re truoc, sau do giao phan doi trang thai/ghi du lieu
+ * cho command service de caller khac co the tai su dung ma khong phai copy lai guard logic.
+ *
+ * @param args.subscriptionId Subscription can dung.
+ * @param args.userId User dang thuc hien luot su dung.
+ * @param args.now Moc thoi gian xu ly. Mac dinh dung thoi gian hien tai.
  */
 export function useSubscriptionOnceUseCase(args: {
   subscriptionId: string;

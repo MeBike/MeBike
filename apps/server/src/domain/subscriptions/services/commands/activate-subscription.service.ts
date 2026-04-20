@@ -1,25 +1,28 @@
 import { Effect, Option } from "effect";
 
-import type { SubscriptionRow } from "../models";
-import type { ActivateSubscriptionFailure } from "./subscription-flows.shared";
+import type { SubscriptionRow } from "../../models";
+import type { ActivateSubscriptionFailure } from "../shared/subscription-flow.shared";
 
 import {
   SubscriptionNotFound as SubscriptionNotFoundError,
   SubscriptionNotPending as SubscriptionNotPendingError,
-} from "../domain-errors";
+} from "../../domain-errors";
 import {
   SubscriptionCommandServiceTag,
-} from "../services/subscription-command.live";
+} from "./subscription-command.live";
 import {
   SubscriptionQueryServiceTag,
-} from "../services/subscription-query.live";
-import { computeExpiresAt } from "./subscription-flows.shared";
+} from "../queries/subscription-query.live";
+import { computeExpiresAt } from "../shared/subscription-flow.shared";
 
 /**
- * Kích hoạt ngay một subscription đang ở trạng thái pending.
+ * Kich hoat ngay mot subscription dang o trang thai pending.
  *
- * Use case này giữ phần check đọc riêng ra trước khi gọi command service,
- * để lỗi trả về vẫn rõ ràng khi đọc log hoặc debug job auto-activate.
+ * Use case nay giu phan check doc rieng ra truoc khi goi command service,
+ * de loi tra ve van ro rang khi doc log hoac debug job auto-activate.
+ *
+ * @param args.subscriptionId Id subscription can kich hoat.
+ * @param args.now Moc thoi gian kich hoat. Mac dinh dung thoi gian hien tai.
  */
 export function activateSubscriptionUseCase(args: {
   subscriptionId: string;
