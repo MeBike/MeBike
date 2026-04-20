@@ -44,6 +44,17 @@ export const reserveBikeRoute = createRoute({
                 details: { code: ReservationErrorCodeSchema.enum.ACTIVE_RESERVATION_EXISTS },
               },
             },
+            OvernightOperationsClosed: {
+              value: {
+                error: "Operations are closed overnight",
+                details: {
+                  code: ReservationErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+                  currentTime: "2026-04-20T23:00:00+07:00",
+                  windowStart: "23:00",
+                  windowEnd: "05:00",
+                },
+              },
+            },
             BikeAlreadyReserved: {
               value: {
                 error: "Bike is already reserved",
@@ -103,6 +114,17 @@ export const confirmReservationRoute = createRoute({
               value: {
                 error: "Invalid reservation status transition",
                 details: { code: ReservationErrorCodeSchema.enum.INVALID_RESERVATION_TRANSITION },
+              },
+            },
+            OvernightOperationsClosed: {
+              value: {
+                error: "Operations are closed overnight",
+                details: {
+                  code: ReservationErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+                  currentTime: "2026-04-20T23:00:00+07:00",
+                  windowStart: "23:00",
+                  windowEnd: "05:00",
+                },
               },
             },
             ConfirmBlockedByActiveRental: {

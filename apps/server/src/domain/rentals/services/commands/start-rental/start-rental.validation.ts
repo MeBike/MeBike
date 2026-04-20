@@ -4,6 +4,10 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
+import {
+  isWithinOvernightOperationsWindow,
+  makeOvernightOperationsClosedError,
+} from "@/domain/shared";
 
 import type { RentalServiceFailure } from "../../../domain-errors";
 import type { StartRentalInput } from "../../../types";
@@ -33,6 +37,11 @@ export function prepareStartRentalInTx(
     const txBikeRepo = makeBikeRepository(tx);
     const txRentalRepo = makeRentalRepository(tx);
     const txPricingPolicyRepo = makePricingPolicyRepository(tx);
+    const now = input.now ?? new Date();
+
+    if (isWithinOvernightOperationsWindow(now)) {
+      return yield* Effect.fail(makeOvernightOperationsClosedError(now));
+    }
 
     const existingByUser = yield* txRentalRepo.findActiveByUserId(input.userId);
     if (Option.isSome(existingByUser)) {

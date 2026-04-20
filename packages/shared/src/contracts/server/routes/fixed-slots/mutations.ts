@@ -53,6 +53,15 @@ export const createFixedSlotTemplateRoute = createRoute({
                 },
               },
             },
+            StartOutsideOperatingHours: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS,
+                  slotStart: "23:30",
+                },
+              },
+            },
           },
         },
       },
@@ -199,6 +208,15 @@ export const updateFixedSlotTemplateRoute = createRoute({
                 details: {
                   code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_NOT_FUTURE,
                   slotDate: "2026-04-10",
+                },
+              },
+            },
+            StartOutsideOperatingHours: {
+              value: {
+                error: fixedSlotTemplateErrorMessages.FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS,
+                details: {
+                  code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS,
+                  slotStart: "04:30",
                 },
               },
             },

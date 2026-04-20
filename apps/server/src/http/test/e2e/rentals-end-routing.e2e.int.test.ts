@@ -1,6 +1,6 @@
 import type { RentalsContracts } from "@mebike/shared";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
@@ -213,6 +213,56 @@ describe("rentals end routing e2e", () => {
     expect(body.returnSlot?.status).toBe("ACTIVE");
   });
 
+  it("blocks return-slot creation during overnight closure", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-21T16:00:00.000Z"));
+
+    try {
+      const { user, rental } = await createActiveRentalGraph();
+      const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+      const targetStation = await fixture.factories.station({ capacity: 5 });
+
+      const response = await createReturnSlot(userToken, rental.id, targetStation.id);
+      const body = await response.json() as RentalsContracts.RentalErrorResponse;
+
+      expect(response.status).toBe(400);
+      expect(body.details?.code).toBe("OVERNIGHT_OPERATIONS_CLOSED");
+    }
+    finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("blocks staff rental end during overnight closure", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-21T16:00:00.000Z"));
+
+    try {
+      const { rental, startStation } = await createActiveRentalGraph();
+      const { token: staffToken } = await createStaffToken(startStation.id);
+
+      const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${staffToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          stationId: startStation.id,
+          confirmationMethod: "MANUAL",
+        }),
+      });
+
+      const body = await response.json() as RentalsContracts.RentalErrorResponse;
+
+      expect(response.status).toBe(400);
+      expect(body.details?.code).toBe("OVERNIGHT_OPERATIONS_CLOSED");
+    }
+    finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("allows an agency user to fetch rental detail from the staff route", async () => {
     const { rental } = await createActiveRentalGraph();
     const { token: agencyToken } = await createAgencyToken();
@@ -244,6 +294,24 @@ describe("rentals end routing e2e", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe(rental.id);
+  });
+
+  it("allows a manager to fetch active rental detail outside their station for walk-in returns", async () => {
+    const { rental } = await createActiveRentalGraph();
+    const otherStation = await fixture.factories.station({ capacity: 5 });
+    const { token: managerToken } = await createManagerToken(otherStation.id);
+
+    const response = await fixture.app.request(`http://test/v1/staff/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${managerToken}`,
+      },
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.status).toBe("RENTED");
   });
 
   it("lets agency use the agency rentals list but only for its station", async () => {
@@ -362,8 +430,21 @@ describe("rentals end routing e2e", () => {
     expect(response.status).toBe(404);
   });
 
-  it("hides rental detail from manager when the rental is outside their station", async () => {
-    const { rental } = await createActiveRentalGraph();
+  it("hides completed rental detail from manager when the rental is outside their station", async () => {
+    const rider = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: rider.id, balance: 100_000n });
+    const startStation = await fixture.factories.station({ capacity: 5 });
+    const endStation = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: endStation.id, status: "AVAILABLE" });
+    const rental = await fixture.factories.rental({
+      userId: rider.id,
+      bikeId: bike.id,
+      startStationId: startStation.id,
+      endStationId: endStation.id,
+      startTime: new Date("2026-03-21T08:00:00.000Z"),
+      endTime: new Date("2026-03-21T09:00:00.000Z"),
+      status: "COMPLETED",
+    });
     const otherStation = await fixture.factories.station({ capacity: 5 });
     const { token: managerToken } = await createManagerToken(otherStation.id);
 

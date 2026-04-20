@@ -35,6 +35,7 @@ export const ReservationErrorCodeSchema = z
     "RESERVATION_NOT_OWNED",
     "RESERVATION_MISSING_BIKE",
     "INVALID_RESERVATION_TRANSITION",
+    "OVERNIGHT_OPERATIONS_CLOSED",
   ])
   .openapi("ReservationErrorCode");
 
@@ -59,6 +60,7 @@ export const reservationErrorMessages = {
   RESERVATION_NOT_OWNED: "Reservation does not belong to user",
   RESERVATION_MISSING_BIKE: "Reservation missing bike assignment",
   INVALID_RESERVATION_TRANSITION: "Invalid reservation status transition",
+  OVERNIGHT_OPERATIONS_CLOSED: "Operations are closed overnight",
 } as const;
 
 export const ReservationErrorDetailSchema = z.object({
@@ -79,6 +81,9 @@ export const ReservationErrorDetailSchema = z.object({
   totalCapacity: z.number().optional(),
   availableBikes: z.number().optional(),
   requiredAvailableBikes: z.number().optional(),
+  currentTime: z.string().optional(),
+  windowStart: z.string().optional(),
+  windowEnd: z.string().optional(),
 }).openapi("ReservationErrorDetail");
 
 export const ReservationErrorResponseSchema = z.object({

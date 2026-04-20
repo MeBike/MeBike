@@ -1,10 +1,15 @@
 import { Effect, Option } from "effect";
 
-import { defectOn } from "@/domain/shared";
+import {
+  defectOn,
+  isWithinOvernightOperationsWindow,
+  makeOvernightOperationsClosedError,
+} from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
+import type { RentalOperatingHourFailure } from "../../domain-errors";
 import type { ReturnSlotRow } from "../../models";
 
 import {
@@ -24,7 +29,10 @@ export type ReturnSlotFailure
     | ReturnSlotRequiresActiveRental
     | ReturnSlotNotFound
     | ReturnSlotCapacityExceeded
-    | StationNotFound;
+    | StationNotFound
+    | ReturnSlotOperatingHourFailure;
+
+type ReturnSlotOperatingHourFailure = RentalOperatingHourFailure;
 
 type ReturnSlotInput = {
   rentalId: string;
@@ -62,6 +70,10 @@ export function createReturnSlot(
     yield* RentalRepository;
     yield* ReturnSlotRepository;
     const now = input.now ?? new Date();
+
+    if (isWithinOvernightOperationsWindow(now)) {
+      return yield* Effect.fail(makeOvernightOperationsClosedError(now));
+    }
 
     return yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {

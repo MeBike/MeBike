@@ -14,6 +14,11 @@ import type {
 } from "@/types/navigation";
 
 import { presentFixedSlotError } from "@/presenters/fixed-slots/fixed-slot-presenter";
+import {
+  getFixedSlotOperatingHoursMessage,
+  isWallClockWithinOvernightOperationsWindow,
+  parseTimeStringToWallClockDate,
+} from "@/utils/business-hours";
 
 import {
   filterFutureDates,
@@ -28,6 +33,18 @@ export type FixedSlotEditorHookParams = {
   routeParams?: FixedSlotEditorRouteProp["params"];
 };
 
+function getDefaultSlotStartDate(): Date {
+  const now = new Date();
+
+  if (isWallClockWithinOvernightOperationsWindow(now)) {
+    now.setHours(5, 0, 0, 0);
+    return now;
+  }
+
+  now.setSeconds(0, 0);
+  return now;
+}
+
 export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorHookParams) {
   const queryClient = useQueryClient();
   const { stationId: initialStationId, stationName, templateId } = routeParams ?? {};
@@ -35,11 +52,11 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
   const canEditStation = !isEditMode && !initialStationId;
 
   const [stationId, setStationId] = useState(initialStationId ?? "");
-  const [slotStart, setSlotStart] = useState(formatTime(new Date()));
+  const [slotStart, setSlotStart] = useState(() => formatTime(getDefaultSlotStartDate()));
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [pastDatesHidden, setPastDatesHidden] = useState(0);
   const [timePickerVisible, setTimePickerVisible] = useState(false);
-  const [timePickerValue, setTimePickerValue] = useState(() => timeStringToDate(formatTime(new Date())));
+  const [timePickerValue, setTimePickerValue] = useState(() => getDefaultSlotStartDate());
   const [dateModalVisible, setDateModalVisible] = useState(false);
   const [datePickerValue, setDatePickerValue] = useState(getTomorrowDate());
 
@@ -124,10 +141,14 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
     if (Platform.OS === "android") {
       DateTimePickerAndroid.open({
         mode: "time",
-        value: new Date(),
+        value: timeStringToDate(slotStart),
         is24Hour: true,
         onChange: (event, date) => {
           if (event.type === "set" && date) {
+            if (isWallClockWithinOvernightOperationsWindow(date)) {
+              Alert.alert("Giờ không hợp lệ", getFixedSlotOperatingHoursMessage());
+              return;
+            }
             setSlotStart(formatTime(date));
           }
         },
@@ -144,6 +165,11 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
   }, []);
 
   const confirmTimePicker = useCallback(() => {
+    if (isWallClockWithinOvernightOperationsWindow(timePickerValue)) {
+      Alert.alert("Giờ không hợp lệ", getFixedSlotOperatingHoursMessage());
+      return;
+    }
+
     setSlotStart(formatTime(timePickerValue));
     setTimePickerVisible(false);
   }, [timePickerValue]);
@@ -165,6 +191,11 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
     }
     if (selectedDates.length === 0) {
       Alert.alert("Thiếu ngày", "Cần ít nhất 1 ngày áp dụng.");
+      return;
+    }
+
+    if (isWallClockWithinOvernightOperationsWindow(parseTimeStringToWallClockDate(slotStart))) {
+      Alert.alert("Giờ không hợp lệ", getFixedSlotOperatingHoursMessage());
       return;
     }
 

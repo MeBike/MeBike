@@ -15,7 +15,6 @@ import { BikeRepository } from "@/domain/bikes";
 import { RentalRepository, startRental } from "@/domain/rentals";
 import {
   confirmReservation,
-  ReservationCommandServiceTag,
 } from "@/domain/reservations";
 import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
 import { Prisma } from "@/infrastructure/prisma";
@@ -42,7 +41,6 @@ type DeviceAccessCommandDeps = {
   readonly prisma: typeof Prisma.Service;
   readonly bikeRepository: typeof BikeRepository.Service;
   readonly rentalRepository: typeof RentalRepository.Service;
-  readonly reservationCommandService: typeof ReservationCommandServiceTag.Service;
   readonly subscriptionCommandService: typeof SubscriptionCommandServiceTag.Service;
 };
 
@@ -53,14 +51,11 @@ function provideConfirmReservationDeps(
   effect: Effect.Effect<
     ReservationRow,
     ReservationServiceFailure,
-    Prisma | ReservationCommandServiceTag | BikeRepository | RentalRepository
+    Prisma
   >,
   deps: DeviceAccessCommandDeps,
 ): Effect.Effect<ReservationRow, ReservationServiceFailure> {
   return effect.pipe(
-    Effect.provideService(RentalRepository, deps.rentalRepository),
-    Effect.provideService(BikeRepository, deps.bikeRepository),
-    Effect.provideService(ReservationCommandServiceTag, deps.reservationCommandService),
     Effect.provideService(Prisma, deps.prisma),
   );
 }
@@ -105,14 +100,12 @@ const makeDeviceAccessCommandServiceEffect = Effect.gen(function* () {
   const prisma = yield* Prisma;
   const bikeRepository = yield* BikeRepository;
   const rentalRepository = yield* RentalRepository;
-  const reservationCommandService = yield* ReservationCommandServiceTag;
   const subscriptionCommandService = yield* SubscriptionCommandServiceTag;
 
   return makeDeviceAccessCommandService({
     prisma,
     bikeRepository,
     rentalRepository,
-    reservationCommandService,
     subscriptionCommandService,
   });
 });

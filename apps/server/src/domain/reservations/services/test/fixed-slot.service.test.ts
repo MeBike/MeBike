@@ -54,6 +54,13 @@ type DraftState = {
   bikeStatus: "AVAILABLE" | "RESERVED";
 };
 
+function makeTransactionClient(state: DraftState) {
+  return {
+    state,
+    $queryRaw: vi.fn(async () => []),
+  };
+}
+
 describe("assignFixedSlotReservations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,9 +129,9 @@ describe("assignFixedSlotReservations", () => {
     }));
 
     const client = {
-      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) => {
+      $transaction: async <T>(callback: (tx: ReturnType<typeof makeTransactionClient>) => Promise<T>) => {
         const draft: DraftState = { ...state };
-        const result = await callback({ state: draft });
+        const result = await callback(makeTransactionClient(draft));
         state.reservationId = draft.reservationId;
         state.bikeStatus = draft.bikeStatus;
         return result;
@@ -152,6 +159,49 @@ describe("assignFixedSlotReservations", () => {
     expect(state.reservationId).toBe(createdReservation.id);
     expect(state.bikeStatus).toBe("RESERVED");
     expect(mocks.enqueueOutboxJobInTx).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips templates whose slot start is overnight", async () => {
+    const slotDate = new Date(Date.UTC(2026, 3, 14));
+    const slotStart = new Date(Date.UTC(2000, 0, 1, 4, 30, 0));
+    const template = {
+      id: "template-overnight",
+      userId: "user-1",
+      stationId: "station-1",
+      slotStart,
+      user: { fullName: "Test User", email: "user@example.com" },
+      station: { name: "Test Station", totalCapacity: 10 },
+    };
+
+    mocks.makeReservationQueryRepository.mockReturnValue({
+      listActiveFixedSlotTemplatesByDate: () => Effect.succeed([template]),
+    });
+
+    const client = {
+      $transaction: vi.fn(),
+    };
+
+    const layer = Layer.mergeAll(
+      Layer.succeed(Prisma, Prisma.make({ client: client as never })),
+      Layer.succeed(BikeRepository, BikeRepository.make({} as never)),
+    );
+
+    const summary = await runEffectWithLayer(
+      assignFixedSlotReservations({ slotDate, assignmentTime: slotDate, now: slotDate }),
+      layer,
+    );
+
+    expect(summary).toMatchObject({
+      totalTemplates: 1,
+      assigned: 0,
+      alreadyAssigned: 0,
+      billingFailed: 0,
+      noBike: 0,
+      conflicts: 0,
+      skippedOutsideOperatingHours: 1,
+    });
+    expect(mocks.billFixedSlotDates).not.toHaveBeenCalled();
+    expect(client.$transaction).not.toHaveBeenCalled();
   });
 
   it("skips duplicate creation when day reservation already assigned", async () => {
@@ -191,13 +241,11 @@ describe("assignFixedSlotReservations", () => {
     });
 
     const client = {
-      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) =>
-        callback({
-          state: {
-            reservationId: "reservation-1",
-            bikeStatus: "RESERVED",
-          },
-        }),
+      $transaction: async <T>(callback: (tx: ReturnType<typeof makeTransactionClient>) => Promise<T>) =>
+        callback(makeTransactionClient({
+          reservationId: "reservation-1",
+          bikeStatus: "RESERVED",
+        })),
     };
 
     const layer = Layer.mergeAll(
@@ -272,9 +320,9 @@ describe("assignFixedSlotReservations", () => {
     }));
 
     const client = {
-      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) => {
+      $transaction: async <T>(callback: (tx: ReturnType<typeof makeTransactionClient>) => Promise<T>) => {
         const draft: DraftState = { ...state };
-        const result = await callback({ state: draft });
+        const result = await callback(makeTransactionClient(draft));
         state.reservationId = draft.reservationId;
         state.bikeStatus = draft.bikeStatus;
         return result;
@@ -340,13 +388,11 @@ describe("assignFixedSlotReservations", () => {
     });
 
     const client = {
-      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) =>
-        callback({
-          state: {
-            reservationId: "reservation-1",
-            bikeStatus: "AVAILABLE",
-          },
-        }),
+      $transaction: async <T>(callback: (tx: ReturnType<typeof makeTransactionClient>) => Promise<T>) =>
+        callback(makeTransactionClient({
+          reservationId: "reservation-1",
+          bikeStatus: "AVAILABLE",
+        })),
     };
 
     const layer = Layer.mergeAll(
@@ -407,13 +453,11 @@ describe("assignFixedSlotReservations", () => {
       Effect.fail({ _tag: "InsufficientWalletBalance" } as never));
 
     const client = {
-      $transaction: async <T>(callback: (tx: { state: DraftState }) => Promise<T>) =>
-        callback({
-          state: {
-            reservationId: null,
-            bikeStatus: "AVAILABLE",
-          },
-        }),
+      $transaction: async <T>(callback: (tx: ReturnType<typeof makeTransactionClient>) => Promise<T>) =>
+        callback(makeTransactionClient({
+          reservationId: null,
+          bikeStatus: "AVAILABLE",
+        })),
     };
 
     const layer = Layer.mergeAll(

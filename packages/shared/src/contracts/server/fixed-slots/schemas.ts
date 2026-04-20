@@ -24,6 +24,7 @@ export const FixedSlotTemplateErrorCodeSchema = z
     "FIXED_SLOT_TEMPLATE_CONFLICT",
     "FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT",
     "FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT",
+    "FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS",
   ])
   .openapi("FixedSlotTemplateErrorCode");
 
@@ -37,6 +38,7 @@ export const fixedSlotTemplateErrorMessages = {
   FIXED_SLOT_TEMPLATE_CONFLICT: "An active fixed-slot template already exists for one or more selected dates at this time",
   FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT: "Fixed-slot template could not be cancelled safely",
   FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT: "Fixed-slot template could not be updated safely",
+  FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS: "Fixed-slot start time is outside operating hours",
 } as const;
 
 /** Schema response lỗi chuẩn cho fixed-slot template API. */
@@ -48,6 +50,8 @@ export const FixedSlotTemplateErrorResponseSchema = z.object({
     slotDate: FixedSlotDateStringSchema.optional(),
     slotStart: FixedSlotTimeStringSchema.optional(),
     slotDates: z.array(FixedSlotDateStringSchema).optional(),
+    windowStart: z.string().optional(),
+    windowEnd: z.string().optional(),
   }),
 }).openapi("FixedSlotTemplateErrorResponse");
 

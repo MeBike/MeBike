@@ -209,4 +209,52 @@ describe("reservation use-cases integration", () => {
 
     expectLeftTag(result, "BikeNotAvailable");
   });
+
+  it("reserveBikeUseCase rejects during overnight closure", async () => {
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 50000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 1 },
+    });
+
+    const blockedNow = new Date("2026-04-20T16:00:00.000Z");
+    const result = await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: blockedNow,
+      now: blockedNow,
+    });
+
+    expectLeftTag(result, "OvernightOperationsClosed");
+  });
+
+  it("confirmReservationUseCase rejects during overnight closure", async () => {
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 600000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 1 },
+    });
+
+    const allowedNow = new Date("2026-04-20T10:00:00.000Z");
+    const reserveResult = await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: allowedNow,
+      now: allowedNow,
+    });
+    const reservation = expectRight(reserveResult);
+
+    const blockedNow = new Date("2026-04-20T16:00:00.000Z");
+    const confirmResult = await runConfirm({
+      reservationId: reservation.id,
+      userId: user.id,
+      now: blockedNow,
+    });
+
+    expectLeftTag(confirmResult, "OvernightOperationsClosed");
+  });
 });

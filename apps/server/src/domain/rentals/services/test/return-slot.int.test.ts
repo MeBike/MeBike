@@ -1,4 +1,3 @@
-import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect } from "effect";
 import { beforeAll, describe, expect, it } from "vitest";
 
@@ -6,6 +5,7 @@ import {
   enqueueEnvironmentImpactCalculationJob,
   environmentImpactRentalDedupeKey,
 } from "@/domain/rentals";
+import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { expectLeftTag, expectRight } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenActiveRental, givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
@@ -233,6 +233,26 @@ describe("return slot integration", () => {
     });
 
     expectLeftTag(result, "ReturnSlotRequiresActiveRental");
+  });
+
+  it("blocks creating a return slot during overnight closure", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+    const targetStation = await fixture.factories.station({ capacity: 2 });
+    await fixture.factories.bike({ stationId: targetStation.id, status: "AVAILABLE" });
+
+    const result = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+      now: new Date("2026-03-21T16:00:00.000Z"),
+    });
+
+    expectLeftTag(result, "OvernightOperationsClosed");
+
+    const activeSlot = await fixture.prisma.returnSlotReservation.findFirst({
+      where: { rentalId: rental.id, status: "ACTIVE" },
+    });
+    expect(activeSlot).toBeNull();
   });
 
   it("fails to cancel when no active return slot exists", async () => {

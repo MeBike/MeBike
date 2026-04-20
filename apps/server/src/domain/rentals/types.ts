@@ -14,6 +14,7 @@ export type StartRentalInput = {
   bikeId: string;
   startStationId: string;
   startTime: Date;
+  now?: Date;
   subscriptionId?: string;
 };
 
@@ -34,4 +35,5 @@ export type ConfirmRentalReturnInput = {
   operatorAgencyId?: string | null;
   confirmationMethod: ConfirmationMethod;
   confirmedAt: Date;
+  now?: Date;
 };

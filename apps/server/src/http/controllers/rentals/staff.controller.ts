@@ -38,11 +38,15 @@ function getStationScopedRoleScope(currentUser: {
 }
 
 function canAccessRentalInStationScope(
-  rental: { startStation: { id: string }; endStation: { id: string } | null },
+  rental: { status: string; startStation: { id: string }; endStation: { id: string } | null },
   stationScopeId: string | null | undefined,
 ) {
   if (!stationScopeId) {
     return stationScopeId === undefined;
+  }
+
+  if (rental.status === "RENTED") {
+    return true;
   }
 
   return rental.startStation.id === stationScopeId || rental.endStation?.id === stationScopeId;

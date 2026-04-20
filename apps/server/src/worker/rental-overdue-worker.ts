@@ -34,6 +34,7 @@ export async function handleRentalOverdueSweep(job: QueueJob | undefined): Promi
         failed: summary.failed,
         depositForfeited: summary.depositForfeited,
         bikeUnavailable: summary.bikeUnavailable,
+        cancelledReturnSlots: summary.cancelledReturnSlots,
       },
       "Overdue rental sweep completed",
     );
