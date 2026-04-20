@@ -24,6 +24,7 @@ export const ENDPOINT = {
             "/stations/nearest-available-bike",
         SELECT_STATION :  
             "/admin/stations",
+        CONTEXT_STATION : "/operators/station-context",
     },
     SUPPLIER : {
         BASE : "/suppliers",

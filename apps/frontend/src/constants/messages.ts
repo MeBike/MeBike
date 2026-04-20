@@ -750,6 +750,7 @@ export const DISTRIBUTION_REQUEST = {
   EXCEEDED_MIN_BIKES_AT_STATION : "Thao tác vượt quá giới hạn tối thiểu xe tại trạm (10 xe)",
   STATION_NOT_FOUND : "Không tìm thấy trạm",
   USER_NOT_FOUND : "Không tìm thấy người dùng",
+  INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS : "Bạn đã tạo yêu cầu trước đó rồi",
   
 }
 export const ENVIRONMENT_POLICY_REQUEST = {

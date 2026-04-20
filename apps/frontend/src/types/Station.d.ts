@@ -132,3 +132,13 @@ export interface SelectStation {
   name : string;
   stationId : string; 
 }
+
+export type currentStation = {
+  id : string;
+  name : string;
+  address : string;
+}
+export interface CurrentStation {
+  currentStation : currentStation,
+  otherStations : currentStation[],
+}
