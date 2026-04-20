@@ -56,32 +56,6 @@ export const ChangePasswordRequestSchema = z.object({
   newPassword: z.string().min(8),
 }).openapi("ChangePasswordRequest");
 
-export const PushTokenPlatformSchema = z.enum(["ANDROID", "IOS", "UNKNOWN"])
-  .openapi("PushTokenPlatform");
-
-export const RegisterPushTokenRequestSchema = z.object({
-  token: z.string().min(1),
-  platform: PushTokenPlatformSchema.optional(),
-  deviceId: z.string().optional().nullable(),
-  appVersion: z.string().optional().nullable(),
-}).openapi("RegisterPushTokenRequest");
-
-export const UnregisterPushTokenRequestSchema = z.object({
-  token: z.string().min(1),
-}).openapi("UnregisterPushTokenRequest");
-
-export const PushTokenSummarySchema = z.object({
-  id: z.uuidv7(),
-  platform: PushTokenPlatformSchema,
-  deviceId: z.string().nullable(),
-  appVersion: z.string().nullable(),
-  isActive: z.boolean(),
-  maskedToken: z.string(),
-  lastSeenAt: z.iso.datetime(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-}).openapi("PushTokenSummary");
-
 export const AdminUserListResponseSchema = z.object({
   data: z.array(UserDetailSchema),
   pagination: PaginationSchema,
@@ -296,9 +270,6 @@ export const StatsPaginationQuerySchema = z.object({
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 export type UpdateMeResponse = z.infer<typeof UpdateMeResponseSchema>;
 export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
-export type RegisterPushTokenRequest = z.infer<typeof RegisterPushTokenRequestSchema>;
-export type UnregisterPushTokenRequest = z.infer<typeof UnregisterPushTokenRequestSchema>;
-export type PushTokenSummary = z.infer<typeof PushTokenSummarySchema>;
 export type AdminUserListResponse = z.infer<typeof AdminUserListResponseSchema>;
 export type AdminUserSearchResponse = z.infer<typeof AdminUserSearchResponseSchema>;
 export type AdminTechnicianListResponse = z.infer<typeof AdminTechnicianListResponseSchema>;

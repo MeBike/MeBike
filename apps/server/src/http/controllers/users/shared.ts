@@ -54,26 +54,3 @@ export function mapUserSummary(
     fullName: row.fullname,
   };
 }
-
-function maskPushToken(token: string): string {
-  if (token.length <= 10) {
-    return "**********";
-  }
-  return `${token.slice(0, 6)}...${token.slice(-4)}`;
-}
-
-export function mapPushTokenSummary(
-  row: import("@/domain/notifications").PushTokenRow,
-): import("@mebike/shared").UsersContracts.PushTokenSummary {
-  return {
-    id: row.id,
-    platform: row.platform,
-    deviceId: row.deviceId,
-    appVersion: row.appVersion,
-    isActive: row.isActive,
-    maskedToken: maskPushToken(row.token),
-    lastSeenAt: row.lastSeenAt.toISOString(),
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}

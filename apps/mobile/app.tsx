@@ -1,7 +1,6 @@
 import { AuthProviderNext } from "@providers/auth-provider-next";
 import { BikeStatusStreamProvider } from "@providers/bike-status-stream-provider";
 import Providers from "@providers/providers";
-import { PushNotificationsProvider } from "@providers/push-notifications-provider";
 import { NavigationContainer } from "@react-navigation/native";
 import { initStripe } from "@stripe/stripe-react-native";
 import { appFontSources } from "@theme/typography";
@@ -79,12 +78,10 @@ export default function App() {
       <Providers>
         <NavigationContainer>
           <AuthProviderNext>
-            <PushNotificationsProvider>
-              <BikeStatusStreamProvider>
-                <StatusBar style="dark" />
-                <RootNavigator />
-              </BikeStatusStreamProvider>
-            </PushNotificationsProvider>
+            <BikeStatusStreamProvider>
+              <StatusBar style="dark" />
+              <RootNavigator />
+            </BikeStatusStreamProvider>
           </AuthProviderNext>
         </NavigationContainer>
       </Providers>

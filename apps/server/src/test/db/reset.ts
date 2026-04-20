@@ -18,7 +18,6 @@ export async function resetTestData(prisma: PrismaClient): Promise<void> {
       "Reservation",
       "pricing_policies",
       "Subscription",
-      "push_tokens",
       "payment_attempts",
       "wallet_transactions",
       "wallet_withdrawals",

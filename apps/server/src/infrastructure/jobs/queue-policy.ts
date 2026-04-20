@@ -18,12 +18,6 @@ const DEFAULT_QUEUE_OPTIONS: Record<JobType, JobQueueOptions> = {
     retryBackoff: true,
     retryDelayMax: 15 * 60,
   },
-  [JobTypes.PushSend]: {
-    retryLimit: 3,
-    retryDelay: 30,
-    retryBackoff: true,
-    retryDelayMax: 5 * 60,
-  },
   [JobTypes.SubscriptionAutoActivate]: {
     retryLimit: 10,
     retryDelay: 60,

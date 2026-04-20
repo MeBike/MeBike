@@ -13,9 +13,6 @@ import {
   AdminUpdateUserRequestSchema,
   AdminUserDetailResponseSchema,
   ChangePasswordRequestSchema,
-  PushTokenSummarySchema,
-  RegisterPushTokenRequestSchema,
-  UnregisterPushTokenRequestSchema,
   UpdateMeRequestSchema,
   UpdateMeResponseSchema,
   UploadAvatarRequestSchema,
@@ -249,96 +246,6 @@ export const uploadMyAvatarRoute = createRoute({
         },
       },
     },
-  },
-});
-
-export const registerPushTokenRoute = createRoute({
-  method: "post",
-  path: "/v1/users/me/push-tokens",
-  tags: ["Users"],
-  security: [{ bearerAuth: [] }],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: RegisterPushTokenRequestSchema,
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: "Push token registered",
-      content: {
-        "application/json": {
-          schema: PushTokenSummarySchema,
-        },
-      },
-    },
-    400: {
-      description: "Invalid push token",
-      content: {
-        "application/json": {
-          schema: UserErrorResponseSchema,
-          examples: {
-            InvalidPushToken: {
-              value: {
-                error: userErrorMessages.INVALID_PUSH_TOKEN,
-                details: { code: UserErrorCodeSchema.enum.INVALID_PUSH_TOKEN },
-              },
-            },
-          },
-        },
-      },
-    },
-    401: unauthorizedResponse(),
-  },
-});
-
-export const unregisterPushTokenRoute = createRoute({
-  method: "delete",
-  path: "/v1/users/me/push-tokens",
-  tags: ["Users"],
-  security: [{ bearerAuth: [] }],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: UnregisterPushTokenRequestSchema,
-        },
-      },
-    },
-  },
-  responses: {
-    204: { description: "Push token unregistered" },
-    400: {
-      description: "Invalid push token",
-      content: {
-        "application/json": {
-          schema: UserErrorResponseSchema,
-          examples: {
-            InvalidPushToken: {
-              value: {
-                error: userErrorMessages.INVALID_PUSH_TOKEN,
-                details: { code: UserErrorCodeSchema.enum.INVALID_PUSH_TOKEN },
-              },
-            },
-          },
-        },
-      },
-    },
-    401: unauthorizedResponse(),
-  },
-});
-
-export const unregisterAllPushTokensRoute = createRoute({
-  method: "delete",
-  path: "/v1/users/me/push-tokens/all",
-  tags: ["Users"],
-  security: [{ bearerAuth: [] }],
-  responses: {
-    204: { description: "All push tokens unregistered" },
-    401: unauthorizedResponse(),
   },
 });
 

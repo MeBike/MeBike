@@ -1,10 +1,8 @@
 import type Stripe from "stripe";
 
-import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Match } from "effect";
 
 import { defectOn } from "@/domain/shared";
-import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -153,18 +151,6 @@ function matchAttemptOption<A>(
     ));
 }
 
-function formatAmountForCurrency(amountMinor: bigint, currency: string) {
-  const normalized = currency.toUpperCase();
-  const isZeroDecimal = normalized === "VND";
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: normalized,
-    minimumFractionDigits: isZeroDecimal ? 0 : 2,
-    maximumFractionDigits: isZeroDecimal ? 0 : 2,
-  }).format(isZeroDecimal ? Number(amountMinor) : Number(amountMinor) / 100);
-}
-
 function settleSuccessfulTopup(
   client: import("generated/prisma/client").PrismaClient,
   attempt: {
@@ -200,28 +186,7 @@ function settleSuccessfulTopup(
 
       return yield* Match.value(creditResult).pipe(
         Match.tag("Right", () =>
-          enqueueOutboxJobInTx(tx, {
-            type: JobTypes.PushSend,
-            payload: {
-              version: 1,
-              userId: attempt.userId,
-              event: "wallets.topupSucceeded",
-              title: "Top-up successful",
-              body: `Your wallet has been credited with ${formatAmountForCurrency(input.amountMinor, attempt.currency)}.`,
-              channelId: "default",
-              data: {
-                paymentAttemptId: attempt.id,
-                amountMinor: input.amountMinor.toString(),
-                currency: attempt.currency.toLowerCase(),
-                providerRef: input.providerRef,
-                provider: "stripe",
-              },
-            },
-            runAt: new Date(),
-            dedupeKey: `wallet:topup:push:${attempt.id}`,
-          }).pipe(
-            Effect.as({ status: "succeeded", paymentAttemptId: attempt.id } as StripeWebhookOutcome),
-          )),
+          Effect.succeed({ status: "succeeded", paymentAttemptId: attempt.id } as StripeWebhookOutcome)),
         Match.tag("Left", ({ left }) => {
           if (left._tag === "WalletNotFound") {
             return txPaymentAttemptRepo.markFailedIfPending(attempt.id, "wallet_missing").pipe(

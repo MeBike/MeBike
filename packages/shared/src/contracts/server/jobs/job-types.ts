@@ -1,6 +1,5 @@
 export const JobTypes = {
   EmailSend: "emails.send",
-  PushSend: "notifications.push.send",
   SubscriptionAutoActivate: "subscriptions.autoActivate",
   SubscriptionExpireSweep: "subscriptions.expireSweep",
   ReservationFixedSlotAssign: "reservations.fixedSlotAssign",
