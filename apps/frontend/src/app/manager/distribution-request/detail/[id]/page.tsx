@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useDistributionRequest } from "@/hooks/use-distribution-request";
 import { DistributionRequestDetailClient } from "./client";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-
+import { useStationActions } from "@/hooks/use-station";
 const DistributionRequestDetailPage = () => {
   const params = useParams();
   const id = params.id as string;
@@ -20,7 +20,10 @@ const DistributionRequestDetailPage = () => {
     id: id,
     hasToken: true,
   });
-
+  const { getListStation, listStation, isLoadingListStation } = useStationActions({
+      hasToken: true,
+    });
+  
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -37,6 +40,7 @@ const DistributionRequestDetailPage = () => {
   useEffect(() => {
     if (id) {
       getManagerViewDistributionRequestDetail();
+      getListStation();
     }
   }, [id, getManagerViewDistributionRequestDetail]);
 
@@ -51,9 +55,10 @@ const DistributionRequestDetailPage = () => {
       </div>
     );
   }
-
+  
   return (
     <DistributionRequestDetailClient 
+      listStation={listStation}
       data={managerViewDistributionRequestDetail.data}
       onApprove={() => approveDistributeRequest(id)}
       onReject={(reason: string) => rejectDistributeRequest(id, { reason })}
