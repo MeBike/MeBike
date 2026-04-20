@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import { ENDPOINT } from "@/constants";
 import { AxiosResponse } from "axios";
-import { ApiResponse } from "@/types";
+import { ApiResponse , Station , Bike , BikeStatus , Reservation , DetailReservation,RentalRecord,Rental,RentalStatus} from "@/types";
 import type { Agency, AgencyStats, AgencyRequest } from "@/types/Agency";
 import { UpdateAgencyFormData, UpdateAgencyStatusFormData , RegisterAgencyFormData , AdminCreateAgencyUserRequest } from "@/schemas";
 export const agencyService = {
@@ -167,4 +167,154 @@ export const agencyService = {
     );
     return response;
   },
+  getMyStations : async ({
+    page,
+    pageSize,
+    name,
+    address,
+    latitude,
+    longitude,
+    sortBy,
+    sortDir,   
+  }: {
+    page?: number;
+    pageSize?: number;
+    name?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    sortBy?: "name" | "capacity" | "updatedAt";
+    sortDir?: "asc" | "desc";
+  }): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
+      ENDPOINT.AGENCY.STATION,
+      {
+        page,
+        pageSize,
+        name,
+        address,
+        latitude,
+        longitude,
+        sortBy,
+        sortDir,
+      }
+    );
+    return response;
+  },
+  getMyStationDetail: async (
+    stationId: string
+  ): Promise<AxiosResponse<Station>> => {
+    const response = await fetchHttpClient.get<Station>(
+      ENDPOINT.AGENCY.STATION_DETAIL(stationId)
+    );
+    return response;
+  },
+  getBikeInMyStation: async ({
+    id,
+    page,
+    pageSize,
+    stationId,
+    supplierId,
+    status,
+  }: {
+    id?: string;
+    page?: number;
+    pageSize?: number;
+    stationId?: string;
+    supplierId?: string;
+    status?: BikeStatus;
+  }): Promise<AxiosResponse<ApiResponse<Bike[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(
+      ENDPOINT.AGENCY.BIKE,
+      {
+        id : id,
+        page : page,
+        pageSize : pageSize,
+        stationId : stationId,
+        supplierId : supplierId,
+        status : status,
+      }
+    );
+    return response;
+  },
+  getBikeDetailInMyStation: async (
+    id: string
+  ): Promise<AxiosResponse<Bike>> => {
+    const response = await fetchHttpClient.get<Bike>(
+      ENDPOINT.AGENCY.BIKE_DETAIL(id)
+    );
+    return response;
+  },
+    getReservationInMyStation: async ({
+    page,
+    pageSize,
+    status,
+    option,
+  }: {
+    page?: number;
+    pageSize?: number;
+    status ?: "PENDING" | "FULFILLED" | "CANCELLED" | "EXPIRED";
+    option ?: "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION";
+  }): Promise<AxiosResponse<ApiResponse<Reservation[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Reservation[]>>(
+      ENDPOINT.AGENCY.RESERVATION,
+      {
+        page : page,
+        pageSize : pageSize,
+        status : status,
+        reservationOption : option,
+      },
+    );
+    return response;
+  },
+  getReservationDetailInMyStation: async (
+    id: string,
+  ): Promise<AxiosResponse<DetailReservation>> => {
+    const response = await fetchHttpClient.get<DetailReservation>(
+      ENDPOINT.AGENCY.RESERVATION_DETAIL(id),
+    );
+    return response;
+  },
+    getRentalInMyStation: async ({
+    page,
+    pageSize,
+    startStation,
+    endStation,
+    status,
+    userId,
+    bikeId,
+  }: {
+    page ?: number,
+    pageSize ?: number,
+    startStation ?: string,
+    endStation ?: string,
+    status ?: RentalStatus,
+    userId ?: string,
+    bikeId ?: string,
+  }): Promise<
+    AxiosResponse<ApiResponse<Rental[]>>
+  > => {
+    const response = await fetchHttpClient.get<ApiResponse<Rental[]>>(
+      ENDPOINT.AGENCY.RENTAL,
+      {
+        page : page,
+        pageSize : pageSize,
+        startStation : startStation,
+        endStation : endStation,
+        status : status,
+        userId : userId,
+        bikeId : bikeId
+      }
+    );
+    return response;
+  },
+  getRentalDetailInMyStation: async (
+    id: string
+  ): Promise<AxiosResponse<RentalRecord>> => {
+    const response = await fetchHttpClient.get<RentalRecord>(
+      ENDPOINT.AGENCY.RENTAL_DETAIL(id)
+    );
+    return response;
+  },
+  
 };
