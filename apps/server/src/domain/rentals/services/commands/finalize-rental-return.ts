@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import type { RentalServiceFailure } from "../domain-errors";
-import type { RentalRow } from "../models";
+import type { RentalServiceFailure } from "../../domain-errors";
+import type { RentalRow } from "../../models";
 import type { FinalizeRentalReturnInput } from "./finalize-rental-return/finalize-rental-return.types";
 
 import { persistFinalizeRentalReturnInTx } from "./finalize-rental-return/finalize-rental-return.persistence";

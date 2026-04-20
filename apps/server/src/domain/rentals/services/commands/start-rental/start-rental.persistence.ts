@@ -5,9 +5,9 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
 
-import type { RentalServiceFailure } from "../../domain-errors";
-import type { RentalRow } from "../../models";
-import type { StartRentalInput } from "../../types";
+import type { RentalServiceFailure } from "../../../domain-errors";
+import type { RentalRow } from "../../../models";
+import type { StartRentalInput } from "../../../types";
 import type { PreparedStartRental } from "./start-rental.types";
 
 import {
@@ -15,11 +15,11 @@ import {
   BikeNotFound,
   InsufficientBalanceToRent,
   UserWalletNotFound,
-} from "../../domain-errors";
-import { startRentalFailureFromBikeStatus } from "../../guards/bike-status";
-import { makeRentalRepository } from "../../repository/rental.repository";
+} from "../../../domain-errors";
+import { startRentalFailureFromBikeStatus } from "../../../guards/bike-status";
+import { makeRentalRepository } from "../../../repository/rental.repository";
+import { rentalUniqueViolationToFailure } from "../../shared/unique-violation-mapper";
 import { createRentalDepositHoldInTx } from "../rental-deposit-hold.service";
-import { rentalUniqueViolationToFailure } from "../unique-violation-mapper";
 
 /**
  * Ghi toàn bộ side effect để bắt đầu một lượt thuê mới.

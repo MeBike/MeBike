@@ -8,8 +8,8 @@ import { makeBikeRepository } from "@/domain/bikes";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeWalletRepository } from "@/domain/wallets";
 
-import type { RentalServiceFailure } from "../../domain-errors";
-import type { RentalRow } from "../../models";
+import type { RentalServiceFailure } from "../../../domain-errors";
+import type { RentalRow } from "../../../models";
 import type {
   FinalizeRentalReturnInput,
   FinalizeRentalReturnPricing,
@@ -19,9 +19,9 @@ import {
   BikeNotFound,
   InsufficientBalanceToRent,
   UserWalletNotFound,
-} from "../../domain-errors";
-import { makeRentalRepository } from "../../repository/rental.repository";
-import { makeReturnSlotRepository } from "../../repository/return-slot.repository";
+} from "../../../domain-errors";
+import { makeRentalRepository } from "../../../repository/rental.repository";
+import { makeReturnSlotRepository } from "../../../repository/return-slot.repository";
 import {
   forfeitRentalDepositHoldInTx,
   releaseRentalDepositHoldInTx,

@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { rentalUniqueViolationToFailure } from "../unique-violation-mapper";
+import { rentalUniqueViolationToFailure } from "../shared/unique-violation-mapper";
 
 describe("rentalUniqueViolationToFailure", () => {
   const base = {

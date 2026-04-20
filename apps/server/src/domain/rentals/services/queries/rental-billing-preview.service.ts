@@ -18,14 +18,14 @@ import { SubscriptionNotFound } from "@/domain/subscriptions/domain-errors";
 import { makeSubscriptionQueryRepository } from "@/domain/subscriptions/repository/subscription-query.repository";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { RentalBillingPreviewRow, RentalRow } from "../models";
+import type { RentalBillingPreviewRow, RentalRow } from "../../models";
 
 import {
   BillingPreviewRequiresActiveRental,
   RentalNotFound,
-} from "../domain-errors";
-import { computeSubscriptionCoverage } from "../pricing";
-import { makeRentalRepository } from "../repository/rental.repository";
+} from "../../domain-errors";
+import { computeSubscriptionCoverage } from "../../pricing";
+import { makeRentalRepository } from "../../repository/rental.repository";
 
 type RentalBillingPreviewInput = {
   readonly rentalId: string;

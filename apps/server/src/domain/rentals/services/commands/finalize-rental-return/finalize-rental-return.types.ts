@@ -5,7 +5,7 @@ import type {
 import type { PricingPolicyRow } from "@/domain/pricing";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
-import type { RentalRow } from "../../models";
+import type { RentalRow } from "../../../models";
 
 /**
  * Đầu vào tối thiểu để hoàn tất một lượt trả xe trong cùng transaction.

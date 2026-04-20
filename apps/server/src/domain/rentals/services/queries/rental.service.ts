@@ -12,7 +12,7 @@ import { StationNotFound, StationQueryRepository } from "@/domain/stations";
 import type {
   BikeSwapRequestNotFound,
   RentalServiceFailure,
-} from "../domain-errors";
+} from "../../domain-errors";
 import type {
   BikeSwapRequestRow,
   MyBikeSwapRequestFilter,
@@ -23,16 +23,16 @@ import type {
   StaffBikeSwapRequestFilter,
   StaffBikeSwapRequestRow,
   StaffBikeSwapRequestSortField,
-} from "../models";
-import type { RentalRepo } from "../repository/rental.repository";
+} from "../../models";
+import type { RentalRepo } from "../../repository/rental.repository";
 
 import {
   BikeAlreadyRented,
   CannotRequestSwap,
   RentalNotFound,
   UnauthorizedRentalAccess,
-} from "../domain-errors";
-import { RentalRepository } from "../repository/rental.repository";
+} from "../../domain-errors";
+import { RentalRepository } from "../../repository/rental.repository";
 import { aggregateRentalStatusCounts } from "./rental-counts";
 
 export type RentalService = {

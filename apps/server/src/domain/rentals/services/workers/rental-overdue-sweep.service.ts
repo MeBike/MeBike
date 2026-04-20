@@ -5,7 +5,7 @@ import type { PrismaClient } from "generated/prisma/client";
 import { makeBikeRepository } from "@/domain/bikes";
 import { isPastRentalReturnDeadline, makePricingPolicyRepository } from "@/domain/pricing";
 import { makeRentalRepository } from "@/domain/rentals/repository/rental.repository";
-import { forfeitRentalDepositHoldInTx } from "@/domain/rentals/services/rental-deposit-hold.service";
+import { forfeitRentalDepositHoldInTx } from "@/domain/rentals/services/commands/rental-deposit-hold.service";
 import logger from "@/lib/logger";
 
 export type RentalOverdueSweepSummary = {

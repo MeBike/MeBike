@@ -1,4 +1,4 @@
-import type { RentalCountsRow, RentalStatusCounts } from "../models";
+import type { RentalCountsRow, RentalStatusCounts } from "../../models";
 
 export function aggregateRentalStatusCounts(
   rows: readonly RentalCountsRow[],

@@ -24,8 +24,8 @@ import { makeSubscriptionQueryRepository } from "@/domain/subscriptions/reposito
 
 import type { FinalizeRentalReturnPricing } from "./finalize-rental-return.types";
 
-import { InvalidRentalState } from "../../domain-errors";
-import { computeSubscriptionCoverage } from "../../pricing";
+import { InvalidRentalState } from "../../../domain-errors";
+import { computeSubscriptionCoverage } from "../../../pricing";
 
 /**
  * Tính toàn bộ phần pricing/billing cho bước hoàn tất trả xe.

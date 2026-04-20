@@ -5,8 +5,8 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 import { makeBikeRepository } from "@/domain/bikes";
 import { getDepositRequiredMinor, makePricingPolicyRepository } from "@/domain/pricing";
 
-import type { RentalServiceFailure } from "../../domain-errors";
-import type { StartRentalInput } from "../../types";
+import type { RentalServiceFailure } from "../../../domain-errors";
+import type { StartRentalInput } from "../../../types";
 import type { PreparedStartRental } from "./start-rental.types";
 
 import {
@@ -15,9 +15,9 @@ import {
   BikeMissingStation,
   BikeNotFound,
   BikeNotFoundInStation,
-} from "../../domain-errors";
-import { startRentalFailureFromBikeStatus } from "../../guards/bike-status";
-import { makeRentalRepository } from "../../repository/rental.repository";
+} from "../../../domain-errors";
+import { startRentalFailureFromBikeStatus } from "../../../guards/bike-status";
+import { makeRentalRepository } from "../../../repository/rental.repository";
 
 /**
  * Chạy toàn bộ bước kiểm tra trước khi bắt đầu thuê xe.

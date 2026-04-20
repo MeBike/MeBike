@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenActiveRental } from "@/test/scenarios";
 
-import { createRentalDepositHoldInTx } from "../rental-deposit-hold.service";
-import { sweepOverdueRentals } from "../rental-overdue-sweep.service";
+import { createRentalDepositHoldInTx } from "../commands/rental-deposit-hold.service";
+import { sweepOverdueRentals } from "../workers/rental-overdue-sweep.service";
 
 describe("rental overdue sweep", () => {
   const fixture = setupPrismaIntFixture();

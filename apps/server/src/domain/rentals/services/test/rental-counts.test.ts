@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { RentalCountsRow } from "../../models";
 
-import { aggregateRentalStatusCounts } from "../rental-counts";
+import { aggregateRentalStatusCounts } from "../queries/rental-counts";
 
 describe("aggregateRentalStatusCounts", () => {
   it("fills missing statuses with zeros", () => {

@@ -5,18 +5,19 @@ import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { RentalServiceFailure } from "../domain-errors";
-import type { RentalRow } from "../models";
-import type { ConfirmRentalReturnInput } from "../types";
+import type { RentalServiceFailure } from "../../domain-errors";
+import type { RentalRow } from "../../models";
+import type { ConfirmRentalReturnInput } from "../../types";
 
 import {
   RentalRepositoryError,
-} from "../domain-errors";
-import { RentalRepository } from "../repository/rental.repository";
+} from "../../domain-errors";
+import { RentalRepository } from "../../repository/rental.repository";
 import {
   ReturnConfirmationRepository,
-} from "../repository/return-confirmation.repository";
-import { ReturnSlotRepository } from "../repository/return-slot.repository";
+} from "../../repository/return-confirmation.repository";
+import { ReturnSlotRepository } from "../../repository/return-slot.repository";
+import { enqueueEnvironmentImpactCalculationJob } from "../workers/environment-impact-job.service";
 import {
   createReturnConfirmationInTx,
   ensureOperatorCanConfirmReturnInTx,
@@ -24,7 +25,6 @@ import {
   loadConfirmableRentalInTx,
   resolveConfirmReturnOperatorInTx,
 } from "./confirm-return/confirm-return.guard";
-import { enqueueEnvironmentImpactCalculationJob } from "./environment-impact-job.service";
 import { finalizeRentalReturnInTx } from "./finalize-rental-return";
 
 /**

@@ -2,7 +2,7 @@ import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs"
 
 import type { QueueJob } from "@/infrastructure/jobs/ports";
 
-import { sweepOverdueRentals } from "@/domain/rentals/services/rental-overdue-sweep.service";
+import { sweepOverdueRentals } from "@/domain/rentals/services/workers/rental-overdue-sweep.service";
 import logger from "@/lib/logger";
 import { makePrismaClient } from "@/lib/prisma";
 

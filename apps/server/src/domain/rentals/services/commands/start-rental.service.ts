@@ -6,11 +6,11 @@ import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { RentalServiceFailure } from "../domain-errors";
-import type { RentalRow } from "../models";
-import type { StartRentalInput } from "../types";
+import type { RentalServiceFailure } from "../../domain-errors";
+import type { RentalRow } from "../../models";
+import type { StartRentalInput } from "../../types";
 
-import { RentalRepository } from "../repository/rental.repository";
+import { RentalRepository } from "../../repository/rental.repository";
 import { persistStartRentalInTx } from "./start-rental/start-rental.persistence";
 import { prepareStartRentalInTx } from "./start-rental/start-rental.validation";
 

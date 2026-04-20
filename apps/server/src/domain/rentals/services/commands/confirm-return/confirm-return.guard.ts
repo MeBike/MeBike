@@ -4,8 +4,8 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { StationNotFound } from "@/domain/stations";
 
-import type { RentalRow } from "../../models";
-import type { ConfirmRentalReturnInput } from "../../types";
+import type { RentalRow } from "../../../models";
+import type { ConfirmRentalReturnInput } from "../../../types";
 import type { ConfirmReturnOperatorScope } from "./confirm-return.types";
 
 import {
@@ -16,10 +16,10 @@ import {
   ReturnSlotCapacityExceeded,
   ReturnSlotStationMismatch,
   UnauthorizedRentalAccess,
-} from "../../domain-errors";
-import { makeRentalRepository } from "../../repository/rental.repository";
-import { makeReturnConfirmationRepository } from "../../repository/return-confirmation.repository";
-import { makeReturnSlotRepository } from "../../repository/return-slot.repository";
+} from "../../../domain-errors";
+import { makeRentalRepository } from "../../../repository/rental.repository";
+import { makeReturnConfirmationRepository } from "../../../repository/return-confirmation.repository";
+import { makeReturnSlotRepository } from "../../../repository/return-slot.repository";
 
 /**
  * Nạp rental cần xác nhận và chặn sớm nếu rental không còn ở trạng thái đang thuê.

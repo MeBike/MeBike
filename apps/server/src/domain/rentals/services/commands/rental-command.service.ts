@@ -5,16 +5,16 @@ import { Effect, Layer } from "effect";
 import { BikeRepository } from "@/domain/bikes";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { RentalServiceFailure } from "../domain-errors";
-import type { RentalRow, ReturnSlotRow } from "../models";
-import type { ConfirmRentalReturnInput } from "../types";
+import type { RentalServiceFailure } from "../../domain-errors";
+import type { RentalRow, ReturnSlotRow } from "../../models";
+import type { ConfirmRentalReturnInput } from "../../types";
 import type { ReturnSlotFailure } from "./return-slot.service";
 
-import { RentalRepository } from "../repository/rental.repository";
+import { RentalRepository } from "../../repository/rental.repository";
 import {
   ReturnConfirmationRepository,
-} from "../repository/return-confirmation.repository";
-import { ReturnSlotRepository } from "../repository/return-slot.repository";
+} from "../../repository/return-confirmation.repository";
+import { ReturnSlotRepository } from "../../repository/return-slot.repository";
 import {
   confirmRentalReturnByOperator,
 } from "./confirm-return.service";

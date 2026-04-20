@@ -1,8 +1,8 @@
 import { Option } from "effect";
 
-import type { RentalServiceFailure } from "../domain-errors";
+import type { RentalServiceFailure } from "../../domain-errors";
 
-import { ActiveRentalExists, BikeAlreadyRented } from "../domain-errors";
+import { ActiveRentalExists, BikeAlreadyRented } from "../../domain-errors";
 
 function normalizeConstraintList(
   constraint: string[] | string | undefined,
