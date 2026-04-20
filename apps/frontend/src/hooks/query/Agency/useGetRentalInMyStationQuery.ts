@@ -17,5 +17,6 @@ export const useGetRentalInMyStationAgency = ({page,pageSize,rental_status} : {p
   return useQuery({
     queryKey: ["data","rental-in-my-station","agency",page,pageSize,rental_status],
     queryFn: () => fetchMyRental({ page, pageSize,rental_status }),
+    enabled:false,
   });
 };

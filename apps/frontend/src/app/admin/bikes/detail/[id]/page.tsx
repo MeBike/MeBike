@@ -59,13 +59,15 @@ export default function BikeDetailPage({
     return <LoadingScreen />;
   }
   return (
-    <>
-      <BikeDetailView
-        bike={detailBike || null}
-        activity={bikeActivityStats || null}
-        rentals={bikeHistory?.data.data || []}
-        statisticData={statisticsBike || null}
-      />
-    </>
+    <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <BikeDetailView
+          bike={detailBike || null}
+          activity={bikeActivityStats || null}
+          rentals={bikeHistory?.data.data || []}
+          statisticData={statisticsBike || null}
+        />
+      </div>
+    </div>
   );
 }

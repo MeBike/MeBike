@@ -22,5 +22,6 @@ export const useGetReservationInMyStationAgency = ({page,pageSize,reservation_st
   return useQuery({
     queryKey: ["data","reservation-in-my-station","agency",page,pageSize,reservation_status],
     queryFn: () => fetchMyReservation({ page, pageSize,reservation_status }),
+    enabled:false,
   });
 };

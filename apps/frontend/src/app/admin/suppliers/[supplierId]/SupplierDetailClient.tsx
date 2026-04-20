@@ -255,6 +255,7 @@ export default function SupplierDetailClient({
         </div>
       </div>
     </div>
+    
   );
 }
 

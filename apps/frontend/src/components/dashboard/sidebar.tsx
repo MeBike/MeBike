@@ -140,12 +140,6 @@ export function Sidebar() {
           roles: ["ADMIN"],
         },
         {
-          title: "Quản lý sử dụng coupon",
-          icon: Building2,
-          href: "/admin/usage",
-          roles: ["ADMIN"],
-        },
-        {
           title: "Quản lý nhà cung cấp",
           icon: Store,
           href: "/admin/suppliers",
