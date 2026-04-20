@@ -1,8 +1,7 @@
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
 import { BikeRepository } from "@/domain/bikes";
 import { defectOn } from "@/domain/shared";
-import { StationNotFound } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -11,23 +10,30 @@ import type { RentalRow } from "../models";
 import type { ConfirmRentalReturnInput } from "../types";
 
 import {
-  InvalidRentalState,
-  RentalNotFound,
   RentalRepositoryError,
-  ReturnAlreadyConfirmed,
-  ReturnSlotCapacityExceeded,
-  ReturnSlotStationMismatch,
-  UnauthorizedRentalAccess,
 } from "../domain-errors";
-import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
+import { RentalRepository } from "../repository/rental.repository";
 import {
-  makeReturnConfirmationRepository,
   ReturnConfirmationRepository,
 } from "../repository/return-confirmation.repository";
-import { makeReturnSlotRepository, ReturnSlotRepository } from "../repository/return-slot.repository";
+import { ReturnSlotRepository } from "../repository/return-slot.repository";
+import {
+  createReturnConfirmationInTx,
+  ensureOperatorCanConfirmReturnInTx,
+  ensureReturnDestinationReadyInTx,
+  loadConfirmableRentalInTx,
+  resolveConfirmReturnOperatorInTx,
+} from "./confirm-return/confirm-return.guard";
 import { enqueueEnvironmentImpactCalculationJob } from "./environment-impact-job.service";
 import { finalizeRentalReturnInTx } from "./finalize-rental-return";
 
+/**
+ * Điều phối flow xác nhận trả xe bởi staff hoặc agency trong một transaction.
+ *
+ * Hàm public này chỉ giữ thứ tự nghiệp vụ ở mức cao:
+ * nạp rental, kiểm tra quyền, kiểm tra station trả, ghi confirmation,
+ * rồi mới hoàn tất rental và đẩy job hậu xử lý.
+ */
 export function confirmRentalReturnByOperator(
   input: ConfirmRentalReturnInput,
 ): Effect.Effect<
@@ -50,154 +56,29 @@ export function confirmRentalReturnByOperator(
       client,
       tx =>
         Effect.gen(function* () {
-          const txRentalRepo = makeRentalRepository(tx);
-          const txReturnSlotRepo = makeReturnSlotRepository(tx);
-          const txReturnConfirmationRepo = makeReturnConfirmationRepository(tx);
+          const rental = yield* loadConfirmableRentalInTx(tx, input.rentalId);
+          const operator = yield* resolveConfirmReturnOperatorInTx(tx, input).pipe(
+            defectOn(RentalRepositoryError),
+          );
 
-          const rentalOpt = yield* txRentalRepo.findById(input.rentalId);
-
-          if (Option.isNone(rentalOpt)) {
-            return yield* Effect.fail(new RentalNotFound({
-              rentalId: input.rentalId,
-              userId: "unknown",
-            }));
-          }
-
-          const rental = rentalOpt.value;
-          if (rental.status !== "RENTED") {
-            return yield* Effect.fail(new InvalidRentalState({
-              rentalId: rental.id,
-              from: rental.status,
-              to: "COMPLETED",
-            }));
-          }
-
-          const operator = yield* Effect.tryPromise({
-            try: async () => {
-              if (
-                input.operatorRole
-                && (input.operatorRole === "STAFF"
-                  || input.operatorRole === "AGENCY")
-              ) {
-                return {
-                  role: input.operatorRole,
-                  stationId: input.operatorStationId ?? null,
-                  agencyId: input.operatorAgencyId ?? null,
-                };
-              }
-
-              const user = await tx.user.findUnique({
-                where: { id: input.confirmedByUserId },
-                select: {
-                  role: true,
-                  orgAssignment: {
-                    select: {
-                      stationId: true,
-                      agencyId: true,
-                    },
-                  },
-                },
-              });
-
-              return user
-                ? {
-                    role: user.role,
-                    stationId: user.orgAssignment?.stationId ?? null,
-                    agencyId: user.orgAssignment?.agencyId ?? null,
-                  }
-                : null;
-            },
-            catch: e =>
-              new RentalRepositoryError({
-                operation: "confirmRentalReturnByOperator.findOperator",
-                cause: e,
-              }),
+          yield* ensureOperatorCanConfirmReturnInTx({
+            tx,
+            input,
+            rental,
+            operator,
           }).pipe(defectOn(RentalRepositoryError));
 
-          if (operator?.role === "STAFF" && operator.stationId !== input.stationId) {
-            return yield* Effect.fail(new UnauthorizedRentalAccess({
-              rentalId: rental.id,
-              userId: input.confirmedByUserId,
-            }));
-          }
+          yield* ensureReturnDestinationReadyInTx({
+            tx,
+            input,
+            rental,
+          });
 
-          if (operator?.role === "AGENCY") {
-            const station = yield* Effect.tryPromise({
-              try: () =>
-                tx.station.findUnique({
-                  where: { id: input.stationId },
-                  select: { agencyId: true },
-                }),
-              catch: e =>
-                new RentalRepositoryError({
-                  operation: "confirmRentalReturnByOperator.findStationAgency",
-                  cause: e,
-                }),
-            }).pipe(defectOn(RentalRepositoryError));
-
-            if (!station || !operator.agencyId || station.agencyId !== operator.agencyId) {
-              return yield* Effect.fail(new UnauthorizedRentalAccess({
-                rentalId: rental.id,
-                userId: input.confirmedByUserId,
-              }));
-            }
-          }
-
-          const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(rental.id);
-
-          if (Option.isSome(activeReturnSlotOpt)) {
-            const activeReturnSlot = activeReturnSlotOpt.value;
-
-            if (activeReturnSlot.stationId !== input.stationId) {
-              return yield* Effect.fail(new ReturnSlotStationMismatch({
-                rentalId: rental.id,
-                returnSlotStationId: activeReturnSlot.stationId,
-                attemptedEndStationId: input.stationId,
-              }));
-            }
-          }
-          else {
-            const stationSnapshotOpt = yield* txReturnSlotRepo.getStationCapacitySnapshot(input.stationId);
-
-            if (Option.isNone(stationSnapshotOpt)) {
-              return yield* Effect.fail(new StationNotFound({ id: input.stationId }));
-            }
-
-            const stationSnapshot = stationSnapshotOpt.value;
-            const physicalRemaining = stationSnapshot.totalCapacity
-              - stationSnapshot.totalBikes
-              - stationSnapshot.activeReturnSlots;
-
-            if (physicalRemaining <= 0) {
-              return yield* Effect.fail(new ReturnSlotCapacityExceeded({
-                stationId: input.stationId,
-                totalCapacity: stationSnapshot.totalCapacity,
-                returnSlotLimit: stationSnapshot.returnSlotLimit,
-                totalBikes: stationSnapshot.totalBikes,
-                activeReturnSlots: stationSnapshot.activeReturnSlots,
-              }));
-            }
-          }
-
-          const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(rental.id);
-
-          if (Option.isSome(existingConfirmationOpt)) {
-            return yield* Effect.fail(new ReturnAlreadyConfirmed({
-              rentalId: rental.id,
-            }));
-          }
-
-          yield* txReturnConfirmationRepo.create({
-            rentalId: rental.id,
-            stationId: input.stationId,
-            confirmedByUserId: input.confirmedByUserId,
-            confirmationMethod: input.confirmationMethod,
-            handoverStatus: "CONFIRMED",
-            confirmedAt: input.confirmedAt,
-          }).pipe(
-            Effect.catchTag("ReturnConfirmationUniqueViolation", () =>
-              Effect.fail(new ReturnAlreadyConfirmed({ rentalId: rental.id }))),
-          );
+          yield* createReturnConfirmationInTx({
+            tx,
+            input,
+            rental,
+          });
 
           return yield* finalizeRentalReturnInTx({
             tx,
