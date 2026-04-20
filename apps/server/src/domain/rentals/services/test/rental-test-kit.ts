@@ -103,7 +103,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
       now?: Date;
     }) {
       return runEffectEitherWithLayer(
-        createReturnSlot(args),
+        createReturnSlot({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },

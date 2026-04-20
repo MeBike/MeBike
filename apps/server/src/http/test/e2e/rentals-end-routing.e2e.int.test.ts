@@ -213,6 +213,26 @@ describe("rentals end routing e2e", () => {
     expect(body.returnSlot?.status).toBe("ACTIVE");
   });
 
+  it("blocks return-slot creation during overnight closure", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-21T16:00:00.000Z"));
+
+    try {
+      const { user, rental } = await createActiveRentalGraph();
+      const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+      const targetStation = await fixture.factories.station({ capacity: 5 });
+
+      const response = await createReturnSlot(userToken, rental.id, targetStation.id);
+      const body = await response.json() as RentalsContracts.RentalErrorResponse;
+
+      expect(response.status).toBe(400);
+      expect(body.details?.code).toBe("OVERNIGHT_OPERATIONS_CLOSED");
+    }
+    finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("blocks staff rental end during overnight closure", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-21T16:00:00.000Z"));

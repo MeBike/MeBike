@@ -544,6 +544,19 @@ const createMyReturnSlot: RouteHandler<
             },
             404,
           )),
+        Match.tag("OvernightOperationsClosed", ({ currentTime, windowStart, windowEnd }) =>
+          c.json(
+            {
+              error: rentalErrorMessages.OVERNIGHT_OPERATIONS_CLOSED,
+              details: {
+                code: RentalErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+                currentTime,
+                windowStart,
+                windowEnd,
+              },
+            },
+            400,
+          )),
         Match.tag("ReturnSlotRequiresActiveRental", ({ status }) =>
           c.json(
             {
