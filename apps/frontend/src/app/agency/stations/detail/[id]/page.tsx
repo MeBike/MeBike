@@ -80,7 +80,7 @@ export default function StationDetailPage() {
       hasToken: true,
       station_id: id,
     });
-    const [isVisualLoading, setIsVisualLoading] = useState(true);
+  const [isVisualLoading, setIsVisualLoading] = useState(true);
   useEffect(() => {
     if (isLoadingMyStationDetail) {
       setIsVisualLoading(true);

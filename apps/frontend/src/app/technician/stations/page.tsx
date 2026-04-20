@@ -27,19 +27,16 @@ export default function StationsPage() {
     name: searchQuery,
   });
   const [isVisualLoading, setIsVisualLoading] = useState(false);
-
   useEffect(() => {
     if (isLoadingMyStation) {
       setIsVisualLoading(true);
     } else {
-      // Khi API xong, đợi thêm một chút rồi mới tắt Skeleton
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600); // 600ms là khoảng "vàng" để UI mượt mà
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyStation]);
-
   useEffect(() => {
     getMyStation();
   }, [page, getMyStation, limit]);

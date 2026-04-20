@@ -106,7 +106,7 @@ export function Sidebar() {
           title: "Tổng quan",
           icon: LayoutDashboard,
           href: `/${role.toLowerCase()}`,
-          roles: ["ADMIN", "STAFF", "AGENCY", "MANAGER", "USER"],
+          roles: ["ADMIN", "STAFF", "AGENCY", "MANAGER", "USER","TECHNICIAN"],
           exact: true,
         },
         {

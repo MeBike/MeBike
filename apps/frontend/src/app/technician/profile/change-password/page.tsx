@@ -58,7 +58,7 @@ export default function ChangePasswordPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <Link
-              href="/staff/profile"
+              href="/technician/profile"
               className="p-2 hover:bg-accent rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -243,7 +243,7 @@ export default function ChangePasswordPage() {
 
               {/* Submit Button */}
               <div className="flex gap-3 pt-6 border-t border-border">
-                <Link href="/staff/profile">
+                <Link href="/technician/profile">
                   <Button
                     type="button"
                     variant="outline"

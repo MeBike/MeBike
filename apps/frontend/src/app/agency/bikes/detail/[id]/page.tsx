@@ -7,11 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { BikeDetailView } from "./BikeDetail";
 import { useAgencyActions } from "@/hooks/use-agency";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-export default function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const {
@@ -36,7 +32,7 @@ export default function Page({
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-  if(!myAgencyBikeInStationDetail){
+  if (!myAgencyBikeInStationDetail) {
     notFound();
   }
   return (
