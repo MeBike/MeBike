@@ -89,10 +89,17 @@ export const CreateBikeBodySchema = z.object({
   status: BikeStatusSchema.optional(),
 }).openapi("CreateBikeBody");
 
+export const AdminBikeManageableStatusSchema = z.enum([
+  "AVAILABLE",
+  "BROKEN",
+  "MAINTAINED",
+  "UNAVAILABLE",
+]).openapi("AdminBikeManageableStatus");
+
 export const UpdateBikeBodySchema = z.object({
   stationId: z.uuidv7().optional(),
   supplierId: z.uuidv7().optional(),
-  status: BikeStatusSchema.optional(),
+  status: AdminBikeManageableStatusSchema.optional(),
 }).openapi("UpdateBikeBody");
 
 export const BikeManageableStatusSchema = z.enum(["AVAILABLE", "BROKEN"]).openapi("BikeManageableStatus");

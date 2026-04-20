@@ -68,7 +68,7 @@ describe("admin bikes routing e2e", () => {
     const updateResponse = await fixture.app.request(`http://test/v1/bikes/${bike.id}`, {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ status: "BROKEN" }),
@@ -95,7 +95,7 @@ describe("admin bikes routing e2e", () => {
     const response = await fixture.app.request("http://test/v1/bikes", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

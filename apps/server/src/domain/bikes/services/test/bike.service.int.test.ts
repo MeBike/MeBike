@@ -152,6 +152,37 @@ describe("bikeService Integration", () => {
     }
   });
 
+  it("allows admin maintenance transition from available", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
+
+    const result = await runAdminUpdateBike(bike.id, {
+      status: "MAINTAINED",
+    });
+
+    expect(result._tag).toBe("Some");
+    if (result._tag === "Some") {
+      expect(result.value.status).toBe("MAINTAINED");
+    }
+  });
+
+  it("fails when admin tries to override booked bike status", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const bike = await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "BOOKED",
+    });
+
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "InvalidBikeStatus");
+  });
+
   it("fails with BikeStationPlacementCapacityExceeded when moving to station with no placement space after reserved returns", async () => {
     const originalStation = await fixture.factories.station();
     const blockedStation = await fixture.factories.station({ capacity: 1, returnSlotLimit: 0 });

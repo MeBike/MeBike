@@ -115,6 +115,14 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
           error: bikeErrorMessages.BIKE_NOT_FOUND,
           details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
         }, 404)),
+      Match.tag("InvalidBikeStatus", ({ status }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.INVALID_BIKE_STATUS,
+          details: {
+            code: BikeErrorCodeSchema.enum.INVALID_BIKE_STATUS,
+            status,
+          },
+        }, 400)),
       Match.tag("BikeStationNotFound", ({ stationId }) =>
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_STATION_NOT_FOUND,
