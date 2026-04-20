@@ -4,11 +4,11 @@ import { ServerErrorDetailSchema, ServerErrorResponseSchema } from "../schemas";
 export const bikeErrorCodes = [
   "BIKE_NOT_FOUND",
   "BIKE_STATION_NOT_FOUND",
+  "BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED",
   "BIKE_SUPPLIER_NOT_FOUND",
   "INVALID_BIKE_STATUS",
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
-  "BIKE_NOT_RENTED_BY_USER",
   "INVALID_QUERY_PARAMS",
 ] as const;
 
@@ -20,6 +20,8 @@ export const BikeErrorDetailSchema = ServerErrorDetailSchema.extend({
   stationId: z.uuidv7().optional(),
   supplierId: z.uuidv7().optional(),
   status: z.string().optional(),
+  availablePlacementSlots: z.number().int().nonnegative().optional(),
+  requiredPlacementSlots: z.number().int().positive().optional(),
 }).openapi({
   description: "Bike-specific error detail",
   example: {
@@ -33,11 +35,11 @@ export const BikeNotFoundCodeSchema = z.enum(["BIKE_NOT_FOUND"]);
 export const BikeUpdateConflictCodeSchema = z.enum([
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
+  "BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED",
   "BIKE_STATION_NOT_FOUND",
   "BIKE_SUPPLIER_NOT_FOUND",
   "INVALID_BIKE_STATUS",
 ]);
-export const BikeReportForbiddenCodeSchema = z.enum(["BIKE_NOT_RENTED_BY_USER"]);
 
 export type BikeErrorCode = (typeof bikeErrorCodes)[number];
 export type BikeErrorDetail = z.infer<typeof BikeErrorDetailSchema>;
@@ -76,32 +78,16 @@ export const BikeUpdateConflictResponseSchema = ServerErrorResponseSchema.extend
   },
 });
 
-export const BikeReportForbiddenResponseSchema = ServerErrorResponseSchema.extend({
-  details: BikeErrorDetailSchema.extend({
-    code: BikeReportForbiddenCodeSchema,
-  }).optional(),
-}).openapi("BikeReportForbiddenResponse", {
-  description: "Bike report broken forbidden response",
-  example: {
-    error: "Permission denied",
-    details: {
-      code: "BIKE_NOT_RENTED_BY_USER",
-      bikeId: "665fd6e36b7e5d53f8f3d2c9",
-    },
-  },
-});
-
 export type BikeNotFoundResponse = z.infer<typeof BikeNotFoundResponseSchema>;
 export type BikeUpdateConflictResponse = z.infer<typeof BikeUpdateConflictResponseSchema>;
-export type BikeReportForbiddenResponse = z.infer<typeof BikeReportForbiddenResponseSchema>;
 
 export const bikeErrorMessages: Record<BikeErrorCode, string> = {
   BIKE_NOT_FOUND: "Bike not found",
   BIKE_STATION_NOT_FOUND: "Station not found",
+  BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED: "Station has no physical space available after honoring active return reservations",
   BIKE_SUPPLIER_NOT_FOUND: "Supplier not found",
   INVALID_BIKE_STATUS: "Invalid bike status transition",
   BIKE_CURRENTLY_RENTED: "Bike is currently rented and cannot be modified/deleted",
   BIKE_CURRENTLY_RESERVED: "Bike is currently reserved and cannot be modified/deleted",
-  BIKE_NOT_RENTED_BY_USER: "User is not currently renting this bike",
   INVALID_QUERY_PARAMS: "Invalid query parameters",
 };

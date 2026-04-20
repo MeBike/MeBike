@@ -4,7 +4,6 @@ import { z } from "../../../../zod";
 import {
   BikeErrorCodeSchema,
   BikeNotFoundResponseSchema,
-  BikeReportForbiddenResponseSchema,
   BikeUpdateConflictResponseSchema,
 } from "../../bikes";
 import { forbiddenResponse, unauthorizedResponse } from "../helpers";
@@ -274,46 +273,5 @@ export const technicianUpdateBikeStatus = createRoute({
     },
     401: unauthorizedResponse(),
     403: forbiddenResponse("Technician"),
-  },
-});
-
-export const reportBrokenBike = createRoute({
-  method: "post",
-  path: "/v1/bikes/{id}/report-broken",
-  tags: ["Bikes"],
-  request: {
-    params: BikeIdParamSchema,
-  },
-  responses: {
-    200: {
-      description: "Bike reported as broken",
-      content: {
-        "application/json": { schema: BikeSummarySchemaOpenApi },
-      },
-    },
-    403: {
-      description: "User not currently renting the bike",
-      content: {
-        "application/json": {
-          schema: BikeReportForbiddenResponseSchema,
-          examples: {
-            NotRented: {
-              value: {
-                error: "Permission denied",
-                details: {
-                  code: BikeErrorCodeSchema.enum.BIKE_NOT_RENTED_BY_USER,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    404: {
-      description: "Bike not found",
-      content: {
-        "application/json": { schema: BikeNotFoundResponseSchema },
-      },
-    },
   },
 });

@@ -14,6 +14,12 @@ export class BikeStationNotFound extends Data.TaggedError("BikeStationNotFound")
   readonly stationId: string;
 }> {}
 
+export class BikeStationPlacementCapacityExceeded extends Data.TaggedError("BikeStationPlacementCapacityExceeded")<{
+  readonly stationId: string;
+  readonly availablePlacementSlots: number;
+  readonly requiredPlacementSlots: number;
+}> {}
+
 export class BikeSupplierNotFound extends Data.TaggedError("BikeSupplierNotFound")<{
   readonly supplierId: string;
 }> {}
@@ -31,9 +37,4 @@ export class BikeCurrentlyRented extends Data.TaggedError("BikeCurrentlyRented")
 export class BikeCurrentlyReserved extends Data.TaggedError("BikeCurrentlyReserved")<{
   readonly bikeId: string;
   readonly action: "update_station" | "delete";
-}> {}
-
-export class BikeNotRentedByUser extends Data.TaggedError("BikeNotRentedByUser")<{
-  readonly bikeId: string;
-  readonly userId: string;
 }> {}

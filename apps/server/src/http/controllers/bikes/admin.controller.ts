@@ -48,6 +48,16 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
             stationId,
           },
         }, 400)),
+      Match.tag("BikeStationPlacementCapacityExceeded", ({ stationId, availablePlacementSlots, requiredPlacementSlots }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED,
+            stationId,
+            availablePlacementSlots,
+            requiredPlacementSlots,
+          },
+        }, 400)),
       Match.tag("BikeSupplierNotFound", ({ supplierId }) =>
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_SUPPLIER_NOT_FOUND,
@@ -111,6 +121,16 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
           details: {
             code: BikeErrorCodeSchema.enum.BIKE_STATION_NOT_FOUND,
             stationId,
+          },
+        }, 400)),
+      Match.tag("BikeStationPlacementCapacityExceeded", ({ stationId, availablePlacementSlots, requiredPlacementSlots }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED,
+            stationId,
+            availablePlacementSlots,
+            requiredPlacementSlots,
           },
         }, 400)),
       Match.tag("BikeSupplierNotFound", ({ supplierId }) =>

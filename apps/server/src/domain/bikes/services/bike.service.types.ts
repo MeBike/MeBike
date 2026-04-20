@@ -7,6 +7,8 @@ import type {
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
+  BikeRepositoryError,
+  BikeStationPlacementCapacityExceeded,
   BikeStationNotFound,
   BikeSupplierNotFound,
   InvalidBikeStatus,
@@ -25,7 +27,7 @@ export type BikeService = {
     },
   ) => Effect.Effect<
     BikeRow,
-    BikeStationNotFound | BikeSupplierNotFound
+    BikeRepositoryError | BikeStationNotFound | BikeStationPlacementCapacityExceeded | BikeSupplierNotFound
   >;
 
   listBikes: (
@@ -35,8 +37,6 @@ export type BikeService = {
 
   getBikeDetail: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
 
-  reportBrokenBike: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
-
   adminUpdateBike: (
     bikeId: string,
     patch: BikeUpdatePatch,
@@ -45,6 +45,8 @@ export type BikeService = {
     | BikeCurrentlyRented
     | BikeCurrentlyReserved
     | BikeNotFound
+    | BikeRepositoryError
+    | BikeStationPlacementCapacityExceeded
     | BikeStationNotFound
     | BikeSupplierNotFound
   >;
