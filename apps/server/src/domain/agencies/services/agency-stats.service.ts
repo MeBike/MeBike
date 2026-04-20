@@ -66,7 +66,6 @@ function emptyMetrics(totalCapacity: number, returnSlotLimit: number) {
       totalRentals: 0,
       activeRentals: 0,
       completedRentals: 0,
-      cancelledRentals: 0,
       totalRevenue: 0,
       avgDurationMinutes: 0,
     },

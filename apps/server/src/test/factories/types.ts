@@ -61,7 +61,7 @@ export type RentalOverrides = {
   duration?: number | null;
   totalPrice?: string | null;
   subscriptionId?: string | null;
-  status?: "RENTED" | "COMPLETED" | "CANCELLED";
+  status?: "RENTED" | "COMPLETED";
 };
 
 export type ReservationOverrides = {

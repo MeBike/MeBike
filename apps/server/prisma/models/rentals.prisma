@@ -1,7 +1,6 @@
 enum RentalStatus {
   RENTED
   COMPLETED
-  CANCELLED
 }
 
 model Rental {

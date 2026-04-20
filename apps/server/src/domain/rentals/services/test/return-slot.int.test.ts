@@ -402,7 +402,11 @@ describe("return slot integration", () => {
       userId: user.id,
       bikeId: bike.id,
       startStationId: station.id,
-      status: "CANCELLED",
+      status: "COMPLETED",
+      endStationId: station.id,
+      endTime: new Date(Date.now() - 30 * 60 * 1000),
+      duration: 30,
+      totalPrice: "12000",
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
