@@ -1,9 +1,9 @@
 import { Effect, Layer } from "effect";
 
-import { SubscriptionQueryRepository } from "../repository/subscription-query.repository";
+import { SubscriptionQueryRepository } from "../../repository/subscription-query.repository";
 import { makeSubscriptionQueryService } from "./subscription-query.service";
 
-export type { SubscriptionQueryService } from "./subscription.service.types";
+export type { SubscriptionQueryService } from "../subscription.service.types";
 
 const makeSubscriptionQueryServiceEffect = Effect.gen(function* () {
   const repo = yield* SubscriptionQueryRepository;

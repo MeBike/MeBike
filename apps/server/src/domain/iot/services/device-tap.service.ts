@@ -41,6 +41,7 @@ export type DeviceTapService = {
  */
 function mapReservationFailureToDenyReason(failure: ReservationServiceFailure): string {
   return Match.value(failure).pipe(
+    Match.tag("OvernightOperationsClosed", () => "OVERNIGHT_OPERATIONS_CLOSED"),
     Match.tag("BikeNotFound", () => "BIKE_NOT_FOUND"),
     Match.tag("BikeNotAvailable", () => "BIKE_UNAVAILABLE"),
     Match.tag("BikeNotFoundInStation", () => "BIKE_NOT_AT_STATION"),
@@ -64,6 +65,7 @@ function mapReservationFailureToDenyReason(failure: ReservationServiceFailure): 
  */
 function mapRentalFailureToDenyReason(failure: RentalServiceFailure): string {
   return Match.value(failure).pipe(
+    Match.tag("OvernightOperationsClosed", () => "OVERNIGHT_OPERATIONS_CLOSED"),
     Match.tag("ActiveRentalExists", () => "ACTIVE_RENTAL_EXISTS"),
     Match.tag("BikeAlreadyRented", () => "BIKE_ALREADY_RENTED"),
     Match.tag("BikeNotFound", () => "BIKE_NOT_FOUND"),
@@ -163,6 +165,7 @@ const makeDeviceTapServiceEffect = Effect.gen(function* () {
       bikeId,
       startStationId: stationId,
       startTime: now,
+      now,
       subscriptionId: undefined,
     }).pipe(
       Effect.matchEffect({

@@ -6,6 +6,10 @@ import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 
 import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
+import {
+  getOvernightOperationsClosedMessage,
+  isWithinVietnamOvernightOperationsWindow,
+} from "@/utils/business-hours";
 
 type EndRentalPayload = {
   stationId: string;
@@ -63,6 +67,12 @@ export function useStaffRentalDetailScreen(rentalId: string) {
           "Sai trạm trả xe",
           `Phiên này chỉ có thể kết thúc tại ${returnSlot.station.name} vì đó là trạm khách đã giữ chỗ.`,
         );
+        return;
+      }
+
+      if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+        Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
+        callbacks?.onError?.();
         return;
       }
 

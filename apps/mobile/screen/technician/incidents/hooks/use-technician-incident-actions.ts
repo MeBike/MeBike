@@ -7,6 +7,10 @@ import { useRejectIncidentMutation } from "@/screen/incidents/hooks/use-reject-i
 import { useResolveIncidentMutation } from "@/screen/incidents/hooks/use-resolve-incident-mutation";
 import { useStartIncidentMutation } from "@/screen/incidents/hooks/use-start-incident-mutation";
 import { presentIncidentError } from "@/screen/incidents/incident-presenters";
+import {
+  getOvernightOperationsClosedMessage,
+  isWithinVietnamOvernightOperationsWindow,
+} from "@/utils/business-hours";
 
 type ActionKind = "assigned" | "accepted" | "in_progress";
 
@@ -20,6 +24,15 @@ function showMutationError(error: unknown) {
   if (error) {
     Alert.alert("Lỗi", presentIncidentError(error as never));
   }
+}
+
+function shouldBlockOvernightIncidentAction(): boolean {
+  if (!isWithinVietnamOvernightOperationsWindow(new Date())) {
+    return false;
+  }
+
+  Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
+  return true;
 }
 
 export function useTechnicianIncidentActions({
@@ -41,6 +54,10 @@ export function useTechnicianIncidentActions({
         : null;
 
   const handleAccept = () => {
+    if (shouldBlockOvernightIncidentAction()) {
+      return;
+    }
+
     Alert.alert(
       "Nhận xử lý sự cố",
       "Xác nhận nhận xử lý sự cố này?",
@@ -62,6 +79,10 @@ export function useTechnicianIncidentActions({
   };
 
   const handleReject = () => {
+    if (shouldBlockOvernightIncidentAction()) {
+      return;
+    }
+
     Alert.alert(
       "Từ chối sự cố",
       "Nếu từ chối, hệ thống sẽ điều phối kỹ thuật viên khác cho sự cố này.",
@@ -85,6 +106,10 @@ export function useTechnicianIncidentActions({
   };
 
   const handleStart = () => {
+    if (shouldBlockOvernightIncidentAction()) {
+      return;
+    }
+
     Alert.alert(
       "Bắt đầu xử lý",
       "Xác nhận bắt đầu xử lý sự cố này?",
@@ -106,6 +131,10 @@ export function useTechnicianIncidentActions({
   };
 
   const handleResolve = () => {
+    if (shouldBlockOvernightIncidentAction()) {
+      return;
+    }
+
     Alert.alert(
       "Hoàn tất sự cố",
       "Xác nhận đã xử lý xong sự cố này?",

@@ -1,7 +1,6 @@
 import { Layer } from "effect";
 
 import type {
-  ReservationCommandServiceTag,
   ReservationQueryServiceTag,
 } from "@/domain/reservations";
 import type {
@@ -19,7 +18,6 @@ import {
   makeReservationCommandRepository,
   makeReservationQueryRepository,
   ReservationCommandRepository,
-  ReservationCommandServiceLive,
   ReservationQueryRepository,
   ReservationQueryServiceLive,
   reserveBike,
@@ -38,12 +36,13 @@ import { WalletServiceLive } from "@/domain/wallets/services/wallet.service";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectEitherWithLayer } from "@/test/effect/run";
 
+const DEFAULT_TEST_NOW = new Date("2025-01-01T10:00:00.000Z");
+
 export type ReservationDeps
   = | Prisma
     | ReservationQueryRepository
     | ReservationCommandRepository
     | ReservationQueryServiceTag
-    | ReservationCommandServiceTag
     | BikeRepository
     | StationQueryRepository
     | WalletRepository
@@ -76,9 +75,6 @@ export function makeReservationTestLayer(client: PrismaClient) {
   const reservationQueryServiceLayer = ReservationQueryServiceLive.pipe(
     Layer.provide(reservationQueryRepoLayer),
   );
-  const reservationCommandServiceLayer = ReservationCommandServiceLive.pipe(
-    Layer.provide(reservationCommandRepoLayer),
-  );
   const walletRepoLayer = Layer.succeed(WalletRepository, walletRepo);
   const walletServiceLayer = WalletServiceLive.pipe(
     Layer.provide(walletRepoLayer),
@@ -103,7 +99,6 @@ export function makeReservationTestLayer(client: PrismaClient) {
     reservationQueryRepoLayer,
     reservationCommandRepoLayer,
     reservationQueryServiceLayer,
-    reservationCommandServiceLayer,
     Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
     Layer.succeed(StationQueryRepository, StationQueryRepository.make(stationRepo)),
     walletRepoLayer,
@@ -142,7 +137,10 @@ export function makeReservationRunners(layer: Layer.Layer<ReservationDeps>) {
     },
     confirm(args: { reservationId: string; userId: string; now: Date }) {
       return runEffectEitherWithLayer(
-        confirmReservation(args),
+        confirmReservation({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },

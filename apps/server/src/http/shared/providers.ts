@@ -77,7 +77,6 @@ export {
 } from "./features/rental.layers";
 export {
   ReservationCommandReposLive,
-  ReservationCommandServiceLayer,
   ReservationDepsLive,
   ReservationQueryReposLive,
   ReservationQueryServiceLayer,

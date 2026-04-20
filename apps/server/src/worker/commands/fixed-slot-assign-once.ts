@@ -36,6 +36,7 @@ async function main() {
       noBike: summary.noBike,
       billingFailed: summary.billingFailed,
       conflicts: summary.conflicts,
+      skippedOutsideOperatingHours: summary.skippedOutsideOperatingHours,
     },
     "fixed-slot-assign-once completed",
   );

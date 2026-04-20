@@ -33,13 +33,15 @@ import { RentalErrorCodeSchema, rentalErrorMessages } from "./shared";
 const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
   const userId = c.var.currentUser!.userId;
   const body = c.req.valid("json");
+  const now = new Date();
 
   const eff = withLoggedCause(
     startRental({
       userId,
       bikeId: body.bikeId,
       startStationId: body.startStationId,
-      startTime: new Date(),
+      startTime: now,
+      now,
       subscriptionId: body.subscriptionId,
     }),
     "POST /v1/rentals",
@@ -55,6 +57,19 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
       )),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
+        Match.tag("OvernightOperationsClosed", ({ currentTime, windowStart, windowEnd }) =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>(
+            {
+              error: rentalErrorMessages.OVERNIGHT_OPERATIONS_CLOSED,
+              details: {
+                code: RentalErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+                currentTime,
+                windowStart,
+                windowEnd,
+              },
+            },
+            400,
+          )),
         Match.tag("ActiveRentalExists", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
@@ -528,6 +543,19 @@ const createMyReturnSlot: RouteHandler<
               },
             },
             404,
+          )),
+        Match.tag("OvernightOperationsClosed", ({ currentTime, windowStart, windowEnd }) =>
+          c.json(
+            {
+              error: rentalErrorMessages.OVERNIGHT_OPERATIONS_CLOSED,
+              details: {
+                code: RentalErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+                currentTime,
+                windowStart,
+                windowEnd,
+              },
+            },
+            400,
           )),
         Match.tag("ReturnSlotRequiresActiveRental", ({ status }) =>
           c.json(

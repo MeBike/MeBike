@@ -5,6 +5,10 @@ import { Alert } from "react-native";
 
 import type { ReservationFlowNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
+import {
+  getOvernightOperationsClosedMessage,
+  isWithinVietnamOvernightOperationsWindow,
+} from "@/utils/business-hours";
 
 function getMinimumReservationDate() {
   const now = new Date();
@@ -74,6 +78,11 @@ export function useReservationFlowSubmit({
     const minimumDate = getMinimumReservationDate();
     if (scheduledAt.getTime() < minimumDate.getTime()) {
       Alert.alert("Thời gian không hợp lệ", "Vui lòng chọn thời gian hiện tại hoặc trong tương lai.");
+      return;
+    }
+
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
       return;
     }
 

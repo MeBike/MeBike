@@ -217,6 +217,7 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
 > = async (c) => {
   const { rentalId } = c.req.valid("param");
   const body = c.req.valid("json");
+  const now = new Date();
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -229,7 +230,8 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
         operatorStationId: c.var.currentUser!.operatorStationId ?? null,
         operatorAgencyId: c.var.currentUser!.agencyId ?? null,
         confirmationMethod: body.confirmationMethod ?? "MANUAL",
-        confirmedAt: body.confirmedAt ? new Date(body.confirmedAt) : new Date(),
+        confirmedAt: body.confirmedAt ? new Date(body.confirmedAt) : now,
+        now,
       });
     }),
     "PUT /v1/rentals/{rentalId}/end",
@@ -260,6 +262,19 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
     }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
+        Match.tag("OvernightOperationsClosed", ({ currentTime, windowStart, windowEnd }) =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>(
+            {
+              error: rentalErrorMessages.OVERNIGHT_OPERATIONS_CLOSED,
+              details: {
+                code: RentalErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+                currentTime,
+                windowStart,
+                windowEnd,
+              },
+            },
+            400,
+          )),
         Match.tag("RentalNotFound", () =>
           c.json(
             {

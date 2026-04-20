@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   isAfterLateReturnCutoff,
+  isAtOrAfterLateReturnCutoff,
   isPastRentalReturnDeadline,
 } from "../late-return";
 
@@ -31,5 +32,16 @@ describe("late return cutoff", () => {
     const referenceTime = new Date("2026-03-23T00:05:00.000Z");
 
     expect(isPastRentalReturnDeadline(rentalStartTime, referenceTime, cutoff)).toBe(true);
+  });
+
+  it("treats exactly 23:00:00 local time as at cutoff for overdue checks", () => {
+    const referenceTime = new Date("2026-03-22T16:00:00.000Z");
+
+    expect(isAtOrAfterLateReturnCutoff(referenceTime, cutoff)).toBe(true);
+    expect(isPastRentalReturnDeadline(
+      new Date("2026-03-22T10:00:00.000Z"),
+      referenceTime,
+      cutoff,
+    )).toBe(true);
   });
 });

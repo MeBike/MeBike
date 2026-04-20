@@ -4,7 +4,11 @@ import type { PricingPolicyRow } from "@/domain/pricing";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { isPastRentalReturnDeadline, makePricingPolicyRepository } from "@/domain/pricing";
+import {
+  isAtOrAfterLateReturnCutoff,
+  isPastRentalReturnDeadline,
+  makePricingPolicyRepository,
+} from "@/domain/pricing";
 import { makeRentalRepository } from "@/domain/rentals/repository/rental.repository";
 import { forfeitRentalDepositHoldInTx } from "@/domain/rentals/services/commands/rental-deposit-hold.service";
 import logger from "@/lib/logger";
@@ -16,6 +20,7 @@ export type RentalOverdueSweepSummary = {
   failed: number;
   depositForfeited: number;
   bikeUnavailable: number;
+  cancelledReturnSlots: number;
 };
 
 const OVERDUE_SWEEP_BATCH_SIZE = 100;
@@ -53,6 +58,10 @@ export async function sweepOverdueRentals(
     now,
     activePricingPolicy.lateReturnCutoff,
   );
+  const earliestCutoff = await resolveEarliestLateReturnCutoff(
+    client,
+    activePricingPolicy.lateReturnCutoff,
+  );
 
   const summary: RentalOverdueSweepSummary = {
     scanned: 0,
@@ -61,7 +70,12 @@ export async function sweepOverdueRentals(
     failed: 0,
     depositForfeited: 0,
     bikeUnavailable: 0,
+    cancelledReturnSlots: 0,
   };
+
+  if (isAtOrAfterLateReturnCutoff(now, earliestCutoff)) {
+    summary.cancelledReturnSlots = await cancelActiveReturnSlots(client, now);
+  }
 
   let lastRentalId: string | undefined;
 
@@ -173,6 +187,23 @@ export async function sweepOverdueRentals(
   return summary;
 }
 
+async function cancelActiveReturnSlots(
+  client: PrismaClient,
+  now: Date,
+): Promise<number> {
+  const result = await client.returnSlotReservation.updateMany({
+    where: {
+      status: "ACTIVE",
+    },
+    data: {
+      status: "CANCELLED",
+      updatedAt: now,
+    },
+  });
+
+  return result.count;
+}
+
 /**
  * Resolve pricing policy cho từng rental với cache cục bộ trong một lần sweep.
  *
@@ -214,21 +245,10 @@ async function resolveCandidateStartUpperBound(
   now: Date,
   fallbackCutoff: Date,
 ): Promise<Date> {
-  const cutoffRows = await client.pricingPolicy.findMany({
-    select: {
-      lateReturnCutoff: true,
-    },
-  });
-
-  const earliestCutoff = cutoffRows.reduce(
-    (currentEarliest, row) => compareCutoffTimes(row.lateReturnCutoff, currentEarliest) < 0
-      ? row.lateReturnCutoff
-      : currentEarliest,
-    fallbackCutoff,
-  );
+  const earliestCutoff = await resolveEarliestLateReturnCutoff(client, fallbackCutoff);
 
   const businessDayStart = startOfBusinessDayUtc(now);
-  if (!isAfterCutoffInBusinessTime(now, earliestCutoff)) {
+  if (!isAtOrAfterLateReturnCutoff(now, earliestCutoff)) {
     return businessDayStart;
   }
 
@@ -263,24 +283,22 @@ function compareCutoffTimes(left: Date, right: Date): number {
 }
 
 /**
- * Kiểm tra thời điểm hiện tại theo giờ Việt Nam đã vượt qua cutoff chưa.
+ * Lay cutoff sớm nhất trong tất cả pricing policy de worker khong bo sot rental.
  */
-function isAfterCutoffInBusinessTime(now: Date, cutoff: Date): boolean {
-  const shifted = new Date(now.getTime() + BUSINESS_TIME_ZONE_OFFSET_MS);
+async function resolveEarliestLateReturnCutoff(
+  client: PrismaClient,
+  fallbackCutoff: Date,
+): Promise<Date> {
+  const cutoffRows = await client.pricingPolicy.findMany({
+    select: {
+      lateReturnCutoff: true,
+    },
+  });
 
-  const businessHour = shifted.getUTCHours();
-  const businessMinute = shifted.getUTCMinutes();
-  const businessSecond = shifted.getUTCSeconds();
-  const cutoffHour = cutoff.getUTCHours();
-  const cutoffMinute = cutoff.getUTCMinutes();
-  const cutoffSecond = cutoff.getUTCSeconds();
-
-  if (businessHour !== cutoffHour) {
-    return businessHour > cutoffHour;
-  }
-  if (businessMinute !== cutoffMinute) {
-    return businessMinute > cutoffMinute;
-  }
-
-  return businessSecond > cutoffSecond;
+  return cutoffRows.reduce(
+    (currentEarliest, row) => compareCutoffTimes(row.lateReturnCutoff, currentEarliest) < 0
+      ? row.lateReturnCutoff
+      : currentEarliest,
+    fallbackCutoff,
+  );
 }

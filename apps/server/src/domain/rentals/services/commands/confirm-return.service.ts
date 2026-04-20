@@ -1,7 +1,11 @@
 import { Effect } from "effect";
 
 import { BikeRepository } from "@/domain/bikes";
-import { defectOn } from "@/domain/shared";
+import {
+  defectOn,
+  isWithinOvernightOperationsWindow,
+  makeOvernightOperationsClosedError,
+} from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -51,32 +55,41 @@ export function confirmRentalReturnByOperator(
     yield* ReturnSlotRepository;
     yield* ReturnConfirmationRepository;
     yield* BikeRepository;
+    const now = input.now ?? new Date();
+    const runtimeInput = { ...input, now };
+
+    if (
+      (runtimeInput.operatorRole === "STAFF" || runtimeInput.operatorRole === "AGENCY")
+      && isWithinOvernightOperationsWindow(now)
+    ) {
+      return yield* Effect.fail(makeOvernightOperationsClosedError(now));
+    }
 
     const completedRental = yield* runPrismaTransaction(
       client,
       tx =>
         Effect.gen(function* () {
-          const rental = yield* loadConfirmableRentalInTx(tx, input.rentalId);
-          const operator = yield* resolveConfirmReturnOperatorInTx(tx, input).pipe(
+          const rental = yield* loadConfirmableRentalInTx(tx, runtimeInput.rentalId);
+          const operator = yield* resolveConfirmReturnOperatorInTx(tx, runtimeInput).pipe(
             defectOn(RentalRepositoryError),
           );
 
           yield* ensureOperatorCanConfirmReturnInTx({
             tx,
-            input,
+            input: runtimeInput,
             rental,
             operator,
           }).pipe(defectOn(RentalRepositoryError));
 
           yield* ensureReturnDestinationReadyInTx({
             tx,
-            input,
+            input: runtimeInput,
             rental,
           });
 
           yield* createReturnConfirmationInTx({
             tx,
-            input,
+            input: runtimeInput,
             rental,
           });
 
