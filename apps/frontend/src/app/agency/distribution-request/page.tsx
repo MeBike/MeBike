@@ -11,9 +11,9 @@ export default function Page() {
   const pageSize = 10;
 
   const { 
-    staffViewDistributionRequest, 
-    isFetchingStaffViewDistributionRequest,
-    getStaffViewDistributionRequest
+    agencyViewDistributionRequest, 
+    isFetchingAgencyViewDistributionRequest,
+    getAgencyViewDistributionRequest
   } = useDistributionRequest({
     page,
     pageSize,
@@ -21,19 +21,18 @@ export default function Page() {
     hasToken: true,
   });
 
-  // Cập nhật dependency để gọi lại API khi Page hoặc Status thay đổi
   useEffect(() => {
-    getStaffViewDistributionRequest();
-  }, [page, statusFilter, getStaffViewDistributionRequest]); 
+    getAgencyViewDistributionRequest();
+  }, [page, statusFilter, getAgencyViewDistributionRequest]); 
 
-  const requests = staffViewDistributionRequest?.data?.data || [];
+  const requests = agencyViewDistributionRequest?.data || [];
 
   return (
     <DistributionRequestClient
       data={{
         requests: requests,
-        pagination: staffViewDistributionRequest?.data.pagination,
-        isVisualLoading: isFetchingStaffViewDistributionRequest,
+        pagination: agencyViewDistributionRequest?.pagination,
+        isVisualLoading: isFetchingAgencyViewDistributionRequest,
       }}
       filters={{
         statusFilter,
