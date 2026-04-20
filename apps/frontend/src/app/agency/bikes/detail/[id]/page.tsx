@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { BikeDetailView } from "./BikeDetail";
@@ -37,13 +37,7 @@ export default function BikeDetailPage({
     return <LoadingScreen />;
   }
   if (!myAgencyBikeInStationDetail) {
-    return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Không tìm thấy thông tin xe đạp.
-        </p>
-      </div>
-    );
+    notFound();
   }
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">

@@ -99,13 +99,7 @@ export default function StationDetailPage() {
 
   if (isVisualLoading) return <LoadingScreen />;
   if (!myStationDetail) {
-    return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Không tìm thấy thông tin xe đạp.
-        </p>
-      </div>
-    );
+    notFound();
   }
   const station = myStationDetail as Station;
   return (

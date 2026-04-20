@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -127,33 +127,11 @@ export default function AdminRentalDetailPage() {
       </div>
     </div>
   );
-
   if (isDetailRentalLoadingForAgency) {
     return loadingShell;
   }
-
   if (!detailData) {
-    return (
-      <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold text-foreground">
-              Chi tiết đơn thuê
-            </h1>
-            <Button
-              variant="outline"
-              onClick={() => router.push("/agency/rentals")}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Quay lại danh sách
-            </Button>
-          </div>
-          <div className="rounded-xl border border-destructive/30 bg-card p-8 text-center text-destructive">
-            Không thể tải chi tiết đơn thuê.
-          </div>
-        </div>
-      </div>
-    );
+    notFound();
   }
   const hasEnd = Boolean(detailData.endTime && detailData.endStation);
   const verifyRaw = String(detailData.user?.verify ?? "")

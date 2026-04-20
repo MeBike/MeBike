@@ -1,5 +1,5 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -106,13 +106,7 @@ export default function ReservationDetailClient() {
     }
   }, [id, getDetailReservationForAgency]);
   if (!detailReservationForAgency) {
-    return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Không tìm thấy thông tin đặt chỗ.
-        </p>
-      </div>
-    );
+    notFound();
   }
 
   const data = detailReservationForAgency;
