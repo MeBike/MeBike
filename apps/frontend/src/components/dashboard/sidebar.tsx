@@ -113,19 +113,13 @@ export function Sidebar() {
           title: "Quản lý khách hàng",
           icon: Users,
           href: `/${role.toLowerCase()}/customers`,
-          roles: ["ADMIN", "MANAGER"],
-        },
-        {
-          title: "Quản lý khách hàng",
-          icon: Users,
-          href: "/staff/customers",
-          roles: ["STAFF"],
+          roles: ["ADMIN"]
         },
         {
           title: "Quản lý nhân viên",
           icon: Users,
           href: `/${role.toLowerCase()}/staffs`,
-          roles: ["ADMIN", "MANAGER"],
+          roles: ["ADMIN"],
         },
         {
           title: "Quản lý điều phối xe",
@@ -185,7 +179,7 @@ export function Sidebar() {
           title: "Đánh giá & Phản hồi",
           icon: Star,
           href: `/${role.toLowerCase()}/ratings`,
-          roles: ["ADMIN", "MANAGER"],
+          roles: ["ADMIN"],
         },
         {
           title: "Quản lý subscription",

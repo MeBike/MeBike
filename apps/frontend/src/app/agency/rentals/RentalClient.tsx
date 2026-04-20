@@ -8,12 +8,15 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { rentalColumnForStaff } from "@/columns/rental-columns";
 import { TableSkeleton } from "@/components/table-skeleton";
+
 export default function RentalClient() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<RentalStatus>("");
+  // Chỉnh logic: Mặc định là "all" để khớp với component Filter mới
+  const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
+
   const {
     rentalInMyStation,
     getRentalInMyStation,
@@ -22,9 +25,12 @@ export default function RentalClient() {
     hasToken: true,
     pageSize: limit,
     page: page,
-    ...(statusFilter !== "" && { rental_status: statusFilter }),
+    // Nếu status là "all" thì không gửi status vào params (để lấy tất cả)
+    ...(statusFilter !== "all" && { rental_status: statusFilter as RentalStatus }),
   });
+
   const [isVisualLoading, setIsVisualLoading] = useState(false);
+
   useEffect(() => {
     if (isLoadingRentalInMyStation) {
       setIsVisualLoading(true);
@@ -35,15 +41,22 @@ export default function RentalClient() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingRentalInMyStation]);
-  const rentals = rentalInMyStation?.data || [];
+
+  const rentals = rentalInMyStation || [];
+
   const handleReset = () => {
     setSearchQuery("");
-    setStatusFilter("");
+    setStatusFilter("all"); // Reset về "all"
   };
+
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
-  useEffect(() => {getRentalInMyStation()},[getRentalInMyStation]);
+
+  useEffect(() => {
+    getRentalInMyStation();
+  }, [getRentalInMyStation]);
+
   return (
     <div>
       <div className="space-y-6">
@@ -66,6 +79,7 @@ export default function RentalClient() {
           onStatusChange={setStatusFilter}
           onReset={handleReset}
         />
+
         <div className="min-h-[520px]">
           {isVisualLoading ? (
             <TableSkeleton />
@@ -78,14 +92,14 @@ export default function RentalClient() {
               <DataTable
                 columns={rentalColumnForStaff({
                   onView: ({ id }) => {
-                    router.push(`/agency/rentals/detail/${id}`);
+                    router.push(`/manager/rentals/detail/${id}`);
                   },
                 })}
-                data={rentals}
+                data={rentalInMyStation?.data || []}
               />
               <div className="pt-3">
                 <PaginationDemo
-                  currentPage={rentalInMyStation?.pagination  ?.page ?? 1}
+                  currentPage={rentalInMyStation?.pagination?.page ?? 1}
                   onPageChange={setPage}
                   totalPages={rentalInMyStation?.pagination?.totalPages ?? 1}
                 />

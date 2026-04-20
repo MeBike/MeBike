@@ -39,9 +39,16 @@ export default function BikeClient() {
   }, [statusFilter]);
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
-      </div>
+      <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Quản lý xe đạp
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Theo dõi và quản lý các xe đạp
+            </p>
+          </div>
+        </div>
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
@@ -57,7 +64,7 @@ export default function BikeClient() {
             </p>
             <DataTable
               columns={bikeColumnForStaff({
-                onView: ({ id }) => router.push(`/staff/bikes/detail/${id}`),
+                onView: ({ id }) => router.push(`/manager/bikes/detail/${id}`),
               })}
               data={myBikeInStation?.data || []}
             />

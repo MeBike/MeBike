@@ -28,9 +28,9 @@ const Login = () => {
       if (user?.role === "ADMIN") {
         router.push("/admin");
       } else if (user?.role === "STAFF") {
-        router.push("/staff/customers");
+        router.push("/staff");
       } else if (user?.role === "MANAGER") {
-        router.push("/manager/customers");
+        router.push("/manager");
       } else if (user?.role === "USER") {
         router.push("/user");
       } else if (user?.role === "AGENCY") {

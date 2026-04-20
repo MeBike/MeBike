@@ -8,20 +8,21 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-export const getStatusColor = (status: BikeStatus) => {
+
+export const getStatusConfig = (status: BikeStatus) => {
   switch (status) {
     case "BOOKED":
-      return "bg-yellow-100 text-yellow-800";
+      return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800" };
     case "MAINTENANCE":
-      return "bg-blue-100 text-blue-800";
+      return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800" };
     case "BROKEN":
-      return "bg-red-100 text-red-800";
+      return { label: "Đang hỏng", color: "bg-red-100 text-red-800" };
     case "AVAILABLE":
-      return "bg-green-100 text-green-800";
+      return { label: "Sẵn sàng", color: "bg-green-100 text-green-800" };
     case "RESERVED":
-      return "bg-yellow-100 text-yellow-800";
+      return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800" };
     default:
-      return "bg-gray-100 text-gray-800";
+      return { label: status, color: "bg-gray-100 text-gray-800" };
   }
 };
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
@@ -45,7 +46,7 @@ export const bikeColumn = ({
     accessorKey: "chipId",
     header: "Tên chip",
     cell: ({ row }) => {
-      return (row.original.chipId) || "Không có";
+      return row.original.chipId || "Không có";
     },
   },
   {
@@ -65,13 +66,16 @@ export const bikeColumn = ({
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(row.original.status as BikeStatus)}`}
-      >
-        {row.original.status}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const { label, color } = getStatusConfig(
+        row.original.status as BikeStatus,
+      );
+      return (
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${color}`}>
+          {label}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "createdAt",
@@ -150,19 +154,22 @@ export const bikeColumnForStaff = ({
     accessorKey: "supplierId",
     header: "Tên nhà cung cấp",
     cell: ({ row }) => {
-      <span>{row.original.supplier.name}</span>;
+      return row.original.supplier.name || "Không có";
     },
   },
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(row.original.status as BikeStatus)}`}
-      >
-        {row.original.status}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const { label, color } = getStatusConfig(
+        row.original.status as BikeStatus,
+      );
+      return (
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${color}`}>
+          {label}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "createdAt",

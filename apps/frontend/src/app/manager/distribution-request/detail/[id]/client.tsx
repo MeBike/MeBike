@@ -50,6 +50,7 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject, onC
   const handleAction = async (action: () => Promise<void>) => {
     setIsProcessing(true);
     await action();
+    setSelectedBikeIds([]);
     setIsProcessing(false);
   };
 
@@ -58,7 +59,6 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject, onC
       prev.includes(bikeId) ? prev.filter((id) => id !== bikeId) : [...prev, bikeId]
     );
   };
-
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

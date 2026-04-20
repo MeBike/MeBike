@@ -458,7 +458,7 @@ export default function ProfilePage() {
                   Cập nhật mật khẩu của bạn
                 </p>
               </div>
-              <Link href="/staff/profile/change-password">
+              <Link href="/manager/profile/change-password">
                 <Button variant="outline" className="cursor-pointer">
                   Thay đổi
                 </Button>

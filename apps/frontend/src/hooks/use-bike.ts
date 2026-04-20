@@ -24,7 +24,6 @@ import {
 } from "@queries";
 import { HTTP_STATUS } from "@constants";
 import { getErrorMessageFromBikeCode, getAxiosErrorCodeMessage } from "@utils";
-import { id } from "date-fns/locale";
 export const useBikeActions = ({
   hasToken,
   bike_detail_id,
@@ -246,7 +245,7 @@ export const useBikeActions = ({
     data: myBikeInStation,
     refetch: refetchMyBikeInStation,
     isLoading: isLoadingMyBikeInStation,
-  } = useGetBikeInMyStationQuery({ page: page, pageSize: pageSize });
+  } = useGetBikeInMyStationQuery({ page: page, pageSize: pageSize, status: status || "" });
   const getMyBikeInStation = useCallback(() => {
     if (!hasToken) {
       return;

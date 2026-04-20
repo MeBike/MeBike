@@ -161,13 +161,9 @@ export const useDistributionRequest = ({
       try {
         const result = await useCompleteTransit.mutateAsync({id,data});
         if (result.status === HTTP_STATUS.OK) {
-          toast.success("Nhận xe được điều phối tới trạm thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["distribution-request", "all"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["manager","distribution-request-data","detail",id],
-          });
+          toast.success("Nhận xe được điều phối tới trạm thành công");;
+          getManagerViewDistributionRequest();
+          getManagerViewDistributionRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);

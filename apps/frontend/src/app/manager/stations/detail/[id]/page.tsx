@@ -60,9 +60,6 @@ function Field({ label, value, className }: { label: string; value: React.ReactN
 export default function StationDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  
-  // State visual loading ảo
-  const [isVisualLoading, setIsVisualLoading] = useState(true);
 
   const {
     getMyStationDetail,
@@ -72,34 +69,26 @@ export default function StationDetailPage() {
     hasToken: true,
     stationId: id,
   });
-  
-  // Effect để xử lý loading ảo 600ms
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisualLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Effect fetch data
+    if (isLoadingMyStationDetail) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingMyStationDetail]);
   useEffect(() => {
     if (id) {
       getMyStationDetail();
     }
   }, [id, getMyStationDetail]);
-
-  // Hiển thị LoadingScreen ảo trước
   if (isVisualLoading) return <LoadingScreen />;
-  
-  // Sau đó nếu API vẫn đang gọi thì hiển thị Skeleton như cũ
-  if (isLoadingMyStationDetail) return <StationDetailSkeleton />;
-  
-  if (!myStationDetail && !isLoadingMyStationDetail) {
+  if (!myStationDetail) {
     notFound();
-    return null;
   }
-
   const station = myStationDetail as Station;
 
   return (

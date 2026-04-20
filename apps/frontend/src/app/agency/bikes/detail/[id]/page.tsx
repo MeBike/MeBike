@@ -19,7 +19,7 @@ export default function Page({
     getMyAgencyBikeInStationDetail,
     isLoadingMyAgencyBikeInStationDetail,
   } = useAgencyActions({ hasToken: true, bike_detail_id: id });
-  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
     if (isLoadingMyAgencyBikeInStationDetail) {
       setIsVisualLoading(true);
@@ -35,6 +35,9 @@ export default function Page({
   }, [id]);
   if (isVisualLoading) {
     return <LoadingScreen />;
+  }
+  if(!myAgencyBikeInStationDetail){
+    notFound();
   }
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">

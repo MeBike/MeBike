@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { DetailUser } from "@/types";
 import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
-
+import { formatToVNTime } from "@/lib/formatVNDate";
 interface ProfileHeaderProps {
   user: DetailUser;
   avatarPreview?: string;
@@ -72,27 +72,27 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <User className="w-4 h-4" />
-              <span className="font-mono">{user.username}</span>
+              <span className="font-mono">{user.username || "Chưa cập nhật"}</span>
             </div>
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <Mail className="w-4 h-4" />
-              <span>{user.email}</span>
+              <span>{user.email || "Chưa cập nhật"}</span>
             </div>
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <Phone className="w-4 h-4" />
-              <span>{user.phoneNumber}</span>
+              <span>{user.phoneNumber || "Chưa cập nhật"} </span>
             </div>
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="w-4 h-4" />
-              <span>{user.location}</span>
+              <span>{user.location || "Chưa cập nhật"}</span>
             </div>
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              <span>Tham gia: {formatDate(user.createdAt)}</span>
+              <span>Tham gia: {formatToVNTime(user.createdAt)}</span>
             </div>
           </div>
         </div>

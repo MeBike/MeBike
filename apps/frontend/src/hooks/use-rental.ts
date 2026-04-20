@@ -86,7 +86,7 @@ export function useRentalsActions({
       return;
     }
     refetchStaffRentals();
-  }, [hasToken, refetchStaffRentals,page,limit]);
+  }, [hasToken, refetchStaffRentals,page,limit,status]);
   const getRentals = useCallback(() => {
     if(!hasToken){
       return;
