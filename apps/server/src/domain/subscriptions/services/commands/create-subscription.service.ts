@@ -32,6 +32,7 @@ import { computeAutoActivateAt } from "../shared/subscription-flow.shared";
  * 3. tru tien vi
  * 4. enqueue job auto-activate va email xac nhan
  *
+ * @param args Thong tin tao subscription moi.
  * @param args.userId User mua goi.
  * @param args.packageName Goi subscription duoc chon.
  * @param args.email Email nhan thong bao tao goi.

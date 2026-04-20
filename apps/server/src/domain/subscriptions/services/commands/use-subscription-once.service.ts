@@ -10,12 +10,12 @@ import {
   SubscriptionUsageExceeded as SubscriptionUsageExceededError,
 } from "../../domain-errors";
 import {
-  SubscriptionCommandServiceTag,
-} from "./subscription-command.live";
-import {
   SubscriptionQueryServiceTag,
 } from "../queries/subscription-query.live";
 import { computeExpiresAt } from "../shared/subscription-flow.shared";
+import {
+  SubscriptionCommandServiceTag,
+} from "./subscription-command.live";
 
 /**
  * Dung dung mot luot subscription o lop use case thong thuong.
@@ -23,6 +23,7 @@ import { computeExpiresAt } from "../shared/subscription-flow.shared";
  * Flow nay lam cac buoc check re truoc, sau do giao phan doi trang thai/ghi du lieu
  * cho command service de caller khac co the tai su dung ma khong phai copy lai guard logic.
  *
+ * @param args Thong tin su dung subscription.
  * @param args.subscriptionId Subscription can dung.
  * @param args.userId User dang thuc hien luot su dung.
  * @param args.now Moc thoi gian xu ly. Mac dinh dung thoi gian hien tai.

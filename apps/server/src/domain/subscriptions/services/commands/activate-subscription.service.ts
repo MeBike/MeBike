@@ -8,12 +8,12 @@ import {
   SubscriptionNotPending as SubscriptionNotPendingError,
 } from "../../domain-errors";
 import {
-  SubscriptionCommandServiceTag,
-} from "./subscription-command.live";
-import {
   SubscriptionQueryServiceTag,
 } from "../queries/subscription-query.live";
 import { computeExpiresAt } from "../shared/subscription-flow.shared";
+import {
+  SubscriptionCommandServiceTag,
+} from "./subscription-command.live";
 
 /**
  * Kich hoat ngay mot subscription dang o trang thai pending.
@@ -21,6 +21,7 @@ import { computeExpiresAt } from "../shared/subscription-flow.shared";
  * Use case nay giu phan check doc rieng ra truoc khi goi command service,
  * de loi tra ve van ro rang khi doc log hoac debug job auto-activate.
  *
+ * @param args Thong tin kich hoat subscription.
  * @param args.subscriptionId Id subscription can kich hoat.
  * @param args.now Moc thoi gian kich hoat. Mac dinh dung thoi gian hien tai.
  */

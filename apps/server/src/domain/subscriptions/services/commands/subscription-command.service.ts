@@ -19,6 +19,7 @@ import { computeExpiresAt } from "../shared/subscription-flow.shared";
  * Service nay gom phan ghi du lieu va phan map loi domain,
  * de caller khong phai tu giai thich `Option.none()` o tang repo nghia la gi.
  *
+ * @param args Tap repository can cho command service.
  * @param args.commandRepo Command repository phuc vu cac thao tac ghi.
  * @param args.queryRepo Query repository giup phan biet not found va state conflict.
  */
@@ -77,6 +78,7 @@ export function makeSubscriptionCommandService(args: {
      * Caller chi can biet truyen `tx` de cung transaction voi reservation/rental hien tai.
      *
      * @param tx Prisma transaction client dang duoc caller su dung.
+     * @param input Thong tin su dung subscription trong transaction hien tai.
      * @param input.subscriptionId Subscription can dung.
      * @param input.userId User dang so huu subscription.
      * @param input.now Moc thoi gian xu ly. Mac dinh dung thoi gian hien tai.
