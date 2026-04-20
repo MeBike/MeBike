@@ -103,3 +103,15 @@ export async function lockStationRow(
     FOR UPDATE
   `;
 }
+
+export async function lockBikeRow(
+  tx: PrismaClient | Prisma.TransactionClient,
+  bikeId: string,
+) {
+  await tx.$queryRaw`
+    SELECT id
+    FROM "Bike"
+    WHERE id = ${bikeId}::uuid
+    FOR UPDATE
+  `;
+}

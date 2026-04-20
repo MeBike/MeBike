@@ -21,6 +21,7 @@ import {
   getAdminAllowedStatusTransitions,
   getAvailablePlacementSlots,
   isBikeUpdateDomainPassThroughError,
+  lockBikeRow,
   lockStationRow,
 } from "./bike-command.helpers";
 
@@ -33,6 +34,8 @@ export function adminUpdateBikeWithGuards(
     try: () => client.$transaction(async (tx) => {
       const txBikeRepo = makeBikeRepository(tx);
       const txStationRepo = makeStationQueryRepository(tx);
+
+      await lockBikeRow(tx, bikeId);
 
       const current = await Effect.runPromise(txBikeRepo.getById(bikeId));
       if (Option.isNone(current)) {
