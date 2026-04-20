@@ -57,6 +57,7 @@ export const ENDPOINT = {
         ACTIVITY_STATS : (id : string) => `/bikes/${id}/activity-stats`,
         REPORT_BROKEN : (id : string) => `/bikes/report-broken/${id}`,
         MANAGER_UPDATE : (id:string) => `/manager/bikes/${id}/status`,
+        TECHNICIAN_UPDATE_BIKE : (id:string) => `/technician/bikes/${id}/status`,
     },
     DASHBOARD : {
         STATS : "/stats/summary",

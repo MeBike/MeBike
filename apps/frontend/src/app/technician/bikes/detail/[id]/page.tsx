@@ -8,6 +8,7 @@ import { useBikeActions } from "@/hooks/use-bike";
 import { BikeDetailView } from "./BikeDetail";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { notFound } from "next/navigation";
+import { SimpleUpdateBikeDialog } from "../../components/simple-update";
 export default function BikeDetailPage({
   params,
 }: {
@@ -21,6 +22,8 @@ export default function BikeDetailPage({
     getMyBikeInStationDetail,
     isLoadingMyBikeInStationDetail,
   } = useBikeActions({ hasToken: true, bike_detail_id: id });
+  const { technicianUpdateBikeStatus, isTechnicianUpdateStatusBike } =
+    useBikeActions({ hasToken: true, bike_detail_id: id });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
     if (isLoadingMyBikeInStationDetail) {
@@ -41,6 +44,13 @@ export default function BikeDetailPage({
   if (!myBikeInStationDetail) {
     notFound();
   }
+  const handleUpdateStatus = async (data: {
+    status: "AVAILABLE" | "BROKEN";
+  }) => {
+    // Truyền data.status vào hàm update
+    await technicianUpdateBikeStatus(id, data.status);
+    getMyBikeInStationDetail();
+  };
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -56,9 +66,21 @@ export default function BikeDetailPage({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" onClick={() => router.push("/staff/bikes")}>
-            Danh sách xe
-          </Button>
+          <div className="flex items-center gap-2">
+            {myBikeInStationDetail && (
+              <SimpleUpdateBikeDialog
+                bike={myBikeInStationDetail}
+                onUpdate={handleUpdateStatus}
+                isUpdating={isTechnicianUpdateStatusBike}
+              />
+            )}
+            <Button
+              variant="outline"
+              onClick={() => router.push("/technician/bikes")}
+            >
+              Danh sách xe
+            </Button>
+          </div>
         </div>
 
         {/* Content */}

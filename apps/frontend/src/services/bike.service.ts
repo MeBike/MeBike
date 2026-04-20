@@ -176,4 +176,17 @@ export const bikeService = {
     );
     return response;
   },
+  updateBikeStatusTechnician: async ({
+    id,
+    status,
+  }: {
+    id: string;
+    status: "AVAILABLE" | "BROKEN";
+  }) => {
+    const response = await fetchHttpClient.patch(
+      ENDPOINT.BIKE.TECHNICIAN_UPDATE_BIKE(id),
+      { status:status },
+    );
+    return response;
+  },
 };

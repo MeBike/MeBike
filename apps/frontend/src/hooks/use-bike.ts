@@ -8,6 +8,7 @@ import type { BikeStatus, BikeActionProps } from "@custom-types";
 import {
   useReportBike,
   useSoftDeleteBikeMutation,
+  useTechnicianUpdateBikeStatus,
   useUpdateBike,
   useUpdateBikeStatus,
 } from "@mutations";
@@ -105,6 +106,7 @@ export const useBikeActions = ({
   const deleteBikeMutation = useSoftDeleteBikeMutation();
   const reportBikeMutation = useReportBike();
   const useUpdateBikeStatusMutation = useUpdateBikeStatus();
+  const useTechnicianUpdateBike = useTechnicianUpdateBikeStatus();
   const {
     data: detailBike,
     refetch: getDetailBike,
@@ -197,6 +199,38 @@ export const useBikeActions = ({
       }
       try {
         const result = await useUpdateBikeStatusMutation.mutateAsync({ id, status });
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Cập nhật trạng thái xe đạp thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["bikes", "all"],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromBikeCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useUpdateBikeStatusMutation,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      stationId,
+      supplierId,
+      status,
+      queryClient,
+    ],
+  );
+  const technicianUpdateBikeStatus = useCallback(
+    async (id: string, status: "AVAILABLE" | "BROKEN") => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useTechnicianUpdateBike.mutateAsync({ id, status });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Cập nhật trạng thái xe đạp thành công");
           queryClient.invalidateQueries({
@@ -343,5 +377,7 @@ export const useBikeActions = ({
     getMyBikeInStationDetail,
     updateBikeStatus,
     isUpdateStatusBike : useUpdateBikeStatusMutation.isPending,
+    technicianUpdateBikeStatus,
+    isTechnicianUpdateStatusBike : useTechnicianUpdateBike.isPending,
   };
 };
