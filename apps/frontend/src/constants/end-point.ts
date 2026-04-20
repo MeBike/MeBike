@@ -98,7 +98,8 @@ export const ENDPOINT = {
         RENTAL : "/agency/rentals",
         RENTAL_DETAIL : (id:string) => `/agency/rentals/${id}`,
         RESERVATION : "/agency/reservations",
-        RESERVATION_DETAIL: (id:string) => `/agency/reservations/${id}`,   
+        RESERVATION_DETAIL: (id:string) => `/agency/reservations/${id}`,  
+        AGENCY_UPDATE_BIKE_STATUS : (id:string) => `/agency/bikes/${id}/status`,
     },
     AGENCY_REQUEST : {
         BASE : "/admin/agency-requests",

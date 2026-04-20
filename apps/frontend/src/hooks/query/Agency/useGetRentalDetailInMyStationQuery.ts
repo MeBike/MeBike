@@ -16,5 +16,6 @@ export const useGetRentalDetailAgencyInMyStation = ({id} : {id:string}) => {
   return useQuery({
     queryKey: ["data","rental-detail-in-my-station","agency",id],
     queryFn: () => fetchMyRentalDetail({ id }),
+    enabled:false,
   });
 };

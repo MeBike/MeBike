@@ -316,5 +316,14 @@ export const agencyService = {
     );
     return response;
   },
+  updateBikeStatus : async({id,status}:{
+    id:string,
+    status:"AVAILABLE" | "BROKEN"
+  }) => {
+    const response = await fetchHttpClient.patch(ENDPOINT.AGENCY.AGENCY_UPDATE_BIKE_STATUS(id),{
+      status : status
+    });
+    return response;
+  }
   
 };

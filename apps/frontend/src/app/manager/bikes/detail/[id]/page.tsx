@@ -45,11 +45,13 @@ export default function BikeDetailPage({
   if (!myBikeInStationDetail) {
     return notFound();
   }
-  const handleUpdateStatus = async (data: { status: "AVAILABLE" | "BROKEN" }) => {
+  const handleUpdateStatus = async (data: {
+    status: "AVAILABLE" | "BROKEN";
+  }) => {
     // Truyền data.status vào hàm update
-    await updateBikeStatus(id, data.status); 
+    await updateBikeStatus(id, data.status);
     getMyBikeInStationDetail();
-};
+  };
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -64,16 +66,19 @@ export default function BikeDetailPage({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
-        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             {/* Tích hợp Dialog vào đây */}
             {myBikeInStationDetail && (
-              <SimpleUpdateBikeDialog 
-                bike={myBikeInStationDetail} 
+              <SimpleUpdateBikeDialog
+                bike={myBikeInStationDetail}
                 onUpdate={handleUpdateStatus}
                 isUpdating={isUpdateStatusBike}
               />
             )}
-            <Button variant="outline" onClick={() => router.push("/staff/bikes")}>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/staff/bikes")}
+            >
               Danh sách xe
             </Button>
           </div>
