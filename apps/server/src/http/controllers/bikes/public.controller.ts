@@ -83,32 +83,7 @@ const getBike: RouteHandler<BikesRoutes["getBike"]> = async (c) => {
       }, 404);
 };
 
-const reportBrokenBike: RouteHandler<BikesRoutes["reportBrokenBike"]> = async (c) => {
-  const { id } = c.req.valid("param");
-
-  const eff = Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
-    const bike = yield* service.reportBrokenBike(id);
-
-    if (Option.isNone(bike)) {
-      return Option.none<BikeSummary>();
-    }
-
-    const summary = yield* loadBikeSummary(bike.value);
-    return Option.some(summary);
-  });
-
-  const value = await c.var.runPromise(withLoggedCause(eff, `PATCH /v1/bikes/report-broken/${id}`));
-  return Option.isSome(value)
-    ? c.json<BikeSummary, 200>(value.value, 200)
-    : c.json<BikeNotFoundResponse, 404>({
-        error: bikeErrorMessages.BIKE_NOT_FOUND,
-        details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-      }, 404);
-};
-
 export const BikePublicController = {
   listBikes,
   getBike,
-  reportBrokenBike,
 } as const;

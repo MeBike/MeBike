@@ -48,6 +48,16 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
             stationId,
           },
         }, 400)),
+      Match.tag("BikeStationPlacementCapacityExceeded", ({ stationId, availablePlacementSlots, requiredPlacementSlots }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED,
+            stationId,
+            availablePlacementSlots,
+            requiredPlacementSlots,
+          },
+        }, 400)),
       Match.tag("BikeSupplierNotFound", ({ supplierId }) =>
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_SUPPLIER_NOT_FOUND,
@@ -105,12 +115,30 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
           error: bikeErrorMessages.BIKE_NOT_FOUND,
           details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
         }, 404)),
+      Match.tag("InvalidBikeStatus", ({ status }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.INVALID_BIKE_STATUS,
+          details: {
+            code: BikeErrorCodeSchema.enum.INVALID_BIKE_STATUS,
+            status,
+          },
+        }, 400)),
       Match.tag("BikeStationNotFound", ({ stationId }) =>
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_STATION_NOT_FOUND,
           details: {
             code: BikeErrorCodeSchema.enum.BIKE_STATION_NOT_FOUND,
             stationId,
+          },
+        }, 400)),
+      Match.tag("BikeStationPlacementCapacityExceeded", ({ stationId, availablePlacementSlots, requiredPlacementSlots }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED,
+            stationId,
+            availablePlacementSlots,
+            requiredPlacementSlots,
           },
         }, 400)),
       Match.tag("BikeSupplierNotFound", ({ supplierId }) =>

@@ -2,14 +2,14 @@ import { Effect, Option } from "effect";
 
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { BikeRow } from "../models";
+import type { BikeRow } from "../../models";
 
 import {
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
-} from "../domain-errors";
-import { BikeRepository } from "../repository/bike.repository";
+} from "../../domain-errors";
+import { BikeRepository } from "../../repository/bike.repository";
 
 export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
   Option.Option<BikeRow>,

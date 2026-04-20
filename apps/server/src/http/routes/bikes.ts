@@ -44,7 +44,12 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(agencyListBikesRoute, BikeAgencyController.agencyListBikes);
 
-  app.openapi(bikes.updateBike, BikeAdminController.updateBike);
+  const updateBikeRoute = {
+    ...bikes.updateBike,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(updateBikeRoute, BikeAdminController.updateBike);
 
   const managerUpdateBikeStatusRoute = {
     ...bikes.managerUpdateBikeStatus,
@@ -67,9 +72,12 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(technicianUpdateBikeStatusRoute, BikeManagementController.technicianUpdateBikeStatus);
 
-  app.openapi(bikes.reportBrokenBike, BikePublicController.reportBrokenBike);
+  const deleteBikeRoute = {
+    ...bikes.deleteBike,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
 
-  app.openapi(bikes.deleteBike, BikeAdminController.deleteBike);
+  app.openapi(deleteBikeRoute, BikeAdminController.deleteBike);
 
   const getBikeStatsRoute = {
     ...bikes.getBikeStats,

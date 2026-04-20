@@ -28,6 +28,33 @@ describe("bikeService Integration", () => {
       status: "AVAILABLE",
     });
 
+  const createActiveReturnSlotAt = async (stationId: string) => {
+    const user = await fixture.factories.user({ role: "USER" });
+    const rentalStation = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const bike = await fixture.factories.bike({
+      stationId: rentalStation.id,
+      supplierId: supplier.id,
+      status: "BOOKED",
+    });
+    const rental = await fixture.factories.rental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: rentalStation.id,
+      status: "RENTED",
+    });
+
+    await fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: rental.id,
+        userId: user.id,
+        stationId,
+        reservedFrom: new Date(),
+        status: "ACTIVE",
+      },
+    });
+  };
+
   it("fails with BikeStationNotFound when station does not exist", async () => {
     const supplier = await fixture.factories.supplier();
 
@@ -65,6 +92,21 @@ describe("bikeService Integration", () => {
     expect(created.stationId).toBe(station.id);
     expect(created.supplierId).toBe(supplier.id);
     expect(created.status).toBe("AVAILABLE");
+  });
+
+  it("fails with BikeStationPlacementCapacityExceeded when station has no placement space after reserved returns", async () => {
+    const station = await fixture.factories.station({ capacity: 1, returnSlotLimit: 0 });
+    const supplier = await fixture.factories.supplier();
+
+    await createActiveReturnSlotAt(station.id);
+
+    const result = await runCreateBikeEither({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "BikeStationPlacementCapacityExceeded");
   });
 
   it("update fails with BikeStationNotFound when station does not exist", async () => {
@@ -108,5 +150,51 @@ describe("bikeService Integration", () => {
       expect(result.value.stationId).toBe(nextStation.id);
       expect(result.value.supplierId).toBe(nextSupplier.id);
     }
+  });
+
+  it("allows admin maintenance transition from available", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
+
+    const result = await runAdminUpdateBike(bike.id, {
+      status: "MAINTAINED",
+    });
+
+    expect(result._tag).toBe("Some");
+    if (result._tag === "Some") {
+      expect(result.value.status).toBe("MAINTAINED");
+    }
+  });
+
+  it("fails when admin tries to override booked bike status", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const bike = await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "BOOKED",
+    });
+
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "InvalidBikeStatus");
+  });
+
+  it("fails with BikeStationPlacementCapacityExceeded when moving to station with no placement space after reserved returns", async () => {
+    const originalStation = await fixture.factories.station();
+    const blockedStation = await fixture.factories.station({ capacity: 1, returnSlotLimit: 0 });
+    const supplier = await fixture.factories.supplier();
+    const bike = await createBike({ stationId: originalStation.id, supplierId: supplier.id });
+
+    await createActiveReturnSlotAt(blockedStation.id);
+
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      stationId: blockedStation.id,
+    });
+
+    expectLeftTag(result, "BikeStationPlacementCapacityExceeded");
   });
 });
