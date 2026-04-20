@@ -40,22 +40,6 @@ async function decodeBikeResponse<TValue>(
 }
 
 export const bikeService = {
-  reportBrokenBike: async (id: string): Promise<Result<BikeSummary, BikeError>> => {
-    try {
-      const path = routePath(ServerRoutes.bikes.reportBrokenBike, { id });
-      const response = await kyClient.post(path, { throwHttpErrors: false });
-
-      if (response.status === 200) {
-        const okSchema = ServerRoutes.bikes.reportBrokenBike.responses[200].content["application/json"].schema;
-        return decodeBikeResponse(response, okSchema as z.ZodType<BikeSummary>);
-      }
-
-      return err(await parseBikeError(response));
-    }
-    catch (error) {
-      return asNetworkError(error);
-    }
-  },
   getBikeByIdForAll: async (id: string): Promise<Result<BikeSummary, BikeError>> => {
     try {
       const path = routePath(ServerRoutes.bikes.getBike, { id });
