@@ -22,7 +22,12 @@ import type {
   BikeActivityStats,
   BikeStats,
   Bike as BikeType,
+  Station,
+  Supplier,
+  BikeStatus
 } from "@/types";
+import type { UpdateBikeSchemaFormData } from "@/schemas";
+import { UpdateBikeDialog } from "../../components/update-bike";
 function SectionCard({
   icon: Icon,
   title,
@@ -71,22 +76,47 @@ function bikeStatusVariant(status: string) {
   if (s.includes("MAINTENANCE") || s.includes("BẢO TRÌ")) return "destructive";
   return "secondary";
 }
+export const getStatusConfig = (status: BikeStatus | string) => {
+  switch (status) {
+    case "BOOKED":
+      return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
+    case "MAINTENANCE":
+      return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800 border-blue-200" };
+    case "BROKEN":
+      return { label: "Đang hỏng", color: "bg-red-100 text-red-800 border-red-200" };
+    case "AVAILABLE":
+      return { label: "Sẵn sàng", color: "bg-green-100 text-green-800 border-green-200" };
+    case "RESERVED":
+      return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800 border-orange-200" };
+    default:
+      return { label: status, color: "bg-gray-100 text-gray-800 border-gray-200" };
+  }
+};
 
 export function BikeDetailView({
   bike,
   activity,
   rentals,
   statisticData,
+  onUpdate,
+  stations,
+  suppliers,
+  isUpdating
 }: {
   bike: BikeType;
   activity: BikeActivityStats | null;
   rentals: BikeRentalHistory[];
   statisticData: BikeStats | null;
+  onUpdate: (data: UpdateBikeSchemaFormData) => Promise<void>;
+  stations: Station[];
+  suppliers: Supplier[];
+  isUpdating: boolean;
 }) {
   const router = useRouter();
   const totalHours = activity
     ? Math.floor(activity.totalMinutesActive / 60)
     : 0;
+  const statusInfo = getStatusConfig(bike.status);  
   return (
     <>
       <div className=" bg-slate-50 p-6 dark:bg-background">
@@ -105,12 +135,20 @@ export function BikeDetailView({
                 Chi tiết xe:
               </h1>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => router.push("/admin/bikes")}
-            >
-              Danh sách xe
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* NÚT UPDATE Ở ĐÂY */}
+              <UpdateBikeDialog 
+                bike={bike} 
+                stations={stations} 
+                suppliers={suppliers} 
+                onUpdate={onUpdate}
+                isUpdating={isUpdating}
+              />
+              
+              <Button variant="outline" onClick={() => router.push("/admin/bikes")}>
+                Danh sách xe
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -150,10 +188,12 @@ export function BikeDetailView({
                   label="Trạng thái"
                   value={
                     <Badge
-                      variant={bikeStatusVariant(bike.status)}
-                      className="rounded-full"
+                      className={cn(
+                        "rounded-full px-3 py-1 font-semibold border shadow-none",
+                        statusInfo.color
+                      )}
                     >
-                      {bike.status}
+                      {statusInfo.label}
                     </Badge>
                   }
                 />

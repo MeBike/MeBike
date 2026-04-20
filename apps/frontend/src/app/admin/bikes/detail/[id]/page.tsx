@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useBikeActions } from "@/hooks/use-bike";
 import { BikeDetailView } from "./BikeDetail";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { useStationActions } from "@/hooks/use-station";
+import { useSupplierActions } from "@/hooks/use-supplier";
+import { UpdateBikeSchemaFormData } from "@/schemas";
 export default function BikeDetailPage({
   params,
 }: {
@@ -22,15 +25,18 @@ export default function BikeDetailPage({
     bikeHistory,
     getHistoryBike,
     statisticsBike,
-    getStatsBike,
     isLoadingStatisticsBike,
     getStatisticsBike,
-    bikeStats,
     getBikeStats,
+    updateBike,
+    isUpdatingBike
   } = useBikeActions({ hasToken: true, bike_detail_id: id });
-
+  const {getAllStations,stations} = useStationActions({hasToken:true});
+  const {getAllSuppliers,suppliers} = useSupplierActions({hasToken:true});
   useEffect(() => {
     getBikeByID();
+    getAllStations();
+    getAllSuppliers();
     getBikeActivityStats();
     getHistoryBike();
     getStatisticsBike();
@@ -58,14 +64,23 @@ export default function BikeDetailPage({
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
+  const handleUpdateBike = async (data: UpdateBikeSchemaFormData) => {
+    await updateBike(data,id);
+    getBikeByID(); // Refresh lại dữ liệu sau khi update thành công
+  };
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
-        <BikeDetailView
-          bike={detailBike || null}
+       <BikeDetailView
+          bike={detailBike}
           activity={bikeActivityStats || null}
           rentals={bikeHistory?.data.data || []}
           statisticData={statisticsBike || null}
+          // Truyền thêm props mới
+          onUpdate={handleUpdateBike}
+          stations={stations || []}
+          suppliers={suppliers || []}
+          isUpdating={isUpdatingBike}
         />
       </div>
     </div>

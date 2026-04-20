@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useBikeActions } from "@/hooks/use-bike";
 import { BikeDetailView } from "./BikeDetail";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { SimpleUpdateBikeDialog } from "../../components/simple-update";
 export default function BikeDetailPage({
   params,
 }: {
@@ -18,8 +19,10 @@ export default function BikeDetailPage({
     myBikeInStationDetail,
     getMyBikeInStationDetail,
     isLoadingMyBikeInStationDetail,
+    updateBikeStatus,
+    isUpdateStatusBike,
   } = useBikeActions({ hasToken: true, bike_detail_id: id });
-  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
     if (isLoadingMyBikeInStationDetail) {
       setIsVisualLoading(true);
@@ -39,9 +42,16 @@ export default function BikeDetailPage({
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-  if (!isLoadingMyBikeInStationDetail && !myBikeInStationDetail) {
+  if (!myBikeInStationDetail) {
     return notFound();
   }
+  const handleUpdateStatus = async (data: {
+    status: "AVAILABLE" | "BROKEN";
+  }) => {
+    // Truyền data.status vào hàm update
+    await updateBikeStatus(id, data.status);
+    getMyBikeInStationDetail();
+  };
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -56,9 +66,22 @@ export default function BikeDetailPage({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" onClick={() => router.push("/staff/bikes")}>
-            Danh sách xe
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Tích hợp Dialog vào đây */}
+            {myBikeInStationDetail && (
+              <SimpleUpdateBikeDialog
+                bike={myBikeInStationDetail}
+                onUpdate={handleUpdateStatus}
+                isUpdating={isUpdateStatusBike}
+              />
+            )}
+            <Button
+              variant="outline"
+              onClick={() => router.push("/staff/bikes")}
+            >
+              Danh sách xe
+            </Button>
+          </div>
         </div>
 
         {/* Content */}

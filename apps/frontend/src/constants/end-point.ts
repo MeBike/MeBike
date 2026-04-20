@@ -56,6 +56,8 @@ export const ENDPOINT = {
         RENTAL_HISTORY : (id : string) => `/bikes/${id}/rental-history`,
         ACTIVITY_STATS : (id : string) => `/bikes/${id}/activity-stats`,
         REPORT_BROKEN : (id : string) => `/bikes/report-broken/${id}`,
+        MANAGER_UPDATE : (id:string) => `/manager/bikes/${id}/status`,
+        TECHNICIAN_UPDATE_BIKE : (id:string) => `/technician/bikes/${id}/status`,
     },
     DASHBOARD : {
         STATS : "/stats/summary",
@@ -97,7 +99,8 @@ export const ENDPOINT = {
         RENTAL : "/agency/rentals",
         RENTAL_DETAIL : (id:string) => `/agency/rentals/${id}`,
         RESERVATION : "/agency/reservations",
-        RESERVATION_DETAIL: (id:string) => `/agency/reservations/${id}`,   
+        RESERVATION_DETAIL: (id:string) => `/agency/reservations/${id}`,  
+        AGENCY_UPDATE_BIKE_STATUS : (id:string) => `/agency/bikes/${id}/status`,
     },
     AGENCY_REQUEST : {
         BASE : "/admin/agency-requests",

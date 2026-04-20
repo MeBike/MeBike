@@ -261,6 +261,7 @@ export const BIKES_MESSAGES = {
   NOT_BIKE_FOUND: 'Không tìm thấy xe đạp nào',
   GET_BIKE_HIGHEST_REVENUE_SUCCESS: 'Lấy thống kê xe có doanh thu cao nhất thành công',
   DUPLICATE_CHIP_ID: 'Chip ID đã tồn tại trên một xe đạp khác',
+  INVALID_BIKE_STATUS : "Trạng thái xe không hợp lệ"
 } as const
 
 export const RENTALS_MESSAGE = {
