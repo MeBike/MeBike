@@ -89,6 +89,10 @@ const EnvironmentImpactCalculateRentalPayloadV1Schema = z.object({
   rentalId: z.uuidv7(),
 });
 
+const RentalOverdueSweepPayloadV1Schema = z.object({
+  version: z.literal(1),
+});
+
 const WalletWithdrawalExecutePayloadV1Schema = z.object({
   version: z.literal(1),
   withdrawalId: z.uuidv7(),
@@ -119,6 +123,7 @@ export const JobPayloadSchemas = {
   [JobTypes.ReservationNotifyNearExpiry]: ReservationNotifyNearExpiryPayloadV1Schema,
   [JobTypes.ReservationExpireHold]: ReservationExpireHoldPayloadV1Schema,
   [JobTypes.EnvironmentImpactCalculateRental]: EnvironmentImpactCalculateRentalPayloadV1Schema,
+  [JobTypes.RentalOverdueSweep]: RentalOverdueSweepPayloadV1Schema,
   [JobTypes.WalletWithdrawalExecute]: WalletWithdrawalExecutePayloadV1Schema,
   [JobTypes.WalletWithdrawalSweep]: WalletWithdrawalSweepPayloadV1Schema,
 } as const;

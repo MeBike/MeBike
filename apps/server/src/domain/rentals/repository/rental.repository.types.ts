@@ -103,6 +103,13 @@ export type RentalRepo = {
     data: UpdateRentalOnEndInput,
   ) => Effect.Effect<Option.Option<RentalRow>>;
 
+  markOverdueUnreturned: (
+    data: {
+      rentalId: string;
+      overdueAt: Date;
+    },
+  ) => Effect.Effect<Option.Option<RentalRow>>;
+
   findById: (rentalId: string) => Effect.Effect<Option.Option<RentalRow>>;
 
   // Admin read views
