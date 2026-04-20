@@ -41,9 +41,9 @@ describe("rental overdue sweep", () => {
     );
 
     expect(summary).toMatchObject({
-      scanned: 2,
+      scanned: 1,
       overdue: 1,
-      skipped: 1,
+      skipped: 0,
       failed: 0,
       bikeUnavailable: 1,
       depositForfeited: 1,
@@ -80,5 +80,62 @@ describe("rental overdue sweep", () => {
       where: { id: stillActiveRental.bike.id },
     });
     expect(stillActiveBikeRow?.status).toBe("BOOKED");
+  });
+
+  it("rolls back the overdue transition when deposit forfeiture fails", async () => {
+    const overdueRental = await givenActiveRental(fixture, {
+      wallet: {
+        balance: 500_000n,
+      },
+      rental: {
+        startTime: new Date("2026-03-21T10:00:00.000Z"),
+      },
+    });
+
+    await fixture.prisma.$transaction(async (tx) => {
+      await Effect.runPromise(createRentalDepositHoldInTx({
+        tx,
+        rentalId: overdueRental.rental.id,
+        userId: overdueRental.user.id,
+        amount: 500_000n,
+      }));
+    });
+
+    await fixture.prisma.wallet.update({
+      where: { userId: overdueRental.user.id },
+      data: {
+        balance: 0n,
+      },
+    });
+
+    const summary = await sweepOverdueRentals(
+      fixture.prisma,
+      new Date("2026-03-22T14:05:00.000Z"),
+    );
+
+    expect(summary).toMatchObject({
+      scanned: 1,
+      overdue: 0,
+      skipped: 0,
+      failed: 1,
+      bikeUnavailable: 0,
+      depositForfeited: 0,
+    });
+
+    const rentalRow = await fixture.prisma.rental.findUnique({
+      where: { id: overdueRental.rental.id },
+    });
+    expect(rentalRow?.status).toBe("RENTED");
+
+    const bikeRow = await fixture.prisma.bike.findUnique({
+      where: { id: overdueRental.bike.id },
+    });
+    expect(bikeRow?.status).toBe("BOOKED");
+
+    const holdRow = await fixture.prisma.walletHold.findFirst({
+      where: { rentalId: overdueRental.rental.id },
+    });
+    expect(holdRow?.status).toBe("ACTIVE");
+    expect(holdRow?.forfeitedAt).toBeNull();
   });
 });
