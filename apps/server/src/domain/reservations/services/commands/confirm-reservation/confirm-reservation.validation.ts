@@ -9,8 +9,8 @@ import {
 } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 
-import type { ConfirmPendingReservationResult } from "../../reservation.service.types";
 import type {
+  ConfirmPendingReservationResult,
   ConfirmReservationCommandInput,
   ConfirmReservationFailure,
   PreparedConfirmReservation,

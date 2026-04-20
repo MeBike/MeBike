@@ -1,7 +1,6 @@
 import { Layer } from "effect";
 
 import type {
-  ReservationCommandServiceTag,
   ReservationQueryServiceTag,
 } from "@/domain/reservations";
 import type {
@@ -19,7 +18,6 @@ import {
   makeReservationCommandRepository,
   makeReservationQueryRepository,
   ReservationCommandRepository,
-  ReservationCommandServiceLive,
   ReservationQueryRepository,
   ReservationQueryServiceLive,
   reserveBike,
@@ -45,7 +43,6 @@ export type ReservationDeps
     | ReservationQueryRepository
     | ReservationCommandRepository
     | ReservationQueryServiceTag
-    | ReservationCommandServiceTag
     | BikeRepository
     | StationQueryRepository
     | WalletRepository
@@ -78,9 +75,6 @@ export function makeReservationTestLayer(client: PrismaClient) {
   const reservationQueryServiceLayer = ReservationQueryServiceLive.pipe(
     Layer.provide(reservationQueryRepoLayer),
   );
-  const reservationCommandServiceLayer = ReservationCommandServiceLive.pipe(
-    Layer.provide(reservationCommandRepoLayer),
-  );
   const walletRepoLayer = Layer.succeed(WalletRepository, walletRepo);
   const walletServiceLayer = WalletServiceLive.pipe(
     Layer.provide(walletRepoLayer),
@@ -105,7 +99,6 @@ export function makeReservationTestLayer(client: PrismaClient) {
     reservationQueryRepoLayer,
     reservationCommandRepoLayer,
     reservationQueryServiceLayer,
-    reservationCommandServiceLayer,
     Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
     Layer.succeed(StationQueryRepository, StationQueryRepository.make(stationRepo)),
     walletRepoLayer,

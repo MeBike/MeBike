@@ -18,11 +18,17 @@ export type ConfirmReservationCommandInput = ConfirmReservationInput & {
 };
 
 /**
- * Dữ liệu read-only đã được chuẩn bị trước khi chạy mutation confirm.
+ * Kết quả validate tối thiểu để bước confirm biết reservation nào và bike nào đang được giữ.
  */
-export type PreparedConfirmReservation = {
+export type ConfirmPendingReservationResult = {
   readonly reservation: ReservationRow;
   readonly bikeId: string;
+};
+
+/**
+ * Dữ liệu read-only đã được chuẩn bị trước khi chạy mutation confirm.
+ */
+export type PreparedConfirmReservation = ConfirmPendingReservationResult & {
   readonly pricingPolicyId: string;
   readonly requiredBalance: bigint;
 };
