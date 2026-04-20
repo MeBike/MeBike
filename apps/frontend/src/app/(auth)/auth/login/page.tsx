@@ -33,6 +33,10 @@ const Login = () => {
         router.push("/manager/customers");
       } else if (user?.role === "USER") {
         router.push("/user");
+      } else if (user?.role === "AGENCY") {
+        router.push("/agency");
+      } else if (user?.role === "TECHNICIAN") {
+        router.push("/technician");
       }
       resetFormData();
     } else if (isNavigating) {

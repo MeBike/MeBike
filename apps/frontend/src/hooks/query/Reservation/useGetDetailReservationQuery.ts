@@ -22,6 +22,6 @@ export const useGetDetailReservationQuery = (id: string) => {
     queryKey: ['ADMIN_RESERVATION_DETAIL', id],
     queryFn: () => getDetailReservation(id),
     staleTime: 5 * 60 * 1000,
-    enabled: !!id,
+    enabled: false,
   });
 };

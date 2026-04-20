@@ -133,5 +133,15 @@ export const ENDPOINT = {
         DEACTIVE : (id:string) => `/admin/coupon-rules/${id}/deactivate`,
         COUPON_STATS : "/admin/coupon-stats",
         USAGE_COUPON_STATS_LOG : "/admin/coupon-usage-logs",
+    },
+    STAFF : {
+        STATION : "/staff/stations",
+        STATION_DETAIL : (id:string) => `/staff/stations/${id}`,
+        BIKE : "/staff/bikes",
+        BIKE_DETAIL : (id:string) => `/staff/bikes/${id}`,
+        RENTAL : "/staff/rentals",
+        RENTAL_DETAIL : (id:string) => `/staff/rentals/${id}`,
+        RESERVATION : "/staff/reservations",
+        RESERVATION_DETAIL: (id:string) => `/staff/reservations/${id}`,   
     }
 } as const;

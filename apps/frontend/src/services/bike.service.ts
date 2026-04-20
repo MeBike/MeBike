@@ -128,4 +128,40 @@ export const bikeService = {
     );
     return response;
   },
+  getBikeInMyStation: async ({
+    id,
+    page,
+    pageSize,
+    stationId,
+    supplierId,
+    status,
+  }: {
+    id?: string;
+    page?: number;
+    pageSize?: number;
+    stationId?: string;
+    supplierId?: string;
+    status?: BikeStatus;
+  }): Promise<AxiosResponse<ApiResponse<Bike[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(
+      ENDPOINT.STAFF.BIKE,
+      {
+        id : id,
+        page : page,
+        pageSize : pageSize,
+        stationId : stationId,
+        supplierId : supplierId,
+        status : status,
+      }
+    );
+    return response;
+  },
+  getBikeDetailInMyStation: async (
+    id: string
+  ): Promise<AxiosResponse<Bike>> => {
+    const response = await fetchHttpClient.get<Bike>(
+      ENDPOINT.STAFF.BIKE_DETAIL(id)
+    );
+    return response;
+  },
 };
