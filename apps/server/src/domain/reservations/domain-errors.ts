@@ -1,5 +1,9 @@
 import { Data } from "effect";
 
+import type {
+  FixedSlotTemplateStartOutsideOperatingHours,
+  OvernightOperationsClosed,
+} from "@/domain/shared";
 import type { WithGenericError } from "@/domain/shared";
 import type {
   InsufficientWalletBalance,
@@ -171,6 +175,10 @@ export class FixedSlotTemplateUpdateConflict extends Data.TaggedError("FixedSlot
   readonly templateId: string;
 }> {}
 
+export type ReservationOperatingHourFailure
+  = | OvernightOperationsClosed
+    | FixedSlotTemplateStartOutsideOperatingHours;
+
 export type ReservationServiceFailure
   = | ActiveReservationExists
     | ReservationConfirmBlockedByActiveRental
@@ -184,6 +192,7 @@ export type ReservationServiceFailure
     | ReservationNotOwned
     | ReservationMissingBike
     | InvalidReservationTransition
+    | ReservationOperatingHourFailure
     | SubscriptionRequired
     | WalletNotFound
     | InsufficientWalletBalance;

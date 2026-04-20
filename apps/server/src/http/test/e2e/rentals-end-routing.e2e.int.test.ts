@@ -1,6 +1,6 @@
 import type { RentalsContracts } from "@mebike/shared";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
@@ -211,6 +211,36 @@ describe("rentals end routing e2e", () => {
     expect(body.id).toBe(rental.id);
     expect(body.returnSlot?.station.id).toBe(reservedStation.id);
     expect(body.returnSlot?.status).toBe("ACTIVE");
+  });
+
+  it("blocks staff rental end during overnight closure", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-21T16:00:00.000Z"));
+
+    try {
+      const { rental, startStation } = await createActiveRentalGraph();
+      const { token: staffToken } = await createStaffToken(startStation.id);
+
+      const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${staffToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          stationId: startStation.id,
+          confirmationMethod: "MANUAL",
+        }),
+      });
+
+      const body = await response.json() as RentalsContracts.RentalErrorResponse;
+
+      expect(response.status).toBe(400);
+      expect(body.details?.code).toBe("OVERNIGHT_OPERATIONS_CLOSED");
+    }
+    finally {
+      vi.useRealTimers();
+    }
   });
 
   it("allows an agency user to fetch rental detail from the staff route", async () => {

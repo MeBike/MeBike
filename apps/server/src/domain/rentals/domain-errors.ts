@@ -1,5 +1,6 @@
 import { Data } from "effect";
 
+import type { OvernightOperationsClosed } from "@/domain/shared";
 import type { WithGenericError } from "@/domain/shared";
 import type { StationNotFound } from "@/domain/stations/errors";
 import type {
@@ -190,6 +191,8 @@ export class InvalidBikeSwapRequestStatus extends Data.TaggedError(
     readonly status: BikeSwapStatus;
   }> {}
 
+export type RentalOperatingHourFailure = OvernightOperationsClosed;
+
 export type RentalServiceFailure
   = | RentalNotFound
     | ActiveRentalExists
@@ -223,6 +226,7 @@ export type RentalServiceFailure
     | BikeSwapRequestNotFound
     | NoAvailableBike
     | InvalidBikeSwapRequestStatus
+    | RentalOperatingHourFailure
     | BikeSwapRequestExisted;
 
 export type RentalRepoError = RentalUniqueViolation;

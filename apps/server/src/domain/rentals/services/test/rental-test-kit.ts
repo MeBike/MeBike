@@ -32,6 +32,8 @@ import {
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectEitherWithLayer, runEffectWithLayer } from "@/test/effect/run";
 
+const DEFAULT_TEST_NOW = new Date("2025-01-01T10:00:00.000Z");
+
 export type RentalDeps
   = | Prisma
     | RentalRepository
@@ -87,7 +89,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
   return {
     start(args: StartRentalInput) {
       return runEffectEitherWithLayer(
-        startRental(args),
+        startRental({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },
@@ -134,7 +139,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
     },
     confirmReturn(args: ConfirmRentalReturnInput) {
       return runEffectEitherWithLayer(
-        confirmRentalReturnByOperator(args),
+        confirmRentalReturnByOperator({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },

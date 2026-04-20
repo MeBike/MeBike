@@ -10,7 +10,11 @@ import type { ReservationOption } from "generated/prisma/client";
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
 import { getReservationFeeMinor, makePricingPolicyRepository } from "@/domain/pricing";
-import { defectOn } from "@/domain/shared";
+import {
+  defectOn,
+  makeOvernightOperationsClosedError,
+  isWithinOvernightOperationsWindow,
+} from "@/domain/shared";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationQueryRepository } from "@/domain/stations";
 import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
@@ -103,6 +107,10 @@ export function reserveBike(
     const reservationCommandService = yield* ReservationCommandServiceTag;
     const subscriptionCommandService = yield* SubscriptionCommandServiceTag;
     const now = input.now ?? new Date();
+
+    if (isWithinOvernightOperationsWindow(now)) {
+      return yield* Effect.fail(makeOvernightOperationsClosedError(now));
+    }
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {

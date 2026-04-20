@@ -92,6 +92,17 @@ export const createRental = createRoute({
                 },
               },
             },
+            OvernightOperationsClosed: {
+              value: {
+                error: "Operations are closed overnight",
+                details: {
+                  code: RentalErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+                  currentTime: "2026-04-20T23:00:00+07:00",
+                  windowStart: "23:00",
+                  windowEnd: "05:00",
+                },
+              },
+            },
           },
         },
       },
@@ -343,6 +354,19 @@ export const confirmRentalReturnByOperator = createRoute({
       content: {
         "application/json": {
           schema: RentalErrorResponseSchema,
+          examples: {
+            OvernightOperationsClosed: {
+              value: {
+                error: "Operations are closed overnight",
+                details: {
+                  code: RentalErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+                  currentTime: "2026-04-20T23:00:00+07:00",
+                  windowStart: "23:00",
+                  windowEnd: "05:00",
+                },
+              },
+            },
+          },
         },
       },
     },

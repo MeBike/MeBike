@@ -42,6 +42,7 @@ export const rentalErrorCodes = [
   "INVALID_END_TIME_FORMAT",
   "INVALID_RENTAL_STATUS",
   "INVALID_OBJECT_ID",
+  "OVERNIGHT_OPERATIONS_CLOSED",
 
   // Status Transition Errors
   "CANNOT_EDIT_THIS_RENTAL_WITH_STATUS",
@@ -119,6 +120,9 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   returnSlotLimit: z.number().optional(),
   totalBikes: z.number().optional(),
   activeReturnSlots: z.number().optional(),
+  currentTime: z.string().optional(),
+  windowStart: z.string().optional(),
+  windowEnd: z.string().optional(),
 }).openapi({
   description: "Rental-specific error detail",
   example: {
@@ -204,6 +208,7 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   INVALID_END_TIME_FORMAT: "Invalid end time format",
   INVALID_RENTAL_STATUS: "Invalid rental status",
   INVALID_OBJECT_ID: "Invalid identifier",
+  OVERNIGHT_OPERATIONS_CLOSED: "Operations are closed overnight",
 
   CANNOT_EDIT_THIS_RENTAL_WITH_STATUS: "Cannot edit rental in this status",
   CANNOT_CANCEL_THIS_RENTAL_WITH_STATUS: "Cannot cancel rental in this status",

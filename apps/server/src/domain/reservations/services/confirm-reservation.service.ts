@@ -11,7 +11,11 @@ import {
 import { RentalRepositoryError } from "@/domain/rentals/domain-errors";
 import { createRentalDepositHoldInTx } from "@/domain/rentals/services/commands/rental-deposit-hold.service";
 import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/shared/unique-violation-mapper";
-import { defectOn } from "@/domain/shared";
+import {
+  defectOn,
+  isWithinOvernightOperationsWindow,
+  makeOvernightOperationsClosedError,
+} from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -45,6 +49,10 @@ export function confirmReservation(
     const reservationService = yield* ReservationCommandServiceTag;
     yield* RentalRepository;
     const now = input.now ?? new Date();
+
+    if (isWithinOvernightOperationsWindow(now)) {
+      return yield* Effect.fail(makeOvernightOperationsClosedError(now));
+    }
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
