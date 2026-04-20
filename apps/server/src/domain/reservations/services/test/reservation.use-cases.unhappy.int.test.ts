@@ -1,6 +1,6 @@
 import { Either } from "effect";
 import { uuidv7 } from "uuidv7";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { env } from "@/config/env";
 import { expectLeftTag, expectRight } from "@/test/effect/assertions";
@@ -8,6 +8,8 @@ import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenPendingReservation, givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
 import { makeReservationRunners, makeReservationTestLayer } from "./reservation-test-kit";
+
+const SAFE_NOW = new Date("2025-01-01T10:00:00.000Z");
 
 describe("reservation use-cases unhappy paths", () => {
   const fixture = setupPrismaIntFixture();
@@ -22,6 +24,15 @@ describe("reservation use-cases unhappy paths", () => {
     runReserve = runners.reserve;
     runConfirm = runners.confirm;
     runCancel = runners.cancel;
+  });
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(SAFE_NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("reserveBikeUseCase fails with ActiveReservationExists when user already has pending reservation", async () => {

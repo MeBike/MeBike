@@ -1,8 +1,10 @@
 import type { RentalsContracts } from "@mebike/shared";
 
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
+
+const SAFE_E2E_NOW = new Date("2026-03-21T08:15:00.000Z");
 
 describe("rentals end routing e2e", () => {
   const fixture = setupHttpE2eFixture({
@@ -16,6 +18,15 @@ describe("rentals end routing e2e", () => {
         RentalDepsLive,
       );
     },
+  });
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(SAFE_E2E_NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   async function createActiveRentalGraph() {
