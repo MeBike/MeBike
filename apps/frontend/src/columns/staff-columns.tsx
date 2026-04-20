@@ -145,49 +145,35 @@ export const staffColumns = ({
       );
     },
   },
-  // {
-  //   accessorKey: "created_at",
-  //   header: "Ngày tạo",
-  //   cell: ({ row }) => {
-  //     return formatToVNTime(row.original.createdAt);
-  //   },
-  // },
-  // {
-  //   accessorKey: "updated_at",
-  //   header: "Ngày cập nhật",
-  //   cell: ({ row }) => {
-  //     return formatToVNTime(row.original.updatedAt);
-  //   },
-  // },
   {
     id: "actions",
     header: "Hành động",
     meta: {
-      thClassName: "w-[12%]",
-      tdClassName: "whitespace-nowrap",
+      thClassName: "w-[12%] text-center", // Căn giữa header
+      tdClassName: "whitespace-nowrap text-center", // Căn giữa nội dung ô
     },
     cell: ({ row }) => {
       return (
-        <div className="flex items-center gap-0">
-          <div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0"
-                  aria-label="Xem chi tiết"
-                  onClick={() => {
-                    onView?.({ id: row.original.id });
-                  }}
-                >
-                  <Eye className="text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Xem chi tiết</TooltipContent>
-            </Tooltip>
-          </div>
+        /* Sử dụng justify-center để đưa nội dung vào giữa theo chiều ngang */
+        <div className="flex items-center justify-center w-full">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                /* Loại bỏ shrink-0 không cần thiết, thêm flex để icon luôn ở tâm button */
+                className="h-8 w-8 p-0 flex items-center justify-center"
+                aria-label="Xem chi tiết"
+                onClick={() => {
+                  onView?.({ id: row.original.id });
+                }}
+              >
+                <Eye className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xem chi tiết</TooltipContent>
+          </Tooltip>
         </div>
       );
     },

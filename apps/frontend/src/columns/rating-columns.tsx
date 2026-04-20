@@ -2,6 +2,13 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Star } from "lucide-react";
 import { formatDateOnlyVN } from "@/utils/dateFormat";
 import type { Rating } from "@/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Đảm bảo đúng path component của bạn
+import { Button } from "@/components/ui/button";
 
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
@@ -13,13 +20,6 @@ export const ratingColumn = ({
 }: {
   onView?: ({ id }: { id: string }) => void;
 }): ColumnDef<Rating>[] => [
-  // {
-  //   accessorKey: "id",
-  //   header: "Mã đánh giá",
-  //   cell: ({ row }) => {
-  //     return shortenId(row.original.id);
-  //   },
-  // },
   {
     accessorKey: "user",
     header: "Người dùng",
@@ -69,19 +69,29 @@ export const ratingColumn = ({
   {
     id: "actions",
     header: "Hành động",
+    meta: {
+      thClassName: "text-center",
+      tdClassName: "text-center",
+    },
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original.id });
-            }
-          }}
-        >
-          <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
+      <div className="flex items-center justify-center">
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 p-0 flex items-center justify-center"
+                onClick={() => onView?.({ id: row.original.id })}
+              >
+                <Eye className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Xem chi tiết đánh giá</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     ),
   },

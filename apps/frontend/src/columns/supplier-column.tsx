@@ -1,6 +1,12 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Recycle } from "lucide-react";
 import type { Supplier } from "@/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 const getStatusColor = (status: "ACTIVE" | "INACTIVE" | "TERMINATED" | "") => {
   switch (status) {
     case "ACTIVE":
@@ -54,18 +60,26 @@ export const columns = ({
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView(row.original);
-            }
-          }}
-        >
-          <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
+      <div className="flex items-center gap-0">
+        <div className="pl-4.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label="Xem chi tiết"
+                onClick={() => {
+                  onView?.(row.original);
+                }}
+              >
+                <Eye className="text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xem chi tiết</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     ),
   },
