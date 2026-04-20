@@ -18,6 +18,23 @@ function getTimePartsInTimeZone(date: Date, timeZone: string) {
   return { hour, minute, second };
 }
 
+function getDateKeyInTimeZone(date: Date, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const parts = formatter.formatToParts(date);
+
+  const year = parts.find(part => part.type === "year")?.value ?? "0000";
+  const month = parts.find(part => part.type === "month")?.value ?? "01";
+  const day = parts.find(part => part.type === "day")?.value ?? "01";
+
+  return `${year}-${month}-${day}`;
+}
+
 export function isAfterLateReturnCutoff(
   confirmedAt: Date,
   lateReturnCutoff: Date,
@@ -39,4 +56,20 @@ export function isAfterLateReturnCutoff(
   }
 
   return confirmed.second > cutoff.second;
+}
+
+export function isPastRentalReturnDeadline(
+  rentalStartTime: Date,
+  referenceTime: Date,
+  lateReturnCutoff: Date,
+  timeZone = DEFAULT_TIME_ZONE,
+): boolean {
+  const rentalDateKey = getDateKeyInTimeZone(rentalStartTime, timeZone);
+  const referenceDateKey = getDateKeyInTimeZone(referenceTime, timeZone);
+
+  if (referenceDateKey !== rentalDateKey) {
+    return referenceDateKey > rentalDateKey;
+  }
+
+  return isAfterLateReturnCutoff(referenceTime, lateReturnCutoff, timeZone);
 }

@@ -10,6 +10,7 @@ import { UserRoleSchema, VerifyStatusSchema } from "../users";
 export const RentalStatusSchema = z.enum([
   "RENTED",
   "COMPLETED",
+  "OVERDUE_UNRETURNED",
 ]);
 
 export const BikeSwapStatusSchema = z.enum([

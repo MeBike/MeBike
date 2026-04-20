@@ -8,7 +8,7 @@ import {
 } from "@/domain/environment";
 import {
   environmentImpactRentalDedupeKey,
-} from "@/domain/rentals/services/environment-impact-job.service";
+} from "@/domain/rentals/services/workers/environment-impact-job.service";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import {
   givenStationWithAvailableBike,

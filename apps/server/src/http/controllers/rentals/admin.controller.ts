@@ -10,7 +10,7 @@ import {
   RentalRepository,
   RentalStatsServiceTag,
 } from "@/domain/rentals";
-import { previousUtcMonthFullRange } from "@/domain/rentals/services/rental-stats-time";
+import { previousUtcMonthFullRange } from "@/domain/rentals/services/queries/rental-stats-time";
 import { withLoggedCause } from "@/domain/shared";
 import {
   toContractAdminRentalDetail,

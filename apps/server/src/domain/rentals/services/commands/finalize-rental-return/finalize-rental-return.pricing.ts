@@ -5,62 +5,43 @@ import type {
   CouponRuleSnapshot,
   GlobalAutoDiscountSelection,
 } from "@/domain/coupons";
-import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
-import type { DecreaseBalanceInput } from "@/domain/wallets/models";
+import type { RentalServiceFailure } from "@/domain/rentals/domain-errors";
+import type { RentalRow } from "@/domain/rentals/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
-import { makeBikeRepository } from "@/domain/bikes";
-import {
-  makeCouponQueryRepository,
-  selectBestGlobalAutoDiscountRule,
-} from "@/domain/coupons";
+import { makeCouponQueryRepository, selectBestGlobalAutoDiscountRule } from "@/domain/coupons";
 import {
   calculateUsageChargeMinor,
   isAfterLateReturnCutoff,
+  isPastRentalReturnDeadline,
   makePricingPolicyRepository,
 } from "@/domain/pricing";
 import { makeReservationQueryRepository } from "@/domain/reservations/repository/reservation-query.repository";
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
 import { SubscriptionNotFound, SubscriptionUsageExceeded } from "@/domain/subscriptions/domain-errors";
 import { makeSubscriptionCommandRepository } from "@/domain/subscriptions/repository/subscription-command.repository";
 import { makeSubscriptionQueryRepository } from "@/domain/subscriptions/repository/subscription-query.repository";
-import { makeWalletRepository } from "@/domain/wallets";
 
-import type { RentalServiceFailure } from "../domain-errors";
-import type { RentalRow } from "../models";
+import type { FinalizeRentalReturnPricing } from "./finalize-rental-return.types";
 
-import {
-  BikeNotFound,
-  InsufficientBalanceToRent,
-  UserWalletNotFound,
-} from "../domain-errors";
-import { computeSubscriptionCoverage } from "../pricing";
-import { makeRentalRepository } from "../repository/rental.repository";
-import { makeReturnSlotRepository } from "../repository/return-slot.repository";
-import {
-  forfeitRentalDepositHoldInTx,
-  releaseRentalDepositHoldInTx,
-} from "./rental-deposit-hold.service";
+import { InvalidRentalState } from "../../../domain-errors";
+import { computeSubscriptionCoverage } from "../../../pricing";
 
-type FinalizeRentalReturnInput = {
-  tx: PrismaTypes.TransactionClient;
-  rental: RentalRow;
-  bikeId: string;
-  endStationId: string;
-  endTime: Date;
-};
-
-export function finalizeRentalReturnInTx(
-  input: FinalizeRentalReturnInput,
-): Effect.Effect<RentalRow, RentalServiceFailure> {
+/**
+ * Tính toàn bộ phần pricing/billing cho bước hoàn tất trả xe.
+ *
+ * Hàm này chỉ lo phần quyết định nghiệp vụ về giá:
+ * kiểm tra hạn trả, prepaid, subscription, coupon và cờ mất cọc.
+ */
+export function resolveFinalizeRentalReturnPricingInTx(args: {
+  readonly tx: PrismaTypes.TransactionClient;
+  readonly rental: RentalRow;
+  readonly endTime: Date;
+}): Effect.Effect<FinalizeRentalReturnPricing, RentalServiceFailure> {
   return Effect.gen(function* () {
-    const { tx, rental, bikeId, endStationId, endTime } = input;
-    const txBikeRepo = makeBikeRepository(tx);
+    const { tx, rental, endTime } = args;
     const txCouponRepo = makeCouponQueryRepository(tx);
-    const txRentalRepo = makeRentalRepository(tx);
     const txPricingPolicyRepo = makePricingPolicyRepository(tx);
-    const txReturnSlotRepo = makeReturnSlotRepository(tx);
 
     const durationMinutes = Math.max(
       1,
@@ -75,6 +56,14 @@ export function finalizeRentalReturnInTx(
           Effect.catchTag("ActivePricingPolicyNotFound", err => Effect.die(err)),
           Effect.catchTag("ActivePricingPolicyAmbiguous", err => Effect.die(err)),
         ));
+
+    if (isPastRentalReturnDeadline(rental.startTime, endTime, pricingPolicy.lateReturnCutoff)) {
+      return yield* Effect.fail(new InvalidRentalState({
+        rentalId: rental.id,
+        from: rental.status,
+        to: "OVERDUE_UNRETURNED",
+      }));
+    }
 
     const fullBaseAmountMinor = calculateUsageChargeMinor({
       durationMinutes,
@@ -155,6 +144,7 @@ export function finalizeRentalReturnInTx(
         eligibleRentalAmountMinor,
       );
     }
+
     const selectedCouponRule = discountSelection.rule;
     const couponDiscountAmountMinor = discountSelection.discountAmountMinor;
     const couponRuleSnapshot = selectedCouponRule
@@ -165,111 +155,29 @@ export function finalizeRentalReturnInTx(
           appliedAt: endTime,
         })
       : null;
-
     const totalPriceMinor = eligibleRentalAmountMinor > couponDiscountAmountMinor
       ? eligibleRentalAmountMinor - couponDiscountAmountMinor
       : 0n;
-
     const depositForfeited = Boolean(rental.depositHoldId)
       && isAfterLateReturnCutoff(endTime, pricingPolicy.lateReturnCutoff);
 
-    if (rental.depositHoldId) {
-      const depositHandled = depositForfeited
-        ? yield* forfeitRentalDepositHoldInTx({
-          tx,
-          holdId: rental.depositHoldId,
-          userId: rental.userId,
-          rentalId: rental.id,
-          forfeitedAt: endTime,
-        }).pipe(
-          Effect.catchTag("WalletNotFound", err => Effect.die(err)),
-          Effect.catchTag("InsufficientWalletBalance", err => Effect.die(err)),
-        )
-        : yield* releaseRentalDepositHoldInTx({
-          tx,
-          holdId: rental.depositHoldId,
-          releasedAt: endTime,
-        });
-
-      if (!depositHandled) {
-        return yield* Effect.die(new Error(
-          `Expected rental ${rental.id} deposit hold ${rental.depositHoldId} to be handled during return finalization`,
-        ));
-      }
-    }
-
-    if (totalPriceMinor > 0n) {
-      yield* debitWallet(makeWalletRepository(tx), {
-        userId: rental.userId,
-        amount: totalPriceMinor,
-        description: `Rental ${rental.id}`,
-        hash: `rental:${rental.id}`,
-        type: "DEBIT",
-      });
-    }
-
-    const updatedBike = yield* txBikeRepo.updateStatusAndStationAt(
-      bikeId,
-      "AVAILABLE",
-      endStationId,
-      endTime,
-    );
-    if (Option.isNone(updatedBike)) {
-      return yield* Effect.fail(new BikeNotFound({ bikeId }));
-    }
-
-    yield* txReturnSlotRepo.finalizeActiveByRentalId(
-      rental.id,
-      "USED",
-      endTime,
-    );
-
-    const updatedRental = yield* txRentalRepo.updateRentalOnEnd({
-      rentalId: rental.id,
-      pricingPolicyId: pricingPolicy.id,
-      endStationId,
-      endTime,
+    return {
+      pricingPolicy,
       durationMinutes,
-      totalPrice: Number(totalPriceMinor),
-      newStatus: "COMPLETED",
-    });
-
-    if (Option.isNone(updatedRental)) {
-      return yield* Effect.die(new Error(
-        `Expected rental ${rental.id} to remain completable during return finalization`,
-      ));
-    }
-
-    yield* Effect.tryPromise({
-      try: () =>
-        tx.rentalBillingRecord.create({
-          data: {
-            rentalId: rental.id,
-            pricingPolicyId: pricingPolicy.id,
-            totalDurationMinutes: durationMinutes,
-            estimatedDistanceKm: null,
-            baseAmount: toPrismaDecimal(fullBaseAmountMinor.toString()),
-            couponRuleId: selectedCouponRule?.ruleId ?? null,
-            ...(couponRuleSnapshot
-              ? {
-                  couponRuleSnapshot: couponRuleSnapshot as unknown as PrismaTypes.InputJsonValue,
-                }
-              : {}),
-            couponDiscountAmount: toPrismaDecimal(couponDiscountAmountMinor.toString()),
-            subscriptionDiscountAmount: toPrismaDecimal(subscriptionDiscountMinor.toString()),
-            depositForfeited,
-            totalAmount: toPrismaDecimal(totalPriceMinor.toString()),
-          },
-        }),
-      catch: err => err,
-    }).pipe(
-      Effect.catchAll(err => Effect.die(err)),
-    );
-
-    return updatedRental.value;
+      fullBaseAmountMinor,
+      subscriptionDiscountMinor,
+      couponDiscountAmountMinor,
+      selectedCouponRule,
+      couponRuleSnapshot,
+      totalPriceMinor,
+      depositForfeited,
+    };
   });
 }
 
+/**
+ * Chụp lại coupon đã áp dụng để lưu vào billing record.
+ */
 function buildCouponRuleSnapshot(input: {
   readonly rule: BillingPreviewDiscountRuleRow;
   readonly billableMinutes: number;
@@ -288,20 +196,4 @@ function buildCouponRuleSnapshot(input: {
     billableHours: input.billableHours,
     appliedAt: input.appliedAt.toISOString(),
   };
-}
-
-function debitWallet(
-  repo: ReturnType<typeof makeWalletRepository>,
-  input: DecreaseBalanceInput,
-) {
-  return repo.decreaseBalance(input).pipe(
-    Effect.catchTag("WalletRecordNotFound", () =>
-      Effect.fail(new UserWalletNotFound({ userId: input.userId }))),
-    Effect.catchTag("WalletBalanceConstraint", (err: WalletBalanceConstraint) =>
-      Effect.fail(new InsufficientBalanceToRent({
-        userId: err.userId,
-        requiredBalance: Number(err.attemptedDebit),
-        currentBalance: Number(err.balance),
-      }))),
-  );
 }

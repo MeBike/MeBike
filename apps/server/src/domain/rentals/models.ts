@@ -158,6 +158,7 @@ export type RentalCountsRow = {
 export type RentalStatusCounts = {
   RENTED: number;
   COMPLETED: number;
+  OVERDUE_UNRETURNED: number;
 };
 
 export type RentalRevenueGroupBy = "DAY" | "MONTH" | "YEAR";

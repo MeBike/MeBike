@@ -20,7 +20,10 @@ import { mapToRentalRow, rentalSelect } from "../rental.repository.query";
 
 export type RentalRentalWriteRepo = Pick<
   RentalRepo,
-  "createRental" | "updateRentalDepositHold" | "updateRentalOnEnd"
+  | "createRental"
+  | "updateRentalDepositHold"
+  | "updateRentalOnEnd"
+  | "markOverdueUnreturned"
 >;
 
 export function makeRentalRentalWriteRepository(
@@ -143,6 +146,42 @@ export function makeRentalRentalWriteRepository(
         catch: e =>
           new RentalRepositoryError({
             operation: "updateRentalOnEnd",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
+        ),
+        defectOn(RentalRepositoryError),
+      );
+    },
+
+    markOverdueUnreturned(data) {
+      return Effect.tryPromise({
+        try: async () => {
+          const updated = await client.rental.updateMany({
+            where: {
+              id: data.rentalId,
+              status: "RENTED",
+            },
+            data: {
+              status: "OVERDUE_UNRETURNED" as RentalStatus,
+              updatedAt: data.overdueAt,
+            },
+          });
+
+          if (updated.count === 0) {
+            return null;
+          }
+
+          return await client.rental.findUnique({
+            where: { id: data.rentalId },
+            select,
+          });
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "markOverdueUnreturned",
             cause: e,
           }),
       }).pipe(

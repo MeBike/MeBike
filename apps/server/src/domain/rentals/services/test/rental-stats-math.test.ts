@@ -4,7 +4,7 @@ import {
   comparePercentage,
   compareRevenue,
   toTrend,
-} from "../rental-stats-math";
+} from "../queries/rental-stats-math";
 
 describe("compareRevenue", () => {
   it("returns zero percent change when both values are zero", () => {

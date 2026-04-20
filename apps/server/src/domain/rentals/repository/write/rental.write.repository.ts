@@ -9,7 +9,10 @@ import { makeRentalRentalWriteRepository } from "./rental.rental-write.repositor
 
 export type RentalWriteRepo = Pick<
   RentalRepo,
-  "createRental" | "updateRentalDepositHold" | "updateRentalOnEnd"
+  | "createRental"
+  | "updateRentalDepositHold"
+  | "updateRentalOnEnd"
+  | "markOverdueUnreturned"
 >;
 
 export function makeRentalWriteRepository(
