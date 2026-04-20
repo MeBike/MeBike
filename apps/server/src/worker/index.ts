@@ -30,7 +30,6 @@ import { handleEmailJob } from "./email-worker";
 import { handleEnvironmentImpactCalculateRental } from "./environment-impact-worker";
 import { handleFixedSlotAssign } from "./fixed-slot-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
-import { handlePushSend } from "./push-worker";
 import { handleRentalOverdueSweep } from "./rental-overdue-worker";
 import {
   handleReservationExpireHold,
@@ -120,7 +119,6 @@ async function main() {
   WorkerLog.emailVerified();
 
   await setupQueue(runtime, JobTypes.EmailSend);
-  await setupQueue(runtime, JobTypes.PushSend);
   await setupQueue(runtime, JobTypes.SubscriptionAutoActivate);
   await setupQueue(runtime, JobTypes.SubscriptionExpireSweep);
   await setupQueue(runtime, JobTypes.ReservationFixedSlotAssign);
@@ -141,9 +139,6 @@ async function main() {
 
   const emailWorkerId = await runtime.register(JobTypes.EmailSend, async job => handleEmailJob(job, email));
   WorkerLog.workerRegistered(JobTypes.EmailSend, emailWorkerId);
-
-  const pushWorkerId = await runtime.register(JobTypes.PushSend, handlePushSend);
-  WorkerLog.workerRegistered(JobTypes.PushSend, pushWorkerId);
 
   const fixedSlotWorkerId = await runtime.register(JobTypes.ReservationFixedSlotAssign, handleFixedSlotAssign);
   WorkerLog.workerRegistered(JobTypes.ReservationFixedSlotAssign, fixedSlotWorkerId);

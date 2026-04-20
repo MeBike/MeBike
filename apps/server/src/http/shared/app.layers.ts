@@ -8,7 +8,6 @@ import { BikeDepsLive } from "./features/bike.layers";
 import { CouponDepsLive } from "./features/coupon.layers";
 import { EnvironmentDepsLive } from "./features/environment.layers";
 import { IncidentDepsLive } from "./features/incident.layers";
-import { NotificationDepsLive } from "./features/notification.layers";
 import { RatingDepsLive } from "./features/rating.layers";
 import { RedistributionRequestDepsLive } from "./features/redistribution.layers";
 import { RentalDepsLive } from "./features/rental.layers";
@@ -43,7 +42,6 @@ export const HttpDepsLive = Layer.mergeAll(
   SupplierDepsLive,
   TechnicianTeamDepsLive,
   AgencyRequestDepsLive,
-  NotificationDepsLive,
   UserDepsLive,
   UserStatsDepsLive,
   WalletDepsLive,

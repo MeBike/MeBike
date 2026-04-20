@@ -130,30 +130,6 @@ export async function handleReservationNotifyNearExpiry(
         catch: err => err as unknown,
       }).pipe(Effect.catchAll(err => Effect.die(err)));
 
-      yield* Effect.tryPromise({
-        try: () =>
-          sendJob(
-            producer,
-            JobTypes.PushSend,
-            {
-              version: 1,
-              userId: reservation.userId,
-              event: "reservations.nearExpiry",
-              title: "Reservation expiring soon",
-              body: `Your bike reservation at ${station.name} expires in about ${minutesRemaining} minute(s).`,
-              channelId: "default",
-              data: {
-                reservationId: reservation.id,
-                event: "reservations.nearExpiry",
-              },
-            },
-            {
-              dedupeKey: `reservation:near-expiry:push:${reservation.id}`,
-            },
-          ),
-        catch: err => err as unknown,
-      }).pipe(Effect.catchAll(err => Effect.die(err)));
-
       return { outcome: "NOTIFIED" as const };
     }),
   );
@@ -282,30 +258,6 @@ export async function handleReservationExpireHold(
             },
             {
               dedupeKey: `reservation:expired:${outcome.reservationId}`,
-            },
-          ),
-        catch: err => err as unknown,
-      }).pipe(Effect.catchAll(err => Effect.die(err)));
-
-      yield* Effect.tryPromise({
-        try: () =>
-          sendJob(
-            producer,
-            JobTypes.PushSend,
-            {
-              version: 1,
-              userId: outcome.userId,
-              event: "reservations.expired",
-              title: "Reservation expired",
-              body: `Your bike reservation at ${station.name} has expired.`,
-              channelId: "default",
-              data: {
-                reservationId: outcome.reservationId,
-                event: "reservations.expired",
-              },
-            },
-            {
-              dedupeKey: `reservation:expired:push:${outcome.reservationId}`,
             },
           ),
         catch: err => err as unknown,

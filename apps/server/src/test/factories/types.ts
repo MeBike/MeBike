@@ -117,17 +117,6 @@ export type UserOrgAssignmentOverrides = {
   technicianTeamId?: string | null;
 };
 
-export type PushTokenOverrides = {
-  id?: string;
-  userId?: string;
-  token?: string;
-  platform?: "ANDROID" | "IOS" | "UNKNOWN";
-  deviceId?: string | null;
-  appVersion?: string | null;
-  isActive?: boolean;
-  lastSeenAt?: Date;
-};
-
 export type WalletOverrides = {
   id?: string;
   userId?: string;
@@ -185,12 +174,6 @@ export type CreatedTechnicianTeam = {
 export type CreatedUserOrgAssignment = {
   id: string;
   userId: string;
-};
-
-export type CreatedPushToken = {
-  id: string;
-  userId: string;
-  token: string;
 };
 
 export type CreatedWallet = {

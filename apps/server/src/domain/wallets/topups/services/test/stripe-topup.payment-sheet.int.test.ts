@@ -96,30 +96,13 @@ describe("stripe topup PaymentSheet integration", () => {
     const outboxRows = await fixture.prisma.jobOutbox.findMany({
       orderBy: { createdAt: "asc" },
     });
-    expect(outboxRows).toHaveLength(1);
-    expect(outboxRows[0]?.type).toBe("notifications.push.send");
-    expect(outboxRows[0]?.dedupeKey).toBe(`wallet:topup:push:${created.paymentAttemptId}`);
-    expect(outboxRows[0]?.payload).toEqual({
-      version: 1,
-      userId,
-      event: "wallets.topupSucceeded",
-      title: "Top-up successful",
-      body: "Your wallet has been credited with ₫12,000.",
-      channelId: "default",
-      data: {
-        paymentAttemptId: created.paymentAttemptId,
-        amountMinor: "12000",
-        currency: "vnd",
-        providerRef: "pi_test_success",
-        provider: "stripe",
-      },
-    });
+    expect(outboxRows).toHaveLength(0);
 
     const repeated = await topup.handleWebhook(event);
     expect(repeated).toEqual({ status: "ignored", reason: "already_succeeded" });
 
     const repeatedOutboxRows = await fixture.prisma.jobOutbox.findMany();
-    expect(repeatedOutboxRows).toHaveLength(1);
+    expect(repeatedOutboxRows).toHaveLength(0);
   });
 
   it("marks the attempt failed on payment_intent.payment_failed", async () => {

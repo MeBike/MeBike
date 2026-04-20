@@ -12,6 +12,9 @@ import { givenActiveRental, givenStationWithAvailableBike, givenUserWithWallet }
 
 import { makeRentalRunners, makeRentalTestLayer } from "./rental-test-kit";
 
+const SAFE_RENTAL_START_TIME = new Date("2025-01-01T10:00:00.000Z");
+const SAFE_RETURN_CONFIRMED_AT = new Date("2025-01-01T10:30:00.000Z");
+
 describe("return slot integration", () => {
   const fixture = setupPrismaIntFixture();
   let runCreateReturnSlot: ReturnType<typeof makeRentalRunners>["createReturnSlot"];
@@ -286,6 +289,7 @@ describe("return slot integration", () => {
   it("finalizes the active return slot when an operator confirms the return", async () => {
     const { user, station, bike, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
@@ -301,7 +305,7 @@ describe("return slot integration", () => {
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     }));
 
     expect(ended.status).toBe("COMPLETED");
@@ -330,6 +334,7 @@ describe("return slot integration", () => {
   it("allows confirming a rental return without an active return slot when the station has live capacity", async () => {
     const { station, bike, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
@@ -339,7 +344,7 @@ describe("return slot integration", () => {
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     }));
 
     expect(ended.status).toBe("COMPLETED");
@@ -357,6 +362,7 @@ describe("return slot integration", () => {
   it("enqueues environment impact calculation after a rental is completed", async () => {
     const { rental, station } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
@@ -366,7 +372,7 @@ describe("return slot integration", () => {
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     }));
 
     expect(ended.status).toBe("COMPLETED");
@@ -390,6 +396,7 @@ describe("return slot integration", () => {
   it("keeps rental completion successful when no active environment policy exists", async () => {
     const { rental, station } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
@@ -401,7 +408,7 @@ describe("return slot integration", () => {
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     }));
 
     expect(ended.status).toBe("COMPLETED");
@@ -436,7 +443,7 @@ describe("return slot integration", () => {
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     });
 
     expectLeftTag(result, "InvalidRentalState");
@@ -476,6 +483,7 @@ describe("return slot integration", () => {
   it("does not duplicate environment impact outbox jobs for the same rental", async () => {
     const { rental, station } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     await fixture.factories.userOrgAssignment({ userId: operator.id, stationId: station.id });
@@ -485,7 +493,7 @@ describe("return slot integration", () => {
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     }));
 
     await Effect.runPromise(
@@ -503,6 +511,7 @@ describe("return slot integration", () => {
   it("allows confirming a rental return without an active return slot when only the reservation limit is exhausted", async () => {
     const { bike, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const station = await fixture.factories.station({
       capacity: 5,
@@ -517,7 +526,7 @@ describe("return slot integration", () => {
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     }));
 
     expect(ended.status).toBe("COMPLETED");
@@ -530,6 +539,7 @@ describe("return slot integration", () => {
   it("fails to confirm a rental return without an active return slot when the station has no live capacity", async () => {
     const { rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const fullStation = await fixture.factories.station({
       capacity: 1,
@@ -545,7 +555,7 @@ describe("return slot integration", () => {
       stationId: fullStation.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     });
 
     expectLeftTag(result, "ReturnSlotCapacityExceeded");
@@ -554,6 +564,7 @@ describe("return slot integration", () => {
   it("fails to confirm a rental return at a different station than the active return slot", async () => {
     const { user, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     const reservedStation = await fixture.factories.station({ capacity: 2 });
@@ -571,7 +582,7 @@ describe("return slot integration", () => {
       stationId: attemptedStation.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     });
 
     expectLeftTag(result, "ReturnSlotStationMismatch");

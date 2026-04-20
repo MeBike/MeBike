@@ -140,12 +140,6 @@ export const PaymentRecordStatus = {
     PARTIALLY_REFUNDED: "PARTIALLY_REFUNDED"
 } as const;
 export type PaymentRecordStatus = (typeof PaymentRecordStatus)[keyof typeof PaymentRecordStatus];
-export const PushTokenPlatform = {
-    ANDROID: "ANDROID",
-    IOS: "IOS",
-    UNKNOWN: "UNKNOWN"
-} as const;
-export type PushTokenPlatform = (typeof PushTokenPlatform)[keyof typeof PushTokenPlatform];
 export const RatingReasonType = {
     ISSUE: "ISSUE",
     COMPLIMENT: "COMPLIMENT"
@@ -494,18 +488,6 @@ export type PricingPolicy = {
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
-export type PushToken = {
-    id: string;
-    user_id: string;
-    token: string;
-    platform: Generated<PushTokenPlatform>;
-    device_id: string | null;
-    app_version: string | null;
-    is_active: Generated<boolean>;
-    last_seen_at: Generated<Timestamp>;
-    created_at: Generated<Timestamp>;
-    updated_at: Timestamp;
-};
 export type Rating = {
     id: string;
     user_id: string;
@@ -793,7 +775,6 @@ export type DB = {
     payment_attempts: PaymentAttempt;
     payments: Payment;
     pricing_policies: PricingPolicy;
-    push_tokens: PushToken;
     rating_reason_links: RatingReasonLink;
     rating_reasons: RatingReason;
     ratings: Rating;
