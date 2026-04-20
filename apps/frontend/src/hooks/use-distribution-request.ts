@@ -176,7 +176,7 @@ export const useDistributionRequest = ({
       }
     },
     [
-      useApproveDistributeRequest,
+      useCompleteTransit,
       hasToken,
       router,
       page,

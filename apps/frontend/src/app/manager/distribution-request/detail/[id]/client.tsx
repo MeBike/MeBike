@@ -4,26 +4,36 @@ import React, { useState } from "react";
 import { RedistributionRequestDetail } from "@/types/DistributionRequest";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bike, MapPin, ClipboardList, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Bike, MapPin, ClipboardList, CheckCircle, XCircle, Loader2, CheckCheck } from "lucide-react";
 import type { RedistributionRequestStatus } from "@/types/DistributionRequest";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Props {
   data: RedistributionRequestDetail;
   onApprove: () => Promise<void>;
   onReject: (reason: string) => Promise<void>;
+  onComplete: (payload: { completedBikeIds: string[] }) => Promise<void>;
 }
 
-export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: Props) => {
+export const DistributionRequestDetailClient = ({ data, onApprove, onReject, onComplete }: Props) => {
   const router = useRouter();
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
 
   const getStatusStyle = (status: RedistributionRequestStatus) => {
     switch (status) {
@@ -43,9 +53,14 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: P
     setIsProcessing(false);
   };
 
+  const handleToggleBike = (bikeId: string) => {
+    setSelectedBikeIds((prev) =>
+      prev.includes(bikeId) ? prev.filter((id) => id !== bikeId) : [...prev, bikeId]
+    );
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      {/* Header với nút Back và Action Buttons */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <Button 
@@ -65,18 +80,26 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: P
           </div>
         </div>
 
-        {/* Action Buttons bổ sung */}
-        {data.status === "PENDING_APPROVAL" && (
-          <div className="flex gap-3">
-            <Button variant="destructive" onClick={() => setShowRejectModal(true)} disabled={isProcessing}>
-              <XCircle className="mr-2 h-4 w-4" /> Từ chối
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          {data.status === "PENDING_APPROVAL" && (
+            <>
+              <Button variant="destructive" onClick={() => setShowRejectModal(true)} disabled={isProcessing}>
+                <XCircle className="mr-2 h-4 w-4" /> Từ chối
+              </Button>
+              <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleAction(onApprove)} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                Duyệt yêu cầu
+              </Button>
+            </>
+          )}
+          {(data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED") && (
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleAction(() => onComplete({ completedBikeIds: selectedBikeIds }))} disabled={isProcessing || selectedBikeIds.length === 0}>
+              {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+              Hoàn tất ({selectedBikeIds.length} xe)
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleAction(onApprove)} disabled={isProcessing}>
-              {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-              Duyệt yêu cầu
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -126,7 +149,6 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: P
               </CardHeader>
               <CardContent className="relative space-y-8 px-8">
                 <div className="absolute left-[2.4rem] top-12 bottom-12 w-0.5 bg-dashed border-l-2 border-dashed border-slate-300"></div>
-                
                 <div className="relative z-10 flex flex-col">
                   <div className="flex items-start gap-4">
                     <div className="h-8 w-8 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center shadow-sm">
@@ -139,7 +161,6 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: P
                     </div>
                   </div>
                 </div>
-
                 <div className="relative z-10 flex flex-col">
                   <div className="flex items-start gap-4">
                     <div className="h-8 w-8 rounded-full bg-white border-2 border-primary flex items-center justify-center shadow-sm">
@@ -166,7 +187,7 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: P
               <Table>
                 <TableHeader className="bg-slate-50">
                   <TableRow>
-                    <TableHead className="w-[80px] text-center font-bold">STT</TableHead>
+                    <TableHead className="w-[50px] text-center font-bold">Chọn</TableHead>
                     <TableHead className="font-bold uppercase text-xs">Mã Chip (Bike ID)</TableHead>
                     <TableHead className="font-bold uppercase text-xs">Trạng thái xe</TableHead>
                     <TableHead className="font-bold uppercase text-xs text-right">Ngày bàn giao</TableHead>
@@ -175,7 +196,11 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: P
                 <TableBody>
                   {data.items.map((item, index) => (
                     <TableRow key={item.id} className="hover:bg-blue-50/30 transition-colors">
-                      <TableCell className="text-center font-medium text-slate-500">{index + 1}</TableCell>
+                      <TableCell className="text-center">
+                         {!item.deliveredAt && (
+                           <Checkbox checked={selectedBikeIds.includes(item.bike.id)} onCheckedChange={() => handleToggleBike(item.bike.id)} />
+                         )}
+                      </TableCell>
                       <TableCell>
                         <code className="px-2 py-1 bg-slate-100 rounded text-blue-700 font-bold text-xs">
                           {item.bike.id}
@@ -191,13 +216,6 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: P
                       </TableCell>
                     </TableRow>
                   ))}
-                  {data.items.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                        Chưa có danh sách xe cụ thể cho yêu cầu này.
-                      </TableCell>
-                    </TableRow>
-                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -210,13 +228,12 @@ export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: P
                  <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground italic">Ghi chú hệ thống</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-slate-500">
-                 Yêu cầu này được xử lý tự động bởi hệ thống quản lý MeBike. Mọi thay đổi về trạng thái sẽ được thông báo qua email cho các bên liên quan.
+                 Yêu cầu này được xử lý tự động bởi hệ thống quản lý MeBike.
               </CardContent>
            </Card>
         </div>
       </div>
 
-      {/* Dialog Từ chối */}
       <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
         <DialogContent>
           <DialogHeader><DialogTitle>Lý do từ chối yêu cầu</DialogTitle></DialogHeader>
