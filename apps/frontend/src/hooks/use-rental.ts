@@ -40,21 +40,21 @@ export function useRentalsActions({
   const router = useRouter();
   const { data: detailData, isLoading: isDetailLoading ,
     refetch : refetchDetail
-  } = useGetDetailRentalAdminQuery(bike_id || "");
-  const {data : detailDataForStaff , isLoading : isDetailLoadingForStaff , refetch:refetchDetailForStaff} = useGetDetailRentalForStaffQuery(bike_id || "");
-  const usePutUpdateRental = usePutUpdateRentalMutation(bike_id || "");
+  } = useGetDetailRentalAdminQuery(rental_id || "");
+  const {data : detailDataForStaff , isLoading : isDetailLoadingForStaff , refetch:refetchDetailForStaff} = useGetDetailRentalForStaffQuery(rental_id || "");
+  const usePutUpdateRental = usePutUpdateRentalMutation(rental_id || "");
   const getDetailRental = useCallback(() => {
-    if(!hasToken || !bike_id){
+    if(!hasToken || !rental_id){
       return;
     } 
     refetchDetail();
-  }, [hasToken, bike_id, refetchDetail]);
+  }, [hasToken, rental_id, refetchDetail]);
     const getDetailRentalForStaff = useCallback(() => {
-    if(!hasToken || !bike_id){
+    if(!hasToken || !rental_id){
       return;
     } 
     refetchDetailForStaff();
-  }, [hasToken, bike_id, refetchDetail]);
+  }, [hasToken, rental_id, refetchDetailForStaff]);
   const {
     data: allRentalsData,
     refetch: refetchAllRentals,

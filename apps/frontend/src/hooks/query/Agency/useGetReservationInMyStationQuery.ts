@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { agencyService } from "@/services/agency.service";
 import { HTTP_STATUS } from "@/constants";
-const fetchMyReservation = async ({page,limit} : {page ?: number , limit ?: number}) => {
+const fetchMyReservation = async ({page,pageSize} : {page ?: number , pageSize ?: number}) => {
   try {
-    const response = await agencyService.getReservationInMyStation({page,pageSize:limit});
+    const response = await agencyService.getReservationInMyStation({page,pageSize});
     if (response.status === HTTP_STATUS.OK) {
       return response.data; 
     }
@@ -12,9 +12,9 @@ const fetchMyReservation = async ({page,limit} : {page ?: number , limit ?: numb
     throw error;    
   }
 };
-export const useGetReservationInMyStationAgency = ({page,limit} : {page ?: number , limit ?: number}) => {
+export const useGetReservationInMyStationAgency = ({page,pageSize} : {page ?: number , pageSize ?: number}) => {
   return useQuery({
-    queryKey: ["data","reservation-in-my-station","agency",page,limit],
-    queryFn: () => fetchMyReservation({ page, limit }),
+    queryKey: ["data","reservation-in-my-station","agency",page,pageSize],
+    queryFn: () => fetchMyReservation({ page, pageSize }),
   });
 };

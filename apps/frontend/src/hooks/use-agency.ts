@@ -1,4 +1,3 @@
-
 import {
   useGetAgencies,
   useGetAgencyDetail,
@@ -7,6 +6,14 @@ import {
   useGetAgencyRequestDetail,
   useGetMyAgencyRequests,
   useGetMyAgencyRequestDetail,
+  useGetMyStationDetailAgency,
+  useGetMyStationsAgency,
+  useGetBikeInMyStationAgencyQuery,
+  useGetBikeDetailInMyStationAgencyQuery,
+  useGetRentalInMyStationAgency,
+  useGetRentalDetailAgencyInMyStation,
+  useGetReservationInMyStationAgency,
+  useGetReservationDetailInMyStationAgency,
 } from "@queries";
 import {
   useUpdateAgencyStatusMutation,
@@ -15,7 +22,7 @@ import {
   useCancelAgencyRequestMutation,
   useRegisterAgencyRequestMutation,
   useRejectAgencyRequestMutation,
-  useCreateAgencyMutation
+  useCreateAgencyMutation,
 } from "@mutations";
 import { toast } from "sonner";
 import { useCallback } from "react";
@@ -39,6 +46,10 @@ export interface AgencyActionProps {
   page?: number;
   pageSize?: number;
   agency_request_id?: string;
+  station_id?: string;
+  bike_detail_id?: string;
+  rental_id?: string;
+  reservation_id?: string;
 }
 export const useAgencyActions = ({
   hasToken,
@@ -46,6 +57,10 @@ export const useAgencyActions = ({
   page,
   pageSize,
   agency_request_id,
+  station_id,
+  bike_detail_id,
+  rental_id,
+  reservation_id,
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -349,6 +364,97 @@ export const useAgencyActions = ({
     },
     [registerAgencyRequestMutation, hasToken],
   );
+  const {
+    data: agencyStation,
+    refetch: refetchMyAgencyStation,
+    isLoading: isLoadingMyAgencyStation,
+  } = useGetMyStationsAgency({ page: page, pageSize: pageSize });
+  const getMyAgencyStation = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchMyAgencyStation();
+  }, [refetchMyAgencyStation, hasToken, page, pageSize]);
+  const {
+    data: myStationDetail,
+    refetch: refetchMyAgencyStationDetail,
+    isLoading: isLoadingMyStationDetail,
+  } = useGetMyStationDetailAgency({ stationId: station_id || "" });
+  const getMyStationDetail = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchMyAgencyStationDetail();
+  }, [refetchMyAgencyStationDetail, hasToken, station_id]);
+  const {
+    data: myAgencyBikeInStation,
+    refetch: refetchMyAgencyBikeInStation,
+    isLoading: isLoadingMyAgencyBikeInStation,
+  } = useGetBikeInMyStationAgencyQuery({ page: page, pageSize: pageSize });
+  const getMyAgencyBikeInStation = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchMyAgencyBikeInStation();
+  }, [refetchMyAgencyBikeInStation, hasToken, page, pageSize]);
+  const {
+    data: myAgencyBikeInStationDetail,
+    refetch: refetchMyAgencyBikeInStationDetail,
+    isLoading: isLoadingMyAgencyBikeInStationDetail,
+  } = useGetBikeDetailInMyStationAgencyQuery(bike_detail_id || "");
+  const getMyAgencyBikeInStationDetail = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchMyAgencyBikeInStationDetail();
+  }, [refetchMyAgencyBikeInStationDetail, hasToken, bike_detail_id]);
+  const {
+    data: detailRentalForAgency,
+    isLoading: isDetailLoadingForAgency,
+    refetch: refetchDetailForAgency,
+  } = useGetRentalDetailAgencyInMyStation({ id: rental_id || "" });
+  const getDetailRentalForAgency = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchDetailForAgency();
+  }, [refetchDetailForAgency, hasToken, rental_id]);
+  const {
+    data: rentalInMyStation,
+    refetch: refetchRentalInMyStation,
+    isLoading: isLoadingRentalInMyStation,
+  } = useGetRentalInMyStationAgency({
+    page: page,
+    pageSize: pageSize,
+  });
+  const getRentalInMyStation = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchRentalInMyStation();
+  }, [refetchRentalInMyStation, hasToken, page, pageSize]);
+  const {
+    data: allReservationsAgency,
+    refetch: refetchReservationsForAgency,
+    isLoading: isLoadingReservationsAgency,
+  } = useGetReservationInMyStationAgency({ page: page, pageSize: pageSize });
+  const getReservationsForAgency = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchReservationsForAgency();
+  }, [refetchReservationsForAgency, hasToken, page, pageSize]);
+  const {
+    data: detailReservationForAgency,
+    refetch: refetchDetailReservationForAency,
+    isLoading : isLoadingDetailReservationForAgency,
+  } = useGetReservationDetailInMyStationAgency({ id: reservation_id || "" });
+  const getDetailReservationForAgency = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchDetailReservationForAency();
+  }, [refetchDetailReservationForAency, hasToken, reservation_id]);
   return {
     agencies,
     getAgencies,
@@ -378,5 +484,28 @@ export const useAgencyActions = ({
     getMyAgencyRequestDetail,
     isLoadingMyAgencyRequestDetail,
     createAgency,
+    agencyStation,
+    getMyAgencyStation,
+    isLoadingMyAgencyStation,
+    myStationDetail,
+    getMyStationDetail,
+    isLoadingMyStationDetail,
+    myAgencyBikeInStation,
+    getMyAgencyBikeInStation,
+    isLoadingMyAgencyBikeInStation,
+    myAgencyBikeInStationDetail,
+    getMyAgencyBikeInStationDetail,
+    isLoadingMyAgencyBikeInStationDetail,
+    detailRentalForAgency,
+    isLoadingRentalInMyStation,
+    getDetailRentalForAgency,
+    rentalInMyStation,
+    getRentalInMyStation,
+    allReservationsAgency,
+    getReservationsForAgency,
+    isLoadingReservationsAgency,
+    detailReservationForAgency,
+    getDetailReservationForAgency,
+    isLoadingDetailReservationForAgency,
   };
 };

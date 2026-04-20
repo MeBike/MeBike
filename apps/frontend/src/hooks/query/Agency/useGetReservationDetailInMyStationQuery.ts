@@ -12,7 +12,7 @@ const fetchMyReservationDetail = async ({id} : {id:string}) => {
     throw error;    
   }
 };
-export const useGetReservationDetailInMyStation = ({id} : {id:string}) => {
+export const useGetReservationDetailInMyStationAgency = ({id} : {id:string}) => {
   return useQuery({
     queryKey: ["data","reservation-detail-in-my-station","agency",id],
     queryFn: () => fetchMyReservationDetail({ id }),
