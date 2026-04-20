@@ -40,6 +40,7 @@ import {
   getAxiosErrorCodeMessage,
 } from "@utils";
 import { id } from "date-fns/locale";
+import { BikeStatus, RentalStatus, ReservationStatus } from "@/types";
 export interface AgencyActionProps {
   hasToken?: boolean;
   agency_id?: string;
@@ -50,6 +51,9 @@ export interface AgencyActionProps {
   bike_detail_id?: string;
   rental_id?: string;
   reservation_id?: string;
+  status ?: BikeStatus;
+  renservation_status ?: ReservationStatus;
+  rental_status ?: RentalStatus,
 }
 export const useAgencyActions = ({
   hasToken,
@@ -61,6 +65,9 @@ export const useAgencyActions = ({
   bike_detail_id,
   rental_id,
   reservation_id,
+  status,
+  renservation_status,
+  rental_status
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -390,7 +397,7 @@ export const useAgencyActions = ({
     data: myAgencyBikeInStation,
     refetch: refetchMyAgencyBikeInStation,
     isLoading: isLoadingMyAgencyBikeInStation,
-  } = useGetBikeInMyStationAgencyQuery({ page: page, pageSize: pageSize });
+  } = useGetBikeInMyStationAgencyQuery({ page: page, pageSize: pageSize, status: status });
   const getMyAgencyBikeInStation = useCallback(() => {
     if (!hasToken) {
       return;
@@ -410,7 +417,7 @@ export const useAgencyActions = ({
   }, [refetchMyAgencyBikeInStationDetail, hasToken, bike_detail_id]);
   const {
     data: detailRentalForAgency,
-    isLoading: isDetailLoadingForAgency,
+    isLoading: isDetailRentalLoadingForAgency,
     refetch: refetchDetailForAgency,
   } = useGetRentalDetailAgencyInMyStation({ id: rental_id || "" });
   const getDetailRentalForAgency = useCallback(() => {
@@ -426,24 +433,25 @@ export const useAgencyActions = ({
   } = useGetRentalInMyStationAgency({
     page: page,
     pageSize: pageSize,
+    rental_status: rental_status,
   });
   const getRentalInMyStation = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchRentalInMyStation();
-  }, [refetchRentalInMyStation, hasToken, page, pageSize]);
+  }, [refetchRentalInMyStation, hasToken, page, pageSize,rental_status]);
   const {
     data: allReservationsAgency,
     refetch: refetchReservationsForAgency,
     isLoading: isLoadingReservationsAgency,
-  } = useGetReservationInMyStationAgency({ page: page, pageSize: pageSize });
+  } = useGetReservationInMyStationAgency({ page: page, pageSize: pageSize,reservation_status:renservation_status });
   const getReservationsForAgency = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchReservationsForAgency();
-  }, [refetchReservationsForAgency, hasToken, page, pageSize]);
+  }, [refetchReservationsForAgency, hasToken, page, pageSize,renservation_status]);
   const {
     data: detailReservationForAgency,
     refetch: refetchDetailReservationForAency,
@@ -507,5 +515,6 @@ export const useAgencyActions = ({
     detailReservationForAgency,
     getDetailReservationForAgency,
     isLoadingDetailReservationForAgency,
+    isDetailRentalLoadingForAgency
   };
 };

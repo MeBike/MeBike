@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import { ENDPOINT } from "@/constants";
 import { AxiosResponse } from "axios";
-import { ApiResponse , Station , Bike , BikeStatus , Reservation , DetailReservation,RentalRecord,Rental,RentalStatus} from "@/types";
+import { ApiResponse , Station , Bike , BikeStatus , Reservation , DetailReservation,RentalRecord,Rental,RentalStatus, ReservationStatus} from "@/types";
 import type { Agency, AgencyStats, AgencyRequest } from "@/types/Agency";
 import { UpdateAgencyFormData, UpdateAgencyStatusFormData , RegisterAgencyFormData , AdminCreateAgencyUserRequest } from "@/schemas";
 export const agencyService = {
@@ -253,7 +253,7 @@ export const agencyService = {
   }: {
     page?: number;
     pageSize?: number;
-    status ?: "PENDING" | "FULFILLED" | "CANCELLED" | "EXPIRED";
+    status ?: ReservationStatus;
     option ?: "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION";
   }): Promise<AxiosResponse<ApiResponse<Reservation[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Reservation[]>>(

@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { agencyService } from "@/services/agency.service";
 import { HTTP_STATUS } from "@/constants";
-const fetchMyReservation = async ({page,pageSize} : {page ?: number , pageSize ?: number}) => {
+import type { ReservationStatus } from "@/types";
+const fetchMyReservation = async ({page,pageSize,reservation_status} : {page ?: number , pageSize ?: number , reservation_status ?: ReservationStatus}) => {
   try {
-    const response = await agencyService.getReservationInMyStation({page,pageSize});
+    const response = await agencyService.getReservationInMyStation({page,pageSize,status:reservation_status});
     if (response.status === HTTP_STATUS.OK) {
       return response.data; 
     }
@@ -12,9 +13,9 @@ const fetchMyReservation = async ({page,pageSize} : {page ?: number , pageSize ?
     throw error;    
   }
 };
-export const useGetReservationInMyStationAgency = ({page,pageSize} : {page ?: number , pageSize ?: number}) => {
+export const useGetReservationInMyStationAgency = ({page,pageSize,reservation_status} : {page ?: number , pageSize ?: number , reservation_status ?: ReservationStatus}) => {
   return useQuery({
-    queryKey: ["data","reservation-in-my-station","agency",page,pageSize],
-    queryFn: () => fetchMyReservation({ page, pageSize }),
+    queryKey: ["data","reservation-in-my-station","agency",page,pageSize,reservation_status],
+    queryFn: () => fetchMyReservation({ page, pageSize,reservation_status }),
   });
 };

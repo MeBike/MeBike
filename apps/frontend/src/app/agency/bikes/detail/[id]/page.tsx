@@ -1,12 +1,12 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { useBikeActions } from "@/hooks/use-bike";
-import { BikeDetailView } from "./BikeDetail"; 
-
+import { ArrowLeft } from "lucide-react";
+import { BikeDetailView } from "./BikeDetail";
+import { useAgencyActions } from "@/hooks/use-agency";
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function BikeDetailPage({
   params,
 }: {
@@ -14,29 +14,40 @@ export default function BikeDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  
   const {
-    myBikeInStationDetail,
-    getMyBikeInStationDetail,
-    isLoadingMyBikeInStationDetail,
-  } = useBikeActions({ hasToken: true, bike_detail_id: id });
-
+    myAgencyBikeInStationDetail,
+    getMyAgencyBikeInStationDetail,
+    isLoadingMyAgencyBikeInStationDetail,
+  } = useAgencyActions({ hasToken: true, bike_detail_id: id });
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   useEffect(() => {
-    getMyBikeInStationDetail();
+    if (isLoadingMyAgencyBikeInStationDetail) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingMyAgencyBikeInStationDetail]);
+  useEffect(() => {
+    getMyAgencyBikeInStationDetail();
   }, [id]);
-
-  if (isLoadingMyBikeInStationDetail) {
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!myAgencyBikeInStationDetail) {
     return (
-      <div className="flex h-[60vh] w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin xe đạp.
+        </p>
       </div>
     );
   }
-
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header Section */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button
@@ -48,15 +59,14 @@ export default function BikeDetailPage({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" onClick={() => router.push("/staff/bikes")}>
-             Danh sách xe
+          <Button
+            variant="outline"
+            onClick={() => router.push("/agency/bikes")}
+          >
+            Danh sách xe
           </Button>
         </div>
-
-        {/* Content */}
-        <BikeDetailView 
-          bike={myBikeInStationDetail || null} 
-        />
+        <BikeDetailView bike={myAgencyBikeInStationDetail || null} />
       </div>
     </div>
   );

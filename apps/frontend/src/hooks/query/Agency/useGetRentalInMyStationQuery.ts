@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { agencyService } from "@/services/agency.service";
 import { HTTP_STATUS } from "@/constants";
-const fetchMyRental = async ({page,pageSize} : {page ?: number , pageSize ?: number}) => {
+import type { RentalStatus } from "@/types";
+const fetchMyRental = async ({page,pageSize,rental_status} : {page ?: number , pageSize ?: number , rental_status ?: RentalStatus}) => {
   try {
-    const response = await agencyService.getRentalInMyStation({page,pageSize:pageSize});
+    const response = await agencyService.getRentalInMyStation({page,pageSize:pageSize,status:rental_status});
     if (response.status === HTTP_STATUS.OK) {
       return response.data; 
     }
@@ -12,9 +13,9 @@ const fetchMyRental = async ({page,pageSize} : {page ?: number , pageSize ?: num
     throw error;    
   }
 };
-export const useGetRentalInMyStationAgency = ({page,pageSize} : {page ?: number , pageSize ?: number}) => {
+export const useGetRentalInMyStationAgency = ({page,pageSize,rental_status} : {page ?: number , pageSize ?: number , rental_status ?: RentalStatus}) => {
   return useQuery({
-    queryKey: ["data","rental-in-my-station","agency",page,pageSize],
-    queryFn: () => fetchMyRental({ page, pageSize }),
+    queryKey: ["data","rental-in-my-station","agency",page,pageSize,rental_status],
+    queryFn: () => fetchMyRental({ page, pageSize,rental_status }),
   });
 };
