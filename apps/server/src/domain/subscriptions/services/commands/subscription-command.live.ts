@@ -1,10 +1,10 @@
 import { Effect, Layer } from "effect";
 
-import { SubscriptionCommandRepository } from "../repository/subscription-command.repository";
-import { SubscriptionQueryRepository } from "../repository/subscription-query.repository";
+import { SubscriptionCommandRepository } from "../../repository/subscription-command.repository";
+import { SubscriptionQueryRepository } from "../../repository/subscription-query.repository";
 import { makeSubscriptionCommandService } from "./subscription-command.service";
 
-export type { SubscriptionCommandService } from "./subscription.service.types";
+export type { SubscriptionCommandService } from "../subscription.service.types";
 
 const makeSubscriptionCommandServiceEffect = Effect.gen(function* () {
   const commandRepo = yield* SubscriptionCommandRepository;

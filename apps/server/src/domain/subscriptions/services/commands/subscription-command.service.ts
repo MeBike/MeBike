@@ -1,23 +1,27 @@
 import { Effect, Option } from "effect";
 
-import type { SubscriptionCommandRepo, SubscriptionQueryRepo } from "../repository/subscription.repository.types";
-import type { SubscriptionCommandService } from "./subscription.service.types";
+import type { SubscriptionCommandRepo, SubscriptionQueryRepo } from "../../repository/subscription.repository.types";
+import type { SubscriptionCommandService } from "../subscription.service.types";
 
 import {
   SubscriptionNotFound,
   SubscriptionNotPending,
   SubscriptionNotUsable,
   SubscriptionUsageExceeded,
-} from "../domain-errors";
-import { makeSubscriptionCommandRepository } from "../repository/subscription-command.repository";
-import { makeSubscriptionQueryRepository } from "../repository/subscription-query.repository";
-import { computeExpiresAt } from "./subscription-flows.shared";
+} from "../../domain-errors";
+import { makeSubscriptionCommandRepository } from "../../repository/subscription-command.repository";
+import { makeSubscriptionQueryRepository } from "../../repository/subscription-query.repository";
+import { computeExpiresAt } from "../shared/subscription-flow.shared";
 
 /**
- * Tạo command service cho subscriptions.
+ * Tao command service cho subscriptions.
  *
- * Service này gom phần ghi dữ liệu và phần map lỗi domain,
- * để caller không phải tự giải thích `Option.none()` ở tầng repo nghĩa là gì.
+ * Service nay gom phan ghi du lieu va phan map loi domain,
+ * de caller khong phai tu giai thich `Option.none()` o tang repo nghia la gi.
+ *
+ * @param args Tap repository can cho command service.
+ * @param args.commandRepo Command repository phuc vu cac thao tac ghi.
+ * @param args.queryRepo Query repository giup phan biet not found va state conflict.
  */
 export function makeSubscriptionCommandService(args: {
   commandRepo: SubscriptionCommandRepo;
@@ -68,10 +72,16 @@ export function makeSubscriptionCommandService(args: {
       }),
 
     /**
-     * Dùng đúng một lượt subscription bên trong transaction hiện có.
+     * Dung dung mot luot subscription ben trong transaction hien co.
      *
-     * Tên hàm giữ ở mức nghiệp vụ (`useOne`) thay vì phơi chi tiết triển khai.
-     * Caller chỉ cần biết truyền `tx` để cùng transaction với reservation/rental hiện tại.
+     * Ten ham giu o muc nghiep vu (`useOne`) thay vi phoi chi tiet trien khai.
+     * Caller chi can biet truyen `tx` de cung transaction voi reservation/rental hien tai.
+     *
+     * @param tx Prisma transaction client dang duoc caller su dung.
+     * @param input Thong tin su dung subscription trong transaction hien tai.
+     * @param input.subscriptionId Subscription can dung.
+     * @param input.userId User dang so huu subscription.
+     * @param input.now Moc thoi gian xu ly. Mac dinh dung thoi gian hien tai.
      */
     useOne: (tx, input) =>
       Effect.gen(function* () {
