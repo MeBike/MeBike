@@ -92,6 +92,11 @@ export default function StationDetailScreen() {
       return;
     }
 
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
+      return;
+    }
+
     bikeSwapMutation.mutate(
       {
         rentalId,

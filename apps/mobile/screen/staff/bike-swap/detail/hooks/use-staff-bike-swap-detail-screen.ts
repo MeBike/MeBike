@@ -5,6 +5,10 @@ import { useApproveBikeSwapRequestMutation } from "@/hooks/mutations/rentals/use
 import { useRejectBikeSwapRequestMutation } from "@/hooks/mutations/rentals/use-reject-bike-swap-request-mutation";
 import { useStaffBikeSwapRequestQuery } from "@/hooks/query/rentals/use-staff-bike-swap-request-query";
 import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
+import {
+  getOvernightOperationsClosedMessage,
+  isWithinVietnamOvernightOperationsWindow,
+} from "@/utils/business-hours";
 
 type UseStaffBikeSwapDetailScreenOptions = {
   bikeSwapRequestId: string;
@@ -44,6 +48,11 @@ export function useStaffBikeSwapDetailScreen({
       return;
     }
 
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
+      return;
+    }
+
     approveMutation.mutate(
       { bikeSwapRequestId: request.id },
       {
@@ -72,6 +81,11 @@ export function useStaffBikeSwapDetailScreen({
 
     if (!reason) {
       Alert.alert("Thiếu lý do", "Vui lòng nhập lý do từ chối trước khi tiếp tục.");
+      return;
+    }
+
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
       return;
     }
 
