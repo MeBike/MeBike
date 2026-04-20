@@ -1,7 +1,9 @@
 import { Effect, Option } from "effect";
 
+import type { OvernightOperationsClosed } from "@/domain/shared";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { isWithinOvernightOperationsWindow, makeOvernightOperationsClosedError } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
 
 import type { RentalRow } from "../../../models";
@@ -110,9 +112,18 @@ export function ensureOperatorCanConfirmReturnInTx(args: {
   readonly input: ConfirmRentalReturnInput;
   readonly rental: RentalRow;
   readonly operator: ConfirmReturnOperatorScope | null;
-}): Effect.Effect<void, UnauthorizedRentalAccess | RentalRepositoryError> {
+}): Effect.Effect<void, OvernightOperationsClosed | UnauthorizedRentalAccess | RentalRepositoryError> {
   return Effect.gen(function* () {
     const { tx, input, rental, operator } = args;
+    const now = input.now ?? new Date();
+    const operatorRole = operator?.role ?? input.operatorRole;
+
+    if (
+      (operatorRole === "STAFF" || operatorRole === "AGENCY")
+      && isWithinOvernightOperationsWindow(now)
+    ) {
+      return yield* Effect.fail(makeOvernightOperationsClosedError(now));
+    }
 
     if (operator?.role === "STAFF" && operator.stationId !== input.stationId) {
       return yield* Effect.fail(new UnauthorizedRentalAccess({

@@ -4,7 +4,6 @@ import {
   FixedSlotTemplateServiceLive,
   ReservationAnalyticsRepositoryLive,
   ReservationCommandRepositoryLive,
-  ReservationCommandServiceLive,
   ReservationQueryRepositoryLive,
   ReservationQueryServiceLive,
   ReservationStatsServiceLive,
@@ -36,10 +35,6 @@ export const ReservationQueryServiceLayer = ReservationQueryServiceLive.pipe(
   Layer.provide(ReservationQueryReposLive),
 );
 
-export const ReservationCommandServiceLayer = ReservationCommandServiceLive.pipe(
-  Layer.provide(ReservationCommandReposLive),
-);
-
 export const ReservationStatsServiceLayer = ReservationStatsServiceLive.pipe(
   Layer.provide(ReservationAnalyticsReposLive),
 );
@@ -57,7 +52,6 @@ export const ReservationDepsLive = Layer.mergeAll(
   ReservationCommandReposLive,
   ReservationAnalyticsReposLive,
   ReservationQueryServiceLayer,
-  ReservationCommandServiceLayer,
   ReservationStatsServiceLayer,
   FixedSlotTemplateServiceLayer,
   BikeReposLive,

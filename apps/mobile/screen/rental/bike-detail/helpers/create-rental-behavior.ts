@@ -86,6 +86,10 @@ export function handleCreateRentalError(args: {
       invalidateRentalRelatedQueries(queryClient);
       return;
     }
+    case "OVERNIGHT_OPERATIONS_CLOSED": {
+      Alert.alert("Ngoài giờ phục vụ", message);
+      return;
+    }
     case "BIKE_NOT_FOUND_IN_STATION":
     case "BIKE_IN_USE":
     case "BIKE_IS_RESERVED":

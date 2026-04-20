@@ -12,6 +12,10 @@ import { useCurrentLocation } from "@/providers/location-provider";
 import { useCreateIncidentMutation } from "@/screen/incidents/hooks/use-create-incident-mutation";
 import { useRentalIncidentQuery } from "@/screen/incidents/hooks/use-rental-incident-query";
 import { isIncidentTerminalStatus, presentIncidentError } from "@/screen/incidents/incident-presenters";
+import {
+  getOvernightOperationsClosedMessage,
+  isWithinVietnamOvernightOperationsWindow,
+} from "@/utils/business-hours";
 
 type Coordinates = {
   latitude: number;
@@ -134,6 +138,11 @@ export function useBookingIncidentState({
   const hasActiveIncident = Boolean(rentalIncident && !isIncidentTerminalStatus(rentalIncident.status));
 
   const handleOpenIncidentSheet = useCallback(() => {
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
+      return;
+    }
+
     setIncidentSheetOpen(true);
   }, []);
 
@@ -153,6 +162,11 @@ export function useBookingIncidentState({
     },
   ) => {
     if (!booking || isReportingIncident) {
+      return;
+    }
+
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
       return;
     }
 

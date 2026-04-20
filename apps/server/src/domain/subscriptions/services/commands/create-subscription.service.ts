@@ -14,23 +14,30 @@ import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import { buildSubscriptionCreatedEmail } from "@/lib/email-templates";
 
-import type { SubscriptionRow } from "../models";
-import type { CreateSubscriptionFailure } from "./subscription-flows.shared";
+import type { SubscriptionRow } from "../../models";
+import type { CreateSubscriptionFailure } from "../shared/subscription-flow.shared";
 
-import { SubscriptionPendingOrActiveExists as SubscriptionPendingOrActiveExistsError } from "../domain-errors";
-import { getSubscriptionPackageConfig } from "../package-config";
-import { makeSubscriptionCommandRepository } from "../repository/subscription-command.repository";
-import { makeSubscriptionQueryRepository } from "../repository/subscription-query.repository";
-import { computeAutoActivateAt } from "./subscription-flows.shared";
+import { SubscriptionPendingOrActiveExists as SubscriptionPendingOrActiveExistsError } from "../../domain-errors";
+import { getSubscriptionPackageConfig } from "../../package-config";
+import { makeSubscriptionCommandRepository } from "../../repository/subscription-command.repository";
+import { makeSubscriptionQueryRepository } from "../../repository/subscription-query.repository";
+import { computeAutoActivateAt } from "../shared/subscription-flow.shared";
 
 /**
- * Tạo subscription mới ở trạng thái pending, trừ tiền ví ngay, rồi enqueue các side effect cần thiết.
+ * Tao subscription moi o trang thai pending, tru tien vi ngay, roi enqueue cac side effect can thiet.
  *
- * Toàn bộ flow được gói trong một transaction để các bước sau luôn đi cùng nhau:
- * 1. kiểm tra user chưa có gói pending/active
- * 2. tạo row subscription pending
- * 3. trừ tiền ví
- * 4. enqueue job auto-activate và email xác nhận
+ * Toan bo flow duoc goi trong mot transaction de cac buoc sau luon di cung nhau:
+ * 1. kiem tra user chua co goi pending/active
+ * 2. tao row subscription pending
+ * 3. tru tien vi
+ * 4. enqueue job auto-activate va email xac nhan
+ *
+ * @param args Thong tin tao subscription moi.
+ * @param args.userId User mua goi.
+ * @param args.packageName Goi subscription duoc chon.
+ * @param args.email Email nhan thong bao tao goi.
+ * @param args.fullName Ten hien thi trong email xac nhan.
+ * @param args.now Moc thoi gian tao subscription. Mac dinh dung thoi gian hien tai.
  */
 export function createSubscriptionUseCase(args: {
   userId: string;
@@ -119,7 +126,10 @@ export function createSubscriptionUseCase(args: {
 }
 
 /**
- * Trừ tiền ví và map lỗi wallet sang lỗi domain của luồng mua subscription.
+ * Tru tien vi va map loi wallet sang loi domain cua luong mua subscription.
+ *
+ * @param repo Wallet repository dang chay trong transaction hien tai.
+ * @param input Thong tin debit can ap dung cho vi user.
  */
 function debitWallet(
   repo: ReturnType<typeof makeWalletRepository>,

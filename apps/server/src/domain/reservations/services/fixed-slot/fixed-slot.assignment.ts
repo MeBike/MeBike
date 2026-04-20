@@ -8,6 +8,7 @@ import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/clien
 
 import { makeBikeRepository } from "@/domain/bikes";
 import { makePricingPolicyRepository } from "@/domain/pricing";
+import { isWallClockWithinOvernightOperationsWindow } from "@/domain/shared";
 import {
   makeSubscriptionCommandRepository,
   makeSubscriptionQueryRepository,
@@ -329,6 +330,10 @@ export function processFixedSlotTemplate(
   template: FixedSlotAssignmentTemplateRow,
   context: FixedSlotAssignmentContext,
 ) {
+  if (isWallClockWithinOvernightOperationsWindow(template.slotStart)) {
+    return Effect.succeed("SKIPPED_OUTSIDE_OPERATING_HOURS" as const);
+  }
+
   const labels = buildFixedSlotLabels(context.slotDate, template.slotStart);
 
   return Effect.tryPromise({

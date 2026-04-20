@@ -138,4 +138,130 @@ describe("rental overdue sweep", () => {
     expect(holdRow?.status).toBe("ACTIVE");
     expect(holdRow?.forfeitedAt).toBeNull();
   });
+
+  it("cancels active return slots during overnight closure", async () => {
+    const { rental, user } = await givenActiveRental(fixture, {
+      rental: {
+        startTime: new Date("2026-03-22T10:00:00.000Z"),
+      },
+    });
+    const station = await fixture.factories.station({ capacity: 3 });
+
+    await fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: rental.id,
+        userId: user.id,
+        stationId: station.id,
+        reservedFrom: new Date("2026-03-22T15:30:00.000Z"),
+        status: "ACTIVE",
+      },
+    });
+
+    const summary = await sweepOverdueRentals(
+      fixture.prisma,
+      new Date("2026-03-22T16:05:00.000Z"),
+    );
+
+    expect(summary.cancelledReturnSlots).toBe(1);
+
+    const slot = await fixture.prisma.returnSlotReservation.findFirst({
+      where: { rentalId: rental.id },
+    });
+    expect(slot?.status).toBe("CANCELLED");
+  });
+
+  it("marks same-day rentals overdue and cancels return slots exactly at cutoff", async () => {
+    const { rental, user, bike } = await givenActiveRental(fixture, {
+      wallet: {
+        balance: 1_000_000n,
+      },
+      rental: {
+        startTime: new Date("2026-03-22T10:00:00.000Z"),
+      },
+    });
+    const station = await fixture.factories.station({ capacity: 3 });
+
+    await fixture.prisma.$transaction(async (tx) => {
+      await Effect.runPromise(createRentalDepositHoldInTx({
+        tx,
+        rentalId: rental.id,
+        userId: user.id,
+        amount: 500_000n,
+      }));
+    });
+
+    await fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: rental.id,
+        userId: user.id,
+        stationId: station.id,
+        reservedFrom: new Date("2026-03-22T15:30:00.000Z"),
+        status: "ACTIVE",
+      },
+    });
+
+    const summary = await sweepOverdueRentals(
+      fixture.prisma,
+      new Date("2026-03-22T16:00:00.000Z"),
+    );
+
+    expect(summary).toMatchObject({
+      overdue: 1,
+      cancelledReturnSlots: 1,
+      depositForfeited: 1,
+      bikeUnavailable: 1,
+    });
+
+    const rentalRow = await fixture.prisma.rental.findUnique({
+      where: { id: rental.id },
+    });
+    expect(rentalRow?.status).toBe("OVERDUE_UNRETURNED");
+
+    const bikeRow = await fixture.prisma.bike.findUnique({
+      where: { id: bike.id },
+    });
+    expect(bikeRow?.status).toBe("UNAVAILABLE");
+
+    const slot = await fixture.prisma.returnSlotReservation.findFirst({
+      where: { rentalId: rental.id },
+    });
+    expect(slot?.status).toBe("CANCELLED");
+  });
+
+  it("cancels active return slots at the configured pricing cutoff, not only overnight window", async () => {
+    await fixture.prisma.pricingPolicy.updateMany({
+      data: {
+        lateReturnCutoff: new Date("1970-01-01T22:00:00.000Z"),
+      },
+    });
+
+    const { rental, user } = await givenActiveRental(fixture, {
+      rental: {
+        startTime: new Date("2026-03-22T09:00:00.000Z"),
+      },
+    });
+    const station = await fixture.factories.station({ capacity: 3 });
+
+    await fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: rental.id,
+        userId: user.id,
+        stationId: station.id,
+        reservedFrom: new Date("2026-03-22T14:30:00.000Z"),
+        status: "ACTIVE",
+      },
+    });
+
+    const summary = await sweepOverdueRentals(
+      fixture.prisma,
+      new Date("2026-03-22T15:00:00.000Z"),
+    );
+
+    expect(summary.cancelledReturnSlots).toBe(1);
+
+    const slot = await fixture.prisma.returnSlotReservation.findFirst({
+      where: { rentalId: rental.id },
+    });
+    expect(slot?.status).toBe("CANCELLED");
+  });
 });

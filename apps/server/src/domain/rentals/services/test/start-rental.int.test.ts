@@ -196,6 +196,42 @@ describe("startRentalUseCase Integration", () => {
     expectLeftTag(result, "InsufficientBalanceToRent");
   });
 
+  it("rejects rental start during overnight closure", async () => {
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 600000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
+
+    const blockedNow = new Date("2026-04-20T16:00:00.000Z");
+    const result = await runStartRental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime: blockedNow,
+      now: blockedNow,
+    });
+
+    expectLeftTag(result, "OvernightOperationsClosed");
+  });
+
+  it("allows rental start again at 05:00", async () => {
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 600000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
+
+    const allowedNow = new Date("2026-04-20T22:00:00.000Z");
+    const result = await runStartRental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime: allowedNow,
+      now: allowedNow,
+    });
+
+    expectRight(result);
+  });
+
   it("emits RentalUniqueViolation on duplicate active rentals (repo)", async () => {
     const user = await fixture.factories.user();
     const station = await fixture.factories.station();

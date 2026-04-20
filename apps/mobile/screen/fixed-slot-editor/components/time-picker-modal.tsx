@@ -22,9 +22,12 @@ export function TimePickerModal({ visible, value, onChange, onConfirm, onClose }
       <YStack gap="$5" padding="$5">
         <YStack gap="$1">
           <AppText variant="sectionTitle">Chọn giờ bắt đầu</AppText>
-          <AppText tone="muted" variant="bodySmall">
-            Giờ này sẽ áp dụng cho toàn bộ ngày đã chọn.
-          </AppText>
+        <AppText tone="muted" variant="bodySmall">
+          Giờ này sẽ áp dụng cho toàn bộ ngày đã chọn.
+        </AppText>
+        <AppText tone="muted" variant="bodySmall">
+          Chỉ chọn giờ từ 05:00 đến trước 23:00.
+        </AppText>
         </YStack>
         <View>
           <DateTimePicker

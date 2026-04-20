@@ -9,6 +9,7 @@ export type FixedSlotAssignmentSummary = {
   readonly noBike: number;
   readonly billingFailed: number;
   readonly conflicts: number;
+  readonly skippedOutsideOperatingHours: number;
 };
 
 /** Ket qua assignment cua mot fixed-slot template trong worker run. */
@@ -17,7 +18,8 @@ export type FixedSlotAssignmentOutcome
     | "ALREADY_ASSIGNED"
     | "BILLING_FAILED"
     | "NO_BIKE"
-    | "CONFLICT";
+    | "CONFLICT"
+    | "SKIPPED_OUTSIDE_OPERATING_HOURS";
 
 /** Context chung duoc truyen xuyen suot mot lan worker xu ly fixed-slot. */
 export type FixedSlotAssignmentContext = {
@@ -40,6 +42,7 @@ export type FixedSlotCounts = {
   noBike: number;
   billingFailed: number;
   conflicts: number;
+  skippedOutsideOperatingHours: number;
 };
 
 export type { FixedSlotAssignmentTemplateRow };

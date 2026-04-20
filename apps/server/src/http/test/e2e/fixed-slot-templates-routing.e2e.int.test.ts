@@ -77,6 +77,31 @@ describe("fixed-slot templates routing e2e", () => {
     expect(wallet?.balance).toBe(10000n);
   });
 
+  it("rejects fixed-slot create when slot start is overnight", async () => {
+    const user = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: user.id, balance: 10000n });
+    const station = await fixture.factories.station({ name: "Overnight Fixed Slot Station" });
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+
+    const response = await fixture.app.request("http://test/v1/fixed-slot-templates", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        stationId: station.id,
+        slotStart: "23:30",
+        slotDates: ["2026-04-20"],
+      }),
+    });
+
+    const body = await response.json() as FixedSlotTemplatesContracts.FixedSlotTemplateErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.details.code).toBe("FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS");
+  });
+
   it("rejects a slot that is already today in Vietnam even if UTC is still previous day", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-19T18:00:00.000Z"));
@@ -478,6 +503,41 @@ describe("fixed-slot templates routing e2e", () => {
     expect(response.status).toBe(200);
     expect(body.slotStart).toBe("10:45");
     expect(updatedReservation?.startTime.toISOString()).toBe("2026-04-20T03:45:00.000Z");
+  });
+
+  it("rejects fixed-slot update when new slot start is overnight", async () => {
+    const user = await fixture.factories.user({ role: "USER" });
+    const station = await fixture.factories.station({ name: "Fixed Slot Overnight Update Station" });
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+
+    const template = await fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        userId: user.id,
+        stationId: station.id,
+        slotStart: new Date(Date.UTC(2000, 0, 1, 9, 30, 0)),
+        status: "ACTIVE",
+        updatedAt: new Date("2026-04-10T10:00:00.000Z"),
+        dates: {
+          create: [{ slotDate: new Date(Date.UTC(2026, 3, 20)) }],
+        },
+      },
+    });
+
+    const response = await fixture.app.request(`http://test/v1/fixed-slot-templates/${template.id}`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        slotStart: "04:30",
+      }),
+    });
+
+    const body = await response.json() as FixedSlotTemplatesContracts.FixedSlotTemplateErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.details.code).toBe("FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS");
   });
 
   it("user can remove one fixed-slot date without wallet side effects before assignment", async () => {

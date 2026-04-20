@@ -14,6 +14,10 @@ import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
+import {
+  getOvernightOperationsClosedMessage,
+  isWithinVietnamOvernightOperationsWindow,
+} from "@/utils/business-hours";
 
 import { BikeList } from "./components/bike-list";
 import { FixedSlotBanner } from "./components/fixed-slot-banner";
@@ -56,6 +60,11 @@ export default function StationDetailScreen() {
       return;
     }
 
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
+      return;
+    }
+
     returnSlotMutation.mutate(
       { rentalId, stationId: station.id },
       {
@@ -80,6 +89,11 @@ export default function StationDetailScreen() {
 
   const handleSelectBikeSwapStation = () => {
     if (!station || !rentalId) {
+      return;
+    }
+
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
       return;
     }
 

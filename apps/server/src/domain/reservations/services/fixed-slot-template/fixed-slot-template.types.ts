@@ -1,6 +1,7 @@
 import type { Effect } from "effect";
 
 import type { FixedSlotTemplateFilter, FixedSlotTemplateRow } from "@/domain/reservations/models";
+import type { FixedSlotTemplateStartOutsideOperatingHours } from "@/domain/shared";
 import type { PageResult } from "@/domain/shared/pagination";
 import type { Prisma } from "@/infrastructure/prisma";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
@@ -44,6 +45,7 @@ export type FixedSlotTemplateService = {
     FixedSlotTemplateRow,
     | FixedSlotTemplateStationNotFound
     | FixedSlotTemplateDateNotFuture
+    | FixedSlotTemplateStartOutsideOperatingHours
     | FixedSlotTemplateConflict,
     Prisma
   >;
@@ -120,6 +122,7 @@ export type FixedSlotTemplateService = {
     | FixedSlotTemplateNotFound
     | FixedSlotTemplateDateNotFuture
     | FixedSlotTemplateDateLocked
+    | FixedSlotTemplateStartOutsideOperatingHours
     | FixedSlotTemplateConflict
     | FixedSlotTemplateUpdateConflict,
     Prisma

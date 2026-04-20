@@ -54,6 +54,16 @@ const reserveBikeHandler: RouteHandler<ReservationsRoutes["reserveBike"]> = asyn
       c.json<ReservationDetailResponse, 200>(toContractReservation(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
+        Match.tag("OvernightOperationsClosed", ({ currentTime, windowStart, windowEnd }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.OVERNIGHT_OPERATIONS_CLOSED,
+            details: {
+              code: ReservationErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+              currentTime,
+              windowStart,
+              windowEnd,
+            },
+          }, 400)),
         Match.tag("ActiveReservationExists", ({ userId: ownerId }) =>
           c.json<ReservationErrorResponse, 400>({
             error: reservationErrorMessages.ACTIVE_RESERVATION_EXISTS,
@@ -199,6 +209,16 @@ const confirmReservationHandler: RouteHandler<ReservationsRoutes["confirmReserva
       c.json<ReservationDetailResponse, 200>(toContractReservation(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
+        Match.tag("OvernightOperationsClosed", ({ currentTime, windowStart, windowEnd }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.OVERNIGHT_OPERATIONS_CLOSED,
+            details: {
+              code: ReservationErrorCodeSchema.enum.OVERNIGHT_OPERATIONS_CLOSED,
+              currentTime,
+              windowStart,
+              windowEnd,
+            },
+          }, 400)),
         Match.tag("ReservationConfirmBlockedByActiveRental", ({ userId: ownerId }) =>
           c.json<ReservationErrorResponse, 400>({
             error: reservationErrorMessages.RESERVATION_CONFIRM_BLOCKED_BY_ACTIVE_RENTAL,

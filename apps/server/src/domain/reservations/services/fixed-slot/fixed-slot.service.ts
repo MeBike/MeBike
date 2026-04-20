@@ -52,6 +52,7 @@ export function assignFixedSlotReservations(args: {
       noBike: 0,
       billingFailed: 0,
       conflicts: 0,
+      skippedOutsideOperatingHours: 0,
     };
     // TODO(ops): Avoid "sequential death" — a single unexpected DB/infra failure currently dies the whole run.
     // Wrap per-template processing with `Effect.either` / `Effect.catchAll` to log + continue, and track an error count.
