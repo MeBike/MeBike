@@ -40,7 +40,6 @@ export function persistConfirmReservationInTx(args: {
   return Effect.gen(function* () {
     const { tx, input, prepared } = args;
     const txRentalRepo = makeRentalRepository(tx);
-    const txBikeRepo = makeBikeRepository(tx);
     const txReservationCommandRepo = makeReservationCommandRepository(tx);
 
     yield* bookReservedBikeForConfirmationInTx(tx, prepared.bikeId, input.now);

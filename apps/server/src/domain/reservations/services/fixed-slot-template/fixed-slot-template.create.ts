@@ -104,7 +104,6 @@ export function createFixedSlotTemplateForUser(args: {
           slotDates,
           updatedAt: now,
         });
-      }),
-    ).pipe(defectOn(PrismaTransactionError));
+      })).pipe(defectOn(PrismaTransactionError));
   });
 }

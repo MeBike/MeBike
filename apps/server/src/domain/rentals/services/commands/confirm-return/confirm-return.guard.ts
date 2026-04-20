@@ -1,9 +1,10 @@
 import { Effect, Option } from "effect";
 
+import type { OvernightOperationsClosed } from "@/domain/shared";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { isWithinOvernightOperationsWindow, makeOvernightOperationsClosedError } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
-import { type OvernightOperationsClosed, isWithinOvernightOperationsWindow, makeOvernightOperationsClosedError } from "@/domain/shared";
 
 import type { RentalRow } from "../../../models";
 import type { ConfirmRentalReturnInput } from "../../../types";

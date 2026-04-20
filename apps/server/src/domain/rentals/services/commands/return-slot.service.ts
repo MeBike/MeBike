@@ -9,8 +9,8 @@ import { StationNotFound } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { ReturnSlotRow } from "../../models";
 import type { RentalOperatingHourFailure } from "../../domain-errors";
+import type { ReturnSlotRow } from "../../models";
 
 import {
   RentalNotFound,

@@ -9,6 +9,10 @@ import {
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
+import type {
+  FixedSlotTemplateConflict,
+  FixedSlotTemplateUpdateConflict,
+} from "../../domain-errors";
 import type { FixedSlotTemplateRow } from "../../models";
 
 import {
@@ -16,18 +20,16 @@ import {
   FixedSlotTemplateDateNotFound,
   FixedSlotTemplateDateNotFuture,
   FixedSlotTemplateNotFound,
-  FixedSlotTemplateConflict,
-  FixedSlotTemplateUpdateConflict,
 } from "../../domain-errors";
 import { makeReservationCommandRepository } from "../../repository/reservation-command.repository";
 import { makeReservationQueryRepository } from "../../repository/reservation-query.repository";
-import { applyTemplateMutation, ensureTemplateMutationAllowed } from "./mutations";
 import {
   normalizeSlotDate,
   parseSlotDateKey,
   parseSlotTimeValue,
   toSlotDateKey,
 } from "../fixed-slot/fixed-slot.helpers";
+import { applyTemplateMutation, ensureTemplateMutationAllowed } from "./mutations";
 
 /**
  * Cập nhật giờ bắt đầu hoặc tập ngày của fixed-slot template.
@@ -130,8 +132,7 @@ export function updateFixedSlotTemplateForUser(args: {
           txCommandRepo,
           bikeRepo,
         });
-      }),
-    ).pipe(defectOn(PrismaTransactionError));
+      })).pipe(defectOn(PrismaTransactionError));
   });
 }
 
@@ -210,7 +211,6 @@ export function removeFixedSlotTemplateDateForUser(args: {
           txCommandRepo,
           bikeRepo,
         });
-      }),
-    ).pipe(defectOn(PrismaTransactionError));
+      })).pipe(defectOn(PrismaTransactionError));
   });
 }

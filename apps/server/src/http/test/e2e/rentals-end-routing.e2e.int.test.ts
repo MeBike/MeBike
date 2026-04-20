@@ -244,7 +244,7 @@ describe("rentals end routing e2e", () => {
       const response = await fixture.app.request(`http://test/v1/rentals/${rental.id}/end`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${staffToken}`,
+          "Authorization": `Bearer ${staffToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

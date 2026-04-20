@@ -1,7 +1,6 @@
 import { Data } from "effect";
 
-import type { OvernightOperationsClosed } from "@/domain/shared";
-import type { WithGenericError } from "@/domain/shared";
+import type { OvernightOperationsClosed, WithGenericError } from "@/domain/shared";
 import type { StationNotFound } from "@/domain/stations/errors";
 import type {
   SubscriptionNotFound,

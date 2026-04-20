@@ -3,8 +3,8 @@ import { Data } from "effect";
 import type {
   FixedSlotTemplateStartOutsideOperatingHours,
   OvernightOperationsClosed,
+  WithGenericError,
 } from "@/domain/shared";
-import type { WithGenericError } from "@/domain/shared";
 import type {
   InsufficientWalletBalance,
   WalletNotFound,

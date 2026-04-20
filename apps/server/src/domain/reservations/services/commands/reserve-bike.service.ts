@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 
-import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
 import { defectOn } from "@/domain/shared";
+import { SubscriptionCommandServiceTag } from "@/domain/subscriptions";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 

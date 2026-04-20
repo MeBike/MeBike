@@ -526,7 +526,7 @@ describe("fixed-slot templates routing e2e", () => {
     const response = await fixture.app.request(`http://test/v1/fixed-slot-templates/${template.id}`, {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

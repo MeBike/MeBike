@@ -85,7 +85,6 @@ export function cancelFixedSlotTemplateForUser(args: {
           status: "CANCELLED",
           updatedAt: now,
         });
-      }),
-    ).pipe(defectOn(PrismaTransactionError));
+      })).pipe(defectOn(PrismaTransactionError));
   });
 }
