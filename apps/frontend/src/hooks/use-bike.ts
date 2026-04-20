@@ -244,7 +244,7 @@ export const useBikeActions = ({
       }
     },
     [
-      useUpdateBikeStatusMutation,
+      useTechnicianUpdateBike,
       hasToken,
       router,
       page,
