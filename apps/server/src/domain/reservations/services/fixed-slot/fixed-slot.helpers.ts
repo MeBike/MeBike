@@ -176,6 +176,9 @@ export function incrementFixedSlotCounts(
     case "CONFLICT":
       counts.conflicts += 1;
       break;
+    case "SKIPPED_OUTSIDE_OPERATING_HOURS":
+      counts.skippedOutsideOperatingHours += 1;
+      break;
     default: {
       const _exhaustive: never = outcome;
       throw _exhaustive;

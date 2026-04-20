@@ -3,7 +3,11 @@ import { Context, Effect, Layer, Option } from "effect";
 import type { StationQueryRepo } from "@/domain/stations";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { defectOn } from "@/domain/shared";
+import {
+  defectOn,
+  isWallClockWithinOvernightOperationsWindow,
+  makeFixedSlotTemplateStartOutsideOperatingHoursError,
+} from "@/domain/shared";
 import { makeStationQueryRepository, StationQueryRepository } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -59,6 +63,12 @@ export function makeFixedSlotTemplateService(deps: {
         const today = normalizeSlotDate(now);
         const slotStart = parseSlotTimeValue(args.slotStart);
         const slotDates = args.slotDates.map(parseSlotDateKey);
+
+        if (isWallClockWithinOvernightOperationsWindow(slotStart)) {
+          return yield* Effect.fail(
+            makeFixedSlotTemplateStartOutsideOperatingHoursError(slotStart),
+          );
+        }
 
         for (const slotDate of slotDates) {
           if (slotDate.getTime() <= today.getTime()) {
@@ -220,6 +230,14 @@ export function makeFixedSlotTemplateService(deps: {
             );
 
             const nextSlotStart = args.slotStart ? parseSlotTimeValue(args.slotStart) : template.slotStart;
+            if (
+              args.slotStart !== undefined
+              && isWallClockWithinOvernightOperationsWindow(nextSlotStart)
+            ) {
+              return yield* Effect.fail(
+                makeFixedSlotTemplateStartOutsideOperatingHoursError(nextSlotStart),
+              );
+            }
             let nextSlotDates = template.slotDates;
 
             if (args.slotDates) {

@@ -10,6 +10,7 @@ import type {
   FixedSlotTemplateNotFound,
   FixedSlotTemplateUpdateConflict,
 } from "@/domain/reservations";
+import type { FixedSlotTemplateStartOutsideOperatingHours } from "@/domain/shared";
 
 import { FixedSlotTemplateServiceTag } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
@@ -35,6 +36,7 @@ type UpdateFixedSlotTemplateError
     | FixedSlotTemplateDateLocked
     | FixedSlotTemplateDateNotFuture
     | FixedSlotTemplateNotFound
+    | FixedSlotTemplateStartOutsideOperatingHours
     | FixedSlotTemplateUpdateConflict;
 
 type RemoveFixedSlotTemplateDateError
@@ -89,6 +91,16 @@ const createFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["createFixe
           stationId,
         },
       }, 404)),
+    Match.tag("FixedSlotTemplateStartOutsideOperatingHours", ({ slotStart, windowStart, windowEnd }) =>
+      c.json<FixedSlotTemplateErrorResponse, 400>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS,
+          slotStart,
+          windowStart,
+          windowEnd,
+        },
+      }, 400)),
     Match.tag("FixedSlotTemplateConflict", ({ slotStart, slotDates }) =>
       c.json<FixedSlotTemplateErrorResponse, 409>({
         error: fixedSlotTemplateErrorMessages.FIXED_SLOT_TEMPLATE_CONFLICT,
@@ -275,6 +287,16 @@ const updateFixedSlotTemplate: RouteHandler<FixedSlotTemplatesRoutes["updateFixe
         details: {
           code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_DATE_NOT_FUTURE,
           slotDate,
+        },
+      }, 400)),
+    Match.tag("FixedSlotTemplateStartOutsideOperatingHours", ({ slotStart, windowStart, windowEnd }) =>
+      c.json<FixedSlotTemplateErrorResponse, 400>({
+        error: fixedSlotTemplateErrorMessages.FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS,
+        details: {
+          code: FixedSlotTemplateErrorCodeSchema.enum.FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS,
+          slotStart,
+          windowStart,
+          windowEnd,
         },
       }, 400)),
     Match.tag("FixedSlotTemplateDateLocked", ({ slotDate }) =>

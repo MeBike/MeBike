@@ -46,6 +46,7 @@ export async function handleFixedSlotAssign(
       noBike: summary.noBike,
       billingFailed: summary.billingFailed,
       conflicts: summary.conflicts,
+      skippedOutsideOperatingHours: summary.skippedOutsideOperatingHours,
     },
     "reservations.fixedSlotAssign completed",
   );
