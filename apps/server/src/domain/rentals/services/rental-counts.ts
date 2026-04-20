@@ -6,6 +6,7 @@ export function aggregateRentalStatusCounts(
   const counts: RentalStatusCounts = {
     RENTED: 0,
     COMPLETED: 0,
+    OVERDUE_UNRETURNED: 0,
   };
 
   for (const row of rows) {

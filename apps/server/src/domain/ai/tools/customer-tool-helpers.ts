@@ -115,6 +115,7 @@ export const bikeToolPage = {
 const rentalStatusLabels = {
   CANCELLED: "Đã hủy",
   COMPLETED: "Đã hoàn thành",
+  OVERDUE_UNRETURNED: "Quá hạn chưa trả",
   RENTED: "Đang hoạt động",
 } as const;
 

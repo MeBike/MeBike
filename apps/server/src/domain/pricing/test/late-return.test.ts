@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { isAfterLateReturnCutoff } from "../late-return";
+import {
+  isAfterLateReturnCutoff,
+  isPastRentalReturnDeadline,
+} from "../late-return";
 
 describe("late return cutoff", () => {
   const cutoff = new Date("1970-01-01T23:00:00.000Z");
@@ -21,5 +24,12 @@ describe("late return cutoff", () => {
     const confirmedAt = new Date("2026-03-22T15:59:59.000Z");
 
     expect(isAfterLateReturnCutoff(confirmedAt, cutoff)).toBe(false);
+  });
+
+  it("treats next-day returns as overdue", () => {
+    const rentalStartTime = new Date("2026-03-22T10:00:00.000Z");
+    const referenceTime = new Date("2026-03-23T00:05:00.000Z");
+
+    expect(isPastRentalReturnDeadline(rentalStartTime, referenceTime, cutoff)).toBe(true);
   });
 });

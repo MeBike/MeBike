@@ -14,6 +14,7 @@ describe("aggregateRentalStatusCounts", () => {
     expect(aggregateRentalStatusCounts(rows)).toEqual({
       RENTED: 2,
       COMPLETED: 5,
+      OVERDUE_UNRETURNED: 0,
     });
   });
 
@@ -27,6 +28,7 @@ describe("aggregateRentalStatusCounts", () => {
     expect(aggregateRentalStatusCounts(rows)).toEqual({
       RENTED: 3,
       COMPLETED: 2,
+      OVERDUE_UNRETURNED: 0,
     });
   });
 });

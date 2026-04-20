@@ -181,7 +181,8 @@ export const HandoverStatus = {
 export type HandoverStatus = (typeof HandoverStatus)[keyof typeof HandoverStatus];
 export const RentalStatus = {
     RENTED: "RENTED",
-    COMPLETED: "COMPLETED"
+    COMPLETED: "COMPLETED",
+    OVERDUE_UNRETURNED: "OVERDUE_UNRETURNED"
 } as const;
 export type RentalStatus = (typeof RentalStatus)[keyof typeof RentalStatus];
 export const ReservationStatus = {
