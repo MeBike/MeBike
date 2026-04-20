@@ -2,6 +2,11 @@ import { useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 import { Alert } from "react-native";
 
+import {
+  getOvernightOperationsClosedMessage,
+  isWithinVietnamOvernightOperationsWindow,
+} from "@/utils/business-hours";
+
 import { useCancelReservationMutation } from "../mutations/reservation/use-cancel-reservation-mutation";
 import { useConfirmReservationMutation } from "../mutations/reservation/use-confirm-reservation-mutation";
 import { useCreateReservationMutation } from "../mutations/reservation/use-create-reservation-mutation";
@@ -53,6 +58,13 @@ export function useReservationMutations({ ensureAuthenticated }: UseReservationM
       const startIso = startTime
         ? new Date(startTime).toISOString()
         : new Date(Date.now() + RESERVATION_BUFFER_MS).toISOString();
+
+      if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+        const message = getOvernightOperationsClosedMessage();
+        Alert.alert("Ngoài giờ phục vụ", message);
+        options?.callbacks?.onError?.(message);
+        return;
+      }
 
       const reservationOption = options?.reservationOption ?? "MỘT LẦN";
       const payload = {
@@ -140,6 +152,13 @@ export function useReservationMutations({ ensureAuthenticated }: UseReservationM
   const confirmReservation = useCallback(
     (reservationIdToConfirm: string, callbacks?: MutationCallbacks) => {
       if (!ensureAuthenticated()) {
+        return;
+      }
+
+      if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+        const message = getOvernightOperationsClosedMessage();
+        Alert.alert("Ngoài giờ phục vụ", message);
+        callbacks?.onError?.(message);
         return;
       }
 

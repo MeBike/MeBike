@@ -296,6 +296,24 @@ describe("rentals end routing e2e", () => {
     expect(body.id).toBe(rental.id);
   });
 
+  it("allows a manager to fetch active rental detail outside their station for walk-in returns", async () => {
+    const { rental } = await createActiveRentalGraph();
+    const otherStation = await fixture.factories.station({ capacity: 5 });
+    const { token: managerToken } = await createManagerToken(otherStation.id);
+
+    const response = await fixture.app.request(`http://test/v1/staff/rentals/${rental.id}`, {
+      headers: {
+        Authorization: `Bearer ${managerToken}`,
+      },
+    });
+
+    const body = await response.json() as RentalsContracts.RentalDetail;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.status).toBe("RENTED");
+  });
+
   it("lets agency use the agency rentals list but only for its station", async () => {
     const { agency, token: agencyToken, station } = await createAgencyToken();
     const riderA = await fixture.factories.user({ role: "USER" });
@@ -412,8 +430,21 @@ describe("rentals end routing e2e", () => {
     expect(response.status).toBe(404);
   });
 
-  it("hides rental detail from manager when the rental is outside their station", async () => {
-    const { rental } = await createActiveRentalGraph();
+  it("hides completed rental detail from manager when the rental is outside their station", async () => {
+    const rider = await fixture.factories.user({ role: "USER" });
+    await fixture.factories.wallet({ userId: rider.id, balance: 100_000n });
+    const startStation = await fixture.factories.station({ capacity: 5 });
+    const endStation = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: endStation.id, status: "AVAILABLE" });
+    const rental = await fixture.factories.rental({
+      userId: rider.id,
+      bikeId: bike.id,
+      startStationId: startStation.id,
+      endStationId: endStation.id,
+      startTime: new Date("2026-03-21T08:00:00.000Z"),
+      endTime: new Date("2026-03-21T09:00:00.000Z"),
+      status: "COMPLETED",
+    });
     const otherStation = await fixture.factories.station({ capacity: 5 });
     const { token: managerToken } = await createManagerToken(otherStation.id);
 

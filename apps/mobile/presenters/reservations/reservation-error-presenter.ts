@@ -9,6 +9,7 @@ const reservationErrorMessages = {
   insufficientWalletBalance: "Số dư ví không đủ để đặt xe.",
   invalidReservationTransition: "Không thể chuyển lượt giữ chỗ sang trạng thái này.",
   networkError: "Không thể kết nối tới máy chủ.",
+  overnightOperationsClosed: "Hệ thống tạm ngưng thao tác này từ 23:00 đến 05:00 giờ Việt Nam. Vui lòng thử lại sau 05:00.",
   reservationConfirmBlockedByActiveRental:
     "Bạn đang có chuyến đi hoạt động nên chưa thể nhận thêm lượt giữ chỗ này.",
   reservationMissingBike: "Lượt giữ chỗ này chưa được gán xe phù hợp.",
@@ -58,6 +59,8 @@ function presentReservationApiError(error: Extract<ReservationError, { _tag: "Ap
     }
     case "INVALID_RESERVATION_TRANSITION":
       return reservationErrorMessages.invalidReservationTransition;
+    case "OVERNIGHT_OPERATIONS_CLOSED":
+      return reservationErrorMessages.overnightOperationsClosed;
     case "RESERVATION_CONFIRM_BLOCKED_BY_ACTIVE_RENTAL":
       return reservationErrorMessages.reservationConfirmBlockedByActiveRental;
     case "RESERVATION_MISSING_BIKE":

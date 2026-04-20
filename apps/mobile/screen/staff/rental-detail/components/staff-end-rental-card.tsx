@@ -92,7 +92,7 @@ export default function StaffEndRentalCard({
         </AppButton>
       </YStack>
 
-      <AppBottomModalCard isVisible={isVisible} onClose={() => onChangeVisible(false)}>
+      <AppBottomModalCard isVisible={isVisible} onClose={() => onChangeVisible(false)} variant="sheet">
         <YStack gap="$4" padding="$6">
           <YStack gap="$2">
             <AppText variant="sectionTitle">Xác nhận thu xe</AppText>
@@ -106,14 +106,15 @@ export default function StaffEndRentalCard({
             </AppText>
           </YStack>
 
+          {/*
           <AppCard
-            borderColor={activeReturnSlot ? "$borderSubtle" : "$borderDanger"}
+            borderColor="$borderSubtle"
             borderRadius="$4"
             borderWidth={borderWidths.subtle}
             chrome="flat"
             gap="$3"
             padding="$4"
-            tone={activeReturnSlot ? "muted" : "danger"}
+            tone="muted"
           >
             <XStack alignItems="flex-start" gap="$3">
               <YStack
@@ -125,8 +126,8 @@ export default function StaffEndRentalCard({
                 width={36}
               >
                 <IconSymbol
-                  color={activeReturnSlot ? theme.statusWarning.val : theme.statusDanger.val}
-                  name={activeReturnSlot ? "location" : "warning"}
+                  color={activeReturnSlot ? theme.statusWarning.val : theme.textBrand.val}
+                  name="location"
                   size="sm"
                   variant="filled"
                 />
@@ -148,6 +149,7 @@ export default function StaffEndRentalCard({
               </YStack>
             </XStack>
           </AppCard>
+          */}
 
           <YStack gap="$2">
             <AppText variant="subhead">Ghi chú (Tùy chọn)</AppText>

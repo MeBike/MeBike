@@ -8,6 +8,10 @@ import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
 
 import { isBikeAvailable as isBikeAvailableStatus } from "@/utils/bike";
+import {
+  getOvernightOperationsClosedMessage,
+  isWithinVietnamOvernightOperationsWindow,
+} from "@/utils/business-hours";
 
 import type { PaymentMode } from "../types";
 
@@ -93,6 +97,11 @@ export function useBikeDetailActions({
       return;
     }
 
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
+      return;
+    }
+
     navigateToReservationFlow(navigation, reservationFlowParams);
   }, [currentBike.status, ensureAuthenticated, navigation, reservationFlowParams]);
 
@@ -103,6 +112,11 @@ export function useBikeDetailActions({
     }
 
     if (!ensureAuthenticated()) {
+      return;
+    }
+
+    if (isWithinVietnamOvernightOperationsWindow(new Date())) {
+      Alert.alert("Ngoài giờ phục vụ", getOvernightOperationsClosedMessage());
       return;
     }
 
