@@ -4,6 +4,7 @@ import { serverRoutes } from "@mebike/shared";
 
 import {
   BikeAdminController,
+  BikeAgencyController,
   BikeManagementController,
   BikePublicController,
   BikeStaffController,
@@ -15,6 +16,7 @@ import {
   requireBackofficeMiddleware,
   requireManagerMiddleware,
   requireStationScopedOperatorMiddleware,
+  requireTechnicianMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
@@ -35,6 +37,13 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(staffListBikesRoute, BikeStaffController.staffListBikes);
 
+  const agencyListBikesRoute = {
+    ...bikes.agencyListBikes,
+    middleware: [requireAgencyMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(agencyListBikesRoute, BikeAgencyController.agencyListBikes);
+
   app.openapi(bikes.updateBike, BikeAdminController.updateBike);
 
   const managerUpdateBikeStatusRoute = {
@@ -50,6 +59,13 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   } satisfies RouteConfig;
 
   app.openapi(agencyUpdateBikeStatusRoute, BikeManagementController.agencyUpdateBikeStatus);
+
+  const technicianUpdateBikeStatusRoute = {
+    ...bikes.technicianUpdateBikeStatus,
+    middleware: [requireTechnicianMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(technicianUpdateBikeStatusRoute, BikeManagementController.technicianUpdateBikeStatus);
 
   app.openapi(bikes.reportBrokenBike, BikePublicController.reportBrokenBike);
 
@@ -107,6 +123,13 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   } satisfies RouteConfig;
 
   app.openapi(staffGetBikeRoute, BikeStaffController.staffGetBike);
+
+  const agencyGetBikeRoute = {
+    ...bikes.agencyGetBike,
+    middleware: [requireAgencyMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(agencyGetBikeRoute, BikeAgencyController.agencyGetBike);
 
   // Analytics endpoints implemented above.
 }

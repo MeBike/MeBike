@@ -1,15 +1,19 @@
 import type { ScrollView as ScrollViewType } from "react-native";
 
-import { useAiAssistantChat } from "@hooks/ai/use-ai-assistant-chat";
-import { mapAiAssistantMessagesToFeed } from "@services/ai";
-import { borderWidths, radii, spaceScale, spacingRules } from "@theme/metrics";
-import { AppComposerInput } from "@ui/primitives/app-composer-input";
-import { AppText } from "@ui/primitives/app-text";
-import { Screen } from "@ui/primitives/screen";
+import { useRoute } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StatusBar } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XStack, YStack } from "tamagui";
+
+import type { AiAssistantRouteProp } from "@/types/navigation";
+
+import { useAiAssistantChat } from "@hooks/ai/use-ai-assistant-chat";
+import { mapAiAssistantMessagesToFeed } from "@services/ai";
+import { borderWidths, radii, spacingRules } from "@theme/metrics";
+import { AppComposerInput } from "@ui/primitives/app-composer-input";
+import { AppText } from "@ui/primitives/app-text";
+import { Screen } from "@ui/primitives/screen";
 
 import {
   AssistantBubble,
@@ -25,21 +29,26 @@ import { INTRO_MARKDOWN, SUGGESTED_PROMPTS } from "./constants";
 import { getAiAssistantErrorMessage } from "./helpers";
 
 export default function AiAssistantScreen() {
+  const route = useRoute<AiAssistantRouteProp>();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollViewType | null>(null);
   const [composerText, setComposerText] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const routeContext = route.params?.context ?? null;
   const {
+    addToolApprovalResponse,
     error,
     isBusy,
     messages,
     sendTextMessage,
     stop,
-  } = useAiAssistantChat();
+  } = useAiAssistantChat({
+    context: routeContext,
+  });
 
   const feedMessages = useMemo(() => mapAiAssistantMessagesToFeed(messages), [messages]);
   const hasRunningToolActivity = useMemo(() => {
-    return feedMessages.some(message => message.toolActivities.some(activity => activity.state === "running"));
+    return feedMessages.some(message => message.toolActivities.some(activity => activity.state === "running" && activity.rawState !== "approval-requested"));
   }, [feedMessages]);
   const hasConversation = feedMessages.length > 0;
   const canSend = composerText.trim().length > 0;
@@ -75,7 +84,8 @@ export default function AiAssistantScreen() {
 
     try {
       await sendTextMessage(trimmedText);
-    } finally {
+    }
+    finally {
       setIsSending(false);
     }
   }, [sendTextMessage]);
@@ -88,6 +98,14 @@ export default function AiAssistantScreen() {
 
     void handleSend(composerText);
   }, [composerText, handleSend, isBusy, stop]);
+
+  const handleApproveTool = useCallback((approvalId: string) => {
+    addToolApprovalResponse(approvalId, true);
+  }, [addToolApprovalResponse]);
+
+  const handleDenyTool = useCallback((approvalId: string) => {
+    addToolApprovalResponse(approvalId, false);
+  }, [addToolApprovalResponse]);
 
   return (
     <Screen tone="subtle">
@@ -130,7 +148,14 @@ export default function AiAssistantScreen() {
                 <YStack key={message.id}>
                   {message.role === "user"
                     ? <UserMessageBlock message={message} />
-                    : <AssistantMessageBlock message={message} />}
+                    : (
+                        <AssistantMessageBlock
+                          approvalBusy={isAssistantWorking}
+                          message={message}
+                          onApproveTool={handleApproveTool}
+                          onDenyTool={handleDenyTool}
+                        />
+                      )}
                 </YStack>
               ))}
 

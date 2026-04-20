@@ -4,11 +4,13 @@ import { serverRoutes } from "@mebike/shared";
 
 import {
   StationAdminController,
+  StationAgencyController,
   StationPublicController,
   StationStaffController,
 } from "@/http/controllers/stations";
 import {
   requireAdminMiddleware,
+  requireAgencyMiddleware,
   requireStationScopedOperatorMiddleware,
 } from "@/http/middlewares/auth";
 
@@ -42,6 +44,13 @@ export function registerStationRoutes(
 
   app.openapi(staffListStationsRoute, StationStaffController.staffListStations);
 
+  const agencyListStationsRoute = {
+    ...stations.agencyListStations,
+    middleware: [requireAgencyMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(agencyListStationsRoute, StationAgencyController.agencyListStations);
+
   app.openapi(stations.getAllStationsRevenue, StationPublicController.getAllStationsRevenue);
 
   app.openapi(stations.getNearbyStations, StationPublicController.getNearbyStations);
@@ -54,4 +63,11 @@ export function registerStationRoutes(
   } satisfies RouteConfig;
 
   app.openapi(staffGetStationRoute, StationStaffController.staffGetStation);
+
+  const agencyGetStationRoute = {
+    ...stations.agencyGetStation,
+    middleware: [requireAgencyMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(agencyGetStationRoute, StationAgencyController.agencyGetStation);
 }

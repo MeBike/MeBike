@@ -35,7 +35,6 @@ export type RootStackParamList = {
   "Wallet": undefined;
   "AiAssistant": {
     context?: AiChatContext | null;
-    initialPrompt?: string;
   } | undefined;
   "BookingHistoryDetail": { bookingId: string };
   "BikeDetail": {

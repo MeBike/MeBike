@@ -64,11 +64,7 @@ function BookingHistoryDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <YStack>
-          <AppHeroHeader
-            onBack={() => navigation.goBack()}
-            size="compact"
-            title="Chi tiết thuê xe"
-          />
+          <AppHeroHeader onBack={() => navigation.goBack()} size="compact" title="Chi tiết thuê xe" />
 
           <YStack gap="$5" marginTop={-spaceScale[5]} paddingHorizontal="$5">
             <RentalHeroCard rental={vm.booking} />

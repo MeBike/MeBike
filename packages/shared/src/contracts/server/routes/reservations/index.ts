@@ -4,6 +4,8 @@ import {
   reserveBikeRoute,
 } from "./mutations";
 import {
+  agencyGetReservationRoute,
+  agencyListReservationsRoute,
   adminGetReservationRoute,
   adminListReservationsRoute,
   getReservationStatsSummaryRoute,
@@ -26,6 +28,8 @@ export const reservationsRoutes = {
   adminListReservations: adminListReservationsRoute,
   adminGetReservation: adminGetReservationRoute,
   getReservationStatsSummary: getReservationStatsSummaryRoute,
+  agencyListReservations: agencyListReservationsRoute,
+  agencyGetReservation: agencyGetReservationRoute,
   staffListReservations: staffListReservationsRoute,
   staffGetReservation: staffGetReservationRoute,
 } as const;

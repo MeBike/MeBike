@@ -1,6 +1,6 @@
 import type { FixedSlotTemplatesContracts } from "@mebike/shared";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
@@ -18,6 +18,11 @@ describe("fixed-slot templates routing e2e", () => {
         UserDepsLive,
       );
     },
+  });
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-10T00:00:00.000Z"));
   });
 
   afterEach(() => {

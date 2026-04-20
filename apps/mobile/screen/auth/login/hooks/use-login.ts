@@ -20,6 +20,7 @@ export type BackendStatus = "checking" | "online" | "offline";
 
 export function useLogin() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const canGoBack = navigation.canGoBack();
   const [showPassword, setShowPassword] = useState(false);
   const [backendStatus, setBackendStatus] = useState<BackendStatus>("checking");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,7 +80,6 @@ export function useLogin() {
         Alert.alert("Đăng nhập thất bại", message);
         return;
       }
-      navigation.navigate("Main");
     }
     catch {
       rotateAnim.stopAnimation();
@@ -110,6 +110,7 @@ export function useLogin() {
     showPassword,
     toggleShowPassword,
     backendStatus,
+    canGoBack,
     rotateAnim,
     submit,
     isSubmitting,

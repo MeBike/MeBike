@@ -1,6 +1,9 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
 
+import { LoadingScreen } from "@components/LoadingScreen";
+import { useAuthNext } from "@providers/auth-provider-next";
+
 import type { RootStackParamList } from "../types/navigation";
 
 import {
@@ -42,8 +45,71 @@ import MainTabNavigator from "./main-tab-navigator";
 const Stack = createStackNavigator<RootStackParamList>();
 
 function RootNavigator() {
+  const { status, isAuthenticated } = useAuthNext();
+
+  if (status === "loading") {
+    return <LoadingScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Stack.Navigator initialRouteName="StationSelectFlow" key="unauthenticated">
+        <Stack.Screen
+          name="StationSelectFlow"
+          component={StationSelectScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="StationDetail"
+          component={StationDetailScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="BikeDetail"
+          component={BikeDetailScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="Intro"
+          component={IntroScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="Register"
+          component={RegisterScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="EmailVerification"
+          component={EmailVerificationScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="ResetPasswordOTP"
+          component={ResetPasswordOTPScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="ResetPasswordForm"
+          component={ResetPasswordFormScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+      </Stack.Navigator>
+    );
+  }
+
   return (
-    <Stack.Navigator initialRouteName="Main">
+    <Stack.Navigator initialRouteName="Main" key="authenticated">
       <Stack.Screen
         name="Main"
         component={MainTabNavigator}
