@@ -13,6 +13,7 @@ const DistributionRequestDetailPage = () => {
     staffViewDistributionRequestDetail,
     isLoadingStaffViewDistributionRequestDetail,
     getStaffViewDistributionRequestDetail,
+    startTransitDistributionRequest,
   } = useDistributionRequest({
     id: id,
     hasToken: hasToken,
@@ -48,6 +49,7 @@ const DistributionRequestDetailPage = () => {
   return (
     <DistributionRequestDetailClient 
       data={staffViewDistributionRequestDetail.data} 
+      onStartTransit={async () => await startTransitDistributionRequest(id)}
     />
   );
 };

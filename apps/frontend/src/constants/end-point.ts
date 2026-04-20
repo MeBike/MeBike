@@ -24,6 +24,7 @@ export const ENDPOINT = {
             "/stations/nearest-available-bike",
         SELECT_STATION :  
             "/admin/stations",
+        CONTEXT_STATION : "/operators/station-context",
     },
     SUPPLIER : {
         BASE : "/suppliers",
@@ -89,6 +90,14 @@ export const ENDPOINT = {
         ID : (id : string) => `/admin/agencies/${id}`,
         STATUS : (id : string) => `/admin/agencies/${id}/status`,
         STATS : (id:string) => `/admin/agencies/${id}/stats`,
+        STATION : "/agency/stations",
+        STATION_DETAIL : (id:string) => `/agency/stations/${id}`,
+        BIKE : "/agency/bikes",
+        BIKE_DETAIL : (id:string) => `/agency/bikes/${id}`,
+        RENTAL : "/agency/rentals",
+        RENTAL_DETAIL : (id:string) => `/agency/rentals/${id}`,
+        RESERVATION : "/agency/reservations",
+        RESERVATION_DETAIL: (id:string) => `/agency/reservations/${id}`,   
     },
     AGENCY_REQUEST : {
         BASE : "/admin/agency-requests",
@@ -143,5 +152,5 @@ export const ENDPOINT = {
         RENTAL_DETAIL : (id:string) => `/staff/rentals/${id}`,
         RESERVATION : "/staff/reservations",
         RESERVATION_DETAIL: (id:string) => `/staff/reservations/${id}`,   
-    }
+    },
 } as const;

@@ -59,7 +59,6 @@ export default function CreateBikeClient({
   } = useForm<BikeSchemaFormData>({
     resolver: zodResolver(bikeSchema),
     defaultValues: {
-      chipId: "",
       stationId: "",
       supplierId: "",
       status: "AVAILABLE",
@@ -69,7 +68,6 @@ export default function CreateBikeClient({
   const onSubmit = async (data: BikeSchemaFormData) => {
     try {
       await onSubmitBike(data);
-      router.push("/admin/bikes");
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -195,27 +193,8 @@ export default function CreateBikeClient({
                   </div>
                   {errors.status && <p className="text-xs font-medium text-destructive">{errors.status.message}</p>}
                 </div>
-
-                {/* Chip ID Field (Tùy chọn) */}
-                <div className="space-y-2">
-                  <Label htmlFor="chipId" className="font-semibold text-muted-foreground">
-                    Chip ID <span className="text-xs font-normal text-muted-foreground ml-1">(Tùy chọn)</span>
-                  </Label>
-                  <div className="relative">
-                    <Cpu className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="chipId"
-                      {...register("chipId")}
-                      placeholder="Nhập mã chip (nếu có)"
-                      className={`pl-10 ${errors.chipId ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                    />
-                  </div>
-                  {errors.chipId && <p className="text-xs font-medium text-destructive">{errors.chipId.message}</p>}
-                </div>
               </div>
             </div>
-
-            {/* Actions */}
             <div className="flex items-center gap-3 pt-6 border-t border-border/50">
               <Button type="submit" disabled={isSubmitting} className="min-w-[150px] gradient-primary shadow-glow">
                 {isSubmitting ? (

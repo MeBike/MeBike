@@ -161,13 +161,9 @@ export const useDistributionRequest = ({
       try {
         const result = await useCompleteTransit.mutateAsync({id,data});
         if (result.status === HTTP_STATUS.OK) {
-          toast.success("Nhận xe được điều phối tới trạm thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["distribution-request", "all"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["manager","distribution-request-data","detail",id],
-          });
+          toast.success("Nhận xe được điều phối tới trạm thành công");;
+          getManagerViewDistributionRequest();
+          getManagerViewDistributionRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -176,7 +172,7 @@ export const useDistributionRequest = ({
       }
     },
     [
-      useApproveDistributeRequest,
+      useCompleteTransit,
       hasToken,
       router,
       page,
@@ -195,12 +191,10 @@ export const useDistributionRequest = ({
         const result = await useApproveDistributeRequest.mutateAsync(id);
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Duyệt yêu cầu phân bổ thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["distribution-request", "all"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["manager","distribution-request-data","detail",id],
-          });
+          getAdminViewDistributionRequest();
+          getStaffViewDistributionRequest();
+          getManagerViewDistributionRequest();
+          getManagerViewDistributionRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -234,6 +228,9 @@ export const useDistributionRequest = ({
           queryClient.invalidateQueries({
             queryKey: ["manager","distribution-request-data","detail",id],
           });
+          queryClient.invalidateQueries({
+            queryKey: ["staff","distribution-request-data","detail",id],
+          });
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -261,12 +258,10 @@ export const useDistributionRequest = ({
         const result = await useRejectDistributeRequest.mutateAsync({id,data});
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Từ chối yêu cầu phân bổ thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["distribution-request", "all"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["manager","distribution-request-data","detail",id],
-          });
+          getAdminViewDistributionRequest();
+          getStaffViewDistributionRequest();
+          getManagerViewDistributionRequest();
+          getManagerViewDistributionRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);

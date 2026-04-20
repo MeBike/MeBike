@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React , {useState} from "react";
 import { RedistributionRequestDetail } from "@/types/DistributionRequest";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,13 +10,21 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Bike, MapPin, ClipboardList } from "lucide-react"; // Import icon cho đẹp
 import type { RedistributionRequestStatus } from "@/types/DistributionRequest";
+import { Loader2 } from "lucide-react";
 interface Props {
   data: RedistributionRequestDetail;
+  onStartTransit: () => Promise<void>;
 }
 
-export const DistributionRequestDetailClient = ({ data }: Props) => {
+export const DistributionRequestDetailClient = ({ data,onStartTransit }: Props) => {
   const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
 
+  const handleStartTransit = async () => {
+    setIsProcessing(true);
+    await onStartTransit();
+    setIsProcessing(false);
+  };
   // Hàm xử lý màu sắc Badge dựa trên status
   const getStatusStyle = (status: RedistributionRequestStatus) => {
     switch (status) {
@@ -59,7 +67,22 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
               {data.status}
             </Badge>
           </div>
+            
         </div>
+        {data.status === "APPROVED" && (
+      <Button 
+        onClick={handleStartTransit} 
+        disabled={isProcessing}
+        className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+      >
+        {isProcessing ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Bike className="mr-2 h-4 w-4" />
+        )}
+        Bắt đầu điều phối
+      </Button>
+    )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -166,7 +189,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                       <TableCell className="text-center font-medium text-slate-500">{index + 1}</TableCell>
                       <TableCell>
                         <code className="px-2 py-1 bg-slate-100 rounded text-blue-700 font-bold text-xs">
-                          {item.bike.chipId}
+                          {item.bike.id}
                         </code>
                       </TableCell>
                       <TableCell>
@@ -175,7 +198,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right text-slate-600 font-medium">
-                        {item.deliveredAt ? formatToVNTime(item.deliveredAt) : "---"}
+                        {item.deliveredAt ? formatToVNTime(item.deliveredAt) : "Chưa có"}
                       </TableCell>
                     </TableRow>
                   ))}

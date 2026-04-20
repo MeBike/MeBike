@@ -62,15 +62,8 @@ export const redistributionColumn = ({
     accessorKey: "requestedQuantity",
     header: "Số lượng",
     cell: ({ row }) => (
-      <div className="text-center font-semibold">
-        {row.original.requestedQuantity} xe
-      </div>
+      row.original.requestedQuantity
     ),
-  },
-  {
-    accessorKey: "requestedByUser",
-    header: "Người yêu cầu",
-    cell: ({ row }) => row.original.requestedByUser.fullName,
   },
   {
     accessorKey: "status",
@@ -87,15 +80,10 @@ export const redistributionColumn = ({
     },
   },
   {
-    accessorKey: "createdAt",
-    header: "Ngày tạo",
-    cell: ({ row }) => formatToVNTime(row.original.createdAt),
-  },
-  {
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-      <div className="flex items-center justify-center">
+      <div className="">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -115,13 +103,6 @@ export const redistributionColumn = ({
 
 // 3. Column hiển thị danh sách xe (Items) trong chi tiết yêu cầu
 export const redistributionItemColumn = (): ColumnDef<any>[] => [
-  {
-    accessorKey: "bike.chipId",
-    header: "Mã Chip",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.bike.chipId}</span>
-    ),
-  },
   {
     accessorKey: "bike.status",
     header: "Tình trạng xe",

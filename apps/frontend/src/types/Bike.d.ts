@@ -2,7 +2,6 @@
 export interface Bike {
   id: string;
   bikeNumber : string;
-  chipId: string;
   station : {
     id : string;
     name : string;
@@ -19,7 +18,6 @@ export interface Bike {
   }
   createdAt: string;
   updatedAt: string;
-  chipId: string;
   averageRating?: number;
   totalRatings?: number;
 }
@@ -72,7 +70,6 @@ export interface BikeRentalHistory {
 }
 export interface BikeHasHighestRevenue {
   bikdId: string;
-  bikeChipId: string;
   totalRevenue: number;
   rentalCount: number;
   station : {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { notFound, useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Bike,
@@ -13,12 +13,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useRentalsActions } from "@/hooks/use-rental";
+import { useAgencyActions } from "@/hooks/use-agency";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
-
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 function rentalStatusBadgeVariant(
-  status: string
+  status: string,
 ): "warning" | "pending" | "success" | "destructive" | "secondary" {
   const s = status.toUpperCase();
   if (s.includes("RESERVED") || s.includes("ĐẶT TRƯỚC")) return "warning";
@@ -45,7 +45,7 @@ function SectionCard({
     <div
       className={cn(
         "overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm",
-        className
+        className,
       )}
     >
       <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4">
@@ -78,63 +78,42 @@ function Field({
 export default function AdminRentalDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  const { detailDataForStaff : detailData, isDetailLoadingForStaff, getDetailRentalForStaff } = useRentalsActions({
+  const {
+    detailRentalForAgency: detailData,
+    isDetailRentalLoadingForAgency,
+    getDetailRentalForAgency,
+  } = useAgencyActions({
     hasToken: true,
-    bike_id: id,
+    rental_id: id,
   });
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
-    getDetailRentalForStaff();
-  }, [getDetailRentalForStaff, id]);
-
-  const loadingShell = (
-    <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="h-9 w-48 animate-pulse rounded-md bg-muted" />
-          <div className="h-9 w-40 animate-pulse rounded-md bg-muted" />
-        </div>
-        <div className="h-14 animate-pulse rounded-lg bg-muted" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="h-80 animate-pulse rounded-xl bg-muted lg:col-span-2" />
-          <div className="h-64 animate-pulse rounded-xl bg-muted" />
-        </div>
-      </div>
-    </div>
-  );
-
-  if (isDetailLoadingForStaff) {
-    return loadingShell;
-  }
-
+    if (isDetailRentalLoadingForAgency) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isDetailRentalLoadingForAgency]);
+  useEffect(() => {
+    if (id) {
+      getDetailRentalForAgency();
+    }
+  }, [id, getDetailRentalForAgency]);
+  if (isVisualLoading) return <LoadingScreen />;
   if (!detailData) {
-    return (
-      <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold text-foreground">
-              Chi tiết đơn thuê
-            </h1>
-            <Button variant="outline" onClick={() => router.push("/staff/rentals")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Quay lại danh sách
-            </Button>
-          </div>
-          <div className="rounded-xl border border-destructive/30 bg-card p-8 text-center text-destructive">
-            Không thể tải chi tiết đơn thuê.
-          </div>
-        </div>
-      </div>
-    );
+    notFound();
   }
-
   const hasEnd = Boolean(detailData.endTime && detailData.endStation);
-  const verifyRaw = String(detailData.user?.verify ?? "").trim().toUpperCase();
+  const verifyRaw = String(detailData.user?.verify ?? "")
+    .trim()
+    .toUpperCase();
   const isVerified = verifyRaw === "VERIFIED";
-
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <Button
@@ -160,14 +139,12 @@ export default function AdminRentalDetailPage() {
           <Button
             variant="outline"
             className="shrink-0"
-            onClick={() => router.push("/admin/rentals")}
+            onClick={() => router.push("/agency/rentals")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại danh sách
           </Button>
         </div>
-
-        {/* Metadata bar */}
         <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-1">
           <div>
             <span className="text-muted-foreground">Mã đơn: </span>
@@ -211,7 +188,7 @@ export default function AdminRentalDetailPage() {
                       "h-3 w-3 shrink-0 rounded-full border-2 bg-muted",
                       hasEnd
                         ? "border-muted-foreground/50"
-                        : "border-muted-foreground/30"
+                        : "border-muted-foreground/30",
                     )}
                   />
                 </div>
@@ -251,7 +228,7 @@ export default function AdminRentalDetailPage() {
                         "mt-1 font-medium",
                         hasEnd
                           ? "text-foreground"
-                          : "italic text-muted-foreground"
+                          : "italic text-muted-foreground",
                       )}
                     >
                       {detailData.endStation?.name || "Chưa trả xe"}
@@ -284,7 +261,9 @@ export default function AdminRentalDetailPage() {
                   label="Xe được gán"
                   value={
                     detailData.bike?.id ? (
-                      <span className="font-mono text-xs">{detailData.bike.id}</span>
+                      <span className="font-mono text-xs">
+                        {detailData.bike.id}
+                      </span>
                     ) : (
                       <span className="italic text-muted-foreground">
                         Chưa gán xe
@@ -295,10 +274,6 @@ export default function AdminRentalDetailPage() {
                 <Field
                   label="Trạng thái xe"
                   value={detailData.bike?.status || "Chưa có dữ liệu"}
-                />
-                <Field
-                  label="Mã Chip"
-                  value={detailData.bike?.chipId || "Chưa có dữ liệu"}
                 />
                 <Field
                   label="Nhà cung cấp"

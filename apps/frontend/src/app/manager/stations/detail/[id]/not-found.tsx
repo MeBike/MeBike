@@ -9,7 +9,7 @@ export default function StationNotFound() {
       <h2 className="text-2xl font-bold">Không tìm thấy trạm này!</h2>
       <p className="text-muted-foreground">Có vẻ như mã trạm không tồn tại hoặc đã bị xóa.</p>
       <Button asChild>
-        <Link href="/admin/stations">Quay lại danh sách</Link>
+        <Link href="/manager/stations">Quay lại danh sách</Link>
       </Button>
     </div>
   );

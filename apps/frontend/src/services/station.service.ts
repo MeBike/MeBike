@@ -5,6 +5,7 @@ import { StationSchemaFormData } from "@/schemas/station-schema";
 import type {
   StationBikeRevenue,
   StationStatisticsResponse,
+  CurrentStation
 } from "@/types/Station";
 import { ENDPOINT } from "@/constants/end-point";
 import { ApiResponse , DetailApiResponse } from "@/types";
@@ -40,6 +41,12 @@ export const stationService = {
         sortBy,
         sortDir,
       }
+    );
+    return response;
+  },
+  getListStations: async (): Promise<AxiosResponse<CurrentStation>> => {
+    const response = await fetchHttpClient.get<CurrentStation>(
+      ENDPOINT.STATION.CONTEXT_STATION
     );
     return response;
   },

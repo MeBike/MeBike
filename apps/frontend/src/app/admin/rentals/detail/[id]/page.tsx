@@ -8,7 +8,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const { detailData, isDetailLoading, getDetailRental } = useRentalsActions({
     hasToken: true,
-    bike_id: id,
+    rental_id: id,
   });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   useEffect(() => {

@@ -62,10 +62,6 @@ export function BikeDetailTabs({ bike, rentals, activity, stats }: Props) {
               <p className="font-medium">{bike.id}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Chip ID</p>
-              <p className="font-medium">{bike.chipId}</p>
-            </div>
-            <div>
               <p className="text-sm text-muted-foreground">Trạng thái</p>
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bike.status)}`}

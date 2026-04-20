@@ -100,7 +100,7 @@ export default function DistributionRequestClient({
               <DataTable
                 title="Danh sách yêu cầu điều phối"
                 columns={redistributionColumn({
-                  onView: ({ id }) => router.push(`/manager/distribution-request/detail/${id}`),
+                  onView: ({ id }) => router.push(`/admin/distribution-request/detail/${id}`),
                 })}
                 data={requests || []}
                 searchValue={searchQuery}

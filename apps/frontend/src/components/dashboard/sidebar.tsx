@@ -106,26 +106,20 @@ export function Sidebar() {
           title: "Tổng quan",
           icon: LayoutDashboard,
           href: `/${role.toLowerCase()}`,
-          roles: ["ADMIN", "STAFF", "AGENCY", "MANAGER", "USER"],
+          roles: ["ADMIN", "STAFF", "AGENCY", "MANAGER", "USER","TECHNICIAN"],
           exact: true,
         },
         {
           title: "Quản lý khách hàng",
           icon: Users,
           href: `/${role.toLowerCase()}/customers`,
-          roles: ["ADMIN", "MANAGER"],
-        },
-        {
-          title: "Quản lý khách hàng",
-          icon: Users,
-          href: "/staff/customers",
-          roles: ["STAFF"],
+          roles: ["ADMIN"]
         },
         {
           title: "Quản lý nhân viên",
           icon: Users,
           href: `/${role.toLowerCase()}/staffs`,
-          roles: ["ADMIN", "MANAGER"],
+          roles: ["ADMIN"],
         },
         {
           title: "Quản lý điều phối xe",
@@ -143,12 +137,6 @@ export function Sidebar() {
           title: "Quản lý coupon",
           icon: Building2,
           href: "/admin/coupon",
-          roles: ["ADMIN"],
-        },
-        {
-          title: "Quản lý sử dụng coupon",
-          icon: Building2,
-          href: "/admin/usage",
           roles: ["ADMIN"],
         },
         {
@@ -185,7 +173,7 @@ export function Sidebar() {
           title: "Đánh giá & Phản hồi",
           icon: Star,
           href: `/${role.toLowerCase()}/ratings`,
-          roles: ["ADMIN", "MANAGER"],
+          roles: ["ADMIN"],
         },
         {
           title: "Quản lý subscription",

@@ -10,8 +10,6 @@ interface StationTableSectionProps {
   pagination?: Pagination;
   setPage: (page: number) => void;
   onView : (id:string) => void;
-  onDelete: (id: string) => void;
-  onEdit: (id: string) => void;
   isLoading?: boolean;
 }
 export function StationTableSection({
@@ -19,8 +17,6 @@ export function StationTableSection({
   pagination,
   setPage,
   onView,
-  onDelete,
-  onEdit,
   isLoading = false,
 }: StationTableSectionProps) {
   return (

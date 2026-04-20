@@ -64,11 +64,15 @@ export default function Page({
   };
 
   return (
-    <SupplierDetailClient
-      supplierId={supplierId}
-      supplier={supplier}
-      bikeStats={bikeStats}
-      onSubmit={handleSubmit}
-    />
+    <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <SupplierDetailClient
+          supplierId={supplierId}
+          supplier={supplier}
+          bikeStats={bikeStats}
+          onSubmit={handleSubmit}
+        />
+      </div>
+    </div>
   );
 }

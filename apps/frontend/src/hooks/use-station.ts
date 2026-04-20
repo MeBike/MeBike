@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { QUERY_KEYS , HTTP_STATUS } from "@constants";
 import { useCreateStationMutation,useSoftDeleteStationMutation,useUpdateStationMutation} from "@mutations"
-import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationByIDQuery,useGetAllStation, useGetSelectStation,useGetMyStations,useGetMyStationDetail} from "@queries";
+import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationByIDQuery,useGetAllStation, useGetSelectStation,useGetMyStations,useGetMyStationDetail,useGetListStation} from "@queries";
 import {getAxiosErrorCodeMessage , getErrorMessageFromStationCode} from "@utils";
 import type { StationActionProps } from "@custom-types";
 export const useStationActions = ({
@@ -167,6 +167,13 @@ export const useStationActions = ({
     }
     refetchMyStationDetail();
   }, [refetchMyStationDetail, hasToken,stationId]);
+  const {data:listStation,isLoading:isLoadingListStation,refetch:refetchListStation} = useGetListStation();
+  const getListStation = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchListStation();
+  }, [refetchListStation, hasToken]);
   return {
     getAllStations,
     getStationByID,
@@ -196,7 +203,9 @@ export const useStationActions = ({
     getMyStation,
     myStationDetail,
     getMyStationDetail,
-    isLoadingMyStationDetail
-
+    isLoadingMyStationDetail,
+    listStation,
+    getListStation,
+    isLoadingListStation
   };
 };

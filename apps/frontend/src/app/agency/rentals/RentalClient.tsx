@@ -3,31 +3,36 @@ import { useState, useEffect } from "react";
 import { RentalFilters } from "@/components/rentals/rental-filters";
 import { useRouter } from "next/navigation";
 import type { RentalStatus } from "@custom-types";
-import { useRentalsActions } from "@/hooks/use-rental";
+import { useAgencyActions } from "@/hooks/use-agency";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { rentalColumnForStaff } from "@/columns/rental-columns";
 import { TableSkeleton } from "@/components/table-skeleton";
+
 export default function RentalClient() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<RentalStatus>("");
+  // Chỉnh logic: Mặc định là "all" để khớp với component Filter mới
+  const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
+
   const {
-    staffRentalsData,
-    isAllRentalsStaffLoading,
-    paginationStaffRental,
-    getStaffRentals
-  } = useRentalsActions({
+    rentalInMyStation,
+    getRentalInMyStation,
+    isLoadingRentalInMyStation,
+  } = useAgencyActions({
     hasToken: true,
-    limit: limit,
+    pageSize: limit,
     page: page,
-    ...(statusFilter !== "" && { status: statusFilter }),
+    // Nếu status là "all" thì không gửi status vào params (để lấy tất cả)
+    ...(statusFilter !== "all" && { rental_status: statusFilter as RentalStatus }),
   });
+
   const [isVisualLoading, setIsVisualLoading] = useState(false);
+
   useEffect(() => {
-    if (isAllRentalsStaffLoading) {
+    if (isLoadingRentalInMyStation) {
       setIsVisualLoading(true);
     } else {
       const timer = setTimeout(() => {
@@ -35,16 +40,23 @@ export default function RentalClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isAllRentalsStaffLoading]);
-  const rentals = staffRentalsData || [];
+  }, [isLoadingRentalInMyStation]);
+
+  const rentals = rentalInMyStation || [];
+
   const handleReset = () => {
     setSearchQuery("");
-    setStatusFilter("");
+    setStatusFilter("all"); // Reset về "all"
   };
+
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
-  useEffect(() => {getStaffRentals()},[getStaffRentals]);
+
+  useEffect(() => {
+    getRentalInMyStation();
+  }, [getRentalInMyStation]);
+
   return (
     <div>
       <div className="space-y-6">
@@ -67,28 +79,29 @@ export default function RentalClient() {
           onStatusChange={setStatusFilter}
           onReset={handleReset}
         />
+
         <div className="min-h-[520px]">
           {isVisualLoading ? (
             <TableSkeleton />
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-4">
-                Hiển thị {paginationStaffRental?.page ?? 1} / {paginationStaffRental?.totalPages ?? 1}{" "}
+                Hiển thị {rentalInMyStation?.pagination?.page ?? 1} / {rentalInMyStation?.pagination?.totalPages ?? 1}{" "}
                 trang
               </p>
               <DataTable
                 columns={rentalColumnForStaff({
                   onView: ({ id }) => {
-                    router.push(`/staff/rentals/detail/${id}`);
+                    router.push(`/manager/rentals/detail/${id}`);
                   },
                 })}
-                data={rentals}
+                data={rentalInMyStation?.data || []}
               />
               <div className="pt-3">
                 <PaginationDemo
-                  currentPage={paginationStaffRental?.page ?? 1}
+                  currentPage={rentalInMyStation?.pagination?.page ?? 1}
                   onPageChange={setPage}
-                  totalPages={paginationStaffRental?.totalPages ?? 1}
+                  totalPages={rentalInMyStation?.pagination?.totalPages ?? 1}
                 />
               </div>
             </>

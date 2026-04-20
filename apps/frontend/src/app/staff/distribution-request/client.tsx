@@ -9,7 +9,7 @@ import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
 import type { RedistributionRequest, RedistributionRequestStatus } from "@/types/DistributionRequest";
 import type { Pagination } from "@custom-types";
-
+import { Plus } from "lucide-react";
 interface DistributionRequestClientProps {
   data: {
     requests: RedistributionRequest[];
@@ -52,6 +52,9 @@ export default function DistributionRequestClient({
             Theo dõi và quản lý các yêu cầu luân chuyển xe trong hệ thống
           </p>
         </div>
+        <Button onClick={() => router.push("/staff/distribution-request/create")}>
+          <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu điều phối
+        </Button>
       </div>
 
       {/* 2. Khối Bộ Lọc (Giống y chang bên Customer) */}

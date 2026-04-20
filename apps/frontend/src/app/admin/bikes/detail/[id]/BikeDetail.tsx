@@ -102,7 +102,7 @@ export function BikeDetailView({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-                Chi tiết xe: {bike?.chipId || "N/A"}
+                Chi tiết xe:
               </h1>
             </div>
             <Button
@@ -182,19 +182,6 @@ export function BikeDetailView({
                     </span>
                   </div>
                 </div>
-              </div>
-            </SectionCard>
-
-            <SectionCard icon={Cpu} title="Thông số kỹ thuật & Chip">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <Field
-                  label="Mã Chip"
-                  value={
-                    <code className="text-primary font-bold">
-                      {bike.chipId}
-                    </code>
-                  }
-                />
               </div>
             </SectionCard>
           </div>

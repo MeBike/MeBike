@@ -100,11 +100,6 @@ export function BikeDetailView({
             </div>
           </SectionCard>
 
-          <SectionCard icon={Cpu} title="Thông số kỹ thuật & Chip">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <Field label="Mã Chip (Chip ID)" value={<code className="text-primary font-bold">{bike.chipId}</code>} />
-            </div>
-          </SectionCard>
         </div>
 
         <div className="space-y-6">

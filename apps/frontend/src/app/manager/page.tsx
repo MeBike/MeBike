@@ -9,22 +9,13 @@ import { Progress } from "@/components/ui/progress";
 export default function DashboardPage() {
   const { user } = useAuth();
   if (!user) {
-    return (
-      <div>
-        <Progress />
-      </div>
-    );
+    return <div><Progress /></div>;
   }
   return (
     <div>
       <div className="space-y-8">
         <section>
           <ProfileHeader user={user} />
-        </section>
-        <section>
-          <h2 className="text-2xl font-bold text-foreground mb-4">
-            Thống kê tổng quan
-          </h2>
         </section>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { useBikeActions } from "@/hooks/use-bike";
+import { useAgencyActions } from "@/hooks/use-agency";
 import { bikeColumnForStaff } from "@/columns/bike-colums";
 import { BikeStatus } from "@custom-types";
 import { BikeFilters } from "./components/bike-filter";
@@ -14,10 +14,10 @@ export default function BikeClient() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const {
-    myBikeInStation,
-    isLoadingMyBikeInStation,
-    getMyBikeInStation
-  } = useBikeActions({
+    myAgencyBikeInStation,
+    getMyAgencyBikeInStation,
+    isLoadingMyAgencyBikeInStation,
+  } = useAgencyActions({
     hasToken: true,
     status: statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
     pageSize: 7,
@@ -25,7 +25,7 @@ export default function BikeClient() {
   });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   useEffect(() => {
-    if (isLoadingMyBikeInStation) {
+    if (isLoadingMyAgencyBikeInStation) {
       setIsVisualLoading(true);
     } else {
       const timer = setTimeout(() => {
@@ -33,9 +33,9 @@ export default function BikeClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoadingMyBikeInStation]);
+  }, [isLoadingMyAgencyBikeInStation]);
   useEffect(() => {
-    getMyBikeInStation();
+    getMyAgencyBikeInStation();
   }, [statusFilter]);
   return (
     <div className="space-y-6">
@@ -52,20 +52,20 @@ export default function BikeClient() {
         ) : (
           <>
             <p className="text-sm text-muted-foreground mb-4">
-              Hiển thị {myBikeInStation?.pagination?.page ?? 1} /{" "}
-              {myBikeInStation?.pagination?.totalPages ?? 1} trang
+              Hiển thị {myAgencyBikeInStation?.pagination?.page ?? 1} /{" "}
+              {myAgencyBikeInStation?.pagination?.totalPages ?? 1} trang
             </p>
             <DataTable
               columns={bikeColumnForStaff({
-                onView: ({ id }) => router.push(`/staff/bikes/detail/${id}`),
+                onView: ({ id }) => router.push(`/agency/bikes/detail/${id}`),
               })}
-              data={myBikeInStation?.data || []}
+              data={myAgencyBikeInStation?.data || []}
             />
             <div className="pt-3">
               <PaginationDemo
-                currentPage={myBikeInStation?.pagination?.page ?? 1}
+                currentPage={myAgencyBikeInStation?.pagination?.page ?? 1}
                 onPageChange={setPage}
-                totalPages={myBikeInStation?.pagination?.totalPages ?? 1}
+                totalPages={myAgencyBikeInStation?.pagination?.totalPages ?? 1}
               />
             </div>
           </>

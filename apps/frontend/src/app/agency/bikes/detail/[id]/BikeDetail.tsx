@@ -62,15 +62,11 @@ function bikeStatusVariant(status: string) {
 export function BikeDetailView({ 
   bike, 
 }: { 
-  bike: BikeType | null; // Sử dụng Extended để dùng được bike.name, bike.station...
+  bike: BikeType | null;
 }) {
   if (!bike) return null;
-
-  // const totalHours = activity ? Math.floor(activity.totalMinutesActive / 60) : 0;
-
   return (
     <div className="space-y-6">
-      {/* Metadata bar */}
       <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm sm:flex-row sm:items-center sm:gap-x-8">
         <div>
           <span className="text-muted-foreground">ID Phương tiện: </span>
@@ -102,7 +98,6 @@ export function BikeDetailView({
 
           <SectionCard icon={Cpu} title="Thông số kỹ thuật & Chip">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <Field label="Mã Chip (Chip ID)" value={<code className="text-primary font-bold">{bike.chipId}</code>} />
             </div>
           </SectionCard>
         </div>

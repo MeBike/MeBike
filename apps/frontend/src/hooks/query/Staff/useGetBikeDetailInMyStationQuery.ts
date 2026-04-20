@@ -16,6 +16,6 @@ export const useGetBikeDetailInMyStationQuery = (id: string) => {
     return useQuery({
         queryKey: ["my","bike-detail",id],
         queryFn: () => getBikeDetailInMyStation(id),
-        enabled: !!id,
+        enabled:false,
     })
 }
