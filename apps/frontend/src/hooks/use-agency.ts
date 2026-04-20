@@ -39,8 +39,8 @@ import {
   getErrorMessageFromAgencyCode,
   getAxiosErrorCodeMessage,
 } from "@utils";
-import { id } from "date-fns/locale";
 import { BikeStatus, RentalStatus, ReservationStatus } from "@/types";
+import { useUpdateStatusBikeMutation } from "./mutations/Agency/useUpdateStatusBikeMutation";
 export interface AgencyActionProps {
   hasToken?: boolean;
   agency_id?: string;
@@ -238,7 +238,7 @@ export const useAgencyActions = ({
         throw error;
       }
     },
-    [updateStatusMutation, hasToken, id],
+    [updateStatusMutation, hasToken],
   );
   const approveAgencyRequest = useCallback(
     async ({ id, description }: { id: string; description?: string }) => {
@@ -360,7 +360,7 @@ export const useAgencyActions = ({
             queryKey: ["data", "agencies"],
           });
           queryClient.invalidateQueries({
-            queryKey: ["stats", "agency", id],
+            queryKey: ["stats", "agency"],
           });
         }
       } catch (error) {
@@ -463,6 +463,37 @@ export const useAgencyActions = ({
     }
     refetchDetailReservationForAency();
   }, [refetchDetailReservationForAency, hasToken, reservation_id]);
+  const updateBikeStatusMutation = useUpdateStatusBikeMutation();
+  const updateBikeStatus = useCallback(
+    async (id: string, status: "AVAILABLE" | "BROKEN") => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await updateBikeStatusMutation.mutateAsync({ id, status });
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Cập nhật trạng thái xe đạp thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["bikes", "all"],
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromAgencyCode(error_code));
+        throw error;
+      }
+    },
+    [
+      updateBikeStatusMutation,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
   return {
     agencies,
     getAgencies,
@@ -515,6 +546,8 @@ export const useAgencyActions = ({
     detailReservationForAgency,
     getDetailReservationForAgency,
     isLoadingDetailReservationForAgency,
-    isDetailRentalLoadingForAgency
+    isDetailRentalLoadingForAgency,
+    updateBikeStatus,
+    isUpdatingStatus : updateBikeStatusMutation.isPending,
   };
 };

@@ -5,7 +5,9 @@ import { notFound, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { BikeDetailView } from "./BikeDetail";
+import { useBikeActions } from "@/hooks/use-bike";
 import { useAgencyActions } from "@/hooks/use-agency";
+import { SimpleUpdateBikeDialog } from "../../components/simple-update";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -14,6 +16,8 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     myAgencyBikeInStationDetail,
     getMyAgencyBikeInStationDetail,
     isLoadingMyAgencyBikeInStationDetail,
+    updateBikeStatus,
+    isUpdatingStatus,
   } = useAgencyActions({ hasToken: true, bike_detail_id: id });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
@@ -26,6 +30,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyAgencyBikeInStationDetail]);
+  const handleUpdateStatus = async (data: {
+    status: "AVAILABLE" | "BROKEN";
+  }) => {
+    // Truyền data.status vào hàm update
+    await updateBikeStatus(id, data.status);
+    getMyAgencyBikeInStationDetail();
+  };
   useEffect(() => {
     getMyAgencyBikeInStationDetail();
   }, [id]);
@@ -49,12 +60,21 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => router.push("/agency/bikes")}
-          >
-            Danh sách xe
-          </Button>
+          <div className="flex items-center gap-2">
+            {myAgencyBikeInStationDetail && (
+              <SimpleUpdateBikeDialog
+                bike={myAgencyBikeInStationDetail}
+                onUpdate={handleUpdateStatus}
+                isUpdating={isUpdatingStatus}
+              />
+            )}
+            <Button
+              variant="outline"
+              onClick={() => router.push("/staff/bikes")}
+            >
+              Danh sách xe
+            </Button>
+          </div>
         </div>
         <BikeDetailView bike={myAgencyBikeInStationDetail || null} />
       </div>

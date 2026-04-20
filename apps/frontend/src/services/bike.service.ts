@@ -4,7 +4,14 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@/schemas/bike-schema";
-import { BikeStats ,Bike , BikeRentalHistory , BikeStatus , BikeActivityStats , BikeStatistics } from "@custom-types";
+import {
+  BikeStats,
+  Bike,
+  BikeRentalHistory,
+  BikeStatus,
+  BikeActivityStats,
+  BikeStatistics,
+} from "@custom-types";
 import { ENDPOINT } from "@/constants/end-point";
 import { ApiResponse } from "@custom-types";
 
@@ -12,25 +19,22 @@ export const bikeService = {
   //for admin
 
   createBikeAdmin: async (
-    data: BikeSchemaFormData
+    data: BikeSchemaFormData,
   ): Promise<AxiosResponse<Bike>> => {
-    const response = await fetchHttpClient.post<Bike>(
-      ENDPOINT.BIKE.BASE,
-      data
+    const response = await fetchHttpClient.post<Bike>(ENDPOINT.BIKE.BASE, data);
+    return response;
+  },
+  getStatusCountBikeAdmin: async (): Promise<AxiosResponse<BikeStatistics>> => {
+    const response = await fetchHttpClient.get<BikeStatistics>(
+      ENDPOINT.BIKE.STATUS_COUNT,
     );
     return response;
   },
-  getStatusCountBikeAdmin: async (): Promise<
-    AxiosResponse<BikeStatistics>
-  > => {
-    const response = await fetchHttpClient.get<
-    BikeStatistics
-    >(ENDPOINT.BIKE.STATUS_COUNT);
-    return response;
-  },
-  getStatusBikeByIdAdmin: async (id: string): Promise<AxiosResponse<BikeStatus>> => {
+  getStatusBikeByIdAdmin: async (
+    id: string,
+  ): Promise<AxiosResponse<BikeStatus>> => {
     const response = await fetchHttpClient.get<BikeStatus>(
-      ENDPOINT.BIKE.ID(id)
+      ENDPOINT.BIKE.ID(id),
     );
     return response;
   },
@@ -38,42 +42,39 @@ export const bikeService = {
     const response = await fetchHttpClient.delete(ENDPOINT.BIKE.ID(id));
     return response;
   },
-  
+
   //for both admin and staf
-  getHistoryBikeById: async (id: string): Promise<AxiosResponse<ApiResponse<BikeRentalHistory[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<BikeRentalHistory[]>>(
-      ENDPOINT.BIKE.RENTAL_HISTORY(id),
-      {
-        page:1,
-        pageSize : 10,
-      }
-    );
+  getHistoryBikeById: async (
+    id: string,
+  ): Promise<AxiosResponse<ApiResponse<BikeRentalHistory[]>>> => {
+    const response = await fetchHttpClient.get<
+      ApiResponse<BikeRentalHistory[]>
+    >(ENDPOINT.BIKE.RENTAL_HISTORY(id), {
+      page: 1,
+      pageSize: 10,
+    });
     return response;
   },
   updateBike: async (
     id: string,
-    data: Partial<UpdateBikeSchemaFormData>
+    data: Partial<UpdateBikeSchemaFormData>,
   ): Promise<AxiosResponse<Bike>> => {
     const response = await fetchHttpClient.patch<Bike>(
       ENDPOINT.BIKE.ID(id),
-      data
+      data,
     );
     return response;
   },
   //for user
   reportBrokenBike: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.patch(
-      ENDPOINT.BIKE.REPORT_BROKEN(id)
+      ENDPOINT.BIKE.REPORT_BROKEN(id),
     );
     return response;
   },
   //all
-  getBikeByIdForAll: async (
-    id: string
-  ): Promise<AxiosResponse<Bike>> => {
-    const response = await fetchHttpClient.get<Bike>(
-      ENDPOINT.BIKE.ID(id)
-    );
+  getBikeByIdForAll: async (id: string): Promise<AxiosResponse<Bike>> => {
+    const response = await fetchHttpClient.get<Bike>(ENDPOINT.BIKE.ID(id));
     return response;
   },
   getAllBikes: async ({
@@ -94,37 +95,35 @@ export const bikeService = {
     const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(
       ENDPOINT.BIKE.BASE,
       {
-        id : id,
-        page : page,
-        pageSize : pageSize,
-        stationId : stationId,
-        supplierId : supplierId,
-        status : status,
-      }
+        id: id,
+        page: page,
+        pageSize: pageSize,
+        stationId: stationId,
+        supplierId: supplierId,
+        status: status,
+      },
     );
     return response;
   },
   getBikeActivityStats: async (
-    id: string
+    id: string,
   ): Promise<AxiosResponse<BikeActivityStats>> => {
     const response = await fetchHttpClient.get<BikeActivityStats>(
-      ENDPOINT.BIKE.ACTIVITY_STATS(id)
+      ENDPOINT.BIKE.ACTIVITY_STATS(id),
     );
     return response;
   },
-  getStatisticsBike: async (
-    id: string
-  ): Promise<AxiosResponse<BikeStats>> => {
+  getStatisticsBike: async (id: string): Promise<AxiosResponse<BikeStats>> => {
     const response = await fetchHttpClient.get<BikeStats>(
-      ENDPOINT.BIKE.STATS_BIKE(id)
+      ENDPOINT.BIKE.STATS_BIKE(id),
     );
     return response;
   },
   getRentalHistoryBike: async (
-    id: string
+    id: string,
   ): Promise<AxiosResponse<BikeRentalHistory[]>> => {
     const response = await fetchHttpClient.get<BikeRentalHistory[]>(
-      ENDPOINT.BIKE.RENTAL_HISTORY(id)
+      ENDPOINT.BIKE.RENTAL_HISTORY(id),
     );
     return response;
   },
@@ -146,21 +145,47 @@ export const bikeService = {
     const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(
       ENDPOINT.STAFF.BIKE,
       {
-        id : id,
-        page : page,
-        pageSize : pageSize,
-        stationId : stationId,
-        supplierId : supplierId,
-        status : status,
-      }
+        id: id,
+        page: page,
+        pageSize: pageSize,
+        stationId: stationId,
+        supplierId: supplierId,
+        status: status,
+      },
     );
     return response;
   },
   getBikeDetailInMyStation: async (
-    id: string
+    id: string,
   ): Promise<AxiosResponse<Bike>> => {
     const response = await fetchHttpClient.get<Bike>(
-      ENDPOINT.STAFF.BIKE_DETAIL(id)
+      ENDPOINT.STAFF.BIKE_DETAIL(id),
+    );
+    return response;
+  },
+  updateBikeStatus: async ({
+    id,
+    status,
+  }: {
+    id: string;
+    status: "AVAILABLE" | "BROKEN";
+  }) => {
+    const response = await fetchHttpClient.patch(
+      ENDPOINT.BIKE.MANAGER_UPDATE(id),
+      { status:status },
+    );
+    return response;
+  },
+  updateBikeStatusTechnician: async ({
+    id,
+    status,
+  }: {
+    id: string;
+    status: "AVAILABLE" | "BROKEN";
+  }) => {
+    const response = await fetchHttpClient.patch(
+      ENDPOINT.BIKE.TECHNICIAN_UPDATE_BIKE(id),
+      { status:status },
     );
     return response;
   },

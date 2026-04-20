@@ -143,7 +143,7 @@ export default function AdminRentalDetailPage() {
           <Button
             variant="outline"
             className="shrink-0"
-            onClick={() => router.push("/admin/rentals")}
+            onClick={() => router.push("/staff/rentals")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại danh sách

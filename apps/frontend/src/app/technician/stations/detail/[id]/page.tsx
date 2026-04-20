@@ -128,7 +128,7 @@ export default function StationDetailPage() {
 
           <Button
             variant="outline"
-            onClick={() => router.push("/staff/stations")}
+            onClick={() => router.push("/technician/stations")}
           >
             Quay lại danh sách
           </Button>

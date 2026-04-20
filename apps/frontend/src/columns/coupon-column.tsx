@@ -62,6 +62,7 @@ export const couponColumns = ({
   },
   {
     id: "actions",
+    header:"Hành động",
     cell: ({ row }) => (
       // <div className="flex gap-2">
       //   <Button variant="ghost" size="icon" onClick={() => onView(row.original)}>
@@ -78,8 +79,7 @@ export const couponColumns = ({
       //   )}
       // </div>
       <div className="flex items-center gap-0">
-        <div className="flex items-center pl-4.5">
-          {/* Tooltip cho nút View */}
+        <div className="">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -95,8 +95,6 @@ export const couponColumns = ({
             </TooltipTrigger>
             <TooltipContent>Xem chi tiết</TooltipContent>
           </Tooltip>
-
-          {/* Tooltip cho nút Active/Deactive */}
           <Tooltip>
             <TooltipTrigger asChild>
               {row.original.status === "ACTIVE" ? (

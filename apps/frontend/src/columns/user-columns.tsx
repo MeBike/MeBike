@@ -188,8 +188,6 @@ export const userColumns = ({
               </TooltipTrigger>
               <TooltipContent>Xem chi tiết</TooltipContent>
             </Tooltip>
-          </div>
-          <div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
