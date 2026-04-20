@@ -1,47 +1,51 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { RedistributionRequestDetail } from "@/types/DistributionRequest";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button"; // Giả sử dùng Shadcn Button
+import { Button } from "@/components/ui/button";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bike, MapPin, ClipboardList } from "lucide-react"; // Import icon cho đẹp
+import { ArrowLeft, Bike, MapPin, ClipboardList, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import type { RedistributionRequestStatus } from "@/types/DistributionRequest";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+
 interface Props {
   data: RedistributionRequestDetail;
+  onApprove: () => Promise<void>;
+  onReject: (reason: string) => Promise<void>;
 }
 
-export const DistributionRequestDetailClient = ({ data }: Props) => {
+export const DistributionRequestDetailClient = ({ data, onApprove, onReject }: Props) => {
   const router = useRouter();
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Hàm xử lý màu sắc Badge dựa trên status
   const getStatusStyle = (status: RedistributionRequestStatus) => {
     switch (status) {
-      case "PENDING_APPROVAL":
-        return "bg-amber-100 text-amber-800 border-amber-200";
-      case "APPROVED":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "IN_TRANSIT":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "PARTIALLY_COMPLETED":
-        return "bg-indigo-100 text-indigo-800 border-indigo-200";
-      case "COMPLETED":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "REJECTED":
-      case "CANCELLED":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "PENDING_APPROVAL": return "bg-amber-100 text-amber-800 border-amber-200";
+      case "APPROVED": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "IN_TRANSIT": return "bg-purple-100 text-purple-800 border-purple-200";
+      case "PARTIALLY_COMPLETED": return "bg-indigo-100 text-indigo-800 border-indigo-200";
+      case "COMPLETED": return "bg-green-100 text-green-800 border-green-200";
+      case "REJECTED": case "CANCELLED": return "bg-red-100 text-red-800 border-red-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
-  
+
+  const handleAction = async (action: () => Promise<void>) => {
+    setIsProcessing(true);
+    await action();
+    setIsProcessing(false);
+  };
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      {/* Header với nút Back */}
+      {/* Header với nút Back và Action Buttons */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <Button 
@@ -60,13 +64,24 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
             </Badge>
           </div>
         </div>
+
+        {/* Action Buttons bổ sung */}
+        {data.status === "PENDING_APPROVAL" && (
+          <div className="flex gap-3">
+            <Button variant="destructive" onClick={() => setShowRejectModal(true)} disabled={isProcessing}>
+              <XCircle className="mr-2 h-4 w-4" /> Từ chối
+            </Button>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleAction(onApprove)} disabled={isProcessing}>
+              {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+              Duyệt yêu cầu
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Cột trái: Thông tin cơ bản & Lộ trình */}
         <div className="lg:col-span-2 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Thông tin cơ bản */}
             <Card className="shadow-md border-none bg-slate-50/50">
               <CardHeader className="pb-3 text-primary">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -103,7 +118,6 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
               </CardContent>
             </Card>
 
-            {/* Lộ trình điều phối */}
             <Card className="shadow-md border-none bg-slate-50/50">
               <CardHeader className="pb-3 text-primary">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -111,7 +125,6 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative space-y-8 px-8">
-                {/* Đường nối giữa 2 trạm */}
                 <div className="absolute left-[2.4rem] top-12 bottom-12 w-0.5 bg-dashed border-l-2 border-dashed border-slate-300"></div>
                 
                 <div className="relative z-10 flex flex-col">
@@ -143,7 +156,6 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
             </Card>
           </div>
 
-          {/* Danh sách xe điều phối */}
           <Card className="shadow-lg border-none overflow-hidden">
             <CardHeader className="bg-slate-900 text-white py-4">
               <CardTitle className="text-md font-medium flex items-center gap-2">
@@ -166,7 +178,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                       <TableCell className="text-center font-medium text-slate-500">{index + 1}</TableCell>
                       <TableCell>
                         <code className="px-2 py-1 bg-slate-100 rounded text-blue-700 font-bold text-xs">
-                          {item.bike.chipId}
+                          {item.bike.id}
                         </code>
                       </TableCell>
                       <TableCell>
@@ -175,7 +187,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right text-slate-600 font-medium">
-                        {item.deliveredAt ? formatToVNTime(item.deliveredAt) : "---"}
+                        {item.deliveredAt ? formatToVNTime(item.deliveredAt) : "Chưa có"}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -192,7 +204,6 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
           </Card>
         </div>
 
-        {/* Cột phải: Timeline hoặc Hành động phụ (nếu cần mở rộng sau này) */}
         <div className="space-y-6">
            <Card className="border-dashed border-2 bg-slate-50/30">
               <CardHeader>
@@ -204,6 +215,18 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
            </Card>
         </div>
       </div>
+
+      {/* Dialog Từ chối */}
+      <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Lý do từ chối yêu cầu</DialogTitle></DialogHeader>
+          <Textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Nhập lý do tại đây..." />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowRejectModal(false)}>Hủy</Button>
+            <Button variant="destructive" onClick={() => handleAction(() => onReject(rejectReason))} disabled={!rejectReason}>Xác nhận từ chối</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

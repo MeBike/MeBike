@@ -69,7 +69,6 @@ export default function CreateBikeClient({
   const onSubmit = async (data: BikeSchemaFormData) => {
     try {
       await onSubmitBike(data);
-      router.push("/admin/bikes");
       router.refresh();
     } catch (error) {
       console.error(error);

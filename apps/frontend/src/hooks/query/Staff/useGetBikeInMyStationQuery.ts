@@ -42,5 +42,6 @@ export const useGetBikeInMyStationQuery = ({
   return useQuery({
     queryKey: ["data","bike-in-my-station",page,pageSize,stationId,supplierId,status],
     queryFn: () => getBikeInMyStation(page, pageSize, stationId, supplierId, status),
+    enabled:false,
   });
 };

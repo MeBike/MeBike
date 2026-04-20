@@ -1,99 +1,71 @@
 "use client";
 
-import { Dispatch, SetStateAction } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { bikeColumn } from "@/columns/bike-colums";
-import { BikeStats } from "./components/bike-stats";
+import { useBikeActions } from "@/hooks/use-bike";
+import { bikeColumnForStaff } from "@/columns/bike-colums";
+import { BikeStatus } from "@custom-types";
 import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
-import type { Bike, BikeStatus ,BikeStatistics , Pagination , Station , Supplier } from "@custom-types";
-
-// Định nghĩa cấu trúc Props
-interface BikeClientProps {
-  data: {
-    bikes: Bike[];
-    statusCount?: BikeStatistics;
-    paginationBikes?: Pagination;
-    stations: Station[];
-    suppliers: Supplier[];
-    isVisualLoading: boolean;
-    isLoadingStatusCount: boolean;
-  };
-  filters: {
-    statusFilter: BikeStatus | "all";
-    page: number;
-  };
-  actions: {
-    setStatusFilter: Dispatch<SetStateAction<BikeStatus | "all">>;
-    setPage: Dispatch<SetStateAction<number>>;
-  };
-}
-
-export default function BikeClient({
-  data: {
-    bikes,
-    statusCount,
-    paginationBikes,
-    stations,
-    suppliers,
-    isVisualLoading,
-    isLoadingStatusCount,
-  },
-  filters: { statusFilter, page },
-  actions: { setStatusFilter, setPage },
-}: BikeClientProps) {
+export default function BikeClient() {
   const router = useRouter();
-
-  // Loading tổng thể (khi đang fetch số lượng trạng thái ban đầu)
-  if (isLoadingStatusCount) {
-    return <Loader2 className="m-auto animate-spin" />;
-  }
-
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
+  const {
+    myBikeInStation,
+    isLoadingMyBikeInStation,
+    getMyBikeInStation
+  } = useBikeActions({
+    hasToken: true,
+    status: statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
+    pageSize: 7,
+    page: page,
+  });
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+  useEffect(() => {
+    if (isLoadingMyBikeInStation) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingMyBikeInStation]);
+  useEffect(() => {
+    getMyBikeInStation();
+  }, [statusFilter]);
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
-        <Button onClick={() => router.push("/admin/bikes/create")}>
-          <Plus className="mr-2 h-4 w-4" /> Thêm xe
-        </Button>
       </div>
-
-      {statusCount && <BikeStats stats={statusCount} />}
-
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
       />
-
       <div className="min-h-[700px]">
         {isVisualLoading ? (
           <TableSkeleton />
         ) : (
           <>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Hiển thị {paginationBikes?.page ?? 1} /{" "}
-              {paginationBikes?.totalPages ?? 1} trang
+            <p className="text-sm text-muted-foreground mb-4">
+              Hiển thị {myBikeInStation?.pagination?.page ?? 1} /{" "}
+              {myBikeInStation?.pagination?.totalPages ?? 1} trang
             </p>
-
             <DataTable
-              columns={bikeColumn({
-                onView: ({ id }) => router.push(`/admin/bikes/detail/${id}`),
-                onEdit: ({ id }) => router.push(`/admin/bikes/${id}?edit=true`),
-                stations: stations,
-                suppliers: suppliers,
+              columns={bikeColumnForStaff({
+                onView: ({ id }) => router.push(`/staff/bikes/detail/${id}`),
               })}
-              data={bikes}
+              data={myBikeInStation?.data || []}
             />
-
             <div className="pt-3">
               <PaginationDemo
-                currentPage={paginationBikes?.page ?? 1}
+                currentPage={myBikeInStation?.pagination?.page ?? 1}
                 onPageChange={setPage}
-                totalPages={paginationBikes?.totalPages ?? 1}
+                totalPages={myBikeInStation?.pagination?.totalPages ?? 1}
               />
             </div>
           </>

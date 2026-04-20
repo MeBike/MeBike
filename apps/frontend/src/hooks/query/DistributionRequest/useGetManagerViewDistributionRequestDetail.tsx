@@ -19,7 +19,7 @@ export const useGetManagerViewDistributionRequestDetailQuery = ({
   id:string;
 }) => {
   return useQuery({
-    queryKey: ["manager","distribution-request-data","detail",id],
+    queryKey: ["manager","distribution-request-data","detail"],
     queryFn: () => getManagerViewDistributionRequestDetail({id:id}),
     enabled:false,
   });

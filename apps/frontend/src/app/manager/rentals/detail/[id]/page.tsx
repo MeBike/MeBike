@@ -80,7 +80,7 @@ export default function AdminRentalDetailPage() {
   const { id } = useParams() as { id: string };
   const { detailDataForStaff : detailData, isDetailLoadingForStaff, getDetailRentalForStaff } = useRentalsActions({
     hasToken: true,
-    bike_id: id,
+    rental_id: id,
   });
   useEffect(() => {
     getDetailRentalForStaff();

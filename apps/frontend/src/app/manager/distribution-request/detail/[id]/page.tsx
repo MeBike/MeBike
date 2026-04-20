@@ -13,6 +13,8 @@ const DistributionRequestDetailPage = () => {
     managerViewDistributionRequestDetail,
     isLoadingManagerViewDistributionRequestDetail,
     getManagerViewDistributionRequestDetail,
+    approveDistributeRequest,
+    rejectDistributeRequest
   } = useDistributionRequest({
     id: id,
     hasToken: hasToken,
@@ -47,7 +49,9 @@ const DistributionRequestDetailPage = () => {
 
   return (
     <DistributionRequestDetailClient 
-      data={managerViewDistributionRequestDetail.data} 
+      data={managerViewDistributionRequestDetail.data}
+      onApprove={() => approveDistributeRequest(id)}
+    onReject={(reason: string) => rejectDistributeRequest(id, { reason })}
     />
   );
 };
