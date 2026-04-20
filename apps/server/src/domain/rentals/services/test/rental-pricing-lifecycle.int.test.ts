@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { expectRight } from "@/test/effect/assertions";
+import { expectLeftTag, expectRight } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
@@ -450,7 +450,7 @@ describe("rental pricing lifecycle integration", () => {
     expect(billingRecord?.totalAmount.toString()).toBe("12000");
   });
 
-  it("forfeits the deposit when return confirmation happens after the late cutoff", async () => {
+  it("rejects return confirmation after the late cutoff and leaves deposit handling to the sweep worker", async () => {
     await fixture.prisma.pricingPolicy.updateMany({
       data: { status: "INACTIVE" },
     });
@@ -504,31 +504,33 @@ describe("rental pricing lifecycle integration", () => {
     }));
 
     const lateConfirmedAt = new Date("2026-03-22T16:30:01.000Z");
-    const completedRental = expectRight(await runConfirmReturn({
+    const failure = expectLeftTag(await runConfirmReturn({
       rentalId: rental!.id,
       stationId: station.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
       confirmedAt: lateConfirmedAt,
-    }));
-
-    expect(completedRental.status).toBe("COMPLETED");
+    }), "InvalidRentalState");
+    expect(failure).toMatchObject({
+      rentalId: rental!.id,
+      to: "OVERDUE_UNRETURNED",
+    });
 
     const billingRecord = await fixture.prisma.rentalBillingRecord.findUnique({
       where: { rentalId: rental!.id },
     });
-    expect(billingRecord?.depositForfeited).toBe(true);
+    expect(billingRecord).toBeNull();
 
     const forfeitedHold = await fixture.prisma.walletHold.findUnique({
       where: { id: rental!.depositHoldId! },
     });
-    expect(forfeitedHold?.status).toBe("SETTLED");
-    expect(forfeitedHold?.forfeitedAt?.toISOString()).toBe(lateConfirmedAt.toISOString());
+    expect(forfeitedHold?.status).toBe("ACTIVE");
+    expect(forfeitedHold?.forfeitedAt).toBeNull();
 
     const walletAfterReturn = await fixture.prisma.wallet.findUnique({
       where: { userId: user.id },
     });
-    expect(walletAfterReturn?.reservedBalance.toString()).toBe("0");
-    expect(walletAfterReturn?.balance.toString()).toBe("36000");
+    expect(walletAfterReturn?.reservedBalance.toString()).toBe("2000");
+    expect(walletAfterReturn?.balance.toString()).toBe("47000");
   });
 });
