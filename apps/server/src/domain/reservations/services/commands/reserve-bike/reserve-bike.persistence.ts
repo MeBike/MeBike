@@ -35,6 +35,12 @@ function formatReservationDateTime(value: Date): string {
  * - tạo reservation row
  * - đổi trạng thái bike sang reserved
  * - enqueue lifecycle jobs và email xác nhận
+ *
+ * @param args Dữ liệu mutation của flow reserve bike.
+ * @param args.tx Transaction client đang dùng.
+ * @param args.input Input reservation đã được chuẩn hóa `now`.
+ * @param args.prepared Snapshot read-only đã validate xong.
+ * @param args.subscriptionCommandService Service dùng subscription bên trong transaction hiện tại.
  */
 export function persistReserveBikeInTx(args: {
   readonly tx: PrismaTypes.TransactionClient;
@@ -109,6 +115,10 @@ export function persistReserveBikeInTx(args: {
 
 /**
  * Enqueue các job nhắc hết hạn và auto-expire cho reservation hold.
+ *
+ * @param tx Transaction client đang dùng.
+ * @param reservation Reservation vừa được tạo.
+ * @param now Mốc hiện tại để clamp lịch chạy job.
  */
 function scheduleReservationLifecycleJobsInTx(
   tx: PrismaTypes.TransactionClient,
@@ -149,6 +159,13 @@ function scheduleReservationLifecycleJobsInTx(
 
 /**
  * Enqueue email xác nhận reservation sau khi transaction đã có đủ user + station + reservation data.
+ *
+ * @param args Dữ liệu cần để build và enqueue email xác nhận.
+ * @param args.tx Transaction client đang dùng.
+ * @param args.reservation Reservation vừa được tạo.
+ * @param args.bikeId ID bike fallback nếu reservation row chưa phản chiếu đủ dữ liệu.
+ * @param args.now Mốc hiện tại dùng cho `runAt`.
+ * @param args.endTime Thời gian kết thúc hold để render email.
  */
 function enqueueReservationConfirmationEmailInTx(args: {
   readonly tx: PrismaTypes.TransactionClient;
@@ -201,6 +218,12 @@ function enqueueReservationConfirmationEmailInTx(args: {
 
 /**
  * Trừ tiền ví cho prepaid reservation và map lỗi wallet thô sang lỗi domain của flow reservation.
+ *
+ * @param repo Wallet repository đang bám theo transaction hiện tại.
+ * @param input Dữ liệu debit ví.
+ * @param input.userId ID user bị trừ tiền.
+ * @param input.amount Số tiền cần trừ.
+ * @param input.description Mô tả transaction wallet.
  */
 function debitWallet(
   repo: ReturnType<typeof makeWalletRepository>,

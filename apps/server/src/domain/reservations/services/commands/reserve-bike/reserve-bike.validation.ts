@@ -43,6 +43,17 @@ function computeEndTime(startTime: Date, holdMinutes = HOLD_MINUTES): Date {
  * Hàm này cố tình không ghi side effect nào xuống DB.
  * Mục tiêu là gom toàn bộ rule đọc trạng thái vào một nơi, để bước persistence
  * phía sau chỉ còn lo mutation và outbox/email.
+ *
+ * @param tx Transaction client đang dùng.
+ * @param input Dữ liệu reservation đã được chuẩn hóa `now`.
+ * @param input.userId ID user yêu cầu giữ xe.
+ * @param input.bikeId ID bike cần giữ.
+ * @param input.stationId ID station bike phải đang thuộc về.
+ * @param input.startTime Thời điểm bắt đầu reservation.
+ * @param input.reservationOption Cách charge reservation hiện tại.
+ * @param input.subscriptionId ID subscription nếu dùng gói.
+ * @param input.endTime Thời điểm kết thúc hold do caller truyền vào.
+ * @param input.now Mốc hiện tại để áp dụng blackout và validate active hold.
  */
 export function prepareReserveBikeInTx(
   tx: PrismaTypes.TransactionClient,

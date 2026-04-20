@@ -4,7 +4,7 @@ export * from "./repository/reservation-analytics.repository";
 export * from "./repository/reservation-command.repository";
 export * from "./repository/reservation-query.repository";
 export * from "./services/cancel-reservation.service";
-export * from "./services/confirm-reservation.service";
+export * from "./services/commands/confirm-reservation.service";
 export * from "./services/commands/reserve-bike.service";
 export * from "./services/fixed-slot-template.service";
 export * from "./services/fixed-slot/fixed-slot.helpers";

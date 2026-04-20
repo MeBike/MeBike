@@ -1,9 +1,5 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { StationQueryRepo } from "@/domain/stations";
-
-import { StationQueryRepository } from "@/domain/stations";
-
 import type { ReservationQueryRepo } from "../repository/reservation-query.repository";
 import type { FixedSlotTemplateService } from "./fixed-slot-template/fixed-slot-template.types";
 
@@ -26,13 +22,10 @@ export type { FixedSlotTemplateService } from "./fixed-slot-template/fixed-slot-
  *
  * @param deps Cac repo can de tao service.
  * @param deps.reservationQueryRepo Repo query cho template va reservation.
- * @param deps.reservationCommandRepo Repo command cho template va reservation.
- * @param deps.stationRepo Repo station o service scope.
  * @returns Service public de create/list/get/cancel/update/remove fixed-slot template.
  */
 export function makeFixedSlotTemplateService(deps: {
   reservationQueryRepo: ReservationQueryRepo;
-  stationRepo: StationQueryRepo;
 }): FixedSlotTemplateService {
   return {
     createForUser: createFixedSlotTemplateForUser,
@@ -82,11 +75,9 @@ export const FixedSlotTemplateServiceLive = Layer.effect(
   FixedSlotTemplateServiceTag,
   Effect.gen(function* () {
     const reservationQueryRepo = yield* ReservationQueryRepository;
-    const stationRepo = yield* StationQueryRepository;
 
     return makeFixedSlotTemplateService({
       reservationQueryRepo,
-      stationRepo,
     });
   }),
 );

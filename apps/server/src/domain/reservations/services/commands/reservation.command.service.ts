@@ -5,13 +5,13 @@ import type { ReservationCommandService } from "../reservation.service.types";
 
 import {
   InvalidReservationTransition,
-  ReservationMissingBike,
   ReservationNotFound,
   ReservationNotOwned,
 } from "../../domain-errors";
 import { makeReservationCommandRepository } from "../../repository/reservation-command.repository";
 import { makeReservationQueryRepository } from "../../repository/reservation-query.repository";
 import { mapReservationUniqueViolation } from "../../repository/unique-violation";
+import { validatePendingReservationForConfirmationInTx } from "./confirm-reservation/confirm-reservation.validation";
 
 export function makeReservationCommandService(
   commandRepo: ReservationCommandRepo,
@@ -20,46 +20,7 @@ export function makeReservationCommandService(
     markExpiredNow: now => commandRepo.markExpiredNow(now),
     updateStatus: input => commandRepo.updateStatus(input),
     validatePendingForConfirmationInTx: (tx, input) =>
-      Effect.gen(function* () {
-        const txQueryRepo = makeReservationQueryRepository(tx);
-        const reservationOpt = yield* txQueryRepo.findById(input.reservationId);
-        if (Option.isNone(reservationOpt)) {
-          return yield* Effect.fail(new ReservationNotFound({ reservationId: input.reservationId }));
-        }
-        const reservation = reservationOpt.value;
-
-        if (reservation.userId !== input.userId) {
-          return yield* Effect.fail(new ReservationNotOwned({
-            reservationId: reservation.id,
-            userId: input.userId,
-          }));
-        }
-
-        if (reservation.status !== "PENDING") {
-          return yield* Effect.fail(new InvalidReservationTransition({
-            reservationId: reservation.id,
-            from: reservation.status,
-            to: "FULFILLED",
-          }));
-        }
-
-        if (reservation.endTime && reservation.endTime <= input.now) {
-          return yield* Effect.fail(new InvalidReservationTransition({
-            reservationId: reservation.id,
-            from: reservation.status,
-            to: "FULFILLED",
-          }));
-        }
-
-        if (!reservation.bikeId) {
-          return yield* Effect.fail(new ReservationMissingBike({ reservationId: reservation.id }));
-        }
-
-        return {
-          reservation,
-          bikeId: reservation.bikeId,
-        };
-      }),
+      validatePendingReservationForConfirmationInTx(tx, input),
     cancelPendingInTx: (tx, input) =>
       Effect.gen(function* () {
         const txQueryRepo = makeReservationQueryRepository(tx);
