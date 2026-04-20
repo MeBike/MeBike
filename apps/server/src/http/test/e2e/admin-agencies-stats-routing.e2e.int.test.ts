@@ -150,17 +150,6 @@ describe("admin agency stats routing e2e", () => {
       status: "RENTED",
     });
 
-    await fixture.factories.rental({
-      userId: customer.id,
-      bikeId: bookedBike.id,
-      startStationId: station.id,
-      startTime: new Date("2026-03-14T10:00:00.000Z"),
-      endTime: null,
-      duration: null,
-      totalPrice: null,
-      status: "CANCELLED",
-    });
-
     await fixture.prisma.returnConfirmation.create({
       data: {
         rentalId: completedRental.id,
@@ -235,10 +224,9 @@ describe("admin agency stats routing e2e", () => {
     });
     expect(body.currentStation.occupancyRate).toBeCloseTo(33.33, 2);
     expect(body.pickups).toEqual({
-      totalRentals: 3,
+      totalRentals: 2,
       activeRentals: 1,
       completedRentals: 1,
-      cancelledRentals: 1,
       totalRevenue: 32000,
       avgDurationMinutes: 45,
     });

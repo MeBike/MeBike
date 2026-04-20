@@ -153,7 +153,7 @@ describe("environment policies routing e2e", () => {
   async function createRentalForImpact(input: {
     id?: string;
     userId?: string;
-    status?: "RENTED" | "COMPLETED" | "CANCELLED";
+    status?: "RENTED" | "COMPLETED";
     duration?: number | null;
     startTime?: Date;
     endTime?: Date | null;

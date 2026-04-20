@@ -50,7 +50,6 @@ export const AgencyPickupStatsSchema = z.object({
   totalRentals: z.number(),
   activeRentals: z.number(),
   completedRentals: z.number(),
-  cancelledRentals: z.number(),
   totalRevenue: z.number(),
   avgDurationMinutes: z.number(),
 }).openapi("AgencyPickupStats");

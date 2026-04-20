@@ -113,7 +113,7 @@ export function toAdminRatingDetailRow(
   row: AdminRatingBasePayload & {
     rental: {
       id: string;
-      status: "RENTED" | "COMPLETED" | "CANCELLED";
+      status: "RENTED" | "COMPLETED";
       startTime: Date;
       endTime: Date | null;
     };

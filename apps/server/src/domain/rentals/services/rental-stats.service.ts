@@ -74,7 +74,6 @@ export const RentalStatsServiceLive = Layer.effect(
             rentalList: {
               Rented: counts.RENTED,
               Completed: counts.COMPLETED,
-              Cancelled: counts.CANCELLED,
             },
             dailyRevenue: compareRevenue(dailyCurrent, dailyPrevious),
             monthlyRevenue: compareRevenue(monthlyCurrent, monthlyPrevious),

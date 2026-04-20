@@ -18,7 +18,7 @@ describe("rentalAnalyticsRepository Integration", () => {
     userId: string;
     bikeId: string;
     stationId: string;
-    status: "RENTED" | "COMPLETED" | "CANCELLED";
+    status: "RENTED" | "COMPLETED";
     startTime: Date;
     endTime?: Date | null;
     totalPrice?: number | null;
@@ -44,7 +44,6 @@ describe("rentalAnalyticsRepository Integration", () => {
     const now = new Date("2026-03-16T10:00:00.000Z");
 
     await createRental({ userId: user.id, bikeId: bike.id, stationId: station.id, status: "RENTED", startTime: now });
-    await createRental({ userId: user.id, bikeId: bike.id, stationId: station.id, status: "CANCELLED", startTime: now });
     await createRental({
       userId: user.id,
       bikeId: bike.id,
@@ -59,7 +58,6 @@ describe("rentalAnalyticsRepository Integration", () => {
     const byStatus = new Map(rows.map(row => [row.status, row.count]));
 
     expect(byStatus.get("RENTED")).toBe(1);
-    expect(byStatus.get("CANCELLED")).toBe(1);
     expect(byStatus.get("COMPLETED")).toBe(1);
   });
 

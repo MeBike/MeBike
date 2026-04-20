@@ -50,7 +50,6 @@ export type AgencyPickupStats = {
   readonly totalRentals: number;
   readonly activeRentals: number;
   readonly completedRentals: number;
-  readonly cancelledRentals: number;
   readonly totalRevenue: number;
   readonly avgDurationMinutes: number;
 };
