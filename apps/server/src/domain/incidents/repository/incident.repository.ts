@@ -490,8 +490,7 @@ function rejectIncidentWithClient(
       const technician = yield* Effect.promise(() =>
         tx.userOrgAssignment.findFirst({
           where: {
-            stationId: station.id,
-            technicianTeam: { availabilityStatus: "AVAILABLE" },
+            technicianTeam: { availabilityStatus: "AVAILABLE", stationId: station.id },
             userId: {
               not: assignment.technicianUserId!,
             },
