@@ -5,7 +5,6 @@ import type { StationReadSummary } from "@/contracts/server";
 import { IconSymbol } from "@components/IconSymbol";
 import { AppHeroHeader } from "@ui/patterns/app-hero-header";
 import { AppText } from "@ui/primitives/app-text";
-import { StatusBadge } from "@ui/primitives/status-badge";
 
 type StationDetailHeaderProps = {
   onBack: () => void;
@@ -20,7 +19,6 @@ export function StationDetailHeader({
 
   return (
     <AppHeroHeader
-      accessory={<StatusBadge label="HOẠT ĐỘNG" size="compact" tone="overlaySuccess" />}
       onBack={onBack}
       size="default"
       subtitle={(
