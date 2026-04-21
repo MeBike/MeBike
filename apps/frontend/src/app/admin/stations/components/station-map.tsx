@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import * as tt from "@tomtom-international/web-sdk-maps";
+import "@tomtom-international/web-sdk-maps/dist/maps.css";
 
 interface StationMapProps {
   onLocationSelect: (lat: number, lng: number) => void;
-  // Cho phép null để an toàn nếu component cha chưa fetch xong data
   defaultCenter?: [number, number] | null; 
 }
 
@@ -13,75 +13,62 @@ export function StationMap({ onLocationSelect, defaultCenter }: StationMapProps)
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<tt.Map | null>(null);
   const markerRef = useRef<tt.Marker | null>(null);
+  const HCM_CITY: [number, number] = [106.6601, 10.7626];
 
-  // 1. SAFEGUARD 1: Chống lỗi null/undefined từ API. Luôn fallback về SG nếu data hỏng.
-  const safeCenter = (defaultCenter && defaultCenter.length === 2) 
-    ? defaultCenter 
-    : [106.70098, 10.77689] as [number, number];
-
-  const onLocationSelectRef = useRef(onLocationSelect);
-  useEffect(() => {
-    onLocationSelectRef.current = onLocationSelect;
-  }, [onLocationSelect]);
+  const currentCenter = defaultCenter && defaultCenter.length === 2 ? defaultCenter : HCM_CITY;
 
   useEffect(() => {
-    // 2. SAFEGUARD 2: Cắt bỏ khoảng trắng thừa trong file .env (rất hay gặp)
     const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY?.trim();
-    
-    if (!mapRef.current || !apiKey || mapInstanceRef.current) return;
+    if (!mapRef.current || !apiKey) return;
 
     const map = tt.map({
       key: apiKey,
       container: mapRef.current,
-      center: safeCenter, 
+      center: currentCenter, 
       zoom: 14,
-      // 3. SAFEGUARD 3: Ép cứng API Key vào thẳng URL giao diện. 
-      // Bỏ qua cơ chế tự nối chuỗi lởm khởm của SDK khi chạy trên Next.js
-      style: `https://api.tomtom.com/style/1/style/21.1.0-*?map=hybrid_main&key=${apiKey}`,
     });
 
     mapInstanceRef.current = map;
 
-    map.on("load", () => {
-      map.resize();
-    });
-
-    map.on("click", (e) => {
-      const { lat, lng } = e.lngLat;
-      onLocationSelectRef.current(lat, lng);
-
+    // --- THÊM ĐOẠN NÀY ĐỂ HIỂN THỊ CỜ MẶC ĐỊNH ---
+    const addMarker = (lng: number, lat: number) => {
       if (markerRef.current) {
         markerRef.current.setLngLat([lng, lat]);
       } else {
-        markerRef.current = new tt.Marker({ draggable: false })
+        markerRef.current = new tt.Marker({ color: "#ef4444" }) // Màu đỏ cho nổi bật
           .setLngLat([lng, lat])
           .addTo(map);
       }
+    };
+
+    // Đặt cờ ngay khi load xong
+    map.on("load", () => {
+      map.resize();
+      addMarker(currentCenter[0], currentCenter[1]);
+    });
+    // ---------------------------------------------
+
+    map.on("click", (e: any) => {
+      const { lat, lng } = e.lngLat;
+      onLocationSelect(lat, lng);
+      addMarker(lng, lat); // Dùng lại hàm addMarker
     });
 
     return () => {
       map.remove();
       mapInstanceRef.current = null;
     };
-  // Cố tình disable cảnh báo dependency để map chỉ mount 1 lần
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
 
-  // 4. Update tọa độ khi component cha đã load xong data
-  useEffect(() => {
-    if (mapInstanceRef.current && safeCenter) {
-      mapInstanceRef.current.setCenter(safeCenter);
-    }
-  // So sánh giá trị nguyên thủy (từng số) thay vì array để tránh Re-render loop
-  }, [safeCenter[0], safeCenter[1]]); 
-
   return (
-    <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden h-full">
-      <div className="border-b border-border bg-muted/30 px-6 py-5">
-        <h2 className="text-lg font-semibold">Chọn vị trí trên bản đồ</h2>
-        <p className="text-sm text-muted-foreground mt-1">Nhấp trên bản đồ để xác định tọa độ</p>
-      </div>
-      <div ref={mapRef} className="w-full h-[500px] bg-muted" />
+    <div className="w-full h-full flex flex-col">
+      <div ref={mapRef} className="w-full h-[500px] relative" />
+      {/* CSS bắt buộc để cờ không bị nằm dưới bản đồ */}
+      <style jsx global>{`
+        .mapboxgl-marker {
+          z-index: 999 !important;
+        }
+      `}</style>
     </div>
   );
 }

@@ -23,6 +23,7 @@ export default function Page({
   } = useSupplierActions({
     hasToken: true,
     supplier_id: supplierId,
+    status :"",
   });
 
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);

@@ -4,7 +4,10 @@ import { isValidUUID } from "@utils";
 export const userProfileSchema = z.object({
   fullname: z.string().min(1, "Họ tên là bắt buộc"),
   email: z.email("Email không hợp lệ"),
-  phoneNumber: z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự"),
+  phoneNumber:z
+    .string()
+    .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
+    .regex(/^[0-9]+$/, "Chỉ được nhập số"),
   password: z.string().min(6, "Mật khẩu phải ít nhất 6 ký tự"),
   role: z.enum(["USER", "STAFF", "ADMIN","TECHNICIAN","MANAGER"]),
   verify: z.enum([] as VerifyStatus[]).optional(),
@@ -21,7 +24,10 @@ export type CreateUserFormData = z.infer<typeof createUserSchema>;
 const baseUserSchema = z.object({
   fullname : z.string().min(1, "Họ tên là bắt buộc"),
   email : z.email("Email không hợp lệ"),
-  phoneNumber : z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự"),
+  phoneNumber : z
+    .string()
+    .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
+    .regex(/^[0-9]+$/, "Chỉ được nhập số"),
   password : z.string().min(10,"Password phải ít nhất 10 kí tự"),
   // accountStatus :  z.enum(["ACTIVE","INACTIVE","SUSPENDED","BANNED",""]),
   // verify : z.enum(["VERIFIED","UNVERIFIED"]),

@@ -8,7 +8,7 @@ import {useGetSupplierByIDQuery,useGetBikeStatsSupplierQuery,useGetAllSupplierQu
 import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
 import {HTTP_STATUS , SUPPLIER_MESSAGE} from "@constants";
 import { SupplierActionProps } from "@custom-types";
-export const useSupplierActions = ({hasToken,supplier_id,page,pageSize}: SupplierActionProps) => {
+export const useSupplierActions = ({hasToken,supplier_id,page,pageSize,status}: SupplierActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
@@ -17,7 +17,8 @@ export const useSupplierActions = ({hasToken,supplier_id,page,pageSize}: Supplie
     isLoading: isLoadingAllSuppliers,
   } = useGetAllSupplierQuery({
     page:page,
-    pageSize:pageSize
+    pageSize:pageSize,
+    status:status,
   });
   const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
     useGetAllStatsSupplierQuery();
@@ -45,13 +46,12 @@ export const useSupplierActions = ({hasToken,supplier_id,page,pageSize}: Supplie
     async (supplierData: CreateSupplierSchema) => {
       if (!hasToken) {
         router.push("/login");
-        // throw new Error("Unauthorized");
       }
       try {
         const result = await useCreateSupplier.mutateAsync(supplierData);
-        if(result.status === HTTP_STATUS.OK){
+        if(result.status === HTTP_STATUS.CREATED){
           toast.success(SUPPLIER_MESSAGE.CREATE_SUCCESS);
-          queryClient.invalidateQueries({ queryKey : ["suppliers", "all"]})
+          getAllSuppliers();
         }
         return result;
       } catch (error) {
