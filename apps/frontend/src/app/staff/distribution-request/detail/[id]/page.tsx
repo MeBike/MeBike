@@ -8,27 +8,28 @@ import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 const DistributionRequestDetailPage = () => {
   const params = useParams();
   const id = params.id as string;
-  const hasToken = true; 
+  const hasToken = true;
   const {
     staffViewDistributionRequestDetail,
     isLoadingStaffViewDistributionRequestDetail,
     getStaffViewDistributionRequestDetail,
     startTransitDistributionRequest,
+    cancelDistributeRequest,
   } = useDistributionRequest({
     id: id,
     hasToken: hasToken,
   });
-  const [isVisualLoading,setIsVisualLoading] = useState<boolean>(false);
-    useEffect(() => {
-      if (isLoadingStaffViewDistributionRequestDetail) {
-        setIsVisualLoading(true);
-      } else {
-        const timer = setTimeout(() => {
-          setIsVisualLoading(false);
-        }, 600);
-        return () => clearTimeout(timer);
-      }
-    }, [isLoadingStaffViewDistributionRequestDetail]);
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+  useEffect(() => {
+    if (isLoadingStaffViewDistributionRequestDetail) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingStaffViewDistributionRequestDetail]);
   useEffect(() => {
     if (id) {
       getStaffViewDistributionRequestDetail();
@@ -47,8 +48,11 @@ const DistributionRequestDetailPage = () => {
   }
 
   return (
-    <DistributionRequestDetailClient 
-      data={staffViewDistributionRequestDetail.data} 
+    <DistributionRequestDetailClient
+      onCancel={async (reason: string) =>
+        await cancelDistributeRequest(id, { reason })
+      }
+      data={staffViewDistributionRequestDetail.data}
       onStartTransit={async () => await startTransitDistributionRequest(id)}
     />
   );
