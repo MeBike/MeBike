@@ -12,7 +12,31 @@ import type {
   RedistributionRequestStatus 
 } from "@/types/DistributionRequest";
 
-// 1. Hàm helper xử lý màu sắc trạng thái điều phối
+// --- 1. CONFIG TỪ ĐIỂN TIẾNG VIỆT ---
+
+// Tiếng Việt cho trạng thái điều phối
+const REQUEST_STATUS_VI: Record<string, string> = {
+  PENDING_APPROVAL: "Chờ phê duyệt",
+  APPROVED: "Đã phê duyệt",
+  IN_TRANSIT: "Đang vận chuyển",
+  PARTIALLY_COMPLETED: "Hoàn thành 1 phần",
+  COMPLETED: "Đã hoàn thành",
+  REJECTED: "Bị từ chối",
+  CANCELLED: "Đã hủy",
+};
+
+// Tiếng Việt cho trạng thái xe (Dựa trên các trạng thái phổ biến của bạn)
+const BIKE_STATUS_VI: Record<string, string> = {
+  AVAILABLE: "Sẵn sàng",
+  BROKEN: "Hỏng hóc",
+  MAINTENANCE: "Bảo trì",
+  UNAVAILABLE: "Không khả dụng",
+  RENTED: "Đang được thuê",
+  BOOKED: "Đã đặt chỗ",
+  RESERVED: "Đã giữ chỗ",
+};
+
+// --- 2. HÀM HELPER XỬ LÝ MÀU SẮC ---
 export const getRequestStatusColor = (status: RedistributionRequestStatus) => {
   switch (status) {
     case "PENDING_APPROVAL":
@@ -33,7 +57,7 @@ export const getRequestStatusColor = (status: RedistributionRequestStatus) => {
   }
 };
 
-// 2. Định nghĩa Column cho danh sách yêu cầu điều phối
+// --- 3. COLUMN ĐIỀU PHỐI ---
 export const redistributionColumn = ({
   onView,
 }: {
@@ -72,9 +96,10 @@ export const redistributionColumn = ({
       const status = row.original.status;
       return (
         <span
-          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getRequestStatusColor(status)}`}
+          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getRequestStatusColor(status)} uppercase`}
         >
-          {status.replace("_", " ")}
+          {/* Map sang tiếng Việt, nếu chưa có trong từ điển thì giữ nguyên fallback */}
+          {REQUEST_STATUS_VI[status] || status.replace("_", " ")}
         </span>
       );
     },
@@ -101,14 +126,19 @@ export const redistributionColumn = ({
   },
 ];
 
-// 3. Column hiển thị danh sách xe (Items) trong chi tiết yêu cầu
+// --- 4. COLUMN CHI TIẾT XE ---
 export const redistributionItemColumn = (): ColumnDef<any>[] => [
   {
     accessorKey: "bike.status",
     header: "Tình trạng xe",
-    cell: ({ row }) => (
-       <span className="capitalize">{row.original.bike.status.toLowerCase()}</span>
-    ),
+    cell: ({ row }) => {
+       const status = row.original.bike.status;
+       return (
+         <span className="font-medium">
+           {BIKE_STATUS_VI[status] || status.toLowerCase()}
+         </span>
+       )
+    },
   },
   {
     accessorKey: "deliveredAt",

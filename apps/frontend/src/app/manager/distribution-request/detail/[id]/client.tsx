@@ -36,6 +36,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CurrentStation } from "@/types";
+
 interface Props {
   data: RedistributionRequestDetail;
   onApprove: () => Promise<void>;
@@ -56,6 +57,7 @@ export const DistributionRequestDetailClient = ({
   const [rejectReason, setRejectReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
+  
   const getStatusStyle = (status: RedistributionRequestStatus) => {
     switch (status) {
       case "PENDING_APPROVAL":
@@ -75,6 +77,7 @@ export const DistributionRequestDetailClient = ({
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
+  
   const STATUS_MAP: Record<
     RedistributionRequestStatus,
     { label: string; style: string }
@@ -117,6 +120,19 @@ export const DistributionRequestDetailClient = ({
     setShowRejectModal(false);
   };
 
+  // Logic xử lý riêng cho nút Từ chối để clear text sau khi xong
+  const handleRejectSubmit = async () => {
+    if (!isValid) return;
+    setIsProcessing(true);
+    try {
+      await onReject(rejectReason);
+      setShowRejectModal(false); // Đóng form
+    } finally {
+      setIsProcessing(false);
+      setRejectReason(""); // Reset lại text
+    }
+  };
+
   const handleToggleBike = (bikeId: string) => {
     setSelectedBikeIds((prev) =>
       prev.includes(bikeId)
@@ -124,12 +140,15 @@ export const DistributionRequestDetailClient = ({
         : [...prev, bikeId],
     );
   };
+  
   const statusInfo = STATUS_MAP[data.status] || {
     label: "Không xác định",
     style: "bg-gray-100",
   };
-  // 1. Tạo logic kiểm tra (có thể đặt trực tiếp trong component)
+  
+  // 1. Logic kiểm tra tối thiểu 10 ký tự
   const isValid = rejectReason.trim().length >= 10;
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -394,35 +413,30 @@ export const DistributionRequestDetailClient = ({
             <DialogTitle>Lý do từ chối yêu cầu</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-2">
+          <div className="py-4 space-y-2">
             <Textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Nhập lý do tại đây..."
-              className={
-                !isValid && rejectReason.length > 0 ? "border-red-500" : ""
-              }
+              placeholder="Nhập lý do từ chối (tối thiểu 10 ký tự)..."
+              className="resize-none"
+              rows={4}
             />
-
-            {/* 2. Hiển thị thông báo lỗi khi người dùng đã nhập nhưng chưa đủ 10 ký tự */}
-            {!isValid && rejectReason.length > 0 && (
-              <p className="text-sm text-red-500 italic">
-                Vui lòng nhập ít nhất 10 ký tự (Hiện tại: {rejectReason.length})
-              </p>
-            )}
+            {/* Bộ đếm ký tự màu Xanh/Đỏ */}
+            <p className={`text-xs text-right font-medium ${isValid ? "text-green-600" : "text-red-500"}`}>
+              {rejectReason.trim().length} / 10 ký tự
+            </p>
           </div>
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowRejectModal(false)}>
+            <Button variant="outline" onClick={() => setShowRejectModal(false)} disabled={isProcessing}>
               Hủy
             </Button>
-
-            {/* 3. Nút xác nhận chỉ hoạt động khi pass rules */}
             <Button
               variant="destructive"
-              onClick={() => handleAction(() => onReject(rejectReason))}
-              disabled={!isValid} // Nút sẽ mờ đi nếu chưa đủ 10 ký tự
+              onClick={handleRejectSubmit} // Đổi sang hàm submit mới
+              disabled={isProcessing || !isValid} // Khóa nếu đang gọi API hoặc chưa đủ ký tự
             >
+              {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Xác nhận từ chối
             </Button>
           </DialogFooter>

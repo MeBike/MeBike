@@ -3,7 +3,14 @@
 import { useState, useMemo, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, MapPin, Activity, Loader2, AlertCircle, Building2 } from "lucide-react";
+import {
+  Edit,
+  MapPin,
+  Activity,
+  Loader2,
+  AlertCircle,
+  Building2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,7 +28,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updateBikeSchema, UpdateBikeSchemaFormData } from "@/schemas/bike-schema";
+import {
+  updateBikeSchema,
+  UpdateBikeSchemaFormData,
+} from "@/schemas/bike-schema";
 import { cn } from "@/lib/utils";
 import type { Bike, Station, BikeStatus, Supplier } from "@/types";
 
@@ -39,6 +49,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   UNAVAILABLE: { label: "Không khả dụng", color: "bg-slate-500" },
   RENTED: { label: "Đang được thuê", color: "bg-blue-500" },
   BOOKED: { label: "Đã đặt chỗ", color: "bg-purple-500" },
+  RESERVED: { label: "Đã giữ chỗ", color: "bg-orange-500" }
 };
 
 interface UpdateBikeDialogProps {
@@ -76,6 +87,7 @@ export function UpdateBikeDialog({
   useEffect(() => {
     console.log("Dữ liệu nhà cung cấp của xe:", bike?.supplier);
     console.log("Dữ liệu trạm của xe:", bike?.station);
+    console.log("Dữ liệu trạng thái của xe:", bike?.status);
     if (open) {
       reset({
         stationId: bike?.station?.id ? String(bike.station.id) : "",
@@ -100,28 +112,35 @@ export function UpdateBikeDialog({
     }
   };
 
-  const isRestricted = bike?.status === "BOOKED";
+  const isRestricted = bike?.status === "BOOKED" || bike?.status === "RESERVED";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9 gap-2 border-primary/20 hover:bg-primary/5">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 gap-2 border-primary/20 hover:bg-primary/5"
+        >
           <Edit className="h-4 w-4" />
           Cập nhật xe
         </Button>
       </DialogTrigger>
-      
+
       {/* Tăng max-width để layout không bị chật */}
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle className="text-xl">Cập nhật xe #{bike?.bikeNumber}</DialogTitle>
-          <DialogDescription>Điều chỉnh thông tin kỹ thuật và vị trí của xe.</DialogDescription>
+          <DialogTitle className="text-xl">
+            Cập nhật xe #{bike?.bikeNumber}
+          </DialogTitle>
+          <DialogDescription>
+            Điều chỉnh thông tin kỹ thuật và vị trí của xe.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
           {/* Grid Layout thoáng hơn với gap-6 */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            
             {/* Trạm xe */}
             <div className="space-y-2">
               <Label className="text-sm font-bold">Trạm hiện tại</Label>
@@ -131,20 +150,29 @@ export function UpdateBikeDialog({
                 render={({ field }) => (
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || undefined}
+                    >
                       <SelectTrigger className="pl-10 w-full">
                         <SelectValue placeholder="Chọn trạm" />
                       </SelectTrigger>
                       <SelectContent>
                         {stations?.map((s) => (
-                          <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                          <SelectItem key={s.id} value={String(s.id)}>
+                            {s.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 )}
               />
-              {errors.stationId && <p className="text-[10px] text-destructive font-medium">{errors.stationId.message}</p>}
+              {errors.stationId && (
+                <p className="text-[10px] text-destructive font-medium">
+                  {errors.stationId.message}
+                </p>
+              )}
             </div>
 
             {/* Nhà cung cấp */}
@@ -156,7 +184,10 @@ export function UpdateBikeDialog({
                 render={({ field }) => (
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || undefined}
+                    >
                       <SelectTrigger className="pl-10 w-full">
                         <SelectValue placeholder="Chọn NCC" />
                       </SelectTrigger>
@@ -171,11 +202,14 @@ export function UpdateBikeDialog({
                   </div>
                 )}
               />
-              {errors.supplierId && <p className="text-[10px] text-destructive font-medium">{errors.supplierId.message}</p>}
+              {errors.supplierId && (
+                <p className="text-[10px] text-destructive font-medium">
+                  {errors.supplierId.message}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Trạng thái - Để full width cho dễ đọc */}
           <div className="space-y-2">
             <Label className="text-sm font-bold">Trạng thái kỹ thuật</Label>
             <Controller
@@ -184,20 +218,32 @@ export function UpdateBikeDialog({
               render={({ field }) => (
                 <div className="relative">
                   <Activity className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     value={field.value}
-                    disabled={isRestricted}
+                    disabled={isRestricted} // <--- Điểm mấu chốt là cái này
                   >
-                    <SelectTrigger className="pl-10 h-11 w-full">
+                    <SelectTrigger
+                      className={cn(
+                        "pl-10 h-11 w-full",
+                        isRestricted && "opacity-70 cursor-not-allowed",
+                      )}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {statusOptions.map((status) => (
                         <SelectItem key={status} value={status}>
                           <div className="flex items-center gap-2">
-                            <span className={cn("h-2.5 w-2.5 rounded-full", STATUS_CONFIG[status]?.color)} />
-                            <span className="font-medium">{STATUS_CONFIG[status]?.label}</span>
+                            <span
+                              className={cn(
+                                "h-2.5 w-2.5 rounded-full",
+                                STATUS_CONFIG[status]?.color,
+                              )}
+                            />
+                            <span className="font-medium">
+                              {STATUS_CONFIG[status]?.label}
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
@@ -206,20 +252,37 @@ export function UpdateBikeDialog({
                 </div>
               )}
             />
+
+            {/* Câu cảnh báo hiện ra khi bị khóa */}
             {isRestricted && (
               <div className="flex items-start gap-2 text-[11px] font-medium text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-100 mt-2">
                 <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>Xe đang có khách thuê hoặc đặt trước, không thể thay đổi trạng thái kỹ thuật lúc này.</span>
+                <span>
+                  Xe đang trong trạng thái{" "}
+                  <strong>
+                    {STATUS_CONFIG[bike?.status]?.label.toLowerCase()}
+                  </strong>
+                  . Không thể thay đổi trạng thái kỹ thuật lúc này.
+                </span>
               </div>
             )}
           </div>
 
           {/* Footer Buttons */}
           <div className="flex justify-end gap-3 pt-6 border-t mt-4">
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={isUpdating}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              disabled={isUpdating}
+            >
               Hủy bỏ
             </Button>
-            <Button type="submit" disabled={isUpdating} className="min-w-[140px] font-semibold">
+            <Button
+              type="submit"
+              disabled={isUpdating}
+              className="min-w-[140px] font-semibold"
+            >
               {isUpdating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
