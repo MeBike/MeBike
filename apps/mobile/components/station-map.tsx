@@ -36,6 +36,11 @@ export default function StationMap({
   const ignoreNextMapPressRef = useRef(false);
   const ignoreResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAutoCenteredUserLocationRef = useRef(false);
+  const latestUserLocationRef = useRef(userLocation);
+
+  useEffect(() => {
+    latestUserLocationRef.current = userLocation;
+  }, [userLocation]);
 
   useEffect(() => {
     return () => {
@@ -60,7 +65,7 @@ export default function StationMap({
       return;
     }
 
-    if (!userLocation || hasAutoCenteredUserLocationRef.current) {
+    if (hasAutoCenteredUserLocationRef.current) {
       return;
     }
 
@@ -73,16 +78,21 @@ export default function StationMap({
   }, [userLocation]);
 
   useEffect(() => {
-    if (!userLocation || recenterToUserLocationKey === 0) {
+    if (recenterToUserLocationKey === 0) {
+      return;
+    }
+
+    const nextUserLocation = latestUserLocationRef.current;
+    if (!nextUserLocation) {
       return;
     }
 
     cameraRef.current?.setCamera({
-      centerCoordinate: [userLocation.longitude, userLocation.latitude],
+      centerCoordinate: [nextUserLocation.longitude, nextUserLocation.latitude],
       zoomLevel: 15,
       animationDuration: 700,
     });
-  }, [recenterToUserLocationKey, userLocation]);
+  }, [recenterToUserLocationKey]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
