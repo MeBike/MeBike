@@ -10,6 +10,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "turbo run dev --parallel",
+    "dev:cli": "pnpm --dir apps/server dev:cli",
+    "dev:cli:interactive": "pnpm --dir apps/server dev:cli:interactive",
     "openapi:generate": "pnpm --filter iot-service openapi:generate",
     "orval": "orval --config orval.config.ts --tsconfig packages/shared/tsconfig.json",
     "client:generate": "pnpm openapi:generate && pnpm orval",
