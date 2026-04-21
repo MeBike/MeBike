@@ -138,7 +138,7 @@ export default function StationDetailPage() {
             </Badge>
           </div>
           
-          <Button variant="outline" onClick={() => router.push("/manager/stations")}>
+          <Button variant="outline" onClick={() => router.push("/agency/stations")}>
             Quay lại danh sách
           </Button>
         </div>
