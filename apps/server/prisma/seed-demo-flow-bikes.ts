@@ -190,8 +190,8 @@ async function main() {
         .map(item => `${item.station.name}: projected ${item.projectedTotalBikes}/${item.station.totalCapacity}`)
         .join("; ");
       throw new Error(
-        `Cannot add ${BOOSTER_BIKES_PER_STATION} bikes per station without exceeding capacity. ` +
-        `Reset with \`pnpm seed:demo\` before running this script. Conflicts: ${details}`,
+        `Cannot add ${BOOSTER_BIKES_PER_STATION} bikes per station without exceeding capacity. `
+        + `Reset with \`pnpm seed:demo\` before running this script. Conflicts: ${details}`,
       );
     }
 
