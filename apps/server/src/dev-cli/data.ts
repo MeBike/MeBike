@@ -499,23 +499,40 @@ export async function listEmailJobs(args: {
   limit?: number;
 }) {
   return withClient(args.connectionString, async (client) => {
-    const rows = await client.$queryRaw<RawEmailJobRow[]>`
-        SELECT
-          id,
-          status,
-          attempts,
-          dedupe_key AS "dedupeKey",
-          last_error AS "lastError",
-          created_at AS "createdAt",
-          run_at AS "runAt",
-          sent_at AS "sentAt",
-          payload
-        FROM job_outbox
-        WHERE type = ${EMAIL_JOB_TYPE}
-          AND (${args.status} = 'ALL' OR status = ${args.status})
-        ORDER BY created_at DESC
-        LIMIT ${args.limit ?? 30}
-      `;
+    const rows = args.status === "ALL"
+      ? await client.$queryRaw<RawEmailJobRow[]>`
+          SELECT
+            id,
+            status,
+            attempts,
+            dedupe_key AS "dedupeKey",
+            last_error AS "lastError",
+            created_at AS "createdAt",
+            run_at AS "runAt",
+            sent_at AS "sentAt",
+            payload
+          FROM job_outbox
+          WHERE type = ${EMAIL_JOB_TYPE}
+          ORDER BY created_at DESC
+          LIMIT ${args.limit ?? 30}
+        `
+      : await client.$queryRaw<RawEmailJobRow[]>`
+          SELECT
+            id,
+            status,
+            attempts,
+            dedupe_key AS "dedupeKey",
+            last_error AS "lastError",
+            created_at AS "createdAt",
+            run_at AS "runAt",
+            sent_at AS "sentAt",
+            payload
+          FROM job_outbox
+          WHERE type = ${EMAIL_JOB_TYPE}
+            AND status = ${args.status}
+          ORDER BY created_at DESC
+          LIMIT ${args.limit ?? 30}
+        `;
 
     return rows.map((row) => {
       const parsed = safeParseJobPayload(EMAIL_JOB_TYPE, row.payload);
