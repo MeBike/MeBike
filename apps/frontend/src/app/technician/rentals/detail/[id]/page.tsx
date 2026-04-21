@@ -74,7 +74,25 @@ function Field({
     </div>
   );
 }
-
+const renderStatus = (status: string) => {
+  let label = "Không rõ";
+  let className = "bg-gray-100 text-gray-800";
+  if (status === "RENTED") {
+    label = "Đang thuê";
+    className = "bg-blue-100 text-blue-800";
+  } else if (status === "COMPLETED") {
+    label = "Đã hoàn thành";
+    className = "bg-green-100 text-green-800";
+  } else if (status === "OVERDUE_UNRETURNED"){
+    label = "Quá hạn chưa trả"; 
+    className = "bg-red-100 text-red-800";
+  }
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}>
+      {label}
+    </span>
+  );
+};
 export default function AdminRentalDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
@@ -150,17 +168,12 @@ export default function AdminRentalDetailPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
               Chi tiết đơn thuê
             </h1>
-            <Badge
-              variant={rentalStatusBadgeVariant(detailData.status)}
-              className="rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase"
-            >
-              {detailData.status}
-            </Badge>
+            {renderStatus(detailData.status)}
           </div>
           <Button
             variant="outline"
             className="shrink-0"
-            onClick={() => router.push("/admin/rentals")}
+            onClick={() => router.push("/technician/rentals")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại danh sách

@@ -13,7 +13,7 @@ export default function RentalClient() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<RentalStatus>("");
+  const [statusFilter, setStatusFilter] = useState<"all" | RentalStatus>("all");
   const {
     staffRentalsData,
     isAllRentalsStaffLoading,
@@ -23,7 +23,7 @@ export default function RentalClient() {
     hasToken: true,
     limit: limit,
     page: page,
-    ...(statusFilter !== "" && { status: statusFilter }),
+    ...(statusFilter !== "all" && { status: statusFilter }),
   });
   const [isVisualLoading, setIsVisualLoading] = useState(false);
   useEffect(() => {

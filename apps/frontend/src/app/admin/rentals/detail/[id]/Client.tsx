@@ -72,6 +72,25 @@ function Field({
     </div>
   );
 }
+const renderStatus = (status: string) => {
+  let label = "Không rõ";
+  let className = "bg-gray-100 text-gray-800";
+  if (status === "RENTED") {
+    label = "Đang thuê";
+    className = "bg-blue-100 text-blue-800";
+  } else if (status === "COMPLETED") {
+    label = "Đã hoàn thành";
+    className = "bg-green-100 text-green-800";
+  } else if (status === "OVERDUE_UNRETURNED"){
+    label = "Quá hạn chưa trả"; 
+    className = "bg-red-100 text-red-800";
+  }
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}>
+      {label}
+    </span>
+  );
+};
 
 
 
@@ -152,12 +171,7 @@ export default function AdminRentalDetailClient({
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
               Chi tiết đơn thuê
             </h1>
-            <Badge
-              variant={rentalStatusBadgeVariant(data.status)}
-              className="rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase"
-            >
-              {data.status}
-            </Badge>
+            {renderStatus(data.status)}
           </div>
           <Button
             variant="outline"

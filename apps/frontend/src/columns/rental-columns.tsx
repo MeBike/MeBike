@@ -9,6 +9,28 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+// Hàm helper để render status sang tiếng Việt
+const renderStatus = (status: string) => {
+  let label = "Không rõ";
+  let className = "bg-gray-100 text-gray-800";
+  if (status === "RENTED") {
+    label = "Đang thuê";
+    className = "bg-blue-100 text-blue-800";
+  } else if (status === "COMPLETED") {
+    label = "Đã hoàn thành";
+    className = "bg-green-100 text-green-800";
+  } else if (status === "OVERDUE_UNRETURNED"){
+    label = "Quá hạn chưa trả"; 
+    className = "bg-red-100 text-red-800";
+  }
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}>
+      {label}
+    </span>
+  );
+};
+
 export const rentalColumn = ({
   onView,
   onUpdateStatus,
@@ -37,21 +59,9 @@ export const rentalColumn = ({
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "RENTED"
-            ? "bg-blue-100 text-blue-800"
-            : row.original.status === "COMPLETED"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-        }`}
-      >
-        {row.original.status}
-      </span>
-    ),
+    cell: ({ row }) => renderStatus(row.original.status),
   },
-    {
+  {
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
@@ -120,19 +130,7 @@ export const rentalColumnForStaff = ({
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "RENTED"
-            ? "bg-blue-100 text-blue-800"
-            : row.original.status === "COMPLETED"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-        }`}
-      >
-        {row.original.status}
-      </span>
-    ),
+    cell: ({ row }) => renderStatus(row.original.status),
   },
   {
     accessorKey: "created_at",

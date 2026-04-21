@@ -164,7 +164,7 @@ export const reservationColumnForStaff = ({
                   : "bg-gray-100 text-gray-800"
         }`}
       >
-        {row.original.status}
+        {STATUS_LABELS[row.original.status]}
       </span>
     ),
   },
