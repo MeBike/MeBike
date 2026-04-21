@@ -42,6 +42,10 @@ const roleRank: Record<string, number> = {
   TECHNICIAN: 4,
 };
 
+function looksLikeUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function toPersonaRecord(row: {
   id: string;
   fullName: string;
@@ -96,7 +100,7 @@ export async function resolveUserCardTarget(connectionString: string, value: str
     client.user.findMany({
       where: {
         OR: [
-          { id: value },
+          ...(looksLikeUuid(value) ? [{ id: value }] : []),
           { email: value },
           { email: handleEmail },
         ],
