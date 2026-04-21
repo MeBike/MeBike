@@ -20,6 +20,6 @@ export const stationSchema = z
   })
   .refine((data) => data.returnSlotLimit < data.totalCapacity, {
     message: "Số lượng trả xe phải nhỏ hơn sức chứa",
-    path: ["returnSlotLimit"], // lỗi hiển thị ở field này
+    path: ["returnSlotLimit"],
   });
 export type StationSchemaFormData = z.infer<typeof stationSchema>;
