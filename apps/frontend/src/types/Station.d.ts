@@ -142,3 +142,41 @@ export interface CurrentStation {
   currentStation : currentStation,
   otherStations : currentStation[],
 }
+
+export type GroupBy = "DAY" | "WEEK" | "MONTH" | "YEAR";
+
+export interface Period {
+  from: string;
+  to: string;
+}
+
+export interface Summary {
+  totalStations: number;
+  totalRevenue: number;
+  totalRentals: number;
+  avgRevenuePerStation: number;
+}
+
+export interface StationReport {
+  id: string;
+  name: string;
+  address: string;
+  totalRentals: number;
+  totalRevenue: number;
+  totalDuration: number;
+  avgDuration: number;
+}
+
+export interface SeriesItem {
+  date: string; // ISO string
+  totalRevenue: number;
+  totalRentals: number;
+}
+
+export interface StaffReportRevenueResponse {
+  period: Period;
+  summary: Summary;
+  stations: StationReport[];
+  groupBy: GroupBy;
+  series: SeriesItem[];
+}

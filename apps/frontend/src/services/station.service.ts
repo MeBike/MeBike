@@ -5,7 +5,8 @@ import { StationSchemaFormData } from "@/schemas/station-schema";
 import type {
   StationBikeRevenue,
   StationStatisticsResponse,
-  CurrentStation
+  CurrentStation,
+  StaffReportRevenueResponse
 } from "@/types/Station";
 import { ENDPOINT } from "@/constants/end-point";
 import { ApiResponse , DetailApiResponse } from "@/types";
@@ -155,6 +156,20 @@ export const stationService = {
     const response = await fetchHttpClient.get<
       StationBikeRevenue
     >(ENDPOINT.STATION.STATION_REVENUE());
+    return response;
+  },
+  getStationRevenueForManager: async (): Promise<
+    AxiosResponse<StaffReportRevenueResponse>> => {
+    const response = await fetchHttpClient.get<
+      StaffReportRevenueResponse
+    >(ENDPOINT.STATION.MANAGER_STATION_REVENUE);
+    return response;
+  },
+  getStationRevenueForAgency: async (): Promise<
+    AxiosResponse<StaffReportRevenueResponse>> => {
+    const response = await fetchHttpClient.get<
+      StaffReportRevenueResponse
+    >(ENDPOINT.STATION.AGENCY_STATION_REVENUE);
     return response;
   },
   getStationNearestAvailableBike: async ({

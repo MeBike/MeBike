@@ -14,6 +14,7 @@ import {
   useGetRentalDetailAgencyInMyStation,
   useGetReservationInMyStationAgency,
   useGetReservationDetailInMyStationAgency,
+  useGetStationRevenueForAgency,
 } from "@queries";
 import {
   useUpdateAgencyStatusMutation,
@@ -494,6 +495,17 @@ export const useAgencyActions = ({
       queryClient,
     ],
   );
+  const {
+      data: responseStationRevenueForAgency,
+      refetch: refetchStationRevenueForAgency,
+      isLoading: isLoadingStationRevenueForAgency,
+    } = useGetStationRevenueForAgency();
+  const getStationRevenueForAgency = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchStationRevenueForAgency();
+  }, [refetchStationRevenueForAgency, hasToken]);
   return {
     agencies,
     getAgencies,
@@ -549,5 +561,8 @@ export const useAgencyActions = ({
     isDetailRentalLoadingForAgency,
     updateBikeStatus,
     isUpdatingStatus : updateBikeStatusMutation.isPending,
+    responseStationRevenueForAgency,
+    isLoadingStationRevenueForAgency,
+    getStationRevenueForAgency,
   };
 };
