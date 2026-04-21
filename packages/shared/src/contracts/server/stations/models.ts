@@ -131,6 +131,14 @@ export const StationRevenueSummarySchema = z.object({
   avgRevenuePerStation: z.number(),
 });
 
+export const StationRevenueGroupBySchema = z.enum(["DAY", "MONTH", "YEAR"]);
+
+export const StationRevenueSeriesItemSchema = z.object({
+  date: z.iso.datetime(),
+  totalRevenue: z.number(),
+  totalRentals: z.number(),
+});
+
 export const StationRevenueResponseSchema = z.object({
   period: z.object({
     from: z.string(),
@@ -138,6 +146,8 @@ export const StationRevenueResponseSchema = z.object({
   }),
   summary: StationRevenueSummarySchema,
   stations: z.array(StationRevenueItemSchema),
+  groupBy: StationRevenueGroupBySchema.optional(),
+  series: z.array(StationRevenueSeriesItemSchema).optional(),
 });
 
 export const BikeRevenueItemSchema = z.object({

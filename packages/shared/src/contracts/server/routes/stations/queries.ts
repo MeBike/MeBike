@@ -16,6 +16,7 @@ import {
   StationReadSummarySchemaOpenApi,
   StationRevenueQuerySchema,
   StationRevenueResponseSchemaOpenApi,
+  StationRevenueRouteQuerySchema,
   StationStatsResponseSchemaOpenApi,
 } from "./shared";
 
@@ -368,7 +369,7 @@ export const getStationStats = createRoute({
   tags: ["Stations"],
   request: {
     params: StationIdParamSchema,
-    query: StationRevenueQuerySchema,
+    query: StationRevenueRouteQuerySchema,
   },
   responses: {
     200: {
@@ -422,8 +423,10 @@ export const getAllStationsRevenue = createRoute({
   method: "get",
   path: "/v1/stations/revenue",
   tags: ["Stations"],
+  description:
+    "Deprecated. Prefer role-scoped revenue endpoints. Returns all-station revenue and defaults omitted date range to the previous full UTC month. Pass groupBy to include time series.",
   request: {
-    query: StationRevenueQuerySchema,
+    query: StationRevenueRouteQuerySchema,
   },
   responses: {
     200: {
@@ -449,6 +452,148 @@ export const getAllStationsRevenue = createRoute({
               },
             },
           },
+        },
+      },
+    },
+  },
+});
+
+export const adminGetAllStationsRevenue = createRoute({
+  method: "get",
+  path: "/v1/admin/stations/revenue",
+  tags: ["Admin", "Stations"],
+  security: [{ bearerAuth: [] }],
+  description:
+    "Revenue stats for all stations in admin scope. When from/to are omitted, server defaults to previous full UTC month. Pass groupBy to include time series.",
+  request: {
+    query: StationRevenueRouteQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Revenue stats for all stations in admin scope",
+      content: {
+        "application/json": { schema: StationRevenueResponseSchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid date range",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+          examples: {
+            InvalidDateRange: {
+              value: {
+                error: "Invalid date range",
+                details: {
+                  code: StationErrorCodeSchema.enum.INVALID_DATE_RANGE,
+                  from: "2025-02-10T00:00:00.000Z",
+                  to: "2025-02-01T00:00:00.000Z",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
+export const managerGetAssignedStationRevenue = createRoute({
+  method: "get",
+  path: "/v1/manager/stations/revenue",
+  tags: ["Manager", "Stations"],
+  security: [{ bearerAuth: [] }],
+  description:
+    "Revenue stats for the manager's assigned station. Revenue is recognized by completed rental end time and attributed to the pickup station. Pass groupBy to include time series.",
+  request: {
+    query: StationRevenueRouteQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Revenue stats for the manager's assigned station",
+      content: {
+        "application/json": { schema: StationRevenueResponseSchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid date range",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+          examples: {
+            InvalidDateRange: {
+              value: {
+                error: "Invalid date range",
+                details: {
+                  code: StationErrorCodeSchema.enum.INVALID_DATE_RANGE,
+                  from: "2025-02-10T00:00:00.000Z",
+                  to: "2025-02-01T00:00:00.000Z",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Manager"),
+    404: {
+      description: "Assigned station not found",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const agencyGetAssignedStationRevenue = createRoute({
+  method: "get",
+  path: "/v1/agency/stations/revenue",
+  tags: ["Agency", "Stations"],
+  security: [{ bearerAuth: [] }],
+  description:
+    "Revenue stats for the agency's assigned station. Revenue is recognized by completed rental end time and attributed to the pickup station. Pass groupBy to include time series.",
+  request: {
+    query: StationRevenueRouteQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Revenue stats for the agency's assigned station",
+      content: {
+        "application/json": { schema: StationRevenueResponseSchemaOpenApi },
+      },
+    },
+    400: {
+      description: "Invalid date range",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
+          examples: {
+            InvalidDateRange: {
+              value: {
+                error: "Invalid date range",
+                details: {
+                  code: StationErrorCodeSchema.enum.INVALID_DATE_RANGE,
+                  from: "2025-02-10T00:00:00.000Z",
+                  to: "2025-02-01T00:00:00.000Z",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Agency"),
+    404: {
+      description: "Assigned station not found",
+      content: {
+        "application/json": {
+          schema: StationErrorResponseSchema,
         },
       },
     },

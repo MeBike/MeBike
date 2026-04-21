@@ -13,8 +13,10 @@ import {
   StationDateRangeQuerySchema,
   StationErrorCodeSchema,
   StationErrorDetailSchema,
+  StationIsoDateTimeStringSchema,
   StationListQuerySchema,
   StationReadSummarySchema,
+  StationRevenueGroupBySchema,
   StationRevenueResponseSchema,
   StationStatsResponseSchema,
   StationSummarySchema,
@@ -71,36 +73,6 @@ function requiredLongitudeQuery(example?: number) {
     value => (typeof value === "string" ? Number(value) : value),
     LongitudeSchema,
   ).openapi({ example });
-}
-
-function optionalLatitudeQuery(example?: number) {
-  return z
-    .preprocess(
-      value =>
-        value === undefined || value === null
-          ? undefined
-          : typeof value === "string"
-            ? Number(value)
-            : value,
-      LatitudeSchema,
-    )
-    .optional()
-    .openapi({ example });
-}
-
-function optionalLongitudeQuery(example?: number) {
-  return z
-    .preprocess(
-      value =>
-        value === undefined || value === null
-          ? undefined
-          : typeof value === "string"
-            ? Number(value)
-            : value,
-      LongitudeSchema,
-    )
-    .optional()
-    .openapi({ example });
 }
 
 export const StationErrorResponseSchema = ServerErrorResponseSchema.extend({
@@ -247,6 +219,16 @@ export const StationRevenueQuerySchema = StationDateRangeQuerySchema.openapi(
   },
 );
 
+export const StationRevenueRouteQuerySchema = z
+  .object({
+    from: StationIsoDateTimeStringSchema.optional(),
+    to: StationIsoDateTimeStringSchema.optional(),
+    groupBy: StationRevenueGroupBySchema.optional(),
+  })
+  .openapi("StationRevenueRouteQuery", {
+    description: "Optional date range filters for revenue/statistics endpoints. Provide both from and to together, or omit both to default to previous full UTC month. Pass groupBy to include revenue series in response.",
+  });
+
 export const StationSummarySchemaOpenApi = StationSummarySchema.openapi(
   "StationSummary",
   {
@@ -320,7 +302,7 @@ export const StationStatsResponseSchemaOpenApi = StationStatsResponseSchema.open
 
 export const StationRevenueResponseSchemaOpenApi
   = StationRevenueResponseSchema.openapi("StationRevenueResponse", {
-    description: "Revenue metrics grouped by station (and bikes per station)",
+    description: "Revenue metrics grouped by station, with optional time series when groupBy is requested",
   });
 
 export const BikeRevenueResponseSchemaOpenApi = BikeRevenueResponseSchema.openapi(

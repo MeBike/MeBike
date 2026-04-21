@@ -2,23 +2,31 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
+import { withLoggedCause } from "@/domain/shared";
 import {
   StationCommandServiceTag,
   StationQueryServiceTag,
+  StationStatsServiceTag,
 } from "@/domain/stations";
 import {
   toContractStationReadSummary,
+  toContractStationRevenue,
   toContractStationSummary,
 } from "@/http/presenters/stations.presenter";
 
 import type {
   StationErrorResponse,
   StationListResponse,
+  StationRevenueResponse,
   StationsRoutes,
   StationSummary,
 } from "./shared";
 
-import { StationErrorCodeSchema, stationErrorMessages } from "./shared";
+import {
+  resolveStationRevenueRange,
+  StationErrorCodeSchema,
+  stationErrorMessages,
+} from "./shared";
 
 const listStations: RouteHandler<StationsRoutes["adminListStations"]> = async (c) => {
   const query = c.req.valid("query");
@@ -61,6 +69,29 @@ const listStations: RouteHandler<StationsRoutes["adminListStations"]> = async (c
       }, 400)),
     Match.exhaustive,
   );
+};
+
+const getAllStationsRevenue: RouteHandler<StationsRoutes["adminGetAllStationsRevenue"]> = async (c) => {
+  const query = c.req.valid("query");
+  const rangeResult = resolveStationRevenueRange(query);
+
+  if (!rangeResult.ok) {
+    return c.json<StationErrorResponse, 400>(rangeResult.error, 400);
+  }
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* StationStatsServiceTag;
+      return yield* service.getRevenueByStation({
+        ...rangeResult.range,
+        groupBy: rangeResult.groupBy,
+      });
+    }),
+    "GET /v1/admin/stations/revenue",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json<StationRevenueResponse, 200>(toContractStationRevenue(result), 200);
 };
 
 const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) => {
@@ -280,6 +311,7 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
 
 export const StationAdminController = {
   listStations,
+  getAllStationsRevenue,
   createStation,
   updateStation,
 } as const;

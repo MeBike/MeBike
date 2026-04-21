@@ -21,7 +21,6 @@ import type {
   NearestStationRow,
   StationContextRow,
   StationFilter,
-  StationRevenueStats,
   StationRow,
   StationSortField,
   UpdateStationInput,
@@ -29,10 +28,7 @@ import type {
 
 export type StationCommandService = {
   /**
-   * Tao tram moi sau khi validate suc chua, ownership va geo boundary.
-   *
-   * @param input Du lieu tao tram.
-   * @returns Effect tra ve tram vua tao neu hop le.
+   * Tạo trạm mới sau khi validate sức chứa, ownership và geo boundary rules.
    */
   createStation: (
     input: CreateStationInput,
@@ -50,11 +46,7 @@ export type StationCommandService = {
   >;
 
   /**
-   * Cap nhat tram hien co va bao ve cac invariant van hanh dang ton tai.
-   *
-   * @param id ID tram can cap nhat.
-   * @param input Du lieu cap nhat.
-   * @returns Effect tra ve tram sau cap nhat neu thanh cong.
+   * Cập nhật trạm hiện có và bảo vệ các invariant vận hành đang tồn tại.
    */
   updateStation: (
     id: string,
@@ -78,11 +70,7 @@ export type StationCommandService = {
 
 export type StationQueryService = {
   /**
-   * Liet ke tram theo filter va phan trang offset.
-   *
-   * @param filter Dieu kien loc tram.
-   * @param pageReq Cau hinh phan trang va sort.
-   * @returns Effect tra ve danh sach tram co pagination.
+   * Liệt kê trạm theo filter chuẩn và phân trang offset.
    */
   listStations: (
     filter: StationFilter,
@@ -90,10 +78,7 @@ export type StationQueryService = {
   ) => Effect.Effect<PageResult<StationRow>>;
 
   /**
-   * Lay chi tiet mot tram theo ID.
-   *
-   * @param id ID tram can lay.
-   * @returns Effect tra ve tram neu tim thay.
+   * Lấy chi tiết một trạm theo ID.
    */
   getStationById: (id: string) => Effect.Effect<StationRow, import("../errors").StationNotFound>;
 
@@ -102,25 +87,12 @@ export type StationQueryService = {
   ) => Effect.Effect<readonly StationContextRow[]>;
 
   /**
-   * Tim tram gan nhat theo vi tri hien tai.
-   *
-   * @param args Toa do, ban kinh va pagination tim kiem.
-   * @returns Effect tra ve danh sach tram gan nhat.
+   * Tìm các trạm gần nhất theo tọa độ hiện tại.
    */
   listNearestStations: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;
 
-  /**
-   * Tong hop doanh thu theo tram trong mot khoang thoi gian.
-   *
-   * @param args Moc thoi gian bat dau va ket thuc.
-   * @returns Effect tra ve tong hop doanh thu + xep hang tram.
-   */
-  getRevenueByStation: (args: {
-    from: Date;
-    to: Date;
-  }) => Effect.Effect<StationRevenueStats>;
 };
 
 export type StationService = StationCommandService & StationQueryService;
