@@ -146,9 +146,15 @@ export function Sidebar() {
           roles: ["ADMIN"],
         },
         {
-          title: "Quản lý môi trường",
+          title: "Quản lý chính sách CO2",
           icon: Store,
           href: "/admin/environment-policy",
+          roles: ["ADMIN"],
+        },
+        {
+          title: "Lịch sử tác động CO2",
+          icon: Store,
+          href: "/admin/environment-impact",
           roles: ["ADMIN"],
         },
         {

@@ -12,6 +12,8 @@ import {
 import {
   useGetEnvironmentPoliciesActiveQuery,
   useGetEnvironmentPoliciesQuery,
+  useGetEnvironmentImpactsQuery,
+  useGetEnvironmentImpactDetailQuery,
 } from "@queries";
 import { useRouter } from "next/navigation";
 import { HTTP_STATUS } from "@constants";
@@ -113,6 +115,22 @@ export const useEnvironmentPolicy = ({
     },
     [useActiveEnvironmentPolicy, hasToken, router, page, pageSize, queryClient],
   );
+  const {data:dataEnvironmentImpacts,isLoading:isLoadingEnvironmentImpacts,refetch:refetchEnvironmentImpacts} = useGetEnvironmentImpactsQuery({page:page,pageSize:pageSize});
+  const getEnvironmentImpacts = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchEnvironmentImpacts();
+  }, [refetchEnvironmentImpacts, page, pageSize]);
+  const {data:dataEnvironmentImpactDetail,isLoading:isLoadingEnvironmentImpactDetail,refetch:refetchEnvironmentImpactDetail} = useGetEnvironmentImpactDetailQuery({id:id || ""});
+  const getEnvironmentImpactDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchEnvironmentImpactDetail();
+  }, [refetchEnvironmentImpactDetail, id]);
   return {
     dataEnvironmentPolicy,
     isLoadingEnvironmentPolicy,
@@ -122,5 +140,11 @@ export const useEnvironmentPolicy = ({
     getEnvironmentPoliciesActive,
     activeEnvironmentPolicty,
     createEnvironmentPolicty,
+    dataEnvironmentImpacts,
+    isLoadingEnvironmentImpacts,
+    getEnvironmentImpacts,
+    dataEnvironmentImpactDetail,
+    isLoadingEnvironmentImpactDetail,
+    getEnvironmentImpactDetail,
   };
 };
