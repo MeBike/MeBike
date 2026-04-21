@@ -12,12 +12,8 @@ import { StationQueryRepository } from "../repository/station-query.repository";
 
 export type StationStatsService = {
   /**
-   * EN: Aggregates revenue for all stations in a given period.
-   * VI: Tổng hợp doanh thu cho toàn bộ trạm trong một khoảng thời gian.
-   *
-   * EN: Revenue is recognized by rental `endTime` and attributed to the
-   * originating station via `startStationId`.
-   * VI: Revenue được ghi nhận theo `endTime` của rental và ownership được gán
+   * Tổng hợp doanh thu cho toàn bộ trạm trong một khoảng thời gian.
+   * Revenue được ghi nhận theo `endTime` của rental và ownership được gán
    * cho trạm bắt đầu qua `startStationId`.
    */
   getRevenueByStation: (args: {
@@ -27,12 +23,8 @@ export type StationStatsService = {
   }) => Effect.Effect<StationRevenueStats>;
 
   /**
-   * EN: Aggregates revenue for a single station in a given period.
-   * VI: Tổng hợp doanh thu cho một trạm cụ thể trong một khoảng thời gian.
-   *
-   * EN: Revenue is recognized by rental `endTime` and attributed to the
-   * originating station via `startStationId`.
-   * VI: Revenue được ghi nhận theo `endTime` của rental và ownership được gán
+   * Tổng hợp doanh thu cho một trạm cụ thể trong một khoảng thời gian.
+   * Revenue được ghi nhận theo `endTime` của rental và ownership được gán
    * cho trạm bắt đầu qua `startStationId`.
    */
   getRevenueForStation: (args: {

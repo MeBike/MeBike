@@ -26,12 +26,9 @@ import {
 } from "../errors";
 
 /**
- * EN: Builds the command-side station service.
- * VI: Xây dựng service command-side cho station domain.
+ * Xây dựng service command-side cho station domain.
  *
- * EN: Keeps write-side business rules close to station mutations while delegating
- * persistence to command/query repositories.
- * VI: Giữ các business rule phía ghi gần với mutation của station, còn persistence
+ * Giữ các business rule phía ghi gần với mutation của station, còn persistence
  * được tách cho command/query repositories.
  */
 export function makeStationCommandService(args: {
@@ -42,11 +39,8 @@ export function makeStationCommandService(args: {
   const { agencyRepo, commandRepo, queryRepo } = args;
 
   /**
-   * EN: Normalizes capacity defaults for station creation.
-   * VI: Chuẩn hóa capacity mặc định khi tạo trạm.
-   *
-   * EN: When caller omits `returnSlotLimit`, we default it to full station capacity.
-   * VI: Nếu caller không truyền `returnSlotLimit` thì mặc định bằng toàn bộ sức chứa trạm.
+   * Chuẩn hóa capacity mặc định khi tạo trạm.
+   * Nếu caller không truyền `returnSlotLimit` thì mặc định bằng toàn bộ sức chứa trạm.
    */
   function resolveCapacitySplit(input: {
     totalCapacity: number;
@@ -59,12 +53,8 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * EN: Normalizes capacity values for station updates.
-   * VI: Chuẩn hóa capacity khi cập nhật trạm.
-   *
-   * EN: Preserves the old defaulting behavior when total capacity changes but the
-   * stored return-slot limit still mirrors total capacity.
-   * VI: Giữ nguyên hành vi default cũ khi total capacity thay đổi nhưng
+   * Chuẩn hóa capacity khi cập nhật trạm.
+   * Giữ nguyên hành vi default cũ khi total capacity thay đổi nhưng
    * return-slot limit đang bám theo total capacity hiện tại.
    */
   function resolveUpdatedCapacitySplit(current: StationRow, input: UpdateStationInput) {
@@ -82,10 +72,7 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * EN: Validates that the return-slot limit stays within physical capacity bounds.
-   * VI: Validate để return-slot limit luôn nằm trong giới hạn sức chứa vật lý.
-   *
-   * @returns EN: `true` when the split is valid. VI: `true` nếu split hợp lệ.
+   * Validate để return-slot limit luôn nằm trong giới hạn sức chứa vật lý.
    */
   function validateCapacitySplit(args: {
     totalCapacity: number;
@@ -97,12 +84,8 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * EN: Validates the relationship between station type and agency ownership.
-   * VI: Validate quan hệ giữa station type và agency ownership.
-   *
-   * EN: Used by both create and update flows to enforce internal vs agency-backed
-   * station rules and prevent an agency from being attached to multiple stations.
-   * VI: Dùng cho cả flow create và update để enforce rule internal/agency-backed,
+   * Validate quan hệ giữa station type và agency ownership.
+   * Dùng cho cả flow create và update để enforce rule internal/agency-backed,
    * đồng thời ngăn một agency bị gán cho nhiều station.
    */
   const validateOwnership = (args: {
@@ -144,12 +127,8 @@ export function makeStationCommandService(args: {
     });
 
   /**
-   * EN: Prevents updates that would invalidate active operational state.
-   * VI: Chặn các cập nhật làm vi phạm trạng thái vận hành đang active.
-   *
-   * EN: Capacity cannot drop below currently occupied physical usage, and return-slot
-   * limit cannot drop below already active return reservations.
-   * VI: Capacity không được thấp hơn mức sử dụng vật lý hiện tại, và return-slot limit
+   * Chặn các cập nhật làm vi phạm trạng thái vận hành đang active.
+   * Capacity không được thấp hơn mức sử dụng vật lý hiện tại, và return-slot limit
    * không được thấp hơn số return reservation đang active.
    */
   const validateOperationalUpdate = (current: StationRow, next: {
