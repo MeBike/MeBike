@@ -12,6 +12,7 @@ import { useTheme, XStack, YStack } from "tamagui";
 import type { MapboxDirectionsProfile } from "@/lib/mapbox-directions";
 
 import { borderWidths } from "@theme/metrics";
+import { IconSymbol } from "@components/IconSymbol";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 
@@ -25,6 +26,7 @@ type StationSelectMapOverlayProps = {
   showingNearby: boolean;
   isLoadingNearbyStations: boolean;
   isResolvingNearbyLocation: boolean;
+  isRefreshingLocation: boolean;
   destinationLabel: string;
   selectedStationAddress?: string | null;
   selectedStationAvailableBikes?: number | null;
@@ -35,6 +37,7 @@ type StationSelectMapOverlayProps = {
   hasDestination: boolean;
   isRoutingMode: boolean;
   hasRoute: boolean;
+  onLocateUser: () => void;
   onToggleNearby: () => void;
   onOpenList: () => void;
   onEnterRoutingMode: () => void;
@@ -50,6 +53,7 @@ export function StationSelectMapOverlay({
   showingNearby,
   isLoadingNearbyStations,
   isResolvingNearbyLocation,
+  isRefreshingLocation,
   destinationLabel,
   selectedStationAddress,
   selectedStationAvailableBikes,
@@ -60,6 +64,7 @@ export function StationSelectMapOverlay({
   hasDestination,
   isRoutingMode,
   hasRoute,
+  onLocateUser,
   onToggleNearby,
   onOpenList,
   onEnterRoutingMode,
@@ -223,6 +228,30 @@ export function StationSelectMapOverlay({
                         {showRouting ? destinationLabel : "Chạm vào pin trạm để xem chi tiết"}
                       </AppText>
                     </YStack>
+
+                    {!showRouting
+                      ? (
+                          <Pressable disabled={isRefreshingLocation} hitSlop={8} onPress={() => void onLocateUser()}>
+                            <AppCard
+                              alignItems="center"
+                              backgroundColor="$surfaceMuted"
+                              borderRadius="$round"
+                              chrome="flat"
+                              height={40}
+                              justifyContent="center"
+                              opacity={isRefreshingLocation ? 0.7 : 1}
+                              padding="$0"
+                              width={40}
+                            >
+                              <IconSymbol
+                                color={isRefreshingLocation ? theme.textSecondary.val : theme.textPrimary.val}
+                                name="location"
+                                size="input"
+                              />
+                            </AppCard>
+                          </Pressable>
+                        )
+                      : null}
 
                   </XStack>
                 </Pressable>

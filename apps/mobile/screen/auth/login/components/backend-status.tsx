@@ -42,7 +42,7 @@ function BackendStatusIndicator({ backendStatus }: BackendStatusProps) {
       : theme.actionAccent.val;
 
   return (
-    <View style={[styles.badge, { backgroundColor: theme.surfaceMuted.val, borderColor: theme.overlayGlassMuted.val }]}>
+    <View style={[styles.badge, { backgroundColor: theme.overlayGlassMuted.val, borderColor: theme.overlayGlass.val }]}>
       <View style={[styles.dot, { backgroundColor: dotColor }]} />
       <AppText tone="inverted" variant="caption">{statusText}</AppText>
     </View>

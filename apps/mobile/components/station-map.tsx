@@ -13,6 +13,7 @@ type StationMapProps = {
   stations: StationReadSummary[];
   onStationPress?: (station: StationReadSummary) => void;
   onMapPress?: () => void;
+  recenterToUserLocationKey?: number;
   route?: MapboxRouteLine | null;
   selectedStationId?: string | null;
   userLocation?: {
@@ -25,6 +26,7 @@ export default function StationMap({
   stations,
   onStationPress,
   onMapPress,
+  recenterToUserLocationKey = 0,
   route,
   selectedStationId,
   userLocation,
@@ -33,6 +35,12 @@ export default function StationMap({
   const cameraRef = useRef<Mapbox.Camera>(null);
   const ignoreNextMapPressRef = useRef(false);
   const ignoreResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasAutoCenteredUserLocationRef = useRef(false);
+  const latestUserLocationRef = useRef(userLocation);
+
+  useEffect(() => {
+    latestUserLocationRef.current = userLocation;
+  }, [userLocation]);
 
   useEffect(() => {
     return () => {
@@ -52,12 +60,39 @@ export default function StationMap({
   }, [stations, userLocation]);
 
   useEffect(() => {
+    if (!userLocation) {
+      hasAutoCenteredUserLocationRef.current = false;
+      return;
+    }
+
+    if (hasAutoCenteredUserLocationRef.current) {
+      return;
+    }
+
+    hasAutoCenteredUserLocationRef.current = true;
     cameraRef.current?.setCamera({
-      centerCoordinate,
+      centerCoordinate: [userLocation.longitude, userLocation.latitude],
       zoomLevel: 14,
       animationDuration: 700,
     });
-  }, [centerCoordinate]);
+  }, [userLocation]);
+
+  useEffect(() => {
+    if (recenterToUserLocationKey === 0) {
+      return;
+    }
+
+    const nextUserLocation = latestUserLocationRef.current;
+    if (!nextUserLocation) {
+      return;
+    }
+
+    cameraRef.current?.setCamera({
+      centerCoordinate: [nextUserLocation.longitude, nextUserLocation.latitude],
+      zoomLevel: 15,
+      animationDuration: 700,
+    });
+  }, [recenterToUserLocationKey]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>

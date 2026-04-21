@@ -36,8 +36,10 @@ export default function StationSelectScreen() {
     isLoadingStations,
     isLoadingNearbyStations,
     isResolvingNearbyLocation,
+    isRefreshingLocation,
     handleSelectStationForRoute,
     handleFindNearbyStations,
+    handleLocateUser,
     handleRefresh,
     buildRouteToSelectedStation,
     clearRoute,
@@ -48,6 +50,7 @@ export default function StationSelectScreen() {
     selectedStationId,
     isRoutingMode,
     enterRoutingMode,
+    recenterToUserLocationKey,
   } = useStationSelect();
 
   const selectedStation = React.useMemo(
@@ -68,6 +71,7 @@ export default function StationSelectScreen() {
         route={stationRoute}
         onStationPress={station => void handleSelectStationForRoute(station.id)}
         onMapPress={deselectStation}
+        recenterToUserLocationKey={recenterToUserLocationKey}
         userLocation={currentLocation ?? undefined}
         selectedStationId={selectedStationId}
       />
@@ -122,6 +126,7 @@ export default function StationSelectScreen() {
         showingNearby={showingNearby}
         isLoadingNearbyStations={isLoadingNearbyStations}
         isResolvingNearbyLocation={isResolvingNearbyLocation}
+        isRefreshingLocation={isRefreshingLocation}
         destinationLabel={selectedStation
           ? selectedStation.name
           : "Chọn một trạm trên bản đồ"}
@@ -134,6 +139,7 @@ export default function StationSelectScreen() {
         hasDestination={Boolean(selectedStationId)}
         isRoutingMode={isRoutingMode}
         hasRoute={Boolean(stationRoute)}
+        onLocateUser={handleLocateUser}
         onToggleNearby={handleFindNearbyStations}
         onOpenList={() => setIsListOpen(true)}
         onEnterRoutingMode={enterRoutingMode}
