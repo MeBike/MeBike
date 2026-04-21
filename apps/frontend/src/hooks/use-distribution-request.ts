@@ -285,12 +285,8 @@ export const useDistributionRequest = ({
         const result = await useCancelDistributionRequest.mutateAsync({id,data});
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Hủy bỏ yêu điều phối xe thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["distribution-request", "all"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["manager","distribution-request-data","detail",id],
-          });
+          getStaffViewDistributionRequest();
+          getStaffViewDistributionRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
