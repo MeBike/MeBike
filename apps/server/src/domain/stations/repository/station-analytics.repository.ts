@@ -37,11 +37,9 @@ function toRevenueBucketDate(value: Date, groupBy: StationRevenueGroupBy): Date 
 }
 
 /**
- * EN: Builds analytics-only station repository.
- * VI: Xây dựng repository analytics-only cho station domain.
+ * Xây dựng repository analytics-only cho station domain.
  *
- * EN: Keeps revenue aggregation separate from general station read queries.
- * VI: Giữ revenue aggregation tách biệt khỏi các query đọc station thông thường.
+ * Giữ revenue aggregation tách biệt khỏi các query đọc station thông thường.
  */
 export function makeStationAnalyticsRepository(
   db: PrismaClient | PrismaTypes.TransactionClient,

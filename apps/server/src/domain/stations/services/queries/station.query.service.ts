@@ -6,12 +6,9 @@ import type { StationQueryService } from "../station.service.types";
 import { StationNotFound } from "../../errors";
 
 /**
- * EN: Builds read-only station service for standard query use-cases.
- * VI: Xây dựng service đọc dữ liệu station cho các query use-case thông thường.
+ * Xây dựng service đọc dữ liệu station cho các query use-case thông thường.
  *
- * EN: This service intentionally excludes analytics concerns such as revenue
- * aggregation, which live in the dedicated station stats service.
- * VI: Service này cố ý không chứa analytics như revenue aggregation; phần đó nằm
+ * Service này cố ý không chứa analytics như revenue aggregation; phần đó nằm
  * trong station stats service riêng.
  */
 export function makeStationQueryService(repo: StationQueryRepo): StationQueryService {
