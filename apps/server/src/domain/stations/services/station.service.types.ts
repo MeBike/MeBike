@@ -113,6 +113,8 @@ export type StationQueryService = {
 
   /**
    * Tong hop doanh thu theo tram trong mot khoang thoi gian.
+   * Doanh thu duoc ghi nhan theo endTime cua rental hoan tat,
+   * nhung van gan ownership cho startStationId.
    *
    * @param args Moc thoi gian bat dau va ket thuc.
    * @returns Effect tra ve tong hop doanh thu + xep hang tram.
@@ -122,6 +124,13 @@ export type StationQueryService = {
     to: Date;
   }) => Effect.Effect<StationRevenueStats>;
 
+  /**
+   * Tong hop doanh thu cho mot tram cu the trong khoang thoi gian.
+   * Revenue recognition dung endTime, station ownership dung startStationId.
+   *
+   * @param args Tram dich va moc thoi gian bat dau / ket thuc.
+   * @returns Effect tra ve stats cua tram hoac StationNotFound.
+   */
   getRevenueForStation: (args: {
     stationId: string;
     from: Date;

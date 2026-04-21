@@ -75,21 +75,21 @@ export function makeStationQueryService(repo: StationQueryRepo): StationQuerySer
           return yield* Effect.fail(new StationNotFound({ id: args.stationId }));
         }
 
-        const row = yield* repo.getRevenueForStation(args);
-        const fallbackRow: StationRevenueRow = {
+        const aggregate = yield* repo.getRevenueForStation(args);
+        const row: StationRevenueRow = {
           stationId: stationOpt.value.id,
           name: stationOpt.value.name,
           address: stationOpt.value.address,
-          totalRentals: 0,
-          totalRevenue: 0,
-          totalDuration: 0,
-          avgDuration: 0,
+          totalRentals: aggregate?.totalRentals ?? 0,
+          totalRevenue: aggregate?.totalRevenue ?? 0,
+          totalDuration: aggregate?.totalDuration ?? 0,
+          avgDuration: aggregate?.avgDuration ?? 0,
         };
 
         return buildRevenueStats({
           from: args.from,
           to: args.to,
-          rows: [row ?? fallbackRow],
+          rows: [row],
         });
       }),
   };

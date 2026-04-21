@@ -16,6 +16,7 @@ import {
   StationReadSummarySchemaOpenApi,
   StationRevenueQuerySchema,
   StationRevenueResponseSchemaOpenApi,
+  StationRevenueRouteQuerySchema,
   StationStatsResponseSchemaOpenApi,
 } from "./shared";
 
@@ -368,7 +369,7 @@ export const getStationStats = createRoute({
   tags: ["Stations"],
   request: {
     params: StationIdParamSchema,
-    query: StationRevenueQuerySchema,
+    query: StationRevenueRouteQuerySchema,
   },
   responses: {
     200: {
@@ -422,8 +423,10 @@ export const getAllStationsRevenue = createRoute({
   method: "get",
   path: "/v1/stations/revenue",
   tags: ["Stations"],
+  description:
+    "Deprecated. Prefer role-scoped revenue endpoints. Returns all-station revenue and defaults omitted date range to the previous full UTC month.",
   request: {
-    query: StationRevenueQuerySchema,
+    query: StationRevenueRouteQuerySchema,
   },
   responses: {
     200: {
@@ -460,8 +463,10 @@ export const adminGetAllStationsRevenue = createRoute({
   path: "/v1/admin/stations/revenue",
   tags: ["Admin", "Stations"],
   security: [{ bearerAuth: [] }],
+  description:
+    "Revenue stats for all stations in admin scope. When from/to are omitted, server defaults to previous full UTC month.",
   request: {
-    query: StationRevenueQuerySchema,
+    query: StationRevenueRouteQuerySchema,
   },
   responses: {
     200: {
@@ -500,8 +505,10 @@ export const managerGetAssignedStationRevenue = createRoute({
   path: "/v1/manager/stations/revenue",
   tags: ["Manager", "Stations"],
   security: [{ bearerAuth: [] }],
+  description:
+    "Revenue stats for the manager's assigned station. Revenue is recognized by completed rental end time and attributed to the pickup station.",
   request: {
-    query: StationRevenueQuerySchema,
+    query: StationRevenueRouteQuerySchema,
   },
   responses: {
     200: {
@@ -548,8 +555,10 @@ export const agencyGetAssignedStationRevenue = createRoute({
   path: "/v1/agency/stations/revenue",
   tags: ["Agency", "Stations"],
   security: [{ bearerAuth: [] }],
+  description:
+    "Revenue stats for the agency's assigned station. Revenue is recognized by completed rental end time and attributed to the pickup station.",
   request: {
-    query: StationRevenueQuerySchema,
+    query: StationRevenueRouteQuerySchema,
   },
   responses: {
     200: {

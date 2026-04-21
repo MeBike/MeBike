@@ -213,8 +213,6 @@ describe("stationReadRepository Integration", () => {
     }));
 
     expect(scoped).toMatchObject({
-      stationId: stationA.id,
-      name: "Scoped Revenue Station A",
       totalRentals: 1,
       totalRevenue: 12000,
       totalDuration: 30,

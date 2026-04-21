@@ -509,48 +509,35 @@ export function makeStationReadRepository(
     getRevenueForStation({ stationId, from, to }) {
       return Effect.tryPromise({
         try: async () => {
-          const [station, aggregate] = await Promise.all([
-            client.station.findUnique({
-              where: { id: stationId },
-              select: {
-                id: true,
-                name: true,
-                address: true,
+          const aggregate = await client.rental.aggregate({
+            where: {
+              status: "COMPLETED",
+              startStationId: stationId,
+              endTime: {
+                gte: from,
+                lte: to,
               },
-            }),
-            client.rental.aggregate({
-              where: {
-                status: "COMPLETED",
-                startStationId: stationId,
-                endTime: {
-                  gte: from,
-                  lte: to,
-                },
-              },
-              _count: { _all: true },
-              _sum: {
-                totalPrice: true,
-                duration: true,
-              },
-              _avg: {
-                duration: true,
-              },
-            }),
-          ]);
+            },
+            _count: { _all: true },
+            _sum: {
+              totalPrice: true,
+              duration: true,
+            },
+            _avg: {
+              duration: true,
+            },
+          });
 
-          if (!station || aggregate._count._all === 0) {
+          if (aggregate._count._all === 0) {
             return null;
           }
 
           return {
-            stationId: station.id,
-            name: station.name,
-            address: station.address,
             totalRentals: aggregate._count._all,
             totalRevenue: aggregate._sum.totalPrice === null ? 0 : Number(aggregate._sum.totalPrice),
             totalDuration: aggregate._sum.duration ?? 0,
             avgDuration: aggregate._avg.duration === null ? 0 : Number(aggregate._avg.duration.toFixed(2)),
-          } satisfies StationRevenueRow;
+          };
         },
         catch: cause =>
           new StationRepositoryError({

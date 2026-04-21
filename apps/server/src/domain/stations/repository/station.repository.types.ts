@@ -13,6 +13,7 @@ import type {
   NearestStationRow,
   StationContextRow,
   StationFilter,
+  StationRevenueAggregate,
   StationRevenueRow,
   StationRow,
   StationSortField,
@@ -70,7 +71,7 @@ export type StationQueryRepo = {
     stationId: string;
     from: Date;
     to: Date;
-  }) => Effect.Effect<StationRevenueRow | null>;
+  }) => Effect.Effect<StationRevenueAggregate | null>;
 };
 
 export type StationRepo = StationCommandRepo & StationQueryRepo;

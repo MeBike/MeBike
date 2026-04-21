@@ -96,6 +96,13 @@ export type StationRevenueRow = {
   avgDuration: number;
 };
 
+export type StationRevenueAggregate = {
+  totalRentals: number;
+  totalRevenue: number;
+  totalDuration: number;
+  avgDuration: number;
+};
+
 export type StationRevenueStats = {
   period: {
     from: Date;
