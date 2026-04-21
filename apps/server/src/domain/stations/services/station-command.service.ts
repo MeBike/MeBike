@@ -26,13 +26,10 @@ import {
 } from "../errors";
 
 /**
- * Tao command-side service cho station domain.
+ * Xây dựng service command-side cho station domain.
  *
- * @param args Tap dependency command/query de build service.
- * @param args.commandRepo Repository command de tao/cap nhat tram.
- * @param args.queryRepo Repository query can de validate state hien tai.
- * @param args.agencyRepo Repository agency de validate ownership.
- * @returns StationCommandService da bao gom business rule truoc khi ghi du lieu.
+ * Giữ các business rule phía ghi gần với mutation của station, còn persistence
+ * được tách cho command/query repositories.
  */
 export function makeStationCommandService(args: {
   commandRepo: StationCommandRepo;
@@ -42,12 +39,8 @@ export function makeStationCommandService(args: {
   const { agencyRepo, commandRepo, queryRepo } = args;
 
   /**
-   * Chuan hoa capacity split khi tao tram moi.
-   *
-   * @param input Input tao tram chua chac da co returnSlotLimit.
-   * @param input.totalCapacity Tong suc chua cua tram moi.
-   * @param input.returnSlotLimit Gioi han slot tra xe neu caller co truyen vao.
-   * @returns Cap total/return slot da duoc fill default.
+   * Chuẩn hóa capacity mặc định khi tạo trạm.
+   * Nếu caller không truyền `returnSlotLimit` thì mặc định bằng toàn bộ sức chứa trạm.
    */
   function resolveCapacitySplit(input: {
     totalCapacity: number;
@@ -60,11 +53,9 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * Chuan hoa capacity split khi cap nhat de giu hanh vi default on dinh.
-   *
-   * @param current Tram hien tai trong DB.
-   * @param input Payload cap nhat.
-   * @returns Cap total/return slot sau khi merge voi gia tri cu.
+   * Chuẩn hóa capacity khi cập nhật trạm.
+   * Giữ nguyên hành vi default cũ khi total capacity thay đổi nhưng
+   * return-slot limit đang bám theo total capacity hiện tại.
    */
   function resolveUpdatedCapacitySplit(current: StationRow, input: UpdateStationInput) {
     const totalCapacity = input.totalCapacity ?? current.totalCapacity;
@@ -81,12 +72,7 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * Validate return slot limit co nam trong khoang hop le cua total capacity hay khong.
-   *
-   * @param args Cap total/return slot can kiem tra.
-   * @param args.totalCapacity Tong suc chua can doi chieu.
-   * @param args.returnSlotLimit Gioi han slot tra xe can validate.
-   * @returns `true` neu split hop le.
+   * Validate để return-slot limit luôn nằm trong giới hạn sức chứa vật lý.
    */
   function validateCapacitySplit(args: {
     totalCapacity: number;
@@ -98,13 +84,9 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * Validate quan he giua station type va agency ownership.
-   *
-   * @param args Loai tram, agency va station dang bi exclude khi update.
-   * @param args.stationType Loai tram sau khi merge input.
-   * @param args.agencyId Agency duoc gan cho tram.
-   * @param args.excludeStationId Station can bo qua khi dang update chinh no.
-   * @returns Effect chi thanh cong khi ownership hop le va agency ton tai.
+   * Validate quan hệ giữa station type và agency ownership.
+   * Dùng cho cả flow create và update để enforce rule internal/agency-backed,
+   * đồng thời ngăn một agency bị gán cho nhiều station.
    */
   const validateOwnership = (args: {
     stationType: CreateStationInput["stationType"];
@@ -145,13 +127,9 @@ export function makeStationCommandService(args: {
     });
 
   /**
-   * Chan cac cap nhat lam vi pham tai nguyen dang duoc su dung.
-   *
-   * @param current Trang thai tram hien tai.
-   * @param next Gia tri suc chua moi sau khi merge update.
-   * @param next.totalCapacity Tong suc chua sau cap nhat.
-   * @param next.returnSlotLimit Gioi han slot tra xe sau cap nhat.
-   * @returns Effect fail neu cap nhat lam vuot qua bike/return-slot dang active.
+   * Chặn các cập nhật làm vi phạm trạng thái vận hành đang active.
+   * Capacity không được thấp hơn mức sử dụng vật lý hiện tại, và return-slot limit
+   * không được thấp hơn số return reservation đang active.
    */
   const validateOperationalUpdate = (current: StationRow, next: {
     totalCapacity: number;

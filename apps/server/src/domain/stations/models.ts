@@ -96,6 +96,21 @@ export type StationRevenueRow = {
   avgDuration: number;
 };
 
+export type StationRevenueAggregate = {
+  totalRentals: number;
+  totalRevenue: number;
+  totalDuration: number;
+  avgDuration: number;
+};
+
+export type StationRevenueGroupBy = "DAY" | "MONTH" | "YEAR";
+
+export type StationRevenuePoint = {
+  date: Date;
+  totalRevenue: number;
+  totalRentals: number;
+};
+
 export type StationRevenueStats = {
   period: {
     from: Date;
@@ -108,6 +123,8 @@ export type StationRevenueStats = {
     avgRevenuePerStation: number;
   };
   stations: readonly StationRevenueRow[];
+  groupBy?: StationRevenueGroupBy;
+  series?: readonly StationRevenuePoint[];
 };
 
 export type ListStationsInput = {

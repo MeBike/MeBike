@@ -5,12 +5,14 @@ import { serverRoutes } from "@mebike/shared";
 import {
   StationAdminController,
   StationAgencyController,
+  StationManagerController,
   StationPublicController,
   StationStaffController,
 } from "@/http/controllers/stations";
 import {
   requireAdminMiddleware,
   requireAgencyMiddleware,
+  requireManagerMiddleware,
   requireStationScopedOperatorMiddleware,
 } from "@/http/middlewares/auth";
 
@@ -30,10 +32,15 @@ export function registerStationRoutes(
     ...stations.updateStation,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const adminGetAllStationsRevenueRoute = {
+    ...stations.adminGetAllStationsRevenue,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
 
   app.openapi(adminListStationsRoute, StationAdminController.listStations);
   app.openapi(createStationRoute, StationAdminController.createStation);
   app.openapi(updateStationRoute, StationAdminController.updateStation);
+  app.openapi(adminGetAllStationsRevenueRoute, StationAdminController.getAllStationsRevenue);
 
   app.openapi(stations.listStations, StationPublicController.listStations);
 
@@ -50,6 +57,26 @@ export function registerStationRoutes(
   } satisfies RouteConfig;
 
   app.openapi(agencyListStationsRoute, StationAgencyController.agencyListStations);
+
+  const managerGetAssignedStationRevenueRoute = {
+    ...stations.managerGetAssignedStationRevenue,
+    middleware: [requireManagerMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    managerGetAssignedStationRevenueRoute,
+    StationManagerController.managerGetAssignedStationRevenue,
+  );
+
+  const agencyGetAssignedStationRevenueRoute = {
+    ...stations.agencyGetAssignedStationRevenue,
+    middleware: [requireAgencyMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    agencyGetAssignedStationRevenueRoute,
+    StationAgencyController.agencyGetAssignedStationRevenue,
+  );
 
   app.openapi(stations.getAllStationsRevenue, StationPublicController.getAllStationsRevenue);
 
