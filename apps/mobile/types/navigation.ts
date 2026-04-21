@@ -58,6 +58,7 @@ export type RootStackParamList = {
   "ResetPasswordForm": { resetToken: string };
   "UpdateProfile": undefined;
   "MyWallet": undefined;
+  "MetroJourney": undefined;
   "Ví": undefined;
   "Subscriptions": undefined;
   "Xe": undefined;
@@ -182,6 +183,10 @@ export type UpdateProfileNavigationProp = StackNavigationProp<
 export type MyWalletNavigationProp = StackNavigationProp<
   RootStackParamList,
   "MyWallet"
+>;
+export type MetroJourneyNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "MetroJourney"
 >;
 export type SubscriptionsNavigationProp = StackNavigationProp<
   RootStackParamList,
