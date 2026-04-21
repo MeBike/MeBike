@@ -2,7 +2,13 @@ import React from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useGetSubscriptionDetailQuery } from "@hooks/query/subscription/use-get-subscription-detail-query";
-import { formatCurrency, formatDate, getStatusStyle, toSubscriptionStatusLabel } from "@utils/subscription";
+import {
+  formatCurrency,
+  formatDate,
+  getStatusStyle,
+  getSubscriptionDisplayPrice,
+  toSubscriptionStatusLabel,
+} from "@utils/subscription";
 
 type Props = {
   visible: boolean;
@@ -114,7 +120,7 @@ export function SubscriptionDetailModal({ visible, subscriptionId, onClose }: Pr
                   </View>
                 )}
               </View>
-              <Text style={styles.price}>{formatCurrency(data.price)}</Text>
+              <Text style={styles.price}>{formatCurrency(getSubscriptionDisplayPrice(data))}</Text>
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Thông tin gói</Text>
                 <InfoRow label="Cập nhật" value={formatDate(data.updatedAt)} />
