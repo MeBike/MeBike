@@ -163,18 +163,18 @@ export const useStationActions = ({
     refetch: refetchStationRevenueForManager,
     isLoading: isLoadingStationRevenueForManager,
   } = useGetStationRevenueForManager();
-  const getStationRevenueForAgency = useCallback(() => {
-    if (!hasToken) {
-      return;
-    }
-    refetchStationRevenueForAgency();
-  }, [refetchStationRevenueForAgency, hasToken]);
   const getStationRevenueForManager = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchStationRevenueForManager();
   }, [refetchStationRevenueForManager, hasToken]);
+  const getStationRevenueForAgency = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchStationRevenueForAgency();
+  }, [refetchStationRevenueForAgency, hasToken]);
   const getStationRevenue = useCallback(() => {
     if (!hasToken) {
       return;
@@ -264,5 +264,6 @@ export const useStationActions = ({
     listStation,
     getListStation,
     isLoadingListStation,
+    isLoadingStationRevenueForManager,
   };
 };
