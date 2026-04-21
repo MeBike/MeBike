@@ -30,7 +30,6 @@ export type StationSummaryRow = {
 export type StationBikeRow = {
   id: string;
   bikeNumber: string;
-  chipId: string;
   status: string;
   updatedAt: Date;
   activeRentalId: string | null;
@@ -53,7 +52,6 @@ export type BikeRentalSnapshot = {
 export type BikeInspection = {
   id: string;
   bikeNumber: string;
-  chipId: string;
   status: string;
   stationId: string | null;
   stationName: string | null;
@@ -73,7 +71,6 @@ export type ActiveRentalInspectorRow = {
   userEmail: string;
   bikeId: string;
   bikeNumber: string;
-  bikeChipId: string;
   startStationId: string;
   startStationName: string;
   startTime: Date;
@@ -85,7 +82,6 @@ export type PersonaRentalHistoryRow = {
   status: string;
   bikeId: string;
   bikeNumber: string;
-  bikeChipId: string;
   startStationId: string;
   startStationName: string;
   endStationId: string | null;
@@ -104,7 +100,6 @@ export type PersonaRentalDetail = {
   status: string;
   bikeId: string;
   bikeNumber: string;
-  bikeChipId: string;
   bikeStatus: string;
   startStationId: string;
   startStationName: string;
@@ -127,12 +122,9 @@ export type PersonaRentalDetail = {
   returnConfirmationStationName: string | null;
   billedTotalAmount: number | null;
   billedBaseAmount: number | null;
-  billedOvertimeAmount: number | null;
   billedCouponDiscountAmount: number | null;
   billedSubscriptionDiscountAmount: number | null;
   billedDepositForfeited: boolean | null;
-  penaltiesTotalAmount: number | null;
-  penaltiesCount: number;
 };
 
 export type EmailJobRow = {
@@ -151,20 +143,236 @@ export type EmailJobRow = {
   html: string;
 };
 
-type RawEmailJobRow = {
-  id: string;
-  status: Exclude<EmailJobStatus, "ALL">;
-  attempts: number;
-  dedupeKey: string | null;
-  lastError: string | null;
-  createdAt: Date;
-  runAt: Date;
-  sentAt: Date | null;
-  payload: unknown;
-};
-
 async function withClient<T>(_connectionString: string, task: (client: PrismaClient) => Promise<T>) {
   return withPrismaClient(task);
+}
+
+function looksLikeUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function toNumber(value: { toNumber: () => number } | number | null | undefined) {
+  if (value == null) {
+    return null;
+  }
+
+  return typeof value === "number" ? value : value.toNumber();
+}
+
+function summarizeBikeStatuses(bikes: Array<{ status: string }>) {
+  return bikes.reduce((counts, bike) => {
+    counts.totalBikes += 1;
+
+    switch (bike.status) {
+      case "AVAILABLE":
+        counts.availableBikes += 1;
+        break;
+      case "BOOKED":
+        counts.bookedBikes += 1;
+        break;
+      case "BROKEN":
+        counts.brokenBikes += 1;
+        break;
+      case "RESERVED":
+        counts.reservedBikes += 1;
+        break;
+      case "MAINTAINED":
+        counts.maintainedBikes += 1;
+        break;
+      case "UNAVAILABLE":
+        counts.unavailableBikes += 1;
+        break;
+    }
+
+    return counts;
+  }, {
+    totalBikes: 0,
+    availableBikes: 0,
+    bookedBikes: 0,
+    brokenBikes: 0,
+    reservedBikes: 0,
+    maintainedBikes: 0,
+    unavailableBikes: 0,
+  });
+}
+
+function toStationSummaryRow<T extends {
+  id: string;
+  name: string;
+  address: string;
+  stationType: string;
+  totalCapacity: number;
+  returnSlotLimit: number;
+  updatedAt: Date;
+  bikes: Array<{ status: string }>;
+}>(station: T) {
+  return {
+    id: station.id,
+    name: station.name,
+    address: station.address,
+    stationType: station.stationType as StationSummaryRow["stationType"],
+    totalCapacity: station.totalCapacity,
+    returnSlotLimit: station.returnSlotLimit,
+    updatedAt: station.updatedAt,
+    ...summarizeBikeStatuses(station.bikes),
+  } satisfies StationSummaryRow;
+}
+
+type StationInspectionRecord = {
+  id: string;
+  name: string;
+  address: string;
+  stationType: string;
+  totalCapacity: number;
+  returnSlotLimit: number;
+  updatedAt: Date;
+  bikes: Array<{
+    id: string;
+    bikeNumber: string;
+    status: string;
+    updatedAt: Date;
+    rentals: Array<{ id: string }>;
+    reservations: Array<{ id: string }>;
+  }>;
+};
+
+const stationInspectionSelect = {
+  id: true,
+  name: true,
+  address: true,
+  stationType: true,
+  totalCapacity: true,
+  returnSlotLimit: true,
+  updatedAt: true,
+  bikes: {
+    orderBy: { bikeNumber: "asc" },
+    select: {
+      id: true,
+      bikeNumber: true,
+      status: true,
+      updatedAt: true,
+      rentals: {
+        where: { status: "RENTED" },
+        orderBy: { startTime: "desc" },
+        take: 1,
+        select: { id: true },
+      },
+      reservations: {
+        where: { status: "PENDING" },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { id: true },
+      },
+    },
+  },
+} as const;
+
+type BikeInspectionRecord = {
+  id: string;
+  bikeNumber: string;
+  status: string;
+  stationId: string | null;
+  supplierId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  station: {
+    name: string;
+    address: string;
+  } | null;
+  supplier: {
+    name: string;
+  } | null;
+  rentals: Array<{ id: string }>;
+  reservations: Array<{ id: string }>;
+};
+
+const bikeInspectionBaseSelect = {
+  id: true,
+  bikeNumber: true,
+  status: true,
+  stationId: true,
+  supplierId: true,
+  createdAt: true,
+  updatedAt: true,
+  station: {
+    select: {
+      name: true,
+      address: true,
+    },
+  },
+  supplier: {
+    select: {
+      name: true,
+    },
+  },
+  rentals: {
+    where: { status: "RENTED" },
+    orderBy: { startTime: "desc" },
+    take: 1,
+    select: { id: true },
+  },
+  reservations: {
+    where: { status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: { id: true },
+  },
+} as const;
+
+async function findStationByInspectableValue(client: PrismaClient, value: string): Promise<StationInspectionRecord | null> {
+  if (looksLikeUuid(value)) {
+    const byId = await client.station.findUnique({
+      where: { id: value },
+      select: stationInspectionSelect,
+    });
+
+    if (byId) {
+      return byId;
+    }
+  }
+
+  const byExactName = await client.station.findFirst({
+    where: { name: { equals: value, mode: "insensitive" } },
+    select: stationInspectionSelect,
+  });
+
+  if (byExactName) {
+    return byExactName;
+  }
+
+  return client.station.findFirst({
+    where: { name: { contains: value, mode: "insensitive" } },
+    orderBy: { updatedAt: "desc" },
+    select: stationInspectionSelect,
+  });
+}
+
+async function findBikeByInspectableValue(client: PrismaClient, value: string): Promise<BikeInspectionRecord | null> {
+  if (looksLikeUuid(value)) {
+    const byId = await client.bike.findUnique({
+      where: { id: value },
+      select: bikeInspectionBaseSelect,
+    });
+
+    if (byId) {
+      return byId;
+    }
+  }
+
+  const byExactBikeNumber = await client.bike.findFirst({
+    where: { bikeNumber: { equals: value, mode: "insensitive" } },
+    select: bikeInspectionBaseSelect,
+  });
+
+  if (byExactBikeNumber) {
+    return byExactBikeNumber;
+  }
+
+  return client.bike.findFirst({
+    where: { bikeNumber: { contains: value, mode: "insensitive" } },
+    orderBy: { updatedAt: "desc" },
+    select: bikeInspectionBaseSelect,
+  });
 }
 
 export async function listStations(args: {
@@ -173,30 +381,33 @@ export async function listStations(args: {
   search?: string;
 }) {
   return withClient(args.connectionString, async (client) => {
-    const search = args.search ?? null;
-    return client.$queryRaw<StationSummaryRow[]>`
-        SELECT
-          s.id,
-          s.name,
-          s.address,
-          s.station_type AS "stationType",
-          s.total_capacity AS "totalCapacity",
-          s.return_slot_limit AS "returnSlotLimit",
-          s.updated_at AS "updatedAt",
-          COUNT(b.id)::int AS "totalBikes",
-          COUNT(*) FILTER (WHERE b.status = 'AVAILABLE')::int AS "availableBikes",
-          COUNT(*) FILTER (WHERE b.status = 'BOOKED')::int AS "bookedBikes",
-          COUNT(*) FILTER (WHERE b.status = 'BROKEN')::int AS "brokenBikes",
-          COUNT(*) FILTER (WHERE b.status = 'RESERVED')::int AS "reservedBikes",
-          COUNT(*) FILTER (WHERE b.status = 'MAINTAINED')::int AS "maintainedBikes",
-          COUNT(*) FILTER (WHERE b.status = 'UNAVAILABLE')::int AS "unavailableBikes"
-        FROM "Station" s
-        LEFT JOIN "Bike" b ON b."stationId" = s.id
-        WHERE (${search}::text IS NULL OR s.id::text = ${search} OR s.name ILIKE '%' || ${search} || '%')
-        GROUP BY s.id
-        ORDER BY s.name ASC
-        LIMIT ${args.limit ?? 25}
-      `;
+    const search = args.search?.trim();
+    const stations = await client.station.findMany({
+      where: search
+        ? {
+            OR: [
+              ...(looksLikeUuid(search) ? [{ id: search }] : []),
+              { name: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : undefined,
+      orderBy: { name: "asc" },
+      take: args.limit ?? 25,
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        stationType: true,
+        totalCapacity: true,
+        returnSlotLimit: true,
+        updatedAt: true,
+        bikes: {
+          select: { status: true },
+        },
+      },
+    });
+
+    return stations.map(toStationSummaryRow);
   });
 }
 
@@ -205,70 +416,21 @@ export async function getStationInspection(args: {
   value: string;
 }) {
   return withClient(args.connectionString, async (client) => {
-    const stationRows = await client.$queryRaw<StationSummaryRow[]>`
-        SELECT
-          s.id,
-          s.name,
-          s.address,
-          s.station_type AS "stationType",
-          s.total_capacity AS "totalCapacity",
-          s.return_slot_limit AS "returnSlotLimit",
-          s.updated_at AS "updatedAt",
-          COUNT(b.id)::int AS "totalBikes",
-          COUNT(*) FILTER (WHERE b.status = 'AVAILABLE')::int AS "availableBikes",
-          COUNT(*) FILTER (WHERE b.status = 'BOOKED')::int AS "bookedBikes",
-          COUNT(*) FILTER (WHERE b.status = 'BROKEN')::int AS "brokenBikes",
-          COUNT(*) FILTER (WHERE b.status = 'RESERVED')::int AS "reservedBikes",
-          COUNT(*) FILTER (WHERE b.status = 'MAINTAINED')::int AS "maintainedBikes",
-          COUNT(*) FILTER (WHERE b.status = 'UNAVAILABLE')::int AS "unavailableBikes"
-        FROM "Station" s
-        LEFT JOIN "Bike" b ON b."stationId" = s.id
-        WHERE s.id::text = ${args.value} OR s.name ILIKE '%' || ${args.value} || '%'
-        GROUP BY s.id
-        ORDER BY
-          CASE
-            WHEN s.id::text = ${args.value} THEN 0
-            WHEN s.name = ${args.value} THEN 1
-            ELSE 2
-          END,
-          s.updated_at DESC
-        LIMIT 1
-      `;
-
-    const station = stationRows[0] ?? null;
+    const station = await findStationByInspectableValue(client, args.value);
     if (!station) {
       return null;
     }
 
-    const bikes = await client.$queryRaw<StationBikeRow[]>`
-        SELECT
-          b.id,
-          b.bike_number AS "bikeNumber",
-          b.chip_id AS "chipId",
-          b.status,
-          b.updated_at AS "updatedAt",
-          (
-            SELECT r.id
-            FROM "Rental" r
-            WHERE r.bike_id = b.id AND r.status = 'RENTED'
-            ORDER BY r.start_time DESC
-            LIMIT 1
-          ) AS "activeRentalId",
-          (
-            SELECT res.id
-            FROM "Reservation" res
-            WHERE res.bike_id = b.id AND res.status = 'PENDING'
-            ORDER BY res.created_at DESC
-            LIMIT 1
-          ) AS "pendingReservationId"
-        FROM "Bike" b
-        WHERE b."stationId" = ${station.id}::uuid
-        ORDER BY b.bike_number ASC
-      `;
-
     return {
-      ...station,
-      bikes,
+      ...toStationSummaryRow(station),
+      bikes: station.bikes.map(bike => ({
+        id: bike.id,
+        bikeNumber: bike.bikeNumber,
+        status: bike.status,
+        updatedAt: bike.updatedAt,
+        activeRentalId: bike.rentals[0]?.id ?? null,
+        pendingReservationId: bike.reservations[0]?.id ?? null,
+      } satisfies StationBikeRow)),
     } satisfies StationInspection;
   });
 }
@@ -278,71 +440,50 @@ export async function getBikeInspection(args: {
   value: string;
 }) {
   return withClient(args.connectionString, async (client) => {
-    const bikeRows = await client.$queryRaw<Array<Omit<BikeInspection, "recentRentals">>>`
-        SELECT
-          b.id,
-          b.bike_number AS "bikeNumber",
-          b.chip_id AS "chipId",
-          b.status,
-          b."stationId" AS "stationId",
-          s.name AS "stationName",
-          s.address AS "stationAddress",
-          b."supplierId" AS "supplierId",
-          sup.name AS "supplierName",
-          b.created_at AS "createdAt",
-          b.updated_at AS "updatedAt",
-          (
-            SELECT r.id
-            FROM "Rental" r
-            WHERE r.bike_id = b.id AND r.status = 'RENTED'
-            ORDER BY r.start_time DESC
-            LIMIT 1
-          ) AS "activeRentalId",
-          (
-            SELECT res.id
-            FROM "Reservation" res
-            WHERE res.bike_id = b.id AND res.status = 'PENDING'
-            ORDER BY res.created_at DESC
-            LIMIT 1
-          ) AS "pendingReservationId"
-        FROM "Bike" b
-        LEFT JOIN "Station" s ON s.id = b."stationId"
-        LEFT JOIN "Supplier" sup ON sup.id = b."supplierId"
-        WHERE b.id::text = ${args.value} OR b.bike_number ILIKE '%' || ${args.value} || '%' OR b.chip_id ILIKE '%' || ${args.value} || '%'
-        ORDER BY
-          CASE
-            WHEN b.id::text = ${args.value} THEN 0
-            WHEN b.bike_number = ${args.value} THEN 1
-            WHEN b.chip_id = ${args.value} THEN 2
-            ELSE 3
-          END,
-          b.updated_at DESC
-        LIMIT 1
-      `;
-
-    const bike = bikeRows[0] ?? null;
+    const bike = await findBikeByInspectableValue(client, args.value);
     if (!bike) {
       return null;
     }
 
-    const recentRentals = await client.$queryRaw<BikeRentalSnapshot[]>`
-        SELECT
-          r.id,
-          r.status,
-          r.start_time AS "startTime",
-          r.end_time AS "endTime",
-          u.id AS "userId",
-          u.email AS "userEmail"
-        FROM "Rental" r
-        INNER JOIN users u ON u.id = r.user_id
-        WHERE r.bike_id = ${bike.id}::uuid
-        ORDER BY r.start_time DESC
-        LIMIT 5
-      `;
+    const recentRentals = await client.rental.findMany({
+      where: { bikeId: bike.id },
+      orderBy: { startTime: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        status: true,
+        startTime: true,
+        endTime: true,
+        userId: true,
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
 
     return {
-      ...bike,
-      recentRentals,
+      id: bike.id,
+      bikeNumber: bike.bikeNumber,
+      status: bike.status,
+      stationId: bike.stationId,
+      stationName: bike.station?.name ?? null,
+      stationAddress: bike.station?.address ?? null,
+      supplierId: bike.supplierId,
+      supplierName: bike.supplier?.name ?? null,
+      createdAt: bike.createdAt,
+      updatedAt: bike.updatedAt,
+      activeRentalId: bike.rentals[0]?.id ?? null,
+      pendingReservationId: bike.reservations[0]?.id ?? null,
+      recentRentals: recentRentals.map(rental => ({
+        id: rental.id,
+        status: rental.status,
+        startTime: rental.startTime,
+        endTime: rental.endTime,
+        userId: rental.userId,
+        userEmail: rental.user.email,
+      } satisfies BikeRentalSnapshot)),
     } satisfies BikeInspection;
   });
 }
@@ -352,26 +493,34 @@ export async function listActiveRentals(args: {
   limit?: number;
 }) {
   return withClient(args.connectionString, async (client) => {
-    return client.$queryRaw<ActiveRentalInspectorRow[]>`
-        SELECT
-          r.id,
-          r.user_id AS "userId",
-          u.email AS "userEmail",
-          r.bike_id AS "bikeId",
-          b.bike_number AS "bikeNumber",
-          b.chip_id AS "bikeChipId",
-          r.start_station AS "startStationId",
-          s.name AS "startStationName",
-          r.start_time AS "startTime",
-          r.status
-        FROM "Rental" r
-        INNER JOIN users u ON u.id = r.user_id
-        INNER JOIN "Bike" b ON b.id = r.bike_id
-        INNER JOIN "Station" s ON s.id = r.start_station
-        WHERE r.status = 'RENTED'
-        ORDER BY r.start_time DESC
-        LIMIT ${args.limit ?? 25}
-      `;
+    const rentals = await client.rental.findMany({
+      where: { status: "RENTED" },
+      orderBy: { startTime: "desc" },
+      take: args.limit ?? 25,
+      select: {
+        id: true,
+        userId: true,
+        user: { select: { email: true } },
+        bikeId: true,
+        bike: { select: { bikeNumber: true } },
+        startStationId: true,
+        startStation: { select: { name: true } },
+        startTime: true,
+        status: true,
+      },
+    });
+
+    return rentals.map(rental => ({
+      id: rental.id,
+      userId: rental.userId,
+      userEmail: rental.user.email,
+      bikeId: rental.bikeId,
+      bikeNumber: rental.bike.bikeNumber,
+      startStationId: rental.startStationId,
+      startStationName: rental.startStation.name,
+      startTime: rental.startTime,
+      status: rental.status,
+    } satisfies ActiveRentalInspectorRow));
   });
 }
 
@@ -379,35 +528,48 @@ export async function listPersonaRentalHistory(args: {
   connectionString: string;
   userId: string;
   limit?: number;
-  status?: "RENTED" | "COMPLETED" | "CANCELLED";
+  status?: "RENTED" | "COMPLETED" | "OVERDUE_UNRETURNED";
 }) {
   return withClient(args.connectionString, async (client) => {
-    const status = args.status ?? null;
-    return client.$queryRaw<PersonaRentalHistoryRow[]>`
-        SELECT
-          r.id,
-          r.status,
-          r.bike_id AS "bikeId",
-          b.bike_number AS "bikeNumber",
-          b.chip_id AS "bikeChipId",
-          r.start_station AS "startStationId",
-          start_station.name AS "startStationName",
-          r.end_station AS "endStationId",
-          end_station.name AS "endStationName",
-          r.start_time AS "startTime",
-          r.end_time AS "endTime",
-          r.duration AS "durationMinutes",
-          CASE WHEN r.total_price IS NULL THEN NULL ELSE r.total_price::float8 END AS "totalPrice",
-          r.updated_at AS "updatedAt"
-        FROM "Rental" r
-        INNER JOIN "Bike" b ON b.id = r.bike_id
-        INNER JOIN "Station" start_station ON start_station.id = r.start_station
-        LEFT JOIN "Station" end_station ON end_station.id = r.end_station
-        WHERE r.user_id = ${args.userId}::uuid
-          AND (${status}::text IS NULL OR r.status = ${status})
-        ORDER BY r.start_time DESC, r.created_at DESC
-        LIMIT ${args.limit ?? 20}
-      `;
+    const rentals = await client.rental.findMany({
+      where: {
+        userId: args.userId,
+        ...(args.status ? { status: args.status } : {}),
+      },
+      orderBy: [{ startTime: "desc" }, { createdAt: "desc" }],
+      take: args.limit ?? 20,
+      select: {
+        id: true,
+        status: true,
+        bikeId: true,
+        bike: { select: { bikeNumber: true } },
+        startStationId: true,
+        startStation: { select: { name: true } },
+        endStationId: true,
+        endStation: { select: { name: true } },
+        startTime: true,
+        endTime: true,
+        duration: true,
+        totalPrice: true,
+        updatedAt: true,
+      },
+    });
+
+    return rentals.map(rental => ({
+      id: rental.id,
+      status: rental.status,
+      bikeId: rental.bikeId,
+      bikeNumber: rental.bike.bikeNumber,
+      startStationId: rental.startStationId,
+      startStationName: rental.startStation.name,
+      endStationId: rental.endStationId,
+      endStationName: rental.endStation?.name ?? null,
+      startTime: rental.startTime,
+      endTime: rental.endTime,
+      durationMinutes: rental.duration,
+      totalPrice: toNumber(rental.totalPrice),
+      updatedAt: rental.updatedAt,
+    } satisfies PersonaRentalHistoryRow));
   });
 }
 
@@ -417,66 +579,88 @@ export async function getPersonaRentalDetail(args: {
   rentalId: string;
 }) {
   return withClient(args.connectionString, async (client) => {
-    const rows = await client.$queryRaw<PersonaRentalDetail[]>`
-        SELECT
-          r.id,
-          r.user_id AS "userId",
-          u.email AS "userEmail",
-          r.status,
-          r.bike_id AS "bikeId",
-          b.bike_number AS "bikeNumber",
-          b.chip_id AS "bikeChipId",
-          b.status AS "bikeStatus",
-          r.start_station AS "startStationId",
-          start_station.name AS "startStationName",
-          start_station.address AS "startStationAddress",
-          r.end_station AS "endStationId",
-          end_station.name AS "endStationName",
-          end_station.address AS "endStationAddress",
-          r.start_time AS "startTime",
-          r.end_time AS "endTime",
-          r.duration AS "durationMinutes",
-          CASE WHEN r.total_price IS NULL THEN NULL ELSE r.total_price::float8 END AS "totalPrice",
-          r.subscription_id AS "subscriptionId",
-          r.updated_at AS "updatedAt",
-          rc.confirmed_at AS "returnConfirmedAt",
-          rc.confirmation_method AS "returnConfirmationMethod",
-          rc.handover_status AS "returnHandoverStatus",
-          rc.confirmed_by_user_id AS "returnConfirmedByUserId",
-          confirmed_by.email AS "returnConfirmedByUserEmail",
-          rc.station_id AS "returnConfirmationStationId",
-          confirmation_station.name AS "returnConfirmationStationName",
-          CASE WHEN rbr.total_amount IS NULL THEN NULL ELSE rbr.total_amount::float8 END AS "billedTotalAmount",
-          CASE WHEN rbr.base_amount IS NULL THEN NULL ELSE rbr.base_amount::float8 END AS "billedBaseAmount",
-          CASE WHEN rbr.overtime_amount IS NULL THEN NULL ELSE rbr.overtime_amount::float8 END AS "billedOvertimeAmount",
-          CASE WHEN rbr.coupon_discount_amount IS NULL THEN NULL ELSE rbr.coupon_discount_amount::float8 END AS "billedCouponDiscountAmount",
-          CASE WHEN rbr.subscription_discount_amount IS NULL THEN NULL ELSE rbr.subscription_discount_amount::float8 END AS "billedSubscriptionDiscountAmount",
-          rbr.deposit_forfeited AS "billedDepositForfeited",
-          penalties.total_amount AS "penaltiesTotalAmount",
-          penalties.count AS "penaltiesCount"
-        FROM "Rental" r
-        INNER JOIN users u ON u.id = r.user_id
-        INNER JOIN "Bike" b ON b.id = r.bike_id
-        INNER JOIN "Station" start_station ON start_station.id = r.start_station
-        LEFT JOIN "Station" end_station ON end_station.id = r.end_station
-        LEFT JOIN return_confirmations rc ON rc.rental_id = r.id
-        LEFT JOIN users confirmed_by ON confirmed_by.id = rc.confirmed_by_user_id
-        LEFT JOIN "Station" confirmation_station ON confirmation_station.id = rc.station_id
-        LEFT JOIN rental_billing_records rbr ON rbr.rental_id = r.id
-        LEFT JOIN (
-          SELECT
-            rental_id,
-            COUNT(*)::int AS count,
-            COALESCE(SUM(amount)::float8, 0) AS total_amount
-          FROM rental_penalties
-          GROUP BY rental_id
-        ) penalties ON penalties.rental_id = r.id
-        WHERE r.user_id = ${args.userId}::uuid
-          AND r.id = ${args.rentalId}::uuid
-        LIMIT 1
-      `;
+    const rental = await client.rental.findFirst({
+      where: {
+        id: args.rentalId,
+        userId: args.userId,
+      },
+      select: {
+        id: true,
+        userId: true,
+        user: { select: { email: true } },
+        status: true,
+        bikeId: true,
+        bike: { select: { bikeNumber: true, status: true } },
+        startStationId: true,
+        startStation: { select: { name: true, address: true } },
+        endStationId: true,
+        endStation: { select: { name: true, address: true } },
+        startTime: true,
+        endTime: true,
+        duration: true,
+        totalPrice: true,
+        subscriptionId: true,
+        updatedAt: true,
+        returnConfirmation: {
+          select: {
+            confirmedAt: true,
+            confirmationMethod: true,
+            handoverStatus: true,
+            confirmedByUserId: true,
+            confirmedByUser: { select: { email: true } },
+            stationId: true,
+            station: { select: { name: true } },
+          },
+        },
+        rentalBillingRecord: {
+          select: {
+            totalAmount: true,
+            baseAmount: true,
+            couponDiscountAmount: true,
+            subscriptionDiscountAmount: true,
+            depositForfeited: true,
+          },
+        },
+      },
+    });
 
-    return rows[0] ?? null;
+    if (!rental) {
+      return null;
+    }
+
+    return {
+      id: rental.id,
+      userId: rental.userId,
+      userEmail: rental.user.email,
+      status: rental.status,
+      bikeId: rental.bikeId,
+      bikeNumber: rental.bike.bikeNumber,
+      bikeStatus: rental.bike.status,
+      startStationId: rental.startStationId,
+      startStationName: rental.startStation.name,
+      startStationAddress: rental.startStation.address,
+      endStationId: rental.endStationId,
+      endStationName: rental.endStation?.name ?? null,
+      endStationAddress: rental.endStation?.address ?? null,
+      startTime: rental.startTime,
+      endTime: rental.endTime,
+      durationMinutes: rental.duration,
+      totalPrice: toNumber(rental.totalPrice),
+      subscriptionId: rental.subscriptionId,
+      updatedAt: rental.updatedAt,
+      returnConfirmedAt: rental.returnConfirmation?.confirmedAt ?? null,
+      returnConfirmationMethod: rental.returnConfirmation?.confirmationMethod ?? null,
+      returnHandoverStatus: rental.returnConfirmation?.handoverStatus ?? null,
+      returnConfirmedByUserId: rental.returnConfirmation?.confirmedByUserId ?? null,
+      returnConfirmedByUserEmail: rental.returnConfirmation?.confirmedByUser.email ?? null,
+      returnConfirmationStationId: rental.returnConfirmation?.stationId ?? null,
+      returnConfirmationStationName: rental.returnConfirmation?.station?.name ?? null,
+      billedTotalAmount: toNumber(rental.rentalBillingRecord?.totalAmount),
+      billedBaseAmount: toNumber(rental.rentalBillingRecord?.baseAmount),
+      billedCouponDiscountAmount: toNumber(rental.rentalBillingRecord?.couponDiscountAmount),
+      billedSubscriptionDiscountAmount: toNumber(rental.rentalBillingRecord?.subscriptionDiscountAmount),
+      billedDepositForfeited: rental.rentalBillingRecord?.depositForfeited ?? null,
+    } satisfies PersonaRentalDetail;
   });
 }
 
@@ -499,40 +683,25 @@ export async function listEmailJobs(args: {
   limit?: number;
 }) {
   return withClient(args.connectionString, async (client) => {
-    const rows = args.status === "ALL"
-      ? await client.$queryRaw<RawEmailJobRow[]>`
-          SELECT
-            id,
-            status,
-            attempts,
-            dedupe_key AS "dedupeKey",
-            last_error AS "lastError",
-            created_at AS "createdAt",
-            run_at AS "runAt",
-            sent_at AS "sentAt",
-            payload
-          FROM job_outbox
-          WHERE type = ${EMAIL_JOB_TYPE}
-          ORDER BY created_at DESC
-          LIMIT ${args.limit ?? 30}
-        `
-      : await client.$queryRaw<RawEmailJobRow[]>`
-          SELECT
-            id,
-            status,
-            attempts,
-            dedupe_key AS "dedupeKey",
-            last_error AS "lastError",
-            created_at AS "createdAt",
-            run_at AS "runAt",
-            sent_at AS "sentAt",
-            payload
-          FROM job_outbox
-          WHERE type = ${EMAIL_JOB_TYPE}
-            AND status = ${args.status}
-          ORDER BY created_at DESC
-          LIMIT ${args.limit ?? 30}
-        `;
+    const rows = await client.jobOutbox.findMany({
+      where: {
+        type: EMAIL_JOB_TYPE,
+        ...(args.status === "ALL" ? {} : { status: args.status }),
+      },
+      orderBy: { createdAt: "desc" },
+      take: args.limit ?? 30,
+      select: {
+        id: true,
+        status: true,
+        attempts: true,
+        dedupeKey: true,
+        lastError: true,
+        createdAt: true,
+        runAt: true,
+        sentAt: true,
+        payload: true,
+      },
+    });
 
     return rows.map((row) => {
       const parsed = safeParseJobPayload(EMAIL_JOB_TYPE, row.payload);
