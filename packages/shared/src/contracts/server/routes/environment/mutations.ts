@@ -3,18 +3,18 @@ import { createRoute } from "@hono/zod-openapi";
 import {
   CreateEnvironmentPolicyBodySchema,
   EnvironmentErrorCodeSchema,
+  environmentErrorMessages,
   EnvironmentImpactRentalIdParamsSchema,
   EnvironmentImpactSchema,
   EnvironmentPolicyIdParamsSchema,
   EnvironmentPolicySchema,
   ServerErrorResponseSchema,
   UnauthorizedErrorResponseSchema,
-  environmentErrorMessages,
 } from "./shared";
 
 export const createEnvironmentPolicy = createRoute({
   method: "post",
-  path: "/environment/policies",
+  path: "/v1/environment/policies",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -54,7 +54,7 @@ export const createEnvironmentPolicy = createRoute({
 
 export const activateEnvironmentPolicy = createRoute({
   method: "patch",
-  path: "/environment/policies/{policyId}/activate",
+  path: "/v1/environment/policies/{policyId}/activate",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -151,7 +151,7 @@ export const activateEnvironmentPolicy = createRoute({
 
 export const calculateEnvironmentImpactFromRental = createRoute({
   method: "post",
-  path: "/internal/environment/calculate-from-rental/{rentalId}",
+  path: "/v1/internal/environment/calculate-from-rental/{rentalId}",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
