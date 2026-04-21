@@ -490,7 +490,10 @@ function rejectIncidentWithClient(
       const technician = yield* Effect.promise(() =>
         tx.userOrgAssignment.findFirst({
           where: {
-            technicianTeam: { availabilityStatus: "AVAILABLE", stationId: station.id },
+            technicianTeam: {
+              availabilityStatus: "AVAILABLE",
+              stationId: station.id,
+            },
             userId: {
               not: assignment.technicianUserId!,
             },
@@ -813,10 +816,8 @@ export function makeIncidentRepository(
     },
 
     rejectIncident(id) {
-      return runPrismaTransaction(
-        client as PrismaClient,
-        tx => rejectIncidentWithClient(tx, id, mapbox),
-      ).pipe(
+      return runPrismaTransaction(client as PrismaClient, tx =>
+        rejectIncidentWithClient(tx, id, mapbox)).pipe(
         Effect.map(opt =>
           Option.map(opt, a => a as TechnicianAssignmentRow),
         ),
