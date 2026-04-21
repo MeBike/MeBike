@@ -105,6 +105,7 @@ async function sendProvisioningCommand(
 
     try {
       await openSerialPort(port);
+      port.setEncoding("utf8");
       await sleep(SERIAL_SETTLE_MS);
       const responsePromise = waitForProvisioningResponse(port, requestId, timeoutMs);
       await writeSerialPort(port, request);
@@ -123,7 +124,7 @@ async function sendProvisioningCommand(
       await sleep(750);
     }
     finally {
-      await closeSerialPort(port);
+      await closeSerialPort(port).catch(() => {});
     }
   }
 

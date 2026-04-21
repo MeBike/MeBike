@@ -95,7 +95,7 @@ export async function runInteractiveCli(args: {
         await browseStations(args.connectionString);
         break;
       case "bike": {
-        const value = await input({ message: "Bike id, bike number, or chip id" });
+        const value = await input({ message: "Bike id or bike number" });
         if (value) {
           await inspectBike(args.connectionString, value);
         }
@@ -411,13 +411,13 @@ async function browsePersonaRentals(
     return;
   }
 
-  const status = await select<"ALL" | "RENTED" | "COMPLETED" | "CANCELLED" | "__back">({
+  const status = await select<"ALL" | "RENTED" | "COMPLETED" | "OVERDUE_UNRETURNED" | "__back">({
     message: "Choose rental status",
     choices: [
       { name: "All", value: "ALL" },
       { name: "Rented", value: "RENTED" },
       { name: "Completed", value: "COMPLETED" },
-      { name: "Cancelled", value: "CANCELLED" },
+      { name: "Overdue unreturned", value: "OVERDUE_UNRETURNED" },
       { name: "Back", value: "__back" },
     ],
   });
@@ -469,7 +469,6 @@ async function inspectPersonaRental(connectionString: string, userId: string, re
     writeLine(chalk.cyan(`Rental ${rental.id}`));
     writeLine(`${chalk.gray("status")}: ${rental.status}`);
     writeLine(`${chalk.gray("bike")}: ${rental.bikeNumber} ${chalk.gray(`(${rental.bikeId})`)}`);
-    writeLine(`${chalk.gray("chip")}: ${rental.bikeChipId}`);
     writeLine(`${chalk.gray("bikeStatus")}: ${rental.bikeStatus}`);
     writeLine(`${chalk.gray("startStation")}: ${rental.startStationName} ${chalk.gray(`(${rental.startStationAddress})`)}`);
     writeLine(`${chalk.gray("endStation")}: ${rental.endStationName ?? "-"} ${rental.endStationAddress ? chalk.gray(`(${rental.endStationAddress})`) : ""}`.trimEnd());
@@ -485,11 +484,9 @@ async function inspectPersonaRental(connectionString: string, userId: string, re
     writeLine(`${chalk.gray("returnStation")}: ${rental.returnConfirmationStationName ?? rental.returnConfirmationStationId ?? "-"}`);
     writeLine(`${chalk.gray("billedTotal")}: ${rental.billedTotalAmount ?? "-"}`);
     writeLine(`${chalk.gray("billedBase")}: ${rental.billedBaseAmount ?? "-"}`);
-    writeLine(`${chalk.gray("billedOvertime")}: ${rental.billedOvertimeAmount ?? "-"}`);
     writeLine(`${chalk.gray("couponDiscount")}: ${rental.billedCouponDiscountAmount ?? "-"}`);
     writeLine(`${chalk.gray("subscriptionDiscount")}: ${rental.billedSubscriptionDiscountAmount ?? "-"}`);
     writeLine(`${chalk.gray("depositForfeited")}: ${rental.billedDepositForfeited ?? "-"}`);
-    writeLine(`${chalk.gray("penalties")}: ${rental.penaltiesCount} item(s), total ${rental.penaltiesTotalAmount ?? 0}`);
 
     writeLine(chalk.gray("Press r to refresh, b/Enter/q to go back."));
     const action = await readDetailAction({ allowInspectBike: false });
@@ -606,7 +603,7 @@ async function inspectStation(connectionString: string, value: string) {
           bike.activeRentalId ? chalk.green("active-rental") : null,
           bike.pendingReservationId ? chalk.yellow("pending-reservation") : null,
         ].filter(Boolean).join(", ");
-        writeLine(`  ${chalk.white(bike.bikeNumber.padEnd(8))} ${chalk.gray(bike.id)} ${bike.status.padEnd(11)} ${bike.chipId}${activity ? ` ${chalk.gray(`(${activity})`)}` : ""}`);
+        writeLine(`  ${chalk.white(bike.bikeNumber.padEnd(8))} ${chalk.gray(bike.id)} ${bike.status.padEnd(11)}${activity ? ` ${chalk.gray(`(${activity})`)}` : ""}`);
       }
     }
 
@@ -649,7 +646,6 @@ async function inspectBike(connectionString: string, value: string) {
     writeLine("");
     writeLine(chalk.cyan(`Bike ${bike.bikeNumber}`));
     writeLine(`${chalk.gray("id")}: ${bike.id}`);
-    writeLine(`${chalk.gray("chip")}: ${bike.chipId}`);
     writeLine(`${chalk.gray("status")}: ${bike.status}`);
     writeLine(`${chalk.gray("station")}: ${bike.stationName ?? "-"} ${bike.stationAddress ? `(${bike.stationAddress})` : ""}`);
     writeLine(`${chalk.gray("supplier")}: ${bike.supplierName ?? "-"}`);
