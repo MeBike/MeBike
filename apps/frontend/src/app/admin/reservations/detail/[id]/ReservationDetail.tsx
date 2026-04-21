@@ -190,6 +190,10 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
                   value={<span className="font-mono">{data.bike?.id}</span>}
                 />
                 <Field
+                  label="Xe được gán"
+                  value={<span className="font-mono">{data.bike?.bikeNumber}</span>}
+                />
+                <Field
                   label="Trạng thái xe"
                   value={
                     <Badge variant="outline" className="capitalize">

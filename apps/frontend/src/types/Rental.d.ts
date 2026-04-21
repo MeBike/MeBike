@@ -10,6 +10,7 @@ export type Rental = {
     fullName : string;
     fullname?: string;
   }
+  bikeNumber : string;
   status : RentalStatus,
   startStation : string,
   startTime : string,
@@ -39,6 +40,7 @@ export type RentalDetail = {
   };
   bike: {
     _id: string;
+    bikeNumber : string;
     status: string;
     supplier_id: string | null;
     created_at: string;
@@ -153,6 +155,7 @@ interface RentalRecord {
     updatedAt: string;
   };
   bike: {
+    bikeNumber : string;
     id: string;
     status: string;
     supplierId: string;

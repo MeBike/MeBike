@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit2, Eye, RefreshCw } from "lucide-react";
 import type { Reservation } from "@/types/Reservation";
+import { formatToVNTime } from "@/lib/formatVNDate";
 import { Button } from "@/components/ui/button";
 import type { Station } from "@/types/Station";
 import {
@@ -71,22 +72,22 @@ export const reservationColumn = ({
       </span>
     ),
   },
-  // {
-  //   accessorKey: "start_time",
-  //   header: "Thời gian bắt đầu",
-  //   cell: ({ row }) => formatToVNTime(row.original.startTime),
-  // },
-  // {
-  //   accessorKey: "end_time",
-  //   header: "Thời gian kết thúc",
-  //   cell: ({ row }) => {
-  //     if (row.original.endTime) {
-  //       return formatToVNTime(row.original.endTime);
-  //     } else {
-  //       return "Chưa kết thúc";
-  //     }
-  //   },
-  // },
+  {
+    accessorKey: "start_time",
+    header: "Thời gian bắt đầu",
+    cell: ({ row }) => formatToVNTime(row.original.startTime),
+  },
+  {
+    accessorKey: "end_time",
+    header: "Thời gian kết thúc",
+    cell: ({ row }) => {
+      if (row.original.endTime) {
+        return formatToVNTime(row.original.endTime);
+      } else {
+        return "Chưa kết thúc";
+      }
+    },
+  },
   {
     id: "actions",
     header: "Hành động",

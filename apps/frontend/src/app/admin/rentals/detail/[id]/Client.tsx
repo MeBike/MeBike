@@ -285,11 +285,23 @@ export default function AdminRentalDetailClient({
 
             <SectionCard icon={Bike} title="Phương tiện">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field
-                  label="Xe được gán"
+                 <Field
+                  label="Mã xe"
                   value={
                     data.bike?.id ? (
                       <span className="font-mono text-xs">{data.bike.id}</span>
+                    ) : (
+                      <span className="italic text-muted-foreground">
+                        Chưa gán xe
+                      </span>
+                    )
+                  }
+                />
+                <Field
+                  label="Xe được gán"
+                  value={
+                    data.bike?.bikeNumber ? (
+                      <span className="font-mono text-xs">{data.bike.bikeNumber}</span>
                     ) : (
                       <span className="italic text-muted-foreground">
                         Chưa gán xe
