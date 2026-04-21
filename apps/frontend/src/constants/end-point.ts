@@ -25,6 +25,8 @@ export const ENDPOINT = {
         SELECT_STATION :  
             "/admin/stations",
         CONTEXT_STATION : "/operators/station-context",
+        MANAGER_STATION_REVENUE : "/manager/stations/revenue",
+        AGENCY_STATION_REVENUE : "/agency/stations/revenue",
     },
     SUPPLIER : {
         BASE : "/suppliers",
