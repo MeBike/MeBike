@@ -1,4 +1,6 @@
+import { resolve } from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 import { makeJobBackend } from "@/infrastructure/jobs/backend";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
@@ -9,7 +11,11 @@ import logger from "@/lib/logger";
 import { handleEmailJob } from "../email-worker";
 import { attachJobRuntimeLogging, WorkerLog } from "../worker-logging";
 
-async function main() {
+export type ProcessEmailOnceResult
+  = | { readonly status: "empty" }
+    | { readonly status: "processed"; readonly jobId: string };
+
+export async function processEmailOnce(): Promise<ProcessEmailOnceResult> {
   const { runtime } = makeJobBackend();
   attachJobRuntimeLogging(runtime);
   await runtime.start();
@@ -30,7 +36,7 @@ async function main() {
     if (typeof email.transporter.close === "function") {
       email.transporter.close();
     }
-    return;
+    return { status: "empty" };
   }
 
   try {
@@ -38,6 +44,7 @@ async function main() {
     await handleEmailJob(job, email);
     await runtime.complete(JobTypes.EmailSend, job.id);
     WorkerLog.completedOnce(JobTypes.EmailSend, job.id);
+    return { status: "processed", jobId: job.id };
   }
   catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -53,7 +60,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  logger.error({ err }, "process-email-once failed");
-  process.exit(1);
-});
+const isMain = fileURLToPath(import.meta.url) === resolve(process.argv[1] ?? "");
+
+if (isMain) {
+  processEmailOnce().catch((err) => {
+    logger.error({ err }, "process-email-once failed");
+    process.exit(1);
+  });
+}
