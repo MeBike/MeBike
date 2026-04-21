@@ -151,7 +151,10 @@ const getAllStationsRevenue: RouteHandler<StationsRoutes["getAllStationsRevenue"
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const service = yield* StationQueryServiceTag;
-      return yield* service.getRevenueByStation(rangeResult.range);
+      return yield* service.getRevenueByStation({
+        ...rangeResult.range,
+        groupBy: rangeResult.groupBy,
+      });
     }),
     "GET /v1/stations/revenue",
   );

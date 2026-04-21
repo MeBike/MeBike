@@ -217,6 +217,54 @@ describe("stations revenue routing e2e", () => {
     }
   });
 
+  it("returns station revenue series when groupBy is requested", async () => {
+    const station = await fixture.factories.station({ name: "Series Response Station" });
+    const bike = await fixture.factories.bike({ stationId: station.id });
+    const user = await fixture.factories.user({ email: "station-series-response@example.com" });
+
+    await fixture.factories.rental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime: new Date("2026-02-05T09:00:00.000Z"),
+      endTime: new Date("2026-02-05T09:30:00.000Z"),
+      duration: 30,
+      totalPrice: "5000",
+      status: "COMPLETED",
+    });
+    await fixture.factories.rental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime: new Date("2026-02-20T09:00:00.000Z"),
+      endTime: new Date("2026-02-20T09:30:00.000Z"),
+      duration: 30,
+      totalPrice: "7000",
+      status: "COMPLETED",
+    });
+
+    const response = await fixture.app.request(
+      "http://test/v1/stations/revenue?from=2026-02-01T00:00:00.000Z&to=2026-02-28T23:59:59.999Z&groupBy=DAY",
+      { method: "GET" },
+    );
+    const body = await response.json() as StationsContracts.StationRevenueResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.groupBy).toBe("DAY");
+    expect(body.series).toEqual([
+      {
+        date: "2026-02-05T00:00:00.000Z",
+        totalRevenue: 5000,
+        totalRentals: 1,
+      },
+      {
+        date: "2026-02-20T00:00:00.000Z",
+        totalRevenue: 7000,
+        totalRentals: 1,
+      },
+    ]);
+  });
+
   it("requires admin auth for admin station revenue", async () => {
     const response = await fixture.app.request("http://test/v1/admin/stations/revenue", {
       method: "GET",
@@ -271,6 +319,55 @@ describe("stations revenue routing e2e", () => {
     expect(body.summary.totalStations).toBe(2);
   });
 
+  it("returns all-station revenue series for admin when groupBy is requested", async () => {
+    const station = await fixture.factories.station({ name: "Admin Series Station" });
+    const bike = await fixture.factories.bike({ stationId: station.id });
+    const user = await fixture.factories.user({ email: "admin-station-series@example.com" });
+    const token = await createAdminToken();
+
+    await fixture.factories.rental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime: new Date("2026-02-05T09:00:00.000Z"),
+      endTime: new Date("2026-02-05T09:30:00.000Z"),
+      duration: 30,
+      totalPrice: "5000",
+      status: "COMPLETED",
+    });
+    await fixture.factories.rental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime: new Date("2026-02-15T09:00:00.000Z"),
+      endTime: new Date("2026-02-15T09:30:00.000Z"),
+      duration: 30,
+      totalPrice: "7000",
+      status: "COMPLETED",
+    });
+
+    const response = await fixture.app.request(
+      "http://test/v1/admin/stations/revenue?from=2026-02-01T00:00:00.000Z&to=2026-02-28T23:59:59.999Z&groupBy=MONTH",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const body = await response.json() as StationsContracts.StationRevenueResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.groupBy).toBe("MONTH");
+    expect(body.series).toEqual([
+      {
+        date: "2026-02-01T00:00:00.000Z",
+        totalRevenue: 12000,
+        totalRentals: 2,
+      },
+    ]);
+  });
+
   it("returns only assigned station revenue for manager", async () => {
     const visibleStation = await fixture.factories.station({ name: "Manager Visible Station" });
     const hiddenStation = await fixture.factories.station({ name: "Manager Hidden Station" });
@@ -317,6 +414,58 @@ describe("stations revenue routing e2e", () => {
     expect(body.summary.totalStations).toBe(1);
     expect(body.stations).toHaveLength(1);
     expect(body.stations[0]?.id).toBe(visibleStation.id);
+  });
+
+  it("returns assigned station revenue series for manager when groupBy is requested", async () => {
+    const visibleStation = await fixture.factories.station({ name: "Manager Series Station" });
+    const hiddenStation = await fixture.factories.station({ name: "Manager Hidden Series Station" });
+    const bikeA = await fixture.factories.bike({ stationId: visibleStation.id });
+    const bikeB = await fixture.factories.bike({ stationId: hiddenStation.id });
+    const userA = await fixture.factories.user({ email: "manager-station-series-a@example.com" });
+    const userB = await fixture.factories.user({ email: "manager-station-series-b@example.com" });
+    const token = await createManagerToken(visibleStation.id);
+
+    await fixture.factories.rental({
+      userId: userA.id,
+      bikeId: bikeA.id,
+      startStationId: visibleStation.id,
+      startTime: new Date("2026-02-05T09:00:00.000Z"),
+      endTime: new Date("2026-02-05T09:30:00.000Z"),
+      duration: 30,
+      totalPrice: "10000",
+      status: "COMPLETED",
+    });
+    await fixture.factories.rental({
+      userId: userB.id,
+      bikeId: bikeB.id,
+      startStationId: hiddenStation.id,
+      startTime: new Date("2026-02-12T09:00:00.000Z"),
+      endTime: new Date("2026-02-12T09:20:00.000Z"),
+      duration: 20,
+      totalPrice: "5000",
+      status: "COMPLETED",
+    });
+
+    const response = await fixture.app.request(
+      "http://test/v1/manager/stations/revenue?from=2026-02-01T00:00:00.000Z&to=2026-02-28T23:59:59.999Z&groupBy=DAY",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const body = await response.json() as StationsContracts.StationRevenueResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.groupBy).toBe("DAY");
+    expect(body.series).toEqual([
+      {
+        date: "2026-02-05T00:00:00.000Z",
+        totalRevenue: 10000,
+        totalRentals: 1,
+      },
+    ]);
   });
 
   it("returns 404 for manager revenue when manager has no assigned station", async () => {

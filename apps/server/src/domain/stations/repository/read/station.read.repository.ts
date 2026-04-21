@@ -12,6 +12,8 @@ import type {
   NearestSearchArgs,
   NearestStationRow,
   StationContextRow,
+  StationRevenueGroupBy,
+  StationRevenuePoint,
   StationRevenueRow,
   StationWorkerRow,
 } from "../../models";
@@ -45,7 +47,24 @@ export type StationReadRepo = Pick<
   | "listNearest"
   | "getRevenueByStation"
   | "getRevenueForStation"
+  | "getRevenueSeries"
 >;
+
+function toRevenueBucketDate(value: Date, groupBy: StationRevenueGroupBy): Date {
+  const year = value.getUTCFullYear();
+  const month = value.getUTCMonth();
+  const day = value.getUTCDate();
+
+  if (groupBy === "YEAR") {
+    return new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+  }
+
+  if (groupBy === "MONTH") {
+    return new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+  }
+
+  return new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+}
 
 export function makeStationReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
@@ -542,6 +561,62 @@ export function makeStationReadRepository(
         catch: cause =>
           new StationRepositoryError({
             operation: "getRevenueForStation",
+            cause,
+          }),
+      }).pipe(defectOn(StationRepositoryError));
+    },
+
+    getRevenueSeries({ from, to, groupBy, stationId }) {
+      return Effect.tryPromise({
+        try: async () => {
+          const rows = await client.rental.findMany({
+            where: {
+              status: "COMPLETED",
+              ...(stationId ? { startStationId: stationId } : {}),
+              endTime: {
+                gte: from,
+                lte: to,
+              },
+            },
+            select: {
+              endTime: true,
+              totalPrice: true,
+            },
+          });
+
+          const buckets = new Map<string, StationRevenuePoint>();
+
+          for (const row of rows) {
+            if (!row.endTime) {
+              continue;
+            }
+
+            const bucketDate = toRevenueBucketDate(row.endTime, groupBy);
+            const key = bucketDate.toISOString();
+            const amount = row.totalPrice === null ? 0 : Number(row.totalPrice);
+            const current = buckets.get(key);
+
+            if (current) {
+              buckets.set(key, {
+                ...current,
+                totalRevenue: current.totalRevenue + amount,
+                totalRentals: current.totalRentals + 1,
+              });
+              continue;
+            }
+
+            buckets.set(key, {
+              date: bucketDate,
+              totalRevenue: amount,
+              totalRentals: 1,
+            });
+          }
+
+          return [...buckets.values()].sort((left, right) => left.date.getTime() - right.date.getTime());
+        },
+        catch: cause =>
+          new StationRepositoryError({
+            operation: "getRevenueSeries",
             cause,
           }),
       }).pipe(defectOn(StationRepositoryError));

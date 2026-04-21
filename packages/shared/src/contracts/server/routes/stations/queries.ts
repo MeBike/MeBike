@@ -424,7 +424,7 @@ export const getAllStationsRevenue = createRoute({
   path: "/v1/stations/revenue",
   tags: ["Stations"],
   description:
-    "Deprecated. Prefer role-scoped revenue endpoints. Returns all-station revenue and defaults omitted date range to the previous full UTC month.",
+    "Deprecated. Prefer role-scoped revenue endpoints. Returns all-station revenue and defaults omitted date range to the previous full UTC month. Pass groupBy to include time series.",
   request: {
     query: StationRevenueRouteQuerySchema,
   },
@@ -464,7 +464,7 @@ export const adminGetAllStationsRevenue = createRoute({
   tags: ["Admin", "Stations"],
   security: [{ bearerAuth: [] }],
   description:
-    "Revenue stats for all stations in admin scope. When from/to are omitted, server defaults to previous full UTC month.",
+    "Revenue stats for all stations in admin scope. When from/to are omitted, server defaults to previous full UTC month. Pass groupBy to include time series.",
   request: {
     query: StationRevenueRouteQuerySchema,
   },
@@ -506,7 +506,7 @@ export const managerGetAssignedStationRevenue = createRoute({
   tags: ["Manager", "Stations"],
   security: [{ bearerAuth: [] }],
   description:
-    "Revenue stats for the manager's assigned station. Revenue is recognized by completed rental end time and attributed to the pickup station.",
+    "Revenue stats for the manager's assigned station. Revenue is recognized by completed rental end time and attributed to the pickup station. Pass groupBy to include time series.",
   request: {
     query: StationRevenueRouteQuerySchema,
   },
@@ -556,7 +556,7 @@ export const agencyGetAssignedStationRevenue = createRoute({
   tags: ["Agency", "Stations"],
   security: [{ bearerAuth: [] }],
   description:
-    "Revenue stats for the agency's assigned station. Revenue is recognized by completed rental end time and attributed to the pickup station.",
+    "Revenue stats for the agency's assigned station. Revenue is recognized by completed rental end time and attributed to the pickup station. Pass groupBy to include time series.",
   request: {
     query: StationRevenueRouteQuerySchema,
   },

@@ -15,13 +15,18 @@ export type StationRevenueResponse = StationsContracts.StationRevenueResponse;
 type StationRevenueQueryInput = {
   from?: string;
   to?: string;
+  groupBy?: StationsContracts.StationRevenueResponse["groupBy"];
 };
 
 export function resolveStationRevenueRange(
   query: StationRevenueQueryInput,
   now = new Date(),
 ):
-  | { ok: true; range: { from: Date; to: Date } }
+  | {
+    ok: true;
+    range: { from: Date; to: Date };
+    groupBy?: StationsContracts.StationRevenueResponse["groupBy"];
+  }
   | { ok: false; error: StationErrorResponse } {
   const from = query.from ? new Date(query.from) : null;
   const to = query.to ? new Date(query.to) : null;
@@ -43,5 +48,6 @@ export function resolveStationRevenueRange(
   return {
     ok: true,
     range: from && to ? { from, to } : previousUtcMonthFullRange(now),
+    ...(query.groupBy ? { groupBy: query.groupBy } : {}),
   };
 }

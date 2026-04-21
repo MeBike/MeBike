@@ -112,5 +112,15 @@ export function toContractStationRevenue(
       totalDuration: station.totalDuration,
       avgDuration: station.avgDuration,
     })),
+    ...(stats.groupBy ? { groupBy: stats.groupBy } : {}),
+    ...(stats.series
+      ? {
+          series: stats.series.map(item => ({
+            date: item.date.toISOString(),
+            totalRevenue: item.totalRevenue,
+            totalRentals: item.totalRentals,
+          })),
+        }
+      : {}),
   };
 }

@@ -221,6 +221,85 @@ describe("stationReadRepository Integration", () => {
     expect(empty).toBeNull();
   });
 
+  it("getRevenueSeries returns bucketed revenue and supports station scope", async () => {
+    const stationA = await kit.fixture.factories.station({ name: "Series Station A" });
+    const stationB = await kit.fixture.factories.station({ name: "Series Station B" });
+    const bikeA = await kit.fixture.factories.bike({ stationId: stationA.id });
+    const bikeB = await kit.fixture.factories.bike({ stationId: stationB.id });
+    const userA = await kit.fixture.factories.user({ email: "series-user-a@example.com" });
+    const userB = await kit.fixture.factories.user({ email: "series-user-b@example.com" });
+    const from = new Date("2026-02-01T00:00:00.000Z");
+    const to = new Date("2026-02-28T23:59:59.999Z");
+
+    await kit.fixture.factories.rental({
+      userId: userA.id,
+      bikeId: bikeA.id,
+      startStationId: stationA.id,
+      startTime: new Date("2026-02-02T09:00:00.000Z"),
+      endTime: new Date("2026-02-02T09:30:00.000Z"),
+      duration: 30,
+      totalPrice: "12000",
+      status: "COMPLETED",
+    });
+    await kit.fixture.factories.rental({
+      userId: userA.id,
+      bikeId: bikeA.id,
+      startStationId: stationA.id,
+      startTime: new Date("2026-02-15T09:00:00.000Z"),
+      endTime: new Date("2026-02-15T09:45:00.000Z"),
+      duration: 45,
+      totalPrice: "8000",
+      status: "COMPLETED",
+    });
+    await kit.fixture.factories.rental({
+      userId: userB.id,
+      bikeId: bikeB.id,
+      startStationId: stationB.id,
+      startTime: new Date("2026-02-15T10:00:00.000Z"),
+      endTime: new Date("2026-02-15T10:20:00.000Z"),
+      duration: 20,
+      totalPrice: "5000",
+      status: "COMPLETED",
+    });
+
+    const allStations = await Effect.runPromise(repo.getRevenueSeries({
+      from,
+      to,
+      groupBy: "DAY",
+    }));
+    const scoped = await Effect.runPromise(repo.getRevenueSeries({
+      stationId: stationA.id,
+      from,
+      to,
+      groupBy: "DAY",
+    }));
+
+    expect(allStations).toEqual([
+      {
+        date: new Date("2026-02-02T00:00:00.000Z"),
+        totalRevenue: 12000,
+        totalRentals: 1,
+      },
+      {
+        date: new Date("2026-02-15T00:00:00.000Z"),
+        totalRevenue: 13000,
+        totalRentals: 2,
+      },
+    ]);
+    expect(scoped).toEqual([
+      {
+        date: new Date("2026-02-02T00:00:00.000Z"),
+        totalRevenue: 12000,
+        totalRentals: 1,
+      },
+      {
+        date: new Date("2026-02-15T00:00:00.000Z"),
+        totalRevenue: 8000,
+        totalRentals: 1,
+      },
+    ]);
+  });
+
   it("defects with StationRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {

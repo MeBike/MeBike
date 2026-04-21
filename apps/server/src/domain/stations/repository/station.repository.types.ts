@@ -14,6 +14,8 @@ import type {
   StationContextRow,
   StationFilter,
   StationRevenueAggregate,
+  StationRevenueGroupBy,
+  StationRevenuePoint,
   StationRevenueRow,
   StationRow,
   StationSortField,
@@ -72,6 +74,12 @@ export type StationQueryRepo = {
     from: Date;
     to: Date;
   }) => Effect.Effect<StationRevenueAggregate | null>;
+  getRevenueSeries: (args: {
+    from: Date;
+    to: Date;
+    groupBy: StationRevenueGroupBy;
+    stationId?: string;
+  }) => Effect.Effect<readonly StationRevenuePoint[]>;
 };
 
 export type StationRepo = StationCommandRepo & StationQueryRepo;

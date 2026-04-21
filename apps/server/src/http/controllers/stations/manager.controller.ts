@@ -55,6 +55,7 @@ const managerGetAssignedStationRevenue: RouteHandler<
       return yield* service.getRevenueForStation({
         stationId: stationScopeId,
         ...rangeResult.range,
+        groupBy: rangeResult.groupBy,
       });
     }),
     "GET /v1/manager/stations/revenue",

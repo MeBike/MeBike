@@ -21,6 +21,7 @@ import type {
   NearestStationRow,
   StationContextRow,
   StationFilter,
+  StationRevenueGroupBy,
   StationRevenueStats,
   StationRow,
   StationSortField,
@@ -122,6 +123,7 @@ export type StationQueryService = {
   getRevenueByStation: (args: {
     from: Date;
     to: Date;
+    groupBy?: StationRevenueGroupBy;
   }) => Effect.Effect<StationRevenueStats>;
 
   /**
@@ -135,6 +137,7 @@ export type StationQueryService = {
     stationId: string;
     from: Date;
     to: Date;
+    groupBy?: StationRevenueGroupBy;
   }) => Effect.Effect<StationRevenueStats, import("../errors").StationNotFound>;
 };
 

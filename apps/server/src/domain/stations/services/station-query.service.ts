@@ -1,6 +1,6 @@
 import { Effect, Option } from "effect";
 
-import type { StationRevenueRow, StationRevenueStats } from "../models";
+import type { StationRevenuePoint, StationRevenueRow, StationRevenueStats } from "../models";
 import type { StationQueryRepo } from "../repository/station.repository.types";
 import type { StationQueryService } from "./station.service.types";
 
@@ -17,6 +17,8 @@ export function makeStationQueryService(repo: StationQueryRepo): StationQuerySer
     from: Date;
     to: Date;
     rows: readonly StationRevenueRow[];
+    series?: readonly StationRevenuePoint[];
+    groupBy?: StationRevenueStats["groupBy"];
   }): StationRevenueStats => {
     const stations = [...args.rows].sort((a, b) => b.totalRevenue - a.totalRevenue);
     const totalRevenue = stations.reduce((sum, station) => sum + station.totalRevenue, 0);
@@ -36,6 +38,8 @@ export function makeStationQueryService(repo: StationQueryRepo): StationQuerySer
           : Number((totalRevenue / stations.length).toFixed(2)),
       },
       stations,
+      ...(args.groupBy ? { groupBy: args.groupBy } : {}),
+      ...(args.series ? { series: args.series } : {}),
     };
   };
 
@@ -60,11 +64,23 @@ export function makeStationQueryService(repo: StationQueryRepo): StationQuerySer
 
     getRevenueByStation: args =>
       Effect.gen(function* () {
-        const rows = yield* repo.getRevenueByStation(args);
+        const [rows, series] = yield* Effect.all([
+          repo.getRevenueByStation(args),
+          args.groupBy
+            ? repo.getRevenueSeries({
+                from: args.from,
+                to: args.to,
+                groupBy: args.groupBy,
+              })
+            : Effect.succeed(undefined),
+        ]);
+
         return buildRevenueStats({
           from: args.from,
           to: args.to,
           rows,
+          groupBy: args.groupBy,
+          series,
         });
       }),
 
@@ -75,7 +91,18 @@ export function makeStationQueryService(repo: StationQueryRepo): StationQuerySer
           return yield* Effect.fail(new StationNotFound({ id: args.stationId }));
         }
 
-        const aggregate = yield* repo.getRevenueForStation(args);
+        const [aggregate, series] = yield* Effect.all([
+          repo.getRevenueForStation(args),
+          args.groupBy
+            ? repo.getRevenueSeries({
+                stationId: args.stationId,
+                from: args.from,
+                to: args.to,
+                groupBy: args.groupBy,
+              })
+            : Effect.succeed(undefined),
+        ]);
+
         const row: StationRevenueRow = {
           stationId: stationOpt.value.id,
           name: stationOpt.value.name,
@@ -90,6 +117,8 @@ export function makeStationQueryService(repo: StationQueryRepo): StationQuerySer
           from: args.from,
           to: args.to,
           rows: [row],
+          groupBy: args.groupBy,
+          series,
         });
       }),
   };

@@ -16,6 +16,7 @@ import {
   StationIsoDateTimeStringSchema,
   StationListQuerySchema,
   StationReadSummarySchema,
+  StationRevenueGroupBySchema,
   StationRevenueResponseSchema,
   StationStatsResponseSchema,
   StationSummarySchema,
@@ -222,9 +223,10 @@ export const StationRevenueRouteQuerySchema = z
   .object({
     from: StationIsoDateTimeStringSchema.optional(),
     to: StationIsoDateTimeStringSchema.optional(),
+    groupBy: StationRevenueGroupBySchema.optional(),
   })
   .openapi("StationRevenueRouteQuery", {
-    description: "Optional date range filters for revenue/statistics endpoints. Provide both from and to together, or omit both to default to previous full UTC month.",
+    description: "Optional date range filters for revenue/statistics endpoints. Provide both from and to together, or omit both to default to previous full UTC month. Pass groupBy to include revenue series in response.",
   });
 
 export const StationSummarySchemaOpenApi = StationSummarySchema.openapi(
@@ -300,7 +302,7 @@ export const StationStatsResponseSchemaOpenApi = StationStatsResponseSchema.open
 
 export const StationRevenueResponseSchemaOpenApi
   = StationRevenueResponseSchema.openapi("StationRevenueResponse", {
-    description: "Revenue metrics grouped by station (and bikes per station)",
+    description: "Revenue metrics grouped by station, with optional time series when groupBy is requested",
   });
 
 export const BikeRevenueResponseSchemaOpenApi = BikeRevenueResponseSchema.openapi(
