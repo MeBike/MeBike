@@ -19,6 +19,7 @@ import {
 } from "./data";
 import {
   getDeviceConfig,
+  resolveDevicePort,
   restartDevice,
   setDeviceConfig,
 } from "./device";
@@ -136,7 +137,7 @@ try {
       writeLine(`${chalk.gray("returnSlots")}: ${station.returnSlotLimit}`);
       writeLine(`${chalk.gray("bikes")}: available ${station.availableBikes}, booked ${station.bookedBikes}, reserved ${station.reservedBikes}, broken ${station.brokenBikes}, maintained ${station.maintainedBikes}, unavailable ${station.unavailableBikes}`);
       for (const bike of station.bikes) {
-        writeLine(`- ${bike.bikeNumber} ${bike.status} ${bike.id} ${bike.chipId}`);
+        writeLine(`- ${bike.bikeNumber} ${bike.status} ${bike.id}`);
       }
       break;
     }
@@ -144,7 +145,7 @@ try {
       const connectionString = requireConnectionString();
       const value = args[0];
       if (!value) {
-        throw new Error("Need bike id, bike number, or chip id: pnpm dev:cli bike <value>");
+        throw new Error("Need bike id or bike number: pnpm dev:cli bike <value>");
       }
 
       const bike = await getBikeInspection({ connectionString, value });
@@ -154,7 +155,6 @@ try {
 
       writeLine(chalk.cyan(`Bike ${bike.bikeNumber}`));
       writeLine(`${chalk.gray("id")}: ${bike.id}`);
-      writeLine(`${chalk.gray("chip")}: ${bike.chipId}`);
       writeLine(`${chalk.gray("status")}: ${bike.status}`);
       writeLine(`${chalk.gray("station")}: ${bike.stationName ?? "-"}`);
       writeLine(`${chalk.gray("supplier")}: ${bike.supplierName ?? "-"}`);
@@ -285,17 +285,17 @@ function printHelp() {
   writeLine("  pnpm dev:cli persona current");
   writeLine("  pnpm dev:cli persona use <handle|email>");
   writeLine("  pnpm dev:cli persona clear");
-  writeLine("  pnpm dev:cli device config get [--port /dev/ttyUSB0]");
-  writeLine("  pnpm dev:cli device config set --bike-id <id> [--wifi-ssid <ssid>] [--wifi-pass <pass>] [--mqtt-broker-ip <ip>] [--mqtt-port <port>] [--mqtt-username <user>] [--mqtt-password <pass>] [--port /dev/ttyUSB0]");
-  writeLine("  pnpm dev:cli device restart [--port /dev/ttyUSB0]");
+  writeLine("  pnpm dev:cli device config get [--port <serial-port>]");
+  writeLine("  pnpm dev:cli device config set --bike-id <id> [--wifi-ssid <ssid>] [--wifi-pass <pass>] [--mqtt-broker-ip <ip>] [--mqtt-port <port>] [--mqtt-username <user>] [--mqtt-password <pass>] [--port <serial-port>]");
+  writeLine("  pnpm dev:cli device restart [--port <serial-port>]");
   writeLine("  pnpm dev:cli user-card <user-id|email|handle> <card-uid>");
   writeLine("  pnpm dev:cli user-card <user-id|email|handle> --clear");
   writeLine("  pnpm dev:cli list [ALL|PENDING|SENT|FAILED|CANCELLED]");
   writeLine("  pnpm dev:cli list --interactive");
   writeLine("  pnpm dev:cli stations [search]");
   writeLine("  pnpm dev:cli station <station-id|name>");
-  writeLine("  pnpm dev:cli bike <bike-id|bike-number|chip-id>");
-  writeLine("  pnpm dev:cli rentals [RENTED|COMPLETED|CANCELLED]");
+  writeLine("  pnpm dev:cli bike <bike-id|bike-number>");
+  writeLine("  pnpm dev:cli rentals [RENTED|COMPLETED|OVERDUE_UNRETURNED]");
   writeLine("  pnpm dev:cli rental <rental-id>");
   writeLine("  pnpm dev:cli show <job-id>");
   writeLine("  pnpm dev:cli process-once");
@@ -328,7 +328,7 @@ async function handleDeviceCommand(args: string[]) {
 
   if (subcommand === "restart") {
     const flags = parseFlags([maybeAction, ...rest].filter(Boolean) as string[]);
-    const portPath = flags.port ?? "/dev/ttyUSB0";
+    const portPath = await resolveDevicePort(flags.port);
     await restartDevice(portPath);
     writeLine(chalk.green(`Restart command sent to ${portPath}.`));
     return;
@@ -336,7 +336,7 @@ async function handleDeviceCommand(args: string[]) {
 
   const action = maybeAction;
   const flags = parseFlags(rest);
-  const portPath = flags.port ?? "/dev/ttyUSB0";
+  const portPath = await resolveDevicePort(flags.port);
 
   if (subcommand === "config" && action === "get") {
     const config = await getDeviceConfig(portPath);
@@ -479,7 +479,6 @@ async function handleRentalDetailCommand(connectionString: string, args: string[
   writeLine(`${chalk.gray("user")}: ${rental.userEmail}`);
   writeLine(`${chalk.gray("status")}: ${rental.status}`);
   writeLine(`${chalk.gray("bike")}: ${rental.bikeNumber} ${chalk.gray(`(${rental.bikeId})`)}`);
-  writeLine(`${chalk.gray("chip")}: ${rental.bikeChipId}`);
   writeLine(`${chalk.gray("bikeStatus")}: ${rental.bikeStatus}`);
   writeLine(`${chalk.gray("startStation")}: ${rental.startStationName} ${chalk.gray(`(${rental.startStationId})`)}`);
   writeLine(`${chalk.gray("endStation")}: ${rental.endStationName ?? "-"} ${rental.endStationId ? chalk.gray(`(${rental.endStationId})`) : ""}`.trimEnd());
@@ -496,11 +495,9 @@ async function handleRentalDetailCommand(connectionString: string, args: string[
   writeLine(`${chalk.gray("returnStation")}: ${rental.returnConfirmationStationName ?? rental.returnConfirmationStationId ?? "-"}`);
   writeLine(`${chalk.gray("billedTotal")}: ${rental.billedTotalAmount ?? "-"}`);
   writeLine(`${chalk.gray("billedBase")}: ${rental.billedBaseAmount ?? "-"}`);
-  writeLine(`${chalk.gray("billedOvertime")}: ${rental.billedOvertimeAmount ?? "-"}`);
   writeLine(`${chalk.gray("couponDiscount")}: ${rental.billedCouponDiscountAmount ?? "-"}`);
   writeLine(`${chalk.gray("subscriptionDiscount")}: ${rental.billedSubscriptionDiscountAmount ?? "-"}`);
   writeLine(`${chalk.gray("depositForfeited")}: ${rental.billedDepositForfeited ?? "-"}`);
-  writeLine(`${chalk.gray("penalties")}: ${rental.penaltiesCount} item(s), total ${rental.penaltiesTotalAmount ?? 0}`);
 }
 
 async function requireCurrentPersona(connectionString: string, repoRoot: string) {
@@ -523,8 +520,8 @@ function normalizeRentalStatus(input?: string) {
       return undefined;
     case "RENTED":
     case "COMPLETED":
-    case "CANCELLED":
-      return input.toUpperCase() as "RENTED" | "COMPLETED" | "CANCELLED";
+    case "OVERDUE_UNRETURNED":
+      return input.toUpperCase() as "RENTED" | "COMPLETED" | "OVERDUE_UNRETURNED";
     default:
       throw new Error(`Unknown rental status filter: ${input}`);
   }
