@@ -1,8 +1,7 @@
-import { createStackNavigator } from "@react-navigation/stack";
-import React from "react";
-
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useAuthNext } from "@providers/auth-provider-next";
+import { createStackNavigator } from "@react-navigation/stack";
+import React from "react";
 
 import type { RootStackParamList } from "../types/navigation";
 
@@ -20,6 +19,7 @@ import {
   ForgotPasswordScreen,
   IntroScreen,
   LoginScreen,
+  MetroJourneyScreen,
   MyWalletScreen,
   QRScannerScreen,
   RegisterScreen,
@@ -67,6 +67,11 @@ function RootNavigator() {
         <Stack.Screen
           name="BikeDetail"
           component={BikeDetailScreen}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
+          name="MetroJourney"
+          component={MetroJourneyScreen}
           options={{ headerShown: false, gestureEnabled: false }}
         />
         <Stack.Screen
@@ -198,6 +203,11 @@ function RootNavigator() {
       <Stack.Screen
         name="MyWallet"
         component={MyWalletScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="MetroJourney"
+        component={MetroJourneyScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen

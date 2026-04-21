@@ -14,6 +14,7 @@ export { default as FixedSlotDetailScreen } from "./fixed-slot-detail-screen";
 export { default as FixedSlotEditorScreen } from "./fixed-slot-editor-screen";
 export { default as FixedSlotTemplatesScreen } from "./fixed-slot-templates";
 export { default as IntroScreen } from "./Intro";
+export { default as MetroJourneyScreen } from "./metro/metro-journey-screen";
 export { default as MyWalletScreen } from "./my-wallet";
 export { default as QRScannerScreen } from "./QRScannerScreen";
 export { default as BikeDetailScreen } from "./rental/bike-detail/bike-detail-screen";
