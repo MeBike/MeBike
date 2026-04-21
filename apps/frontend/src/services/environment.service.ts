@@ -54,16 +54,6 @@ export const environmentService = {
     );
     return response;
   },
-  getEnvironmentPolicyDetail: async ({
-    id,
-  }: {
-    id: string;
-  }): Promise<AxiosResponse<ApiResponse<Environment[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Environment[]>>(
-      ENDPOINT.ENVIRONMENT.POLICY,
-    );
-    return response;
-  },
   getEnvironmentImpacts: async ({
     page,
     pageSize,
