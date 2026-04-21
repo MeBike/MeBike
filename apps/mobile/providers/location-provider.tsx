@@ -1,6 +1,7 @@
 import { log } from "@lib/log";
 import * as Location from "expo-location";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { AppState } from "react-native";
 
 type Coordinates = {
   latitude: number;
@@ -23,6 +24,60 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<LocationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const inflightRefreshRef = useRef<Promise<void> | null>(null);
+  const watchSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const latestLocationRef = useRef<Coordinates | null>(null);
+
+  const clearWatchSubscription = useCallback(() => {
+    if (!watchSubscriptionRef.current) {
+      return;
+    }
+
+    log.debug("Location watch stopped");
+    watchSubscriptionRef.current.remove();
+    watchSubscriptionRef.current = null;
+  }, []);
+
+  const applyLocation = useCallback((nextLocation: Coordinates, source: string) => {
+    latestLocationRef.current = nextLocation;
+    log.debug("Location fix applied", {
+      latitude: nextLocation.latitude,
+      longitude: nextLocation.longitude,
+      source,
+    });
+    setLocation(nextLocation);
+    setStatus("ready");
+    setError(null);
+  }, []);
+
+  const ensureWatchSubscription = useCallback(async () => {
+    if (watchSubscriptionRef.current) {
+      return;
+    }
+
+    log.debug("Location watch starting");
+    watchSubscriptionRef.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Balanced,
+        distanceInterval: 10,
+        mayShowUserSettingsDialog: false,
+        timeInterval: 10000,
+      },
+      (nextLocation) => {
+        log.debug("Location watch update", {
+          accuracy: nextLocation.coords.accuracy,
+          latitude: nextLocation.coords.latitude,
+          longitude: nextLocation.coords.longitude,
+          mocked: nextLocation.mocked,
+          timestamp: nextLocation.timestamp,
+        });
+        applyLocation({
+          latitude: nextLocation.coords.latitude,
+          longitude: nextLocation.coords.longitude,
+        }, "watch");
+      },
+    );
+    log.debug("Location watch started");
+  }, [applyLocation]);
 
   const refresh = useCallback(async () => {
     if (inflightRefreshRef.current) {
@@ -32,12 +87,16 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
     const task = (async () => {
       log.debug("Location refresh started");
-      setStatus("loading");
+      if (!latestLocationRef.current) {
+        setStatus("loading");
+      }
       setError(null);
       try {
         const servicesEnabled = await Location.hasServicesEnabledAsync();
         log.debug("Location services enabled check", { servicesEnabled });
         if (!servicesEnabled) {
+          clearWatchSubscription();
+          latestLocationRef.current = null;
           setLocation(null);
           setStatus("error");
           setError("Location services are disabled");
@@ -54,7 +113,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         log.debug("Location provider status", providerStatus);
         const permission = currentPermission.status === "granted"
           ? currentPermission
-          : await Location.requestForegroundPermissionsAsync();
+          : currentPermission.canAskAgain
+            ? await Location.requestForegroundPermissionsAsync()
+            : currentPermission;
 
         if (currentPermission.status !== "granted") {
           log.debug("Location permission request result", {
@@ -69,15 +130,46 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
             canAskAgain: permission.canAskAgain,
             status: permission.status,
           });
+          clearWatchSubscription();
+          latestLocationRef.current = null;
           setLocation(null);
           setStatus("denied");
           setError("Permission denied");
           return;
         }
 
+        const lastKnown = await Location.getLastKnownPositionAsync({
+          maxAge: 5 * 60 * 1000,
+          requiredAccuracy: 1000,
+        });
+
+        const isRecentLastKnown = lastKnown
+          ? Date.now() - lastKnown.timestamp <= 5 * 60 * 1000
+          : false;
+
+        log.debug("Location last known lookup", {
+          accuracy: lastKnown?.coords.accuracy,
+          ageMs: lastKnown ? Date.now() - lastKnown.timestamp : null,
+          found: Boolean(lastKnown),
+          isRecentLastKnown,
+          latitude: lastKnown?.coords.latitude,
+          longitude: lastKnown?.coords.longitude,
+          mocked: lastKnown?.mocked,
+          timestamp: lastKnown?.timestamp,
+        });
+
+        if (lastKnown && isRecentLastKnown) {
+          applyLocation({
+            latitude: lastKnown.coords.latitude,
+            longitude: lastKnown.coords.longitude,
+          }, "last-known");
+        }
+
+        await ensureWatchSubscription();
+
         try {
           const currentLocation = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
+            accuracy: Location.Accuracy.Balanced,
             mayShowUserSettingsDialog: false,
           });
           log.debug("Location current position success", {
@@ -87,39 +179,15 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
             mocked: currentLocation.mocked,
             timestamp: currentLocation.timestamp,
           });
-          setLocation({
+          applyLocation({
             latitude: currentLocation.coords.latitude,
             longitude: currentLocation.coords.longitude,
-          });
-          setStatus("ready");
+          }, "current");
         }
         catch (currentPositionError) {
           log.warn("Location current position failed", currentPositionError);
-          const lastKnown = await Location.getLastKnownPositionAsync({
-            maxAge: 2 * 60 * 1000,
-            requiredAccuracy: 500,
-          });
-
-          const isRecentLastKnown = lastKnown
-            ? Date.now() - lastKnown.timestamp <= 2 * 60 * 1000
-            : false;
-
-          log.debug("Location last known lookup", {
-            accuracy: lastKnown?.coords.accuracy,
-            ageMs: lastKnown ? Date.now() - lastKnown.timestamp : null,
-            found: Boolean(lastKnown),
-            isRecentLastKnown,
-            latitude: lastKnown?.coords.latitude,
-            longitude: lastKnown?.coords.longitude,
-            mocked: lastKnown?.mocked,
-            timestamp: lastKnown?.timestamp,
-          });
-
-          if (lastKnown && isRecentLastKnown) {
-            setLocation({
-              latitude: lastKnown.coords.latitude,
-              longitude: lastKnown.coords.longitude,
-            });
+          if (latestLocationRef.current) {
+            log.debug("Location refresh keeping last known provider fix", latestLocationRef.current);
             setStatus("ready");
             return;
           }
@@ -129,6 +197,12 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       }
       catch (err) {
         log.error("Location refresh failed", err);
+        if (latestLocationRef.current) {
+          setStatus("ready");
+          setError("Using the last known location");
+          return;
+        }
+
         setLocation(null);
         setStatus("error");
         setError("Failed to get location");
@@ -140,7 +214,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
     inflightRefreshRef.current = task;
     return task;
-  }, []);
+  }, [applyLocation, clearWatchSubscription, ensureWatchSubscription]);
 
   useEffect(() => {
     log.debug("Location provider state changed", {
@@ -153,6 +227,22 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState !== "active") {
+        return;
+      }
+
+      log.debug("Location provider foreground refresh requested");
+      void refresh();
+    });
+
+    return () => {
+      subscription.remove();
+      clearWatchSubscription();
+    };
+  }, [clearWatchSubscription, refresh]);
 
   const value = useMemo(
     () => ({

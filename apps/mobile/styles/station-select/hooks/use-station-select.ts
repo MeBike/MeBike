@@ -20,6 +20,7 @@ export function useStationSelect() {
   const insets = useSafeAreaInsets();
   const [showingNearby, setShowingNearby] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
+  const [recenterToUserLocationKey, setRecenterToUserLocationKey] = React.useState(0);
   const [selectedStationId, setSelectedStationId] = React.useState<string | null>(null);
   const [routeProfile, setRouteProfile] = React.useState<MapboxDirectionsProfile>("walking");
   const [routeRequested, setRouteRequested] = React.useState(false);
@@ -77,6 +78,12 @@ export function useStationSelect() {
     await (showingNearby ? refetchNearbyStations() : refetchAllStations());
     setRefreshing(false);
   };
+
+  const handleLocateUser = React.useCallback(async () => {
+    setRecenterToUserLocationKey(current => current + 1);
+    await refreshLocation();
+    setRecenterToUserLocationKey(current => current + 1);
+  }, [refreshLocation]);
 
   const stations = showingNearby ? nearbyStations : allStations;
 
@@ -170,9 +177,11 @@ export function useStationSelect() {
     isLoadingStations: isLoadingAllStations,
     isLoadingNearbyStations,
     isResolvingNearbyLocation: locationStatus === "loading",
+    isRefreshingLocation: locationStatus === "loading",
     handleSelectStation,
     handleSelectStationForRoute,
     handleFindNearbyStations,
+    handleLocateUser,
     handleRefresh,
     buildRouteToSelectedStation,
     enterRoutingMode,
@@ -182,5 +191,6 @@ export function useStationSelect() {
     deselectStation,
     insets,
     currentLocation,
+    recenterToUserLocationKey,
   };
 }
