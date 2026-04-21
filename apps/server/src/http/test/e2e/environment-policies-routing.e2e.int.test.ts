@@ -177,7 +177,7 @@ describe("environment policies routing e2e", () => {
 
   async function calculateEnvironmentImpact(rentalId: string) {
     const response = await fixture.app.request(
-      `http://test/internal/environment/calculate-from-rental/${rentalId}`,
+      `http://test/v1/internal/environment/calculate-from-rental/${rentalId}`,
       {
         method: "POST",
         headers: adminHeaders(),
@@ -196,7 +196,7 @@ describe("environment policies routing e2e", () => {
   }
 
   it("creates an inactive environment policy as admin", async () => {
-    const response = await fixture.app.request("http://test/environment/policies", {
+    const response = await fixture.app.request("http://test/v1/environment/policies", {
       method: "POST",
       headers: adminHeaders(),
       body: JSON.stringify({
@@ -249,7 +249,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects unauthenticated requests", async () => {
-    const response = await fixture.app.request("http://test/environment/policies", {
+    const response = await fixture.app.request("http://test/v1/environment/policies", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -263,7 +263,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects non-admin users", async () => {
-    const response = await fixture.app.request("http://test/environment/policies", {
+    const response = await fixture.app.request("http://test/v1/environment/policies", {
       method: "POST",
       headers: userHeaders(),
       body: JSON.stringify({
@@ -277,7 +277,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("returns an empty environment policy list when no policies exist", async () => {
-    const response = await fixture.app.request("http://test/environment/policies", {
+    const response = await fixture.app.request("http://test/v1/environment/policies", {
       method: "GET",
       headers: adminHeaders(),
     });
@@ -319,7 +319,7 @@ describe("environment policies routing e2e", () => {
       },
     });
 
-    const response = await fixture.app.request("http://test/environment/policies", {
+    const response = await fixture.app.request("http://test/v1/environment/policies", {
       method: "GET",
       headers: adminHeaders(),
     });
@@ -385,7 +385,7 @@ describe("environment policies routing e2e", () => {
     });
 
     const response = await fixture.app.request(
-      "http://test/environment/policies?status=ACTIVE&search=%20default%20",
+      "http://test/v1/environment/policies?status=ACTIVE&search=%20default%20",
       {
         method: "GET",
         headers: adminHeaders(),
@@ -429,7 +429,7 @@ describe("environment policies routing e2e", () => {
     });
 
     const response = await fixture.app.request(
-      "http://test/environment/policies?page=2&pageSize=1&sortBy=name&sortOrder=asc",
+      "http://test/v1/environment/policies?page=2&pageSize=1&sortBy=name&sortOrder=asc",
       {
         method: "GET",
         headers: adminHeaders(),
@@ -447,7 +447,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects unauthenticated environment policy list reads", async () => {
-    const response = await fixture.app.request("http://test/environment/policies", {
+    const response = await fixture.app.request("http://test/v1/environment/policies", {
       method: "GET",
     });
 
@@ -455,7 +455,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects non-admin environment policy list reads", async () => {
-    const response = await fixture.app.request("http://test/environment/policies", {
+    const response = await fixture.app.request("http://test/v1/environment/policies", {
       method: "GET",
       headers: userHeaders(),
     });
@@ -474,7 +474,7 @@ describe("environment policies routing e2e", () => {
     ];
 
     for (const query of invalidQueries) {
-      const response = await fixture.app.request(`http://test/environment/policies?${query}`, {
+      const response = await fixture.app.request(`http://test/v1/environment/policies?${query}`, {
         method: "GET",
         headers: adminHeaders(),
       });
@@ -486,7 +486,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("returns 404 when no active environment policy exists", async () => {
-    const response = await fixture.app.request("http://test/environment/policies/active", {
+    const response = await fixture.app.request("http://test/v1/environment/policies/active", {
       method: "GET",
       headers: adminHeaders(),
     });
@@ -511,7 +511,7 @@ describe("environment policies routing e2e", () => {
       },
     });
 
-    const response = await fixture.app.request("http://test/environment/policies/active", {
+    const response = await fixture.app.request("http://test/v1/environment/policies/active", {
       method: "GET",
       headers: adminHeaders(),
     });
@@ -538,7 +538,7 @@ describe("environment policies routing e2e", () => {
     const rental = await createRentalForImpact();
 
     const response = await fixture.app.request(
-      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      `http://test/v1/internal/environment/calculate-from-rental/${rental.id}`,
       {
         method: "POST",
         headers: adminHeaders(),
@@ -582,7 +582,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("returns zero environment summary when the current user has no impact records", async () => {
-    const response = await fixture.app.request("http://test/environment/me/summary", {
+    const response = await fixture.app.request("http://test/v1/environment/me/summary", {
       method: "GET",
       headers: userHeaders(),
     });
@@ -612,7 +612,7 @@ describe("environment policies routing e2e", () => {
       otherUserRental.id,
     ]) {
       const response = await fixture.app.request(
-        `http://test/internal/environment/calculate-from-rental/${rentalId}`,
+        `http://test/v1/internal/environment/calculate-from-rental/${rentalId}`,
         {
           method: "POST",
           headers: adminHeaders(),
@@ -621,7 +621,7 @@ describe("environment policies routing e2e", () => {
       expect(response.status).toBe(200);
     }
 
-    const response = await fixture.app.request("http://test/environment/me/summary", {
+    const response = await fixture.app.request("http://test/v1/environment/me/summary", {
       method: "GET",
       headers: userHeaders(),
     });
@@ -646,7 +646,7 @@ describe("environment policies routing e2e", () => {
 
     for (const rentalId of [regularRental.id, otherUserRental.id]) {
       const response = await fixture.app.request(
-        `http://test/internal/environment/calculate-from-rental/${rentalId}`,
+        `http://test/v1/internal/environment/calculate-from-rental/${rentalId}`,
         {
           method: "POST",
           headers: adminHeaders(),
@@ -655,7 +655,7 @@ describe("environment policies routing e2e", () => {
       expect(response.status).toBe(200);
     }
 
-    const response = await fixture.app.request("http://test/environment/me/summary", {
+    const response = await fixture.app.request("http://test/v1/environment/me/summary", {
       method: "GET",
       headers: otherUserHeaders(),
     });
@@ -671,7 +671,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects admin environment summary requests", async () => {
-    const response = await fixture.app.request("http://test/environment/me/summary", {
+    const response = await fixture.app.request("http://test/v1/environment/me/summary", {
       method: "GET",
       headers: adminHeaders(),
     });
@@ -680,7 +680,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects unauthenticated environment summary requests", async () => {
-    const response = await fixture.app.request("http://test/environment/me/summary", {
+    const response = await fixture.app.request("http://test/v1/environment/me/summary", {
       method: "GET",
     });
 
@@ -688,7 +688,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("returns an empty environment impact history when the current user has no impact records", async () => {
-    const response = await fixture.app.request("http://test/environment/me/history", {
+    const response = await fixture.app.request("http://test/v1/environment/me/history", {
       method: "GET",
       headers: userHeaders(),
     });
@@ -733,7 +733,7 @@ describe("environment policies routing e2e", () => {
       new Date("2026-04-16T10:00:00.000Z"),
     );
 
-    const response = await fixture.app.request("http://test/environment/me/history", {
+    const response = await fixture.app.request("http://test/v1/environment/me/history", {
       method: "GET",
       headers: userHeaders(),
     });
@@ -780,7 +780,7 @@ describe("environment policies routing e2e", () => {
     await calculateEnvironmentImpact(rental.id);
 
     const response = await fixture.app.request(
-      `http://test/environment/me/rentals/${rental.id}`,
+      `http://test/v1/environment/me/rentals/${rental.id}`,
       {
         method: "GET",
         headers: userHeaders(),
@@ -828,7 +828,7 @@ describe("environment policies routing e2e", () => {
     const rental = await createRentalForImpact({ duration: 23 });
 
     const response = await fixture.app.request(
-      `http://test/environment/me/rentals/${rental.id}`,
+      `http://test/v1/environment/me/rentals/${rental.id}`,
       {
         method: "GET",
         headers: userHeaders(),
@@ -851,7 +851,7 @@ describe("environment policies routing e2e", () => {
     await calculateEnvironmentImpact(otherUserRental.id);
 
     const response = await fixture.app.request(
-      `http://test/environment/me/rentals/${otherUserRental.id}`,
+      `http://test/v1/environment/me/rentals/${otherUserRental.id}`,
       {
         method: "GET",
         headers: userHeaders(),
@@ -866,7 +866,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects invalid rentalId params for environment impact detail", async () => {
     const response = await fixture.app.request(
-      "http://test/environment/me/rentals/not-a-uuid",
+      "http://test/v1/environment/me/rentals/not-a-uuid",
       {
         method: "GET",
         headers: userHeaders(),
@@ -880,7 +880,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects admin environment impact detail requests", async () => {
     const response = await fixture.app.request(
-      "http://test/environment/me/rentals/018fa200-0000-7000-8000-000000000601",
+      "http://test/v1/environment/me/rentals/018fa200-0000-7000-8000-000000000601",
       {
         method: "GET",
         headers: adminHeaders(),
@@ -892,7 +892,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects unauthenticated environment impact detail requests", async () => {
     const response = await fixture.app.request(
-      "http://test/environment/me/rentals/018fa200-0000-7000-8000-000000000602",
+      "http://test/v1/environment/me/rentals/018fa200-0000-7000-8000-000000000602",
       {
         method: "GET",
       },
@@ -925,7 +925,7 @@ describe("environment policies routing e2e", () => {
     );
 
     const response = await fixture.app.request(
-      "http://test/environment/me/history?page=2&pageSize=1&sortOrder=asc&dateFrom=2026-04-14&dateTo=2026-04-15",
+      "http://test/v1/environment/me/history?page=2&pageSize=1&sortOrder=asc&dateFrom=2026-04-14&dateTo=2026-04-15",
       {
         method: "GET",
         headers: userHeaders(),
@@ -972,7 +972,7 @@ describe("environment policies routing e2e", () => {
     );
 
     const response = await fixture.app.request(
-      "http://test/environment/me/history?sortOrder=asc&dateFrom=2026-04-15&dateTo=2026-04-15",
+      "http://test/v1/environment/me/history?sortOrder=asc&dateFrom=2026-04-15&dateTo=2026-04-15",
       {
         method: "GET",
         headers: userHeaders(),
@@ -988,7 +988,7 @@ describe("environment policies routing e2e", () => {
     ]);
 
     const mixedBoundaryResponse = await fixture.app.request(
-      "http://test/environment/me/history?dateFrom=2026-04-15T23:59:59.999Z&dateTo=2026-04-15",
+      "http://test/v1/environment/me/history?dateFrom=2026-04-15T23:59:59.999Z&dateTo=2026-04-15",
       {
         method: "GET",
         headers: userHeaders(),
@@ -1031,7 +1031,7 @@ describe("environment policies routing e2e", () => {
     );
 
     const response = await fixture.app.request(
-      "http://test/environment/me/history?sortOrder=asc&dateFrom=2026-04-14T17:00:00.000Z&dateTo=2026-04-15T16:59:59.999Z",
+      "http://test/v1/environment/me/history?sortOrder=asc&dateFrom=2026-04-14T17:00:00.000Z&dateTo=2026-04-15T16:59:59.999Z",
       {
         method: "GET",
         headers: userHeaders(),
@@ -1065,7 +1065,7 @@ describe("environment policies routing e2e", () => {
     );
 
     const response = await fixture.app.request(
-      "http://test/environment/me/history?dateFrom=2026-04-15T00:00:00.000%2B07:00&dateTo=2026-04-15T00:00:00.000%2B07:00",
+      "http://test/v1/environment/me/history?dateFrom=2026-04-15T00:00:00.000%2B07:00&dateTo=2026-04-15T00:00:00.000%2B07:00",
       {
         method: "GET",
         headers: userHeaders(),
@@ -1091,7 +1091,7 @@ describe("environment policies routing e2e", () => {
     await calculateEnvironmentImpact(regularRental.id);
     await calculateEnvironmentImpact(otherUserRental.id);
 
-    const response = await fixture.app.request("http://test/environment/me/history", {
+    const response = await fixture.app.request("http://test/v1/environment/me/history", {
       method: "GET",
       headers: otherUserHeaders(),
     });
@@ -1116,7 +1116,7 @@ describe("environment policies routing e2e", () => {
 
     for (const query of invalidQueries) {
       const response = await fixture.app.request(
-        `http://test/environment/me/history?${query}`,
+        `http://test/v1/environment/me/history?${query}`,
         {
           method: "GET",
           headers: userHeaders(),
@@ -1130,7 +1130,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects admin environment impact history requests", async () => {
-    const response = await fixture.app.request("http://test/environment/me/history", {
+    const response = await fixture.app.request("http://test/v1/environment/me/history", {
       method: "GET",
       headers: adminHeaders(),
     });
@@ -1139,7 +1139,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects unauthenticated environment impact history requests", async () => {
-    const response = await fixture.app.request("http://test/environment/me/history", {
+    const response = await fixture.app.request("http://test/v1/environment/me/history", {
       method: "GET",
     });
 
@@ -1167,7 +1167,7 @@ describe("environment policies routing e2e", () => {
       new Date("2026-04-16T10:00:00.000Z"),
     );
 
-    const response = await fixture.app.request("http://test/environment/impacts", {
+    const response = await fixture.app.request("http://test/v1/environment/impacts", {
       method: "GET",
       headers: adminHeaders(),
     });
@@ -1213,7 +1213,7 @@ describe("environment policies routing e2e", () => {
     await calculateEnvironmentImpact(otherUserRental.id);
 
     const byUserResponse = await fixture.app.request(
-      `http://test/environment/impacts?userId=${OTHER_USER_ID}`,
+      `http://test/v1/environment/impacts?userId=${OTHER_USER_ID}`,
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1228,7 +1228,7 @@ describe("environment policies routing e2e", () => {
     ]);
 
     const byRentalResponse = await fixture.app.request(
-      `http://test/environment/impacts?rentalId=${regularRental.id}`,
+      `http://test/v1/environment/impacts?rentalId=${regularRental.id}`,
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1241,7 +1241,7 @@ describe("environment policies routing e2e", () => {
     expect(byRentalBody.data[0]?.rental_id).toBe(regularRental.id);
 
     const byPolicyResponse = await fixture.app.request(
-      "http://test/environment/impacts?policyId=018fa200-0000-7000-8000-000000000101",
+      "http://test/v1/environment/impacts?policyId=018fa200-0000-7000-8000-000000000101",
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1289,7 +1289,7 @@ describe("environment policies routing e2e", () => {
     );
 
     const response = await fixture.app.request(
-      "http://test/environment/impacts?page=2&pageSize=1&sortOrder=asc&dateFrom=2026-04-15&dateTo=2026-04-15",
+      "http://test/v1/environment/impacts?page=2&pageSize=1&sortOrder=asc&dateFrom=2026-04-15&dateTo=2026-04-15",
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1310,7 +1310,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects unauthorized, non-admin, and invalid admin environment impact list requests", async () => {
     const unauthenticatedResponse = await fixture.app.request(
-      "http://test/environment/impacts",
+      "http://test/v1/environment/impacts",
       {
         method: "GET",
       },
@@ -1318,7 +1318,7 @@ describe("environment policies routing e2e", () => {
 
     expect(unauthenticatedResponse.status).toBe(401);
 
-    const userResponse = await fixture.app.request("http://test/environment/impacts", {
+    const userResponse = await fixture.app.request("http://test/v1/environment/impacts", {
       method: "GET",
       headers: userHeaders(),
     });
@@ -1340,7 +1340,7 @@ describe("environment policies routing e2e", () => {
 
     for (const query of invalidQueries) {
       const response = await fixture.app.request(
-        `http://test/environment/impacts?${query}`,
+        `http://test/v1/environment/impacts?${query}`,
         {
           method: "GET",
           headers: adminHeaders(),
@@ -1359,7 +1359,7 @@ describe("environment policies routing e2e", () => {
     const impact = await calculateEnvironmentImpact(rental.id);
 
     const response = await fixture.app.request(
-      `http://test/environment/impacts/${impact.id}`,
+      `http://test/v1/environment/impacts/${impact.id}`,
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1406,7 +1406,7 @@ describe("environment policies routing e2e", () => {
 
   it("returns 404 for a missing admin environment impact detail", async () => {
     const response = await fixture.app.request(
-      "http://test/environment/impacts/018fa200-0000-7000-8000-000000000404",
+      "http://test/v1/environment/impacts/018fa200-0000-7000-8000-000000000404",
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1421,7 +1421,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects unauthenticated, invalid, and non-admin admin environment impact detail requests", async () => {
     const unauthenticatedResponse = await fixture.app.request(
-      "http://test/environment/impacts/018fa200-0000-7000-8000-000000000001",
+      "http://test/v1/environment/impacts/018fa200-0000-7000-8000-000000000001",
       {
         method: "GET",
       },
@@ -1430,7 +1430,7 @@ describe("environment policies routing e2e", () => {
     expect(unauthenticatedResponse.status).toBe(401);
 
     const invalidResponse = await fixture.app.request(
-      "http://test/environment/impacts/not-a-uuid",
+      "http://test/v1/environment/impacts/not-a-uuid",
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1442,7 +1442,7 @@ describe("environment policies routing e2e", () => {
     expect(invalidBody.details?.code).toBe("VALIDATION_ERROR");
 
     const userResponse = await fixture.app.request(
-      "http://test/environment/impacts/018fa200-0000-7000-8000-000000000001",
+      "http://test/v1/environment/impacts/018fa200-0000-7000-8000-000000000001",
       {
         method: "GET",
         headers: userHeaders(),
@@ -1466,7 +1466,7 @@ describe("environment policies routing e2e", () => {
     await calculateEnvironmentImpact(otherUserRental.id);
 
     const response = await fixture.app.request(
-      `http://test/environment/users/${REGULAR_USER_ID}/summary`,
+      `http://test/v1/environment/users/${REGULAR_USER_ID}/summary`,
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1488,7 +1488,7 @@ describe("environment policies routing e2e", () => {
     const userWithoutImpactId = "018fa100-0000-7000-8000-000000000099";
 
     const response = await fixture.app.request(
-      `http://test/environment/users/${userWithoutImpactId}/summary`,
+      `http://test/v1/environment/users/${userWithoutImpactId}/summary`,
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1508,7 +1508,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects unauthenticated, non-admin, and invalid admin environment user summary requests", async () => {
     const unauthenticatedResponse = await fixture.app.request(
-      `http://test/environment/users/${REGULAR_USER_ID}/summary`,
+      `http://test/v1/environment/users/${REGULAR_USER_ID}/summary`,
       {
         method: "GET",
       },
@@ -1517,7 +1517,7 @@ describe("environment policies routing e2e", () => {
     expect(unauthenticatedResponse.status).toBe(401);
 
     const userResponse = await fixture.app.request(
-      `http://test/environment/users/${REGULAR_USER_ID}/summary`,
+      `http://test/v1/environment/users/${REGULAR_USER_ID}/summary`,
       {
         method: "GET",
         headers: userHeaders(),
@@ -1527,7 +1527,7 @@ describe("environment policies routing e2e", () => {
     expect(userResponse.status).toBe(403);
 
     const invalidResponse = await fixture.app.request(
-      "http://test/environment/users/not-a-uuid/summary",
+      "http://test/v1/environment/users/not-a-uuid/summary",
       {
         method: "GET",
         headers: adminHeaders(),
@@ -1544,7 +1544,7 @@ describe("environment policies routing e2e", () => {
     const rental = await createRentalForImpact();
 
     const firstResponse = await fixture.app.request(
-      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      `http://test/v1/internal/environment/calculate-from-rental/${rental.id}`,
       {
         method: "POST",
         headers: adminHeaders(),
@@ -1553,7 +1553,7 @@ describe("environment policies routing e2e", () => {
     const firstBody = await firstResponse.json() as EnvironmentContracts.EnvironmentImpact;
 
     const secondResponse = await fixture.app.request(
-      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      `http://test/v1/internal/environment/calculate-from-rental/${rental.id}`,
       {
         method: "POST",
         headers: adminHeaders(),
@@ -1580,7 +1580,7 @@ describe("environment policies routing e2e", () => {
     await insertActiveEnvironmentPolicy();
 
     const response = await fixture.app.request(
-      "http://test/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000404",
+      "http://test/v1/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000404",
       {
         method: "POST",
         headers: adminHeaders(),
@@ -1602,7 +1602,7 @@ describe("environment policies routing e2e", () => {
     });
 
     const response = await fixture.app.request(
-      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      `http://test/v1/internal/environment/calculate-from-rental/${rental.id}`,
       {
         method: "POST",
         headers: adminHeaders(),
@@ -1619,7 +1619,7 @@ describe("environment policies routing e2e", () => {
     const rental = await createRentalForImpact();
 
     const response = await fixture.app.request(
-      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      `http://test/v1/internal/environment/calculate-from-rental/${rental.id}`,
       {
         method: "POST",
         headers: adminHeaders(),
@@ -1637,7 +1637,7 @@ describe("environment policies routing e2e", () => {
     const rental = await createRentalForImpact({ duration: 0 });
 
     const response = await fixture.app.request(
-      `http://test/internal/environment/calculate-from-rental/${rental.id}`,
+      `http://test/v1/internal/environment/calculate-from-rental/${rental.id}`,
       {
         method: "POST",
         headers: adminHeaders(),
@@ -1654,7 +1654,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects invalid rentalId params for environment impact calculation", async () => {
     const response = await fixture.app.request(
-      "http://test/internal/environment/calculate-from-rental/not-a-uuid",
+      "http://test/v1/internal/environment/calculate-from-rental/not-a-uuid",
       {
         method: "POST",
         headers: adminHeaders(),
@@ -1668,7 +1668,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects unauthenticated environment impact calculation requests", async () => {
     const response = await fixture.app.request(
-      "http://test/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000501",
+      "http://test/v1/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000501",
       {
         method: "POST",
       },
@@ -1679,7 +1679,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects non-admin environment impact calculation requests", async () => {
     const response = await fixture.app.request(
-      "http://test/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000502",
+      "http://test/v1/internal/environment/calculate-from-rental/018fa200-0000-7000-8000-000000000502",
       {
         method: "POST",
         headers: userHeaders(),
@@ -1721,7 +1721,7 @@ describe("environment policies routing e2e", () => {
       },
     });
 
-    const response = await fixture.app.request("http://test/environment/policies/active", {
+    const response = await fixture.app.request("http://test/v1/environment/policies/active", {
       method: "GET",
       headers: adminHeaders(),
     });
@@ -1756,7 +1756,7 @@ describe("environment policies routing e2e", () => {
     });
 
     const response = await fixture.app.request(
-      "http://test/environment/policies/018fa200-0000-7000-8000-000000000042/activate",
+      "http://test/v1/environment/policies/018fa200-0000-7000-8000-000000000042/activate",
       {
         method: "PATCH",
         headers: adminHeaders(),
@@ -1836,7 +1836,7 @@ describe("environment policies routing e2e", () => {
     });
 
     const response = await fixture.app.request(
-      "http://test/environment/policies/018fa200-0000-7000-8000-000000000043/activate",
+      "http://test/v1/environment/policies/018fa200-0000-7000-8000-000000000043/activate",
       {
         method: "PATCH",
         headers: adminHeaders(),
@@ -1860,7 +1860,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects invalid activate policyId params", async () => {
     const response = await fixture.app.request(
-      "http://test/environment/policies/not-a-uuid/activate",
+      "http://test/v1/environment/policies/not-a-uuid/activate",
       {
         method: "PATCH",
         headers: adminHeaders(),
@@ -1874,7 +1874,7 @@ describe("environment policies routing e2e", () => {
 
   it("returns 404 when activating a missing environment policy", async () => {
     const response = await fixture.app.request(
-      "http://test/environment/policies/018fa200-0000-7000-8000-000000000045/activate",
+      "http://test/v1/environment/policies/018fa200-0000-7000-8000-000000000045/activate",
       {
         method: "PATCH",
         headers: adminHeaders(),
@@ -1899,7 +1899,7 @@ describe("environment policies routing e2e", () => {
     });
 
     const response = await fixture.app.request(
-      "http://test/environment/policies/018fa200-0000-7000-8000-000000000046/activate",
+      "http://test/v1/environment/policies/018fa200-0000-7000-8000-000000000046/activate",
       {
         method: "PATCH",
         headers: adminHeaders(),
@@ -1914,7 +1914,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects unauthenticated activate requests", async () => {
     const response = await fixture.app.request(
-      "http://test/environment/policies/018fa200-0000-7000-8000-000000000047/activate",
+      "http://test/v1/environment/policies/018fa200-0000-7000-8000-000000000047/activate",
       {
         method: "PATCH",
       },
@@ -1925,7 +1925,7 @@ describe("environment policies routing e2e", () => {
 
   it("rejects non-admin activate requests", async () => {
     const response = await fixture.app.request(
-      "http://test/environment/policies/018fa200-0000-7000-8000-000000000048/activate",
+      "http://test/v1/environment/policies/018fa200-0000-7000-8000-000000000048/activate",
       {
         method: "PATCH",
         headers: userHeaders(),
@@ -1936,7 +1936,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects unauthenticated active policy reads", async () => {
-    const response = await fixture.app.request("http://test/environment/policies/active", {
+    const response = await fixture.app.request("http://test/v1/environment/policies/active", {
       method: "GET",
     });
 
@@ -1944,7 +1944,7 @@ describe("environment policies routing e2e", () => {
   });
 
   it("rejects non-admin active policy reads", async () => {
-    const response = await fixture.app.request("http://test/environment/policies/active", {
+    const response = await fixture.app.request("http://test/v1/environment/policies/active", {
       method: "GET",
       headers: userHeaders(),
     });
@@ -1990,7 +1990,7 @@ describe("environment policies routing e2e", () => {
     ];
 
     for (const invalidBody of invalidBodies) {
-      const response = await fixture.app.request("http://test/environment/policies", {
+      const response = await fixture.app.request("http://test/v1/environment/policies", {
         method: "POST",
         headers: adminHeaders(),
         body: JSON.stringify(invalidBody),
