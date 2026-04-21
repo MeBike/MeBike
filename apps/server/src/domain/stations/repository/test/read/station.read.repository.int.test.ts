@@ -94,7 +94,7 @@ describe("stationReadRepository Integration", () => {
     expect(result.items[1].id).toBe(farId);
   });
 
-  it("getRevenueByStation aggregates completed rental revenue by start station", async () => {
+  it("getRevenueByStation attributes revenue to start station and recognizes it by end time", async () => {
     const stationA = await kit.fixture.factories.station({ name: "Revenue Station A" });
     const stationB = await kit.fixture.factories.station({ name: "Revenue Station B" });
     const bikeA = await kit.fixture.factories.bike({ stationId: stationA.id });
@@ -108,8 +108,8 @@ describe("stationReadRepository Integration", () => {
       userId: userA.id,
       bikeId: bikeA.id,
       startStationId: stationA.id,
-      startTime: new Date("2026-02-05T09:00:00.000Z"),
-      endTime: new Date("2026-02-05T09:30:00.000Z"),
+      startTime: new Date("2026-01-31T23:45:00.000Z"),
+      endTime: new Date("2026-02-01T00:15:00.000Z"),
       duration: 30,
       totalPrice: "10000",
       status: "COMPLETED",
@@ -132,6 +132,16 @@ describe("stationReadRepository Integration", () => {
       endTime: new Date("2026-02-12T09:20:00.000Z"),
       duration: 20,
       totalPrice: "5000",
+      status: "COMPLETED",
+    });
+    await kit.fixture.factories.rental({
+      userId: userA.id,
+      bikeId: bikeA.id,
+      startStationId: stationA.id,
+      startTime: new Date("2026-02-28T23:30:00.000Z"),
+      endTime: new Date("2026-03-01T00:05:00.000Z"),
+      duration: 35,
+      totalPrice: "7000",
       status: "COMPLETED",
     });
     const result = await Effect.runPromise(repo.getRevenueByStation({ from, to }));
@@ -157,6 +167,60 @@ describe("stationReadRepository Integration", () => {
       totalDuration: 20,
       avgDuration: 20,
     });
+  });
+
+  it("getRevenueForStation returns only the assigned station aggregate", async () => {
+    const stationA = await kit.fixture.factories.station({ name: "Scoped Revenue Station A" });
+    const stationB = await kit.fixture.factories.station({ name: "Scoped Revenue Station B" });
+    const stationC = await kit.fixture.factories.station({ name: "Scoped Revenue Station C" });
+    const bikeA = await kit.fixture.factories.bike({ stationId: stationA.id });
+    const bikeB = await kit.fixture.factories.bike({ stationId: stationB.id });
+    const userA = await kit.fixture.factories.user({ email: "scoped-revenue-user-a@example.com" });
+    const userB = await kit.fixture.factories.user({ email: "scoped-revenue-user-b@example.com" });
+    const from = new Date("2026-02-01T00:00:00.000Z");
+    const to = new Date("2026-02-28T23:59:59.999Z");
+
+    await kit.fixture.factories.rental({
+      userId: userA.id,
+      bikeId: bikeA.id,
+      startStationId: stationA.id,
+      startTime: new Date("2026-02-02T09:00:00.000Z"),
+      endTime: new Date("2026-02-02T09:30:00.000Z"),
+      duration: 30,
+      totalPrice: "12000",
+      status: "COMPLETED",
+    });
+    await kit.fixture.factories.rental({
+      userId: userB.id,
+      bikeId: bikeB.id,
+      startStationId: stationB.id,
+      startTime: new Date("2026-02-03T10:00:00.000Z"),
+      endTime: new Date("2026-02-03T10:45:00.000Z"),
+      duration: 45,
+      totalPrice: "9000",
+      status: "COMPLETED",
+    });
+
+    const scoped = await Effect.runPromise(repo.getRevenueForStation({
+      stationId: stationA.id,
+      from,
+      to,
+    }));
+    const empty = await Effect.runPromise(repo.getRevenueForStation({
+      stationId: stationC.id,
+      from,
+      to,
+    }));
+
+    expect(scoped).toMatchObject({
+      stationId: stationA.id,
+      name: "Scoped Revenue Station A",
+      totalRentals: 1,
+      totalRevenue: 12000,
+      totalDuration: 30,
+      avgDuration: 30,
+    });
+    expect(empty).toBeNull();
   });
 
   it("defects with StationRepositoryError when database is unreachable", async () => {

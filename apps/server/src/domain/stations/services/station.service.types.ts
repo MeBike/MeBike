@@ -121,6 +121,12 @@ export type StationQueryService = {
     from: Date;
     to: Date;
   }) => Effect.Effect<StationRevenueStats>;
+
+  getRevenueForStation: (args: {
+    stationId: string;
+    from: Date;
+    to: Date;
+  }) => Effect.Effect<StationRevenueStats, import("../errors").StationNotFound>;
 };
 
 export type StationService = StationCommandService & StationQueryService;

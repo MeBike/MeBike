@@ -2,18 +2,22 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
+import { previousUtcMonthFullRange } from "@/domain/rentals/services/queries/rental-stats-time";
 import {
   StationCommandServiceTag,
   StationQueryServiceTag,
 } from "@/domain/stations";
+import { withLoggedCause } from "@/domain/shared";
 import {
   toContractStationReadSummary,
+  toContractStationRevenue,
   toContractStationSummary,
 } from "@/http/presenters/stations.presenter";
 
 import type {
   StationErrorResponse,
   StationListResponse,
+  StationRevenueResponse,
   StationsRoutes,
   StationSummary,
 } from "./shared";
@@ -61,6 +65,36 @@ const listStations: RouteHandler<StationsRoutes["adminListStations"]> = async (c
       }, 400)),
     Match.exhaustive,
   );
+};
+
+const getAllStationsRevenue: RouteHandler<StationsRoutes["adminGetAllStationsRevenue"]> = async (c) => {
+  const query = c.req.valid("query");
+
+  const from = query.from ? new Date(query.from) : null;
+  const to = query.to ? new Date(query.to) : null;
+
+  if ((from && !to) || (!from && to)) {
+    return c.json<StationErrorResponse, 400>({
+      error: stationErrorMessages.INVALID_DATE_RANGE,
+      details: {
+        code: StationErrorCodeSchema.enum.INVALID_DATE_RANGE,
+        from: query.from,
+        to: query.to,
+      },
+    }, 400);
+  }
+
+  const range = from && to ? { from, to } : previousUtcMonthFullRange(new Date());
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* StationQueryServiceTag;
+      return yield* service.getRevenueByStation(range);
+    }),
+    "GET /v1/admin/stations/revenue",
+  );
+
+  const result = await c.var.runPromise(eff);
+  return c.json<StationRevenueResponse, 200>(toContractStationRevenue(result), 200);
 };
 
 const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) => {
@@ -280,6 +314,7 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
 
 export const StationAdminController = {
   listStations,
+  getAllStationsRevenue,
   createStation,
   updateStation,
 } as const;

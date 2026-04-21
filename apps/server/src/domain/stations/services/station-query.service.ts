@@ -1,6 +1,6 @@
 import { Effect, Option } from "effect";
 
-import type { StationRevenueStats } from "../models";
+import type { StationRevenueRow, StationRevenueStats } from "../models";
 import type { StationQueryRepo } from "../repository/station.repository.types";
 import type { StationQueryService } from "./station.service.types";
 
@@ -13,6 +13,32 @@ import { StationNotFound } from "../errors";
  * @returns StationQueryService chi gom doc du lieu va map query-level rules.
  */
 export function makeStationQueryService(repo: StationQueryRepo): StationQueryService {
+  const buildRevenueStats = (args: {
+    from: Date;
+    to: Date;
+    rows: readonly StationRevenueRow[];
+  }): StationRevenueStats => {
+    const stations = [...args.rows].sort((a, b) => b.totalRevenue - a.totalRevenue);
+    const totalRevenue = stations.reduce((sum, station) => sum + station.totalRevenue, 0);
+    const totalRentals = stations.reduce((sum, station) => sum + station.totalRentals, 0);
+
+    return {
+      period: {
+        from: args.from,
+        to: args.to,
+      },
+      summary: {
+        totalStations: stations.length,
+        totalRevenue,
+        totalRentals,
+        avgRevenuePerStation: stations.length === 0
+          ? 0
+          : Number((totalRevenue / stations.length).toFixed(2)),
+      },
+      stations,
+    };
+  };
+
   return {
     listStations: (filter, pageReq) =>
       repo.listWithOffset(filter, pageReq),
@@ -35,22 +61,36 @@ export function makeStationQueryService(repo: StationQueryRepo): StationQuerySer
     getRevenueByStation: args =>
       Effect.gen(function* () {
         const rows = yield* repo.getRevenueByStation(args);
-        const stations = [...rows].sort((a, b) => b.totalRevenue - a.totalRevenue);
-        const totalRevenue = stations.reduce((sum, station) => sum + station.totalRevenue, 0);
-        const totalRentals = stations.reduce((sum, station) => sum + station.totalRentals, 0);
+        return buildRevenueStats({
+          from: args.from,
+          to: args.to,
+          rows,
+        });
+      }),
 
-        return {
-          period: args,
-          summary: {
-            totalStations: stations.length,
-            totalRevenue,
-            totalRentals,
-            avgRevenuePerStation: stations.length === 0
-              ? 0
-              : Number((totalRevenue / stations.length).toFixed(2)),
-          },
-          stations,
-        } satisfies StationRevenueStats;
+    getRevenueForStation: args =>
+      Effect.gen(function* () {
+        const stationOpt = yield* repo.getById(args.stationId);
+        if (Option.isNone(stationOpt)) {
+          return yield* Effect.fail(new StationNotFound({ id: args.stationId }));
+        }
+
+        const row = yield* repo.getRevenueForStation(args);
+        const fallbackRow: StationRevenueRow = {
+          stationId: stationOpt.value.id,
+          name: stationOpt.value.name,
+          address: stationOpt.value.address,
+          totalRentals: 0,
+          totalRevenue: 0,
+          totalDuration: 0,
+          avgDuration: 0,
+        };
+
+        return buildRevenueStats({
+          from: args.from,
+          to: args.to,
+          rows: [row ?? fallbackRow],
+        });
       }),
   };
 }

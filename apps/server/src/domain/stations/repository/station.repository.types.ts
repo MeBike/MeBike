@@ -66,6 +66,11 @@ export type StationQueryRepo = {
     from: Date;
     to: Date;
   }) => Effect.Effect<readonly StationRevenueRow[]>;
+  getRevenueForStation: (args: {
+    stationId: string;
+    from: Date;
+    to: Date;
+  }) => Effect.Effect<StationRevenueRow | null>;
 };
 
 export type StationRepo = StationCommandRepo & StationQueryRepo;
