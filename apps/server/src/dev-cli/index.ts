@@ -19,6 +19,7 @@ import {
 } from "./data";
 import {
   getDeviceConfig,
+  resolveDevicePort,
   restartDevice,
   setDeviceConfig,
 } from "./device";
@@ -285,9 +286,9 @@ function printHelp() {
   writeLine("  pnpm dev:cli persona current");
   writeLine("  pnpm dev:cli persona use <handle|email>");
   writeLine("  pnpm dev:cli persona clear");
-  writeLine("  pnpm dev:cli device config get [--port /dev/ttyUSB0]");
-  writeLine("  pnpm dev:cli device config set --bike-id <id> [--wifi-ssid <ssid>] [--wifi-pass <pass>] [--mqtt-broker-ip <ip>] [--mqtt-port <port>] [--mqtt-username <user>] [--mqtt-password <pass>] [--port /dev/ttyUSB0]");
-  writeLine("  pnpm dev:cli device restart [--port /dev/ttyUSB0]");
+  writeLine("  pnpm dev:cli device config get [--port <serial-port>]");
+  writeLine("  pnpm dev:cli device config set --bike-id <id> [--wifi-ssid <ssid>] [--wifi-pass <pass>] [--mqtt-broker-ip <ip>] [--mqtt-port <port>] [--mqtt-username <user>] [--mqtt-password <pass>] [--port <serial-port>]");
+  writeLine("  pnpm dev:cli device restart [--port <serial-port>]");
   writeLine("  pnpm dev:cli user-card <user-id|email|handle> <card-uid>");
   writeLine("  pnpm dev:cli user-card <user-id|email|handle> --clear");
   writeLine("  pnpm dev:cli list [ALL|PENDING|SENT|FAILED|CANCELLED]");
@@ -328,7 +329,7 @@ async function handleDeviceCommand(args: string[]) {
 
   if (subcommand === "restart") {
     const flags = parseFlags([maybeAction, ...rest].filter(Boolean) as string[]);
-    const portPath = flags.port ?? "/dev/ttyUSB0";
+    const portPath = await resolveDevicePort(flags.port);
     await restartDevice(portPath);
     writeLine(chalk.green(`Restart command sent to ${portPath}.`));
     return;
@@ -336,7 +337,7 @@ async function handleDeviceCommand(args: string[]) {
 
   const action = maybeAction;
   const flags = parseFlags(rest);
-  const portPath = flags.port ?? "/dev/ttyUSB0";
+  const portPath = await resolveDevicePort(flags.port);
 
   if (subcommand === "config" && action === "get") {
     const config = await getDeviceConfig(portPath);

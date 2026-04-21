@@ -20,7 +20,7 @@ import {
   sendSampleEmails,
   stripHtml,
 } from "./data";
-import { getDeviceConfig, restartDevice, setDeviceConfig } from "./device";
+import { getDeviceConfig, resolveDevicePort, restartDevice, setDeviceConfig, suggestDevicePort } from "./device";
 import { writeError, writeLine } from "./output";
 import { printPersona } from "./persona-output";
 import {
@@ -33,7 +33,6 @@ import {
 import { updateUserCardBinding } from "./user-card";
 
 const STATUS_OPTIONS: EmailJobStatus[] = ["ALL", "PENDING", "SENT", "FAILED", "CANCELLED"];
-const DEFAULT_DEVICE_PORT = "/dev/ttyUSB0";
 
 export async function runInteractiveCli(args: {
   connectionString: string;
@@ -149,14 +148,13 @@ async function runInteractiveAction(action: () => Promise<void>) {
 }
 
 async function deviceConfigInteractive() {
-  const portPath = await input({
-    message: "Serial port",
-    default: DEFAULT_DEVICE_PORT,
+  const suggestedPortPath = await suggestDevicePort();
+  const requestedPortPath = await input({
+    message: suggestedPortPath ? "Serial port" : "Serial port (leave empty to auto-detect)",
+    default: suggestedPortPath ?? "",
   });
 
-  if (!portPath) {
-    return;
-  }
+  const portPath = await resolveDevicePort(requestedPortPath || undefined);
 
   while (true) {
     const action = await select<string>({
