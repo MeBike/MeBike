@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Coupon, Status } from "@/types/Coupon"; // Đường dẫn tới file chứa interface của bạn
 import { Button } from "@/components/ui/button";
-import { Eye, Power, EyeOff } from "lucide-react";
+import { Eye, Power, EyeOff , PowerOff} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -104,7 +104,7 @@ export const couponColumns = ({
                   onClick={() => onDeactive(row.original)}
                   className="text-destructive" // Đổi màu đỏ nếu muốn cảnh báo deactive
                 >
-                  <EyeOff className="w-4 h-4" />{" "}
+                  <PowerOff className="w-4 h-4" />{" "}
                   {/* Dùng EyeOff hoặc PowerOff cho deactive */}
                 </Button>
               ) : (

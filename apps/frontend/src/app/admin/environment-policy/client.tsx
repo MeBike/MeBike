@@ -17,6 +17,7 @@ export default function Client() {
     dataEnvironmentPolicy,
     isLoadingEnvironmentPolicy,
     getEnvironmentPolicies,
+    activeEnvironmentPolicty,
   } = useEnvironmentPolicy({
     hasToken: true,
     pageSize: 7,
@@ -45,7 +46,7 @@ export default function Client() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Quản lý Chính sách Môi trường</h1>
-        <Button onClick={() => router.push("/admin/environment-policy/create")}>
+        <Button onClick={() => router.push("/admin/environment-policty/create")}>
           <Plus className="w-4 h-4 mr-2" /> Thêm chính sách
         </Button>
       </div>
@@ -64,6 +65,7 @@ export default function Client() {
               columns={redistributionColumn({
                 onView: ({ id }) =>
                   router.push(`/admin/environment-policy/detail/${id}`),
+                onActive: (environment) => activeEnvironmentPolicty(environment.id),
               })}
               data={dataEnvironmentPolicy?.data || []}
             />

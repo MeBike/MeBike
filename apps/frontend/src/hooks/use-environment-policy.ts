@@ -97,14 +97,13 @@ export const useEnvironmentPolicy = ({
       }
       try {
         const result = await useActiveEnvironmentPolicy.mutateAsync(id);
-        if (result.status === HTTP_STATUS.CREATED) {
-          toast.success("Kích hoạt chính sách môi trường thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["admin", "environment-policy-data"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["admin", "environment-policy-active-data"],
-          });
+        if (result.status === HTTP_STATUS.OK) {
+          if (result.data.status === "ACTIVE") {
+            toast.success("Kích hoạt chính sách môi trường thành công");
+          } else {
+            toast.success("Hủy kích hoạt chính sách môi trường thành công");
+          }
+          getEnvironmentPolicies();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);

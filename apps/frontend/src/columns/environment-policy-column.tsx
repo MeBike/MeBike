@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Clock, CheckCircle2, XCircle, Truck } from "lucide-react";
+import { Eye, Power, PowerOff } from "lucide-react";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Environment , EnvironmentStatus } from "@/types/Environment";
+import type { Environment, EnvironmentStatus } from "@/types/Environment";
 export const getRequestStatusColor = (status: EnvironmentStatus) => {
   switch (status) {
     case "ACTIVE":
@@ -24,8 +24,10 @@ export const getRequestStatusColor = (status: EnvironmentStatus) => {
 };
 export const redistributionColumn = ({
   onView,
+  onActive,
 }: {
   onView?: ({ id }: { id: string }) => void;
+  onActive: (environment: Environment) => void;
 }): ColumnDef<Environment>[] => [
   {
     accessorKey: "name",
@@ -60,29 +62,60 @@ export const redistributionColumn = ({
       );
     },
   },
-  {
-    accessorKey: "created_at",
-    header: "Ngày tạo",
-    cell: ({ row }) => formatToVNTime(row.original.created_at),
-  },
   // {
-  //   id: "actions",
-  //   header: "Hành động",
-  //   cell: ({ row }) => (
-  //     <div className="flex items-center justify-center">
-  //       <Tooltip>
-  //         <TooltipTrigger asChild>
-  //           <Button
-  //             variant="ghost"
-  //             size="icon"
-  //             onClick={() => onView?.({ id: row.original.id })}
-  //           >
-  //             <Eye className="w-4 h-4 text-muted-foreground" />
-  //           </Button>
-  //         </TooltipTrigger>
-  //         <TooltipContent>Xem chi tiết chính sách</TooltipContent>
-  //       </Tooltip>
-  //     </div>
-  //   ),
+  //   accessorKey: "created_at",
+  //   header: "Ngày tạo",
+  //   cell: ({ row }) => formatToVNTime(row.original.created_at),
   // },
+  {
+    id: "actions",
+    header: "Hành động",
+    cell: ({ row }) => (
+      <div className="flex items-center gap-0">
+        <div className="">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label="Xem chi tiết"
+                onClick={() => onView?.(row.original)}
+              >
+                <Eye className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Xem chi tiết</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {row.original.status === "ACTIVE" ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onActive(row.original)}
+                  className="text-destructive"
+                >
+                  <PowerOff className="w-4 h-4" />{" "}
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onActive(row.original)}
+                  className="text-emerald-600"
+                >
+                  <Power className="w-4 h-4" />{" "}
+                </Button>
+              )}
+            </TooltipTrigger>
+            <TooltipContent>
+              {row.original.status === "ACTIVE" ? "Hủy kích hoạt" : "Kích hoạt"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    ),
+  },
 ];
