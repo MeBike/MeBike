@@ -5,6 +5,7 @@ import type {
 
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
+import { makeStationAnalyticsRepository } from "../station-analytics.repository";
 import { makeStationCommandRepository } from "../station-command.repository";
 import { makeStationQueryRepository } from "../station-query.repository";
 
@@ -53,6 +54,8 @@ export function setupStationRepositoryIntTestKit() {
     fixture,
     makeQueryRepo: (client: StationRepoClient = fixture.prisma) =>
       makeStationQueryRepository(client),
+    makeAnalyticsRepo: (client: StationRepoClient = fixture.prisma) =>
+      makeStationAnalyticsRepository(client),
     makeCommandRepo: (client: StationRepoClient = fixture.prisma) =>
       makeStationCommandRepository(client),
     createStation,

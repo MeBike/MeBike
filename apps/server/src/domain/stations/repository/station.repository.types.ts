@@ -13,10 +13,6 @@ import type {
   NearestStationRow,
   StationContextRow,
   StationFilter,
-  StationRevenueAggregate,
-  StationRevenueGroupBy,
-  StationRevenuePoint,
-  StationRevenueRow,
   StationRow,
   StationSortField,
   UpdateStationInput,
@@ -65,21 +61,6 @@ export type StationQueryRepo = {
   listNearest: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;
-  getRevenueByStation: (args: {
-    from: Date;
-    to: Date;
-  }) => Effect.Effect<readonly StationRevenueRow[]>;
-  getRevenueForStation: (args: {
-    stationId: string;
-    from: Date;
-    to: Date;
-  }) => Effect.Effect<StationRevenueAggregate | null>;
-  getRevenueSeries: (args: {
-    from: Date;
-    to: Date;
-    groupBy: StationRevenueGroupBy;
-    stationId?: string;
-  }) => Effect.Effect<readonly StationRevenuePoint[]>;
 };
 
 export type StationRepo = StationCommandRepo & StationQueryRepo;

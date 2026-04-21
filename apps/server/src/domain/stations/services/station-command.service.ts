@@ -26,13 +26,13 @@ import {
 } from "../errors";
 
 /**
- * Tao command-side service cho station domain.
+ * EN: Builds the command-side station service.
+ * VI: Xây dựng service command-side cho station domain.
  *
- * @param args Tap dependency command/query de build service.
- * @param args.commandRepo Repository command de tao/cap nhat tram.
- * @param args.queryRepo Repository query can de validate state hien tai.
- * @param args.agencyRepo Repository agency de validate ownership.
- * @returns StationCommandService da bao gom business rule truoc khi ghi du lieu.
+ * EN: Keeps write-side business rules close to station mutations while delegating
+ * persistence to command/query repositories.
+ * VI: Giữ các business rule phía ghi gần với mutation của station, còn persistence
+ * được tách cho command/query repositories.
  */
 export function makeStationCommandService(args: {
   commandRepo: StationCommandRepo;
@@ -42,12 +42,11 @@ export function makeStationCommandService(args: {
   const { agencyRepo, commandRepo, queryRepo } = args;
 
   /**
-   * Chuan hoa capacity split khi tao tram moi.
+   * EN: Normalizes capacity defaults for station creation.
+   * VI: Chuẩn hóa capacity mặc định khi tạo trạm.
    *
-   * @param input Input tao tram chua chac da co returnSlotLimit.
-   * @param input.totalCapacity Tong suc chua cua tram moi.
-   * @param input.returnSlotLimit Gioi han slot tra xe neu caller co truyen vao.
-   * @returns Cap total/return slot da duoc fill default.
+   * EN: When caller omits `returnSlotLimit`, we default it to full station capacity.
+   * VI: Nếu caller không truyền `returnSlotLimit` thì mặc định bằng toàn bộ sức chứa trạm.
    */
   function resolveCapacitySplit(input: {
     totalCapacity: number;
@@ -60,11 +59,13 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * Chuan hoa capacity split khi cap nhat de giu hanh vi default on dinh.
+   * EN: Normalizes capacity values for station updates.
+   * VI: Chuẩn hóa capacity khi cập nhật trạm.
    *
-   * @param current Tram hien tai trong DB.
-   * @param input Payload cap nhat.
-   * @returns Cap total/return slot sau khi merge voi gia tri cu.
+   * EN: Preserves the old defaulting behavior when total capacity changes but the
+   * stored return-slot limit still mirrors total capacity.
+   * VI: Giữ nguyên hành vi default cũ khi total capacity thay đổi nhưng
+   * return-slot limit đang bám theo total capacity hiện tại.
    */
   function resolveUpdatedCapacitySplit(current: StationRow, input: UpdateStationInput) {
     const totalCapacity = input.totalCapacity ?? current.totalCapacity;
@@ -81,12 +82,10 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * Validate return slot limit co nam trong khoang hop le cua total capacity hay khong.
+   * EN: Validates that the return-slot limit stays within physical capacity bounds.
+   * VI: Validate để return-slot limit luôn nằm trong giới hạn sức chứa vật lý.
    *
-   * @param args Cap total/return slot can kiem tra.
-   * @param args.totalCapacity Tong suc chua can doi chieu.
-   * @param args.returnSlotLimit Gioi han slot tra xe can validate.
-   * @returns `true` neu split hop le.
+   * @returns EN: `true` when the split is valid. VI: `true` nếu split hợp lệ.
    */
   function validateCapacitySplit(args: {
     totalCapacity: number;
@@ -98,13 +97,13 @@ export function makeStationCommandService(args: {
   }
 
   /**
-   * Validate quan he giua station type va agency ownership.
+   * EN: Validates the relationship between station type and agency ownership.
+   * VI: Validate quan hệ giữa station type và agency ownership.
    *
-   * @param args Loai tram, agency va station dang bi exclude khi update.
-   * @param args.stationType Loai tram sau khi merge input.
-   * @param args.agencyId Agency duoc gan cho tram.
-   * @param args.excludeStationId Station can bo qua khi dang update chinh no.
-   * @returns Effect chi thanh cong khi ownership hop le va agency ton tai.
+   * EN: Used by both create and update flows to enforce internal vs agency-backed
+   * station rules and prevent an agency from being attached to multiple stations.
+   * VI: Dùng cho cả flow create và update để enforce rule internal/agency-backed,
+   * đồng thời ngăn một agency bị gán cho nhiều station.
    */
   const validateOwnership = (args: {
     stationType: CreateStationInput["stationType"];
@@ -145,13 +144,13 @@ export function makeStationCommandService(args: {
     });
 
   /**
-   * Chan cac cap nhat lam vi pham tai nguyen dang duoc su dung.
+   * EN: Prevents updates that would invalidate active operational state.
+   * VI: Chặn các cập nhật làm vi phạm trạng thái vận hành đang active.
    *
-   * @param current Trang thai tram hien tai.
-   * @param next Gia tri suc chua moi sau khi merge update.
-   * @param next.totalCapacity Tong suc chua sau cap nhat.
-   * @param next.returnSlotLimit Gioi han slot tra xe sau cap nhat.
-   * @returns Effect fail neu cap nhat lam vuot qua bike/return-slot dang active.
+   * EN: Capacity cannot drop below currently occupied physical usage, and return-slot
+   * limit cannot drop below already active return reservations.
+   * VI: Capacity không được thấp hơn mức sử dụng vật lý hiện tại, và return-slot limit
+   * không được thấp hơn số return reservation đang active.
    */
   const validateOperationalUpdate = (current: StationRow, next: {
     totalCapacity: number;

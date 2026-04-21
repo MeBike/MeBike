@@ -3,7 +3,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
-import { StationQueryServiceTag } from "@/domain/stations";
+import { StationQueryServiceTag, StationStatsServiceTag } from "@/domain/stations";
 import {
   toContractStationReadSummary,
   toContractStationRevenue,
@@ -165,7 +165,7 @@ const agencyGetAssignedStationRevenue: RouteHandler<StationsRoutes["agencyGetAss
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* StationQueryServiceTag;
+      const service = yield* StationStatsServiceTag;
       return yield* service.getRevenueForStation({
         stationId: stationScopeId,
         ...rangeResult.range,

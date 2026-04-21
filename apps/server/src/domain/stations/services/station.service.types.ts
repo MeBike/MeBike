@@ -21,8 +21,6 @@ import type {
   NearestStationRow,
   StationContextRow,
   StationFilter,
-  StationRevenueGroupBy,
-  StationRevenueStats,
   StationRow,
   StationSortField,
   UpdateStationInput,
@@ -30,10 +28,11 @@ import type {
 
 export type StationCommandService = {
   /**
-   * Tao tram moi sau khi validate suc chua, ownership va geo boundary.
+   * EN: Creates a station after validating capacity, ownership, and geo boundary rules.
+   * VI: Tạo trạm mới sau khi validate sức chứa, ownership và geo boundary rules.
    *
-   * @param input Du lieu tao tram.
-   * @returns Effect tra ve tram vua tao neu hop le.
+   * @param input EN: Station creation payload. VI: Dữ liệu tạo trạm.
+   * @returns EN: Created station on success. VI: Trạm vừa tạo nếu hợp lệ.
    */
   createStation: (
     input: CreateStationInput,
@@ -51,11 +50,12 @@ export type StationCommandService = {
   >;
 
   /**
-   * Cap nhat tram hien co va bao ve cac invariant van hanh dang ton tai.
+   * EN: Updates an existing station while protecting active operational invariants.
+   * VI: Cập nhật trạm hiện có và bảo vệ các invariant vận hành đang tồn tại.
    *
-   * @param id ID tram can cap nhat.
-   * @param input Du lieu cap nhat.
-   * @returns Effect tra ve tram sau cap nhat neu thanh cong.
+   * @param id EN: Station identifier. VI: ID trạm cần cập nhật.
+   * @param input EN: Partial station update payload. VI: Dữ liệu cập nhật.
+   * @returns EN: Updated station on success. VI: Trạm sau cập nhật nếu thành công.
    */
   updateStation: (
     id: string,
@@ -79,11 +79,12 @@ export type StationCommandService = {
 
 export type StationQueryService = {
   /**
-   * Liet ke tram theo filter va phan trang offset.
+   * EN: Lists stations using standard filters and offset pagination.
+   * VI: Liệt kê trạm theo filter chuẩn và phân trang offset.
    *
-   * @param filter Dieu kien loc tram.
-   * @param pageReq Cau hinh phan trang va sort.
-   * @returns Effect tra ve danh sach tram co pagination.
+   * @param filter EN: Station filtering options. VI: Điều kiện lọc trạm.
+   * @param pageReq EN: Pagination and sorting configuration. VI: Cấu hình phân trang và sort.
+   * @returns EN: Paginated station result. VI: Danh sách trạm có pagination.
    */
   listStations: (
     filter: StationFilter,
@@ -91,10 +92,11 @@ export type StationQueryService = {
   ) => Effect.Effect<PageResult<StationRow>>;
 
   /**
-   * Lay chi tiet mot tram theo ID.
+   * EN: Loads a single station by identifier.
+   * VI: Lấy chi tiết một trạm theo ID.
    *
-   * @param id ID tram can lay.
-   * @returns Effect tra ve tram neu tim thay.
+   * @param id EN: Station identifier. VI: ID trạm cần lấy.
+   * @returns EN: Station row or `StationNotFound`. VI: Trạm nếu tìm thấy hoặc lỗi `StationNotFound`.
    */
   getStationById: (id: string) => Effect.Effect<StationRow, import("../errors").StationNotFound>;
 
@@ -103,42 +105,17 @@ export type StationQueryService = {
   ) => Effect.Effect<readonly StationContextRow[]>;
 
   /**
-   * Tim tram gan nhat theo vi tri hien tai.
+   * EN: Lists nearest stations for the given coordinates.
+   * VI: Tìm các trạm gần nhất theo tọa độ hiện tại.
    *
-   * @param args Toa do, ban kinh va pagination tim kiem.
-   * @returns Effect tra ve danh sach tram gan nhat.
+   * @param args EN: Coordinates, search radius, and pagination input.
+   * VI: Tọa độ, bán kính và cấu hình phân trang tìm kiếm.
+   * @returns EN: Paginated nearest-station result. VI: Danh sách trạm gần nhất có pagination.
    */
   listNearestStations: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>>;
 
-  /**
-   * Tong hop doanh thu theo tram trong mot khoang thoi gian.
-   * Doanh thu duoc ghi nhan theo endTime cua rental hoan tat,
-   * nhung van gan ownership cho startStationId.
-   *
-   * @param args Moc thoi gian bat dau va ket thuc.
-   * @returns Effect tra ve tong hop doanh thu + xep hang tram.
-   */
-  getRevenueByStation: (args: {
-    from: Date;
-    to: Date;
-    groupBy?: StationRevenueGroupBy;
-  }) => Effect.Effect<StationRevenueStats>;
-
-  /**
-   * Tong hop doanh thu cho mot tram cu the trong khoang thoi gian.
-   * Revenue recognition dung endTime, station ownership dung startStationId.
-   *
-   * @param args Tram dich va moc thoi gian bat dau / ket thuc.
-   * @returns Effect tra ve stats cua tram hoac StationNotFound.
-   */
-  getRevenueForStation: (args: {
-    stationId: string;
-    from: Date;
-    to: Date;
-    groupBy?: StationRevenueGroupBy;
-  }) => Effect.Effect<StationRevenueStats, import("../errors").StationNotFound>;
 };
 
 export type StationService = StationCommandService & StationQueryService;

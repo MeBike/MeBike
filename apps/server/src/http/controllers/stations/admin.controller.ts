@@ -6,6 +6,7 @@ import { withLoggedCause } from "@/domain/shared";
 import {
   StationCommandServiceTag,
   StationQueryServiceTag,
+  StationStatsServiceTag,
 } from "@/domain/stations";
 import {
   toContractStationReadSummary,
@@ -80,7 +81,7 @@ const getAllStationsRevenue: RouteHandler<StationsRoutes["adminGetAllStationsRev
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* StationQueryServiceTag;
+      const service = yield* StationStatsServiceTag;
       return yield* service.getRevenueByStation({
         ...rangeResult.range,
         groupBy: rangeResult.groupBy,
