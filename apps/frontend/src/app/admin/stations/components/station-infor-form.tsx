@@ -44,7 +44,6 @@ export function StationInfoForm({ form, onSubmit, onCancel }: StationInfoFormPro
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="INTERNAL">Trạm nội bộ</SelectItem>
-              <SelectItem value="AGENCY">Trạm đại lý</SelectItem>
             </SelectContent>
           </Select>
         </FormField>
