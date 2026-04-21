@@ -65,24 +65,24 @@ export const redistributionColumn = ({
     header: "Ngày tạo",
     cell: ({ row }) => formatToVNTime(row.original.created_at),
   },
-  {
-    id: "actions",
-    header: "Hành động",
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onView?.({ id: row.original.id })}
-            >
-              <Eye className="w-4 h-4 text-muted-foreground" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Xem chi tiết chính sách</TooltipContent>
-        </Tooltip>
-      </div>
-    ),
-  },
+  // {
+  //   id: "actions",
+  //   header: "Hành động",
+  //   cell: ({ row }) => (
+  //     <div className="flex items-center justify-center">
+  //       <Tooltip>
+  //         <TooltipTrigger asChild>
+  //           <Button
+  //             variant="ghost"
+  //             size="icon"
+  //             onClick={() => onView?.({ id: row.original.id })}
+  //           >
+  //             <Eye className="w-4 h-4 text-muted-foreground" />
+  //           </Button>
+  //         </TooltipTrigger>
+  //         <TooltipContent>Xem chi tiết chính sách</TooltipContent>
+  //       </Tooltip>
+  //     </div>
+  //   ),
+  // },
 ];

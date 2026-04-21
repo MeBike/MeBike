@@ -146,6 +146,12 @@ export function Sidebar() {
           roles: ["ADMIN"],
         },
         {
+          title: "Quản lý môi trường",
+          icon: Store,
+          href: "/admin/environment-policy",
+          roles: ["ADMIN"],
+        },
+        {
           title: "Quản lý đơn đặt trước",
           icon: CalendarCheck2,
           href: `/${role.toLowerCase()}/reservations`,

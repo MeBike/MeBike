@@ -5,7 +5,7 @@ export const CreateEnvironmentPolicySchema = z.object({
 
   average_speed_kmh: z
     .number()
-    .gt(0, "Tốc độ trung bình phải lớn hơn 0")
+    .min(0, "Tốc độ trung bình phải lớn hơn 0")
     .max(40, "Tốc độ trung bình tối đa là 40 km/h"),
 
   co2_saved_per_km: z
@@ -25,7 +25,7 @@ export const CreateEnvironmentPolicySchema = z.object({
     .max(30, "Thời gian tối đa là 30 phút")
     .optional(),
 
-  status: z.enum(["ACTIVE", "INACTIVE"]),
+  status: z.enum(["INACTIVE"]),
 });
 
 export type CreateEnvironmentPolicyInput = z.infer<

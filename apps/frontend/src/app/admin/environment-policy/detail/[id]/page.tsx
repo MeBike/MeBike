@@ -40,8 +40,6 @@ export default function Page() {
     //   data={dataEnvironmentPolicy?.data}
     //   onActivate={activeEnvironmentPolicty}
     // />
-    <>
-    hello world
-    </>
+    <>hello world</>
   );
 }
