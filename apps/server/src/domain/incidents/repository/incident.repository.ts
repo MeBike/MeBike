@@ -2,7 +2,6 @@ import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
-  AssignmentStatus,
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
@@ -19,6 +18,9 @@ import { MapboxRouting } from "@/infrastructure/mapbox";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import {
+  AssignmentStatus,
+} from "generated/kysely/types";
 
 import type {
   IncidentNotFound,
@@ -653,6 +655,9 @@ export function makeIncidentRepository(
                       assignments: {
                         some: {
                           technicianUserId: filter.userId,
+                          status: {
+                            not: AssignmentStatus.CANCELLED,
+                          },
                         },
                       },
                     },
