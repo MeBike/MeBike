@@ -60,15 +60,10 @@ export const co2RecordColumn = ({
     accessorKey: "distance_source",
     header: "Nguồn tính",
     cell: ({ row }) => (
-      <span className="px-2 py-1 rounded-md text-[11px] font-medium bg-secondary text-secondary-foreground">
-        {row.original.distance_source}
+      <span className="px-2 py-1 rounded-md text-[11px] text-secondary-foreground">
+        {"Theo thời gian"}
       </span>
     ),
-  },
-  {
-    accessorKey: "calculated_at",
-    header: "Ngày tính",
-    cell: ({ row }) => <div>{formatToVNTime(row.original.calculated_at)}</div>,
   },
   {
     id: "actions",

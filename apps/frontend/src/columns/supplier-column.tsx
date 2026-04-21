@@ -73,50 +73,25 @@ export const columns = ({
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => {
-      const supplier = row.original;
-      // Logic gợi ý đổi trạng thái (Ví dụ: Đang hoạt động <-> Không hoạt động)
-      const toggleTargetStatus = supplier.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-center gap-0">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="shrink-0 h-8 w-8"
+                className="shrink-0"
                 aria-label="Xem chi tiết"
-                onClick={() => onView?.(supplier)}
+                onClick={() => onView?.(row.original)}
               >
                 <Eye className="h-4 w-4 text-muted-foreground hover:text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Xem chi tiết</TooltipContent>
           </Tooltip>
-
-          {/* Nút đổi trạng thái dùng icon Recycle đã import */}
-          {onChangeStatus && supplier.status !== "TERMINATED" && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 h-8 w-8"
-                  aria-label="Đổi trạng thái"
-                  onClick={() => onChangeStatus(supplier.id, toggleTargetStatus)}
-                >
-                  <Recycle className="h-4 w-4 text-muted-foreground hover:text-orange-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                Chuyển sang: {STATUS_CONFIG[toggleTargetStatus]?.label}
-              </TooltipContent>
-            </Tooltip>
-          )}
         </div>
-      );
+      )
     },
   },
 ];
