@@ -73,6 +73,7 @@ function ProfileScreen() {
     handleReservations,
     handleSubscriptions,
     handleEnvironmentImpact,
+    handleMetroJourney,
     handleNotifications,
     handleVerifyEmail,
   } = useProfile();
@@ -141,6 +142,14 @@ function ProfileScreen() {
       onPress: handleChangePassword,
     },
     {
+      icon: "map",
+      title: "Hành trình Metro",
+      subtitle: "Xem tàu đang chạy và lịch các ga theo tuyến",
+      iconColor: theme.actionPrimary.val,
+      iconBackground: theme.surfaceAccent.val,
+      onPress: handleMetroJourney,
+    },
+    {
       icon: "bell",
       title: "Thông báo",
       subtitle: "Tùy chỉnh nhắc nhở và cập nhật",
@@ -150,8 +159,10 @@ function ProfileScreen() {
     },
   ], [
     handleChangePassword,
+    handleMetroJourney,
     handleNotifications,
     handleUpdateProfile,
+    theme.actionPrimary.val,
     theme.statusSuccess.val,
     theme.statusWarning.val,
     theme.actionSecondary.val,

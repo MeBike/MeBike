@@ -2,6 +2,7 @@
 
 import type { ColorValue, StyleProp, ViewStyle } from "react-native";
 
+import { iconSizes } from "@theme/metrics";
 import {
   ArrowDown,
   ArrowLeft,
@@ -47,6 +48,7 @@ import {
   Star,
   Tag,
   Timer,
+  TrainFront,
   TriangleAlert,
   User,
   Wallet,
@@ -55,8 +57,6 @@ import {
   X,
 } from "lucide-react-native";
 import React from "react";
-
-import { iconSizes } from "@theme/metrics";
 
 type LucideIconComponent = typeof ArrowLeft;
 
@@ -118,6 +118,7 @@ const ICONS = {
   "station": { outline: { icon: Building2 } },
   "tag": { outline: { icon: Tag } },
   "timer": { outline: { icon: Timer } },
+  "train": { outline: { icon: TrainFront } },
   "tools": { outline: { icon: Wrench } },
   "wallet": { outline: { icon: Wallet } },
   "warning": { outline: { icon: TriangleAlert }, filled: { icon: TriangleAlert, fill: true } },
