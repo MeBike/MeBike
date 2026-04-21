@@ -4,7 +4,13 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "rea
 
 import type { Subscription } from "@/types/subscription-types";
 
-import { formatCurrency, formatDate, getStatusStyle, toSubscriptionStatusLabel } from "@utils/subscription";
+import {
+  formatCurrency,
+  formatDate,
+  getStatusStyle,
+  getSubscriptionDisplayPrice,
+  toSubscriptionStatusLabel,
+} from "@utils/subscription";
 
 type Props = {
   activeSubscription?: Subscription | null;
@@ -32,8 +38,8 @@ export function SubscriptionSummary({
     if (hasActive && activeSubscription) {
       const limit = activeSubscription.maxUsages;
       const used = activeSubscription.usageCount;
-      const remaining =
-        typeof limit === "number" ? Math.max(0, limit - used) : null;
+      const remaining
+        = typeof limit === "number" ? Math.max(0, limit - used) : null;
       const quota = typeof limit === "number"
         ? `Còn ${remaining}/${limit} lượt`
         : `${used} lượt đã dùng`;
@@ -51,9 +57,9 @@ export function SubscriptionSummary({
       ? pendingSubscription?.status
       : undefined;
   const amount = hasActive
-    ? activeSubscription!.price
+    ? getSubscriptionDisplayPrice(activeSubscription!)
     : hasPending
-      ? pendingSubscription!.price
+      ? getSubscriptionDisplayPrice(pendingSubscription!)
       : "0";
 
   const statusStyle = status ? getStatusStyle(status) : undefined;
@@ -85,11 +91,13 @@ export function SubscriptionSummary({
           </View>
           {hasPending && onActivatePending && (
             <TouchableOpacity style={styles.activateButton} onPress={onActivatePending} disabled={activating}>
-              {activating ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.activateText}>Kích hoạt ngay</Text>
-              )}
+              {activating
+                ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  )
+                : (
+                    <Text style={styles.activateText}>Kích hoạt ngay</Text>
+                  )}
             </TouchableOpacity>
           )}
         </View>

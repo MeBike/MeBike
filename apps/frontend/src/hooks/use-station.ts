@@ -1,13 +1,31 @@
-
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { StationSchemaFormData } from "@schemas";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { QUERY_KEYS , HTTP_STATUS } from "@constants";
-import { useCreateStationMutation,useSoftDeleteStationMutation,useUpdateStationMutation} from "@mutations"
-import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationByIDQuery,useGetAllStation, useGetSelectStation,useGetMyStations,useGetMyStationDetail,useGetListStation} from "@queries";
-import {getAxiosErrorCodeMessage , getErrorMessageFromStationCode} from "@utils";
+import { QUERY_KEYS, HTTP_STATUS } from "@constants";
+import {
+  useCreateStationMutation,
+  useSoftDeleteStationMutation,
+  useUpdateStationMutation,
+} from "@mutations";
+import {
+  useGetNearestAvailableBike,
+  useGetStationRevenue,
+  useGetStationBikeRevenue,
+  useGetStationByIDQuery,
+  useGetAllStation,
+  useGetSelectStation,
+  useGetMyStations,
+  useGetMyStationDetail,
+  useGetListStation,
+  useGetStationRevenueForAgency,
+  useGetStationRevenueForManager,
+} from "@queries";
+import {
+  getAxiosErrorCodeMessage,
+  getErrorMessageFromStationCode,
+} from "@utils";
 import type { StationActionProps } from "@custom-types";
 export const useStationActions = ({
   hasToken,
@@ -26,9 +44,9 @@ export const useStationActions = ({
     isLoading,
   } = useGetAllStation({ page: page, limit: limit, name: name });
   const {
-    data : selectedDataStation,
-    isLoading : isLoadingGetSelectStation,
-    refetch : refetchingGetSelectStation
+    data: selectedDataStation,
+    isLoading: isLoadingGetSelectStation,
+    refetch: refetchingGetSelectStation,
   } = useGetSelectStation();
   const {
     refetch: fetchingStationID,
@@ -49,7 +67,7 @@ export const useStationActions = ({
       return;
     }
     fetchingStationID();
-  }, [fetchingStationID, hasToken,stationId]);
+  }, [fetchingStationID, hasToken, stationId]);
   const createStation = useCallback(
     async (data: StationSchemaFormData) => {
       if (!hasToken) {
@@ -68,7 +86,7 @@ export const useStationActions = ({
       } catch (error) {
         const code_error = getAxiosErrorCodeMessage(error);
         toast.error(getErrorMessageFromStationCode(code_error));
-        throw error; 
+        throw error;
       }
     },
     [hasToken, router, queryClient, useCreateStation, page, limit, name],
@@ -91,7 +109,7 @@ export const useStationActions = ({
         onError: (error) => {
           const code_error = getAxiosErrorCodeMessage(error);
           toast.error(getErrorMessageFromStationCode(code_error));
-          throw error; 
+          throw error;
         },
       });
     },
@@ -110,14 +128,15 @@ export const useStationActions = ({
           queryClient.invalidateQueries({
             queryKey: ["stations", "all"],
           });
-          queryClient.invalidateQueries({queryKey:["detail","station",stationId]})
+          queryClient.invalidateQueries({
+            queryKey: ["detail", "station", stationId],
+          });
         }
         return result;
       } catch (error) {
         const code_error = getAxiosErrorCodeMessage(error);
         toast.error(getErrorMessageFromStationCode(code_error));
-        throw error; 
-        
+        throw error;
       }
     },
     [hasToken, router, queryClient, useUpdateStation, page, limit, name],
@@ -134,6 +153,28 @@ export const useStationActions = ({
   }, [refetchStationBikeRevenue, hasToken]);
   const { data: responseStationRevenue, refetch: refetchStationRevenue } =
     useGetStationRevenue();
+  const {
+    data: responseStationRevenueForAgency,
+    refetch: refetchStationRevenueForAgency,
+    isLoading: isLoadingStationRevenueForAgency,
+  } = useGetStationRevenueForAgency();
+  const {
+    data: responseStationRevenueForManager,
+    refetch: refetchStationRevenueForManager,
+    isLoading: isLoadingStationRevenueForManager,
+  } = useGetStationRevenueForManager();
+  const getStationRevenueForManager = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchStationRevenueForManager();
+  }, [refetchStationRevenueForManager, hasToken]);
+  const getStationRevenueForAgency = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchStationRevenueForAgency();
+  }, [refetchStationRevenueForAgency, hasToken]);
   const getStationRevenue = useCallback(() => {
     if (!hasToken) {
       return;
@@ -153,21 +194,33 @@ export const useStationActions = ({
     }
     refetchNearestAvailableBike();
   }, [refetchNearestAvailableBike, hasToken]);
-  const {data:myStation,refetch:refetchMyStation,isLoading:isLoadingMyStation} = useGetMyStations({page:page,pageSize:limit});
+  const {
+    data: myStation,
+    refetch: refetchMyStation,
+    isLoading: isLoadingMyStation,
+  } = useGetMyStations({ page: page, pageSize: limit });
   const getMyStation = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchMyStation();
-  }, [refetchMyStation, hasToken,page,limit]);
-  const {data:myStationDetail,refetch:refetchMyStationDetail,isLoading:isLoadingMyStationDetail} = useGetMyStationDetail({stationId:stationId || ""});
+  }, [refetchMyStation, hasToken, page, limit]);
+  const {
+    data: myStationDetail,
+    refetch: refetchMyStationDetail,
+    isLoading: isLoadingMyStationDetail,
+  } = useGetMyStationDetail({ stationId: stationId || "" });
   const getMyStationDetail = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchMyStationDetail();
-  }, [refetchMyStationDetail, hasToken,stationId]);
-  const {data:listStation,isLoading:isLoadingListStation,refetch:refetchListStation} = useGetListStation();
+  }, [refetchMyStationDetail, hasToken, stationId]);
+  const {
+    data: listStation,
+    isLoading: isLoadingListStation,
+    refetch: refetchListStation,
+  } = useGetListStation();
   const getListStation = useCallback(() => {
     if (!hasToken) {
       return;
@@ -192,13 +245,17 @@ export const useStationActions = ({
     getStationBikeRevenue,
     responseStationRevenue,
     getStationRevenue,
+    responseStationRevenueForAgency,
+    getStationRevenueForAgency,
+    responseStationRevenueForManager,
+    getStationRevenueForManager,
     responseNearestAvailableBike,
     getNearestAvailableBike,
-    selectedDataStation : selectedDataStation?.data || [],
+    selectedDataStation: selectedDataStation?.data || [],
     isLoadingGetSelectStation,
     refetchingGetSelectStation,
-    myStation : myStation?.data || [],
-    paginationMyStation : myStation?.pagination,
+    myStation: myStation?.data || [],
+    paginationMyStation: myStation?.pagination,
     isLoadingMyStation,
     getMyStation,
     myStationDetail,
@@ -206,6 +263,7 @@ export const useStationActions = ({
     isLoadingMyStationDetail,
     listStation,
     getListStation,
-    isLoadingListStation
+    isLoadingListStation,
+    isLoadingStationRevenueForManager,
   };
 };

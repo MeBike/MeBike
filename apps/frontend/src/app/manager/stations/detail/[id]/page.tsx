@@ -3,27 +3,39 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { LucideIcon } from "lucide-react";
 import { useStationActions } from "@/hooks/use-station";
 import { 
   ArrowLeft, 
   Bike, 
   Info, 
-  MapPin, 
-  Clock, 
   LayoutGrid, 
   Activity,
   CheckCircle2,
   AlertTriangle,
   Wrench,
-  Ban
+  Ban,
+  Clock,
+  TrendingUp // <-- Thêm icon này cho thẻ Doanh thu
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Station } from "@/types";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+
+// Định nghĩa nhanh type dựa trên thông tin bạn cung cấp (hoặc bạn có thể import từ file type của dự án)
+interface StationReport {
+  id: string;
+  name: string;
+  address: string;
+  totalRentals: number;
+  totalRevenue: number;
+  totalDuration: number;
+  avgDuration: number;
+}
+
 function SectionCard({
   icon: Icon,
   title,
@@ -65,13 +77,19 @@ export default function StationDetailPage() {
     getMyStationDetail,
     myStationDetail,
     isLoadingMyStationDetail,
+    getStationRevenueForManager,
+    responseStationRevenueForManager,
+    isLoadingStationRevenueForManager,
   } = useStationActions({
     hasToken: true,
     stationId: id,
   });
+
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
+
+  // Xử lý loading visual chung
   useEffect(() => {
-    if (isLoadingMyStationDetail) {
+    if (isLoadingMyStationDetail || isLoadingStationRevenueForManager) {
       setIsVisualLoading(true);
     } else {
       const timer = setTimeout(() => {
@@ -79,17 +97,29 @@ export default function StationDetailPage() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoadingMyStationDetail]);
+  }, [isLoadingMyStationDetail, isLoadingStationRevenueForManager]);
+
+  // Fetch data detail và data doanh thu
   useEffect(() => {
     if (id) {
       getMyStationDetail();
+      getStationRevenueForManager(); // Gọi fetch doanh thu
     }
-  }, [id, getMyStationDetail]);
+  }, [id, getMyStationDetail, getStationRevenueForManager]);
+
   if (isVisualLoading) return <LoadingScreen />;
   if (!myStationDetail) {
     notFound();
   }
+
   const station = myStationDetail as Station;
+
+  // Trích xuất doanh thu của trạm hiện tại từ response
+  // Tuỳ thuộc vào backend bọc data ra sao (ví dụ có bọc qua `data` không), bạn điều chỉnh lại dòng này cho khớp
+  const rawRevenueData = (responseStationRevenueForManager as any)?.data || responseStationRevenueForManager;
+  const currentStationRevenue: StationReport | undefined = rawRevenueData?.stations?.find(
+    (s: StationReport) => s.id === id
+  );
 
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
@@ -114,7 +144,7 @@ export default function StationDetailPage() {
             </Badge>
           </div>
           
-          <Button variant="outline" onClick={() => router.push("/staff/stations")}>
+          <Button variant="outline" onClick={() => router.push("/manager/stations")}>
             Quay lại danh sách
           </Button>
         </div>
@@ -168,8 +198,38 @@ export default function StationDetailPage() {
             </SectionCard>
           </div>
 
-          {/* Right Column: Bike Statistics */}
+          {/* Right Column: Revenue & Bike Statistics */}
           <div className="space-y-6">
+
+            {/* --> THÊM THẺ DOANH THU VÀO ĐÂY <-- */}
+            <SectionCard icon={TrendingUp} title="Báo cáo doanh thu">
+                {currentStationRevenue ? (
+                    <div className="space-y-4">
+                        <div className="rounded-lg border border-green-500/15 bg-green-500/5 px-4 py-5 text-center">
+                            <p className="text-xs font-medium text-muted-foreground uppercase">Tổng doanh thu</p>
+                            <p className="mt-1 text-3xl font-bold text-green-600">
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(currentStationRevenue.totalRevenue)}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div className="rounded-lg border border-border/40 bg-muted/20 p-3 text-center">
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold">Lượt thuê</p>
+                                <p className="text-lg font-bold text-foreground">{currentStationRevenue.totalRentals}</p>
+                            </div>
+                            <div className="rounded-lg border border-border/40 bg-muted/20 p-3 text-center">
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold">Thời gian TB</p>
+                                <p className="text-lg font-bold text-foreground">{Math.round(currentStationRevenue.avgDuration)} phút</p>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="py-6 text-center text-sm text-muted-foreground">
+                        Không có dữ liệu doanh thu cho trạm này.
+                    </div>
+                )}
+            </SectionCard>
+
             <SectionCard icon={Activity} title="Thống kê xe tại trạm">
                 <div className="space-y-4">
                     <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-5 text-center">
@@ -187,6 +247,7 @@ export default function StationDetailPage() {
                     </div>
                 </div>
             </SectionCard>
+            
           </div>
         </div>
       </div>
@@ -205,26 +266,5 @@ function StatusItem({ icon: Icon, label, value, color }: { icon: LucideIcon, lab
             </div>
             <span className={cn("font-bold", color)}>{value}</span>
         </div>
-    );
-}
-
-function StationDetailSkeleton() {
-    return (
-      <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-10 w-48" />
-            <Skeleton className="h-10 w-28" />
-          </div>
-          <Skeleton className="h-14 w-full rounded-lg" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-                <Skeleton className="h-64 w-full rounded-xl" />
-                <Skeleton className="h-40 w-full rounded-xl" />
-            </div>
-            <Skeleton className="h-[500px] w-full rounded-xl" />
-          </div>
-        </div>
-      </div>
     );
 }

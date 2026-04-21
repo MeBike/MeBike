@@ -77,7 +77,7 @@ export default function BikeDetailPage({
             )}
             <Button
               variant="outline"
-              onClick={() => router.push("/staff/bikes")}
+              onClick={() => router.push("/manager/bikes")}
             >
               Danh sách xe
             </Button>

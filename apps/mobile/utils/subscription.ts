@@ -1,5 +1,7 @@
 import type { Subscription, SubscriptionStatus } from "@/types/subscription-types";
 
+import { SUBSCRIPTION_PACKAGES } from "@constants/subscriptionPackages";
+
 const STATUS_COLORS: Record<SubscriptionStatus, { text: string; background: string }> = {
   PENDING: { text: "#B45309", background: "#FEF3C7" },
   ACTIVE: { text: "#15803D", background: "#DCFCE7" },
@@ -26,6 +28,10 @@ export function formatCurrency(amount: string | number): string {
   return `${safe.toLocaleString("vi-VN")} đ`;
 }
 
+export function getSubscriptionDisplayPrice(subscription: Pick<Subscription, "packageName" | "price">): number {
+  return SUBSCRIPTION_PACKAGES[subscription.packageName]?.price ?? Number(subscription.price) ?? 0;
+}
+
 export function formatDate(date?: string | null): string {
   if (!date)
     return "-";
@@ -43,9 +49,11 @@ export function getStatusStyle(status: SubscriptionStatus) {
 }
 
 export function extractLatestSubscription(subscriptions: Subscription[]): Subscription | null {
-  if (!subscriptions.length) return null;
+  if (!subscriptions.length)
+    return null;
   return subscriptions.reduce((latest, current) => {
-    if (!latest) return current;
+    if (!latest)
+      return current;
     const latestTime = new Date(latest.updatedAt).getTime();
     const currentTime = new Date(current.updatedAt).getTime();
     return currentTime > latestTime ? current : latest;
