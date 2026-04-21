@@ -6,25 +6,24 @@ import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
-import { LinearGradient } from "expo-linear-gradient";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StatusBar } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, View, XStack, YStack } from "tamagui";
 
 import { useMetroJourneyScreen } from "./hooks/use-metro-journey-screen";
 
+const routeCanvasColor = "#EEF0FA";
+const routeRailColor = "#4B6BFB";
 const routeRailWidth = 8;
 const routeStationMarkerSize = 18;
 const routeTrainMarkerSize = 28;
-const routeTrainAuraSize = routeTrainMarkerSize + 10;
-const routeRowHalfHeight = 32;
-const routeSegmentMinHeight = 78;
-const routePixelsPerKm = 54;
-const routeRailLeftInset = 54;
-const routeRowRightInset = 26;
-const routeGradientColors = ["rgba(59,130,246,0.12)", "rgba(168,85,247,0.08)", "rgba(255,255,255,0)"] as const;
-const routeRailColor = "#5B6EF5";
-const routeTrainAuraColor = "rgba(59, 130, 246, 0.18)";
+const routeRowHalfHeight = 36;
+const routeSegmentMinHeight = 82;
+const routePixelsPerKm = 56;
+const routeDistanceColumnWidth = 54;
+const routeRailLeftInset = 62;
+const routeContentGap = 24;
+const routeInfoWidth = 28;
 const routeRailCenterX = routeRailLeftInset + (routeRailWidth / 2);
 
 function formatDistanceLabel(label: string | null, distanceKm: number | null) {
@@ -37,6 +36,11 @@ function formatDistanceLabel(label: string | null, distanceKm: number | null) {
   }
 
   return `${distanceKm.toFixed(1)} km`;
+}
+
+function splitDistanceLabel(label: string) {
+  const [value = "", unit = ""] = label.split(" ");
+  return { unit, value };
 }
 
 function buildSegmentHeights(stations: MetroJourneyStation[]) {
@@ -58,14 +62,42 @@ function buildStationCenterPositions(segmentHeights: number[]) {
   return centerPositions;
 }
 
-function isVehicleNearStation(station: MetroJourneyStation, vehicles: MetroVehicle[]) {
-  return vehicles.some(vehicle => Math.abs(vehicle.percent - station.progress) <= 0.045);
+function HeaderActionButton({
+  icon,
+  onPress,
+  loading = false,
+}: {
+  icon: "arrow-left" | "refresh";
+  loading?: boolean;
+  onPress: () => void;
+}) {
+  const theme = useTheme();
+
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
+      <XStack
+        alignItems="center"
+        backgroundColor="$surfaceDefault"
+        borderColor="$borderSubtle"
+        borderRadius="$round"
+        borderWidth={borderWidths.subtle}
+        height={44}
+        justifyContent="center"
+        style={elevations.whisper}
+        width={44}
+      >
+        {loading
+          ? <ActivityIndicator color={theme.textSecondary.val} size="small" />
+          : <IconSymbol color={theme.textSecondary.val} name={icon} size="md" />}
+      </XStack>
+    </Pressable>
+  );
 }
 
 function DirectionToggle({
   activeDirectionId,
-  options,
   onSelect,
+  options,
 }: {
   activeDirectionId: MetroDirectionId;
   onSelect: (directionId: MetroDirectionId) => void;
@@ -77,7 +109,7 @@ function DirectionToggle({
       borderColor="$borderSubtle"
       borderRadius="$round"
       borderWidth={borderWidths.subtle}
-      gap="$2"
+      gap="$1"
       padding="$1.5"
     >
       {options.map((option) => {
@@ -94,22 +126,23 @@ function DirectionToggle({
             })}
           >
             {() => (
-              <YStack
+              <XStack
                 alignItems="center"
                 backgroundColor={active ? "$surfaceDefault" : "transparent"}
                 borderRadius="$round"
+                justifyContent="center"
+                minHeight={52}
                 paddingHorizontal="$4"
-                paddingVertical="$3"
                 shadowColor="$shadowColor"
-                shadowOffset={{ width: 0, height: 8 }}
-                shadowOpacity={active ? 0.06 : 0}
-                shadowRadius={active ? 12 : 0}
+                shadowOffset={{ width: 0, height: 4 }}
+                shadowOpacity={active ? 0.08 : 0}
+                shadowRadius={active ? 10 : 0}
                 elevation={active ? 2 : 0}
               >
-                <AppText tone={active ? "brand" : "subtle"} variant="tabLabel">
+                <AppText tone={active ? "brand" : "muted"} variant="tabLabel">
                   {option.label}
                 </AppText>
-              </YStack>
+              </XStack>
             )}
           </Pressable>
         );
@@ -121,48 +154,35 @@ function DirectionToggle({
 function MetroJourneyHeader({
   activeDirectionId,
   activeTrainCount,
+  isRefreshing,
   lastUpdatedLabel,
   onBack,
+  onRefresh,
   onSelectDirection,
   options,
 }: {
   activeDirectionId: MetroDirectionId;
   activeTrainCount: number;
+  isRefreshing: boolean;
   lastUpdatedLabel?: string;
   onBack: () => void;
+  onRefresh: () => void;
   onSelectDirection: (directionId: MetroDirectionId) => void;
   options: MetroDirectionOption[];
 }) {
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
 
   return (
     <YStack
       backgroundColor="$surfaceDefault"
-      borderBottomColor="$borderSubtle"
       borderBottomLeftRadius={radii.xxl}
       borderBottomRightRadius={radii.xxl}
-      borderBottomWidth={borderWidths.subtle}
       paddingTop={insets.top + 12}
       paddingHorizontal="$5"
       paddingBottom="$5"
     >
       <XStack alignItems="center" justifyContent="space-between">
-        <Pressable onPress={onBack} style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}>
-          <XStack
-            alignItems="center"
-            backgroundColor="$surfaceMuted"
-            borderColor="$borderSubtle"
-            borderRadius="$round"
-            borderWidth={borderWidths.subtle}
-            height={44}
-            justifyContent="center"
-            style={elevations.whisper}
-            width={44}
-          >
-            <IconSymbol color={theme.textPrimary.val} name="arrow-left" size="md" />
-          </XStack>
-        </Pressable>
+        <HeaderActionButton icon="arrow-left" onPress={onBack} />
 
         <YStack alignItems="center" flex={1} gap="$1" paddingHorizontal="$4">
           <AppText align="center" variant="xlTitle">
@@ -173,24 +193,20 @@ function MetroJourneyHeader({
           </AppText>
         </YStack>
 
-        <View width={44} />
+        <HeaderActionButton icon="refresh" loading={isRefreshing} onPress={onRefresh} />
       </XStack>
 
-      <XStack alignItems="center" justifyContent="space-between" paddingTop="$4">
-        <AppText tone="muted" variant="bodySmall">
+      <XStack alignItems="center" justifyContent="space-between" paddingTop="$5">
+        <AppText tone="muted" variant="subhead">
           {activeTrainCount > 0 ? `${activeTrainCount} tàu đang hoạt động` : "Đang chờ dữ liệu tàu"}
         </AppText>
 
-        {lastUpdatedLabel
-          ? (
-              <XStack alignItems="center" gap="$2">
-                <IconSymbol color={theme.textSecondary.val} name="refresh" size="caption" />
-                <AppText tone="subtle" variant="caption">
-                  {lastUpdatedLabel}
-                </AppText>
-              </XStack>
-            )
-          : null}
+        <XStack alignItems="center" gap="$2">
+          <IconSymbol color="$textSecondary" name="refresh" size="caption" />
+          <AppText tone="muted" variant="caption">
+            {lastUpdatedLabel ?? "--:--"}
+          </AppText>
+        </XStack>
       </XStack>
 
       <YStack paddingTop="$4">
@@ -218,7 +234,7 @@ function MetroJourneyState({
   const theme = useTheme();
 
   return (
-    <YStack flex={1} justifyContent="center" padding="$5">
+    <YStack backgroundColor={routeCanvasColor} flex={1} justifyContent="center" padding="$5">
       <AppCard alignItems="center" borderRadius="$6" gap="$4" padding="$6">
         <YStack
           alignItems="center"
@@ -255,15 +271,15 @@ function MetroJourneyState({
 }
 
 function MetroJourneyRoute({
-  stations,
-  vehicles,
   canOpenStationDetail,
   onOpenStationDetail,
+  stations,
+  vehicles,
 }: {
-  stations: MetroJourneyStation[];
-  vehicles: MetroVehicle[];
   canOpenStationDetail: boolean;
   onOpenStationDetail: (stationName: string) => void;
+  stations: MetroJourneyStation[];
+  vehicles: MetroVehicle[];
 }) {
   const theme = useTheme();
   const segmentHeights = buildSegmentHeights(stations);
@@ -272,149 +288,133 @@ function MetroJourneyRoute({
   const canvasHeight = stationCenterPositions.at(-1)! + routeRowHalfHeight;
 
   return (
-    <YStack>
-      <View height={canvasHeight} position="relative">
-        <LinearGradient
-          colors={[...routeGradientColors]}
-          end={{ x: 1, y: 1 }}
-          start={{ x: 0, y: 0 }}
-          style={{ bottom: 0, left: 0, position: "absolute", right: 0, top: 0 }}
-        />
+    <View backgroundColor={routeCanvasColor} height={canvasHeight} position="relative">
+      <View
+        backgroundColor={routeRailColor}
+        borderRadius={radii.round}
+        height={totalRouteHeight}
+        left={routeRailLeftInset}
+        position="absolute"
+        top={stationCenterPositions[0]}
+        width={routeRailWidth}
+      />
 
-        <View
-          backgroundColor="rgba(91, 110, 245, 0.14)"
-          borderRadius={radii.round}
-          height={totalRouteHeight}
-          left={routeRailLeftInset - 5}
-          position="absolute"
-          top={stationCenterPositions[0]}
-          width={routeRailWidth + 10}
-        />
-        <View
-          backgroundColor={routeRailColor}
-          borderRadius={radii.round}
-          height={totalRouteHeight}
-          left={routeRailLeftInset}
-          position="absolute"
-          top={stationCenterPositions[0]}
-          width={routeRailWidth}
-        />
+      {segmentHeights.map((segmentHeight, index) => {
+        const station = stations[index + 1];
+        const top = stationCenterPositions[index] + (segmentHeight / 2) - 16;
+        const { unit, value } = splitDistanceLabel(
+          formatDistanceLabel(station.distanceFromPreviousLabel, station.distanceFromPreviousKm),
+        );
 
-        {segmentHeights.map((segmentHeight, index) => {
-          const station = stations[index + 1];
-          const top = stationCenterPositions[index] + (segmentHeight / 2) - 10;
+        return (
+          <YStack
+            key={`distance-${station.stopId}`}
+            alignItems="flex-end"
+            left={0}
+            position="absolute"
+            top={top}
+            width={routeDistanceColumnWidth}
+          >
+            <AppText align="right" tone="subtle" variant="subhead">
+              {value}
+            </AppText>
+            <AppText align="right" tone="subtle" variant="subhead">
+              {unit}
+            </AppText>
+          </YStack>
+        );
+      })}
 
-          return (
-            <YStack
-              key={`distance-${station.stopId}`}
-              left={0}
-              position="absolute"
-              top={top}
-              width={42}
-            >
-              <AppText align="right" tone="subtle" variant="bodySmall">
-                {formatDistanceLabel(station.distanceFromPreviousLabel, station.distanceFromPreviousKm)}
-              </AppText>
-            </YStack>
-          );
-        })}
+      {vehicles.map((vehicle, index) => {
+        const markerTop = stationCenterPositions[0] + (vehicle.percent * totalRouteHeight);
 
-        {vehicles.map((vehicle, index) => {
-          const markerTop = stationCenterPositions[0] + (vehicle.percent * totalRouteHeight);
-
-          return (
-            <View
-              key={`vehicle-${vehicle.coordinate[0]}-${vehicle.coordinate[1]}-${index}`}
-              left={routeRailCenterX - (routeTrainAuraSize / 2)}
-              position="absolute"
-              top={markerTop - (routeTrainAuraSize / 2)}
+        return (
+          <View
+            key={`vehicle-${vehicle.coordinate[0]}-${vehicle.coordinate[1]}-${index}`}
+            left={routeRailCenterX - (routeTrainMarkerSize / 2)}
+            pointerEvents="none"
+            position="absolute"
+            top={markerTop - (routeTrainMarkerSize / 2)}
+          >
+            <XStack
+              alignItems="center"
+              justifyContent="center"
+              width={routeTrainMarkerSize}
             >
               <XStack
                 alignItems="center"
-                backgroundColor={routeTrainAuraColor}
-                borderRadius="$round"
-                height={routeTrainAuraSize}
-                justifyContent="center"
-                width={routeTrainAuraSize}
-              >
-                <XStack
-                  alignItems="center"
-                  backgroundColor="$actionPrimary"
-                  borderColor="$surfaceDefault"
-                  borderRadius="$round"
-                  borderWidth={2}
-                  height={routeTrainMarkerSize}
-                  justifyContent="center"
-                  shadowColor="$shadowColor"
-                  shadowOffset={{ width: 0, height: 8 }}
-                  shadowOpacity={0.18}
-                  shadowRadius={16}
-                  width={routeTrainMarkerSize}
-                >
-                  <IconSymbol
-                    color={theme.onActionPrimary.val}
-                    name="train"
-                    size="sm"
-                    style={{ transform: [{ translateX: 0.5 }] }}
-                  />
-                </XStack>
-              </XStack>
-            </View>
-          );
-        })}
-
-        {stations.map((station, index) => {
-          const centerY = stationCenterPositions[index];
-          const rowTop = centerY - routeRowHalfHeight;
-          const hasNearbyVehicle = isVehicleNearStation(station, vehicles);
-
-          return (
-            <Pressable
-              key={station.stopId}
-              disabled={!canOpenStationDetail}
-              onPress={() => {
-                onOpenStationDetail(station.internalStationName);
-              }}
-              style={({ pressed }) => ({
-                left: 0,
-                opacity: pressed && canOpenStationDetail ? 0.9 : 1,
-                position: "absolute",
-                right: 0,
-                top: rowTop,
-              })}
-            >
-              <View
-                backgroundColor="$surfaceDefault"
-                borderColor={hasNearbyVehicle ? "$actionPrimary" : "$surfaceDefault"}
+                backgroundColor={routeRailColor}
+                borderColor="$surfaceDefault"
                 borderRadius="$round"
                 borderWidth={2}
-                height={routeStationMarkerSize}
-                left={routeRailLeftInset - ((routeStationMarkerSize - routeRailWidth) / 2)}
-                position="absolute"
-                top={routeRowHalfHeight - (routeStationMarkerSize / 2)}
-                width={routeStationMarkerSize}
-              />
-
-              <XStack alignItems="center" minHeight={routeRowHalfHeight * 2} paddingRight="$3">
-                <View width={routeRailLeftInset + routeStationMarkerSize + 18} />
-
-                <YStack flex={1} gap="$1" minWidth={0} paddingRight="$3">
-                  <XStack alignItems="center" gap="$2">
-                    <AppText tone={hasNearbyVehicle ? "brand" : "default"} variant="cardTitle">
-                      {station.name}
-                    </AppText>
-                  </XStack>
-                </YStack>
-
-                <XStack alignItems="center" justifyContent="center" width={routeRowRightInset}>
-                  <IconSymbol color={theme.textSecondary.val} name="info" size="sm" />
-                </XStack>
+                height={routeTrainMarkerSize}
+                justifyContent="center"
+                shadowColor="$shadowColor"
+                shadowOffset={{ width: 0, height: 6 }}
+                shadowOpacity={0.18}
+                shadowRadius={12}
+                width={routeTrainMarkerSize}
+              >
+                <IconSymbol
+                  color={theme.onActionPrimary.val}
+                  name="train"
+                  size="sm"
+                  style={{ transform: [{ translateX: 0.5 }] }}
+                />
               </XStack>
-            </Pressable>
-          );
-        })}
-      </View>
-    </YStack>
+            </XStack>
+          </View>
+        );
+      })}
+
+      {stations.map((station, index) => {
+        const centerY = stationCenterPositions[index];
+        const rowTop = centerY - routeRowHalfHeight;
+
+        return (
+          <Pressable
+            key={station.stopId}
+            disabled={!canOpenStationDetail}
+            onPress={() => {
+              onOpenStationDetail(station.internalStationName);
+            }}
+            style={({ pressed }) => ({
+              left: 0,
+              opacity: pressed && canOpenStationDetail ? 0.88 : 1,
+              position: "absolute",
+              right: 0,
+              top: rowTop,
+            })}
+          >
+            <View
+              backgroundColor="$surfaceDefault"
+              borderColor={routeRailColor}
+              borderRadius="$round"
+              borderWidth={4}
+              height={routeStationMarkerSize}
+              left={routeRailCenterX - (routeStationMarkerSize / 2)}
+              position="absolute"
+              top={routeRowHalfHeight - (routeStationMarkerSize / 2)}
+              width={routeStationMarkerSize}
+            />
+
+            <XStack alignItems="center" minHeight={routeRowHalfHeight * 2} paddingRight="$2">
+              <View width={routeRailLeftInset + routeStationMarkerSize + routeContentGap} />
+
+              <YStack flex={1} minWidth={0} paddingRight="$3">
+                <AppText variant="cardTitle">
+                  {station.name}
+                </AppText>
+              </YStack>
+
+              <XStack alignItems="center" justifyContent="center" width={routeInfoWidth}>
+                <IconSymbol color={theme.textSecondary.val} name="info" size="input" />
+              </XStack>
+            </XStack>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -424,12 +424,16 @@ export default function MetroJourneyScreen() {
 
   if (vm.isInitialLoading) {
     return (
-      <Screen tone="subtle">
+      <Screen backgroundColor="$surfaceDefault">
         <StatusBar backgroundColor={theme.surfaceDefault.val} barStyle="dark-content" />
         <MetroJourneyHeader
           activeDirectionId={vm.directionId}
           activeTrainCount={0}
+          isRefreshing={false}
           onBack={vm.actions.goBack}
+          onRefresh={() => {
+            void vm.actions.onRefresh();
+          }}
           onSelectDirection={vm.actions.setDirection}
           options={vm.directionOptions}
         />
@@ -444,12 +448,16 @@ export default function MetroJourneyScreen() {
 
   if (vm.initialError || !vm.data) {
     return (
-      <Screen tone="subtle">
+      <Screen backgroundColor="$surfaceDefault">
         <StatusBar backgroundColor={theme.surfaceDefault.val} barStyle="dark-content" />
         <MetroJourneyHeader
           activeDirectionId={vm.directionId}
           activeTrainCount={0}
+          isRefreshing={vm.isRefreshing}
           onBack={vm.actions.goBack}
+          onRefresh={() => {
+            void vm.actions.onRefresh();
+          }}
           onSelectDirection={vm.actions.setDirection}
           options={vm.directionOptions}
         />
@@ -466,7 +474,7 @@ export default function MetroJourneyScreen() {
   }
 
   return (
-    <Screen tone="subtle">
+    <Screen backgroundColor="$surfaceDefault">
       <StatusBar backgroundColor={theme.surfaceDefault.val} barStyle="dark-content" />
 
       <ScrollView
@@ -482,37 +490,41 @@ export default function MetroJourneyScreen() {
         )}
         showsVerticalScrollIndicator={false}
       >
-        <YStack paddingBottom="$7">
-          <MetroJourneyHeader
-            activeDirectionId={vm.directionId}
-            activeTrainCount={vm.data.activeTrainCount}
-            lastUpdatedLabel={vm.data.lastUpdatedLabel}
-            onBack={vm.actions.goBack}
-            onSelectDirection={vm.actions.setDirection}
-            options={vm.directionOptions}
+        <MetroJourneyHeader
+          activeDirectionId={vm.directionId}
+          activeTrainCount={vm.data.activeTrainCount}
+          isRefreshing={vm.isRefreshing}
+          lastUpdatedLabel={vm.data.lastUpdatedLabel}
+          onBack={vm.actions.goBack}
+          onRefresh={() => {
+            void vm.actions.onRefresh();
+          }}
+          onSelectDirection={vm.actions.setDirection}
+          options={vm.directionOptions}
+        />
+
+        <YStack backgroundColor={routeCanvasColor} paddingBottom="$7">
+          <XStack alignItems="center" justifyContent="space-between" paddingHorizontal="$5" paddingTop="$5" paddingBottom="$4">
+            <AppText tone="muted" variant="subhead">
+              {vm.data.directionLabel}
+            </AppText>
+            <AppText tone="muted" variant="subhead">
+              {vm.data.stations.length}
+              {" "}
+              ga
+            </AppText>
+          </XStack>
+
+          <MetroJourneyRoute
+            canOpenStationDetail={vm.canOpenStationDetail}
+            onOpenStationDetail={vm.actions.openStationDetail}
+            stations={vm.data.stations}
+            vehicles={vm.data.vehicles}
           />
 
-          <YStack gap="$4" paddingHorizontal="$5" paddingTop="$5">
-            <XStack alignItems="center" justifyContent="space-between" paddingRight="$1">
-              <AppText tone="subtle" variant="bodySmall">
-                {vm.data.directionLabel}
-              </AppText>
-              <AppText tone="subtle" variant="bodySmall">
-                {vm.data.stations.length}
-                {" "}
-                ga
-              </AppText>
-            </XStack>
-
-            <MetroJourneyRoute
-              canOpenStationDetail={vm.canOpenStationDetail}
-              onOpenStationDetail={vm.actions.openStationDetail}
-              stations={vm.data.stations}
-              vehicles={vm.data.vehicles}
-            />
-
-            {vm.refreshError
-              ? (
+          {vm.refreshError
+            ? (
+                <YStack paddingHorizontal="$5" paddingTop="$4">
                   <AppCard tone="warning">
                     <AppText variant="cardTitle">
                       Đang hiển thị dữ liệu lần gần nhất
@@ -521,9 +533,9 @@ export default function MetroJourneyScreen() {
                       {vm.refreshError}
                     </AppText>
                   </AppCard>
-                )
-              : null}
-          </YStack>
+                </YStack>
+              )
+            : null}
         </YStack>
       </ScrollView>
     </Screen>
