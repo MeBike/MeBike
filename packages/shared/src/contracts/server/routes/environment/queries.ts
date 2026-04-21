@@ -6,24 +6,24 @@ import {
   AdminEnvironmentImpactListResponseSchema,
   AdminEnvironmentUserSummarySchema,
   EnvironmentErrorCodeSchema,
-  EnvironmentImpactIdParamsSchema,
+  environmentErrorMessages,
   EnvironmentImpactDetailSchema,
-  EnvironmentImpactRentalIdParamsSchema,
   EnvironmentImpactHistoryResponseSchema,
+  EnvironmentImpactIdParamsSchema,
+  EnvironmentImpactRentalIdParamsSchema,
   EnvironmentPolicyListResponseSchema,
   EnvironmentPolicySchema,
+  EnvironmentSummarySchema,
   EnvironmentUserIdParamsSchema,
   ListAdminEnvironmentImpactsQuerySchema,
-  EnvironmentSummarySchema,
   ListEnvironmentImpactHistoryQuerySchema,
   ListEnvironmentPoliciesQuerySchema,
   ServerErrorResponseSchema,
-  environmentErrorMessages,
 } from "./shared";
 
 export const getMyEnvironmentSummary = createRoute({
   method: "get",
-  path: "/environment/me/summary",
+  path: "/v1/environment/me/summary",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   responses: {
@@ -61,7 +61,7 @@ export const getMyEnvironmentSummary = createRoute({
 
 export const getMyEnvironmentImpactHistory = createRoute({
   method: "get",
-  path: "/environment/me/history",
+  path: "/v1/environment/me/history",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -129,7 +129,7 @@ export const getMyEnvironmentImpactHistory = createRoute({
 
 export const getMyEnvironmentImpactByRental = createRoute({
   method: "get",
-  path: "/environment/me/rentals/{rentalId}",
+  path: "/v1/environment/me/rentals/{rentalId}",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -217,7 +217,7 @@ export const getMyEnvironmentImpactByRental = createRoute({
 
 export const listAdminEnvironmentImpacts = createRoute({
   method: "get",
-  path: "/environment/impacts",
+  path: "/v1/environment/impacts",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -286,7 +286,7 @@ export const listAdminEnvironmentImpacts = createRoute({
 
 export const getAdminEnvironmentImpactDetail = createRoute({
   method: "get",
-  path: "/environment/impacts/{impactId}",
+  path: "/v1/environment/impacts/{impactId}",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -374,7 +374,7 @@ export const getAdminEnvironmentImpactDetail = createRoute({
 
 export const getAdminEnvironmentUserSummary = createRoute({
   method: "get",
-  path: "/environment/users/{userId}/summary",
+  path: "/v1/environment/users/{userId}/summary",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -425,7 +425,7 @@ export const getAdminEnvironmentUserSummary = createRoute({
 
 export const listEnvironmentPolicies = createRoute({
   method: "get",
-  path: "/environment/policies",
+  path: "/v1/environment/policies",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   request: {
@@ -499,7 +499,7 @@ export const listEnvironmentPolicies = createRoute({
 
 export const getActiveEnvironmentPolicy = createRoute({
   method: "get",
-  path: "/environment/policies/active",
+  path: "/v1/environment/policies/active",
   tags: ["Environment"],
   security: [{ bearerAuth: [] }],
   responses: {
