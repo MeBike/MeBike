@@ -23,7 +23,7 @@ interface RentalClientProps {
   };
   actions: {
     setSearchQuery: Dispatch<SetStateAction<string>>;
-    setStatusFilter: Dispatch<SetStateAction<RentalStatus | "">>;
+    setStatusFilter: Dispatch<SetStateAction<RentalStatus | "all">>;
     setPage: Dispatch<SetStateAction<number>>;
     handleReset: () => void;
   };

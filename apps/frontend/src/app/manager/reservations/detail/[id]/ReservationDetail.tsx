@@ -79,7 +79,12 @@ function Field({
     </div>
   );
 }
-
+export const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Đang chờ xử lý",
+  FULFILLED: "Thành công",
+  CANCELLED: "Đã hủy",
+  EXPIRED: "Hết hạn",
+};
 export default function ReservationDetailClient() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
@@ -136,7 +141,7 @@ export default function ReservationDetailClient() {
               variant={statusBadgeVariant(data.status)}
               className="rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase"
             >
-              {data.status}
+              {STATUS_LABELS[data.status]}
             </Badge>
           </div>
           <Button
@@ -215,7 +220,7 @@ export default function ReservationDetailClient() {
                   </p>
                   <p className="mt-1 text-base font-semibold">
                     {data.endTime
-                      ? "Đã hoàn thành"
+                      ? "Hiệu lực đến"
                       : "Đang trong thời gian đặt"}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
@@ -234,6 +239,10 @@ export default function ReservationDetailClient() {
                 <Field
                   label="Mã số xe (ID)"
                   value={<span className="font-mono">{data.bike?.id}</span>}
+                />
+                <Field
+                  label="Xe được gán"
+                  value={<span className="font-mono">{data.bike?.bikeNumber}</span>}
                 />
                 <Field
                   label="Trạng thái xe"

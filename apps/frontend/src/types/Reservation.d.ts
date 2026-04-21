@@ -24,6 +24,7 @@ export interface IUser {
 }
 export interface IBike {
   id: string;
+  bikeNumber : string;
   status: string;
 }
 export interface IStation {

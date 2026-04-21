@@ -208,7 +208,7 @@ export default function ReservationDetailClient() {
                   </p>
                   <p className="mt-1 text-base font-semibold">
                     {data.endTime
-                      ? "Đã hoàn thành"
+                      ? "Hiệu lực đến"
                       : "Đang trong thời gian đặt"}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-sm text-foreground">

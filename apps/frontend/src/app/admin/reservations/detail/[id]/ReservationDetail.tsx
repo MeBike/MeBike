@@ -171,7 +171,7 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
                     Thời gian kết thúc
                   </p>
                   <p className="mt-1 text-base font-semibold">
-                    {data.endTime ? "Đã hoàn thành" : "Đang trong thời gian đặt"}
+                    {data.endTime ? "Hiệu lực đến" : "Đang trong thời gian đặt"}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
                     <Clock className="h-4 w-4 text-muted-foreground" />
@@ -188,6 +188,10 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
                 <Field
                   label="Mã số xe (ID)"
                   value={<span className="font-mono">{data.bike?.id}</span>}
+                />
+                <Field
+                  label="Xe được gán"
+                  value={<span className="font-mono">{data.bike?.bikeNumber}</span>}
                 />
                 <Field
                   label="Trạng thái xe"

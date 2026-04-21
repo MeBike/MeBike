@@ -137,6 +137,8 @@ export const ENDPOINT = {
         POLICY : "/environment/policies",
         ACTIVE : "/environment/policies/active",
         ACTIVE_ID : (id:string) => `/environment/policies/${id}/activate`,
+        IMPACT : "/environment/impacts",
+        IMPACT_ID : (id:string) => `/environment/impacts/${id}`,
     },
     COUPON : {
         BASE : "/admin/coupon-rules",

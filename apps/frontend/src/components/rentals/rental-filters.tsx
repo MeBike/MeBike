@@ -3,12 +3,12 @@
 import type { RentalStatus } from "@custom-types";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-
+import type { Dispatch, SetStateAction } from "react";
 interface RentalFiltersProps {
   searchQuery: string; // Giữ lại prop nếu bạn cần dùng sau này
   onSearchChange: (value: string) => void;
   statusFilter: RentalStatus | "all";
-  onStatusChange: (value: RentalStatus | "all") => void;
+  onStatusChange: Dispatch<SetStateAction<RentalStatus | "all">>;
   onReset: () => void;
 }
 
@@ -47,8 +47,8 @@ export function RentalFilters({
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="RENTED">Đang thuê</option>
-            <option value="COMPLETED">Hoàn thành</option>
-            <option value="CANCELLED">Đã hủy</option>
+            <option value="COMPLETED">Đã hoàn thành</option>
+            <option value="OVERDUE_UNRETURNED">Quá hạn chưa trả</option>
           </select>
         </div>
 
