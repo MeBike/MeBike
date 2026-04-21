@@ -564,6 +564,28 @@ async function main() {
         },
       },
     });
+    await prisma.environmentalImpactStat.deleteMany({
+      where: {
+        rental: {
+          user: {
+            email: {
+              in: userEmails,
+            },
+          },
+        },
+      },
+    });
+    await prisma.rentalBillingRecord.deleteMany({
+      where: {
+        rental: {
+          user: {
+            email: {
+              in: userEmails,
+            },
+          },
+        },
+      },
+    });
     await prisma.rental.deleteMany({
       where: {
         user: {

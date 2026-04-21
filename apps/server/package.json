@@ -35,6 +35,7 @@
     "start": "node dist/src/http/server.js",
     "seed": "pnpm prisma db seed",
     "seed:demo": "tsx prisma/seed-demo.ts",
+    "seed:demo:flow-bikes": "tsx prisma/seed-demo-flow-bikes.ts",
     "seed:bikes": "tsx prisma/seed-bikes.ts",
     "android": "expo run:android",
     "ios": "expo run:ios"
