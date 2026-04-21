@@ -191,8 +191,6 @@ export const useDistributionRequest = ({
         const result = await useApproveDistributeRequest.mutateAsync(id);
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Duyệt yêu cầu phân bổ thành công");
-          getAdminViewDistributionRequest();
-          getStaffViewDistributionRequest();
           getManagerViewDistributionRequest();
           getManagerViewDistributionRequestDetail();
         }
@@ -258,8 +256,6 @@ export const useDistributionRequest = ({
         const result = await useRejectDistributeRequest.mutateAsync({id,data});
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Từ chối yêu cầu phân bổ thành công");
-          getAdminViewDistributionRequest();
-          getStaffViewDistributionRequest();
           getManagerViewDistributionRequest();
           getManagerViewDistributionRequestDetail();
         }

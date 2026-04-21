@@ -753,7 +753,7 @@ export const DISTRIBUTION_REQUEST = {
   STATION_NOT_FOUND : "Không tìm thấy trạm",
   USER_NOT_FOUND : "Không tìm thấy người dùng",
   INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS : "Bạn đã tạo yêu cầu điều phối trước đó rồi",
-  
+  VALIDATION_ERROR : "Lý do phải hơn 10 ký tự",
 }
 export const ENVIRONMENT_POLICY_REQUEST = {
   
