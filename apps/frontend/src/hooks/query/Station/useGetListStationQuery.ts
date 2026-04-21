@@ -16,5 +16,6 @@ export const useGetListStation = () => {
   return useQuery({
     queryKey: ["list-station"],
     queryFn: () => fetchListStations(),
+    enabled:false,
   });
 };

@@ -114,6 +114,7 @@ export const DistributionRequestDetailClient = ({
     await action();
     setSelectedBikeIds([]);
     setIsProcessing(false);
+    setShowRejectModal(false);
   };
 
   const handleToggleBike = (bikeId: string) => {
@@ -127,6 +128,8 @@ export const DistributionRequestDetailClient = ({
     label: "Không xác định",
     style: "bg-gray-100",
   };
+  // 1. Tạo logic kiểm tra (có thể đặt trực tiếp trong component)
+  const isValid = rejectReason.trim().length >= 10;
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -390,19 +393,35 @@ export const DistributionRequestDetailClient = ({
           <DialogHeader>
             <DialogTitle>Lý do từ chối yêu cầu</DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="Nhập lý do tại đây..."
-          />
+
+          <div className="space-y-2">
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Nhập lý do tại đây..."
+              className={
+                !isValid && rejectReason.length > 0 ? "border-red-500" : ""
+              }
+            />
+
+            {/* 2. Hiển thị thông báo lỗi khi người dùng đã nhập nhưng chưa đủ 10 ký tự */}
+            {!isValid && rejectReason.length > 0 && (
+              <p className="text-sm text-red-500 italic">
+                Vui lòng nhập ít nhất 10 ký tự (Hiện tại: {rejectReason.length})
+              </p>
+            )}
+          </div>
+
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShowRejectModal(false)}>
               Hủy
             </Button>
+
+            {/* 3. Nút xác nhận chỉ hoạt động khi pass rules */}
             <Button
               variant="destructive"
               onClick={() => handleAction(() => onReject(rejectReason))}
-              disabled={!rejectReason}
+              disabled={!isValid} // Nút sẽ mờ đi nếu chưa đủ 10 ký tự
             >
               Xác nhận từ chối
             </Button>

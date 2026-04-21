@@ -10,12 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  ArrowLeft, Edit, Save, X, Bike, Info, MapPin, 
-  Clock, LayoutGrid, Activity, CheckCircle2, 
-  AlertTriangle, Wrench, Ban, LucideIcon, Users 
+  ArrowLeft, Info, Activity, LayoutGrid, Users,
+  Clock, Bike, CheckCircle2, AlertTriangle, Wrench, Ban, LucideIcon 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatToVNTime } from "@/lib/formatVNDate";
 import type { Station } from "@/types";
 
 // --- REUSABLE COMPONENTS ---
@@ -50,6 +48,11 @@ function StatusItem({ icon: Icon, label, value, color }: { icon: LucideIcon, lab
       <span className={cn("font-bold", color)}>{value}</span>
     </div>
   );
+}
+
+function ErrorMsg({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-[11px] font-medium text-destructive">{message}</p>;
 }
 
 // --- MAIN COMPONENT ---
@@ -94,22 +97,42 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
             <Button variant="outline" size="icon" onClick={() => router.push("/admin/stations")}><ArrowLeft className="h-4 w-4" /></Button>
             <h1 className="text-2xl font-bold">{isEditing ? "Chỉnh sửa trạm" : "Chi tiết trạm"}</h1>
           </div>
-          <Button onClick={isEditing ? handleSubmit(onSave) : handleEdit} disabled={isSubmitting}>
-            {isEditing ? (isSubmitting ? "Đang lưu..." : "Lưu thay đổi") : "Chỉnh sửa"}
-          </Button>
+          <div className="flex gap-2">
+            {isEditing && (
+              <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={isSubmitting}>Hủy</Button>
+            )}
+            <Button onClick={isEditing ? handleSubmit(onSave) : handleEdit} disabled={isSubmitting}>
+              {isEditing ? (isSubmitting ? "Đang lưu..." : "Lưu thay đổi") : "Chỉnh sửa"}
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            {/* THÔNG TIN QUẢN LÝ */}
             <SectionCard icon={Info} title="Thông tin quản lý">
               {isEditing ? (
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1"><label className="text-[10px] font-bold">TÊN TRẠM</label><Input {...register("name")} /></div>
-                  <div className="space-y-1"><label className="text-[10px] font-bold">LOẠI TRẠM</label>
-                    <select {...register("stationType")} className="w-full h-10 border rounded-md px-2"><option value="INTERNAL">INTERNAL</option><option value="AGENCY">AGENCY</option></select>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold">TÊN TRẠM</label>
+                    <Input {...register("name")} className={cn(errors.name && "border-destructive focus-visible:ring-destructive")} />
+                    <ErrorMsg message={errors.name?.message} />
                   </div>
-                  <div className="col-span-2 space-y-1"><label className="text-[10px] font-bold">ĐỊA CHỈ</label><Input {...register("address")} /></div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold">LOẠI TRẠM</label>
+                    <select 
+                      {...register("stationType")} 
+                      className={cn("w-full h-10 border rounded-md px-2 text-sm", errors.stationType && "border-destructive")}
+                    >
+                      <option value="INTERNAL">INTERNAL</option>
+                      <option value="AGENCY">AGENCY</option>
+                    </select>
+                    <ErrorMsg message={errors.stationType?.message} />
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-[10px] font-bold">ĐỊA CHỈ</label>
+                    <Input {...register("address")} className={cn(errors.address && "border-destructive focus-visible:ring-destructive")} />
+                    <ErrorMsg message={errors.address?.message} />
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-6">
@@ -120,13 +143,15 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
               )}
             </SectionCard>
 
-            {/* NHÂN VIÊN */}
             <SectionCard icon={Users} title="Nhân viên phụ trách">
               {station.workers?.length > 0 ? (
                 <div className="space-y-3">
                   {station.workers.map((w) => (
                     <div key={w.userId} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
-                      <div className="flex gap-2"><div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">{w.fullName.charAt(0)}</div><div><p className="text-sm font-bold">{w.fullName}</p><p className="text-[10px] text-muted-foreground">{w.role}</p></div></div>
+                      <div className="flex gap-2">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">{w.fullName.charAt(0)}</div>
+                        <div><p className="text-sm font-bold">{w.fullName}</p><p className="text-[10px] text-muted-foreground">{w.role}</p></div>
+                      </div>
                       {w.technicianTeamId && <Badge variant="secondary">{w.technicianTeamName || "No Team"}</Badge>}
                     </div>
                   ))}
@@ -136,12 +161,19 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
           </div>
 
           <div className="space-y-6">
-            {/* CẤU HÌNH SỨC CHỨA */}
             <SectionCard icon={LayoutGrid} title="Cấu hình sức chứa">
               {isEditing ? (
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1"><label className="text-[10px] font-bold">TỔNG SLOTS</label><Input type="number" {...register("totalCapacity", { valueAsNumber: true })} /></div>
-                  <div className="space-y-1"><label className="text-[10px] font-bold">TRẢ TỐI ĐA</label><Input type="number" {...register("returnSlotLimit", { valueAsNumber: true })} /></div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold">TỔNG SLOTS</label>
+                    <Input type="number" {...register("totalCapacity", { valueAsNumber: true })} className={cn(errors.totalCapacity && "border-destructive")} />
+                    <ErrorMsg message={errors.totalCapacity?.message} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold">TRẢ TỐI ĐA</label>
+                    <Input type="number" {...register("returnSlotLimit", { valueAsNumber: true })} className={cn(errors.returnSlotLimit && "border-destructive")} />
+                    <ErrorMsg message={errors.returnSlotLimit?.message} />
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
@@ -151,7 +183,6 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
               )}
             </SectionCard>
             
-            {/* THỐNG KÊ XE */}
             <SectionCard icon={Activity} title="Thống kê xe tại trạm">
               <div className="space-y-4">
                 <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-5 text-center"><p className="text-xs font-medium text-muted-foreground uppercase">Tổng số xe</p><p className="mt-1 text-4xl font-bold text-primary">{station.bikes.total}</p></div>

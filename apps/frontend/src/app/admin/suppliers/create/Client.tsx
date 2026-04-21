@@ -48,11 +48,6 @@ export default function CreateSupplierClient({ onSubmitSupplier }: CreateSupplie
   const onSubmit = async (data: CreateSupplierSchema) => {
     try {
       const result = await onSubmitSupplier(data);
-      // Giả sử API trả về status 200 hoặc object kết quả thành công
-      if (result?.status === 200 || result) { 
-        toast.success("Tạo nhà cung cấp thành công!");
-        router.push("/admin/suppliers");
-      }
     } catch (err) {
       console.error("Failed to create supplier:", err);
       toast.error("Đã có lỗi xảy ra khi tạo nhà cung cấp. Vui lòng thử lại.");

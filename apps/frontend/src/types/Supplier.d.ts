@@ -23,4 +23,5 @@ export interface SupplierActionProps {
   supplier_id ?: string,
   page ?: number,
   pageSize ?: number,
+  status: "ACTIVE" | "INACTIVE" | "TERMINATED" | "",
 }
