@@ -4,7 +4,10 @@ export const updateAgencyStatusSchema = z.object({
 })
 export type UpdateAgencyStatusFormData = z.infer<typeof updateAgencyStatusSchema>;
 export const updateSchema = z.object({
-    contactPhone :  z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự"),
+    contactPhone : z
+      .string()
+      .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
+      .regex(/^[0-9]+$/, "Chỉ được nhập số"),
     name : z.string(),
 })
 export type UpdateAgencyFormData = z.infer<typeof updateSchema>;
@@ -15,10 +18,16 @@ const AgencyStationLongitudeSchema = z.number()
 
 export const registerToAgencySchema = z.object({
   requesterEmail: z.string().email("Email không hợp lệ"),
-  requesterPhone: z.string().regex(/^\d{10}$/, "Số điện thoại phải có 10 chữ số"),
+  requesterPhone: z
+    .string()
+    .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
+    .regex(/^[0-9]+$/, "Chỉ được nhập số"),
   agencyName: z.string().min(1, "Tên Agency là bắt buộc"),
   agencyAddress: z.string().min(1, "Địa chỉ Agency là bắt buộc"),
-  agencyContactPhone: z.string().regex(/^\d{10}$/, "SĐT Agency phải có 10 chữ số"),
+  agencyContactPhone: z
+    .string()
+    .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
+    .regex(/^[0-9]+$/, "Chỉ được nhập số"),
   stationName: z.string().min(1, "Tên trạm là bắt buộc"),
   stationAddress: z.string().min(1, "Địa chỉ trạm là bắt buộc"),
   stationTotalCapacity: z.number().int().min(1).max(40, "Tối đa 40 xe"),
@@ -31,21 +40,19 @@ export type RegisterAgencyFormData = z.infer<typeof registerToAgencySchema>;
 
 export const adminCreateAgencyUserRequestSchema = z.object({
   role: z.literal("AGENCY"),
-  requesterEmail: z.string().email(),
-  requesterPhone:  z
+  requesterEmail: z.email("Email không hợp lệ"),
+  requesterPhone:z
     .string()
-    .regex(/^\d{10}$/, "Phone must be 10 digits")
-    .optional()
-    .nullable(),
+    .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
+    .regex(/^[0-9]+$/, "Chỉ được nhập số"),
   agencyName: z.string().trim().min(1,"Agency Name là bắt buộc"),
-  agencyAddress: z.string(),
-  agencyContactPhone:  z
+  agencyAddress: z.string().min(1,"Địa chỉ agency là bắt buộc"),
+  agencyContactPhone:z
     .string()
-    .regex(/^\d{10}$/, "Phone must be 10 digits")
-    .optional()
-    .nullable(),
-  stationName: z.string().trim().min(1),
-  stationAddress: z.string().trim().min(1),
+    .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
+    .regex(/^[0-9]+$/, "Chỉ được nhập số"),
+  stationName: z.string().trim().min(1,"Tên trạm là bắt buộc"),
+  stationAddress: z.string().trim().min(1,"Địa chỉ trạm là bắt buộc"),
   stationLatitude: AgencyStationLatitudeSchema,
   stationLongitude: AgencyStationLongitudeSchema,
   stationTotalCapacity: z

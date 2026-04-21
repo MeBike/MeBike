@@ -27,7 +27,7 @@ import type { Supplier } from "@/types";
 interface SupplierDetailClientProps {
   supplierId: string;
   supplier: Supplier;
-  bikeStats?: StatsSupplierBike ;
+  bikeStats?: StatsSupplierBike;
   onSubmit: (data: UpdateSupplierSchema) => Promise<boolean>;
 }
 
@@ -39,28 +39,28 @@ export default function SupplierDetailClient({
 }: SupplierDetailClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
-  // State này dùng để hiển thị UI Select
   const [editStatus, setEditStatus] = useState(supplier.status || "INACTIVE");
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue, // Dùng để cập nhật giá trị status vào form
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<UpdateSupplierSchema>({
     resolver: zodResolver(updateSupplierSchema),
+    mode: "onChange", // <--- THÊM DÒNG NÀY: Giúp báo lỗi real-time ngay khi đang gõ
     defaultValues: {
       name: supplier.name || "",
       address: supplier.address || "",
       phoneNumber: supplier.phoneNumber || "",
       contractFee: supplier.contractFee || 0,
-      status: (supplier.status) || "INACTIVE",
+      status: supplier.status || "INACTIVE",
     },
   });
 
   const openEditForm = () => {
-    const currentStatus = (supplier.status) || "INACTIVE";
+    const currentStatus = supplier.status || "INACTIVE";
     reset({
       name: supplier.name || "",
       address: supplier.address || "",
@@ -186,7 +186,7 @@ export default function SupplierDetailClient({
                 {isEditing ? (
                   <div>
                     <Input {...register("name")} className={errors.name ? "border-red-500" : ""} />
-                    {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+                    {errors.name && <p className="mt-1 text-xs font-medium text-red-500">{errors.name.message}</p>}
                   </div>
                 ) : (
                   <div className="rounded-md bg-muted/20 px-3 py-2 text-sm font-medium">{supplier.name}</div>
@@ -197,7 +197,7 @@ export default function SupplierDetailClient({
                 {isEditing ? (
                   <div>
                     <Input {...register("phoneNumber")} className={errors.phoneNumber ? "border-red-500" : ""} />
-                    {errors.phoneNumber && <p className="mt-1 text-xs text-red-500">{errors.phoneNumber.message}</p>}
+                    {errors.phoneNumber && <p className="mt-1 text-xs font-medium text-red-500">{errors.phoneNumber.message}</p>}
                   </div>
                 ) : (
                   <div className="rounded-md bg-muted/20 px-3 py-2 text-sm font-medium">{supplier.phoneNumber}</div>
@@ -208,7 +208,7 @@ export default function SupplierDetailClient({
                 {isEditing ? (
                   <div>
                     <Input {...register("address")} className={errors.address ? "border-red-500" : ""} />
-                    {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address.message}</p>}
+                    {errors.address && <p className="mt-1 text-xs font-medium text-red-500">{errors.address.message}</p>}
                   </div>
                 ) : (
                   <div className="rounded-md bg-muted/20 px-3 py-2 text-sm font-medium">{supplier.address}</div>
@@ -219,7 +219,7 @@ export default function SupplierDetailClient({
                 {isEditing ? (
                   <div>
                     <Input type="number" {...register("contractFee", { valueAsNumber: true })} className={errors.contractFee ? "border-red-500" : ""} />
-                    {errors.contractFee && <p className="mt-1 text-xs text-red-500">{errors.contractFee.message}</p>}
+                    {errors.contractFee && <p className="mt-1 text-xs font-medium text-red-500">{errors.contractFee.message}</p>}
                   </div>
                 ) : (
                   <div className="rounded-md bg-muted/20 px-3 py-2 text-sm font-medium">
@@ -247,7 +247,7 @@ export default function SupplierDetailClient({
                       <SelectItem value="TERMINATED">Đã kết thúc</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.status && <p className="mt-1 text-xs text-red-500">{errors.status.message}</p>}
+                  {errors.status && <p className="mt-1 text-xs font-medium text-red-500">{errors.status.message}</p>}
                 </FormField>
               )}
             </div>
@@ -255,7 +255,6 @@ export default function SupplierDetailClient({
         </div>
       </div>
     </div>
-    
   );
 }
 

@@ -14,20 +14,25 @@ export default function SupplierClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "ACTIVE" | "INACTIVE" | "TERMINATED" | ""
-  >("ACTIVE");
+  >("");
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(7);
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   const router = useRouter();
-  const { changeStatusSupplier, isLoadingAllSuppliers, allSupplier } =
+  const { changeStatusSupplier, isLoadingAllSuppliers, allSupplier ,getAllSuppliers} =
     useSupplierActions({
       hasToken: true,
       page: page,
       pageSize: pageSize,
+      status: statusFilter,
     });
   useEffect(() => {
+    getAllSuppliers();
     setPage(1);
   }, [statusFilter, searchQuery]);
+  useEffect(() => {
+    getAllSuppliers();
+}, [page]);
   useEffect(() => {
     if (isLoadingAllSuppliers) {
       setIsVisualLoading(true);

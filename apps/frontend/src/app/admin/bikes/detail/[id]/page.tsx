@@ -31,8 +31,8 @@ export default function BikeDetailPage({
     updateBike,
     isUpdatingBike
   } = useBikeActions({ hasToken: true, bike_detail_id: id });
-  const {getAllStations,stations} = useStationActions({hasToken:true});
-  const {getAllSuppliers,suppliers} = useSupplierActions({hasToken:true});
+  const {getAllStations,stations} = useStationActions({hasToken:true,page:1,limit:200});
+  const {getAllSuppliers,suppliers} = useSupplierActions({hasToken:true,status:"",page:1,pageSize:200});
   useEffect(() => {
     getBikeByID();
     getAllStations();

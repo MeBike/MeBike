@@ -35,7 +35,8 @@ export const useGetAllSupplierQuery = ({
   status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | "";
 }) => {
   return useQuery({
-    queryKey: ["suppliers", "all", page, pageSize, status],
+    queryKey: ["suppliers", "all"],
     queryFn: () => fetchAllSuppliers({page:page,pageSize:pageSize,status:status}),
+    enabled:false,
   });
 };
