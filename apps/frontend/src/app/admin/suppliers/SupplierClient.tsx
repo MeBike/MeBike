@@ -31,6 +31,9 @@ export default function SupplierClient() {
     setPage(1);
   }, [statusFilter, searchQuery]);
   useEffect(() => {
+    getAllSuppliers();
+}, [page]);
+  useEffect(() => {
     if (isLoadingAllSuppliers) {
       setIsVisualLoading(true);
     } else {
