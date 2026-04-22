@@ -153,9 +153,9 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
                       name="role"
                       control={control}
                       render={({ field }) => (
-                        // Đã thêm value={field.value} vào Select
                         <Select 
                           onValueChange={field.onChange} 
+                          disabled
                           value={field.value} 
                           defaultValue={field.value}
                         >

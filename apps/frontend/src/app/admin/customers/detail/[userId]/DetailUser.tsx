@@ -8,6 +8,7 @@ import {
   CreditCard,
   User,
   CheckCircle,
+  XCircle,
   Clock,
   Edit,
 } from "lucide-react";
@@ -18,7 +19,6 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatToVNTime } from "@lib/formatVNDate";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import type {
   DetailUser as Me,
   Station,
@@ -58,23 +58,10 @@ type StatusConfig = {
 
 type UserDisplayStatus = VerifyStatus | "BANNED";
 
-const statusMap: Record<AccountStatus, StatusConfig> = {
-  ACTIVE: { label: "Đang hoạt động", variant: "success" },
-  INACTIVE: { label: "Chưa kích hoạt", variant: "secondary" },
-  SUSPENDED: { label: "Tạm dừng", variant: "warning" },
-  BANNED: { label: "Đã bị khóa", variant: "danger" },
-};
-
 const roleConfig = {
-ADMIN: { label: "ADMIN", variant: "default" as const },
-STAFF: { label: "STAFF", variant: "info" as const },
-USER: { label: "USER", variant: "secondary" as const },
-TECHNICIAN: { label: "TECHNICIAN", variant: "customBlue" as const },
-AGENCY: { label: "AGENCY", variant: "warning" as const },
-MANAGER: { label: "MANAGER", variant: "brand" as const },
+  USER: { label: "Người dùng", variant: "secondary" as const },
 };
 type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
-
 interface UserDetailProps {
   user: Me;
   onSubmit: ({ data }: { data: UpdateUserFormData }) => void;
@@ -83,23 +70,29 @@ interface UserDetailProps {
 
 const getUserDisplayStatus = (user: {
   verify: VerifyStatus;
-  accountStatus?: string;
+  accountStatus?: AccountStatus;
 }): UserDisplayStatus => {
   return user.verify;
+};
+const statusMap: Record<AccountStatus, StatusConfig> = {
+  ACTIVE: { label: "Đang hoạt động", variant: "success" },
+  INACTIVE: { label: "Chưa kích hoạt", variant: "secondary" },
+  SUSPENDED: { label: "Tạm dừng", variant: "warning" },
+  BANNED: { label: "Đã bị khóa", variant: "danger" },
 };
 export const getStatusDisplay = (status: AccountStatus): StatusConfig => {
   return statusMap[status] || { label: "Không xác định", variant: "secondary" };
 };
-export default function DetailUser({
+export default function DetailStaff({
   user,
   onSubmit,
   stations,
 }: UserDetailProps) {
   const displayStatus = getUserDisplayStatus(user);
   const status = getStatusDisplay(user.accountStatus);
-  const role = roleConfig[user.role] || roleConfig.USER;
+  const role = roleConfig.USER;
   const [open, setOpen] = React.useState(false);
-  const [editRole, setEditRole] = React.useState<UserRole>(user.role);
+  const [editRole, setEditRole] = React.useState<"USER">("USER");
   const [verify, setVerify] = React.useState<"VERIFIED" | "UNVERIFIED">(
     displayStatus === "VERIFIED" ? "VERIFIED" : "UNVERIFIED",
   );
@@ -115,7 +108,6 @@ export default function DetailUser({
       </div>
     );
   }
-
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -124,7 +116,7 @@ export default function DetailUser({
       .toUpperCase()
       .slice(0, 2);
   };
-  
+
   const handleSave = async () => {
     const payload = {
       accountStatus: accountStatus,
@@ -142,19 +134,11 @@ export default function DetailUser({
   return (
     <div>
       <PageHeader
-        title="Thông tin người dùng"
-        description={`Người dùng: ${user.fullName}`}
-        backLink="/admin/customers"
+        title="Thông tin nhân viên"
+        description={`Nhân viên: ${user.fullName}`}
+        backLink="/admin/staffs"
         actions={
-          <div className="flex gap-2">
-            <div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/admin/customers/wallet/${user.id}`}>
-                  <User className="h-4 w-4 mr-2" />
-                  Ví người dùng
-                </Link>
-              </Button>
-            </div>
+          <div className="flex">
             <div>
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
@@ -165,32 +149,31 @@ export default function DetailUser({
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Chỉnh sửa (Admin)</DialogTitle>
+                    <DialogTitle>Chỉnh sửa</DialogTitle>
                     <DialogDescription>
-                      Cập nhật role + trạng thái + phân công (station/team).
+                      Cập nhật trạng thái tài khoản và xác thực.
                     </DialogDescription>
                   </DialogHeader>
+
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Role</Label>
                       <Select
                         disabled
                         value={editRole}
-                        onValueChange={(v) =>
-                          setEditRole(v === "USER" ? "USER" : "STAFF")
-                        }
+                        onValueChange={(v: "USER") => setEditRole(v)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Chọn role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="USER">USER</SelectItem>
+                          <SelectItem value="USER">Người dùng</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Verify status</Label>
+                      <Label>Xác thực</Label>
                       <Select
                         value={verify}
                         onValueChange={(v) =>
@@ -203,14 +186,14 @@ export default function DetailUser({
                           <SelectValue placeholder="Chọn trạng thái" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="VERIFIED">VERIFIED</SelectItem>
-                          <SelectItem value="UNVERIFIED">UNVERIFIED</SelectItem>
+                          <SelectItem value="VERIFIED">Đã xác thực</SelectItem>
+                          <SelectItem value="UNVERIFIED">Chưa xác thực</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Account status</Label>
+                      <Label>Trạng thái tài khoản</Label>
                       <Select
                         value={accountStatus}
                         onValueChange={(v: AccountStatus) =>
@@ -221,10 +204,10 @@ export default function DetailUser({
                           <SelectValue placeholder="Chọn trạng thái" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                          <SelectItem value="INACTIVE">INACTIVE</SelectItem>
-                          <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
-                          <SelectItem value="BANNED">BANNED</SelectItem>
+                          <SelectItem value="ACTIVE">Đang hoạt động</SelectItem>
+                          <SelectItem value="INACTIVE">Chưa kích hoạt</SelectItem>
+                          <SelectItem value="SUSPENDED">Tạm dừng</SelectItem>
+                          <SelectItem value="BANNED">Bị khóa</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -274,13 +257,18 @@ export default function DetailUser({
                   <Shield className="h-3 w-3 mr-1" />
                   {role.label}
                 </Badge>
-                <Badge>{status.label}</Badge>
+                <Badge variant={status.variant}>{status.label}</Badge>
               </div>
-
               {displayStatus === "VERIFIED" && (
                 <div className="flex items-center gap-1 text-sm text-green-600 mt-3">
                   <CheckCircle className="h-4 w-4" />
-                  <span>Verified Account</span>
+                  <span>Tài khoản đã xác thực</span>
+                </div>
+              )}
+              {displayStatus === "UNVERIFIED" && (
+                <div className="flex items-center gap-1 text-sm text-red-600 mt-3">
+                  <XCircle className="h-4 w-4" />
+                  <span>Tài khoản chưa xác thực</span>
                 </div>
               )}
             </div>
@@ -306,10 +294,17 @@ export default function DetailUser({
                   <span className="text-muted-foreground">{user.location}</span>
                 </div>
               )}
+              {/* <div className="flex items-center gap-3 text-sm">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="text-muted-foreground">
+                  Born in {user.}
+                </span>
+              </div> */}
             </div>
           </CardContent>
         </Card>
 
+        {/* Details Card */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -343,7 +338,7 @@ export default function DetailUser({
               <div className="space-y-2">
                 <Label>Số điện thoại:</Label>
                 <p className="text-sm text-muted-foreground py-2">
-                  {user.phoneNumber || "N/A"}
+                  {user.phoneNumber || "Chưa có"}
                 </p>
               </div>
 
@@ -359,13 +354,37 @@ export default function DetailUser({
                   {role.label}
                 </Badge>
               </div>
+
+              {/* <div className="space-y-2">
+                <Label>Trạng thái tài khoản:</Label>
+                 <p className="text-sm text-muted-foreground">
+                  <Badge
+                    variant={
+                      displayStatus === "VERIFIED" ? "success" : "danger"
+                    }
+                  >
+                    {displayStatus === "VERIFIED"
+                      ? "VERIFIED"
+                        : "UNVERIFIED"}
+                  </Badge>
+                </p>
+              </div> */}
+
               <div className="space-y-2">
-                <Label>NFC Card ID:</Label>
+                <Label>NFC Card UID:</Label>
                 <p className="text-sm text-muted-foreground py-2">
                   {user.nfcCardUid || "Chưa có"}
                 </p>
               </div>
             </div>
+
+            {/* <div className="space-y-2">
+              <Label>Address</Label>
+              <p className="text-sm text-muted-foreground py-2">
+                {user.location || "N/A"}
+              </p>  
+            </div> */}
+
             <div className="space-y-2">
               <Label>Địa chỉ:</Label>
               <p className="text-sm text-muted-foreground py-2">
@@ -418,7 +437,7 @@ export default function DetailUser({
                 <div>
                   <span className="text-muted-foreground">Thời gian tạo: </span>
                   <span className="font-medium">
-                    {formatToVNTime(user.createdAt || "Chưa có")}
+                    {formatToVNTime(user.createdAt || "")}
                   </span>
                 </div>
               </div>
@@ -429,7 +448,7 @@ export default function DetailUser({
                     Thời gian cập nhật:{" "}
                   </span>
                   <span className="font-medium">
-                    {formatToVNTime(user.updatedAt || "Chưa có")}
+                    {formatToVNTime(user.updatedAt || "")}
                   </span>
                 </div>
               </div>
