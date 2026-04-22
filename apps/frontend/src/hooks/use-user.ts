@@ -82,6 +82,7 @@ export const useUserActions = ({
     page : page,
     pageSize : limit,
     role : role,
+    verify:verify || ""
   });
   const pagination = data?.pagination as
     | { total?: number; totalRecords?: number }
@@ -124,7 +125,7 @@ export const useUserActions = ({
       return;
     }
     refetchStaff();
-  }, [hasToken, router, refetch,role]);
+  }, [hasToken, router, refetch,role,verify]);
   const getAllStatistics = useCallback(() => {
     if (!hasToken) {
       router.push("/login");

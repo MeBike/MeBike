@@ -19,7 +19,7 @@ export interface User {
 export interface UserActionProps {
   hasToken: boolean;
   verify?: VerifyStatus;
-  role?: UserRole;
+  role?: UserRole | "";
   limit?: number;
   page?: number;
   searchQuery?: string;
