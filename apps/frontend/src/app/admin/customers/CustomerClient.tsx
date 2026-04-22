@@ -47,7 +47,6 @@ export default function CustomersClient({
 }: CustomersClientProps) {
   const router = useRouter();
 
-  // Các hàm điều hướng giữ lại ở UI vì chúng không liên quan đến API Data
   const handleDetailUser = (id: string) => {
     router.push(`/admin/customers/detail/${id}`);
   };

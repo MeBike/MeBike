@@ -12,6 +12,13 @@ export default function Page() {
   const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
   const limit = 10;
   const verifyQuery =
     verifyFilter === "VERIFIED" || verifyFilter === "UNVERIFIED"
@@ -32,14 +39,14 @@ export default function Page() {
     page: currentPage,
     verify: verifyFilter === "all" ? "" : verifyQuery,
     accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
-    fullName: searchQuery,
+    fullName: debouncedSearch,
   });
   useEffect(() => {
     getAllUsers();
     getAllStatistics();
     getRefetchDashboardStats();
   }, [
-    searchQuery,
+    debouncedSearch,
     verifyFilter,
     roleFilter,
     currentPage,
