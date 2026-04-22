@@ -2,7 +2,6 @@ import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
-  AssignmentStatus,
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
@@ -19,6 +18,9 @@ import { MapboxRouting } from "@/infrastructure/mapbox";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
+import {
+  AssignmentStatus,
+} from "generated/kysely/types";
 
 import type {
   IncidentNotFound,
@@ -490,8 +492,10 @@ function rejectIncidentWithClient(
       const technician = yield* Effect.promise(() =>
         tx.userOrgAssignment.findFirst({
           where: {
-            stationId: station.id,
-            technicianTeam: { availabilityStatus: "AVAILABLE" },
+            technicianTeam: {
+              availabilityStatus: "AVAILABLE",
+              stationId: station.id,
+            },
             userId: {
               not: assignment.technicianUserId!,
             },
@@ -651,6 +655,9 @@ export function makeIncidentRepository(
                       assignments: {
                         some: {
                           technicianUserId: filter.userId,
+                          status: {
+                            not: AssignmentStatus.CANCELLED,
+                          },
                         },
                       },
                     },
@@ -814,10 +821,8 @@ export function makeIncidentRepository(
     },
 
     rejectIncident(id) {
-      return runPrismaTransaction(
-        client as PrismaClient,
-        tx => rejectIncidentWithClient(tx, id, mapbox),
-      ).pipe(
+      return runPrismaTransaction(client as PrismaClient, tx =>
+        rejectIncidentWithClient(tx, id, mapbox)).pipe(
         Effect.map(opt =>
           Option.map(opt, a => a as TechnicianAssignmentRow),
         ),
