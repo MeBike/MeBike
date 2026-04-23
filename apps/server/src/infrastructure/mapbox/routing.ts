@@ -1,5 +1,3 @@
-import { createRequire } from "node:module";
-
 import type { MapiResponse } from "@mapbox/mapbox-sdk/lib/classes/mapi-response";
 import type {
   DirectionsRequest,
@@ -8,6 +6,7 @@ import type {
 import type { MatrixRequest, MatrixResponse } from "@mapbox/mapbox-sdk/services/matrix";
 
 import { Effect, Layer } from "effect";
+import { createRequire } from "node:module";
 
 import { env } from "@/config/env";
 import { Redis } from "@/infrastructure/redis";
