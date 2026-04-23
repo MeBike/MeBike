@@ -32,8 +32,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-COPY --from=builder /repo/apps/frontend/.next/standalone ./
-COPY --from=builder /repo/apps/frontend/.next/static ./apps/frontend/.next/static
-COPY --from=builder /repo/apps/frontend/public ./apps/frontend/public
+COPY --from=builder --chown=node:node /repo/apps/frontend/.next/standalone ./
+COPY --from=builder --chown=node:node /repo/apps/frontend/.next/static ./apps/frontend/.next/static
+COPY --from=builder --chown=node:node /repo/apps/frontend/public ./apps/frontend/public
+USER node
 EXPOSE 3000
 CMD ["node", "apps/frontend/server.js"]
