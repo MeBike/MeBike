@@ -101,7 +101,7 @@ services:
       - mebike-internal
     command: ["node", "apps/server/dist/src/worker/index.js"]
 
-  worker-iot:
+  worker_iot:
     image: ${COMPOSE_PROJECT_NAME:-mebike}-server:${IMAGE_TAG:-latest}
     build:
       context: .
