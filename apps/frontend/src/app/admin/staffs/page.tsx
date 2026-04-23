@@ -5,11 +5,11 @@ import StaffClient from "./StaffClient";
 import { useUserActions } from "@/hooks/use-user";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-export type UserStatusFilter = VerifyStatus | "BANNED" | "all";
+export type UserStatusFilter = VerifyStatus | "BANNED" | "";
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
+  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "">("");
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 7;
@@ -18,6 +18,8 @@ export default function Page() {
     limit: limit,
     page: currentPage,
     fullName: searchQuery,
+    verify:verifyFilter,
+    role:roleFilter,
   });
 
   // 3. EFFECTS
@@ -54,7 +56,7 @@ export default function Page() {
   }
   const handleReset = () => {
     setSearchQuery("");
-    setVerifyFilter("all");
+    setVerifyFilter("");
     setRoleFilter("");
     setCurrentPage(1);
   };

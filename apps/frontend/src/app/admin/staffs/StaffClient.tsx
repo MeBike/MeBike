@@ -33,10 +33,11 @@ interface StaffClientProps {
 
 export default function StaffClient({
   data: { staffOnly, isVisualLoading },
-  filters: { searchQuery, verifyFilter, currentPage },
+  filters: { searchQuery, verifyFilter, roleFilter, currentPage },
   actions: {
     setSearchQuery,
     setVerifyFilter,
+    setRoleFilter,
     setCurrentPage,
     handleReset,
     handleFilterChange,
@@ -80,16 +81,19 @@ export default function StaffClient({
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Trạng thái xác thực</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Verify Status */}
+            <div className="p-4 space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">
+                Trạng thái xác thực
+              </label>
               <select
                 value={verifyFilter}
                 onChange={(e) => {
                   setVerifyFilter(e.target.value as UserStatusFilter);
                   handleFilterChange();
                 }}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">Tất cả</option>
                 <option value="VERIFIED">Đã xác thực</option>
@@ -97,8 +101,27 @@ export default function StaffClient({
                 <option value="BANNED">Bị cấm</option>
               </select>
             </div>
-            
-            {/* Bạn có thể thêm Select cho roleFilter ở đây nếu cần thiết trong tương lai */}
+
+            {/* Role */}
+            <div className="p-4 space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">
+                Chức vụ
+              </label>
+              <select
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.target.value as UserRole);
+                  handleFilterChange();
+                }}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Tất cả</option>
+                <option value="MANAGER">Quản lý</option>
+                <option value="STAFF">Nhân viên</option>
+                <option value="TECHNICIAN">Kỹ thuật viên</option>
+                <option value="AGENCY">Đại lý</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -124,7 +147,7 @@ export default function StaffClient({
                   filterPlaceholder="Tìm kiếm nhân viên"
                   onSearchChange={setSearchQuery}
                 />
-                
+
                 <div className="pt-3">
                   <PaginationDemo
                     currentPage={currentPage}

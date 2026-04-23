@@ -33,6 +33,7 @@ const badgeVariants = cva(
         customBlue:
           "border-transparent bg-[#2196F3] text-white [a&]:hover:bg-[#1e86d6]",
         danger: "bg-red-600 text-white border-transparent",
+        inactive: "bg-yellow-100 text-yellow-800 border-transparent",
       },
     },
     defaultVariants: {

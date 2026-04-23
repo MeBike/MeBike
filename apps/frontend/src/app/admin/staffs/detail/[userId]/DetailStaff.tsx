@@ -59,12 +59,12 @@ type StatusConfig = {
 type UserDisplayStatus = VerifyStatus | "BANNED";
 
 const roleConfig = {
-  ADMIN: { label: "ADMIN", variant: "default" as const },
-  STAFF: { label: "STAFF", variant: "info" as const },
+  ADMIN: { label: "Quản trị viên", variant: "default" as const },
+  STAFF: { label: "Nhân viên", variant: "info" as const },
   USER: { label: "USER", variant: "secondary" as const },
-  TECHNICIAN: { label: "TECHNICIAN", variant: "warning" as const },
-  AGENCY: { label: "AGENCY", variant: "outline" as const },
-  MANAGER: { label: "MANAGER", variant: "customBlue" as const },
+  TECHNICIAN: { label: "Kỹ thuật viên", variant: "warning" as const },
+  AGENCY: { label: "Đại lý", variant: "outline" as const },
+  MANAGER: { label: "Quản lý", variant: "customBlue" as const },
 };
 type AccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
 interface UserDetailProps {
@@ -154,9 +154,9 @@ export default function DetailStaff({
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Chỉnh sửa (Admin)</DialogTitle>
+                    <DialogTitle>Chỉnh sửa</DialogTitle>
                     <DialogDescription>
-                      Cập nhật role + trạng thái + phân công (station/team).
+                      Cập nhật trạng thái tài khoản và xác thực.
                     </DialogDescription>
                   </DialogHeader>
 
@@ -172,16 +172,16 @@ export default function DetailStaff({
                           <SelectValue placeholder="Chọn role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="MANAGER">MANAGER</SelectItem>
-                          <SelectItem value="STAFF">STAFF</SelectItem>
-                          <SelectItem value="AGENCY">AGENCY</SelectItem>
-                          <SelectItem value="TECHNICIAN">TECHNICIAN</SelectItem>
+                          <SelectItem value="MANAGER">Quản lý</SelectItem>
+                          <SelectItem value="STAFF">Nhân viên</SelectItem>
+                          <SelectItem value="AGENCY">Đại lý</SelectItem>
+                          <SelectItem value="TECHNICIAN">Kỹ thuật viên</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Verify status</Label>
+                      <Label>Xác thực</Label>
                       <Select
                         value={verify}
                         onValueChange={(v) =>
@@ -194,14 +194,14 @@ export default function DetailStaff({
                           <SelectValue placeholder="Chọn trạng thái" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="VERIFIED">VERIFIED</SelectItem>
-                          <SelectItem value="UNVERIFIED">UNVERIFIED</SelectItem>
+                          <SelectItem value="VERIFIED">Đã xác thực</SelectItem>
+                          <SelectItem value="UNVERIFIED">Chưa xác thực</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Account status</Label>
+                      <Label>Trạng thái tài khoản</Label>
                       <Select
                         value={accountStatus}
                         onValueChange={(v: AccountStatus) =>
@@ -212,10 +212,10 @@ export default function DetailStaff({
                           <SelectValue placeholder="Chọn trạng thái" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                          <SelectItem value="INACTIVE">INACTIVE</SelectItem>
-                          <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
-                          <SelectItem value="BANNED">BANNED</SelectItem>
+                          <SelectItem value="ACTIVE">Đang hoạt động</SelectItem>
+                          <SelectItem value="INACTIVE">Chưa kích hoạt</SelectItem>
+                          <SelectItem value="SUSPENDED">Tạm dừng</SelectItem>
+                          <SelectItem value="BANNED">Bị khóa</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -270,13 +270,13 @@ export default function DetailStaff({
               {displayStatus === "VERIFIED" && (
                 <div className="flex items-center gap-1 text-sm text-green-600 mt-3">
                   <CheckCircle className="h-4 w-4" />
-                  <span>Verified Account</span>
+                  <span>Tài khoản đã xác thực</span>
                 </div>
               )}
               {displayStatus === "UNVERIFIED" && (
                 <div className="flex items-center gap-1 text-sm text-red-600 mt-3">
                   <XCircle className="h-4 w-4" />
-                  <span>Unverified Account</span>
+                  <span>Tài khoản chưa xác thực</span>
                 </div>
               )}
             </div>
