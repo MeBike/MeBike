@@ -22,6 +22,7 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import type { DetailUser } from "@/types";
 import type { UserWallet } from "@custom-types";
 import { cn } from "@/lib/utils";
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 
 type WalletTxRow = {
   id: string;
@@ -161,7 +162,24 @@ function statusBadgeVariant(
   if (status === "THẤT BẠI" || status === "FAILED") return "destructive";
   return "secondary";
 }
+type Status = "ACTIVE" | "INACTIVE";
 
+const statusConfig: Record<Status, { label: string; variant: any }> = {
+  ACTIVE: {
+    label: "Hoạt động",
+    variant: "success",
+  },
+  INACTIVE: {
+    label: "Ngưng hoạt động",
+    variant: "destructive",
+  },
+};
+
+const getStatusConfig = (status: Status) =>
+  statusConfig[status] || {
+    label: "Không xác định",
+    variant: "default",
+  };
 interface CustomerWalletDetailProps {
   user: DetailUser;
   allWallets: UserWallet | undefined;
@@ -199,7 +217,13 @@ export default function CustomerWalletDetail({
   const totalPages = Math.max(1, pagination?.totalPages ?? 1);
   const currentTxPage =
     pagination?.currentPage ?? pagination?.page ?? transactionPage;
-
+  if (isLoadingTransactions || isLoadingWallet) {
+    return (
+      <div className="w-full flex items-center justify-center py-12">
+        <LoadingScreen />
+      </div>
+    );
+  }
   return (
     <div>
       <PageHeader
@@ -239,9 +263,7 @@ export default function CustomerWalletDetail({
               )}
             </div>
             <div className="mt-6 pt-6 border-t border-border">
-              <Label className="text-xs text-muted-foreground">
-                ID
-              </Label>
+              <Label className="text-xs text-muted-foreground">ID</Label>
               <p className="text-sm font-mono bg-muted/50 p-2 rounded mt-1 break-all">
                 {user.id}
               </p>
@@ -256,12 +278,8 @@ export default function CustomerWalletDetail({
               Ví
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {isLoadingWallet ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : wallet ? (
+          <CardContent className="min-h-[220px]">
+            {wallet ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label>Số dư</Label>
@@ -273,12 +291,10 @@ export default function CustomerWalletDetail({
                   <Label>Tình trạng</Label>
                   <p className="text-sm py-1">
                     <Badge
-                      variant={
-                        wallet.status === "ACTIVE" ? "success" : "default"
-                      }
+                      variant={getStatusConfig(wallet.status).variant}
                       className="font-normal"
                     >
-                      {wallet.status}
+                      {getStatusConfig(wallet.status).label}
                     </Badge>
                   </p>
                 </div>
@@ -298,7 +314,9 @@ export default function CustomerWalletDetail({
                   <Label>Thời gian</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-muted-foreground">
                     <div>
-                      <span className="text-muted-foreground">Thời gian tạo tài khoản: </span>
+                      <span className="text-muted-foreground">
+                        Thời gian tạo tài khoản:{" "}
+                      </span>
                       <span className="font-medium text-foreground">
                         {wallet.createdAt
                           ? formatToVNTime(wallet.createdAt)
@@ -306,7 +324,9 @@ export default function CustomerWalletDetail({
                       </span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Thời gian tài khoản cập nhật: </span>
+                      <span className="text-muted-foreground">
+                        Thời gian tài khoản cập nhật:{" "}
+                      </span>
                       <span className="font-medium text-foreground">
                         {wallet.updatedAt
                           ? formatToVNTime(wallet.updatedAt)
@@ -317,9 +337,10 @@ export default function CustomerWalletDetail({
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                Chưa có ví
-              </p>
+              <div className="flex flex-col items-center justify-center h-full py-10 gap-2 text-muted-foreground">
+                <Wallet className="h-8 w-8" />
+                <p className="text-sm">Chưa có ví</p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -331,15 +352,12 @@ export default function CustomerWalletDetail({
               Lịch sử giao dịch
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {isLoadingTransactions ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <CardContent className="min-h-[220px]">
+            {txRows.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full py-10 gap-2 text-muted-foreground">
+                <CreditCard className="h-8 w-8" />
+                <p className="text-sm">Chưa có giao dịch</p>
               </div>
-            ) : txRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                Chưa có giao dịch
-              </p>
             ) : (
               <>
                 <div className="space-y-3">

@@ -45,12 +45,13 @@ export const userService = {
     );
     return response;
   },
-  getStaffOnly : async ({page , pageSize,role}: {page?: number; pageSize?: number,role?:UserRole}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+  getStaffOnly : async ({page,pageSize,verify,role}: {page?: number; pageSize?: number,verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "",role?:UserRole | ""}): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
       ENDPOINT.USER.BASE,{
-        roles : "STAFF,TECHNICIAN,AGENCY,MANAGER",
+        roles : role ? role : "STAFF,TECHNICIAN,AGENCY,MANAGER",
         page : page || 1,
         pageSize : pageSize || 7,
+        verify : verify,
       }
     );
     return response;

@@ -80,7 +80,7 @@ export const couponColumns = ({
       // </div>
       <div className="flex items-center gap-0">
         <div className="">
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
@@ -94,7 +94,7 @@ export const couponColumns = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Xem chi tiết</TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip>
             <TooltipTrigger asChild>
               {row.original.status === "ACTIVE" ? (
@@ -102,10 +102,9 @@ export const couponColumns = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => onDeactive(row.original)}
-                  className="text-destructive" // Đổi màu đỏ nếu muốn cảnh báo deactive
+                  className="text-destructive"
                 >
                   <PowerOff className="w-4 h-4" />{" "}
-                  {/* Dùng EyeOff hoặc PowerOff cho deactive */}
                 </Button>
               ) : (
                 <Button
@@ -115,7 +114,6 @@ export const couponColumns = ({
                   className="text-emerald-600"
                 >
                   <Power className="w-4 h-4" />{" "}
-                  {/* Dùng Power hoặc CheckCircle cho active */}
                 </Button>
               )}
             </TooltipTrigger>
