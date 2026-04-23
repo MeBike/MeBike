@@ -754,6 +754,7 @@ export const DISTRIBUTION_REQUEST = {
   USER_NOT_FOUND : "Không tìm thấy người dùng",
   INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS : "Bạn đã tạo yêu cầu điều phối trước đó rồi",
   VALIDATION_ERROR : "Lý do phải hơn 10 ký tự",
+  STATION_LOCATION_ALREADY_EXISTS : "Không thể tạo yêu cầu điều phối cho trạm đã có yêu cầu điều phối."
 }
 export const ENVIRONMENT_POLICY_REQUEST = {
   
