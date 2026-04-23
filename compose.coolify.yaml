@@ -99,7 +99,28 @@ services:
         condition: service_healthy
     networks:
       - mebike-internal
-    command: ["pnpm", "--filter", "server", "worker"]
+    command: ["node", "apps/server/dist/src/worker/index.js"]
+
+  worker-iot:
+    image: ${COMPOSE_PROJECT_NAME:-mebike}-server:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      server-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mebike-internal
+    command: ["node", "apps/server/dist/src/worker/iot-runtime.js"]
 
   server-migrate:
     build:
