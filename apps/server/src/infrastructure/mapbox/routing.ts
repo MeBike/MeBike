@@ -1,3 +1,5 @@
+import { createRequire } from "node:module";
+
 import type { MapiResponse } from "@mapbox/mapbox-sdk/lib/classes/mapi-response";
 import type {
   DirectionsRequest,
@@ -5,8 +7,6 @@ import type {
 } from "@mapbox/mapbox-sdk/services/directions";
 import type { MatrixRequest, MatrixResponse } from "@mapbox/mapbox-sdk/services/matrix";
 
-import directionsSdk from "@mapbox/mapbox-sdk/services/directions";
-import matrixSdk from "@mapbox/mapbox-sdk/services/matrix";
 import { Effect, Layer } from "effect";
 
 import { env } from "@/config/env";
@@ -39,6 +39,10 @@ import {
   hasValidCoordinates,
   toSdkCoordinate,
 } from "./routing.helpers";
+
+const require = createRequire(import.meta.url);
+const directionsSdk = require("@mapbox/mapbox-sdk/services/directions") as typeof import("@mapbox/mapbox-sdk/services/directions").default;
+const matrixSdk = require("@mapbox/mapbox-sdk/services/matrix") as typeof import("@mapbox/mapbox-sdk/services/matrix").default;
 
 type DirectionsClient = ReturnType<typeof directionsSdk>;
 type MatrixClient = ReturnType<typeof matrixSdk>;
