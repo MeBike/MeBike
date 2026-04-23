@@ -14,9 +14,8 @@ pnpm-debug.log*
 .vscode
 .DS_Store
 
-# Unused apps for backend/iot builds
+# Unused apps for server/iot builds
 apps/mobile
-apps/frontend
 progress
 openapi
 
