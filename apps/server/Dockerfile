@@ -15,6 +15,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts --filter @mebike/shared... -
 
 FROM deps AS builder
 ARG DATABASE_URL
+ENV NODE_OPTIONS=--max-old-space-size=4096
 COPY apps/server ./apps/server
 COPY packages/shared ./packages/shared
 COPY packages/tsconfig ./packages/tsconfig
