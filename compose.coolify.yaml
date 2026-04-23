@@ -54,8 +54,6 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
-    networks:
-      - mebike-internal
     expose:
       - "3000"
 
@@ -71,6 +69,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
     depends_on:
+      server-migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -80,20 +80,38 @@ services:
     expose:
       - "4000"
 
-  server-migrate:
-    profiles: ["ops"]
+  worker:
+    image: ${COMPOSE_PROJECT_NAME:-mebike}-server:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/server/Dockerfile
-      target: builder
+    restart: unless-stopped
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
     depends_on:
+      server-migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks:
+      - mebike-internal
+    command: ["pnpm", "--filter", "server", "worker"]
+
+  server-migrate:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+      target: builder
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
         condition: service_healthy
     networks:
       - mebike-internal
