@@ -67,6 +67,7 @@ services:
       - "traefik.http.routers.mebike-frontend.tls.certresolver=${TRAEFIK_CERT_RESOLVER}"
       - "traefik.http.routers.mebike-frontend.tls.domains[0].main=${APEX_DOMAIN}"
       - "traefik.http.routers.mebike-frontend.tls.domains[0].sans=*.${APEX_DOMAIN}"
+      - "traefik.http.routers.mebike-frontend.service=mebike-frontend"
       - "traefik.http.services.mebike-frontend.loadbalancer.server.port=3000"
 
   server:
@@ -97,6 +98,7 @@ services:
       - "traefik.http.routers.mebike-server.entrypoints=websecure"
       - "traefik.http.routers.mebike-server.tls=true"
       - "traefik.http.routers.mebike-server.tls.certresolver=${TRAEFIK_CERT_RESOLVER}"
+      - "traefik.http.routers.mebike-server.service=mebike-server"
       - "traefik.http.services.mebike-server.loadbalancer.server.port=4000"
 
   server-migrate:
