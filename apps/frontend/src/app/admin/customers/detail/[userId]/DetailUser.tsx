@@ -11,7 +11,9 @@ import {
   XCircle,
   Clock,
   Edit,
+  Wallet,
 } from "lucide-react";
+import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +85,7 @@ const statusMap: Record<AccountStatus, StatusConfig> = {
 export const getStatusDisplay = (status: AccountStatus): StatusConfig => {
   return statusMap[status] || { label: "Không xác định", variant: "secondary" };
 };
-export default function DetailStaff({
+export default function DetailUser({
   user,
   onSubmit,
   stations,
@@ -134,11 +136,11 @@ export default function DetailStaff({
   return (
     <div>
       <PageHeader
-        title="Thông tin nhân viên"
-        description={`Nhân viên: ${user.fullName}`}
-        backLink="/admin/staffs"
+        title="Thông tin người dùng"
+        description={`Người dùng: ${user.fullName}`}
+        backLink="/admin/customers"
         actions={
-          <div className="flex">
+          <div className="flex gap-2">
             <div>
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
@@ -187,7 +189,9 @@ export default function DetailStaff({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="VERIFIED">Đã xác thực</SelectItem>
-                          <SelectItem value="UNVERIFIED">Chưa xác thực</SelectItem>
+                          <SelectItem value="UNVERIFIED">
+                            Chưa xác thực
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -205,7 +209,9 @@ export default function DetailStaff({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="ACTIVE">Đang hoạt động</SelectItem>
-                          <SelectItem value="INACTIVE">Chưa kích hoạt</SelectItem>
+                          <SelectItem value="INACTIVE">
+                            Chưa kích hoạt
+                          </SelectItem>
                           <SelectItem value="SUSPENDED">Tạm dừng</SelectItem>
                           <SelectItem value="BANNED">Bị khóa</SelectItem>
                         </SelectContent>
@@ -227,6 +233,16 @@ export default function DetailStaff({
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+            </div>
+            <div className="flex gap-2">
+              <div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/admin/customers/wallet/${user.id}`}>
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Ví người dùng
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         }
