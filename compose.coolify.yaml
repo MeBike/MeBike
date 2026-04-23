@@ -1,0 +1,114 @@
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: apps/server/infra/postgres/Dockerfile.pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - mebike-postgres-data:/var/lib/postgresql
+      - ./apps/server/infra/postgres/init-extensions.sql:/docker-entrypoint-initdb.d/10_extensions.sql:ro
+    networks:
+      - mebike-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:8.4-bookworm
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - mebike-redis-data:/data
+    networks:
+      - mebike-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  frontend:
+    image: ${COMPOSE_PROJECT_NAME:-mebike}-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        NEXT_PUBLIC_TOMTOM_API_KEY: ${NEXT_PUBLIC_TOMTOM_API_KEY:-}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:-}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:-}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:-}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:-}
+    restart: unless-stopped
+    env_file:
+      - ${COMPOSE_ENV_FILE:-./compose.coolify.env}
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    networks:
+      - mebike-internal
+    expose:
+      - "3000"
+
+  server:
+    image: ${COMPOSE_PROJECT_NAME:-mebike}-server:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ${COMPOSE_ENV_FILE:-./compose.coolify.env}
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mebike-internal
+    expose:
+      - "4000"
+
+  server-migrate:
+    profiles: ["ops"]
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+      target: builder
+    env_file:
+      - ${COMPOSE_ENV_FILE:-./compose.coolify.env}
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mebike-internal
+    command: ["pnpm", "--filter", "server", "exec", "prisma", "migrate", "deploy"]
+
+networks:
+  mebike-internal:
+    driver: bridge
+
+volumes:
+  mebike-postgres-data:
+  mebike-redis-data:
