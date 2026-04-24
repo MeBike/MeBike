@@ -12,7 +12,7 @@ import type {
   VerifyResetPasswordOtpRequest,
 } from "./models";
 
-import { OptionalPhoneNumberNullableSchema } from "../schemas";
+import { OptionalPhoneNumberNullableSchema, ValidationIssueSchema } from "../schemas";
 
 export const TokensSchema = z.object({
   accessToken: z.string(),
@@ -34,6 +34,13 @@ export const RegisterRequestSchema = z.object({
   password: z.string().min(8),
   phoneNumber: OptionalPhoneNumberNullableSchema,
 }).openapi("RegisterRequest") satisfies z.ZodType<RegisterRequest>;
+
+export const RegisterRequestFieldSchema = RegisterRequestSchema.keyof();
+
+export const RegisterValidationIssuePathSchema = z.templateLiteral([
+  z.literal("body."),
+  RegisterRequestFieldSchema,
+]);
 
 export const RefreshRequestSchema = z.object({
   refreshToken: z.string().min(1),
@@ -71,6 +78,7 @@ export const ResetPasswordTokenEnvelopeSchema = z.object({
 }).openapi("ResetPasswordTokenEnvelope");
 
 export const AuthErrorCodeSchema = z.enum([
+  "VALIDATION_ERROR",
   "INVALID_CREDENTIALS",
   "INVALID_REFRESH_TOKEN",
   "INVALID_OTP",
@@ -84,11 +92,24 @@ export const AuthErrorResponseSchema = z.object({
   details: z.object({
     code: AuthErrorCodeSchema,
     retriable: z.boolean().optional(),
-    issues: z.array(z.any()).optional(),
+    issues: z.array(ValidationIssueSchema).optional(),
   }),
 }).openapi("AuthErrorResponse");
 
+export const RegisterValidationIssueSchema = ValidationIssueSchema.extend({
+  path: RegisterValidationIssuePathSchema,
+});
+
+export const RegisterValidationErrorResponseSchema = z.object({
+  error: z.string(),
+  details: z.object({
+    code: z.literal(AuthErrorCodeSchema.enum.VALIDATION_ERROR),
+    issues: z.array(RegisterValidationIssueSchema),
+  }),
+}).openapi("RegisterValidationErrorResponse");
+
 export const authErrorMessages = {
+  VALIDATION_ERROR: "Validation error",
   INVALID_CREDENTIALS: "Invalid credentials",
   INVALID_REFRESH_TOKEN: "Invalid refresh token",
   INVALID_OTP: "Invalid or expired OTP",

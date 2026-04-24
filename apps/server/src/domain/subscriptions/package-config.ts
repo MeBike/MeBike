@@ -8,27 +8,27 @@ export type SubscriptionPackageConfig = {
   readonly packageName: SubscriptionPackage;
   readonly price: bigint;
   readonly maxUsages: number | null;
-  readonly currency: "usd";
+  readonly currency: "vnd";
 };
 
 const PACKAGE_CONFIG: Record<SubscriptionPackage, SubscriptionPackageConfig> = {
   basic: {
     packageName: "basic",
-    price: 1190n,
+    price: 119000n,
     maxUsages: 30,
-    currency: "usd",
+    currency: "vnd",
   },
   premium: {
     packageName: "premium",
-    price: 1990n,
+    price: 199000n,
     maxUsages: 60,
-    currency: "usd",
+    currency: "vnd",
   },
   ultra: {
     packageName: "ultra",
-    price: 2990n,
+    price: 299000n,
     maxUsages: 90,
-    currency: "usd",
+    currency: "vnd",
   },
 };
 

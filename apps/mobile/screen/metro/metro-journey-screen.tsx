@@ -171,6 +171,7 @@ function MetroJourneyHeader({
   options: MetroDirectionOption[];
 }) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
 
   return (
     <YStack
@@ -202,7 +203,7 @@ function MetroJourneyHeader({
         </AppText>
 
         <XStack alignItems="center" gap="$2">
-          <IconSymbol color="$textSecondary" name="refresh" size="caption" />
+          <IconSymbol color={theme.textSecondary.val} name="refresh" size="caption" />
           <AppText tone="muted" variant="caption">
             {lastUpdatedLabel ?? "--:--"}
           </AppText>

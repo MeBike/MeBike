@@ -119,10 +119,6 @@ export function useProfile() {
     navigation.navigate("MetroJourney" as never);
   };
 
-  const handleNotifications = () => {
-    Alert.alert("Sắp ra mắt", "Quản lý thông báo sẽ sớm được cập nhật.");
-  };
-
   const handleVerifyEmailPress = () => {
     openVerifyModal();
   };
@@ -147,7 +143,6 @@ export function useProfile() {
     handleSubscriptions,
     handleEnvironmentImpact,
     handleMetroJourney,
-    handleNotifications,
     handleResendOtp,
     handleVerifyEmail,
     handleVerifyEmailPress,

@@ -1,15 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { log } from "@lib/log";
 import { AuthContracts } from "@mebike/shared";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { authService } from "@services/auth/auth-service";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import * as z from "zod";
 
 import { presentAuthError, presentRegisterFieldError } from "@/presenters/auth/auth-error-presenter";
-import { log } from "@lib/log";
-import { useAuthNext } from "@providers/auth-provider-next";
-import { authService } from "@services/auth/auth-service";
 
 import type { RegisterScreenNavigationProp } from "../../../../types/navigation";
 
@@ -20,7 +20,10 @@ const registerSchema = AuthContracts.RegisterRequestSchema
     password: z.string()
       .min(1, { message: "Mật khẩu là bắt buộc" })
       .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
-    phoneNumber: z.string().optional().nullable().or(z.literal("")),
+    phoneNumber: z.string().trim().refine(
+      value => value.length === 0 || /^\d{10}$/.test(value),
+      { message: "Số điện thoại phải gồm đúng 10 chữ số" },
+    ),
     confirmPassword: z.string()
       .min(1, { message: "Xác nhận mật khẩu là bắt buộc" })
       .min(8, { message: "Mật khẩu xác nhận phải có ít nhất 8 ký tự" }),
@@ -59,7 +62,7 @@ export function useRegister() {
       fullname: data.fullname,
       email: data.email,
       password: data.password,
-      phoneNumber: data.phoneNumber ? data.phoneNumber : null,
+      phoneNumber: data.phoneNumber.trim() ? data.phoneNumber.trim() : null,
     });
 
     if (!result.ok) {
@@ -75,16 +78,10 @@ export function useRegister() {
     }
 
     const email = data.email;
-    await hydrate();
     reset();
+    await hydrate();
     navigation.navigate("EmailVerification", { email });
   });
-
-  useEffect(() => {
-    if (Object.keys(errors).length > 0) {
-      log.warn("Register form errors", { errors });
-    }
-  }, [errors]);
 
   const goBack = () => {
     navigation.goBack();

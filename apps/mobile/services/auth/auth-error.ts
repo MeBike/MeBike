@@ -5,15 +5,27 @@ import { AuthContracts } from "@mebike/shared";
 import {
   type ServiceError,
   asNetworkError as asSharedNetworkError,
+  isServiceErrorCode,
+  normalizeServiceErrorCode,
   parseServiceError,
 } from "@services/shared/service-error";
 
-export type AuthErrorCode = z.infer<typeof AuthContracts.AuthErrorCodeSchema>;
+type ContractAuthErrorCode = z.infer<typeof AuthContracts.AuthErrorCodeSchema>;
+
+export type AuthErrorCode = ContractAuthErrorCode | "UNAUTHORIZED" | "UNKNOWN";
 
 export type AuthError = ServiceError<AuthErrorCode>;
 
-export function isAuthErrorCode(code: string): code is AuthErrorCode {
+export function isAuthContractErrorCode(code: string): code is ContractAuthErrorCode {
   return AuthContracts.AuthErrorCodeSchema.safeParse(code).success;
+}
+
+export function isAuthErrorCode(code: string): code is AuthErrorCode {
+  return isServiceErrorCode(code, isAuthContractErrorCode);
+}
+
+function mapAuthErrorCode(code: string | undefined): AuthErrorCode | null {
+  return normalizeServiceErrorCode(code, isAuthContractErrorCode);
 }
 
 export function isAuthApiError(
@@ -27,7 +39,7 @@ export function isAuthApiError(
 export async function parseAuthError(response: Response): Promise<AuthError> {
   return parseServiceError(response, {
     schema: AuthContracts.AuthErrorResponseSchema,
-    mapCode: code => (code && isAuthErrorCode(code) ? code : null),
+    mapCode: mapAuthErrorCode,
   });
 }
 

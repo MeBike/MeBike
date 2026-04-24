@@ -86,8 +86,9 @@ function RegisterForm({
               invalid={Boolean(errors.phoneNumber?.message)}
               keyboardType="phone-pad"
               leadingIcon={<IconSymbol color={theme.textSecondary.val} name="phone" size="input" />}
+              maxLength={10}
               onBlur={onBlur}
-              onChangeText={onChange}
+              onChangeText={text => onChange(text.replace(/\D/g, ""))}
               placeholder="Nhập số điện thoại"
               value={value ?? ""}
             />

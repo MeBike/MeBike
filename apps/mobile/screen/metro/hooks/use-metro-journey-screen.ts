@@ -2,6 +2,7 @@ import type { MetroDirectionId } from "@services/metro";
 
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { useGetStationListQuery } from "@hooks/query/stations/use-get-station-list-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { metroDirectionOptions, metroService } from "@services/metro";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
@@ -21,6 +22,7 @@ function presentMetroError(error: unknown) {
 
 export function useMetroJourneyScreen() {
   const navigation = useNavigation<MetroJourneyNavigationProp>();
+  const { isAuthenticated } = useAuthNext();
   const isFocused = useIsFocused();
   const [directionId, setDirectionId] = useState<MetroDirectionId>(1);
   const { data: stations = [] } = useGetStationListQuery();
@@ -43,8 +45,13 @@ export function useMetroJourneyScreen() {
   );
 
   const goBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+
+    navigation.navigate(isAuthenticated ? "Main" : "StationSelectFlow");
+  }, [isAuthenticated, navigation]);
 
   const onRefresh = useCallback(async () => {
     await journeyQuery.refetch();

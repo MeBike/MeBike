@@ -7,6 +7,7 @@ import {
   LoginRequestSchema,
   RefreshRequestSchema,
   RegisterRequestSchema,
+  RegisterValidationErrorResponseSchema,
   ResetPasswordRequestSchema,
   ResetPasswordTokenEnvelopeSchema,
   SendResetPasswordRequestSchema,
@@ -27,6 +28,31 @@ export const registerRoute = createRoute({
       description: "Registered",
       content: {
         "application/json": { schema: TokensEnvelopeSchema },
+      },
+    },
+    400: {
+      description: "Invalid register payload",
+      content: {
+        "application/json": {
+          schema: RegisterValidationErrorResponseSchema,
+          examples: {
+            InvalidPhoneNumber: {
+              value: {
+                error: authErrorMessages.VALIDATION_ERROR,
+                details: {
+                  code: AuthErrorCodeSchema.enum.VALIDATION_ERROR,
+                  issues: [
+                    {
+                      path: "body.phoneNumber",
+                      message: "phoneNumber must be 10 digits",
+                      code: "invalid_string",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
       },
     },
     409: {
