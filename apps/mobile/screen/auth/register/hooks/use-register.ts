@@ -79,8 +79,8 @@ export function useRegister() {
 
     const email = data.email;
     reset();
+    await hydrate();
     navigation.navigate("EmailVerification", { email });
-    void hydrate();
   });
 
   const goBack = () => {

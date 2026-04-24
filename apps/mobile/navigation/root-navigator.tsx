@@ -44,252 +44,194 @@ import MainTabNavigator from "./main-tab-navigator";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
+const standardScreenOptions = { headerShown: false, gestureEnabled: false } as const;
+const assistantScreenOptions = { headerShown: false, gestureEnabled: true } as const;
+
 function RootNavigator() {
-  const { status, isAuthenticated, user } = useAuthNext();
+  const { status, isAuthenticated } = useAuthNext();
 
   if (status === "loading") {
     return <LoadingScreen />;
   }
 
-  if (!isAuthenticated) {
-    return (
-      <Stack.Navigator initialRouteName="StationSelectFlow" key="unauthenticated">
-        <Stack.Screen
-          name="StationSelectFlow"
-          component={StationSelectScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="StationDetail"
-          component={StationDetailScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="BikeDetail"
-          component={BikeDetailScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="MetroJourney"
-          component={MetroJourneyScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="Intro"
-          component={IntroScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="EmailVerification"
-          component={EmailVerificationScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="ForgotPassword"
-          component={ForgotPasswordScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="ResetPasswordOTP"
-          component={ResetPasswordOTPScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="ResetPasswordForm"
-          component={ResetPasswordFormScreen}
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-      </Stack.Navigator>
-    );
-  }
-
-  const initialAuthenticatedRoute = user?.verify === "UNVERIFIED"
-    ? "EmailVerification"
-    : "Main";
-
   return (
-    <Stack.Navigator initialRouteName={initialAuthenticatedRoute} key="authenticated">
+    <Stack.Navigator initialRouteName={isAuthenticated ? "Main" : "StationSelectFlow"}>
       <Stack.Screen
-        name="Main"
-        component={MainTabNavigator}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="AiAssistant"
-        component={AiAssistantScreen}
-        options={{ headerShown: false, gestureEnabled: true }}
-      />
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="Intro"
-        component={IntroScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="EmailVerification"
-        component={EmailVerificationScreen}
-        initialParams={{ email: user?.email ?? "" }}
-        options={{ headerShown: false, gestureEnabled: false }}
+        name="StationSelectFlow"
+        component={StationSelectScreen}
+        options={standardScreenOptions}
       />
       <Stack.Screen
         name="StationDetail"
         component={StationDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        options={standardScreenOptions}
       />
       <Stack.Screen
         name="BikeDetail"
         component={BikeDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        options={standardScreenOptions}
       />
       <Stack.Screen
-        name="StationSelectFlow"
-        component={StationSelectScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="BookingHistoryDetail"
-        component={BookingHistoryDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="StaffRentalDetail"
-        component={StaffRentalDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="RentalQr"
-        component={RentalQrScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="ChangePassword"
-        component={ChangePasswordScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="ForgotPassword"
-        component={ForgotPasswordScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="ResetPasswordOTP"
-        component={ResetPasswordOTPScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="ResetPasswordForm"
-        component={ResetPasswordFormScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="UpdateProfile"
-        component={UpdateProfileScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="MyWallet"
-        component={MyWalletScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        name="EmailVerification"
+        component={EmailVerificationScreen}
+        options={standardScreenOptions}
       />
       <Stack.Screen
         name="MetroJourney"
         component={MetroJourneyScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        options={standardScreenOptions}
       />
       <Stack.Screen
-        name="Subscriptions"
-        component={SubscriptionScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        name="Login"
+        component={LoginScreen}
+        options={standardScreenOptions}
       />
       <Stack.Screen
-        name="Reservations"
-        component={ReservationScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        name="Intro"
+        component={IntroScreen}
+        options={standardScreenOptions}
       />
       <Stack.Screen
-        name="ReservationDetail"
-        component={ReservationDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        name="Register"
+        component={RegisterScreen}
+        options={standardScreenOptions}
       />
       <Stack.Screen
-        name="ReservationFlow"
-        component={ReservationFlowScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+        options={standardScreenOptions}
       />
       <Stack.Screen
-        name="EnvironmentImpact"
-        component={EnvironmentImpactScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        name="ResetPasswordOTP"
+        component={ResetPasswordOTPScreen}
+        options={standardScreenOptions}
       />
       <Stack.Screen
-        name="EnvironmentImpactDetail"
-        component={EnvironmentImpactDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
+        name="ResetPasswordForm"
+        component={ResetPasswordFormScreen}
+        options={standardScreenOptions}
       />
-      <Stack.Screen
-        name="FixedSlotTemplates"
-        component={FixedSlotTemplatesScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="FixedSlotDetail"
-        component={FixedSlotDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="FixedSlotEditor"
-        component={FixedSlotEditorScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="QRScanner"
-        component={QRScannerScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="StaffPhoneLookup"
-        component={StaffPhoneLookupScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="StaffBikeSwapList"
-        component={StaffBikeSwapListScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="StaffBikeSwapDetail"
-        component={StaffBikeSwapDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="TechnicianIncidentList"
-        component={TechnicianIncidentListScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="TechnicianIncidentDetail"
-        component={TechnicianIncidentDetailScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
+      {isAuthenticated
+        ? (
+            <>
+              <Stack.Screen
+                name="Main"
+                component={MainTabNavigator}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="AiAssistant"
+                component={AiAssistantScreen}
+                options={assistantScreenOptions}
+              />
+              <Stack.Screen
+                name="BookingHistoryDetail"
+                component={BookingHistoryDetailScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="StaffRentalDetail"
+                component={StaffRentalDetailScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="RentalQr"
+                component={RentalQrScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="ChangePassword"
+                component={ChangePasswordScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="UpdateProfile"
+                component={UpdateProfileScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="MyWallet"
+                component={MyWalletScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="Subscriptions"
+                component={SubscriptionScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="Reservations"
+                component={ReservationScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="ReservationDetail"
+                component={ReservationDetailScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="ReservationFlow"
+                component={ReservationFlowScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="EnvironmentImpact"
+                component={EnvironmentImpactScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="EnvironmentImpactDetail"
+                component={EnvironmentImpactDetailScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="FixedSlotTemplates"
+                component={FixedSlotTemplatesScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="FixedSlotDetail"
+                component={FixedSlotDetailScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="FixedSlotEditor"
+                component={FixedSlotEditorScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="QRScanner"
+                component={QRScannerScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="StaffPhoneLookup"
+                component={StaffPhoneLookupScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="StaffBikeSwapList"
+                component={StaffBikeSwapListScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="StaffBikeSwapDetail"
+                component={StaffBikeSwapDetailScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="TechnicianIncidentList"
+                component={TechnicianIncidentListScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="TechnicianIncidentDetail"
+                component={TechnicianIncidentDetailScreen}
+                options={standardScreenOptions}
+              />
+            </>
+          )
+        : null}
     </Stack.Navigator>
   );
 }

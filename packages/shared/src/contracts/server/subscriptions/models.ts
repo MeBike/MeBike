@@ -10,9 +10,9 @@ export const SubscriptionPackageSchema = z
 
 export const SubscriptionPackageDetailSchema = z.object({
   packageName: SubscriptionPackageSchema,
-  price: z.string().openapi({ example: "1190" }),
+  price: z.string().openapi({ example: "119000" }),
   maxUsages: z.number().int().nullable(),
-  currency: z.literal("usd").openapi({ example: "usd" }),
+  currency: z.literal("vnd").openapi({ example: "vnd" }),
 }).openapi("SubscriptionPackageDetail");
 
 export const SubscriptionDetailSchema = z.object({
@@ -24,7 +24,7 @@ export const SubscriptionDetailSchema = z.object({
   status: SubscriptionStatusSchema,
   activatedAt: z.string().datetime().nullable(),
   expiresAt: z.string().datetime().nullable(),
-  price: z.string().openapi({ example: "1190" }),
+  price: z.string().openapi({ example: "119000" }),
   updatedAt: z.string().datetime(),
 }).openapi("SubscriptionDetail");
 

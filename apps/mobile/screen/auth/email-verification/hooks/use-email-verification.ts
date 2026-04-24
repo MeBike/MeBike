@@ -220,6 +220,11 @@ export function useEmailVerification() {
   }, [navigation]);
 
   const goBack = useCallback(() => {
+    if (!navigation.canGoBack()) {
+      navigation.navigate("Main");
+      return;
+    }
+
     navigation.goBack();
   }, [navigation]);
 

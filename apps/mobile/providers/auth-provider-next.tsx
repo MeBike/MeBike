@@ -6,6 +6,7 @@ import { useMeQuery } from "@hooks/query/auth-next/use-me-query";
 import { clearTokens, getAccessToken, getRefreshToken } from "@lib/auth-tokens";
 import { log } from "@lib/log";
 import { authService } from "@services/auth/auth-service";
+import { userService } from "@services/users/user-service";
 import { isUserApiError } from "@services/users/user-error";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -126,13 +127,31 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
   const hydrate = useCallback(async () => {
     const token = await getAccessToken();
     const nextTokenState = token ? "present" : "missing";
-    setTokenState(nextTokenState);
 
     if (nextTokenState === "missing") {
+      setSessionUser(null);
+      setTokenState("missing");
       clearSessionQueries(queryClient);
       return;
     }
 
+    const meResult = await userService.me();
+    if (meResult.ok) {
+      setSessionUser(meResult.value);
+      queryClient.setQueryData(authQueryKeys.me(), meResult.value);
+      setTokenState("present");
+      return;
+    }
+
+    if (isUserApiError(meResult.error) && (meResult.error.code === "UNAUTHORIZED" || meResult.error.code === "FORBIDDEN")) {
+      await clearTokens();
+      setSessionUser(null);
+      setTokenState("missing");
+      clearSessionQueries(queryClient);
+      return;
+    }
+
+    setTokenState("present");
     await queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
   }, [queryClient]);
 
@@ -144,11 +163,10 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!result.ok) {
         return result.error;
       }
-      setTokenState("present");
-      await queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
+      await hydrate();
       return null;
     },
-    [queryClient],
+    [hydrate],
   );
 
   const logout = useCallback(async () => {

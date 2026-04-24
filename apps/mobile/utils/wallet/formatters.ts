@@ -72,6 +72,10 @@ export function formatTransactionTitle(type: string, description?: string | null
       return "Thanh toán chuyến đi";
     }
 
+    if (normalizedDescription.includes("subscription payment")) {
+      return "Thanh toán gói tháng";
+    }
+
     if (normalizedDescription.includes("deposit") || normalizedDescription.includes("top up") || normalizedDescription.includes("topup")) {
       return "Nạp tiền vào ví";
     }
