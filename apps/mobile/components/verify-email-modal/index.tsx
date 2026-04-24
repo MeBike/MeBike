@@ -67,18 +67,22 @@ type VerifyEmailModalProps = {
   visible: boolean;
   onClose: () => void;
   onSubmit: (otp: string) => Promise<void>;
+  onResend?: () => Promise<boolean>;
   isLoading?: boolean;
+  isResending?: boolean;
 };
 
 export function VerifyEmailModal({
   visible,
   onClose,
   onSubmit,
+  onResend,
   isLoading = false,
+  isResending = false,
 }: VerifyEmailModalProps) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { timeLeft, resendTimeLeft, resetTimers } = useOtpTimers(visible);
+  const { timeLeft, resendTimeLeft, resetTimers, restartTimers } = useOtpTimers(visible);
 
   useEffect(() => {
     if (!visible) {
@@ -104,6 +108,18 @@ export function VerifyEmailModal({
     }
     finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!onResend || resendTimeLeft > 0 || isResending) {
+      return;
+    }
+
+    const resent = await onResend();
+    if (resent) {
+      setOtp(["", "", "", "", "", ""]);
+      restartTimers();
     }
   };
 
@@ -141,7 +157,13 @@ export function VerifyEmailModal({
             </TouchableOpacity>
 
             <View style={styles.resendInfo}>
-              <OtpResendInfo resendTimeLeft={resendTimeLeft} />
+              <OtpResendInfo
+                isResending={isResending}
+                onResend={() => {
+                  void handleResend();
+                }}
+                resendTimeLeft={resendTimeLeft}
+              />
             </View>
           </View>
         </View>

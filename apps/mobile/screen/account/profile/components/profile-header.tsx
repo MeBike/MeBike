@@ -14,7 +14,6 @@ type ProfileHeaderProps = {
   completedTrips?: number;
   isLoadingTrips?: boolean;
   topInset: number;
-  onVerifyEmail: () => void;
   formatDate: (dateString: string) => string;
 };
 
@@ -26,7 +25,6 @@ function ProfileHeader({
   completedTrips,
   isLoadingTrips,
   topInset,
-  onVerifyEmail,
   formatDate,
 }: ProfileHeaderProps) {
   const theme = useTheme();
@@ -120,28 +118,6 @@ function ProfileHeader({
                         Chuyến đi
                       </AppText>
                     </XStack>
-                  )
-                : null}
-
-              {!isVerified
-                ? (
-                    <Pressable onPress={onVerifyEmail} style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}>
-                      <XStack
-                        alignItems="center"
-                        backgroundColor="$overlayGlass"
-                        borderColor="$overlayGlass"
-                        borderRadius="$4"
-                        borderWidth={borderWidths.subtle}
-                        gap="$2"
-                        paddingHorizontal="$4"
-                        paddingVertical="$2"
-                      >
-                        <IconSymbol color={theme.onSurfaceBrand.val} name="mail" size="sm" />
-                        <AppText tone="inverted" variant="badgeLabel">
-                          Xác thực email
-                        </AppText>
-                      </XStack>
-                    </Pressable>
                   )
                 : null}
             </XStack>

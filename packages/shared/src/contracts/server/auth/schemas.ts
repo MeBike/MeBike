@@ -12,7 +12,7 @@ import type {
   VerifyResetPasswordOtpRequest,
 } from "./models";
 
-import { OptionalTrimmedNullableStringSchema } from "../schemas";
+import { OptionalPhoneNumberNullableSchema } from "../schemas";
 
 export const TokensSchema = z.object({
   accessToken: z.string(),
@@ -31,8 +31,8 @@ export const LoginRequestSchema = z.object({
 export const RegisterRequestSchema = z.object({
   fullname: z.string().min(1),
   email: z.string().email(),
-  password: z.string().min(1),
-  phoneNumber: OptionalTrimmedNullableStringSchema,
+  password: z.string().min(8),
+  phoneNumber: OptionalPhoneNumberNullableSchema,
 }).openapi("RegisterRequest") satisfies z.ZodType<RegisterRequest>;
 
 export const RefreshRequestSchema = z.object({
@@ -56,7 +56,7 @@ export const SendResetPasswordRequestSchema = z.object({
 
 export const ResetPasswordRequestSchema = z.object({
   resetToken: z.string().min(1),
-  newPassword: z.string().min(1),
+  newPassword: z.string().min(8),
 }).openapi("ResetPasswordRequest") satisfies z.ZodType<ResetPasswordRequest>;
 
 export const VerifyResetPasswordOtpRequestSchema = z.object({

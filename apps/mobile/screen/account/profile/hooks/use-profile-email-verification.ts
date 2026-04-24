@@ -26,7 +26,7 @@ export function useProfileEmailVerification({
   const handleResendOtp = useCallback(async () => {
     if (profile.verify === "VERIFIED") {
       Alert.alert("Info", "Email của bạn đã được xác thực.");
-      return;
+      return false;
     }
 
     try {
@@ -38,14 +38,16 @@ export function useProfileEmailVerification({
 
       if (!result.ok) {
         Alert.alert("Lỗi", presentAuthError(result.error));
-        return;
+        return false;
       }
 
       Alert.alert("Success", "Mã OTP mới đã được gửi đến email của bạn!");
       setIsVerifyEmailModalOpen(true);
+      return true;
     }
     catch {
       Alert.alert("Lỗi", "Không thể gửi lại OTP. Vui lòng thử lại.");
+      return false;
     }
   }, [profile.email, profile.fullName, profile.id, profile.verify, resendOtpMutation]);
 

@@ -17,9 +17,13 @@ const registerSchema = AuthContracts.RegisterRequestSchema
   .extend({
     fullname: z.string().min(1, { message: "Họ tên là bắt buộc" }),
     email: z.string().min(1, { message: "Email là bắt buộc" }).email("Email không hợp lệ"),
-    password: z.string().min(1, { message: "Mật khẩu là bắt buộc" }),
+    password: z.string()
+      .min(1, { message: "Mật khẩu là bắt buộc" })
+      .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
     phoneNumber: z.string().optional().nullable().or(z.literal("")),
-    confirmPassword: z.string().min(1, { message: "Xác nhận mật khẩu là bắt buộc" }),
+    confirmPassword: z.string()
+      .min(1, { message: "Xác nhận mật khẩu là bắt buộc" })
+      .min(8, { message: "Mật khẩu xác nhận phải có ít nhất 8 ký tự" }),
   })
   .refine(data => data.password === data.confirmPassword, {
     message: "Mật khẩu xác nhận không khớp",
