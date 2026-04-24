@@ -1,7 +1,9 @@
 import { useCreateFixedSlotTemplateMutation } from "@hooks/mutations/fixed-slots/use-create-fixed-slot-template-mutation";
 import { useUpdateFixedSlotTemplateMutation } from "@hooks/mutations/fixed-slots/use-update-fixed-slot-template-mutation";
+import { fixedSlotQueryKeys } from "@hooks/query/fixed-slots/fixed-slot-query-keys";
 import { useFixedSlotTemplateDetailQuery } from "@hooks/query/fixed-slots/use-fixed-slot-template-detail-query";
 import { useGetStationDetailQuery } from "@hooks/query/stations/use-get-station-detail-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
@@ -47,6 +49,7 @@ function getDefaultSlotStartDate(): Date {
 
 export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorHookParams) {
   const queryClient = useQueryClient();
+  const { isAuthenticated, user } = useAuthNext();
   const { stationId: initialStationId, stationName, templateId } = routeParams ?? {};
   const isEditMode = Boolean(templateId);
   const canEditStation = !isEditMode && !initialStationId;
@@ -64,7 +67,8 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
   const updateMutation = useUpdateFixedSlotTemplateMutation();
   const { data: templateData, isLoading: isDetailLoading } = useFixedSlotTemplateDetailQuery(
     templateId,
-    isEditMode,
+    isEditMode && isAuthenticated,
+    user?.id,
   );
 
   const lookupStationId = !canEditStation
@@ -208,7 +212,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
           onSuccess: async () => {
             await Promise.all([
               queryClient.invalidateQueries({ queryKey: ["fixed-slots"] }),
-              queryClient.invalidateQueries({ queryKey: ["fixed-slots", "detail", templateId] }),
+              queryClient.invalidateQueries({ queryKey: fixedSlotQueryKeys.detail(user?.id, templateId) }),
             ]);
             Alert.alert("Đã lưu", "Khung giờ đã được cập nhật.");
             navigation.goBack();
@@ -251,6 +255,8 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
     queryClient,
     navigation,
     createMutation,
+    isAuthenticated,
+    user?.id,
   ]);
 
   return {

@@ -15,7 +15,7 @@ export type UseBikeDetailArgs = {
 };
 
 export function useBikeDetail({ routeParams, hasToken, userId, verifyStatus, navigation }: UseBikeDetailArgs) {
-  const data = useBikeDetailData({ routeParams, hasToken, walletScope: userId });
+  const data = useBikeDetailData({ routeParams, hasToken, walletScope: userId, userId });
   const payment = useBikeDetailPayment({
     activeSubscriptions: data.activeSubscriptions,
     canUseSubscription: data.canUseSubscription,

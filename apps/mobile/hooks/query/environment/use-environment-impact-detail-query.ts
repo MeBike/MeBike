@@ -10,9 +10,10 @@ import { environmentKeys } from "./environment-query-keys";
 export function useEnvironmentImpactDetailQuery(
   rentalId: string,
   enabled: boolean = true,
+  scope?: string | null,
 ) {
   return useQuery<EnvironmentImpactDetail, EnvironmentError>({
-    queryKey: environmentKeys.detail(rentalId),
+    queryKey: environmentKeys.detail(scope, rentalId),
     enabled: enabled && Boolean(rentalId),
     queryFn: async () => {
       const result = await environmentService.getDetail(rentalId);

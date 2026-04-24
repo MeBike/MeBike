@@ -13,7 +13,7 @@ type UseFixedSlotTemplatesScreenParams = {
 
 export function useFixedSlotTemplatesScreen({ navigation, routeParams }: UseFixedSlotTemplatesScreenParams) {
   const { stationId, stationName } = routeParams ?? {};
-  const { isAuthenticated } = useAuthNext();
+  const { isAuthenticated, user } = useAuthNext();
 
   const [statusFilter, setStatusFilter] = useState<FixedSlotStatus | undefined>();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -23,6 +23,7 @@ export function useFixedSlotTemplatesScreen({ navigation, routeParams }: UseFixe
   const templatesQuery = useFixedSlotTemplatesQuery(
     { pageSize, stationId, status: statusFilter },
     isAuthenticated,
+    user?.id,
   );
 
   const templates = useMemo(

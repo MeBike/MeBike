@@ -33,7 +33,7 @@ function messageFromError(error: unknown, fallback: string): string {
 export function useSubscriptionScreen() {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  const { status, isAuthenticated } = useAuthNext();
+  const { status, isAuthenticated, user } = useAuthNext();
 
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [activeSection, setActiveSection] = useState<SubscriptionSectionKey>("plans");
@@ -44,7 +44,7 @@ export function useSubscriptionScreen() {
     isLoading,
     isFetching,
     refetch,
-  } = useGetSubscriptionsQuery({ page: 1, pageSize: PAGE_SIZE }, isAuthenticated);
+  } = useGetSubscriptionsQuery({ page: 1, pageSize: PAGE_SIZE }, isAuthenticated, user?.id);
 
   const subscriptions: Subscription[] = data?.data ?? [];
   const activeSubscription = subscriptions.find(sub => toSubscriptionStatusLabel(sub.status) === "ĐANG HOẠT ĐỘNG") ?? null;

@@ -1,4 +1,5 @@
 import { rentalKeys } from "@hooks/query/rentals/rental-query-keys";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { isRentalApiError, rentalServiceV1 } from "@services/rentals";
 import { useQuery } from "@tanstack/react-query";
 
@@ -17,8 +18,9 @@ export function useMyBikeSwapRequestQuery({
   enabled = true,
   keepPollingWhenMissing = false,
 }: UseMyBikeSwapRequestQueryOptions) {
+  const { user } = useAuthNext();
   const detailQuery = useQuery<BikeSwapRequestDetail | null>({
-    queryKey: rentalKeys.bikeSwap.meDetail(requestId ?? null),
+    queryKey: rentalKeys.bikeSwap.meDetail(user?.id, requestId ?? null),
     enabled: enabled && Boolean(requestId),
     queryFn: async () => {
       if (!requestId) {
@@ -50,7 +52,7 @@ export function useMyBikeSwapRequestQuery({
   });
 
   const rentalQuery = useQuery<BikeSwapRequestDetail | null>({
-    queryKey: rentalKeys.bikeSwap.meList({ page: 1, pageSize: 20, rentalId }),
+    queryKey: rentalKeys.bikeSwap.meList(user?.id, { page: 1, pageSize: 20, rentalId }),
     enabled: enabled && Boolean(rentalId) && (!requestId || detailQuery.data === null),
     queryFn: async () => {
       const result = await rentalServiceV1.listMyBikeSwapRequests({

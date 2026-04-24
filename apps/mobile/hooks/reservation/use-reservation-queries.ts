@@ -10,6 +10,7 @@ const EMPTY_RESERVATIONS: Reservation[] = [];
 
 type UseReservationQueriesParams = {
   hasToken: boolean;
+  userId?: string | null;
   pendingPage?: number;
   pendingLimit?: number;
   historyPage?: number;
@@ -23,6 +24,7 @@ type UseReservationQueriesParams = {
 
 export function useReservationQueries({
   hasToken,
+  userId,
   pendingPage = 1,
   pendingLimit = 10,
   historyPage = 1,
@@ -40,21 +42,21 @@ export function useReservationQueries({
     data: pendingReservationsResponse,
     isLoading: isPendingReservationsLoading,
     isFetching: isPendingReservationsFetching,
-  } = useGetPendingReservationsQuery(pendingPage, pendingLimit, shouldFetchLists);
+  } = useGetPendingReservationsQuery(pendingPage, pendingLimit, shouldFetchLists, userId);
 
   const {
     refetch: refetchReservationHistory,
     data: reservationHistoryResponse,
     isLoading: isReservationHistoryLoading,
     isFetching: isReservationHistoryFetching,
-  } = useGetReservationHistoryQuery(historyPage, historyLimit, shouldFetchLists, historyVersion);
+  } = useGetReservationHistoryQuery(historyPage, historyLimit, shouldFetchLists, historyVersion, userId);
 
   const {
     refetch: refetchReservationDetail,
     data: reservationDetail,
     isLoading: isReservationDetailLoading,
     isFetching: isReservationDetailFetching,
-  } = useGetReservationDetailQuery(reservationId ?? "", enableDetailQuery);
+  } = useGetReservationDetailQuery(reservationId ?? "", enableDetailQuery, userId);
 
   const fetchPendingReservations = useCallback(async () => {
     if (!ensureAuthenticated()) {

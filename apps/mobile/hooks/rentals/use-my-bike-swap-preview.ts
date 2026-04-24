@@ -1,4 +1,5 @@
 import { rentalKeys } from "@hooks/query/rentals/rental-query-keys";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
@@ -14,7 +15,8 @@ export type MyBikeSwapPreview = {
 
 export function useMyBikeSwapPreview(rentalId: string) {
   const queryClient = useQueryClient();
-  const queryKey = rentalKeys.bikeSwap.mePreview(rentalId);
+  const { user } = useAuthNext();
+  const queryKey = rentalKeys.bikeSwap.mePreview(user?.id, rentalId);
 
   const previewQuery = useQuery<MyBikeSwapPreview | null>({
     queryKey,

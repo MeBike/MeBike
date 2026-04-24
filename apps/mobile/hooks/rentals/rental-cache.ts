@@ -22,11 +22,11 @@ export function invalidateAllRentalQueries(queryClient: QueryClient) {
 }
 
 export function invalidateMyRentalQueries(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({ queryKey: rentalKeys.me() });
+  return queryClient.invalidateQueries({ queryKey: rentalKeys.meRoot() });
 }
 
 export function invalidateMyRentalCountsQuery(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({ queryKey: rentalKeys.meCounts() });
+  return queryClient.invalidateQueries({ queryKey: rentalKeys.meRoot() });
 }
 
 export function invalidateStaffRentalQueries(queryClient: QueryClient) {

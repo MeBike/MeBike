@@ -1,5 +1,6 @@
 import { useEnvironmentImpactHistoryQuery } from "@hooks/query/environment/use-environment-impact-history-query";
 import { useEnvironmentSummaryQuery } from "@hooks/query/environment/use-environment-summary-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 
@@ -188,6 +189,7 @@ function flattenHistory(pages: Array<{ data: EnvironmentImpactHistoryItem[] }> |
 
 export function useEnvironmentImpactScreen() {
   const navigation = useNavigation<EnvironmentImpactNavigationProp>();
+  const { isAuthenticated, user } = useAuthNext();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedRange, setSelectedRange] = useState<HistoryRangeKey>("all");
   const [draftRange, setDraftRange] = useState<HistoryRangeKey>("all");
@@ -200,8 +202,8 @@ export function useEnvironmentImpactScreen() {
     () => buildHistoryParams(selectedRange, customRange),
     [customRange, selectedRange],
   );
-  const summaryQuery = useEnvironmentSummaryQuery();
-  const historyQuery = useEnvironmentImpactHistoryQuery(historyParams);
+  const summaryQuery = useEnvironmentSummaryQuery(isAuthenticated, user?.id);
+  const historyQuery = useEnvironmentImpactHistoryQuery(historyParams, isAuthenticated, user?.id);
   const historyItems = useMemo(() => flattenHistory(historyQuery.data?.pages), [historyQuery.data?.pages]);
   const activeRange = HISTORY_RANGE_OPTIONS.find(option => option.key === selectedRange) ?? HISTORY_RANGE_OPTIONS[0];
 

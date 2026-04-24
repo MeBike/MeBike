@@ -18,9 +18,10 @@ type UseBikeDetailDataArgs = {
   routeParams: BikeDetailRouteParams;
   hasToken: boolean;
   walletScope?: string | null;
+  userId?: string | null;
 };
 
-export function useBikeDetailData({ routeParams, hasToken, walletScope }: UseBikeDetailDataArgs) {
+export function useBikeDetailData({ routeParams, hasToken, walletScope, userId }: UseBikeDetailDataArgs) {
   const { bike, station } = routeParams;
 
   const { myWallet, getMyWallet } = useWalletActions(hasToken, 5, walletScope);
@@ -34,7 +35,7 @@ export function useBikeDetailData({ routeParams, hasToken, walletScope }: UseBik
     pendingLimit: 5,
   });
 
-  const subscriptionsQuery = useGetSubscriptionsQuery({ status: "ACTIVE" }, hasToken);
+  const subscriptionsQuery = useGetSubscriptionsQuery({ status: "ACTIVE" }, hasToken, userId);
   const bikeDetailQuery = useGetBikeDetailQuery(bike.id);
   const refetchBikeDetail = bikeDetailQuery.refetch;
   const refetchSubscriptions = subscriptionsQuery.refetch;

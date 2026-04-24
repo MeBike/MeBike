@@ -213,10 +213,10 @@ function RentalQrScreen() {
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
   const insets = useSafeAreaInsets();
-  const { isAuthenticated } = useAuthNext();
+  const { isAuthenticated, user } = useAuthNext();
   const hasToken = isAuthenticated;
 
-  const rentalQuery = useMyRentalQuery(bookingId, hasToken);
+  const rentalQuery = useMyRentalQuery(bookingId, hasToken, user?.id);
   const rental = rentalQuery.data;
 
   const [isSessionCompleted, setIsSessionCompleted] = useState(false);

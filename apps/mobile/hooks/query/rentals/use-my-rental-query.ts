@@ -6,9 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { Rental } from "@/types/rental-types";
 
-export function useMyRentalQuery(rentalId: string, enabled: boolean = true) {
+export function useMyRentalQuery(rentalId: string, enabled: boolean = true, scope?: string | null) {
   return useQuery<Rental, RentalError>({
-    queryKey: rentalKeys.meDetail(rentalId),
+    queryKey: rentalKeys.meDetail(scope, rentalId),
     enabled: enabled && Boolean(rentalId),
     queryFn: async () => {
       const result = await rentalServiceV1.getMyRental(rentalId);
