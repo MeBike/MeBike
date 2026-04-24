@@ -25,7 +25,7 @@ export function useProfileEmailVerification({
 
   const handleResendOtp = useCallback(async () => {
     if (profile.verify === "VERIFIED") {
-      Alert.alert("Info", "Email của bạn đã được xác thực.");
+      Alert.alert("Thông báo", "Email của bạn đã được xác thực.");
       return false;
     }
 
@@ -41,7 +41,7 @@ export function useProfileEmailVerification({
         return false;
       }
 
-      Alert.alert("Success", "Mã OTP mới đã được gửi đến email của bạn!");
+      Alert.alert("Thành công", "Mã OTP mới đã được gửi đến email của bạn!");
       setIsVerifyEmailModalOpen(true);
       return true;
     }
@@ -60,7 +60,7 @@ export function useProfileEmailVerification({
         return;
       }
 
-      Alert.alert("Success", "Email đã được xác thực.");
+      Alert.alert("Thành công", "Email đã được xác thực.");
       void queryClient.invalidateQueries({ queryKey: authQueryKeys.me() });
       await hydrate();
       setTimeout(() => {
