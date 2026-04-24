@@ -37,7 +37,14 @@ export function useForgotPassword() {
       return;
     }
 
-    navigation.navigate("ResetPasswordOTP", { email: data.email });
+    Alert.alert("Thành công", "Mã OTP đã được gửi đến email của bạn.", [
+      {
+        text: "Tiếp tục",
+        onPress: () => {
+          navigation.navigate("ResetPasswordOTP", { email: data.email });
+        },
+      },
+    ]);
   });
 
   return {

@@ -123,6 +123,10 @@ export function useProfile() {
     Alert.alert("Sắp ra mắt", "Quản lý thông báo sẽ sớm được cập nhật.");
   };
 
+  const handleVerifyEmailPress = () => {
+    openVerifyModal();
+  };
+
   return {
     profile,
     isVerifyEmailModalOpen,
@@ -146,5 +150,6 @@ export function useProfile() {
     handleNotifications,
     handleResendOtp,
     handleVerifyEmail,
+    handleVerifyEmailPress,
   };
 }

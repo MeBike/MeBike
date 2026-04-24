@@ -36,7 +36,7 @@ export const MeResponseSchema = UserDetailSchema.openapi("MeResponse");
 
 export const UpdateMeRequestSchema = z.object({
   fullname: z.string().min(1).optional(),
-  phoneNumber: OptionalTrimmedNullableStringSchema,
+  phoneNumber: OptionalPhoneNumberNullableSchema,
   username: z.string().optional().nullable(),
   avatar: z.string().url().optional().nullable(),
   location: z.string().optional().nullable(),

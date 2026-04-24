@@ -69,13 +69,16 @@ function ProfileScreen() {
     formatDate,
     handleLogout,
     handleChangePassword,
+    handleVerifyEmailPress,
     handleUpdateProfile,
     handleReservations,
     handleSubscriptions,
     handleEnvironmentImpact,
     handleMetroJourney,
     handleNotifications,
+    isResendingOtp,
     handleVerifyEmail,
+    handleResendOtp,
   } = useProfile();
 
   const activityItems = useMemo<MenuItem[]>(() => {
@@ -141,6 +144,16 @@ function ProfileScreen() {
       iconBackground: theme.surfaceWarning.val,
       onPress: handleChangePassword,
     },
+    ...(profile.verify === "VERIFIED"
+      ? []
+      : [{
+          icon: "mail" as const,
+          title: "Xác thực email",
+          subtitle: "Email của bạn chưa được xác thực",
+          iconColor: theme.actionPrimary.val,
+          iconBackground: theme.surfaceAccent.val,
+          onPress: handleVerifyEmailPress,
+        }]),
     {
       icon: "map",
       title: "Hành trình Metro",
@@ -162,6 +175,8 @@ function ProfileScreen() {
     handleMetroJourney,
     handleNotifications,
     handleUpdateProfile,
+    handleVerifyEmailPress,
+    profile.verify,
     theme.actionPrimary.val,
     theme.statusSuccess.val,
     theme.statusWarning.val,
@@ -225,7 +240,9 @@ function ProfileScreen() {
 
       <VerifyEmailModal
         isLoading={isVerifyingOtp}
+        isResending={isResendingOtp}
         onClose={closeVerifyModal}
+        onResend={handleResendOtp}
         onSubmit={handleVerifyEmail}
         visible={isVerifyEmailModalOpen}
       />

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const styles = StyleSheet.create({
   timerContainer: {
@@ -41,6 +41,21 @@ const styles = StyleSheet.create({
     color: "#999",
     fontStyle: "italic",
   },
+  resendButton: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "#0066FF",
+  },
+  resendButtonDisabled: {
+    opacity: 0.6,
+  },
+  resendButtonText: {
+    fontSize: 13,
+    color: "white",
+    fontWeight: "600",
+  },
 });
 
 type OtpTimerProps = {
@@ -73,7 +88,15 @@ export function OtpTimer({ timeLeft }: { timeLeft: number }) {
   );
 }
 
-export function OtpResendInfo({ resendTimeLeft }: { resendTimeLeft: number }) {
+export function OtpResendInfo({
+  resendTimeLeft,
+  onResend,
+  isResending = false,
+}: {
+  resendTimeLeft: number;
+  onResend?: () => void;
+  isResending?: boolean;
+}) {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -92,9 +115,19 @@ export function OtpResendInfo({ resendTimeLeft }: { resendTimeLeft: number }) {
             </Text>
           )
         : (
-            <Text style={styles.resendInfo}>
-              Kiểm tra email của bạn hoặc yêu cầu gửi lại từ Profile
-            </Text>
+            <Pressable
+              disabled={!onResend || isResending}
+              onPress={onResend}
+              style={({ pressed }) => [
+                styles.resendButton,
+                (!onResend || isResending) && styles.resendButtonDisabled,
+                pressed && onResend && !isResending ? { opacity: 0.9 } : null,
+              ]}
+            >
+              <Text style={styles.resendButtonText}>
+                {isResending ? "Đang gửi mã..." : "Gửi lại mã"}
+              </Text>
+            </Pressable>
           )}
     </View>
   );

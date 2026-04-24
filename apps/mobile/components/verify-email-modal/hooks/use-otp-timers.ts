@@ -12,6 +12,11 @@ export function useOtpTimers(visible: boolean) {
     setResendTimeLeft(0);
   }, []);
 
+  const restartTimers = useCallback(() => {
+    setTimeLeft(OTP_EXPIRY);
+    setResendTimeLeft(_RESEND_COOLDOWN);
+  }, []);
+
   useEffect(() => {
     if (!visible) {
       setTimeLeft(OTP_EXPIRY);
@@ -57,5 +62,6 @@ export function useOtpTimers(visible: boolean) {
     timeLeft,
     resendTimeLeft,
     resetTimers,
+    restartTimers,
   };
 }
