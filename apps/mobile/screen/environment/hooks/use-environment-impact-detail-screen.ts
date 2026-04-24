@@ -1,4 +1,5 @@
 import { useEnvironmentImpactDetailQuery } from "@hooks/query/environment/use-environment-impact-detail-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 
@@ -7,7 +8,8 @@ import type { EnvironmentImpactDetailNavigationProp } from "@/types/navigation";
 export function useEnvironmentImpactDetailScreen(rentalId: string) {
   const navigation = useNavigation<EnvironmentImpactDetailNavigationProp>();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const detailQuery = useEnvironmentImpactDetailQuery(rentalId);
+  const { isAuthenticated, user } = useAuthNext();
+  const detailQuery = useEnvironmentImpactDetailQuery(rentalId, isAuthenticated, user?.id);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);

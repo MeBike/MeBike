@@ -1,6 +1,8 @@
 import { useCancelFixedSlotTemplateMutation } from "@hooks/mutations/fixed-slots/use-cancel-fixed-slot-template-mutation";
 import { useRemoveFixedSlotTemplateDateMutation } from "@hooks/mutations/fixed-slots/use-remove-fixed-slot-template-date-mutation";
+import { fixedSlotQueryKeys } from "@hooks/query/fixed-slots/fixed-slot-query-keys";
 import { useFixedSlotTemplateDetailQuery } from "@hooks/query/fixed-slots/use-fixed-slot-template-detail-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { Alert } from "react-native";
@@ -18,9 +20,10 @@ type UseFixedSlotDetailScreenParams = {
 
 export function useFixedSlotDetailScreen({ navigation, templateId }: UseFixedSlotDetailScreenParams) {
   const queryClient = useQueryClient();
+  const { isAuthenticated, user } = useAuthNext();
   const cancelMutation = useCancelFixedSlotTemplateMutation();
   const removeDateMutation = useRemoveFixedSlotTemplateDateMutation();
-  const detailQuery = useFixedSlotTemplateDetailQuery(templateId, true);
+  const detailQuery = useFixedSlotTemplateDetailQuery(templateId, isAuthenticated, user?.id);
 
   const template = detailQuery.data;
   const templateCode = useMemo(() => templateId.split("-")[1]?.toUpperCase() ?? templateId, [templateId]);
@@ -29,9 +32,9 @@ export function useFixedSlotDetailScreen({ navigation, templateId }: UseFixedSlo
   const canMutate = template?.status === "ACTIVE";
 
   const syncTemplate = useCallback((nextTemplate: NonNullable<typeof template>) => {
-    queryClient.setQueryData(["fixed-slots", "detail", templateId], nextTemplate);
+    queryClient.setQueryData(fixedSlotQueryKeys.detail(user?.id, templateId), nextTemplate);
     queryClient.invalidateQueries({ queryKey: ["fixed-slots"] });
-  }, [queryClient, templateId]);
+  }, [queryClient, templateId, user?.id]);
 
   const handleNavigateToEditor = useCallback(() => {
     if (!template || !canMutate) {

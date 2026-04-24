@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useMyRentalResolvedDetailQuery } from "@hooks/query/rentals/use-my-rental-resolved-detail-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 type Options = {
   onRentalEnd?: () => void;
@@ -9,8 +10,9 @@ type Options = {
 export function useRentalDetailData(bookingId: string, options?: Options) {
   const { onRentalEnd } = options || {};
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { isAuthenticated, user } = useAuthNext();
 
-  const rentalQuery = useMyRentalResolvedDetailQuery(bookingId, true);
+  const rentalQuery = useMyRentalResolvedDetailQuery(bookingId, isAuthenticated, user?.id);
 
   const refreshAll = useCallback(async () => {
     setIsRefreshing(true);

@@ -15,6 +15,7 @@ const DEFAULT_PAGE_SIZE = 20;
 export function useEnvironmentImpactHistoryQuery(
   params: EnvironmentImpactHistoryQuery = {},
   enabled: boolean = true,
+  scope?: string | null,
 ) {
   const {
     pageSize = DEFAULT_PAGE_SIZE,
@@ -25,6 +26,7 @@ export function useEnvironmentImpactHistoryQuery(
 
   return useInfiniteQuery<EnvironmentImpactHistoryResponse, EnvironmentError>({
     queryKey: environmentKeys.history({
+      scope,
       pageSize,
       sortOrder,
       dateFrom,

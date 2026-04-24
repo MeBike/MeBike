@@ -9,12 +9,13 @@ import { useBikeDetailPayment } from "./use-bike-detail-payment";
 export type UseBikeDetailArgs = {
   routeParams: BikeDetailRouteParams;
   hasToken: boolean;
+  userId?: string | null;
   verifyStatus: "UNVERIFIED" | "VERIFIED" | string | undefined;
   navigation: BikeDetailNavigationProp;
 };
 
-export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation }: UseBikeDetailArgs) {
-  const data = useBikeDetailData({ routeParams, hasToken });
+export function useBikeDetail({ routeParams, hasToken, userId, verifyStatus, navigation }: UseBikeDetailArgs) {
+  const data = useBikeDetailData({ routeParams, hasToken, walletScope: userId, userId });
   const payment = useBikeDetailPayment({
     activeSubscriptions: data.activeSubscriptions,
     canUseSubscription: data.canUseSubscription,

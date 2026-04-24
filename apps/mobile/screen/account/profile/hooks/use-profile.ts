@@ -42,6 +42,7 @@ export function useProfile() {
 
   const { data: rentalCounts, isLoading: isRentalCountsLoading } = useMyRentalCountsQuery({
     enabled: shouldLoadRentalCounts,
+    scope: user?.id,
   });
   const completedTrips = rentalCounts?.COMPLETED ?? 0;
   const {

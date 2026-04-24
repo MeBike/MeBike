@@ -6,14 +6,15 @@ import type {
 export const rentalKeys = {
   all: () => ["rentals"] as const,
 
-  me: () => ["rentals", "me"] as const,
-  meHistory: () => ["rentals", "me", "history"] as const,
-  meHistoryPage: (pageSize: number) => ["rentals", "me", "history", pageSize] as const,
-  meCounts: (status?: RentalStatus | null) =>
-    ["rentals", "me", "counts", status ?? null] as const,
-  meDetail: (rentalId: string) => ["rentals", "me", "detail", rentalId] as const,
-  meResolvedDetail: (rentalId: string) =>
-    ["rentals", "me", "resolved-detail", rentalId] as const,
+  meRoot: () => ["rentals", "me"] as const,
+  me: (scope: string | null | undefined) => ["rentals", "me", scope ?? "guest"] as const,
+  meHistory: (scope: string | null | undefined) => ["rentals", "me", scope ?? "guest", "history"] as const,
+  meHistoryPage: (scope: string | null | undefined, pageSize: number) => ["rentals", "me", scope ?? "guest", "history", pageSize] as const,
+  meCounts: (scope: string | null | undefined, status?: RentalStatus | null) =>
+    ["rentals", "me", scope ?? "guest", "counts", status ?? null] as const,
+  meDetail: (scope: string | null | undefined, rentalId: string) => ["rentals", "me", scope ?? "guest", "detail", rentalId] as const,
+  meResolvedDetail: (scope: string | null | undefined, rentalId: string) =>
+    ["rentals", "me", scope ?? "guest", "resolved-detail", rentalId] as const,
 
   staff: () => ["rentals", "staff"] as const,
   staffDetail: (rentalId: string) => ["rentals", "staff", "detail", rentalId] as const,
@@ -21,12 +22,13 @@ export const rentalKeys = {
     ["rentals", "staff", "active-by-phone", phone, page, pageSize] as const,
 
   bikeSwap: {
-    mePreview: (rentalId: string) =>
-      ["rentals", "me", "bike-swap", "preview", rentalId] as const,
-    meList: (params: BikeSwapRequestListParams = {}) =>
+    mePreview: (scope: string | null | undefined, rentalId: string) =>
+      ["rentals", "me", scope ?? "guest", "bike-swap", "preview", rentalId] as const,
+    meList: (scope: string | null | undefined, params: BikeSwapRequestListParams = {}) =>
       [
         "rentals",
         "me",
+        scope ?? "guest",
         "bike-swap",
         "list",
         params.rentalId ?? null,
@@ -36,8 +38,8 @@ export const rentalKeys = {
         params.page ?? null,
         params.pageSize ?? null,
       ] as const,
-    meDetail: (bikeSwapRequestId: string | null) =>
-      ["rentals", "me", "bike-swap", "detail", bikeSwapRequestId] as const,
+    meDetail: (scope: string | null | undefined, bikeSwapRequestId: string | null) =>
+      ["rentals", "me", scope ?? "guest", "bike-swap", "detail", bikeSwapRequestId] as const,
     staff: () => ["rentals", "staff", "bike-swap"] as const,
     staffList: (params: BikeSwapRequestListParams = {}) =>
       [

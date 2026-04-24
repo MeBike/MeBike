@@ -7,13 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import type { RentalCounts, RentalStatus } from "@/types/rental-types";
 
 export function useMyRentalCountsQuery(
-  options?: { status?: RentalStatus; enabled?: boolean },
+  options?: { status?: RentalStatus; enabled?: boolean; scope?: string | null },
 ) {
   const status = options?.status;
   const enabled = options?.enabled ?? true;
+  const scope = options?.scope;
 
   return useQuery<RentalCounts, RentalError>({
-    queryKey: rentalKeys.meCounts(status),
+    queryKey: rentalKeys.meCounts(scope, status),
     enabled,
     queryFn: async () => {
       const result = await rentalServiceV1.getMyRentalCounts(status);

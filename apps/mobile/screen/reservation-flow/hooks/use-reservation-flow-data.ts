@@ -12,7 +12,7 @@ export function useReservationFlowData() {
   const navigation = useNavigation<ReservationFlowNavigationProp>();
   const route = useRoute<ReservationFlowRouteProp>();
   const insets = useSafeAreaInsets();
-  const { isAuthenticated } = useAuthNext();
+  const { isAuthenticated, user } = useAuthNext();
 
   const hasToken = isAuthenticated;
 
@@ -38,6 +38,7 @@ export function useReservationFlowData() {
   } = useGetSubscriptionsQuery(
     { status: "ACTIVE", pageSize: 10 },
     hasToken,
+    user?.id,
   );
 
   const activeSubscriptions = useMemo(

@@ -17,12 +17,14 @@ import type { BikeDetailRouteParams } from "../types";
 type UseBikeDetailDataArgs = {
   routeParams: BikeDetailRouteParams;
   hasToken: boolean;
+  walletScope?: string | null;
+  userId?: string | null;
 };
 
-export function useBikeDetailData({ routeParams, hasToken }: UseBikeDetailDataArgs) {
+export function useBikeDetailData({ routeParams, hasToken, walletScope, userId }: UseBikeDetailDataArgs) {
   const { bike, station } = routeParams;
 
-  const { myWallet, getMyWallet } = useWalletActions(hasToken);
+  const { myWallet, getMyWallet } = useWalletActions(hasToken, 5, walletScope);
   const {
     pendingReservations,
     fetchPendingReservations,
@@ -33,7 +35,7 @@ export function useBikeDetailData({ routeParams, hasToken }: UseBikeDetailDataAr
     pendingLimit: 5,
   });
 
-  const subscriptionsQuery = useGetSubscriptionsQuery({ status: "ACTIVE" }, hasToken);
+  const subscriptionsQuery = useGetSubscriptionsQuery({ status: "ACTIVE" }, hasToken, userId);
   const bikeDetailQuery = useGetBikeDetailQuery(bike.id);
   const refetchBikeDetail = bikeDetailQuery.refetch;
   const refetchSubscriptions = subscriptionsQuery.refetch;

@@ -13,6 +13,8 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StatusBar, Vi
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, XStack, YStack } from "tamagui";
 
+import { walletQueryKeys } from "@/hooks/query/wallet/wallet-query-keys";
+
 import { WalletHeroCard } from "./components/wallet-hero-card";
 import { WalletTopUpCta } from "./components/wallet-top-up-cta";
 import { WalletTransactionRow } from "./components/wallet-transaction-row";
@@ -32,19 +34,19 @@ function MyWalletScreen() {
   const [selectedTransaction, setSelectedTransaction] = useState<WalletTransactionDetail | null>(null);
 
   const wallet = useMyWalletScreen();
-  const { getMyTransaction, getMyWallet } = wallet;
+  const { getMyTransaction, getMyWallet, userId } = wallet;
 
   const refreshWalletData = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["my-wallet"] }),
-      queryClient.invalidateQueries({ queryKey: ["myTransactions"] }),
+      queryClient.invalidateQueries({ queryKey: walletQueryKeys.myWallet(userId) }),
+      queryClient.invalidateQueries({ queryKey: walletQueryKeys.myTransactions(userId) }),
     ]);
 
     await Promise.all([
       getMyWallet(),
       getMyTransaction(),
     ]);
-  }, [getMyTransaction, getMyWallet, queryClient]);
+  }, [getMyTransaction, getMyWallet, queryClient, userId]);
 
   useFocusEffect(
     useCallback(() => {

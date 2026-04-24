@@ -1,6 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 
+import { useAuthNext } from "@providers/auth-provider-next";
+
 import { useReservationMutations } from "./reservation/use-reservation-mutations";
 import { useReservationQueries } from "./reservation/use-reservation-queries";
 
@@ -28,6 +30,7 @@ export function useReservationActions({
   autoFetch = true,
 }: UseReservationActionsParams) {
   const navigation = useNavigation();
+  const { user } = useAuthNext();
 
   const ensureAuthenticated = useCallback(() => {
     if (!hasToken) {
@@ -39,6 +42,7 @@ export function useReservationActions({
 
   const queryState = useReservationQueries({
     hasToken,
+    userId: user?.id,
     pendingPage,
     pendingLimit,
     historyPage,

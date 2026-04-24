@@ -1,6 +1,5 @@
 import type { WalletTransactionDetail } from "@services/wallets/wallet.service";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 
 import { useGetMyTransactionsQuery } from "./query/wallet/use-get-my-transaction-query";
@@ -19,10 +18,9 @@ type ErrorWithMessage = {
   message: string;
 };
 
-export function useWalletActions(hasToken: boolean, limit: number = 5) {
-  const queryClient = useQueryClient();
-  const useGetMyWallet = useGetMyWalletQuery();
-  const useGetMyTransaction = useGetMyTransactionsQuery(limit);
+export function useWalletActions(hasToken: boolean, limit: number = 5, scope: string | null | undefined = null) {
+  const useGetMyWallet = useGetMyWalletQuery(hasToken, scope);
+  const useGetMyTransaction = useGetMyTransactionsQuery(limit, hasToken, scope);
   const { refetch, data: response, isLoading } = useGetMyWallet;
   const getMyWallet = useCallback(async () => {
     if (!hasToken) {

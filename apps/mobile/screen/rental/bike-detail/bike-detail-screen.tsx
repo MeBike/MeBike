@@ -50,6 +50,7 @@ export default function BikeDetailScreen() {
   } = useBikeDetail({
     routeParams,
     hasToken: isAuthenticated,
+    userId: user?.id,
     verifyStatus: user?.verify,
     navigation,
   });
