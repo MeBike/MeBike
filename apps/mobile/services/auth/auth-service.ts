@@ -90,7 +90,7 @@ export const authService = {
         return tokens;
       }
 
-      if (response.status === StatusCodes.CONFLICT) {
+      if (response.status === StatusCodes.BAD_REQUEST || response.status === StatusCodes.CONFLICT) {
         return err(await parseAuthError(response));
       }
 

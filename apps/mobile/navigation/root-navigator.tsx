@@ -45,7 +45,7 @@ import MainTabNavigator from "./main-tab-navigator";
 const Stack = createStackNavigator<RootStackParamList>();
 
 function RootNavigator() {
-  const { status, isAuthenticated } = useAuthNext();
+  const { status, isAuthenticated, user } = useAuthNext();
 
   if (status === "loading") {
     return <LoadingScreen />;
@@ -113,8 +113,12 @@ function RootNavigator() {
     );
   }
 
+  const initialAuthenticatedRoute = user?.verify === "UNVERIFIED"
+    ? "EmailVerification"
+    : "Main";
+
   return (
-    <Stack.Navigator initialRouteName="Main" key="authenticated">
+    <Stack.Navigator initialRouteName={initialAuthenticatedRoute} key="authenticated">
       <Stack.Screen
         name="Main"
         component={MainTabNavigator}
@@ -143,6 +147,7 @@ function RootNavigator() {
       <Stack.Screen
         name="EmailVerification"
         component={EmailVerificationScreen}
+        initialParams={{ email: user?.email ?? "" }}
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen

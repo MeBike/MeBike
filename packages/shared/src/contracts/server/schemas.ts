@@ -1,6 +1,6 @@
 import { z } from "../../zod";
 
-const ValidationIssueSchema = z.object({
+export const ValidationIssueSchema = z.object({
   path: z.string().openapi({
     description: "Location of the invalid value (body, query, params, etc.)",
     example: "body.fieldName",

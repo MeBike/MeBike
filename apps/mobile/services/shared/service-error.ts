@@ -132,6 +132,19 @@ export async function parseServiceError<TCode extends string, TSchema extends Er
     const data = await readJson(response);
 
     if (includeUnauthorized && isUnauthorizedStatus(response.status, includeForbidden)) {
+      const parsed = parseErrorFromSchema(schema, data);
+      if (parsed) {
+        const parsedCode = mapCode(parsed.code);
+        if (parsedCode) {
+          return {
+            _tag: "ApiError",
+            code: parsedCode,
+            message: parsed.message,
+            details: parsed.details,
+          };
+        }
+      }
+
       const unauthorized = parseUnauthorizedError(data);
       if (!unauthorized) {
         return { _tag: "DecodeError" };

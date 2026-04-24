@@ -13,6 +13,7 @@ type ProfileHeaderProps = {
   profile: UserDetail;
   completedTrips?: number;
   isLoadingTrips?: boolean;
+  onVerifyEmail?: () => void;
   topInset: number;
   formatDate: (dateString: string) => string;
 };
@@ -24,6 +25,7 @@ function ProfileHeader({
   profile,
   completedTrips,
   isLoadingTrips,
+  onVerifyEmail: _onVerifyEmail,
   topInset,
   formatDate,
 }: ProfileHeaderProps) {
