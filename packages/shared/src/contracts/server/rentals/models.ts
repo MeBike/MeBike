@@ -309,11 +309,6 @@ export const StaffCreateRentalRequestSchema = CreateRentalRequestSchema.extend({
   userId: z.uuidv7(),
 });
 
-export const CardTapRentalRequestSchema = z.object({
-  bikeId: z.uuidv7(),
-  cardUid: z.string(),
-});
-
 export const EndRentalRequestSchema = z.object({
   stationId: z.uuidv7(),
   confirmedAt: z.iso.datetime().optional(),
@@ -472,7 +467,6 @@ export type CreateRentalRequest = z.infer<typeof CreateRentalRequestSchema>;
 export type StaffCreateRentalRequest = z.infer<
   typeof StaffCreateRentalRequestSchema
 >;
-export type CardTapRentalRequest = z.infer<typeof CardTapRentalRequestSchema>;
 export type EndRentalRequest = z.infer<typeof EndRentalRequestSchema>;
 export type UpdateRentalRequest = z.infer<typeof UpdateRentalRequestSchema>;
 export type CreateReturnSlotRequest = z.infer<typeof CreateReturnSlotRequestSchema>;
