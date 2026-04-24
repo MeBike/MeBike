@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 
 import { useWalletActions } from "@hooks/use-wallet-action";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { WALLET_CONSTANTS } from "@utils/wallet/constants";
 
 export function useMyWalletScreen() {
-  const wallet = useWalletActions(true, WALLET_CONSTANTS.DEFAULT_LIMIT);
+  const { isAuthenticated, user } = useAuthNext();
+  const wallet = useWalletActions(isAuthenticated, WALLET_CONSTANTS.DEFAULT_LIMIT, user?.id);
 
   return useMemo(() => ({
     getMyTransaction: wallet.getMyTransaction,
@@ -15,6 +17,7 @@ export function useMyWalletScreen() {
     isLoadingWallet: wallet.isLoadingGetMyWallet,
     loadMoreTransactions: wallet.loadMoreTransactions,
     myWallet: wallet.myWallet,
+    userId: user?.id ?? null,
     totalTransactions: wallet.totalTransactions,
     transactions: wallet.myTransactions,
   }), [
@@ -28,5 +31,6 @@ export function useMyWalletScreen() {
     wallet.myTransactions,
     wallet.myWallet,
     wallet.totalTransactions,
+    user?.id,
   ]);
 }

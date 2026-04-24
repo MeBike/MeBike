@@ -17,12 +17,13 @@ import type { BikeDetailRouteParams } from "../types";
 type UseBikeDetailDataArgs = {
   routeParams: BikeDetailRouteParams;
   hasToken: boolean;
+  walletScope?: string | null;
 };
 
-export function useBikeDetailData({ routeParams, hasToken }: UseBikeDetailDataArgs) {
+export function useBikeDetailData({ routeParams, hasToken, walletScope }: UseBikeDetailDataArgs) {
   const { bike, station } = routeParams;
 
-  const { myWallet, getMyWallet } = useWalletActions(hasToken);
+  const { myWallet, getMyWallet } = useWalletActions(hasToken, 5, walletScope);
   const {
     pendingReservations,
     fetchPendingReservations,

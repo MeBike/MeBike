@@ -65,6 +65,10 @@ type AuthContextValue = {
 
 const AuthContextNext = createContext<AuthContextValue | undefined>(undefined);
 
+function clearSessionQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.clear();
+}
+
 export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
   const [tokenState, setTokenState] = useState<TokenState>("checking");
@@ -114,7 +118,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
       void clearTokens().finally(() => {
         setSessionUser(null);
         setTokenState("missing");
-        queryClient.removeQueries({ queryKey: authQueryKeys.me() });
+        clearSessionQueries(queryClient);
       });
     }
   }, [meQuery.error, queryClient, tokenState]);
@@ -125,7 +129,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
     setTokenState(nextTokenState);
 
     if (nextTokenState === "missing") {
-      queryClient.removeQueries({ queryKey: authQueryKeys.me() });
+      clearSessionQueries(queryClient);
       return;
     }
 
@@ -155,7 +159,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
     await clearTokens();
     setSessionUser(null);
     setTokenState("missing");
-    queryClient.removeQueries({ queryKey: authQueryKeys.me() });
+    clearSessionQueries(queryClient);
   }, [queryClient]);
 
   const value = useMemo<AuthContextValue>(() => {
