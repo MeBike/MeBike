@@ -103,5 +103,4 @@ export interface TechnicianTeam {
   id: string;
   name: string;
   stationId: string;
-  ß;
 }

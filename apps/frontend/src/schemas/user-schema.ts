@@ -8,7 +8,7 @@ export const userProfileSchema = z.object({
     .string()
     .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
     .regex(/^[0-9]+$/, "Chỉ được nhập số"),
-  password: z.string().min(6, "Mật khẩu phải ít nhất 6 ký tự"),
+  password: z.string().min(8, "Mật khẩu phải ít nhất 8 ký tự"),
   role: z.enum(["USER", "STAFF", "ADMIN","TECHNICIAN","MANAGER"]),
   verify: z.enum([] as VerifyStatus[]).optional(),
 });
@@ -28,7 +28,7 @@ const baseUserSchema = z.object({
     .string()
     .length(10, "Số điện thoại phải bao gồm chính xác 10 chữ số")
     .regex(/^[0-9]+$/, "Chỉ được nhập số"),
-  password : z.string().min(10,"Password phải ít nhất 10 kí tự"),
+  password : z.string().min(8,"Password phải ít nhất 8 kí tự"),
   // accountStatus :  z.enum(["ACTIVE","INACTIVE","SUSPENDED","BANNED",""]),
   // verify : z.enum(["VERIFIED","UNVERIFIED"]),
 });
