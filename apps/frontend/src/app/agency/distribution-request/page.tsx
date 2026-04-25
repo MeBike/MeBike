@@ -21,6 +21,7 @@ export default function Page() {
     hasToken: true,
   });
 
+  // Cập nhật dependency để gọi lại API khi Page hoặc Status thay đổi
   useEffect(() => {
     getAgencyViewDistributionRequest();
   }, [page, statusFilter, getAgencyViewDistributionRequest]); 

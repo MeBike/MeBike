@@ -1,23 +1,67 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { RedistributionRequestDetail } from "@/types/DistributionRequest";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button"; // Giả sử dùng Shadcn Button
+import { Button } from "@/components/ui/button";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bike, MapPin, ClipboardList } from "lucide-react"; // Import icon cho đẹp
+import { ArrowLeft, Bike, MapPin, ClipboardList, Loader2, XCircle } from "lucide-react"; 
 import type { RedistributionRequestStatus } from "@/types/DistributionRequest";
+
+// Import Dialog & Textarea của shadcn
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+
+// --- CONFIG TỪ ĐIỂN TIẾNG VIỆT ---
+const REQUEST_STATUS_VI: Record<string, string> = {
+  PENDING_APPROVAL: "Chờ phê duyệt",
+  APPROVED: "Đã phê duyệt",
+  IN_TRANSIT: "Đang vận chuyển",
+  PARTIALLY_COMPLETED: "Hoàn thành 1 phần",
+  COMPLETED: "Đã hoàn thành",
+  REJECTED: "Bị từ chối",
+  CANCELLED: "Đã hủy",
+};
+
+const BIKE_STATUS_VI: Record<string, string> = {
+  AVAILABLE: "Sẵn sàng",
+  BROKEN: "Hỏng hóc",
+  MAINTENANCE: "Bảo trì",
+  UNAVAILABLE: "Không khả dụng",
+  RENTED: "Đang được thuê",
+  BOOKED: "Đã đặt chỗ",
+  RESERVED: "Đã giữ chỗ",
+};
 interface Props {
   data: RedistributionRequestDetail;
+  onStartTransit: () => Promise<void>;
+  onCancel: (reason: string) => Promise<void>; 
 }
-
-export const DistributionRequestDetailClient = ({ data }: Props) => {
+export const DistributionRequestDetailClient = ({ data, onStartTransit, onCancel }: Props) => {
   const router = useRouter();
-
-  // Hàm xử lý màu sắc Badge dựa trên status
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const isValidCancelReason = cancelReason.trim().length >= 10;
+  const handleStartTransit = async () => {
+    setIsProcessing(true);
+    await onStartTransit();
+    setIsProcessing(false);
+  };
+  const handleCancel = async () => {
+    if (!isValidCancelReason) return;
+    setIsProcessing(true);
+    try {
+      await onCancel(cancelReason);
+      setIsCancelDialogOpen(false); 
+    } finally {
+      setIsProcessing(false);
+      setCancelReason(""); 
+    }
+  };
   const getStatusStyle = (status: RedistributionRequestStatus) => {
     switch (status) {
       case "PENDING_APPROVAL":
@@ -38,10 +82,8 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
     }
   };
   
-
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      {/* Header với nút Back */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <Button 
@@ -56,9 +98,72 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
               Chi tiết yêu cầu điều phối
             </h1>
             <Badge className={`${getStatusStyle(data.status)} px-3 py-1 text-xs font-bold uppercase shadow-sm`}>
-              {data.status}
+              {REQUEST_STATUS_VI[data.status] || data.status.replace("_", " ")}
             </Badge>
           </div>
+        </div>
+        <div className="flex gap-2">
+          {data.status === "PENDING_APPROVAL" && (
+            <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  disabled={isProcessing}
+                  className="shadow-lg"
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Hủy yêu cầu
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Hủy yêu cầu điều phối</DialogTitle>
+                </DialogHeader>
+                <div className="py-4 space-y-2">
+                  <Textarea 
+                    placeholder="Nhập lý do hủy yêu cầu (tối thiểu 10 ký tự)..."
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    className="resize-none"
+                    rows={4}
+                  />
+                  {/* Hiển thị số lượng ký tự, màu đỏ nếu chưa đủ, xanh nếu đã đủ */}
+                  <p className={`text-xs text-right font-medium ${isValidCancelReason ? "text-green-600" : "text-red-500"}`}>
+                    {cancelReason.trim().length} / 10 ký tự
+                  </p>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)} disabled={isProcessing}>
+                    Đóng
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleCancel} 
+                    // Chặn click nếu chưa đủ điều kiện hoặc đang submit
+                    disabled={isProcessing || !isValidCancelReason}
+                  >
+                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Xác nhận hủy
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {data.status === "APPROVED" && (
+            <Button 
+              onClick={handleStartTransit} 
+              disabled={isProcessing}
+              className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+            >
+              {isProcessing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Bike className="mr-2 h-4 w-4" />
+              )}
+              Bắt đầu điều phối
+            </Button>
+          )}
         </div>
       </div>
 
@@ -170,12 +275,12 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                         </code>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="font-semibold text-[10px] bg-white">
-                          {item.bike.status}
+                        <Badge variant="outline" className="font-medium text-[12px] bg-white text-slate-700">
+                          {BIKE_STATUS_VI[item.bike.status] || item.bike.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right text-slate-600 font-medium">
-                        {item.deliveredAt ? formatToVNTime(item.deliveredAt) : "---"}
+                        {item.deliveredAt ? formatToVNTime(item.deliveredAt) : "Chưa có"}
                       </TableCell>
                     </TableRow>
                   ))}
