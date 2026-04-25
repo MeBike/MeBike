@@ -34,15 +34,24 @@ export function useBookingHistory() {
     initialPageParam: 1,
     staleTime: 5 * 60 * 1000,
   });
+  const {
+    data,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    isLoading,
+    isRefetching,
+  } = query;
 
   const bookings = useMemo(() => {
-    if (!query.data?.pages) {
+    if (!data?.pages) {
       return [];
     }
     const seenIds = new Set<string>();
     const unique: Rental[] = [];
 
-    query.data.pages.forEach((page) => {
+    data.pages.forEach((page) => {
       page.data.forEach((item) => {
         if (item && !seenIds.has(item.id)) {
           seenIds.add(item.id);
@@ -52,30 +61,30 @@ export function useBookingHistory() {
     });
 
     return unique;
-  }, [query.data]);
+  }, [data]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await query.refetch();
+      await refetch();
     }
     finally {
       setIsRefreshing(false);
     }
-  }, [query]);
+  }, [refetch]);
 
   const loadMore = useCallback(() => {
-    if (query.hasNextPage && !query.isFetchingNextPage) {
-      query.fetchNextPage();
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
     }
-  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return {
     bookings,
-    isLoading: query.isLoading && !query.data,
-    isFetchingNextPage: query.isFetchingNextPage,
-    hasNextPage: query.hasNextPage,
-    refreshing: isRefreshing || query.isRefetching,
+    isLoading: isLoading && !data,
+    isFetchingNextPage,
+    hasNextPage,
+    refreshing: isRefreshing || isRefetching,
     onRefresh,
     loadMore,
   };
