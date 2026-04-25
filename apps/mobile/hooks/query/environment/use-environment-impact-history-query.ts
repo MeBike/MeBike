@@ -35,7 +35,8 @@ export function useEnvironmentImpactHistoryQuery(
     enabled,
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
-      const page = typeof pageParam === "number" ? pageParam : 1;
+      const requestedPage = typeof pageParam === "number" ? pageParam : Number(pageParam);
+      const page = Number.isFinite(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
       const result = await environmentService.getHistory({
         page,
         pageSize,
