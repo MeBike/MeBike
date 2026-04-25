@@ -8,36 +8,38 @@ import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 const DistributionRequestDetailPage = () => {
   const params = useParams();
   const id = params.id as string;
-  const hasToken = true; 
+  const hasToken = true;
   const {
-    staffViewDistributionRequestDetail,
-    isLoadingStaffViewDistributionRequestDetail,
-    getStaffViewDistributionRequestDetail,
+    agencyViewDistributionRequestDetail,
+    isLoadingAgencyViewDistributionRequestDetail,
+    getAgencyViewDistributionRequestDetail,
+    startTransitDistributionRequest,
+    cancelDistributeRequest,
   } = useDistributionRequest({
     id: id,
     hasToken: hasToken,
   });
-  const [isVisualLoading,setIsVisualLoading] = useState<boolean>(false);
-    useEffect(() => {
-      if (isLoadingStaffViewDistributionRequestDetail) {
-        setIsVisualLoading(true);
-      } else {
-        const timer = setTimeout(() => {
-          setIsVisualLoading(false);
-        }, 600);
-        return () => clearTimeout(timer);
-      }
-    }, [isLoadingStaffViewDistributionRequestDetail]);
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+  useEffect(() => {
+    if (isLoadingAgencyViewDistributionRequestDetail) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingAgencyViewDistributionRequestDetail]);
   useEffect(() => {
     if (id) {
-      getStaffViewDistributionRequestDetail();
+      getAgencyViewDistributionRequestDetail();
     }
-  }, [id, getStaffViewDistributionRequestDetail]);
+  }, [id, getAgencyViewDistributionRequestDetail]);
 
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-  if (!staffViewDistributionRequestDetail?.data) {
+  if (!agencyViewDistributionRequestDetail?.data) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>Không tìm thấy thông tin yêu cầu điều phối.</p>
@@ -46,8 +48,12 @@ const DistributionRequestDetailPage = () => {
   }
 
   return (
-    <DistributionRequestDetailClient 
-      data={staffViewDistributionRequestDetail.data} 
+    <DistributionRequestDetailClient
+      onCancel={async (reason: string) =>
+        await cancelDistributeRequest(id, { reason })
+      }
+      data={agencyViewDistributionRequestDetail.data}
+      onStartTransit={async () => await startTransitDistributionRequest(id)}
     />
   );
 };
