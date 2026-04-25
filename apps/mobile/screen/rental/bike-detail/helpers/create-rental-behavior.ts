@@ -71,7 +71,7 @@ export function handleCreateRentalError(args: {
       invalidateRentalRelatedQueries(queryClient);
       return;
     }
-    case "CARD_RENTAL_ACTIVE_EXISTS": {
+    case "ACTIVE_RENTAL_EXISTS": {
       Alert.alert(
         "Đang có phiên thuê hoạt động",
         message,

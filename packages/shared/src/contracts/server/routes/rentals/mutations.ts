@@ -4,7 +4,6 @@ import { z } from "../../../../zod";
 import {
   BikeSwapRequestErrorCodeSchema,
   BikeSwapRequestErrorResponseSchema,
-  CardTapRentalRequestSchema,
   CreateRentalRequestSchema,
   CreateReturnSlotRequestSchema,
   EndRentalRequestSchema,
@@ -100,6 +99,14 @@ export const createRental = createRoute({
                   currentTime: "2026-04-20T23:00:00+07:00",
                   windowStart: "23:00",
                   windowEnd: "05:00",
+                },
+              },
+            },
+            ActiveRentalExists: {
+              value: {
+                error: "Active rental already exists for this user",
+                details: {
+                  code: RentalErrorCodeSchema.enum.ACTIVE_RENTAL_EXISTS,
                 },
               },
             },
@@ -408,64 +415,6 @@ export const confirmRentalReturnByOperator = createRoute({
 
 // Legacy alias kept so existing generated route consumers do not break immediately.
 export const endRentalByAdmin = confirmRentalReturnByOperator;
-
-export const processCardTapRental = createRoute({
-  method: "post",
-  path: "/v1/rentals/card-rental",
-  tags: ["Rentals"],
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: CardTapRentalRequestSchema.openapi("CardTapRentalRequest"),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: "Card tap rental processed",
-      content: {
-        "application/json": {
-          schema: z
-            .object({
-              rental: RentalSchemaOpenApi,
-              mode: z.string(),
-            })
-            .openapi("CardTapRentalResponse"),
-        },
-      },
-    },
-    400: {
-      description: "Card tap rental failed",
-      content: {
-        "application/json": {
-          schema: RentalErrorResponseSchema,
-          examples: {
-            UserNotFound: {
-              value: {
-                error: "User not found for the provided card",
-                details: {
-                  code: RentalErrorCodeSchema.enum.USER_NOT_FOUND_FOR_CARD,
-                  cardUid: "A1B2C3D4E5F6",
-                },
-              },
-            },
-            BikeNotFound: {
-              value: {
-                error: "Bike not found or unavailable",
-                details: {
-                  code: RentalErrorCodeSchema.enum.BIKE_NOT_FOUND_FOR_BIKE_ID,
-                  bikeId: "019b17bd-d130-7e7d-be69-91ceef7b6888",
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-});
 
 export const requestBikeSwap = createRoute({
   method: "post",

@@ -65,16 +65,12 @@ export const rentalErrorCodes = [
   "RETURN_SLOT_CAPACITY_EXCEEDED",
   "RETURN_ALREADY_CONFIRMED",
 
-  // Card Tap Rental Errors
-  "CARD_RENTAL_ACTIVE_EXISTS",
+  // Active Rental Errors
+  "ACTIVE_RENTAL_EXISTS",
 
   // System & Update Errors
   "RENTAL_UPDATE_FAILED",
   "BIKE_UPDATE_FAILED",
-
-  // Card Tap Specific Errors
-  "USER_NOT_FOUND_FOR_CARD",
-  "BIKE_NOT_FOUND_FOR_BIKE_ID",
   "BIKE_MISSING_STATION",
   "BIKE_NOT_AVAILABLE_FOR_RENTAL",
   "BIKE_SWAP_REQUEST_ALREADY_PENDING",
@@ -230,13 +226,10 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   RETURN_SLOT_CAPACITY_EXCEEDED: "Station does not have enough capacity for another return slot",
   RETURN_ALREADY_CONFIRMED: "Rental return has already been confirmed",
 
-  CARD_RENTAL_ACTIVE_EXISTS: "Active rental already exists for this card",
+  ACTIVE_RENTAL_EXISTS: "Active rental already exists for this user",
 
   RENTAL_UPDATE_FAILED: "Rental update failed",
   BIKE_UPDATE_FAILED: "Bike update failed",
-
-  USER_NOT_FOUND_FOR_CARD: "User not found for the provided card",
-  BIKE_NOT_FOUND_FOR_BIKE_ID: "Bike not found for the provided bike ID",
   BIKE_MISSING_STATION: "Bike is missing station information",
   BIKE_NOT_AVAILABLE_FOR_RENTAL: "Bike is not available for rental",
   BIKE_SWAP_REQUEST_ALREADY_PENDING: "A bike swap request is already pending for this rental",

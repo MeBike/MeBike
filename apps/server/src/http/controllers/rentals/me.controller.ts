@@ -73,9 +73,9 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
         Match.tag("ActiveRentalExists", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
-              error: rentalErrorMessages.CARD_RENTAL_ACTIVE_EXISTS,
+              error: rentalErrorMessages.ACTIVE_RENTAL_EXISTS,
               details: {
-                code: RentalErrorCodeSchema.enum.CARD_RENTAL_ACTIVE_EXISTS,
+                code: RentalErrorCodeSchema.enum.ACTIVE_RENTAL_EXISTS,
               },
             },
             400,

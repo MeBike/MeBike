@@ -9,7 +9,6 @@ const rentalErrorMessages = {
   bikeMissingStation: "Xe này đang thiếu thông tin trạm, vui lòng thử lại sau.",
   bikeNotAvailableForRental: "Xe hiện chưa sẵn sàng để bắt đầu chuyến đi.",
   bikeNotFound: "Không tìm thấy xe phù hợp.",
-  bikeNotFoundForBikeId: "Không tìm thấy xe tương ứng với mã xe được gửi lên.",
   bikeNotFoundInStation: "Không tìm thấy xe này tại trạm đã chọn.",
   bikeSwapRequestAlreadyPending: "Yêu cầu đổi xe cho chuyến đi này đang chờ xử lý.",
   cannotApproveSwapThisRentalWithStatus: "Không thể duyệt đổi xe ở trạng thái chuyến đi hiện tại.",
@@ -23,7 +22,7 @@ const rentalErrorMessages = {
   cannotEndWithoutEndStation: "Bạn cần chọn trạm kết thúc trước khi hoàn tất chuyến đi.",
   cannotEndWithoutEndTime: "Thiếu thời điểm kết thúc chuyến đi.",
   cannotRequestSwapThisRentalWithStatus: "Không thể yêu cầu đổi xe ở trạng thái chuyến đi hiện tại.",
-  cardRentalActiveExists: "Thẻ này đang có một chuyến đi hoạt động.",
+  activeRentalExists: "Bạn đang có một chuyến đi đang diễn ra.",
   endDateCannotBeInFuture: "Thời điểm kết thúc không được nằm trong tương lai.",
   endTimeMustGreaterThanStartTime: "Thời điểm kết thúc phải sau thời điểm bắt đầu.",
   invalidBikeStatus: "Trạng thái xe hiện không hợp lệ.",
@@ -55,7 +54,6 @@ const rentalErrorMessages = {
   unknownError: "Không thể xử lý yêu cầu thuê xe lúc này. Vui lòng thử lại.",
   updatedStatusNotAllowed: "Không thể chuyển chuyến đi sang trạng thái này.",
   userNotFound: "Không tìm thấy người dùng phù hợp.",
-  userNotFoundForCard: "Không tìm thấy người dùng tương ứng với thẻ này.",
   userNotHaveWallet: "Tài khoản của bạn chưa có ví để thực hiện giao dịch.",
   validationError: "Dữ liệu gửi lên chưa hợp lệ. Vui lòng thử lại.",
 } as const;
@@ -86,8 +84,6 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.bikeNotAvailableForRental;
     case "BIKE_NOT_FOUND":
       return rentalErrorMessages.bikeNotFound;
-    case "BIKE_NOT_FOUND_FOR_BIKE_ID":
-      return rentalErrorMessages.bikeNotFoundForBikeId;
     case "BIKE_NOT_FOUND_IN_STATION":
       return rentalErrorMessages.bikeNotFoundInStation;
     case "BIKE_SWAP_REQUEST_ALREADY_PENDING":
@@ -114,8 +110,8 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.cannotEndWithoutEndTime;
     case "CANNOT_REQUEST_SWAP_THIS_RENTAL_WITH_STATUS":
       return rentalErrorMessages.cannotRequestSwapThisRentalWithStatus;
-    case "CARD_RENTAL_ACTIVE_EXISTS":
-      return rentalErrorMessages.cardRentalActiveExists;
+    case "ACTIVE_RENTAL_EXISTS":
+      return rentalErrorMessages.activeRentalExists;
     case "END_DATE_CANNOT_BE_IN_FUTURE":
       return rentalErrorMessages.endDateCannotBeInFuture;
     case "END_TIME_MUST_GREATER_THAN_START_TIME":
@@ -182,8 +178,6 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.updatedStatusNotAllowed;
     case "USER_NOT_FOUND":
       return rentalErrorMessages.userNotFound;
-    case "USER_NOT_FOUND_FOR_CARD":
-      return rentalErrorMessages.userNotFoundForCard;
     case "USER_NOT_HAVE_WALLET":
       return rentalErrorMessages.userNotHaveWallet;
     case "VALIDATION_ERROR":

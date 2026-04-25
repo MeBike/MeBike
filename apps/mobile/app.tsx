@@ -12,6 +12,7 @@ import { TamaguiProvider } from "tamagui";
 
 import { runSharedContractsSmokeTest } from "./debug/shared-contract-smoke";
 import { log } from "./lib/log";
+import { navigationRef } from "./navigation/navigation-ref";
 import { STRIPE_PUBLISHABLE_KEY, STRIPE_URL_SCHEME } from "./lib/stripe";
 import RootNavigator from "./navigation/root-navigator";
 import tamaguiConfig from "./tamagui.config";
@@ -76,7 +77,7 @@ export default function App() {
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
       <Providers>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <AuthProviderNext>
             <BikeStatusStreamProvider>
               <StatusBar style="dark" />
