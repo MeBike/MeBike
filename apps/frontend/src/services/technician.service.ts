@@ -17,6 +17,12 @@ export const technicianService = {
     );
     return response;
   },
+  getTechnicianTeamDetail : async (teamId : string) : Promise<AxiosResponse<TechnicianTeamRecord>> => {
+    const response = await fetchHttpClient.get<TechnicianTeamRecord>(
+      ENDPOINT.TECH_TEAM.UPDATE(teamId),
+    );
+    return response;
+  },
   createTechnicianTeam : async (data : CreateTechnicianTeamSchema) : Promise<AxiosResponse<TechnicianTeamRecord>> => {
     const response = await fetchHttpClient.post<TechnicianTeamRecord>(
       ENDPOINT.TECH_TEAM.BASE,
