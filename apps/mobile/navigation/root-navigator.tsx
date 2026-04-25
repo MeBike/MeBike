@@ -1,7 +1,7 @@
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { createStackNavigator } from "@react-navigation/stack";
-import React from "react";
+import React, { useEffect } from "react";
 
 import type { RootStackParamList } from "../types/navigation";
 
@@ -40,6 +40,7 @@ import {
   UpdateProfileScreen,
 } from "../screen";
 import StationSelectScreen from "../styles/StationSelect";
+import { navigationRef } from "./navigation-ref";
 import MainTabNavigator from "./main-tab-navigator";
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -49,6 +50,21 @@ const assistantScreenOptions = { headerShown: false, gestureEnabled: true } as c
 
 function RootNavigator() {
   const { status, isAuthenticated } = useAuthNext();
+
+  useEffect(() => {
+    if (!isAuthenticated || !navigationRef.isReady()) {
+      return;
+    }
+
+    if (navigationRef.getCurrentRoute()?.name !== "Login") {
+      return;
+    }
+
+    navigationRef.reset({
+      index: 0,
+      routes: [{ name: "Main" }],
+    });
+  }, [isAuthenticated]);
 
   if (status === "loading") {
     return <LoadingScreen />;
