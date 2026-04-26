@@ -10,4 +10,4 @@ export interface TechnicianTeamRecord {
     createdAt : string,
     updatedAt : string,
 }
-export type TechnicianStatus  = 'AVAILABLE' | 'UNAVAILABLE';
+export type TechnicianStatus  = 'AVAILABLE' | 'UNAVAILABLE' | "";
