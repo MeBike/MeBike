@@ -4,9 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {useGetAllTechnicianTeamQuery} from "@queries"
+import {useGetAllTechnicianTeamQuery} from "@queries";
+import { useCreateTechnicianTeamMutation } from "./mutations";
 import {HTTP_STATUS} from "@constants";
 import { TechnicianStatus } from "@/types/TechnicianTeam";
+import { CreateTechnicianTeamSchema } from "@/schemas/technician-schema";
+import { getErrorMessageFromTechnicianTeamCode , getAxiosErrorCodeMessage } from "@utils";
 export interface TechnicianActionProps {
   hasToken: boolean , 
   supplier_id ?: string,
@@ -33,9 +36,31 @@ export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,sta
     }
     refetchAllTechnicianTeam();
   }, [hasToken, router]);
+  const useCreateTechnicianTeam = useCreateTechnicianTeamMutation();
+  const createTechnicianTeam = useCallback(
+    async (technicianTeamData: CreateTechnicianTeamSchema) => {
+      if (!hasToken) {
+        router.push("/login");
+      }
+      try {
+        const result = await useCreateTechnicianTeam.mutateAsync(technicianTeamData);
+        if(result.status === HTTP_STATUS.CREATED){
+          toast.success("Tạo đội kỹ thuật thành công");
+          getTechnicianTeam();
+        }
+        return result;
+      } catch (error) {
+        const code_error = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromTechnicianTeamCode(code_error));
+        throw error; 
+      }
+    },
+    [hasToken, router, queryClient, useCreateTechnicianTeam]
+  );
   return {
     getTechnicianTeam,
     isLoadingAllTechnicianTeam,
     allTechnicianTeam,
+    createTechnicianTeam,
   };
 };

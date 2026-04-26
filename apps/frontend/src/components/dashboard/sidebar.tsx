@@ -124,7 +124,7 @@ export function Sidebar() {
         {
           title: "Quản lý đội kỹ thuật",
           icon: Users,
-          href: `/${role.toLowerCase()}/technician-team`,
+          href: `/${role.toLowerCase()}/technician-teams`,
           roles: ["ADMIN"],
         },
         {
