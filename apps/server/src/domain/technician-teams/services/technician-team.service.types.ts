@@ -3,6 +3,7 @@ import type { Effect } from "effect";
 import type {
   TechnicianTeamInternalStationRequired,
   TechnicianTeamNotFound,
+  TechnicianTeamStationAlreadyAssigned,
   TechnicianTeamStationNotFound,
 } from "../domain-errors";
 import type {
@@ -18,7 +19,7 @@ export type TechnicianTeamCommandService = {
     input: CreateTechnicianTeamInput,
   ) => Effect.Effect<
     TechnicianTeamRow,
-    TechnicianTeamStationNotFound | TechnicianTeamInternalStationRequired
+    TechnicianTeamStationNotFound | TechnicianTeamInternalStationRequired | TechnicianTeamStationAlreadyAssigned
   >;
   updateTechnicianTeam: (
     id: string,
