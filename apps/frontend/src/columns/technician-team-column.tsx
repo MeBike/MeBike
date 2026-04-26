@@ -6,24 +6,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-
-// Giả sử bạn import type từ file riêng, mình để ở đây để tham chiếu
-export type TechnicianStatus = 'AVAILABLE' | 'UNAVAILABLE';
-
-export interface TechnicianTeamRecord {
-  id: string;
-  name: string;
-  station: {
-    id: string;
-    name: string;
-  };
-  availabilityStatus: TechnicianStatus;
-  memberCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// 1. Cập nhật STATUS_CONFIG theo TechnicianStatus
+import { TechnicianTeamRecord,TechnicianStatus } from "@/types";
 const STATUS_CONFIG: Record<TechnicianStatus, { label: string; color: string }> = {
   AVAILABLE: { 
     label: "Sẵn sàng", 
@@ -33,22 +16,18 @@ const STATUS_CONFIG: Record<TechnicianStatus, { label: string; color: string }> 
     label: "Không sẵn sàng", 
     color: "bg-rose-100 text-rose-700 border-rose-200" 
   },
+  "": { 
+    label: "Không sẵn sàng", 
+    color: "bg-rose-100 text-rose-700 border-rose-200" 
+  },
 };
 
 export const columns = ({
   onView,
-  onChangeStatus,
 }: {
   onView?: (team: TechnicianTeamRecord) => void;
-  // Đổi type của newStatus cho khớp với TechnicianStatus
-  onChangeStatus?: (id: string, newStatus: TechnicianStatus) => void; 
 }): ColumnDef<TechnicianTeamRecord>[] => [
   {
-    accessorKey: "name",
-    header: "Tên đội kỹ thuật",
-  },
-  {
-    // Cột trạm trực thuộc (lấy từ object station)
     id: "station",
     header: "Trạm trực thuộc",
     cell: ({ row }) => row.original.station?.name || "N/A",

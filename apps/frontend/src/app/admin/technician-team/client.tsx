@@ -24,7 +24,7 @@ interface BikeClientProps {
     page: number;
   };
   actions: {
-    setStatusFilter: Dispatch<SetStateAction<TechnicianStatus | "all">>;
+    setStatusFilter: Dispatch<SetStateAction<TechnicianStatus | "">>;
     setPage: Dispatch<SetStateAction<number>>;
   };
 }
@@ -34,23 +34,17 @@ export default function Client({
     technicianTeam,
     paginationBikes,
     isVisualLoading,
-    isLoadingStatusCount,
   },
   filters: { statusFilter, page },
   actions: { setStatusFilter, setPage },
 }: BikeClientProps) {
   const router = useRouter();
-
-  if (isLoadingStatusCount) {
-    return <Loader2 className="m-auto animate-spin" />;
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
-        <Button onClick={() => router.push("/admin/bikes/create")}>
-          <Plus className="mr-2 h-4 w-4" /> Thêm xe
+        <h1 className="text-3xl font-bold">Quản lý đội kỹ thuật</h1>
+        <Button onClick={() => router.push("/admin/technician-team/create")}>
+          <Plus className="mr-2 h-4 w-4" /> Thêm đội kỹ thuật
         </Button>
       </div>
       <div className="min-h-[700px]">
@@ -66,10 +60,6 @@ export default function Client({
             <DataTable
               columns={columns({
                 onView: ({ id }) => router.push(`/admin/technician-team/detail/${id}`),
-                onChangeStatus: (id, newStatus) => {
-                  // Gọi API hoặc th
-                  
-                }
               })}
               data={technicianTeam}
             />
