@@ -1,19 +1,20 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
-import { useTheme, YStack } from "tamagui";
-
-import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 import { IconSymbol } from "@components/IconSymbol";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { useCreateMyReturnSlotMutation } from "@hooks/mutations/rentals/use-create-my-return-slot-mutation";
 import { useRequestBikeSwapMutation } from "@hooks/mutations/rentals/use-request-bike-swap-mutation";
 import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
 import { useMyBikeSwapPreview } from "@hooks/rentals/use-my-bike-swap-preview";
+import { useAuthNext } from "@providers/auth-provider-next";
+import { useQueryClient } from "@tanstack/react-query";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { useTheme, YStack } from "tamagui";
+
+import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
 import {
   getOvernightOperationsClosedMessage,
   isWithinVietnamOvernightOperationsWindow,
@@ -28,6 +29,7 @@ import { useStationDetail } from "./hooks/use-station-detail";
 export default function StationDetailScreen() {
   const queryClient = useQueryClient();
   const theme = useTheme();
+  const { isAuthenticated } = useAuthNext();
   const returnSlotMutation = useCreateMyReturnSlotMutation();
   const bikeSwapMutation = useRequestBikeSwapMutation();
   const {
@@ -126,6 +128,22 @@ export default function StationDetailScreen() {
         },
       },
     );
+  };
+
+  const handleOpenFixedSlots = () => {
+    if (!isAuthenticated) {
+      Alert.alert("Cần đăng nhập", "Vui lòng đăng nhập để sử dụng tính năng này.");
+      return;
+    }
+
+    if (!station) {
+      return;
+    }
+
+    navigation.navigate("FixedSlotTemplates", {
+      stationId: station.id,
+      stationName: station.name,
+    });
   };
 
   if (isLoading) {
@@ -234,10 +252,7 @@ export default function StationDetailScreen() {
               )
             : null}
           <FixedSlotBanner
-            onPress={() => navigation.navigate("FixedSlotTemplates", {
-              stationId: station.id,
-              stationName: station.name,
-            })}
+            onPress={handleOpenFixedSlots}
           />
           <BikeList
             bikes={loadedBikes}
