@@ -81,6 +81,15 @@ const createTechnicianTeam: RouteHandler<TechnicianTeamsRoutes["adminCreate"]> =
           stationType,
         },
       }, 400)),
+    Match.tag("TechnicianTeamStationAlreadyAssigned", ({ stationId, teamId }) =>
+      c.json<TechnicianTeamErrorResponse, 400>({
+        error: technicianTeamErrorMessages.TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED,
+        details: {
+          code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED,
+          stationId,
+          teamId,
+        },
+      }, 400)),
     Match.tag("TechnicianTeamStationNotFound", ({ stationId }) =>
       c.json<TechnicianTeamErrorResponse, 400>({
         error: technicianTeamErrorMessages.TECHNICIAN_TEAM_STATION_NOT_FOUND,

@@ -107,6 +107,28 @@ describe("admin technician teams routing e2e", () => {
     expect(body.memberCount).toBe(0);
   });
 
+  it("rejects create when station already has technician team", async () => {
+    const station = await fixture.factories.station({ name: "Create Team Duplicate Station" });
+    await fixture.factories.technicianTeam({
+      name: "Existing Team For Station",
+      stationId: station.id,
+    });
+
+    const response = await fixture.app.request("http://test/v1/admin/technician-teams", {
+      method: "POST",
+      headers: authHeader(),
+      body: JSON.stringify({
+        name: "Second Team",
+        stationId: station.id,
+      }),
+    });
+    const body = await response.json() as TechnicianTeamsContracts.TechnicianTeamErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED");
+    expect(body.details.stationId).toBe(station.id);
+  });
+
   it("rejects create when station does not exist", async () => {
     const response = await fixture.app.request("http://test/v1/admin/technician-teams", {
       method: "POST",

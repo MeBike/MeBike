@@ -30,3 +30,16 @@ apps/iot-service/folder.md
 # Traefik runtime state
 infra/traefik/letsencrypt/
 infra/traefik/logs/
+
+# Local spreadsheet/report artifacts
+*.xlsx
+*.fods
+.tmp-fods-out/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
