@@ -151,6 +151,7 @@ export function useBikeDetailActions({
     createRentalPayload,
     currentBike.status,
     ensureAuthenticated,
+    hasToken,
     navigation,
     paymentMode,
     queryClient,

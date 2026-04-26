@@ -1,30 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert } from "react-native";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
 
 import type { PaymentMode } from "../types";
+import { showSubscriptionRequiredAlert } from "../helpers/create-rental-alerts";
 
 type UseBikeDetailPaymentArgs = {
   activeSubscriptions: Subscription[];
   canUseSubscription: boolean;
   navigation: BikeDetailNavigationProp;
 };
-
-function showSubscriptionRequiredAlert(navigation: BikeDetailNavigationProp) {
-  Alert.alert(
-    "Chưa có gói tháng",
-    "Bạn cần đăng ký gói tháng trước khi sử dụng hình thức này.",
-    [
-      { text: "Để sau", style: "cancel" },
-      {
-        text: "Xem gói tháng",
-        onPress: () => navigation.navigate("Subscriptions"),
-      },
-    ],
-  );
-}
 
 export function useBikeDetailPayment({
   activeSubscriptions,

@@ -45,9 +45,10 @@ const styles = StyleSheet.create({
 
 export default function SubscriptionScreen() {
   const {
+    isAuthenticated,
     isLoading,
     isFetching,
-    refetch,
+    handleRefresh,
     subscriptions,
     activeSubscription,
     pendingSubscription,
@@ -66,7 +67,7 @@ export default function SubscriptionScreen() {
   const refreshControl = (
     <RefreshControl
       refreshing={isFetching && !isLoading}
-      onRefresh={refetch}
+      onRefresh={handleRefresh}
       tintColor="#2563EB"
     />
   );
@@ -91,7 +92,11 @@ export default function SubscriptionScreen() {
             activating={activateMutation.isPending}
           />
 
-          <SubscriptionToggle active={activeSection} onChange={handleSectionChange} />
+          <SubscriptionToggle
+            active={activeSection}
+            historyDisabled={!isAuthenticated}
+            onChange={handleSectionChange}
+          />
 
           {activeSection === "plans" && (
             <SubscriptionPlansSection
