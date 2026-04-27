@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import { env as processEnv } from "node:process";
 import { z } from "zod";
 
@@ -21,8 +21,6 @@ import {
   redisEnvSchema,
   stripeEnvSchema,
 } from "./env/infra";
-
-dotenv.config();
 
 const envSchema = z.object({
   ...appEnvSchema.shape,
