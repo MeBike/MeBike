@@ -7,8 +7,10 @@ import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import {
   expireReturnSlots,
+  returnSlotExpiresAt,
 } from "@/domain/rentals";
 import logger from "@/lib/logger";
+import { notifyReturnSlotExpired } from "@/realtime/return-slot-events";
 
 type ReturnSlotExpiryRunner = <A, E>(
   effect: Effect.Effect<A, E, ReturnSlotRepository>,
@@ -29,7 +31,20 @@ export function makeReturnSlotExpireSweepHandler(runPromise: ReturnSlotExpiryRun
       throw error;
     }
 
-    const summary = await runPromise(expireReturnSlots({ now: new Date() }));
+    const now = new Date();
+    const summary = await runPromise(expireReturnSlots({ now }));
+
+    await Promise.all(summary.expiredSlots.map(slot =>
+      notifyReturnSlotExpired({
+        userId: slot.userId,
+        rentalId: slot.rentalId,
+        returnSlotId: slot.id,
+        stationId: slot.stationId,
+        reservedFrom: slot.reservedFrom.toISOString(),
+        expiredAt: returnSlotExpiresAt(slot.reservedFrom).toISOString(),
+        at: now.toISOString(),
+      }),
+    ));
 
     logger.info(
       {

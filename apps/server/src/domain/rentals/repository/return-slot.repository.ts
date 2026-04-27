@@ -245,6 +245,43 @@ export function makeReturnSlotRepository(
           }),
       }).pipe(defectOn(RentalRepositoryError)),
 
+    cancelActiveOlderThanReturning: (activeUntil, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const rows = await client.$queryRaw<Array<{
+            id: string;
+            rentalId: string;
+            userId: string;
+            stationId: string;
+            reservedFrom: Date;
+            status: "ACTIVE" | "USED" | "CANCELLED";
+            createdAt: Date;
+            updatedAt: Date;
+          }>>`
+            UPDATE return_slot_reservations
+            SET status = 'CANCELLED', updated_at = ${updatedAt}
+            WHERE status = 'ACTIVE'
+              AND reserved_from <= ${activeUntil}
+            RETURNING
+              id,
+              rental_id AS "rentalId",
+              user_id AS "userId",
+              station_id AS "stationId",
+              reserved_from AS "reservedFrom",
+              status,
+              created_at AS "createdAt",
+              updated_at AS "updatedAt"
+          `;
+
+          return rows.map(mapToReturnSlotRow);
+        },
+        catch: cause =>
+          new RentalRepositoryError({
+            operation: "returnSlot.cancelActiveOlderThanReturning",
+            cause,
+          }),
+      }).pipe(defectOn(RentalRepositoryError)),
+
     getStationCapacitySnapshot: (stationId, activeAfter) =>
       Effect.gen(function* () {
         const station = yield* Effect.tryPromise({

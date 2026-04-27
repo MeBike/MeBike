@@ -10,3 +10,12 @@ import { env } from "@/config/env";
 export function returnSlotActiveAfter(now: Date): Date {
   return new Date(now.getTime() - env.RETURN_SLOT_HOLD_MINUTES * 60_000);
 }
+
+/**
+ * Tính thời điểm return slot hết hiệu lực từ lúc bắt đầu giữ chỗ.
+ *
+ * @param reservedFrom Thời điểm slot được giữ chỗ.
+ */
+export function returnSlotExpiresAt(reservedFrom: Date): Date {
+  return new Date(reservedFrom.getTime() + env.RETURN_SLOT_HOLD_MINUTES * 60_000);
+}

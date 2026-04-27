@@ -94,6 +94,20 @@ export type ReturnSlotRepo = {
   ) => Effect.Effect<number>;
 
   /**
+   * Batch cleanup cho worker và trả lại các slot vừa bị hủy.
+   *
+   * Dùng khi caller cần phát realtime event cho từng user sau cleanup.
+   *
+   * @param activeUntil Mốc cutoff. Slot có `reservedFrom` nhỏ hơn hoặc bằng mốc
+   * này sẽ bị hủy.
+   * @param updatedAt Thời điểm ghi nhận thao tác cleanup.
+   */
+  cancelActiveOlderThanReturning: (
+    activeUntil: Date,
+    updatedAt: Date,
+  ) => Effect.Effect<readonly ReturnSlotRow[]>;
+
+  /**
    * Chốt slot ACTIVE hiện tại của rental sang trạng thái cuối cùng.
    *
    * @param rentalId ID rental đang giữ slot.

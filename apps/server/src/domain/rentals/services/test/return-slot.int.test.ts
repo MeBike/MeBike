@@ -283,6 +283,8 @@ describe("return slot integration", () => {
     );
 
     expect(summary.expired).toBe(1);
+    expect(summary.expiredSlots).toHaveLength(1);
+    expect(summary.expiredSlots[0]?.rentalId).toBe(expiredRental.rental.id);
 
     const rows = await fixture.prisma.returnSlotReservation.findMany({
       where: { rentalId: { in: [expiredRental.rental.id, activeRental.rental.id] } },

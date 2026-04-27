@@ -222,6 +222,7 @@ describe("rentals end routing e2e", () => {
     expect(body.id).toBe(rental.id);
     expect(body.returnSlot?.station.id).toBe(reservedStation.id);
     expect(body.returnSlot?.status).toBe("ACTIVE");
+    expect(body.returnSlot?.expiresAt).toEqual(expect.any(String));
   });
 
   it("blocks return-slot creation during overnight closure", async () => {

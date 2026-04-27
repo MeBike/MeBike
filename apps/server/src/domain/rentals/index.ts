@@ -7,6 +7,7 @@ export * from "./repository/unique-violation";
 export * from "./services/commands/confirm-return.service";
 export * from "./services/commands/finalize-rental-return";
 export * from "./services/commands/rental-command.service";
+export * from "./services/commands/return-slot-expiry";
 export * from "./services/commands/return-slot.service";
 export * from "./services/commands/start-rental.service";
 export * from "./services/queries/rental-billing-detail.service";

@@ -1,10 +1,13 @@
 import { Effect } from "effect";
 
+import type { ReturnSlotRow } from "../../models";
+
 import { ReturnSlotRepository } from "../../repository/return-slot.repository";
 import { returnSlotActiveAfter } from "../commands/return-slot-expiry";
 
 export type ReturnSlotExpirySummary = {
   readonly expired: number;
+  readonly expiredSlots: readonly ReturnSlotRow[];
 };
 
 /**
@@ -23,8 +26,8 @@ export function expireReturnSlots(args: {
   return Effect.gen(function* () {
     const repo = yield* ReturnSlotRepository;
     const cutoff = returnSlotActiveAfter(args.now);
-    const expired = yield* repo.cancelActiveOlderThan(cutoff, args.now);
+    const expiredSlots = yield* repo.cancelActiveOlderThanReturning(cutoff, args.now);
 
-    return { expired };
+    return { expired: expiredSlots.length, expiredSlots };
   });
 }
