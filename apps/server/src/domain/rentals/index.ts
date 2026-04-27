@@ -2,7 +2,6 @@ export * from "./domain-errors";
 export * from "./models";
 export * from "./repository/rental-analytics.repository";
 export * from "./repository/rental.repository";
-export * from "./repository/return-confirmation.repository";
 export * from "./repository/return-slot.repository";
 export * from "./repository/unique-violation";
 export * from "./services/commands/confirm-return.service";

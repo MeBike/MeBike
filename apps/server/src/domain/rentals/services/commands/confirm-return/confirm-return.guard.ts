@@ -19,8 +19,8 @@ import {
   UnauthorizedRentalAccess,
 } from "../../../domain-errors";
 import { makeRentalRepository } from "../../../repository/rental.repository";
-import { makeReturnConfirmationRepository } from "../../../repository/return-confirmation.repository";
 import { makeReturnSlotRepository } from "../../../repository/return-slot.repository";
+import { makeRentalReturnConfirmationWriteRepository } from "../../../repository/write/rental.return-confirmation-write.repository";
 import { returnSlotActiveAfter } from "../return-slot-expiry";
 
 /**
@@ -222,8 +222,8 @@ export function createReturnConfirmationInTx(args: {
   readonly rental: RentalRow;
 }): Effect.Effect<void, ReturnAlreadyConfirmed> {
   return Effect.gen(function* () {
-    const txReturnConfirmationRepo = makeReturnConfirmationRepository(args.tx);
-    const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(args.rental.id);
+    const txReturnConfirmationRepo = makeRentalReturnConfirmationWriteRepository(args.tx);
+    const existingConfirmationOpt = yield* txReturnConfirmationRepo.findReturnConfirmationByRentalId(args.rental.id);
 
     if (Option.isSome(existingConfirmationOpt)) {
       return yield* Effect.fail(new ReturnAlreadyConfirmed({
@@ -231,7 +231,7 @@ export function createReturnConfirmationInTx(args: {
       }));
     }
 
-    yield* txReturnConfirmationRepo.create({
+    yield* txReturnConfirmationRepo.createReturnConfirmation({
       rentalId: args.rental.id,
       stationId: args.input.stationId,
       confirmedByUserId: args.input.confirmedByUserId,
