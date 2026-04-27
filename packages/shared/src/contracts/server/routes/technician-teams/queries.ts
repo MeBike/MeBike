@@ -3,6 +3,10 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { forbiddenResponse, unauthorizedResponse } from "../helpers";
 import {
   TechnicianTeamAvailableListResponseSchema,
+  TechnicianTeamDetailResponseSchema,
+  TechnicianTeamErrorCodeSchema,
+  TechnicianTeamErrorResponseSchema,
+  TechnicianTeamIdParamSchema,
   TechnicianTeamListQuerySchema,
   TechnicianTeamListResponseSchema,
 } from "./shared";
@@ -53,7 +57,49 @@ export const adminAvailableTechnicianTeamsRoute = createRoute({
   },
 });
 
+export const adminGetTechnicianTeamRoute = createRoute({
+  method: "get",
+  path: "/v1/admin/technician-teams/{teamId}",
+  tags: ["Technician Teams"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: TechnicianTeamIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Admin technician team detail",
+      content: {
+        "application/json": {
+          schema: TechnicianTeamDetailResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Technician team not found",
+      content: {
+        "application/json": {
+          schema: TechnicianTeamErrorResponseSchema,
+          examples: {
+            TeamNotFound: {
+              value: {
+                error: "Technician team not found",
+                details: {
+                  code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_NOT_FOUND,
+                  teamId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Admin"),
+  },
+});
+
 export const technicianTeamQueries = {
   adminAvailable: adminAvailableTechnicianTeamsRoute,
+  adminGet: adminGetTechnicianTeamRoute,
   adminList: adminListTechnicianTeamsRoute,
 } as const;
