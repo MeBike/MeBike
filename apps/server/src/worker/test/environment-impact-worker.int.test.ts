@@ -1,11 +1,53 @@
+import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 
+import type {
+  EnvironmentImpactServiceTag,
+} from "@/domain/environment";
+import type { EffectRunner } from "@/worker/worker-runtime";
+
+import {
+  EnvironmentImpactRepositoryLive,
+  EnvironmentImpactServiceLive,
+  EnvironmentPolicyRepositoryLive,
+  EnvironmentPolicyServiceLive,
+} from "@/domain/environment";
+import { Prisma } from "@/infrastructure/prisma";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
-import { handleEnvironmentImpactCalculateRental } from "@/worker/environment-impact-worker";
+import { makeEnvironmentImpactCalculateRentalHandler } from "@/worker/environment-impact-worker";
 
 describe("environment impact worker integration", () => {
   const fixture = setupPrismaIntFixture();
+
+  function makeHandler() {
+    const PrismaTestLive = Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma }));
+    const EnvironmentPolicyReposTestLive = EnvironmentPolicyRepositoryLive.pipe(
+      Layer.provide(PrismaTestLive),
+    );
+    const EnvironmentImpactReposTestLive = EnvironmentImpactRepositoryLive.pipe(
+      Layer.provide(PrismaTestLive),
+    );
+    const EnvironmentPolicyServiceTestLayer = EnvironmentPolicyServiceLive.pipe(
+      Layer.provide(EnvironmentPolicyReposTestLive),
+    );
+    const EnvironmentImpactServiceTestLayer = EnvironmentImpactServiceLive.pipe(
+      Layer.provide(EnvironmentImpactReposTestLive),
+      Layer.provide(EnvironmentPolicyServiceTestLayer),
+    );
+    const TestLive = Layer.mergeAll(
+      PrismaTestLive,
+      EnvironmentPolicyReposTestLive,
+      EnvironmentImpactReposTestLive,
+      EnvironmentPolicyServiceTestLayer,
+      EnvironmentImpactServiceTestLayer,
+    );
+    const runEffect: EffectRunner<EnvironmentImpactServiceTag> = effect => Effect.runPromise(
+      effect.pipe(Effect.provide(TestLive)),
+    );
+
+    return makeEnvironmentImpactCalculateRentalHandler(runEffect);
+  }
 
   async function createActiveEnvironmentPolicy() {
     return fixture.prisma.environmentalImpactPolicy.create({
@@ -46,7 +88,7 @@ describe("environment impact worker integration", () => {
     const policy = await createActiveEnvironmentPolicy();
     const { rental } = await createCompletedRental();
 
-    await handleEnvironmentImpactCalculateRental({
+    await makeHandler()({
       id: "environment-impact-test-1",
       data: {
         version: 1,
@@ -74,8 +116,9 @@ describe("environment impact worker integration", () => {
       },
     };
 
-    await handleEnvironmentImpactCalculateRental(job);
-    await handleEnvironmentImpactCalculateRental(job);
+    const handler = makeHandler();
+    await handler(job);
+    await handler(job);
 
     const impactRows = await fixture.prisma.environmentalImpactStat.findMany({
       where: { rentalId: rental.id },
@@ -87,7 +130,7 @@ describe("environment impact worker integration", () => {
     const { rental } = await createCompletedRental();
 
     await expect(
-      handleEnvironmentImpactCalculateRental({
+      makeHandler()({
         id: "environment-impact-test-3",
         data: {
           version: 1,
