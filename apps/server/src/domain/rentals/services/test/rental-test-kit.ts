@@ -116,7 +116,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
       now?: Date;
     }) {
       return runEffectWithLayer(
-        getCurrentReturnSlot(args),
+        getCurrentReturnSlot({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },
@@ -126,7 +129,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
       now?: Date;
     }) {
       return runEffectEitherWithLayer(
-        getCurrentReturnSlot(args),
+        getCurrentReturnSlot({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },
@@ -136,7 +142,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
       now?: Date;
     }) {
       return runEffectEitherWithLayer(
-        cancelReturnSlot(args),
+        cancelReturnSlot({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },

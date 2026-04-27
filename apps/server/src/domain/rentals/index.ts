@@ -17,3 +17,4 @@ export * from "./services/queries/rental.service";
 export * from "./services/roles/admin-rentals.service";
 export * from "./services/roles/staff-rental.service";
 export * from "./services/workers/environment-impact-job.service";
+export * from "./services/workers/return-slot-expiry.service";

@@ -22,6 +22,11 @@ export const reservationEnvSchema = z.object({
   REFUND_PERIOD_HOURS: z.coerce.number().default(24),
 });
 
+export const returnSlotEnvSchema = z.object({
+  RETURN_SLOT_HOLD_MINUTES: z.coerce.number().int().positive().default(30),
+  RETURN_SLOT_EXPIRE_SWEEP_CRON: z.string().default("* * * * *"),
+});
+
 export const fixedSlotEnvSchema = z.object({
   FIXED_SLOT_ASSIGN_CRON: z.string().default("0 0 * * *"),
 });

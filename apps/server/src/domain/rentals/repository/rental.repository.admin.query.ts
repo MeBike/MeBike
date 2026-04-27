@@ -2,6 +2,8 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type { AdminRentalDetail, AdminRentalListItem } from "../models";
 
+import { returnSlotActiveAfter } from "../services/commands/return-slot-expiry";
+
 export const adminRentalListSelect = {
   id: true,
   userId: true,
@@ -140,7 +142,11 @@ type AdminRentalDetailSelectRow = PrismaTypes.RentalGetPayload<{
 }>;
 
 export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRentalDetail {
-  const activeReturnSlot = raw.returnSlotReservations[0] ?? null;
+  const candidateReturnSlot = raw.returnSlotReservations[0] ?? null;
+  const activeReturnSlot = candidateReturnSlot
+    && candidateReturnSlot.reservedFrom > returnSlotActiveAfter(new Date())
+    ? candidateReturnSlot
+    : null;
 
   return {
     id: raw.id,
