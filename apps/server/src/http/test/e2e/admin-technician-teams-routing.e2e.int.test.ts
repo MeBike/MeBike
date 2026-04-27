@@ -86,6 +86,64 @@ describe("admin technician teams routing e2e", () => {
     expect(body.data[0]?.memberCount).toBe(1);
   });
 
+  it("gets technician team detail with station address and members", async () => {
+    const station = await fixture.factories.station({
+      name: "Detail Team Station",
+      address: "88 Detail Street, Thu Duc, TP.HCM",
+    });
+    const team = await fixture.factories.technicianTeam({
+      name: "Detail Team",
+      stationId: station.id,
+    });
+    const technician = await fixture.factories.user({
+      fullname: "Detail Technician",
+      email: "detail-technician@example.com",
+      role: "TECHNICIAN",
+    });
+
+    await fixture.factories.userOrgAssignment({
+      userId: technician.id,
+      technicianTeamId: team.id,
+    });
+
+    const response = await fixture.app.request(`http://test/v1/admin/technician-teams/${team.id}`, {
+      method: "GET",
+      headers: authHeader(),
+    });
+    const body = await response.json() as TechnicianTeamsContracts.TechnicianTeamDetailResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      id: team.id,
+      name: "Detail Team",
+      station: {
+        id: station.id,
+        name: "Detail Team Station",
+        address: "88 Detail Street, Thu Duc, TP.HCM",
+      },
+      availabilityStatus: "AVAILABLE",
+      memberCount: 1,
+    });
+    expect(body.data.members).toEqual([
+      {
+        userId: technician.id,
+        fullName: "Detail Technician",
+        role: "TECHNICIAN",
+      },
+    ]);
+  });
+
+  it("returns 404 when getting missing technician team", async () => {
+    const response = await fixture.app.request(`http://test/v1/admin/technician-teams/${uuidv7()}`, {
+      method: "GET",
+      headers: authHeader(),
+    });
+    const body = await response.json() as TechnicianTeamsContracts.TechnicianTeamErrorResponse;
+
+    expect(response.status).toBe(404);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_NOT_FOUND");
+  });
+
   it("creates technician team for an existing station", async () => {
     const station = await fixture.factories.station({ name: "Create Team Station" });
 
@@ -105,6 +163,28 @@ describe("admin technician teams routing e2e", () => {
     expect(body.station.name).toBe("Create Team Station");
     expect(body.availabilityStatus).toBe("AVAILABLE");
     expect(body.memberCount).toBe(0);
+  });
+
+  it("rejects create when station already has technician team", async () => {
+    const station = await fixture.factories.station({ name: "Create Team Duplicate Station" });
+    await fixture.factories.technicianTeam({
+      name: "Existing Team For Station",
+      stationId: station.id,
+    });
+
+    const response = await fixture.app.request("http://test/v1/admin/technician-teams", {
+      method: "POST",
+      headers: authHeader(),
+      body: JSON.stringify({
+        name: "Second Team",
+        stationId: station.id,
+      }),
+    });
+    const body = await response.json() as TechnicianTeamsContracts.TechnicianTeamErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.details.code).toBe("TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED");
+    expect(body.details.stationId).toBe(station.id);
   });
 
   it("rejects create when station does not exist", async () => {

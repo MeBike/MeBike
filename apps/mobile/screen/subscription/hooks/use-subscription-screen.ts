@@ -57,11 +57,17 @@ export function useSubscriptionScreen() {
 
   useEffect(() => {
     loadSubscriptionSection().then((saved) => {
-      if (saved) {
+      if (saved && (isAuthenticated || saved !== "history")) {
         setActiveSection(saved);
       }
     }).catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated && activeSection === "history") {
+      setActiveSection("plans");
+    }
+  }, [activeSection, isAuthenticated]);
 
   const handleSectionChange = useCallback(async (section: SubscriptionSectionKey) => {
     setActiveSection(section);
@@ -78,10 +84,7 @@ export function useSubscriptionScreen() {
     }
 
     if (!isAuthenticated) {
-      Alert.alert("Đăng nhập trước", "Bạn cần đăng nhập để đăng ký gói tháng", [
-        { text: "Hủy", style: "cancel" },
-        { text: "Đăng nhập", onPress: openLogin },
-      ]);
+      openLogin();
       return;
     }
 
@@ -118,6 +121,14 @@ export function useSubscriptionScreen() {
     );
   }, [isAuthenticated, openLogin, queryClient, status, subscribeMutation]);
 
+  const handleRefresh = useCallback(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    void refetch();
+  }, [isAuthenticated, refetch]);
+
   const handleActivate = useCallback(() => {
     if (!pendingSubscription) {
       return;
@@ -152,7 +163,7 @@ export function useSubscriptionScreen() {
     isAuthenticated,
     isLoading,
     isFetching,
-    refetch,
+    handleRefresh,
     subscriptions,
     activeSubscription,
     pendingSubscription,

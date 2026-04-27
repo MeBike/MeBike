@@ -8,12 +8,13 @@ import type { TechnicianTeamCommandService } from "./technician-team.service.typ
 import {
   TechnicianTeamInternalStationRequired,
   TechnicianTeamNotFound,
+  TechnicianTeamStationAlreadyAssigned,
   TechnicianTeamStationNotFound,
 } from "../domain-errors";
 
 export function makeTechnicianTeamCommandService(args: {
   commandRepo: TechnicianTeamCommandRepo;
-  queryRepo: Pick<TechnicianTeamQueryRepo, "getById">;
+  queryRepo: Pick<TechnicianTeamQueryRepo, "getById" | "list">;
   stationRepo: Pick<StationQueryRepo, "getById">;
 }): TechnicianTeamCommandService {
   return {
@@ -28,6 +29,14 @@ export function makeTechnicianTeamCommandService(args: {
           return yield* Effect.fail(new TechnicianTeamInternalStationRequired({
             stationId: input.stationId,
             stationType: station.value.stationType,
+          }));
+        }
+
+        const existingTeams = yield* args.queryRepo.list({ stationId: input.stationId });
+        if (existingTeams.length > 0) {
+          return yield* Effect.fail(new TechnicianTeamStationAlreadyAssigned({
+            stationId: input.stationId,
+            teamId: existingTeams[0]!.id,
           }));
         }
 

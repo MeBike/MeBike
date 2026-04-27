@@ -5,14 +5,11 @@ import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/clien
 import { defectOn } from "@/domain/shared";
 import { pickDefined } from "@/domain/shared/pick-defined";
 
-import type { TechnicianTeamAvailableOption, TechnicianTeamRow } from "../../models";
+import type { TechnicianTeamAvailableOption, TechnicianTeamDetailRow, TechnicianTeamRow } from "../../models";
 import type { TechnicianTeamQueryRepo } from "../technician-team.repository.types";
 
 import { TechnicianTeamRepositoryError } from "../../domain-errors";
-import {
-  TECHNICIAN_TEAM_MEMBER_LIMIT,
-
-} from "../../models";
+import { TECHNICIAN_TEAM_MEMBER_LIMIT } from "../../models";
 
 export function makeTechnicianTeamReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
@@ -35,6 +32,32 @@ export function makeTechnicianTeamReadRepository(
     memberCount: row._count.userAssignments,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  });
+
+  const mapDetailRow = (row: {
+    id: string;
+    name: string;
+    stationId: string;
+    station: { name: string; address: string };
+    availabilityStatus: import("generated/prisma/client").TechnicianTeamAvailability;
+    createdAt: Date;
+    updatedAt: Date;
+    _count: { userAssignments: number };
+    userAssignments: ReadonlyArray<{
+      user: {
+        id: string;
+        fullName: string;
+        role: import("generated/prisma/client").UserRole;
+      };
+    }>;
+  }): TechnicianTeamDetailRow => ({
+    ...mapRow(row),
+    stationAddress: row.station.address,
+    members: row.userAssignments.map(assignment => ({
+      userId: assignment.user.id,
+      fullName: assignment.user.fullName,
+      role: assignment.user.role,
+    })),
   });
 
   return {
@@ -71,6 +94,56 @@ export function makeTechnicianTeamReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(
             Option.map(mapRow),
+          ),
+        ),
+        defectOn(TechnicianTeamRepositoryError),
+      ),
+
+    getDetailById: id =>
+      Effect.tryPromise({
+        try: () =>
+          client.technicianTeam.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              name: true,
+              stationId: true,
+              station: {
+                select: {
+                  name: true,
+                  address: true,
+                },
+              },
+              availabilityStatus: true,
+              createdAt: true,
+              updatedAt: true,
+              _count: {
+                select: {
+                  userAssignments: true,
+                },
+              },
+              userAssignments: {
+                select: {
+                  user: {
+                    select: {
+                      id: true,
+                      fullName: true,
+                      role: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        catch: cause =>
+          new TechnicianTeamRepositoryError({
+            operation: "getDetailById",
+            cause,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(
+            Option.map(mapDetailRow),
           ),
         ),
         defectOn(TechnicianTeamRepositoryError),

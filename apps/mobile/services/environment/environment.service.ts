@@ -5,6 +5,7 @@ import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
 import { ServerContracts } from "@mebike/shared";
+import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
 
 import type {
@@ -19,27 +20,13 @@ import type { EnvironmentError } from "./environment-error";
 import { asNetworkError, parseEnvironmentError } from "./environment-error";
 
 function buildHistorySearchParams(params: EnvironmentImpactHistoryQuery = {}) {
-  const searchParams = new URLSearchParams();
-
-  const page = params.page ?? 1;
-  const pageSize = params.pageSize ?? 20;
-
-  searchParams.set("page", String(page));
-  searchParams.set("pageSize", String(pageSize));
-
-  if (params.sortOrder) {
-    searchParams.set("sortOrder", params.sortOrder);
-  }
-
-  if (params.dateFrom) {
-    searchParams.set("dateFrom", params.dateFrom);
-  }
-
-  if (params.dateTo) {
-    searchParams.set("dateTo", params.dateTo);
-  }
-
-  return searchParams;
+  return toSearchParams({
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? 20,
+    sortOrder: params.sortOrder,
+    dateFrom: params.dateFrom,
+    dateTo: params.dateTo,
+  });
 }
 
 export const environmentService = {

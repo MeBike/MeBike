@@ -3,11 +3,13 @@ import type { Effect } from "effect";
 import type {
   TechnicianTeamInternalStationRequired,
   TechnicianTeamNotFound,
+  TechnicianTeamStationAlreadyAssigned,
   TechnicianTeamStationNotFound,
 } from "../domain-errors";
 import type {
   CreateTechnicianTeamInput,
   TechnicianTeamAvailableOption,
+  TechnicianTeamDetailRow,
   TechnicianTeamFilter,
   TechnicianTeamRow,
   UpdateTechnicianTeamInput,
@@ -18,7 +20,7 @@ export type TechnicianTeamCommandService = {
     input: CreateTechnicianTeamInput,
   ) => Effect.Effect<
     TechnicianTeamRow,
-    TechnicianTeamStationNotFound | TechnicianTeamInternalStationRequired
+    TechnicianTeamStationNotFound | TechnicianTeamInternalStationRequired | TechnicianTeamStationAlreadyAssigned
   >;
   updateTechnicianTeam: (
     id: string,
@@ -27,6 +29,9 @@ export type TechnicianTeamCommandService = {
 };
 
 export type TechnicianTeamQueryService = {
+  getTechnicianTeamDetail: (
+    id: string,
+  ) => Effect.Effect<TechnicianTeamDetailRow, TechnicianTeamNotFound>;
   listTechnicianTeams: (
     filter?: TechnicianTeamFilter,
   ) => Effect.Effect<readonly TechnicianTeamRow[]>;
