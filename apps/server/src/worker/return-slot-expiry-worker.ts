@@ -1,5 +1,3 @@
-import type { Effect } from "effect";
-
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 
 import type { ReturnSlotRepository } from "@/domain/rentals";
@@ -12,11 +10,9 @@ import {
 import logger from "@/lib/logger";
 import { notifyReturnSlotExpired } from "@/realtime/return-slot-events";
 
-type ReturnSlotExpiryRunner = <A, E>(
-  effect: Effect.Effect<A, E, ReturnSlotRepository>,
-) => Promise<A>;
+import type { EffectRunner } from "./worker-runtime";
 
-export function makeReturnSlotExpireSweepHandler(runPromise: ReturnSlotExpiryRunner) {
+export function makeReturnSlotExpireSweepHandler(runPromise: EffectRunner<ReturnSlotRepository>) {
   return async function handleReturnSlotExpireSweep(job: QueueJob | undefined): Promise<void> {
     if (!job) {
       logger.warn("Return slot expire worker received empty batch");

@@ -1,30 +1,34 @@
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
+import { Effect } from "effect";
 
 import type { QueueJob } from "@/infrastructure/jobs/ports";
 
 import { sweepOverdueRentals } from "@/domain/rentals/services/workers/rental-overdue-sweep.service";
+import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
-import { makePrismaClient } from "@/lib/prisma";
 
-export async function handleRentalOverdueSweep(job: QueueJob | undefined): Promise<void> {
-  if (!job) {
-    logger.warn("Overdue rental sweep worker received empty batch");
-    return;
-  }
+import type { EffectRunner } from "./worker-runtime";
 
-  try {
-    parseJobPayload(JobTypes.RentalOverdueSweep, job.data);
-  }
-  catch (error) {
-    logger.error({ jobId: job.id, error }, "Invalid overdue sweep payload");
-    throw error;
-  }
+export function makeRentalOverdueSweepHandler(runEffect: EffectRunner<Prisma>) {
+  return async function handleRentalOverdueSweep(job: QueueJob | undefined): Promise<void> {
+    if (!job) {
+      logger.warn("Overdue rental sweep worker received empty batch");
+      return;
+    }
 
-  const prisma = makePrismaClient();
+    try {
+      parseJobPayload(JobTypes.RentalOverdueSweep, job.data);
+    }
+    catch (error) {
+      logger.error({ jobId: job.id, error }, "Invalid overdue sweep payload");
+      throw error;
+    }
 
-  try {
-    await prisma.$connect();
-    const summary = await sweepOverdueRentals(prisma, new Date());
+    const summary = await runEffect(Effect.gen(function* () {
+      const { client } = yield* Prisma;
+      return yield* Effect.promise(() => sweepOverdueRentals(client, new Date()));
+    }));
+
     logger.info(
       {
         jobId: job.id,
@@ -38,8 +42,5 @@ export async function handleRentalOverdueSweep(job: QueueJob | undefined): Promi
       },
       "Overdue rental sweep completed",
     );
-  }
-  finally {
-    await prisma.$disconnect();
-  }
+  };
 }

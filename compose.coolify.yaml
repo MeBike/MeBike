@@ -120,7 +120,7 @@ services:
         condition: service_healthy
     networks:
       - mebike-internal
-    command: ["node", "apps/server/dist/src/worker/iot-runtime.js"]
+    command: ["node", "apps/server/dist/src/worker/iot/index.js"]
 
   server-migrate:
     build:
