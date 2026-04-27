@@ -27,7 +27,7 @@ import {
 import { makeReservationQueryRepository } from "../../../repository/reservation-query.repository";
 import {
   lockStationForReservationCheck,
-  requiredAvailableBikesForReservation,
+  requiredAvailableBikesForNextReservation,
   stationCanAcceptReservation,
 } from "../../reservation-availability-rule";
 
@@ -127,14 +127,15 @@ export function prepareReserveBikeInTx(
 
     yield* lockStationForReservationCheck(tx, input.stationId);
 
-    const availableBikes = yield* txBikeRepo.countAvailableByStation(input.stationId);
-    const requiredAvailableBikes = requiredAvailableBikesForReservation(
-      stationOpt.value.totalCapacity,
-    );
+    const [availableBikes, pendingReservations] = yield* Effect.all([
+      txBikeRepo.countAvailableByStation(input.stationId),
+      txReservationQueryRepo.countPendingByStationId(input.stationId),
+    ]);
+    const requiredAvailableBikes = requiredAvailableBikesForNextReservation(pendingReservations);
 
     if (!stationCanAcceptReservation({
-      totalCapacity: stationOpt.value.totalCapacity,
       availableBikes,
+      pendingReservations,
     })) {
       return yield* Effect.fail(new StationReservationAvailabilityTooLow({
         stationId: input.stationId,

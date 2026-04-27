@@ -32,7 +32,7 @@ export const customerAssistantRentalRules = [
 
 export const customerAssistantReservationRules = [
   "Reservation rules: do not say a user can create a new reservation if they already have a pending or active reservation.",
-  "Reservation rules: a station can accept a new reservation only when available bikes are greater than 50 percent of total capacity.",
+  "Reservation rules: at most half of a station's available-bike pool can be reserved for pickup at the same time.",
   "Reservation rules: reservation timing and expiry must come from tool data. Do not guess countdowns, expiry times, or hold windows.",
 ] as const;
 

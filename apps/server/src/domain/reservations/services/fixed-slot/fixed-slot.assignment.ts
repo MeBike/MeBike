@@ -233,10 +233,13 @@ async function runFixedSlotAssignmentTransaction(
 
       yield* lockStationForReservationCheck(tx, template.stationId);
 
-      const availableBikes = yield* bikeRepo.countAvailableByStation(template.stationId);
+      const [availableBikes, pendingReservations] = yield* Effect.all([
+        bikeRepo.countAvailableByStation(template.stationId),
+        txReservationQueryRepo.countPendingByStationId(template.stationId),
+      ]);
       if (!stationCanAcceptReservation({
-        totalCapacity: template.station.totalCapacity,
         availableBikes,
+        pendingReservations,
       })) {
         yield* enqueueNoBikeEmail(tx, template, labels, context);
         return "NO_BIKE" as const;
