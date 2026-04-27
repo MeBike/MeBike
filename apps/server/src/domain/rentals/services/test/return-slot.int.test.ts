@@ -561,7 +561,7 @@ describe("return slot integration", () => {
     expectLeftTag(result, "ReturnSlotCapacityExceeded");
   });
 
-  it("fails to confirm a rental return at a different station than the active return slot", async () => {
+  it("allows confirming a rental return at a different station than the active return slot", async () => {
     const { user, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
       rental: { startTime: SAFE_RENTAL_START_TIME },
@@ -585,7 +585,14 @@ describe("return slot integration", () => {
       confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     });
 
-    expectLeftTag(result, "ReturnSlotStationMismatch");
+    const completed = expectRight(result);
+    expect(completed.status).toBe("COMPLETED");
+    expect(completed.endStationId).toBe(attemptedStation.id);
+
+    const slot = await fixture.prisma.returnSlotReservation.findFirst({
+      where: { rentalId: rental.id },
+    });
+    expect(slot?.status).toBe("CANCELLED");
   });
 
   it("fails when the rental return is already confirmed", async () => {
@@ -628,7 +635,7 @@ describe("return slot integration", () => {
     expectLeftTag(result, "ReturnAlreadyConfirmed");
   });
 
-  it("fails when a staff operator is not assigned to the return station", async () => {
+  it("allows a staff operator to confirm return outside their assigned station", async () => {
     const { user, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 5000n },
     });
@@ -651,6 +658,8 @@ describe("return slot integration", () => {
       confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
     });
 
-    expectLeftTag(result, "UnauthorizedRentalAccess");
+    const completed = expectRight(result);
+    expect(completed.status).toBe("COMPLETED");
+    expect(completed.endStationId).toBe(reservedStation.id);
   });
 });

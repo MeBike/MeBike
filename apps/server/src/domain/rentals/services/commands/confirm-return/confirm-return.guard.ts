@@ -16,7 +16,6 @@ import {
   RentalRepositoryError,
   ReturnAlreadyConfirmed,
   ReturnSlotCapacityExceeded,
-  ReturnSlotStationMismatch,
   UnauthorizedRentalAccess,
 } from "../../../domain-errors";
 import { makeRentalRepository } from "../../../repository/rental.repository";
@@ -125,13 +124,6 @@ export function ensureOperatorCanConfirmReturnInTx(args: {
       return yield* Effect.fail(makeOvernightOperationsClosedError(now));
     }
 
-    if (operator?.role === "STAFF" && operator.stationId !== input.stationId) {
-      return yield* Effect.fail(new UnauthorizedRentalAccess({
-        rentalId: rental.id,
-        userId: input.confirmedByUserId,
-      }));
-    }
-
     if (operator?.role !== "AGENCY") {
       return;
     }
@@ -161,14 +153,15 @@ export function ensureOperatorCanConfirmReturnInTx(args: {
 /**
  * Xác nhận rằng station trả xe hiện tại vẫn hợp lệ cho rental này.
  *
- * Nếu user đã giữ return slot, station phải trùng với slot đó.
- * Nếu chưa có slot, station phải còn chỗ vật lý để nhận xe.
+ * Return slot chỉ giữ chỗ tại station đó. Nếu trả đúng station đã giữ, bỏ qua
+ * capacity check. Nếu trả station khác, slot sẽ được hủy khi hoàn tất trả xe
+ * và station nhận xe vẫn phải còn chỗ vật lý.
  */
 export function ensureReturnDestinationReadyInTx(args: {
   readonly tx: PrismaTypes.TransactionClient;
   readonly input: ConfirmRentalReturnInput;
   readonly rental: RentalRow;
-}): Effect.Effect<void, ReturnSlotStationMismatch | ReturnSlotCapacityExceeded | StationNotFound> {
+}): Effect.Effect<void, ReturnSlotCapacityExceeded | StationNotFound> {
   return Effect.gen(function* () {
     const txReturnSlotRepo = makeReturnSlotRepository(args.tx);
     const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(args.rental.id);
@@ -176,15 +169,15 @@ export function ensureReturnDestinationReadyInTx(args: {
     if (Option.isSome(activeReturnSlotOpt)) {
       const activeReturnSlot = activeReturnSlotOpt.value;
 
-      if (activeReturnSlot.stationId !== args.input.stationId) {
-        return yield* Effect.fail(new ReturnSlotStationMismatch({
-          rentalId: args.rental.id,
-          returnSlotStationId: activeReturnSlot.stationId,
-          attemptedEndStationId: args.input.stationId,
-        }));
+      if (activeReturnSlot.stationId === args.input.stationId) {
+        return;
       }
 
-      return;
+      yield* txReturnSlotRepo.finalizeActiveByRentalId(
+        args.rental.id,
+        "CANCELLED",
+        args.input.confirmedAt,
+      );
     }
 
     const stationSnapshotOpt = yield* txReturnSlotRepo.getStationCapacitySnapshot(args.input.stationId);
