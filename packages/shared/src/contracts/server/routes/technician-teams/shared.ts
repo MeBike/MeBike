@@ -5,6 +5,8 @@ import {
 import {
   TechnicianTeamAvailabilitySchema,
   TechnicianTeamAvailableOptionSchema,
+  TechnicianTeamDetailResponseSchema,
+  TechnicianTeamDetailSchema,
   TechnicianTeamErrorCodeSchema,
   TechnicianTeamErrorResponseSchema,
   TechnicianTeamSummarySchema,
@@ -61,6 +63,8 @@ export {
   ServerErrorResponseSchema,
   TechnicianTeamAvailabilitySchema,
   TechnicianTeamAvailableOptionSchema,
+  TechnicianTeamDetailResponseSchema,
+  TechnicianTeamDetailSchema,
   TechnicianTeamErrorCodeSchema,
   TechnicianTeamErrorResponseSchema,
   TechnicianTeamSummarySchema,

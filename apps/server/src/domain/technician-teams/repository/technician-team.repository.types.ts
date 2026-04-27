@@ -3,6 +3,7 @@ import type { Effect, Option } from "effect";
 import type {
   CreateTechnicianTeamInput,
   TechnicianTeamAvailableOption,
+  TechnicianTeamDetailRow,
   TechnicianTeamFilter,
   TechnicianTeamRow,
   UpdateTechnicianTeamInput,
@@ -12,6 +13,9 @@ export type TechnicianTeamQueryRepo = {
   readonly getById: (
     id: string,
   ) => Effect.Effect<Option.Option<TechnicianTeamRow>>;
+  readonly getDetailById: (
+    id: string,
+  ) => Effect.Effect<Option.Option<TechnicianTeamDetailRow>>;
   readonly list: (args?: TechnicianTeamFilter) => Effect.Effect<readonly TechnicianTeamRow[]>;
   readonly listAvailable: (args?: {
     readonly stationId?: string;

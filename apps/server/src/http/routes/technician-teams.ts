@@ -17,6 +17,10 @@ export function registerTechnicianTeamRoutes(
     ...technicianTeams.adminAvailable,
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
+  const adminGetRoute = {
+    ...technicianTeams.adminGet,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
   const adminCreateRoute = {
     ...technicianTeams.adminCreate,
     middleware: [requireAdminMiddleware] as const,
@@ -27,6 +31,7 @@ export function registerTechnicianTeamRoutes(
   } satisfies RouteConfig;
 
   app.openapi(adminAvailableRoute, TechnicianTeamAdminController.listAvailableTechnicianTeams);
+  app.openapi(adminGetRoute, TechnicianTeamAdminController.getTechnicianTeam);
   app.openapi(adminListRoute, TechnicianTeamAdminController.listTechnicianTeams);
   app.openapi(adminCreateRoute, TechnicianTeamAdminController.createTechnicianTeam);
   app.openapi(adminUpdateRoute, TechnicianTeamAdminController.updateTechnicianTeam);

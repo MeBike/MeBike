@@ -9,6 +9,7 @@ import type {
 import type {
   CreateTechnicianTeamInput,
   TechnicianTeamAvailableOption,
+  TechnicianTeamDetailRow,
   TechnicianTeamFilter,
   TechnicianTeamRow,
   UpdateTechnicianTeamInput,
@@ -28,6 +29,9 @@ export type TechnicianTeamCommandService = {
 };
 
 export type TechnicianTeamQueryService = {
+  getTechnicianTeamDetail: (
+    id: string,
+  ) => Effect.Effect<TechnicianTeamDetailRow, TechnicianTeamNotFound>;
   listTechnicianTeams: (
     filter?: TechnicianTeamFilter,
   ) => Effect.Effect<readonly TechnicianTeamRow[]>;

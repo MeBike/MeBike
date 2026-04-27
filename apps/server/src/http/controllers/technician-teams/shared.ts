@@ -5,6 +5,7 @@ export type TechnicianTeamsRoutes = typeof import("@mebike/shared")["serverRoute
 export const { TechnicianTeamErrorCodeSchema, technicianTeamErrorMessages } = TechnicianTeamsContracts;
 
 export type TechnicianTeamSummary = TechnicianTeamsContracts.TechnicianTeamSummary;
+export type TechnicianTeamDetailResponse = TechnicianTeamsContracts.TechnicianTeamDetailResponse;
 export type TechnicianTeamListResponse = TechnicianTeamsContracts.TechnicianTeamListResponse;
 export type TechnicianTeamAvailableListResponse = TechnicianTeamsContracts.TechnicianTeamAvailableListResponse;
 export type TechnicianTeamErrorResponse = TechnicianTeamsContracts.TechnicianTeamErrorResponse;
