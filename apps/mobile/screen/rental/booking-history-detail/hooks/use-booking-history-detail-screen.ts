@@ -1,9 +1,11 @@
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
+import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { BookingHistoryDetailNavigationProp } from "@/types/navigation";
 
+import { useReturnSlotExpiredEvents } from "@/hooks/use-return-slot-events";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { spaceScale } from "@theme/metrics";
 import { getBikeDisplayLabel } from "@utils/bike";
@@ -19,6 +21,7 @@ export function useBookingHistoryDetailScreen(bookingId: string) {
   const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const { isAuthenticated } = useAuthNext();
+  const alertedReturnSlotRef = useRef<string | null>(null);
 
   const hasToken = isAuthenticated;
 
@@ -31,6 +34,38 @@ export function useBookingHistoryDetailScreen(bookingId: string) {
     hasToken,
     refetchDetail: rental.refetchDetail,
   });
+
+  const alertReturnSlotExpired = useCallback(() => {
+    Alert.alert(
+      "Chỗ trả xe đã hết hạn",
+      "Bạn cần giữ chỗ lại nếu muốn đảm bảo còn chỗ tại trạm trả xe.",
+    );
+  }, []);
+
+  const handleReturnSlotExpired = useCallback(() => {
+    if (!isFocused) {
+      return;
+    }
+
+    const returnSlotId = rental.detail?.returnSlot?.id;
+    if (returnSlotId && alertedReturnSlotRef.current === returnSlotId) {
+      return;
+    }
+
+    alertedReturnSlotRef.current = returnSlotId ?? bookingId;
+    alertReturnSlotExpired();
+    void rental.refetchDetail();
+  }, [alertReturnSlotExpired, bookingId, isFocused, rental]);
+
+  useReturnSlotExpiredEvents(
+    (payload) => {
+      if (payload.rentalId !== bookingId) {
+        return;
+      }
+      handleReturnSlotExpired();
+    },
+    { enabled: hasToken },
+  );
 
   const bikeSwap = useBookingBikeSwapState({
     bookingId,

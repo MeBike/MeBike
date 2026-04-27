@@ -30,6 +30,7 @@ import {
   resolvePersona,
   writeCurrentPersona,
 } from "./personas";
+import { expireReturnSlotsForDev } from "./runtime";
 import { updateUserCardBinding } from "./user-card";
 
 const STATUS_OPTIONS: EmailJobStatus[] = ["ALL", "PENDING", "SENT", "FAILED", "CANCELLED"];
@@ -60,6 +61,7 @@ export async function runInteractiveCli(args: {
           ? [{ name: "End rental as staff", value: "staff-end-rental" }]
           : []),
         { name: "Device config", value: "device-config" },
+        { name: "Run return-slot expiry sweep", value: "return-slot-expiry" },
         { name: "Browse recent email jobs", value: "browse" },
         { name: "Browse stations", value: "stations" },
         { name: "Inspect bike", value: "bike" },
@@ -87,6 +89,9 @@ export async function runInteractiveCli(args: {
         break;
       case "device-config":
         await runInteractiveAction(deviceConfigInteractive);
+        break;
+      case "return-slot-expiry":
+        await runInteractiveAction(runReturnSlotExpiryInteractive);
         break;
       case "browse":
         await browseJobs(args.connectionString, status);
@@ -135,6 +140,46 @@ export async function runInteractiveCli(args: {
       case "quit":
         return;
     }
+  }
+}
+
+async function runReturnSlotExpiryInteractive() {
+  const defaultNow = new Date().toISOString();
+  const nowValue = await input({
+    message: "Effective now for expiry sweep (ISO timestamp)",
+    default: defaultNow,
+  });
+  const now = new Date(nowValue || defaultNow);
+
+  if (Number.isNaN(now.getTime())) {
+    throw new TypeError(`Invalid timestamp: ${nowValue}`);
+  }
+
+  const notify = await confirm({
+    message: "Publish returnSlotExpired realtime events for expired slots?",
+    default: true,
+  });
+
+  const confirmed = await confirm({
+    message: `Cancel expired return slots as of ${now.toISOString()}?`,
+    default: false,
+  });
+
+  if (!confirmed) {
+    writeLine(chalk.yellow("Return-slot expiry sweep cancelled."));
+    return;
+  }
+
+  const summary = await expireReturnSlotsForDev({ now, notify });
+  writeLine(chalk.green(`Expired ${summary.expired} return slot(s).`));
+
+  for (const slot of summary.expiredSlots) {
+    writeLine([
+      chalk.white(slot.id),
+      chalk.gray(`rental ${slot.rentalId}`),
+      chalk.gray(`user ${slot.userId}`),
+      chalk.gray(`station ${slot.stationId}`),
+    ].join("  "));
   }
 }
 

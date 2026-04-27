@@ -9,6 +9,7 @@ import type { ReservationQueryService } from "@/domain/reservations";
 import type { StationQueryService } from "@/domain/stations";
 import type { WalletService } from "@/domain/wallets/services/wallet.service";
 
+import { returnSlotExpiresAt } from "@/domain/rentals";
 import { requiredAvailableBikesForNextReservation, stationCanAcceptReservation } from "@/domain/reservations/services/reservation-availability-rule";
 import { toContractNearbyStation, toContractStationReadSummary } from "@/http/presenters/stations.presenter";
 
@@ -236,6 +237,7 @@ export function toReturnSlotAiDetail(
     userId: returnSlot.userId,
     stationId: returnSlot.stationId,
     reservedFrom: returnSlot.reservedFrom.toISOString(),
+    expiresAt: returnSlotExpiresAt(returnSlot.reservedFrom).toISOString(),
     reservedFromDisplay: formatLocalDateTime(returnSlot.reservedFrom),
     status: returnSlot.status,
     statusLabel: getReturnSlotStatusLabel(returnSlot.status),

@@ -7,6 +7,7 @@ import { Prisma } from "@/infrastructure/prisma";
 import { Redis } from "@/infrastructure/redis";
 import logger from "@/lib/logger";
 import { startBikeStatusListener } from "@/realtime/pg-bike-status-listener";
+import { startReturnSlotListener } from "@/realtime/pg-return-slot-listener";
 
 import { createHttpApp } from "./app";
 import { HttpDepsLive } from "./shared/providers";
@@ -21,6 +22,7 @@ export const startHonoServer = Effect.gen(function* () {
     })),
   );
   yield* Effect.promise(() => startBikeStatusListener());
+  yield* Effect.promise(() => startReturnSlotListener());
   const port = env.PORT;
   serve({
     fetch: createHttpApp({

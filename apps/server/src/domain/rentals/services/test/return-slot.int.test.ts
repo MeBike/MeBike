@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   enqueueEnvironmentImpactCalculationJob,
   environmentImpactRentalDedupeKey,
+  expireReturnSlots,
 } from "@/domain/rentals";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { expectLeftTag, expectRight } from "@/test/effect/assertions";
@@ -50,7 +51,11 @@ describe("return slot integration", () => {
     expect(created.userId).toBe(user.id);
     expect(created.stationId).toBe(targetStation.id);
 
-    const current = await runGetCurrentReturnSlot({ rentalId: rental.id, userId: user.id });
+    const current = await runGetCurrentReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      now: new Date("2026-03-21T12:01:00.000Z"),
+    });
 
     expect(current._tag).toBe("Some");
     if (current._tag === "Some") {
@@ -169,6 +174,125 @@ describe("return slot integration", () => {
     });
 
     expectLeftTag(result, "ReturnSlotCapacityExceeded");
+  });
+
+  it("ignores expired return slots when checking logical return capacity", async () => {
+    const first = await givenActiveRental(fixture);
+    const second = await givenActiveRental(fixture);
+    const station = await fixture.factories.station({
+      capacity: 10,
+      returnSlotLimit: 1,
+    });
+
+    await fixture.prisma.returnSlotReservation.create({
+      data: {
+        rentalId: first.rental.id,
+        userId: first.user.id,
+        stationId: station.id,
+        reservedFrom: new Date("2025-01-01T10:00:00.000Z"),
+      },
+    });
+
+    const created = expectRight(await runCreateReturnSlot({
+      rentalId: second.rental.id,
+      userId: second.user.id,
+      stationId: station.id,
+      now: new Date("2025-01-01T10:31:00.000Z"),
+    }));
+
+    expect(created.stationId).toBe(station.id);
+  });
+
+  it("does not return an expired active return slot as current", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+    const station = await fixture.factories.station({ capacity: 2 });
+
+    expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: station.id,
+      now: new Date("2025-01-01T10:00:00.000Z"),
+    }));
+
+    const current = await runGetCurrentReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      now: new Date("2025-01-01T10:31:00.000Z"),
+    });
+
+    expect(current._tag).toBe("None");
+  });
+
+  it("cancels an expired slot before creating a new slot for the same rental", async () => {
+    const { user, rental } = await givenActiveRental(fixture);
+    const firstStation = await fixture.factories.station({ capacity: 2 });
+    const secondStation = await fixture.factories.station({ capacity: 2 });
+
+    const first = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: firstStation.id,
+      now: new Date("2025-01-01T10:00:00.000Z"),
+    }));
+
+    const second = expectRight(await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: secondStation.id,
+      now: new Date("2025-01-01T10:31:00.000Z"),
+    }));
+
+    expect(second.id).not.toBe(first.id);
+
+    const rows = await fixture.prisma.returnSlotReservation.findMany({
+      where: { rentalId: rental.id },
+      orderBy: { createdAt: "asc" },
+    });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.status).toBe("CANCELLED");
+    expect(rows[1]?.status).toBe("ACTIVE");
+  });
+
+  it("expires active return slots older than the configured hold window", async () => {
+    const expiredRental = await givenActiveRental(fixture);
+    const activeRental = await givenActiveRental(fixture);
+    const station = await fixture.factories.station({ capacity: 5 });
+
+    await fixture.prisma.returnSlotReservation.createMany({
+      data: [
+        {
+          rentalId: expiredRental.rental.id,
+          userId: expiredRental.user.id,
+          stationId: station.id,
+          reservedFrom: new Date("2025-01-01T10:00:00.000Z"),
+        },
+        {
+          rentalId: activeRental.rental.id,
+          userId: activeRental.user.id,
+          stationId: station.id,
+          reservedFrom: new Date("2025-01-01T10:45:00.000Z"),
+        },
+      ],
+    });
+
+    const summary = await Effect.runPromise(
+      expireReturnSlots({ now: new Date("2025-01-01T10:31:00.000Z") }).pipe(
+        Effect.provide(makeRentalTestLayer(fixture.prisma)),
+      ),
+    );
+
+    expect(summary.expired).toBe(1);
+    expect(summary.expiredSlots).toHaveLength(1);
+    expect(summary.expiredSlots[0]?.rentalId).toBe(expiredRental.rental.id);
+
+    const rows = await fixture.prisma.returnSlotReservation.findMany({
+      where: { rentalId: { in: [expiredRental.rental.id, activeRental.rental.id] } },
+      orderBy: { reservedFrom: "asc" },
+    });
+
+    expect(rows[0]?.status).toBe("CANCELLED");
+    expect(rows[1]?.status).toBe("ACTIVE");
   });
 
   it("fails when the target station does not exist", async () => {

@@ -3,78 +3,36 @@ import { Effect, Layer, Match, Option } from "effect";
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
-  ReturnSlotStatus,
 } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
-import type { ReturnSlotRepoError } from "../domain-errors";
-import type {
-  ReturnSlotRow,
-  ReturnSlotStationCapacityRow,
-} from "../models";
+import type { ReturnSlotRepo } from "./return-slot.repository.types";
 
 import {
   RentalRepositoryError,
-
   ReturnSlotUniqueViolation,
 } from "../domain-errors";
+import { mapToReturnSlotRow, returnSlotSelect } from "./return-slot.repository.query";
 import { isKnownReturnSlotUniqueConstraint, uniqueTargets } from "./unique-violation";
 
-type CreateActiveReturnSlotInput = {
-  rentalId: string;
-  userId: string;
-  stationId: string;
-  reservedFrom: Date;
-};
+export type {
+  CreateActiveReturnSlotInput,
+  ReturnSlotRepo,
+} from "./return-slot.repository.types";
 
-export type ReturnSlotRepo = {
-  findActiveByRentalId: (
-    rentalId: string,
-  ) => Effect.Effect<Option.Option<ReturnSlotRow>>;
-  createActive: (
-    input: CreateActiveReturnSlotInput,
-  ) => Effect.Effect<ReturnSlotRow, ReturnSlotRepoError>;
-  cancelActiveByRentalId: (
-    rentalId: string,
-    updatedAt: Date,
-  ) => Effect.Effect<Option.Option<ReturnSlotRow>>;
-  finalizeActiveByRentalId: (
-    rentalId: string,
-    status: Extract<ReturnSlotStatus, "USED" | "CANCELLED">,
-    updatedAt: Date,
-  ) => Effect.Effect<Option.Option<ReturnSlotRow>>;
-  getStationCapacitySnapshot: (
-    stationId: string,
-  ) => Effect.Effect<Option.Option<ReturnSlotStationCapacityRow>>;
-};
-
-const returnSlotSelect = {
-  id: true,
-  rentalId: true,
-  userId: true,
-  stationId: true,
-  reservedFrom: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true,
-} as const;
-
-function mapToReturnSlotRow(raw: {
-  id: string;
-  rentalId: string;
-  userId: string;
-  stationId: string;
-  reservedFrom: Date;
-  status: ReturnSlotStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}): ReturnSlotRow {
-  return raw;
-}
-
+/**
+ * Tạo Prisma-backed repository cho return-slot reservation.
+ *
+ * Repository này giữ toàn bộ chi tiết truy vấn liên quan tới:
+ * - đọc slot ACTIVE thuần persistence,
+ * - đọc slot còn hiệu lực theo cửa sổ thời gian,
+ * - cleanup cục bộ và cleanup batch các slot đã quá hạn.
+ *
+ * @param db Prisma client hoặc transaction client dùng để thực thi truy vấn.
+ */
 export function makeReturnSlotRepository(
   db: PrismaClient | PrismaTypes.TransactionClient,
 ): ReturnSlotRepo {
@@ -95,6 +53,28 @@ export function makeReturnSlotRepository(
         catch: cause =>
           new RentalRepositoryError({
             operation: "returnSlot.findActiveByRentalId",
+            cause,
+          }),
+      }).pipe(defectOn(RentalRepositoryError)),
+
+    findUnexpiredActiveByRentalId: (rentalId, activeAfter) =>
+      Effect.tryPromise({
+        try: async () => {
+          const raw = await client.returnSlotReservation.findFirst({
+            where: {
+              rentalId,
+              status: "ACTIVE",
+              reservedFrom: { gt: activeAfter },
+            },
+            select: returnSlotSelect,
+            orderBy: { createdAt: "desc" },
+          });
+
+          return Option.fromNullable(raw).pipe(Option.map(mapToReturnSlotRow));
+        },
+        catch: cause =>
+          new RentalRepositoryError({
+            operation: "returnSlot.findUnexpiredActiveByRentalId",
             cause,
           }),
       }).pipe(defectOn(RentalRepositoryError)),
@@ -143,6 +123,30 @@ export function makeReturnSlotRepository(
         Effect.map(mapToReturnSlotRow),
         defectOn(RentalRepositoryError),
       ),
+
+    cancelActiveByRentalIdOlderThan: (rentalId, activeUntil, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const result = await client.returnSlotReservation.updateMany({
+            where: {
+              rentalId,
+              status: "ACTIVE",
+              reservedFrom: { lte: activeUntil },
+            },
+            data: {
+              status: "CANCELLED",
+              updatedAt,
+            },
+          });
+
+          return result.count;
+        },
+        catch: cause =>
+          new RentalRepositoryError({
+            operation: "returnSlot.cancelActiveByRentalIdOlderThan",
+            cause,
+          }),
+      }).pipe(defectOn(RentalRepositoryError)),
 
     cancelActiveByRentalId: (rentalId, updatedAt) =>
       Effect.gen(function* () {
@@ -218,7 +222,67 @@ export function makeReturnSlotRepository(
         return Option.some(mapToReturnSlotRow(updated));
       }).pipe(defectOn(RentalRepositoryError)),
 
-    getStationCapacitySnapshot: stationId =>
+    cancelActiveOlderThan: (activeUntil, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const result = await client.returnSlotReservation.updateMany({
+            where: {
+              status: "ACTIVE",
+              reservedFrom: { lte: activeUntil },
+            },
+            data: {
+              status: "CANCELLED",
+              updatedAt,
+            },
+          });
+
+          return result.count;
+        },
+        catch: cause =>
+          new RentalRepositoryError({
+            operation: "returnSlot.cancelActiveOlderThan",
+            cause,
+          }),
+      }).pipe(defectOn(RentalRepositoryError)),
+
+    cancelActiveOlderThanReturning: (activeUntil, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const rows = await client.$queryRaw<Array<{
+            id: string;
+            rentalId: string;
+            userId: string;
+            stationId: string;
+            reservedFrom: Date;
+            status: "ACTIVE" | "USED" | "CANCELLED";
+            createdAt: Date;
+            updatedAt: Date;
+          }>>`
+            UPDATE return_slot_reservations
+            SET status = 'CANCELLED', updated_at = ${updatedAt}
+            WHERE status = 'ACTIVE'
+              AND reserved_from <= ${activeUntil}
+            RETURNING
+              id,
+              rental_id AS "rentalId",
+              user_id AS "userId",
+              station_id AS "stationId",
+              reserved_from AS "reservedFrom",
+              status,
+              created_at AS "createdAt",
+              updated_at AS "updatedAt"
+          `;
+
+          return rows.map(mapToReturnSlotRow);
+        },
+        catch: cause =>
+          new RentalRepositoryError({
+            operation: "returnSlot.cancelActiveOlderThanReturning",
+            cause,
+          }),
+      }).pipe(defectOn(RentalRepositoryError)),
+
+    getStationCapacitySnapshot: (stationId, activeAfter) =>
       Effect.gen(function* () {
         const station = yield* Effect.tryPromise({
           try: () =>
@@ -253,7 +317,13 @@ export function makeReturnSlotRepository(
           Effect.tryPromise({
             try: () =>
               client.returnSlotReservation.count({
-                where: { stationId, status: "ACTIVE" },
+                where: {
+                  stationId,
+                  status: "ACTIVE",
+                  ...(activeAfter
+                    ? { reservedFrom: { gt: activeAfter } }
+                    : {}),
+                },
               }),
             catch: cause =>
               new RentalRepositoryError({

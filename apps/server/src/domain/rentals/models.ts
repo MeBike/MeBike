@@ -134,6 +134,7 @@ export type AdminRentalDetail = {
   returnSlot: {
     id: string;
     reservedFrom: Date;
+    expiresAt: Date;
     status: ReturnSlotStatus;
     station: {
       id: string;

@@ -11,6 +11,8 @@ import type {
   StaffBikeSwapRequestRow,
 } from "@/domain/rentals";
 
+import { returnSlotExpiresAt } from "@/domain/rentals/services/commands/return-slot-expiry";
+
 function toContractRentalDeposit(row: RentalRow) {
   return {
     depositAmount: row.depositAmount ?? undefined,
@@ -237,6 +239,7 @@ export function toContractAdminRentalDetail(
       ? {
           id: detail.returnSlot.id,
           reservedFrom: detail.returnSlot.reservedFrom.toISOString(),
+          expiresAt: detail.returnSlot.expiresAt.toISOString(),
           status: detail.returnSlot.status,
           station: {
             id: detail.returnSlot.station.id,
@@ -333,6 +336,7 @@ export function toContractReturnSlot(
     userId: row.userId,
     stationId: row.stationId,
     reservedFrom: row.reservedFrom.toISOString(),
+    expiresAt: returnSlotExpiresAt(row.reservedFrom).toISOString(),
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

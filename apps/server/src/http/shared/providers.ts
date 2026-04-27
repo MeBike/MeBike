@@ -67,7 +67,6 @@ export {
   RentalReposLive,
   RentalServiceLayer,
   RentalStatsServiceLayer,
-  ReturnConfirmationReposLive,
   ReturnSlotReposLive,
 } from "./features/rental.layers";
 export {

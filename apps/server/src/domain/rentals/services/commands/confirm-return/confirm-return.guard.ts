@@ -19,8 +19,9 @@ import {
   UnauthorizedRentalAccess,
 } from "../../../domain-errors";
 import { makeRentalRepository } from "../../../repository/rental.repository";
-import { makeReturnConfirmationRepository } from "../../../repository/return-confirmation.repository";
 import { makeReturnSlotRepository } from "../../../repository/return-slot.repository";
+import { makeRentalReturnConfirmationWriteRepository } from "../../../repository/write/rental.return-confirmation-write.repository";
+import { returnSlotActiveAfter } from "../return-slot-expiry";
 
 /**
  * Nạp rental cần xác nhận và chặn sớm nếu rental không còn ở trạng thái đang thuê.
@@ -164,7 +165,16 @@ export function ensureReturnDestinationReadyInTx(args: {
 }): Effect.Effect<void, ReturnSlotCapacityExceeded | StationNotFound> {
   return Effect.gen(function* () {
     const txReturnSlotRepo = makeReturnSlotRepository(args.tx);
-    const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(args.rental.id);
+    const now = args.input.now ?? new Date();
+    const activeAfter = returnSlotActiveAfter(now);
+
+    yield* txReturnSlotRepo.cancelActiveByRentalIdOlderThan(
+      args.rental.id,
+      activeAfter,
+      args.input.confirmedAt,
+    );
+
+    const activeReturnSlotOpt = yield* txReturnSlotRepo.findUnexpiredActiveByRentalId(args.rental.id, activeAfter);
 
     if (Option.isSome(activeReturnSlotOpt)) {
       const activeReturnSlot = activeReturnSlotOpt.value;
@@ -180,7 +190,7 @@ export function ensureReturnDestinationReadyInTx(args: {
       );
     }
 
-    const stationSnapshotOpt = yield* txReturnSlotRepo.getStationCapacitySnapshot(args.input.stationId);
+    const stationSnapshotOpt = yield* txReturnSlotRepo.getStationCapacitySnapshot(args.input.stationId, activeAfter);
 
     if (Option.isNone(stationSnapshotOpt)) {
       return yield* Effect.fail(new StationNotFound({ id: args.input.stationId }));
@@ -212,8 +222,8 @@ export function createReturnConfirmationInTx(args: {
   readonly rental: RentalRow;
 }): Effect.Effect<void, ReturnAlreadyConfirmed> {
   return Effect.gen(function* () {
-    const txReturnConfirmationRepo = makeReturnConfirmationRepository(args.tx);
-    const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(args.rental.id);
+    const txReturnConfirmationRepo = makeRentalReturnConfirmationWriteRepository(args.tx);
+    const existingConfirmationOpt = yield* txReturnConfirmationRepo.findReturnConfirmationByRentalId(args.rental.id);
 
     if (Option.isSome(existingConfirmationOpt)) {
       return yield* Effect.fail(new ReturnAlreadyConfirmed({
@@ -221,7 +231,7 @@ export function createReturnConfirmationInTx(args: {
       }));
     }
 
-    yield* txReturnConfirmationRepo.create({
+    yield* txReturnConfirmationRepo.createReturnConfirmation({
       rentalId: args.rental.id,
       stationId: args.input.stationId,
       confirmedByUserId: args.input.confirmedByUserId,

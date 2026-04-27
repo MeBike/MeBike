@@ -4,9 +4,7 @@ import type { PrismaClient } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import {
-  makeReturnConfirmationRepository,
   makeReturnSlotRepository,
-  ReturnConfirmationRepository,
   ReturnSlotRepository,
 } from "@/domain/rentals";
 import {
@@ -26,10 +24,6 @@ export function makeReservationRentalFlowTestKit(client: PrismaClient) {
     Layer.succeed(
       ReturnSlotRepository,
       ReturnSlotRepository.make(makeReturnSlotRepository(client)),
-    ),
-    Layer.succeed(
-      ReturnConfirmationRepository,
-      ReturnConfirmationRepository.make(makeReturnConfirmationRepository(client)),
     ),
   );
 

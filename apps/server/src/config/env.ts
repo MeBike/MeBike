@@ -8,6 +8,7 @@ import {
   authEnvSchema,
   fixedSlotEnvSchema,
   reservationEnvSchema,
+  returnSlotEnvSchema,
   stationEnvSchema,
   subscriptionEnvSchema,
   walletEnvSchema,
@@ -36,6 +37,7 @@ const envSchema = z.object({
   ...walletEnvSchema.shape,
   ...stationEnvSchema.shape,
   ...reservationEnvSchema.shape,
+  ...returnSlotEnvSchema.shape,
   ...fixedSlotEnvSchema.shape,
   ...subscriptionEnvSchema.shape,
 });

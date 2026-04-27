@@ -17,9 +17,6 @@ import {
   RentalRepositoryError,
 } from "../../domain-errors";
 import { RentalRepository } from "../../repository/rental.repository";
-import {
-  ReturnConfirmationRepository,
-} from "../../repository/return-confirmation.repository";
 import { ReturnSlotRepository } from "../../repository/return-slot.repository";
 import { enqueueEnvironmentImpactCalculationJob } from "../workers/environment-impact-job.service";
 import {
@@ -46,14 +43,12 @@ export function confirmRentalReturnByOperator(
   | Prisma
   | RentalRepository
   | ReturnSlotRepository
-  | ReturnConfirmationRepository
   | BikeRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     yield* RentalRepository;
     yield* ReturnSlotRepository;
-    yield* ReturnConfirmationRepository;
     yield* BikeRepository;
     const now = input.now ?? new Date();
     const runtimeInput = { ...input, now };

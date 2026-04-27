@@ -1,7 +1,7 @@
 import type { JobPayload } from "@mebike/shared/contracts/server/jobs";
 
 import { parseJobPayload } from "@mebike/shared/contracts/server/jobs";
-import { Effect } from "effect";
+import { Effect, Layer, ManagedRuntime } from "effect";
 import process from "node:process";
 
 import type {
@@ -12,6 +12,7 @@ import type { Prisma } from "@/infrastructure/prisma";
 
 import { env } from "@/config/env";
 import { db } from "@/database";
+import { ReturnSlotRepositoryLive } from "@/domain/rentals";
 import {
   activateSubscriptionUseCase,
   SubscriptionCommandRepositoryLive,
@@ -35,6 +36,7 @@ import {
   handleReservationExpireHold,
   handleReservationNotifyNearExpiry,
 } from "./reservation-hold-worker";
+import { makeReturnSlotExpireSweepHandler } from "./return-slot-expiry-worker";
 import { handleWithdrawalExecute, handleWithdrawalSweep } from "./wallet-withdrawal-worker";
 import { attachJobRuntimeLogging, WorkerLog } from "./worker-logging";
 import { setupQueue } from "./worker-setup";
@@ -56,6 +58,10 @@ function runSubscriptionEffect<A, E>(
     ),
   );
 }
+
+const ReturnSlotExpiryWorkerLive = ReturnSlotRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
 
 async function handleAutoActivate(job: QueueJob | undefined) {
   if (!job) {
@@ -110,6 +116,7 @@ async function handleExpireSweep(job: QueueJob | undefined) {
 
 async function main() {
   const { producer, runtime, scheduler } = makeJobBackend();
+  const returnSlotExpiryRuntime = ManagedRuntime.make(ReturnSlotExpiryWorkerLive);
   attachJobRuntimeLogging(runtime);
   await runtime.start();
   WorkerLog.runtimeStarted();
@@ -124,6 +131,7 @@ async function main() {
   await setupQueue(runtime, JobTypes.ReservationFixedSlotAssign);
   await setupQueue(runtime, JobTypes.ReservationNotifyNearExpiry);
   await setupQueue(runtime, JobTypes.ReservationExpireHold);
+  await setupQueue(runtime, JobTypes.ReturnSlotExpireSweep);
   await setupQueue(runtime, JobTypes.EnvironmentImpactCalculateRental);
   await setupQueue(runtime, JobTypes.RentalOverdueSweep);
   await setupQueue(runtime, JobTypes.WalletWithdrawalExecute);
@@ -154,6 +162,12 @@ async function main() {
     async job => handleReservationExpireHold(job, producer),
   );
   WorkerLog.workerRegistered(JobTypes.ReservationExpireHold, expireWorkerId);
+
+  const returnSlotExpireWorkerId = await runtime.register(
+    JobTypes.ReturnSlotExpireSweep,
+    makeReturnSlotExpireSweepHandler(returnSlotExpiryRuntime.runPromise.bind(returnSlotExpiryRuntime)),
+  );
+  WorkerLog.workerRegistered(JobTypes.ReturnSlotExpireSweep, returnSlotExpireWorkerId);
 
   const environmentImpactWorkerId = await runtime.register(
     JobTypes.EnvironmentImpactCalculateRental,
@@ -186,6 +200,7 @@ async function main() {
     }
     stopDispatcher();
     await runtime.stopGracefully(30_000);
+    await returnSlotExpiryRuntime.dispose();
     if (typeof email.transporter.close === "function") {
       email.transporter.close();
     }
@@ -232,6 +247,13 @@ async function ensureSchedules(scheduler: JobScheduler) {
     { version: 1 },
   );
   WorkerLog.scheduleEnsured(JobTypes.WalletWithdrawalSweep, env.WITHDRAWAL_SWEEP_CRON);
+
+  await scheduler.schedule(
+    JobTypes.ReturnSlotExpireSweep,
+    env.RETURN_SLOT_EXPIRE_SWEEP_CRON,
+    { version: 1 },
+  );
+  WorkerLog.scheduleEnsured(JobTypes.ReturnSlotExpireSweep, env.RETURN_SLOT_EXPIRE_SWEEP_CRON);
 
   await scheduler.schedule(
     JobTypes.RentalOverdueSweep,
