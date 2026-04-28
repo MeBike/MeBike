@@ -1,11 +1,6 @@
 import { IconSymbol } from "@components/IconSymbol";
 import { AppText } from "@ui/primitives/app-text";
-import {
-  formatCurrency,
-  formatDate,
-  formatTransactionStatus,
-  formatTransactionType,
-} from "@utils/wallet/formatters";
+import { formatTransactionStatus } from "@utils/wallet/formatters";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import Animated, {
@@ -16,17 +11,17 @@ import Animated, {
 } from "react-native-reanimated";
 import { useTheme } from "tamagui";
 
-import { createTransactionDetailModalStyles } from "./styles";
+import type { Transaction } from "./types";
 
-type Transaction = {
-  id: string;
-  amount: string;
-  description?: string | null;
-  type: string;
-  status: string;
-  createdAt: string;
-  hash?: string | null;
-};
+import { DetailRow } from "./detail-row";
+import {
+  formatDetailDate,
+  formatDisplayAmount,
+  getStatusTone,
+  humanizeTransactionTitle,
+  toShortReference,
+} from "./helpers";
+import { createTransactionDetailModalStyles } from "./styles";
 
 type TransactionDetailModalProps = {
   visible: boolean;
@@ -36,83 +31,6 @@ type TransactionDetailModalProps = {
 
 const SHEET_OPEN_DURATION = 260;
 const SHEET_CLOSE_DURATION = 220;
-
-function toShortReference(transaction: Transaction) {
-  const reference = transaction.hash || transaction.id;
-  if (!reference) {
-    return "--";
-  }
-
-  if (reference.length <= 16) {
-    return reference;
-  }
-
-  return `${reference.slice(0, 8)}...${reference.slice(-6)}`;
-}
-
-function getStatusTone(status: string): "success" | "warning" | "danger" | "default" {
-  switch (status.toUpperCase()) {
-    case "SUCCESS":
-      return "success";
-    case "PENDING":
-      return "warning";
-    case "FAILED":
-      return "danger";
-    default:
-      return "default";
-  }
-}
-
-function DetailRow({
-  label,
-  value,
-  valueTone = "default",
-  strong = false,
-  showToggle = false,
-  onToggle,
-  styles,
-  copyIconColor,
-}: {
-  label: string;
-  value: string;
-  valueTone?: "success" | "warning" | "danger" | "default";
-  strong?: boolean;
-  showToggle?: boolean;
-  onToggle?: () => void;
-  styles: ReturnType<typeof createTransactionDetailModalStyles>;
-  copyIconColor: string;
-}) {
-  return (
-    <View style={styles.row}>
-      <AppText style={styles.label} variant="body">
-        {label}
-      </AppText>
-
-      <View style={styles.valueGroup}>
-        <AppText
-          style={[
-            styles.value,
-            strong ? styles.valueStrong : null,
-            valueTone === "success" ? styles.valueSuccess : null,
-            valueTone === "warning" ? styles.valueWarning : null,
-            valueTone === "danger" ? styles.valueDanger : null,
-          ]}
-          variant="body"
-        >
-          {value}
-        </AppText>
-
-        {showToggle && onToggle
-          ? (
-              <Pressable onPress={onToggle} style={({ pressed }) => [styles.copyButton, pressed ? styles.copyButtonPressed : null]}>
-                <IconSymbol color={copyIconColor} name="copy" size="sm" />
-              </Pressable>
-            )
-          : null}
-      </View>
-    </View>
-  );
-}
 
 export function TransactionDetailModal({
   visible,
@@ -205,11 +123,10 @@ export function TransactionDetailModal({
     return null;
   }
 
-  const typeUpper = transaction.type.toUpperCase();
-  const isMoneyOut = typeUpper === "DEBIT";
-  const amountPrefix = isMoneyOut ? "-" : "+";
   const statusTone = getStatusTone(transaction.status);
-  const shortReference = toShortReference(transaction);
+  const shortReference = toShortReference(transaction, showFullReference);
+  const detailTitle = humanizeTransactionTitle(transaction);
+  const amountText = formatDisplayAmount(transaction);
 
   return (
     <Modal
@@ -234,47 +151,48 @@ export function TransactionDetailModal({
             </Pressable>
           </View>
 
+          <View style={styles.heroBlock}>
+            <AppText align="center" style={styles.heroAmount}>
+              {amountText}
+            </AppText>
+
+            <AppText align="center" numberOfLines={2} style={styles.heroTitle}>
+              {detailTitle}
+            </AppText>
+          </View>
+
           <View style={styles.block}>
+            <View style={styles.divider} />
+
             <DetailRow
               copyIconColor={theme.textTertiary.val}
-              label="Mã tham chiếu:"
+              label="Trạng thái"
+              styles={styles}
+              value={formatTransactionStatus(transaction.status)}
+              valueTone={statusTone}
+            />
+
+            <View style={styles.rowDivider} />
+
+            <DetailRow copyIconColor={theme.textTertiary.val} label="Thời gian" styles={styles} value={formatDetailDate(transaction.createdAt)} />
+
+            <View style={styles.rowDivider} />
+
+            <DetailRow copyIconColor={theme.textTertiary.val} label="Nguồn tiền" styles={styles} value="Ví MeBike" />
+
+            <View style={styles.rowDivider} />
+
+            <DetailRow
+              copyIconColor={theme.textTertiary.val}
+              expanded={showFullReference}
+              label="Mã giao dịch"
               onToggle={() => setShowFullReference(value => !value)}
               showToggle
               styles={styles}
               value={shortReference}
             />
 
-            {showFullReference
-              ? (
-                  <View style={styles.fullReferenceCard}>
-                    <AppText style={styles.fullReferenceText} selectable variant="bodySmall">
-                      {transaction.id}
-                    </AppText>
-                  </View>
-                )
-              : null}
-
-            <View style={styles.divider} />
-
-            <DetailRow copyIconColor={theme.textTertiary.val} label="Loại:" styles={styles} value={formatTransactionType(transaction.type)} />
-            <DetailRow
-              copyIconColor={theme.textTertiary.val}
-              label="Số tiền:"
-              styles={styles}
-              strong
-              value={`${amountPrefix}${formatCurrency(transaction.amount)}`}
-              valueTone={isMoneyOut ? "default" : "success"}
-            />
-            <DetailRow
-              copyIconColor={theme.textTertiary.val}
-              label="Trạng thái:"
-              styles={styles}
-              strong
-              value={formatTransactionStatus(transaction.status)}
-              valueTone={statusTone}
-            />
-            <DetailRow copyIconColor={theme.textTertiary.val} label="Thời gian:" styles={styles} value={formatDate(transaction.createdAt)} />
-            <DetailRow copyIconColor={theme.textTertiary.val} label="Mô tả:" styles={styles} value={transaction.description || "--"} />
+            <View style={styles.rowDivider} />
           </View>
         </Animated.View>
       </View>
