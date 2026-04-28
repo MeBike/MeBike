@@ -4,11 +4,11 @@ import { Effect, Match } from "effect";
 import type {
   PaymentAttemptRepository,
   StripeTopupServiceTag,
-} from "@/domain/wallets/topups";
+} from "@/domain/wallets";
 import type { QueueJob } from "@/infrastructure/jobs/ports";
 import type { Prisma } from "@/infrastructure/prisma";
 
-import { sweepTopupReconciliation } from "@/domain/wallets/topups";
+import { sweepTopupReconciliation } from "@/domain/wallets";
 import logger from "@/lib/logger";
 
 import type { EffectRunner } from "./worker-runtime";

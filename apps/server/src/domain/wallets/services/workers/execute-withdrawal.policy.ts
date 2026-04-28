@@ -1,4 +1,4 @@
-import type { ExecuteWithdrawalOutcome } from "./services/execute-withdrawal.service";
+import type { ExecuteWithdrawalOutcome } from "./execute-withdrawal.service";
 
 export type ExecuteWithdrawalDecision
   = | { readonly action: "complete" }

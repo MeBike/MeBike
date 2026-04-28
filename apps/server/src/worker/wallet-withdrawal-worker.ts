@@ -7,15 +7,15 @@ import type { UserQueryServiceTag } from "@/domain/users";
 import type {
   StripeWithdrawalServiceTag,
   WithdrawalRepository,
-} from "@/domain/wallets/withdrawals";
+} from "@/domain/wallets";
 import type { QueueJob } from "@/infrastructure/jobs/ports";
 import type { Prisma } from "@/infrastructure/prisma";
 
 import {
   executeWithdrawalUseCase,
   sweepWithdrawalsUseCase,
-} from "@/domain/wallets/withdrawals";
-import { decideExecuteWithdrawalOutcome } from "@/domain/wallets/withdrawals/execute-withdrawal.policy";
+} from "@/domain/wallets";
+import { decideExecuteWithdrawalOutcome } from "@/domain/wallets/services/workers/execute-withdrawal.policy";
 import logger from "@/lib/logger";
 
 import type { EffectRunner } from "./worker-runtime";

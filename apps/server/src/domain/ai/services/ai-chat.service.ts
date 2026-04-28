@@ -10,7 +10,7 @@ import { RentalCommandServiceTag } from "@/domain/rentals";
 import { RentalServiceTag } from "@/domain/rentals/services/queries/rental.service";
 import { ReservationQueryServiceTag } from "@/domain/reservations";
 import { StationQueryServiceTag } from "@/domain/stations";
-import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import { WalletServiceTag } from "@/domain/wallets/services/shared/wallet.service";
 import { getOpenRouterChatModel } from "@/infrastructure/ai/openrouter";
 import logger from "@/lib/logger";
 

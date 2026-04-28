@@ -7,7 +7,7 @@ import type { BikeRow, BikeService } from "@/domain/bikes";
 import type { RentalCommandService, RentalService, ReturnSlotRow } from "@/domain/rentals";
 import type { ReservationQueryService } from "@/domain/reservations";
 import type { StationQueryService } from "@/domain/stations";
-import type { WalletService } from "@/domain/wallets/services/wallet.service";
+import type { WalletService } from "@/domain/wallets/services/shared/wallet.service";
 
 import { returnSlotExpiresAt } from "@/domain/rentals";
 import { requiredAvailableBikesForNextReservation, stationCanAcceptReservation } from "@/domain/reservations/services/reservation-availability-rule";

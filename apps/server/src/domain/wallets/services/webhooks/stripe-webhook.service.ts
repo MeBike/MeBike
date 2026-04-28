@@ -4,19 +4,16 @@ import { Effect, Match } from "effect";
 
 import type {
   InsufficientWalletBalance,
+  TopupProviderError,
   WalletNotFound,
 } from "@/domain/wallets/domain-errors";
-import type { TopupProviderError } from "@/domain/wallets/topups/domain-errors";
-import type { StripeWebhookOutcome as StripeTopupOutcome } from "@/domain/wallets/topups/services/stripe-topup.service";
-import type { StripeAccountUpdatedOutcome } from "@/domain/wallets/withdrawals/services/stripe-connect.service";
-import type { StripePayoutOutcome } from "@/domain/wallets/withdrawals/services/stripe-payout.service";
+import type { StripeWebhookOutcome as StripeTopupOutcome } from "@/domain/wallets/services/providers/stripe-topup.service";
+import type { StripeAccountUpdatedOutcome } from "@/domain/wallets/services/webhooks/stripe-connect.service";
+import type { StripePayoutOutcome } from "@/domain/wallets/services/webhooks/stripe-payout.service";
 
-import {
-  handleStripePaymentIntentWebhookEvent,
-  handleStripeTopupWebhookEvent,
-} from "@/domain/wallets/topups";
-import { handleStripeAccountUpdatedUseCase } from "@/domain/wallets/withdrawals/services/stripe-connect.service";
-import { handleStripePayoutWebhookUseCase } from "@/domain/wallets/withdrawals/services/stripe-payout.service";
+import { handleStripeAccountUpdatedUseCase } from "@/domain/wallets/services/webhooks/stripe-connect.service";
+import { handleStripePayoutWebhookUseCase } from "@/domain/wallets/services/webhooks/stripe-payout.service";
+import { handleStripePaymentIntentWebhookEvent, handleStripeTopupWebhookEvent } from "@/domain/wallets/services/webhooks/stripe-topup-webhook.service";
 
 export type StripeWebhookDispatchOutcome
   = | StripeTopupOutcome
@@ -30,8 +27,8 @@ export function handleStripeWebhookUseCase(
   | TopupProviderError
   | WalletNotFound
   | InsufficientWalletBalance,
-  | import("@/domain/wallets/topups/services/stripe-topup.service").StripeTopupServiceTag
-  | import("@/domain/wallets/withdrawals/repository/withdrawal.repository").WithdrawalRepository
+  | import("@/domain/wallets/services/providers/stripe-topup.service").StripeTopupServiceTag
+  | import("@/domain/wallets/repository/withdrawal.repository").WithdrawalRepository
   | import("@/domain/users/services/user-command.live").UserCommandServiceTag
   | import("@/infrastructure/prisma").Prisma
 > {

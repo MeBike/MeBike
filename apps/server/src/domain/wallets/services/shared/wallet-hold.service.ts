@@ -2,9 +2,9 @@ import type { Option } from "effect";
 
 import { Context, Effect, Layer } from "effect";
 
-import type { CreateWalletHoldInput, WalletHoldRow } from "../models";
+import type { CreateWalletHoldInput, WalletHoldRow } from "../../models";
 
-import { makeWalletHoldRepository, WalletHoldRepository } from "../repository/wallet-hold.repository";
+import { makeWalletHoldRepository, WalletHoldRepository } from "../../repository/wallet-hold.repository";
 
 export type WalletHoldService = {
   createInTx: (
@@ -60,7 +60,7 @@ export class WalletHoldServiceTag extends Context.Tag("WalletHoldService")<
 >() {}
 
 function makeWalletHoldService(
-  _repo: import("../repository/wallet-hold.repository").WalletHoldRepo,
+  _repo: import("../../repository/wallet-hold.repository").WalletHoldRepo,
 ): WalletHoldService {
   return {
     createInTx: (tx, input) => makeWalletHoldRepository(tx).create(input),

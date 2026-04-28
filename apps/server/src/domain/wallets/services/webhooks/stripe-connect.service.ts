@@ -8,13 +8,13 @@ import { UserQueryServiceTag } from "@/domain/users/services/user-query.live";
 import type {
   StripeConnectNotEnabled,
   WithdrawalProviderError,
-} from "../domain-errors";
+} from "../../domain-errors";
 
 import {
   InvalidWithdrawalRequest,
   WithdrawalUserNotFound,
-} from "../domain-errors";
-import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
+} from "../../domain-errors";
+import { StripeWithdrawalServiceTag } from "../providers/stripe-withdrawal.service";
 
 export type StartStripeConnectOnboardingInput = {
   readonly userId: string;

@@ -10,7 +10,7 @@ import {
   createStripePaymentSheet,
   requestWithdrawalUseCase,
 } from "@/domain/wallets";
-import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import { WalletServiceTag } from "@/domain/wallets/services/shared/wallet.service";
 import {
   toWalletDetail,
   toWalletTransactionDetail,

@@ -5,11 +5,11 @@ import { Context, Effect, Layer } from "effect";
 
 import { StripeClient } from "@/infrastructure/stripe";
 
-import type { PaymentAttemptUniqueViolation } from "../domain-errors";
-import type { PaymentAttemptRow } from "../models";
+import type { PaymentAttemptUniqueViolation } from "../../domain-errors";
+import type { PaymentAttemptRow } from "../../models";
 
-import { InvalidTopupRequest, TopupProviderError } from "../domain-errors";
-import { PaymentAttemptRepository } from "../repository/payment-attempt.repository";
+import { InvalidTopupRequest, TopupProviderError } from "../../domain-errors";
+import { PaymentAttemptRepository } from "../../repository/payment-attempt.repository";
 
 export type StripeCheckoutAttemptInput = {
   readonly userId: string;

@@ -7,7 +7,7 @@ import type {
   SubscriptionCommandServiceTag,
   SubscriptionQueryServiceTag,
 } from "@/domain/subscriptions";
-import type { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import type { WalletServiceTag } from "@/domain/wallets/services/shared/wallet.service";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
@@ -32,7 +32,7 @@ import {
   SubscriptionQueryServiceLive,
 } from "@/domain/subscriptions";
 import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
-import { WalletServiceLive } from "@/domain/wallets/services/wallet.service";
+import { WalletServiceLive } from "@/domain/wallets/services/shared/wallet.service";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectEitherWithLayer } from "@/test/effect/run";
 

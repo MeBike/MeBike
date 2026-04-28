@@ -4,12 +4,11 @@ import { defectOn } from "@/domain/shared";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { IncreaseBalanceInput } from "../../models";
-import type { StripeWebhookOutcome } from "./stripe-topup.service";
+import type { StripeWebhookOutcome } from "../providers/stripe-topup.service";
 
-import { WalletNotFound as WalletNotFoundError } from "../../domain-errors";
+import { TopupProviderError, WalletNotFound as WalletNotFoundError } from "../../domain-errors";
+import { makePaymentAttemptRepository } from "../../repository/payment-attempt.repository";
 import { makeWalletRepository } from "../../repository/wallet.repository";
-import { TopupProviderError } from "../domain-errors";
-import { makePaymentAttemptRepository } from "../repository/payment-attempt.repository";
 
 function creditWallet(
   repo: ReturnType<typeof makeWalletRepository>,

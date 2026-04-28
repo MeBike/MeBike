@@ -8,12 +8,12 @@ import { makeWalletRepository } from "@/domain/wallets/repository/wallet.reposit
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalProviderError } from "../domain-errors";
+import type { WithdrawalProviderError } from "../../domain-errors";
 
-import { WithdrawalNotFound, WithdrawalUserNotFound } from "../domain-errors";
-import { convertVndToUsdMinor } from "../fx";
-import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
-import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
+import { WithdrawalNotFound, WithdrawalUserNotFound } from "../../domain-errors";
+import { makeWithdrawalRepository, WithdrawalRepository } from "../../repository/withdrawal.repository";
+import { StripeWithdrawalServiceTag } from "../providers/stripe-withdrawal.service";
+import { convertVndToUsdMinor } from "../shared/withdrawal-fx";
 
 export type ExecuteWithdrawalOutcome
   = | { readonly status: "missing"; readonly withdrawalId: string }
@@ -36,7 +36,7 @@ function toMinorAmountNumber(amount: bigint): number | null {
   return Number(amount);
 }
 
-function resolvePayoutAmountMinor(withdrawal: import("../models").WalletWithdrawalRow): number | null {
+function resolvePayoutAmountMinor(withdrawal: import("../../models").WalletWithdrawalRow): number | null {
   if (withdrawal.payoutAmount && withdrawal.payoutCurrency?.toLowerCase() === "usd") {
     return toMinorAmountNumber(withdrawal.payoutAmount);
   }
@@ -240,7 +240,7 @@ export function executeWithdrawalUseCase(
 
 function markFailedAndReleaseHold(
   client: import("generated/prisma/client").PrismaClient,
-  withdrawal: import("../models").WalletWithdrawalRow,
+  withdrawal: import("../../models").WalletWithdrawalRow,
   reason: string,
 ): Effect.Effect<
   ExecuteWithdrawalOutcome

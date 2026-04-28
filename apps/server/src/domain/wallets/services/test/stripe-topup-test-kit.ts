@@ -7,15 +7,15 @@ import type { PrismaClient } from "generated/prisma/client";
 import { Prisma } from "@/infrastructure/prisma";
 import { StripeClient } from "@/infrastructure/stripe";
 
-import { WalletRepositoryLive } from "../../../repository/wallet.repository";
-import { WalletServiceLive } from "../../../services/wallet.service";
 import { PaymentAttemptRepositoryLive } from "../../repository/payment-attempt.repository";
-import { sweepTopupReconciliation } from "../reconcile-topup.service";
-import { createStripePaymentSheet } from "../request-stripe-topup.service";
+import { WalletRepositoryLive } from "../../repository/wallet.repository";
+import { createStripePaymentSheet } from "../commands/request-stripe-topup.service";
+import { StripeTopupServiceLive } from "../providers/stripe-topup.service";
+import { WalletServiceLive } from "../shared/wallet.service";
 import {
   handleStripePaymentIntentWebhookEvent,
-} from "../stripe-topup-webhook.service";
-import { StripeTopupServiceLive } from "../stripe-topup.service";
+} from "../webhooks/stripe-topup-webhook.service";
+import { sweepTopupReconciliation } from "../workers/reconcile-topup.service";
 
 export function makeStripeTopupTestKit(args: {
   prisma: PrismaClient;

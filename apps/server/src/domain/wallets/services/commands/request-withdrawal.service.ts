@@ -12,8 +12,8 @@ import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalUniqueViolation } from "../domain-errors";
-import type { CreateWalletWithdrawalInput, WalletWithdrawalRow } from "../models";
+import type { WithdrawalUniqueViolation } from "../../domain-errors";
+import type { CreateWalletWithdrawalInput, WalletWithdrawalRow } from "../../models";
 
 import {
   DuplicateWithdrawalRequest,
@@ -21,9 +21,9 @@ import {
   StripeConnectNotLinked,
   StripePayoutsNotEnabled,
   WithdrawalUserNotFound,
-} from "../domain-errors";
-import { convertVndToUsdMinor, VND_PER_USD } from "../fx";
-import { makeWithdrawalRepository } from "../repository/withdrawal.repository";
+} from "../../domain-errors";
+import { makeWithdrawalRepository } from "../../repository/withdrawal.repository";
+import { convertVndToUsdMinor, VND_PER_USD } from "../shared/withdrawal-fx";
 
 const WITHDRAWAL_CURRENCY = "vnd" as const;
 const PAYOUT_CURRENCY = "usd" as const;

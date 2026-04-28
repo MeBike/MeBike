@@ -6,17 +6,15 @@ import {
   UserQueryServiceLive,
 } from "@/domain/users";
 import {
+  StripeWithdrawalServiceLive,
+  sweepWithdrawalsUseCase,
   WalletHoldRepositoryLive,
   WalletHoldServiceLive,
   WalletRepositoryLive,
   WalletServiceLive,
-} from "@/domain/wallets";
-import {
-  StripeWithdrawalServiceLive,
-  sweepWithdrawalsUseCase,
   WithdrawalRepositoryLive,
   WithdrawalServiceLive,
-} from "@/domain/wallets/withdrawals";
+} from "@/domain/wallets";
 import { PrismaLive } from "@/infrastructure/prisma";
 import { StripeLive } from "@/infrastructure/stripe";
 import logger from "@/lib/logger";

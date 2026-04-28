@@ -27,20 +27,16 @@ import {
   UserQueryServiceLive,
 } from "@/domain/users";
 import {
+  PaymentAttemptRepositoryLive,
+  StripeTopupServiceLive,
+  StripeWithdrawalServiceLive,
   WalletHoldRepositoryLive,
   WalletHoldServiceLive,
   WalletRepositoryLive,
   WalletServiceLive,
-} from "@/domain/wallets";
-import {
-  PaymentAttemptRepositoryLive,
-  StripeTopupServiceLive,
-} from "@/domain/wallets/topups";
-import {
-  StripeWithdrawalServiceLive,
   WithdrawalRepositoryLive,
   WithdrawalServiceLive,
-} from "@/domain/wallets/withdrawals";
+} from "@/domain/wallets";
 import { PrismaLive } from "@/infrastructure/prisma";
 import { StripeLive } from "@/infrastructure/stripe";
 

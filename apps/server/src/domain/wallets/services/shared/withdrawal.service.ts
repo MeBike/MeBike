@@ -2,14 +2,14 @@ import type { Option } from "effect";
 
 import { Context, Effect, Layer } from "effect";
 
-import type { WithdrawalUniqueViolation } from "../domain-errors";
+import type { WithdrawalUniqueViolation } from "../../domain-errors";
 import type {
   CreateWalletWithdrawalInput,
   WalletWithdrawalRow,
-} from "../models";
+} from "../../models";
 
-import { DuplicateWithdrawalRequest, WithdrawalNotFound } from "../domain-errors";
-import { WithdrawalRepository } from "../repository/withdrawal.repository";
+import { DuplicateWithdrawalRequest, WithdrawalNotFound } from "../../domain-errors";
+import { WithdrawalRepository } from "../../repository/withdrawal.repository";
 
 export type WithdrawalService = {
   createPending: (

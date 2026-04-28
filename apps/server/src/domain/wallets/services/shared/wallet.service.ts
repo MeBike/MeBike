@@ -4,21 +4,19 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { WalletTransactionStatus } from "generated/prisma/client";
 
 import type {
-} from "../domain-errors";
-import type {
   DecreaseBalanceInput,
   IncreaseBalanceInput,
   WalletRow,
   WalletTransactionRow,
   WalletTransactionUserRow,
-} from "../models";
+} from "../../models";
 
 import {
   InsufficientWalletBalance,
   WalletAlreadyExists,
   WalletNotFound,
-} from "../domain-errors";
-import { WalletRepository } from "../repository/wallet.repository";
+} from "../../domain-errors";
+import { WalletRepository } from "../../repository/wallet.repository";
 
 export type WalletService = {
   getOptionalByUserId: (

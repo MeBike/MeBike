@@ -17,7 +17,7 @@ import { makeWalletRepository } from "@/domain/wallets/repository/wallet.reposit
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
+import { makeWithdrawalRepository, WithdrawalRepository } from "../../repository/withdrawal.repository";
 
 export type StripePayoutOutcome
   = | { readonly status: "ignored"; readonly reason: string }

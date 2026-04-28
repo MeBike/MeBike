@@ -1,15 +1,14 @@
 import { Effect } from "effect";
 
-import type { WalletNotFound } from "../../domain-errors";
-import type { InvalidTopupRequest, PaymentAttemptUniqueViolation, TopupProviderError } from "../domain-errors";
+import type { InvalidTopupRequest, PaymentAttemptUniqueViolation, TopupProviderError, WalletNotFound } from "../../domain-errors";
 import type {
   StripeCheckoutAttemptInput,
   StripeTopupPaymentSheetResult,
   StripeTopupSessionResult,
-} from "./stripe-topup.service";
+} from "../providers/stripe-topup.service";
 
-import { WalletServiceTag } from "../../services/wallet.service";
-import { StripeTopupServiceTag } from "./stripe-topup.service";
+import { StripeTopupServiceTag } from "../providers/stripe-topup.service";
+import { WalletServiceTag } from "../shared/wallet.service";
 
 export type CreateStripeCheckoutSessionInput = Omit<
   StripeCheckoutAttemptInput,

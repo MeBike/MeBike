@@ -19,10 +19,10 @@ import { makeWalletRepository } from "@/domain/wallets/repository/wallet.reposit
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalProviderError } from "../domain-errors";
+import type { WithdrawalProviderError } from "../../domain-errors";
 
-import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
-import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
+import { makeWithdrawalRepository, WithdrawalRepository } from "../../repository/withdrawal.repository";
+import { StripeWithdrawalServiceTag } from "../providers/stripe-withdrawal.service";
 
 export type WithdrawalSweepSummary = {
   readonly scanned: number;
@@ -173,7 +173,7 @@ export function sweepWithdrawalsUseCase(
 
 function markSucceededAndSettle(
   client: import("generated/prisma/client").PrismaClient,
-  withdrawal: import("../models").WalletWithdrawalRow,
+  withdrawal: import("../../models").WalletWithdrawalRow,
   payoutId: string,
   now: Date,
 ): Effect.Effect<boolean, WalletNotFound | InsufficientWalletBalance> {
@@ -222,7 +222,7 @@ function markSucceededAndSettle(
 
 function markFailedAndReleaseHold(
   client: import("generated/prisma/client").PrismaClient,
-  withdrawal: import("../models").WalletWithdrawalRow,
+  withdrawal: import("../../models").WalletWithdrawalRow,
   reason: string,
   now: Date,
 ): Effect.Effect<boolean> {

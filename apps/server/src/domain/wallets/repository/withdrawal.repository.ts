@@ -15,48 +15,7 @@ import type {
 } from "../models";
 
 import { WithdrawalRepositoryError, WithdrawalUniqueViolation } from "../domain-errors";
-
-const selectWithdrawalRow = {
-  id: true,
-  userId: true,
-  walletId: true,
-  amount: true,
-  currency: true,
-  payoutAmount: true,
-  payoutCurrency: true,
-  fxRate: true,
-  fxQuotedAt: true,
-  status: true,
-  idempotencyKey: true,
-  stripeTransferId: true,
-  stripePayoutId: true,
-  failureReason: true,
-  createdAt: true,
-  updatedAt: true,
-} satisfies PrismaTypes.WalletWithdrawalSelect;
-
-function toWithdrawalRow(
-  row: PrismaTypes.WalletWithdrawalGetPayload<{ select: typeof selectWithdrawalRow }>,
-): WalletWithdrawalRow {
-  return {
-    id: row.id,
-    userId: row.userId,
-    walletId: row.walletId,
-    amount: row.amount,
-    currency: row.currency,
-    payoutAmount: row.payoutAmount,
-    payoutCurrency: row.payoutCurrency,
-    fxRate: row.fxRate,
-    fxQuotedAt: row.fxQuotedAt,
-    status: row.status,
-    idempotencyKey: row.idempotencyKey,
-    stripeTransferId: row.stripeTransferId,
-    stripePayoutId: row.stripePayoutId,
-    failureReason: row.failureReason,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  };
-}
+import { selectWithdrawalRow, toWithdrawalRow } from "./withdrawal.mappers";
 
 export type WithdrawalRepositoryType = {
   createPending: (
@@ -154,6 +113,11 @@ export function makeWithdrawalRepository(
           }
           catch (err) {
             if (isPrismaUniqueViolation(err)) {
+              // TODO(wallets): This currently makes repository-level createPending behave idempotently
+              // by returning the existing withdrawal on duplicate idempotencyKey.
+              // That conflicts with request-withdrawal flow, which still expects duplicates to surface
+              // as WithdrawalUniqueViolation so it can map them to DuplicateWithdrawalRequest / HTTP 409.
+              // Revisit this behavior and align repository, service, and controller semantics.
               const existing = await findByIdempotencyKey(client, input.idempotencyKey);
               if (existing) {
                 return toWithdrawalRow(existing);

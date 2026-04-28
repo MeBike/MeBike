@@ -4,7 +4,7 @@ import { Context, Effect, Layer } from "effect";
 
 import { StripeClient } from "@/infrastructure/stripe";
 
-import { StripeConnectNotEnabled, WithdrawalProviderError } from "../domain-errors";
+import { StripeConnectNotEnabled, WithdrawalProviderError } from "../../domain-errors";
 
 function getErrorMessage(cause: unknown): string | undefined {
   if (typeof cause === "object" && cause !== null && "message" in cause) {

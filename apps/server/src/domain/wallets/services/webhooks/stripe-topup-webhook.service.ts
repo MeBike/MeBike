@@ -4,12 +4,12 @@ import { Effect, Match } from "effect";
 
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { StripeWebhookOutcome } from "./stripe-topup.service";
+import type { StripeWebhookOutcome } from "../providers/stripe-topup.service";
 
-import { TopupProviderError } from "../domain-errors";
-import { makePaymentAttemptRepository } from "../repository/payment-attempt.repository";
-import { settleSuccessfulTopup } from "./settle-topup.service";
-import { StripeTopupServiceTag } from "./stripe-topup.service";
+import { TopupProviderError } from "../../domain-errors";
+import { makePaymentAttemptRepository } from "../../repository/payment-attempt.repository";
+import { StripeTopupServiceTag } from "../providers/stripe-topup.service";
+import { settleSuccessfulTopup } from "../shared/settle-topup.service";
 
 function matchAttemptOption<A>(
   effect: Effect.Effect<{ _tag: "Some"; value: A } | { _tag: "None" }>,

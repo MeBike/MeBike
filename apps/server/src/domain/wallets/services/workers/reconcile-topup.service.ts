@@ -5,13 +5,13 @@ import { Effect } from "effect";
 import { env } from "@/config/env";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { TopupProviderError } from "../domain-errors";
-import type { PaymentAttemptRow } from "../models";
-import type { PaymentAttemptRepositoryType } from "../repository/payment-attempt.repository";
+import type { TopupProviderError } from "../../domain-errors";
+import type { PaymentAttemptRow } from "../../models";
+import type { PaymentAttemptRepositoryType } from "../../repository/payment-attempt.repository";
 
-import { PaymentAttemptRepository } from "../repository/payment-attempt.repository";
-import { settleSuccessfulTopup } from "./settle-topup.service";
-import { StripeTopupServiceTag } from "./stripe-topup.service";
+import { PaymentAttemptRepository } from "../../repository/payment-attempt.repository";
+import { StripeTopupServiceTag } from "../providers/stripe-topup.service";
+import { settleSuccessfulTopup } from "../shared/settle-topup.service";
 
 const TOPUP_RECONCILE_LIMIT = 100;
 

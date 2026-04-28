@@ -4,7 +4,7 @@ import type { WalletsContracts } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
-import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import { WalletServiceTag } from "@/domain/wallets/services/shared/wallet.service";
 import {
   toWalletDetail,
   toWalletTransactionDetail,
