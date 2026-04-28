@@ -19,7 +19,7 @@ export type RentalOverdueSweepSummary = {
   skipped: number;
   failed: number;
   depositForfeited: number;
-  bikeUnavailable: number;
+  bikeDisabled: number;
   cancelledReturnSlots: number;
 };
 
@@ -69,7 +69,7 @@ export async function sweepOverdueRentals(
     skipped: 0,
     failed: 0,
     depositForfeited: 0,
-    bikeUnavailable: 0,
+    bikeDisabled: 0,
     cancelledReturnSlots: 0,
   };
 
@@ -136,7 +136,7 @@ export async function sweepOverdueRentals(
           );
 
           if (Option.isNone(updatedBike)) {
-            throw new Error(`Failed to mark bike ${rental.bikeId} unavailable for overdue rental ${rental.id}`);
+            throw new Error(`Failed to mark bike ${rental.bikeId} disabled for overdue rental ${rental.id}`);
           }
 
           if (!rental.depositHoldId) {
@@ -172,7 +172,7 @@ export async function sweepOverdueRentals(
         }
 
         summary.overdue += 1;
-        summary.bikeUnavailable += 1;
+        summary.bikeDisabled += 1;
         if (outcome.depositForfeited) {
           summary.depositForfeited += 1;
         }
