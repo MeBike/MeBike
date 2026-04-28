@@ -41,6 +41,7 @@ export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,sta
     async (technicianTeamData: CreateTechnicianTeamSchema) => {
       if (!hasToken) {
         router.push("/login");
+        return;
       }
       try {
         const result = await useCreateTechnicianTeam.mutateAsync(technicianTeamData);

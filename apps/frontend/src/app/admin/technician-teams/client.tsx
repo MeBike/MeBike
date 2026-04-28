@@ -43,7 +43,7 @@ export default function Client({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Quản lý đội kỹ thuật</h1>
-        <Button onClick={() => router.push("/admin/technician-team/create")}>
+        <Button onClick={() => router.push("/admin/technician-teams/create")}>
           <Plus className="mr-2 h-4 w-4" /> Thêm đội kỹ thuật
         </Button>
       </div>
@@ -59,7 +59,7 @@ export default function Client({
 
             <DataTable
               columns={columns({
-                onView: ({ id }) => router.push(`/admin/technician-team/detail/${id}`),
+                onView: ({ id }) => router.push(`/admin/technician-teams/detail/${id}`),
               })}
               data={technicianTeam}
             />

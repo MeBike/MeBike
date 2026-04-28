@@ -9,7 +9,7 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<TechnicianStatus | "">("");
   const pageSize = 7;
-  const {allTechnicianTeam,getTechnicianTeam,isLoadingAllTechnicianTeam} = useTechnicianTeamActions({hasToken:true,page:page,pageSize:pageSize})
+  const {allTechnicianTeam,getTechnicianTeam,isLoadingAllTechnicianTeam} = useTechnicianTeamActions({hasToken:true,page:page,pageSize:pageSize,status:statusFilter})
   useEffect(() => {
     getTechnicianTeam();
   }, [getTechnicianTeam]);
