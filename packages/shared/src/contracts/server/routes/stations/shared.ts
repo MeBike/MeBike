@@ -273,8 +273,9 @@ export const StationListResponseSchema = z
             booked: 3,
             broken: 1,
             reserved: 2,
-            maintained: 1,
-            unavailable: 1,
+            redistributing: 1,
+            lost: 1,
+            disabled: 1,
           },
           returnSlots: {
             active: 0,

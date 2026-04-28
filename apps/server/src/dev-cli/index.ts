@@ -135,7 +135,7 @@ try {
       writeLine(`${chalk.gray("address")}: ${station.address}`);
       writeLine(`${chalk.gray("capacity")}: ${station.totalBikes}/${station.totalCapacity}`);
       writeLine(`${chalk.gray("returnSlots")}: ${station.returnSlotLimit}`);
-      writeLine(`${chalk.gray("bikes")}: available ${station.availableBikes}, booked ${station.bookedBikes}, reserved ${station.reservedBikes}, broken ${station.brokenBikes}, maintained ${station.maintainedBikes}, unavailable ${station.unavailableBikes}`);
+      writeLine(`${chalk.gray("bikes")}: available ${station.availableBikes}, booked ${station.bookedBikes}, reserved ${station.reservedBikes}, broken ${station.brokenBikes}, redistributing ${station.redistributingBikes}, lost ${station.lostBikes}, disabled ${station.disabledBikes}`);
       for (const bike of station.bikes) {
         writeLine(`- ${bike.bikeNumber} ${bike.status} ${bike.id}`);
       }
