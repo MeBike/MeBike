@@ -115,11 +115,14 @@ export {
   UserStatsServiceLayer,
 } from "./features/user.layers";
 export {
+  WalletCommandDepsLive,
+  WalletCommandReposLive,
+  WalletCommandServiceLayer,
   WalletDepsLive,
   WalletHoldReposLive,
-  WalletHoldServiceLayer,
-  WalletReposLive,
-  WalletServiceLayer,
+  WalletQueryDepsLive,
+  WalletQueryReposLive,
+  WalletQueryServiceLayer,
 } from "./features/wallet.layers";
 export {
   StripeWebhookDepsLive,

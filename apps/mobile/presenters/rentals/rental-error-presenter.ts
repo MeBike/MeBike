@@ -4,7 +4,9 @@ const rentalErrorMessages = {
   accessDenied: "Bạn không có quyền thực hiện thao tác này.",
   bikeInUse: "Xe này hiện đang được sử dụng.",
   bikeIsBroken: "Xe này đang bị hỏng và chưa thể sử dụng.",
-  bikeIsMaintained: "Xe này đang được bảo trì.",
+  bikeIsDisabled: "Xe này hiện đang bị vô hiệu hóa.",
+  bikeIsLost: "Xe này đang được đánh dấu thất lạc.",
+  bikeIsRedistributing: "Xe này đang được điều phối.",
   bikeIsReserved: "Xe này đang được giữ chỗ.",
   bikeMissingStation: "Xe này đang thiếu thông tin trạm, vui lòng thử lại sau.",
   bikeNotAvailableForRental: "Xe hiện chưa sẵn sàng để bắt đầu chuyến đi.",
@@ -74,8 +76,12 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.bikeInUse;
     case "BIKE_IS_BROKEN":
       return rentalErrorMessages.bikeIsBroken;
-    case "BIKE_IS_MAINTAINED":
-      return rentalErrorMessages.bikeIsMaintained;
+    case "BIKE_IS_DISABLED":
+      return rentalErrorMessages.bikeIsDisabled;
+    case "BIKE_IS_LOST":
+      return rentalErrorMessages.bikeIsLost;
+    case "BIKE_IS_REDISTRIBUTING":
+      return rentalErrorMessages.bikeIsRedistributing;
     case "BIKE_IS_RESERVED":
       return rentalErrorMessages.bikeIsReserved;
     case "BIKE_MISSING_STATION":
@@ -172,8 +178,6 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.subscriptionUsageExceeded;
     case "UNAUTHORIZED":
       return rentalErrorMessages.unauthorized;
-    case "UNAVAILABLE_BIKE":
-      return rentalErrorMessages.unavailableBike;
     case "UPDATED_STATUS_NOT_ALLOWED":
       return rentalErrorMessages.updatedStatusNotAllowed;
     case "USER_NOT_FOUND":

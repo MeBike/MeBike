@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 
-import type { WalletServiceTag } from "@/domain/wallets";
+import type { WalletCommandServiceTag } from "@/domain/wallets";
 
 import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
@@ -37,7 +37,7 @@ export function cancelReservation(
 ): Effect.Effect<
   ReservationRow,
   CancelReservationFailure,
-  Prisma | WalletServiceTag
+  Prisma | WalletCommandServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;

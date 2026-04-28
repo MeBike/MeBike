@@ -194,7 +194,7 @@ describe("reservation use-cases integration", () => {
     expect(refundTx).not.toBeNull();
   });
 
-  it("reserveBikeUseCase fails when bike is already reserved", async () => {
+  it("reserveBikeUseCase fails with BikeAlreadyReserved when bike status is reserved", async () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 50000n },
     });
@@ -210,7 +210,30 @@ describe("reservation use-cases integration", () => {
       now,
     });
 
-    expectLeftTag(result, "BikeNotAvailable");
+    expectLeftTag(result, "BikeAlreadyReserved");
+  });
+
+  it.each([
+    { status: "REDISTRIBUTING", tag: "BikeIsRedistributing" },
+    { status: "LOST", tag: "BikeIsLost" },
+    { status: "DISABLED", tag: "BikeIsDisabled" },
+  ] as const)("reserveBikeUseCase fails when bike status is $status", async ({ status, tag }) => {
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 50000n },
+    });
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id, status });
+
+    const now = new Date("2025-01-01T10:00:00.000Z");
+    const result = await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: now,
+      now,
+    });
+
+    expectLeftTag(result, tag);
   });
 
   it("reserveBikeUseCase rejects during overnight closure", async () => {

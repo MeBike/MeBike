@@ -3,7 +3,7 @@ import { Layer } from "effect";
 import {
   PaymentAttemptRepositoryLive,
   StripeTopupServiceLive,
-} from "@/domain/wallets/topups";
+} from "@/domain/wallets";
 
 import { PrismaLive, StripeLive } from "../infra.layers";
 import { WalletDepsLive } from "./wallet.layers";

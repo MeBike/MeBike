@@ -1,7 +1,6 @@
 import type { WalletsContracts } from "@mebike/shared";
 
-import type { WalletRow, WalletTransactionRow } from "@/domain/wallets";
-import type { WalletWithdrawalRow } from "@/domain/wallets/withdrawals";
+import type { WalletRow, WalletTransactionRow, WalletWithdrawalRow } from "@/domain/wallets";
 
 export function toWalletDetail(row: WalletRow): WalletsContracts.WalletDetail {
   const availableBalance = row.balance - row.reservedBalance;

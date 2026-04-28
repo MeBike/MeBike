@@ -4,7 +4,7 @@ import {
   StripeWithdrawalServiceLive,
   WithdrawalRepositoryLive,
   WithdrawalServiceLive,
-} from "@/domain/wallets/withdrawals";
+} from "@/domain/wallets";
 
 import { PrismaLive, StripeLive } from "../infra.layers";
 import { StripeTopupDepsLive } from "./stripe-topup.layers";

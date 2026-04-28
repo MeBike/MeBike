@@ -1,15 +1,20 @@
 import { Layer } from "effect";
 
 import {
+  WalletCommandRepositoryLive,
+  WalletCommandServiceLive,
   WalletHoldRepositoryLive,
-  WalletHoldServiceLive,
-  WalletRepositoryLive,
-  WalletServiceLive,
+  WalletQueryRepositoryLive,
+  WalletQueryServiceLive,
 } from "@/domain/wallets";
 
 import { PrismaLive } from "../infra.layers";
 
-export const WalletReposLive = WalletRepositoryLive.pipe(
+export const WalletQueryReposLive = WalletQueryRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+export const WalletCommandReposLive = WalletCommandRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
@@ -17,18 +22,31 @@ export const WalletHoldReposLive = WalletHoldRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-export const WalletServiceLayer = WalletServiceLive.pipe(
-  Layer.provide(WalletReposLive),
+export const WalletQueryServiceLayer = WalletQueryServiceLive.pipe(
+  Layer.provide(WalletQueryReposLive),
 );
 
-export const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
-  Layer.provide(WalletHoldReposLive),
+export const WalletCommandServiceLayer = WalletCommandServiceLive.pipe(
+  Layer.provide(WalletCommandReposLive),
+  Layer.provide(WalletQueryServiceLayer),
+);
+
+export const WalletQueryDepsLive = Layer.mergeAll(
+  WalletQueryReposLive,
+  WalletQueryServiceLayer,
+  PrismaLive,
+);
+
+export const WalletCommandDepsLive = Layer.mergeAll(
+  WalletCommandReposLive,
+  WalletCommandServiceLayer,
+  WalletQueryDepsLive,
+  PrismaLive,
 );
 
 export const WalletDepsLive = Layer.mergeAll(
-  WalletReposLive,
-  WalletServiceLayer,
+  WalletQueryDepsLive,
+  WalletCommandDepsLive,
   WalletHoldReposLive,
-  WalletHoldServiceLayer,
   PrismaLive,
 );

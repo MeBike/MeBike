@@ -6,7 +6,7 @@ import type { SubscriptionPackage } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
-import { makeWalletRepository } from "@/domain/wallets";
+import { makeWalletCommandRepository } from "@/domain/wallets";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
@@ -86,7 +86,7 @@ export function createSubscriptionUseCase(args: {
         });
 
         const priceMinor = toMinorUnit(packageConfig.price);
-        yield* debitWallet(makeWalletRepository(tx), {
+        yield* debitWallet(makeWalletCommandRepository(tx), {
           userId: args.userId,
           amount: priceMinor,
           description: `Subscription payment ${pending.id}`,
@@ -132,7 +132,7 @@ export function createSubscriptionUseCase(args: {
  * @param input Thong tin debit can ap dung cho vi user.
  */
 function debitWallet(
-  repo: ReturnType<typeof makeWalletRepository>,
+  repo: ReturnType<typeof makeWalletCommandRepository>,
   input: DecreaseBalanceInput,
 ) {
   return repo.decreaseBalance(input).pipe(

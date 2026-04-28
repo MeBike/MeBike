@@ -3,6 +3,9 @@ import type { ReservationError } from "@services/reservations";
 const reservationErrorMessages = {
   activeReservationExists: "Bạn đang có một lượt giữ chỗ khác còn hiệu lực.",
   bikeAlreadyReserved: "Xe này đang được người khác giữ chỗ.",
+  bikeIsDisabled: "Xe này hiện đang bị vô hiệu hóa nên chưa thể đặt trước.",
+  bikeIsLost: "Xe này đang được đánh dấu thất lạc nên chưa thể đặt trước.",
+  bikeIsRedistributing: "Xe này đang được điều phối nên chưa thể đặt trước.",
   bikeNotAvailable: "Xe hiện chưa sẵn sàng để đặt trước.",
   bikeNotFound: "Không tìm thấy xe phù hợp.",
   bikeNotFoundInStation: "Không tìm thấy xe này tại trạm đã chọn.",
@@ -41,6 +44,12 @@ function presentReservationApiError(error: Extract<ReservationError, { _tag: "Ap
       return reservationErrorMessages.activeReservationExists;
     case "BIKE_ALREADY_RESERVED":
       return reservationErrorMessages.bikeAlreadyReserved;
+    case "BIKE_IS_DISABLED":
+      return reservationErrorMessages.bikeIsDisabled;
+    case "BIKE_IS_LOST":
+      return reservationErrorMessages.bikeIsLost;
+    case "BIKE_IS_REDISTRIBUTING":
+      return reservationErrorMessages.bikeIsRedistributing;
     case "BIKE_NOT_AVAILABLE":
       return reservationErrorMessages.bikeNotAvailable;
     case "BIKE_NOT_FOUND":

@@ -33,6 +33,7 @@ import {
   makeReservationNotifyNearExpiryHandler,
 } from "./reservation-hold/index";
 import { makeReturnSlotExpireSweepHandler } from "./return-slot-expiry-worker";
+import { makeTopupReconciliationSweepHandler } from "./wallet-topup-reconciliation-worker";
 import { makeWithdrawalExecuteHandler, makeWithdrawalSweepHandler } from "./wallet-withdrawal-worker";
 import { attachJobRuntimeLogging, WorkerLog } from "./worker-logging";
 import { WorkerRuntimeLive } from "./worker-runtime";
@@ -127,6 +128,7 @@ async function main() {
   await setupQueue(runtime, JobTypes.ReturnSlotExpireSweep);
   await setupQueue(runtime, JobTypes.EnvironmentImpactCalculateRental);
   await setupQueue(runtime, JobTypes.RentalOverdueSweep);
+  await setupQueue(runtime, JobTypes.WalletTopupReconcileSweep);
   await setupQueue(runtime, JobTypes.WalletWithdrawalExecute);
   await setupQueue(runtime, JobTypes.WalletWithdrawalSweep);
 
@@ -189,6 +191,12 @@ async function main() {
   );
   WorkerLog.workerRegistered(JobTypes.WalletWithdrawalExecute, withdrawalWorkerId);
 
+  const topupReconcileSweepWorkerId = await runtime.register(
+    JobTypes.WalletTopupReconcileSweep,
+    makeTopupReconciliationSweepHandler(runWorkerEffect),
+  );
+  WorkerLog.workerRegistered(JobTypes.WalletTopupReconcileSweep, topupReconcileSweepWorkerId);
+
   const withdrawalSweepWorkerId = await runtime.register(
     JobTypes.WalletWithdrawalSweep,
     makeWithdrawalSweepHandler(runWorkerEffect),
@@ -248,6 +256,13 @@ async function ensureSchedules(scheduler: JobScheduler) {
     JobTypes.ReservationFixedSlotAssign,
     `${env.FIXED_SLOT_ASSIGN_CRON} (${fixedSlotScheduleTz})`,
   );
+
+  await scheduler.schedule(
+    JobTypes.WalletTopupReconcileSweep,
+    env.TOPUP_RECONCILE_SWEEP_CRON,
+    { version: 1 },
+  );
+  WorkerLog.scheduleEnsured(JobTypes.WalletTopupReconcileSweep, env.TOPUP_RECONCILE_SWEEP_CRON);
 
   await scheduler.schedule(
     JobTypes.WalletWithdrawalSweep,

@@ -6,11 +6,12 @@ import { Effect, Match } from "effect";
 import { withLoggedCause } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import {
-  createStripeCheckoutSessionUseCase,
-  createStripePaymentSheetUseCase,
+  createStripeCheckoutSession,
+  createStripePaymentSheet,
   requestWithdrawalUseCase,
 } from "@/domain/wallets";
-import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import { WalletCommandServiceTag } from "@/domain/wallets/services/commands/wallet-command.service";
+import { WalletQueryServiceTag } from "@/domain/wallets/services/queries/wallet-query.service";
 import {
   toWalletDetail,
   toWalletTransactionDetail,
@@ -33,7 +34,7 @@ const getMyWallet: RouteHandler<WalletsRoutes["getMyWallet"]> = async (c) => {
   }
 
   const eff = withLoggedCause(
-    Effect.flatMap(WalletServiceTag, service => service.getByUserId(userId)),
+    Effect.flatMap(WalletQueryServiceTag, service => service.getByUserId(userId)),
     "GET /v1/wallets/me",
   );
 
@@ -70,7 +71,7 @@ const listMyWalletTransactions: RouteHandler<WalletsRoutes["listMyWalletTransact
   const pageSize = query.pageSize ?? 50;
 
   const eff = withLoggedCause(
-    Effect.flatMap(WalletServiceTag, service =>
+    Effect.flatMap(WalletQueryServiceTag, service =>
       service.listTransactionsForUser({ userId, pageReq: { page, pageSize } })),
     "GET /v1/wallets/me/transactions",
   );
@@ -116,7 +117,7 @@ const creditMyWallet: RouteHandler<WalletsRoutes["creditMyWallet"]> = async (c) 
   const fee = body.fee !== undefined ? toMinorUnit(body.fee) : undefined;
 
   const eff = withLoggedCause(
-    Effect.flatMap(WalletServiceTag, service => service.creditWallet({
+    Effect.flatMap(WalletCommandServiceTag, service => service.creditWallet({
       userId,
       amount,
       fee,
@@ -159,7 +160,7 @@ const debitMyWallet: RouteHandler<WalletsRoutes["debitMyWallet"]> = async (c) =>
   const amount = toMinorUnit(body.amount);
 
   const eff = withLoggedCause(
-    Effect.flatMap(WalletServiceTag, service => service.debitWallet({
+    Effect.flatMap(WalletCommandServiceTag, service => service.debitWallet({
       userId,
       amount,
       description: body.description ?? null,
@@ -221,7 +222,7 @@ const createStripeTopupSession: RouteHandler<WalletsRoutes["createStripeTopupSes
   }
 
   const eff = withLoggedCause(
-    createStripeCheckoutSessionUseCase({
+    createStripeCheckoutSession({
       userId,
       amountMinor: Number(amountMinor),
       successUrl: body.successUrl,
@@ -292,7 +293,7 @@ const createStripeTopupPaymentSheet: RouteHandler<WalletsRoutes["createStripeTop
   }
 
   const eff = withLoggedCause(
-    createStripePaymentSheetUseCase({
+    createStripePaymentSheet({
       userId,
       amountMinor: Number(amountMinor),
     }),

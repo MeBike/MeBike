@@ -25,7 +25,7 @@ describe("bikeStatsRepository Integration", () => {
     return fixture.factories.station({ name, latitude: 10.0, longitude: 20.0 });
   };
 
-  const createBike = async (stationId: string, status: "AVAILABLE" | "BOOKED" | "DISABLED") => {
+  const createBike = async (stationId: string, status: "AVAILABLE" | "BOOKED" | "DISABLED" | "REDISTRIBUTING" | "LOST") => {
     return fixture.factories.bike({ stationId, status });
   };
 
@@ -56,6 +56,8 @@ describe("bikeStatsRepository Integration", () => {
     const { id: stationId } = await createStation("Stats Station");
     await createBike(stationId, "BOOKED");
     await createBike(stationId, "AVAILABLE");
+    await createBike(stationId, "REDISTRIBUTING");
+    await createBike(stationId, "LOST");
     await createBike(stationId, "DISABLED");
 
     const result = await Effect.runPromise(repo.getRentalStats());

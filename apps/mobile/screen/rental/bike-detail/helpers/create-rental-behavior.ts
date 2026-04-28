@@ -6,6 +6,7 @@ import { Alert } from "react-native";
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 
 import { presentRentalError } from "@/presenters/rentals/rental-error-presenter";
+
 import {
   showInsufficientBalanceAlert,
   showWalletRequiredAlert,
@@ -94,8 +95,9 @@ export function handleCreateRentalError(args: {
     case "BIKE_IN_USE":
     case "BIKE_IS_RESERVED":
     case "BIKE_IS_BROKEN":
-    case "BIKE_IS_MAINTAINED":
-    case "UNAVAILABLE_BIKE":
+    case "BIKE_IS_REDISTRIBUTING":
+    case "BIKE_IS_LOST":
+    case "BIKE_IS_DISABLED":
     case "INVALID_BIKE_STATUS":
     case "BIKE_MISSING_STATION":
     case "BIKE_NOT_AVAILABLE_FOR_RENTAL":

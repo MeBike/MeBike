@@ -12,18 +12,23 @@ import {
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makeStationQueryRepository } from "@/domain/stations";
 
+import type {
+  BikeIsDisabled,
+  BikeIsLost,
+  BikeIsRedistributing,
+} from "../../../domain-errors";
 import type { PreparedReserveBike, ReserveBikeCommandInput, ReserveBikeFailure } from "./reserve-bike.types";
 
 import {
   ActiveReservationExists,
   BikeAlreadyReserved,
-  BikeNotAvailable,
   BikeNotFound,
   BikeNotFoundInStation,
   ReservationOptionNotSupported,
   StationReservationAvailabilityTooLow,
   SubscriptionRequired,
 } from "../../../domain-errors";
+import { reserveFailureFromBikeStatus } from "../../../guards/bike-status";
 import { makeReservationQueryRepository } from "../../../repository/reservation-query.repository";
 import {
   lockStationForReservationCheck,
@@ -58,7 +63,10 @@ function computeEndTime(startTime: Date, holdMinutes = HOLD_MINUTES): Date {
 export function prepareReserveBikeInTx(
   tx: PrismaTypes.TransactionClient,
   input: ReserveBikeCommandInput,
-): Effect.Effect<PreparedReserveBike, ReserveBikeFailure> {
+): Effect.Effect<
+  PreparedReserveBike,
+  ReserveBikeFailure | BikeIsRedistributing | BikeIsLost | BikeIsDisabled
+> {
   return Effect.gen(function* () {
     const txBikeRepo = makeBikeRepository(tx);
     const txStationRepo = makeStationQueryRepository(tx);
@@ -111,11 +119,12 @@ export function prepareReserveBikeInTx(
       }));
     }
 
-    if (bike.status !== "AVAILABLE") {
-      return yield* Effect.fail(new BikeNotAvailable({
-        bikeId: input.bikeId,
-        status: bike.status,
-      }));
+    const unavailableFailure = reserveFailureFromBikeStatus({
+      bikeId: input.bikeId,
+      status: bike.status,
+    });
+    if (Option.isSome(unavailableFailure)) {
+      return yield* Effect.fail(unavailableFailure.value);
     }
 
     const stationOpt = yield* txStationRepo.getById(input.stationId);

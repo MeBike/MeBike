@@ -42,8 +42,13 @@ export type DeviceTapService = {
 function mapReservationFailureToDenyReason(failure: ReservationServiceFailure): string {
   return Match.value(failure).pipe(
     Match.tag("OvernightOperationsClosed", () => "OVERNIGHT_OPERATIONS_CLOSED"),
+    Match.tag("BikeAlreadyReserved", () => "BIKE_RESERVED"),
     Match.tag("BikeNotFound", () => "BIKE_NOT_FOUND"),
+    Match.tag("BikeNotAvailable", () => "BIKE_UNAVAILABLE"),
     Match.tag("BikeNotFoundInStation", () => "BIKE_NOT_AT_STATION"),
+    Match.tag("BikeIsRedistributing", () => "BIKE_REDISTRIBUTING"),
+    Match.tag("BikeIsLost", () => "BIKE_LOST"),
+    Match.tag("BikeIsDisabled", () => "BIKE_DISABLED"),
     Match.tag("ReservationNotFound", () => "RESERVATION_NOT_FOUND"),
     Match.tag("ReservationNotOwned", () => "RESERVATION_NOT_OWNED"),
     Match.tag("ReservationMissingBike", () => "RESERVATION_MISSING_BIKE"),

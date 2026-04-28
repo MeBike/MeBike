@@ -7,7 +7,7 @@ import type { BikeRow, BikeService } from "@/domain/bikes";
 import type { RentalCommandService, RentalService, ReturnSlotRow } from "@/domain/rentals";
 import type { ReservationQueryService } from "@/domain/reservations";
 import type { StationQueryService } from "@/domain/stations";
-import type { WalletService } from "@/domain/wallets/services/wallet.service";
+import type { WalletQueryService } from "@/domain/wallets/services/queries/wallet-query.service";
 
 import { returnSlotExpiresAt } from "@/domain/rentals";
 import { requiredAvailableBikesForNextReservation, stationCanAcceptReservation } from "@/domain/reservations/services/reservation-availability-rule";
@@ -21,7 +21,7 @@ export type CreateCustomerToolsArgs = {
   readonly rentalService: RentalService;
   readonly stationQueryService: StationQueryService;
   readonly userId: string;
-  readonly walletService: WalletService;
+  readonly walletService: WalletQueryService;
 };
 
 export type CustomerToolName
