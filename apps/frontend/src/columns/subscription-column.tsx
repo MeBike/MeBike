@@ -22,6 +22,20 @@ export const getVerifyStatusColor = (status: SubscriptionStatus) => {
   }
 };
 
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  ACTIVE: { 
+    label: "Đang hoạt động", 
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200" 
+  },
+  INACTIVE: { 
+    label: "Không hoạt động", 
+    color: "bg-rose-100 text-rose-700 border-rose-200" 
+  },
+  TERMINATED: { 
+    label: "Đã kết thúc", 
+    color: "bg-slate-100 text-slate-700 border-slate-200" 
+  },
+};
 export const subscriptionColumns = ({
   onView,
 }: {
@@ -46,13 +60,17 @@ export const subscriptionColumns = ({
     accessorKey: "status",
     header: "Trạng thái",
     cell: ({ row }) => {
+      const statusValue = row.original.status || "";
+      const config = STATUS_CONFIG[statusValue] || { 
+        label: statusValue || "Không rõ", 
+        color: "bg-muted text-muted-foreground border-border" 
+      };
+
       return (
         <span
-          className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
-            row.original.status,
-          )}`}
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
         >
-          {row.original.status}
+          {config.label}
         </span>
       );
     },
