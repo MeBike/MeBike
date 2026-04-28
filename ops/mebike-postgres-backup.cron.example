@@ -1,0 +1,7 @@
+# Copy to /etc/cron.d/mebike-postgres-backup on the VPS.
+# Adjust /path/to/MeBike to the checkout path that contains scripts/ops/postgres-backup.sh.
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+15 2 * * * root cd /path/to/MeBike && ENV_FILE=/etc/mebike/postgres-backup.env ./scripts/ops/postgres-backup.sh >> /var/log/mebike-postgres-backup.log 2>&1
