@@ -27,16 +27,17 @@ import {
   UserQueryServiceLive,
 } from "@/domain/users";
 import {
-  WalletHoldRepositoryLive,
-  WalletHoldServiceLive,
-  WalletRepositoryLive,
-  WalletServiceLive,
-} from "@/domain/wallets";
-import {
+  PaymentAttemptRepositoryLive,
+  StripeTopupServiceLive,
   StripeWithdrawalServiceLive,
+  WalletCommandRepositoryLive,
+  WalletCommandServiceLive,
+  WalletHoldRepositoryLive,
+  WalletQueryRepositoryLive,
+  WalletQueryServiceLive,
   WithdrawalRepositoryLive,
   WithdrawalServiceLive,
-} from "@/domain/wallets/withdrawals";
+} from "@/domain/wallets";
 import { PrismaLive } from "@/infrastructure/prisma";
 import { StripeLive } from "@/infrastructure/stripe";
 
@@ -91,7 +92,11 @@ const EnvironmentImpactServiceLayer = EnvironmentImpactServiceLive.pipe(
   Layer.provide(EnvironmentPolicyServiceLayer),
 );
 
-const WalletReposLive = WalletRepositoryLive.pipe(
+const WalletQueryReposLive = WalletQueryRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const WalletCommandReposLive = WalletCommandRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
@@ -99,12 +104,22 @@ const WalletHoldReposLive = WalletHoldRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-const WalletServiceLayer = WalletServiceLive.pipe(
-  Layer.provide(WalletReposLive),
+const WalletQueryServiceLayer = WalletQueryServiceLive.pipe(
+  Layer.provide(WalletQueryReposLive),
 );
 
-const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
-  Layer.provide(WalletHoldReposLive),
+const WalletCommandServiceLayer = WalletCommandServiceLive.pipe(
+  Layer.provide(WalletCommandReposLive),
+  Layer.provide(WalletQueryServiceLayer),
+);
+
+const PaymentAttemptReposLive = PaymentAttemptRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const StripeTopupServiceLayer = StripeTopupServiceLive.pipe(
+  Layer.provide(PaymentAttemptReposLive),
+  Layer.provide(StripeLive),
 );
 
 const WithdrawalReposLive = WithdrawalRepositoryLive.pipe(
@@ -137,10 +152,13 @@ export const WorkerRuntimeLive = Layer.mergeAll(
   EnvironmentImpactReposLive,
   EnvironmentPolicyServiceLayer,
   EnvironmentImpactServiceLayer,
-  WalletReposLive,
+  WalletQueryReposLive,
+  WalletCommandReposLive,
   WalletHoldReposLive,
-  WalletServiceLayer,
-  WalletHoldServiceLayer,
+  WalletQueryServiceLayer,
+  WalletCommandServiceLayer,
+  PaymentAttemptReposLive,
+  StripeTopupServiceLayer,
   WithdrawalReposLive,
   WithdrawalServiceLayer,
   StripeWithdrawalServiceLayer,

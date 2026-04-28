@@ -20,8 +20,9 @@ export const StationSummarySchema = z.object({
   bookedBikes: z.number(),
   brokenBikes: z.number(),
   reservedBikes: z.number(),
-  maintainedBikes: z.number(),
-  unavailableBikes: z.number(),
+  redistributingBikes: z.number(),
+  lostBikes: z.number(),
+  disabledBikes: z.number(),
   emptySlots: z.number(),
 });
 
@@ -42,8 +43,9 @@ export const StationBikesSchema = z.object({
   booked: z.number(),
   broken: z.number(),
   reserved: z.number(),
-  maintained: z.number(),
-  unavailable: z.number(),
+  redistributing: z.number(),
+  lost: z.number(),
+  disabled: z.number(),
 });
 
 export const StationReturnSlotsSchema = z.object({
@@ -78,8 +80,9 @@ export const StationStatsCurrentBikesSchema = z.object({
   booked: z.number(),
   broken: z.number(),
   reserved: z.number(),
-  maintained: z.number(),
-  unavailable: z.number(),
+  redistributing: z.number(),
+  lost: z.number(),
+  disabled: z.number(),
   emptySlots: z.number(),
 });
 

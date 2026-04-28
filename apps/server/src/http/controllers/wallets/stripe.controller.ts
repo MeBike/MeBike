@@ -4,8 +4,7 @@ import type { StripeContracts, WalletsContracts } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
-import { handleStripeWebhookUseCase } from "@/domain/wallets";
-import { startStripeConnectOnboardingUseCase } from "@/domain/wallets/withdrawals";
+import { handleStripeWebhookUseCase, startStripeConnectOnboardingUseCase } from "@/domain/wallets";
 import { StripeClient, StripeWebhookError, verifyStripeWebhook } from "@/infrastructure/stripe";
 import logger from "@/lib/logger";
 

@@ -607,7 +607,7 @@ describe("rentals end routing e2e", () => {
       where: { userId: user.id },
       select: { balance: true },
     });
-    expect(wallet?.balance.toString()).toBe("94000");
+    expect(wallet?.balance.toString()).toBe("92000");
 
     const walletTransaction = await fixture.prisma.walletTransaction.findFirst({
       where: { hash: `rental:${rental.id}` },

@@ -10,7 +10,7 @@ import { sweepOverdueRentals } from "../workers/rental-overdue-sweep.service";
 describe("rental overdue sweep", () => {
   const fixture = setupPrismaIntFixture();
 
-  it("moves overdue rentals to overdue and marks the bike unavailable", async () => {
+  it("moves overdue rentals to overdue and marks the bike disabled", async () => {
     const overdueRental = await givenActiveRental(fixture, {
       wallet: {
         balance: 1_000_000n,
@@ -45,7 +45,7 @@ describe("rental overdue sweep", () => {
       overdue: 1,
       skipped: 0,
       failed: 0,
-      bikeUnavailable: 1,
+      bikeDisabled: 1,
       depositForfeited: 1,
     });
 
@@ -57,7 +57,7 @@ describe("rental overdue sweep", () => {
     const overdueBikeRow = await fixture.prisma.bike.findUnique({
       where: { id: overdueRental.bike.id },
     });
-    expect(overdueBikeRow?.status).toBe("UNAVAILABLE");
+    expect(overdueBikeRow?.status).toBe("DISABLED");
 
     const forfeitedHold = await fixture.prisma.walletHold.findFirst({
       where: { rentalId: overdueRental.rental.id },
@@ -118,7 +118,7 @@ describe("rental overdue sweep", () => {
       overdue: 0,
       skipped: 0,
       failed: 1,
-      bikeUnavailable: 0,
+      bikeDisabled: 0,
       depositForfeited: 0,
     });
 
@@ -209,7 +209,7 @@ describe("rental overdue sweep", () => {
       overdue: 1,
       cancelledReturnSlots: 1,
       depositForfeited: 1,
-      bikeUnavailable: 1,
+      bikeDisabled: 1,
     });
 
     const rentalRow = await fixture.prisma.rental.findUnique({
@@ -220,7 +220,7 @@ describe("rental overdue sweep", () => {
     const bikeRow = await fixture.prisma.bike.findUnique({
       where: { id: bike.id },
     });
-    expect(bikeRow?.status).toBe("UNAVAILABLE");
+    expect(bikeRow?.status).toBe("DISABLED");
 
     const slot = await fixture.prisma.returnSlotReservation.findFirst({
       where: { rentalId: rental.id },

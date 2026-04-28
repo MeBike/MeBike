@@ -20,8 +20,9 @@ export const SupplierBikeStatsSchema = z.object({
   booked: z.number(),
   broken: z.number(),
   reserved: z.number(),
-  maintained: z.number(),
-  unavailable: z.number(),
+  redistributing: z.number(),
+  lost: z.number(),
+  disabled: z.number(),
 });
 
 export const SupplierStatusSummarySchema = z.object({

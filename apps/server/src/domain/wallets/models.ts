@@ -1,9 +1,14 @@
 import type {
+  PaymentKind,
+  PaymentProvider,
+  PaymentStatus,
+  Prisma as PrismaTypes,
   WalletHoldReason,
   WalletHoldStatus,
   WalletStatus,
   WalletTransactionStatus,
   WalletTransactionType,
+  WalletWithdrawalStatus,
 } from "generated/prisma/client";
 
 export type WalletRow = {
@@ -76,4 +81,83 @@ export type CreateWalletHoldInput = {
   readonly rentalId?: string | null;
   readonly amount: bigint;
   readonly reason?: WalletHoldReason;
+};
+
+export type PaymentAttemptRow = {
+  readonly id: string;
+  readonly userId: string;
+  readonly walletId: string;
+  readonly provider: PaymentProvider;
+  readonly providerRef: string | null;
+  readonly kind: PaymentKind;
+  readonly status: PaymentStatus;
+  readonly amountMinor: bigint;
+  readonly feeMinor: bigint;
+  readonly currency: string;
+  readonly failureReason: string | null;
+  readonly metadata: PrismaTypes.JsonValue | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+};
+
+export type CreatePaymentAttemptInput = {
+  readonly userId: string;
+  readonly walletId: string;
+  readonly provider: PaymentProvider;
+  readonly kind: PaymentKind;
+  readonly amountMinor: bigint;
+  readonly feeMinor?: bigint;
+  readonly currency: string;
+  readonly providerRef?: string | null;
+  readonly metadata?: PrismaTypes.JsonValue | null;
+};
+
+export type WalletWithdrawalRow = {
+  readonly id: string;
+  readonly userId: string;
+  readonly walletId: string;
+  readonly amount: bigint;
+  readonly currency: string;
+  readonly payoutAmount: bigint | null;
+  readonly payoutCurrency: string | null;
+  readonly fxRate: bigint | null;
+  readonly fxQuotedAt: Date | null;
+  readonly status: WalletWithdrawalStatus;
+  readonly idempotencyKey: string;
+  readonly stripeTransferId: string | null;
+  readonly stripePayoutId: string | null;
+  readonly failureReason: string | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+};
+
+export type CreateWalletWithdrawalInput = {
+  readonly userId: string;
+  readonly walletId: string;
+  readonly amount: bigint;
+  readonly currency: string;
+  readonly payoutAmount?: bigint | null;
+  readonly payoutCurrency?: string | null;
+  readonly fxRate?: bigint | null;
+  readonly fxQuotedAt?: Date | null;
+  readonly idempotencyKey: string;
+};
+
+export type MarkWithdrawalProcessingInput = {
+  readonly withdrawalId: string;
+  readonly stripeTransferId?: string | null;
+  readonly stripePayoutId?: string | null;
+  readonly staleBefore?: Date;
+};
+
+export type MarkWithdrawalResultInput = {
+  readonly withdrawalId: string;
+  readonly stripePayoutId?: string | null;
+  readonly failureReason?: string | null;
+};
+
+export type UpdateWithdrawalStripeRefsInput = {
+  readonly withdrawalId: string;
+  readonly stripeTransferId?: string | null;
+  readonly stripePayoutId?: string | null;
 };

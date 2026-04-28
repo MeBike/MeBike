@@ -766,15 +766,15 @@ async function main() {
     );
 
     const userByEmail = new Map(users.map(user => [user.email, user]));
-    const technicianAssignments: DemoOrgAssignment[] = technicianTeams
+    const technicianAssignments = technicianTeams
       .map((team, index) => ({
         user: userByEmail.get(`tech${index + 1}@mebike.local`),
         stationId: null,
         agencyId: null,
         technicianTeamId: team.id,
       }))
-      .filter((item): item is DemoOrgAssignment => item.user !== undefined);
-    const orgAssignments: DemoOrgAssignment[] = [
+      .filter(item => item.user !== undefined) as DemoOrgAssignment[];
+    const orgAssignments = [
       {
         user: userByEmail.get("staff1@mebike.local"),
         stationId: pick(stationIds, 2),
@@ -806,7 +806,7 @@ async function main() {
         technicianTeamId: null,
       },
       ...technicianAssignments,
-    ].filter((item): item is DemoOrgAssignment => item.user !== undefined);
+    ].filter(item => item.user !== undefined) as DemoOrgAssignment[];
 
     if (orgAssignments.length > 0) {
       await prisma.userOrgAssignment.createMany({

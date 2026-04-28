@@ -75,6 +75,10 @@ const RentalOverdueSweepPayloadV1Schema = z.object({
   version: z.literal(1),
 });
 
+const WalletTopupReconcileSweepPayloadV1Schema = z.object({
+  version: z.literal(1),
+});
+
 const WalletWithdrawalExecutePayloadV1Schema = z.object({
   version: z.literal(1),
   withdrawalId: z.uuidv7(),
@@ -106,6 +110,7 @@ export const JobPayloadSchemas = {
   [JobTypes.ReturnSlotExpireSweep]: ReturnSlotExpireSweepPayloadV1Schema,
   [JobTypes.EnvironmentImpactCalculateRental]: EnvironmentImpactCalculateRentalPayloadV1Schema,
   [JobTypes.RentalOverdueSweep]: RentalOverdueSweepPayloadV1Schema,
+  [JobTypes.WalletTopupReconcileSweep]: WalletTopupReconcileSweepPayloadV1Schema,
   [JobTypes.WalletWithdrawalExecute]: WalletWithdrawalExecutePayloadV1Schema,
   [JobTypes.WalletWithdrawalSweep]: WalletWithdrawalSweepPayloadV1Schema,
 } as const;

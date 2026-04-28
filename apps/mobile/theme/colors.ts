@@ -20,8 +20,9 @@ export const bikeStatusColors = {
   BOOKED: lightThemeColors.statusWarning,
   BROKEN: lightThemeColors.statusDanger,
   RESERVED: lightThemeColors.statusWarning,
-  MAINTAINED: lightThemeColors.statusDanger,
-  UNAVAILABLE: lightThemeColors.textDisabled,
+  REDISTRIBUTING: lightThemeColors.statusWarning,
+  LOST: lightThemeColors.statusDanger,
+  DISABLED: lightThemeColors.textDisabled,
 } as const;
 
 export const reservationStatusColors = {

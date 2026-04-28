@@ -7,7 +7,7 @@ import type { BikeRow, BikeService } from "@/domain/bikes";
 import type { RentalCommandService, RentalService, ReturnSlotRow } from "@/domain/rentals";
 import type { ReservationQueryService } from "@/domain/reservations";
 import type { StationQueryService } from "@/domain/stations";
-import type { WalletService } from "@/domain/wallets/services/wallet.service";
+import type { WalletQueryService } from "@/domain/wallets/services/queries/wallet-query.service";
 
 import { returnSlotExpiresAt } from "@/domain/rentals";
 import { requiredAvailableBikesForNextReservation, stationCanAcceptReservation } from "@/domain/reservations/services/reservation-availability-rule";
@@ -21,7 +21,7 @@ export type CreateCustomerToolsArgs = {
   readonly rentalService: RentalService;
   readonly stationQueryService: StationQueryService;
   readonly userId: string;
-  readonly walletService: WalletService;
+  readonly walletService: WalletQueryService;
 };
 
 export type CustomerToolName
@@ -131,19 +131,21 @@ const bikeStatusLabels = {
   AVAILABLE: "Có sẵn",
   BOOKED: "Đang được thuê",
   BROKEN: "Bị hỏng",
-  MAINTAINED: "Đang bảo trì",
   RESERVED: "Đã đặt trước",
-  UNAVAILABLE: "Không có sẵn",
+  REDISTRIBUTING: "Đang điều phối",
+  LOST: "Xe bị mất",
+  DISABLED: "Đã bị vô hiệu hóa",
 } as const;
 
 const bikeRentabilityLabels = {
   AVAILABLE: "Sẵn sàng để thuê",
   BOOKED: "Đang được thuê",
   BROKEN: "Không nên sử dụng vì xe đang hỏng",
-  MAINTAINED: "Không nên sử dụng vì xe đang bảo trì",
   NO_STATION: "Không thể thuê vì xe không ở trạm nào",
   RESERVED: "Không sẵn sàng để thuê vì xe đã được đặt trước",
-  UNAVAILABLE: "Không sẵn sàng để thuê",
+  REDISTRIBUTING: "Không sẵn sàng để thuê vì xe đang được điều phối",
+  LOST: "Không nên sử dụng vì xe bị mất",
+  DISABLED: "Không sẵn sàng để thuê vì xe đã bị vô hiệu hóa",
 } as const;
 
 const returnSlotStatusLabels = {
@@ -266,10 +268,12 @@ function getBikeRentabilityReason(bike: {
       return "RESERVED" as const;
     case "BROKEN":
       return "BROKEN" as const;
-    case "MAINTAINED":
-      return "MAINTAINED" as const;
-    default:
-      return "UNAVAILABLE" as const;
+    case "REDISTRIBUTING":
+      return "REDISTRIBUTING" as const;
+    case "LOST":
+      return "LOST" as const;
+    case "DISABLED":
+      return "DISABLED" as const;
   }
 }
 

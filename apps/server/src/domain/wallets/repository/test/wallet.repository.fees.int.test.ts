@@ -3,14 +3,16 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { makeWalletRepository } from "../wallet.repository";
+import type { WalletTestRepository } from "./wallet-repository-test-kit";
+
+import { makeWalletTestRepository } from "./wallet-repository-test-kit";
 
 describe("wallet Repository - Fee Handling", () => {
   const fixture = setupPrismaIntFixture();
-  let repo: ReturnType<typeof makeWalletRepository>;
+  let repo: WalletTestRepository;
 
   beforeAll(() => {
-    repo = makeWalletRepository(fixture.prisma);
+    repo = makeWalletTestRepository(fixture.prisma);
   });
 
   it("increaseBalance deducts fees from amount", async () => {
@@ -35,7 +37,7 @@ describe("wallet Repository - Fee Handling", () => {
     await Effect.runPromise(repo.createForUser(userId));
 
     await fixture.prisma.$transaction(async (tx) => {
-      const txRepo = makeWalletRepository(tx);
+      const txRepo = makeWalletTestRepository(tx);
       const increased = await Effect.runPromise(
         txRepo.increaseBalance({ userId, amount: 100n, fee: 15n }),
       );

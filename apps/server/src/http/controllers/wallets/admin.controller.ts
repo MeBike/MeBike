@@ -4,7 +4,7 @@ import type { WalletsContracts } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
-import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import { WalletQueryServiceTag } from "@/domain/wallets/services/queries/wallet-query.service";
 import {
   toWalletDetail,
   toWalletTransactionDetail,
@@ -22,7 +22,7 @@ const adminGetUserWallet: RouteHandler<
   const { userId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    Effect.flatMap(WalletServiceTag, service => service.getByUserId(userId)),
+    Effect.flatMap(WalletQueryServiceTag, service => service.getByUserId(userId)),
     "GET /v1/admin/users/{userId}/wallet",
   );
 
@@ -56,7 +56,7 @@ const adminListUserWalletTransactions: RouteHandler<
   const status = query.status;
 
   const eff = withLoggedCause(
-    Effect.flatMap(WalletServiceTag, service =>
+    Effect.flatMap(WalletQueryServiceTag, service =>
       service.adminListTransactionsForUser({ userId, pageReq: { page, pageSize }, status })),
     "GET /v1/admin/users/{userId}/wallet/transactions",
   );

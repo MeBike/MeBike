@@ -6,17 +6,16 @@ import {
   UserQueryServiceLive,
 } from "@/domain/users";
 import {
-  WalletHoldRepositoryLive,
-  WalletHoldServiceLive,
-  WalletRepositoryLive,
-  WalletServiceLive,
-} from "@/domain/wallets";
-import {
   StripeWithdrawalServiceLive,
   sweepWithdrawalsUseCase,
+  WalletCommandRepositoryLive,
+  WalletCommandServiceLive,
+  WalletHoldRepositoryLive,
+  WalletQueryRepositoryLive,
+  WalletQueryServiceLive,
   WithdrawalRepositoryLive,
   WithdrawalServiceLive,
-} from "@/domain/wallets/withdrawals";
+} from "@/domain/wallets";
 import { PrismaLive } from "@/infrastructure/prisma";
 import { StripeLive } from "@/infrastructure/stripe";
 import logger from "@/lib/logger";
@@ -29,7 +28,11 @@ const UserQueryServiceLayer = UserQueryServiceLive.pipe(
   Layer.provide(UserQueryReposLive),
 );
 
-const WalletReposLive = WalletRepositoryLive.pipe(
+const WalletQueryReposLive = WalletQueryRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const WalletCommandReposLive = WalletCommandRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
@@ -37,12 +40,13 @@ const WalletHoldReposLive = WalletHoldRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-const WalletServiceLayer = WalletServiceLive.pipe(
-  Layer.provide(WalletReposLive),
+const WalletQueryServiceLayer = WalletQueryServiceLive.pipe(
+  Layer.provide(WalletQueryReposLive),
 );
 
-const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
-  Layer.provide(WalletHoldReposLive),
+const WalletCommandServiceLayer = WalletCommandServiceLive.pipe(
+  Layer.provide(WalletCommandReposLive),
+  Layer.provide(WalletQueryServiceLayer),
 );
 
 const WithdrawalReposLive = WithdrawalRepositoryLive.pipe(
@@ -60,10 +64,11 @@ const StripeWithdrawalServiceLayer = StripeWithdrawalServiceLive.pipe(
 const WithdrawalSweepLive = Layer.mergeAll(
   UserQueryReposLive,
   UserQueryServiceLayer,
-  WalletReposLive,
-  WalletServiceLayer,
+  WalletQueryReposLive,
+  WalletQueryServiceLayer,
+  WalletCommandReposLive,
+  WalletCommandServiceLayer,
   WalletHoldReposLive,
-  WalletHoldServiceLayer,
   WithdrawalReposLive,
   WithdrawalServiceLayer,
   StripeWithdrawalServiceLayer,

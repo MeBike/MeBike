@@ -55,7 +55,9 @@ export function toBikeStatistics(
     RESERVED: row.RESERVED,
     AVAILABLE: row.AVAILABLE,
     RENTED: row.RENTED,
-    UNAVAILABLE: row.UNAVAILABLE,
+    REDISTRIBUTING: row.REDISTRIBUTING,
+    LOST: row.LOST,
+    DISABLED: row.DISABLED,
     BROKEN: row.BROKEN,
   };
 }

@@ -59,7 +59,7 @@ export class BikeIsBroken extends Data.TaggedError("BikeIsBroken")<{
   readonly bikeId: string;
 }> {}
 
-export class BikeIsMaintained extends Data.TaggedError("BikeIsMaintained")<{
+export class BikeIsLost extends Data.TaggedError("BikeIsLost")<{
   readonly bikeId: string;
 }> {}
 
@@ -67,7 +67,11 @@ export class BikeIsReserved extends Data.TaggedError("BikeIsReserved")<{
   readonly bikeId: string;
 }> {}
 
-export class BikeUnavailable extends Data.TaggedError("BikeUnavailable")<{
+export class BikeIsRedistributing extends Data.TaggedError("BikeIsRedistributing")<{
+  readonly bikeId: string;
+}> {}
+
+export class BikeIsDisabled extends Data.TaggedError("BikeIsDisabled")<{
   readonly bikeId: string;
 }> {}
 
@@ -82,6 +86,14 @@ export class UserWalletNotFound extends Data.TaggedError("UserWalletNotFound")<{
 
 export class InsufficientBalanceToRent extends Data.TaggedError(
   "InsufficientBalanceToRent",
+)<{
+    readonly userId: string;
+    readonly requiredBalance: number;
+    readonly currentBalance: number;
+  }> {}
+
+export class InsufficientBalanceForReturnSlot extends Data.TaggedError(
+  "InsufficientBalanceForReturnSlot",
 )<{
     readonly userId: string;
     readonly requiredBalance: number;
@@ -200,12 +212,14 @@ export type RentalServiceFailure
     | BikeMissingStation
     | BikeNotFoundInStation
     | BikeIsBroken
-    | BikeIsMaintained
+    | BikeIsLost
     | BikeIsReserved
-    | BikeUnavailable
+    | BikeIsRedistributing
+    | BikeIsDisabled
     | InvalidBikeStatus
     | UserWalletNotFound
     | InsufficientBalanceToRent
+    | InsufficientBalanceForReturnSlot
     | InvalidRentalState
     | ReturnSlotRequiredForReturn
     | ReturnSlotStationMismatch

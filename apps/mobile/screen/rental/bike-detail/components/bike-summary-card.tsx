@@ -16,9 +16,13 @@ function getStatusTone(status: BikeSummary["status"]) {
     case "RESERVED":
     case "BOOKED":
       return "warning" as const;
+    case "REDISTRIBUTING":
+      return "warning" as const;
     case "BROKEN":
-    case "MAINTAINED":
+    case "LOST":
       return "danger" as const;
+    case "DISABLED":
+      return "neutral" as const;
     default:
       return "neutral" as const;
   }
@@ -34,8 +38,12 @@ function getStatusLabel(status: BikeSummary["status"]) {
       return "Đang thuê";
     case "BROKEN":
       return "Bị hỏng";
-    case "MAINTAINED":
-      return "Bảo trì";
+    case "REDISTRIBUTING":
+      return "Điều phối";
+    case "LOST":
+      return "Thất lạc";
+    case "DISABLED":
+      return "Không khả dụng";
     default:
       return "Không khả dụng";
   }

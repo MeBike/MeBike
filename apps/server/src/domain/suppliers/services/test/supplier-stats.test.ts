@@ -26,8 +26,9 @@ describe("supplier Stats Utilities", () => {
         booked: 0,
         broken: 0,
         reserved: 0,
-        maintained: 0,
-        unavailable: 0,
+        redistributing: 0,
+        lost: 0,
+        disabled: 0,
       });
     });
   });
@@ -65,20 +66,28 @@ describe("supplier Stats Utilities", () => {
       expect(result.reserved).toBe(1);
     });
 
-    it("should update totalBikes and maintained count", () => {
-      const stats = emptyStats("id", "name");
-      const result = updateStatsWithCount(stats, "MAINTAINED" as BikeStatus, 4);
+    it("should update totalBikes and redistributing count", () => {
+      const stats = emptyStats("sup-1", "Sup 1");
+      const result = updateStatsWithCount(stats, "REDISTRIBUTING" as BikeStatus, 4);
 
       expect(result.totalBikes).toBe(4);
-      expect(result.maintained).toBe(4);
+      expect(result.redistributing).toBe(4);
     });
 
-    it("should update totalBikes and unavailable count", () => {
-      const stats = emptyStats("id", "name");
-      const result = updateStatsWithCount(stats, "UNAVAILABLE" as BikeStatus, 2);
+    it("should update totalBikes and disabled count", () => {
+      const stats = emptyStats("sup-1", "Sup 1");
+      const result = updateStatsWithCount(stats, "DISABLED" as BikeStatus, 2);
 
       expect(result.totalBikes).toBe(2);
-      expect(result.unavailable).toBe(2);
+      expect(result.disabled).toBe(2);
+    });
+
+    it("should update totalBikes and lost count", () => {
+      const stats = emptyStats("sup-1", "Sup 1");
+      const result = updateStatsWithCount(stats, "LOST" as BikeStatus, 1);
+
+      expect(result.totalBikes).toBe(1);
+      expect(result.lost).toBe(1);
     });
 
     it("should accumulate counts when called multiple times", () => {
@@ -121,8 +130,9 @@ describe("supplier Stats Utilities", () => {
         booked: 3,
         broken: 0,
         reserved: 0,
-        maintained: 0,
-        unavailable: 0,
+        redistributing: 0,
+        lost: 0,
+        disabled: 0,
       });
 
       const s2Stats = result.find(s => s.supplierId === "s2");
@@ -134,8 +144,9 @@ describe("supplier Stats Utilities", () => {
         booked: 0,
         broken: 1,
         reserved: 0,
-        maintained: 0,
-        unavailable: 0,
+        redistributing: 0,
+        lost: 0,
+        disabled: 0,
       });
     });
 
@@ -205,8 +216,9 @@ describe("supplier Stats Utilities", () => {
         { status: "BOOKED" as BikeStatus, count: 3 },
         { status: "BROKEN" as BikeStatus, count: 2 },
         { status: "RESERVED" as BikeStatus, count: 1 },
-        { status: "MAINTAINED" as BikeStatus, count: 4 },
-        { status: "UNAVAILABLE" as BikeStatus, count: 2 },
+        { status: "REDISTRIBUTING" as BikeStatus, count: 4 },
+        { status: "LOST" as BikeStatus, count: 2 },
+        { status: "DISABLED" as BikeStatus, count: 2 },
       ];
 
       const result = buildSupplierStats("s1", "Supplier 1", counts);
@@ -214,13 +226,14 @@ describe("supplier Stats Utilities", () => {
       expect(result).toEqual({
         supplierId: "s1",
         supplierName: "Supplier 1",
-        totalBikes: 17,
+        totalBikes: 19,
         available: 5,
         booked: 3,
         broken: 2,
         reserved: 1,
-        maintained: 4,
-        unavailable: 2,
+        redistributing: 4,
+        lost: 2,
+        disabled: 2,
       });
     });
 
@@ -236,8 +249,9 @@ describe("supplier Stats Utilities", () => {
         booked: 0,
         broken: 0,
         reserved: 0,
-        maintained: 0,
-        unavailable: 0,
+        redistributing: 0,
+        lost: 0,
+        disabled: 0,
       });
     });
 
@@ -259,8 +273,9 @@ describe("supplier Stats Utilities", () => {
         booked: 1,
         broken: 0,
         reserved: 0,
-        maintained: 0,
-        unavailable: 0,
+        redistributing: 0,
+        lost: 0,
+        disabled: 0,
       });
     });
   });

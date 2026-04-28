@@ -11,7 +11,7 @@ import {
   UserQueryRepositoryLive,
   UserQueryServiceLive,
 } from "@/domain/users";
-import { WalletRepositoryLive } from "@/domain/wallets";
+import { WalletCommandRepositoryLive } from "@/domain/wallets";
 
 import { EmailLive, PrismaLive, RedisLive } from "../infra.layers";
 
@@ -21,7 +21,7 @@ export const AuthReposLive = Layer.mergeAll(
   AgencyRequestRepositoryLive,
   UserQueryRepositoryLive,
   UserCommandRepositoryLive,
-  WalletRepositoryLive,
+  WalletCommandRepositoryLive,
 ).pipe(
   Layer.provide(PrismaLive),
   Layer.provide(RedisLive),

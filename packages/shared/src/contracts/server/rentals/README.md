@@ -97,9 +97,10 @@ The rental system uses comprehensive error codes with detailed context:
 ### Bike Availability
 - `BIKE_IN_USE` - Bike currently rented
 - `BIKE_IS_BROKEN` - Bike needs maintenance
-- `BIKE_IS_MAINTAINED` - Bike under maintenance
 - `BIKE_IS_RESERVED` - Bike reserved by other user
-- `UNAVAILABLE_BIKE` - General unavailability
+- `BIKE_IS_LOST` - Bike is lost
+- `BIKE_IS_DISABLED` - Bike is disabled
+- `BIKE_IS_REDISTRIBUTING` - Bike is being redistributed
 - `INVALID_BIKE_STATUS` - Invalid bike status
 
 ### Payment & Wallet

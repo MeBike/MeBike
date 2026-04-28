@@ -4,7 +4,9 @@ const rentalErrorMessages = {
   accessDenied: "Bạn không có quyền thực hiện thao tác này.",
   bikeInUse: "Xe này hiện đang được sử dụng.",
   bikeIsBroken: "Xe này đang bị hỏng và chưa thể sử dụng.",
-  bikeIsMaintained: "Xe này đang được bảo trì.",
+  bikeIsDisabled: "Xe này hiện đang bị vô hiệu hóa.",
+  bikeIsLost: "Xe này đang được đánh dấu thất lạc.",
+  bikeIsRedistributing: "Xe này đang được điều phối.",
   bikeIsReserved: "Xe này đang được giữ chỗ.",
   bikeMissingStation: "Xe này đang thiếu thông tin trạm, vui lòng thử lại sau.",
   bikeNotAvailableForRental: "Xe hiện chưa sẵn sàng để bắt đầu chuyến đi.",
@@ -30,6 +32,7 @@ const rentalErrorMessages = {
   invalidObjectId: "Mã định danh không hợp lệ.",
   invalidRentalStatus: "Trạng thái chuyến đi không hợp lệ.",
   networkError: "Không thể kết nối tới máy chủ.",
+  notEnoughBalanceForReturnSlot: "Số dư ví không đủ để giữ chỗ trả xe.",
   notAvailableBike: "Xe hiện không sẵn sàng để sử dụng.",
   notEnoughBalanceToRent: "Số dư ví không đủ để bắt đầu chuyến đi.",
   notFoundRentedRental: "Bạn hiện không có chuyến đi đang diễn ra.",
@@ -74,8 +77,12 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.bikeInUse;
     case "BIKE_IS_BROKEN":
       return rentalErrorMessages.bikeIsBroken;
-    case "BIKE_IS_MAINTAINED":
-      return rentalErrorMessages.bikeIsMaintained;
+    case "BIKE_IS_DISABLED":
+      return rentalErrorMessages.bikeIsDisabled;
+    case "BIKE_IS_LOST":
+      return rentalErrorMessages.bikeIsLost;
+    case "BIKE_IS_REDISTRIBUTING":
+      return rentalErrorMessages.bikeIsRedistributing;
     case "BIKE_IS_RESERVED":
       return rentalErrorMessages.bikeIsReserved;
     case "BIKE_MISSING_STATION":
@@ -126,6 +133,16 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.invalidRentalStatus;
     case "NOT_AVAILABLE_BIKE":
       return rentalErrorMessages.notAvailableBike;
+    case "NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT": {
+      const requiredBalance = formatCurrencyDetail(error.details?.requiredBalance);
+      const currentBalance = formatCurrencyDetail(error.details?.currentBalance);
+
+      if (requiredBalance && currentBalance) {
+        return `Số dư ví không đủ để giữ chỗ trả xe. Bạn cần ${requiredBalance} nhưng hiện chỉ còn ${currentBalance}.`;
+      }
+
+      return rentalErrorMessages.notEnoughBalanceForReturnSlot;
+    }
     case "NOT_ENOUGH_BALANCE_TO_RENT": {
       const requiredBalance = formatCurrencyDetail(error.details?.requiredBalance);
       const currentBalance = formatCurrencyDetail(error.details?.currentBalance);
@@ -172,8 +189,6 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.subscriptionUsageExceeded;
     case "UNAUTHORIZED":
       return rentalErrorMessages.unauthorized;
-    case "UNAVAILABLE_BIKE":
-      return rentalErrorMessages.unavailableBike;
     case "UPDATED_STATUS_NOT_ALLOWED":
       return rentalErrorMessages.updatedStatusNotAllowed;
     case "USER_NOT_FOUND":

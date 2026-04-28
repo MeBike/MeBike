@@ -22,15 +22,17 @@ export const rentalErrorCodes = [
   // Bike Availability Errors
   "BIKE_IN_USE",
   "BIKE_IS_BROKEN",
-  "BIKE_IS_MAINTAINED",
   "BIKE_IS_RESERVED",
-  "UNAVAILABLE_BIKE",
+  "BIKE_IS_REDISTRIBUTING",
+  "BIKE_IS_LOST",
+  "BIKE_IS_DISABLED",
   "NOT_AVAILABLE_BIKE",
   "NO_AVAILABLE_BIKE",
   "INVALID_BIKE_STATUS",
 
   // Payment & Wallet Errors
   "NOT_ENOUGH_BALANCE_TO_RENT",
+  "NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT",
   "USER_NOT_HAVE_WALLET",
   "SUBSCRIPTION_NOT_FOUND",
   "SUBSCRIPTION_NOT_USABLE",
@@ -186,14 +188,16 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
 
   BIKE_IN_USE: "Bike is already in use",
   BIKE_IS_BROKEN: "Bike is broken",
-  BIKE_IS_MAINTAINED: "Bike is under maintenance",
   BIKE_IS_RESERVED: "Bike is reserved",
-  UNAVAILABLE_BIKE: "Bike is unavailable",
+  BIKE_IS_REDISTRIBUTING: "Bike is being redistributed",
+  BIKE_IS_LOST: "Bike is lost",
+  BIKE_IS_DISABLED: "Bike is disabled",
   NOT_AVAILABLE_BIKE: "Bike is not available",
   NO_AVAILABLE_BIKE: "No available bike found for swap",
   INVALID_BIKE_STATUS: "Invalid bike status",
 
   NOT_ENOUGH_BALANCE_TO_RENT: "Insufficient balance to start rental",
+  NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT: "Insufficient balance to reserve return slot",
   USER_NOT_HAVE_WALLET: "User does not have a wallet",
   SUBSCRIPTION_NOT_FOUND: "Subscription not found",
   SUBSCRIPTION_NOT_USABLE: "Subscription is not usable",

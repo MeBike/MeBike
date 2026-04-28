@@ -1,19 +1,19 @@
 import type { Result } from "@lib/result";
+import type { ServiceError } from "@services/shared/service-error";
 import type { z } from "zod";
 
 import { ServerContracts } from "@mebike/shared";
-
 import {
-  type ServiceError,
   asNetworkError as asSharedNetworkError,
   isServiceErrorCode,
   normalizeServiceErrorCode,
   parseServiceError,
+
 } from "@services/shared/service-error";
 
 type ContractRatingErrorCode = z.infer<typeof ServerContracts.RatingsContracts.RatingErrorCodeSchema>;
 
-export type RatingErrorCode = ContractRatingErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type RatingErrorCode = ContractRatingErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type RatingError = ServiceError<RatingErrorCode>;
 

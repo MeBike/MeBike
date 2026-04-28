@@ -7,6 +7,8 @@ export const authEnvSchema = z.object({
 
 export const walletEnvSchema = z.object({
   MIN_WITHDRAWAL_AMOUNT: z.coerce.number().default(5),
+  TOPUP_RECONCILE_STALE_MINUTES: z.coerce.number().default(15),
+  TOPUP_RECONCILE_SWEEP_CRON: z.string().default("*/5 * * * *"),
   WITHDRAWAL_PROCESSING_TTL_MINUTES: z.coerce.number().default(10),
   WITHDRAWAL_SLA_MINUTES: z.coerce.number().default(5),
   WITHDRAWAL_SWEEP_CRON: z.string().default("*/5 * * * *"),
@@ -23,6 +25,7 @@ export const reservationEnvSchema = z.object({
 });
 
 export const returnSlotEnvSchema = z.object({
+  RETURN_SLOT_RESERVATION_FEE_MINOR: z.coerce.number().int().nonnegative().default(2000),
   RETURN_SLOT_HOLD_MINUTES: z.coerce.number().int().positive().default(30),
   RETURN_SLOT_EXPIRE_SWEEP_CRON: z.string().default("* * * * *"),
 });

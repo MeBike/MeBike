@@ -4,14 +4,16 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { makeWalletRepository } from "../wallet.repository";
+import type { WalletTestRepository } from "./wallet-repository-test-kit";
+
+import { makeWalletTestRepository } from "./wallet-repository-test-kit";
 
 describe("wallet Repository - Reserve/Release Balance", () => {
   const fixture = setupPrismaIntFixture();
-  let repo: ReturnType<typeof makeWalletRepository>;
+  let repo: WalletTestRepository;
 
   beforeAll(() => {
-    repo = makeWalletRepository(fixture.prisma);
+    repo = makeWalletTestRepository(fixture.prisma);
   });
 
   it("reserveBalanceInTx successfully reserves funds", async () => {
@@ -20,7 +22,7 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await fixture.prisma.$transaction(async (tx) => {
-      const txRepo = makeWalletRepository(tx);
+      const txRepo = makeWalletTestRepository(tx);
       const reserved = await Effect.runPromise(
         txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
       );
@@ -38,7 +40,7 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await fixture.prisma.$transaction(async (tx) => {
-      const txRepo = makeWalletRepository(tx);
+      const txRepo = makeWalletTestRepository(tx);
       const reserved = await Effect.runPromise(
         txRepo.reserveBalance({ walletId: wallet.id, amount: 150n }),
       );
@@ -55,14 +57,14 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await fixture.prisma.$transaction(async (tx) => {
-      const txRepo = makeWalletRepository(tx);
+      const txRepo = makeWalletTestRepository(tx);
       await Effect.runPromise(
         txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
       );
     });
 
     await fixture.prisma.$transaction(async (tx) => {
-      const txRepo = makeWalletRepository(tx);
+      const txRepo = makeWalletTestRepository(tx);
       const released = await Effect.runPromise(
         txRepo.releaseReservedBalance({ walletId: wallet.id, amount: 30n }),
       );
@@ -79,7 +81,7 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await fixture.prisma.$transaction(async (tx) => {
-      const txRepo = makeWalletRepository(tx);
+      const txRepo = makeWalletTestRepository(tx);
       const released = await Effect.runPromise(
         txRepo.releaseReservedBalance({ walletId: wallet.id, amount: 30n }),
       );
@@ -96,7 +98,7 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await fixture.prisma.$transaction(async (tx) => {
-      const txRepo = makeWalletRepository(tx);
+      const txRepo = makeWalletTestRepository(tx);
       await Effect.runPromise(
         txRepo.reserveBalance({ walletId: wallet.id, amount: 80n }),
       );
@@ -120,7 +122,7 @@ describe("wallet Repository - Reserve/Release Balance", () => {
 
     try {
       await fixture.prisma.$transaction(async (tx) => {
-        const txRepo = makeWalletRepository(tx);
+        const txRepo = makeWalletTestRepository(tx);
         await Effect.runPromise(
           txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
         );
