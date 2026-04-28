@@ -35,6 +35,37 @@ services:
       retries: 10
       start_period: 5s
 
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    environment:
+      IOT_MQTT_USERNAME: ${IOT_MQTT_USERNAME}
+      IOT_MQTT_PASSWORD: ${IOT_MQTT_PASSWORD}
+    command:
+      - sh
+      - -c
+      - |
+        if [ -z "$${IOT_MQTT_USERNAME:-}" ] || [ -z "$${IOT_MQTT_PASSWORD:-}" ]; then
+          echo "IOT_MQTT_USERNAME and IOT_MQTT_PASSWORD are required" >&2
+          exit 1
+        fi
+        printf '%s\n' \
+          'listener 1883 0.0.0.0' \
+          'allow_anonymous false' \
+          'password_file /mosquitto/config/passwords' \
+          'persistence true' \
+          'persistence_location /mosquitto/data/' \
+          'log_dest stdout' \
+          > /mosquitto/config/mosquitto.conf
+        mosquitto_passwd -b -c /mosquitto/config/passwords "$${IOT_MQTT_USERNAME}" "$${IOT_MQTT_PASSWORD}"
+        exec mosquitto -c /mosquitto/config/mosquitto.conf
+    ports:
+      - "1883:1883"
+    volumes:
+      - mebike-mosquitto-data:/mosquitto/data
+    networks:
+      - mebike-internal
+
   frontend:
     image: ${COMPOSE_PROJECT_NAME:-mebike}-frontend:${IMAGE_TAG:-latest}
     build:
@@ -68,6 +99,9 @@ services:
       PORT: 4000
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
+      IOT_MQTT_URL: mqtt://mosquitto:1883
+      IOT_MQTT_USERNAME: ${IOT_MQTT_USERNAME}
+      IOT_MQTT_PASSWORD: ${IOT_MQTT_PASSWORD}
     depends_on:
       server-migrate:
         condition: service_completed_successfully
@@ -111,6 +145,9 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
+      IOT_MQTT_URL: mqtt://mosquitto:1883
+      IOT_MQTT_USERNAME: ${IOT_MQTT_USERNAME}
+      IOT_MQTT_PASSWORD: ${IOT_MQTT_PASSWORD}
     depends_on:
       server-migrate:
         condition: service_completed_successfully
@@ -118,6 +155,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mosquitto:
+        condition: service_started
     networks:
       - mebike-internal
     command: ["node", "apps/server/dist/src/worker/iot/index.js"]
@@ -145,3 +184,4 @@ networks:
 volumes:
   mebike-postgres-data:
   mebike-redis-data:
+  mebike-mosquitto-data:
