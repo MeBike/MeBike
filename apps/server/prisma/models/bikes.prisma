@@ -4,6 +4,7 @@ enum BikeStatus {
   BROKEN
   RESERVED
   REDISTRIBUTING
+  LOST
   DISABLED
 }
 
