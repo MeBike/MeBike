@@ -206,13 +206,7 @@ export function Sidebar() {
           roles: ["USER"],
         },
         {
-          title: "Đăng ký agency",
-          icon: Bike,
-          href: "/user/create-agency-request",
-          roles: ["USER"],
-        },
-        {
-          title: "Yêu cầu của tôi",
+          title: "Đăng ký Agency",
           icon: Bike,
           href: "/user/my-agency-request",
           roles: ["USER"],

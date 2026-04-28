@@ -57,7 +57,20 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
-
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  VERIFIED: { 
+    label: "Xác thực", 
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200" 
+  },
+  UNVERIFIED: { 
+    label: "Chưa xác thực", 
+    color: "bg-rose-100 text-rose-700 border-rose-200" 
+  },
+  BANNED: { 
+    label: "Bị khóa", 
+    color: "bg-slate-100 text-slate-700 border-slate-200" 
+  },
+};
 export const staffColumns = ({
   onView,
   onViewWallet,
@@ -128,19 +141,18 @@ export const staffColumns = ({
   {
     accessorKey: "verify",
     header: "Trạng thái",
-    meta: {
-      thClassName: "w-[14%]",
-      tdClassName: "whitespace-nowrap",
-    },
     cell: ({ row }) => {
-      const displayStatus = getUserDisplayStatus(row.original);
+      const statusValue = row.original.verify || "";
+      const config = STATUS_CONFIG[statusValue] || { 
+        label: statusValue || "Không rõ", 
+        color: "bg-muted text-muted-foreground border-border" 
+      };
+
       return (
         <span
-          className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
-            displayStatus,
-          )}`}
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
         >
-          {displayStatus}
+          {config.label}
         </span>
       );
     },
