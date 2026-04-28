@@ -1,18 +1,19 @@
 import type { Result } from "@lib/result";
+import type { ServiceError } from "@services/shared/service-error";
 import type { z } from "zod";
 
 import { AuthContracts } from "@mebike/shared";
 import {
-  type ServiceError,
   asNetworkError as asSharedNetworkError,
   isServiceErrorCode,
   normalizeServiceErrorCode,
   parseServiceError,
+
 } from "@services/shared/service-error";
 
 type ContractAuthErrorCode = z.infer<typeof AuthContracts.AuthErrorCodeSchema>;
 
-export type AuthErrorCode = ContractAuthErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type AuthErrorCode = ContractAuthErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type AuthError = ServiceError<AuthErrorCode>;
 

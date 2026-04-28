@@ -18,6 +18,7 @@ type ContractEnvironmentErrorCode = z.infer<
 export type EnvironmentErrorCode
   = | ContractEnvironmentErrorCode
     | "UNAUTHORIZED"
+    | "FORBIDDEN"
     | "UNKNOWN"
     | "VALIDATION_ERROR";
 

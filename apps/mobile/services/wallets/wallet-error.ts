@@ -1,18 +1,19 @@
 import type { Result } from "@lib/result";
+import type { ServiceError } from "@services/shared/service-error";
 import type { z } from "zod";
 
 import { ServerContracts } from "@mebike/shared";
 import {
-  type ServiceError,
   asNetworkError as asSharedNetworkError,
   isServiceErrorCode,
   normalizeServiceErrorCode,
   parseServiceError,
+
 } from "@services/shared/service-error";
 
 type ContractWalletErrorCode = z.infer<typeof ServerContracts.WalletsContracts.WalletErrorCodeSchema>;
 
-export type WalletErrorCode = ContractWalletErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type WalletErrorCode = ContractWalletErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type WalletError = ServiceError<WalletErrorCode>;
 

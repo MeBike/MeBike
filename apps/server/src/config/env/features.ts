@@ -25,6 +25,7 @@ export const reservationEnvSchema = z.object({
 });
 
 export const returnSlotEnvSchema = z.object({
+  RETURN_SLOT_RESERVATION_FEE_MINOR: z.coerce.number().int().nonnegative().default(2000),
   RETURN_SLOT_HOLD_MINUTES: z.coerce.number().int().positive().default(30),
   RETURN_SLOT_EXPIRE_SWEEP_CRON: z.string().default("* * * * *"),
 });

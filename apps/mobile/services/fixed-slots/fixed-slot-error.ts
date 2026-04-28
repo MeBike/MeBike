@@ -13,7 +13,7 @@ import {
 
 type ContractFixedSlotErrorCode = z.infer<typeof ServerContracts.FixedSlotTemplatesContracts.FixedSlotTemplateErrorCodeSchema>;
 
-export type FixedSlotErrorCode = ContractFixedSlotErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type FixedSlotErrorCode = ContractFixedSlotErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type FixedSlotError = ServiceError<FixedSlotErrorCode>;
 

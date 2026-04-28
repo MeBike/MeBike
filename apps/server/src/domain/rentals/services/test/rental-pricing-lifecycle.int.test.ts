@@ -531,6 +531,6 @@ describe("rental pricing lifecycle integration", () => {
       where: { userId: user.id },
     });
     expect(walletAfterReturn?.reservedBalance.toString()).toBe("2000");
-    expect(walletAfterReturn?.balance.toString()).toBe("47000");
+    expect(walletAfterReturn?.balance.toString()).toBe("45000");
   });
 });

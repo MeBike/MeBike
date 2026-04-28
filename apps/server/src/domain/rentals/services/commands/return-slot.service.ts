@@ -1,11 +1,15 @@
 import { Effect, Option } from "effect";
 
+import type { DecreaseBalanceInput } from "@/domain/wallets/models";
+
+import { env } from "@/config/env";
 import {
   defectOn,
   isWithinOvernightOperationsWindow,
   makeOvernightOperationsClosedError,
 } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
+import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -13,10 +17,12 @@ import type { RentalOperatingHourFailure } from "../../domain-errors";
 import type { ReturnSlotRow } from "../../models";
 
 import {
+  InsufficientBalanceForReturnSlot,
   RentalNotFound,
   ReturnSlotCapacityExceeded,
   ReturnSlotNotFound,
   ReturnSlotRequiresActiveRental,
+  UserWalletNotFound,
 } from "../../domain-errors";
 import { makeRentalRepository, RentalRepository } from "../../repository/rental.repository";
 import {
@@ -30,6 +36,8 @@ export type ReturnSlotFailure
     | ReturnSlotRequiresActiveRental
     | ReturnSlotNotFound
     | ReturnSlotCapacityExceeded
+    | UserWalletNotFound
+    | InsufficientBalanceForReturnSlot
     | StationNotFound
     | ReturnSlotOperatingHourFailure;
 
@@ -57,6 +65,23 @@ function availableReturnSlots(
   const physicalRemaining = totalCapacity - totalBikes - activeReturnSlots;
   const operationalRemaining = returnSlotLimit - activeReturnSlots;
   return Math.min(physicalRemaining, operationalRemaining);
+}
+
+function debitReturnSlotFee(
+  repo: ReturnType<typeof makeWalletCommandRepository>,
+  input: DecreaseBalanceInput,
+): Effect.Effect<void, UserWalletNotFound | InsufficientBalanceForReturnSlot> {
+  return repo.decreaseBalance(input).pipe(
+    Effect.catchTag("WalletRecordNotFound", () =>
+      Effect.fail(new UserWalletNotFound({ userId: input.userId }))),
+    Effect.catchTag("WalletBalanceConstraint", err =>
+      Effect.fail(new InsufficientBalanceForReturnSlot({
+        userId: input.userId,
+        requiredBalance: Number(err.attemptedDebit),
+        currentBalance: Number(err.balance),
+      }))),
+    Effect.asVoid,
+  );
 }
 
 /**
@@ -92,6 +117,7 @@ export function createReturnSlot(
       Effect.gen(function* () {
         const rentalRepo = makeRentalRepository(tx);
         const returnSlotRepo = makeReturnSlotRepository(tx);
+        const walletRepo = makeWalletCommandRepository(tx);
 
         const rentalOpt = yield* rentalRepo.getMyRentalById(input.userId, input.rentalId);
 
@@ -151,17 +177,18 @@ export function createReturnSlot(
           yield* returnSlotRepo.cancelActiveByRentalId(input.rentalId, now);
         }
 
-        return yield* returnSlotRepo.createActive({
+        const createResult = yield* returnSlotRepo.createActive({
           rentalId: input.rentalId,
           userId: input.userId,
           stationId: input.stationId,
           reservedFrom: now,
         }).pipe(
+          Effect.map(slot => ({ slot, created: true as const })),
           Effect.catchTag("ReturnSlotUniqueViolation", () =>
             returnSlotRepo.findActiveByRentalId(input.rentalId).pipe(
               Effect.flatMap(activeOpt =>
                 Option.isSome(activeOpt)
-                  ? Effect.succeed(activeOpt.value)
+                  ? Effect.succeed({ slot: activeOpt.value, created: false as const })
                   // This is still treated as a defect on purpose: once we hit the known
                   // one-active-return-slot-per-rental unique constraint, rereading that
                   // active slot should always succeed. We do not have a meaningful recovery
@@ -173,6 +200,19 @@ export function createReturnSlot(
               ),
             )),
         );
+
+        if (createResult.created && env.RETURN_SLOT_RESERVATION_FEE_MINOR > 0) {
+          const fee = BigInt(env.RETURN_SLOT_RESERVATION_FEE_MINOR);
+          yield* debitReturnSlotFee(walletRepo, {
+            userId: input.userId,
+            amount: fee,
+            description: `Return slot reservation ${createResult.slot.id}`,
+            hash: `return-slot:${createResult.slot.id}:fee`,
+            type: "DEBIT",
+          });
+        }
+
+        return createResult.slot;
       })).pipe(
       defectOn(PrismaTransactionError),
     );

@@ -64,7 +64,10 @@ export async function givenActiveRental(
 ) {
   const { user, wallet } = await givenUserWithWallet(fixture, {
     user: overrides.user,
-    wallet: overrides.wallet,
+    wallet: {
+      balance: 100000n,
+      ...overrides.wallet,
+    },
   });
   const station = await fixture.factories.station(overrides.station);
   const bike = await fixture.factories.bike({

@@ -15,7 +15,7 @@ type ContractIncidentErrorCode = z.infer<
   typeof ServerContracts.IncidentsContracts.IncidentErrorCodeSchema
 >;
 
-export type IncidentErrorCode = ContractIncidentErrorCode | "UNAUTHORIZED" | "UNKNOWN" | "VALIDATION_ERROR";
+export type IncidentErrorCode = ContractIncidentErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN" | "VALIDATION_ERROR";
 
 export type IncidentError = ServiceError<IncidentErrorCode>;
 

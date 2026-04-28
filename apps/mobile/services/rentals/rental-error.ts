@@ -20,6 +20,7 @@ export type RentalErrorCode
   = | ContractRentalErrorCode
     | ContractBikeSwapRequestErrorCode
     | "UNAUTHORIZED"
+    | "FORBIDDEN"
     | "VALIDATION_ERROR"
     | "UNKNOWN";
 
