@@ -36,6 +36,7 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts --filter @mebike/shar
 COPY --from=builder --chown=node:node /repo/packages/shared/dist ./packages/shared/dist
 COPY --from=builder --chown=node:node /repo/apps/server/dist ./apps/server/dist
 COPY --from=builder --chown=node:node /repo/apps/server/generated ./apps/server/generated
+COPY --from=builder --chown=node:node /repo/apps/server/prisma ./apps/server/prisma
 USER node
 EXPOSE 4000
 CMD ["node", "apps/server/dist/src/http/server.js"]
