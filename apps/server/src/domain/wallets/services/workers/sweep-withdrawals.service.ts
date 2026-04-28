@@ -14,8 +14,8 @@ import {
   InsufficientWalletBalance,
   WalletNotFound,
 } from "@/domain/wallets/domain-errors";
-import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
+import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -33,6 +33,17 @@ export type WithdrawalSweepSummary = {
 
 const SWEEP_LIMIT = 100;
 
+/**
+ * Trừ wallet khi payout đã thành công và map lỗi wallet sang lỗi domain ổn định.
+ *
+ * @param repo Wallet command repo đang bám theo transaction hiện tại.
+ * @param input Dữ liệu debit wallet.
+ * @param input.userId ID user bị trừ tiền.
+ * @param input.amount Số tiền withdrawal cần settle.
+ * @param input.description Mô tả transaction wallet.
+ * @param input.hash Khóa idempotency của ledger entry.
+ * @param input.type Loại transaction wallet cần ghi.
+ */
 function debitWallet(
   repo: ReturnType<typeof makeWalletCommandRepository>,
   input: DecreaseBalanceInput,
@@ -50,18 +61,41 @@ function debitWallet(
   );
 }
 
+/**
+ * Kiểm tra payout đã ở trạng thái fail terminal hay chưa.
+ *
+ * @param status Trạng thái payout từ Stripe.
+ */
 function isPayoutTerminalFailure(status: Stripe.Payout["status"]): boolean {
   return status === "failed" || status === "canceled";
 }
 
+/**
+ * Kiểm tra payout đã paid hay chưa.
+ *
+ * @param status Trạng thái payout từ Stripe.
+ */
 function isPayoutSucceeded(status: Stripe.Payout["status"]): boolean {
   return status === "paid";
 }
 
+/**
+ * Kiểm tra payout còn đang pending/in_transit hay không.
+ *
+ * @param status Trạng thái payout từ Stripe.
+ */
 function isPayoutPending(status: Stripe.Payout["status"]): boolean {
   return status === "pending" || status === "in_transit";
 }
 
+/**
+ * Sweep các withdrawal processing quá SLA và reconcile với Stripe payout.
+ *
+ * Worker này là recovery path khi webhook payout bị miss. Nó hỏi Stripe theo payout id,
+ * rồi settle hoặc fail withdrawal trong DB theo trạng thái provider hiện tại.
+ *
+ * @param now Mốc hiện tại dùng để tính SLA cutoff.
+ */
 export function sweepWithdrawalsUseCase(
   now: Date = new Date(),
 ): Effect.Effect<
@@ -171,6 +205,14 @@ export function sweepWithdrawalsUseCase(
   });
 }
 
+/**
+ * Mark withdrawal succeeded, settle hold, release reserved balance và ghi debit ledger.
+ *
+ * @param client Prisma client root dùng để mở transaction.
+ * @param withdrawal Withdrawal cần settle.
+ * @param payoutId Stripe payout id đã thành công.
+ * @param now Mốc thời gian settle.
+ */
 function markSucceededAndSettle(
   client: import("generated/prisma/client").PrismaClient,
   withdrawal: import("../../models").WalletWithdrawalRow,
@@ -181,7 +223,7 @@ function markSucceededAndSettle(
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
       const txWalletHoldRepo = makeWalletHoldRepository(tx);
-        const txWalletRepo = makeWalletCommandRepository(tx);
+      const txWalletRepo = makeWalletCommandRepository(tx);
 
       const marked = yield* txWithdrawalRepo.markSucceeded({
         withdrawalId: withdrawal.id,
@@ -220,6 +262,14 @@ function markSucceededAndSettle(
   );
 }
 
+/**
+ * Mark withdrawal failed và release hold/reserved balance.
+ *
+ * @param client Prisma client root dùng để mở transaction.
+ * @param withdrawal Withdrawal cần fail.
+ * @param reason Lý do fail lưu vào withdrawal.
+ * @param now Mốc thời gian release hold.
+ */
 function markFailedAndReleaseHold(
   client: import("generated/prisma/client").PrismaClient,
   withdrawal: import("../../models").WalletWithdrawalRow,
@@ -230,7 +280,7 @@ function markFailedAndReleaseHold(
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
       const txWalletHoldRepo = makeWalletHoldRepository(tx);
-        const txWalletRepo = makeWalletCommandRepository(tx);
+      const txWalletRepo = makeWalletCommandRepository(tx);
 
       const marked = yield* txWithdrawalRepo.markFailed({
         withdrawalId: withdrawal.id,

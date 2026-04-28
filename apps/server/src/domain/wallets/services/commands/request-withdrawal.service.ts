@@ -56,6 +56,16 @@ function requireOption<A, E>(
     : Effect.fail(orElse());
 }
 
+/**
+ * Chuẩn hóa request withdrawal trước khi vào transaction DB.
+ *
+ * @param input Request withdrawal từ caller.
+ * @param input.userId ID user yêu cầu rút tiền.
+ * @param input.amount Số tiền VND theo minor unit nội bộ.
+ * @param input.currency Currency request, hiện chỉ hỗ trợ `vnd`.
+ * @param input.idempotencyKey Khóa idempotency từ client hoặc server tự sinh.
+ * @param input.now Mốc thời gian nghiệp vụ cho request.
+ */
 function normalizeWithdrawalRequest(
   input: RequestWithdrawalInput,
 ): Effect.Effect<NormalizedWithdrawalRequest, InvalidWithdrawalRequest> {
@@ -82,6 +92,11 @@ function normalizeWithdrawalRequest(
   });
 }
 
+/**
+ * Kiểm tra user đã liên kết Stripe Connect và bật payouts.
+ *
+ * @param user Snapshot user cần kiểm tra trước khi tạo withdrawal.
+ */
 function ensureUserCanRequestWithdrawal(
   user: WithdrawalUser,
 ): Effect.Effect<WithdrawalUser, StripeConnectNotLinked | StripePayoutsNotEnabled> {
@@ -100,6 +115,12 @@ function ensureUserCanRequestWithdrawal(
   return Effect.succeed(user);
 }
 
+/**
+ * Load user tối thiểu cần cho withdrawal flow.
+ *
+ * @param userService User query service đã được provide từ environment.
+ * @param userId ID user cần load.
+ */
 function loadWithdrawalUser(
   userService: InstanceType<typeof UserQueryServiceTag>,
   userId: string,
@@ -110,6 +131,14 @@ function loadWithdrawalUser(
   );
 }
 
+/**
+ * Build input tạo withdrawal pending từ wallet và request đã normalize.
+ *
+ * @param args Dữ liệu cần để tạo pending withdrawal.
+ * @param args.userId ID user yêu cầu rút tiền.
+ * @param args.walletId ID wallet bị reserve balance.
+ * @param args.request Request withdrawal đã chuẩn hóa.
+ */
 function buildPendingWithdrawalInput(args: {
   readonly userId: string;
   readonly walletId: string;
@@ -128,6 +157,12 @@ function buildPendingWithdrawalInput(args: {
   };
 }
 
+/**
+ * Tạo withdrawal pending và map unique violation sang lỗi idempotency domain.
+ *
+ * @param repo Withdrawal repo đang bám theo transaction hiện tại.
+ * @param input Dữ liệu tạo withdrawal pending.
+ */
 function createPendingWithdrawal(
   repo: ReturnType<typeof makeWithdrawalRepository>,
   input: CreateWalletWithdrawalInput,
@@ -149,6 +184,16 @@ function createPendingWithdrawal(
   );
 }
 
+/**
+ * Ghi toàn bộ side effect DB cho request withdrawal trong một transaction.
+ *
+ * Bao gồm tạo withdrawal pending, reserve balance, tạo wallet hold và enqueue job execute.
+ *
+ * @param args Dữ liệu mutation của flow withdrawal.
+ * @param args.client Prisma client root dùng để mở transaction.
+ * @param args.userId ID user yêu cầu rút tiền.
+ * @param args.request Request withdrawal đã chuẩn hóa.
+ */
 function requestWithdrawalInTransaction(args: {
   readonly client: import("generated/prisma/client").PrismaClient;
   readonly userId: string;
@@ -218,6 +263,18 @@ export type RequestWithdrawalInput = {
   readonly now?: Date;
 };
 
+/**
+ * Tạo yêu cầu rút tiền từ wallet sang Stripe payout worker.
+ *
+ * Flow này chỉ reserve tiền và enqueue job. Worker mới gọi Stripe để transfer/payout.
+ *
+ * @param input Request withdrawal từ HTTP/controller hoặc test.
+ * @param input.userId ID user yêu cầu rút tiền.
+ * @param input.amount Số tiền VND theo minor unit nội bộ.
+ * @param input.currency Currency request, hiện chỉ hỗ trợ `vnd`.
+ * @param input.idempotencyKey Khóa idempotency từ client.
+ * @param input.now Mốc thời gian nghiệp vụ, mặc định là hiện tại.
+ */
 export function requestWithdrawalUseCase(
   input: RequestWithdrawalInput,
 ): Effect.Effect<

@@ -11,6 +11,12 @@ import { makePaymentAttemptRepository } from "../../repository/payment-attempt.r
 import { settleSuccessfulTopup } from "../commands/settle-topup.service";
 import { StripeTopupServiceTag } from "../providers/stripe-topup.service";
 
+/**
+ * Chuyển Option payment attempt thành nullable value cho nhánh webhook.
+ *
+ * @param effect Effect trả về payment attempt option.
+ * @returns Payment attempt value hoặc null nếu không tìm thấy.
+ */
 function matchAttemptOption<A>(
   effect: Effect.Effect<{ _tag: "Some"; value: A } | { _tag: "None" }>,
 ) {
@@ -22,6 +28,14 @@ function matchAttemptOption<A>(
     ));
 }
 
+/**
+ * Xử lý Stripe Checkout Session webhook cho wallet top-up.
+ *
+ * Webhook chỉ settle khi session đã `paid`, amount/currency khớp attempt nội bộ,
+ * và attempt vẫn còn `PENDING`. Các trạng thái khác được trả về dạng outcome idempotent.
+ *
+ * @param event Stripe webhook event nhận từ HTTP boundary.
+ */
 export function handleStripeTopupWebhookEvent(
   event: Stripe.Event,
 ): Effect.Effect<
@@ -94,6 +108,14 @@ export function handleStripeTopupWebhookEvent(
   });
 }
 
+/**
+ * Xử lý Stripe PaymentIntent webhook cho mobile PaymentSheet top-up.
+ *
+ * `payment_intent.succeeded` settle wallet sau khi verify amount/currency.
+ * `payment_intent.payment_failed` mark attempt failed nếu attempt vẫn pending.
+ *
+ * @param event Stripe webhook event nhận từ HTTP boundary.
+ */
 export function handleStripePaymentIntentWebhookEvent(
   event: Stripe.Event,
 ): Effect.Effect<

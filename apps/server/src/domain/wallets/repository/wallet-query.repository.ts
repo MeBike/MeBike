@@ -19,16 +19,48 @@ import {
   toWalletTransactionRow,
 } from "./wallet.mappers";
 
+/**
+ * Contract persistence chỉ đọc cho wallet và wallet transaction.
+ *
+ * Tách riêng khỏi command repo để các flow chỉ cần đọc ví không kéo theo quyền ghi balance.
+ */
 export type WalletQueryRepo = {
+  /**
+   * Đọc wallet theo owner user.
+   *
+   * @param userId ID user sở hữu wallet.
+   */
   findByUserId: (userId: string) => Effect.Effect<Option.Option<WalletRow>>;
+
+  /**
+   * Đọc context owner dùng cho màn admin list transaction của một user.
+   *
+   * @param userId ID user cần xem wallet transaction.
+   */
   findTransactionListOwnerByUserId: (
     userId: string,
   ) => Effect.Effect<Option.Option<WalletTransactionListOwnerRow>>;
+
+  /**
+   * List transaction của một wallet theo phân trang offset hiện tại.
+   *
+   * @param walletId ID wallet cần đọc transaction.
+   * @param pageReq Thông tin phân trang và sort.
+   * @param filter Bộ lọc transaction tùy chọn.
+   * @param filter.status Trạng thái transaction cần lọc.
+   */
   listTransactions: (
     walletId: string,
     pageReq: PageRequest<"createdAt">,
     filter?: { readonly status?: WalletTransactionStatus },
   ) => Effect.Effect<PageResult<WalletTransactionRow>>;
+
+  /**
+   * Đọc một transaction theo id, có scope theo wallet để tránh lộ dữ liệu chéo user.
+   *
+   * @param walletId ID wallet dùng làm ownership scope.
+   * @param transactionId ID transaction cần đọc.
+   */
   findTransactionById: (
     walletId: string,
     transactionId: string,
@@ -40,6 +72,11 @@ export class WalletQueryRepository extends Context.Tag("WalletQueryRepository")<
   WalletQueryRepo
 >() {}
 
+/**
+ * Tạo wallet query repository bám theo Prisma client hoặc transaction client hiện tại.
+ *
+ * @param client Prisma client hoặc transaction client đang dùng.
+ */
 export function makeWalletQueryRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): WalletQueryRepo {

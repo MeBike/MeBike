@@ -21,18 +21,67 @@ import {
 } from "../domain-errors";
 import { selectWalletRow, toWalletRow } from "./wallet.mappers";
 
+/**
+ * Contract persistence ghi cho wallet balance và reservation balance.
+ *
+ * Các hàm ở đây tạo wallet transaction cùng transaction DB với thay đổi balance.
+ */
 export type WalletCommandRepo = {
+  /**
+   * Tạo wallet mặc định cho một user mới.
+   *
+   * @param userId ID user cần tạo wallet.
+   */
   createForUser: (userId: string) => Effect.Effect<WalletRow, WalletUniqueViolation>;
+
+  /**
+   * Cộng tiền vào wallet và ghi transaction ledger tương ứng.
+   *
+   * @param input Dữ liệu credit wallet.
+   * @param input.userId ID user được cộng tiền.
+   * @param input.amount Số tiền gross cần ghi vào transaction.
+   * @param input.fee Phí trừ khỏi amount trước khi tăng balance.
+   * @param input.description Mô tả transaction wallet.
+   * @param input.hash Khóa idempotency của ledger entry.
+   * @param input.type Loại transaction cần ghi.
+   */
   increaseBalance: (
     input: IncreaseBalanceInput,
   ) => Effect.Effect<WalletRow, WalletRecordNotFound | WalletUniqueViolation>;
+
+  /**
+   * Trừ tiền khỏi available balance và ghi transaction ledger tương ứng.
+   *
+   * @param input Dữ liệu debit wallet.
+   * @param input.userId ID user bị trừ tiền.
+   * @param input.amount Số tiền cần trừ khỏi available balance.
+   * @param input.description Mô tả transaction wallet.
+   * @param input.hash Khóa idempotency của ledger entry.
+   * @param input.type Loại transaction cần ghi.
+   */
   decreaseBalance: (input: DecreaseBalanceInput) => Effect.Effect<
     WalletRow,
     WalletRecordNotFound | WalletBalanceConstraint
   >;
+
+  /**
+   * Giữ một phần available balance mà chưa trừ khỏi balance thật.
+   *
+   * @param input Dữ liệu reserve balance.
+   * @param input.walletId ID wallet cần giữ tiền.
+   * @param input.amount Số tiền cần giữ.
+   */
   reserveBalance: (
     input: { readonly walletId: string; readonly amount: bigint },
   ) => Effect.Effect<boolean>;
+
+  /**
+   * Giải phóng phần balance đã reserve trước đó.
+   *
+   * @param input Dữ liệu release reserved balance.
+   * @param input.walletId ID wallet cần release tiền giữ.
+   * @param input.amount Số tiền cần release.
+   */
   releaseReservedBalance: (
     input: { readonly walletId: string; readonly amount: bigint },
   ) => Effect.Effect<boolean>;
@@ -43,6 +92,12 @@ export class WalletCommandRepository extends Context.Tag("WalletCommandRepositor
   WalletCommandRepo
 >() {}
 
+/**
+ * Đọc wallet trong cùng transaction trước khi mutate balance.
+ *
+ * @param tx Prisma client hoặc transaction client đang dùng.
+ * @param userId ID user sở hữu wallet.
+ */
 async function findWalletByUserId(
   tx: PrismaClient | PrismaTypes.TransactionClient,
   userId: string,
@@ -53,6 +108,19 @@ async function findWalletByUserId(
   });
 }
 
+/**
+ * Tạo ledger entry cho một thay đổi balance.
+ *
+ * @param tx Prisma client hoặc transaction client đang dùng.
+ * @param args Dữ liệu transaction wallet cần ghi.
+ * @param args.walletId ID wallet được ghi transaction.
+ * @param args.amount Số tiền gross của transaction.
+ * @param args.fee Phí của transaction.
+ * @param args.description Mô tả transaction wallet.
+ * @param args.hash Khóa idempotency của ledger entry.
+ * @param args.type Loại transaction wallet.
+ * @param args.status Trạng thái transaction wallet.
+ */
 async function createTransaction(
   tx: PrismaClient | PrismaTypes.TransactionClient,
   args: {
@@ -79,6 +147,14 @@ async function createTransaction(
   });
 }
 
+/**
+ * Tạo wallet command repository bám theo Prisma client hoặc transaction client hiện tại.
+ *
+ * Khi nhận root Prisma client, các mutation balance sẽ tự mở transaction.
+ * Khi nhận transaction client, mutation sẽ dùng transaction bên ngoài.
+ *
+ * @param client Prisma client hoặc transaction client đang dùng.
+ */
 export function makeWalletCommandRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): WalletCommandRepo {

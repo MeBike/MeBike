@@ -20,6 +20,14 @@ export type StripeWebhookDispatchOutcome
     | StripeAccountUpdatedOutcome
     | StripePayoutOutcome;
 
+/**
+ * Dispatch Stripe webhook event tới đúng wallet handler.
+ *
+ * HTTP boundary chỉ verify signature và parse event. Domain dispatcher này chọn handler
+ * theo event type để top-up, payout và Connect account sync dùng cùng outcome envelope.
+ *
+ * @param event Stripe webhook event đã verify từ HTTP boundary.
+ */
 export function handleStripeWebhookUseCase(
   event: Stripe.Event,
 ): Effect.Effect<

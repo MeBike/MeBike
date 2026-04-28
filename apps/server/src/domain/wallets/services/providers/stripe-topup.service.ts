@@ -33,19 +33,51 @@ export type StripeWebhookOutcome
     | { readonly status: "failed"; readonly paymentAttemptId: string; readonly reason: string }
     | { readonly status: "succeeded"; readonly paymentAttemptId: string };
 
+/**
+ * Provider adapter cho Stripe top-up.
+ *
+ * Service này là nơi duy nhất tạo/retrieve Stripe Checkout Session hoặc PaymentIntent.
+ * Domain command/webhook/reconcile layer chỉ làm việc qua contract này.
+ */
 export type StripeTopupService = {
+  /**
+   * Tạo payment attempt pending cho Checkout top-up.
+   *
+   * @param input Dữ liệu attempt top-up.
+   * @param input.userId ID user nạp tiền.
+   * @param input.walletId ID wallet nhận tiền.
+   * @param input.amountMinor Số tiền nạp theo minor unit.
+   */
   prepareCheckoutAttempt: (
     input: StripeCheckoutAttemptInput,
   ) => Effect.Effect<
     { readonly attempt: PaymentAttemptRow },
     InvalidTopupRequest | PaymentAttemptUniqueViolation
   >;
+
+  /**
+   * Tạo payment attempt pending cho mobile PaymentSheet top-up.
+   *
+   * @param input Dữ liệu attempt top-up.
+   * @param input.userId ID user nạp tiền.
+   * @param input.walletId ID wallet nhận tiền.
+   * @param input.amountMinor Số tiền nạp theo minor unit.
+   */
   preparePaymentSheetAttempt: (
     input: StripeCheckoutAttemptInput,
   ) => Effect.Effect<
     { readonly attempt: PaymentAttemptRow },
     InvalidTopupRequest | PaymentAttemptUniqueViolation
   >;
+
+  /**
+   * Tạo Stripe Checkout Session cho payment attempt đã chuẩn bị.
+   *
+   * @param input Dữ liệu tạo Checkout Session.
+   * @param input.attempt Payment attempt nội bộ.
+   * @param input.successUrl URL redirect thành công.
+   * @param input.cancelUrl URL redirect hủy checkout.
+   */
   createCheckoutSession: (
     input: {
       readonly attempt: PaymentAttemptRow;
@@ -53,6 +85,13 @@ export type StripeTopupService = {
       readonly cancelUrl: string;
     },
   ) => Effect.Effect<{ readonly sessionId: string; readonly checkoutUrl: string }, TopupProviderError>;
+
+  /**
+   * Tạo Stripe PaymentIntent cho mobile PaymentSheet.
+   *
+   * @param input Dữ liệu tạo PaymentIntent.
+   * @param input.attempt Payment attempt nội bộ.
+   */
   createPaymentIntent: (
     input: {
       readonly attempt: PaymentAttemptRow;
@@ -61,19 +100,50 @@ export type StripeTopupService = {
     { readonly paymentIntentId: string; readonly clientSecret: string },
     TopupProviderError
   >;
+
+  /**
+   * Retrieve Checkout Session từ Stripe, expand PaymentIntent để reconciliation có đủ dữ liệu.
+   *
+   * @param sessionId ID Checkout Session từ Stripe.
+   */
   retrieveCheckoutSession: (
     sessionId: string,
   ) => Effect.Effect<Stripe.Checkout.Session, TopupProviderError>;
+
+  /**
+   * Retrieve PaymentIntent từ Stripe cho reconciliation.
+   *
+   * @param paymentIntentId ID PaymentIntent từ Stripe.
+   */
   retrievePaymentIntent: (
     paymentIntentId: string,
   ) => Effect.Effect<Stripe.PaymentIntent, TopupProviderError>;
+
+  /**
+   * Lưu Stripe provider ref vào payment attempt nội bộ.
+   *
+   * @param attemptId ID payment attempt nội bộ.
+   * @param providerRef Stripe Checkout Session id hoặc PaymentIntent id.
+   */
   attachProviderRef: (
     attemptId: string,
     providerRef: string,
   ) => Effect.Effect<PaymentAttemptRow, PaymentAttemptUniqueViolation>;
+
+  /**
+   * Resolve payment attempt từ Checkout Session webhook/retrieve response.
+   *
+   * @param session Checkout Session từ Stripe.
+   */
   resolveAttemptForSession: (
     session: Stripe.Checkout.Session,
   ) => Effect.Effect<Option.Option<PaymentAttemptRow>>;
+
+  /**
+   * Resolve payment attempt từ PaymentIntent webhook/retrieve response.
+   *
+   * @param paymentIntent PaymentIntent từ Stripe.
+   */
   resolveAttemptForPaymentIntent: (
     paymentIntent: Stripe.PaymentIntent,
   ) => Effect.Effect<Option.Option<PaymentAttemptRow>>;
@@ -84,10 +154,20 @@ export class StripeTopupServiceTag extends Context.Tag("StripeTopupService")<
   StripeTopupService
 >() {}
 
+/**
+ * Kiểm tra amount top-up có hợp lệ để gửi sang Stripe hay không.
+ *
+ * @param amount Amount theo minor unit.
+ */
 function isValidMinorAmount(amount: number) {
   return Number.isInteger(amount) && amount > 0;
 }
 
+/**
+ * Build metadata liên kết Stripe object với payment attempt nội bộ.
+ *
+ * @param attempt Payment attempt nội bộ.
+ */
 function buildAttemptMetadata(attempt: PaymentAttemptRow) {
   return {
     paymentAttemptId: attempt.id,
@@ -97,6 +177,11 @@ function buildAttemptMetadata(attempt: PaymentAttemptRow) {
   };
 }
 
+/**
+ * Layer live cho Stripe top-up provider adapter.
+ *
+ * @remarks Cần `StripeClient` và `PaymentAttemptRepository` trong environment.
+ */
 export const StripeTopupServiceLive = Layer.effect(
   StripeTopupServiceTag,
   Effect.gen(function* () {

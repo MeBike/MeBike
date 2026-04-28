@@ -8,23 +8,61 @@ import type { WalletRow, WalletTransactionRow, WalletTransactionUserRow } from "
 import { WalletNotFound } from "../../domain-errors";
 import { WalletQueryRepository } from "../../repository/wallet-query.repository";
 
+/**
+ * Service đọc wallet cho HTTP, AI tool và flow cần wallet snapshot.
+ *
+ * Service này chỉ map Option ở repository sang lỗi domain ở boundary nghiệp vụ.
+ */
 export type WalletQueryService = {
+  /**
+   * Đọc wallet optional theo user.
+   *
+   * @param userId ID user sở hữu wallet.
+   */
   getOptionalByUserId: (
     userId: string,
   ) => Effect.Effect<Option.Option<WalletRow>>;
 
+  /**
+   * Đọc wallet bắt buộc theo user.
+   *
+   * @param userId ID user sở hữu wallet.
+   */
   getByUserId: (
     userId: string,
   ) => Effect.Effect<WalletRow, WalletNotFound>;
 
+  /**
+   * List transaction của wallet hiện tại của user.
+   *
+   * @param args Dữ liệu truy vấn transaction.
+   * @param args.userId ID user sở hữu wallet.
+   * @param args.pageReq Thông tin phân trang.
+   * @param args.status Trạng thái transaction cần lọc.
+   */
   listTransactionsForUser: (
     args: { userId: string; pageReq: PageRequest<"createdAt">; status?: WalletTransactionStatus },
   ) => Effect.Effect<PageResult<WalletTransactionRow>, WalletNotFound>;
 
+  /**
+   * Đọc chi tiết một transaction theo scope wallet của user.
+   *
+   * @param args Dữ liệu truy vấn transaction.
+   * @param args.userId ID user sở hữu wallet.
+   * @param args.transactionId ID transaction cần đọc.
+   */
   getTransactionByIdForUser: (
     args: { userId: string; transactionId: string },
   ) => Effect.Effect<Option.Option<WalletTransactionRow>, WalletNotFound>;
 
+  /**
+   * List transaction cho admin kèm snapshot user owner.
+   *
+   * @param args Dữ liệu truy vấn admin.
+   * @param args.userId ID user cần xem wallet.
+   * @param args.pageReq Thông tin phân trang.
+   * @param args.status Trạng thái transaction cần lọc.
+   */
   adminListTransactionsForUser: (
     args: { userId: string; pageReq: PageRequest<"createdAt">; status?: WalletTransactionStatus },
   ) => Effect.Effect<{
@@ -38,6 +76,11 @@ export class WalletQueryServiceTag extends Context.Tag("WalletQueryService")<
   WalletQueryService
 >() {}
 
+/**
+ * Layer live cho wallet query service.
+ *
+ * @remarks Cần `WalletQueryRepository` trong environment.
+ */
 export const WalletQueryServiceLive = Layer.effect(
   WalletQueryServiceTag,
   Effect.gen(function* () {

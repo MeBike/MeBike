@@ -23,6 +23,18 @@ export type CreateStripePaymentSheetInput = Omit<
   "walletId"
 >;
 
+/**
+ * Tạo Stripe Checkout Session cho flow nạp tiền vào wallet.
+ *
+ * Hàm này tạo payment attempt nội bộ trước, gọi Stripe để tạo session,
+ * rồi attach provider ref để webhook/reconcile có thể settle về cùng attempt.
+ *
+ * @param input Dữ liệu tạo Checkout Session.
+ * @param input.userId ID user cần nạp tiền.
+ * @param input.amountMinor Số tiền nạp theo minor unit.
+ * @param input.successUrl URL redirect khi Stripe checkout thành công.
+ * @param input.cancelUrl URL redirect khi user hủy checkout.
+ */
 export function createStripeCheckoutSession(
   input: CreateStripeCheckoutSessionInput,
 ): Effect.Effect<
@@ -56,6 +68,16 @@ export function createStripeCheckoutSession(
   });
 }
 
+/**
+ * Tạo Stripe PaymentIntent cho mobile PaymentSheet top-up.
+ *
+ * Flow này trả client secret cho mobile, còn settle tiền vẫn đi qua webhook
+ * hoặc reconciliation để giữ idempotency ở server.
+ *
+ * @param input Dữ liệu tạo PaymentSheet top-up.
+ * @param input.userId ID user cần nạp tiền.
+ * @param input.amountMinor Số tiền nạp theo minor unit.
+ */
 export function createStripePaymentSheet(
   input: CreateStripePaymentSheetInput,
 ): Effect.Effect<

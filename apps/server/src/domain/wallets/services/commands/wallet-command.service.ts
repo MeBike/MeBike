@@ -10,15 +10,46 @@ import {
 import { WalletCommandRepository } from "../../repository/wallet-command.repository";
 import { WalletQueryServiceTag } from "../queries/wallet-query.service";
 
+/**
+ * Service ghi wallet cho các flow mutate balance ở HTTP và domain services.
+ *
+ * Service này map lỗi repository thô sang lỗi domain ổn định cho caller.
+ */
 export type WalletCommandService = {
+  /**
+   * Tạo wallet mặc định cho user.
+   *
+   * @param userId ID user cần tạo wallet.
+   */
   createForUser: (
     userId: string,
   ) => Effect.Effect<WalletRow, WalletAlreadyExists>;
 
+  /**
+   * Cộng tiền vào wallet và trả về wallet mới nhất.
+   *
+   * @param input Dữ liệu credit wallet.
+   * @param input.userId ID user được cộng tiền.
+   * @param input.amount Số tiền gross cần ghi.
+   * @param input.fee Phí trừ khỏi amount trước khi tăng balance.
+   * @param input.description Mô tả transaction wallet.
+   * @param input.hash Khóa idempotency của ledger entry.
+   * @param input.type Loại transaction cần ghi.
+   */
   creditWallet: (
     input: IncreaseBalanceInput,
   ) => Effect.Effect<WalletRow, WalletNotFound>;
 
+  /**
+   * Trừ tiền khỏi available balance và trả về wallet mới nhất.
+   *
+   * @param input Dữ liệu debit wallet.
+   * @param input.userId ID user bị trừ tiền.
+   * @param input.amount Số tiền cần trừ khỏi available balance.
+   * @param input.description Mô tả transaction wallet.
+   * @param input.hash Khóa idempotency của ledger entry.
+   * @param input.type Loại transaction cần ghi.
+   */
   debitWallet: (
     input: DecreaseBalanceInput,
   ) => Effect.Effect<
@@ -32,6 +63,11 @@ export class WalletCommandServiceTag extends Context.Tag("WalletCommandService")
   WalletCommandService
 >() {}
 
+/**
+ * Layer live cho wallet command service.
+ *
+ * @remarks Cần `WalletCommandRepository` và `WalletQueryServiceTag` trong environment.
+ */
 export const WalletCommandServiceLive = Layer.effect(
   WalletCommandServiceTag,
   Effect.gen(function* () {

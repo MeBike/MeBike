@@ -11,6 +11,20 @@ import { makePaymentAttemptRepository } from "../../repository/payment-attempt.r
 import { makeWalletCommandRepository } from "../../repository/wallet-command.repository";
 import { makeWalletQueryRepository } from "../../repository/wallet-query.repository";
 
+/**
+ * Credit wallet trong transaction settle top-up và xử lý idempotency ledger.
+ *
+ * Nếu ledger hash đã tồn tại, đọc lại wallet hiện tại thay vì credit lần hai.
+ *
+ * @param commandRepo Wallet command repo đang bám theo transaction hiện tại.
+ * @param queryRepo Wallet query repo đang bám theo transaction hiện tại.
+ * @param input Dữ liệu credit wallet.
+ * @param input.userId ID user được credit.
+ * @param input.amount Số tiền top-up theo minor unit.
+ * @param input.description Mô tả transaction wallet.
+ * @param input.hash Khóa idempotency của ledger entry.
+ * @param input.type Loại transaction wallet cần ghi.
+ */
 function creditWallet(
   commandRepo: ReturnType<typeof makeWalletCommandRepository>,
   queryRepo: ReturnType<typeof makeWalletQueryRepository>,
@@ -29,6 +43,26 @@ function creditWallet(
   );
 }
 
+/**
+ * Settle một top-up Stripe đã được xác nhận thành công.
+ *
+ * Hàm này là điểm dùng chung cho webhook và reconciliation:
+ * - mark payment attempt từ `PENDING` sang `SUCCEEDED`
+ * - credit wallet trong cùng transaction DB
+ * - bỏ qua nếu attempt đã được xử lý trước đó
+ *
+ * @param client Prisma client root dùng để mở transaction settle.
+ * @param attempt Payment attempt nội bộ cần settle.
+ * @param attempt.id ID payment attempt.
+ * @param attempt.userId ID user sở hữu attempt.
+ * @param attempt.currency Currency nội bộ của attempt.
+ * @param input Dữ liệu provider đã xác nhận.
+ * @param input.providerRef Stripe provider reference dùng để settle attempt.
+ * @param input.amountMinor Số tiền đã nhận theo minor unit.
+ * @param input.description Mô tả transaction wallet.
+ * @param input.hash Khóa idempotency cho wallet ledger.
+ * @param input.errorOperation Tên operation dùng khi wrap lỗi provider.
+ */
 export function settleSuccessfulTopup(
   client: import("generated/prisma/client").PrismaClient,
   attempt: {

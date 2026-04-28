@@ -6,6 +6,11 @@ import { StripeClient } from "@/infrastructure/stripe";
 
 import { StripeConnectNotEnabled, WithdrawalProviderError } from "../../domain-errors";
 
+/**
+ * Lấy message từ lỗi Stripe SDK dạng unknown.
+ *
+ * @param cause Lỗi thô từ provider.
+ */
 function getErrorMessage(cause: unknown): string | undefined {
   if (typeof cause === "object" && cause !== null && "message" in cause) {
     const message = (cause as { readonly message?: unknown }).message;
@@ -14,6 +19,11 @@ function getErrorMessage(cause: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Nhận diện lỗi Stripe account chưa bật Connect trên account platform.
+ *
+ * @param message Message lỗi từ Stripe SDK.
+ */
 function isStripeConnectNotEnabledMessage(message: string | undefined): boolean {
   return typeof message === "string" && message.toLowerCase().includes("signed up for connect");
 }
@@ -23,13 +33,34 @@ export type StripeConnectOnboardingResult = {
   readonly url: string;
 };
 
+/**
+ * Provider adapter cho Stripe Connect withdrawal.
+ *
+ * Service này đóng gói toàn bộ calls sang Stripe cho onboarding, transfer, payout và retrieve payout.
+ */
 export type StripeWithdrawalService = {
+  /**
+   * Tạo Stripe Express connected account cho user.
+   *
+   * @param input Dữ liệu tạo connected account.
+   * @param input.userId ID user nội bộ.
+   * @param input.email Email user dùng cho Stripe account.
+   */
   createConnectedAccount: (
     input: {
       readonly userId: string;
       readonly email: string;
     },
   ) => Effect.Effect<Stripe.Account, WithdrawalProviderError | StripeConnectNotEnabled>;
+
+  /**
+   * Tạo onboarding account link cho connected account.
+   *
+   * @param input Dữ liệu tạo account link.
+   * @param input.accountId Stripe connected account id.
+   * @param input.returnUrl URL quay lại app sau onboarding.
+   * @param input.refreshUrl URL refresh khi account link hết hạn.
+   */
   createAccountLink: (
     input: {
       readonly accountId: string;
@@ -37,6 +68,16 @@ export type StripeWithdrawalService = {
       readonly refreshUrl: string;
     },
   ) => Effect.Effect<StripeConnectOnboardingResult, WithdrawalProviderError>;
+
+  /**
+   * Tạo transfer từ platform balance sang connected account.
+   *
+   * @param input Dữ liệu tạo transfer.
+   * @param input.amountMinor Amount USD theo minor unit.
+   * @param input.destinationAccountId Stripe connected account id.
+   * @param input.idempotencyKey Khóa idempotency cho transfer.
+   * @param input.description Mô tả transfer.
+   */
   createTransfer: (
     input: {
       readonly amountMinor: number;
@@ -45,6 +86,16 @@ export type StripeWithdrawalService = {
       readonly description?: string;
     },
   ) => Effect.Effect<Stripe.Transfer, WithdrawalProviderError>;
+
+  /**
+   * Tạo payout từ connected account ra external account của user.
+   *
+   * @param input Dữ liệu tạo payout.
+   * @param input.amountMinor Amount USD theo minor unit.
+   * @param input.accountId Stripe connected account id.
+   * @param input.idempotencyKey Khóa idempotency cho payout.
+   * @param input.description Mô tả payout.
+   */
   createPayout: (
     input: {
       readonly amountMinor: number;
@@ -53,6 +104,14 @@ export type StripeWithdrawalService = {
       readonly description?: string;
     },
   ) => Effect.Effect<Stripe.Payout, WithdrawalProviderError>;
+
+  /**
+   * Retrieve payout từ Stripe connected account để reconcile withdrawal.
+   *
+   * @param input Dữ liệu retrieve payout.
+   * @param input.payoutId Stripe payout id.
+   * @param input.accountId Stripe connected account id.
+   */
   retrievePayout: (
     input: {
       readonly payoutId: string;
@@ -66,6 +125,11 @@ export class StripeWithdrawalServiceTag extends Context.Tag("StripeWithdrawalSer
   StripeWithdrawalService
 >() {}
 
+/**
+ * Layer live cho Stripe withdrawal provider adapter.
+ *
+ * @remarks Cần `StripeClient` trong environment.
+ */
 export const StripeWithdrawalServiceLive = Layer.effect(
   StripeWithdrawalServiceTag,
   Effect.gen(function* () {

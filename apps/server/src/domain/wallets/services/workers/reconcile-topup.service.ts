@@ -29,6 +29,12 @@ export type TopupReconcileSummary = {
   readonly ignored: number;
 };
 
+/**
+ * Rút PaymentIntent id từ Checkout Session đã retrieve từ Stripe.
+ *
+ * @param value Field `payment_intent` của Checkout Session.
+ * @returns PaymentIntent id nếu Stripe trả về reference hợp lệ.
+ */
 function getPaymentIntentId(value: Stripe.Checkout.Session["payment_intent"]): string | null {
   if (!value) {
     return null;
@@ -36,14 +42,33 @@ function getPaymentIntentId(value: Stripe.Checkout.Session["payment_intent"]): s
   return typeof value === "string" ? value : value.id;
 }
 
+/**
+ * Lấy PaymentIntent object khi Checkout Session được expand `payment_intent`.
+ *
+ * @param value Field `payment_intent` của Checkout Session.
+ * @returns PaymentIntent expanded hoặc null nếu chỉ có string/null.
+ */
 function getExpandedPaymentIntent(value: Stripe.Checkout.Session["payment_intent"]): Stripe.PaymentIntent | null {
   return value && typeof value !== "string" ? value : null;
 }
 
+/**
+ * Chuẩn hóa reason lưu vào payment attempt khi PaymentIntent chưa thành công.
+ *
+ * @param status Trạng thái PaymentIntent từ Stripe.
+ * @returns Reason ổn định để audit/retry reconciliation.
+ */
 function reasonForPaymentIntentStatus(status: Stripe.PaymentIntent.Status): string {
   return `payment_intent_${status}`;
 }
 
+/**
+ * Mark payment attempt là failed nếu nó vẫn đang pending.
+ *
+ * @param repo Payment attempt repo đang dùng trong flow hiện tại.
+ * @param attemptId ID payment attempt cần fail.
+ * @param reason Lý do fail lưu vào attempt.
+ */
 function failAttempt(
   repo: PaymentAttemptRepositoryType,
   attemptId: string,
@@ -57,6 +82,16 @@ function failAttempt(
   );
 }
 
+/**
+ * Reconcile một PaymentIntent Stripe với payment attempt nội bộ.
+ *
+ * Stripe là source of truth cho capture, còn wallet ledger là source of truth cho balance.
+ * Vì vậy hàm này verify amount/currency trước khi settle wallet.
+ *
+ * @param client Prisma client root dùng để mở transaction settle.
+ * @param attempt Payment attempt nội bộ đang pending.
+ * @param paymentIntent PaymentIntent mới retrieve từ Stripe.
+ */
 function settlePaymentIntent(
   client: import("generated/prisma/client").PrismaClient,
   attempt: PaymentAttemptRow,
@@ -111,6 +146,16 @@ function settlePaymentIntent(
   });
 }
 
+/**
+ * Reconcile một Checkout Session Stripe với payment attempt nội bộ.
+ *
+ * Nếu session chưa paid nhưng có expanded PaymentIntent, delegate sang PaymentIntent
+ * để xử lý trạng thái chi tiết hơn.
+ *
+ * @param client Prisma client root dùng để mở transaction settle.
+ * @param attempt Payment attempt nội bộ đang pending.
+ * @param session Checkout Session mới retrieve từ Stripe.
+ */
 function settleCheckoutSession(
   client: import("generated/prisma/client").PrismaClient,
   attempt: PaymentAttemptRow,
@@ -171,6 +216,13 @@ function settleCheckoutSession(
   });
 }
 
+/**
+ * Reconcile một top-up attempt bằng cách hỏi trực tiếp Stripe theo provider ref.
+ *
+ * Dùng cho recovery path khi webhook bị miss hoặc xử lý thất bại tạm thời.
+ *
+ * @param attempt Payment attempt cần reconcile.
+ */
 export function reconcileTopupAttempt(
   attempt: PaymentAttemptRow,
 ): Effect.Effect<
@@ -204,6 +256,11 @@ export function reconcileTopupAttempt(
   });
 }
 
+/**
+ * Sweep các top-up pending đã stale và reconcile từng attempt với Stripe.
+ *
+ * @param now Mốc hiện tại dùng để tính stale cutoff.
+ */
 export function sweepTopupReconciliation(
   now: Date = new Date(),
 ): Effect.Effect<

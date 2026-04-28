@@ -12,8 +12,8 @@ import {
   InsufficientWalletBalance,
   WalletNotFound,
 } from "@/domain/wallets/domain-errors";
-import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
+import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -25,6 +25,17 @@ export type StripePayoutOutcome
     | { readonly status: "succeeded"; readonly payoutId: string; readonly withdrawalId: string }
     | { readonly status: "failed"; readonly payoutId: string; readonly withdrawalId: string; readonly reason: string };
 
+/**
+ * Trừ wallet khi Stripe payout đã paid và map lỗi wallet sang lỗi domain ổn định.
+ *
+ * @param repo Wallet command repo đang bám theo transaction hiện tại.
+ * @param input Dữ liệu debit wallet.
+ * @param input.userId ID user bị trừ tiền.
+ * @param input.amount Số tiền withdrawal cần settle.
+ * @param input.description Mô tả transaction wallet.
+ * @param input.hash Khóa idempotency của ledger entry.
+ * @param input.type Loại transaction wallet cần ghi.
+ */
 function debitWallet(
   repo: ReturnType<typeof makeWalletCommandRepository>,
   input: DecreaseBalanceInput,
@@ -42,6 +53,15 @@ function debitWallet(
   );
 }
 
+/**
+ * Xử lý webhook Stripe payout cho withdrawal lifecycle.
+ *
+ * `payout.paid` chốt withdrawal thành succeeded, settle wallet hold,
+ * release reserved balance rồi ghi debit ledger. `payout.failed/canceled` fail withdrawal
+ * và release hold/reserved balance.
+ *
+ * @param event Stripe webhook event nhận từ HTTP boundary.
+ */
 export function handleStripePayoutWebhookUseCase(
   event: Stripe.Event,
 ): Effect.Effect<

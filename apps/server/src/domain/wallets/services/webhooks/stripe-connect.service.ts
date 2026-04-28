@@ -32,6 +32,17 @@ export type StripeAccountUpdatedOutcome
     | { readonly status: "missing"; readonly accountId: string }
     | { readonly status: "updated"; readonly accountId: string; readonly payoutsEnabled: boolean };
 
+/**
+ * Bắt đầu onboarding Stripe Connect cho user muốn rút tiền.
+ *
+ * Flow này tạo connected account nếu user chưa có, lưu account id theo kiểu
+ * compare-and-set để chịu được retry/race, rồi tạo account link onboarding.
+ *
+ * @param input Dữ liệu bắt đầu onboarding.
+ * @param input.userId ID user cần onboarding.
+ * @param input.returnUrl URL Stripe redirect sau khi onboarding xong.
+ * @param input.refreshUrl URL Stripe redirect khi link hết hạn/cần refresh.
+ */
 export function startStripeConnectOnboardingUseCase(
   input: StartStripeConnectOnboardingInput,
 ): Effect.Effect<
@@ -102,6 +113,13 @@ export function startStripeConnectOnboardingUseCase(
   });
 }
 
+/**
+ * Đồng bộ trạng thái payouts từ Stripe `account.updated` webhook về user.
+ *
+ * Đây là source cập nhật chính cho cờ `stripePayoutsEnabled` trước khi cho rút tiền.
+ *
+ * @param event Stripe account.updated event nhận từ HTTP boundary.
+ */
 export function handleStripeAccountUpdatedUseCase(
   event: Stripe.Event,
 ): Effect.Effect<

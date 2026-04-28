@@ -26,6 +26,12 @@ export type ExecuteWithdrawalOutcome
     }
     | { readonly status: "failed"; readonly withdrawalId: string; readonly reason: string };
 
+/**
+ * Chuyển bigint amount sang number an toàn cho Stripe minor units.
+ *
+ * @param amount Amount bigint cần gửi sang Stripe.
+ * @returns Number nếu amount hợp lệ và không vượt `MAX_SAFE_INTEGER`.
+ */
 function toMinorAmountNumber(amount: bigint): number | null {
   if (amount <= 0n) {
     return null;
@@ -36,6 +42,14 @@ function toMinorAmountNumber(amount: bigint): number | null {
   return Number(amount);
 }
 
+/**
+ * Resolve số tiền payout theo USD minor unit cho provider Stripe.
+ *
+ * Withdrawal cũ có thể chưa có `payoutAmount`; khi đó fallback theo currency gốc.
+ *
+ * @param withdrawal Withdrawal row cần execute.
+ * @returns Amount number gửi sang Stripe, hoặc null nếu không thể payout an toàn.
+ */
 function resolvePayoutAmountMinor(withdrawal: import("../../models").WalletWithdrawalRow): number | null {
   if (withdrawal.payoutAmount && withdrawal.payoutCurrency?.toLowerCase() === "usd") {
     return toMinorAmountNumber(withdrawal.payoutAmount);
@@ -53,6 +67,12 @@ function resolvePayoutAmountMinor(withdrawal: import("../../models").WalletWithd
   return null;
 }
 
+/**
+ * Lấy mã lỗi Stripe từ cause để quyết định retry hay fail withdrawal.
+ *
+ * @param cause Lỗi provider thô từ Stripe SDK.
+ * @returns Stripe error code nếu tìm được.
+ */
 function getStripeErrorCode(cause: unknown): string | undefined {
   if (!cause || typeof cause !== "object") {
     return undefined;
@@ -69,6 +89,15 @@ function getStripeErrorCode(cause: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Execute một withdrawal pending bằng Stripe transfer + payout.
+ *
+ * Flow này lock withdrawal sang `PROCESSING`, gọi Stripe bằng idempotency key,
+ * lưu transfer/payout refs, và chờ webhook/sweep settle wallet sau khi payout terminal.
+ * Nếu dữ liệu user/payout không hợp lệ, withdrawal bị fail và hold được release.
+ *
+ * @param withdrawalId ID withdrawal cần execute.
+ */
 export function executeWithdrawalUseCase(
   withdrawalId: string,
 ): Effect.Effect<
@@ -238,6 +267,15 @@ export function executeWithdrawalUseCase(
   });
 }
 
+/**
+ * Mark withdrawal failed và release hold/reserved balance trong một transaction.
+ *
+ * Dùng cho lỗi pre-provider hoặc lỗi provider terminal trong execute path.
+ *
+ * @param client Prisma client root dùng để mở transaction.
+ * @param withdrawal Withdrawal cần fail.
+ * @param reason Lý do fail lưu vào withdrawal.
+ */
 function markFailedAndReleaseHold(
   client: import("generated/prisma/client").PrismaClient,
   withdrawal: import("../../models").WalletWithdrawalRow,
