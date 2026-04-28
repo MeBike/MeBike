@@ -20,14 +20,10 @@ export default function Page() {
     status: statusFilter === "all" ? undefined : statusFilter,
     hasToken: true,
   });
-
-  // Cập nhật dependency để gọi lại API khi Page hoặc Status thay đổi
   useEffect(() => {
     getAgencyViewDistributionRequest();
   }, [page, statusFilter, getAgencyViewDistributionRequest]); 
-
   const requests = agencyViewDistributionRequest?.data || [];
-
   return (
     <DistributionRequestClient
       data={{

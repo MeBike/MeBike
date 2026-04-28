@@ -13,11 +13,11 @@ const DistributionRequestDetailPage = () => {
     agencyViewDistributionRequestDetail,
     isLoadingAgencyViewDistributionRequestDetail,
     getAgencyViewDistributionRequestDetail,
-    startTransitDistributionRequest,
-    cancelDistributeRequest,
-    approveDistributeRequest,
-    rejectDistributeRequest,
-    completeDistributeRequest,
+    agencyStartTransitDistributionRequest,
+    agencyCancelDistributeRequest,
+    agencyApproveDistributeRequest,
+    agencyRejectDistributeRequest,
+    agencyCompleteDistributeRequest,
   } = useDistributionRequest({
     id: id,
     hasToken: true,
@@ -62,12 +62,12 @@ const DistributionRequestDetailPage = () => {
     <DistributionRequestDetailClient 
       listStation={listStation}
       data={agencyViewDistributionRequestDetail.data}
-      onApprove={() => approveDistributeRequest(id)}
-      onReject={(reason: string) => rejectDistributeRequest(id, { reason })}
-      onComplete={(payload) => completeDistributeRequest(id, { completedBikeIds: payload.completedBikeIds })}
-      onStartTransit={async () => await startTransitDistributionRequest(id)}
+      onApprove={() => agencyApproveDistributeRequest(id)}
+      onReject={(reason: string) => agencyRejectDistributeRequest(id, { reason })}
+      onComplete={(payload) => agencyCompleteDistributeRequest(id, { completedBikeIds: payload.completedBikeIds })}
+      onStartTransit={async () => await agencyStartTransitDistributionRequest(id)}
       onCancel={async (reason: string) =>
-        await cancelDistributeRequest(id, { reason })
+        await agencyCancelDistributeRequest(id, { reason })
       }
     />
   );

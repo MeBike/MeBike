@@ -337,6 +337,180 @@ export const useDistributionRequest = ({
       queryClient,
     ],
   );
+  const agencyCompleteDistributeRequest = useCallback(
+    async (id:string , data : {completedBikeIds:string[]}) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useCompleteTransit.mutateAsync({id,data});
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Nhận xe được điều phối tới trạm thành công");;
+          getAgencyViewDistributionRequest();
+          getAgencyViewDistributionRequestDetail();
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useCompleteTransit,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
+  const agencyApproveDistributeRequest = useCallback(
+    async (id:string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useApproveDistributeRequest.mutateAsync(id);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Duyệt yêu cầu phân bổ thành công");
+          getAgencyViewDistributionRequest();
+          getAgencyViewDistributionRequestDetail();
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useApproveDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
+  const agencyStartTransitDistributionRequest = useCallback(
+    async (id:string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useStartTransit.mutateAsync(id);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Bắt đầu điều phối xe thành công");
+          getAgencyViewDistributionRequest();
+          getAgencyViewDistributionRequestDetail();
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useApproveDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
+  const agencyRejectDistributeRequest = useCallback(
+    async (id:string , data : {reason:string}) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useRejectDistributeRequest.mutateAsync({id,data});
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Từ chối yêu cầu phân bổ thành công");
+          getAgencyViewDistributionRequest();
+          getAgencyViewDistributionRequestDetail();
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useRejectDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
+  const agencyCancelDistributeRequest = useCallback(
+    async (id:string , data : {reason:string}) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useCancelDistributionRequest.mutateAsync({id,data});
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Hủy bỏ yêu điều phối xe thành công");
+          getAgencyViewDistributionRequest();
+          getAgencyViewDistributionRequestDetail();
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useRejectDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
+  const agencyCreateDistributeRequest = useCallback(
+    async (data:CreateRedistributionRequestInput) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useCreateDistributeRequest.mutateAsync(data);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Tạo yêu cầu điều phối xe thành công");
+          getAgencyViewDistributionRequest();
+          getAgencyViewDistributionRequestDetail();
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useCreateDistributeRequest,
+      hasToken,
+      router,
+      page,
+      pageSize,
+      status,
+      queryClient,
+    ],
+  );
   return {
     adminViewDistributionRequest,
     refetchAdminViewDistributionRequest,
@@ -375,6 +549,12 @@ export const useDistributionRequest = ({
     cancelDistributeRequest,
     createDistributeRequest,
     startTransitDistributionRequest,
-    completeDistributeRequest
+    completeDistributeRequest,
+    agencyApproveDistributeRequest,
+    agencyCancelDistributeRequest,
+    agencyCompleteDistributeRequest,
+    agencyStartTransitDistributionRequest,
+    agencyRejectDistributeRequest,
+    agencyCreateDistributeRequest,
   };
 };
