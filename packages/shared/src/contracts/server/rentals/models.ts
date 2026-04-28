@@ -109,6 +109,7 @@ export const RentalStationSchema = z.object({
 export const RentalDetailReturnSlotSchema = z.object({
   id: z.uuidv7(),
   reservedFrom: z.iso.datetime(),
+  expiresAt: z.iso.datetime(),
   status: ReturnSlotStatusSchema,
   station: RentalStationSchema.pick({
     id: true,
@@ -337,6 +338,7 @@ export const ReturnSlotReservationSchema = z.object({
   userId: z.uuidv7(),
   stationId: z.uuidv7(),
   reservedFrom: z.iso.datetime(),
+  expiresAt: z.iso.datetime(),
   status: ReturnSlotStatusSchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

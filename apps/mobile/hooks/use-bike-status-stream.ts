@@ -1,35 +1,50 @@
 import type { ErrorEvent, ExceptionEvent, TimeoutEvent } from "react-native-sse";
 
-import { API_BASE_URL } from "@lib/api-base-url";
-import { clearTokens, getAccessToken } from "@lib/auth-tokens";
-import { refreshAccessToken } from "@lib/ky-client";
-import { log } from "@lib/log";
 import { StatusCodes } from "http-status-codes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import EventSource from "react-native-sse";
 
+import { API_BASE_URL } from "@lib/api-base-url";
+import { clearTokens, getAccessToken } from "@lib/auth-tokens";
+import { refreshAccessToken } from "@lib/ky-client";
+import { log } from "@lib/log";
+
 export type BikeStatusUpdate = {
+  userId?: string;
   bikeId: string;
   status: string;
 };
 
-type CustomEventName = "bikeStatusUpdate";
+export type ReturnSlotExpiredUpdate = {
+  userId: string;
+  rentalId: string;
+  returnSlotId: string;
+  stationId: string;
+  reservedFrom: string;
+  expiredAt: string;
+  at: string;
+};
+
+type CustomEventName = "bikeStatusUpdate" | "returnSlotExpired";
 
 export type UseBikeStatusStreamOptions = {
   autoConnect?: boolean;
   onUpdate?: (payload: BikeStatusUpdate) => void;
+  onReturnSlotExpired?: (payload: ReturnSlotExpiredUpdate) => void;
   onError?: (error: Error) => void;
 };
 
 const SSE_UNAUTHORIZED_ERROR = "SSE_UNAUTHORIZED";
 
 export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
-  const { autoConnect = true, onUpdate, onError } = options ?? {};
+  const { autoConnect = true, onUpdate, onReturnSlotExpired, onError } = options ?? {};
   const [lastUpdate, setLastUpdate] = useState<BikeStatusUpdate | null>(null);
+  const [lastReturnSlotExpired, setLastReturnSlotExpired] = useState<ReturnSlotExpiredUpdate | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const eventSourceRef = useRef<EventSource<CustomEventName> | null>(null);
   const onUpdateRef = useRef<typeof onUpdate>(onUpdate);
+  const onReturnSlotExpiredRef = useRef<typeof onReturnSlotExpired>(onReturnSlotExpired);
   const onErrorRef = useRef<typeof onError>(onError);
   const suppressReconnectRef = useRef(false);
   const isRecoveringAuthRef = useRef(false);
@@ -38,6 +53,10 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
   useEffect(() => {
     onUpdateRef.current = onUpdate;
   }, [onUpdate]);
+
+  useEffect(() => {
+    onReturnSlotExpiredRef.current = onReturnSlotExpired;
+  }, [onReturnSlotExpired]);
 
   useEffect(() => {
     onErrorRef.current = onError;
@@ -140,6 +159,19 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
         }
       });
 
+      eventSource.addEventListener("returnSlotExpired", (event) => {
+        try {
+          const payload = event.data ? (JSON.parse(event.data) as ReturnSlotExpiredUpdate) : null;
+          if (payload) {
+            setLastReturnSlotExpired(payload);
+            onReturnSlotExpiredRef.current?.(payload);
+          }
+        }
+        catch (error) {
+          log.warn("Failed to parse return slot expiry update", error);
+        }
+      });
+
       eventSource.addEventListener("error", (event) => {
         const normalizedError = event as ErrorEvent | TimeoutEvent | ExceptionEvent;
         const xhrStatus = "xhrStatus" in normalizedError ? normalizedError.xhrStatus : undefined;
@@ -198,5 +230,6 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
     isConnected,
     isConnecting,
     lastUpdate,
+    lastReturnSlotExpired,
   };
 }

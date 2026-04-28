@@ -9,7 +9,8 @@ import type { ReservationQueryService } from "@/domain/reservations";
 import type { StationQueryService } from "@/domain/stations";
 import type { WalletService } from "@/domain/wallets/services/wallet.service";
 
-import { requiredAvailableBikesForReservation, stationCanAcceptReservation } from "@/domain/reservations/services/reservation-availability-rule";
+import { returnSlotExpiresAt } from "@/domain/rentals";
+import { requiredAvailableBikesForNextReservation, stationCanAcceptReservation } from "@/domain/reservations/services/reservation-availability-rule";
 import { toContractNearbyStation, toContractStationReadSummary } from "@/http/presenters/stations.presenter";
 
 export type CreateCustomerToolsArgs = {
@@ -189,10 +190,10 @@ export function toStationAiDetail(station: Parameters<typeof toContractStationRe
     ...toContractStationReadSummary(station),
     reservationPolicy: {
       canAcceptNewReservation: stationCanAcceptReservation({
-        totalCapacity: station.totalCapacity,
         availableBikes: station.availableBikes,
+        pendingReservations: station.reservedBikes,
       }),
-      requiredAvailableBikes: requiredAvailableBikesForReservation(station.totalCapacity),
+      requiredAvailableBikes: requiredAvailableBikesForNextReservation(station.reservedBikes),
     },
   };
 }
@@ -202,10 +203,10 @@ export function toNearbyStationAiDetail(station: Parameters<typeof toContractNea
     ...toContractNearbyStation(station),
     reservationPolicy: {
       canAcceptNewReservation: stationCanAcceptReservation({
-        totalCapacity: station.totalCapacity,
         availableBikes: station.availableBikes,
+        pendingReservations: station.reservedBikes,
       }),
-      requiredAvailableBikes: requiredAvailableBikesForReservation(station.totalCapacity),
+      requiredAvailableBikes: requiredAvailableBikesForNextReservation(station.reservedBikes),
     },
   };
 }
@@ -236,6 +237,7 @@ export function toReturnSlotAiDetail(
     userId: returnSlot.userId,
     stationId: returnSlot.stationId,
     reservedFrom: returnSlot.reservedFrom.toISOString(),
+    expiresAt: returnSlotExpiresAt(returnSlot.reservedFrom).toISOString(),
     reservedFromDisplay: formatLocalDateTime(returnSlot.reservedFrom),
     status: returnSlot.status,
     statusLabel: getReturnSlotStatusLabel(returnSlot.status),

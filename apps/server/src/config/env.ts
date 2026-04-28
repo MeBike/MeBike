@@ -1,85 +1,45 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import { env as processEnv } from "node:process";
 import { z } from "zod";
 
-dotenv.config();
-
-const CsvStringArraySchema = z.preprocess(
-  (value) => {
-    if (typeof value !== "string") {
-      return value;
-    }
-
-    const items = value
-      .split(",")
-      .map(item => item.trim())
-      .filter(Boolean);
-
-    return items.length > 0 ? items : undefined;
-  },
-  z.array(z.string().min(1)).optional(),
-);
-
-const BooleanStringSchema = z.preprocess(
-  (value) => {
-    if (typeof value !== "string") {
-      return value;
-    }
-
-    const normalized = value.trim().toLowerCase();
-
-    if (normalized === "true") {
-      return true;
-    }
-
-    if (normalized === "false") {
-      return false;
-    }
-
-    return value;
-  },
-  z.boolean(),
-);
+import { aiEnvSchema } from "./env/ai";
+import { appEnvSchema } from "./env/app";
+import {
+  authEnvSchema,
+  fixedSlotEnvSchema,
+  reservationEnvSchema,
+  returnSlotEnvSchema,
+  stationEnvSchema,
+  subscriptionEnvSchema,
+  walletEnvSchema,
+} from "./env/features";
+import {
+  databaseEnvSchema,
+  emailEnvSchema,
+  firebaseEnvSchema,
+  iotEnvSchema,
+  mapboxEnvSchema,
+  redisEnvSchema,
+  stripeEnvSchema,
+} from "./env/infra";
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  PORT: z.coerce.number().default(4000),
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
-  REDIS_URL: z.string().default("redis://localhost:6379"),
-  IOT_MQTT_URL: z.string().default("mqtt://localhost:1883"),
-  IOT_MQTT_USERNAME: z.string().optional(),
-  IOT_MQTT_PASSWORD: z.string().optional(),
-  EMAIL_APP: z.string().min(1, "EMAIL_APP is required"),
-  EMAIL_PASSWORD_APP: z.string().min(1, "EMAIL_PASSWORD_APP is required"),
-  FIREBASE_PROJECT_ID: z.string().optional(),
-  FIREBASE_STORAGE_BUCKET: z.string().optional(),
-  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
-  MAPBOX_ACCESS_TOKEN: z.string().optional(),
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  OPENROUTER_API_KEY: z.string().optional(),
-  OPENROUTER_SITE_URL: z.string().url().optional(),
-  OPENROUTER_APP_NAME: z.string().default("MeBike"),
-  AI_MODEL: z.string().default("moonshotai/kimi-k2.5"),
-  OPENROUTER_PROVIDER_ONLY: CsvStringArraySchema.default(["moonshotai"]),
-  OPENROUTER_PROVIDER_QUANTIZATIONS: CsvStringArraySchema.default(["int4"]),
-  OPENROUTER_ALLOW_FALLBACKS: BooleanStringSchema.default(false),
-  JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
-  BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(4).default(10),
-  LOG_LEVEL: z.string().default("info"),
-  MIN_WITHDRAWAL_AMOUNT: z.coerce.number().default(5),
-  WITHDRAWAL_PROCESSING_TTL_MINUTES: z.coerce.number().default(10),
-  WITHDRAWAL_SLA_MINUTES: z.coerce.number().default(5),
-  WITHDRAWAL_SWEEP_CRON: z.string().default("*/5 * * * *"),
-  STATION_CAPACITY_LIMIT: z.coerce.number().int().min(1).default(40),
-  RESERVATION_HOLD_MINUTES: z.coerce.number().default(30),
-  EXPIRY_NOTIFY_MINUTES: z.coerce.number().default(15),
-  REFUND_PERIOD_HOURS: z.coerce.number().default(24),
-  FIXED_SLOT_ASSIGN_CRON: z.string().default("0 0 * * *"),
-  // Legacy semantics: each subscription "usage" covers this many hours of rental time.
-  SUB_HOURS_PER_USED: z.coerce.number().default(10),
-  EXPIRE_AFTER_DAYS: z.coerce.number().default(30),
-  AUTO_ACTIVATE_IN_DAYS: z.coerce.number().default(10),
+  ...appEnvSchema.shape,
+  ...databaseEnvSchema.shape,
+  ...redisEnvSchema.shape,
+  ...iotEnvSchema.shape,
+  ...emailEnvSchema.shape,
+  ...firebaseEnvSchema.shape,
+  ...mapboxEnvSchema.shape,
+  ...stripeEnvSchema.shape,
+  ...aiEnvSchema.shape,
+  ...authEnvSchema.shape,
+  ...walletEnvSchema.shape,
+  ...stationEnvSchema.shape,
+  ...reservationEnvSchema.shape,
+  ...returnSlotEnvSchema.shape,
+  ...fixedSlotEnvSchema.shape,
+  ...subscriptionEnvSchema.shape,
 });
 
 export type Env = z.infer<typeof envSchema>;

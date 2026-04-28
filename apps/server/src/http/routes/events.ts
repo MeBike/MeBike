@@ -3,15 +3,17 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { streamSSE } from "hono/streaming";
 
 import { getBikeStatusEventBus } from "@/realtime/bike-status-events";
+import { getReturnSlotEventBus } from "@/realtime/return-slot-events";
 
 type StreamWriter = {
   writeSSE: (input: { data: string; event?: string }) => Promise<void> | void;
 };
 
 const connections = new Map<string, Set<StreamWriter>>();
-const eventBus = getBikeStatusEventBus();
+const bikeStatusEventBus = getBikeStatusEventBus();
+const returnSlotEventBus = getReturnSlotEventBus();
 
-eventBus.on("bikeStatusUpdate", (payload: { userId: string }) => {
+bikeStatusEventBus.on("bikeStatusUpdate", (payload: { userId: string }) => {
   const targets = connections.get(payload.userId);
   if (!targets || targets.size === 0) {
     return;
@@ -19,6 +21,17 @@ eventBus.on("bikeStatusUpdate", (payload: { userId: string }) => {
   const data = JSON.stringify(payload);
   for (const writer of targets) {
     void writer.writeSSE({ event: "bikeStatusUpdate", data });
+  }
+});
+
+returnSlotEventBus.on("returnSlotExpired", (payload: { userId: string }) => {
+  const targets = connections.get(payload.userId);
+  if (!targets || targets.size === 0) {
+    return;
+  }
+  const data = JSON.stringify(payload);
+  for (const writer of targets) {
+    void writer.writeSSE({ event: "returnSlotExpired", data });
   }
 });
 

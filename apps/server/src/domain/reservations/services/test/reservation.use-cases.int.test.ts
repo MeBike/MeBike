@@ -28,8 +28,9 @@ describe("reservation use-cases integration", () => {
       wallet: { balance: 50000n },
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date("2025-01-01T10:00:00.000Z");
     const startTime = new Date("2025-01-01T10:00:00.000Z");
@@ -93,8 +94,9 @@ describe("reservation use-cases integration", () => {
       wallet: { balance: 600000n },
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date("2025-01-01T12:00:00.000Z");
 
@@ -150,8 +152,9 @@ describe("reservation use-cases integration", () => {
       wallet: { balance: initialBalance },
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date("2025-01-01T13:00:00.000Z");
 
@@ -215,8 +218,9 @@ describe("reservation use-cases integration", () => {
       wallet: { balance: 50000n },
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const blockedNow = new Date("2026-04-20T16:00:00.000Z");
     const result = await runReserve({
@@ -235,8 +239,9 @@ describe("reservation use-cases integration", () => {
       wallet: { balance: 600000n },
     });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const allowedNow = new Date("2026-04-20T10:00:00.000Z");
     const reserveResult = await runReserve({

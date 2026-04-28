@@ -83,8 +83,9 @@ describe("reservation use-cases unhappy paths", () => {
   it("reserveBikeUseCase fails with WalletNotFound when user has no wallet", async () => {
     const user = await fixture.factories.user();
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date();
     const result = await runReserve({ userId: user.id, bikeId: bike.id, stationId: station.id, startTime: now, now });
@@ -94,23 +95,34 @@ describe("reservation use-cases unhappy paths", () => {
   it("reserveBikeUseCase fails with InsufficientWalletBalance when balance too low", async () => {
     const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 0n } });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date();
     const result = await runReserve({ userId: user.id, bikeId: bike.id, stationId: station.id, startTime: now, now });
     expectLeftTag(result, "InsufficientWalletBalance");
   });
 
-  it("reserveBikeUseCase fails when station availability drops to 50 percent or less", async () => {
+  it("reserveBikeUseCase fails when station reaches half-available reservation cap", async () => {
     const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
     const station = await fixture.factories.station({
-      capacity: 10,
-      returnSlotLimit: 10,
+      capacity: 4,
+      returnSlotLimit: 4,
     });
-    for (let index = 0; index < 4; index++) {
-      await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    for (let index = 0; index < 2; index++) {
+      const reservedBike = await fixture.factories.bike({ stationId: station.id, status: "RESERVED" });
+      const reservedUser = await fixture.factories.user();
+      await fixture.factories.reservation({
+        userId: reservedUser.id,
+        bikeId: reservedBike.id,
+        stationId: station.id,
+        status: "PENDING",
+      });
     }
+
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const bike = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date();
@@ -129,13 +141,9 @@ describe("reservation use-cases unhappy paths", () => {
     const first = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
     const second = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
     const station = await fixture.factories.station({
-      capacity: 10,
-      returnSlotLimit: 10,
+      capacity: 2,
+      returnSlotLimit: 2,
     });
-
-    for (let index = 0; index < 4; index++) {
-      await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
-    }
 
     const bikeA = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const bikeB = await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
@@ -172,8 +180,9 @@ describe("reservation use-cases unhappy paths", () => {
   it("reserveBikeUseCase fails with SubscriptionRequired when subscription option missing id", async () => {
     const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date();
     const result = await runReserve({
@@ -191,8 +200,9 @@ describe("reservation use-cases unhappy paths", () => {
     const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
     const otherUser = await fixture.factories.user();
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const subscription = await fixture.factories.subscription({ userId: otherUser.id, status: "ACTIVE" });
 
     const now = new Date();
@@ -211,8 +221,9 @@ describe("reservation use-cases unhappy paths", () => {
   it("reserveBikeUseCase fails with SubscriptionUsageExceeded when max usage reached", async () => {
     const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 50000n } });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
     const subscription = await fixture.factories.subscription({
       userId: user.id,
       status: "ACTIVE",
@@ -368,8 +379,9 @@ describe("reservation use-cases unhappy paths", () => {
   it("confirmReservationUseCase fails when wallet balance falls below the required deposit threshold", async () => {
     const { user } = await givenUserWithWallet(fixture, { wallet: { balance: 3000n } });
     const { station, bike } = await givenStationWithAvailableBike(fixture, {
-      station: { capacity: 1 },
+      station: { capacity: 2 },
     });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
 
     const now = new Date();
     const reserveResult = await runReserve({

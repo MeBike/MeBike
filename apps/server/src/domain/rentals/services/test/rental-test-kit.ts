@@ -14,10 +14,8 @@ import {
   createReturnSlot,
   getCurrentReturnSlot,
   makeRentalRepository,
-  makeReturnConfirmationRepository,
   makeReturnSlotRepository,
   RentalRepository,
-  ReturnConfirmationRepository,
   ReturnSlotRepository,
   startRental,
 } from "@/domain/rentals";
@@ -38,7 +36,6 @@ export type RentalDeps
   = | Prisma
     | RentalRepository
     | ReturnSlotRepository
-    | ReturnConfirmationRepository
     | BikeRepository
     | SubscriptionQueryRepository
     | SubscriptionCommandRepository
@@ -48,7 +45,6 @@ export type RentalDeps
 export function makeRentalTestLayer(client: PrismaClient) {
   const rentalRepo = makeRentalRepository(client);
   const returnSlotRepo = makeReturnSlotRepository(client);
-  const returnConfirmationRepo = makeReturnConfirmationRepository(client);
   const bikeRepo = makeBikeRepository(client);
   const subscriptionQueryRepo = makeSubscriptionQueryRepository(client);
   const subscriptionCommandRepo = makeSubscriptionCommandRepository(client);
@@ -73,10 +69,6 @@ export function makeRentalTestLayer(client: PrismaClient) {
     prismaLayer,
     Layer.succeed(RentalRepository, RentalRepository.make(rentalRepo)),
     Layer.succeed(ReturnSlotRepository, ReturnSlotRepository.make(returnSlotRepo)),
-    Layer.succeed(
-      ReturnConfirmationRepository,
-      ReturnConfirmationRepository.make(returnConfirmationRepo),
-    ),
     Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
     subscriptionQueryRepoLayer,
     subscriptionCommandRepoLayer,
@@ -116,7 +108,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
       now?: Date;
     }) {
       return runEffectWithLayer(
-        getCurrentReturnSlot(args),
+        getCurrentReturnSlot({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },
@@ -126,7 +121,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
       now?: Date;
     }) {
       return runEffectEitherWithLayer(
-        getCurrentReturnSlot(args),
+        getCurrentReturnSlot({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },
@@ -136,7 +134,10 @@ export function makeRentalRunners(layer: Layer.Layer<any>) {
       now?: Date;
     }) {
       return runEffectEitherWithLayer(
-        cancelReturnSlot(args),
+        cancelReturnSlot({
+          ...args,
+          now: args.now ?? DEFAULT_TEST_NOW,
+        }),
         layer,
       );
     },
