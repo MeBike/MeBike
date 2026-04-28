@@ -92,8 +92,7 @@ export const CreateBikeBodySchema = z.object({
 export const AdminBikeManageableStatusSchema = z.enum([
   "AVAILABLE",
   "BROKEN",
-  "MAINTAINED",
-  "UNAVAILABLE",
+  "DISABLED",
 ]).openapi("AdminBikeManageableStatus");
 
 export const UpdateBikeBodySchema = z.object({

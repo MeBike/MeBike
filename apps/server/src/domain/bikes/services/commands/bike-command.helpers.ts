@@ -31,18 +31,14 @@ export function getScopedStatusTransitions(currentStatus: BikeStatus): readonly 
  */
 export function getAdminAllowedStatusTransitions(currentStatus: BikeStatus): readonly AdminBikeManageableStatus[] {
   if (currentStatus === "AVAILABLE") {
-    return ["BROKEN", "MAINTAINED", "UNAVAILABLE"] as const;
+    return ["BROKEN", "DISABLED"] as const;
   }
 
   if (currentStatus === "BROKEN") {
     return ["AVAILABLE"] as const;
   }
 
-  if (currentStatus === "MAINTAINED") {
-    return ["AVAILABLE"] as const;
-  }
-
-  if (currentStatus === "UNAVAILABLE") {
+  if (currentStatus === "DISABLED") {
     return ["AVAILABLE"] as const;
   }
 

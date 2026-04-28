@@ -16,7 +16,7 @@ import type {
 import type { BikeFilter, BikeRow, BikeSortField } from "../../models";
 
 export type BikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN">;
-export type AdminBikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN" | "MAINTAINED" | "UNAVAILABLE">;
+export type AdminBikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN" | "DISABLED">;
 
 export type CreateBikeInput = {
   stationId: string;

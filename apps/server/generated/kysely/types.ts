@@ -34,8 +34,8 @@ export const BikeStatus = {
     BOOKED: "BOOKED",
     BROKEN: "BROKEN",
     RESERVED: "RESERVED",
-    MAINTAINED: "MAINTAINED",
-    UNAVAILABLE: "UNAVAILABLE"
+    REDISTRIBUTING: "REDISTRIBUTING",
+    DISABLED: "DISABLED"
 } as const;
 export type BikeStatus = (typeof BikeStatus)[keyof typeof BikeStatus];
 export const DiscountType = {

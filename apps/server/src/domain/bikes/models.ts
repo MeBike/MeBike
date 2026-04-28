@@ -76,7 +76,8 @@ export type BikeStatistics = {
   RESERVED: number;
   AVAILABLE: number;
   RENTED: number;
-  UNAVAILABLE: number;
+  REDISTRIBUTING: number;
+  DISABLED: number;
   BROKEN: number;
 };
 
