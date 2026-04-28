@@ -312,7 +312,7 @@ export const useDistributionRequest = ({
       }
       try {
         const result = await useCreateDistributeRequest.mutateAsync(data);
-        if (result.status === HTTP_STATUS.OK) {
+        if (result.status === HTTP_STATUS.CREATED) {
           toast.success("Tạo yêu cầu điều phối xe thành công");
           queryClient.invalidateQueries({
             queryKey: ["distribution-request", "all"],
@@ -490,7 +490,7 @@ export const useDistributionRequest = ({
       }
       try {
         const result = await useCreateDistributeRequest.mutateAsync(data);
-        if (result.status === HTTP_STATUS.OK) {
+        if (result.status === HTTP_STATUS.CREATED) {
           toast.success("Tạo yêu cầu điều phối xe thành công");
           getAgencyViewDistributionRequest();
           getAgencyViewDistributionRequestDetail();

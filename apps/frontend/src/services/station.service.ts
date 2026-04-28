@@ -19,7 +19,8 @@ export const stationService = {
     latitude,
     longitude,
     sortBy,
-    sortDir,   
+    sortDir,
+    stationType,   
   }: {
     page?: number;
     pageSize?: number;
@@ -29,6 +30,7 @@ export const stationService = {
     longitude?: number;
     sortBy?: "name" | "capacity" | "updatedAt";
     sortDir?: "asc" | "desc";
+    stationType ?: string;
   }): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
       ENDPOINT.STATION.BASE,
@@ -41,6 +43,7 @@ export const stationService = {
         longitude,
         sortBy,
         sortDir,
+        stationType : stationType,
       }
     );
     return response;

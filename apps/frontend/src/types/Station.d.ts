@@ -125,6 +125,7 @@ export interface StationActionProps {
   limit?: number;
   latitude?: number;
   name?: string;
+  stationType ?: string;
   longitude?: number;
 }
 export interface SelectStation {
