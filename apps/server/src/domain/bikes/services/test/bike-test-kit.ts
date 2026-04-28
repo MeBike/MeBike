@@ -49,7 +49,7 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
     },
     adminUpdateBike(bikeId: string, input: {
       stationId?: string;
-      status?: "AVAILABLE" | "BROKEN" | "MAINTAINED" | "UNAVAILABLE";
+      status?: "AVAILABLE" | "BROKEN" | "DISABLED";
       supplierId?: string;
     }) {
       return runEffectWithLayer(
@@ -59,7 +59,7 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
     },
     adminUpdateBikeEither(bikeId: string, input: {
       stationId?: string;
-      status?: "AVAILABLE" | "BROKEN" | "MAINTAINED" | "UNAVAILABLE";
+      status?: "AVAILABLE" | "BROKEN" | "DISABLED";
       supplierId?: string;
     }) {
       return runEffectEitherWithLayer(

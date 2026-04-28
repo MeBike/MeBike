@@ -42,8 +42,9 @@ export type SupplierBikeStats = {
   booked: number;
   broken: number;
   reserved: number;
-  maintained: number;
-  unavailable: number;
+  redistributing: number;
+  lost: number;
+  disabled: number;
 };
 
 export type SupplierStatusSummary = {

@@ -152,21 +152,6 @@ describe("bikeService Integration", () => {
     }
   });
 
-  it("allows admin maintenance transition from available", async () => {
-    const station = await fixture.factories.station();
-    const supplier = await fixture.factories.supplier();
-    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
-
-    const result = await runAdminUpdateBike(bike.id, {
-      status: "MAINTAINED",
-    });
-
-    expect(result._tag).toBe("Some");
-    if (result._tag === "Some") {
-      expect(result.value.status).toBe("MAINTAINED");
-    }
-  });
-
   it("fails when admin tries to override booked bike status", async () => {
     const station = await fixture.factories.station();
     const supplier = await fixture.factories.supplier();

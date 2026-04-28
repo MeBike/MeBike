@@ -218,8 +218,9 @@ describe("admin agency stats routing e2e", () => {
       bookedBikes: 1,
       brokenBikes: 1,
       reservedBikes: 1,
-      maintainedBikes: 0,
-      unavailableBikes: 0,
+      redistributingBikes: 0,
+      lostBikes: 0,
+      disabledBikes: 0,
       emptySlots: 8,
     });
     expect(body.currentStation.occupancyRate).toBeCloseTo(33.33, 2);
