@@ -35,6 +35,7 @@ export const BikeStatus = {
     BROKEN: "BROKEN",
     RESERVED: "RESERVED",
     REDISTRIBUTING: "REDISTRIBUTING",
+    LOST: "LOST",
     DISABLED: "DISABLED"
 } as const;
 export type BikeStatus = (typeof BikeStatus)[keyof typeof BikeStatus];
