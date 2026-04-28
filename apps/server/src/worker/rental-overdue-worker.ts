@@ -37,7 +37,7 @@ export function makeRentalOverdueSweepHandler(runEffect: EffectRunner<Prisma>) {
         skipped: summary.skipped,
         failed: summary.failed,
         depositForfeited: summary.depositForfeited,
-        bikeUnavailable: summary.bikeUnavailable,
+        bikeDisabled: summary.bikeDisabled,
         cancelledReturnSlots: summary.cancelledReturnSlots,
       },
       "Overdue rental sweep completed",
