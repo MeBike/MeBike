@@ -33,6 +33,10 @@ import {
   WalletServiceLive,
 } from "@/domain/wallets";
 import {
+  PaymentAttemptRepositoryLive,
+  StripeTopupServiceLive,
+} from "@/domain/wallets/topups";
+import {
   StripeWithdrawalServiceLive,
   WithdrawalRepositoryLive,
   WithdrawalServiceLive,
@@ -107,6 +111,15 @@ const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
   Layer.provide(WalletHoldReposLive),
 );
 
+const PaymentAttemptReposLive = PaymentAttemptRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const StripeTopupServiceLayer = StripeTopupServiceLive.pipe(
+  Layer.provide(PaymentAttemptReposLive),
+  Layer.provide(StripeLive),
+);
+
 const WithdrawalReposLive = WithdrawalRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
@@ -141,6 +154,8 @@ export const WorkerRuntimeLive = Layer.mergeAll(
   WalletHoldReposLive,
   WalletServiceLayer,
   WalletHoldServiceLayer,
+  PaymentAttemptReposLive,
+  StripeTopupServiceLayer,
   WithdrawalReposLive,
   WithdrawalServiceLayer,
   StripeWithdrawalServiceLayer,

@@ -56,6 +56,10 @@ export type PaymentAttemptRepositoryType = {
     provider: PaymentProvider,
     providerRef: string,
   ) => Effect.Effect<Option.Option<PaymentAttemptRow>>;
+  findPendingTopupsBefore: (
+    createdBefore: Date,
+    limit: number,
+  ) => Effect.Effect<ReadonlyArray<PaymentAttemptRow>>;
   setProviderRef: (
     id: string,
     providerRef: string,
@@ -142,6 +146,29 @@ export function makePaymentAttemptRepository(
         catch: err =>
           new PaymentAttemptRepositoryError({
             operation: "findByProviderRef",
+            cause: err,
+          }),
+      }).pipe(defectOn(PaymentAttemptRepositoryError)),
+
+    findPendingTopupsBefore: (createdBefore, limit) =>
+      Effect.tryPromise({
+        try: async () => {
+          const rows = await client.paymentAttempt.findMany({
+            where: {
+              provider: "STRIPE",
+              kind: "TOPUP",
+              status: "PENDING",
+              createdAt: { lte: createdBefore },
+            },
+            orderBy: { createdAt: "asc" },
+            take: limit,
+            select: selectPaymentAttemptRow,
+          });
+          return rows.map(toPaymentAttemptRow);
+        },
+        catch: err =>
+          new PaymentAttemptRepositoryError({
+            operation: "findPendingTopupsBefore",
             cause: err,
           }),
       }).pipe(defectOn(PaymentAttemptRepositoryError)),

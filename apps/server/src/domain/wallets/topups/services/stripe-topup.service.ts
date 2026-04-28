@@ -61,6 +61,12 @@ export type StripeTopupService = {
     { readonly paymentIntentId: string; readonly clientSecret: string },
     TopupProviderError
   >;
+  retrieveCheckoutSession: (
+    sessionId: string,
+  ) => Effect.Effect<Stripe.Checkout.Session, TopupProviderError>;
+  retrievePaymentIntent: (
+    paymentIntentId: string,
+  ) => Effect.Effect<Stripe.PaymentIntent, TopupProviderError>;
   attachProviderRef: (
     attemptId: string,
     providerRef: string,
@@ -206,6 +212,31 @@ export const StripeTopupServiceLive = Layer.effect(
         };
       });
 
+    const retrieveCheckoutSession: StripeTopupService["retrieveCheckoutSession"] = sessionId =>
+      Effect.tryPromise({
+        try: () =>
+          stripe.checkout.sessions.retrieve(sessionId, {
+            expand: ["payment_intent"],
+          }),
+        catch: cause =>
+          new TopupProviderError({
+            operation: "stripe.checkout.sessions.retrieve",
+            provider: "stripe",
+            cause,
+          }),
+      });
+
+    const retrievePaymentIntent: StripeTopupService["retrievePaymentIntent"] = paymentIntentId =>
+      Effect.tryPromise({
+        try: () => stripe.paymentIntents.retrieve(paymentIntentId),
+        catch: cause =>
+          new TopupProviderError({
+            operation: "stripe.paymentIntents.retrieve",
+            provider: "stripe",
+            cause,
+          }),
+      });
+
     const attachProviderRef: StripeTopupService["attachProviderRef"] = (attemptId, providerRef) =>
       repo.setProviderRef(attemptId, providerRef);
 
@@ -230,6 +261,8 @@ export const StripeTopupServiceLive = Layer.effect(
       preparePaymentSheetAttempt,
       createCheckoutSession,
       createPaymentIntent,
+      retrieveCheckoutSession,
+      retrievePaymentIntent,
       attachProviderRef,
       resolveAttemptForSession,
       resolveAttemptForPaymentIntent,

@@ -6,8 +6,8 @@ import { Effect, Match } from "effect";
 import { withLoggedCause } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
 import {
-  createStripeCheckoutSessionUseCase,
-  createStripePaymentSheetUseCase,
+  createStripeCheckoutSession,
+  createStripePaymentSheet,
   requestWithdrawalUseCase,
 } from "@/domain/wallets";
 import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
@@ -221,7 +221,7 @@ const createStripeTopupSession: RouteHandler<WalletsRoutes["createStripeTopupSes
   }
 
   const eff = withLoggedCause(
-    createStripeCheckoutSessionUseCase({
+    createStripeCheckoutSession({
       userId,
       amountMinor: Number(amountMinor),
       successUrl: body.successUrl,
@@ -292,7 +292,7 @@ const createStripeTopupPaymentSheet: RouteHandler<WalletsRoutes["createStripeTop
   }
 
   const eff = withLoggedCause(
-    createStripePaymentSheetUseCase({
+    createStripePaymentSheet({
       userId,
       amountMinor: Number(amountMinor),
     }),

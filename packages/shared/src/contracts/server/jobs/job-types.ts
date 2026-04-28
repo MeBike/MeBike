@@ -8,6 +8,7 @@ export const JobTypes = {
   ReturnSlotExpireSweep: "rentals.returnSlots.expireSweep",
   EnvironmentImpactCalculateRental: "environment.impact.calculateRental",
   RentalOverdueSweep: "rentals.overdueSweep",
+  WalletTopupReconcileSweep: "wallets.topup.reconcileSweep",
   WalletWithdrawalExecute: "wallets.withdraw.execute",
   WalletWithdrawalSweep: "wallets.withdraw.sweep",
 } as const;
