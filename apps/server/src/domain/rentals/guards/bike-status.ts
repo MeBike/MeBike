@@ -5,18 +5,20 @@ import type { BikeStatus } from "generated/prisma/enums";
 import {
   BikeAlreadyRented,
   BikeIsBroken,
-  BikeIsMaintained,
+  BikeIsDisabled,
+  BikeIsLost,
+  BikeIsRedistributing,
   BikeIsReserved,
-  BikeUnavailable,
   InvalidBikeStatus,
 } from "../domain-errors";
 
 export type StartRentalBikeStatusFailure
   = | BikeAlreadyRented
     | BikeIsBroken
-    | BikeIsMaintained
     | BikeIsReserved
-    | BikeUnavailable
+    | BikeIsDisabled
+    | BikeIsRedistributing
+    | BikeIsLost
     | InvalidBikeStatus;
 
 export function startRentalFailureFromBikeStatus(args: {
@@ -32,12 +34,14 @@ export function startRentalFailureFromBikeStatus(args: {
       return Option.some(new BikeAlreadyRented({ bikeId }));
     case "BROKEN":
       return Option.some(new BikeIsBroken({ bikeId }));
-    case "MAINTAINED":
-      return Option.some(new BikeIsMaintained({ bikeId }));
     case "RESERVED":
       return Option.some(new BikeIsReserved({ bikeId }));
-    case "UNAVAILABLE":
-      return Option.some(new BikeUnavailable({ bikeId }));
+    case "REDISTRIBUTING":
+      return Option.some(new BikeIsRedistributing({ bikeId }));
+    case "LOST":
+      return Option.some(new BikeIsLost({ bikeId }));
+    case "DISABLED":
+      return Option.some(new BikeIsDisabled({ bikeId }));
     default:
       return Option.some(new InvalidBikeStatus({ bikeId, status }));
   }

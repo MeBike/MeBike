@@ -36,7 +36,7 @@ export type BikeOverrides = {
   bikeNumber?: string;
   stationId?: string | null;
   supplierId?: string | null;
-  status?: "AVAILABLE" | "BOOKED" | "BROKEN" | "RESERVED" | "MAINTAINED" | "UNAVAILABLE";
+  status?: "AVAILABLE" | "BOOKED" | "BROKEN" | "RESERVED" | "REDISTRIBUTING" | "LOST" | "DISABLED";
 };
 
 export type SupplierOverrides = {

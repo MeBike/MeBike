@@ -47,8 +47,9 @@ const STATUS_BY_LEGACY_LABEL: Record<string, BikeStatus> = {
   "ĐANG ĐƯỢC THUÊ": BikeStatus.BOOKED,
   "BỊ HỎNG": BikeStatus.BROKEN,
   "ĐÃ ĐẶT TRƯỚC": BikeStatus.RESERVED,
-  "ĐANG BẢO TRÌ": BikeStatus.MAINTAINED,
-  "KHÔNG CÓ SẴN": BikeStatus.UNAVAILABLE,
+  "ĐANG PHÂN PHỐI": BikeStatus.REDISTRIBUTING,
+  "MẤT": BikeStatus.LOST,
+  "BỊ VÔ HIỆU HÓA": BikeStatus.DISABLED,
 };
 
 function getConnectionString() {
@@ -171,7 +172,7 @@ async function main() {
       }
 
       const sourceStatus = bike.status?.trim() ?? "";
-      const status = STATUS_BY_LEGACY_LABEL[sourceStatus] ?? BikeStatus.UNAVAILABLE;
+      const status = STATUS_BY_LEGACY_LABEL[sourceStatus] ?? BikeStatus.DISABLED;
       if (!(sourceStatus in STATUS_BY_LEGACY_LABEL)) {
         normalizedUnknownStatusCount += 1;
       }

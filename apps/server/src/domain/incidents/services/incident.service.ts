@@ -247,11 +247,11 @@ export const IncidentServiceLive = Layer.effect(
               return yield* Effect.fail(new BikeNotFound({ id: data.bikeId }));
             }
 
-            if (bike.value.status === "UNAVAILABLE") {
+            if (bike.value.status === "DISABLED") {
               return yield* Effect.fail(
                 new BikeNotAvailable({
                   bikeId: data.bikeId,
-                  status: "UNAVAILABLE",
+                  status: "DISABLED",
                 }),
               );
             }

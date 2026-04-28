@@ -49,6 +49,6 @@ export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
       return yield* Effect.fail(new BikeCurrentlyReserved({ bikeId, action: "delete" }));
     }
 
-    return yield* repo.updateStatus(bikeId, "UNAVAILABLE");
+    return yield* repo.updateStatus(bikeId, "DISABLED");
   });
 }

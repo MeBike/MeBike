@@ -109,8 +109,8 @@ export function startIncidentUseCase(
                 }),
             });
 
-            yield* bikeRepo.updateStatus(incident.bike.id, "MAINTAINED");
-            yield* bikeRepo.updateStatus(availableBike.value.id, "UNAVAILABLE");
+            yield* bikeRepo.updateStatus(incident.bike.id, "BROKEN");
+            yield* bikeRepo.updateStatus(availableBike.value.id, "DISABLED");
           }
         }
 

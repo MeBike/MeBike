@@ -23,8 +23,9 @@ export type StationSummaryRow = {
   bookedBikes: number;
   brokenBikes: number;
   reservedBikes: number;
-  maintainedBikes: number;
-  unavailableBikes: number;
+  redistributingBikes: number;
+  lostBikes: number;
+  disabledBikes: number;
 };
 
 export type StationBikeRow = {
@@ -176,11 +177,14 @@ function summarizeBikeStatuses(bikes: Array<{ status: string }>) {
       case "RESERVED":
         counts.reservedBikes += 1;
         break;
-      case "MAINTAINED":
-        counts.maintainedBikes += 1;
+      case "REDISTRIBUTING":
+        counts.redistributingBikes += 1;
         break;
-      case "UNAVAILABLE":
-        counts.unavailableBikes += 1;
+      case "LOST":
+        counts.lostBikes += 1;
+        break;
+      case "DISABLED":
+        counts.disabledBikes += 1;
         break;
     }
 
@@ -191,8 +195,9 @@ function summarizeBikeStatuses(bikes: Array<{ status: string }>) {
     bookedBikes: 0,
     brokenBikes: 0,
     reservedBikes: 0,
-    maintainedBikes: 0,
-    unavailableBikes: 0,
+    redistributingBikes: 0,
+    lostBikes: 0,
+    disabledBikes: 0,
   });
 }
 

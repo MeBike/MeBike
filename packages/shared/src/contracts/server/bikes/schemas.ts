@@ -5,8 +5,9 @@ export const BikeStatusSchema = z.enum([
   "BOOKED",
   "BROKEN",
   "RESERVED",
-  "MAINTAINED",
-  "UNAVAILABLE",
+  "REDISTRIBUTING",
+  "LOST",
+  "DISABLED",
 ]);
 
 export type BikeStatus = z.infer<typeof BikeStatusSchema>;

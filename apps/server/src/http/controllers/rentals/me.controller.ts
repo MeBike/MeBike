@@ -130,11 +130,19 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
             },
             400,
           )),
-        Match.tag("BikeIsMaintained", () =>
+        Match.tag("BikeIsRedistributing", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
-              error: rentalErrorMessages.BIKE_IS_MAINTAINED,
-              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_MAINTAINED },
+              error: rentalErrorMessages.BIKE_IS_REDISTRIBUTING,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_REDISTRIBUTING },
+            },
+            400,
+          )),
+        Match.tag("BikeIsLost", () =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>(
+            {
+              error: rentalErrorMessages.BIKE_IS_LOST,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_LOST },
             },
             400,
           )),
@@ -146,11 +154,11 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
             },
             400,
           )),
-        Match.tag("BikeUnavailable", () =>
+        Match.tag("BikeIsDisabled", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
-              error: rentalErrorMessages.UNAVAILABLE_BIKE,
-              details: { code: RentalErrorCodeSchema.enum.UNAVAILABLE_BIKE },
+              error: rentalErrorMessages.BIKE_IS_DISABLED,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_DISABLED },
             },
             400,
           )),

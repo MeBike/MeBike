@@ -98,6 +98,7 @@ describe("assignFixedSlotReservations", () => {
               ? Option.none()
               : Option.some({ id: client.state!.reservationId, bikeId: "bike-1" }),
           ),
+          countPendingByStationId: () => Effect.succeed(0),
         };
       }
 
@@ -295,6 +296,7 @@ describe("assignFixedSlotReservations", () => {
               ? Option.none()
               : Option.some({ id: reservation.id, bikeId: "bike-1" }),
           ),
+          countPendingByStationId: () => Effect.succeed(0),
         };
       }
 
@@ -433,6 +435,7 @@ describe("assignFixedSlotReservations", () => {
       if (client.state) {
         return {
           findPendingFixedSlotByTemplateAndStart: () => Effect.succeed(Option.none()),
+          countPendingByStationId: () => Effect.succeed(0),
         };
       }
 

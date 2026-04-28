@@ -487,10 +487,10 @@ function makeRedistributionService(
 
             bikeIds.push(...availableBikes.map(b => b.id));
 
-            // Marks bikes as unavailable
+            // Marks bikes as redistributing
             yield* txBikeRepo.updateManyStatusAt(
               bikeIds,
-              BikeStatus.UNAVAILABLE,
+              BikeStatus.REDISTRIBUTING,
               now,
             );
 
@@ -546,7 +546,7 @@ function makeRedistributionService(
 
             const bikeIds = existing.items.map(item => item.bikeId);
 
-            // Restore bikes to AVAILABLE if any were marked unavailable
+            // Restore bikes to AVAILABLE if any were marked REDISTRIBUTING
             if (bikeIds.length > 0) {
               yield* txBikeRepo.updateManyStatusAt(
                 bikeIds,
@@ -831,7 +831,7 @@ function makeRedistributionService(
 
             // Comparison logic
             const unconfirmedBikeIds = req.items
-              .filter(item => item.bike.status === BikeStatus.UNAVAILABLE)
+              .filter(item => item.bike.status === BikeStatus.REDISTRIBUTING)
               .map(item => item.bike.id);
 
             const validCompletedBikeIds = completedBikeIds.filter(id =>

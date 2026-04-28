@@ -40,8 +40,9 @@ export const AgencyCurrentStationStatsSchema = z.object({
   bookedBikes: z.number(),
   brokenBikes: z.number(),
   reservedBikes: z.number(),
-  maintainedBikes: z.number(),
-  unavailableBikes: z.number(),
+  redistributingBikes: z.number(),
+  lostBikes: z.number(),
+  disabledBikes: z.number(),
   emptySlots: z.number(),
   occupancyRate: z.number(),
 }).openapi("AgencyCurrentStationStats");

@@ -636,7 +636,7 @@ async function inspectStation(connectionString: string, value: string) {
     writeLine(`${chalk.gray("address")}: ${station.address}`);
     writeLine(`${chalk.gray("capacity")}: ${station.totalBikes}/${station.totalCapacity} bikes`);
     writeLine(`${chalk.gray("returnSlots")}: ${station.returnSlotLimit}`);
-    writeLine(`${chalk.gray("status")}: available ${station.availableBikes}, booked ${station.bookedBikes}, reserved ${station.reservedBikes}, broken ${station.brokenBikes}, maintained ${station.maintainedBikes}, unavailable ${station.unavailableBikes}`);
+    writeLine(`${chalk.gray("status")}: available ${station.availableBikes}, booked ${station.bookedBikes}, reserved ${station.reservedBikes}, broken ${station.brokenBikes}, redistributing ${station.redistributingBikes}, lost ${station.lostBikes}, disabled ${station.disabledBikes}`);
     writeLine(`${chalk.gray("updated")}: ${formatTimestamp(station.updatedAt)}`);
     writeLine(chalk.magenta("bikes in station"));
     if (station.bikes.length === 0) {

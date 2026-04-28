@@ -146,9 +146,10 @@ describe("startRentalUseCase Integration", () => {
   it.each([
     { status: "BOOKED", tag: "BikeAlreadyRented" },
     { status: "BROKEN", tag: "BikeIsBroken" },
-    { status: "MAINTAINED", tag: "BikeIsMaintained" },
+    { status: "LOST", tag: "BikeIsLost" },
     { status: "RESERVED", tag: "BikeIsReserved" },
-    { status: "UNAVAILABLE", tag: "BikeUnavailable" },
+    { status: "DISABLED", tag: "BikeIsDisabled" },
+    { status: "REDISTRIBUTING", tag: "BikeIsRedistributing" },
   ] as const)("fails when bike status is $status", async ({ status, tag }) => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 5000n },

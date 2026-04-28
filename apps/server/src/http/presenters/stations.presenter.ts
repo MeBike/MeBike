@@ -30,8 +30,9 @@ export function toContractStationReadSummary(
       booked: station.bookedBikes,
       broken: station.brokenBikes,
       reserved: station.reservedBikes,
-      maintained: station.maintainedBikes,
-      unavailable: station.unavailableBikes,
+      redistributing: station.redistributingBikes,
+      lost: station.lostBikes,
+      disabled: station.disabledBikes,
     },
     returnSlots: {
       active: station.activeReturnSlots,
@@ -73,8 +74,9 @@ export function toContractStationSummary(
     bookedBikes: station.bookedBikes,
     brokenBikes: station.brokenBikes,
     reservedBikes: station.reservedBikes,
-    maintainedBikes: station.maintainedBikes,
-    unavailableBikes: station.unavailableBikes,
+    redistributingBikes: station.redistributingBikes,
+    lostBikes: station.lostBikes,
+    disabledBikes: station.disabledBikes,
     emptySlots: station.emptySlots,
   };
 }

@@ -73,8 +73,9 @@ export function emptyStats(
     booked: 0,
     broken: 0,
     reserved: 0,
-    maintained: 0,
-    unavailable: 0,
+    redistributing: 0,
+    lost: 0,
+    disabled: 0,
   };
 }
 
@@ -132,11 +133,14 @@ export function updateStatsWithCount(
     case "RESERVED":
       update.reserved = count;
       break;
-    case "MAINTAINED":
-      update.maintained = count;
+    case "REDISTRIBUTING":
+      update.redistributing = count;
       break;
-    case "UNAVAILABLE":
-      update.unavailable = count;
+    case "LOST":
+      update.lost = count;
+      break;
+    case "DISABLED":
+      update.disabled = count;
       break;
   }
 
