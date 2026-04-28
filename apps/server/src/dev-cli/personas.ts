@@ -69,7 +69,7 @@ function toPersonaRecord(row: {
   } satisfies PersonaRecord;
 }
 
-export async function listSeededPersonas(connectionString: string) {
+export async function listSeededPersonas(connectionString: string): Promise<PersonaRecord[]> {
   void connectionString;
   const rows = await withPrismaClient(client =>
     client.user.findMany({
@@ -88,12 +88,40 @@ export async function listSeededPersonas(connectionString: string) {
     });
 }
 
-export async function resolvePersona(connectionString: string, value: string) {
+export async function resolvePersona(connectionString: string, value: string): Promise<PersonaRecord | null> {
   const personas = await listSeededPersonas(connectionString);
-  return personas.find(persona => persona.email === value || persona.handle === value) ?? null;
+  return personas.find(persona => persona.email === value || persona.handle === value)
+    ?? await resolveUserCardTarget(connectionString, value);
 }
 
-export async function resolveUserCardTarget(connectionString: string, value: string) {
+export async function searchUsers(connectionString: string, value: string): Promise<PersonaRecord[]> {
+  void connectionString;
+  const handleEmail = value.includes("@") ? value : `${value}@mebike.local`;
+  const rows = await withPrismaClient(client =>
+    client.user.findMany({
+      where: {
+        OR: [
+          ...(looksLikeUuid(value) ? [{ id: value }] : []),
+          { email: { contains: value, mode: "insensitive" } },
+          { fullName: { contains: value, mode: "insensitive" } },
+          { email: handleEmail },
+        ],
+      },
+      select: personaSelect,
+      take: 20,
+    }),
+  );
+
+  return rows
+    .map(toPersonaRecord)
+    .sort((left, right) => {
+      const leftRank = left.id === value ? 0 : left.email === value ? 1 : left.email === handleEmail ? 2 : 3;
+      const rightRank = right.id === value ? 0 : right.email === value ? 1 : right.email === handleEmail ? 2 : 3;
+      return leftRank - rightRank || left.email.localeCompare(right.email);
+    });
+}
+
+export async function resolveUserCardTarget(connectionString: string, value: string): Promise<PersonaRecord | null> {
   void connectionString;
   const handleEmail = value.includes("@") ? value : `${value}@mebike.local`;
   const rows = await withPrismaClient(client =>

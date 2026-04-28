@@ -28,6 +28,7 @@ import {
   listSeededPersonas,
   readCurrentPersona,
   resolvePersona,
+  searchUsers,
   writeCurrentPersona,
 } from "./personas";
 import { expireReturnSlotsForDev } from "./runtime";
@@ -303,14 +304,11 @@ async function updateDeviceConfigInteractive(portPath: string) {
 
 async function choosePersona(connectionString: string, repoRoot: string, currentPersonaEmail: string | null) {
   const personas = await listSeededPersonas(connectionString);
-  if (personas.length === 0) {
-    writeLine(chalk.yellow("No seeded personas found."));
-    return currentPersonaEmail;
-  }
 
   const selected = await select<string>({
-    message: "Choose seeded persona",
+    message: "Choose persona",
     choices: [
+      { name: "Find user by email, name, or id", value: "__find" },
       ...personas.map(persona => ({
         name: `${persona.handle.padEnd(12)} ${persona.role.padEnd(10)} ${persona.email}`,
         value: persona.email,
@@ -323,6 +321,17 @@ async function choosePersona(connectionString: string, repoRoot: string, current
 
   if (selected === "__back") {
     return currentPersonaEmail;
+  }
+
+  if (selected === "__find") {
+    const persona = await findUserInteractive(connectionString);
+    if (!persona) {
+      return currentPersonaEmail;
+    }
+    await writeCurrentPersona(repoRoot, persona);
+    writeLine(chalk.green(`Current persona set to ${persona.email}.`));
+    printPersona(persona, persona.email);
+    return persona.email;
   }
 
   if (selected === "__clear") {
@@ -340,14 +349,11 @@ async function choosePersona(connectionString: string, repoRoot: string, current
 
 async function bindUserCardInteractive(connectionString: string) {
   const personas = await listSeededPersonas(connectionString);
-  if (personas.length === 0) {
-    writeLine(chalk.yellow("No seeded personas found."));
-    return;
-  }
 
   const selected = await select<string>({
     message: "Choose user to bind card",
     choices: [
+      { name: "Find user by email, name, or id", value: "__find" },
       ...personas.map(persona => ({
         name: `${persona.handle.padEnd(12)} ${persona.role.padEnd(10)} ${persona.email} ${chalk.gray(persona.nfcCardUid ?? "")}`.trim(),
         value: persona.email,
@@ -358,6 +364,14 @@ async function bindUserCardInteractive(connectionString: string) {
   });
 
   if (selected === "__back") {
+    return;
+  }
+
+  const target = selected === "__find"
+    ? (await findUserInteractive(connectionString))?.email
+    : selected;
+
+  if (!target) {
     return;
   }
 
@@ -372,7 +386,7 @@ async function bindUserCardInteractive(connectionString: string) {
 
   const updated = await updateUserCardBinding({
     connectionString,
-    target: selected,
+    target,
     cardUid: cardUid === "--clear" ? null : cardUid,
   });
 
@@ -380,6 +394,39 @@ async function bindUserCardInteractive(connectionString: string) {
   writeLine(`${chalk.gray("email")}: ${updated.email}`);
   writeLine(`${chalk.gray("handle")}: ${updated.handle}`);
   writeLine(`${chalk.gray("nfcCardUid")}: ${updated.nfcCardUid ?? "-"}`);
+}
+
+async function findUserInteractive(connectionString: string) {
+  const query = await input({ message: "User email, name, or id" });
+  if (!query) {
+    return null;
+  }
+
+  const users = await searchUsers(connectionString, query);
+  if (users.length === 0) {
+    writeLine(chalk.yellow(`No users found for: ${query}`));
+    return null;
+  }
+
+  if (users.length === 1) {
+    return users[0]!;
+  }
+
+  const selected = await select<string>({
+    message: "Choose user",
+    choices: [
+      ...users.map(user => ({
+        name: `${user.fullName.padEnd(24)} ${user.role.padEnd(10)} ${user.email} ${chalk.gray(user.nfcCardUid ?? "")}`.trim(),
+        value: user.email,
+      })),
+      { name: "Back", value: "__back" },
+    ],
+    pageSize: 14,
+  });
+
+  return selected === "__back"
+    ? null
+    : users.find(user => user.email === selected) ?? null;
 }
 
 async function endRentalAsStaffInteractive(
