@@ -160,4 +160,9 @@ export const ENDPOINT = {
         RESERVATION : "/staff/reservations",
         RESERVATION_DETAIL: (id:string) => `/staff/reservations/${id}`,   
     },
+    TECH_TEAM : {
+        BASE : "/admin/technician-teams",
+        AVAILABLE : "/admin/technician-teams/available",
+        UPDATE : (id:string) => `/admin/technician-teams/${id}`,    
+    },
 } as const;

@@ -761,3 +761,6 @@ export const ENVIRONMENT_POLICY_REQUEST = {
 export const COUPON_REQUEST = {
   
 }
+export const TECHNICIAN_TEAM = {
+  
+}
