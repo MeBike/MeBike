@@ -59,6 +59,8 @@ services:
           > /mosquitto/config/mosquitto.conf
         rm -f /mosquitto/config/passwords
         mosquitto_passwd -b -c /mosquitto/config/passwords "$${IOT_MQTT_USERNAME}" "$${IOT_MQTT_PASSWORD}"
+        chown mosquitto:mosquitto /mosquitto/config/passwords
+        chmod 600 /mosquitto/config/passwords
         exec mosquitto -c /mosquitto/config/mosquitto.conf
     ports:
       - "1883:1883"
