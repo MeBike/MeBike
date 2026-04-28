@@ -754,6 +754,8 @@ export const DISTRIBUTION_REQUEST = {
   USER_NOT_FOUND : "Không tìm thấy người dùng",
   INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS : "Bạn đã tạo yêu cầu điều phối trước đó rồi",
   VALIDATION_ERROR : "Lý do phải hơn 10 ký tự",
+  INSUFFICIENT_EMPTY_SLOTS : "Số lượng vị trí trống không đủ",
+  UNAUTHORIZED_REDISTRIBUTION_CANCELLATION : "Bạn không có quyền hủy yêu câu này"
 }
 export const ENVIRONMENT_POLICY_REQUEST = {
   
