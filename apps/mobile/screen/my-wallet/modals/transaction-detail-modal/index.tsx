@@ -152,7 +152,7 @@ export function TransactionDetailModal({
           </View>
 
           <View style={styles.heroBlock}>
-            <AppText align="center" style={styles.heroAmount}>
+            <AppText adjustsFontSizeToFit align="center" numberOfLines={1} style={styles.heroAmount}>
               {amountText}
             </AppText>
 

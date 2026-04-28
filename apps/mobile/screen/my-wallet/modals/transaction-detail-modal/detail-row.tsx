@@ -34,6 +34,7 @@ export function DetailRow({
       <View style={styles.valueGroup}>
         <AppText
           numberOfLines={expanded ? undefined : 1}
+          selectable
           style={[
             styles.value,
             valueTone === "success" ? styles.valueSuccess : null,
@@ -47,7 +48,7 @@ export function DetailRow({
 
         {showToggle && onToggle
           ? (
-              <Pressable onPress={onToggle} style={({ pressed }) => [styles.copyButton, pressed ? styles.copyButtonPressed : null]}>
+              <Pressable hitSlop={12} onPress={onToggle} style={({ pressed }) => [styles.copyButton, pressed ? styles.copyButtonPressed : null]}>
                 <IconSymbol color={copyIconColor} name="copy" size="sm" />
               </Pressable>
             )
