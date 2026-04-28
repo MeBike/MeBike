@@ -15,4 +15,5 @@ export * from "./Auth.type";
 export * from "./Dashboard.type";
 export * from "./Wallet";
 export * from "./Agency";
-export * from "./Subscription"
+export * from "./Subscription";
+export * from "./TechnicianTeam"

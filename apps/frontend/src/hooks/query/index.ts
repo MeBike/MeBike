@@ -14,4 +14,5 @@ export * from "./Agency/index";
 export * from "./DistributionRequest/index";
 export * from "./EnvironmentPolicy/index";
 export * from "./Coupon/index";
-export * from "./Staff/index"
+export * from "./Staff/index";
+export * from "./TechnicianTeam/index";
