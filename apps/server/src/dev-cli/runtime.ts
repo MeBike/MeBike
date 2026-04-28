@@ -1,4 +1,4 @@
-import { Cause, Effect, Exit, ManagedRuntime, Option } from "effect";
+import { Cause, Effect, Either, Exit, ManagedRuntime, Option } from "effect";
 
 import "./env-bootstrap";
 
@@ -85,18 +85,42 @@ export async function updateUserCardUid(args: {
   userId: string;
   nfcCardUid: string | null;
 }) {
-  const updated = await userCommandRuntime.runPromise(
+  const result = await userCommandRuntime.runPromise(
     Effect.flatMap(UserCommandServiceTag, userCommandService =>
       userCommandService.updateAdminById(args.userId, {
         nfcCardUid: args.nfcCardUid,
-      })),
+      })).pipe(Effect.either),
   );
+
+  if (Either.isLeft(result)) {
+    throw new Error(formatUserCardUpdateError(result.left, args));
+  }
+
+  const updated = result.right;
 
   if (Option.isNone(updated)) {
     throw new Error(`Failed to update user card uid: ${args.userId}`);
   }
 
   return updated.value;
+}
+
+function formatUserCardUpdateError(
+  error: unknown,
+  args: { userId: string; nfcCardUid: string | null },
+) {
+  const taggedError = typeof error === "object" && error !== null ? error as Record<string, unknown> : null;
+  const tag = typeof taggedError?._tag === "string" ? taggedError._tag : null;
+  const message = typeof taggedError?.message === "string" ? taggedError.message : null;
+  const operation = typeof taggedError?.operation === "string" ? taggedError.operation : null;
+
+  return [
+    `Failed to update NFC card for user ${args.userId}`,
+    `cardUid=${args.nfcCardUid ?? "null"}`,
+    tag ? `error=${tag}` : null,
+    operation ? `operation=${operation}` : null,
+    message ? `message=${message}` : null,
+  ].filter(Boolean).join("; ");
 }
 
 export async function withPrismaClient<T>(
