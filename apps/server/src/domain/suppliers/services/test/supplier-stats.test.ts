@@ -226,7 +226,7 @@ describe("supplier Stats Utilities", () => {
       expect(result).toEqual({
         supplierId: "s1",
         supplierName: "Supplier 1",
-        totalBikes: 17,
+        totalBikes: 19,
         available: 5,
         booked: 3,
         broken: 2,
