@@ -13,8 +13,15 @@ const openrouter = createOpenRouter({
 export function getOpenRouterChatModel() {
   return openrouter.chat(env.AI_MODEL, {
     provider: {
-      only: env.OPENROUTER_PROVIDER_ONLY,
-      quantizations: env.OPENROUTER_PROVIDER_QUANTIZATIONS,
+      ...(env.OPENROUTER_PROVIDER_ORDER.length > 0
+        ? { order: env.OPENROUTER_PROVIDER_ORDER }
+        : {}),
+      ...(env.OPENROUTER_PROVIDER_ONLY.length > 0
+        ? { only: env.OPENROUTER_PROVIDER_ONLY }
+        : {}),
+      ...(env.OPENROUTER_PROVIDER_QUANTIZATIONS.length > 0
+        ? { quantizations: env.OPENROUTER_PROVIDER_QUANTIZATIONS }
+        : {}),
       allow_fallbacks: env.OPENROUTER_ALLOW_FALLBACKS,
     },
   });
