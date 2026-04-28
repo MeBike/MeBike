@@ -65,7 +65,7 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
         const row = await db
           .selectFrom("Bike")
           .select([
-            sql<number>`count(*) filter (where status <> 'DISABLED')`.as(
+            sql<number>`count(*) filter (where status not in ('DISABLED', 'LOST', 'REDISTRIBUTING'))`.as(
               "total_active",
             ),
             sql<number>`count(*) filter (where status = 'BOOKED')`.as(

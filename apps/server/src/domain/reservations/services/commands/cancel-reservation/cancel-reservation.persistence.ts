@@ -8,6 +8,12 @@ import { toMinorUnit } from "@/domain/shared/money";
 import { WalletCommandServiceTag } from "@/domain/wallets";
 import logger from "@/lib/logger";
 
+import type {
+  BikeIsDisabled,
+  BikeIsLost,
+  BikeIsRedistributing,
+  BikeNotAvailable,
+} from "../../../domain-errors";
 import type { ReservationRow } from "../../../models";
 import type {
   CancelReservationCommandInput,
@@ -15,7 +21,10 @@ import type {
   PreparedCancelReservation,
 } from "./cancel-reservation.types";
 
-import { BikeNotAvailable, BikeNotFound } from "../../../domain-errors";
+import {
+  BikeNotFound,
+} from "../../../domain-errors";
+import { reservationTransitionFailureFromBikeStatus } from "../../../guards/bike-status";
 import { makeReservationCommandRepository } from "../../../repository/reservation-command.repository";
 
 /**
@@ -103,7 +112,10 @@ function releaseReservedBikeForCancellationInTx(
   tx: PrismaTypes.TransactionClient,
   bikeId: string,
   now: Date,
-): Effect.Effect<void, BikeNotFound | BikeNotAvailable> {
+): Effect.Effect<
+  void,
+  BikeNotFound | BikeNotAvailable | BikeIsRedistributing | BikeIsLost | BikeIsDisabled
+> {
   return Effect.gen(function* () {
     const bikeRepo = makeBikeRepository(tx);
 
@@ -117,7 +129,7 @@ function releaseReservedBikeForCancellationInTx(
       return yield* Effect.fail(new BikeNotFound({ bikeId }));
     }
 
-    return yield* Effect.fail(new BikeNotAvailable({
+    return yield* Effect.fail(reservationTransitionFailureFromBikeStatus({
       bikeId,
       status: bikeOpt.value.status,
     }));

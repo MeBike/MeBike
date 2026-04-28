@@ -9,6 +9,12 @@ import { createRentalDepositHoldInTx } from "@/domain/rentals/services/commands/
 import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/shared/unique-violation-mapper";
 import { defectOn } from "@/domain/shared";
 
+import type {
+  BikeIsDisabled,
+  BikeIsLost,
+  BikeIsRedistributing,
+  BikeNotAvailable,
+} from "../../../domain-errors";
 import type { ReservationRow } from "../../../models";
 import type {
   ConfirmReservationCommandInput,
@@ -17,10 +23,10 @@ import type {
 } from "./confirm-reservation.types";
 
 import {
-  BikeNotAvailable,
   BikeNotFound,
   ReservationConfirmBlockedByActiveRental,
 } from "../../../domain-errors";
+import { reservationTransitionFailureFromBikeStatus } from "../../../guards/bike-status";
 import { makeReservationCommandRepository } from "../../../repository/reservation-command.repository";
 
 /**
@@ -110,7 +116,10 @@ function bookReservedBikeForConfirmationInTx(
   tx: PrismaTypes.TransactionClient,
   bikeId: string,
   now: Date,
-): Effect.Effect<void, BikeNotFound | BikeNotAvailable> {
+): Effect.Effect<
+  void,
+  BikeNotFound | BikeNotAvailable | BikeIsRedistributing | BikeIsLost | BikeIsDisabled
+> {
   return Effect.gen(function* () {
     const bikeRepo = makeBikeRepository(tx);
 
@@ -124,7 +133,7 @@ function bookReservedBikeForConfirmationInTx(
       return yield* Effect.fail(new BikeNotFound({ bikeId }));
     }
 
-    return yield* Effect.fail(new BikeNotAvailable({
+    return yield* Effect.fail(reservationTransitionFailureFromBikeStatus({
       bikeId,
       status: bikeOpt.value.status,
     }));

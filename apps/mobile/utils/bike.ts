@@ -7,8 +7,9 @@ const BIKE_STATUS_LABELS: Record<BikeSummary["status"], string> = {
   BOOKED: "Đang được thuê",
   BROKEN: "Bị hỏng",
   RESERVED: "Đã đặt trước",
-  MAINTAINED: "Đang bảo trì",
-  UNAVAILABLE: "Không có sẵn",
+  REDISTRIBUTING: "Đang điều phối",
+  LOST: "Thất lạc",
+  DISABLED: "Không có sẵn",
 };
 
 const BIKE_ID_FALLBACK_WIDTH = 6;

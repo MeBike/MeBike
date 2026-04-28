@@ -97,6 +97,30 @@ const reserveBikeHandler: RouteHandler<ReservationsRoutes["reserveBike"]> = asyn
               stationId,
             },
           }, 400)),
+        Match.tag("BikeIsRedistributing", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_REDISTRIBUTING,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_REDISTRIBUTING,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsLost", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_LOST,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_LOST,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsDisabled", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_DISABLED,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_DISABLED,
+              bikeId,
+            },
+          }, 400)),
         Match.tag("BikeNotAvailable", ({ bikeId, status }) =>
           c.json<ReservationErrorResponse, 400>({
             error: reservationErrorMessages.BIKE_NOT_AVAILABLE,
@@ -267,6 +291,30 @@ const confirmReservationHandler: RouteHandler<ReservationsRoutes["confirmReserva
             error: reservationErrorMessages.BIKE_NOT_FOUND,
             details: {
               code: ReservationErrorCodeSchema.enum.BIKE_NOT_FOUND,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsRedistributing", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_REDISTRIBUTING,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_REDISTRIBUTING,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsLost", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_LOST,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_LOST,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsDisabled", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_DISABLED,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_DISABLED,
               bikeId,
             },
           }, 400)),

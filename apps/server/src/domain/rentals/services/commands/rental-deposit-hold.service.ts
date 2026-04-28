@@ -7,8 +7,8 @@ import {
   InsufficientWalletBalance,
   WalletNotFound,
 } from "@/domain/wallets/domain-errors";
-import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
+import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
 import { makeWalletQueryRepository } from "@/domain/wallets/repository/wallet-query.repository";
 
 import { makeRentalRepository } from "../../repository/rental.repository";

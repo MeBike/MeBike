@@ -61,7 +61,7 @@ export function persistReserveBikeInTx(args: {
       });
     }
     else {
-        yield* debitWallet(makeWalletCommandRepository(tx), {
+      yield* debitWallet(makeWalletCommandRepository(tx), {
         userId: input.userId,
         amount: prepared.prepaidMinor,
         description: `Reservation prepaid ${input.userId}`,
