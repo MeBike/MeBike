@@ -122,6 +122,12 @@ export function Sidebar() {
           roles: ["ADMIN"],
         },
         {
+          title: "Quản lý đội kỹ thuật",
+          icon: Users,
+          href: `/${role.toLowerCase()}/technician-teams`,
+          roles: ["ADMIN"],
+        },
+        {
           title: "Quản lý điều phối xe",
           icon: Users,
           href: `/${role.toLowerCase()}/distribution-request`,

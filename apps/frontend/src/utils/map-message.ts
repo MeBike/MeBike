@@ -1,6 +1,6 @@
 
 import { USERS_MESSAGES , AUTH_MESSAGE , STATIONS_MESSAGE , SUPPLIER_MESSAGE, BIKES_MESSAGES ,AGENCY_MESSAGES
-  , DISTRIBUTION_REQUEST,ENVIRONMENT_POLICY_REQUEST,COUPON_REQUEST
+  , DISTRIBUTION_REQUEST,ENVIRONMENT_POLICY_REQUEST,COUPON_REQUEST,TECHNICIAN_TEAM
 } from "@/constants/messages";
 const getErrorMessageUserFromCode = (code?: string) => {
   if (!code) return "Something went wrong";
@@ -51,10 +51,16 @@ const getErrorMessageFromCouponCode = (code?: string) => {
   return COUPON_REQUEST[code as keyof typeof COUPON_REQUEST] 
     || "Something went wrong";
 }
+const getErrorMessageFromTechnicianTeamCode = (code?: string) => {
+  if (!code) return "Something went wrong";
+  return TECHNICIAN_TEAM[code as keyof typeof TECHNICIAN_TEAM] 
+    || "Something went wrong";
+};
 export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, getErrorMessageFromStationCode , getErrorMessageFromSupplierCode, 
   getErrorMessageFromCustomerCode, getErrorMessageFromBikeCode,
   getErrorMessageFromAgencyCode,
   getErrorMessageFromDistributionRequestCode,
   getErrorMessageFromEnvironmentCode,
-  getErrorMessageFromCouponCode
+  getErrorMessageFromCouponCode,
+  getErrorMessageFromTechnicianTeamCode
  };
