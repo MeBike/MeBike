@@ -6,8 +6,9 @@ import { env } from "@/config/env";
 import { defectOn } from "@/domain/shared";
 import { UserQueryServiceTag } from "@/domain/users";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
+import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
-import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
+import { makeWalletQueryRepository } from "@/domain/wallets/repository/wallet-query.repository";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -23,7 +24,7 @@ import {
   WithdrawalUserNotFound,
 } from "../../domain-errors";
 import { makeWithdrawalRepository } from "../../repository/withdrawal.repository";
-import { convertVndToUsdMinor, VND_PER_USD } from "../shared/withdrawal-fx";
+import { convertVndToUsdMinor, VND_PER_USD } from "./withdrawal-fx";
 
 const WITHDRAWAL_CURRENCY = "vnd" as const;
 const PAYOUT_CURRENCY = "usd" as const;
@@ -158,11 +159,12 @@ function requestWithdrawalInTransaction(args: {
 > {
   return runPrismaTransaction(args.client, tx =>
     Effect.gen(function* () {
-      const walletRepo = makeWalletRepository(tx);
+      const walletCommandRepo = makeWalletCommandRepository(tx);
       const walletHoldRepo = makeWalletHoldRepository(tx);
+      const walletQueryRepo = makeWalletQueryRepository(tx);
       const withdrawalRepo = makeWithdrawalRepository(tx);
 
-      const wallet = yield* walletRepo.findByUserId(args.userId).pipe(
+      const wallet = yield* walletQueryRepo.findByUserId(args.userId).pipe(
         Effect.flatMap(walletOpt =>
           requireOption(walletOpt, () => new WalletNotFound({ userId: args.userId }))),
       );
@@ -173,7 +175,7 @@ function requestWithdrawalInTransaction(args: {
         request: args.request,
       }));
 
-      const reservedRows = yield* walletRepo.reserveBalance({
+      const reservedRows = yield* walletCommandRepo.reserveBalance({
         walletId: wallet.id,
         amount: args.request.amount,
       });

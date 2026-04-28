@@ -5,7 +5,7 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
 import { toMinorUnit } from "@/domain/shared/money";
-import { WalletServiceTag } from "@/domain/wallets";
+import { WalletCommandServiceTag } from "@/domain/wallets";
 import logger from "@/lib/logger";
 
 import type { ReservationRow } from "../../../models";
@@ -62,13 +62,13 @@ export function persistCancelReservationInTx(args: {
 export function refundCancelledReservationIfEligible(
   reservation: ReservationRow,
   now: Date,
-): Effect.Effect<void, never, WalletServiceTag> {
+): Effect.Effect<void, never, WalletCommandServiceTag> {
   return Effect.gen(function* () {
     if (!isRefundEligible(reservation, now)) {
       return;
     }
 
-    const walletService = yield* WalletServiceTag;
+    const walletService = yield* WalletCommandServiceTag;
     const refundHash = `refund:reservation:${reservation.id}`;
     const description = `Refund reservation ${reservation.id}`;
     const amount = toMinorUnit(reservation.prepaid);

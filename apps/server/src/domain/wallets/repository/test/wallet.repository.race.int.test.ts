@@ -4,14 +4,16 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { makeWalletRepository } from "../wallet.repository";
+import type { WalletTestRepository } from "./wallet-repository-test-kit";
+
+import { makeWalletTestRepository } from "./wallet-repository-test-kit";
 
 describe("wallet Repository - Race Conditions", () => {
   const fixture = setupPrismaIntFixture();
-  let repo: ReturnType<typeof makeWalletRepository>;
+  let repo: WalletTestRepository;
 
   beforeAll(() => {
-    repo = makeWalletRepository(fixture.prisma);
+    repo = makeWalletTestRepository(fixture.prisma);
   });
 
   it("concurrent decreaseBalance operations maintain consistency", async () => {
@@ -52,27 +54,27 @@ describe("wallet Repository - Race Conditions", () => {
     const results = await Promise.allSettled([
       fixture.prisma.$transaction(tx =>
         Effect.runPromise(
-          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+          makeWalletTestRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
       fixture.prisma.$transaction(tx =>
         Effect.runPromise(
-          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+          makeWalletTestRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
       fixture.prisma.$transaction(tx =>
         Effect.runPromise(
-          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+          makeWalletTestRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
       fixture.prisma.$transaction(tx =>
         Effect.runPromise(
-          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+          makeWalletTestRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
       fixture.prisma.$transaction(tx =>
         Effect.runPromise(
-          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+          makeWalletTestRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
         ),
       ),
     ]);

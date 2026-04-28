@@ -1,6 +1,5 @@
-import { Context, Effect, Layer, Option } from "effect";
+import { Context, Effect, Layer } from "effect";
 
-import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
@@ -9,17 +8,10 @@ import type {
 } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
-import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
-import type {
-  DecreaseBalanceInput,
-  IncreaseBalanceInput,
-  WalletRow,
-  WalletTransactionListOwnerRow,
-  WalletTransactionRow,
-} from "../models";
+import type { DecreaseBalanceInput, IncreaseBalanceInput, WalletRow } from "../models";
 
 import {
   WalletBalanceConstraint,
@@ -27,20 +19,9 @@ import {
   WalletRepositoryError,
   WalletUniqueViolation,
 } from "../domain-errors";
-import {
-  selectWalletRow,
-  selectWalletTransactionListOwnerRow,
-  selectWalletTransactionRow,
-  toWalletRow,
-  toWalletTransactionListOwnerRow,
-  toWalletTransactionRow,
-} from "./wallet.mappers";
+import { selectWalletRow, toWalletRow } from "./wallet.mappers";
 
-export type WalletRepo = {
-  findByUserId: (userId: string) => Effect.Effect<Option.Option<WalletRow>>;
-  findTransactionListOwnerByUserId: (
-    userId: string,
-  ) => Effect.Effect<Option.Option<WalletTransactionListOwnerRow>>;
+export type WalletCommandRepo = {
   createForUser: (userId: string) => Effect.Effect<WalletRow, WalletUniqueViolation>;
   increaseBalance: (
     input: IncreaseBalanceInput,
@@ -55,59 +36,52 @@ export type WalletRepo = {
   releaseReservedBalance: (
     input: { readonly walletId: string; readonly amount: bigint },
   ) => Effect.Effect<boolean>;
-  listTransactions: (
-    walletId: string,
-    pageReq: PageRequest<"createdAt">,
-    filter?: { readonly status?: WalletTransactionStatus },
-  ) => Effect.Effect<PageResult<WalletTransactionRow>>;
-  findTransactionById: (
-    walletId: string,
-    transactionId: string,
-  ) => Effect.Effect<Option.Option<WalletTransactionRow>>;
 };
 
-export class WalletRepository extends Context.Tag("WalletRepository")<
-  WalletRepository,
-  WalletRepo
+export class WalletCommandRepository extends Context.Tag("WalletCommandRepository")<
+  WalletCommandRepository,
+  WalletCommandRepo
 >() {}
 
-export function makeWalletRepository(
-  client: PrismaClient | PrismaTypes.TransactionClient,
-): WalletRepo {
-  const findWalletByUserId = async (
-    tx: PrismaClient | PrismaTypes.TransactionClient,
-    userId: string,
-  ) =>
-    tx.wallet.findUnique({
-      where: { userId },
-      select: selectWalletRow,
-    });
+async function findWalletByUserId(
+  tx: PrismaClient | PrismaTypes.TransactionClient,
+  userId: string,
+) {
+  return tx.wallet.findUnique({
+    where: { userId },
+    select: selectWalletRow,
+  });
+}
 
-  const createTransaction = async (
-    tx: PrismaClient | PrismaTypes.TransactionClient,
-    args: {
-      walletId: string;
-      amount: bigint;
-      fee: bigint;
-      description?: string | null;
-      hash?: string | null;
-      type: WalletTransactionType;
-      status: WalletTransactionStatus;
+async function createTransaction(
+  tx: PrismaClient | PrismaTypes.TransactionClient,
+  args: {
+    walletId: string;
+    amount: bigint;
+    fee: bigint;
+    description?: string | null;
+    hash?: string | null;
+    type: WalletTransactionType;
+    status: WalletTransactionStatus;
+  },
+) {
+  return tx.walletTransaction.create({
+    data: {
+      walletId: args.walletId,
+      amount: args.amount,
+      fee: args.fee,
+      description: args.description ?? null,
+      hash: args.hash ?? null,
+      type: args.type,
+      status: args.status,
     },
-  ) =>
-    tx.walletTransaction.create({
-      data: {
-        walletId: args.walletId,
-        amount: args.amount,
-        fee: args.fee,
-        description: args.description ?? null,
-        hash: args.hash ?? null,
-        type: args.type,
-        status: args.status,
-      },
-      select: { id: true },
-    });
+    select: { id: true },
+  });
+}
 
+export function makeWalletCommandRepository(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+): WalletCommandRepo {
   const runInTransaction = async <T>(
     operation: (tx: PrismaClient | PrismaTypes.TransactionClient) => Promise<T>,
   ) => {
@@ -118,35 +92,6 @@ export function makeWalletRepository(
   };
 
   return {
-    findByUserId: userId =>
-      Effect.tryPromise({
-        try: async () => {
-          const row = await findWalletByUserId(client, userId);
-          return Option.fromNullable(row).pipe(Option.map(toWalletRow));
-        },
-        catch: err =>
-          new WalletRepositoryError({
-            operation: "findByUserId",
-            cause: err,
-          }),
-      }).pipe(defectOn(WalletRepositoryError)),
-
-    findTransactionListOwnerByUserId: userId =>
-      Effect.tryPromise({
-        try: async () => {
-          const row = await client.wallet.findUnique({
-            where: { userId },
-            select: selectWalletTransactionListOwnerRow,
-          });
-          return Option.fromNullable(row).pipe(Option.map(toWalletTransactionListOwnerRow));
-        },
-        catch: err =>
-          new WalletRepositoryError({
-            operation: "findTransactionListOwnerByUserId",
-            cause: err,
-          }),
-      }).pipe(defectOn(WalletRepositoryError)),
-
     createForUser: userId =>
       Effect.tryPromise({
         try: async () => {
@@ -309,68 +254,13 @@ export function makeWalletRepository(
             cause: err,
           }),
       }).pipe(defectOn(WalletRepositoryError)),
-
-    listTransactions: (walletId, pageReq, filter) => {
-      const { page, pageSize, skip, take } = normalizedPage(pageReq);
-      const where = {
-        walletId,
-        ...(filter?.status ? { status: filter.status } : {}),
-      };
-
-      return Effect.gen(function* () {
-        const [total, rows] = yield* Effect.all([
-          Effect.tryPromise({
-            try: () => client.walletTransaction.count({ where }),
-            catch: err =>
-              new WalletRepositoryError({
-                operation: "listTransactions.count",
-                cause: err,
-              }),
-          }),
-          Effect.tryPromise({
-            try: () =>
-              client.walletTransaction.findMany({
-                where,
-                orderBy: { createdAt: "desc" },
-                skip,
-                take,
-                select: selectWalletTransactionRow,
-              }),
-            catch: err =>
-              new WalletRepositoryError({
-                operation: "listTransactions.findMany",
-                cause: err,
-              }),
-          }),
-        ]);
-
-        return makePageResult(rows.map(toWalletTransactionRow), total, page, pageSize);
-      }).pipe(defectOn(WalletRepositoryError));
-    },
-
-    findTransactionById: (walletId, transactionId) =>
-      Effect.tryPromise({
-        try: async () => {
-          const row = await client.walletTransaction.findFirst({
-            where: { id: transactionId, walletId },
-            select: selectWalletTransactionRow,
-          });
-
-          return Option.fromNullable(row).pipe(Option.map(toWalletTransactionRow));
-        },
-        catch: err =>
-          new WalletRepositoryError({
-            operation: "findTransactionById",
-            cause: err,
-          }),
-      }).pipe(defectOn(WalletRepositoryError)),
   };
 }
 
-export const WalletRepositoryLive = Layer.effect(
-  WalletRepository,
+export const WalletCommandRepositoryLive = Layer.effect(
+  WalletCommandRepository,
   Effect.gen(function* () {
     const { client } = yield* Prisma;
-    return makeWalletRepository(client);
+    return makeWalletCommandRepository(client);
   }),
 );

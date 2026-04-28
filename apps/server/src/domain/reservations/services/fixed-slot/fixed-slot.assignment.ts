@@ -13,7 +13,7 @@ import {
   makeSubscriptionCommandRepository,
   makeSubscriptionQueryRepository,
 } from "@/domain/subscriptions";
-import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
+import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -255,7 +255,7 @@ async function runFixedSlotAssignmentTransaction(
       const txPricingPolicyRepo = makePricingPolicyRepository(tx);
       const txSubscriptionQueryRepo = makeSubscriptionQueryRepository(tx);
       const txSubscriptionCommandRepo = makeSubscriptionCommandRepository(tx);
-      const txWalletRepo = makeWalletRepository(tx);
+      const txWalletRepo = makeWalletCommandRepository(tx);
 
       const billingResult = yield* billFixedSlotDates({
         userId: template.userId,

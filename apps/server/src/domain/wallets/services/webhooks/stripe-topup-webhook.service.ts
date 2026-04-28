@@ -8,8 +8,8 @@ import type { StripeWebhookOutcome } from "../providers/stripe-topup.service";
 
 import { TopupProviderError } from "../../domain-errors";
 import { makePaymentAttemptRepository } from "../../repository/payment-attempt.repository";
+import { settleSuccessfulTopup } from "../commands/settle-topup.service";
 import { StripeTopupServiceTag } from "../providers/stripe-topup.service";
-import { settleSuccessfulTopup } from "../shared/settle-topup.service";
 
 function matchAttemptOption<A>(
   effect: Effect.Effect<{ _tag: "Some"; value: A } | { _tag: "None" }>,

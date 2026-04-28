@@ -4,7 +4,7 @@ import type { DuplicateUserEmail, DuplicateUserPhoneNumber } from "@/domain/user
 
 import { defectOn } from "@/domain/shared";
 import { makeUserCommandRepository } from "@/domain/users";
-import { makeWalletRepository } from "@/domain/wallets";
+import { makeWalletCommandRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -41,7 +41,7 @@ export function registerUseCase(args: {
           passwordHash,
           phoneNumber: args.phoneNumber ?? null,
         });
-        yield* makeWalletRepository(tx).createForUser(created.id);
+        yield* makeWalletCommandRepository(tx).createForUser(created.id);
         return created;
       })).pipe(
       defectOn(PrismaTransactionError),

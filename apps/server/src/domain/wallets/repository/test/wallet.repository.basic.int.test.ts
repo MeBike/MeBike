@@ -7,14 +7,16 @@ import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { expectDefect, expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
-import { makeWalletRepository } from "../wallet.repository";
+import type { WalletTestRepository } from "./wallet-repository-test-kit";
+
+import { makeWalletTestRepository } from "./wallet-repository-test-kit";
 
 describe("wallet Repository - Basic Operations", () => {
   const fixture = setupPrismaIntFixture();
-  let repo: ReturnType<typeof makeWalletRepository>;
+  let repo: WalletTestRepository;
 
   beforeAll(() => {
-    repo = makeWalletRepository(fixture.prisma);
+    repo = makeWalletTestRepository(fixture.prisma);
   });
 
   it("createForUser creates a wallet", async () => {
@@ -155,7 +157,7 @@ describe("wallet Repository - Basic Operations", () => {
   it("defects with WalletRepositoryError when database is unreachable", async () => {
     const broken = makeUnreachablePrisma();
     try {
-      const brokenRepo = makeWalletRepository(broken.client);
+      const brokenRepo = makeWalletTestRepository(broken.client);
 
       await expectDefect(
         brokenRepo.findByUserId(uuidv7()),

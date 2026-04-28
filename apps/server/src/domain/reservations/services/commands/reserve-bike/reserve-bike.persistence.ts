@@ -9,7 +9,7 @@ import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
 import { makeStationQueryRepository } from "@/domain/stations";
 import { makeUserQueryRepository } from "@/domain/users";
-import { makeWalletRepository } from "@/domain/wallets";
+import { makeWalletCommandRepository } from "@/domain/wallets";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { buildReservationConfirmedEmail } from "@/lib/email-templates";
@@ -61,7 +61,7 @@ export function persistReserveBikeInTx(args: {
       });
     }
     else {
-      yield* debitWallet(makeWalletRepository(tx), {
+        yield* debitWallet(makeWalletCommandRepository(tx), {
         userId: input.userId,
         amount: prepared.prepaidMinor,
         description: `Reservation prepaid ${input.userId}`,
@@ -226,7 +226,7 @@ function enqueueReservationConfirmationEmailInTx(args: {
  * @param input.description Mô tả transaction wallet.
  */
 function debitWallet(
-  repo: ReturnType<typeof makeWalletRepository>,
+  repo: ReturnType<typeof makeWalletCommandRepository>,
   input: DecreaseBalanceInput,
 ): Effect.Effect<void, WalletNotFound | InsufficientWalletBalance> {
   return repo.decreaseBalance(input).pipe(

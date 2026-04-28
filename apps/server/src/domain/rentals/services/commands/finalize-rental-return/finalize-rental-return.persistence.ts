@@ -6,7 +6,7 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
-import { makeWalletRepository } from "@/domain/wallets";
+import { makeWalletCommandRepository } from "@/domain/wallets";
 
 import type { RentalServiceFailure } from "../../../domain-errors";
 import type { RentalRow } from "../../../models";
@@ -54,7 +54,7 @@ export function persistFinalizeRentalReturnInTx(args: {
     });
 
     if (pricing.totalPriceMinor > 0n) {
-      yield* debitWallet(makeWalletRepository(tx), {
+      yield* debitWallet(makeWalletCommandRepository(tx), {
         userId: rental.userId,
         amount: pricing.totalPriceMinor,
         description: `Rental ${rental.id}`,
@@ -186,7 +186,7 @@ function createRentalBillingRecordInTx(args: {
  * Trừ tiền thuê cuối cùng khỏi ví người dùng và map lỗi về domain error của rental.
  */
 function debitWallet(
-  repo: ReturnType<typeof makeWalletRepository>,
+  repo: ReturnType<typeof makeWalletCommandRepository>,
   input: DecreaseBalanceInput,
 ) {
   return repo.decreaseBalance(input).pipe(

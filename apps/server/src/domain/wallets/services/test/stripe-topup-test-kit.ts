@@ -8,10 +8,10 @@ import { Prisma } from "@/infrastructure/prisma";
 import { StripeClient } from "@/infrastructure/stripe";
 
 import { PaymentAttemptRepositoryLive } from "../../repository/payment-attempt.repository";
-import { WalletRepositoryLive } from "../../repository/wallet.repository";
+import { WalletQueryRepositoryLive } from "../../repository/wallet-query.repository";
 import { createStripePaymentSheet } from "../commands/request-stripe-topup.service";
 import { StripeTopupServiceLive } from "../providers/stripe-topup.service";
-import { WalletServiceLive } from "../shared/wallet.service";
+import { WalletQueryServiceLive } from "../queries/wallet-query.service";
 import {
   handleStripePaymentIntentWebhookEvent,
 } from "../webhooks/stripe-topup-webhook.service";
@@ -33,8 +33,8 @@ export function makeStripeTopupTestKit(args: {
   }));
 
   const paymentAttemptRepoLayer = PaymentAttemptRepositoryLive.pipe(Layer.provide(prismaLayer));
-  const walletRepoLayer = WalletRepositoryLive.pipe(Layer.provide(prismaLayer));
-  const walletServiceLayer = WalletServiceLive.pipe(Layer.provide(walletRepoLayer));
+  const walletRepoLayer = WalletQueryRepositoryLive.pipe(Layer.provide(prismaLayer));
+  const walletServiceLayer = WalletQueryServiceLive.pipe(Layer.provide(walletRepoLayer));
   const stripeTopupLayer = StripeTopupServiceLive.pipe(
     Layer.provide(Layer.mergeAll(stripeLayer, paymentAttemptRepoLayer)),
   );

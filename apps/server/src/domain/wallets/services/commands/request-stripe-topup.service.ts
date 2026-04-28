@@ -8,7 +8,7 @@ import type {
 } from "../providers/stripe-topup.service";
 
 import { StripeTopupServiceTag } from "../providers/stripe-topup.service";
-import { WalletServiceTag } from "../shared/wallet.service";
+import { WalletQueryServiceTag } from "../queries/wallet-query.service";
 
 export type CreateStripeCheckoutSessionInput = Omit<
   StripeCheckoutAttemptInput,
@@ -28,11 +28,11 @@ export function createStripeCheckoutSession(
 ): Effect.Effect<
   StripeTopupSessionResult,
   InvalidTopupRequest | TopupProviderError | PaymentAttemptUniqueViolation | WalletNotFound,
-  StripeTopupServiceTag | WalletServiceTag
+  StripeTopupServiceTag | WalletQueryServiceTag
 > {
   return Effect.gen(function* () {
     const service = yield* StripeTopupServiceTag;
-    const walletService = yield* WalletServiceTag;
+    const walletService = yield* WalletQueryServiceTag;
     const wallet = yield* walletService.getByUserId(input.userId);
 
     const prepared = yield* service.prepareCheckoutAttempt({
@@ -61,11 +61,11 @@ export function createStripePaymentSheet(
 ): Effect.Effect<
   StripeTopupPaymentSheetResult,
   InvalidTopupRequest | TopupProviderError | PaymentAttemptUniqueViolation | WalletNotFound,
-  StripeTopupServiceTag | WalletServiceTag
+  StripeTopupServiceTag | WalletQueryServiceTag
 > {
   return Effect.gen(function* () {
     const service = yield* StripeTopupServiceTag;
-    const walletService = yield* WalletServiceTag;
+    const walletService = yield* WalletQueryServiceTag;
     const wallet = yield* walletService.getByUserId(input.userId);
 
     const prepared = yield* service.preparePaymentSheetAttempt({

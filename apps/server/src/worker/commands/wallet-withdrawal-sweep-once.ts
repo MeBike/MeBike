@@ -8,10 +8,11 @@ import {
 import {
   StripeWithdrawalServiceLive,
   sweepWithdrawalsUseCase,
+  WalletCommandRepositoryLive,
+  WalletCommandServiceLive,
   WalletHoldRepositoryLive,
-  WalletHoldServiceLive,
-  WalletRepositoryLive,
-  WalletServiceLive,
+  WalletQueryRepositoryLive,
+  WalletQueryServiceLive,
   WithdrawalRepositoryLive,
   WithdrawalServiceLive,
 } from "@/domain/wallets";
@@ -27,7 +28,11 @@ const UserQueryServiceLayer = UserQueryServiceLive.pipe(
   Layer.provide(UserQueryReposLive),
 );
 
-const WalletReposLive = WalletRepositoryLive.pipe(
+const WalletQueryReposLive = WalletQueryRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const WalletCommandReposLive = WalletCommandRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
@@ -35,12 +40,13 @@ const WalletHoldReposLive = WalletHoldRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-const WalletServiceLayer = WalletServiceLive.pipe(
-  Layer.provide(WalletReposLive),
+const WalletQueryServiceLayer = WalletQueryServiceLive.pipe(
+  Layer.provide(WalletQueryReposLive),
 );
 
-const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
-  Layer.provide(WalletHoldReposLive),
+const WalletCommandServiceLayer = WalletCommandServiceLive.pipe(
+  Layer.provide(WalletCommandReposLive),
+  Layer.provide(WalletQueryServiceLayer),
 );
 
 const WithdrawalReposLive = WithdrawalRepositoryLive.pipe(
@@ -58,10 +64,11 @@ const StripeWithdrawalServiceLayer = StripeWithdrawalServiceLive.pipe(
 const WithdrawalSweepLive = Layer.mergeAll(
   UserQueryReposLive,
   UserQueryServiceLayer,
-  WalletReposLive,
-  WalletServiceLayer,
+  WalletQueryReposLive,
+  WalletQueryServiceLayer,
+  WalletCommandReposLive,
+  WalletCommandServiceLayer,
   WalletHoldReposLive,
-  WalletHoldServiceLayer,
   WithdrawalReposLive,
   WithdrawalServiceLayer,
   StripeWithdrawalServiceLayer,

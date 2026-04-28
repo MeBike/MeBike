@@ -8,7 +8,8 @@ import {
   WalletNotFound,
 } from "@/domain/wallets/domain-errors";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
-import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
+import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
+import { makeWalletQueryRepository } from "@/domain/wallets/repository/wallet-query.repository";
 
 import { makeRentalRepository } from "../../repository/rental.repository";
 
@@ -33,17 +34,18 @@ export function createRentalDepositHoldInTx(
   | InsufficientWalletBalance
 > {
   return Effect.gen(function* () {
-    const txWalletRepo = makeWalletRepository(input.tx);
+    const txWalletCommandRepo = makeWalletCommandRepository(input.tx);
     const txWalletHoldRepo = makeWalletHoldRepository(input.tx);
+    const txWalletQueryRepo = makeWalletQueryRepository(input.tx);
     const txRentalRepo = makeRentalRepository(input.tx);
 
-    const walletOpt = yield* txWalletRepo.findByUserId(input.userId);
+    const walletOpt = yield* txWalletQueryRepo.findByUserId(input.userId);
     if (Option.isNone(walletOpt)) {
       return yield* Effect.fail(new WalletNotFound({ userId: input.userId }));
     }
 
     const wallet = walletOpt.value;
-    const reserved = yield* txWalletRepo.reserveBalance({
+    const reserved = yield* txWalletCommandRepo.reserveBalance({
       walletId: wallet.id,
       amount: input.amount,
     });
@@ -82,7 +84,7 @@ export function releaseRentalDepositHoldInTx(
 ): Effect.Effect<boolean> {
   return Effect.gen(function* () {
     const txWalletHoldRepo = makeWalletHoldRepository(input.tx);
-    const txWalletRepo = makeWalletRepository(input.tx);
+    const txWalletRepo = makeWalletCommandRepository(input.tx);
 
     const holdOpt = yield* txWalletHoldRepo.findById(input.holdId);
     if (Option.isNone(holdOpt)) {
@@ -124,7 +126,7 @@ export function forfeitRentalDepositHoldInTx(
 > {
   return Effect.gen(function* () {
     const txWalletHoldRepo = makeWalletHoldRepository(input.tx);
-    const txWalletRepo = makeWalletRepository(input.tx);
+    const txWalletRepo = makeWalletCommandRepository(input.tx);
 
     const holdOpt = yield* txWalletHoldRepo.findById(input.holdId);
     if (Option.isNone(holdOpt)) {
@@ -158,7 +160,7 @@ export function forfeitRentalDepositHoldInTx(
 }
 
 function debitHeldAmount(
-  repo: ReturnType<typeof makeWalletRepository>,
+  repo: ReturnType<typeof makeWalletCommandRepository>,
   input: DecreaseBalanceInput,
 ) {
   return repo.decreaseBalance(input).pipe(

@@ -7,7 +7,7 @@ import type {
   SubscriptionCommandServiceTag,
   SubscriptionQueryServiceTag,
 } from "@/domain/subscriptions";
-import type { WalletServiceTag } from "@/domain/wallets/services/shared/wallet.service";
+import type { WalletCommandServiceTag, WalletQueryServiceTag } from "@/domain/wallets";
 import type { PrismaClient } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
@@ -31,8 +31,14 @@ import {
   SubscriptionQueryRepository,
   SubscriptionQueryServiceLive,
 } from "@/domain/subscriptions";
-import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
-import { WalletServiceLive } from "@/domain/wallets/services/shared/wallet.service";
+import {
+  makeWalletCommandRepository,
+  makeWalletQueryRepository,
+  WalletCommandRepository,
+  WalletCommandServiceLive,
+  WalletQueryRepository,
+  WalletQueryServiceLive,
+} from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectEitherWithLayer } from "@/test/effect/run";
 
@@ -45,8 +51,10 @@ export type ReservationDeps
     | ReservationQueryServiceTag
     | BikeRepository
     | StationQueryRepository
-    | WalletRepository
-    | WalletServiceTag
+    | WalletCommandRepository
+    | WalletCommandServiceTag
+    | WalletQueryRepository
+    | WalletQueryServiceTag
     | SubscriptionQueryRepository
     | SubscriptionCommandRepository
     | SubscriptionQueryServiceTag
@@ -58,7 +66,8 @@ export function makeReservationTestLayer(client: PrismaClient) {
   const reservationCommandRepo = makeReservationCommandRepository(client);
   const bikeRepo = makeBikeRepository(client);
   const stationRepo = makeStationQueryRepository(client);
-  const walletRepo = makeWalletRepository(client);
+  const walletCommandRepo = makeWalletCommandRepository(client);
+  const walletQueryRepo = makeWalletQueryRepository(client);
   const subscriptionQueryRepo = makeSubscriptionQueryRepository(client);
   const subscriptionCommandRepo = makeSubscriptionCommandRepository(client);
   const rentalRepo = makeRentalRepository(client);
@@ -75,9 +84,14 @@ export function makeReservationTestLayer(client: PrismaClient) {
   const reservationQueryServiceLayer = ReservationQueryServiceLive.pipe(
     Layer.provide(reservationQueryRepoLayer),
   );
-  const walletRepoLayer = Layer.succeed(WalletRepository, walletRepo);
-  const walletServiceLayer = WalletServiceLive.pipe(
-    Layer.provide(walletRepoLayer),
+  const walletCommandRepoLayer = Layer.succeed(WalletCommandRepository, walletCommandRepo);
+  const walletQueryRepoLayer = Layer.succeed(WalletQueryRepository, walletQueryRepo);
+  const walletQueryServiceLayer = WalletQueryServiceLive.pipe(
+    Layer.provide(walletQueryRepoLayer),
+  );
+  const walletCommandServiceLayer = WalletCommandServiceLive.pipe(
+    Layer.provide(walletCommandRepoLayer),
+    Layer.provide(walletQueryServiceLayer),
   );
   const subscriptionQueryRepoLayer = Layer.succeed(
     SubscriptionQueryRepository,
@@ -101,8 +115,10 @@ export function makeReservationTestLayer(client: PrismaClient) {
     reservationQueryServiceLayer,
     Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
     Layer.succeed(StationQueryRepository, StationQueryRepository.make(stationRepo)),
-    walletRepoLayer,
-    walletServiceLayer,
+    walletCommandRepoLayer,
+    walletCommandServiceLayer,
+    walletQueryRepoLayer,
+    walletQueryServiceLayer,
     subscriptionQueryRepoLayer,
     subscriptionCommandRepoLayer,
     subscriptionQueryServiceLayer,

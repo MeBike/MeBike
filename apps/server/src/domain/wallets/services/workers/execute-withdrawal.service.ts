@@ -3,8 +3,8 @@ import { Effect, Match } from "effect";
 import { env } from "@/config/env";
 import { defectOn } from "@/domain/shared";
 import { UserQueryServiceTag } from "@/domain/users/services/user-query.live";
+import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
-import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -12,8 +12,8 @@ import type { WithdrawalProviderError } from "../../domain-errors";
 
 import { WithdrawalNotFound, WithdrawalUserNotFound } from "../../domain-errors";
 import { makeWithdrawalRepository, WithdrawalRepository } from "../../repository/withdrawal.repository";
+import { convertVndToUsdMinor } from "../commands/withdrawal-fx";
 import { StripeWithdrawalServiceTag } from "../providers/stripe-withdrawal.service";
-import { convertVndToUsdMinor } from "../shared/withdrawal-fx";
 
 export type ExecuteWithdrawalOutcome
   = | { readonly status: "missing"; readonly withdrawalId: string }
@@ -250,7 +250,7 @@ function markFailedAndReleaseHold(
       Effect.gen(function* () {
         const txWithdrawalRepo = makeWithdrawalRepository(tx);
         const txWalletHoldRepo = makeWalletHoldRepository(tx);
-        const txWalletRepo = makeWalletRepository(tx);
+        const txWalletRepo = makeWalletCommandRepository(tx);
 
         const markFailed = yield* txWithdrawalRepo.markFailed({
           withdrawalId: withdrawal.id,

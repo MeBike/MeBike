@@ -15,7 +15,7 @@ import {
   WalletNotFound,
 } from "@/domain/wallets/domain-errors";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
-import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
+import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -34,7 +34,7 @@ export type WithdrawalSweepSummary = {
 const SWEEP_LIMIT = 100;
 
 function debitWallet(
-  repo: ReturnType<typeof makeWalletRepository>,
+  repo: ReturnType<typeof makeWalletCommandRepository>,
   input: DecreaseBalanceInput,
 ) {
   return repo.decreaseBalance(input).pipe(
@@ -181,7 +181,7 @@ function markSucceededAndSettle(
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
       const txWalletHoldRepo = makeWalletHoldRepository(tx);
-      const txWalletRepo = makeWalletRepository(tx);
+        const txWalletRepo = makeWalletCommandRepository(tx);
 
       const marked = yield* txWithdrawalRepo.markSucceeded({
         withdrawalId: withdrawal.id,
@@ -230,7 +230,7 @@ function markFailedAndReleaseHold(
     Effect.gen(function* () {
       const txWithdrawalRepo = makeWithdrawalRepository(tx);
       const txWalletHoldRepo = makeWalletHoldRepository(tx);
-      const txWalletRepo = makeWalletRepository(tx);
+        const txWalletRepo = makeWalletCommandRepository(tx);
 
       const marked = yield* txWithdrawalRepo.markFailed({
         withdrawalId: withdrawal.id,

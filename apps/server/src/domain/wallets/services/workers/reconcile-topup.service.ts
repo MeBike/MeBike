@@ -10,8 +10,8 @@ import type { PaymentAttemptRow } from "../../models";
 import type { PaymentAttemptRepositoryType } from "../../repository/payment-attempt.repository";
 
 import { PaymentAttemptRepository } from "../../repository/payment-attempt.repository";
+import { settleSuccessfulTopup } from "../commands/settle-topup.service";
 import { StripeTopupServiceTag } from "../providers/stripe-topup.service";
-import { settleSuccessfulTopup } from "../shared/settle-topup.service";
 
 const TOPUP_RECONCILE_LIMIT = 100;
 

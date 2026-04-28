@@ -30,10 +30,11 @@ import {
   PaymentAttemptRepositoryLive,
   StripeTopupServiceLive,
   StripeWithdrawalServiceLive,
+  WalletCommandRepositoryLive,
+  WalletCommandServiceLive,
   WalletHoldRepositoryLive,
-  WalletHoldServiceLive,
-  WalletRepositoryLive,
-  WalletServiceLive,
+  WalletQueryRepositoryLive,
+  WalletQueryServiceLive,
   WithdrawalRepositoryLive,
   WithdrawalServiceLive,
 } from "@/domain/wallets";
@@ -91,7 +92,11 @@ const EnvironmentImpactServiceLayer = EnvironmentImpactServiceLive.pipe(
   Layer.provide(EnvironmentPolicyServiceLayer),
 );
 
-const WalletReposLive = WalletRepositoryLive.pipe(
+const WalletQueryReposLive = WalletQueryRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const WalletCommandReposLive = WalletCommandRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
@@ -99,12 +104,13 @@ const WalletHoldReposLive = WalletHoldRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-const WalletServiceLayer = WalletServiceLive.pipe(
-  Layer.provide(WalletReposLive),
+const WalletQueryServiceLayer = WalletQueryServiceLive.pipe(
+  Layer.provide(WalletQueryReposLive),
 );
 
-const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
-  Layer.provide(WalletHoldReposLive),
+const WalletCommandServiceLayer = WalletCommandServiceLive.pipe(
+  Layer.provide(WalletCommandReposLive),
+  Layer.provide(WalletQueryServiceLayer),
 );
 
 const PaymentAttemptReposLive = PaymentAttemptRepositoryLive.pipe(
@@ -146,10 +152,11 @@ export const WorkerRuntimeLive = Layer.mergeAll(
   EnvironmentImpactReposLive,
   EnvironmentPolicyServiceLayer,
   EnvironmentImpactServiceLayer,
-  WalletReposLive,
+  WalletQueryReposLive,
+  WalletCommandReposLive,
   WalletHoldReposLive,
-  WalletServiceLayer,
-  WalletHoldServiceLayer,
+  WalletQueryServiceLayer,
+  WalletCommandServiceLayer,
   PaymentAttemptReposLive,
   StripeTopupServiceLayer,
   WithdrawalReposLive,

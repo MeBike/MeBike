@@ -2,7 +2,7 @@ import { Effect, Option } from "effect";
 
 import type { makePricingPolicyRepository } from "@/domain/pricing";
 import type { makeSubscriptionCommandRepository, makeSubscriptionQueryRepository } from "@/domain/subscriptions";
-import type { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
+import type { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 
 import { getReservationFeeMinor } from "@/domain/pricing";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
@@ -33,7 +33,7 @@ export function billFixedSlotDates(args: {
   txPricingPolicyRepo: ReturnType<typeof makePricingPolicyRepository>;
   txSubscriptionQueryRepo: ReturnType<typeof makeSubscriptionQueryRepository>;
   txSubscriptionCommandRepo: ReturnType<typeof makeSubscriptionCommandRepository>;
-  txWalletRepo: ReturnType<typeof makeWalletRepository>;
+  txWalletRepo: ReturnType<typeof makeWalletCommandRepository>;
 }): Effect.Effect<
   FixedSlotBillingResult,
   FixedSlotTemplateBillingConflict | WalletNotFound | InsufficientWalletBalance

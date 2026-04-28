@@ -8,17 +8,19 @@ import type { StripeWebhookOutcome } from "../providers/stripe-topup.service";
 
 import { TopupProviderError, WalletNotFound as WalletNotFoundError } from "../../domain-errors";
 import { makePaymentAttemptRepository } from "../../repository/payment-attempt.repository";
-import { makeWalletRepository } from "../../repository/wallet.repository";
+import { makeWalletCommandRepository } from "../../repository/wallet-command.repository";
+import { makeWalletQueryRepository } from "../../repository/wallet-query.repository";
 
 function creditWallet(
-  repo: ReturnType<typeof makeWalletRepository>,
+  commandRepo: ReturnType<typeof makeWalletCommandRepository>,
+  queryRepo: ReturnType<typeof makeWalletQueryRepository>,
   input: IncreaseBalanceInput,
 ) {
-  return repo.increaseBalance(input).pipe(
+  return commandRepo.increaseBalance(input).pipe(
     Effect.catchTag("WalletRecordNotFound", () =>
       Effect.fail(new WalletNotFoundError({ userId: input.userId }))),
     Effect.catchTag("WalletUniqueViolation", () =>
-      repo.findByUserId(input.userId).pipe(
+      queryRepo.findByUserId(input.userId).pipe(
         Effect.flatMap(maybeWallet =>
           maybeWallet._tag === "Some"
             ? Effect.succeed(maybeWallet.value)
@@ -45,14 +47,15 @@ export function settleSuccessfulTopup(
   return runPrismaTransaction(client, tx =>
     Effect.gen(function* () {
       const txPaymentAttemptRepo = makePaymentAttemptRepository(tx);
-      const txWalletRepo = makeWalletRepository(tx);
+      const txWalletCommandRepo = makeWalletCommandRepository(tx);
+      const txWalletQueryRepo = makeWalletQueryRepository(tx);
 
       const updated = yield* txPaymentAttemptRepo.markSucceededIfPending(attempt.id, input.providerRef);
       if (!updated) {
         return { status: "ignored", reason: "already_processed" } as StripeWebhookOutcome;
       }
 
-      const creditResult = yield* creditWallet(txWalletRepo, {
+      const creditResult = yield* creditWallet(txWalletCommandRepo, txWalletQueryRepo, {
         userId: attempt.userId,
         amount: input.amountMinor,
         description: input.description,
