@@ -2,7 +2,7 @@
 
 import { useDistributionRequest } from "@/hooks/use-distribution-request";
 import { useStationActions } from "@/hooks/use-station";
-import CreateDistributionRequestClient from "@/app/staff/distribution-request/create/client";
+import CreateDistributionRequestClient from "./client";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";// Giả sử bạn có component này
 import { useEffect } from "react";
 
