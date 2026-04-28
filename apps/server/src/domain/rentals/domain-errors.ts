@@ -59,7 +59,7 @@ export class BikeIsBroken extends Data.TaggedError("BikeIsBroken")<{
   readonly bikeId: string;
 }> {}
 
-export class BikeIsMaintained extends Data.TaggedError("BikeIsMaintained")<{
+export class BikeIsLost extends Data.TaggedError("BikeIsLost")<{
   readonly bikeId: string;
 }> {}
 
@@ -67,7 +67,11 @@ export class BikeIsReserved extends Data.TaggedError("BikeIsReserved")<{
   readonly bikeId: string;
 }> {}
 
-export class BikeUnavailable extends Data.TaggedError("BikeUnavailable")<{
+export class BikeIsRedistributing extends Data.TaggedError("BikeIsRedistributing")<{
+  readonly bikeId: string;
+}> {}
+
+export class BikeIsDisabled extends Data.TaggedError("BikeIsDisabled")<{
   readonly bikeId: string;
 }> {}
 
@@ -200,9 +204,10 @@ export type RentalServiceFailure
     | BikeMissingStation
     | BikeNotFoundInStation
     | BikeIsBroken
-    | BikeIsMaintained
+    | BikeIsLost
     | BikeIsReserved
-    | BikeUnavailable
+    | BikeIsRedistributing
+    | BikeIsDisabled
     | InvalidBikeStatus
     | UserWalletNotFound
     | InsufficientBalanceToRent

@@ -132,7 +132,7 @@ export async function sweepOverdueRentals(
           }
 
           const updatedBike = await Effect.runPromise(
-            txBikeRepo.updateStatusAt(rental.bikeId, "UNAVAILABLE", now),
+            txBikeRepo.updateStatusAt(rental.bikeId, "DISABLED", now),
           );
 
           if (Option.isNone(updatedBike)) {
