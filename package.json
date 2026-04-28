@@ -2,7 +2,7 @@
   "name": "mebike",
   "type": "module",
   "version": "1.0.0",
-  "packageManager": "pnpm@10.27.0",
+  "packageManager": "pnpm@10.33.2",
   "description": "Project for  MeBike",
   "author": "",
   "license": "ISC",
