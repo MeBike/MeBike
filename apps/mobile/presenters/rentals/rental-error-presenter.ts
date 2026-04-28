@@ -32,6 +32,7 @@ const rentalErrorMessages = {
   invalidObjectId: "Mã định danh không hợp lệ.",
   invalidRentalStatus: "Trạng thái chuyến đi không hợp lệ.",
   networkError: "Không thể kết nối tới máy chủ.",
+  notEnoughBalanceForReturnSlot: "Số dư ví không đủ để giữ chỗ trả xe.",
   notAvailableBike: "Xe hiện không sẵn sàng để sử dụng.",
   notEnoughBalanceToRent: "Số dư ví không đủ để bắt đầu chuyến đi.",
   notFoundRentedRental: "Bạn hiện không có chuyến đi đang diễn ra.",
@@ -132,6 +133,16 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.invalidRentalStatus;
     case "NOT_AVAILABLE_BIKE":
       return rentalErrorMessages.notAvailableBike;
+    case "NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT": {
+      const requiredBalance = formatCurrencyDetail(error.details?.requiredBalance);
+      const currentBalance = formatCurrencyDetail(error.details?.currentBalance);
+
+      if (requiredBalance && currentBalance) {
+        return `Số dư ví không đủ để giữ chỗ trả xe. Bạn cần ${requiredBalance} nhưng hiện chỉ còn ${currentBalance}.`;
+      }
+
+      return rentalErrorMessages.notEnoughBalanceForReturnSlot;
+    }
     case "NOT_ENOUGH_BALANCE_TO_RENT": {
       const requiredBalance = formatCurrencyDetail(error.details?.requiredBalance);
       const currentBalance = formatCurrencyDetail(error.details?.currentBalance);

@@ -15,6 +15,8 @@ import { makeRentalRunners, makeRentalTestLayer } from "./rental-test-kit";
 
 const SAFE_RENTAL_START_TIME = new Date("2025-01-01T10:00:00.000Z");
 const SAFE_RETURN_CONFIRMED_AT = new Date("2025-01-01T10:30:00.000Z");
+const RETURN_SLOT_FEE = 2000n;
+const ACTIVE_RENTAL_WALLET_BALANCE = 100000n;
 
 describe("return slot integration", () => {
   const fixture = setupPrismaIntFixture();
@@ -51,6 +53,15 @@ describe("return slot integration", () => {
     expect(created.userId).toBe(user.id);
     expect(created.stationId).toBe(targetStation.id);
 
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    expect(wallet?.balance).toBe(ACTIVE_RENTAL_WALLET_BALANCE - RETURN_SLOT_FEE);
+
+    const feeTransaction = await fixture.prisma.walletTransaction.findFirst({
+      where: { hash: `return-slot:${created.id}:fee` },
+    });
+    expect(feeTransaction?.amount).toBe(RETURN_SLOT_FEE);
+    expect(feeTransaction?.type).toBe("DEBIT");
+
     const current = await runGetCurrentReturnSlot({
       rentalId: rental.id,
       userId: user.id,
@@ -84,6 +95,17 @@ describe("return slot integration", () => {
 
     const slots = await fixture.prisma.returnSlotReservation.findMany({ where: { rentalId: rental.id } });
     expect(slots).toHaveLength(1);
+
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    expect(wallet?.balance).toBe(ACTIVE_RENTAL_WALLET_BALANCE - RETURN_SLOT_FEE);
+
+    const feeTransactions = await fixture.prisma.walletTransaction.count({
+      where: {
+        walletId: wallet!.id,
+        description: { startsWith: "Return slot reservation" },
+      },
+    });
+    expect(feeTransactions).toBe(1);
   });
 
   it("replaces the active return slot when the destination station changes", async () => {
@@ -114,6 +136,29 @@ describe("return slot integration", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]?.status).toBe("CANCELLED");
     expect(rows[1]?.status).toBe("ACTIVE");
+
+    const wallet = await fixture.prisma.wallet.findUnique({ where: { userId: user.id } });
+    expect(wallet?.balance).toBe(ACTIVE_RENTAL_WALLET_BALANCE - RETURN_SLOT_FEE * 2n);
+  });
+
+  it("does not create a return slot when wallet balance cannot cover the fee", async () => {
+    const { user, rental } = await givenActiveRental(fixture, {
+      wallet: { balance: RETURN_SLOT_FEE - 1n },
+    });
+    const targetStation = await fixture.factories.station({ capacity: 2 });
+
+    const result = await runCreateReturnSlot({
+      rentalId: rental.id,
+      userId: user.id,
+      stationId: targetStation.id,
+    });
+
+    expectLeftTag(result, "InsufficientBalanceForReturnSlot");
+
+    const slotCount = await fixture.prisma.returnSlotReservation.count({
+      where: { rentalId: rental.id },
+    });
+    expect(slotCount).toBe(0);
   });
 
   it("cancels the active return slot", async () => {
@@ -761,7 +806,7 @@ describe("return slot integration", () => {
 
   it("allows a staff operator to confirm return outside their assigned station", async () => {
     const { user, rental } = await givenActiveRental(fixture, {
-      wallet: { balance: 5000n },
+      wallet: { balance: 100000n },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     const reservedStation = await fixture.factories.station({ capacity: 2 });

@@ -1,12 +1,10 @@
-import type { z } from "zod";
-
-import { ServerContracts } from "@mebike/shared";
-import { StatusCodes } from "http-status-codes";
-
 import type { Result } from "@lib/result";
+import type { z } from "zod";
 
 import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { err } from "@lib/result";
+import { ServerContracts } from "@mebike/shared";
+import { StatusCodes } from "http-status-codes";
 
 type ErrorEnvelope = {
   error: string;
@@ -17,7 +15,7 @@ type ErrorEnvelope = {
 
 type ContractCodeGuard<TCode extends string> = (code: string) => code is TCode;
 
-export type CommonServiceErrorCode = "UNAUTHORIZED" | "UNKNOWN";
+export type CommonServiceErrorCode = "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type ParsedServiceError = {
   code: string;
@@ -60,7 +58,7 @@ export function normalizeServiceErrorCode<TCode extends string>(
     return "UNKNOWN";
   }
 
-  if (code === "UNAUTHORIZED" || isContractCode(code)) {
+  if (code === "UNAUTHORIZED" || code === "FORBIDDEN" || isContractCode(code)) {
     return code;
   }
 
@@ -72,6 +70,7 @@ export function isServiceErrorCode<TCode extends string>(
   isContractCode: ContractCodeGuard<TCode>,
 ): code is TCode | CommonServiceErrorCode {
   return code === "UNAUTHORIZED"
+    || code === "FORBIDDEN"
     || code === "UNKNOWN"
     || isContractCode(code);
 }
@@ -100,15 +99,15 @@ export function parseErrorFromSchema<T extends ErrorEnvelope>(
 }
 
 export function parseUnauthorizedError(data: unknown): ParsedServiceError | null {
-  const parsed = decodeWithSchema(ServerContracts.UnauthorizedErrorResponseSchema, data);
-  if (!parsed.ok) {
+  const parsed = ServerContracts.UnauthorizedErrorResponseSchema.safeParse(data);
+  if (!parsed.success) {
     return null;
   }
 
   return {
-    code: parsed.value.details?.code ?? "UNAUTHORIZED",
-    message: parsed.value.error,
-    details: parsed.value.details as Record<string, unknown> | undefined,
+    code: parsed.data.details?.code ?? "UNAUTHORIZED",
+    message: parsed.data.error,
+    details: parsed.data.details as Record<string, unknown> | undefined,
   };
 }
 
@@ -132,6 +131,25 @@ export async function parseServiceError<TCode extends string, TSchema extends Er
     const data = await readJson(response);
 
     if (includeUnauthorized && isUnauthorizedStatus(response.status, includeForbidden)) {
+      const unauthorized = parseUnauthorizedError(data);
+      if (unauthorized) {
+        const middlewareCode = response.status === StatusCodes.FORBIDDEN && includeForbidden
+          ? "FORBIDDEN"
+          : unauthorized.code;
+        const code = mapCode(middlewareCode);
+        if (code) {
+          return {
+            _tag: "ApiError",
+            code,
+            message: response.status === StatusCodes.FORBIDDEN ? "Forbidden" : unauthorized.message,
+            details: {
+              ...unauthorized.details,
+              code,
+            },
+          };
+        }
+      }
+
       const parsed = parseErrorFromSchema(schema, data);
       if (parsed) {
         const parsedCode = mapCode(parsed.code);
@@ -145,22 +163,7 @@ export async function parseServiceError<TCode extends string, TSchema extends Er
         }
       }
 
-      const unauthorized = parseUnauthorizedError(data);
-      if (!unauthorized) {
-        return { _tag: "DecodeError" };
-      }
-
-      const code = mapCode(unauthorized.code);
-      if (!code) {
-        return { _tag: "DecodeError" };
-      }
-
-      return {
-        _tag: "ApiError",
-        code,
-        message: unauthorized.message,
-        details: unauthorized.details,
-      };
+      return { _tag: "DecodeError" };
     }
 
     const parsed = parseErrorFromSchema(schema, data);

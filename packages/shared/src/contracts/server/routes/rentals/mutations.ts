@@ -21,7 +21,6 @@ import {
   RentalDetailSchemaOpenApi,
   RentalErrorResponseSchema,
   RentalIdParamSchema,
-  RentalSchemaOpenApi,
   RentalWithPriceSchemaOpenApi,
   SOSIdParamSchema,
 } from "./shared";
@@ -158,6 +157,24 @@ export const createMyReturnSlot = createRoute({
                   currentTime: "2026-04-20T23:00:00+07:00",
                   windowStart: "23:00",
                   windowEnd: "05:00",
+                },
+              },
+            },
+            InsufficientBalance: {
+              value: {
+                error: "Insufficient balance to reserve return slot",
+                details: {
+                  code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT,
+                  requiredBalance: 2000,
+                  currentBalance: 500,
+                },
+              },
+            },
+            WalletMissing: {
+              value: {
+                error: "User does not have a wallet",
+                details: {
+                  code: RentalErrorCodeSchema.enum.USER_NOT_HAVE_WALLET,
                 },
               },
             },

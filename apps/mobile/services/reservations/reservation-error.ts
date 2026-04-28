@@ -1,18 +1,19 @@
 import type { Result } from "@lib/result";
+import type { ServiceError } from "@services/shared/service-error";
 import type { z } from "zod";
 
 import { ServerContracts } from "@mebike/shared";
 import {
-  type ServiceError,
   asNetworkError as asSharedNetworkError,
   isServiceErrorCode,
   normalizeServiceErrorCode,
   parseServiceError,
+
 } from "@services/shared/service-error";
 
 type ContractReservationErrorCode = z.infer<typeof ServerContracts.ReservationsContracts.ReservationErrorCodeSchema>;
 
-export type ReservationErrorCode = ContractReservationErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type ReservationErrorCode = ContractReservationErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type ReservationError = ServiceError<ReservationErrorCode>;
 

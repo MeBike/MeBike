@@ -578,6 +578,29 @@ const createMyReturnSlot: RouteHandler<
             },
             400,
           )),
+        Match.tag("UserWalletNotFound", ({ userId: missingUserId }) =>
+          c.json(
+            {
+              error: rentalErrorMessages.USER_NOT_HAVE_WALLET,
+              details: {
+                code: RentalErrorCodeSchema.enum.USER_NOT_HAVE_WALLET,
+                userId: missingUserId,
+              },
+            },
+            400,
+          )),
+        Match.tag("InsufficientBalanceForReturnSlot", ({ requiredBalance, currentBalance }) =>
+          c.json(
+            {
+              error: rentalErrorMessages.NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT,
+              details: {
+                code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT,
+                requiredBalance,
+                currentBalance,
+              },
+            },
+            400,
+          )),
         Match.tag(
           "ReturnSlotCapacityExceeded",
           ({

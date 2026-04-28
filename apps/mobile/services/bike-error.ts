@@ -1,19 +1,20 @@
 import type { Result } from "@lib/result";
+import type { ServiceError } from "@services/shared/service-error";
 import type { z } from "zod";
 
 import { ServerRoutes } from "@lib/server-routes";
 import { ServerContracts } from "@mebike/shared";
 import {
-  type ServiceError,
   asNetworkError as asSharedNetworkError,
   isServiceErrorCode,
   normalizeServiceErrorCode,
   parseServiceError,
+
 } from "@services/shared/service-error";
 
 type ContractBikeErrorCode = z.infer<typeof ServerContracts.BikesContracts.BikeErrorCodeSchema>;
 
-export type BikeErrorCode = ContractBikeErrorCode | "UNAUTHORIZED" | "UNKNOWN";
+export type BikeErrorCode = ContractBikeErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type BikeError = ServiceError<BikeErrorCode>;
 

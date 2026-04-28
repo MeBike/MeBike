@@ -32,6 +32,7 @@ export const rentalErrorCodes = [
 
   // Payment & Wallet Errors
   "NOT_ENOUGH_BALANCE_TO_RENT",
+  "NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT",
   "USER_NOT_HAVE_WALLET",
   "SUBSCRIPTION_NOT_FOUND",
   "SUBSCRIPTION_NOT_USABLE",
@@ -196,6 +197,7 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   INVALID_BIKE_STATUS: "Invalid bike status",
 
   NOT_ENOUGH_BALANCE_TO_RENT: "Insufficient balance to start rental",
+  NOT_ENOUGH_BALANCE_FOR_RETURN_SLOT: "Insufficient balance to reserve return slot",
   USER_NOT_HAVE_WALLET: "User does not have a wallet",
   SUBSCRIPTION_NOT_FOUND: "Subscription not found",
   SUBSCRIPTION_NOT_USABLE: "Subscription is not usable",

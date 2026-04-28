@@ -92,6 +92,14 @@ export class InsufficientBalanceToRent extends Data.TaggedError(
     readonly currentBalance: number;
   }> {}
 
+export class InsufficientBalanceForReturnSlot extends Data.TaggedError(
+  "InsufficientBalanceForReturnSlot",
+)<{
+    readonly userId: string;
+    readonly requiredBalance: number;
+    readonly currentBalance: number;
+  }> {}
+
 export class InvalidRentalState extends Data.TaggedError("InvalidRentalState")<{
   readonly rentalId: string;
   readonly from: RentalStatus;
@@ -211,6 +219,7 @@ export type RentalServiceFailure
     | InvalidBikeStatus
     | UserWalletNotFound
     | InsufficientBalanceToRent
+    | InsufficientBalanceForReturnSlot
     | InvalidRentalState
     | ReturnSlotRequiredForReturn
     | ReturnSlotStationMismatch
