@@ -1,15 +1,26 @@
 import { JobTypes } from "@mebike/shared/contracts/server/jobs";
+import { Effect, Layer } from "effect";
 import process from "node:process";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
+import type { BikeRepository } from "@/domain/bikes";
+import type { ReservationQueryRepository } from "@/domain/reservations";
+import type { StationQueryRepository } from "@/domain/stations/repository/station-query.repository";
+import type { UserQueryRepository } from "@/domain/users/repository/user-query.repository";
 import type { JobProducer, QueueJob } from "@/infrastructure/jobs/ports";
+import type { EffectRunner } from "@/worker/worker-runtime";
 
+import { BikeRepositoryLive } from "@/domain/bikes";
+import { ReservationQueryRepositoryLive } from "@/domain/reservations";
+import { StationQueryRepositoryLive } from "@/domain/stations/repository/station-query.repository";
+import { UserQueryRepositoryLive } from "@/domain/users/repository/user-query.repository";
+import { Prisma } from "@/infrastructure/prisma";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import {
-  handleReservationExpireHold,
-  handleReservationNotifyNearExpiry,
-} from "@/worker/reservation-hold-worker";
+  makeReservationExpireHoldHandler,
+  makeReservationNotifyNearExpiryHandler,
+} from "@/worker/reservation-hold/index";
 
 function makeBossMock(): {
   readonly producer: JobProducer;
@@ -45,6 +56,20 @@ async function createStation(fixture: ReturnType<typeof setupPrismaIntFixture>, 
 describe("reservation hold worker integration", () => {
   const fixture = setupPrismaIntFixture();
 
+  function makeRunEffect(): EffectRunner<
+    Prisma | BikeRepository | ReservationQueryRepository | StationQueryRepository | UserQueryRepository
+  > {
+    const PrismaTestLive = Layer.succeed(Prisma, Prisma.make({ client: fixture.prisma }));
+    const TestLive = Layer.mergeAll(
+      PrismaTestLive,
+      BikeRepositoryLive.pipe(Layer.provide(PrismaTestLive)),
+      ReservationQueryRepositoryLive.pipe(Layer.provide(PrismaTestLive)),
+      StationQueryRepositoryLive.pipe(Layer.provide(PrismaTestLive)),
+      UserQueryRepositoryLive.pipe(Layer.provide(PrismaTestLive)),
+    );
+    return effect => Effect.runPromise(effect.pipe(Effect.provide(TestLive)));
+  }
+
   beforeAll(() => {
     process.env.TEST_DATABASE_URL = fixture.url;
   });
@@ -79,10 +104,8 @@ describe("reservation hold worker integration", () => {
     });
 
     const { producer, send } = makeBossMock();
-    await handleReservationNotifyNearExpiry(
-      makeReservationJob(reservation.id),
-      producer,
-    );
+    const handler = makeReservationNotifyNearExpiryHandler(makeRunEffect(), producer);
+    await handler(makeReservationJob(reservation.id));
 
     expect(send).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenNthCalledWith(
@@ -128,10 +151,8 @@ describe("reservation hold worker integration", () => {
       },
     });
     const { producer, send } = makeBossMock();
-    await handleReservationExpireHold(
-      makeReservationJob(reservation.id),
-      producer,
-    );
+    const handler = makeReservationExpireHoldHandler(makeRunEffect(), producer);
+    await handler(makeReservationJob(reservation.id));
 
     expect(send).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenNthCalledWith(

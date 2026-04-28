@@ -16,12 +16,12 @@ import {
   RentalRepositoryError,
   ReturnAlreadyConfirmed,
   ReturnSlotCapacityExceeded,
-  ReturnSlotStationMismatch,
   UnauthorizedRentalAccess,
 } from "../../../domain-errors";
 import { makeRentalRepository } from "../../../repository/rental.repository";
-import { makeReturnConfirmationRepository } from "../../../repository/return-confirmation.repository";
 import { makeReturnSlotRepository } from "../../../repository/return-slot.repository";
+import { makeRentalReturnConfirmationWriteRepository } from "../../../repository/write/rental.return-confirmation-write.repository";
+import { returnSlotActiveAfter } from "../return-slot-expiry";
 
 /**
  * Nạp rental cần xác nhận và chặn sớm nếu rental không còn ở trạng thái đang thuê.
@@ -125,13 +125,6 @@ export function ensureOperatorCanConfirmReturnInTx(args: {
       return yield* Effect.fail(makeOvernightOperationsClosedError(now));
     }
 
-    if (operator?.role === "STAFF" && operator.stationId !== input.stationId) {
-      return yield* Effect.fail(new UnauthorizedRentalAccess({
-        rentalId: rental.id,
-        userId: input.confirmedByUserId,
-      }));
-    }
-
     if (operator?.role !== "AGENCY") {
       return;
     }
@@ -161,33 +154,43 @@ export function ensureOperatorCanConfirmReturnInTx(args: {
 /**
  * Xác nhận rằng station trả xe hiện tại vẫn hợp lệ cho rental này.
  *
- * Nếu user đã giữ return slot, station phải trùng với slot đó.
- * Nếu chưa có slot, station phải còn chỗ vật lý để nhận xe.
+ * Return slot chỉ giữ chỗ tại station đó. Nếu trả đúng station đã giữ, bỏ qua
+ * capacity check. Nếu trả station khác, slot sẽ được hủy khi hoàn tất trả xe
+ * và station nhận xe vẫn phải còn chỗ vật lý.
  */
 export function ensureReturnDestinationReadyInTx(args: {
   readonly tx: PrismaTypes.TransactionClient;
   readonly input: ConfirmRentalReturnInput;
   readonly rental: RentalRow;
-}): Effect.Effect<void, ReturnSlotStationMismatch | ReturnSlotCapacityExceeded | StationNotFound> {
+}): Effect.Effect<void, ReturnSlotCapacityExceeded | StationNotFound> {
   return Effect.gen(function* () {
     const txReturnSlotRepo = makeReturnSlotRepository(args.tx);
-    const activeReturnSlotOpt = yield* txReturnSlotRepo.findActiveByRentalId(args.rental.id);
+    const now = args.input.now ?? new Date();
+    const activeAfter = returnSlotActiveAfter(now);
+
+    yield* txReturnSlotRepo.cancelActiveByRentalIdOlderThan(
+      args.rental.id,
+      activeAfter,
+      args.input.confirmedAt,
+    );
+
+    const activeReturnSlotOpt = yield* txReturnSlotRepo.findUnexpiredActiveByRentalId(args.rental.id, activeAfter);
 
     if (Option.isSome(activeReturnSlotOpt)) {
       const activeReturnSlot = activeReturnSlotOpt.value;
 
-      if (activeReturnSlot.stationId !== args.input.stationId) {
-        return yield* Effect.fail(new ReturnSlotStationMismatch({
-          rentalId: args.rental.id,
-          returnSlotStationId: activeReturnSlot.stationId,
-          attemptedEndStationId: args.input.stationId,
-        }));
+      if (activeReturnSlot.stationId === args.input.stationId) {
+        return;
       }
 
-      return;
+      yield* txReturnSlotRepo.finalizeActiveByRentalId(
+        args.rental.id,
+        "CANCELLED",
+        args.input.confirmedAt,
+      );
     }
 
-    const stationSnapshotOpt = yield* txReturnSlotRepo.getStationCapacitySnapshot(args.input.stationId);
+    const stationSnapshotOpt = yield* txReturnSlotRepo.getStationCapacitySnapshot(args.input.stationId, activeAfter);
 
     if (Option.isNone(stationSnapshotOpt)) {
       return yield* Effect.fail(new StationNotFound({ id: args.input.stationId }));
@@ -219,8 +222,8 @@ export function createReturnConfirmationInTx(args: {
   readonly rental: RentalRow;
 }): Effect.Effect<void, ReturnAlreadyConfirmed> {
   return Effect.gen(function* () {
-    const txReturnConfirmationRepo = makeReturnConfirmationRepository(args.tx);
-    const existingConfirmationOpt = yield* txReturnConfirmationRepo.findByRentalId(args.rental.id);
+    const txReturnConfirmationRepo = makeRentalReturnConfirmationWriteRepository(args.tx);
+    const existingConfirmationOpt = yield* txReturnConfirmationRepo.findReturnConfirmationByRentalId(args.rental.id);
 
     if (Option.isSome(existingConfirmationOpt)) {
       return yield* Effect.fail(new ReturnAlreadyConfirmed({
@@ -228,7 +231,7 @@ export function createReturnConfirmationInTx(args: {
       }));
     }
 
-    yield* txReturnConfirmationRepo.create({
+    yield* txReturnConfirmationRepo.createReturnConfirmation({
       rentalId: args.rental.id,
       stationId: args.input.stationId,
       confirmedByUserId: args.input.confirmedByUserId,

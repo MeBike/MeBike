@@ -127,6 +127,11 @@ function RootNavigator() {
         component={ResetPasswordFormScreen}
         options={standardScreenOptions}
       />
+      <Stack.Screen
+        name="Subscriptions"
+        component={SubscriptionScreen}
+        options={standardScreenOptions}
+      />
       {isAuthenticated
         ? (
             <>
@@ -168,11 +173,6 @@ function RootNavigator() {
               <Stack.Screen
                 name="MyWallet"
                 component={MyWalletScreen}
-                options={standardScreenOptions}
-              />
-              <Stack.Screen
-                name="Subscriptions"
-                component={SubscriptionScreen}
                 options={standardScreenOptions}
               />
               <Stack.Screen

@@ -25,10 +25,19 @@ export function useFixedSlotTemplatesScreen({ navigation, routeParams }: UseFixe
     isAuthenticated,
     user?.id,
   );
+  const {
+    data,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    isLoading,
+    isRefetching,
+  } = templatesQuery;
 
   const templates = useMemo(
-    () => templatesQuery.data?.pages.flatMap(page => page.data) ?? [],
-    [templatesQuery.data],
+    () => data?.pages.flatMap(page => page.data) ?? [],
+    [data],
   );
 
   const headerTitle = useMemo(() => stationName ?? "Lịch đặt cố định", [stationName]);
@@ -56,18 +65,18 @@ export function useFixedSlotTemplatesScreen({ navigation, routeParams }: UseFixe
     setIsRefreshing(true);
 
     try {
-      await templatesQuery.refetch();
+      await refetch();
     }
     finally {
       setIsRefreshing(false);
     }
-  }, [templatesQuery]);
+  }, [refetch]);
 
   const handleLoadMore = useCallback(() => {
-    if (templatesQuery.hasNextPage && !templatesQuery.isFetchingNextPage) {
-      templatesQuery.fetchNextPage();
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
     }
-  }, [templatesQuery]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleSelectTemplate = useCallback((templateId: string) => {
     navigation.navigate("FixedSlotDetail", { templateId });
@@ -80,10 +89,10 @@ export function useFixedSlotTemplatesScreen({ navigation, routeParams }: UseFixe
     listHeight,
     setListHeight,
     templates,
-    isLoading: templatesQuery.isLoading,
-    isRefreshing: isRefreshing || templatesQuery.isRefetching,
-    isFetchingMore: templatesQuery.isFetchingNextPage,
-    hasNextPage: Boolean(templatesQuery.hasNextPage),
+    isLoading,
+    isRefreshing: isRefreshing || isRefetching,
+    isFetchingMore: isFetchingNextPage,
+    hasNextPage: Boolean(hasNextPage),
     handleCreateTemplate,
     handleRefresh,
     handleLoadMore,

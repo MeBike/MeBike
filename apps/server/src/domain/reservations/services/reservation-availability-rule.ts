@@ -3,30 +3,41 @@ import { Effect } from "effect";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 /**
- * Tinh nguong xe AVAILABLE toi thieu de tram duoc phep nhan reservation moi.
+ * Tinh so luong reservation pickup toi da cho pool xe kha dung ban dau.
  *
- * Rule theo spec: so xe kha dung phai lon hon 50% tong suc chua.
+ * Rule theo spec: chi toi da mot nua so xe AVAILABLE duoc phep dat truoc.
  *
- * @param totalCapacity Tong suc chua cua tram.
- * @returns So xe AVAILABLE toi thieu can co tai thoi diem kiem tra.
+ * @param availableBikePool Tong so xe AVAILABLE ban dau, tinh ca xe da bi giu boi pending reservation.
+ * @returns So reservation pickup toi da duoc phep ton tai cung luc.
  */
-export function requiredAvailableBikesForReservation(totalCapacity: number): number {
-  return Math.floor(totalCapacity / 2) + 1;
+export function maxReservableBikesForAvailablePool(availableBikePool: number): number {
+  return Math.floor(availableBikePool / 2);
+}
+
+/**
+ * Tinh so xe AVAILABLE toi thieu can co de tao them mot reservation.
+ *
+ * @param pendingReservations So pending reservation hien tai tai tram.
+ * @returns So xe AVAILABLE toi thieu de pendingReservations + 1 khong vuot qua cap.
+ */
+export function requiredAvailableBikesForNextReservation(pendingReservations: number): number {
+  return pendingReservations + 2;
 }
 
 /**
  * Kiem tra tram con du dieu kien tao reservation moi hay khong.
  *
- * @param args Tong suc chua va so xe AVAILABLE hien tai.
- * @param args.totalCapacity Tong suc chua cua tram.
+ * @param args So xe AVAILABLE hien tai va so reservation dang giu xe tai tram.
  * @param args.availableBikes So xe AVAILABLE hien tai.
- * @returns `true` neu tram con vuot nguong availability cho reservation.
+ * @param args.pendingReservations So pending reservation hien tai tai tram.
+ * @returns `true` neu tao them reservation khong vuot qua mot nua pool xe kha dung.
  */
 export function stationCanAcceptReservation(args: {
-  totalCapacity: number;
   availableBikes: number;
+  pendingReservations: number;
 }): boolean {
-  return args.availableBikes >= requiredAvailableBikesForReservation(args.totalCapacity);
+  const availableBikePool = args.availableBikes + args.pendingReservations;
+  return args.pendingReservations < maxReservableBikesForAvailablePool(availableBikePool);
 }
 
 /**

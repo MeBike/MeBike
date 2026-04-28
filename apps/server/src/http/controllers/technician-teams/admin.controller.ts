@@ -8,11 +8,13 @@ import {
 } from "@/domain/technician-teams";
 import {
   toContractAvailableTechnicianTeam,
+  toContractTechnicianTeamDetail,
   toContractTechnicianTeamSummary,
 } from "@/http/presenters/technician-teams.presenter";
 
 import type {
   TechnicianTeamAvailableListResponse,
+  TechnicianTeamDetailResponse,
   TechnicianTeamErrorResponse,
   TechnicianTeamListResponse,
   TechnicianTeamsRoutes,
@@ -55,6 +57,35 @@ const listAvailableTechnicianTeams: RouteHandler<TechnicianTeamsRoutes["adminAva
   }, 200);
 };
 
+const getTechnicianTeam: RouteHandler<TechnicianTeamsRoutes["adminGet"]> = async (c) => {
+  const { teamId } = c.req.valid("param");
+
+  const eff = Effect.flatMap(TechnicianTeamQueryServiceTag, service =>
+    service.getTechnicianTeamDetail(teamId));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  if (result._tag === "Right") {
+    return c.json<TechnicianTeamDetailResponse, 200>({
+      data: toContractTechnicianTeamDetail(result.right),
+    }, 200);
+  }
+
+  return Match.value(result.left).pipe(
+    Match.tag("TechnicianTeamNotFound", ({ id }) =>
+      c.json<TechnicianTeamErrorResponse, 404>({
+        error: technicianTeamErrorMessages.TECHNICIAN_TEAM_NOT_FOUND,
+        details: {
+          code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_NOT_FOUND,
+          teamId: id,
+        },
+      }, 404)),
+    Match.orElse((err) => {
+      throw err;
+    }),
+  );
+};
+
 const createTechnicianTeam: RouteHandler<TechnicianTeamsRoutes["adminCreate"]> = async (c) => {
   const body = c.req.valid("json");
 
@@ -79,6 +110,15 @@ const createTechnicianTeam: RouteHandler<TechnicianTeamsRoutes["adminCreate"]> =
           code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_INTERNAL_STATION_REQUIRED,
           stationId,
           stationType,
+        },
+      }, 400)),
+    Match.tag("TechnicianTeamStationAlreadyAssigned", ({ stationId, teamId }) =>
+      c.json<TechnicianTeamErrorResponse, 400>({
+        error: technicianTeamErrorMessages.TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED,
+        details: {
+          code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED,
+          stationId,
+          teamId,
         },
       }, 400)),
     Match.tag("TechnicianTeamStationNotFound", ({ stationId }) =>
@@ -128,6 +168,7 @@ const updateTechnicianTeam: RouteHandler<TechnicianTeamsRoutes["adminUpdate"]> =
 
 export const TechnicianTeamAdminController = {
   createTechnicianTeam,
+  getTechnicianTeam,
   listAvailableTechnicianTeams,
   listTechnicianTeams,
   updateTechnicianTeam,

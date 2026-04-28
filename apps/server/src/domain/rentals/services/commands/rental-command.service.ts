@@ -11,9 +11,6 @@ import type { ConfirmRentalReturnInput } from "../../types";
 import type { ReturnSlotFailure } from "./return-slot.service";
 
 import { RentalRepository } from "../../repository/rental.repository";
-import {
-  ReturnConfirmationRepository,
-} from "../../repository/return-confirmation.repository";
 import { ReturnSlotRepository } from "../../repository/return-slot.repository";
 import {
   confirmRentalReturnByOperator,
@@ -56,7 +53,6 @@ type RentalCommandDeps = {
   prisma: typeof Prisma.Service;
   rentalRepository: typeof RentalRepository.Service;
   returnSlotRepository: typeof ReturnSlotRepository.Service;
-  returnConfirmationRepository: typeof ReturnConfirmationRepository.Service;
   bikeRepository: typeof BikeRepository.Service;
 };
 
@@ -67,14 +63,12 @@ function provideRentalCommandDeps<A, E>(
     | Prisma
     | RentalRepository
     | ReturnSlotRepository
-    | ReturnConfirmationRepository
     | BikeRepository
   >,
   deps: RentalCommandDeps,
 ): Effect.Effect<A, E> {
   return effect.pipe(
     Effect.provideService(BikeRepository, deps.bikeRepository),
-    Effect.provideService(ReturnConfirmationRepository, deps.returnConfirmationRepository),
     Effect.provideService(ReturnSlotRepository, deps.returnSlotRepository),
     Effect.provideService(RentalRepository, deps.rentalRepository),
     Effect.provideService(Prisma, deps.prisma),
@@ -103,14 +97,12 @@ const makeRentalCommandServiceEffect = Effect.gen(function* () {
   const prisma = yield* Prisma;
   const rentalRepository = yield* RentalRepository;
   const returnSlotRepository = yield* ReturnSlotRepository;
-  const returnConfirmationRepository = yield* ReturnConfirmationRepository;
   const bikeRepository = yield* BikeRepository;
 
   return makeRentalCommandService({
     prisma,
     rentalRepository,
     returnSlotRepository,
-    returnConfirmationRepository,
     bikeRepository,
   });
 });

@@ -25,7 +25,7 @@
     "dev:cli:interactive": "tsx src/dev-cli/index.ts interactive",
     "dev:build": "pnpm --dir ../../packages/shared build && tsx --watch src/http/server.ts",
     "worker": "tsx src/worker/index.ts",
-    "worker:iot": "tsx src/worker/iot-runtime.ts",
+    "worker:iot": "tsx src/worker/iot/index.ts",
     "worker:dispatch-once": "tsx src/worker/commands/dispatch-outbox-once.ts",
     "worker:email-once": "tsx src/worker/commands/process-email-once.ts",
     "worker:fixed-slot-assign-once": "tsx src/worker/commands/fixed-slot-assign-once.ts",

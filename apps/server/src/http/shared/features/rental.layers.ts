@@ -8,7 +8,6 @@ import {
   RentalRepositoryLive,
   RentalServiceLive,
   RentalStatsServiceLive,
-  ReturnConfirmationRepositoryLive,
   ReturnSlotRepositoryLive,
 } from "@/domain/rentals";
 
@@ -30,10 +29,6 @@ export const ReturnSlotReposLive = ReturnSlotRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-export const ReturnConfirmationReposLive = ReturnConfirmationRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
 export const RentalAnalyticsReposLive = RentalAnalyticsRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
@@ -45,7 +40,6 @@ export const RentalServiceLayer = RentalServiceLive.pipe(
 );
 
 export const RentalCommandServiceLayer = RentalCommandServiceLive.pipe(
-  Layer.provide(ReturnConfirmationReposLive),
   Layer.provide(ReturnSlotReposLive),
   Layer.provide(RentalReposLive),
   Layer.provide(BikeReposLive),
@@ -68,7 +62,6 @@ export const RentalBillingDetailServiceLayer = RentalBillingDetailServiceLive.pi
 export const RentalDepsLive = Layer.mergeAll(
   RentalReposLive,
   ReturnSlotReposLive,
-  ReturnConfirmationReposLive,
   RentalAnalyticsReposLive,
   RentalServiceLayer,
   RentalCommandServiceLayer,

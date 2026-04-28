@@ -2,6 +2,7 @@ import type { TechnicianTeamsContracts } from "@mebike/shared";
 
 import type {
   TechnicianTeamAvailableOption,
+  TechnicianTeamDetailRow,
   TechnicianTeamRow,
 } from "@/domain/technician-teams";
 
@@ -29,5 +30,23 @@ export function toContractAvailableTechnicianTeam(
     id: team.id,
     name: team.name,
     stationId: team.stationId,
+  };
+}
+
+export function toContractTechnicianTeamDetail(
+  team: TechnicianTeamDetailRow,
+): TechnicianTeamsContracts.TechnicianTeamDetail {
+  return {
+    ...toContractTechnicianTeamSummary(team),
+    station: {
+      id: team.stationId,
+      name: team.stationName,
+      address: team.stationAddress,
+    },
+    members: team.members.map(member => ({
+      userId: member.userId,
+      fullName: member.fullName,
+      role: member.role,
+    })),
   };
 }

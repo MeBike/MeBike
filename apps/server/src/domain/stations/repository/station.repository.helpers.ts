@@ -6,6 +6,7 @@ import type {
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
+import { env } from "@/config/env";
 import { pickDefined } from "@/domain/shared/pick-defined";
 
 import type { StationFilter, StationRow, StationSortField } from "../models";
@@ -165,6 +166,7 @@ export function toStationWhere(filter: StationFilter): PrismaTypes.StationWhereI
 export function getActiveReturnSlotCounts(
   client: PrismaClient | PrismaTypes.TransactionClient,
   stationIds: string[],
+  activeAfter = new Date(Date.now() - env.RETURN_SLOT_HOLD_MINUTES * 60_000),
 ): Effect.Effect<Map<string, number>, StationRepositoryError> {
   if (stationIds.length === 0) {
     return Effect.succeed(new Map());
@@ -177,6 +179,7 @@ export function getActiveReturnSlotCounts(
         where: {
           stationId: { in: stationIds },
           status: "ACTIVE",
+          reservedFrom: { gt: activeAfter },
         },
         _count: { _all: true },
       }),

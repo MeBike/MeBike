@@ -5,6 +5,7 @@ export const JobTypes = {
   ReservationFixedSlotAssign: "reservations.fixedSlotAssign",
   ReservationNotifyNearExpiry: "reservations.notifyNearExpiry",
   ReservationExpireHold: "reservations.expireHold",
+  ReturnSlotExpireSweep: "rentals.returnSlots.expireSweep",
   EnvironmentImpactCalculateRental: "environment.impact.calculateRental",
   RentalOverdueSweep: "rentals.overdueSweep",
   WalletWithdrawalExecute: "wallets.withdraw.execute",

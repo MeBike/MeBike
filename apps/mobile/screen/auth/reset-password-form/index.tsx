@@ -152,7 +152,10 @@ export default function ResetPasswordFormScreen() {
       }
 
       Alert.alert("Thành công", "Đặt lại mật khẩu thành công");
-      navigation.navigate("Login");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
     }
     catch (error) {
       Alert.alert("Lỗi", error instanceof Error ? error.message : "Không thể đặt lại mật khẩu.");

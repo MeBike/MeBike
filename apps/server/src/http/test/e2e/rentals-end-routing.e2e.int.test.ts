@@ -222,6 +222,7 @@ describe("rentals end routing e2e", () => {
     expect(body.id).toBe(rental.id);
     expect(body.returnSlot?.station.id).toBe(reservedStation.id);
     expect(body.returnSlot?.status).toBe("ACTIVE");
+    expect(body.returnSlot?.expiresAt).toEqual(expect.any(String));
   });
 
   it("blocks return-slot creation during overnight closure", async () => {
@@ -488,7 +489,7 @@ describe("rentals end routing e2e", () => {
     expect(body.pagination.page).toBe(1);
   });
 
-  it("rejects operator confirmation at a station different from the active return slot", async () => {
+  it("allows operator confirmation at a station different from the active return slot", async () => {
     const { user, rental } = await createActiveRentalGraph();
     const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
     const reservedStation = await fixture.factories.station({ capacity: 5 });
@@ -507,13 +508,18 @@ describe("rentals end routing e2e", () => {
       body: JSON.stringify({ stationId: attemptedStation.id, confirmationMethod: "MANUAL" }),
     });
 
-    const body = await response.json() as RentalsContracts.RentalErrorResponse;
+    const body = await response.json() as RentalsContracts.RentalDetail;
 
-    expect(response.status).toBe(400);
-    expect(body.details?.code).toBe("RETURN_SLOT_STATION_MISMATCH");
-    expect(body.details?.rentalId).toBe(rental.id);
-    expect(body.details?.returnSlotStationId).toBe(reservedStation.id);
-    expect(body.details?.endStationId).toBe(attemptedStation.id);
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.status).toBe("COMPLETED");
+    expect(body.endStation?.id).toBe(attemptedStation.id);
+
+    const persistedSlot = await fixture.prisma.returnSlotReservation.findFirst({
+      where: { rentalId: rental.id },
+    });
+    expect(persistedSlot?.stationId).toBe(reservedStation.id);
+    expect(persistedSlot?.status).toBe("CANCELLED");
   });
 
   it("confirms a rental return successfully when the active return slot matches the target station", async () => {
@@ -641,7 +647,7 @@ describe("rentals end routing e2e", () => {
     expect(billingRecord?.totalAmount.toString()).toBe("6000");
   });
 
-  it("rejects staff confirmation when the staff assignment does not match the reserved return station", async () => {
+  it("allows staff confirmation when the staff assignment does not match the reserved return station", async () => {
     const { user, rental } = await createActiveRentalGraph();
     const userToken = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
     const reservedStation = await fixture.factories.station({ capacity: 5 });
@@ -660,11 +666,12 @@ describe("rentals end routing e2e", () => {
       body: JSON.stringify({ stationId: reservedStation.id, confirmationMethod: "MANUAL" }),
     });
 
-    const body = await response.json() as RentalsContracts.RentalErrorResponse;
+    const body = await response.json() as RentalsContracts.RentalDetail;
 
-    expect(response.status).toBe(403);
-    expect(body.details?.code).toBe("ACCESS_DENIED");
-    expect(body.details?.stationId).toBe(reservedStation.id);
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(rental.id);
+    expect(body.status).toBe("COMPLETED");
+    expect(body.endStation?.id).toBe(reservedStation.id);
   });
 
   it("allows staff confirmation when the staff assignment matches the reserved return station", async () => {

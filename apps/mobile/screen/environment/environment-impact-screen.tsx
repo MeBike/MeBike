@@ -305,7 +305,7 @@ export default function EnvironmentImpactScreen() {
                         buttonSize="compact"
                         loading={vm.history.isFetchingNextPage}
                         onPress={() => {
-                          void vm.history.fetchNextPage();
+                          vm.history.loadMore();
                         }}
                         tone="ghost"
                       >

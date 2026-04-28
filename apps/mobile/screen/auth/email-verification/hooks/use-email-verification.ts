@@ -1,13 +1,13 @@
 import type { StackNavigationProp } from "@react-navigation/stack";
 
+import { useResendVerifyEmailMutation } from "@hooks/mutations/AuthNext/use-resend-verify-email-mutation";
+import { useVerifyEmailOtpMutation } from "@hooks/mutations/AuthNext/use-verify-email-otp-mutation";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
-import { useResendVerifyEmailMutation } from "@hooks/mutations/AuthNext/use-resend-verify-email-mutation";
-import { useVerifyEmailOtpMutation } from "@hooks/mutations/AuthNext/use-verify-email-otp-mutation";
-import { useAuthNext } from "@providers/auth-provider-next";
 
 import type { RootStackParamList } from "../../../../types/navigation";
 
@@ -150,6 +150,13 @@ export function useEmailVerification() {
 
   const canResend = resendTimeLeft <= 0 && !resendMutation.isPending;
 
+  const resetToMain = useCallback(() => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Main" }],
+    });
+  }, [navigation]);
+
   const setOtpDigit = useCallback((index: number, value: string) => {
     const next = value.slice(-1);
     setOtp((prev) => {
@@ -176,8 +183,8 @@ export function useEmailVerification() {
     }
 
     await hydrate();
-    navigation.navigate("Main");
-  }, [hydrate, isOtpComplete, navigation, otpCode, user?.id, verifyMutation]);
+    resetToMain();
+  }, [hydrate, isOtpComplete, otpCode, resetToMain, user?.id, verifyMutation]);
 
   const resend = useCallback(async () => {
     if (!canResend) {
@@ -213,20 +220,20 @@ export function useEmailVerification() {
         { text: "Không", style: "cancel" },
         {
           text: "Có, bỏ qua",
-          onPress: () => navigation.navigate("Main"),
+          onPress: resetToMain,
         },
       ],
     );
-  }, [navigation]);
+  }, [resetToMain]);
 
   const goBack = useCallback(() => {
     if (!navigation.canGoBack()) {
-      navigation.navigate("Main");
+      resetToMain();
       return;
     }
 
     navigation.goBack();
-  }, [navigation]);
+  }, [navigation, resetToMain]);
 
   return {
     email,

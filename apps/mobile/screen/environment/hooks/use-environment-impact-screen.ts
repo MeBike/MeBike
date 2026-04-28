@@ -204,25 +204,53 @@ export function useEnvironmentImpactScreen() {
   );
   const summaryQuery = useEnvironmentSummaryQuery(isAuthenticated, user?.id);
   const historyQuery = useEnvironmentImpactHistoryQuery(historyParams, isAuthenticated, user?.id);
-  const historyItems = useMemo(() => flattenHistory(historyQuery.data?.pages), [historyQuery.data?.pages]);
+  const {
+    data: summary,
+    error: summaryError,
+    isLoading: isSummaryLoading,
+    isRefetching: isSummaryRefetching,
+    refetch: refetchSummary,
+  } = summaryQuery;
+  const {
+    data: historyData,
+    error: historyError,
+    isLoading: isHistoryLoading,
+    isRefetching: isHistoryRefetching,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    refetch: refetchHistory,
+  } = historyQuery;
+  const historyItems = flattenHistory(historyData?.pages);
   const activeRange = HISTORY_RANGE_OPTIONS.find(option => option.key === selectedRange) ?? HISTORY_RANGE_OPTIONS[0];
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
       await Promise.all([
-        summaryQuery.refetch(),
-        historyQuery.refetch(),
+        refetchSummary(),
+        refetchHistory(),
       ]);
     }
     finally {
       setIsRefreshing(false);
     }
-  }, [historyQuery, summaryQuery]);
+  }, [refetchHistory, refetchSummary]);
 
   const handleOpenDetail = useCallback((rentalId: string) => {
     navigation.navigate("EnvironmentImpactDetail", { rentalId });
   }, [navigation]);
+
+  const handleLoadMoreHistory = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return;
+    }
+
+    const lastPage = historyData?.pages[historyData.pages.length - 1];
+    const nextPage = lastPage ? lastPage.pagination.page + 1 : 1;
+
+    void fetchNextPage({ pageParam: nextPage });
+  }, [fetchNextPage, hasNextPage, historyData, isFetchingNextPage]);
 
   const handleSelectRange = useCallback((range: HistoryRangeKey) => {
     setDraftRange(range);
@@ -286,20 +314,20 @@ export function useEnvironmentImpactScreen() {
   }, [customRange, selectedRange]);
 
   return {
-    summary: summaryQuery.data ?? null,
-    summaryError: summaryQuery.error,
+    summary: summary ?? null,
+    summaryError,
     historyItems,
     activeRange,
-    isInitialLoading: (!summaryQuery.data && summaryQuery.isLoading)
-      || (historyItems.length === 0 && !historyQuery.data && historyQuery.isLoading),
-    initialError: summaryQuery.error ?? historyQuery.error,
-    isRefreshing: isRefreshing || summaryQuery.isRefetching || historyQuery.isRefetching,
-    hasHistoryRefreshError: Boolean(historyQuery.error) && historyItems.length > 0,
-    historyRefreshError: historyQuery.error,
+    isInitialLoading: (!summary && isSummaryLoading)
+      || (historyItems.length === 0 && !historyData && isHistoryLoading),
+    initialError: summaryError ?? historyError,
+    isRefreshing: isRefreshing || isSummaryRefetching || isHistoryRefetching,
+    hasHistoryRefreshError: Boolean(historyError) && historyItems.length > 0,
+    historyRefreshError: historyError,
     history: {
-      hasNextPage: historyQuery.hasNextPage,
-      isFetchingNextPage: historyQuery.isFetchingNextPage,
-      fetchNextPage: historyQuery.fetchNextPage,
+      hasNextPage,
+      isFetchingNextPage,
+      loadMore: handleLoadMoreHistory,
     },
     filter: {
       isOpen: isFilterOpen,

@@ -4,25 +4,52 @@ import "./env-bootstrap";
 
 import type { PrismaClient } from "generated/prisma/client";
 
-import { RentalCommandServiceTag } from "../domain/rentals";
+import { expireReturnSlots, RentalCommandServiceTag, returnSlotExpiresAt } from "../domain/rentals";
 import { UserCommandServiceTag } from "../domain/users";
 import {
   PrismaLive,
   RentalCommandServiceLayer,
+  ReturnSlotReposLive,
   UserCommandServiceLayer,
 } from "../http/shared/providers";
 import { Prisma } from "../infrastructure/prisma";
+import { notifyReturnSlotExpired } from "../realtime/return-slot-events";
 
 const rentalCommandRuntime = ManagedRuntime.make(RentalCommandServiceLayer);
 const prismaRuntime = ManagedRuntime.make(PrismaLive);
+const returnSlotRuntime = ManagedRuntime.make(ReturnSlotReposLive);
 const userCommandRuntime = ManagedRuntime.make(UserCommandServiceLayer);
 
 export async function disposeCliRuntimes() {
   await Promise.allSettled([
     rentalCommandRuntime.dispose(),
     prismaRuntime.dispose(),
+    returnSlotRuntime.dispose(),
     userCommandRuntime.dispose(),
   ]);
+}
+
+export async function expireReturnSlotsForDev(args: {
+  now: Date;
+  notify: boolean;
+}) {
+  const summary = await returnSlotRuntime.runPromise(expireReturnSlots({ now: args.now }));
+
+  if (args.notify) {
+    await Promise.all(summary.expiredSlots.map(slot =>
+      notifyReturnSlotExpired({
+        userId: slot.userId,
+        rentalId: slot.rentalId,
+        returnSlotId: slot.id,
+        stationId: slot.stationId,
+        reservedFrom: slot.reservedFrom.toISOString(),
+        expiredAt: returnSlotExpiresAt(slot.reservedFrom).toISOString(),
+        at: args.now.toISOString(),
+      }),
+    ));
+  }
+
+  return summary;
 }
 
 export async function confirmRentalReturnByStaff(args: {

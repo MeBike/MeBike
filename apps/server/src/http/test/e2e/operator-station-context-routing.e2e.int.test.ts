@@ -120,6 +120,40 @@ describe("operator station context routing e2e", () => {
     expect(body.otherStations.some(station => station.id === otherStation.id)).toBe(true);
   });
 
+  it("allows agency to read station context for its assigned station", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        name: "Agency Context",
+        status: "ACTIVE",
+      },
+    });
+    const currentStation = await fixture.factories.station({
+      name: "Agency Station",
+      address: "11 Agency Street, Thu Duc, TP.HCM",
+      stationType: "AGENCY",
+      agencyId: agency.id,
+    });
+    const otherStation = await fixture.factories.station({
+      name: "Agency Other Station",
+      address: "12 Agency Street, Thu Duc, TP.HCM",
+    });
+    const agencyUser = await fixture.factories.user({ role: "AGENCY" });
+    await fixture.factories.userOrgAssignment({ userId: agencyUser.id, agencyId: agency.id });
+    const token = fixture.auth.makeAccessToken({ userId: agencyUser.id, role: "AGENCY" });
+
+    const response = await fixture.app.request("http://test/v1/operators/station-context", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const body = await response.json() as OperatorsContracts.OperatorStationContextResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.currentStation.id).toBe(currentStation.id);
+    expect(body.otherStations.some(station => station.id === otherStation.id)).toBe(true);
+  });
+
   it("rejects regular users", async () => {
     const user = await fixture.factories.user({ role: "USER" });
     const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });

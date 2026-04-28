@@ -34,7 +34,7 @@ export const adminCreateTechnicianTeamRoute = createRoute({
       },
     },
     400: {
-      description: "Invalid payload or station not found",
+      description: "Invalid payload, station not found, or station already assigned",
       content: {
         "application/json": {
           schema: TechnicianTeamErrorResponseSchema,
@@ -55,6 +55,16 @@ export const adminCreateTechnicianTeamRoute = createRoute({
                 details: {
                   code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_STATION_NOT_FOUND,
                   stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                },
+              },
+            },
+            StationAlreadyAssigned: {
+              value: {
+                error: "Station already has a technician team assigned",
+                details: {
+                  code: TechnicianTeamErrorCodeSchema.enum.TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED,
+                  stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+                  teamId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2211",
                 },
               },
             },
