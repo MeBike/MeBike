@@ -78,8 +78,9 @@ export const BikeStatisticsSchema = z.object({
   AVAILABLE: z.number(),
   RENTED: z.number(),
   REDISTRIBUTING: z.number(),
-  BROKEN: z.number(),
+  LOST: z.number(),
   DISABLED: z.number(),
+  BROKEN: z.number(),
 });
 
 export const BikeStatsSchema = z.object({

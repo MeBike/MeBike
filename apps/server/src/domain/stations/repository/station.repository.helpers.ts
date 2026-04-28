@@ -42,8 +42,9 @@ export type BikeCounts = Pick<
   | "bookedBikes"
   | "brokenBikes"
   | "reservedBikes"
-  | "maintainedBikes"
-  | "unavailableBikes"
+  | "redistributingBikes"
+  | "lostBikes"
+  | "disabledBikes"
   | "activeReturnSlots"
   | "availableReturnSlots"
   | "emptySlots"
@@ -55,9 +56,10 @@ export function createEmptyBikeCounts(): BikeCounts {
     availableBikes: 0,
     bookedBikes: 0,
     brokenBikes: 0,
+    lostBikes: 0,
     reservedBikes: 0,
-    maintainedBikes: 0,
-    unavailableBikes: 0,
+    redistributingBikes: 0,
+    disabledBikes: 0,
     activeReturnSlots: 0,
     availableReturnSlots: 0,
     emptySlots: 0,
@@ -258,11 +260,14 @@ export function getBikeCounts(
           case "RESERVED":
             counts.reservedBikes += inc;
             break;
-          case "MAINTAINED":
-            counts.maintainedBikes += inc;
+          case "REDISTRIBUTING":
+            counts.redistributingBikes += inc;
             break;
-          case "UNAVAILABLE":
-            counts.unavailableBikes += inc;
+          case "DISABLED":
+            counts.disabledBikes += inc;
+            break;
+          case "LOST":
+            counts.lostBikes += inc;
             break;
         }
         countsMap.set(stationId, counts);

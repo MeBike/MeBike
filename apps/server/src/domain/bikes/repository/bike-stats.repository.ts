@@ -93,6 +93,7 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
             sql<number>`count(*) filter (where status = 'AVAILABLE')`.as("available"),
             sql<number>`count(*) filter (where status = 'BOOKED')`.as("rented"),
             sql<number>`count(*) filter (where status = 'REDISTRIBUTING')`.as("redistributing"),
+            sql<number>`count(*) filter (where status = 'LOST')`.as("lost"),
             sql<number>`count(*) filter (where status = 'DISABLED')`.as("disabled"),
             sql<number>`count(*) filter (where status = 'BROKEN')`.as("broken"),
           ])
@@ -103,6 +104,7 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
           AVAILABLE: Number(row?.available ?? 0),
           RENTED: Number(row?.rented ?? 0),
           REDISTRIBUTING: Number(row?.redistributing ?? 0),
+          LOST: Number(row?.lost ?? 0),
           DISABLED: Number(row?.disabled ?? 0),
           BROKEN: Number(row?.broken ?? 0),
         };

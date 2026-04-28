@@ -34,8 +34,9 @@ export type StationRow = {
   bookedBikes: number;
   brokenBikes: number;
   reservedBikes: number;
-  maintainedBikes: number;
-  unavailableBikes: number;
+  redistributingBikes: number;
+  lostBikes: number;
+  disabledBikes: number;
   activeReturnSlots: number;
   availableReturnSlots: number;
   emptySlots: number;
