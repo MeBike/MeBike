@@ -57,6 +57,7 @@ services:
           'persistence_location /mosquitto/data/' \
           'log_dest stdout' \
           > /mosquitto/config/mosquitto.conf
+        rm -f /mosquitto/config/passwords
         mosquitto_passwd -b -c /mosquitto/config/passwords "$${IOT_MQTT_USERNAME}" "$${IOT_MQTT_PASSWORD}"
         exec mosquitto -c /mosquitto/config/mosquitto.conf
     ports:
