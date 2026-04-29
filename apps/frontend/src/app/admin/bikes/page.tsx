@@ -8,16 +8,13 @@ import { useSupplierActions } from "@/hooks/use-supplier";
 import { BikeStatus } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page() {
-  // 1. QUẢN LÝ STATE
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
+  const [supplierId , setSupplierId] = useState<string>("");
+  const [stationId , setStationId] = useState<string>("");
   const pageSize = 7;
-
-  // 2. GỌI API TRẠM & NHÀ CUNG CẤP
-  const { stations } = useStationActions({ hasToken: true });
-  const { allSupplier } = useSupplierActions({ hasToken: true });
-
-  // 3. GỌI API XE ĐẠP
+  const { stations , getAllStations} = useStationActions({ hasToken: true });
+  const { allSupplier , getAllSuppliers } = useSupplierActions({ hasToken: true });
   const {
     data,
     statusCount,
@@ -30,18 +27,22 @@ export default function Page() {
     status: statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
     pageSize: pageSize,
     page: page,
+    // SỬA Ở ĐÂY: Nếu stationId là "" hoặc "all-stations" thì không truyền xuống API
+    stationId: (!stationId || stationId === "all-stations") ? undefined : stationId,
+    
+    // SỬA Ở ĐÂY: Nếu supplierId là "" hoặc "all-suppliers" thì không truyền xuống API
+    supplierId: (!supplierId || supplierId === "all-suppliers") ? undefined : supplierId,
   });
-
-  // 4. EFFECTS
   useEffect(() => {
     getStatisticsBike();
-  }, [getStatisticsBike]);
+    getAllSuppliers();
+    getAllStations();
+  }, [getStatisticsBike,getAllSuppliers]);
 
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
 
-  // 5. XỬ LÝ LOADING MƯỢT MÀ CHO BẢNG
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -80,10 +81,14 @@ export default function Page() {
       filters={{
         statusFilter,
         page,
+        stationId,
+        supplierId,
       }}
       actions={{
         setStatusFilter,
         setPage,
+        setStationId,
+        setSupplierId,
       }}
     />
   );
