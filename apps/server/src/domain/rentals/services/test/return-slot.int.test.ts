@@ -807,6 +807,7 @@ describe("return slot integration", () => {
   it("allows a staff operator to confirm return outside their assigned station", async () => {
     const { user, rental } = await givenActiveRental(fixture, {
       wallet: { balance: 100000n },
+      rental: { startTime: SAFE_RENTAL_START_TIME },
     });
     const operator = await fixture.factories.user({ role: "STAFF" });
     const reservedStation = await fixture.factories.station({ capacity: 2 });
@@ -824,7 +825,7 @@ describe("return slot integration", () => {
       stationId: reservedStation.id,
       confirmedByUserId: operator.id,
       confirmationMethod: "MANUAL",
-      confirmedAt: new Date(Date.now() + 30 * 60 * 1000),
+      confirmedAt: SAFE_RETURN_CONFIRMED_AT,
     });
 
     const completed = expectRight(result);
