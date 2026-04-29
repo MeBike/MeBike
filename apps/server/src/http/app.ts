@@ -7,11 +7,7 @@ import { logger as honoLogger } from "hono/logger";
 import type { RunPromise } from "@/http/shared/runtime";
 
 import { env } from "@/config/env";
-import {
-  currentUserMiddleware,
-  requireAdminMiddleware,
-  requireAuthMiddleware,
-} from "@/http/middlewares/auth";
+import { currentUserMiddleware } from "@/http/middlewares/auth";
 import logger from "@/lib/logger";
 
 import { registerAgencyRoutes } from "./routes/agencies";
@@ -83,27 +79,6 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
     await next();
   });
   app.use("*", currentUserMiddleware);
-  app.use("/v1/rentals/*", requireAuthMiddleware);
-  app.use("/v1/users/*", requireAuthMiddleware);
-  app.use("/v1/ratings/*", requireAuthMiddleware);
-  app.use("/v1/wallets/*", requireAuthMiddleware);
-  app.use("/v1/subscriptions/*", requireAuthMiddleware);
-  app.use("/v1/fixed-slot-templates", requireAuthMiddleware);
-  app.use("/v1/fixed-slot-templates/*", requireAuthMiddleware);
-  app.use("/v1/reservations", requireAuthMiddleware);
-  app.use("/v1/reservations/*", requireAuthMiddleware);
-  app.use("/v1/stripe/*", requireAuthMiddleware);
-  app.use("/v1/redistribution-requests", requireAuthMiddleware);
-  app.use("/v1/redistribution-requests/*", requireAuthMiddleware);
-  app.use("/v1/suppliers", requireAdminMiddleware);
-  app.use("/v1/suppliers/*", requireAdminMiddleware);
-  app.use("/v1/users/manage-users/*", requireAdminMiddleware);
-  app.use("/v1/admin", requireAdminMiddleware);
-  app.use("/v1/admin/*", requireAdminMiddleware);
-  app.use("/events", requireAuthMiddleware);
-  app.use("/v1/incidents", requireAuthMiddleware);
-  app.use("/v1/incidents/*", requireAuthMiddleware);
-  app.use("/v1/ai/*", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(

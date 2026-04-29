@@ -1,7 +1,10 @@
+import type { RouteConfig } from "@hono/zod-openapi";
+
 import { serverRoutes, UsersContracts } from "@mebike/shared";
 import { bodyLimit } from "hono/body-limit";
 
 import { UsersController } from "@/http/controllers/users";
+import { requireAuthMiddleware } from "@/http/middlewares/auth";
 
 const AVATAR_REQUEST_MAX_BYTES = 6 * 1024 * 1024;
 
@@ -17,8 +20,29 @@ function avatarTooLargeResponse(c: import("hono").Context) {
 
 export function registerUserSelfRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const users = serverRoutes.users;
-  app.openapi(users.me, UsersController.me);
-  app.openapi(users.updateMe, UsersController.updateMe);
+
+  const meRoute = {
+    ...users.me,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const updateMeRoute = {
+    ...users.updateMe,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const uploadMyAvatarRoute = {
+    ...users.uploadMyAvatar,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const changePasswordRoute = {
+    ...users.changePassword,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(meRoute, UsersController.me);
+  app.openapi(updateMeRoute, UsersController.updateMe);
   app.use(users.uploadMyAvatar.path, async (c, next) => {
     const contentLength = c.req.header("content-length");
     const parsedLength = contentLength ? Number(contentLength) : null;
@@ -33,6 +57,6 @@ export function registerUserSelfRoutes(app: import("@hono/zod-openapi").OpenAPIH
     maxSize: AVATAR_REQUEST_MAX_BYTES,
     onError: c => avatarTooLargeResponse(c),
   }));
-  app.openapi(users.uploadMyAvatar, UsersController.uploadMyAvatar);
-  app.openapi(users.changePassword, UsersController.changePassword);
+  app.openapi(uploadMyAvatarRoute, UsersController.uploadMyAvatar);
+  app.openapi(changePasswordRoute, UsersController.changePassword);
 }

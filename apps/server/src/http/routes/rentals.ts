@@ -12,6 +12,7 @@ import {
 import {
   requireAdminMiddleware,
   requireAgencyMiddleware,
+  requireAuthMiddleware,
   requireRentalOperatorManagerMiddleware,
   requireRentalSupportMiddleware,
   requireStaffOrManagerMiddleware,
@@ -23,16 +24,36 @@ export function registerRentalRoutes(
 ) {
   const rentals = serverRoutes.rentals;
 
-  app.openapi(rentals.createRental, RentalMeController.createRental);
+  const createRentalRoute = {
+    ...rentals.createRental,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
 
-  app.openapi(rentals.getMyRentals, RentalMeController.getMyRentals);
+  const getMyRentalsRoute = {
+    ...rentals.getMyRentals,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const getMyCurrentRentalsRoute = {
+    ...rentals.getMyCurrentRentals,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const getMyRentalCountsRoute = {
+    ...rentals.getMyRentalCounts,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(createRentalRoute, RentalMeController.createRental);
+
+  app.openapi(getMyRentalsRoute, RentalMeController.getMyRentals);
 
   app.openapi(
-    rentals.getMyCurrentRentals,
+    getMyCurrentRentalsRoute,
     RentalMeController.getMyCurrentRentals,
   );
 
-  app.openapi(rentals.getMyRentalCounts, RentalMeController.getMyRentalCounts);
+  app.openapi(getMyRentalCountsRoute, RentalMeController.getMyRentalCounts);
 
   const activeByPhoneRoute = {
     ...rentals.getActiveRentalsByPhone,
@@ -264,11 +285,31 @@ export function registerRentalRoutes(
     RentalAgencyController.agencyRejectBikeSwapRequestHandler,
   );
 
-  app.openapi(rentals.getMyRental, RentalMeController.getMyRental);
+  const getMyRentalRoute = {
+    ...rentals.getMyRental,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
 
-  app.openapi(rentals.getMyCurrentReturnSlot, RentalMeController.getMyCurrentReturnSlot);
+  const getMyCurrentReturnSlotRoute = {
+    ...rentals.getMyCurrentReturnSlot,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
 
-  app.openapi(rentals.createMyReturnSlot, RentalMeController.createMyReturnSlot);
+  const createMyReturnSlotRoute = {
+    ...rentals.createMyReturnSlot,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
 
-  app.openapi(rentals.cancelMyReturnSlot, RentalMeController.cancelMyReturnSlot);
+  const cancelMyReturnSlotRoute = {
+    ...rentals.cancelMyReturnSlot,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(getMyRentalRoute, RentalMeController.getMyRental);
+
+  app.openapi(getMyCurrentReturnSlotRoute, RentalMeController.getMyCurrentReturnSlot);
+
+  app.openapi(createMyReturnSlotRoute, RentalMeController.createMyReturnSlot);
+
+  app.openapi(cancelMyReturnSlotRoute, RentalMeController.cancelMyReturnSlot);
 }
