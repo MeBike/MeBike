@@ -2,6 +2,7 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 
 import { streamSSE } from "hono/streaming";
 
+import { requireAuthMiddleware } from "@/http/middlewares/auth";
 import { getBikeStatusEventBus } from "@/realtime/bike-status-events";
 import { getReturnSlotEventBus } from "@/realtime/return-slot-events";
 
@@ -36,7 +37,7 @@ returnSlotEventBus.on("returnSlotExpired", (payload: { userId: string }) => {
 });
 
 export function registerEventRoutes(app: OpenAPIHono) {
-  app.get("/events", (c) => {
+  app.get("/events", requireAuthMiddleware, (c) => {
     const user = c.var.currentUser!;
     c.header("Content-Type", "text/event-stream");
     c.header("Cache-Control", "no-cache");
