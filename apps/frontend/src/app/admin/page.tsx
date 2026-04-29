@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { useUserActions } from "@/hooks/use-user";
 import { useBikeActions } from "@/hooks/use-bike";
 import { useRentalsActions } from "@/hooks/use-rental";
-import { formatRevenue } from "@/lib/formatVND";
+import { formatCurrency } from "@/utils/formatCurrency";
 export default function DashboardPage() {
   const { user } = useAuth();
   const { newRegistrationStats, getNewRegistrationStats } = useUserActions({
@@ -63,52 +63,38 @@ export default function DashboardPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
-              title="Tổng lượt thuê hôm nay"
+              title="Lượt thuê hôm nay"
               value={
                 dashboardSummaryData
                   ? dashboardSummaryData.revenueSummary.today.totalRentals.toString()
                   : "0"
               }
-              change={`${changeRentPercent}% so với hôm qua`}
-              changeType={changeRentPercent > 1 ? "positive" : "negative"}
               icon={Bike}
             />
             <StatsCard
               title="Xe đang cho thuê"
               value={
                 statusCount
-                  ? statusCount.UNAVAILABLE?.toString()
+                  ? statusCount.RENTED?.toString()
                   : "0"
               }
-              change={`${
-                changePercentBike > 1 ? "+" : ""
-              }${changePercentBike}% so với tháng trước`}
-              changeType={changePercentBike > 1 ? "positive" : "negative"}
               icon={TrendingUp}
             />
             <StatsCard
-              title="Khách hàng mới trong tháng"
+              title="Khách hàng mới"
               value={
                 newRegistrationStats
                   ? newRegistrationStats.newUsersThisMonth.toString()
                   : "0"
               }
-              change={`${
-                (newRegistrationStats?.percentageChange ?? 0) > 1 ? "+" : ""
-              }${newRegistrationStats?.percentageChange ?? 0}% so với tháng trước`}
-              changeType={(newRegistrationStats?.percentageChange ?? 0) > 1 ? "positive" : "negative"}
               icon={Users}
             />
             <StatsCard
               title="Doanh thu tháng này"
-              value={formatRevenue(
-                summaryRental?.monthlyRevenue.current
-              )}
+              value={
+                formatCurrency(Number(summaryRental?.monthlyRevenue.current))
+              }
               icon={DollarSign}
-              change={`${
-                (summaryRental?.monthlyRevenue?.percentChange ?? 0) > 1 ? "+" : ""
-              }${summaryRental?.monthlyRevenue?.percentChange ?? 0}% so với tháng trước`}
-              changeType={(summaryRental?.monthlyRevenue?.percentChange ?? 0) > 1 ? "positive" : "negative"}
             />
           </div>
         </section>

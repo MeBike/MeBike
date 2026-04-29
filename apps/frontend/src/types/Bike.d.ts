@@ -85,6 +85,7 @@ export interface BikeStatistics {
   BOOKED: number;
   UNAVAILABLE: number;
   BROKEN: number;
+  RENTED : number;
 }
 export interface BikeActionProps {
   hasToken: boolean;
