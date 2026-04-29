@@ -27,6 +27,9 @@ const invalidTopupBody = {
   details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
 } as const;
 
+const STRIPE_TOPUP_MIN_AMOUNT_MINOR = 15000n;
+const STRIPE_TOPUP_MAX_AMOUNT_MINOR = 5000000n;
+
 const getMyWallet: RouteHandler<WalletsRoutes["getMyWallet"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
   if (!userId) {
@@ -209,7 +212,7 @@ const createStripeTopupSession: RouteHandler<WalletsRoutes["createStripeTopupSes
   }
 
   const amountMinor = BigInt(body.amount);
-  if (amountMinor < 5000n) {
+  if (amountMinor < STRIPE_TOPUP_MIN_AMOUNT_MINOR) {
     return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
@@ -217,7 +220,7 @@ const createStripeTopupSession: RouteHandler<WalletsRoutes["createStripeTopupSes
     return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
-  if (amountMinor > BigInt(Number.MAX_SAFE_INTEGER)) {
+  if (amountMinor > STRIPE_TOPUP_MAX_AMOUNT_MINOR) {
     return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
@@ -280,7 +283,7 @@ const createStripeTopupPaymentSheet: RouteHandler<WalletsRoutes["createStripeTop
   }
 
   const amountMinor = BigInt(body.amount);
-  if (amountMinor < 5000n) {
+  if (amountMinor < STRIPE_TOPUP_MIN_AMOUNT_MINOR) {
     return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
@@ -288,7 +291,7 @@ const createStripeTopupPaymentSheet: RouteHandler<WalletsRoutes["createStripeTop
     return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
-  if (amountMinor > BigInt(Number.MAX_SAFE_INTEGER)) {
+  if (amountMinor > STRIPE_TOPUP_MAX_AMOUNT_MINOR) {
     return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
