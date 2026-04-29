@@ -41,6 +41,12 @@ export default function AgencyRequestClient() {
   }, [getMyAgencyRequest]);
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Đăng ký Agency</h1>
+        <Button onClick={() => router.push("/user/my-agency-request/create")}>
+          <Plus className="mr-2 h-4 w-4" /> Đăng ký
+        </Button>
+      </div>
       <div className="min-h-[700px]">
         {isVisualLoading ? (
           <TableSkeleton />

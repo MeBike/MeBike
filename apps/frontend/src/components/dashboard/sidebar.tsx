@@ -200,19 +200,7 @@ export function Sidebar() {
           roles: ["ADMIN"],
         },
         {
-          title: "Chuyến đi của tôi",
-          icon: Bike,
-          href: "/user/trips",
-          roles: ["USER"],
-        },
-        {
-          title: "Đăng ký agency",
-          icon: Bike,
-          href: "/user/create-agency-request",
-          roles: ["USER"],
-        },
-        {
-          title: "Yêu cầu của tôi",
+          title: "Đăng ký Agency",
           icon: Bike,
           href: "/user/my-agency-request",
           roles: ["USER"],

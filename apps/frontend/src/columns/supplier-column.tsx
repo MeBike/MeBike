@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 
-// 1. Gộp cấu hình màu sắc và text tiếng Việt vào một object cho gọn gàng và dễ mở rộng
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   ACTIVE: { 
     label: "Đang hoạt động", 
@@ -54,7 +53,6 @@ export const columns = ({
     header: "Trạng thái",
     cell: ({ row }) => {
       const statusValue = row.original.status || "";
-      // Lấy config theo status, nếu không có thì dùng default
       const config = STATUS_CONFIG[statusValue] || { 
         label: statusValue || "Không rõ", 
         color: "bg-muted text-muted-foreground border-border" 

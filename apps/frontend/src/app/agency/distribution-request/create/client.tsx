@@ -45,13 +45,11 @@ export default function CreateDistributionRequestClient({
     },
   });
 
-  // Theo dõi giá trị sourceStationId để disable trong targetStationId
   const sourceStationId = useWatch({ control, name: "sourceStationId" });
 
   const onSubmit = async (data: CreateRedistributionRequestInput) => {
     try {
       await onSubmitRequest(data);
-      router.push("/agency/distribution-request");
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -63,7 +61,7 @@ export default function CreateDistributionRequestClient({
       <PageHeader
         title="Tạo yêu cầu điều phối"
         description="Điều phối xe từ trạm của bạn đến trạm đích"
-        backLink="/staff/distribution-request"
+        backLink="/agency/distribution-request"
       />
 
       <Card className="mx-auto max-w-2xl border-border/50 shadow-sm">

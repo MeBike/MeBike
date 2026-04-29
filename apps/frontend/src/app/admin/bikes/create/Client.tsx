@@ -28,6 +28,9 @@ const BIKE_STATUS_LABELS: Record<BikeStatus, string> = {
   RESERVED: "Đã đặt trước",
   MAINTENANCE: "Bảo trì",
   UNAVAILABLE: "Không khả dụng",
+  DISABLED: "Hư",
+  LOST: "Mất xe",
+  REDISTRIBUTING: "Đang điều phối",
   "": "Không xác định",
 };
 const VALID_STATUSES: BikeStatus[] = [

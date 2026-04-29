@@ -35,6 +35,7 @@ export const useStationActions = ({
   latitude,
   longitude,
   name,
+  stationType
 }: StationActionProps) => {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -42,7 +43,7 @@ export const useStationActions = ({
     refetch,
     data: response,
     isLoading,
-  } = useGetAllStation({ page: page, limit: limit, name: name });
+  } = useGetAllStation({ page: page, limit: limit, name: name , stationType : stationType });
   const {
     data: selectedDataStation,
     isLoading: isLoadingGetSelectStation,

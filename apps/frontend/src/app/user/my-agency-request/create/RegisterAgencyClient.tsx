@@ -71,6 +71,7 @@ export default function RegisterAgencyClient() {
       toast.success("Gửi yêu cầu đăng ký thành công!");
       form.reset(); 
       router.refresh();
+      router.push("/user/my-agency-request")
     } catch (error) {
       console.error(error);
     } finally {
