@@ -16,6 +16,34 @@ type UserDetail = import("@services/users/user-service").UserDetail;
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 type TokenState = "checking" | "missing" | "present";
 
+const AUTH_BOOTSTRAP_TIMEOUT_MS = 10000;
+
+class AuthBootstrapTimeoutError extends Error {
+  constructor() {
+    super("Auth token check timed out");
+    this.name = "AuthBootstrapTimeoutError";
+  }
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new AuthBootstrapTimeoutError());
+    }, timeoutMs);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      },
+    );
+  });
+}
+
 function deriveAuthStatus({
   hasRecoverableSessionError,
   tokenState,
@@ -91,7 +119,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     let active = true;
-    getAccessToken()
+    withTimeout(getAccessToken(), AUTH_BOOTSTRAP_TIMEOUT_MS)
       .then((token) => {
         if (!active) {
           return;
@@ -99,7 +127,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
         setTokenState(token ? "present" : "missing");
       })
       .catch((err) => {
-        log.warn("AuthProviderNext token check failed", err);
+        log.warn("AuthProviderNext token check failed", err instanceof Error ? err.message : err);
         if (active) {
           setTokenState("missing");
         }
