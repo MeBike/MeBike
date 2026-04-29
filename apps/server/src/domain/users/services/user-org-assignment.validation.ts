@@ -22,6 +22,27 @@ import {
   TechnicianTeamMemberLimitExceeded as TechnicianTeamMemberLimitExceededError,
 } from "../domain-errors";
 
+function invalidOrgAssignment(args: {
+  stationId: string | null;
+  technicianTeamId: string | null;
+  role: UserRow["role"];
+  agencyId?: string | null;
+}) {
+  return Effect.fail(new InvalidOrgAssignmentError({
+    role: args.role,
+    stationId: args.stationId,
+    agencyId: args.agencyId ?? null,
+    technicianTeamId: args.technicianTeamId,
+  }));
+}
+
+function isAgencyOwnedStation(station: {
+  stationType: "INTERNAL" | "AGENCY";
+  agencyId: string | null;
+}) {
+  return station.stationType === "AGENCY" || station.agencyId !== null;
+}
+
 export function makeValidateOrgAssignmentTargetsExist(deps: {
   agencyRepo: Pick<AgencyRepo, "getById">;
   stationRepo: Pick<StationQueryRepo, "getById">;
@@ -37,12 +58,14 @@ export function makeValidateOrgAssignmentTargetsExist(deps: {
       if (args.stationId) {
         const station = yield* deps.stationRepo.getById(args.stationId);
         if (Option.isNone(station)) {
-          return yield* Effect.fail(new InvalidOrgAssignmentError({
-            role: args.role,
-            stationId: args.stationId,
-            agencyId: args.agencyId ?? null,
-            technicianTeamId: args.technicianTeamId,
-          }));
+          return yield* invalidOrgAssignment(args);
+        }
+
+        if (
+          (args.role === "STAFF" || args.role === "MANAGER")
+          && isAgencyOwnedStation(station.value)
+        ) {
+          return yield* invalidOrgAssignment(args);
         }
       }
 
@@ -51,24 +74,21 @@ export function makeValidateOrgAssignmentTargetsExist(deps: {
           defectOn(AgencyRepositoryError),
         );
         if (Option.isNone(agency)) {
-          return yield* Effect.fail(new InvalidOrgAssignmentError({
-            role: args.role,
-            stationId: args.stationId,
-            agencyId: args.agencyId,
-            technicianTeamId: args.technicianTeamId,
-          }));
+          return yield* invalidOrgAssignment(args);
         }
       }
 
       if (args.technicianTeamId) {
         const technicianTeam = yield* deps.technicianTeamQueryRepo.getById(args.technicianTeamId);
         if (Option.isNone(technicianTeam)) {
-          return yield* Effect.fail(new InvalidOrgAssignmentError({
-            role: args.role,
-            stationId: args.stationId,
-            agencyId: args.agencyId ?? null,
-            technicianTeamId: args.technicianTeamId,
-          }));
+          return yield* invalidOrgAssignment(args);
+        }
+
+        if (args.role === "TECHNICIAN") {
+          const station = yield* deps.stationRepo.getById(technicianTeam.value.stationId);
+          if (Option.isNone(station) || isAgencyOwnedStation(station.value)) {
+            return yield* invalidOrgAssignment(args);
+          }
         }
       }
     });
