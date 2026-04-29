@@ -143,6 +143,13 @@ const makeAiChatService = Effect.gen(function* () {
         model: getOpenRouterChatModel(),
         temperature: 0,
         maxOutputTokens: 700,
+        providerOptions: {
+          openrouter: {
+            reasoning: {
+              effort: env.OPENROUTER_REASONING_EFFORT,
+            },
+          },
+        },
         stopWhen: stepCountIs(5),
         system: buildCustomerAssistantPrompt(args.context),
         messages: modelMessages,
@@ -153,8 +160,10 @@ const makeAiChatService = Effect.gen(function* () {
             chatId: args.chatId,
             context: args.context,
             model: env.AI_MODEL,
+            providerOrder: env.OPENROUTER_PROVIDER_ORDER,
             providerOnly: env.OPENROUTER_PROVIDER_ONLY,
             quantizations: env.OPENROUTER_PROVIDER_QUANTIZATIONS,
+            reasoningEffort: env.OPENROUTER_REASONING_EFFORT,
             userId: args.userId,
           }, "AI stream aborted");
         },
@@ -166,8 +175,10 @@ const makeAiChatService = Effect.gen(function* () {
             context: args.context,
             finishReason: event.finishReason,
             model: env.AI_MODEL,
+            providerOrder: env.OPENROUTER_PROVIDER_ORDER,
             providerOnly: env.OPENROUTER_PROVIDER_ONLY,
             quantizations: env.OPENROUTER_PROVIDER_QUANTIZATIONS,
+            reasoningEffort: env.OPENROUTER_REASONING_EFFORT,
             rawFinishReason: event.rawFinishReason,
             responseId: event.response.id,
             steps: event.steps.length,

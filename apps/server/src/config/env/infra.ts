@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const databaseEnvSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  PRISMA_TRANSACTION_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
 });
 
 export const redisEnvSchema = z.object({

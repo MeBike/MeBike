@@ -80,13 +80,13 @@ export async function runInteractiveCli(args: {
         break;
       }
       case "my-rentals":
-        await browsePersonaRentals(args.connectionString, currentPersona);
+        await runInteractiveAction(() => browsePersonaRentals(args.connectionString, currentPersona));
         break;
       case "user-card":
-        await bindUserCardInteractive(args.connectionString);
+        await runInteractiveAction(() => bindUserCardInteractive(args.connectionString));
         break;
       case "staff-end-rental":
-        await endRentalAsStaffInteractive(args.connectionString, currentPersona);
+        await runInteractiveAction(() => endRentalAsStaffInteractive(args.connectionString, currentPersona));
         break;
       case "device-config":
         await runInteractiveAction(deviceConfigInteractive);
@@ -116,25 +116,29 @@ export async function runInteractiveCli(args: {
       case "show": {
         const id = await input({ message: "Job id" });
         if (id) {
-          await showJob(args.connectionString, id);
+          await runInteractiveAction(() => showJob(args.connectionString, id));
         }
         break;
       }
       case "process": {
-        const result = await processOneEmailJob();
-        if (result.status === "empty") {
-          writeLine(chalk.yellow("No pending email job."));
-        }
-        else {
-          writeLine(chalk.green(`Processed email job ${result.jobId}.`));
-        }
+        await runInteractiveAction(async () => {
+          const result = await processOneEmailJob();
+          if (result.status === "empty") {
+            writeLine(chalk.yellow("No pending email job."));
+          }
+          else {
+            writeLine(chalk.green(`Processed email job ${result.jobId}.`));
+          }
+        });
         break;
       }
       case "samples": {
         const to = await input({ message: "Target email" });
         if (to) {
-          const subjects = await sendSampleEmails({ to });
-          writeLine(chalk.green(`Sent ${subjects.length} sample emails to ${to}`));
+          await runInteractiveAction(async () => {
+            const subjects = await sendSampleEmails({ to });
+            writeLine(chalk.green(`Sent ${subjects.length} sample emails to ${to}`));
+          });
         }
         break;
       }

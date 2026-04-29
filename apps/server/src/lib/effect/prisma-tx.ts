@@ -1,5 +1,7 @@
 import { Data, Effect } from "effect";
 
+import { env } from "@/config/env";
+
 export class PrismaTransactionError extends Data.TaggedError("PrismaTransactionError")<{
   readonly cause: unknown;
 }> {}
@@ -18,13 +20,16 @@ export function runPrismaTransaction<A, E>(
 ): Effect.Effect<A, E | PrismaTransactionError> {
   return Effect.tryPromise({
     try: () =>
-      client.$transaction(async (tx) => {
-        const result = await Effect.runPromise(run(tx).pipe(Effect.either));
-        if (result._tag === "Left") {
-          throw new TxAbort(result.left);
-        }
-        return result.right;
-      }),
+      client.$transaction(
+        async (tx) => {
+          const result = await Effect.runPromise(run(tx).pipe(Effect.either));
+          if (result._tag === "Left") {
+            throw new TxAbort(result.left);
+          }
+          return result.right;
+        },
+        { timeout: env.PRISMA_TRANSACTION_TIMEOUT_MS },
+      ),
     catch: (err) => {
       if (err instanceof TxAbort) {
         return err.payload as E;
