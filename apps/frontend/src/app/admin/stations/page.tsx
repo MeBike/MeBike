@@ -22,6 +22,7 @@ export default function Page() {
     page: page,
     limit: limit,
     name: searchQuery,
+    stationType : "INTERNAL",
   });
   useEffect(() => {
     getAllStations();

@@ -5,21 +5,29 @@ import { useParams } from "next/navigation";
 import { useDistributionRequest } from "@/hooks/use-distribution-request";
 import { DistributionRequestDetailClient } from "./client";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { useStationActions } from "@/hooks/use-station";
 const DistributionRequestDetailPage = () => {
   const params = useParams();
   const id = params.id as string;
-  const hasToken = true;
   const {
     agencyViewDistributionRequestDetail,
     isLoadingAgencyViewDistributionRequestDetail,
     getAgencyViewDistributionRequestDetail,
-    startTransitDistributionRequest,
-    cancelDistributeRequest,
+    agencyStartTransitDistributionRequest,
+    agencyCancelDistributeRequest,
+    agencyApproveDistributeRequest,
+    agencyRejectDistributeRequest,
+    agencyCompleteDistributeRequest,
   } = useDistributionRequest({
     id: id,
-    hasToken: hasToken,
+    hasToken: true,
   });
+  const { getListStation, listStation, isLoadingListStation } = useStationActions({
+      hasToken: true,
+    });
+  
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
+
   useEffect(() => {
     if (isLoadingAgencyViewDistributionRequestDetail) {
       setIsVisualLoading(true);
@@ -30,15 +38,18 @@ const DistributionRequestDetailPage = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoadingAgencyViewDistributionRequestDetail]);
+
   useEffect(() => {
     if (id) {
       getAgencyViewDistributionRequestDetail();
+      getListStation();
     }
   }, [id, getAgencyViewDistributionRequestDetail]);
 
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
+
   if (!agencyViewDistributionRequestDetail?.data) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -46,14 +57,18 @@ const DistributionRequestDetailPage = () => {
       </div>
     );
   }
-
+  
   return (
-    <DistributionRequestDetailClient
-      onCancel={async (reason: string) =>
-        await cancelDistributeRequest(id, { reason })
-      }
+    <DistributionRequestDetailClient 
+      listStation={listStation}
       data={agencyViewDistributionRequestDetail.data}
-      onStartTransit={async () => await startTransitDistributionRequest(id)}
+      onApprove={() => agencyApproveDistributeRequest(id)}
+      onReject={(reason: string) => agencyRejectDistributeRequest(id, { reason })}
+      onComplete={(payload) => agencyCompleteDistributeRequest(id, { completedBikeIds: payload.completedBikeIds })}
+      onStartTransit={async () => await agencyStartTransitDistributionRequest(id)}
+      onCancel={async (reason: string) =>
+        await agencyCancelDistributeRequest(id, { reason })
+      }
     />
   );
 };

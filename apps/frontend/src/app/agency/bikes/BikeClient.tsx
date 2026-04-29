@@ -36,7 +36,7 @@ export default function BikeClient() {
   }, [isLoadingMyAgencyBikeInStation]);
   useEffect(() => {
     getMyAgencyBikeInStation();
-  }, [statusFilter]);
+  }, [statusFilter,page]);
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

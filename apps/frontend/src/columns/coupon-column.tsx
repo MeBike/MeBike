@@ -14,19 +14,19 @@ interface CouponColumnProps {
   onActive: (coupon: Coupon) => void;
   onDeactive: (coupon: Coupon) => void;
 }
-export const getStatusColor = (status: Status) => {
-  switch (status) {
-    case "ACTIVE":
-      return "bg-green-100 text-green-800";
-    case "INACTIVE":
-      return "bg-blue-100 text-blue-800";
-    case "SUSPENDED":
-      return "bg-yellow-100 text-yellow-800";
-    case "BANNED":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  ACTIVE: { 
+    label: "Đang hoạt động", 
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200" 
+  },
+  INACTIVE: { 
+    label: "Không hoạt động", 
+    color: "bg-rose-100 text-rose-700 border-rose-200" 
+  },
+  TERMINATED: { 
+    label: "Đã kết thúc", 
+    color: "bg-slate-100 text-slate-700 border-slate-200" 
+  },
 };
 export const couponColumns = ({
   onView,
@@ -52,13 +52,21 @@ export const couponColumns = ({
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(row.original.status as Status)}`}
-      >
-        {row.original.status}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const statusValue = row.original.status || "";
+      const config = STATUS_CONFIG[statusValue] || { 
+        label: statusValue || "Không rõ", 
+        color: "bg-muted text-muted-foreground border-border" 
+      };
+
+      return (
+        <span
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
+        >
+          {config.label}
+        </span>
+      );
+    },
   },
   {
     id: "actions",

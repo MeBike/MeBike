@@ -22,6 +22,6 @@ export const useGetMyAgencyRequestDetail = ({
   return useQuery({
     queryKey: ["detail", "my-agency-request",id],
     queryFn: () => getMyAgencyRequestDetail({ id : id }),
-    enabled : !!id,
+    enabled : false,
   });
 };

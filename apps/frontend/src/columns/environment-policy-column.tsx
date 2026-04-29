@@ -22,6 +22,30 @@ export const getRequestStatusColor = (status: EnvironmentStatus) => {
       return "bg-gray-100 text-gray-800 border-gray-200";
   }
 };
+
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  ACTIVE: { 
+    label: "Đang hoạt động", 
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200" 
+  },
+  INACTIVE: { 
+    label: "Không hoạt động", 
+    color: "bg-rose-100 text-rose-700 border-rose-200" 
+  },
+  SUSPENDED : {
+    label : "Tạm dừng",
+    color: "bg-yellow-100 text-yellow-700 border-yellow-200"
+  },
+  BANNED : {
+    label : "Đã khóa",
+    color: "bg-red-100 text-red-700 border-red-200"
+  },
+  TERMINATED: { 
+    label: "Đã kết thúc", 
+    color: "bg-slate-100 text-slate-700 border-slate-200" 
+  },
+};
+
 export const redistributionColumn = ({
   onView,
   onActive,
@@ -52,12 +76,17 @@ export const redistributionColumn = ({
     accessorKey: "status",
     header: "Trạng thái",
     cell: ({ row }) => {
-      const status = row.original.status;
+      const statusValue = row.original.status || "";
+      const config = STATUS_CONFIG[statusValue] || { 
+        label: statusValue || "Không rõ", 
+        color: "bg-muted text-muted-foreground border-border" 
+      };
+
       return (
         <span
-          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getRequestStatusColor(status)}`}
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
         >
-          {status}
+          {config.label}
         </span>
       );
     },

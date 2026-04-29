@@ -12,6 +12,20 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  ACTIVE: { 
+    label: "Đang hoạt động", 
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200" 
+  },
+  INACTIVE: { 
+    label: "Không hoạt động", 
+    color: "bg-rose-100 text-rose-700 border-rose-200" 
+  },
+  TERMINATED: { 
+    label: "Đã kết thúc", 
+    color: "bg-slate-100 text-slate-700 border-slate-200" 
+  },
+};
 export const getStatusColor = (status: AgencyStatus) => {
   switch (status) {
     case "INACTIVE":
@@ -76,13 +90,21 @@ export const agencyColumn = ({
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(row.original.status as AgencyStatus)}`}
-      >
-        {row.original.status}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const statusValue = row.original.status || "";
+      const config = STATUS_CONFIG[statusValue] || { 
+        label: statusValue || "Không rõ", 
+        color: "bg-muted text-muted-foreground border-border" 
+      };
+
+      return (
+        <span
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
+        >
+          {config.label}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "createdAt",
@@ -130,6 +152,20 @@ export const agencyColumn = ({
     ),
   },
 ];
+const STATUS_CONFIG_AGENCY_REQUEST: Record<string, { label: string; color: string }> = {
+  PENDING: { 
+    label: "Đang chờ", 
+    color: "bg-yellow-100 text-yellow-700 border-yellow-200" 
+  },
+  APPROVED: { 
+    label: "Đã duyệt", 
+    color: "bg-green-100 text-green-700 border-green-200" 
+  },
+  REJECTED: { 
+    label: "Đã từ chối", 
+    color: "bg-red-100 text-red-700 border-red-200" 
+  },
+};
 export const agencyRequestColumn = ({
   onView,
   onApprove,
@@ -177,13 +213,21 @@ export const agencyRequestColumn = ({
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColorAgencyRequest(row.original.status)}`}
-      >
-        {row.original.status}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const statusValue = row.original.status || "";
+      const config = STATUS_CONFIG_AGENCY_REQUEST[statusValue] || { 
+        label: statusValue || "Không rõ", 
+        color: "bg-muted text-muted-foreground border-border" 
+      };
+
+      return (
+        <span
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
+        >
+          {config.label}
+        </span>
+      );
+    },
   },
   {
     id: "actions",
