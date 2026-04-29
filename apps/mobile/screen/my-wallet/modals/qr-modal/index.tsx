@@ -1,5 +1,6 @@
 import { IconSymbol } from "@components/IconSymbol";
 import { hasStripePublishableKey, STRIPE_RETURN_URL } from "@lib/stripe";
+import { log } from "@lib/log";
 import { walletTopupService } from "@services/wallet-topup.service";
 import {
   initPaymentSheet,
@@ -37,6 +38,8 @@ type QRModalProps = {
 };
 
 const QUICK_AMOUNTS = ["50000", "100000", "200000", "500000"] as const;
+const STRIPE_TOPUP_MIN_AMOUNT = 15000;
+const STRIPE_TOPUP_MAX_AMOUNT = 5000000;
 const SHEET_OPEN_DURATION = 260;
 const SHEET_CLOSE_DURATION = 220;
 
@@ -148,8 +151,13 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
       return;
     }
 
-    if (Number(trimmed) < 5000) {
-      Alert.alert("Số tiền quá nhỏ", "Số tiền tối thiểu là 5.000 VND.");
+    if (Number(trimmed) < STRIPE_TOPUP_MIN_AMOUNT) {
+      Alert.alert("Số tiền quá nhỏ", "Số tiền tối thiểu là 15.000 VND.");
+      return;
+    }
+
+    if (Number(trimmed) > STRIPE_TOPUP_MAX_AMOUNT) {
+      Alert.alert("Số tiền quá lớn", "Số tiền tối đa là 5.000.000 VND.");
       return;
     }
 
@@ -165,6 +173,11 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
       return;
     }
 
+    log.info("Created Stripe PaymentSheet top-up attempt", {
+      amount: trimmed,
+      paymentAttemptId: result.value.paymentAttemptId,
+    });
+
     const initialized = await initPaymentSheet({
       merchantDisplayName: "MeBike",
       paymentIntentClientSecret: result.value.paymentIntentClientSecret,
@@ -173,6 +186,12 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
 
     if (initialized.error) {
       setIsSubmitting(false);
+      log.error("Stripe PaymentSheet initialization failed", {
+        amount: trimmed,
+        code: initialized.error.code,
+        message: initialized.error.message,
+        paymentAttemptId: result.value.paymentAttemptId,
+      });
       Alert.alert("Chưa thể thanh toán", getPaymentInitializationMessage());
       return;
     }
@@ -182,9 +201,19 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
 
     if (presented.error) {
       if (presented.error.code === PaymentSheetError.Canceled) {
+        log.info("Stripe PaymentSheet canceled", {
+          amount: trimmed,
+          paymentAttemptId: result.value.paymentAttemptId,
+        });
         return;
       }
 
+      log.error("Stripe PaymentSheet presentation failed", {
+        amount: trimmed,
+        code: presented.error.code,
+        message: presented.error.message,
+        paymentAttemptId: result.value.paymentAttemptId,
+      });
       Alert.alert("Thanh toán thất bại", getPaymentFailureMessage());
       return;
     }
@@ -245,7 +274,7 @@ export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
             <AppText style={styles.description} tone="muted" variant="bodySmall">
               Nhập số tiền bằng VND. Số tiền tối thiểu là
               {" "}
-              <AppText tone="default" variant="bodyStrong">5.000đ</AppText>
+              <AppText tone="default" variant="bodyStrong">15.000đ</AppText>
               . Số dư ví sẽ được cập nhật ngay sau khi thanh toán thành công.
             </AppText>
 
