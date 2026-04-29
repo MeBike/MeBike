@@ -38,7 +38,7 @@ export function getActiveCustomerTools(
 ): CustomerToolName[] {
   switch (screen) {
     case "rental":
-      return ["getCurrentRentalSummary", ...returnSlotTools, ...returnSlotMutationTools, "getRentalDetail", ...locationTools, ...stationTools, ...bikeTools];
+      return ["queryRentals", ...returnSlotTools, ...returnSlotMutationTools, "getRentalDetail", "getRentalDetails", ...locationTools, ...stationTools, ...bikeTools];
     case "reservation":
       return ["getReservationSummary", "getReservationDetail", ...locationTools, ...stationTools, ...bikeTools];
     case "station":
@@ -49,10 +49,11 @@ export function getActiveCustomerTools(
       return ["getWalletSummary", "getWalletTransactionDetail", ...locationTools, ...stationTools];
     default:
       return [
-        "getCurrentRentalSummary",
+        "queryRentals",
         ...returnSlotTools,
         ...returnSlotMutationTools,
         "getRentalDetail",
+        "getRentalDetails",
         "getReservationSummary",
         "getReservationDetail",
         ...locationTools,
