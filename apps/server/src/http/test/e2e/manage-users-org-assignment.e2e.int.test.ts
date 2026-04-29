@@ -294,6 +294,76 @@ describe("manage-users org assignment e2e", () => {
     expect(technicianBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
   });
 
+  it("returns INVALID_ORG_ASSIGNMENT when create assigns internal roles to agency-owned stations", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        id: uuidv7(),
+        name: "Agency Create Guard",
+      },
+      select: { id: true },
+    });
+    const agencyStation = await fixture.factories.station({
+      name: "Agency Station Create Guard",
+      stationType: "AGENCY",
+      agencyId: agency.id,
+    });
+    const agencyTeam = await fixture.factories.technicianTeam({
+      stationId: agencyStation.id,
+      name: "Agency Team Create Guard",
+    });
+
+    const staffResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Agency Staff Create",
+        email: "agency-staff-create@example.com",
+        password: "password123",
+        role: "STAFF",
+        orgAssignment: {
+          stationId: agencyStation.id,
+        },
+      }),
+    });
+    const managerResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Agency Manager Create",
+        email: "agency-manager-create@example.com",
+        password: "password123",
+        role: "MANAGER",
+        orgAssignment: {
+          stationId: agencyStation.id,
+        },
+      }),
+    });
+    const technicianResponse = await fixture.app.request("http://test/v1/users/manage-users/create", {
+      method: "POST",
+      headers: adminAuthHeader(),
+      body: JSON.stringify({
+        fullname: "Agency Technician Create",
+        email: "agency-technician-create@example.com",
+        password: "password123",
+        role: "TECHNICIAN",
+        orgAssignment: {
+          technicianTeamId: agencyTeam.id,
+        },
+      }),
+    });
+
+    const staffBody = await staffResponse.json() as UsersContracts.UserErrorResponse;
+    const managerBody = await managerResponse.json() as UsersContracts.UserErrorResponse;
+    const technicianBody = await technicianResponse.json() as UsersContracts.UserErrorResponse;
+
+    expect(staffResponse.status).toBe(400);
+    expect(staffBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+    expect(managerResponse.status).toBe(400);
+    expect(managerBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+    expect(technicianResponse.status).toBe(400);
+    expect(technicianBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+  });
+
   it("returns station role limit error when creating a second staff for the same station", async () => {
     const station = await fixture.factories.station({ name: "Station Staff Limit Create" });
 
@@ -804,6 +874,88 @@ describe("manage-users org assignment e2e", () => {
     const managerBody = await managerResponse.json() as UsersContracts.UserErrorResponse;
     const technicianBody = await technicianResponse.json() as UsersContracts.UserErrorResponse;
 
+    expect(managerResponse.status).toBe(400);
+    expect(managerBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+    expect(technicianResponse.status).toBe(400);
+    expect(technicianBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
+  });
+
+  it("returns INVALID_ORG_ASSIGNMENT when update assigns internal roles to agency-owned stations", async () => {
+    const agency = await fixture.prisma.agency.create({
+      data: {
+        id: uuidv7(),
+        name: "Agency Update Guard",
+      },
+      select: { id: true },
+    });
+    const agencyStation = await fixture.factories.station({
+      name: "Agency Station Update Guard",
+      stationType: "AGENCY",
+      agencyId: agency.id,
+    });
+    const agencyTeam = await fixture.factories.technicianTeam({
+      stationId: agencyStation.id,
+      name: "Agency Team Update Guard",
+    });
+    const staffTarget = await fixture.factories.user({
+      role: "STAFF",
+      email: "agency-staff-update-target@example.com",
+    });
+    const managerTarget = await fixture.factories.user({
+      role: "MANAGER",
+      email: "agency-manager-update-target@example.com",
+    });
+    const technicianTarget = await fixture.factories.user({
+      role: "TECHNICIAN",
+      email: "agency-technician-update-target@example.com",
+    });
+
+    const staffResponse = await fixture.app.request(
+      `http://test/v1/users/manage-users/${staffTarget.id}`,
+      {
+        method: "PATCH",
+        headers: adminAuthHeader(),
+        body: JSON.stringify({
+          role: "STAFF",
+          orgAssignment: {
+            stationId: agencyStation.id,
+          },
+        }),
+      },
+    );
+    const managerResponse = await fixture.app.request(
+      `http://test/v1/users/manage-users/${managerTarget.id}`,
+      {
+        method: "PATCH",
+        headers: adminAuthHeader(),
+        body: JSON.stringify({
+          role: "MANAGER",
+          orgAssignment: {
+            stationId: agencyStation.id,
+          },
+        }),
+      },
+    );
+    const technicianResponse = await fixture.app.request(
+      `http://test/v1/users/manage-users/${technicianTarget.id}`,
+      {
+        method: "PATCH",
+        headers: adminAuthHeader(),
+        body: JSON.stringify({
+          role: "TECHNICIAN",
+          orgAssignment: {
+            technicianTeamId: agencyTeam.id,
+          },
+        }),
+      },
+    );
+
+    const staffBody = await staffResponse.json() as UsersContracts.UserErrorResponse;
+    const managerBody = await managerResponse.json() as UsersContracts.UserErrorResponse;
+    const technicianBody = await technicianResponse.json() as UsersContracts.UserErrorResponse;
+
+    expect(staffResponse.status).toBe(400);
+    expect(staffBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
     expect(managerResponse.status).toBe(400);
     expect(managerBody.details.code).toBe("INVALID_ORG_ASSIGNMENT");
     expect(technicianResponse.status).toBe(400);

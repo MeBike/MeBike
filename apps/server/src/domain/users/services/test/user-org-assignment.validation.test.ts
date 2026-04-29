@@ -82,16 +82,68 @@ describe("makeValidateOrgAssignmentTargetsExist", () => {
     }
   });
 
+  it("fails when staff or manager assignment points to an agency station", async () => {
+    const validate = makeValidateOrgAssignmentTargetsExist({
+      agencyRepo: {
+        getById: () => Effect.succeed(Option.some({} as never)),
+      },
+      stationRepo: {
+        getById: () => Effect.succeed(Option.some({ stationType: "AGENCY", agencyId: "agency-1" } as never)),
+      },
+      technicianTeamQueryRepo: {
+        getById: () => Effect.succeed(Option.some({ stationId: "station-1" } as never)),
+      },
+    });
+
+    const result = await Effect.runPromise(validate({
+      role: "STAFF",
+      stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
+      technicianTeamId: null,
+      agencyId: null,
+    }).pipe(Effect.either));
+
+    expect(result._tag).toBe("Left");
+    if (result._tag === "Left") {
+      expect(result.left._tag).toBe("InvalidOrgAssignment");
+    }
+  });
+
+  it("fails when technician assignment points to a team under an agency station", async () => {
+    const validate = makeValidateOrgAssignmentTargetsExist({
+      agencyRepo: {
+        getById: () => Effect.succeed(Option.some({} as never)),
+      },
+      stationRepo: {
+        getById: () => Effect.succeed(Option.some({ stationType: "AGENCY", agencyId: "agency-1" } as never)),
+      },
+      technicianTeamQueryRepo: {
+        getById: () => Effect.succeed(Option.some({ stationId: "station-1" } as never)),
+      },
+    });
+
+    const result = await Effect.runPromise(validate({
+      role: "TECHNICIAN",
+      stationId: null,
+      technicianTeamId: "019d4781-6843-75e0-a223-16279751efab",
+      agencyId: null,
+    }).pipe(Effect.either));
+
+    expect(result._tag).toBe("Left");
+    if (result._tag === "Left") {
+      expect(result.left._tag).toBe("InvalidOrgAssignment");
+    }
+  });
+
   it("passes when referenced org assignment targets exist", async () => {
     const validate = makeValidateOrgAssignmentTargetsExist({
       agencyRepo: {
         getById: () => Effect.succeed(Option.some({} as never)),
       },
       stationRepo: {
-        getById: () => Effect.succeed(Option.some({} as never)),
+        getById: () => Effect.succeed(Option.some({ stationType: "INTERNAL", agencyId: null } as never)),
       },
       technicianTeamQueryRepo: {
-        getById: () => Effect.succeed(Option.some({} as never)),
+        getById: () => Effect.succeed(Option.some({ stationId: "station-1" } as never)),
       },
     });
 

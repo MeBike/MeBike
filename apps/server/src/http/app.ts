@@ -11,7 +11,6 @@ import {
   currentUserMiddleware,
   requireAdminMiddleware,
   requireAuthMiddleware,
-  requireBackofficeMiddleware,
 } from "@/http/middlewares/auth";
 import logger from "@/lib/logger";
 
@@ -98,12 +97,14 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/redistribution-requests/*", requireAuthMiddleware);
   app.use("/v1/suppliers", requireAdminMiddleware);
   app.use("/v1/suppliers/*", requireAdminMiddleware);
-  app.use("/v1/users/manage-users/*", requireBackofficeMiddleware);
+  app.use("/v1/users/manage-users/*", requireAdminMiddleware);
   app.use("/v1/users/manage-users/create", requireAdminMiddleware);
   app.use(
     "/v1/users/manage-users/admin-reset-password/*",
     requireAdminMiddleware,
   );
+  app.use("/v1/admin", requireAdminMiddleware);
+  app.use("/v1/admin/*", requireAdminMiddleware);
   app.use("/v1/admin/rentals", requireAdminMiddleware);
   app.use("/v1/admin/rentals/*", requireAdminMiddleware);
   app.use("/events", requireAuthMiddleware);
