@@ -22,7 +22,6 @@ export default function Page() {
     role:roleFilter,
   });
 
-  // 3. EFFECTS
   useEffect(() => {
     getAllStaffs();
   }, [searchQuery, verifyFilter, roleFilter, currentPage, getAllStaffs]);

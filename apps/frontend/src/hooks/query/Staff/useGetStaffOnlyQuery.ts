@@ -7,11 +7,13 @@ const fetchStaffOnly = async ({
   pageSize,
   role,
   verify,
+  fullName,
 }: {
   page?: number;
   pageSize?: number;
   role?: UserRole | "";
   verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
+  fullName ?: string;
 }) => {
   try {
     const query: Record<string, number | string> = {
@@ -20,6 +22,7 @@ const fetchStaffOnly = async ({
     };
     if (role) query.role = role;
     if(verify) query.verify = verify;
+    if(fullName) query.fullName = fullName;
     const response = await userService.getStaffOnly(query);
     if (response.status === HTTP_STATUS.OK) {
       return response.data;
@@ -33,16 +36,18 @@ export const useGetStaffOnlyQuery = ({
   page,
   pageSize,
   role,
-  verify
+  verify,
+  fullName,
 }: {
   page?: number;
   pageSize?: number;
   role ?: UserRole | "";
-  verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | ""
+  verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "",
+  fullName ?: string;
 }) => {
   return useQuery({
-    queryKey: ["staff-only",{page,pageSize,role,verify}],
-    queryFn: () => fetchStaffOnly({ page: page, pageSize: pageSize, role:role,verify}),
+    queryKey: ["staff-only",{page,pageSize,role,verify,fullName}],
+    queryFn: () => fetchStaffOnly({ page: page, pageSize: pageSize, role:role,verify,fullName}),
     staleTime: 5 * 60 * 1000,
   });
 };

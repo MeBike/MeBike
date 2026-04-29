@@ -6,13 +6,14 @@ import {
   CheckCircle,
   DollarSign,
   TrendingUp,
-  AlertCircle,
 } from "lucide-react";
 import { SummaryRental } from "@custom-types";
-import { formatRevenue } from "@/lib/formatVND";
+import { formatCurrency } from "@/utils/formatCurrency";
+
 export function RentalStats({ params }: { params: SummaryRental }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Thẻ Đang thuê */}
       <Card className="p-4 bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/20">
         <div className="flex items-center justify-between">
           <div>
@@ -27,6 +28,7 @@ export function RentalStats({ params }: { params: SummaryRental }) {
         </div>
       </Card>
 
+      {/* Thẻ Hoàn thành */}
       <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
         <div className="flex items-center justify-between">
           <div>
@@ -40,27 +42,14 @@ export function RentalStats({ params }: { params: SummaryRental }) {
           </div>
         </div>
       </Card>
-
-      <Card className="p-4 bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Đã hủy</p>
-            <p className="text-3xl font-bold text-orange-500 mt-1">
-              {params.rentalList.Cancelled}
-            </p>
-          </div>
-          <div className="p-3 bg-orange-500/10 rounded-lg">
-            <AlertCircle className="w-6 h-6 text-orange-500" />
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 lg:col-span-2">
+      
+      {/* Thẻ Doanh thu hôm nay */}
+      <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground">Doanh thu hôm nay</p>
-            <p className="text-3xl font-bold text-primary mt-1">
-              {formatRevenue(params.dailyRevenue.current) + ""}
+            <p className="text-3xl font-bold text-primary mt-1 tracking-tight">
+              {formatCurrency(params.dailyRevenue.current)}
             </p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg">
@@ -69,14 +58,15 @@ export function RentalStats({ params }: { params: SummaryRental }) {
         </div>
       </Card>
 
-      <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 lg:col-span-2">
+      {/* Thẻ Tổng doanh thu tháng này */}
+      <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground">
               Tổng doanh thu tháng này
             </p>
-            <p className="text-3xl font-bold text-accent mt-1">
-              {formatRevenue(params.monthlyRevenue.current) + ""}
+            <p className="text-3xl font-bold text-accent mt-1 tracking-tight">
+              {formatCurrency(params.monthlyRevenue.current)}
             </p>
           </div>
           <div className="p-3 bg-accent/10 rounded-lg">
