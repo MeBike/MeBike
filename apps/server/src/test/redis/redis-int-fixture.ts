@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import process from "node:process";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
 import { startRedis } from "@/test/db/redis";
