@@ -1,5 +1,7 @@
 import type { Effect, Option } from "effect";
 
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+
 import type {
   CreateTechnicianTeamInput,
   TechnicianTeamAvailableOption,
@@ -16,7 +18,10 @@ export type TechnicianTeamQueryRepo = {
   readonly getDetailById: (
     id: string,
   ) => Effect.Effect<Option.Option<TechnicianTeamDetailRow>>;
-  readonly list: (args?: TechnicianTeamFilter) => Effect.Effect<readonly TechnicianTeamRow[]>;
+  readonly list: (
+    filter: TechnicianTeamFilter,
+    pageReq: PageRequest,
+  ) => Effect.Effect<PageResult<TechnicianTeamRow>>;
   readonly listAvailable: (args?: {
     readonly stationId?: string;
   }) => Effect.Effect<readonly TechnicianTeamAvailableOption[]>;

@@ -16,7 +16,7 @@ export function makeTechnicianTeamQueryService(
           onSome: Effect.succeed,
         })),
       ),
-    listTechnicianTeams: filter => repo.list(filter),
+    listTechnicianTeams: (filter, pageReq) => repo.list(filter, pageReq),
     listAvailableTechnicianTeams: args => repo.listAvailable(args),
   };
 }
