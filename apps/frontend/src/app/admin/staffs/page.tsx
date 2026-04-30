@@ -5,7 +5,7 @@ import StaffClient from "./StaffClient";
 import { useUserActions } from "@/hooks/use-user";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-export type UserStatusFilter = VerifyStatus | "BANNED" | "";
+export type UserStatusFilter = VerifyStatus | "BANNED" | "" | "all";
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { TableSkeleton } from "@/components/table-skeleton";
+import { UserFilters } from "./components/customer-filter";
 import type { DetailUser , Pagination ,VerifyStatus , GetUserDashboardStatsResponse} from "@custom-types";
 type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
@@ -76,32 +77,15 @@ export default function CustomersClient({
 
         {dashboardStatsData && <CustomerStats stats={dashboardStatsData} />}
 
-        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Bộ lọc</h3>
-            <Button variant="ghost" size="sm" onClick={handleReset}>
-              Xóa bộ lọc
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Trạng thái xác thực</label>
-              <select
-                value={verifyFilter}
-                onChange={(e) => {
-                  setVerifyFilter(e.target.value as UserStatusFilter);
-                  handleFilterChange(); // Đưa về trang 1 khi đổi bộ lọc
-                }}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground"
-              >
-                <option value="all">Tất cả</option>
-                <option value="VERIFIED">Đã xác thực</option>
-                <option value="UNVERIFIED">Chưa xác thực</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        <UserFilters
+          verifyFilter={verifyFilter}
+          setVerifyFilter={setVerifyFilter}
+          handleFilterChange={handleFilterChange}
+          onReset={() => {
+            setSearchQuery("");
+            setCurrentPage(1);
+          }}
+        />
 
         <div>
           <div className="min-h-[700px]">

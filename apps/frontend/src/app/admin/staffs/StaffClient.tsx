@@ -10,6 +10,7 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { TableSkeleton } from "@/components/table-skeleton";
 import type { ApiResponse, DetailUser, UserRole } from "@custom-types";
 import type { UserStatusFilter } from "./page";
+import { StaffFilters } from "./components/staff-filter";
 interface StaffClientProps {
   data: {
     staffOnly?: ApiResponse<DetailUser[]>;
@@ -73,57 +74,14 @@ export default function StaffClient({
           </div>
         </div>
 
-        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Bộ lọc</h3>
-            <Button variant="ghost" size="sm" onClick={handleReset}>
-              Xóa bộ lọc
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Verify Status */}
-            <div className="p-4 space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">
-                Trạng thái xác thực
-              </label>
-              <select
-                value={verifyFilter}
-                onChange={(e) => {
-                  setVerifyFilter(e.target.value as UserStatusFilter);
-                  handleFilterChange();
-                }}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">Tất cả</option>
-                <option value="VERIFIED">Đã xác thực</option>
-                <option value="UNVERIFIED">Chưa xác thực</option>
-                <option value="BANNED">Bị cấm</option>
-              </select>
-            </div>
-
-            {/* Role */}
-            <div className="p-4 space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">
-                Chức vụ
-              </label>
-              <select
-                value={roleFilter}
-                onChange={(e) => {
-                  setRoleFilter(e.target.value as UserRole);
-                  handleFilterChange();
-                }}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Tất cả</option>
-                <option value="MANAGER">Quản lý</option>
-                <option value="STAFF">Nhân viên</option>
-                <option value="TECHNICIAN">Kỹ thuật viên</option>
-                <option value="AGENCY">Đại lý</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        <StaffFilters
+        verifyFilter={verifyFilter}
+        setVerifyFilter={setVerifyFilter}
+        roleFilter={roleFilter} // Giả định bạn có roleFilter trong state
+        setRoleFilter={setRoleFilter}
+        handleFilterChange={handleFilterChange}
+        onReset={handleReset}
+      />
 
         <div>
           <div className="min-h-[700px]">
