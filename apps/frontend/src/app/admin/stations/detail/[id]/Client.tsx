@@ -190,9 +190,9 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
                   <StatusItem icon={CheckCircle2} label="Sẵn sàng" value={station.bikes.available} color="text-green-600" />
                   <StatusItem icon={Clock} label="Đang đặt trước" value={station.bikes.reserved} color="text-amber-600" />
                   <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-blue-600" />
-                  <StatusItem icon={Wrench} label="Đang bảo trì" value={station.bikes.maintained} color="text-orange-500" />
-                  <StatusItem icon={AlertTriangle} label="Hỏng hóc" value={station.bikes.broken} color="text-red-500" />
-                  <StatusItem icon={Ban} label="Không khả dụng" value={station.bikes.unavailable} color="text-muted-foreground" />
+                  <StatusItem icon={Wrench} label="Xe được điều phối" value={station.bikes.redistributing} color="text-orange-500" />
+                  <StatusItem icon={AlertTriangle} label="Xe hỏng" value={station.bikes.broken} color="text-red-500" />
+                  <StatusItem icon={Ban} label="Xe tạm ngưng hoạt động" value={station.bikes.disabled} color="text-muted-foreground" />
                 </div>
               </div>
             </SectionCard>
