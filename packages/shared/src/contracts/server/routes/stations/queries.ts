@@ -216,7 +216,7 @@ export const staffListStations = createRoute({
   },
   responses: {
     200: {
-      description: "List current operator station only",
+      description: "List stations for staff, manager, or technician",
       content: {
         "application/json": { schema: StationListResponseSchema },
       },
@@ -228,7 +228,7 @@ export const staffListStations = createRoute({
       },
     },
     404: {
-      description: "Assigned station not found",
+      description: "Station not found",
       content: {
         "application/json": {
           schema: StationErrorResponseSchema,
@@ -284,7 +284,7 @@ export const staffGetStation = createRoute({
   },
   responses: {
     200: {
-      description: "Get station details for current operator station",
+      description: "Get station details for staff, manager, or technician",
       content: {
         "application/json": { schema: StationReadSummarySchemaOpenApi },
       },
