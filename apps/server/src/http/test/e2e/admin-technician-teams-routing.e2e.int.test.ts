@@ -84,6 +84,61 @@ describe("admin technician teams routing e2e", () => {
     expect(body.data[0]?.id).toBe(matchingTeam.id);
     expect(body.data[0]?.station.id).toBe(stationA.id);
     expect(body.data[0]?.memberCount).toBe(1);
+    expect(body.pagination).toMatchObject({
+      page: 1,
+      pageSize: 50,
+      total: 1,
+      totalPages: 1,
+    });
+  });
+
+  it("paginates technician teams for admin list", async () => {
+    const stationA = await fixture.factories.station({ name: "Pagination Station A" });
+    const stationB = await fixture.factories.station({ name: "Pagination Station B" });
+    const stationC = await fixture.factories.station({ name: "Pagination Station C" });
+    await fixture.factories.technicianTeam({
+      name: "Admin Team Alpha",
+      stationId: stationA.id,
+    });
+    const betaTeam = await fixture.factories.technicianTeam({
+      name: "Admin Team Beta",
+      stationId: stationB.id,
+    });
+    await fixture.factories.technicianTeam({
+      name: "Admin Team Gamma",
+      stationId: stationC.id,
+      availabilityStatus: "UNAVAILABLE",
+    });
+    const technician = await fixture.factories.user({
+      fullname: "Paged Tech",
+      email: "paged-tech@example.com",
+      role: "TECHNICIAN",
+    });
+
+    await fixture.factories.userOrgAssignment({
+      userId: technician.id,
+      technicianTeamId: betaTeam.id,
+    });
+
+    const response = await fixture.app.request(
+      "http://test/v1/admin/technician-teams?availabilityStatus=AVAILABLE&page=2&pageSize=1",
+      {
+        method: "GET",
+        headers: authHeader(),
+      },
+    );
+    const body = await response.json() as TechnicianTeamsContracts.TechnicianTeamListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.id).toBe(betaTeam.id);
+    expect(body.data[0]?.memberCount).toBe(1);
+    expect(body.pagination).toMatchObject({
+      page: 2,
+      pageSize: 1,
+      total: 2,
+      totalPages: 2,
+    });
   });
 
   it("gets technician team detail with station address and members", async () => {

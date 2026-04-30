@@ -62,7 +62,7 @@ describe("technicianTeamReadRepository Integration", () => {
     expect(excludedCount).toBe(1);
   });
 
-  it("list returns technician teams with filters and member counts", async () => {
+  it("list returns paginated technician teams with filters and member counts", async () => {
     const stationA = await fixture.factories.station({ name: "List Team Station A" });
     const stationB = await fixture.factories.station({ name: "List Team Station B" });
     const availableTeam = await fixture.factories.technicianTeam({
@@ -85,16 +85,28 @@ describe("technicianTeamReadRepository Integration", () => {
       technicianTeamId: availableTeam.id,
     });
 
-    const rows = await runEffect(repo.list({
-      stationId: stationA.id,
-      availabilityStatus: "AVAILABLE",
-    }));
+    const page = await runEffect(repo.list(
+      {
+        stationId: stationA.id,
+        availabilityStatus: "AVAILABLE",
+      },
+      {
+        page: 1,
+        pageSize: 10,
+      },
+    ));
 
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.id).toBe(availableTeam.id);
-    expect(rows[0]?.stationId).toBe(stationA.id);
-    expect(rows[0]?.stationName).toBe("List Team Station A");
-    expect(rows[0]?.memberCount).toBe(1);
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0]?.id).toBe(availableTeam.id);
+    expect(page.items[0]?.stationId).toBe(stationA.id);
+    expect(page.items[0]?.stationName).toBe("List Team Station A");
+    expect(page.items[0]?.memberCount).toBe(1);
+    expect(page).toMatchObject({
+      page: 1,
+      pageSize: 10,
+      total: 1,
+      totalPages: 1,
+    });
   });
 
   it("listAvailable omits full and unavailable teams and supports station filter", async () => {

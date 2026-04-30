@@ -30,15 +30,27 @@ const listTechnicianTeams: RouteHandler<TechnicianTeamsRoutes["adminList"]> = as
   const query = c.req.valid("query");
 
   const eff = Effect.flatMap(TechnicianTeamQueryServiceTag, service =>
-    service.listTechnicianTeams({
-      stationId: query.stationId,
-      availabilityStatus: query.availabilityStatus,
-    }));
+    service.listTechnicianTeams(
+      {
+        stationId: query.stationId,
+        availabilityStatus: query.availabilityStatus,
+      },
+      {
+        page: query.page ?? 1,
+        pageSize: query.pageSize ?? 50,
+      },
+    ));
 
   const result = await c.var.runPromise(eff);
 
   return c.json<TechnicianTeamListResponse, 200>({
-    data: result.map(toContractTechnicianTeamSummary),
+    data: result.items.map(toContractTechnicianTeamSummary),
+    pagination: {
+      page: result.page,
+      pageSize: result.pageSize,
+      total: result.total,
+      totalPages: result.totalPages,
+    },
   }, 200);
 };
 

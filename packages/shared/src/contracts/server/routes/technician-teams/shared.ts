@@ -1,5 +1,7 @@
 import { z } from "../../../../zod";
 import {
+  paginationQueryFields,
+  PaginationSchema,
   ServerErrorResponseSchema,
 } from "../../schemas";
 import {
@@ -19,6 +21,7 @@ export const TechnicianTeamIdParamSchema = z.object({
 export const TechnicianTeamListQuerySchema = z.object({
   stationId: z.uuidv7().optional(),
   availabilityStatus: TechnicianTeamAvailabilitySchema.optional(),
+  ...paginationQueryFields,
 }).openapi("TechnicianTeamListQuery");
 
 export const TechnicianTeamCreateBodySchema = z.object({
@@ -53,6 +56,7 @@ export const TechnicianTeamUpdateBodySchema = z
 
 export const TechnicianTeamListResponseSchema = z.object({
   data: z.array(TechnicianTeamSummarySchema),
+  pagination: PaginationSchema,
 }).openapi("TechnicianTeamListResponse");
 
 export const TechnicianTeamAvailableListResponseSchema = z.object({
