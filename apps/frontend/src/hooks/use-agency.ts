@@ -55,6 +55,10 @@ export interface AgencyActionProps {
   status ?: BikeStatus;
   renservation_status ?: ReservationStatus;
   rental_status ?: RentalStatus,
+  requesterUserId?: string;
+  status_agency_request?: string;
+  requesterEmail?: string;
+  agencyName?: string;
 }
 export const useAgencyActions = ({
   hasToken,
@@ -68,7 +72,11 @@ export const useAgencyActions = ({
   reservation_id,
   status,
   renservation_status,
-  rental_status
+  rental_status,
+  requesterUserId,
+  status_agency_request,
+  requesterEmail,
+  agencyName,
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -76,14 +84,19 @@ export const useAgencyActions = ({
     data: agencyRequest,
     refetch: refetchGetAgencyRequest,
     isLoading: isLoadingAgencyRequest,
-  } = useGetAgencyRequests({ page: page, pageSize: pageSize });
+  } = useGetAgencyRequests({ page: page, pageSize: pageSize , 
+    requesterUserId:requesterUserId,
+    status:status_agency_request,
+    requesterEmail:requesterEmail,
+    agencyName:agencyName,
+  });
   const getAgencyRequest = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
     refetchGetAgencyRequest();
-  }, [refetchGetAgencyRequest, hasToken, router, page]);
+  }, [refetchGetAgencyRequest, hasToken, router, page,status_agency_request,requesterEmail,agencyName]);
   const {
     data: myAgencyRequest,
     refetch: refetchGetMyAgencyRequest,

@@ -68,15 +68,27 @@ export const agencyService = {
   getAgencyRequest: async ({
     page,
     pageSize,
+    requesterUserId,
+    status,
+    requesterEmail,
+    agencyName,
   }: {
     page?: number;
     pageSize?: number;
+    requesterUserId?: string;
+    status?: string;
+    requesterEmail?: string;
+    agencyName?: string;
   }): Promise<AxiosResponse<ApiResponse<AgencyRequest[]>>> => {
     const response = fetchHttpClient.get<ApiResponse<AgencyRequest[]>>(
       ENDPOINT.AGENCY_REQUEST.BASE,
       {
-        page: page,
-        pageSize: pageSize,
+        page : page,
+        pageSize : pageSize,
+        requesterUserId : requesterUserId,
+        status : status,
+        requesterEmail : requesterEmail,
+        agencyName : agencyName,
       },
     );
     return response;
