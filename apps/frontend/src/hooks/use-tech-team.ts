@@ -17,8 +17,9 @@ export interface TechnicianActionProps {
   pageSize ?: number,
   status?: TechnicianStatus,
   teamId ?: string,
+  station_id ?: string,
 }
-export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,status,teamId}: TechnicianActionProps) => {
+export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,status,teamId,station_id}: TechnicianActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
@@ -29,6 +30,7 @@ export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,sta
     page:page,
     pageSize:pageSize,
     status:status,
+    stationId:station_id
   });
   const getTechnicianTeam = useCallback(() => {
     if (!hasToken) {
@@ -36,7 +38,7 @@ export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,sta
       return;
     }
     refetchAllTechnicianTeam();
-  }, [hasToken, router]);
+  }, [hasToken, router,station_id,page,pageSize,status]);
   const useCreateTechnicianTeam = useCreateTechnicianTeamMutation();
   const createTechnicianTeam = useCallback(
     async (technicianTeamData: CreateTechnicianTeamSchema) => {

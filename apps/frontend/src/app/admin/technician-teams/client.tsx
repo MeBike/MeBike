@@ -1,29 +1,36 @@
-
 "use client";
 
 import { Dispatch, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { columns } from "@/columns/technician-team-column";
 import { TableSkeleton } from "@/components/table-skeleton";
-import type { TechnicianTeamRecord , Pagination, TechnicianStatus } from "@custom-types";
+import { TechnicianTeamFilters } from "./components/filter";
+import type { 
+  TechnicianTeamRecord, 
+  Pagination, 
+  TechnicianStatus, 
+  Station 
+} from "@custom-types";
 
-interface BikeClientProps {
+interface TechnicianClientProps {
   data: {
     technicianTeam: TechnicianTeamRecord[];
-    paginationBikes?: Pagination;
+    pagination?: Pagination;
+    stations: Station[];
     isVisualLoading: boolean;
-    isLoadingStatusCount: boolean;
   };
   filters: {
-    statusFilter: TechnicianStatus;
+    statusFilter: TechnicianStatus | "";
+    stationId: string;
     page: number;
   };
   actions: {
     setStatusFilter: Dispatch<SetStateAction<TechnicianStatus | "">>;
+    setStationId: Dispatch<SetStateAction<string>>;
     setPage: Dispatch<SetStateAction<number>>;
   };
 }
@@ -31,46 +38,72 @@ interface BikeClientProps {
 export default function Client({
   data: {
     technicianTeam,
-    paginationBikes,
+    pagination,
+    stations,
     isVisualLoading,
   },
-  filters: { statusFilter, page },
-  actions: { setStatusFilter, setPage },
-}: BikeClientProps) {
+  filters: { statusFilter, stationId, page },
+  actions: { setStatusFilter, setStationId, setPage },
+}: TechnicianClientProps) {
   const router = useRouter();
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Quản lý đội kỹ thuật</h1>
-        <Button onClick={() => router.push("/admin/technician-teams/create")}>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Quản lý đội kỹ thuật</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Điều phối và quản lý nhân sự tại các trạm xe.
+          </p>
+        </div>
+        <Button onClick={() => router.push("/admin/technician-teams/create")} className="shadow-sm">
           <Plus className="mr-2 h-4 w-4" /> Thêm đội kỹ thuật
         </Button>
       </div>
-      <div className="min-h-[700px]">
+
+      {/* Filter Section */}
+      <TechnicianTeamFilters
+        stationId={stationId}
+        setStationId={setStationId}
+        stations={stations}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        onReset={() => {
+          setStationId("all-stations");
+          setStatusFilter("");
+        }}
+      />
+
+      {/* Main Content */}
+      <div className="min-h-[500px]">
         {isVisualLoading ? (
           <TableSkeleton />
         ) : (
-          <>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Hiển thị {paginationBikes?.page ?? 1} /{" "}
-              {paginationBikes?.totalPages ?? 1} trang
-            </p>
+          <div className="space-y-4">
+            <div className="flex items-end justify-between">
+              <p className="text-xs text-muted-foreground">
+                Hiển {pagination?.page ?? 1} / {pagination?.totalPages ?? 1}
+              </p>
+            </div>
 
-            <DataTable
-              columns={columns({
-                onView: ({ id }) => router.push(`/admin/technician-teams/detail/${id}`),
-              })}
-              data={technicianTeam}
-            />
-
-            <div className="pt-3">
-              <PaginationDemo
-                currentPage={paginationBikes?.page ?? 1}
-                onPageChange={setPage}
-                totalPages={paginationBikes?.totalPages ?? 1}
+            <div className="rounded-md border">
+              <DataTable
+                columns={columns({
+                  onView: ({ id }) => router.push(`/admin/technician-teams/detail/${id}`),
+                })}
+                data={technicianTeam}
               />
             </div>
-          </>
+
+            <div className="flex justify-center pt-4">
+              <PaginationDemo
+                currentPage={pagination?.page ?? 1}
+                onPageChange={setPage}
+                totalPages={pagination?.totalPages ?? 1}
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>

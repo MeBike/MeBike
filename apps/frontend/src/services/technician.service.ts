@@ -4,13 +4,14 @@ import { ApiResponse , TechnicianTeamRecord ,TechnicianTeamDetailResponse } from
 import { ENDPOINT } from "@/constants/end-point";
 import type { CreateTechnicianTeamSchema , UpdateTechnicianTeamSchema } from "@/schemas/technician-schema";
 export const technicianService = {
-  getAllTechnicianTeam: async ({page,pageSize,status}:{page?:number,pageSize?:number,status?:string}): Promise<AxiosResponse<ApiResponse<TechnicianTeamRecord[]>>> => {
+  getAllTechnicianTeam: async ({page,pageSize,status,stationId}:{page?:number,pageSize?:number,status?:string, stationId ?: string}): Promise<AxiosResponse<ApiResponse<TechnicianTeamRecord[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<TechnicianTeamRecord[]>>(
       ENDPOINT.TECH_TEAM.BASE,
       {
         page : page,
         pageSize : pageSize,
         status : status,
+        stationId : stationId,
       }
     );
     return response;
