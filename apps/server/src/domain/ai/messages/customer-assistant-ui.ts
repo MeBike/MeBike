@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { CustomerToolSet } from "../tools/customer-tools";
 
 import {
-  CurrentRentalSummaryToolOutputSchema,
+  QueryRentalsToolOutputSchema,
   ReservationSummaryToolOutputSchema,
   WalletSummaryToolOutputSchema,
 } from "../tools/customer-tool-schemas";
@@ -16,7 +16,7 @@ export const CustomerAssistantMessageMetadataSchema = z.object({
 }).strict();
 
 export const customerAssistantDataSchemas = {
-  rentalSummary: CurrentRentalSummaryToolOutputSchema,
+  rentalSummary: QueryRentalsToolOutputSchema,
   reservationSummary: ReservationSummaryToolOutputSchema,
   walletSummary: WalletSummaryToolOutputSchema,
 } as const;
@@ -26,7 +26,7 @@ export type CustomerAssistantMessageMetadata = z.infer<
 >;
 
 export type CustomerAssistantDataParts = {
-  readonly rentalSummary: z.infer<typeof CurrentRentalSummaryToolOutputSchema>;
+  readonly rentalSummary: z.infer<typeof QueryRentalsToolOutputSchema>;
   readonly reservationSummary: z.infer<typeof ReservationSummaryToolOutputSchema>;
   readonly walletSummary: z.infer<typeof WalletSummaryToolOutputSchema>;
 };
@@ -55,7 +55,7 @@ type GenericDataPart = {
 export function convertCustomerAssistantDataPart(part: GenericDataPart) {
   switch (part.type) {
     case "data-rentalSummary": {
-      const parsed = CurrentRentalSummaryToolOutputSchema.safeParse(part.data);
+      const parsed = QueryRentalsToolOutputSchema.safeParse(part.data);
       return parsed.success
         ? formatDataPartForModel("Rental summary", parsed.data)
         : undefined;

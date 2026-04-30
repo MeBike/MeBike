@@ -25,7 +25,8 @@ export type CreateCustomerToolsArgs = {
 };
 
 export type CustomerToolName
-  = | "getCurrentRentalSummary"
+  = | "queryRentals"
+    | "getRentalDetails"
     | "getCurrentReturnSlot"
     | "createReturnSlot"
     | "switchReturnSlot"
@@ -45,6 +46,19 @@ export type CustomerToolName
 export const RentalDetailInputSchema = z.object({
   rentalId: z.string().optional(),
   reference: z.enum(["context", "current", "latest", "id"]).default("context"),
+});
+
+export const RentalDetailsInputSchema = z.object({
+  rentalIds: z.array(z.string().uuid()).min(1).max(20),
+});
+
+export const QueryRentalsScopeSchema = z.enum(["current", "recent", "all"]);
+
+export const QueryRentalsInputSchema = z.object({
+  scope: QueryRentalsScopeSchema.default("recent"),
+  status: z.enum(["RENTED", "COMPLETED", "OVERDUE_UNRETURNED"]).optional(),
+  limit: z.number().int().min(1).max(20).default(5),
+  includeCounts: z.boolean().default(true),
 });
 
 export const ReservationDetailInputSchema = z.object({

@@ -12,6 +12,16 @@ import {
 import { z } from "zod";
 
 const RentalSummaryItemSchema = RentalSchema.extend({
+  startStationInfo: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    address: z.string(),
+  }).nullable(),
+  endStationInfo: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    address: z.string(),
+  }).nullable(),
   endTimeDisplay: z.string().nullable().optional(),
   startTimeDisplay: z.string().nullable(),
   statusLabel: z.string(),
@@ -30,6 +40,16 @@ const ReservationSummaryItemSchema = ReservationDetailSchema.extend({
 
 const RentalDetailSchema = RentalSchema.extend({
   depositAmountDisplay: z.string().nullable(),
+  startStationInfo: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    address: z.string(),
+  }).nullable(),
+  endStationInfo: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    address: z.string(),
+  }).nullable(),
   endTimeDisplay: z.string().nullable().optional(),
   startTimeDisplay: z.string().nullable(),
   statusLabel: z.string(),
@@ -167,6 +187,7 @@ const ReturnSlotActionSuccessSchema = z.object({
   returnSlot: ReturnSlotAiDetailSchema,
 }).strict();
 
+const QueryRentalsScopeSchema = z.enum(["current", "recent", "all"]);
 const RentalDetailReferenceSchema = z.enum(["context", "current", "latest", "id"]);
 const ReservationDetailReferenceSchema = z.enum(["context", "latestPendingOrActive", "id"]);
 const WalletTransactionDetailReferenceSchema = z.enum(["latest", "id"]);
@@ -174,10 +195,13 @@ const StationDetailReferenceSchema = z.enum(["context", "id"]);
 const BikeDetailReferenceSchema = z.enum(["context", "id"]);
 const ReturnSlotReferenceSchema = z.enum(["context", "current", "latest", "id"]);
 
-export const CurrentRentalSummaryToolOutputSchema = z.object({
-  activeRentalCount: z.number().int().nonnegative(),
-  counts: RentalCountsResponseSchema,
+export const QueryRentalsToolOutputSchema = z.object({
+  counts: RentalCountsResponseSchema.nullable(),
   rentals: z.array(RentalSummaryItemSchema),
+  limit: z.number().int().positive(),
+  scope: QueryRentalsScopeSchema,
+  status: RentalsContracts.RentalStatusSchema.nullable(),
+  totalMatching: z.number().int().nonnegative(),
 }).strict();
 
 export const ReservationSummaryToolOutputSchema = z.object({
@@ -223,6 +247,13 @@ export const StationAvailableBikesToolOutputSchema = z.object({
 export const RentalDetailToolOutputSchema = z.object({
   reference: RentalDetailReferenceSchema,
   detail: RentalDetailSchema.nullable(),
+}).strict();
+
+export const RentalDetailsToolOutputSchema = z.object({
+  details: z.array(RentalDetailSchema),
+  missingRentalIds: z.array(z.string().uuid()),
+  requestedCount: z.number().int().nonnegative(),
+  returnedCount: z.number().int().nonnegative(),
 }).strict();
 
 export const CurrentReturnSlotToolOutputSchema = z.object({

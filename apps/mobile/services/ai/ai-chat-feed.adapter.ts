@@ -139,10 +139,10 @@ const ACTION_TOOL_NAMES = new Set([
 ]);
 
 const TOOL_ACTIVITY_COPY: Record<string, ToolActivityCopy> = {
-  getCurrentRentalSummary: {
-    done: "Đã kiểm tra chuyến thuê hiện tại",
-    error: "Không thể kiểm tra chuyến thuê hiện tại",
-    running: "Đang kiểm tra chuyến thuê hiện tại",
+  queryRentals: {
+    done: "Đã kiểm tra dữ liệu chuyến thuê",
+    error: "Không thể kiểm tra dữ liệu chuyến thuê",
+    running: "Đang kiểm tra dữ liệu chuyến thuê",
   },
   getCurrentReturnSlot: {
     done: "Đã kiểm tra giữ chỗ trả xe hiện tại",
@@ -174,6 +174,11 @@ const TOOL_ACTIVITY_COPY: Record<string, ToolActivityCopy> = {
     done: "Đã lấy chi tiết chuyến thuê",
     error: "Không thể tải chi tiết chuyến thuê",
     running: "Đang lấy chi tiết chuyến thuê",
+  },
+  getRentalDetails: {
+    done: "Đã lấy chi tiết nhiều chuyến thuê",
+    error: "Không thể tải chi tiết nhiều chuyến thuê",
+    running: "Đang lấy chi tiết nhiều chuyến thuê",
   },
   getReservationDetail: {
     done: "Đã lấy chi tiết đặt chỗ",

@@ -15,44 +15,15 @@ import type {
 
 import { StationErrorCodeSchema, stationErrorMessages } from "./shared";
 
-function getStationScopedRoleScope(currentUser: {
-  role: string;
-  operatorStationId?: string;
-}) {
-  if (
-    currentUser.role === "STAFF"
-    || currentUser.role === "MANAGER"
-    || currentUser.role === "TECHNICIAN"
-  ) {
-    return currentUser.operatorStationId ?? null;
-  }
-
-  return undefined;
-}
-
 const staffListStations: RouteHandler<StationsRoutes["staffListStations"]> = async (c) => {
   const query = c.req.valid("query");
-  const stationScopeId = getStationScopedRoleScope(c.var.currentUser!);
-
-  if (stationScopeId === null) {
-    return c.json<StationListResponse, 200>({
-      data: [],
-      pagination: {
-        page: query.page ?? 1,
-        pageSize: query.pageSize ?? 50,
-        total: 0,
-        totalPages: 0,
-      },
-    }, 200);
-  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
       const service = yield* StationQueryServiceTag;
 
-      const page = yield* service.listStations(
+      return yield* service.listStations(
         {
-          id: stationScopeId!,
           name: query.name,
           address: query.address,
           stationType: query.stationType,
@@ -66,14 +37,6 @@ const staffListStations: RouteHandler<StationsRoutes["staffListStations"]> = asy
           sortDir: query.sortDir ?? "asc",
         },
       );
-
-      if (page.total > 0) {
-        return page;
-      }
-
-      yield* service.getStationById(stationScopeId!);
-
-      return page;
     }),
     "GET /v1/staff/stations",
   );
@@ -92,30 +55,18 @@ const staffListStations: RouteHandler<StationsRoutes["staffListStations"]> = asy
         },
       }, 200)),
     Match.tag("Left", () =>
-      c.json<StationErrorResponse, 404>({
-        error: stationErrorMessages.STATION_NOT_FOUND,
+      c.json<StationErrorResponse, 400>({
+        error: stationErrorMessages.INVALID_QUERY_PARAMS,
         details: {
-          code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
-          stationId: stationScopeId!,
+          code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
         },
-      }, 404)),
+      }, 400)),
     Match.exhaustive,
   );
 };
 
 const staffGetStation: RouteHandler<StationsRoutes["staffGetStation"]> = async (c) => {
   const { stationId } = c.req.valid("param");
-  const stationScopeId = getStationScopedRoleScope(c.var.currentUser!);
-
-  if (stationScopeId === null || stationId !== stationScopeId) {
-    return c.json<StationErrorResponse, 404>({
-      error: stationErrorMessages.STATION_NOT_FOUND,
-      details: {
-        code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
-        stationId,
-      },
-    }, 404);
-  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
