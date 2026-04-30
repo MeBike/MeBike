@@ -69,21 +69,24 @@ export const columns = ({
   },
   {
     id: "actions",
-    header: "Hành động",
+    // Chỉnh Header thành một hàm để có thể thêm class căn giữa
+    header: () => <div className="text-center">Hành động</div>,
     cell: ({ row }) => {
       return (
-        <div className="flex items-center justify-center gap-0">
+        /* Sử dụng justify-center để căn giữa icon trong ô */
+        <div className="flex items-center justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="shrink-0"
+                // Thêm hover:bg-accent để nút trông tự nhiên hơn khi di chuột vào
+                className="h-8 w-8 rounded-full transition-colors hover:text-primary"
                 aria-label="Xem chi tiết"
                 onClick={() => onView?.(row.original)}
               >
-                <Eye className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                <Eye className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Xem chi tiết</TooltipContent>

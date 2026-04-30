@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import { ApiResponse , TechnicianTeamRecord  } from "@custom-types";
+import { ApiResponse , TechnicianTeamRecord ,TechnicianTeamDetailResponse } from "@custom-types";
 import { ENDPOINT } from "@/constants/end-point";
 import type { CreateTechnicianTeamSchema , UpdateTechnicianTeamSchema } from "@/schemas/technician-schema";
 export const technicianService = {
@@ -22,8 +22,8 @@ export const technicianService = {
     );
     return response;
   },
-  getTechnicianTeamDetail : async (teamId : string) : Promise<AxiosResponse<TechnicianTeamRecord>> => {
-    const response = await fetchHttpClient.get<TechnicianTeamRecord>(
+  getTechnicianTeamDetail : async (teamId : string) : Promise<AxiosResponse<TechnicianTeamDetailResponse>> => {
+    const response = await fetchHttpClient.get<TechnicianTeamDetailResponse>(
       ENDPOINT.TECH_TEAM.UPDATE(teamId),
     );
     return response;

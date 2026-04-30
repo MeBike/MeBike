@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {useGetAllTechnicianTeamQuery} from "@queries";
+import {useGetAllTechnicianTeamQuery , useGetTechnicianTeamDetailQuery} from "@queries";
 import { useCreateTechnicianTeamMutation } from "./mutations";
 import {HTTP_STATUS} from "@constants";
 import { TechnicianStatus } from "@/types/TechnicianTeam";
@@ -16,8 +16,9 @@ export interface TechnicianActionProps {
   page ?: number,
   pageSize ?: number,
   status?: TechnicianStatus,
+  teamId ?: string,
 }
-export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,status}: TechnicianActionProps) => {
+export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,status,teamId}: TechnicianActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
@@ -58,10 +59,28 @@ export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,sta
     },
     [hasToken, router, queryClient, useCreateTechnicianTeam]
   );
+  const {
+    refetch : refetchTechnicianTeamDetail,
+    data: technicianTeamDetail,
+    isLoading: isLoadingTechnicianTeamDetail,
+  } = useGetTechnicianTeamDetailQuery(
+    teamId || ""
+  );
+  const getTechnicianTeamDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchTechnicianTeamDetail();
+  }, [hasToken, router]);
   return {
     getTechnicianTeam,
     isLoadingAllTechnicianTeam,
     allTechnicianTeam,
     createTechnicianTeam,
+    technicianTeamDetail,
+    getTechnicianTeamDetail,
+    isLoadingTechnicianTeamDetail
+
   };
 };

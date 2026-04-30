@@ -11,7 +11,6 @@ import { columns } from "@/columns/technician-team-column";
 import { TableSkeleton } from "@/components/table-skeleton";
 import type { TechnicianTeamRecord , Pagination, TechnicianStatus } from "@custom-types";
 
-// Định nghĩa cấu trúc Props
 interface BikeClientProps {
   data: {
     technicianTeam: TechnicianTeamRecord[];

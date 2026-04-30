@@ -16,7 +16,6 @@ export const useGetTechnicianTeamDetailQuery = (teamId : string) => {
   return useQuery({
     queryKey: ["data", "technician-team-detail" , teamId],
     queryFn: () => fetchTechnicianTeamDetail(teamId),
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
+    enabled:false,
   });
 };
