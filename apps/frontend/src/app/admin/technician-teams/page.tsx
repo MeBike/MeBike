@@ -11,7 +11,7 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<TechnicianStatus | "">("");
   const [stationId, setStationId] = useState("all-stations");
-  const pageSize = 5;
+  const pageSize = 7;
 
   const { allTechnicianTeam, getTechnicianTeam, isLoadingAllTechnicianTeam } =
     useTechnicianTeamActions({

@@ -49,7 +49,6 @@ export default function Client({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Quản lý đội kỹ thuật</h1>
@@ -61,8 +60,6 @@ export default function Client({
           <Plus className="mr-2 h-4 w-4" /> Thêm đội kỹ thuật
         </Button>
       </div>
-
-      {/* Filter Section */}
       <TechnicianTeamFilters
         stationId={stationId}
         setStationId={setStationId}
@@ -74,8 +71,6 @@ export default function Client({
           setStatusFilter("");
         }}
       />
-
-      {/* Main Content */}
       <div className="min-h-[500px]">
         {isVisualLoading ? (
           <TableSkeleton />
@@ -86,8 +81,7 @@ export default function Client({
                 Hiển {pagination?.page ?? 1} / {pagination?.totalPages ?? 1}
               </p>
             </div>
-
-            <div className="rounded-md border">
+            <div className="">
               <DataTable
                 columns={columns({
                   onView: ({ id }) => router.push(`/admin/technician-teams/detail/${id}`),

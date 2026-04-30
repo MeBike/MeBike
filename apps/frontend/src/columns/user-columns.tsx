@@ -8,12 +8,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-const getUserDisplayStatus = (user: {
-  verify: string;
-  accountStatus?: string;
-}) => {
-  return user.accountStatus === "BANNED" ? "BANNED" : user.verify;
-};
 
 export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Quản trị viên",

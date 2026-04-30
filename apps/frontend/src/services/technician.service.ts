@@ -10,7 +10,7 @@ export const technicianService = {
       {
         page : page,
         pageSize : pageSize,
-        status : status,
+        availabilityStatus : status,
         stationId : stationId,
       }
     );

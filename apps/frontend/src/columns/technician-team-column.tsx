@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { TechnicianTeamRecord,TechnicianStatus } from "@/types";
+import { formatToVNTime } from "@/lib/formatVNDate";
 const STATUS_CONFIG: Record<TechnicianStatus, { label: string; color: string }> = {
   AVAILABLE: { 
     label: "Sẵn sàng", 
@@ -41,10 +42,7 @@ export const columns = ({
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      const dateStr = row.original.createdAt;
-      if (!dateStr) return "N/A";
-      // Format ngày tháng cho dễ nhìn, ví dụ: 26/04/2026
-      return new Date(dateStr).toLocaleDateString("vi-VN");
+      return formatToVNTime(row.original.createdAt);
     },
   },
   {
@@ -52,7 +50,6 @@ export const columns = ({
     header: "Trạng thái",
     cell: ({ row }) => {
       const statusValue = row.original.availabilityStatus;
-      // Lấy config theo status, ép kiểu an toàn
       const config = STATUS_CONFIG[statusValue] || { 
         label: statusValue || "Không rõ", 
         color: "bg-muted text-muted-foreground border-border" 
@@ -69,11 +66,9 @@ export const columns = ({
   },
   {
     id: "actions",
-    // Chỉnh Header thành một hàm để có thể thêm class căn giữa
     header: () => <div className="text-center">Hành động</div>,
     cell: ({ row }) => {
       return (
-        /* Sử dụng justify-center để căn giữa icon trong ô */
         <div className="flex items-center justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -81,7 +76,6 @@ export const columns = ({
                 type="button"
                 variant="ghost"
                 size="icon"
-                // Thêm hover:bg-accent để nút trông tự nhiên hơn khi di chuột vào
                 className="h-8 w-8 rounded-full transition-colors hover:text-primary"
                 aria-label="Xem chi tiết"
                 onClick={() => onView?.(row.original)}
