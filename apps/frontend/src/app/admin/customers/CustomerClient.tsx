@@ -108,7 +108,7 @@ export default function CustomersClient({
                   data={users}
                   searchValue={searchQuery}
                   filterPlaceholder="Tìm kiếm người dùng"
-                  onSearchChange={setSearchQuery} // Cập nhật search query
+                  onSearchChange={setSearchQuery} 
                 />
 
                 <div className="pt-3">
