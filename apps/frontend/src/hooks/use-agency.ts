@@ -40,7 +40,7 @@ import {
   getErrorMessageFromAgencyCode,
   getAxiosErrorCodeMessage,
 } from "@utils";
-import { BikeStatus, RentalStatus, ReservationStatus } from "@/types";
+import { BikeStatus, RentalStatus, ReservationStatus, AgencyStatus } from "@/types";
 import { useUpdateStatusBikeMutation } from "./mutations/Agency/useUpdateStatusBikeMutation";
 export interface AgencyActionProps {
   hasToken?: boolean;
@@ -59,6 +59,11 @@ export interface AgencyActionProps {
   status_agency_request?: string;
   requesterEmail?: string;
   agencyName?: string;
+  name ?: string;
+  stationAddress?: string;
+  contactPhone?: string;
+  contactName?: string;
+  status_agency?: AgencyStatus | "all";
 }
 export const useAgencyActions = ({
   hasToken,
@@ -77,6 +82,11 @@ export const useAgencyActions = ({
   status_agency_request,
   requesterEmail,
   agencyName,
+  name,
+  stationAddress,
+  contactPhone,
+  contactName,
+  status_agency,
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -137,14 +147,20 @@ export const useAgencyActions = ({
     data: agencies,
     refetch: refetchGetAgencies,
     isLoading: isLoadingAgencies,
-  } = useGetAgencies({ page: page, pageSize: pageSize });
+  } = useGetAgencies({ page: page, pageSize: pageSize ,
+    name : name,
+    stationAddress : stationAddress,
+    contactPhone : contactPhone,
+    contactName : contactName,
+    status : status_agency,
+   });
   const getAgencies = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
     refetchGetAgencies();
-  }, [refetchGetAgencies, hasToken, router, page]);
+  }, [refetchGetAgencies, hasToken, router, page,name,stationAddress,contactPhone,contactName,status_agency]);
   const {
     data: agencyDetail,
     refetch: refetchAgencyDetail,

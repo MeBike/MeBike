@@ -2,21 +2,36 @@ import fetchHttpClient from "@/lib/httpClient";
 import { ENDPOINT } from "@/constants";
 import { AxiosResponse } from "axios";
 import { ApiResponse , Station , Bike , BikeStatus , Reservation , DetailReservation,RentalRecord,Rental,RentalStatus, ReservationStatus} from "@/types";
-import type { Agency, AgencyStats, AgencyRequest } from "@/types/Agency";
+import type { Agency, AgencyStats, AgencyRequest,AgencyStatus} from "@/types/Agency";
 import { UpdateAgencyFormData, UpdateAgencyStatusFormData , RegisterAgencyFormData , AdminCreateAgencyUserRequest } from "@/schemas";
 export const agencyService = {
   getAgencies: async ({
     page,
     pageSize,
+    name,
+    stationAddress,
+    contactPhone,
+    contactName,
+    status,
   }: {
     page?: number;
     pageSize?: number;
+    name?: string;
+    stationAddress?: string;
+    contactPhone?: string;
+    contactName?: string;
+    status?: AgencyStatus | "all";
   }): Promise<AxiosResponse<ApiResponse<Agency[]>>> => {
     const response = fetchHttpClient.get<ApiResponse<Agency[]>>(
       ENDPOINT.AGENCY.BASE,
       {
         page: page,
         pageSize: pageSize,
+        name : name,
+        stationAddress : stationAddress,
+        contactPhone : contactPhone,
+        contactName : contactName,
+        status : status,
       },
     );
     return response;
