@@ -199,7 +199,8 @@ export function ensureReturnDestinationReadyInTx(args: {
     const stationSnapshot = stationSnapshotOpt.value;
     const physicalRemaining = stationSnapshot.totalCapacity
       - stationSnapshot.totalBikes
-      - stationSnapshot.activeReturnSlots;
+      - stationSnapshot.activeReturnSlots
+      - stationSnapshot.incomingRedistributionBikes;
 
     if (physicalRemaining <= 0) {
       return yield* Effect.fail(new ReturnSlotCapacityExceeded({
