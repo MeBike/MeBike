@@ -26,3 +26,21 @@ export class ActivePricingPolicyAmbiguous extends Data.TaggedError(
 )<{
     readonly pricingPolicyIds: ReadonlyArray<string>;
   }> {}
+
+export class PricingPolicyAlreadyUsed extends Data.TaggedError(
+  "PricingPolicyAlreadyUsed",
+)<{
+    readonly pricingPolicyId: string;
+    readonly reservationCount: number;
+    readonly rentalCount: number;
+    readonly billingRecordCount: number;
+  }> {}
+
+export class PricingPolicyMutationWindowClosed extends Data.TaggedError(
+  "PricingPolicyMutationWindowClosed",
+)<{
+    readonly currentTime: string;
+    readonly timeZone: string;
+    readonly windowStart: string;
+    readonly windowEnd: string;
+  }> {}

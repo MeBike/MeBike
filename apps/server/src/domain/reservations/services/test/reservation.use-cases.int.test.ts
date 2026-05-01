@@ -1,8 +1,14 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { env } from "@/config/env";
+import {
+  makePricingPolicyCommandRepository,
+  makePricingPolicyCommandService,
+  makePricingPolicyQueryRepository,
+} from "@/domain/pricing";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { expectLeftTag, expectRight } from "@/test/effect/assertions";
+import { runEffectEither } from "@/test/effect/run";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 import { givenStationWithAvailableBike, givenUserWithWallet } from "@/test/scenarios";
 
@@ -22,6 +28,14 @@ describe("reservation use-cases integration", () => {
     runConfirm = runners.confirm;
     runCancel = runners.cancel;
   });
+
+  function makePricingPolicyService() {
+    return makePricingPolicyCommandService({
+      client: fixture.prisma,
+      queryRepo: makePricingPolicyQueryRepository(fixture.prisma),
+      commandRepo: makePricingPolicyCommandRepository(fixture.prisma),
+    });
+  }
 
   it("reserveBikeUseCase creates hold + outbox jobs and reserves bike", async () => {
     const { user } = await givenUserWithWallet(fixture, {
@@ -144,6 +158,44 @@ describe("reservation use-cases integration", () => {
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("BOOKED");
+  });
+
+  it("reserveBikeUseCase uses a policy activated through pricing policy service", async () => {
+    const nextPolicy = await fixture.factories.pricingPolicy({
+      name: "Reservation Activated Policy",
+      reservationFee: "4500",
+      depositRequired: "650000",
+      status: "INACTIVE",
+    });
+
+    const activation = await runEffectEither(
+      makePricingPolicyService().activatePolicy(
+        nextPolicy.id,
+        new Date("2026-04-20T16:30:00.000Z"),
+      ),
+    );
+    expectRight(activation);
+
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 50_000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 2 },
+    });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    const now = new Date("2026-04-21T03:00:00.000Z");
+    const result = await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: now,
+      now,
+    });
+
+    const reservation = expectRight(result);
+    expect(reservation.pricingPolicyId).toBe(nextPolicy.id);
+    expect(reservation.prepaid.toString()).toBe("4500");
   });
 
   it("cancelReservationUseCase cancels hold, releases bike, and refunds prepaid amount", async () => {
