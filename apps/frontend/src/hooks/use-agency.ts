@@ -70,6 +70,7 @@ export interface AgencyActionProps {
   endStation?: string;
   stationId?: string;
   supplierId?: string;
+  option?: string;
 }
 export const useAgencyActions = ({
   hasToken,
@@ -99,6 +100,7 @@ export const useAgencyActions = ({
   endStation,
   stationId,
   supplierId,
+  option,
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -491,7 +493,7 @@ export const useAgencyActions = ({
     data: allReservationsAgency,
     refetch: refetchReservationsForAgency,
     isLoading: isLoadingReservationsAgency,
-  } = useGetReservationInMyStationAgency({ page: page, pageSize: pageSize,reservation_status:renservation_status });
+  } = useGetReservationInMyStationAgency({ page: page, pageSize: pageSize,reservation_status:renservation_status,userId:userId,bikeId:bikeId,option:option });
   const getReservationsForAgency = useCallback(() => {
     if (!hasToken) {
       return;
