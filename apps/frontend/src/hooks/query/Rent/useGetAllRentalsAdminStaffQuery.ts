@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { rentalService } from "@services/rental.service";
-import { QUERY_KEYS } from "@constants";
+import { HTTP_STATUS, QUERY_KEYS } from "@constants";
 import { RentalStatus } from "@/types";
 
 const getAllRentalsForStaffAdmin = async ({
@@ -9,22 +9,29 @@ const getAllRentalsForStaffAdmin = async ({
   startStation,
   endStation,
   status,
+  userId,
+  bikeId,
 }: {
   page ?: number,
   pageSize ?: number,
   startStation ?: string,
   endStation ?: string,
   status ?: RentalStatus,
+  userId?:string,
+  bikeId?:string,
 }) => {
   try {
-    const response = await rentalService.getAllRentalsForStaffAdmin({
-      page : page,
-      pageSize : pageSize,
-      startStation : startStation,
-      endStation : endStation,
-      status : status,
-    });
-    if (response.status === 200) {
+    const query : Record<string,number | string> = {
+      page : page ?? 1,
+      pageSize : pageSize ?? 5,
+    }
+    if (startStation) query.startStation = startStation;
+    if (endStation) query.endStation = endStation;
+    if (status) query.status = status;
+    if (userId) query.userId = userId;
+    if (bikeId) query.bikeId = bikeId;
+    const response = await rentalService.getAllRentalsForStaffAdmin(query);
+    if (response.status === HTTP_STATUS.OK) {
       return response.data;
     }
   } catch (error) {
@@ -38,12 +45,16 @@ export function useGetAllRentalsAdminStaffQuery({
   startStation,
   endStation,
   status,
+  userId,
+  bikeId,
 }: {
   page ?: number,
   pageSize ?: number,
   startStation ?: string,
   endStation ?: string,
   status ?: RentalStatus,
+  userId?:string,
+  bikeId?:string,
 }) {
   return useQuery({
     queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(
@@ -55,11 +66,13 @@ export function useGetAllRentalsAdminStaffQuery({
     ),
     queryFn: () =>
       getAllRentalsForStaffAdmin({
-        page,
-        pageSize,
-        startStation,
-        endStation,
-        status,
+        page : page,
+        pageSize : pageSize,
+        startStation : startStation,
+        endStation : endStation,
+        status : status,
+        userId : userId,
+        bikeId : bikeId,
       }),
     enabled : false,  
   });
