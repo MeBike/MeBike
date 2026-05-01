@@ -48,6 +48,7 @@ export type BikeCounts = Pick<
   | "activeReturnSlots"
   | "availableReturnSlots"
   | "emptySlots"
+  | "incomingRedistributionBikes"
 >;
 
 export function createEmptyBikeCounts(): BikeCounts {
@@ -63,6 +64,7 @@ export function createEmptyBikeCounts(): BikeCounts {
     activeReturnSlots: 0,
     availableReturnSlots: 0,
     emptySlots: 0,
+    incomingRedistributionBikes: 0,
   };
 }
 
@@ -70,8 +72,8 @@ function computeAvailableReturnSlots(station: StationBaseRow, counts: BikeCounts
   return Math.max(
     0,
     Math.min(
-      station.totalCapacity - counts.totalBikes - counts.activeReturnSlots,
-      station.returnSlotLimit - counts.activeReturnSlots,
+      station.totalCapacity - counts.totalBikes - counts.activeReturnSlots - counts.incomingRedistributionBikes,
+      station.returnSlotLimit - counts.activeReturnSlots - counts.incomingRedistributionBikes,
     ),
   );
 }
@@ -105,6 +107,7 @@ export function applyCounts(
     createdAt,
     updatedAt,
     activeReturnSlots: resolved.activeReturnSlots,
+    incomingRedistributionBikes: resolved.incomingRedistributionBikes,
     availableReturnSlots: computeAvailableReturnSlots(station, resolved),
     emptySlots: Math.max(0, station.totalCapacity - resolved.totalBikes),
   };
@@ -113,6 +116,7 @@ export function applyCounts(
 export function resolveStationCounts(args: {
   countsMap: Map<string, BikeCounts>;
   returnSlotCountsMap: Map<string, number>;
+  incomingRedistributionCountsMap?: Map<string, number>;
   stationId: string;
 }): BikeCounts {
   const counts = args.countsMap.get(args.stationId) ?? createEmptyBikeCounts();
@@ -120,6 +124,7 @@ export function resolveStationCounts(args: {
   return {
     ...counts,
     activeReturnSlots: args.returnSlotCountsMap.get(args.stationId) ?? 0,
+    incomingRedistributionBikes: args.incomingRedistributionCountsMap?.get(args.stationId) ?? 0,
   };
 }
 
@@ -271,6 +276,58 @@ export function getBikeCounts(
             break;
         }
         countsMap.set(stationId, counts);
+      }
+
+      return countsMap;
+    }),
+  );
+}
+
+export function getIncomingRedistributionCounts(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+  stationIds: string[],
+): Effect.Effect<Map<string, number>, StationRepositoryError> {
+  if (stationIds.length === 0) {
+    return Effect.succeed(new Map());
+  }
+
+  return Effect.tryPromise({
+    try: () =>
+      client.redistributionRequest.findMany({
+        where: {
+          targetStationId: { in: stationIds },
+          status: { in: ["APPROVED", "IN_TRANSIT", "PARTIALLY_COMPLETED"] },
+        },
+        select: {
+          targetStationId: true,
+          _count: {
+            select: {
+              items: {
+                where: { deliveredAt: null },
+              },
+            },
+          },
+        },
+      }),
+    catch: e =>
+      new StationRepositoryError({
+        operation: "getIncomingRedistributionCounts.findMany",
+        cause: e,
+      }),
+  }).pipe(
+    Effect.map((rows) => {
+      const countsMap = new Map<string, number>();
+      for (const stationId of stationIds) {
+        countsMap.set(stationId, 0);
+      }
+
+      for (const row of rows) {
+        if (!row.targetStationId) {
+          continue;
+        }
+
+        const current = countsMap.get(row.targetStationId) ?? 0;
+        countsMap.set(row.targetStationId, current + row._count.items);
       }
 
       return countsMap;

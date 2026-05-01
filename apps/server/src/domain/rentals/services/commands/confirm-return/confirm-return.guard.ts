@@ -199,7 +199,8 @@ export function ensureReturnDestinationReadyInTx(args: {
     const stationSnapshot = stationSnapshotOpt.value;
     const physicalRemaining = stationSnapshot.totalCapacity
       - stationSnapshot.totalBikes
-      - stationSnapshot.activeReturnSlots;
+      - stationSnapshot.activeReturnSlots
+      - stationSnapshot.incomingRedistributionBikes;
 
     if (physicalRemaining <= 0) {
       return yield* Effect.fail(new ReturnSlotCapacityExceeded({
@@ -208,6 +209,7 @@ export function ensureReturnDestinationReadyInTx(args: {
         returnSlotLimit: stationSnapshot.returnSlotLimit,
         totalBikes: stationSnapshot.totalBikes,
         activeReturnSlots: stationSnapshot.activeReturnSlots,
+        incomingRedistributionBikes: stationSnapshot.incomingRedistributionBikes,
       }));
     }
   });

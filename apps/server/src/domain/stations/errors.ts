@@ -40,12 +40,14 @@ export class StationCapacityBelowActiveUsage extends Data.TaggedError("StationCa
   readonly totalCapacity: number;
   readonly totalBikes: number;
   readonly activeReturnSlots: number;
+  readonly incomingRedistributionBikes: number;
 }> {}
 
 export class StationReturnSlotLimitBelowActiveReservations extends Data.TaggedError("StationReturnSlotLimitBelowActiveReservations")<{
   readonly stationId: string;
   readonly returnSlotLimit: number;
   readonly activeReturnSlots: number;
+  readonly incomingRedistributionBikes: number;
 }> {}
 
 export class StationAgencyRequired extends Data.TaggedError("StationAgencyRequired")<

@@ -23,6 +23,7 @@ export type CreateRedistributionRequestInput = {
 export type UpdateRedistributionRequestData = {
   status?: RedistributionStatus;
   approvedByUserId?: string | null;
+  rejectedByUserId?: string | null;
   requestedQuantity?: number;
   reason?: string | null;
   startedAt?: Date | null;

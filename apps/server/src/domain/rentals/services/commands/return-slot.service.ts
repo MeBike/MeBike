@@ -61,9 +61,10 @@ function availableReturnSlots(
   totalBikes: number,
   activeReturnSlots: number,
   returnSlotLimit: number,
+  incomingRedistributionBikes: number,
 ) {
-  const physicalRemaining = totalCapacity - totalBikes - activeReturnSlots;
-  const operationalRemaining = returnSlotLimit - activeReturnSlots;
+  const physicalRemaining = totalCapacity - totalBikes - activeReturnSlots - incomingRedistributionBikes;
+  const operationalRemaining = returnSlotLimit - activeReturnSlots - incomingRedistributionBikes;
   return Math.min(physicalRemaining, operationalRemaining);
 }
 
@@ -163,6 +164,7 @@ export function createReturnSlot(
           stationSnapshot.totalBikes,
           stationSnapshot.activeReturnSlots,
           stationSnapshot.returnSlotLimit,
+          stationSnapshot.incomingRedistributionBikes,
         ) <= 0) {
           return yield* Effect.fail(new ReturnSlotCapacityExceeded({
             stationId: input.stationId,
@@ -170,6 +172,7 @@ export function createReturnSlot(
             returnSlotLimit: stationSnapshot.returnSlotLimit,
             totalBikes: stationSnapshot.totalBikes,
             activeReturnSlots: stationSnapshot.activeReturnSlots,
+            incomingRedistributionBikes: stationSnapshot.incomingRedistributionBikes,
           }));
         }
 

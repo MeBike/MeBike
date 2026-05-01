@@ -174,6 +174,7 @@ export class ReturnSlotCapacityExceeded extends Data.TaggedError(
     readonly returnSlotLimit: number;
     readonly totalBikes: number;
     readonly activeReturnSlots: number;
+    readonly incomingRedistributionBikes: number;
   }> {}
 
 export class ReturnAlreadyConfirmed extends Data.TaggedError(

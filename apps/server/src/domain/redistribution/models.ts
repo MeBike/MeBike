@@ -67,6 +67,7 @@ export type RedistributionRequestRow = {
   id: string;
   requestedByUserId: string;
   approvedByUserId: string | null;
+  rejectedByUserId: string | null;
   sourceStationId: string;
   targetStationId: string;
   requestedQuantity: number;
@@ -83,6 +84,7 @@ export type RedistributionRequestSummaryRow = {
   id: string;
   requestedByUser: UserSummary;
   approvedByUser: UserSummary | null;
+  rejectedByUser: UserSummary | null;
   sourceStation: StationSummary;
   targetStation: StationSummary;
   requestedQuantity: number;
@@ -99,6 +101,7 @@ export type RedistributionRequestDetailRow = {
   id: string;
   requestedByUser: UserDetail;
   approvedByUser: UserDetail | null;
+  rejectedByUser: UserDetail | null;
   sourceStation: StationDetail;
   targetStation: StationDetail;
   requestedQuantity: number;
@@ -126,12 +129,14 @@ export type MyInStationRedistributionFilter = RedistributionFilter;
 export type InStationRedistributionFilter = {
   requestedByUserId?: string;
   approvedByUserId?: string;
+  rejectedByUserId?: string;
   sourceStationId?: string;
 } & RedistributionFilter;
 
 export type AdminRedistributionFilter = {
   requestedByUserId?: string;
   approvedByUserId?: string;
+  rejectedByUserId?: string;
   sourceStationId?: string;
   OR?: AdminRedistributionFilter[];
 } & RedistributionFilter;

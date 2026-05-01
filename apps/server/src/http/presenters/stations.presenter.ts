@@ -6,6 +6,18 @@ import type {
   StationRow,
 } from "@/domain/stations";
 
+function countTotalActiveSlots({
+  activeReturnSlots,
+  incomingRedistributionBikes,
+  totalCapacity,
+}: {
+  activeReturnSlots: number;
+  incomingRedistributionBikes: number;
+  totalCapacity: number;
+}) {
+  return Math.min(totalCapacity, activeReturnSlots + incomingRedistributionBikes);
+}
+
 export function toContractStationReadSummary(
   station: StationRow,
 ): StationsContracts.StationReadSummary {
@@ -22,6 +34,11 @@ export function toContractStationReadSummary(
     capacity: {
       total: station.totalCapacity,
       returnSlotLimit: station.returnSlotLimit,
+      totalActiveSlots: countTotalActiveSlots({
+        activeReturnSlots: station.activeReturnSlots,
+        incomingRedistributionBikes: station.incomingRedistributionBikes,
+        totalCapacity: station.totalCapacity,
+      }),
       emptyPhysicalSlots: station.emptySlots,
     },
     bikes: {
@@ -38,6 +55,7 @@ export function toContractStationReadSummary(
       active: station.activeReturnSlots,
       available: station.availableReturnSlots,
     },
+    redistributionSlots: station.incomingRedistributionBikes,
     ...(station.workers
       ? {
           workers: station.workers.map(worker => ({

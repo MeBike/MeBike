@@ -31,6 +31,7 @@ const getRequestListForAdmin: RouteHandler<
           status: query.status,
           requestedByUserId: query.requestedByUserId,
           approvedByUserId: query.approvedByUserId,
+          rejectedByUserId: query.rejectedByUserId,
           sourceStationId: query.sourceStationId,
           targetStationId: query.targetStationId,
           from: query.from ? new Date(query.from) : undefined,

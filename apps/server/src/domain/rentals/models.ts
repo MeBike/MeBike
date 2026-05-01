@@ -212,6 +212,7 @@ export type ReturnSlotStationCapacityRow = {
   returnSlotLimit: number;
   totalBikes: number;
   activeReturnSlots: number;
+  incomingRedistributionBikes: number;
 };
 
 export type ReturnConfirmationRow = {

@@ -21,6 +21,7 @@ import {
   applyCounts,
   getActiveReturnSlotCounts,
   getBikeCounts,
+  getIncomingRedistributionCounts,
   resolveStationCounts,
   stationSelect,
   toStationOrderBy,
@@ -53,9 +54,10 @@ export function makeStationReadRepository(
   ) =>
     Effect.gen(function* () {
       const stationIds = rows.map(row => row.id);
-      const [countsMap, returnSlotCountsMap] = yield* Effect.all([
+      const [countsMap, returnSlotCountsMap, incomingRedistributionCountsMap] = yield* Effect.all([
         getBikeCounts(client, stationIds),
         getActiveReturnSlotCounts(client, stationIds),
+        getIncomingRedistributionCounts(client, stationIds),
       ]);
 
       return rows.map(row =>
@@ -64,6 +66,7 @@ export function makeStationReadRepository(
           resolveStationCounts({
             countsMap,
             returnSlotCountsMap,
+            incomingRedistributionCountsMap,
             stationId: row.id,
           }),
         ));
