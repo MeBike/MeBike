@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { PrismaClient } from "generated/prisma/client";
 
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { expectDefect } from "@/test/effect/assertions";
 
 import { PricingPolicyRepositoryError } from "../domain-errors";
@@ -13,10 +12,10 @@ function makePolicy(id: string) {
   return {
     id,
     name: `Policy ${id}`,
-    baseRate: toPrismaDecimal("2000"),
+    baseRate: 2000n,
     billingUnitMinutes: 30,
-    reservationFee: toPrismaDecimal("3000"),
-    depositRequired: toPrismaDecimal("500000"),
+    reservationFee: 3000n,
+    depositRequired: 500000n,
     lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
     status: "ACTIVE" as const,
     createdAt: new Date("2026-03-22T00:00:00.000Z"),

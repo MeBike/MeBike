@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type {
   PricingPolicyAlreadyUsed,
+  PricingPolicyInvalidInput,
   PricingPolicyMutationWindowClosed,
   PricingPolicyNotFound,
 } from "@/domain/pricing/domain-errors";
@@ -81,20 +82,38 @@ describe("pricing policy service integration", () => {
     expect(policy.status).toBe("ACTIVE");
   });
 
-  it("blocks policy creation outside overnight mutation window", async () => {
+  it("allows policy creation outside overnight mutation window", async () => {
     const result = await runCommand(service => service.createPolicy({
-      name: "Blocked Policy",
-      baseRate: toPrismaDecimal("2200"),
+      name: "Daytime Policy",
+      baseRate: 2200n,
       billingUnitMinutes: 30,
-      reservationFee: toPrismaDecimal("2000"),
-      depositRequired: toPrismaDecimal("500000"),
+      reservationFee: 2000n,
+      depositRequired: 500000n,
       lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
       now: new Date("2026-04-20T15:00:00.000Z"),
     }));
 
-    const error = expectLeftTag(result, "PricingPolicyMutationWindowClosed");
-    expect(error.windowStart).toBe("23:00");
-    expect(error.windowEnd).toBe("05:00");
+    const policy = expectRight(result);
+    expect(policy.name).toBe("Daytime Policy");
+    expect(policy.status).toBe("INACTIVE");
+  });
+
+  it("rejects create when money fields are below practical VND minimum", async () => {
+    const result = await runCommand(service => service.createPolicy({
+      name: "Too Cheap Policy",
+      baseRate: 1n,
+      billingUnitMinutes: 30,
+      reservationFee: 1n,
+      depositRequired: 1n,
+      lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
+    }));
+
+    const error = expectLeftTag(result, "PricingPolicyInvalidInput") as PricingPolicyInvalidInput;
+    expect(error.issues.map(issue => issue.path)).toEqual([
+      "baseRate",
+      "reservationFee",
+      "depositRequired",
+    ]);
   });
 
   it("returns not found when updating a nonexistent policy", async () => {
@@ -113,10 +132,10 @@ describe("pricing policy service integration", () => {
   it("creates an inactive draft during overnight mutation window", async () => {
     const result = await runCommand(service => service.createPolicy({
       name: "  Night Draft Policy  ",
-      baseRate: toPrismaDecimal("2200"),
+      baseRate: 2200n,
       billingUnitMinutes: 45,
-      reservationFee: toPrismaDecimal("2500"),
-      depositRequired: toPrismaDecimal("550000"),
+      reservationFee: 2500n,
+      depositRequired: 550000n,
       lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
       now: new Date("2026-04-20T16:30:00.000Z"),
     }));
@@ -127,7 +146,7 @@ describe("pricing policy service integration", () => {
     expect(policy.billingUnitMinutes).toBe(45);
   });
 
-  it("allows updating an unused policy during overnight mutation window", async () => {
+  it("allows updating an unused policy outside overnight mutation window", async () => {
     const policy = await fixture.factories.pricingPolicy({
       name: "Unused Policy",
       status: "INACTIVE",
@@ -136,19 +155,39 @@ describe("pricing policy service integration", () => {
     const result = await runCommand(service => service.updatePolicy({
       pricingPolicyId: policy.id,
       name: "  Renamed Policy  ",
-      baseRate: toPrismaDecimal("2800"),
+      baseRate: 2800n,
       billingUnitMinutes: 60,
-      reservationFee: toPrismaDecimal("3000"),
-      depositRequired: toPrismaDecimal("650000"),
+      reservationFee: 3000n,
+      depositRequired: 650000n,
       lateReturnCutoff: new Date("1970-01-01T22:30:00.000Z"),
       now: new Date("2026-04-20T16:45:00.000Z"),
     }));
 
     const updated = expectRight(result);
     expect(updated.name).toBe("Renamed Policy");
-    expect(updated.baseRate.toString()).toBe("2800");
+    expect(updated.baseRate).toBe(2800n);
     expect(updated.billingUnitMinutes).toBe(60);
     expect(updated.lateReturnCutoff.toISOString()).toBe("1970-01-01T22:30:00.000Z");
+  });
+
+  it("rejects update when billing unit minutes exceed the maximum", async () => {
+    const policy = await fixture.factories.pricingPolicy({
+      name: "Too Long Billing Policy",
+      status: "INACTIVE",
+    });
+
+    const result = await runCommand(service => service.updatePolicy({
+      pricingPolicyId: policy.id,
+      billingUnitMinutes: 24 * 60 + 1,
+    }));
+
+    const error = expectLeftTag(result, "PricingPolicyInvalidInput") as PricingPolicyInvalidInput;
+    expect(error.issues).toEqual([
+      {
+        path: "billingUnitMinutes",
+        message: "billingUnitMinutes must be between 1 and 1440 minutes",
+      },
+    ]);
   });
 
   it("blocks updating a policy once it is referenced", async () => {
