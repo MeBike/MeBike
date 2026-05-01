@@ -403,17 +403,6 @@ const startTransition: RouteHandler<
             },
             404,
           )),
-        Match.tag("StationNotFound", error =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
-            {
-              error: redistributionReqErrorMessages.STATION_NOT_FOUND,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.STATION_NOT_FOUND,
-                stationId: error.stationId,
-              },
-            },
-            404,
-          )),
         Match.tag("RedistributionRequestNotFound", error =>
           c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
             {
@@ -458,19 +447,6 @@ const startTransition: RouteHandler<
               requestId: error.requestId,
             },
           }, 400)),
-        Match.tag("NotEnoughEmptySlotsAtTarget", error =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
-            {
-              error: redistributionReqErrorMessages.INSUFFICIENT_EMPTY_SLOTS,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.INSUFFICIENT_EMPTY_SLOTS,
-                targetStationId: error.targetStationId,
-                required: error.required,
-                available: error.available,
-              },
-            },
-            400,
-          )),
         Match.orElse(() => {
           throw left;
         }),

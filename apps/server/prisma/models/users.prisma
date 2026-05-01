@@ -54,6 +54,7 @@ model User {
   bikeMaintenanceLogs             BikeMaintenanceLog[]
   requestedRedistributionRequests RedistributionRequest[]   @relation("RedistributionRequestRequestedByUser")
   approvedRedistributionRequests  RedistributionRequest[]   @relation("RedistributionRequestApprovedByUser")
+  rejectedRedistributionRequests  RedistributionRequest[]   @relation("RedistributionRequestRejectedByUser")
   environmentalImpactStats        EnvironmentalImpactStat[]
 
   submittedAgencyRequests   AgencyRequest[] @relation("AgencyRequestRequester")

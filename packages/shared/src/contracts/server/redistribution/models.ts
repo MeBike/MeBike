@@ -25,6 +25,7 @@ export const RedistributionRequestSchema = z.object({
   id: z.uuidv7(),
   requestedByUserId: z.uuidv7(),
   approvedByUserId: z.uuidv7().optional(),
+  rejectedByUserId: z.uuidv7().optional(),
   sourceStationId: z.uuidv7(),
   targetStationId: z.uuidv7(),
   requestedQuantity: z.number(),
@@ -112,6 +113,7 @@ export const RedistributionRequestDetailSchema
   = RedistributionRequestDetailBaseSchema.extend({
     requestedByUser: RedistributionUserDetailSchema,
     approvedByUser: RedistributionUserDetailSchema.nullable(),
+    rejectedByUser: RedistributionUserDetailSchema.nullable(),
     sourceStation: RedistributionStationSchema,
     targetStation: RedistributionStationSchema,
     items: z.array(RedistributionRequestItemDetailSchema),
@@ -122,6 +124,7 @@ export const RedistributionRequestListItemSchema
   = RedistributionRequestDetailBaseSchema.extend({
     requestedByUser: RedistributionUserSummarySchema,
     approvedByUser: RedistributionUserSummarySchema.nullable(),
+    rejectedByUser: RedistributionUserSummarySchema.nullable(),
     sourceStation: RedistributionStationSummarySchema,
     targetStation: RedistributionStationSummarySchema,
     items: z.array(RedistributionRequestItemSchema),

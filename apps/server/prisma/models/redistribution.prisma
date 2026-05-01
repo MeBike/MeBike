@@ -14,6 +14,7 @@ model RedistributionRequest {
   id                String               @id @default(uuid(7)) @db.Uuid
   requestedByUserId String               @map("requested_by_user_id") @db.Uuid
   approvedByUserId  String?              @map("approved_by_user_id") @db.Uuid
+  rejectedByUserId  String?              @map("rejected_by_user_id") @db.Uuid
   sourceStationId   String               @map("source_station_id") @db.Uuid
   targetStationId   String              @map("target_station_id") @db.Uuid
   reason            String?
@@ -26,12 +27,14 @@ model RedistributionRequest {
 
   requestedByUser User                  @relation("RedistributionRequestRequestedByUser", fields: [requestedByUserId], references: [id])
   approvedByUser  User?                 @relation("RedistributionRequestApprovedByUser", fields: [approvedByUserId], references: [id])
+  rejectedByUser  User?                 @relation("RedistributionRequestRejectedByUser", fields: [rejectedByUserId], references: [id])
   sourceStation   Station               @relation("RedistributionRequestSourceStation", fields: [sourceStationId], references: [id])
   targetStation   Station              @relation("RedistributionRequestTargetStation", fields: [targetStationId], references: [id])
   items           RedistributionRequestItem[]
 
   @@index([requestedByUserId], name: "idx_redistribution_requests_requested_by")
   @@index([approvedByUserId], name: "idx_redistribution_requests_approved_by")
+  @@index([rejectedByUserId], name: "idx_redistribution_requests_rejected_by")
   @@index([sourceStationId], name: "idx_redistribution_requests_source_station")
   @@index([targetStationId], name: "idx_redistribution_requests_target_station")
   @@index([status], name: "idx_redistribution_requests_status")

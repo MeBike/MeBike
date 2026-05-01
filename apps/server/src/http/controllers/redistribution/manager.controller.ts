@@ -33,6 +33,7 @@ const getRequestListForManager: RouteHandler<
           status: query.status,
           requestedByUserId: query.requestedByUserId,
           approvedByUserId: query.approvedByUserId,
+          rejectedByUserId: query.rejectedByUserId,
           sourceStationId: query.sourceStationId,
           targetStationId: query.targetStationId,
           from: query.from ? new Date(query.from) : undefined,
@@ -95,6 +96,7 @@ const getRequestHistoryForManager: RouteHandler<
           status: query.status,
           requestedByUserId: query.requestedByUserId,
           approvedByUserId: query.approvedByUserId,
+          rejectedByUserId: query.rejectedByUserId,
           sourceStationId: query.sourceStationId,
           targetStationId: query.targetStationId,
           from: query.from ? new Date(query.from) : undefined,
@@ -460,19 +462,6 @@ const confirmRedistributionRequestCompletion: RouteHandler<
                 requestId: error.requestId,
                 providedBikeIds: error.providedBikeIds,
                 unconfirmedBikeIds: error.unconfirmedBikeIds,
-              },
-            },
-            400,
-          )),
-        Match.tag("NotEnoughEmptySlotsAtTarget", error =>
-          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
-            {
-              error: redistributionReqErrorMessages.INSUFFICIENT_EMPTY_SLOTS,
-              details: {
-                code: RedistributionReqErrorCodeSchema.enum.INSUFFICIENT_EMPTY_SLOTS,
-                targetStationId: error.targetStationId,
-                required: error.required,
-                available: error.available,
               },
             },
             400,

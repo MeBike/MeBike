@@ -430,18 +430,6 @@ export const startTransition = createRoute({
                 },
               },
             },
-            NotEnoughEmptySlotsAtTarget: {
-              value: {
-                error: "Not enough empty slots at target station",
-                details: {
-                  code: RedistributionReqErrorCodeSchema.enum
-                    .INSUFFICIENT_EMPTY_SLOTS,
-                  targetStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
-                  required: 10,
-                  available: 5,
-                },
-              },
-            },
           },
         },
       },
@@ -533,18 +521,6 @@ export const confirmRedistributionRequestCompletion = createRoute({
                   requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
                   providedBikeIds: ["bike-1", "bike-2"],
                   unconfirmedBikeIds: ["bike-3", "bike-4"],
-                },
-              },
-            },
-            NotEnoughEmptySlotsAtTarget: {
-              value: {
-                error: "Not enough empty slots at target station",
-                details: {
-                  code: RedistributionReqErrorCodeSchema.enum
-                    .INSUFFICIENT_EMPTY_SLOTS,
-                  targetStationId: "019d53a7-dbbb-7185-b741-eee4e5664bdb",
-                  required: 10,
-                  available: 5,
                 },
               },
             },

@@ -251,6 +251,7 @@ function makeRedistributionService(
     const where: PrismaTypes.RedistributionRequestWhereInput = {
       requestedByUserId: filter.requestedByUserId,
       approvedByUserId: filter.approvedByUserId,
+      rejectedByUserId: filter.rejectedByUserId,
       sourceStationId: filter.sourceStationId,
       targetStationId: filter.targetStationId,
     };
@@ -579,7 +580,6 @@ function makeRedistributionService(
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
-            const txStationRepo = makeStationQueryRepository(tx);
 
             const existingRequest = yield* txRedistributionRepo.findById(
               args.requestId,
@@ -616,33 +616,11 @@ function makeRedistributionService(
 
             const bikeIds = req.items.map(item => item.bikeId);
             const bikeQuantity = bikeIds.length;
-            const targetStationOpt = yield* txStationRepo.getById(
-              req.targetStationId,
-            );
-            if (Option.isNone(targetStationOpt)) {
-              return yield* Effect.fail(
-                new StationNotFound({
-                  stationId: req.targetStationId,
-                }),
-              );
-            }
-            const targetStation = targetStationOpt.value;
 
             if (bikeQuantity === 0) {
               return yield* Effect.fail(
                 new NoBikesInRedistributionRequest({
                   requestId: args.requestId,
-                }),
-              );
-            }
-            // after request approval, availableReturnSlots is already updated to reflect the bikes being moved,
-            // so we only need to check if there are enough empty slots after the move.
-            else if (targetStation.availableReturnSlots < 0) {
-              return yield* Effect.fail(
-                new NotEnoughEmptySlotsAtTarget({
-                  targetStationId: targetStation.id,
-                  required: bikeQuantity,
-                  available: targetStation.availableReturnSlots + bikeQuantity,
                 }),
               );
             }
@@ -807,6 +785,7 @@ function makeRedistributionService(
                 },
                 {
                   status: RedistributionStatus.REJECTED,
+                  rejectedByUserId: args.rejectedByUserId,
                   reason: args.reason,
                 },
               );
@@ -825,7 +804,6 @@ function makeRedistributionService(
         return yield* runPrismaTransaction(client, (tx) => {
           const txRedistributionRepo = makeRedistributionRepository(tx);
           const txBikeRepo = makeBikeRepository(tx);
-          const txStationRepo = makeStationQueryRepository(tx);
 
           return Effect.gen(function* () {
             const reqOpt = yield* txRedistributionRepo.findAndPopulate({
@@ -872,17 +850,6 @@ function makeRedistributionService(
               unconfirmedBikeIds.includes(id),
             );
 
-            const targetStationOpt = yield* txStationRepo.getById(
-              req.targetStation.id,
-            );
-            if (Option.isNone(targetStationOpt)) {
-              return yield* Effect.fail(
-                new StationNotFound({
-                  stationId: req.targetStation.id,
-                }),
-              );
-            }
-            const targetStation = targetStationOpt.value;
             const validLength = validCompletedBikeIds.length;
 
             if (validLength === 0) {
@@ -891,15 +858,6 @@ function makeRedistributionService(
                   requestId,
                   providedBikeIds: completedBikeIds,
                   unconfirmedBikeIds,
-                }),
-              );
-            }
-            else if (targetStation.availableReturnSlots < 0) {
-              return yield* Effect.fail(
-                new NotEnoughEmptySlotsAtTarget({
-                  targetStationId: targetStation.id,
-                  required: validLength,
-                  available: targetStation.availableReturnSlots + validLength,
                 }),
               );
             }
