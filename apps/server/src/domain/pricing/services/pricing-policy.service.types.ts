@@ -1,11 +1,12 @@
 import type { Effect } from "effect";
 
-import type { AccountStatus, Prisma as PrismaTypes } from "generated/prisma/client";
+import type { AccountStatus } from "generated/prisma/client";
 
 import type {
   ActivePricingPolicyAmbiguous,
   ActivePricingPolicyNotFound,
   PricingPolicyAlreadyUsed,
+  PricingPolicyInvalidInput,
   PricingPolicyMutationWindowClosed,
   PricingPolicyNotFound,
 } from "../domain-errors";
@@ -16,14 +17,14 @@ import type { PricingPolicyUsageSummary } from "../repository/pricing-policy.rep
  * Input để tạo mới một draft pricing policy.
  *
  * `now` là optional cho production path, nhưng hữu ích cho test deterministic
- * và cho rule chặn sửa theo khung giờ.
+ * và để caller nội bộ kiểm soát timestamp khi persist.
  */
 export type CreatePricingPolicyInput = {
   readonly name: string;
-  readonly baseRate: PrismaTypes.Decimal;
+  readonly baseRate: bigint;
   readonly billingUnitMinutes: number;
-  readonly reservationFee: PrismaTypes.Decimal;
-  readonly depositRequired: PrismaTypes.Decimal;
+  readonly reservationFee: bigint;
+  readonly depositRequired: bigint;
   readonly lateReturnCutoff: Date;
   readonly now?: Date;
 };
@@ -34,10 +35,10 @@ export type CreatePricingPolicyInput = {
 export type UpdatePricingPolicyInput = {
   readonly pricingPolicyId: string;
   readonly name?: string;
-  readonly baseRate?: PrismaTypes.Decimal;
+  readonly baseRate?: bigint;
   readonly billingUnitMinutes?: number;
-  readonly reservationFee?: PrismaTypes.Decimal;
-  readonly depositRequired?: PrismaTypes.Decimal;
+  readonly reservationFee?: bigint;
+  readonly depositRequired?: bigint;
   readonly lateReturnCutoff?: Date;
   readonly now?: Date;
 };
@@ -71,12 +72,12 @@ export type PricingPolicyQueryService = {
 export type PricingPolicyCommandService = {
   createPolicy: (
     input: CreatePricingPolicyInput,
-  ) => Effect.Effect<PricingPolicyRow, PricingPolicyMutationWindowClosed>;
+  ) => Effect.Effect<PricingPolicyRow, PricingPolicyInvalidInput>;
   updatePolicy: (
     input: UpdatePricingPolicyInput,
   ) => Effect.Effect<
     PricingPolicyRow,
-    PricingPolicyNotFound | PricingPolicyAlreadyUsed | PricingPolicyMutationWindowClosed
+    PricingPolicyNotFound | PricingPolicyAlreadyUsed | PricingPolicyInvalidInput
   >;
   activatePolicy: (
     pricingPolicyId: string,
