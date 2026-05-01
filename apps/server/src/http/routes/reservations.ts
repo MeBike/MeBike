@@ -11,17 +11,43 @@ import {
 import {
   requireAdminMiddleware,
   requireAgencyMiddleware,
+  requireAuthMiddleware,
   requireStaffOrManagerMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const reservations = serverRoutes.reservations;
 
-  app.openapi(reservations.reserveBike, ReservationMeController.reserveBike);
-  app.openapi(reservations.confirmReservation, ReservationMeController.confirmReservation);
-  app.openapi(reservations.cancelReservation, ReservationMeController.cancelReservation);
-  app.openapi(reservations.listMyReservations, ReservationMeController.listMyReservations);
-  app.openapi(reservations.getMyReservation, ReservationMeController.getMyReservation);
+  const reserveBikeRoute = {
+    ...reservations.reserveBike,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const confirmReservationRoute = {
+    ...reservations.confirmReservation,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const cancelReservationRoute = {
+    ...reservations.cancelReservation,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const listMyReservationsRoute = {
+    ...reservations.listMyReservations,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const getMyReservationRoute = {
+    ...reservations.getMyReservation,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(reserveBikeRoute, ReservationMeController.reserveBike);
+  app.openapi(confirmReservationRoute, ReservationMeController.confirmReservation);
+  app.openapi(cancelReservationRoute, ReservationMeController.cancelReservation);
+  app.openapi(listMyReservationsRoute, ReservationMeController.listMyReservations);
+  app.openapi(getMyReservationRoute, ReservationMeController.getMyReservation);
 
   const adminListRoute = {
     ...reservations.adminListReservations,

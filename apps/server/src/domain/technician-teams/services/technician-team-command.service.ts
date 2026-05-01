@@ -32,11 +32,14 @@ export function makeTechnicianTeamCommandService(args: {
           }));
         }
 
-        const existingTeams = yield* args.queryRepo.list({ stationId: input.stationId });
-        if (existingTeams.length > 0) {
+        const existingTeams = yield* args.queryRepo.list(
+          { stationId: input.stationId },
+          { page: 1, pageSize: 1 },
+        );
+        if (existingTeams.items.length > 0) {
           return yield* Effect.fail(new TechnicianTeamStationAlreadyAssigned({
             stationId: input.stationId,
-            teamId: existingTeams[0]!.id,
+            teamId: existingTeams.items[0]!.id,
           }));
         }
 

@@ -7,7 +7,10 @@ import {
   SubscriptionMeController,
   SubscriptionPublicController,
 } from "@/http/controllers/subscriptions";
-import { requireAdminMiddleware } from "@/http/middlewares/auth";
+import {
+  requireAdminMiddleware,
+  requireAuthMiddleware,
+} from "@/http/middlewares/auth";
 
 export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const subscriptions = serverRoutes.subscriptions;
@@ -20,11 +23,36 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
     middleware: [requireAdminMiddleware] as const,
   } satisfies RouteConfig;
 
-  app.openapi(subscriptions.listSubscriptionPackages, SubscriptionPublicController.listSubscriptionPackages);
-  app.openapi(subscriptions.getSubscription, SubscriptionMeController.getSubscription);
-  app.openapi(subscriptions.listSubscriptions, SubscriptionMeController.listSubscriptions);
-  app.openapi(subscriptions.createSubscription, SubscriptionMeController.createSubscription);
-  app.openapi(subscriptions.activateSubscription, SubscriptionMeController.activateSubscription);
+  const listSubscriptionPackagesRoute = {
+    ...subscriptions.listSubscriptionPackages,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const getSubscriptionRoute = {
+    ...subscriptions.getSubscription,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const listSubscriptionsRoute = {
+    ...subscriptions.listSubscriptions,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const createSubscriptionRoute = {
+    ...subscriptions.createSubscription,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const activateSubscriptionRoute = {
+    ...subscriptions.activateSubscription,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(listSubscriptionPackagesRoute, SubscriptionPublicController.listSubscriptionPackages);
+  app.openapi(getSubscriptionRoute, SubscriptionMeController.getSubscription);
+  app.openapi(listSubscriptionsRoute, SubscriptionMeController.listSubscriptions);
+  app.openapi(createSubscriptionRoute, SubscriptionMeController.createSubscription);
+  app.openapi(activateSubscriptionRoute, SubscriptionMeController.activateSubscription);
   app.openapi(adminListSubscriptionsRoute, SubscriptionAdminController.adminListSubscriptions);
   app.openapi(adminGetSubscriptionRoute, SubscriptionAdminController.adminGetSubscription);
 }

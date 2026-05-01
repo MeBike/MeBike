@@ -1,5 +1,7 @@
 import type { Effect } from "effect";
 
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+
 import type {
   TechnicianTeamInternalStationRequired,
   TechnicianTeamNotFound,
@@ -33,8 +35,9 @@ export type TechnicianTeamQueryService = {
     id: string,
   ) => Effect.Effect<TechnicianTeamDetailRow, TechnicianTeamNotFound>;
   listTechnicianTeams: (
-    filter?: TechnicianTeamFilter,
-  ) => Effect.Effect<readonly TechnicianTeamRow[]>;
+    filter: TechnicianTeamFilter,
+    pageReq: PageRequest,
+  ) => Effect.Effect<PageResult<TechnicianTeamRow>>;
   listAvailableTechnicianTeams: (args?: {
     readonly stationId?: string;
   }) => Effect.Effect<readonly TechnicianTeamAvailableOption[]>;

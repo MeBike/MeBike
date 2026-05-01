@@ -1,4 +1,5 @@
 import { z } from "../../../zod";
+import { PaginationSchema } from "../schemas";
 import {
   TechnicianTeamAvailableOptionSchema,
   TechnicianTeamDetailSchema,
@@ -10,6 +11,7 @@ export * from "./models";
 
 export const TechnicianTeamListResponseSchema = z.object({
   data: z.array(TechnicianTeamSummarySchema),
+  pagination: PaginationSchema,
 });
 
 export const TechnicianTeamAvailableListResponseSchema = z.object({
@@ -22,6 +24,7 @@ export const TechnicianTeamDetailResponseSchema = z.object({
 
 export type TechnicianTeamListResponse = {
   data: z.infer<typeof TechnicianTeamSummarySchema>[];
+  pagination: z.infer<typeof PaginationSchema>;
 };
 
 export type TechnicianTeamAvailableListResponse = {

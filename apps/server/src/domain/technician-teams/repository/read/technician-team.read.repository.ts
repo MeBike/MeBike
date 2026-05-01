@@ -3,6 +3,7 @@ import { Effect, Option } from "effect";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { pickDefined } from "@/domain/shared/pick-defined";
 
 import type { TechnicianTeamAvailableOption, TechnicianTeamDetailRow, TechnicianTeamRow } from "../../models";
@@ -149,45 +150,64 @@ export function makeTechnicianTeamReadRepository(
         defectOn(TechnicianTeamRepositoryError),
       ),
 
-    list: args =>
-      Effect.tryPromise({
-        try: () =>
-          client.technicianTeam.findMany({
-            where: pickDefined({
-              stationId: args?.stationId,
-              availabilityStatus: args?.availabilityStatus,
-            }),
-            orderBy: {
-              name: "asc",
-            },
-            select: {
-              id: true,
-              name: true,
-              stationId: true,
-              station: {
+    list: (filter, pageReq) =>
+      Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+        const where = pickDefined({
+          stationId: filter.stationId,
+          availabilityStatus: filter.availabilityStatus,
+        });
+
+        const [total, rows] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () =>
+              client.technicianTeam.count({
+                where,
+              }),
+            catch: cause =>
+              new TechnicianTeamRepositoryError({
+                operation: "list.count",
+                cause,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.technicianTeam.findMany({
+                where,
+                skip,
+                take,
+                orderBy: {
+                  name: "asc",
+                },
                 select: {
+                  id: true,
                   name: true,
+                  stationId: true,
+                  station: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  availabilityStatus: true,
+                  createdAt: true,
+                  updatedAt: true,
+                  _count: {
+                    select: {
+                      userAssignments: true,
+                    },
+                  },
                 },
-              },
-              availabilityStatus: true,
-              createdAt: true,
-              updatedAt: true,
-              _count: {
-                select: {
-                  userAssignments: true,
-                },
-              },
-            },
+              }),
+            catch: cause =>
+              new TechnicianTeamRepositoryError({
+                operation: "list.findMany",
+                cause,
+              }),
           }),
-        catch: cause =>
-          new TechnicianTeamRepositoryError({
-            operation: "list",
-            cause,
-          }),
-      }).pipe(
-        Effect.map(rows => rows.map(mapRow)),
-        defectOn(TechnicianTeamRepositoryError),
-      ),
+        ]);
+
+        return makePageResult(rows.map(mapRow), total, page, pageSize);
+      }).pipe(defectOn(TechnicianTeamRepositoryError)),
 
     listAvailable: args =>
       Effect.tryPromise({

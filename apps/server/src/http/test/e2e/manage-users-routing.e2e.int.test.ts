@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
 const ADMIN_USER_ID = "018d4529-6880-77a8-8e6f-4d2c88d22309";
+const STAFF_USER_ID = "018d4529-6880-77a8-8e6f-4d2c88d22310";
 
 describe("manage-users route ordering e2e", () => {
   const fixture = setupHttpE2eFixture({
@@ -34,7 +35,52 @@ describe("manage-users route ordering e2e", () => {
           verifyStatus: "VERIFIED",
         },
       });
+      await prisma.user.create({
+        data: {
+          id: STAFF_USER_ID,
+          fullName: "Route Staff",
+          email: "route-staff@example.com",
+          passwordHash: "hash123",
+          phoneNumber: null,
+          username: null,
+          avatarUrl: null,
+          locationText: null,
+          nfcCardUid: null,
+          role: "STAFF",
+          accountStatus: "ACTIVE",
+          verifyStatus: "VERIFIED",
+        },
+      });
     },
+  });
+
+  it("forbids staff from manage-users admin routes", async () => {
+    const response = await fixture.app.request("http://test/v1/users/manage-users/stats", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${fixture.auth.makeAccessToken({ userId: STAFF_USER_ID, role: "STAFF" })}`,
+      },
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it("forbids staff from changing managed user roles", async () => {
+    const target = await fixture.factories.user({
+      role: "USER",
+      email: "staff-cannot-promote@example.com",
+    });
+
+    const response = await fixture.app.request(`http://test/v1/users/manage-users/${target.id}`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${fixture.auth.makeAccessToken({ userId: STAFF_USER_ID, role: "STAFF" })}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ role: "ADMIN" }),
+    });
+
+    expect(response.status).toBe(403);
   });
 
   it("get /v1/users/manage-users/stats does not get swallowed by {userId}", async () => {
