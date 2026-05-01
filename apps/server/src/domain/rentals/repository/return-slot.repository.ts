@@ -305,7 +305,7 @@ export function makeReturnSlotRepository(
           return Option.none();
         }
 
-        const [totalBikes, activeReturnSlots] = yield* Effect.all([
+        const [totalBikes, activeReturnSlots, incomingRedistributionBikes] = yield* Effect.all([
           Effect.tryPromise({
             try: () => client.bike.count({ where: { stationId } }),
             catch: cause =>
@@ -331,6 +331,31 @@ export function makeReturnSlotRepository(
                 cause,
               }),
           }),
+          Effect.tryPromise({
+            try: () =>
+              client.redistributionRequest.findMany({
+                where: {
+                  targetStationId: stationId,
+                  status: { in: ["APPROVED", "IN_TRANSIT", "PARTIALLY_COMPLETED"] },
+                },
+                select: {
+                  _count: {
+                    select: {
+                      items: {
+                        where: { deliveredAt: null },
+                      },
+                    },
+                  },
+                },
+              }),
+            catch: cause =>
+              new RentalRepositoryError({
+                operation: "returnSlot.getStationCapacitySnapshot.incomingRedistributionBikes",
+                cause,
+              }),
+          }).pipe(
+            Effect.map(rows => rows.reduce((acc, row) => acc + row._count.items, 0)),
+          ),
         ]);
 
         return Option.some({
@@ -339,6 +364,7 @@ export function makeReturnSlotRepository(
           returnSlotLimit: station.returnSlotLimit,
           totalBikes,
           activeReturnSlots,
+          incomingRedistributionBikes,
         });
       }).pipe(defectOn(RentalRepositoryError)),
   };

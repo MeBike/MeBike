@@ -208,6 +208,7 @@ export function ensureReturnDestinationReadyInTx(args: {
         returnSlotLimit: stationSnapshot.returnSlotLimit,
         totalBikes: stationSnapshot.totalBikes,
         activeReturnSlots: stationSnapshot.activeReturnSlots,
+        incomingRedistributionBikes: stationSnapshot.incomingRedistributionBikes,
       }));
     }
   });
