@@ -2,7 +2,6 @@ import type { Effect, Option } from "effect";
 
 import type {
   AccountStatus,
-  Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
 import type {
@@ -15,10 +14,10 @@ import type { PricingPolicyRow } from "../models";
 export type CreatePricingPolicyInput = {
   readonly id?: string;
   readonly name: string;
-  readonly baseRate: PrismaTypes.Decimal;
+  readonly baseRate: bigint;
   readonly billingUnitMinutes: number;
-  readonly reservationFee: PrismaTypes.Decimal;
-  readonly depositRequired: PrismaTypes.Decimal;
+  readonly reservationFee: bigint;
+  readonly depositRequired: bigint;
   readonly lateReturnCutoff: Date;
   readonly status?: AccountStatus;
   readonly createdAt?: Date;
@@ -28,10 +27,10 @@ export type CreatePricingPolicyInput = {
 export type UpdatePricingPolicyInput = {
   readonly pricingPolicyId: string;
   readonly name?: string;
-  readonly baseRate?: PrismaTypes.Decimal;
+  readonly baseRate?: bigint;
   readonly billingUnitMinutes?: number;
-  readonly reservationFee?: PrismaTypes.Decimal;
-  readonly depositRequired?: PrismaTypes.Decimal;
+  readonly reservationFee?: bigint;
+  readonly depositRequired?: bigint;
   readonly lateReturnCutoff?: Date;
   readonly status?: AccountStatus;
   readonly updatedAt?: Date;

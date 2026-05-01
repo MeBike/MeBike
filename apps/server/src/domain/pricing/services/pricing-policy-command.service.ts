@@ -3,6 +3,7 @@ import { Effect, Layer, Option } from "effect";
 import type { PrismaClient } from "generated/prisma/client";
 
 import {
+  formatVietnamDateTime,
   isWithinOvernightOperationsWindow,
   OVERNIGHT_OPERATIONS_WINDOW_END_LABEL,
   OVERNIGHT_OPERATIONS_WINDOW_START_LABEL,
@@ -22,6 +23,7 @@ import type {
 import { defectOn } from "../../shared";
 import {
   PricingPolicyAlreadyUsed,
+  PricingPolicyInvalidInput,
   PricingPolicyMutationWindowClosed,
   PricingPolicyNotFound,
 } from "../domain-errors";
@@ -29,48 +31,29 @@ import { PricingPolicyCommandRepository } from "../repository/pricing-policy-com
 import { PricingPolicyQueryRepository } from "../repository/pricing-policy-query.repository";
 import { makePricingPolicyRepository } from "../repository/pricing-policy.repository";
 
-/**
- * Format thời điểm theo giờ Việt Nam cho payload lỗi chặn theo khung giờ.
- *
- * Rule quản trị pricing policy bám theo giờ địa phương ở Việt Nam, nên thông tin trả
- * ra cũng nên cùng hệ quy chiếu đó để dễ đọc và debug.
- *
- * @param date Mốc thời gian gốc cần format.
- * @returns Chuỗi thời gian theo múi giờ Việt Nam để trả trong payload lỗi.
- */
-function formatVietnamDateTime(date: Date): string {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: VIETNAM_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  });
+const MIN_BASE_RATE_VND = 1_000n;
+const MAX_BASE_RATE_VND = 1_000_000n;
+const MIN_RESERVATION_FEE_VND = 1_000n;
+const MAX_RESERVATION_FEE_VND = 1_000_000n;
+const MIN_DEPOSIT_REQUIRED_VND = 1_000n;
+const MAX_DEPOSIT_REQUIRED_VND = 100_000_000n;
+const MIN_BILLING_UNIT_MINUTES = 1;
+const MAX_BILLING_UNIT_MINUTES = 24 * 60;
 
-  const parts = formatter.formatToParts(date);
-
-  const year = parts.find(part => part.type === "year")?.value ?? "0000";
-  const month = parts.find(part => part.type === "month")?.value ?? "01";
-  const day = parts.find(part => part.type === "day")?.value ?? "01";
-  const hour = parts.find(part => part.type === "hour")?.value ?? "00";
-  const minute = parts.find(part => part.type === "minute")?.value ?? "00";
-  const second = parts.find(part => part.type === "second")?.value ?? "00";
-
-  return `${year}-${month}-${day}T${hour}:${minute}:${second}+07:00`;
-}
+type ValidationIssue = {
+  readonly path: string;
+  readonly message: string;
+};
 
 /**
- * Mọi mutation của pricing policy chỉ được phép chạy trong khung giờ quản trị
+ * Chỉ flow activate của pricing policy mới bị giới hạn trong khung giờ quản trị
  * ban đêm.
  *
  * @param now Thời điểm hiện tại để kiểm tra cửa sổ mutation.
  * @returns Effect thành công nếu đang trong cửa sổ cho phép; ngược lại fail với
  * `PricingPolicyMutationWindowClosed`.
  */
-function ensureMutationWindowOpen(now: Date) {
+function ensureActivationWindowOpen(now: Date) {
   if (isWithinOvernightOperationsWindow(now)) {
     return Effect.void;
   }
@@ -83,12 +66,146 @@ function ensureMutationWindowOpen(now: Date) {
   }));
 }
 
+function validateMoneyRange(args: {
+  path: string;
+  label: string;
+  value: bigint;
+  min: bigint;
+  max: bigint;
+  issues: ValidationIssue[];
+}) {
+  if (args.value < args.min || args.value > args.max) {
+    args.issues.push({
+      path: args.path,
+      message: `${args.label} must be between ${args.min.toString()} and ${args.max.toString()} VND`,
+    });
+  }
+}
+
+function validateBillingUnitMinutes(
+  value: number,
+  issues: ValidationIssue[],
+) {
+  if (value < MIN_BILLING_UNIT_MINUTES || value > MAX_BILLING_UNIT_MINUTES) {
+    issues.push({
+      path: "billingUnitMinutes",
+      message: `billingUnitMinutes must be between ${MIN_BILLING_UNIT_MINUTES} and ${MAX_BILLING_UNIT_MINUTES} minutes`,
+    });
+  }
+}
+
+function ensureCreateInputValid(input: {
+  name: string;
+  baseRate: bigint;
+  billingUnitMinutes: number;
+  reservationFee: bigint;
+  depositRequired: bigint;
+}) {
+  const issues: ValidationIssue[] = [];
+
+  if (input.name.trim().length === 0) {
+    issues.push({
+      path: "name",
+      message: "name must not be empty",
+    });
+  }
+
+  validateMoneyRange({
+    path: "baseRate",
+    label: "baseRate",
+    value: input.baseRate,
+    min: MIN_BASE_RATE_VND,
+    max: MAX_BASE_RATE_VND,
+    issues,
+  });
+  validateMoneyRange({
+    path: "reservationFee",
+    label: "reservationFee",
+    value: input.reservationFee,
+    min: MIN_RESERVATION_FEE_VND,
+    max: MAX_RESERVATION_FEE_VND,
+    issues,
+  });
+  validateMoneyRange({
+    path: "depositRequired",
+    label: "depositRequired",
+    value: input.depositRequired,
+    min: MIN_DEPOSIT_REQUIRED_VND,
+    max: MAX_DEPOSIT_REQUIRED_VND,
+    issues,
+  });
+  validateBillingUnitMinutes(input.billingUnitMinutes, issues);
+
+  return issues.length === 0
+    ? Effect.void
+    : Effect.fail(new PricingPolicyInvalidInput({ issues }));
+}
+
+function ensureUpdateInputValid(input: {
+  name?: string;
+  baseRate?: bigint;
+  billingUnitMinutes?: number;
+  reservationFee?: bigint;
+  depositRequired?: bigint;
+}) {
+  const issues: ValidationIssue[] = [];
+
+  if (input.name !== undefined && input.name.trim().length === 0) {
+    issues.push({
+      path: "name",
+      message: "name must not be empty",
+    });
+  }
+
+  if (input.baseRate !== undefined) {
+    validateMoneyRange({
+      path: "baseRate",
+      label: "baseRate",
+      value: input.baseRate,
+      min: MIN_BASE_RATE_VND,
+      max: MAX_BASE_RATE_VND,
+      issues,
+    });
+  }
+
+  if (input.reservationFee !== undefined) {
+    validateMoneyRange({
+      path: "reservationFee",
+      label: "reservationFee",
+      value: input.reservationFee,
+      min: MIN_RESERVATION_FEE_VND,
+      max: MAX_RESERVATION_FEE_VND,
+      issues,
+    });
+  }
+
+  if (input.depositRequired !== undefined) {
+    validateMoneyRange({
+      path: "depositRequired",
+      label: "depositRequired",
+      value: input.depositRequired,
+      min: MIN_DEPOSIT_REQUIRED_VND,
+      max: MAX_DEPOSIT_REQUIRED_VND,
+      issues,
+    });
+  }
+
+  if (input.billingUnitMinutes !== undefined) {
+    validateBillingUnitMinutes(input.billingUnitMinutes, issues);
+  }
+
+  return issues.length === 0
+    ? Effect.void
+    : Effect.fail(new PricingPolicyInvalidInput({ issues }));
+}
+
 /**
  * Command service cho pricing policy.
  *
  * Layer này sở hữu rule nghiệp vụ quanh việc tạo draft, bất biến sau lần dùng
- * đầu tiên, và chuyển policy đang active một cách tường minh. Phần persist vẫn
- * nằm ở repository để bên gọi có thể test hành vi mà chưa cần HTTP wiring.
+ * đầu tiên, và chuyển policy đang active một cách tường minh. Theo rule đã chốt:
+ * tạo draft mới luôn được phép, cập nhật chỉ bị chặn sau lần tham chiếu đầu tiên,
+ * còn activate mới bị khóa theo cửa sổ ban đêm.
  *
  * @param args Dependency cần thiết cho command flow pricing policy.
  * @param args.client Prisma client gốc để chạy transaction activation.
@@ -107,16 +224,17 @@ export function makePricingPolicyCommandService(args: {
   /**
    * Tạo mới một pricing policy ở trạng thái draft/inactive.
    *
-   * Hàm này chỉ kiểm tra mutation window và persist draft mới. Việc chuyển
-   * policy này thành policy đang active là flow khác.
+   * Hàm này không áp dụng giới hạn theo khung giờ. Rule hiện tại cho phép admin
+   * tạo thêm draft mới bất kỳ lúc nào; việc đưa draft đó live là flow activate
+   * riêng.
    *
    * @param input Dữ liệu đầu vào để tạo draft pricing policy.
-   * @returns Effect trả về policy vừa tạo hoặc lỗi nếu ngoài khung giờ mutate.
+   * @returns Effect trả về policy vừa tạo ở trạng thái INACTIVE.
    */
   const createPolicy: PricingPolicyCommandService["createPolicy"] = input =>
     Effect.gen(function* () {
       const now = input.now ?? new Date();
-      yield* ensureMutationWindowOpen(now);
+      yield* ensureCreateInputValid(input);
 
       // Policy mới luôn bắt đầu ở trạng thái draft/inactive. Việc đổi policy
       // đang live là một command riêng, chạy tường minh.
@@ -144,7 +262,7 @@ export function makePricingPolicyCommandService(args: {
   const updatePolicy: PricingPolicyCommandService["updatePolicy"] = input =>
     Effect.gen(function* () {
       const now = input.now ?? new Date();
-      yield* ensureMutationWindowOpen(now);
+      yield* ensureUpdateInputValid(input);
 
       // Khi đã có bất kỳ bản ghi giao dịch nào tham chiếu policy này, việc sửa
       // nội dung có thể làm sai nghĩa dữ liệu lịch sử nên phải chặn lại.
@@ -193,7 +311,7 @@ export function makePricingPolicyCommandService(args: {
     now = new Date(),
   ) =>
     Effect.gen(function* () {
-      yield* ensureMutationWindowOpen(now);
+      yield* ensureActivationWindowOpen(now);
 
       return yield* runPrismaTransaction(args.client, tx =>
         Effect.gen(function* () {

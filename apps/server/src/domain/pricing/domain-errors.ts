@@ -44,3 +44,12 @@ export class PricingPolicyMutationWindowClosed extends Data.TaggedError(
     readonly windowStart: string;
     readonly windowEnd: string;
   }> {}
+
+export class PricingPolicyInvalidInput extends Data.TaggedError(
+  "PricingPolicyInvalidInput",
+)<{
+    readonly issues: ReadonlyArray<{
+      readonly path: string;
+      readonly message: string;
+    }>;
+  }> {}

@@ -21,6 +21,8 @@ export const adminCreatePricingPolicyRoute = createRoute({
   path: "/v1/admin/pricing-policies",
   tags: ["Admin", "Pricing Policies"],
   security: [{ bearerAuth: [] }],
+  description:
+    "Create a new inactive pricing policy draft. Draft creation is allowed at any time; activation is a separate overnight-only action.",
   request: jsonBody(CreatePricingPolicyBodySchema),
   responses: {
     201: {
@@ -59,8 +61,8 @@ export const adminCreatePricingPolicyRoute = createRoute({
                   code: PricingPolicyErrorCodeSchema.enum.PRICING_POLICY_INVALID_INPUT,
                   issues: [
                     {
-                      path: "baseRate",
-                      message: "baseRate must be between 1000 and 1000000 VND",
+                      path: "base_rate",
+                      message: "base_rate must be between 1000 and 1000000 VND",
                     },
                   ],
                 },
@@ -80,6 +82,8 @@ export const adminUpdatePricingPolicyRoute = createRoute({
   path: "/v1/admin/pricing-policies/{pricingPolicyId}",
   tags: ["Admin", "Pricing Policies"],
   security: [{ bearerAuth: [] }],
+  description:
+    "Update an existing pricing policy draft or unused policy. Once referenced by reservations, rentals, or billing records, updates are blocked.",
   request: {
     params: PricingPolicyIdParamSchema,
     ...jsonBody(UpdatePricingPolicyBodySchema),
@@ -120,8 +124,8 @@ export const adminUpdatePricingPolicyRoute = createRoute({
                   code: PricingPolicyErrorCodeSchema.enum.PRICING_POLICY_INVALID_INPUT,
                   issues: [
                     {
-                      path: "billingUnitMinutes",
-                      message: "billingUnitMinutes must be between 1 and 1440 minutes",
+                      path: "billing_unit_minutes",
+                      message: "billing_unit_minutes must be between 1 and 1440 minutes",
                     },
                   ],
                 },
@@ -174,6 +178,8 @@ export const adminActivatePricingPolicyRoute = createRoute({
   path: "/v1/admin/pricing-policies/{pricingPolicyId}/activate",
   tags: ["Admin", "Pricing Policies"],
   security: [{ bearerAuth: [] }],
+  description:
+    "Activate a pricing policy and make it the current live policy. Activation is allowed only during the Vietnam overnight admin window from 23:00 to 05:00.",
   request: {
     params: PricingPolicyIdParamSchema,
   },

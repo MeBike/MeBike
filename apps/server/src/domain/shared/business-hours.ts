@@ -87,7 +87,7 @@ function getDateTimePartsInTimeZone(
   };
 }
 
-function formatVietnamDateTime(date: Date): string {
+export function formatVietnamDateTime(date: Date): string {
   const parts = getDateTimePartsInTimeZone(date);
 
   return `${String(parts.year).padStart(4, "0")}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}T${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}:${String(parts.second).padStart(2, "0")}+07:00`;

@@ -21,6 +21,7 @@ export const adminListPricingPoliciesRoute = createRoute({
   path: "/v1/admin/pricing-policies",
   tags: ["Admin", "Pricing Policies"],
   security: [{ bearerAuth: [] }],
+  description: "List pricing policies, optionally filtered by status.",
   request: {
     query: ListPricingPoliciesQuerySchema,
   },
@@ -43,6 +44,7 @@ export const adminGetActivePricingPolicyRoute = createRoute({
   path: "/v1/admin/pricing-policies/active",
   tags: ["Admin", "Pricing Policies"],
   security: [{ bearerAuth: [] }],
+  description: "Get the single pricing policy that is currently active for new pricing decisions.",
   responses: {
     200: {
       description: "Current active pricing policy",
@@ -94,6 +96,7 @@ export const adminGetPricingPolicyRoute = createRoute({
   path: "/v1/admin/pricing-policies/{pricingPolicyId}",
   tags: ["Admin", "Pricing Policies"],
   security: [{ bearerAuth: [] }],
+  description: "Get one pricing policy together with usage counts that determine whether it is still editable.",
   request: {
     params: PricingPolicyIdParamSchema,
   },

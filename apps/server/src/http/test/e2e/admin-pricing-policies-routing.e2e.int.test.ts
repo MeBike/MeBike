@@ -122,9 +122,9 @@ describe("admin pricing policies routing e2e", () => {
     expect(response.status).toBe(400);
     expect(body.details?.code).toBe("PRICING_POLICY_INVALID_INPUT");
     expect(body.details?.issues?.map(issue => issue.path)).toEqual([
-      "baseRate",
-      "reservationFee",
-      "depositRequired",
+      "base_rate",
+      "reservation_fee",
+      "deposit_required",
     ]);
   });
 
@@ -148,8 +148,8 @@ describe("admin pricing policies routing e2e", () => {
     expect(response.status).toBe(400);
     expect(body.details?.code).toBe("PRICING_POLICY_INVALID_INPUT");
     expect(body.details?.issues?.map(issue => issue.path)).toEqual([
-      "baseRate",
-      "billingUnitMinutes",
+      "base_rate",
+      "billing_unit_minutes",
     ]);
   });
 
