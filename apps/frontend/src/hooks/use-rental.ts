@@ -85,6 +85,8 @@ export function useRentalsActions({
       startStation: startStation,
       endStation: endStation,
       status: status,
+      userId : userId,
+      bikeId : bikeId,
     }
   );
   const getStaffRentals = useCallback(() => {

@@ -71,6 +71,10 @@ export const useDistributionRequest = ({
     page: page,
     pageSize: pageSize,
     status: status,
+    requestedByUserId: requestedByUserId,
+    approvedByUserId: approvedByUserId,
+    sourceStationId: sourceStationId,
+    targetStationId: targetStationId,
   });
   const {
     data: agencyViewDistributionRequest,

@@ -22,7 +22,7 @@ export const useReservationActions = ({ hasToken, page, pageSize, id , status ,o
   const { data: allReservations, refetch: refechAllReservation , isLoading : isLoadingReservations } =
     useGetAllReservationQuery({ page:page, pageSize:pageSize , status : status , option : option , userId : userId , bikeId : bikeId });
     const { data: allReservationsStaff, refetch: refetchReservationsForStaff , isLoading : isLoadingReservationsStaff } =
-    useGetAllReservationForStaffQuery({ page:page, pageSize:pageSize , status : status , option : option }); 
+    useGetAllReservationForStaffQuery({ page:page, pageSize:pageSize , status : status , option : option,userId : userId,bikeId : bikeId }); 
   const { data: reservationStats , refetch : refetchReservationsStats} = useGetReservationStatsQuery();
   const { data: detailReservation, refetch: refetchDetailReservation } = useGetDetailReservationQuery(id || "");
     const { data: detailReservationForStaff, refetch: refetchDetailReservationForStaff } = useGetDetailReservationForStaffQuery(id || "");

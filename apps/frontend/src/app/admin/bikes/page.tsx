@@ -27,10 +27,7 @@ export default function Page() {
     status: statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
     pageSize: pageSize,
     page: page,
-    // SỬA Ở ĐÂY: Nếu stationId là "" hoặc "all-stations" thì không truyền xuống API
     stationId: (!stationId || stationId === "all-stations") ? undefined : stationId,
-    
-    // SỬA Ở ĐÂY: Nếu supplierId là "" hoặc "all-suppliers" thì không truyền xuống API
     supplierId: (!supplierId || supplierId === "all-suppliers") ? undefined : supplierId,
   });
   useEffect(() => {
