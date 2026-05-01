@@ -77,15 +77,11 @@ export default function ReservationClient({
   },
 }: ReservationClientProps) {
   const router = useRouter();
-
   const handleDetailReservation = (id: string) => {
     router.push(`/admin/reservations/detail/${id}`);
   };
-
-  // Kiểm tra xem có đang lọc cái gì không để hiện nút Reset
   const isFiltering =
     statusFilter !== "" || option !== "" || userId !== "" || bikeId !== "";
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -100,10 +96,7 @@ export default function ReservationClient({
       </div>
 
       {reservationStats && <ReservationStats overview={reservationStats} />}
-
-      {/* --- BỘ LỌC KIỂU MỚI (GIỐNG BIKE-FILTER) --- */}
       <div className="rounded-xl border border-border bg-card shadow-sm transition-all">
-        {/* Header của Filter */}
         <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
           <div className="flex items-center gap-2">
             <ListFilter className="h-4 w-4 text-primary" />
@@ -221,8 +214,8 @@ export default function ReservationClient({
           <>
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Hiển thị trang {currentPage} /{" "}
-                {allReservations?.pagination?.totalPages ?? 1}
+                Hiển thị {currentPage} /{" "}
+                {allReservations?.pagination?.totalPages ?? 1} trang
               </p>
             </div>
             <DataTable

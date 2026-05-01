@@ -50,7 +50,7 @@ export default function Page() {
   }
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full">
       <Client
         data={{
           technicianTeam: allTechnicianTeam?.data || [],

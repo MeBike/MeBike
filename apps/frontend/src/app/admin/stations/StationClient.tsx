@@ -97,11 +97,16 @@ export default function StationClient({
             </div>
           ))}
         <div className="min-h-[400px] space-y-4">
-          <h2 className="px-1 text-2xl font-bold">Danh sách vận hành</h2>
-
           {isVisualLoading ? (
             <TableSkeleton />
           ) : (
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Hiển thị {paginationStations?.page ?? 1} /{" "}
+                {paginationStations?.totalPages ?? 1} trang
+              </p>
+            </div>
             <StationTableSection
               stations={stations}
               pagination={paginationStations}
@@ -121,6 +126,7 @@ export default function StationClient({
                 router.push(`/admin/stations/${id}`);
               }}
             />
+            </div>
           )}
         </div>
       </div>

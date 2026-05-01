@@ -125,6 +125,12 @@ export default function SupplierClient() {
             <TableSkeleton />
           ) : (
             <>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Hiển thị {allSupplier?.pagination?.page ?? 1} /{" "}
+                  {allSupplier?.pagination?.totalPages ?? 1} trang
+                </p>
+              </div>
               <DataTable
                 title="Danh sách nhà cung cấp"
                 columns={columns({

@@ -154,7 +154,7 @@ export function Sidebar() {
           { title: "Quản lý Agency", href: "/admin/agencies" },
           { title: "Mã giảm giá", href: "/admin/coupon" },
           { title: "Nhà cung cấp", href: "/admin/suppliers" },
-          { title: "Gói Subscription", href: `/${role.toLowerCase()}/subscription` },
+          { title: "Gói tháng khách hàng", href: `/${role.toLowerCase()}/subscription` }
         ],
       },
       {

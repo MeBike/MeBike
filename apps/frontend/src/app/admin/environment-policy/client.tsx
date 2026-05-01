@@ -56,11 +56,12 @@ export default function Client() {
           <TableSkeleton />
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">
-              Hiển thị trang {dataEnvironmentPolicy?.pagination?.page ?? 1} /{" "}
-              {dataEnvironmentPolicy?.pagination?.totalPages ?? 1}
-            </p>
-            
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Hiển thị trang {dataEnvironmentPolicy?.pagination?.page ?? 1} /{" "}
+                {dataEnvironmentPolicy?.pagination?.totalPages ?? 1}
+              </p>
+            </div>
             <DataTable
               columns={redistributionColumn({
                 onView: ({ id }) =>

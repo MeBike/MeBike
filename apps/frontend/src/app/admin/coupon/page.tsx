@@ -38,13 +38,10 @@ export default function CouponPage() {
         </Button>
       </div>
 
-      {/* 2. Thống kê */}
       <div className="bg-white p-6 rounded-xl border shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Tổng quan thống kê</h2>
         <CouponStatsView data={dataCouponStats} />
       </div>
-
-      {/* 3. Danh sách Coupon */}
       <section>
         <div className="flex items-center gap-2 mb-4">
           <TableIcon className="w-5 h-5 text-primary" />

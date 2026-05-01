@@ -78,7 +78,7 @@ export default function Client({
           <div className="space-y-4">
             <div className="flex items-end justify-between">
               <p className="text-xs text-muted-foreground">
-                Hiển {pagination?.page ?? 1} / {pagination?.totalPages ?? 1}
+                Hiển thị {pagination?.page ?? 1} / {pagination?.totalPages ?? 1} trang
               </p>
             </div>
             <div className="">
