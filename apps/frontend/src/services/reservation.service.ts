@@ -13,11 +13,15 @@ export const reservationService = {
     pageSize,
     status,
     option,
+    userId,
+    bikeId,
   }: {
     page?: number;
     pageSize?: number;
     status ?: "PENDING" | "FULFILLED" | "CANCELLED" | "EXPIRED";
     option ?: "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION";
+    userId ?: string,
+    bikeId ?: string,
   }): Promise<AxiosResponse<ApiResponse<Reservation[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Reservation[]>>(
       ENDPOINT.RESERVATION.BASE,
@@ -26,6 +30,8 @@ export const reservationService = {
         pageSize : pageSize,
         status : status,
         reservationOption : option,
+        userId : userId,
+        bikeId : bikeId,
       },
     );
     return response;

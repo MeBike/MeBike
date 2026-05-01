@@ -176,13 +176,6 @@ export const agencyRequestColumn = ({
   onReject?: ({ id }: { id: string }) => void;
 }): ColumnDef<AgencyRequest>[] => [
   {
-    accessorKey: "name",
-    header: "Tên agency",
-    cell: ({ row }) => {
-      return row.original.agencyName || "Không có";
-    },
-  },
-  {
     accessorKey: "address",
     header: "Địa chỉ",
     cell: ({ row }) => {

@@ -11,6 +11,8 @@ export default function Page() {
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "">("");
   const [option, setReservationOption] = useState<ReservationOption | "">("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [userId, setUserId] = useState<string>("");
+  const [bikeId, setBikeId] = useState<string>("");
   const pageSize = 7;
   const [selectedReservationId, setSelectedReservationId] =
     useState<string>("");
@@ -27,6 +29,8 @@ export default function Page() {
     pageSize: pageSize,
     status: statusFilter as ReservationStatus,
     option: option as ReservationOption,
+    userId : userId,
+    bikeId : bikeId,
   });
 
   // 4. EFFECTS GỌI DATA
@@ -88,11 +92,17 @@ export default function Page() {
       filters={{
         searchQuery,
         statusFilter,
+        option,      // Thêm cái này
+        userId,      // Thêm cái này
+        bikeId,      // Thêm cái này
         currentPage,
       }}
       actions={{
         setSearchQuery,
         setStatusFilter,
+        setReservationOption, // Thêm cái này
+        setUserId,            // Thêm cái này
+        setBikeId,            // Thêm cái này
         setCurrentPage,
         setSelectedReservationId,
         handleReset,
