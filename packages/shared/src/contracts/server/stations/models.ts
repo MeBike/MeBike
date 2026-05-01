@@ -34,6 +34,7 @@ export const StationLocationSchema = z.object({
 export const StationCapacitySchema = z.object({
   total: z.number(),
   returnSlotLimit: z.number(),
+  totalActiveSlots: z.number(),
   emptyPhysicalSlots: z.number(),
 });
 
@@ -63,6 +64,7 @@ export const StationReadSummarySchema = z.object({
   capacity: StationCapacitySchema,
   bikes: StationBikesSchema,
   returnSlots: StationReturnSlotsSchema,
+  redistributionSlots: z.number(),
   workers: z.array(z.object({
     userId: z.uuidv7(),
     fullName: z.string(),

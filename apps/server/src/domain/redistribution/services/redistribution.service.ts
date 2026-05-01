@@ -428,12 +428,12 @@ function makeRedistributionService(
               )),
           );
 
-        if (targetStation.emptySlots < args.requestedQuantity) {
+        if (targetStation.availableReturnSlots < args.requestedQuantity) {
           return yield* Effect.fail(
             new NotEnoughEmptySlotsAtTarget({
               targetStationId: args.targetStationId,
               required: args.requestedQuantity,
-              available: targetStation.emptySlots,
+              available: targetStation.availableReturnSlots,
             }),
           );
         }
@@ -627,6 +627,7 @@ function makeRedistributionService(
               );
             }
             const targetStation = targetStationOpt.value;
+
             if (bikeQuantity === 0) {
               return yield* Effect.fail(
                 new NoBikesInRedistributionRequest({
@@ -634,12 +635,14 @@ function makeRedistributionService(
                 }),
               );
             }
-            else if (bikeQuantity > targetStation.emptySlots) {
+            // after request approval, availableReturnSlots is already updated to reflect the bikes being moved,
+            // so we only need to check if there are enough empty slots after the move.
+            else if (targetStation.availableReturnSlots < 0) {
               return yield* Effect.fail(
                 new NotEnoughEmptySlotsAtTarget({
                   targetStationId: targetStation.id,
-                  required: targetStation.emptySlots,
-                  available: bikeQuantity,
+                  required: bikeQuantity,
+                  available: targetStation.availableReturnSlots + bikeQuantity,
                 }),
               );
             }
@@ -663,50 +666,81 @@ function makeRedistributionService(
         );
       }),
 
+    // start keeping redistribution slots for target station after request approved
     approve: args =>
       Effect.gen(function* () {
         const user = yield* assertUserExists(args.approvedByUserId);
         const stationId = getUserStationId(user)!;
-        const updatedOpt = yield* repo.updateAndFindWithPopulation(
-          {
-            id: args.requestId,
-            targetStationId: stationId,
-            status: RedistributionStatus.PENDING_APPROVAL,
-          },
-          {
-            status: RedistributionStatus.APPROVED,
-            approvedByUserId: args.approvedByUserId,
-          },
-        );
+        return yield* runPrismaTransaction(client, tx =>
+          Effect.gen(function* () {
+            const txRedistributionRepo = makeRedistributionRepository(tx);
+            const txStationRepo = makeStationQueryRepository(tx);
 
-        // Update success
-        if (Option.isSome(updatedOpt))
-          return updatedOpt.value;
+            const existingReqOpt = yield* txRedistributionRepo.findById(
+              args.requestId,
+            );
+            if (Option.isNone(existingReqOpt)) {
+              return yield* Effect.fail(
+                new RedistributionRequestNotFound({
+                  requestId: args.requestId,
+                }),
+              );
+            }
 
-        // Update failed
-        const existingReq = yield* repo.findById(args.requestId);
-        if (Option.isSome(existingReq)) {
-          const req = existingReq.value;
-          if (req.targetStationId !== stationId) {
-            return yield* Effect.fail(
-              new UnauthorizedRedistributionApproval({
-                requestId: args.requestId,
-                targetStationId: req.targetStationId,
-                workingStationId: stationId,
-              }),
-            );
-          }
-          if (req.status !== RedistributionStatus.PENDING_APPROVAL) {
-            return yield* Effect.fail(
-              new CannotApproveNonPendingRedistribution({
-                requestId: args.requestId,
-                currentStatus: req.status,
-              }),
-            );
-          }
-        }
-        return yield* Effect.fail(
-          new RedistributionRequestNotFound({ requestId: args.requestId }),
+            const existingReq = existingReqOpt.value;
+
+            if (existingReq.targetStationId !== stationId) {
+              return yield* Effect.fail(
+                new UnauthorizedRedistributionApproval({
+                  requestId: args.requestId,
+                  targetStationId: existingReq.targetStationId,
+                  workingStationId: stationId,
+                }),
+              );
+            }
+            if (existingReq.status !== RedistributionStatus.PENDING_APPROVAL) {
+              return yield* Effect.fail(
+                new CannotApproveNonPendingRedistribution({
+                  requestId: args.requestId,
+                  currentStatus: existingReq.status,
+                }),
+              );
+            }
+
+            const stationOpt = yield* txStationRepo.getById(stationId);
+            if (Option.isNone(stationOpt)) {
+              return yield* Effect.fail(
+                new StationNotFound({
+                  stationId,
+                }),
+              );
+            }
+
+            const station = stationOpt.value;
+            if (station.availableReturnSlots < existingReq.requestedQuantity) {
+              return yield* Effect.fail(
+                new NotEnoughEmptySlotsAtTarget({
+                  targetStationId: station.id,
+                  required: existingReq.requestedQuantity,
+                  available: station.availableReturnSlots,
+                }),
+              );
+            }
+
+            const updatedOpt
+              = yield* txRedistributionRepo.updateAndFindWithPopulation(
+                {
+                  id: args.requestId,
+                },
+                {
+                  status: RedistributionStatus.APPROVED,
+                  approvedByUserId: args.approvedByUserId,
+                },
+              );
+
+            return Option.getOrThrow(updatedOpt);
+          })).pipe(
+          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
         );
       }),
 
@@ -860,18 +894,18 @@ function makeRedistributionService(
                 }),
               );
             }
-            else if (validLength > targetStation.emptySlots) {
+            else if (targetStation.availableReturnSlots < 0) {
               return yield* Effect.fail(
                 new NotEnoughEmptySlotsAtTarget({
                   targetStationId: targetStation.id,
                   required: validLength,
-                  available: targetStation.emptySlots,
+                  available: targetStation.availableReturnSlots + validLength,
                 }),
               );
             }
 
             const isFullMatch
-              = unconfirmedBikeIds.length === validCompletedBikeIds.length;
+              = unconfirmedBikeIds.length === validLength;
 
             const finalStatus = isFullMatch
               ? RedistributionStatus.COMPLETED
@@ -880,7 +914,7 @@ function makeRedistributionService(
             const now = new Date();
 
             // Update item delivery status
-            if (validCompletedBikeIds.length > 0) {
+            if (validLength > 0) {
               yield* txRedistributionRepo.updateItemDeliveredAt(
                 requestId,
                 validCompletedBikeIds,

@@ -251,6 +251,18 @@ export const approveRedistributionRequest = createRoute({
                 },
               },
             },
+            NotEnoughEmptySlotsAtTarget: {
+              value: {
+                error: "Insufficient empty slots at target station",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .INSUFFICIENT_EMPTY_SLOTS,
+                  targetStationId: "019b6656-ebbb-7dbc-74d3-3c62d960e566",
+                  required: 15,
+                  available: 10,
+                },
+              },
+            },
           },
         },
       },
