@@ -18,6 +18,12 @@ const makePricingPolicyCommandRepositoryEffect = Effect.gen(function* () {
   return makePricingPolicyCommandRepository(client);
 });
 
+/**
+ * Effect tag cho persistence phía ghi của pricing policy.
+ *
+ * Command service dùng tag này khi cần primitive ghi dữ liệu thô mà không phải
+ * gắn chặt với chi tiết bootstrap Prisma.
+ */
 export class PricingPolicyCommandRepository extends Effect.Service<PricingPolicyCommandRepository>()(
   "PricingPolicyCommandRepository",
   {
@@ -25,6 +31,12 @@ export class PricingPolicyCommandRepository extends Effect.Service<PricingPolicy
   },
 ) {}
 
+/**
+ * Tạo write repository pricing policy từ Prisma client hiện tại.
+ *
+ * @param client Prisma client hoặc transaction client hiện tại.
+ * @returns Write repository cho pricing policy.
+ */
 export function makePricingPolicyCommandRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): PricingPolicyWriteRepo {

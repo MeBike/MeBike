@@ -18,6 +18,12 @@ const makePricingPolicyQueryRepositoryEffect = Effect.gen(function* () {
   return makePricingPolicyQueryRepository(client);
 });
 
+/**
+ * Effect tag cho persistence phía đọc của pricing policy.
+ *
+ * Các feature layer có thể lấy tag này thay vì tự dựng repo trực tiếp từ
+ * Prisma client.
+ */
 export class PricingPolicyQueryRepository extends Effect.Service<PricingPolicyQueryRepository>()(
   "PricingPolicyQueryRepository",
   {
@@ -25,6 +31,12 @@ export class PricingPolicyQueryRepository extends Effect.Service<PricingPolicyQu
   },
 ) {}
 
+/**
+ * Tạo read repository pricing policy từ Prisma client hiện tại.
+ *
+ * @param client Prisma client hoặc transaction client hiện tại.
+ * @returns Read repository cho pricing policy.
+ */
 export function makePricingPolicyQueryRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): PricingPolicyReadRepo {

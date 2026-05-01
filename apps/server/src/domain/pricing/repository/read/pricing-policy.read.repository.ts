@@ -20,6 +20,12 @@ import {
   toPricingPolicyRow,
 } from "../pricing-policy.mappers";
 
+/**
+ * Repository chỉ-đọc cho pricing policy.
+ *
+ * Module này gom toàn bộ query không có side effect, gồm lookup policy đang
+ * active và usage summary dùng cho rule bất biến ở service layer.
+ */
 export function makePricingPolicyReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): PricingPolicyReadRepo {
@@ -43,6 +49,8 @@ export function makePricingPolicyReadRepository(
 
     getById: pricingPolicyId =>
       Effect.gen(function* () {
+        // Tái dùng nullable lookup để logic đổi "không tìm thấy row" sang lỗi
+        // domain chỉ nằm ở một chỗ.
         const policyOpt = yield* makePricingPolicyReadRepository(client).findById(pricingPolicyId);
         if (Option.isNone(policyOpt)) {
           return yield* Effect.fail(new PricingPolicyNotFound({ pricingPolicyId }));
@@ -66,6 +74,7 @@ export function makePricingPolicyReadRepository(
           }),
       }).pipe(
         Effect.flatMap(rows => Match.value(rows).pipe(
+          // Rule hiện tại yêu cầu đúng một pricing policy đang active.
           Match.when(
             value => value.length === 0,
             () => Effect.fail(new ActivePricingPolicyNotFound({ reason: "MISSING_ACTIVE_POLICY" })),
@@ -102,6 +111,8 @@ export function makePricingPolicyReadRepository(
     getUsageSummary: pricingPolicyId =>
       Effect.tryPromise({
         try: async () => {
+          // Cả ba loại tham chiếu này đều có thể "đóng băng" ý nghĩa lịch sử của
+          // policy, nên service layer phải kiểm tra đủ cả ba trước khi cho sửa.
           const [reservationCount, rentalCount, billingRecordCount] = await Promise.all([
             client.reservation.count({ where: { pricingPolicyId } }),
             client.rental.count({ where: { pricingPolicyId } }),

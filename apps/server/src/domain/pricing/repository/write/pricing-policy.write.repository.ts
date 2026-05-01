@@ -20,15 +20,29 @@ import {
   toPricingPolicyRow,
 } from "../pricing-policy.mappers";
 
+/**
+ * Repository ghi cho pricing policy.
+ *
+ * Layer này chỉ lo ghi dữ liệu và trả về state mới nhất. Rule nghiệp vụ như
+ * khung giờ được phép sửa, bất biến sau lần dùng đầu tiên, hay chuyển policy
+ * đang active thuộc về command service ở tầng trên.
+ */
 export function makePricingPolicyWriteRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): PricingPolicyWriteRepo {
+  /**
+   * Đường reload dùng chung để mọi mutation đều trả về cùng một select shape.
+   */
   const findByIdWithSelect = (pricingPolicyId: string) =>
     client.pricingPolicy.findUnique({
       where: { id: pricingPolicyId },
       select: pricingPolicySelect,
     });
 
+  /**
+   * Helper update trả về `Option.none()` khi row không tồn tại, thay vì phụ
+   * thuộc vào lỗi record-not-found mà Prisma ném ra.
+   */
   const updateById = (
     pricingPolicyId: string,
     data: Omit<PrismaTypes.PricingPolicyUpdateManyMutationInput, "id">,
@@ -108,6 +122,8 @@ export function makePricingPolicyWriteRepository(
         try: () =>
           client.pricingPolicy.updateMany({
             where: {
+              // Activation flow sẽ hạ mọi row đang active trước đó, trừ target
+              // sắp được nâng lên active trong cùng transaction.
               status: "ACTIVE",
               ...(args?.excludePricingPolicyId
                 ? { id: { not: args.excludePricingPolicyId } }
