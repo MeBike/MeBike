@@ -282,7 +282,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
             </CardHeader>
             <CardContent>
                <p className={`text-sm italic ${(isRejected || isCancelled) ? "text-red-900" : "text-amber-900"}`}>
-                  "{data.reason || "Không có nội dung ghi chú."}"
+                  {data.reason || "Không có nội dung ghi chú."}
                </p>
             </CardContent>
           </Card>
