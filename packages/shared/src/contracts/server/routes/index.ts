@@ -9,6 +9,7 @@ import { fixedSlotTemplatesRoutes } from "./fixed-slots";
 import { healthRoutes } from "./health";
 import { incidentsRoutes } from "./incidents";
 import { operatorsRoutes } from "./operators";
+import { pricingPoliciesRoutes } from "./pricing-policies";
 import { ratingsRoutes } from "./ratings";
 import { redistributionRoutes } from "./redistribution";
 import { rentalsRoutes } from "./rentals";
@@ -33,6 +34,7 @@ export * from "./fixed-slots";
 export * from "./health";
 export * from "./incidents";
 export * from "./operators";
+export * from "./pricing-policies";
 export * from "./ratings";
 export * from "./redistribution";
 export * from "./rentals";
@@ -68,6 +70,7 @@ export type ServerRoutes = {
   readonly stripe: typeof stripeRoutes;
   readonly incidents: typeof incidentsRoutes;
   readonly operators: typeof operatorsRoutes;
+  readonly pricingPolicies: typeof pricingPoliciesRoutes;
   readonly redistribution: typeof redistributionRoutes;
   readonly technicianTeams: typeof technicianTeamsRoutes;
 };
@@ -94,6 +97,7 @@ export const serverRoutes: ServerRoutes = {
   stripe: stripeRoutes,
   incidents: incidentsRoutes,
   operators: operatorsRoutes,
+  pricingPolicies: pricingPoliciesRoutes,
   redistribution: redistributionRoutes,
   technicianTeams: technicianTeamsRoutes,
 };

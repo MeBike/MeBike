@@ -243,7 +243,7 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
               code: StationErrorCodeSchema.enum.CAPACITY_SPLIT_INVALID,
             },
           }, 400)),
-        Match.tag("StationCapacityBelowActiveUsage", ({ stationId, totalCapacity, totalBikes, activeReturnSlots }) =>
+        Match.tag("StationCapacityBelowActiveUsage", ({ stationId, totalCapacity, totalBikes, activeReturnSlots, incomingRedistributionBikes }) =>
           c.json<StationErrorResponse, 400>({
             error: stationErrorMessages.CAPACITY_BELOW_ACTIVE_USAGE,
             details: {
@@ -252,9 +252,10 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
               totalCapacity,
               totalBikes,
               activeReturnSlots,
+              incomingRedistributionBikes,
             },
           }, 400)),
-        Match.tag("StationReturnSlotLimitBelowActiveReservations", ({ stationId, returnSlotLimit, activeReturnSlots }) =>
+        Match.tag("StationReturnSlotLimitBelowActiveReservations", ({ stationId, returnSlotLimit, activeReturnSlots, incomingRedistributionBikes }) =>
           c.json<StationErrorResponse, 400>({
             error: stationErrorMessages.RETURN_SLOT_LIMIT_BELOW_ACTIVE_RESERVATIONS,
             details: {
@@ -262,6 +263,7 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
               stationId,
               returnSlotLimit,
               activeReturnSlots,
+              incomingRedistributionBikes,
             },
           }, 400)),
         Match.tag("StationOutsideSupportedArea", () =>

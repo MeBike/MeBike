@@ -2,6 +2,11 @@ import { Effect } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import {
+  makePricingPolicyCommandRepository,
+  makePricingPolicyCommandService,
+  makePricingPolicyQueryRepository,
+} from "@/domain/pricing";
 import { makeRentalRepository } from "@/domain/rentals";
 import { expectLeftTag, expectRight } from "@/test/effect/assertions";
 import { runEffectEither } from "@/test/effect/run";
@@ -17,6 +22,14 @@ describe("startRentalUseCase Integration", () => {
   beforeAll(() => {
     runStartRental = makeRentalRunners(makeRentalTestLayer(fixture.prisma)).start;
   });
+
+  function makePricingPolicyService() {
+    return makePricingPolicyCommandService({
+      client: fixture.prisma,
+      queryRepo: makePricingPolicyQueryRepository(fixture.prisma),
+      commandRepo: makePricingPolicyCommandRepository(fixture.prisma),
+    });
+  }
 
   it("creates a rental and books the bike", async () => {
     const { user } = await givenUserWithWallet(fixture, {
@@ -57,6 +70,44 @@ describe("startRentalUseCase Integration", () => {
 
     const updatedBike = await fixture.prisma.bike.findUnique({ where: { id: bike.id } });
     expect(updatedBike?.status).toBe("BOOKED");
+  });
+
+  it("uses a policy activated through pricing policy service", async () => {
+    const nextPolicy = await fixture.factories.pricingPolicy({
+      name: "Start Rental Activated Policy",
+      depositRequired: "700000",
+      status: "INACTIVE",
+    });
+
+    const activation = await runEffectEither(
+      makePricingPolicyService().activatePolicy(
+        nextPolicy.id,
+        new Date("2026-04-20T16:30:00.000Z"),
+      ),
+    );
+    expectRight(activation);
+
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 800000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture);
+
+    const startTime = new Date("2026-04-21T03:15:00.000Z");
+    const result = await runStartRental({
+      userId: user.id,
+      bikeId: bike.id,
+      startStationId: station.id,
+      startTime,
+      now: startTime,
+    });
+
+    const rental = expectRight(result);
+    expect(rental.pricingPolicyId).toBe(nextPolicy.id);
+
+    const wallet = await fixture.prisma.wallet.findUnique({
+      where: { userId: user.id },
+    });
+    expect(wallet?.reservedBalance.toString()).toBe("700000");
   });
 
   it("fails when user already has an active rental", async () => {

@@ -48,6 +48,13 @@ export {
   withIncidentDeps,
 } from "./features/incident.layers";
 export {
+  PricingDepsLive,
+  PricingPolicyCommandReposLive,
+  PricingPolicyCommandServiceLayer,
+  PricingPolicyQueryReposLive,
+  PricingPolicyQueryServiceLayer,
+} from "./features/pricing.layers";
+export {
   RatingDepsLive,
   RatingReposLive,
   RatingServiceLayer,

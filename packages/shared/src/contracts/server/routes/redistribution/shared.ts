@@ -78,6 +78,7 @@ export const ManagerRedistributionRequestListQuerySchema =
     ...RedistributionRequestListQueryBaseSchema.shape,
     requestedByUserId: z.uuidv7().optional(),
     approvedByUserId: z.uuidv7().optional(),
+    rejectedByUserId: z.uuidv7().optional(),
     sourceStationId: z.uuidv7().optional(),
     targetStationId: z.uuidv7().optional(),
   })
@@ -90,6 +91,7 @@ export const AgencyRedistributionRequestListQuerySchema =
     ...RedistributionRequestListQueryBaseSchema.shape,
     requestedByUserId: z.uuidv7().optional(),
     approvedByUserId: z.uuidv7().optional(),
+    rejectedByUserId: z.uuidv7().optional(),
     sourceStationId: z.uuidv7().optional(),
     targetStationId: z.uuidv7().optional(),
   })
@@ -102,6 +104,7 @@ export const AdminRedistributionRequestListQuerySchema =
     ...RedistributionRequestListQueryBaseSchema.shape,
     requestedByUserId: z.uuidv7().optional(),
     approvedByUserId: z.uuidv7().optional(),
+    rejectedByUserId: z.uuidv7().optional(),
     sourceStationId: z.uuidv7().optional(),
     targetStationId: z.uuidv7().optional(),
   })

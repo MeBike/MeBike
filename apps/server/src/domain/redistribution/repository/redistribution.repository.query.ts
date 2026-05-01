@@ -94,59 +94,56 @@ export const redistributionRequestItemSelect = {
   createdAt: true,
 };
 
+const detailedUserSelect = {
+  id: true,
+  fullName: true,
+  email: true,
+  verifyStatus: true,
+  locationText: true,
+  username: true,
+  phoneNumber: true,
+  avatarUrl: true,
+  role: true,
+  nfcCardUid: true,
+  updatedAt: true,
+};
+
+const detailedStationSelect = {
+  id: true,
+  name: true,
+  address: true,
+  latitude: true,
+  longitude: true,
+  totalCapacity: true,
+  updatedAt: true,
+};
+
+const summaryUserSelect = {
+  id: true,
+  fullName: true,
+};
+
+const summaryStationSelect = {
+  id: true,
+  name: true,
+};
+
 export const detailedRedistributionRequestSelect = {
   id: true,
   requestedByUser: {
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      verifyStatus: true,
-      locationText: true,
-      username: true,
-      phoneNumber: true,
-      avatarUrl: true,
-      role: true,
-      nfcCardUid: true,
-      updatedAt: true,
-    },
+    select: detailedUserSelect,
   },
   approvedByUser: {
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      verifyStatus: true,
-      locationText: true,
-      username: true,
-      phoneNumber: true,
-      avatarUrl: true,
-      role: true,
-      nfcCardUid: true,
-      updatedAt: true,
-    },
+    select: detailedUserSelect,
+  },
+  rejectedByUser: {
+    select: detailedUserSelect,
   },
   sourceStation: {
-    select: {
-      id: true,
-      name: true,
-      address: true,
-      latitude: true,
-      longitude: true,
-      totalCapacity: true,
-      updatedAt: true,
-    },
+    select: detailedStationSelect,
   },
   targetStation: {
-    select: {
-      id: true,
-      name: true,
-      address: true,
-      latitude: true,
-      longitude: true,
-      totalCapacity: true,
-      updatedAt: true,
-    },
+    select: detailedStationSelect,
   },
   requestedQuantity: true,
   reason: true,
@@ -171,28 +168,19 @@ export const summaryRedistributionRequestItemSelect = {
 export const summaryRedistributionRequestSelect = {
   id: true,
   requestedByUser: {
-    select: {
-      id: true,
-      fullName: true,
-    },
+    select: summaryUserSelect,
   },
   approvedByUser: {
-    select: {
-      id: true,
-      fullName: true,
-    },
+    select: summaryUserSelect,
+  },
+  rejectedByUser: {
+    select: summaryUserSelect,
   },
   sourceStation: {
-    select: {
-      id: true,
-      name: true,
-    },
+    select: summaryStationSelect,
   },
   targetStation: {
-    select: {
-      id: true,
-      name: true,
-    },
+    select: summaryStationSelect,
   },
   requestedQuantity: true,
   reason: true,
@@ -210,6 +198,7 @@ export const redistributionRequestSelect = {
   id: true,
   requestedByUserId: true,
   approvedByUserId: true,
+  rejectedByUserId: true,
   sourceStationId: true,
   targetStationId: true,
   requestedQuantity: true,
@@ -246,6 +235,7 @@ export function mapToRedistributionRequestDetail(
     id: raw.id,
     requestedByUser: mapUserDetail(raw.requestedByUser)!,
     approvedByUser: mapUserDetail(raw.approvedByUser),
+    rejectedByUser: mapUserDetail(raw.rejectedByUser),
     sourceStation: mapStationDetail(raw.sourceStation)!,
     targetStation: mapStationDetail(raw.targetStation)!,
     requestedQuantity: raw.requestedQuantity,
@@ -267,6 +257,7 @@ export function mapToRedistributionRequestSummaryRow(
     id: raw.id,
     requestedByUser: mapUserSummary(raw.requestedByUser)!,
     approvedByUser: mapUserSummary(raw.approvedByUser),
+    rejectedByUser: mapUserSummary(raw.rejectedByUser),
     sourceStation: mapStationSummary(raw.sourceStation)!,
     targetStation: mapStationSummary(raw.targetStation)!,
     requestedQuantity: raw.requestedQuantity,
@@ -287,6 +278,7 @@ export function mapToRedistributionRequestRow(
     id: raw.id,
     requestedByUserId: raw.requestedByUserId,
     approvedByUserId: raw.approvedByUserId ?? null,
+    rejectedByUserId: raw.rejectedByUserId ?? null,
     sourceStationId: raw.sourceStationId,
     targetStationId: raw.targetStationId,
     requestedQuantity: raw.requestedQuantity,

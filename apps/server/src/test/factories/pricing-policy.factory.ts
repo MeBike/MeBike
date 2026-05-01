@@ -1,15 +1,15 @@
 import { uuidv7 } from "uuidv7";
 
-import { toPrismaDecimal } from "@/domain/shared/decimal";
+import { toMinorUnit } from "@/domain/shared/money";
 
 import type { CreatedPricingPolicy, FactoryContext, PricingPolicyOverrides } from "./types";
 
 const defaults = {
   name: "Test Pricing Policy",
-  baseRate: "2000",
+  baseRate: 2000n,
   billingUnitMinutes: 30,
-  reservationFee: "2000",
-  depositRequired: "500000",
+  reservationFee: 2000n,
+  depositRequired: 500000n,
   lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
   status: "ACTIVE" as const,
 };
@@ -21,10 +21,10 @@ export function createPricingPolicyFactory(ctx: FactoryContext) {
       data: {
         id,
         name: overrides.name ?? defaults.name,
-        baseRate: toPrismaDecimal(overrides.baseRate ?? defaults.baseRate),
+        baseRate: toMinorUnit(overrides.baseRate ?? defaults.baseRate),
         billingUnitMinutes: overrides.billingUnitMinutes ?? defaults.billingUnitMinutes,
-        reservationFee: toPrismaDecimal(overrides.reservationFee ?? defaults.reservationFee),
-        depositRequired: toPrismaDecimal(overrides.depositRequired ?? defaults.depositRequired),
+        reservationFee: toMinorUnit(overrides.reservationFee ?? defaults.reservationFee),
+        depositRequired: toMinorUnit(overrides.depositRequired ?? defaults.depositRequired),
         lateReturnCutoff: overrides.lateReturnCutoff ?? defaults.lateReturnCutoff,
         status: overrides.status ?? defaults.status,
       },

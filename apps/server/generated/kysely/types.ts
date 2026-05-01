@@ -521,6 +521,7 @@ export type RedistributionRequest = {
     id: string;
     requested_by_user_id: string;
     approved_by_user_id: string | null;
+    rejected_by_user_id: string | null;
     source_station_id: string;
     target_station_id: string;
     reason: string | null;

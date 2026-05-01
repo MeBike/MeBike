@@ -94,10 +94,10 @@ export type SubscriptionOverrides = {
 export type PricingPolicyOverrides = {
   id?: string;
   name?: string;
-  baseRate?: string;
+  baseRate?: bigint | number | string;
   billingUnitMinutes?: number;
-  reservationFee?: string;
-  depositRequired?: string;
+  reservationFee?: bigint | number | string;
+  depositRequired?: bigint | number | string;
   lateReturnCutoff?: Date;
   status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BANNED";
 };

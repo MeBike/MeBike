@@ -138,24 +138,26 @@ export function makeStationCommandService(args: {
     Effect.gen(function* () {
       if (
         next.totalCapacity !== current.totalCapacity
-        && next.totalCapacity < current.totalBikes + current.activeReturnSlots
+        && next.totalCapacity < current.totalBikes + current.activeReturnSlots + current.incomingRedistributionBikes
       ) {
         return yield* Effect.fail(new StationCapacityBelowActiveUsageError({
           stationId: current.id,
           totalCapacity: next.totalCapacity,
           totalBikes: current.totalBikes,
           activeReturnSlots: current.activeReturnSlots,
+          incomingRedistributionBikes: current.incomingRedistributionBikes,
         }));
       }
 
       if (
         next.returnSlotLimit !== current.returnSlotLimit
-        && next.returnSlotLimit < current.activeReturnSlots
+        && next.returnSlotLimit < current.activeReturnSlots + current.incomingRedistributionBikes
       ) {
         return yield* Effect.fail(new StationReturnSlotLimitBelowActiveReservationsError({
           stationId: current.id,
           returnSlotLimit: next.returnSlotLimit,
           activeReturnSlots: current.activeReturnSlots,
+          incomingRedistributionBikes: current.incomingRedistributionBikes,
         }));
       }
     });

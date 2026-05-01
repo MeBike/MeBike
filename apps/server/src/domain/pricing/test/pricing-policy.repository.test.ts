@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { PrismaClient } from "generated/prisma/client";
 
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { expectDefect } from "@/test/effect/assertions";
 
 import { PricingPolicyRepositoryError } from "../domain-errors";
@@ -13,10 +12,10 @@ function makePolicy(id: string) {
   return {
     id,
     name: `Policy ${id}`,
-    baseRate: toPrismaDecimal("2000"),
+    baseRate: 2000n,
     billingUnitMinutes: 30,
-    reservationFee: toPrismaDecimal("3000"),
-    depositRequired: toPrismaDecimal("500000"),
+    reservationFee: 3000n,
+    depositRequired: 500000n,
     lateReturnCutoff: new Date("1970-01-01T23:00:00.000Z"),
     status: "ACTIVE" as const,
     createdAt: new Date("2026-03-22T00:00:00.000Z"),
@@ -29,6 +28,15 @@ function makeDb() {
     pricingPolicy: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
+    },
+    reservation: {
+      count: vi.fn(),
+    },
+    rental: {
+      count: vi.fn(),
+    },
+    rentalBillingRecord: {
+      count: vi.fn(),
     },
   } as unknown as PrismaClient;
 }
@@ -111,6 +119,40 @@ describe("pricing policy repository", () => {
     }
   });
 
+  it("returns usage summary when a policy has references", async () => {
+    const db = makeDb();
+    vi.mocked(db.reservation.count).mockResolvedValue(1);
+    vi.mocked(db.rental.count).mockResolvedValue(2);
+    vi.mocked(db.rentalBillingRecord.count).mockResolvedValue(3);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(repo.getUsageSummary("policy-a"));
+
+    expect(result).toEqual({
+      reservationCount: 1,
+      rentalCount: 2,
+      billingRecordCount: 3,
+      isUsed: true,
+    });
+  });
+
+  it("returns unused usage summary when a policy has no references", async () => {
+    const db = makeDb();
+    vi.mocked(db.reservation.count).mockResolvedValue(0);
+    vi.mocked(db.rental.count).mockResolvedValue(0);
+    vi.mocked(db.rentalBillingRecord.count).mockResolvedValue(0);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(repo.getUsageSummary("policy-a"));
+
+    expect(result).toEqual({
+      reservationCount: 0,
+      rentalCount: 0,
+      billingRecordCount: 0,
+      isUsed: false,
+    });
+  });
+
   it("defects with PricingPolicyRepositoryError when findById query rejects", async () => {
     const db = makeDb();
     vi.mocked(db.pricingPolicy.findUnique).mockRejectedValue(new Error("db down"));
@@ -134,6 +176,19 @@ describe("pricing policy repository", () => {
       repo.getActive(),
       PricingPolicyRepositoryError,
       { operation: "pricingPolicy.getActive" },
+    );
+  });
+
+  it("defects with PricingPolicyRepositoryError when getUsageSummary query rejects", async () => {
+    const db = makeDb();
+    vi.mocked(db.reservation.count).mockRejectedValue(new Error("db down"));
+
+    const repo = makePricingPolicyRepository(db);
+
+    await expectDefect(
+      repo.getUsageSummary("policy-a"),
+      PricingPolicyRepositoryError,
+      { operation: "pricingPolicy.getUsageSummary" },
     );
   });
 });
