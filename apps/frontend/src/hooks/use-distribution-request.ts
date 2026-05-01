@@ -32,6 +32,10 @@ interface DistributionRequestActionProps {
   status?: RedistributionRequestStatus;
   id?: string;
   hasToken: boolean;
+  requestedByUserId?: string;
+  approvedByUserId?: string;
+  sourceStationId?: string;
+  targetStationId?: string;
 }
 export const useDistributionRequest = ({
   page,
@@ -39,6 +43,10 @@ export const useDistributionRequest = ({
   status,
   id,
   hasToken,
+  requestedByUserId,
+  approvedByUserId,
+  sourceStationId,
+  targetStationId,
 }: DistributionRequestActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -50,6 +58,10 @@ export const useDistributionRequest = ({
     page: page,
     pageSize: pageSize,
     status: status,
+    requestedByUserId: requestedByUserId,
+    approvedByUserId: approvedByUserId,
+    sourceStationId: sourceStationId,
+    targetStationId: targetStationId,
   });
   const {
     data: staffViewDistributionRequest,

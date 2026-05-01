@@ -188,7 +188,9 @@ export function useRentalsActions({
                 limit,
                 startStation,
                 endStation,
-                status
+                status,
+                userId,
+                bikeId
               ),
             });
           } else {

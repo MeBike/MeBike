@@ -29,7 +29,9 @@ export const QUERY_KEYS = {
       limit?: number,
       start_station?: string,
       end_station?: string,
-      status?: string
+      status?: string,
+      userId?: string,
+      bikeId?: string
     ) => [
       "rentals",
       "all-admin-staff",
@@ -38,6 +40,8 @@ export const QUERY_KEYS = {
       start_station,
       end_station,
       status,
+      userId,
+      bikeId,
     ],
     DETAIL_ADMIN: (id: string) => ["admin-rentals", "detail", id],
     REVENUE: (
@@ -128,10 +132,21 @@ export const QUERY_KEYS = {
     DETAIL_REPORT: (id: string) => ["report", id],
   },
   RESERVATION: {
-    ALL_RESERVATIONS: (page?: number, limit?: number) => [
+    ALL_RESERVATIONS: (
+      page?: number,
+      limit?: number,
+      status?: string,
+      option?: string,
+      userId?: string,
+      bikeId?: string
+    ) => [
       "all-reservations",
       page,
       limit,
+      status,
+      option,
+      userId,
+      bikeId
     ],
     RESERVATION_STATS: ["reservation", "stats"],
     DETAIL_RESERVATION: (id: string) => ["detail-reservation", id],

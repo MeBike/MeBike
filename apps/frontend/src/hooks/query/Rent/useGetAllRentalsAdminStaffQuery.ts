@@ -62,7 +62,9 @@ export function useGetAllRentalsAdminStaffQuery({
       pageSize,
       startStation,
       endStation,
-      status
+      status,
+      userId,
+      bikeId
     ),
     queryFn: () =>
       getAllRentalsForStaffAdmin({

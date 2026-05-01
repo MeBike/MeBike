@@ -31,7 +31,7 @@ export const useReservationActions = ({ hasToken, page, pageSize, id , status ,o
       return;
     }
     refechAllReservation();
-  }, [queryClient, hasToken, page, pageSize , status , option]);
+  }, [queryClient, hasToken, page, pageSize , status , option,userId,bikeId]);
     const fetchAllReservationsForStaff = useCallback(() => {
     if (!hasToken) {
       return;

@@ -47,15 +47,12 @@ export default function RentalClient({
 
   return (
     <div className="space-y-6">
-      {/* Title & Stats giữ nguyên */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Quản lý đơn thuê</h1>
         <p className="mt-1 text-muted-foreground">Theo dõi và quản lý các phiên thuê xe</p>
       </div>
 
       {summaryRental && <RentalStats params={summaryRental} />}
-
-      {/* Component Filter mới */}
       <RentalFilters
         stations={stations}
         filters={filters}

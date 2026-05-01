@@ -51,7 +51,7 @@ export const useGetAllReservationQuery = ({
   bikeId ?: string;
 }) => {
   return useQuery({
-    queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize),
+    queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize, status, option, userId, bikeId),
     queryFn: () => fetchAllReservations({ page: page, pageSize: pageSize , status : status , option : option , userId : userId , bikeId : bikeId }),
     staleTime: 5 * 60 * 1000,
     enabled:false,

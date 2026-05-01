@@ -29,6 +29,7 @@ export type RedistributionRequest = {
     id: string;
     bikeId: string;
     deliveredAt: string;
+    bikeNumber : string;
   }[];
 };
 export type RedistributionRequestDetail = {
@@ -66,6 +67,7 @@ type Item = {
   bike: {
     id: string;
     status: string;
+    bikeNumber : string;
   };
   deliveredAt: string;
 };

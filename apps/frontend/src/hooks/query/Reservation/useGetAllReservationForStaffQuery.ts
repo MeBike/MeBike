@@ -41,7 +41,7 @@ export const useGetAllReservationForStaffQuery = ({
   option ?: ReservationOption;
 }) => {
   return useQuery({
-    queryKey: ["staff",'reservations'],
+    queryKey: ["staff",'reservations', page, pageSize, status, option],
     queryFn: () => fetchAllReservationsForStaff({ page: page, pageSize: pageSize , status : status , option : option }),
     staleTime: 5 * 60 * 1000,
     enabled:false,
