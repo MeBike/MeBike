@@ -891,7 +891,9 @@ export const PRICING_POLICY_REQUEST = {
   PRICING_POLICY_ALREADY_USED: "Chính sách giá đã được sử dụng",
   PRICING_POLICY_INVALID_INPUT: "Thông tin chính sách giá không hợp lệ",
   PRICING_POLICY_MUTATION_WINDOW_CLOSED:
-    "Không thể thay đổi chính sách giá trong thời gian hiệu lực",
+    "Không thể thay đổi chính sách giá trong thời gian hiệu lực (5h00-23h00)",
   PRICING_POLICY_NOT_FOUND: "Không tìm thấy chính sách giá",
   VALIDATION_ERROR: "Lỗi xác thực",
+
+  ACTIVE_PRICING_POLICY_ALREADY_EXISTS: "Đã có chính sách đang hoạt động",
 };

@@ -12,13 +12,13 @@ import {
 export const getPricingPolicyStatusConfig = (status: PricingPolicyStatus) => {
   switch (status) {
     case "ACTIVE":
-      return { label: "Đang hoạt động", color: "bg-green-100 text-green-800" };
+      return { label: "Đang hoạt động", color: "bg-green-100 text-green-700 border-green-200" };
     case "INACTIVE":
-      return { label: "Ngừng hoạt động", color: "bg-gray-100 text-gray-800" };
+      return { label: "Ngừng hoạt động", color: "bg-rose-100 text-rose-700 border-rose-200" };
     case "SUSPENDED":
-      return { label: "Tạm dừng", color: "bg-yellow-100 text-yellow-800" };
+      return { label: "Tạm dừng", color: "bg-yellow-100 text-yellow-700 border-yellow-200" };
     case "BANNED":
-      return { label: "Bị cấm", color: "bg-red-100 text-red-800" };
+      return { label: "Bị cấm", color: "bg-red-100 text-red-700 border-red-200" };
     default:
       return { label: status, color: "bg-slate-100 text-slate-800" };
   }

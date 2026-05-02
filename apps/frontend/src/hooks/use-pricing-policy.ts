@@ -1,4 +1,4 @@
-
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetAllPricingPoliciesQuery,
   useGetPricingPolicyDetailQuery,
@@ -34,6 +34,7 @@ export const usePricingPolicyActions = ({
   id,
 }: PricingPolicyActionProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     data: pricingPolicies,
     refetch: refetchGetPricingPolicies,
@@ -60,9 +61,12 @@ export const usePricingPolicyActions = ({
   const createPricingPolicy = useCallback(async (data: CreatePricingPolicyFormData) => {
     try {
       const result = await useCreatePricingPolicy.mutateAsync(data);
-      if (result.status === HTTP_STATUS.OK) {
+      if (result.status === HTTP_STATUS.CREATED) {
         toast.success("Tạo chính sách giá thành công");
-        refetchGetPricingPolicies();
+        // queryClient.invalidateQueries({
+        //   queryKey: ["data", "pricing-policy"],
+        // });
+        getPricingPolicies();
       }
     } catch (error) {
       const error_code = getAxiosErrorCodeMessage(error);
