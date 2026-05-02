@@ -1,15 +1,23 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { redistributionColumn } from "@/columns/distribution-request-column";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ListFilter, RotateCcw, Activity, Plus } from "lucide-react"; // Thêm Plus icon
 import type { RedistributionRequest, RedistributionRequestStatus } from "@/types/DistributionRequest";
 import type { Pagination } from "@custom-types";
-import { Plus } from "lucide-react";
+
 interface DistributionRequestClientProps {
   data: {
     requests: RedistributionRequest[];
@@ -23,73 +31,81 @@ interface DistributionRequestClientProps {
   actions: {
     setStatusFilter: Dispatch<SetStateAction<RedistributionRequestStatus | "all">>;
     setPage: Dispatch<SetStateAction<number>>;
+    handleReset: () => void;
   };
 }
 
 export default function DistributionRequestClient({
   data: { requests, pagination, isVisualLoading },
   filters: { statusFilter, page },
-  actions: { setPage, setStatusFilter },
+  actions: { setStatusFilter, setPage, handleReset },
 }: DistributionRequestClientProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleReset = () => {
-    setStatusFilter("all");
-    setPage(1);
-    setSearchQuery("");
-  };
+  const isFiltering = statusFilter !== "all";
 
   return (
     <div className="space-y-6">
-      {/* 1. Header Tiêu đề */}
+      {/* Header - Trả lại nút Tạo yêu cầu cho Tấn đù đây */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Quản lý điều phối xe
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Theo dõi và quản lý các yêu cầu luân chuyển xe trong hệ thống
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Điều phối xe tại trạm</h1>
+          <p className="text-muted-foreground mt-1">Theo dõi và tạo các yêu cầu luân chuyển xe cho trạm của bạn</p>
         </div>
         <Button onClick={() => router.push("/staff/distribution-request/create")}>
-          <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu điều phối
+          <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu
         </Button>
       </div>
 
-      {/* 2. Khối Bộ Lọc (Giống y chang bên Customer) */}
-      <div className="bg-card border border-border rounded-lg p-4 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-foreground">Bộ lọc</h3>
-          <Button variant="ghost" size="sm" onClick={handleReset}>
-            Xóa bộ lọc
-          </Button>
+      {/* --- BỘ LỌC ĐỒNG BỘ --- */}
+      <div className="rounded-xl border border-border bg-card shadow-sm transition-all">
+        <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <ListFilter className="h-4 w-4 text-primary" />
+            <span className="text-sm font-bold tracking-tight">Bộ lọc tìm kiếm</span>
+          </div>
+          {isFiltering && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleReset}
+              className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Trạng thái yêu cầu</label>
-            <select
+        <div className="flex flex-wrap items-center gap-6 p-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <Activity className="h-3 w-3" /> Trạng thái yêu cầu
+            </label>
+            <Select
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value as RedistributionRequestStatus | "all");
+              onValueChange={(val) => {
+                setStatusFilter(val as any);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
-              <option value="all">Tất cả</option>
-              <option value="PENDING_APPROVAL">Chờ phê duyệt</option>
-              <option value="APPROVED">Đã phê duyệt</option>
-              <option value="IN_TRANSIT">Đang vận chuyển</option>
-              <option value="COMPLETED">Đã hoàn thành</option>
-              <option value="REJECTED">Đã từ chối</option>
-              <option value="CANCELLED">Đã hủy</option>
-            </select>
+              <SelectTrigger className="h-9 w-[220px] bg-background/50 text-sm focus:ring-1 focus:ring-primary">
+                <SelectValue placeholder="Chọn trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                <SelectItem value="PENDING_APPROVAL">Chờ phê duyệt</SelectItem>
+                <SelectItem value="APPROVED">Đã phê duyệt</SelectItem>
+                <SelectItem value="IN_TRANSIT">Đang vận chuyển</SelectItem>
+                <SelectItem value="COMPLETED">Đã hoàn thành</SelectItem>
+                <SelectItem value="REJECTED">Đã từ chối</SelectItem>
+                <SelectItem value="CANCELLED">Đã hủy</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
-      {/* 3. Khối Danh sách (Khối riêng tách biệt) */}
       <div className="min-h-[600px] space-y-4">
         {isVisualLoading ? (
           <TableSkeleton />
@@ -99,7 +115,7 @@ export default function DistributionRequestClient({
               Hiển thị {pagination?.page ?? 1} / {pagination?.totalPages ?? 1} trang
             </p>
 
-            <div className="bg-card border border-border rounded-lg p-0 overflow-hidden shadow-sm">
+            <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
               <DataTable
                 title="Danh sách yêu cầu điều phối"
                 columns={redistributionColumn({

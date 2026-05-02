@@ -7,16 +7,23 @@ const getAllBikes = async (
   pageSize?: number,
   stationId?: string,
   supplierId?: string,
-  status?: BikeStatus
+  status?: BikeStatus,
 ) => {
   try {
     const query: Record<string, number | string> = {
       page: page ?? 1,
       pageSize: pageSize ?? 5,
     };
-    if(stationId) query.stationId = stationId;
-    if(supplierId) query.supplierId = supplierId;
-    if(status) query.status = status;
+    if (stationId) query.stationId = stationId;
+    if (supplierId) query.supplierId = supplierId;
+    if (status) query.status = status;
+    if (stationId) {
+      query.stationId = stationId;
+    }
+
+    if (supplierId) {
+      query.supplierId = supplierId;
+    }
     const response = await bikeService.getAllBikes(query);
     if (response.status === 200) {
       return response.data;
@@ -40,7 +47,13 @@ export const useGetAllBikeQuery = ({
   status?: BikeStatus;
 }) => {
   return useQuery({
-    queryKey: QUERY_KEYS.BIKE.ALL(page, pageSize, status, stationId, supplierId),
+    queryKey: QUERY_KEYS.BIKE.ALL(
+      page,
+      pageSize,
+      status,
+      stationId,
+      supplierId,
+    ),
     queryFn: () => getAllBikes(page, pageSize, stationId, supplierId, status),
   });
 };

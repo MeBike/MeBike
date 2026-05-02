@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import StationClient from "./StationClient";
+import { useDebounce } from "@/utils/useDebounce";
 import { useStationActions } from "@/hooks/use-station";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page() {
   const [page, setPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRevenueReport, setShowRevenueReport] = useState(false);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const limit = 7;
   const {
     getAllStations,
@@ -21,7 +23,7 @@ export default function Page() {
     hasToken: true,
     page: page,
     limit: limit,
-    name: searchQuery,
+    name: debouncedSearchQuery,
     stationType : "INTERNAL",
   });
   useEffect(() => {

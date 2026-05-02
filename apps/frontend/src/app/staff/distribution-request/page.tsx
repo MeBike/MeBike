@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDistributionRequest } from "@/hooks/use-distribution-request";
 import DistributionRequestClient from "./client";
 import { RedistributionRequestStatus } from "@/types/DistributionRequest";
@@ -21,10 +21,14 @@ export default function Page() {
     hasToken: true,
   });
 
-  // Cập nhật dependency để gọi lại API khi Page hoặc Status thay đổi
   useEffect(() => {
     getStaffViewDistributionRequest();
   }, [page, statusFilter, getStaffViewDistributionRequest]); 
+
+  const handleReset = () => {
+    setStatusFilter("all");
+    setPage(1);
+  };
 
   const requests = staffViewDistributionRequest?.data?.data || [];
 
@@ -42,6 +46,7 @@ export default function Page() {
       actions={{
         setStatusFilter,
         setPage,
+        handleReset, // Truyền thêm action reset
       }}
     />
   );

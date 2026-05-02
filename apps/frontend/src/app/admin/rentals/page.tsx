@@ -3,16 +3,26 @@
 import { useState, useEffect } from "react";
 import RentalClient from "./RentalClient";
 import { useRentalsActions } from "@/hooks/use-rental";
+import { useStationActions } from "@/hooks/use-station";
 import type { RentalStatus } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { useDebounce } from "@/utils/useDebounce";
+
 export default function Page() {
   // 1. QUẢN LÝ STATE
   const [page, setPage] = useState<number>(1);
   const limit = 7;
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "">("");
-
-  // 2. GỌI API
+  const [userId, setUserId] = useState<string>("");
+  const [bikeId, setBikeId] = useState<string>("");
+  const debouncedUserId = useDebounce(userId, 500);
+  const debouncedBikeId = useDebounce(bikeId, 500);
+  const [startStation, setStartStation] = useState<string>("");
+  const [endStation, setEndStation] = useState<string>("");
+  const { getAllStations, stations } = useStationActions({
+    hasToken: true,
+  });
   const {
     allRentalsData,
     pagination,
@@ -26,16 +36,27 @@ export default function Page() {
     limit: limit,
     page: page,
     ...(statusFilter !== "" && { status: statusFilter as RentalStatus }),
+    ...(debouncedUserId !== "" && { userId: debouncedUserId }),
+    ...(debouncedBikeId !== "" && { bikeId: debouncedBikeId }),
+    ...(startStation !== "" && { startStation: startStation }),
+    ...(endStation !== "" && { endStation: endStation }),
   });
 
-  // 3. EFFECTS GỌI DATA
   useEffect(() => {
     getTodayRevenue();
   }, [getTodayRevenue]);
 
   useEffect(() => {
     getRentals();
-  }, [getRentals, page, statusFilter]);
+  }, [
+    getRentals,
+    page,
+    statusFilter,
+    startStation,
+    endStation,
+    debouncedUserId,
+    debouncedBikeId,
+  ]);
 
   useEffect(() => {
     getSummaryRental();
@@ -45,15 +66,10 @@ export default function Page() {
     setPage(1);
   }, [statusFilter]);
 
-  // 4. XỬ LÝ LOADING MƯỢT MÀ
+  useEffect(() => {
+    getAllStations();
+  }, [getAllStations]);
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
-
-  // 5. CÁC HÀM XỬ LÝ SỰ KIỆN
-  const handleReset = () => {
-    setSearchQuery("");
-    setStatusFilter("");
-  };
-
   useEffect(() => {
     if (isAllRentalsLoading) {
       setIsVisualLoading(true);
@@ -84,16 +100,33 @@ export default function Page() {
         summaryRental,
         pagination,
         isVisualLoading,
+        stations,
       }}
       filters={{
         searchQuery,
         statusFilter,
+        userId : userId,
+        bikeId : bikeId,
+        startStation : startStation,
+        endStation : endStation,
       }}
       actions={{
         setSearchQuery,
         setStatusFilter,
         setPage,
-        handleReset,
+        setUserId, // Thêm
+        setBikeId, // Thêm
+        setStartStation, // Thêm
+        setEndStation, // Thêm
+        handleReset: () => {
+          setSearchQuery("");
+          setStatusFilter("");
+          setUserId("");
+          setBikeId("");
+          setStartStation("");
+          setEndStation("");
+          setPage(1);
+        },
       }}
     />
   );

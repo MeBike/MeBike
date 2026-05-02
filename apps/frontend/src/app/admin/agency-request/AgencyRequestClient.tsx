@@ -9,16 +9,24 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { agencyRequestColumn } from "@/columns/agency-column";
 import { AgencyActionProps, useAgencyActions } from "@/hooks/use-agency";
 import { TableSkeleton } from "@/components/table-skeleton";
+import { AgencyFilters } from "./components/filter";
 import ActionRequestModal from "./components/ActionModal";
+import { useDebounce } from "@/utils/useDebounce";
 export default function AgencyRequestClient() {
   const router = useRouter();
-  // State quản lý Modal
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     type: "APPROVE" | "REJECT" | null;
     selectedId: string | null;
   }>({ isOpen: false, type: null, selectedId: null });
   const [page, setPage] = useState(1);
+  const [status, setStatus] = useState("all");
+  const [agencyName, setAgencyName] = useState("");
+  const [requesterEmail, setRequesterEmail] = useState("");
+  const [requesterUserId, setRequesterUserId] = useState("");
+  const debouncedAgencyName = useDebounce(agencyName, 500);
+  const debouncedEmail = useDebounce(requesterEmail, 500);
+  const debouncedRequesterUserId = useDebounce(requesterUserId, 500);
   const {
     agencyRequest,
     isLoadingAgencyRequest,
@@ -29,6 +37,10 @@ export default function AgencyRequestClient() {
     hasToken: true,
     pageSize: 7,
     page: page,
+    status_agency_request:status === "all" ? undefined : status, // undefined or REQUESTING | APPROVED | REJECTED
+    agencyName: debouncedAgencyName,
+    requesterEmail: debouncedEmail,
+    requesterUserId : debouncedRequesterUserId,
   });
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -72,7 +84,7 @@ export default function AgencyRequestClient() {
   }, [isLoadingAgencyRequest]);
   useEffect(() => {
     getAgencyRequest();
-  }, [getAgencyRequest]);
+  }, [getAgencyRequest, page, status, agencyName, requesterEmail,requesterUserId]);
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -81,6 +93,16 @@ export default function AgencyRequestClient() {
           <Plus className="w-4 h-4 mr-2" /> Thêm agency
         </Button>
       </div>
+      <AgencyFilters 
+        status={status}
+        setStatus={(val) => { setStatus(val); setPage(1); }}
+        agencyName={agencyName}
+        setAgencyName={(val) => { setAgencyName(val); setPage(1); }}
+        requesterEmail={requesterEmail}
+        setRequesterEmail={(val) => { setRequesterEmail(val); setPage(1); }}
+        requesterUserId={requesterUserId}
+        setRequesterUserId={(val) => { setRequesterUserId(val); setPage(1); }}
+      />
       <div className="min-h-[700px]">
         {isVisualLoading ? (
           <TableSkeleton />

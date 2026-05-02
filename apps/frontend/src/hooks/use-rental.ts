@@ -21,20 +21,24 @@ interface UseRentalsActionsProps {
   bike_id?: string;
   limit ?: number;
   page ?: number;
-  start_station?: string;
-  end_station?: string;
+  startStation?: string;
+  endStation?: string;
   status?: RentalStatus;
   rental_id?: string;
+  userId ?: string;
+  bikeId ?: string;
 }
 export function useRentalsActions({
   hasToken,
   bike_id,
   limit,
   page,
-  start_station,
-  end_station,
+  startStation,
+  endStation,
   status,
   rental_id,
+  userId,
+  bikeId,
 } : UseRentalsActionsProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -63,9 +67,11 @@ export function useRentalsActions({
     {
       page: page,
       pageSize: limit,
-      startStation: start_station,
-      endStation: end_station,
+      startStation: startStation,
+      endStation: endStation,
       status: status,
+      userId : userId,
+      bikeId : bikeId,
     }
   );
   const {
@@ -76,9 +82,11 @@ export function useRentalsActions({
     {
       page: page,
       pageSize: limit,
-      startStation: start_station,
-      endStation: end_station,
+      startStation: startStation,
+      endStation: endStation,
       status: status,
+      userId : userId,
+      bikeId : bikeId,
     }
   );
   const getStaffRentals = useCallback(() => {
@@ -92,7 +100,7 @@ export function useRentalsActions({
       return;
     }
     refetchAllRentals();
-  }, [hasToken, refetchAllRentals,page,limit]);
+  }, [hasToken, refetchAllRentals,page,limit,startStation,endStation,status,userId,bikeId]);
   const { data: revenueData , refetch : refetchRevenue , isLoading : isLoadingRevenue } = useGetRevenueQuery(
     { from: undefined, to: undefined, groupBy: "MONTH" }
   );
@@ -150,8 +158,8 @@ export function useRentalsActions({
       queryClient,
       page,
       limit,
-      start_station,
-      end_station,
+      startStation,
+      endStation,
       status,
     ]
   );
@@ -180,9 +188,11 @@ export function useRentalsActions({
               queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(
                 page,
                 limit,
-                start_station,
-                end_station,
-                status
+                startStation,
+                endStation,
+                status,
+                userId,
+                bikeId
               ),
             });
           } else {
@@ -205,8 +215,8 @@ export function useRentalsActions({
       queryClient,
       page,
       limit,
-      start_station,
-      end_station,
+      startStation,
+      endStation,
       status,
     ]
   );

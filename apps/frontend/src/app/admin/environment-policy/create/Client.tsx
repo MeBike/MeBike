@@ -48,7 +48,7 @@ export default function CreateEnvironmentPolicyClient({
     resolver: zodResolver(CreateEnvironmentPolicySchema),
     defaultValues: {
       name: "",
-      average_speed_kmh: 15, // Giá trị mặc định hợp lý cho xe đạp
+      average_speed_kmh: 15,
       co2_saved_per_km: 0,
       confidence_factor: 1,
       return_scan_buffer_minutes: 5,
@@ -70,7 +70,7 @@ export default function CreateEnvironmentPolicyClient({
       <PageHeader
         title="Thêm chính sách môi trường mới"
         description="Thiết lập các thông số về tiết kiệm năng lượng và khí thải"
-        backLink="/admin/environment-policies"
+        backLink="/admin/environment-policy"
       />
 
       <Card className="mx-auto max-w-4xl border-border/50 shadow-sm">

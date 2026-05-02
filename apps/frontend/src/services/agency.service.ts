@@ -2,21 +2,36 @@ import fetchHttpClient from "@/lib/httpClient";
 import { ENDPOINT } from "@/constants";
 import { AxiosResponse } from "axios";
 import { ApiResponse , Station , Bike , BikeStatus , Reservation , DetailReservation,RentalRecord,Rental,RentalStatus, ReservationStatus} from "@/types";
-import type { Agency, AgencyStats, AgencyRequest } from "@/types/Agency";
+import type { Agency, AgencyStats, AgencyRequest,AgencyStatus} from "@/types/Agency";
 import { UpdateAgencyFormData, UpdateAgencyStatusFormData , RegisterAgencyFormData , AdminCreateAgencyUserRequest } from "@/schemas";
 export const agencyService = {
   getAgencies: async ({
     page,
     pageSize,
+    name,
+    stationAddress,
+    contactPhone,
+    contactName,
+    status,
   }: {
     page?: number;
     pageSize?: number;
+    name?: string;
+    stationAddress?: string;
+    contactPhone?: string;
+    contactName?: string;
+    status?: AgencyStatus | "all";
   }): Promise<AxiosResponse<ApiResponse<Agency[]>>> => {
     const response = fetchHttpClient.get<ApiResponse<Agency[]>>(
       ENDPOINT.AGENCY.BASE,
       {
         page: page,
         pageSize: pageSize,
+        name : name,
+        stationAddress : stationAddress,
+        contactPhone : contactPhone,
+        contactName : contactName,
+        status : status,
       },
     );
     return response;
@@ -68,15 +83,27 @@ export const agencyService = {
   getAgencyRequest: async ({
     page,
     pageSize,
+    requesterUserId,
+    status,
+    requesterEmail,
+    agencyName,
   }: {
     page?: number;
     pageSize?: number;
+    requesterUserId?: string;
+    status?: string;
+    requesterEmail?: string;
+    agencyName?: string;
   }): Promise<AxiosResponse<ApiResponse<AgencyRequest[]>>> => {
     const response = fetchHttpClient.get<ApiResponse<AgencyRequest[]>>(
       ENDPOINT.AGENCY_REQUEST.BASE,
       {
-        page: page,
-        pageSize: pageSize,
+        page : page,
+        pageSize : pageSize,
+        requesterUserId : requesterUserId,
+        status : status,
+        requesterEmail : requesterEmail,
+        agencyName : agencyName,
       },
     );
     return response;
@@ -250,11 +277,15 @@ export const agencyService = {
     pageSize,
     status,
     option,
+    userId,
+    bikeId,
   }: {
     page?: number;
     pageSize?: number;
     status ?: ReservationStatus;
     option ?: "ONE_TIME" | "FIXED_SLOT" | "SUBSCRIPTION";
+    userId ?: string;
+    bikeId ?: string;
   }): Promise<AxiosResponse<ApiResponse<Reservation[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Reservation[]>>(
       ENDPOINT.AGENCY.RESERVATION,
@@ -263,6 +294,8 @@ export const agencyService = {
         pageSize : pageSize,
         status : status,
         reservationOption : option,
+        userId : userId,
+        bikeId : bikeId,
       },
     );
     return response;

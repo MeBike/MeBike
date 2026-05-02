@@ -12,9 +12,6 @@ import type {
   RedistributionRequestStatus 
 } from "@/types/DistributionRequest";
 
-// --- 1. CONFIG TỪ ĐIỂN TIẾNG VIỆT ---
-
-// Tiếng Việt cho trạng thái điều phối
 const REQUEST_STATUS_VI: Record<string, string> = {
   PENDING_APPROVAL: "Chờ phê duyệt",
   APPROVED: "Đã phê duyệt",
@@ -25,7 +22,6 @@ const REQUEST_STATUS_VI: Record<string, string> = {
   CANCELLED: "Đã hủy",
 };
 
-// Tiếng Việt cho trạng thái xe (Dựa trên các trạng thái phổ biến của bạn)
 const BIKE_STATUS_VI: Record<string, string> = {
   AVAILABLE: "Sẵn sàng",
   BROKEN: "Hỏng hóc",

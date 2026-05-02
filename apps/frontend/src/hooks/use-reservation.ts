@@ -13,14 +13,16 @@ interface ActionProps {
   pageSize ?: number;
   id ?: string;
   status ?: ReservationStatus;
-  option ?: ReservationOption
+  option ?: ReservationOption;
+  userId ?: string;
+  bikeId ?: string;
 }
-export const useReservationActions = ({ hasToken, page, pageSize, id , status ,option}: ActionProps) => {
+export const useReservationActions = ({ hasToken, page, pageSize, id , status ,option ,userId ,bikeId}: ActionProps) => {
   const queryClient = useQueryClient();
   const { data: allReservations, refetch: refechAllReservation , isLoading : isLoadingReservations } =
-    useGetAllReservationQuery({ page:page, pageSize:pageSize , status : status , option : option });
+    useGetAllReservationQuery({ page:page, pageSize:pageSize , status : status , option : option , userId : userId , bikeId : bikeId });
     const { data: allReservationsStaff, refetch: refetchReservationsForStaff , isLoading : isLoadingReservationsStaff } =
-    useGetAllReservationForStaffQuery({ page:page, pageSize:pageSize , status : status , option : option }); 
+    useGetAllReservationForStaffQuery({ page:page, pageSize:pageSize , status : status , option : option,userId : userId,bikeId : bikeId }); 
   const { data: reservationStats , refetch : refetchReservationsStats} = useGetReservationStatsQuery();
   const { data: detailReservation, refetch: refetchDetailReservation } = useGetDetailReservationQuery(id || "");
     const { data: detailReservationForStaff, refetch: refetchDetailReservationForStaff } = useGetDetailReservationForStaffQuery(id || "");
@@ -29,7 +31,7 @@ export const useReservationActions = ({ hasToken, page, pageSize, id , status ,o
       return;
     }
     refechAllReservation();
-  }, [queryClient, hasToken, page, pageSize , status , option]);
+  }, [queryClient, hasToken, page, pageSize , status , option,userId,bikeId]);
     const fetchAllReservationsForStaff = useCallback(() => {
     if (!hasToken) {
       return;

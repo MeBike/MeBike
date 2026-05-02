@@ -136,7 +136,6 @@ export function BikeDetailView({
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              {/* NÚT UPDATE Ở ĐÂY */}
               <UpdateBikeDialog 
                 bike={bike} 
                 stations={stations} 

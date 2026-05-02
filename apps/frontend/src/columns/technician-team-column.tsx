@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { TechnicianTeamRecord,TechnicianStatus } from "@/types";
+import { formatToVNTime } from "@/lib/formatVNDate";
 const STATUS_CONFIG: Record<TechnicianStatus, { label: string; color: string }> = {
   AVAILABLE: { 
     label: "Sẵn sàng", 
@@ -41,10 +42,7 @@ export const columns = ({
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      const dateStr = row.original.createdAt;
-      if (!dateStr) return "N/A";
-      // Format ngày tháng cho dễ nhìn, ví dụ: 26/04/2026
-      return new Date(dateStr).toLocaleDateString("vi-VN");
+      return formatToVNTime(row.original.createdAt);
     },
   },
   {
@@ -52,7 +50,6 @@ export const columns = ({
     header: "Trạng thái",
     cell: ({ row }) => {
       const statusValue = row.original.availabilityStatus;
-      // Lấy config theo status, ép kiểu an toàn
       const config = STATUS_CONFIG[statusValue] || { 
         label: statusValue || "Không rõ", 
         color: "bg-muted text-muted-foreground border-border" 
@@ -69,21 +66,21 @@ export const columns = ({
   },
   {
     id: "actions",
-    header: "Hành động",
+    header: () => <div className="text-center">Hành động</div>,
     cell: ({ row }) => {
       return (
-        <div className="flex items-center justify-center gap-0">
+        <div className="flex items-center justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="shrink-0"
+                className="h-8 w-8 rounded-full transition-colors hover:text-primary"
                 aria-label="Xem chi tiết"
                 onClick={() => onView?.(row.original)}
               >
-                <Eye className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                <Eye className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Xem chi tiết</TooltipContent>

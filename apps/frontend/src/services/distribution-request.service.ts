@@ -14,10 +14,18 @@ export const distributionRequestService = {
     page,
     pageSize,
     status,
+    requestedByUserId,
+    approvedByUserId,
+    sourceStationId,
+    targetStationId,
   }: {
     page?: number;
     pageSize?: number;
     status?: RedistributionRequestStatus;
+    requestedByUserId ?: string;
+    approvedByUserId ?: string;
+    sourceStationId ?: string;
+    targetStationId ?: string;
   }): Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>> => {
     const response = await fetchHttpClient.get<
       ApiResponse<RedistributionRequest[]>
@@ -25,6 +33,10 @@ export const distributionRequestService = {
       page: page,
       pageSize: pageSize,
       status: status,
+      requestedByUserId : requestedByUserId,
+      approvedByUserId : approvedByUserId,
+      sourceStationId : sourceStationId,
+      targetStationId : targetStationId,
     });
     return response;
   },
@@ -130,10 +142,18 @@ export const distributionRequestService = {
     page,
     pageSize,
     status,
+    requestedByUserId,
+    approvedByUserId,
+    sourceStationId,
+    targetStationId,
   }: {
     page?: number;
     pageSize?: number;
     status?: RedistributionRequestStatus;
+    requestedByUserId?: string;
+    approvedByUserId?: string;
+    sourceStationId?: string;
+    targetStationId?: string;
   }) : Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<RedistributionRequest[]>>(
       ENDPOINT.DISTRIBUTION_REQUEST.STAFF_VIEW,
@@ -141,6 +161,10 @@ export const distributionRequestService = {
         page : page,
         pageSize : pageSize,
         status : status,
+        requestedByUserId : requestedByUserId,
+        approvedByUserId : approvedByUserId,
+        sourceStationId : sourceStationId,
+        targetStationId : targetStationId,
       }
     );
     return response;

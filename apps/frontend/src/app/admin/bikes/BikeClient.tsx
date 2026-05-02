@@ -10,9 +10,9 @@ import { bikeColumn } from "@/columns/bike-colums";
 import { BikeStats } from "./components/bike-stats";
 import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
-import type { Bike, BikeStatus ,BikeStatistics , Pagination , Station , Supplier } from "@custom-types";
+import type { Bike, BikeStatus, BikeStatistics, Pagination, Station, Supplier } from "@custom-types";
 
-// Định nghĩa cấu trúc Props
+// Bổ sung các fields mới vào Interface
 interface BikeClientProps {
   data: {
     bikes: Bike[];
@@ -26,10 +26,14 @@ interface BikeClientProps {
   filters: {
     statusFilter: BikeStatus | "all";
     page: number;
+    stationId: string;
+    supplierId: string;
   };
   actions: {
     setStatusFilter: Dispatch<SetStateAction<BikeStatus | "all">>;
     setPage: Dispatch<SetStateAction<number>>;
+    setStationId: Dispatch<SetStateAction<string>>;
+    setSupplierId: Dispatch<SetStateAction<string>>;
   };
 }
 
@@ -43,16 +47,15 @@ export default function BikeClient({
     isVisualLoading,
     isLoadingStatusCount,
   },
-  filters: { statusFilter, page },
-  actions: { setStatusFilter, setPage },
+  filters: { statusFilter, page, stationId, supplierId },
+  actions: { setStatusFilter, setPage, setStationId, setSupplierId },
 }: BikeClientProps) {
   const router = useRouter();
-
-  // Loading tổng thể (khi đang fetch số lượng trạng thái ban đầu)
+  
   if (isLoadingStatusCount) {
     return <Loader2 className="m-auto animate-spin" />;
   }
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -61,14 +64,21 @@ export default function BikeClient({
           <Plus className="mr-2 h-4 w-4" /> Thêm xe
         </Button>
       </div>
-
+      
       {statusCount && <BikeStats stats={statusCount} />}
-
+      
+      {/* Truyền các dữ liệu về trạm và NCC vào BikeFilters */}
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
+        stationId={stationId}
+        setStationId={setStationId}
+        supplierId={supplierId}
+        setSupplierId={setSupplierId}
+        stations={stations}
+        suppliers={suppliers}
       />
-
+      
       <div className="min-h-[700px]">
         {isVisualLoading ? (
           <TableSkeleton />

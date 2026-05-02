@@ -82,7 +82,8 @@ export const useUserActions = ({
     page : page,
     pageSize : limit,
     role : role,
-    verify:verify || ""
+    verify:verify || "",
+    fullName: fullName || "",
   });
   const pagination = data?.pagination as
     | { total?: number; totalRecords?: number }

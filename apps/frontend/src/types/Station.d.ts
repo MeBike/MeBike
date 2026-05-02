@@ -31,8 +31,8 @@ export interface Station {
     booked: number,
     broken: number,
     reserved: number,
-    maintained: number,
-    unavailable: number
+    disabled: number,
+    redistributing: number
   }
   workers : Worker[],
   createdAt: string;pickupSlotLimit

@@ -7,11 +7,15 @@ const fetchAllReservations = async ({
   pageSize,
   status,
   option,
+  userId,
+  bikeId,
 }: {
   page?: number;
   pageSize?: number;
   status?: ReservationStatus;
   option?: ReservationOption;
+  userId?: string;
+  bikeId?: string;
 }) => {
   try {
     const query: Record<string, number | string> = {
@@ -20,6 +24,8 @@ const fetchAllReservations = async ({
     };
     if (status) query.status = status;
     if (option) query.option = option;
+    if (userId) query.userId = userId;
+    if (bikeId) query.bikeId = bikeId;
     const response = await reservationService.getUserReservations(query);
     if (response.status === 200) {
       return response.data;
@@ -33,16 +39,20 @@ export const useGetAllReservationQuery = ({
   page,
   pageSize,
   status,
-  option
+  option,
+  userId,
+  bikeId,
 }: {
   page?: number;
   pageSize?: number;
   status ?: ReservationStatus;
   option ?: ReservationOption;
+  userId ?: string;
+  bikeId ?: string;
 }) => {
   return useQuery({
-    queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize),
-    queryFn: () => fetchAllReservations({ page: page, pageSize: pageSize , status : status , option : option }),
+    queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, pageSize, status, option, userId, bikeId),
+    queryFn: () => fetchAllReservations({ page: page, pageSize: pageSize , status : status , option : option , userId : userId , bikeId : bikeId }),
     staleTime: 5 * 60 * 1000,
     enabled:false,
   });

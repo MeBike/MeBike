@@ -40,7 +40,7 @@ import {
   getErrorMessageFromAgencyCode,
   getAxiosErrorCodeMessage,
 } from "@utils";
-import { BikeStatus, RentalStatus, ReservationStatus } from "@/types";
+import { BikeStatus, RentalStatus, ReservationStatus, AgencyStatus } from "@/types";
 import { useUpdateStatusBikeMutation } from "./mutations/Agency/useUpdateStatusBikeMutation";
 export interface AgencyActionProps {
   hasToken?: boolean;
@@ -55,6 +55,22 @@ export interface AgencyActionProps {
   status ?: BikeStatus;
   renservation_status ?: ReservationStatus;
   rental_status ?: RentalStatus,
+  requesterUserId?: string;
+  status_agency_request?: string;
+  requesterEmail?: string;
+  agencyName?: string;
+  name ?: string;
+  stationAddress?: string;
+  contactPhone?: string;
+  contactName?: string;
+  status_agency?: AgencyStatus | "all";
+  userId?: string;
+  bikeId?: string;
+  startStation?: string;
+  endStation?: string;
+  stationId?: string;
+  supplierId?: string;
+  option?: string;
 }
 export const useAgencyActions = ({
   hasToken,
@@ -68,7 +84,23 @@ export const useAgencyActions = ({
   reservation_id,
   status,
   renservation_status,
-  rental_status
+  rental_status,
+  requesterUserId,
+  status_agency_request,
+  requesterEmail,
+  agencyName,
+  name,
+  stationAddress,
+  contactPhone,
+  contactName,
+  status_agency,
+  userId,
+  bikeId,
+  startStation,
+  endStation,
+  stationId,
+  supplierId,
+  option,
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -76,14 +108,19 @@ export const useAgencyActions = ({
     data: agencyRequest,
     refetch: refetchGetAgencyRequest,
     isLoading: isLoadingAgencyRequest,
-  } = useGetAgencyRequests({ page: page, pageSize: pageSize });
+  } = useGetAgencyRequests({ page: page, pageSize: pageSize , 
+    requesterUserId:requesterUserId,
+    status:status_agency_request,
+    requesterEmail:requesterEmail,
+    agencyName:agencyName,
+  });
   const getAgencyRequest = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
     refetchGetAgencyRequest();
-  }, [refetchGetAgencyRequest, hasToken, router, page]);
+  }, [refetchGetAgencyRequest, hasToken, router, page,status_agency_request,requesterEmail,agencyName]);
   const {
     data: myAgencyRequest,
     refetch: refetchGetMyAgencyRequest,
@@ -124,14 +161,20 @@ export const useAgencyActions = ({
     data: agencies,
     refetch: refetchGetAgencies,
     isLoading: isLoadingAgencies,
-  } = useGetAgencies({ page: page, pageSize: pageSize });
+  } = useGetAgencies({ page: page, pageSize: pageSize ,
+    name : name,
+    stationAddress : stationAddress,
+    contactPhone : contactPhone,
+    contactName : contactName,
+    status : status_agency,
+   });
   const getAgencies = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
     refetchGetAgencies();
-  }, [refetchGetAgencies, hasToken, router, page]);
+  }, [refetchGetAgencies, hasToken, router, page,name,stationAddress,contactPhone,contactName,status_agency]);
   const {
     data: agencyDetail,
     refetch: refetchAgencyDetail,
@@ -398,7 +441,7 @@ export const useAgencyActions = ({
     data: myAgencyBikeInStation,
     refetch: refetchMyAgencyBikeInStation,
     isLoading: isLoadingMyAgencyBikeInStation,
-  } = useGetBikeInMyStationAgencyQuery({ page: page, pageSize: pageSize, status: status });
+  } = useGetBikeInMyStationAgencyQuery({ page: page, pageSize: pageSize, status: status, stationId: stationId, supplierId: supplierId });
   const getMyAgencyBikeInStation = useCallback(() => {
     if (!hasToken) {
       return;
@@ -434,7 +477,11 @@ export const useAgencyActions = ({
   } = useGetRentalInMyStationAgency({
     page: page,
     pageSize: pageSize,
-    rental_status: rental_status,
+    status: rental_status,
+    userId: userId,
+    bikeId: bikeId,
+    startStation: startStation,
+    endStation: endStation,
   });
   const getRentalInMyStation = useCallback(() => {
     if (!hasToken) {
@@ -446,7 +493,7 @@ export const useAgencyActions = ({
     data: allReservationsAgency,
     refetch: refetchReservationsForAgency,
     isLoading: isLoadingReservationsAgency,
-  } = useGetReservationInMyStationAgency({ page: page, pageSize: pageSize,reservation_status:renservation_status });
+  } = useGetReservationInMyStationAgency({ page: page, pageSize: pageSize,reservation_status:renservation_status,userId:userId,bikeId:bikeId,option:option });
   const getReservationsForAgency = useCallback(() => {
     if (!hasToken) {
       return;

@@ -5,57 +5,70 @@ import Client from "./client";
 import { TechnicianStatus } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useTechnicianTeamActions } from "@/hooks/use-tech-team";
+import { useStationActions } from "@/hooks/use-station";
+
 export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<TechnicianStatus | "">("");
+  const [stationId, setStationId] = useState("all-stations");
   const pageSize = 7;
-  const {allTechnicianTeam,getTechnicianTeam,isLoadingAllTechnicianTeam} = useTechnicianTeamActions({hasToken:true,page:page,pageSize:pageSize,status:statusFilter})
+
+  const { allTechnicianTeam, getTechnicianTeam, isLoadingAllTechnicianTeam } =
+    useTechnicianTeamActions({
+      hasToken: true,
+      page: page,
+      pageSize: pageSize,
+      status: statusFilter,
+      station_id: stationId === "all-stations" ? "" : stationId,
+    });
+
+  const { getAllStations, stations } = useStationActions({ hasToken: true });
+
   useEffect(() => {
     getTechnicianTeam();
-  }, [getTechnicianTeam]);
+    getAllStations();
+  }, [page, statusFilter, stationId, getTechnicianTeam, getAllStations]);
+
+  // Reset về trang 1 khi thay đổi bộ lọc
   useEffect(() => {
     setPage(1);
-  }, [statusFilter]);
+  }, [statusFilter, stationId]);
+
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (isLoadingAllTechnicianTeam) {
       setIsVisualLoading(true);
     } else {
-      const timer = setTimeout(() => {
-        setIsVisualLoading(false);
-      }, 600);
+      const timer = setTimeout(() => setIsVisualLoading(false), 600);
       return () => clearTimeout(timer);
     }
   }, [isLoadingAllTechnicianTeam]);
-  if (isVisualLoading) {
+
+  if (isVisualLoading && !allTechnicianTeam) {
     return <LoadingScreen />;
   }
-  if (!allTechnicianTeam) {
-    return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Không tìm thấy thông tin các xe đạp.
-        </p>
-      </div>
-    );
-  }
+
   return (
-    <Client
-      data={{
-        technicianTeam : allTechnicianTeam.data,
-        paginationBikes : allTechnicianTeam.pagination,
-        isVisualLoading : isVisualLoading,
-        isLoadingStatusCount : isLoadingAllTechnicianTeam,
-      }}
-      filters={{
-        statusFilter,
-        page,
-      }}
-      actions={{
-        setStatusFilter,
-        setPage,
-      }}
-    />
+    <div className="w-full">
+      <Client
+        data={{
+          technicianTeam: allTechnicianTeam?.data || [],
+          pagination: allTechnicianTeam?.pagination,
+          stations: stations || [],
+          isVisualLoading: isVisualLoading,
+        }}
+        filters={{
+          statusFilter,
+          stationId,
+          page,
+        }}
+        actions={{
+          setStatusFilter,
+          setStationId,
+          setPage,
+        }}
+      /> 
+    </div>
   );
 }

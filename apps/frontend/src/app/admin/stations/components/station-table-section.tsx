@@ -9,10 +9,12 @@ interface StationTableSectionProps {
   stations: Station[];
   pagination?: Pagination;
   setPage: (page: number) => void;
-  onView : (id:string) => void;
+  onView: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
   isLoading?: boolean;
+  searchQuery?: string;
+  setSearchQuery?: (searchQuery: string) => void;
 }
 export function StationTableSection({
   stations,
@@ -22,20 +24,24 @@ export function StationTableSection({
   onDelete,
   onEdit,
   isLoading = false,
+  searchQuery = "",
+  setSearchQuery = () => {},
 }: StationTableSectionProps) {
   return (
     <div className="space-y-4">
-
       <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
         <DataTable
           title="Danh sách trạm xe"
           columns={stationStaffColumns({
-            onView : ({id}) => {
+            onView: ({ id }) => {
               onView(id);
-            }
+            },
           })}
           isLoading={isLoading}
           data={stations ?? []}
+          searchValue={searchQuery}
+          filterPlaceholder="Tìm kiếm người dùng"
+          onSearchChange={setSearchQuery}
         />
       </div>
       <div className="flex items-center justify-center py-4">

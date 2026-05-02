@@ -46,6 +46,11 @@ export default function RatingClient({
           <TableSkeleton />
         ) : (
           <>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Hiển thị trang {page} / {pagination?.totalPages ?? 1}
+              </p>
+            </div>
             <DataTable
               columns={ratingColumn({
                 onView: (rating) => handleView({ id: rating.id }),
