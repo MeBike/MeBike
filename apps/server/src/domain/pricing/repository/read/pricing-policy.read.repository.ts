@@ -6,6 +6,7 @@ import type {
 } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 
 import type { PricingPolicyReadRepo } from "../pricing-policy.repository.types";
 
@@ -90,21 +91,30 @@ export function makePricingPolicyReadRepository(
         defectOn(PricingPolicyRepositoryError),
       ),
 
-    listByStatus: status =>
+    listByStatus: (status, pageReq = { page: 1, pageSize: 50 }) =>
       Effect.tryPromise({
-        try: () =>
-          client.pricingPolicy.findMany({
-            where: status ? { status } : undefined,
-            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-            select: pricingPolicySelect,
-          }),
+        try: async () => {
+          const { page, pageSize, skip, take } = normalizedPage(pageReq);
+          const where = status ? { status } : undefined;
+          const [rows, total] = await Promise.all([
+            client.pricingPolicy.findMany({
+              where,
+              orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+              skip,
+              take,
+              select: pricingPolicySelect,
+            }),
+            client.pricingPolicy.count({ where }),
+          ]);
+
+          return makePageResult(rows.map(toPricingPolicyRow), total, page, pageSize);
+        },
         catch: cause =>
           new PricingPolicyRepositoryError({
             operation: "pricingPolicy.listByStatus",
             cause,
           }),
       }).pipe(
-        Effect.map(rows => rows.map(toPricingPolicyRow)),
         defectOn(PricingPolicyRepositoryError),
       ),
 
