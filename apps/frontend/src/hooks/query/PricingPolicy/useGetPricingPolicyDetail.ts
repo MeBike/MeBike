@@ -20,5 +20,6 @@ export const useGetPricingPolicyDetailQuery = ({
   return useQuery({
     queryKey: ["data","detail","pricing-policy",id],
     queryFn: () => getPricingPolicyDetail(id),
+    enabled : false,
   });
 };
