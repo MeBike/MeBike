@@ -1,6 +1,6 @@
 import type { PrismaClient } from "generated/prisma/client";
 
-const DEFAULT_PRICING_POLICY_ID = "11111111-1111-4111-8111-111111111111";
+const DEFAULT_PRICING_POLICY_ID = "0195c768-3456-7f01-8234-111111111111";
 
 export async function seedDefaultPricingPolicy(prisma: PrismaClient): Promise<void> {
   await prisma.pricingPolicy.upsert({
