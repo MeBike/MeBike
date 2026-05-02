@@ -1,39 +1,16 @@
 import { Effect } from "effect";
 
-import type { PageRequest } from "@/domain/shared/pagination";
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
 } from "generated/prisma/client";
 
 import { env } from "@/config/env";
-import { pickDefined } from "@/domain/shared/pick-defined";
 
-import type { StationFilter, StationRow, StationSortField } from "../models";
+import type { StationRow } from "../models";
+import type { StationBaseRow } from "./station.repository.select";
 
 import { StationRepositoryError } from "../errors";
-
-export const stationSelect = {
-  id: true,
-  name: true,
-  address: true,
-  stationType: true,
-  agencyId: true,
-  totalCapacity: true,
-  returnSlotLimit: true,
-  latitude: true,
-  longitude: true,
-  createdAt: true,
-  updatedAt: true,
-} as const;
-
-export type StationBaseRow = PrismaTypes.StationGetPayload<{
-  select: typeof stationSelect;
-}>;
-
-export type NearestStationRowDb = StationBaseRow & {
-  distance_meters: number;
-};
 
 export type BikeCounts = Pick<
   StationRow,
@@ -68,6 +45,19 @@ export function createEmptyBikeCounts(): BikeCounts {
   };
 }
 
+/**
+ * Tính số return slots còn có thể nhận tại station ở thời điểm hiện tại.
+ *
+ * Giá trị này bị chặn bởi hai giới hạn độc lập:
+ * - chỗ vật lý còn lại trong trạm,
+ * - giới hạn return-slot do admin cấu hình.
+ *
+ * `activeReturnSlots` và `incomingRedistributionBikes` đều phải trừ ra vì chúng
+ * đã giữ chỗ cho xe sẽ quay về hoặc đang trên đường vào trạm.
+ *
+ * Hàm này clamp về `0` vì đây là giá trị hiển thị trên resource trả về; API
+ * không nên trả số âm cho số lượng slot còn lại.
+ */
 function computeAvailableReturnSlots(station: StationBaseRow, counts: BikeCounts) {
   return Math.max(
     0,
@@ -78,6 +68,12 @@ function computeAvailableReturnSlots(station: StationBaseRow, counts: BikeCounts
   );
 }
 
+/**
+ * Gộp station row với các count động để tạo resource trả về cho API.
+ *
+ * `availableReturnSlots` luôn là giá trị dẫn xuất. Nó phải trừ cả slot đang giữ
+ * cho return lẫn xe đang trên đường redistribution vào trạm.
+ */
 export function applyCounts(
   station: StationBaseRow,
   counts: BikeCounts | undefined,
@@ -128,48 +124,6 @@ export function resolveStationCounts(args: {
   };
 }
 
-export function toStationOrderBy(
-  req: PageRequest<StationSortField>,
-): PrismaTypes.StationOrderByWithRelationInput {
-  const sortBy: StationSortField = req.sortBy ?? "name";
-  const sortDir = req.sortDir ?? "asc";
-  switch (sortBy) {
-    case "totalCapacity":
-      return { totalCapacity: sortDir };
-    case "updatedAt":
-      return { updatedAt: sortDir };
-    case "name":
-    default:
-      return { name: sortDir };
-  }
-}
-
-export function toStationWhere(filter: StationFilter): PrismaTypes.StationWhereInput {
-  return {
-    ...pickDefined({
-      id: filter.id,
-      name: filter.name
-        ? { contains: filter.name, mode: "insensitive" }
-        : undefined,
-      address: filter.address
-        ? { contains: filter.address, mode: "insensitive" }
-        : undefined,
-      stationType: filter.stationType,
-      agencyId: filter.agencyId,
-      totalCapacity: filter.totalCapacity,
-    }),
-    ...(filter.excludeAssignedStaff && {
-      userAssignments: {
-        none: {
-          user: {
-            role: "STAFF",
-          },
-        },
-      },
-    }),
-  };
-}
-
 export function getActiveReturnSlotCounts(
   client: PrismaClient | PrismaTypes.TransactionClient,
   stationIds: string[],
@@ -190,10 +144,10 @@ export function getActiveReturnSlotCounts(
         },
         _count: { _all: true },
       }),
-    catch: e =>
+    catch: cause =>
       new StationRepositoryError({
         operation: "getActiveReturnSlotCounts.groupBy",
-        cause: e,
+        cause,
       }),
   }).pipe(
     Effect.map((rows) => {
@@ -232,10 +186,10 @@ export function getBikeCounts(
         },
         _count: { _all: true },
       }),
-    catch: e =>
+    catch: cause =>
       new StationRepositoryError({
         operation: "getBikeCounts.groupBy",
-        cause: e,
+        cause,
       }),
   }).pipe(
     Effect.map((rows) => {
@@ -249,9 +203,11 @@ export function getBikeCounts(
         if (!stationId) {
           continue;
         }
+
         const counts = countsMap.get(stationId) ?? createEmptyBikeCounts();
         const inc = row._count._all;
         counts.totalBikes += inc;
+
         switch (row.status) {
           case "AVAILABLE":
             counts.availableBikes += inc;
@@ -275,6 +231,7 @@ export function getBikeCounts(
             counts.lostBikes += inc;
             break;
         }
+
         countsMap.set(stationId, counts);
       }
 
@@ -309,10 +266,10 @@ export function getIncomingRedistributionCounts(
           },
         },
       }),
-    catch: e =>
+    catch: cause =>
       new StationRepositoryError({
         operation: "getIncomingRedistributionCounts.findMany",
-        cause: e,
+        cause,
       }),
   }).pipe(
     Effect.map((rows) => {
