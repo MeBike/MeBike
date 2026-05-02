@@ -215,14 +215,14 @@ const makeDeviceTapServiceEffect = Effect.gen(function* () {
         }
         const card = cardOpt.value;
 
-        if (!card.assignedUser) {
-          return yield* denyTap(event, "CARD_UNASSIGNED");
-        }
-
         if (card.status !== "ACTIVE") {
           return yield* denyTap(event, mapNfcCardStatusToDenyReason(card.status), {
-            userId: card.assignedUser.id,
+            userId: card.assignedUser?.id,
           });
+        }
+
+        if (!card.assignedUser) {
+          return yield* denyTap(event, "CARD_UNASSIGNED");
         }
 
         const user = card.assignedUser;

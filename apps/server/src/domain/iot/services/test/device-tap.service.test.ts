@@ -12,6 +12,65 @@ import { DeviceCommandServiceTag } from "../device-command.live";
 import { DeviceTapServiceLive, DeviceTapServiceTag } from "../device-tap.service";
 
 describe("device tap service", () => {
+  it("denies lost cards as CARD_LOST before assignment fallback", async () => {
+    const denyCalls: string[] = [];
+    const event = DeviceTapEventSchema.parse({
+      requestId: "req-lost",
+      deviceId: "bike-1",
+      cardUid: "999888777",
+      timestampMs: 1,
+    });
+
+    const deps = Layer.mergeAll(
+      Layer.succeed(NfcCardQueryServiceTag, NfcCardQueryServiceTag.make({
+        getById: () => Effect.succeed(Option.none()),
+        findByUid: () => Effect.succeed(Option.some({
+          id: "card-lost",
+          uid: event.cardUid,
+          status: "LOST",
+          assignedUserId: null,
+          assignedUser: null,
+          issuedAt: null,
+          returnedAt: null,
+          blockedAt: null,
+          lostAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })),
+        findByAssignedUserId: () => Effect.succeed(Option.none()),
+        list: () => Effect.succeed([]),
+      })),
+      Layer.succeed(BikeRepository, BikeRepository.make({
+        getById: () => Effect.die("bike lookup should not run for lost card"),
+      } as never)),
+      Layer.succeed(ReservationQueryServiceTag, ReservationQueryServiceTag.make({
+        getCurrentHoldForUserNow: () => Effect.succeed(Option.none()),
+      } as never)),
+      Layer.succeed(DeviceAccessCommandServiceTag, DeviceAccessCommandServiceTag.make({
+        confirmReservation: () => Effect.die("reservation confirm should not run for lost card"),
+        startRental: () => Effect.die("rental start should not run for lost card"),
+      })),
+      Layer.succeed(DeviceCommandServiceTag, DeviceCommandServiceTag.make({
+        sendCommand: () => Effect.void,
+        sendUnlock: () => Effect.void,
+        sendPing: () => Effect.void,
+        sendDeny: ({ reason }) => Effect.sync(() => {
+          denyCalls.push(reason);
+        }),
+      })),
+    );
+    const layer = DeviceTapServiceLive.pipe(Layer.provide(deps));
+
+    const result = await runEffectWithLayer(
+      Effect.flatMap(DeviceTapServiceTag, service => service.handleTapEvent(event)),
+      layer,
+    );
+
+    expect(result.decision).toBe("deny");
+    expect(result.reason).toBe("CARD_LOST");
+    expect(denyCalls).toEqual(["CARD_LOST"]);
+  });
+
   it("denies blocked cards before rental flow starts", async () => {
     const denyCalls: string[] = [];
     const event = DeviceTapEventSchema.parse({
