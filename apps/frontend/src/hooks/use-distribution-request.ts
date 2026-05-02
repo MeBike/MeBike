@@ -239,12 +239,10 @@ export const useDistributionRequest = ({
           queryClient.invalidateQueries({
             queryKey: ["distribution-request", "all"],
           });
-          queryClient.invalidateQueries({
-            queryKey: ["manager","distribution-request-data","detail",id],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["staff","distribution-request-data","detail",id],
-          });
+          // queryClient.invalidateQueries({
+          //   queryKey: ["manager","distribution-request-data","detail",id],
+          // });
+          getStaffViewDistributionRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);

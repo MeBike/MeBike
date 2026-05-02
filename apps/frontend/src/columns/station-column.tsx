@@ -139,6 +139,11 @@ export const stationStaffColumns = ({
     cell: ({ row }) => row.original.capacity.total,
   },
   {
+    accessorKey: "stationType",
+    header: "Loại trạm",
+    cell: ({ row }) => row.original.stationType === "INTERNAL" ? "Trạm nội bộ" : "AGENCY",
+  },
+  {
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => formatToVNTime(row.original.createdAt),
