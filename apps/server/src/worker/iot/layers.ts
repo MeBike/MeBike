@@ -3,6 +3,7 @@ import { Layer } from "effect";
 import {
   DeviceAccessCommandServiceLive,
   DeviceCommandServiceLive,
+  DeviceTapDecisionServiceLive,
   DeviceTapServiceLive,
 } from "@/domain/iot";
 import { NfcCardDepsLive, ReservationDepsLive } from "@/http/shared/providers";
@@ -14,6 +15,12 @@ const DeviceCommandDepsLive = DeviceCommandServiceLive.pipe(
 
 const DeviceAccessCommandDepsLive = DeviceAccessCommandServiceLive.pipe(
   Layer.provide(ReservationDepsLive),
+);
+
+const DeviceTapDecisionDepsLive = DeviceTapDecisionServiceLive.pipe(
+  Layer.provide(NfcCardDepsLive),
+  Layer.provide(ReservationDepsLive),
+  Layer.provide(DeviceAccessCommandDepsLive),
 );
 
 /**
@@ -30,10 +37,9 @@ export const DeviceRuntimeWorkerLive = Layer.mergeAll(
   ReservationDepsLive,
   DeviceCommandDepsLive,
   DeviceAccessCommandDepsLive,
+  DeviceTapDecisionDepsLive,
   DeviceTapServiceLive.pipe(
-    Layer.provide(NfcCardDepsLive),
-    Layer.provide(ReservationDepsLive),
     Layer.provide(DeviceCommandDepsLive),
-    Layer.provide(DeviceAccessCommandDepsLive),
+    Layer.provide(DeviceTapDecisionDepsLive),
   ),
 );
