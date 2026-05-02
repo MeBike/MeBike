@@ -70,7 +70,7 @@ describe("assignFixedSlotReservations integration", () => {
     expect(reservation?.bikeId).toBe(bike.id);
     expect(reservation?.stationId).toBe(station.id);
     expect(reservation?.endTime).toBeNull();
-    expect(reservation?.pricingPolicyId).toBe("11111111-1111-4111-8111-111111111111");
+    expect(reservation?.pricingPolicyId).toBe("0195c768-3456-7f01-8234-111111111111");
     expect(reservation?.subscriptionId).toBeNull();
     expect(reservation?.prepaid.toString()).toBe("2000");
 
