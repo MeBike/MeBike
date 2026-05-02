@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
-const DEFAULT_PRICING_POLICY_ID = "11111111-1111-4111-8111-111111111111";
+const DEFAULT_PRICING_POLICY_ID = "0195c768-3456-7f01-8234-111111111111";
 
 describe("rentals billing preview routing e2e", () => {
   const fixture = setupHttpE2eFixture({
