@@ -56,6 +56,16 @@ type RentalScopedInput = {
   now?: Date;
 };
 
+/**
+ * Tính số slot trả xe còn lại để enforce rule tạo return-slot.
+ *
+ * Công thức giống station resource view: lấy giới hạn nhỏ hơn giữa chỗ vật lý
+ * còn lại và giới hạn return-slot vận hành. `incomingRedistributionBikes` cũng
+ * phải trừ vì các xe đó đã chiếm chỗ tương lai của trạm.
+ *
+ * Khác với station presenter math, hàm này không clamp về `0` vì caller cần biết
+ * khi nào capacity đã về `0` hoặc âm để fail bằng `ReturnSlotCapacityExceeded`.
+ */
 function availableReturnSlots(
   totalCapacity: number,
   totalBikes: number,

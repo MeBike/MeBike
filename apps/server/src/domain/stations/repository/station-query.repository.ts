@@ -8,7 +8,7 @@ import type { StationQueryRepo } from "./station.repository.types";
 
 import { makeStationReadRepository } from "./read/station.read.repository";
 
-export { toStationOrderBy } from "./station.repository.helpers";
+export { toStationOrderBy } from "./station.repository.filters";
 export type { StationQueryRepo } from "./station.repository.types";
 
 const makeStationQueryRepositoryEffect = Effect.gen(function* () {

@@ -133,6 +133,59 @@ describe("stationWriteRepository Integration", () => {
     expect(updated.longitude).toBeCloseTo(104.8411, 10);
   });
 
+  it("update returns derived slot counts that include incoming redistributions", async () => {
+    const target = await kit.fixture.factories.station({
+      name: `Target ${Date.now()}`,
+      capacity: 10,
+      returnSlotLimit: 10,
+      latitude: 10.9,
+      longitude: 106.9,
+    });
+    const source = await kit.fixture.factories.station({
+      name: `Source ${Date.now()}`,
+      capacity: 10,
+      returnSlotLimit: 10,
+      latitude: 11.0,
+      longitude: 107.0,
+    });
+    const requester = await kit.fixture.factories.user({
+      role: "STAFF",
+    });
+    const bike = await kit.fixture.factories.bike({
+      stationId: source.id,
+      status: "REDISTRIBUTING",
+    });
+
+    await kit.fixture.prisma.redistributionRequest.create({
+      data: {
+        requestedByUserId: requester.id,
+        sourceStationId: source.id,
+        targetStationId: target.id,
+        requestedQuantity: 1,
+        status: "APPROVED",
+        items: {
+          create: [{
+            bikeId: bike.id,
+          }],
+        },
+      },
+    });
+
+    const updatedOpt = await Effect.runPromise(
+      repo.update(target.id, {
+        name: "Target With Incoming",
+      }),
+    );
+
+    if (Option.isNone(updatedOpt)) {
+      throw new Error("Expected updated station but got none");
+    }
+
+    const updated = updatedOpt.value;
+    expect(updated.incomingRedistributionBikes).toBe(1);
+    expect(updated.availableReturnSlots).toBe(9);
+  });
+
   it("update returns Option.none for missing station", async () => {
     const updatedOpt = await Effect.runPromise(
       repo.update(uuidv7(), {
