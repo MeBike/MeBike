@@ -29,10 +29,8 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 };
 export const pricingPolicyColumns = ({
   onView,
-  onEdit,
 }: {
   onView?: ({ id }: { id: string }) => void;
-  onEdit?: ({ id }: { id: string }) => void;
 }): ColumnDef<PricingPolicy>[] => [
   {
     accessorKey: "name",
@@ -97,19 +95,6 @@ export const pricingPolicyColumns = ({
             </Button>
           </TooltipTrigger>
           <TooltipContent>Xem chi tiết</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit?.({ id: row.original.id })}
-            >
-              <Pencil className="w-4 h-4 text-blue-600" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Chỉnh sửa</TooltipContent>
         </Tooltip>
       </div>
     ),

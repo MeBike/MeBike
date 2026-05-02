@@ -56,7 +56,7 @@ export default function PricingPolicyClient({
         {/* Bạn có thể tạo component PricingPolicyFilters riêng hoặc dùng Select đơn giản ở đây */}
         <select 
           value={statusFilter} 
-          onChange={(e) => setStatusFilter(e.target.value as any)}
+          onChange={(e) => setStatusFilter(e.target.value as PricingPolicyStatus | "all")}
           className="border rounded px-3 py-2 text-sm"
         >
           <option value="all">Tất cả trạng thái</option>
@@ -80,12 +80,9 @@ export default function PricingPolicyClient({
             <DataTable
               columns={pricingPolicyColumns({
                 onView: ({ id }) => router.push(`/admin/pricing-policies/detail/${id}`),
-                onEdit: ({ id }) => router.push(`/admin/pricing-policies/${id}?edit=true`),
               })}
               data={policies || []}
             />
-
-            {/* Phân trang */}
             {pagination && pagination.totalPages > 1 && (
               <div className="pt-3">
                 <PaginationDemo
