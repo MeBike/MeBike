@@ -16,4 +16,5 @@ export * from "./Dashboard.type";
 export * from "./Wallet";
 export * from "./Agency";
 export * from "./Subscription";
-export * from "./TechnicianTeam"
+export * from "./TechnicianTeam";
+export * from "./PricingPolicy"

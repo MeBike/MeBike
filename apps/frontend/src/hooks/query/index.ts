@@ -16,3 +16,4 @@ export * from "./EnvironmentPolicy/index";
 export * from "./Coupon/index";
 export * from "./Staff/index";
 export * from "./TechnicianTeam/index";
+export * from "./PricingPolicy/index"
