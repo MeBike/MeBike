@@ -156,7 +156,7 @@ describe("admin NFC cards routing e2e", () => {
     expect(updated.status).toBe("BLOCKED");
     expect(updated.blocked_at).not.toBeNull();
 
-    const listResponse = await fixture.app.request("http://test/v1/admin/nfc-cards?status=BLOCKED", {
+    const listResponse = await fixture.app.request("http://test/v1/admin/nfc-cards?status=BLOCKED&page=1&pageSize=10", {
       method: "GET",
       headers: authHeaders(),
     });
@@ -164,6 +164,35 @@ describe("admin NFC cards routing e2e", () => {
 
     expect(listResponse.status).toBe(200);
     expect(listBody.data.some(entry => entry.id === card.id && entry.status === "BLOCKED")).toBe(true);
+    expect(listBody.pagination).toMatchObject({
+      page: 1,
+      pageSize: 10,
+    });
+  });
+
+  it("paginates NFC card list responses", async () => {
+    await fixture.prisma.nfcCard.createMany({
+      data: [
+        { id: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2213", uid: "10000001" },
+        { id: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2214", uid: "10000002" },
+        { id: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2215", uid: "10000003" },
+      ],
+    });
+
+    const response = await fixture.app.request("http://test/v1/admin/nfc-cards?page=2&pageSize=2", {
+      method: "GET",
+      headers: authHeaders(),
+    });
+    const body = await response.json() as NfcCardsContracts.NfcCardListResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.pagination).toEqual({
+      page: 2,
+      pageSize: 2,
+      total: 3,
+      totalPages: 2,
+    });
   });
 
   it("unassigns a card back to inventory", async () => {

@@ -1,5 +1,7 @@
 import type { Effect, Option } from "effect";
 
+import type { PageResult } from "@/domain/shared/pagination";
+
 import type {
   DuplicateNfcCardUid,
   NfcCardAlreadyAssigned,
@@ -12,7 +14,7 @@ import type {
 import type {
   AssignNfcCardInput,
   CreateNfcCardInput,
-  NfcCardFilter,
+  NfcCardListInput,
   NfcCardRow,
   UpdateNfcCardStatusInput,
 } from "../models";
@@ -42,9 +44,9 @@ export type NfcCardQueryService = {
   /**
    * Liệt kê thẻ theo bộ lọc quản trị.
    *
-   * @param filter Bộ lọc trạng thái, user đang được gán, hoặc UID cần tìm gần đúng.
-   */
-  readonly list: (filter: NfcCardFilter) => Effect.Effect<readonly NfcCardRow[]>;
+    * @param filter Bộ lọc trạng thái, user đang được gán, UID cần tìm gần đúng, và pagination.
+    */
+  readonly list: (filter: NfcCardListInput) => Effect.Effect<PageResult<NfcCardRow>>;
 };
 
 /**

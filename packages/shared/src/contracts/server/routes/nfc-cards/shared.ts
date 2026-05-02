@@ -10,6 +10,7 @@ import {
 import {
   ServerErrorResponseSchema,
   UnauthorizedErrorResponseSchema,
+  paginationQueryFields,
 } from "../../schemas";
 
 export {
@@ -31,6 +32,7 @@ export const ListNfcCardsQuerySchema = z.object({
   status: NfcCardStatusSchema.optional(),
   assignedUserId: z.uuidv7().optional(),
   uid: z.string().min(1).optional(),
+  ...paginationQueryFields,
 }).openapi("ListNfcCardsQuery");
 
 export const CreateNfcCardBodySchema = z.object({

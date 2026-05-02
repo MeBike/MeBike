@@ -1,5 +1,6 @@
 import { z } from "../../../zod";
 import { AccountStatusSchema, VerifyStatusSchema } from "../users";
+import { PaginationSchema } from "../schemas";
 
 export const NfcCardStatusSchema = z.enum([
   "UNASSIGNED",
@@ -63,6 +64,7 @@ export const NfcCardSchema = z.object({
 
 export const NfcCardListResponseSchema = z.object({
   data: z.array(NfcCardSchema),
+  pagination: PaginationSchema,
 }).openapi("NfcCardListResponse");
 
 export type NfcCard = z.infer<typeof NfcCardSchema>;

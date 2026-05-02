@@ -36,13 +36,21 @@ const adminListNfcCards: RouteHandler<NfcCardsRoutes["adminList"]> = async (c) =
         status: query.status,
         assignedUserId: query.assignedUserId,
         uid: query.uid,
+        page: query.page ?? 1,
+        pageSize: query.pageSize ?? 50,
       })),
     "GET /v1/admin/nfc-cards",
   );
 
   const cards = await c.var.runPromise(eff);
   return c.json<NfcCardsContracts.NfcCardListResponse, 200>({
-    data: cards.map(toContractNfcCard),
+    data: cards.items.map(toContractNfcCard),
+    pagination: {
+      page: cards.page,
+      pageSize: cards.pageSize,
+      total: cards.total,
+      totalPages: cards.totalPages,
+    },
   }, 200);
 };
 

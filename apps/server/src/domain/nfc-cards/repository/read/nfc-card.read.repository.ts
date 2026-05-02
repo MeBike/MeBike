@@ -6,6 +6,7 @@ import type {
 } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 
 import type { NfcCardReadRepo } from "../nfc-card.repository.types";
 
@@ -66,29 +67,42 @@ export function makeNfcCardReadRepository(
 
     list: filter =>
       Effect.tryPromise({
-        try: () =>
-          client.nfcCard.findMany({
-            where: {
-              status: filter.status,
-              assignedUserId: filter.assignedUserId,
-              ...(filter.uid
-                ? {
-                    uid: {
-                      contains: filter.uid,
-                      mode: "insensitive",
-                    },
-                  }
-                : {}),
-            },
-            orderBy: [
-              { createdAt: "desc" },
-              { id: "desc" },
-            ],
-            select: selectNfcCardRow,
-          }),
+        try: async () => {
+          const { page, pageSize, skip, take } = normalizedPage({
+            page: filter.page,
+            pageSize: filter.pageSize,
+          });
+          const where = {
+            status: filter.status,
+            assignedUserId: filter.assignedUserId,
+            ...(filter.uid
+              ? {
+                  uid: {
+                    contains: filter.uid,
+                    mode: "insensitive" as const,
+                  },
+                }
+              : {}),
+          };
+
+          const [rows, total] = await Promise.all([
+            client.nfcCard.findMany({
+              where,
+              orderBy: [
+                { createdAt: "desc" },
+                { id: "desc" },
+              ],
+              skip,
+              take,
+              select: selectNfcCardRow,
+            }),
+            client.nfcCard.count({ where }),
+          ]);
+
+          return makePageResult(rows.map(toNfcCardRow), total, page, pageSize);
+        },
         catch: cause => new NfcCardRepositoryError({ operation: "list", cause }),
       }).pipe(
-        Effect.map(rows => rows.map(toNfcCardRow)),
         defectOn(NfcCardRepositoryError),
       ),
   };

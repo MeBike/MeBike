@@ -4,6 +4,8 @@ import type {
   UserVerifyStatus,
 } from "generated/prisma/client";
 
+import type { PageRequest } from "@/domain/shared/pagination";
+
 export type NfcCardAssignedUser = {
   readonly id: string;
   readonly fullname: string;
@@ -47,3 +49,5 @@ export type NfcCardFilter = {
   readonly assignedUserId?: string;
   readonly uid?: string;
 };
+
+export type NfcCardListInput = NfcCardFilter & Pick<PageRequest, "page" | "pageSize">;
