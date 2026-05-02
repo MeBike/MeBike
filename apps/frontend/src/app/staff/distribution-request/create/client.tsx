@@ -2,7 +2,7 @@
 
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Repeat, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,8 @@ export default function CreateDistributionRequestClient({
   stations,
 }: CreateDistributionRequestClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const defaultTargetStationId = searchParams.get("targetStationId") || "";
 
   const {
     register,
@@ -40,7 +42,7 @@ export default function CreateDistributionRequestClient({
     defaultValues: {
       requestedQuantity: 1,
       sourceStationId: stations.currentStation.id, // Mặc định là trạm của nhân viên
-      targetStationId: "",
+      targetStationId: defaultTargetStationId,
       reason: "",
     },
   });

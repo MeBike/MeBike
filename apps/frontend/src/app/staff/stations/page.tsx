@@ -20,6 +20,8 @@ export default function StationsPage() {
     myStation,
     paginationMyStation,
     isLoadingMyStation,
+    listStation,
+    getListStation,
   } = useStationActions({
     hasToken: true,
     page: page,
@@ -43,6 +45,10 @@ export default function StationsPage() {
   useEffect(() => {
     getMyStation();
   }, [page, getMyStation, limit]);
+  
+  useEffect(() => {
+    getListStation();
+  }, [getListStation]);
   useEffect(() => {
     setPage(1);
   }, [searchQuery]);
@@ -57,6 +63,12 @@ export default function StationsPage() {
           <p className="text-muted-foreground text-lg">
             Hệ thống giám sát và vận hành trạm xe đạp thông minh.
           </p>
+          {listStation?.currentStation && (
+            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary shadow-sm">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse"></span>
+              <span>Đang làm việc tại: <strong>{listStation.currentStation.name}</strong></span>
+            </div>
+          )}
         </div>
       </div>
       <div className="space-y-4 min-h-[400px]">
