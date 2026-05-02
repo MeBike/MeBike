@@ -897,3 +897,14 @@ export const PRICING_POLICY_REQUEST = {
 
   ACTIVE_PRICING_POLICY_ALREADY_EXISTS: "Đã có chính sách đang hoạt động",
 };
+export const NFC = {
+  DUPLICATE_NFC_CARD_UID: "Thẻ NFC đã tồn tại",
+  NFC_CARD_ALREADY_ASSIGNED: "Thẻ NFC đã được gán",
+  NFC_CARD_ASSIGNEE_NOT_FOUND: "Người gán thẻ NFC không tồn tại",
+  NFC_CARD_INVALID_STATE: "Trạng thái thẻ NFC không hợp lệ",
+  NFC_CARD_NOT_FOUND: "Không tìm thấy thẻ NFC",
+  NFC_CARD_USER_NOT_ELIGIBLE: "Người dùng không đủ điều kiện để gán thẻ NFC",
+  USER_ALREADY_HAS_NFC_CARD: "Người dùng đã có thẻ NFC",
+  VALIDATION_ERROR: "Lỗi xác thực",
+  NFC_CARD_NOT_ASSIGNED: "Thẻ NFC chưa được gán",
+};

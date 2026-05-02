@@ -24,5 +24,6 @@ export const useGetNFCDetailQuery = ({
   return useQuery({
     queryKey: ["data","nfc-detail",id],
     queryFn: () => getNFCDetail({id}),
+    enabled : !!id,
   });
 };

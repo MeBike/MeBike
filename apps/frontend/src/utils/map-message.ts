@@ -1,6 +1,6 @@
 
 import { USERS_MESSAGES , AUTH_MESSAGE , STATIONS_MESSAGE , SUPPLIER_MESSAGE, BIKES_MESSAGES ,AGENCY_MESSAGES
-  , DISTRIBUTION_REQUEST,ENVIRONMENT_POLICY_REQUEST,COUPON_REQUEST,TECHNICIAN_TEAM,PRICING_POLICY_REQUEST
+  , DISTRIBUTION_REQUEST,ENVIRONMENT_POLICY_REQUEST,COUPON_REQUEST,TECHNICIAN_TEAM,PRICING_POLICY_REQUEST, NFC
 } from "@/constants/messages";
 const getErrorMessageUserFromCode = (code?: string) => {
   if (!code) return "Something went wrong";
@@ -61,6 +61,11 @@ const getErrorMessageFromTechnicianTeamCode = (code?: string) => {
   return TECHNICIAN_TEAM[code as keyof typeof TECHNICIAN_TEAM] 
     || "Something went wrong";
 };
+const getErrorMessageFromNFCCode = (code?: string) => {
+  if (!code) return "Something went wrong";
+  return NFC[code as keyof typeof NFC] 
+    || "Something went wrong";
+};
 export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, getErrorMessageFromStationCode , getErrorMessageFromSupplierCode, 
   getErrorMessageFromCustomerCode, getErrorMessageFromBikeCode,
   getErrorMessageFromAgencyCode,
@@ -68,5 +73,6 @@ export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, getErrorMessa
   getErrorMessageFromEnvironmentCode,
   getErrorMessageFromCouponCode,
   getErrorMessageFromTechnicianTeamCode,
-  getErrorMessageFromPricingCode
+  getErrorMessageFromPricingCode,
+  getErrorMessageFromNFCCode
  };
