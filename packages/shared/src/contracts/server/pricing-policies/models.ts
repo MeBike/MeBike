@@ -1,5 +1,6 @@
 import { z } from "../../../zod";
 import { AccountStatusSchema } from "../users";
+import { PaginationSchema } from "../schemas";
 
 export const PricingPolicyTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/).openapi(
   "PricingPolicyTime",
@@ -104,6 +105,7 @@ export const PricingPolicyDetailSchema = PricingPolicySchema.extend({
 
 export const PricingPolicyListResponseSchema = z.object({
   data: z.array(PricingPolicySchema),
+  pagination: PaginationSchema,
 }).openapi("PricingPolicyListResponse", {
   description: "Admin list of pricing policies.",
   example: {
@@ -121,6 +123,12 @@ export const PricingPolicyListResponseSchema = z.object({
         updated_at: "2026-04-20T16:00:00.000Z",
       },
     ],
+    pagination: {
+      page: 1,
+      pageSize: 50,
+      total: 1,
+      totalPages: 1,
+    },
   },
 });
 

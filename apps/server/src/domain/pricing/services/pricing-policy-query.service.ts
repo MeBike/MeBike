@@ -40,8 +40,8 @@ export function makePricingPolicyQueryService(
    * @param status Status cần lọc; bỏ qua nếu muốn lấy toàn bộ.
    * @returns Effect trả về danh sách policy phù hợp điều kiện lọc.
    */
-  const listPolicies: PricingPolicyQueryService["listPolicies"] = status =>
-    repo.listByStatus(status);
+  const listPolicies: PricingPolicyQueryService["listPolicies"] = (status, pageReq) =>
+    repo.listByStatus(status, pageReq);
 
   /**
    * Trả về usage summary để caller biết policy đã bị “khóa lịch sử” hay chưa.

@@ -10,6 +10,7 @@ import {
 import {
   ServerErrorResponseSchema,
   UnauthorizedErrorResponseSchema,
+  paginationQueryFields,
 } from "../../schemas";
 import { AccountStatusSchema } from "../../users";
 
@@ -47,6 +48,7 @@ export const ListPricingPoliciesQuerySchema = z.object({
     description: "Optional filter by pricing policy status.",
     example: "ACTIVE",
   }),
+  ...paginationQueryFields,
 }).openapi("ListPricingPoliciesQuery");
 
 export const CreatePricingPolicyBodySchema = z.object({

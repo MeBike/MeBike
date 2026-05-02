@@ -28,6 +28,7 @@ function makeDb() {
     pricingPolicy: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     reservation: {
       count: vi.fn(),
@@ -119,6 +120,22 @@ describe("pricing policy repository", () => {
     }
   });
 
+  it("lists pricing policies with pagination metadata", async () => {
+    const db = makeDb();
+    vi.mocked(db.pricingPolicy.findMany).mockResolvedValue([makePolicy("policy-a")]);
+    vi.mocked(db.pricingPolicy.count).mockResolvedValue(3);
+
+    const repo = makePricingPolicyRepository(db);
+    const result = await Effect.runPromise(repo.listByStatus("ACTIVE", { page: 2, pageSize: 1 }));
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.id).toBe("policy-a");
+    expect(result.page).toBe(2);
+    expect(result.pageSize).toBe(1);
+    expect(result.total).toBe(3);
+    expect(result.totalPages).toBe(3);
+  });
+
   it("returns usage summary when a policy has references", async () => {
     const db = makeDb();
     vi.mocked(db.reservation.count).mockResolvedValue(1);
@@ -176,6 +193,19 @@ describe("pricing policy repository", () => {
       repo.getActive(),
       PricingPolicyRepositoryError,
       { operation: "pricingPolicy.getActive" },
+    );
+  });
+
+  it("defects with PricingPolicyRepositoryError when listByStatus query rejects", async () => {
+    const db = makeDb();
+    vi.mocked(db.pricingPolicy.findMany).mockRejectedValue(new Error("db down"));
+
+    const repo = makePricingPolicyRepository(db);
+
+    await expectDefect(
+      repo.listByStatus("ACTIVE", { page: 1, pageSize: 10 }),
+      PricingPolicyRepositoryError,
+      { operation: "pricingPolicy.listByStatus" },
     );
   });
 
