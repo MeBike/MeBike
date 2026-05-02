@@ -34,6 +34,5 @@ export const useGetAllPricingPoliciesQuery = ({
   return useQuery({
     queryKey: ["data","pricing-policy",page,pageSize,status],
     queryFn: () => getAllPricingPolicies(page, pageSize, status),
-    enabled:false,
   });
 };
