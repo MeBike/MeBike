@@ -127,7 +127,7 @@ export function makeNfcCardWriteRepository(
               data: {
                 assignedUserId: input.userId,
                 status: "ACTIVE",
-                issuedAt: existing.issuedAt ?? input.now,
+                issuedAt: input.now,
                 returnedAt: null,
                 blockedAt: null,
                 lostAt: null,
@@ -181,6 +181,7 @@ export function makeNfcCardWriteRepository(
               data: {
                 status: "UNASSIGNED",
                 assignedUserId: null,
+                issuedAt: null,
                 returnedAt: args.now,
                 blockedAt: null,
                 lostAt: null,
@@ -223,6 +224,7 @@ export function makeNfcCardWriteRepository(
               data: {
                 status: input.status,
                 assignedUserId: clearsAssignment ? null : existing.assignedUserId,
+                issuedAt: clearsAssignment ? null : undefined,
                 returnedAt: clearsAssignment ? input.now : null,
                 blockedAt: input.status === "BLOCKED" ? input.now : null,
                 lostAt: input.status === "LOST" ? input.now : null,
