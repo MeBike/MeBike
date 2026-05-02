@@ -4,28 +4,34 @@ import "./env-bootstrap";
 
 import type { PrismaClient } from "generated/prisma/client";
 
-import { expireReturnSlots, RentalCommandServiceTag, returnSlotExpiresAt } from "../domain/rentals";
-import { UserCommandServiceTag } from "../domain/users";
 import {
+  NfcCardCommandServiceTag,
+  NfcCardQueryServiceTag,
+} from "../domain/nfc-cards";
+import { expireReturnSlots, RentalCommandServiceTag, returnSlotExpiresAt } from "../domain/rentals";
+import {
+  NfcCardCommandServiceLayer,
+  NfcCardQueryServiceLayer,
   PrismaLive,
   RentalCommandServiceLayer,
   ReturnSlotReposLive,
-  UserCommandServiceLayer,
 } from "../http/shared/providers";
 import { Prisma } from "../infrastructure/prisma";
 import { notifyReturnSlotExpired } from "../realtime/return-slot-events";
 
 const rentalCommandRuntime = ManagedRuntime.make(RentalCommandServiceLayer);
+const nfcCardCommandRuntime = ManagedRuntime.make(NfcCardCommandServiceLayer);
+const nfcCardQueryRuntime = ManagedRuntime.make(NfcCardQueryServiceLayer);
 const prismaRuntime = ManagedRuntime.make(PrismaLive);
 const returnSlotRuntime = ManagedRuntime.make(ReturnSlotReposLive);
-const userCommandRuntime = ManagedRuntime.make(UserCommandServiceLayer);
 
 export async function disposeCliRuntimes() {
   await Promise.allSettled([
     rentalCommandRuntime.dispose(),
+    nfcCardCommandRuntime.dispose(),
+    nfcCardQueryRuntime.dispose(),
     prismaRuntime.dispose(),
     returnSlotRuntime.dispose(),
-    userCommandRuntime.dispose(),
   ]);
 }
 
@@ -85,10 +91,46 @@ export async function updateUserCardUid(args: {
   userId: string;
   nfcCardUid: string | null;
 }) {
-  const result = await userCommandRuntime.runPromise(
-    Effect.flatMap(UserCommandServiceTag, userCommandService =>
-      userCommandService.updateAdminById(args.userId, {
-        nfcCardUid: args.nfcCardUid,
+  if (args.nfcCardUid === null) {
+    const existingCard = await nfcCardQueryRuntime.runPromise(
+      Effect.flatMap(NfcCardQueryServiceTag, service => service.findByAssignedUserId(args.userId)),
+    );
+
+    if (Option.isNone(existingCard)) {
+      return { nfcCardUid: null };
+    }
+
+    const result = await nfcCardCommandRuntime.runPromise(
+      Effect.flatMap(NfcCardCommandServiceTag, service =>
+        service.unassignCard({
+          nfcCardId: existingCard.value.id,
+          now: new Date(),
+        })).pipe(Effect.either),
+    );
+
+    if (Either.isLeft(result)) {
+      throw new Error(formatUserCardUpdateError(result.left, args));
+    }
+
+    return { nfcCardUid: null };
+  }
+
+  const card = await nfcCardQueryRuntime.runPromise(
+    Effect.flatMap(NfcCardQueryServiceTag, service => service.findByUid(args.nfcCardUid!)),
+  );
+
+  const ensuredCard = Option.isSome(card)
+    ? card.value
+    : await nfcCardCommandRuntime.runPromise(
+        Effect.flatMap(NfcCardCommandServiceTag, service => service.createCard({ uid: args.nfcCardUid! })),
+      );
+
+  const result = await nfcCardCommandRuntime.runPromise(
+    Effect.flatMap(NfcCardCommandServiceTag, service =>
+      service.assignCard({
+        nfcCardId: ensuredCard.id,
+        userId: args.userId,
+        now: new Date(),
       })).pipe(Effect.either),
   );
 
@@ -96,13 +138,7 @@ export async function updateUserCardUid(args: {
     throw new Error(formatUserCardUpdateError(result.left, args));
   }
 
-  const updated = result.right;
-
-  if (Option.isNone(updated)) {
-    throw new Error(`Failed to update user card uid: ${args.userId}`);
-  }
-
-  return updated.value;
+  return { nfcCardUid: result.right.uid };
 }
 
 function formatUserCardUpdateError(

@@ -21,6 +21,7 @@ import { registerEventRoutes } from "./routes/events";
 import { registerFixedSlotTemplateRoutes } from "./routes/fixed-slot-templates";
 import { registerHealthRoutes } from "./routes/health";
 import { registerIncidentRoutes } from "./routes/incidents";
+import { registerNfcCardRoutes } from "./routes/nfc-cards";
 import { registerOperatorRoutes } from "./routes/operators";
 import { registerPricingPolicyRoutes } from "./routes/pricing-policies";
 import { registerRatingRoutes } from "./routes/ratings";
@@ -101,6 +102,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerBikeRoutes(app);
   registerCouponRuleRoutes(app);
   registerEnvironmentRoutes(app);
+  registerNfcCardRoutes(app);
   registerPricingPolicyRoutes(app);
   registerEventRoutes(app);
   registerRentalRoutes(app);

@@ -24,7 +24,6 @@ export function createUserInput(overrides: Partial<CreateUserInput> = {}): Creat
     accountStatus: overrides.accountStatus,
     verify: overrides.verify,
     orgAssignment: overrides.orgAssignment,
-    nfcCardUid: overrides.nfcCardUid,
   };
 }
 

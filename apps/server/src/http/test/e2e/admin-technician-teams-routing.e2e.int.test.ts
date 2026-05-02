@@ -30,7 +30,6 @@ describe("admin technician teams routing e2e", () => {
           username: null,
           avatarUrl: null,
           locationText: null,
-          nfcCardUid: null,
           role: "ADMIN",
           accountStatus: "ACTIVE",
           verifyStatus: "VERIFIED",

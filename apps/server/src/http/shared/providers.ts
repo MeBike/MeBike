@@ -48,6 +48,13 @@ export {
   withIncidentDeps,
 } from "./features/incident.layers";
 export {
+  NfcCardCommandReposLive,
+  NfcCardCommandServiceLayer,
+  NfcCardDepsLive,
+  NfcCardQueryReposLive,
+  NfcCardQueryServiceLayer,
+} from "./features/nfc-card.layers";
+export {
   PricingDepsLive,
   PricingPolicyCommandReposLive,
   PricingPolicyCommandServiceLayer,

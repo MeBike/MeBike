@@ -1,0 +1,24 @@
+enum NfcCardStatus {
+  UNASSIGNED
+  ACTIVE
+  BLOCKED
+  LOST
+}
+
+model NfcCard {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  uid            String        @unique
+  status         NfcCardStatus @default(UNASSIGNED)
+  assignedUserId String?       @unique @map("assigned_user_id") @db.Uuid
+  issuedAt       DateTime?     @map("issued_at") @db.Timestamptz
+  returnedAt     DateTime?     @map("returned_at") @db.Timestamptz
+  blockedAt      DateTime?     @map("blocked_at") @db.Timestamptz
+  lostAt         DateTime?     @map("lost_at") @db.Timestamptz
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  assignedUser User? @relation("AssignedNfcCard", fields: [assignedUserId], references: [id])
+
+  @@index([status], name: "idx_nfc_cards_status")
+  @@map("nfc_cards")
+}
