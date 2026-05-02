@@ -155,16 +155,10 @@ export default function StationDetailPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
               Chi tiết trạm
             </h1>
-            <Badge
-              variant="outline"
-              className="rounded-full px-3 py-0.5 font-semibold bg-primary/5 text-primary border-primary/20"
-            >
-              Station Active
-            </Badge>
           </div>
 
           <div className="flex items-center gap-3">
-            {station.bikes.total < 10 && (
+            {/* {station.bikes.total < 10 && (
               <Button
                 onClick={() =>
                   router.push(
@@ -175,7 +169,7 @@ export default function StationDetailPage() {
               >
                 <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
               </Button>
-            )}
+            )} */}
             <Button
               variant="outline"
               onClick={() => router.push("/agency/stations")}
