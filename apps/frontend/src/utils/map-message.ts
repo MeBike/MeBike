@@ -1,6 +1,6 @@
 
 import { USERS_MESSAGES , AUTH_MESSAGE , STATIONS_MESSAGE , SUPPLIER_MESSAGE, BIKES_MESSAGES ,AGENCY_MESSAGES
-  , DISTRIBUTION_REQUEST,ENVIRONMENT_POLICY_REQUEST,COUPON_REQUEST,TECHNICIAN_TEAM
+  , DISTRIBUTION_REQUEST,ENVIRONMENT_POLICY_REQUEST,COUPON_REQUEST,TECHNICIAN_TEAM,PRICING_POLICY_REQUEST
 } from "@/constants/messages";
 const getErrorMessageUserFromCode = (code?: string) => {
   if (!code) return "Something went wrong";
@@ -46,6 +46,11 @@ const getErrorMessageFromEnvironmentCode = (code?: string) => {
   return ENVIRONMENT_POLICY_REQUEST[code as keyof typeof ENVIRONMENT_POLICY_REQUEST] 
     || "Something went wrong";
 }
+const getErrorMessageFromPricingCode = (code?: string) => {
+  if (!code) return "Something went wrong";
+  return PRICING_POLICY_REQUEST[code as keyof typeof PRICING_POLICY_REQUEST] 
+    || "Something went wrong";
+}
 const getErrorMessageFromCouponCode = (code?: string) => {
   if (!code) return "Something went wrong";
   return COUPON_REQUEST[code as keyof typeof COUPON_REQUEST] 
@@ -62,5 +67,6 @@ export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, getErrorMessa
   getErrorMessageFromDistributionRequestCode,
   getErrorMessageFromEnvironmentCode,
   getErrorMessageFromCouponCode,
-  getErrorMessageFromTechnicianTeamCode
+  getErrorMessageFromTechnicianTeamCode,
+  getErrorMessageFromPricingCode
  };

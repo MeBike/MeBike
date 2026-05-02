@@ -15,7 +15,7 @@ export default function StationsPage() {
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRevenueReport, setShowRevenueReport] = useState(false);
-  const { getMyStation, myStation, paginationMyStation, isLoadingMyStation } =
+  const { getMyStation, myStation, paginationMyStation, isLoadingMyStation , listStation , getListStation} =
     useStationActions({
       hasToken: true,
       page: page,
@@ -28,14 +28,15 @@ export default function StationsPage() {
     if (isLoadingMyStation) {
       setIsVisualLoading(true);
     } else {
-      // Khi API xong, đợi thêm một chút rồi mới tắt Skeleton
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600); // 600ms là khoảng "vàng" để UI mượt mà
+      }, 600); 
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyStation]);
-
+  useEffect(() => {
+    getListStation();
+  }, [getListStation]);
   useEffect(() => {
     getMyStation();
   }, [page, getMyStation, limit]);
@@ -54,6 +55,12 @@ export default function StationsPage() {
               <p className="text-muted-foreground mt-1">
                 Theo dõi và quản lý trạm
               </p>
+              {listStation?.currentStation && (
+                <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary shadow-sm">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse"></span>
+                  <span>Đang làm việc tại: <strong>{listStation.currentStation.name}</strong></span>
+                </div>
+              )}
             </div>
           </div>
         </div>

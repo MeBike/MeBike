@@ -165,4 +165,11 @@ export const ENDPOINT = {
         AVAILABLE : "/admin/technician-teams/available",
         UPDATE : (id:string) => `/admin/technician-teams/${id}`,    
     },
+    PRICING_POLICY : {
+        BASE : "/admin/pricing-policies",
+        ACTIVE : "/admin/pricing-policies/active",
+        ID : (id:string) => `/admin/pricing-policies/${id}`,
+        UPDATE : (id:string) => `/admin/pricing-policies/${id}`,
+        ACTIVE_PRICING_POLICY : (id:string) => `/admin/pricing-policies/${id}/activate`,
+    },
 } as const;
