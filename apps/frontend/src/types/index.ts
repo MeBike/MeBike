@@ -17,4 +17,5 @@ export * from "./Wallet";
 export * from "./Agency";
 export * from "./Subscription";
 export * from "./TechnicianTeam";
-export * from "./PricingPolicy"
+export * from "./PricingPolicy";
+export * from "./NFC";
