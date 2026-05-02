@@ -40,8 +40,8 @@ export type NfcCardReadRepo = {
   /**
    * Liệt kê thẻ theo bộ lọc quản trị.
    *
-    * @param filter Bộ lọc theo trạng thái, user đang được gán, UID gần đúng, và pagination.
-    */
+   * @param filter Bộ lọc theo trạng thái, user đang được gán, UID gần đúng, và pagination.
+   */
   readonly list: (filter: NfcCardListInput) => Effect.Effect<PageResult<NfcCardRow>>;
 };
 

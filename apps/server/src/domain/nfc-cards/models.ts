@@ -1,10 +1,9 @@
+import type { PageRequest } from "@/domain/shared/pagination";
 import type {
   AccountStatus,
   NfcCardStatus,
   UserVerifyStatus,
 } from "generated/prisma/client";
-
-import type { PageRequest } from "@/domain/shared/pagination";
 
 export type NfcCardAssignedUser = {
   readonly id: string;

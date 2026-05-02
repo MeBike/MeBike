@@ -44,8 +44,8 @@ export type NfcCardQueryService = {
   /**
    * Liệt kê thẻ theo bộ lọc quản trị.
    *
-    * @param filter Bộ lọc trạng thái, user đang được gán, UID cần tìm gần đúng, và pagination.
-    */
+   * @param filter Bộ lọc trạng thái, user đang được gán, UID cần tìm gần đúng, và pagination.
+   */
   readonly list: (filter: NfcCardListInput) => Effect.Effect<PageResult<NfcCardRow>>;
 };
 
