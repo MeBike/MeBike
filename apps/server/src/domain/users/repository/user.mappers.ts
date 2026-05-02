@@ -43,7 +43,11 @@ export const selectUserRow = {
       },
     },
   },
-  nfcCardUid: true,
+  assignedNfcCard: {
+    select: {
+      uid: true,
+    },
+  },
   stripeConnectedAccountId: true,
   stripePayoutsEnabled: true,
   createdAt: true,
@@ -88,7 +92,7 @@ export function toUserRow(row: PrismaTypes.UserGetPayload<{ select: typeof selec
             : null,
         }
       : null,
-    nfcCardUid: row.nfcCardUid,
+    nfcCardUid: row.assignedNfcCard?.uid ?? null,
     stripeConnectedAccountId: row.stripeConnectedAccountId,
     stripePayoutsEnabled: row.stripePayoutsEnabled,
     createdAt: row.createdAt,

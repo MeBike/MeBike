@@ -58,7 +58,6 @@ export type CreateUserInput = {
   readonly accountStatus?: AccountStatus;
   readonly verify?: UserVerifyStatus;
   readonly orgAssignment?: UserOrgAssignmentPatch | null;
-  readonly nfcCardUid?: string | null;
 };
 
 export type UpdateUserProfilePatch = Partial<{
@@ -80,7 +79,6 @@ export type UpdateUserAdminPatch = Partial<{
   accountStatus: AccountStatus;
   verify: UserVerifyStatus;
   orgAssignment: UserOrgAssignmentPatch | null;
-  nfcCardUid: string | null;
 }>;
 
 export type UserFilter = {

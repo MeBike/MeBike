@@ -307,7 +307,6 @@ export const adminUpdateUserRoute = createRoute({
               value: {
                 role: "MANAGER",
                 orgAssignment: null,
-                nfcCardUid: null,
               },
             },
           },
@@ -431,7 +430,6 @@ export const adminCreateUserRoute = createRoute({
                 accountStatus: "ACTIVE",
                 verify: "VERIFIED",
                 orgAssignment: null,
-                nfcCardUid: null,
               },
             },
             StaffWithStation: {
@@ -449,7 +447,6 @@ export const adminCreateUserRoute = createRoute({
                 orgAssignment: {
                   stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
                 },
-                nfcCardUid: null,
               },
             },
             ManagerWithStation: {
@@ -467,7 +464,6 @@ export const adminCreateUserRoute = createRoute({
                 orgAssignment: {
                   stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
                 },
-                nfcCardUid: null,
               },
             },
             TechnicianWithTeam: {
@@ -485,7 +481,6 @@ export const adminCreateUserRoute = createRoute({
                 orgAssignment: {
                   technicianTeamId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2211",
                 },
-                nfcCardUid: null,
               },
             },
             AdminOperator: {
@@ -501,7 +496,6 @@ export const adminCreateUserRoute = createRoute({
                 accountStatus: "ACTIVE",
                 verify: "VERIFIED",
                 orgAssignment: null,
-                nfcCardUid: null,
               },
             },
             DirectAgencyProvision: {

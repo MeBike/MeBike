@@ -5,7 +5,7 @@ import {
   DeviceCommandServiceLive,
   DeviceTapServiceLive,
 } from "@/domain/iot";
-import { ReservationDepsLive, UserDepsLive } from "@/http/shared/providers";
+import { NfcCardDepsLive, ReservationDepsLive } from "@/http/shared/providers";
 import { MqttLive } from "@/infrastructure/mqtt";
 
 const DeviceCommandDepsLive = DeviceCommandServiceLive.pipe(
@@ -26,12 +26,12 @@ const DeviceAccessCommandDepsLive = DeviceAccessCommandServiceLive.pipe(
  */
 export const DeviceRuntimeWorkerLive = Layer.mergeAll(
   MqttLive,
-  UserDepsLive,
+  NfcCardDepsLive,
   ReservationDepsLive,
   DeviceCommandDepsLive,
   DeviceAccessCommandDepsLive,
   DeviceTapServiceLive.pipe(
-    Layer.provide(UserDepsLive),
+    Layer.provide(NfcCardDepsLive),
     Layer.provide(ReservationDepsLive),
     Layer.provide(DeviceCommandDepsLive),
     Layer.provide(DeviceAccessCommandDepsLive),

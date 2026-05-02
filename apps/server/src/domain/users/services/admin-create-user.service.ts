@@ -17,7 +17,6 @@ export function adminCreateUserUseCase(args: {
   accountStatus?: import("../models").UserRow["accountStatus"];
   verify?: import("../models").UserRow["verify"];
   orgAssignment?: import("../models").UserOrgAssignmentPatch | null;
-  nfcCardUid?: string | null;
 }): Effect.Effect<
   UserRow,
   import("../domain-errors").DuplicateUserEmail

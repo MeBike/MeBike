@@ -7,8 +7,8 @@ import type { ReservationServiceFailure } from "@/domain/reservations";
 import type { MqttPublishError } from "@/infrastructure/mqtt";
 
 import { BikeRepository } from "@/domain/bikes";
+import { NfcCardQueryServiceTag } from "@/domain/nfc-cards";
 import { ReservationQueryServiceTag } from "@/domain/reservations";
-import { UserQueryServiceTag } from "@/domain/users";
 
 import { DeviceAccessCommandServiceTag } from "./device-access-command.service";
 import { DeviceCommandServiceTag } from "./device-command.live";
@@ -90,6 +90,19 @@ function mapRentalFailureToDenyReason(failure: RentalServiceFailure): string {
   );
 }
 
+function mapNfcCardStatusToDenyReason(status: import("generated/prisma/client").NfcCardStatus): string {
+  switch (status) {
+    case "UNASSIGNED":
+      return "CARD_UNASSIGNED";
+    case "BLOCKED":
+      return "CARD_BLOCKED";
+    case "LOST":
+      return "CARD_LOST";
+    case "ACTIVE":
+      return "CARD_INACTIVE";
+  }
+}
+
 /**
  * Khởi tạo live implementation cho tap service.
  */
@@ -97,8 +110,8 @@ const makeDeviceTapServiceEffect = Effect.gen(function* () {
   const bikeRepository = yield* BikeRepository;
   const deviceAccessCommandService = yield* DeviceAccessCommandServiceTag;
   const deviceCommandService = yield* DeviceCommandServiceTag;
+  const nfcCardQueryService = yield* NfcCardQueryServiceTag;
   const reservationQueryService = yield* ReservationQueryServiceTag;
-  const userQueryService = yield* UserQueryServiceTag;
 
   const denyTap = (
     event: DeviceTapEvent,
@@ -196,11 +209,31 @@ const makeDeviceTapServiceEffect = Effect.gen(function* () {
       Effect.gen(function* () {
         const now = options?.now ?? new Date();
 
-        const userOpt = yield* userQueryService.findByNfcCardUid(event.cardUid);
-        if (Option.isNone(userOpt)) {
-          return yield* denyTap(event, "USER_NOT_FOUND");
+        const cardOpt = yield* nfcCardQueryService.findByUid(event.cardUid);
+        if (Option.isNone(cardOpt)) {
+          return yield* denyTap(event, "CARD_NOT_FOUND");
         }
-        const user = userOpt.value;
+        const card = cardOpt.value;
+
+        if (!card.assignedUser) {
+          return yield* denyTap(event, "CARD_UNASSIGNED");
+        }
+
+        if (card.status !== "ACTIVE") {
+          return yield* denyTap(event, mapNfcCardStatusToDenyReason(card.status), {
+            userId: card.assignedUser.id,
+          });
+        }
+
+        const user = card.assignedUser;
+
+        if (user.verify !== "VERIFIED") {
+          return yield* denyTap(event, "USER_NOT_VERIFIED", { userId: user.id });
+        }
+
+        if (user.accountStatus === "BANNED") {
+          return yield* denyTap(event, "USER_BANNED", { userId: user.id });
+        }
 
         // Current contract: MQTT deviceId equals Bike.id.
         const bikeOpt = yield* bikeRepository.getById(event.deviceId);
