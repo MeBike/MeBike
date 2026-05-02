@@ -8,6 +8,7 @@ import { environmentRoutes } from "./environment";
 import { fixedSlotTemplatesRoutes } from "./fixed-slots";
 import { healthRoutes } from "./health";
 import { incidentsRoutes } from "./incidents";
+import { nfcCardsRoutes } from "./nfc-cards";
 import { operatorsRoutes } from "./operators";
 import { pricingPoliciesRoutes } from "./pricing-policies";
 import { ratingsRoutes } from "./ratings";
@@ -33,6 +34,7 @@ export * from "./environment";
 export * from "./fixed-slots";
 export * from "./health";
 export * from "./incidents";
+export * from "./nfc-cards";
 export * from "./operators";
 export * from "./pricing-policies";
 export * from "./ratings";
@@ -69,6 +71,7 @@ export type ServerRoutes = {
   readonly wallets: typeof walletsRoutes;
   readonly stripe: typeof stripeRoutes;
   readonly incidents: typeof incidentsRoutes;
+  readonly nfcCards: typeof nfcCardsRoutes;
   readonly operators: typeof operatorsRoutes;
   readonly pricingPolicies: typeof pricingPoliciesRoutes;
   readonly redistribution: typeof redistributionRoutes;
@@ -96,6 +99,7 @@ export const serverRoutes: ServerRoutes = {
   wallets: walletsRoutes,
   stripe: stripeRoutes,
   incidents: incidentsRoutes,
+  nfcCards: nfcCardsRoutes,
   operators: operatorsRoutes,
   pricingPolicies: pricingPoliciesRoutes,
   redistribution: redistributionRoutes,

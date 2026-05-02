@@ -73,7 +73,7 @@ function mapUserDetail(user: any): UserDetail | null {
     phoneNumber: user.phoneNumber,
     avatar: user.avatar,
     role: user.role,
-    nfcCardUid: user.nfcCardUid,
+    nfcCardUid: user.assignedNfcCard?.uid ?? null,
     updatedAt: user.updatedAt,
   };
 }
@@ -104,7 +104,11 @@ const detailedUserSelect = {
   phoneNumber: true,
   avatarUrl: true,
   role: true,
-  nfcCardUid: true,
+  assignedNfcCard: {
+    select: {
+      uid: true,
+    },
+  },
   updatedAt: true,
 };
 

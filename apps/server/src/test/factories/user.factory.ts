@@ -9,7 +9,6 @@ const defaults = {
   username: null,
   avatar: null,
   location: null,
-  nfcCardUid: null,
   role: "USER" as const,
   accountStatus: "ACTIVE" as const,
   verify: "VERIFIED" as const,
@@ -30,12 +29,22 @@ export function createUserFactory(ctx: FactoryContext) {
         username: overrides.username ?? defaults.username,
         avatarUrl: overrides.avatar ?? defaults.avatar,
         locationText: overrides.location ?? defaults.location,
-        nfcCardUid: overrides.nfcCardUid ?? defaults.nfcCardUid,
         role: overrides.role ?? defaults.role,
         accountStatus: overrides.accountStatus ?? defaults.accountStatus,
         verifyStatus: overrides.verify ?? defaults.verify,
       },
     });
+
+    if (overrides.nfcCardUid) {
+      await ctx.prisma.nfcCard.create({
+        data: {
+          uid: overrides.nfcCardUid,
+          status: "ACTIVE",
+          assignedUserId: id,
+          issuedAt: new Date(),
+        },
+      });
+    }
 
     return { id, email, role: overrides.role ?? defaults.role };
   };

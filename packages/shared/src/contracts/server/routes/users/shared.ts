@@ -100,7 +100,6 @@ const AdminCreateStandardUserRequestSchema = z.object({
   accountStatus: AccountStatusSchema.optional(),
   verify: VerifyStatusSchema.optional(),
   orgAssignment: AdminUserOrgAssignmentInputSchema.optional().nullable(),
-  nfcCardUid: z.string().optional().nullable(),
 }).openapi("AdminCreateStandardUserRequest", {
   example: {
     fullname: "Tran Staff",
@@ -116,7 +115,6 @@ const AdminCreateStandardUserRequestSchema = z.object({
     orgAssignment: {
       stationId: "019d1c26-9d34-7f97-ae3c-4c3f0c2d2210",
     },
-    nfcCardUid: null,
   },
 });
 
@@ -181,7 +179,6 @@ export const AdminUpdateUserRequestSchema = z.object({
   accountStatus: AccountStatusSchema.optional(),
   verify: VerifyStatusSchema.optional(),
   orgAssignment: AdminUserOrgAssignmentInputSchema.optional().nullable(),
-  nfcCardUid: z.string().optional().nullable(),
 }).openapi("AdminUpdateUserRequest", {
   example: {
     role: "STAFF",

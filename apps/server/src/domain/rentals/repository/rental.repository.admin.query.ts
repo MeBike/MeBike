@@ -86,7 +86,11 @@ export const adminRentalDetailSelect = {
       phoneNumber: true,
       avatarUrl: true,
       role: true,
-      nfcCardUid: true,
+      assignedNfcCard: {
+        select: {
+          uid: true,
+        },
+      },
       updatedAt: true,
     },
   },
@@ -163,7 +167,7 @@ export function mapToAdminRentalDetail(raw: AdminRentalDetailSelectRow): AdminRe
       phoneNumber: raw.user.phoneNumber ?? "",
       avatar: raw.user.avatarUrl ?? "",
       role: raw.user.role,
-      nfcCardUid: raw.user.nfcCardUid,
+      nfcCardUid: raw.user.assignedNfcCard?.uid ?? null,
       updatedAt: raw.user.updatedAt,
     },
     bike: {

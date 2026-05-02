@@ -25,7 +25,11 @@ const personaSelect = {
   fullName: true,
   email: true,
   role: true,
-  nfcCardUid: true,
+  assignedNfcCard: {
+    select: {
+      uid: true,
+    },
+  },
   orgAssignment: {
     select: {
       stationId: true,
@@ -51,7 +55,9 @@ function toPersonaRecord(row: {
   fullName: string;
   email: string;
   role: string;
-  nfcCardUid: string | null;
+  assignedNfcCard: {
+    uid: string;
+  } | null;
   orgAssignment: {
     stationId: string | null;
     agencyId: string | null;
@@ -63,7 +69,7 @@ function toPersonaRecord(row: {
     email: row.email,
     role: row.role,
     handle: row.email.replace(/@mebike\.local$/u, ""),
-    nfcCardUid: row.nfcCardUid,
+    nfcCardUid: row.assignedNfcCard?.uid ?? null,
     stationId: row.orgAssignment?.stationId ?? null,
     agencyId: row.orgAssignment?.agencyId ?? null,
   } satisfies PersonaRecord;

@@ -48,7 +48,6 @@ describe("userWriteRepository Integration", () => {
       role: "USER",
       accountStatus: "ACTIVE",
       verify: "UNVERIFIED",
-      nfcCardUid: null,
     })));
 
     const result = await runEffect(repo.updateProfile(user.id, {
@@ -56,7 +55,6 @@ describe("userWriteRepository Integration", () => {
       role: "ADMIN",
       accountStatus: "BANNED",
       verify: "VERIFIED",
-      nfcCardUid: "card-123",
     } as never));
 
     expect(Option.isSome(result)).toBe(true);
@@ -68,7 +66,6 @@ describe("userWriteRepository Integration", () => {
     expect(result.value.role).toBe("USER");
     expect(result.value.accountStatus).toBe("ACTIVE");
     expect(result.value.verify).toBe("UNVERIFIED");
-    expect(result.value.nfcCardUid).toBeNull();
   });
 
   it("updateAdminById rejects duplicate email", async () => {
@@ -84,14 +81,12 @@ describe("userWriteRepository Integration", () => {
       role: "USER",
       accountStatus: "ACTIVE",
       verify: "UNVERIFIED",
-      nfcCardUid: null,
     })));
 
     const result = await runEffect(repo.updateAdminById(user.id, {
       role: "STAFF",
       accountStatus: "BANNED",
       verify: "VERIFIED",
-      nfcCardUid: "card-admin-123",
     }));
 
     expect(Option.isSome(result)).toBe(true);
@@ -102,7 +97,6 @@ describe("userWriteRepository Integration", () => {
     expect(result.value.role).toBe("STAFF");
     expect(result.value.accountStatus).toBe("BANNED");
     expect(result.value.verify).toBe("VERIFIED");
-    expect(result.value.nfcCardUid).toBe("card-admin-123");
   });
 
   it("createUser rejects assigning a fourth member to a technician team", async () => {
