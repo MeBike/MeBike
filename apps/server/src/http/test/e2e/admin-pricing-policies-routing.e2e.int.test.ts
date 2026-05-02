@@ -167,15 +167,26 @@ describe("admin pricing policies routing e2e", () => {
       name: "Inactive Pricing Policy",
       status: "INACTIVE",
     });
+    await fixture.factories.pricingPolicy({
+      name: "Another Inactive Pricing Policy",
+      status: "INACTIVE",
+    });
 
-    const response = await fixture.app.request("http://test/v1/admin/pricing-policies?status=INACTIVE", {
+    const response = await fixture.app.request("http://test/v1/admin/pricing-policies?status=INACTIVE&page=1&pageSize=1", {
       method: "GET",
       headers: authHeaders(),
     });
     const body = await response.json() as PricingPoliciesContracts.PricingPolicyListResponse;
 
     expect(response.status).toBe(200);
+    expect(body.data).toHaveLength(1);
     expect(body.data.every(policy => policy.status === "INACTIVE")).toBe(true);
+    expect(body.pagination).toEqual({
+      page: 1,
+      pageSize: 1,
+      total: 2,
+      totalPages: 2,
+    });
   });
 
   it("returns pricing policy detail with usage summary", async () => {

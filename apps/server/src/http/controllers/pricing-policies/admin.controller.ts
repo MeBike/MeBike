@@ -95,14 +95,23 @@ const adminListPricingPolicies: RouteHandler<
 
   const eff = withLoggedCause(
     Effect.flatMap(PricingPolicyQueryServiceTag, service =>
-      service.listPolicies(query.status)),
+      service.listPolicies(query.status, {
+        page: query.page ?? 1,
+        pageSize: query.pageSize ?? 50,
+      })),
     "GET /v1/admin/pricing-policies",
   );
 
-  const policies = await c.var.runPromise(eff);
+  const result = await c.var.runPromise(eff);
 
   return c.json<PricingPoliciesContracts.PricingPolicyListResponse, 200>({
-    data: policies.map(toContractPricingPolicy),
+    data: result.items.map(toContractPricingPolicy),
+    pagination: {
+      page: result.page,
+      pageSize: result.pageSize,
+      total: result.total,
+      totalPages: result.totalPages,
+    },
   }, 200);
 };
 

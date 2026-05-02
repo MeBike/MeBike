@@ -1,5 +1,6 @@
 import type { Effect, Option } from "effect";
 
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
   AccountStatus,
 } from "generated/prisma/client";
@@ -62,7 +63,8 @@ export type PricingPolicyReadRepo = {
   >;
   listByStatus: (
     status?: AccountStatus,
-  ) => Effect.Effect<ReadonlyArray<PricingPolicyRow>>;
+    pageReq?: PageRequest,
+  ) => Effect.Effect<PageResult<PricingPolicyRow>>;
   getUsageSummary: (
     pricingPolicyId: string,
   ) => Effect.Effect<PricingPolicyUsageSummary>;
