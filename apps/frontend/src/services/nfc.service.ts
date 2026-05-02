@@ -48,7 +48,7 @@ export const nfcService = {
     nfcId: string;
     userId: string;
   }): Promise<AxiosResponse<AssetNFCCard>> => {
-    const response = await fetchHttpClient.post<AssetNFCCard>(
+    const response = await fetchHttpClient.patch<AssetNFCCard>(
       ENDPOINT.NFC.ASSIGN(nfcId),
       {
         userId: userId,
@@ -63,7 +63,7 @@ export const nfcService = {
     nfcId: string;
     userId: string;
   }): Promise<AxiosResponse<AssetNFCCard>> => {
-    const response = await fetchHttpClient.post<AssetNFCCard>(
+    const response = await fetchHttpClient.patch<AssetNFCCard>(
       ENDPOINT.NFC.UNASSIGN(nfcId),
       {
         userId: userId,

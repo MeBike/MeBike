@@ -905,6 +905,6 @@ export const NFC = {
   NFC_CARD_NOT_FOUND: "Không tìm thấy thẻ NFC",
   NFC_CARD_USER_NOT_ELIGIBLE: "Người dùng không đủ điều kiện để gán thẻ NFC",
   USER_ALREADY_HAS_NFC_CARD: "Người dùng đã có thẻ NFC",
-  VALIDATION_ERROR: "Lỗi xác thực",
+  VALIDATION_ERROR: "Không tìm thấy người dùng",
   NFC_CARD_NOT_ASSIGNED: "Thẻ NFC chưa được gán",
 };

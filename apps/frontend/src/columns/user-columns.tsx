@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Wallet } from "lucide-react";
+import { Eye, Wallet , CreditCard } from "lucide-react";
 import type { UserRole } from "@/types";
 import type { DetailUser } from "@/types";
 import {
@@ -58,9 +58,11 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 export const userColumns = ({
   onView,
   onViewWallet,
+  onAssignNFC
 }: {
   onView?: ({ id }: { id: string }) => void;
   onViewWallet?: ({id} : {id:string}) => void;
+  onAssignNFC?: ({ id, name }: { id: string; name: string }) => void;
 }): ColumnDef<DetailUser>[] => [
   {
     accessorKey: "fullName",
@@ -190,7 +192,7 @@ export const userColumns = ({
                   variant="ghost"
                   size="icon"
                   className="shrink-0"
-                  aria-label="Xem chi tiết"
+                  aria-label="Lịch sử giao dịch"
                   onClick={() => {
                     onViewWallet?.({ id: row.original.id });
                   }}
@@ -199,6 +201,23 @@ export const userColumns = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Lịch sử giao dịch</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  aria-label="Gán thẻ NFC"
+                  onClick={() => {
+                    onAssignNFC?.({ id: row.original.id , name : row.original.fullName });
+                  }}
+                >
+                  <CreditCard className="text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Gán thẻ NFC</TooltipContent>
             </Tooltip>
           </div>
         </div>

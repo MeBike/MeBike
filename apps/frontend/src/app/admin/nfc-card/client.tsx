@@ -152,7 +152,7 @@ export default function NFCClient({
 
             <DataTable
               columns={nfcCardColumns({
-                onView: ({ id }) => router.push(`/admin/nfc-cards/detail/${id}`),
+                onView: ({ id }) => router.push(`/admin/nfc-card/detail/${id}`),
               })}
               data={nfcCards || []}
             />
