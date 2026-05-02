@@ -74,7 +74,11 @@ export function makeUserReadRepository(
       Effect.tryPromise({
         try: () =>
           client.user.findFirst({
-            where: { nfcCardUid },
+            where: {
+              assignedNfcCard: {
+                uid: nfcCardUid,
+              },
+            },
             select: selectUserRow,
           }),
         catch: err =>

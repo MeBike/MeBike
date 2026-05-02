@@ -62,7 +62,6 @@ describe("incident image upload route e2e", () => {
           username: null,
           avatarUrl: null,
           locationText: null,
-          nfcCardUid: null,
           role: "USER",
           accountStatus: "ACTIVE",
           verifyStatus: "VERIFIED",

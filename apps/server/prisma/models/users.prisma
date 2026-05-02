@@ -24,7 +24,6 @@ model User {
   passwordHash             String           @map("password_hash")
   avatarUrl                String?          @map("avatar_url")
   locationText             String?          @map("location_text")
-  nfcCardUid               String?          @map("nfc_card_uid")
   role                     UserRole         @default(USER)
   accountStatus            AccountStatus    @default(ACTIVE) @map("account_status")
   verifyStatus             UserVerifyStatus @default(UNVERIFIED) @map("verify_status")
@@ -56,6 +55,7 @@ model User {
   approvedRedistributionRequests  RedistributionRequest[]   @relation("RedistributionRequestApprovedByUser")
   rejectedRedistributionRequests  RedistributionRequest[]   @relation("RedistributionRequestRejectedByUser")
   environmentalImpactStats        EnvironmentalImpactStat[]
+  assignedNfcCard                 NfcCard?                  @relation("AssignedNfcCard")
 
   submittedAgencyRequests   AgencyRequest[] @relation("AgencyRequestRequester")
   reviewedAgencyRequests    AgencyRequest[] @relation("AgencyRequestReviewer")
@@ -63,6 +63,5 @@ model User {
 
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")
-  @@index([nfcCardUid], name: "idx_users_nfc", type: Brin) // partial index not expressible; BRIN as placeholder
   @@map("users")
 }

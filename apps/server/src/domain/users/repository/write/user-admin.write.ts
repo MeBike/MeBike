@@ -88,7 +88,6 @@ export function makeUserAdminWriteRepository(
                       },
                     }
                   : {}),
-                nfcCardUid: data.nfcCardUid ?? null,
               },
               select: selectUserRow,
             });
@@ -145,7 +144,6 @@ export function makeUserAdminWriteRepository(
                   role: patch.role,
                   accountStatus: patch.accountStatus,
                   verifyStatus: patch.verify,
-                  nfcCardUid: patch.nfcCardUid,
                 }),
               });
 

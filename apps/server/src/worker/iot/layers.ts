@@ -3,9 +3,10 @@ import { Layer } from "effect";
 import {
   DeviceAccessCommandServiceLive,
   DeviceCommandServiceLive,
+  DeviceTapDecisionServiceLive,
   DeviceTapServiceLive,
 } from "@/domain/iot";
-import { ReservationDepsLive, UserDepsLive } from "@/http/shared/providers";
+import { NfcCardDepsLive, ReservationDepsLive } from "@/http/shared/providers";
 import { MqttLive } from "@/infrastructure/mqtt";
 
 const DeviceCommandDepsLive = DeviceCommandServiceLive.pipe(
@@ -14,6 +15,12 @@ const DeviceCommandDepsLive = DeviceCommandServiceLive.pipe(
 
 const DeviceAccessCommandDepsLive = DeviceAccessCommandServiceLive.pipe(
   Layer.provide(ReservationDepsLive),
+);
+
+const DeviceTapDecisionDepsLive = DeviceTapDecisionServiceLive.pipe(
+  Layer.provide(NfcCardDepsLive),
+  Layer.provide(ReservationDepsLive),
+  Layer.provide(DeviceAccessCommandDepsLive),
 );
 
 /**
@@ -26,14 +33,13 @@ const DeviceAccessCommandDepsLive = DeviceAccessCommandServiceLive.pipe(
  */
 export const DeviceRuntimeWorkerLive = Layer.mergeAll(
   MqttLive,
-  UserDepsLive,
+  NfcCardDepsLive,
   ReservationDepsLive,
   DeviceCommandDepsLive,
   DeviceAccessCommandDepsLive,
+  DeviceTapDecisionDepsLive,
   DeviceTapServiceLive.pipe(
-    Layer.provide(UserDepsLive),
-    Layer.provide(ReservationDepsLive),
     Layer.provide(DeviceCommandDepsLive),
-    Layer.provide(DeviceAccessCommandDepsLive),
+    Layer.provide(DeviceTapDecisionDepsLive),
   ),
 );

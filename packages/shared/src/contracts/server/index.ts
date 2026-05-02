@@ -15,6 +15,8 @@ export * from "./fixed-slots";
 export * as IncidentsContracts from "./incidents";
 export * as JobsContracts from "./jobs";
 export * from "./jobs";
+export * as NfcCardsContracts from "./nfc-cards";
+export * from "./nfc-cards";
 export * as OperatorsContracts from "./operators";
 export * from "./operators";
 export * as PricingPoliciesContracts from "./pricing-policies";
