@@ -22,8 +22,28 @@ export function isPrismaUniqueViolation(
 export function prismaUniqueViolationTarget(
   error: PrismaTypes.PrismaClientKnownRequestError & { code: "P2002" },
 ): string | string[] | undefined {
-  return typeof error.meta?.target === "string" || Array.isArray(error.meta?.target)
-    ? error.meta?.target
+  if (typeof error.meta?.target === "string" || Array.isArray(error.meta?.target)) {
+    return error.meta?.target;
+  }
+
+  const adapterFields = (
+    error.meta as {
+      driverAdapterError?: {
+        cause?: {
+          constraint?: {
+            fields?: unknown;
+          };
+        };
+      };
+    } | undefined
+  )
+    ?.driverAdapterError
+    ?.cause
+    ?.constraint
+    ?.fields;
+
+  return typeof adapterFields === "string" || Array.isArray(adapterFields)
+    ? adapterFields
     : undefined;
 }
 
