@@ -1,12 +1,13 @@
+import { useMemo } from "react";
+import { RefreshControl, ScrollView, StatusBar } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Separator, useTheme, YStack } from "tamagui";
+
 import { VerifyEmailModal } from "@components/verify-email-modal";
 import { borderWidths, elevations, radii } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
-import { useMemo } from "react";
-import { RefreshControl, ScrollView, StatusBar } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Separator, useTheme, YStack } from "tamagui";
 
 import ProfileHeader from "./components/profile-header";
 import ProfileMenuOption from "./components/profile-menu-option";
@@ -72,6 +73,7 @@ function ProfileScreen() {
     handleVerifyEmailPress,
     handleUpdateProfile,
     handleReservations,
+    handleRidingOffers,
     handleSubscriptions,
     handleEnvironmentImpact,
     handleMetroJourney,
@@ -97,6 +99,15 @@ function ProfileScreen() {
     ];
 
     items.push({
+      icon: "tag",
+      title: "Ưu đãi đạp xe",
+      subtitle: "Xem các mốc giảm giá tự động",
+      iconColor: theme.statusSuccess.val,
+      iconBackground: theme.surfaceSuccess.val,
+      onPress: handleRidingOffers,
+    });
+
+    items.push({
       icon: "bike",
       title: "Gói tháng",
       subtitle: "Ưu đãi và lịch sử sử dụng",
@@ -118,6 +129,7 @@ function ProfileScreen() {
   }, [
     handleEnvironmentImpact,
     handleReservations,
+    handleRidingOffers,
     handleSubscriptions,
     isCustomer,
     theme.actionPrimary.val,

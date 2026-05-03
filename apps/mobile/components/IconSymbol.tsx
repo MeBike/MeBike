@@ -2,7 +2,6 @@
 
 import type { ColorValue, StyleProp, ViewStyle } from "react-native";
 
-import { iconSizes } from "@theme/metrics";
 import {
   ArrowDown,
   ArrowLeft,
@@ -55,8 +54,11 @@ import {
   Wind,
   Wrench,
   X,
+  Zap,
 } from "lucide-react-native";
 import React from "react";
+
+import { iconSizes } from "@theme/metrics";
 
 type LucideIconComponent = typeof ArrowLeft;
 
@@ -123,6 +125,7 @@ const ICONS = {
   "wallet": { outline: { icon: Wallet } },
   "warning": { outline: { icon: TriangleAlert }, filled: { icon: TriangleAlert, fill: true } },
   "wind": { outline: { icon: Wind } },
+  "zap": { outline: { icon: Zap }, filled: { icon: Zap, fill: true, strokeWidth: 1.8 } },
 } as const satisfies Record<string, IconVariantConfig>;
 
 type IconRegistry = typeof ICONS;
