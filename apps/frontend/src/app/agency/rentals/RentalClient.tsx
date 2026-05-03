@@ -137,8 +137,7 @@ export default function RentalClient() {
             <DataTable
               columns={rentalColumnForStaff({
                 onView: ({ id }) => {
-                  // Giữ nguyên path manager/rentals của Agency hoặc đổi theo route mong muốn
-                  router.push(`/manager/rentals/detail/${id}`);
+                  router.push(`/agency/rentals/detail/${id}`);
                 },
               })}
               data={rentalInMyStation?.data || []}

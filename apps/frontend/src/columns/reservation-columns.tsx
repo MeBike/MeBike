@@ -19,6 +19,24 @@ export const STATUS_LABELS: Record<string, string> = {
   CANCELLED: "Đã hủy",
   EXPIRED: "Hết hạn",
 };
+const RESERVATION_CONFIG: Record<string, { label: string; color: string }> = {
+  ONE_TIME: {
+    label: "Một lần",
+    color: "bg-purple-100 text-purple-700 border-purple-200",
+  },
+  FIXED_SLOT: {
+    label: "Khung giờ cố định",
+    color: "bg-orange-100 text-orange-700 border-orange-200",
+  },
+  SUBSCRIPTION: {
+    label: "Dài hạn (Gói)",
+    color: "bg-cyan-100 text-cyan-700 border-cyan-200",
+  },
+  "": {
+    label: "Không có",
+    color: "bg-slate-100 text-slate-600 border-slate-200",
+  },
+};
 export const reservationColumn = ({
   onView,
   onUpdateStatus,
@@ -42,7 +60,20 @@ export const reservationColumn = ({
     accessorKey: "reservationOption",
     header: "Loại đặt trước",
     cell: ({ row }) => {
-      return row.original.reservationOption;
+      const value = row.original.reservationOption;
+      // Fallback nếu value không tồn tại trong config
+      const config = RESERVATION_CONFIG[value] || {
+        label: value || "N/A",
+        color: "bg-gray-100 text-gray-600 border-gray-200",
+      };
+
+      return (
+        <span
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
+        >
+          {config.label}
+        </span>
+      );
     },
   },
   {

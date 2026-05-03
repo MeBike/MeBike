@@ -14,7 +14,7 @@ import { VerifyStatus } from "@/types";
 type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
 interface UserFiltersProps {
-  verifyFilter: UserStatusFilter;
+  verifyFilter: UserStatusFilter | "all" | "";
   setVerifyFilter: (value: UserStatusFilter) => void;
   handleFilterChange: () => void;
   onReset?: () => void;

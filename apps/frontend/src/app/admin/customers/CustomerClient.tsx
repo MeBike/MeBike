@@ -34,22 +34,22 @@ interface CustomersClientProps {
     nfcCardsList: AssetNFCCard[]; 
     isAssigning: boolean;
     isUnassigning: boolean;
-    isUpdatingStatus: boolean; // Trạng thái loading
+    isUpdatingStatus: boolean; 
   };
   filters: {
     searchQuery: string;
-    verifyFilter: UserStatusFilter;
+    verifyFilter: UserStatusFilter | "all" | "";
     currentPage: number;
   };
   actions: {
     setSearchQuery: Dispatch<SetStateAction<string>>;
-    setVerifyFilter: Dispatch<SetStateAction<UserStatusFilter>>;
+    setVerifyFilter: Dispatch<SetStateAction<UserStatusFilter| "all" | "">>;
     setCurrentPage: Dispatch<SetStateAction<number>>;
     handleReset: () => void;
     handleFilterChange: () => void;
     assignNFC: (data: { nfcId: string; userId: string }) => Promise<void>;
     unassignNFC: (data: { nfcId: string; userId: string }) => Promise<void>;
-    updateStatusNFC: (data: { nfcId: string; data: { status: AssetStatus } }) => Promise<void>; // Hàm update status
+    updateStatusNFC: (data: { nfcId: string; data: { status: AssetStatus } }) => Promise<void>;
   };
 }
 
@@ -98,7 +98,6 @@ export default function CustomersClient({
     }
   };
 
-  // Hàm xử lý đổi trạng thái
   const handleUpdateCardStatus = async (cardId: string, newStatus: AssetStatus) => {
     const actionName = newStatus === "BLOCKED" ? "khóa tạm thời" : newStatus === "ACTIVE" ? "mở khóa" : "báo mất";
     if (confirm(`Bạn có chắc chắn muốn ${actionName} thẻ này?`)) {
@@ -132,10 +131,7 @@ export default function CustomersClient({
           verifyFilter={verifyFilter}
           setVerifyFilter={setVerifyFilter}
           handleFilterChange={handleFilterChange}
-          onReset={() => {
-            setSearchQuery("");
-            setCurrentPage(1);
-          }}
+          onReset={handleReset}
         />
 
         <div className="min-h-[700px]">
@@ -218,7 +214,6 @@ export default function CustomersClient({
                           </Badge>
                         </div>
                         
-                        {/* Hàng chứa các action cho thẻ */}
                         <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 border-dashed">
                           {card.status === "ACTIVE" && (
                             <>

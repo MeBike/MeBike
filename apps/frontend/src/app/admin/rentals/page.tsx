@@ -7,9 +7,7 @@ import { useStationActions } from "@/hooks/use-station";
 import type { RentalStatus } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useDebounce } from "@/utils/useDebounce";
-
 export default function Page() {
-  // 1. QUẢN LÝ STATE
   const [page, setPage] = useState<number>(1);
   const limit = 7;
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,6 +18,9 @@ export default function Page() {
   const debouncedBikeId = useDebounce(bikeId, 500);
   const [startStation, setStartStation] = useState<string>("");
   const [endStation, setEndStation] = useState<string>("");
+  const debouncedStatusFilter = useDebounce(statusFilter,500);
+  const debouncedStartStation = useDebounce(startStation,500);
+  const debouncedEndStation = useDebounce(endStation,500);
   const { getAllStations, stations } = useStationActions({
     hasToken: true,
   });
@@ -35,11 +36,11 @@ export default function Page() {
     hasToken: true,
     limit: limit,
     page: page,
-    ...(statusFilter !== "" && { status: statusFilter as RentalStatus }),
+    ...(debouncedStatusFilter !== "" && { status: statusFilter as RentalStatus }),
     ...(debouncedUserId !== "" && { userId: debouncedUserId }),
     ...(debouncedBikeId !== "" && { bikeId: debouncedBikeId }),
-    ...(startStation !== "" && { startStation: startStation }),
-    ...(endStation !== "" && { endStation: endStation }),
+    ...(debouncedStartStation !== "" && { startStation: startStation }),
+    ...(debouncedEndStation !== "" && { endStation: endStation }),
   });
 
   useEffect(() => {

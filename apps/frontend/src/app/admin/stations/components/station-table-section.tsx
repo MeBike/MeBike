@@ -40,7 +40,7 @@ export function StationTableSection({
           isLoading={isLoading}
           data={stations ?? []}
           searchValue={searchQuery}
-          filterPlaceholder="Tìm kiếm người dùng"
+          filterPlaceholder="Tìm kiếm theo tên trạm"
           onSearchChange={setSearchQuery}
         />
       </div>
