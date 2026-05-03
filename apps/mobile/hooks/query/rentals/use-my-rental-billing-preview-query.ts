@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-
-import type { RentalBillingPreview } from "@/types/rental-types";
 import type { RentalError } from "@services/rentals";
 
 import { rentalKeys } from "@hooks/query/rentals/rental-query-keys";
 import { rentalServiceV1 } from "@services/rentals";
+import { useQuery } from "@tanstack/react-query";
+
+import type { RentalBillingPreview } from "@/types/rental-types";
 
 export function useMyRentalBillingPreviewQuery(rentalId: string, enabled: boolean = true, scope?: string | null) {
   return useQuery<RentalBillingPreview, RentalError>({

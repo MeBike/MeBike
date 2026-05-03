@@ -38,11 +38,15 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
   );
   const destinationLabel = useMemo(() => {
     if (!booking.endStation) {
+      if (booking.status === "OVERDUE_UNRETURNED") {
+        return "Quá hạn";
+      }
+
       return "Đang di chuyển...";
     }
 
     return stationNameById.get(booking.endStation) ?? formatSupportCode(booking.endStation);
-  }, [booking.endStation, stationNameById]);
+  }, [booking.endStation, booking.status, stationNameById]);
 
   const status = getStatusMeta(booking.status, theme);
 
@@ -52,109 +56,106 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
       style={({ pressed }) => ({ opacity: pressed ? 0.98 : 1 })}
     >
       <AppCard borderRadius={radii.xl} gap="$4" padding="$4">
-        <XStack alignItems="flex-start" justifyContent="space-between" gap="$3">
-          <XStack flex={1} gap="$3">
-            <YStack
-              alignItems="center"
-              backgroundColor="$surfaceMuted"
-              borderRadius="$round"
-              height={bookingIconShellSize}
-              justifyContent="center"
-              width={bookingIconShellSize}
-            >
-              <IconSymbol color={theme.textSecondary.val} name="bike" size="md" />
-            </YStack>
-            <YStack flex={1} gap="$1">
-              <AppText variant="cardTitle">
-                Xe đạp
-              </AppText>
-              <AppText tone="muted" variant="bodySmall">
-                {formatBikeNumber(booking.bikeNumber, booking.bikeId)}
-              </AppText>
-            </YStack>
-          </XStack>
-
-          <YStack alignItems="flex-end" gap="$2">
-            <AppText style={{ fontVariant: ["tabular-nums"] }} variant="headline">
-              {priceText}
-            </AppText>
-            <StatusBadge
-              label={status.label}
-              pulseDot={status.pulseDot}
-              size="compact"
-              tone={status.tone}
-              withDot={status.withDot}
-            />
-          </YStack>
-        </XStack>
-
-        <XStack alignItems="stretch" gap="$3" paddingTop="$1">
+        <XStack alignItems="center" gap="$3">
           <YStack
             alignItems="center"
-            alignSelf="stretch"
-            justifyContent="space-between"
-            paddingVertical="$1"
-            width={routeColumnWidth}
+            backgroundColor="$surfaceMuted"
+            borderRadius="$round"
+            height={bookingIconShellSize}
+            justifyContent="center"
+            width={bookingIconShellSize}
           >
-            <YStack
-              alignItems="center"
-              backgroundColor={theme.surfaceDefault.val}
-              borderColor={theme.borderStrong.val}
-              borderRadius="$round"
-              borderWidth={1.5}
-              height={routeNodeSize}
-              justifyContent="center"
-              width={routeNodeSize}
-            >
-              <YStack backgroundColor={theme.borderStrong.val} borderRadius="$round" height={routeInnerDotSize} width={routeInnerDotSize} />
-            </YStack>
-
-            <YStack
-              backgroundColor={theme.borderDefault.val}
-              borderRadius="$round"
-              flex={1}
-              marginVertical="$1"
-              width={routeStemWidth}
-            />
-
-            <YStack
-              alignItems="center"
-              backgroundColor={theme.surfaceDefault.val}
-              borderColor={status.routeAccentColor}
-              borderRadius="$round"
-              borderWidth={1.5}
-              height={routeNodeSize}
-              justifyContent="center"
-              width={routeNodeSize}
-            >
-              <YStack
-                backgroundColor={status.routeAccentColor}
-                borderRadius="$round"
-                height={routeInnerDotSize}
-                width={routeInnerDotSize}
-              />
-            </YStack>
+            <IconSymbol color={theme.textSecondary.val} name="bike" size="md" />
           </YStack>
 
-          <YStack flex={1} gap="$5" justifyContent="space-between" minHeight={spaceScale[10]} paddingVertical="$1">
-            <XStack alignItems="center" minHeight={routeNodeSize}>
-              <AppText flex={1} numberOfLines={1} variant="subhead">
-                {originLabel}
+          <YStack flex={1} gap="$1">
+            <XStack alignItems="center" justifyContent="space-between" gap="$3">
+              <AppText flex={1} numberOfLines={1} variant="cardTitle">
+                Xe đạp
+              </AppText>
+              <AppText style={{ fontVariant: ["tabular-nums"] }} variant="headline">
+                {priceText}
               </AppText>
             </XStack>
 
-            <XStack alignItems="center" minHeight={routeNodeSize}>
-              <AppText
-                flex={1}
-                numberOfLines={1}
-                tone={status.destinationTone}
-                variant="subhead"
-              >
-                {destinationLabel}
+            <XStack alignItems="center" justifyContent="space-between" gap="$3">
+              <AppText flex={1} numberOfLines={1} tone="muted" variant="bodySmall">
+                {formatBikeNumber(booking.bikeNumber, booking.bikeId)}
               </AppText>
+              <StatusBadge
+                label={status.label}
+                pulseDot={status.pulseDot}
+                size="compact"
+                tone={status.tone}
+                withDot={status.withDot}
+              />
             </XStack>
           </YStack>
         </XStack>
+
+        <YStack gap="$5" paddingTop="$1" position="relative">
+          <YStack
+            backgroundColor={theme.borderDefault.val}
+            borderRadius="$round"
+            bottom={routeNodeSize}
+            left={(routeColumnWidth - routeStemWidth) / 2}
+            position="absolute"
+            top={routeNodeSize}
+            width={routeStemWidth}
+          />
+
+          <XStack alignItems="center" gap="$3">
+            <YStack alignItems="center" width={routeColumnWidth}>
+              <YStack
+                alignItems="center"
+                backgroundColor={theme.surfaceDefault.val}
+                borderColor={theme.borderStrong.val}
+                borderRadius="$round"
+                borderWidth={1.5}
+                height={routeNodeSize}
+                justifyContent="center"
+                width={routeNodeSize}
+              >
+                <YStack backgroundColor={theme.borderStrong.val} borderRadius="$round" height={routeInnerDotSize} width={routeInnerDotSize} />
+              </YStack>
+            </YStack>
+
+            <AppText flex={1} numberOfLines={1} variant="subhead">
+              {originLabel}
+            </AppText>
+          </XStack>
+
+          <XStack alignItems="center" gap="$3">
+            <YStack alignItems="center" width={routeColumnWidth}>
+              <YStack
+                alignItems="center"
+                backgroundColor={theme.surfaceDefault.val}
+                borderColor={status.routeAccentColor}
+                borderRadius="$round"
+                borderWidth={1.5}
+                height={routeNodeSize}
+                justifyContent="center"
+                width={routeNodeSize}
+              >
+                <YStack
+                  backgroundColor={status.routeAccentColor}
+                  borderRadius="$round"
+                  height={routeInnerDotSize}
+                  width={routeInnerDotSize}
+                />
+              </YStack>
+            </YStack>
+
+            <AppText
+              flex={1}
+              numberOfLines={1}
+              tone={status.destinationTone}
+              variant="subhead"
+            >
+              {destinationLabel}
+            </AppText>
+          </XStack>
+        </YStack>
 
         <Separator borderColor="$backgroundSubtle" />
 
@@ -197,6 +198,15 @@ function getStatusMeta(status: RentalStatus, theme: ReturnType<typeof useTheme>)
         withDot: true,
         destinationTone: "warning" as const,
         routeAccentColor: theme.statusWarning.val,
+      };
+    case "OVERDUE_UNRETURNED":
+      return {
+        label: "QUÁ HẠN",
+        tone: "danger" as const,
+        pulseDot: false,
+        withDot: false,
+        destinationTone: "danger" as const,
+        routeAccentColor: theme.statusDanger.val,
       };
     default:
       return {

@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { Rental } from "@/types/rental-types";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
+import { useEffect, useState } from "react";
+import { Pressable, View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { Rental } from "@/types/rental-types";
 
 import {
   formatCurrencyText,
@@ -37,6 +36,14 @@ function getRentalStatusMeta(status: Rental["status"]) {
     return {
       label: "HOÀN THÀNH",
       tone: "success" as const,
+      pulseDot: false,
+    };
+  }
+
+  if (status === "OVERDUE_UNRETURNED") {
+    return {
+      label: "QUÁ HẠN",
+      tone: "danger" as const,
       pulseDot: false,
     };
   }
@@ -78,7 +85,9 @@ export function RentalHeroCard({ billingTotalAmount, isBillingLoading, onOpenBil
   const displayTotalAmount = billingTotalAmount ?? rental.totalPrice;
   const totalLabel = displayTotalAmount === undefined && isBillingLoading
     ? "Đang tính..."
-    : formatCurrencyText(displayTotalAmount, rental.subscriptionId);
+    : displayTotalAmount === undefined
+      ? rental.status === "RENTED" ? "Đang tính..." : "Chưa có giá"
+      : formatCurrencyText(displayTotalAmount, rental.subscriptionId);
 
   return (
     <AppCard
