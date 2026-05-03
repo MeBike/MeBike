@@ -39,7 +39,7 @@ describe("reservationRepository read integration", () => {
     expect(Option.isSome(result)).toBe(true);
   });
 
-  it("findPendingHoldByBikeIdNow ignores fixed-slot with endTime null", async () => {
+  it("findPendingHoldByBikeIdNow ignores fixed-slot before hold window starts", async () => {
     const now = new Date();
     const user = await kit.createUser();
     const station = await kit.createStation({ name: "Station B" });
@@ -51,7 +51,7 @@ describe("reservationRepository read integration", () => {
       stationId: station.id,
       reservationOption: "FIXED_SLOT",
       startTime: new Date(now.getTime() + 30 * 60 * 1000),
-      endTime: null,
+      endTime: new Date(now.getTime() + 60 * 60 * 1000),
       prepaid: "0",
       status: "PENDING",
     });

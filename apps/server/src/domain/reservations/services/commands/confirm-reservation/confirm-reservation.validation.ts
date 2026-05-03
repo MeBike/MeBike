@@ -71,6 +71,14 @@ export function validatePendingReservationForConfirmationInTx(
       }));
     }
 
+    if (reservation.startTime > input.now) {
+      return yield* Effect.fail(new InvalidReservationTransition({
+        reservationId: reservation.id,
+        from: reservation.status,
+        to: "FULFILLED",
+      }));
+    }
+
     if (reservation.endTime && reservation.endTime <= input.now) {
       return yield* Effect.fail(new InvalidReservationTransition({
         reservationId: reservation.id,
