@@ -172,4 +172,11 @@ export const ENDPOINT = {
         UPDATE : (id:string) => `/admin/pricing-policies/${id}`,
         ACTIVE_PRICING_POLICY : (id:string) => `/admin/pricing-policies/${id}/activate`,
     },
+    NFC : {
+        BASE : "/admin/nfc-cards",
+        ID : (id:string) => `/admin/nfc-cards/${id}`,
+        ASSIGN : (id:string) => `/admin/nfc-cards/${id}/assign`,
+        UNASSIGN : (id:string) => `/admin/nfc-cards/${id}/unassign`,
+        STATUS : (id:string) => `/admin/nfc-cards/${id}/status`,
+    },
 } as const;

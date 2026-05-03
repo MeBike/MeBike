@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useUserActions } from "@/hooks/use-user";
 import { useWalletActions } from "@/hooks/use-wallet";
+import { useNFCCardActions } from "@/hooks/use-nfc";
 import CustomerWalletDetail from "./CustomerWalletDetail";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page({
@@ -30,6 +31,16 @@ export default function Page({
     transactionPage,
     transactionPageSize,
   });
+
+  const {
+    nfcCards,
+    assignNFC,
+    unassignNFC,
+    updateStatusNFC,
+    isAssigning,
+    isUnassigning,
+    isUpdatingStatus,
+  } = useNFCCardActions({ page: 1, pageSize: 1000 });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   useEffect(() => {
     if (isLoadingDetailUser && isLoadingTransactions && isLoadingWallet) {
@@ -62,6 +73,13 @@ export default function Page({
       isLoadingTransactions={isLoadingTransactions}
       transactionPage={transactionPage}
       onTransactionPageChange={setTransactionPage}
+      nfcCardsList={nfcCards?.data || []}
+      assignNFC={assignNFC}
+      unassignNFC={unassignNFC}
+      updateStatusNFC={updateStatusNFC}
+      isAssigning={isAssigning}
+      isUnassigning={isUnassigning}
+      isUpdatingStatus={isUpdatingStatus}
     />
   );
 }

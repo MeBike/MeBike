@@ -10,7 +10,6 @@ import { pricingPolicyColumns } from "@/columns/pricing-policy-column"; // Giả
 import { TableSkeleton } from "@/components/table-skeleton";
 import type { PricingPolicy, PricingPolicyStatus, Pagination } from "@/types";
 
-// 1. Định nghĩa Interface cho PricingPolicyClient
 interface PricingPolicyClientProps {
   data: {
     policies: PricingPolicy[];

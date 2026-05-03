@@ -156,6 +156,7 @@ export function Sidebar() {
           { title: "Nhà cung cấp", href: "/admin/suppliers" },
           { title: "Chính sách giá", href: "/admin/pricing-policies" },
           { title: "Gói tháng khách hàng", href: `/${role.toLowerCase()}/subscription` },
+          { title: "Quản lý thẻ NFC", href: `/${role.toLowerCase()}/nfc-card` },
 
         ],
       },
@@ -233,14 +234,20 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
+        {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-hide">
           {menuGroups.map((group) => {
             const isDropdown = !!group.children;
-            const isOpen = openDropdowns[group.title];
             
-            // Check if any child is active
-            const hasActiveChild = group.children?.some(child => pathname === child.href);
-            const isSingleActive = group.href && (group.exact ? pathname === group.href : pathname.startsWith(group.href));
+            // 1. Cập nhật logic hasActiveChild: Khớp chính xác HOẶC bắt đầu bằng href + "/"
+            const hasActiveChild = group.children?.some(
+              (child) => pathname === child.href || pathname.startsWith(`${child.href}/`)
+            );
+            
+            const isSingleActive = group.href && (group.exact ? pathname === group.href : (pathname === group.href || pathname.startsWith(`${group.href}/`)));
+
+            // (Tùy chọn UX) Mặc định mở dropdown nếu nó đang chứa trang active
+            const isOpen = openDropdowns[group.title] ?? hasActiveChild;
 
             return (
               <div key={group.title} className="flex flex-col space-y-1">
@@ -263,7 +270,9 @@ export function Sidebar() {
                 {isDropdown && (
                   <div className={cn("flex flex-col space-y-1 overflow-hidden transition-all duration-300 pl-10", isOpen ? "max-h-96 py-1" : "max-h-0")}>
                     {group.children?.map((child) => {
-                      const isActive = pathname === child.href;
+                      // 2. Cập nhật logic isActive cho menu con
+                      const isActive = pathname === child.href || pathname.startsWith(`${child.href}/`);
+                      
                       return (
                         <button
                           key={child.href}
