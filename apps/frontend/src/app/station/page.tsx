@@ -212,56 +212,19 @@ const Page = () => {
                       </div>
                     </div>
                     <div className="bg-orange-50 p-3 rounded-lg">
-                      <div className="text-xs text-orange-700">Bảo trì</div>
+                      <div className="text-xs text-orange-700">Tạm ngưng hoạt động</div>
                       <div className="text-xl font-bold text-orange-800">
-                        {formatNumber(selectedStation.bikes.maintained)}
+                        {formatNumber(selectedStation.bikes.disabled)}
                       </div>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-700">Không khả dụng</div>
+                      <div className="text-xs text-gray-700">Đang điều phối</div>
                       <div className="text-xl font-bold text-gray-800">
-                        {formatNumber(selectedStation.bikes.unavailable)}
+                        {formatNumber(selectedStation.bikes.redistributing)}
                       </div>
                     </div>
                   </div>
                 </div>
-
-                <div className="flex flex-wrap gap-4 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    className="flex-1 hover:bg-blue-50"
-                    onClick={() =>
-                      alert(
-                        "Chức năng này đang được phát triển. Vui lòng quay lại sau!"
-                      )
-                    }
-                  >
-                    Xem bản đồ
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 hover:bg-green-50"
-                    onClick={() =>
-                      alert(
-                        "Chức năng này đang được phát triển. Vui lòng quay lại sau!"
-                      )
-                    }
-                  >
-                    Thuê xe
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 hover:bg-purple-50"
-                    onClick={() =>
-                      alert(
-                        "Chức năng này đang được phát triển. Vui lòng quay lại sau!"
-                      )
-                    }
-                  >
-                    📱 Chia sẻ
-                  </Button>
-                </div>
-
               </CardContent>
             </Card>
           </div>

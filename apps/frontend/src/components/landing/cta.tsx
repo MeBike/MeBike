@@ -19,19 +19,11 @@ export function CTA() {
               className="text-lg px-8 h-14 gap-2"
             >
               <Smartphone className="w-5 h-5" />
-              Tải trên App Store
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="text-lg px-8 h-14 gap-2"
-            >
-              <Smartphone className="w-5 h-5" />
               Tải trên Google Play
             </Button>
           </div>
           <p className="text-sm text-primary-foreground/70">
-            Miễn phí tải về. Có sẵn trên iOS và Android.
+            Miễn phí tải về. Có sẵn Android.
           </p>
         </div>
       </div>
