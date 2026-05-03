@@ -36,8 +36,10 @@ function getStatusMeta(status: string) {
       return { label: "ĐANG THUÊ", pulseDot: true, tone: "warning" as const };
     case "COMPLETED":
       return { label: "HOÀN THÀNH", pulseDot: false, tone: "success" as const };
+    case "OVERDUE_UNRETURNED":
+      return { label: "QUÁ HẠN", pulseDot: false, tone: "danger" as const };
     default:
-      return { label: "ĐÃ HỦY", pulseDot: false, tone: "neutral" as const };
+      return { label: status, pulseDot: false, tone: "neutral" as const };
   }
 }
 

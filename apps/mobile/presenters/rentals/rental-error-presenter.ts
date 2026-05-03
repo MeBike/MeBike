@@ -12,6 +12,9 @@ const rentalErrorMessages = {
   bikeNotAvailableForRental: "Xe hiện chưa sẵn sàng để bắt đầu chuyến đi.",
   bikeNotFound: "Không tìm thấy xe phù hợp.",
   bikeNotFoundInStation: "Không tìm thấy xe này tại trạm đã chọn.",
+  billingDetailNotReady: "Chi tiết cước phí chưa sẵn sàng. Vui lòng thử lại sau.",
+  billingDetailRequiresCompletedRental: "Chi tiết cước phí chỉ khả dụng khi chuyến đi đã hoàn thành.",
+  billingPreviewRequiresActiveRental: "Tạm tính cước phí chỉ khả dụng khi chuyến đi đang hoạt động.",
   bikeSwapRequestAlreadyPending: "Yêu cầu đổi xe cho chuyến đi này đang chờ xử lý.",
   cannotApproveSwapThisRentalWithStatus: "Không thể duyệt đổi xe ở trạng thái chuyến đi hiện tại.",
   cannotCancelThisRentalWithStatus: "Không thể hủy chuyến đi ở trạng thái hiện tại.",
@@ -93,6 +96,12 @@ function presentRentalApiError(error: Extract<RentalError, { _tag: "ApiError" }>
       return rentalErrorMessages.bikeNotFound;
     case "BIKE_NOT_FOUND_IN_STATION":
       return rentalErrorMessages.bikeNotFoundInStation;
+    case "BILLING_DETAIL_NOT_READY":
+      return rentalErrorMessages.billingDetailNotReady;
+    case "BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL":
+      return rentalErrorMessages.billingDetailRequiresCompletedRental;
+    case "BILLING_PREVIEW_REQUIRES_ACTIVE_RENTAL":
+      return rentalErrorMessages.billingPreviewRequiresActiveRental;
     case "BIKE_SWAP_REQUEST_ALREADY_PENDING":
       return rentalErrorMessages.bikeSwapRequestAlreadyPending;
     case "CANNOT_APPROVE_SWAP_THIS_RENTAL_WITH_STATUS":
