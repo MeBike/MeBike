@@ -1,43 +1,67 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { BikeStatus } from "@custom-types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ListFilter, RotateCcw, Tag, MapPin, Package } from "lucide-react";
+import type { BikeStatus, Station, Supplier } from "@custom-types";
+import { cn } from "@/lib/utils";
+
 interface BikeFiltersProps {
   statusFilter: BikeStatus | "all";
   setStatusFilter: (status: BikeStatus | "all") => void;
-  onReset?: () => void;
 }
-export function BikeFilters({ 
-  statusFilter, 
-  setStatusFilter, 
-  onReset 
+
+export function BikeFilters({
+  statusFilter,
+  setStatusFilter,
 }: BikeFiltersProps) {
   const handleReset = () => {
     setStatusFilter("all");
-    if (onReset) onReset();
   };
+
   return (
-    <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-      <div className="flex items-center gap-4">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as BikeStatus | "all")}
-          className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="all">ALL</option>
-          <option value="AVAILABLE">AVAILABLE</option>
-          <option value="BOOKED">BOOKED</option>
-          <option value="BROKEN">BROKEN</option>
-          <option value="RESERVED">RESERVED</option>
-          <option value="MAINTAINED">MAINTAINED</option>
-          <option value="UNAVAILABLE">UNAVAILABLE</option>
-        </select>
+    <div className="rounded-xl border border-border bg-card shadow-sm transition-all">
+      {/* Header - Thanh mảnh và hiện đại */}
+      <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <ListFilter className="h-4 w-4 text-primary" />
+          <span className="text-sm font-bold tracking-tight">Bộ lọc tìm kiếm</span>
+        </div>
+      </div>
+
+      {/* Body - Các Select nằm gần nhau, không bị kéo giãn */}
+      <div className="flex flex-wrap items-center gap-6 p-4">
         
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleReset}
-        >
-          Đặt lại
-        </Button>
+        {/* Lọc Trạng thái */}
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <Tag className="h-3 w-3" />
+            Trạng thái
+          </label>
+          <Select
+            value={statusFilter}
+            onValueChange={(val) => setStatusFilter(val as BikeStatus | "all")}
+          >
+            <SelectTrigger className="h-9 w-[180px] border-border/60 bg-background/50 text-sm focus:ring-1 focus:ring-primary">
+              <SelectValue placeholder="Chọn trạng thái" />
+            </SelectTrigger>
+            <SelectContent position="popper" className="max-h-[250px] rounded-lg shadow-xl">
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
+              <SelectItem value="AVAILABLE">Sẵn sàng</SelectItem>
+              <SelectItem value="BOOKED">Đã đặt</SelectItem>
+              <SelectItem value="RESERVED">Đã giữ chỗ</SelectItem>
+              <SelectItem value="MAINTENANCE">Đang bảo trì</SelectItem>
+              <SelectItem value="BROKEN">Đang hỏng</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
       </div>
     </div>
   );

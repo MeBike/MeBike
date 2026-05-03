@@ -9,7 +9,7 @@ export default function BikeNotFound() {
       <h2 className="text-2xl font-bold">Không tìm thấy xe này!</h2>
       <p className="text-muted-foreground">Có vẻ như mã xe không tồn tại hoặc đã bị xóa.</p>
       <Button asChild>
-        <Link href="/technician/bikes">Quay lại danh sách</Link>
+        <Link href="/staff/bikes">Quay lại danh sách</Link>
       </Button>
     </div>
   );
