@@ -42,7 +42,7 @@ import {
 
 // Types
 import type { RedistributionRequestDetail, RedistributionRequestStatus } from "@/types/DistributionRequest";
-import type { CurrentStation, BikeStatus } from "@/types";
+import type { CurrentStation, BikeStatus, DetailUser } from "@/types";
 
 // --- CONFIGS & HELPERS ---
 const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; style: string }> = {
@@ -74,6 +74,7 @@ export const getStatusConfig = (status: BikeStatus) => {
 // --- COMPONENT ---
 interface Props {
   data: RedistributionRequestDetail;
+  user : DetailUser;
   onApprove: () => Promise<void>;
   onReject: (reason: string) => Promise<void>;
   onStartTransit: () => Promise<void>;
@@ -83,7 +84,7 @@ interface Props {
 }
 
 export const DistributionRequestDetailClient = ({
-  data, onApprove, onReject, onComplete, listStation, onStartTransit, onCancel,
+  data, onApprove, onReject, onComplete, listStation, onStartTransit, onCancel,user
 }: Props) => {
   const router = useRouter();
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -92,16 +93,12 @@ export const DistributionRequestDetailClient = ({
   const [cancelReason, setCancelReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
-
-  // Permissions
   const currentStationId = listStation?.currentStation.id;
   const canApproveReject = currentStationId == data.targetStation.id;
   const canStartTransit = currentStationId == data.sourceStation.id && data.status === "APPROVED";
   const canComplete = currentStationId == data.targetStation.id && (data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED");
   const canCancel = currentStationId == data.sourceStation.id;
-  
-  const showCheckboxColumn = data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED";
-
+  const showCheckboxColumn = data.status === "PARTIALLY_COMPLETED" || user.id === data.approvedByUser?.id && data.status === "IN_TRANSIT";
   const handleAction = async (action: () => Promise<void>) => {
     setIsProcessing(true);
     try {
