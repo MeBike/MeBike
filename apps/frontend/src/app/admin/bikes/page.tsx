@@ -7,6 +7,7 @@ import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { BikeStatus } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { useDebounce } from "@/utils/useDebounce";
 export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
@@ -15,6 +16,9 @@ export default function Page() {
   const pageSize = 7;
   const { stations , getAllStations} = useStationActions({ hasToken: true });
   const { allSupplier , getAllSuppliers } = useSupplierActions({ hasToken: true });
+  const debouncedStatusFilter = useDebounce(statusFilter,500);
+  const debouncedSupplierId = useDebounce(supplierId,500);
+  const debouncedStationId = useDebounce(stationId,500);
   const {
     data,
     statusCount,
@@ -24,24 +28,21 @@ export default function Page() {
     isLoadingBikes,
   } = useBikeActions({
     hasToken: true,
-    status: statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
+    status: debouncedStatusFilter !== "all" ? (debouncedStatusFilter as BikeStatus) : undefined,
     pageSize: pageSize,
     page: page,
-    stationId: (!stationId || stationId === "all-stations") ? undefined : stationId,
-    supplierId: (!supplierId || supplierId === "all-suppliers") ? undefined : supplierId,
+    stationId: (!debouncedStationId || stationId === "all-stations") ? undefined : stationId,
+    supplierId: (!debouncedSupplierId || supplierId === "all-suppliers") ? undefined : supplierId,
   });
   useEffect(() => {
     getStatisticsBike();
     getAllSuppliers();
     getAllStations();
   }, [getStatisticsBike,getAllSuppliers]);
-
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
-
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
-
   useEffect(() => {
     if (isLoadingBikes) {
       setIsVisualLoading(true);
@@ -54,15 +55,6 @@ export default function Page() {
   }, [isLoadingBikes]);
   if (isVisualLoading) {
     return <LoadingScreen />;
-  }
-  if (!data) {
-    return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Không tìm thấy thông tin các xe đạp.
-        </p>
-      </div>
-    );
   }
   return (
     <BikeClient

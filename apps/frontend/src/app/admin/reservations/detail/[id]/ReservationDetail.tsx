@@ -1,6 +1,6 @@
 "use client";
-
-import { useRouter } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Bike,
@@ -15,9 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
-import type { DetailReservation } from "@/types";
-
-// Các UI components phụ trợ giữ nguyên
+import { useReservationActions } from "@/hooks/use-reservation";
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 function statusBadgeVariant(
   status: string,
 ): "warning" | "pending" | "success" | "destructive" | "secondary" {
@@ -43,7 +42,12 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div className={cn("overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm", className)}>
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm",
+        className,
+      )}
+    >
       <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4">
         <Icon className="h-5 w-5 shrink-0 text-primary" />
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
@@ -54,26 +58,89 @@ function SectionCard({
   );
 }
 
-function Field({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
+function Field({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={className}>
-      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
         {label}
       </p>
       <div className="mt-1 text-sm font-medium text-foreground">{value}</div>
     </div>
   );
 }
-
-// KHAI BÁO PROPS CHO COMPONENT CHÍNH
-interface ReservationDetailClientProps {
-  id: string;
-  data: DetailReservation; // Đảm bảo import type DetailReservation từ @/types
-}
-
-export default function ReservationDetailClient({ id, data }: ReservationDetailClientProps) {
+export const getStatusReservationConfig = (status: string) => {
+  switch (status) {
+    case "FULFILLED":
+      return { label: "Thành công", className: "bg-green-100 text-green-800" };
+    case "PENDING":
+      return {
+        label: "Đang chờ xử lý",
+        className: "bg-yellow-100 text-yellow-800",
+      };
+    case "EXPIRED":
+      return { label: "Hết hạn", className: "bg-orange-100 text-orange-800" };
+    case "CANCELLED":
+      return { label: "Đã hủy", className: "bg-gray-200 text-gray-800" };
+    default:
+      return { label: status, className: "bg-gray-100 text-gray-800" };
+  }
+};
+const RESERVATION_CONFIG: Record<string, { label: string; color: string }> = {
+  ONE_TIME: {
+    label: "Thuê một lần",
+    color: "bg-purple-100 text-purple-700 border-purple-200",
+  },
+  FIXED_SLOT: {
+    label: "Khung giờ cố định",
+    color: "bg-orange-100 text-orange-700 border-orange-200",
+  },
+  SUBSCRIPTION: {
+    label: "Gói đăng ký",
+    color: "bg-cyan-100 text-cyan-700 border-cyan-200",
+  },
+};
+export default function ReservationDetailClient() {
   const router = useRouter();
-  const isVerified = data.user?.role === "ADMIN" || data.user?.id;
+  const { id } = useParams() as { id: string };
+  const {
+    fetchDetailReservation,
+    detailReservation,
+    isLoadingDetailReservation,
+  } = useReservationActions({
+    hasToken: true,
+    id: id,
+  });
+  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
+  useEffect(() => {
+    if (isLoadingDetailReservation) {
+      setIsVisualLoading(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsVisualLoading(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingDetailReservation]);
+  useEffect(() => {
+    if (id) {
+      fetchDetailReservation();
+    }
+  }, [id, fetchDetailReservation]);
+  if (isVisualLoading) return <LoadingScreen />;
+  if (!detailReservation) {
+    notFound();
+  }
+
+  const data = detailReservation;
+  const { label, className } = getStatusReservationConfig(data.status);
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -91,16 +158,15 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
               Chi tiết đặt chỗ
             </h1>
-            <Badge
-              variant={statusBadgeVariant(data.status)}
-              className="rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase"
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
             >
-              {data.status}
-            </Badge>
+              {label}
+            </span>
           </div>
           <Button
             variant="outline"
-            onClick={() => router.push("/admin/reservations")}
+            onClick={() => router.push("/staff/reservations")}
           >
             Quay lại danh sách
           </Button>
@@ -113,12 +179,6 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
             <span className="font-mono text-xs font-bold text-foreground">
               {data.id}
             </span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Tùy chọn: </span>
-            <Badge variant="secondary" className="ml-1 text-[10px]">
-              {data.reservationOption}
-            </Badge>
           </div>
           <div className="sm:ml-auto">
             <span className="text-muted-foreground">Khởi tạo: </span>
@@ -137,7 +197,9 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
               footer={
                 <div className="flex items-center gap-2 border-t border-border/60 bg-muted/30 px-5 py-3 text-sm">
                   <Info className="h-4 w-4 text-primary" />
-                  <span className="text-muted-foreground">Cập nhật lần cuối:</span>
+                  <span className="text-muted-foreground">
+                    Cập nhật lần cuối:
+                  </span>
                   <span className="font-medium">
                     {formatToVNTime(data.updatedAt)}
                   </span>
@@ -164,19 +226,22 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
                   </div>
                 </div>
 
-                {/* Trạm trả xe */}
+                {/* Trạm trả xe (Dự kiến hoặc thực tế) */}
                 <div className="relative pl-8">
                   <div className="absolute left-0 top-1 h-4 w-4 rounded-full border-4 border-muted-foreground/30 bg-background" />
                   <p className="text-xs font-bold uppercase text-muted-foreground">
                     Thời gian kết thúc
                   </p>
                   <p className="mt-1 text-base font-semibold">
-                    {data.endTime ? "Hiệu lực đến" : "Đang trong thời gian đặt"}
+                    {data.endTime
+                      ? "Đã hoàn thành"
+                      : "Đang trong thời gian đặt"}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span>
-                      Kết thúc: {data.endTime ? formatToVNTime(data.endTime) : "--:--"}
+                      Kết thúc:{" "}
+                      {data.endTime ? formatToVNTime(data.endTime) : "--:--"}
                     </span>
                   </div>
                 </div>
@@ -190,15 +255,13 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
                   value={<span className="font-mono">{data.bike?.id}</span>}
                 />
                 <Field
-                  label="Xe được gán"
-                  value={<span className="font-mono">{data.bike?.bikeNumber}</span>}
-                />
-                <Field
                   label="Trạng thái xe"
                   value={
-                    <Badge variant="outline" className="capitalize">
-                      {data.bike?.status}
-                    </Badge>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
+                    >
+                      {label}
+                    </span>
                   }
                 />
                 <Field label="ID Trạm hiện tại" value={data.stationId} />
@@ -222,18 +285,12 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
                   label="Số điện thoại"
                   value={data.user?.phoneNumber || "Chưa cập nhật"}
                 />
-                <div className="pt-2">
-                  <Badge variant="success" className="rounded-full">
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                    {data.user?.role}
-                  </Badge>
-                </div>
               </div>
             </SectionCard>
 
             <SectionCard icon={CreditCard} title="Thanh toán">
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-6 text-center">
-                <p className="text-xs font-medium uppercase text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground uppercase">
                   Tiền trả trước (Prepaid)
                 </p>
                 <p className="mt-2 text-3xl font-bold text-primary">
@@ -243,11 +300,13 @@ export default function ReservationDetailClient({ id, data }: ReservationDetailC
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Phương thức:</span>
-                  <span className="font-medium">Ví điện tử / QR</span>
+                  <span className="font-medium">Ví </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Loại đặt:</span>
-                  <span className="font-medium">{data.reservationOption}</span>
+                  <span className="font-medium">
+                    {RESERVATION_CONFIG[data.reservationOption].label}
+                  </span>
                 </div>
               </div>
             </SectionCard>

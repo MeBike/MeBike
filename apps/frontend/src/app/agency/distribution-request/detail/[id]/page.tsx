@@ -6,9 +6,12 @@ import { useDistributionRequest } from "@/hooks/use-distribution-request";
 import { DistributionRequestDetailClient } from "./client";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useStationActions } from "@/hooks/use-station";
+import { useAuth } from "@/providers/auth-providers";
+import { DetailUser } from "@/types";
 const DistributionRequestDetailPage = () => {
   const params = useParams();
   const id = params.id as string;
+  const { user } = useAuth();
   const {
     agencyViewDistributionRequestDetail,
     isLoadingAgencyViewDistributionRequestDetail,
@@ -60,6 +63,7 @@ const DistributionRequestDetailPage = () => {
   
   return (
     <DistributionRequestDetailClient 
+      user={user as DetailUser}
       listStation={listStation}
       data={agencyViewDistributionRequestDetail.data}
       onApprove={() => agencyApproveDistributeRequest(id)}

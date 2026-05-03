@@ -331,9 +331,6 @@ export const useDistributionRequest = ({
           queryClient.invalidateQueries({
             queryKey: ["distribution-request", "all"],
           });
-          queryClient.invalidateQueries({
-            queryKey: ["manager","distribution-request-data","detail",id],
-          });
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -507,7 +504,6 @@ export const useDistributionRequest = ({
         if (result.status === HTTP_STATUS.CREATED) {
           toast.success("Tạo yêu cầu điều phối xe thành công");
           getAgencyViewDistributionRequest();
-          getAgencyViewDistributionRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);

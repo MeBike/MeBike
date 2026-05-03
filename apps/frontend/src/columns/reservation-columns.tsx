@@ -13,11 +13,36 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
-export const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Đang chờ xử lý",
-  FULFILLED: "Thành công",
-  CANCELLED: "Đã hủy",
-  EXPIRED: "Hết hạn",
+export const getStatusReservationConfig = (status: string) => {
+  switch (status) {
+    case "FULFILLED":
+      return { label: "Thành công", className: "bg-green-100 text-green-800" };
+    case "PENDING":
+      return {
+        label: "Đang chờ xử lý",
+        className: "bg-yellow-100 text-yellow-800",
+      };
+    case "EXPIRED":
+      return { label: "Hết hạn", className: "bg-orange-100 text-orange-800" };
+    case "CANCELLED":
+      return { label: "Đã hủy", className: "bg-gray-200 text-gray-800" };
+    default:
+      return { label: status, className: "bg-gray-100 text-gray-800" };
+  }
+};
+const RESERVATION_CONFIG: Record<string, { label: string; color: string }> = {
+  ONE_TIME: {
+    label: "Thuê một lần",
+    color: "bg-purple-100 text-purple-700 border-purple-200",
+  },
+  FIXED_SLOT: {
+    label: "Khung giờ cố định",
+    color: "bg-orange-100 text-orange-700 border-orange-200",
+  },
+  SUBSCRIPTION: {
+    label: "Gói đăng ký",
+    color: "bg-cyan-100 text-cyan-700 border-cyan-200",
+  },
 };
 export const reservationColumn = ({
   onView,
@@ -42,7 +67,20 @@ export const reservationColumn = ({
     accessorKey: "reservationOption",
     header: "Loại đặt trước",
     cell: ({ row }) => {
-      return row.original.reservationOption;
+      const value = row.original.reservationOption;
+      // Fallback nếu value không tồn tại trong config
+      const config = RESERVATION_CONFIG[value] || {
+        label: value || "N/A",
+        color: "bg-gray-100 text-gray-600 border-gray-200",
+      };
+
+      return (
+        <span
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
+        >
+          {config.label}
+        </span>
+      );
     },
   },
   {
@@ -54,23 +92,19 @@ export const reservationColumn = ({
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "FULFILLED"
-            ? "bg-green-100 text-green-800"
-            : row.original.status === "PENDING"
-              ? "bg-yellow-100 text-yellow-800"
-              : row.original.status === "EXPIRED"
-                ? "bg-orange-100 text-orange-800"
-                : row.original.status === "CANCELLED"
-                  ? "bg-gray-200 text-gray-800"
-                  : "bg-gray-100 text-gray-800"
-        }`}
-      >
-        {STATUS_LABELS[row.original.status]}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const { label, className } = getStatusReservationConfig(
+        row.original.status,
+      );
+
+      return (
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
+        >
+          {label}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "start_time",
@@ -139,7 +173,19 @@ export const reservationColumnForStaff = ({
     accessorKey: "reservationOption",
     header: "Loại đặt trước",
     cell: ({ row }) => {
-      return row.original.reservationOption;
+      const value = row.original.reservationOption;
+      const config = RESERVATION_CONFIG[value] || {
+        label: value || "N/A",
+        color: "bg-gray-100 text-gray-600 border-gray-200",
+      };
+
+      return (
+        <span
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
+        >
+          {config.label}
+        </span>
+      );
     },
   },
   {
@@ -151,23 +197,19 @@ export const reservationColumnForStaff = ({
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${
-          row.original.status === "FULFILLED"
-            ? "bg-green-100 text-green-800"
-            : row.original.status === "PENDING"
-              ? "bg-yellow-100 text-yellow-800"
-              : row.original.status === "EXPIRED"
-                ? "bg-orange-100 text-orange-800"
-                : row.original.status === "CANCELLED"
-                  ? "bg-gray-200 text-gray-800"
-                  : "bg-gray-100 text-gray-800"
-        }`}
-      >
-        {STATUS_LABELS[row.original.status]}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const { label, className } = getStatusReservationConfig(
+        row.original.status,
+      );
+
+      return (
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
+        >
+          {label}
+        </span>
+      );
+    },
   },
   // {
   //   accessorKey: "start_time",

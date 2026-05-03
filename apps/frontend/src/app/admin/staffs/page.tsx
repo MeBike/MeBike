@@ -5,6 +5,7 @@ import StaffClient from "./StaffClient";
 import { useUserActions } from "@/hooks/use-user";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { useDebounce } from "@/utils/useDebounce";
 export type UserStatusFilter = VerifyStatus | "BANNED" | "" | "all";
 
 export default function Page() {
@@ -12,19 +13,23 @@ export default function Page() {
   const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "">("");
   const [currentPage, setCurrentPage] = useState(1);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedVerifyFilter = useDebounce(verifyFilter, 500);
+  const debouncedRoleFilter = useDebounce(roleFilter, 500);
+
   const limit = 7;
   const { staffOnly, isLoadingStaffOnly, getAllStaffs } = useUserActions({
     hasToken: true,
     limit: limit,
     page: currentPage,
-    fullName: searchQuery,
-    verify:verifyFilter,
-    role:roleFilter,
+    fullName: debouncedSearchQuery,
+    verify:debouncedVerifyFilter,
+    role:debouncedRoleFilter,
   });
 
   useEffect(() => {
     getAllStaffs();
-  }, [searchQuery, verifyFilter, roleFilter, currentPage, getAllStaffs]);
+  }, [debouncedSearchQuery, debouncedRoleFilter, debouncedRoleFilter, currentPage, getAllStaffs]);
 
   useEffect(() => {
     setCurrentPage(1);

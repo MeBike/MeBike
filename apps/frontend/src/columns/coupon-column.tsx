@@ -28,6 +28,35 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     color: "bg-slate-100 text-slate-700 border-slate-200" 
   },
 };
+export enum TriggerType {
+  RENTAL_START = "RENTAL_START",
+  RENTAL_END = "RENTAL_END",
+  RIDE_PACKAGE_PURCHASE = "RIDE_PACKAGE_PURCHASE",
+  RIDING_DURATION = "RIDING_DURATION",
+  USAGE_FREQUENCY = "USAGE_FREQUENCY",
+}
+const TRIGGER_CONFIG: Record<TriggerType, { label: string; color: string }> = {
+  [TriggerType.RENTAL_START]: { 
+    label: "Khi bắt đầu", 
+    color: "bg-blue-100 text-blue-700 border-blue-200" 
+  },
+  [TriggerType.RENTAL_END]: { 
+    label: "Khi kết thúc", 
+    color: "bg-green-100 text-green-700 border-green-200" 
+  },
+  [TriggerType.RIDE_PACKAGE_PURCHASE]: { 
+    label: "Khi mua gói", 
+    color: "bg-yellow-100 text-yellow-700 border-yellow-200" 
+  },
+  [TriggerType.RIDING_DURATION]: {
+    label: "Thời gian đi",
+    color: "bg-purple-100 text-purple-700 border-purple-200"
+  },
+  [TriggerType.USAGE_FREQUENCY]: {
+    label: "Tần suất sử dụng",
+    color: "bg-orange-100 text-orange-700 border-orange-200"
+  },
+};
 export const couponColumns = ({
   onView,
   onActive,
@@ -40,6 +69,21 @@ export const couponColumns = ({
   {
     accessorKey: "triggerType",
     header: "Loại kích hoạt",
+    cell: ({ row }) => {
+      const typeValue = row.original.triggerType || "";
+      const config = TRIGGER_CONFIG[typeValue as TriggerType] || { 
+        label: typeValue || "Không rõ", 
+        color: "bg-muted text-muted-foreground border-border" 
+      };
+
+      return (
+        <span
+          className={`px-2.5 py-1 whitespace-nowrap border rounded-full text-xs font-semibold ${config.color}`}
+        >
+          {config.label}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "discountValue",

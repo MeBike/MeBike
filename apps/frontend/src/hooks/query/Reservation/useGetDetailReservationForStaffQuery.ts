@@ -24,7 +24,6 @@ export const useGetDetailReservationForStaffQuery = (id: string) => {
     queryKey: ['STAFF_RESERVATION_DETAIL', id], // Hoặc QUERY_KEYS tương ứng của bạn
     queryFn: () => getDetailReservation(id),
     staleTime: 5 * 60 * 1000,
-    // THÊM DÒNG NÀY VÀO LÀ HẾT BỆNH:
     enabled: !!id, 
   });
 };

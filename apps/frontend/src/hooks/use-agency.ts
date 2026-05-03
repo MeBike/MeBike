@@ -297,15 +297,7 @@ export const useAgencyActions = ({
         });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Chấp nhận yêu cầu trở thành Agency");
-          queryClient.invalidateQueries({
-            queryKey: [],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["data", "agencies"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["stats", "agency", id],
-          });
+          getAgencyRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -337,15 +329,7 @@ export const useAgencyActions = ({
         });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Từ chối yêu cầu trở thành Agency");
-          queryClient.invalidateQueries({
-            queryKey: [],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["data", "agencies"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["stats", "agency", id],
-          });
+          getAgencyRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -419,13 +403,13 @@ export const useAgencyActions = ({
     data: agencyStation,
     refetch: refetchMyAgencyStation,
     isLoading: isLoadingMyAgencyStation,
-  } = useGetMyStationsAgency({ page: page, pageSize: pageSize });
+  } = useGetMyStationsAgency({ page: page, pageSize: pageSize , name});
   const getMyAgencyStation = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchMyAgencyStation();
-  }, [refetchMyAgencyStation, hasToken, page, pageSize]);
+  }, [refetchMyAgencyStation, hasToken, page, pageSize,name]);
   const {
     data: myStationDetail,
     refetch: refetchMyAgencyStationDetail,

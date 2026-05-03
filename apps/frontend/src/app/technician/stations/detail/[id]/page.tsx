@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Wrench,
   Ban,
+  Repeat,
 } from "lucide-react";
 import { Station } from "@/types";
 import { cn } from "@/lib/utils";
@@ -80,6 +81,7 @@ export default function StationDetailPage() {
       hasToken: true,
       stationId: id,
     });
+
   const [isVisualLoading, setIsVisualLoading] = useState(true);
   useEffect(() => {
     if (isLoadingMyStationDetail) {
@@ -96,6 +98,7 @@ export default function StationDetailPage() {
       getMyStationDetail();
     }
   }, [id, getMyStationDetail]);
+
   if (isVisualLoading) return <LoadingScreen />;
   if (!myStationDetail) {
     notFound();
@@ -126,12 +129,26 @@ export default function StationDetailPage() {
             </Badge>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => router.push("/technician/stations")}
-          >
-            Quay lại danh sách
-          </Button>
+          <div className="flex items-center gap-3">
+            {station.bikes.total < 10 && (
+              <Button
+                onClick={() =>
+                  router.push(
+                    `/staff/distribution-request/create?targetStationId=${station.id}`,
+                  )
+                }
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => router.push("/staff/stations")}
+            >
+              Quay lại danh sách
+            </Button>
+          </div>
         </div>
 
         {/* Metadata Bar */}
@@ -242,20 +259,20 @@ export default function StationDetailPage() {
                   />
                   <StatusItem
                     icon={Wrench}
-                    label="Đang bảo trì"
-                    value={station.bikes.maintained}
+                    label="Xe được điều phối"
+                    value={station.bikes.redistributing}
                     color="text-orange-500"
                   />
                   <StatusItem
                     icon={AlertTriangle}
-                    label="Hỏng hóc"
+                    label="Xe hỏng"
                     value={station.bikes.broken}
                     color="text-red-500"
                   />
                   <StatusItem
                     icon={Ban}
-                    label="Không khả dụng"
-                    value={station.bikes.unavailable}
+                    label="Xe tạm ngưng hoạt động"
+                    value={station.bikes.disabled}
                     color="text-muted-foreground"
                   />
                 </div>

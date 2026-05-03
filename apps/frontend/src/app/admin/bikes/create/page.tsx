@@ -19,7 +19,7 @@ export default function Page() {
     <CreateBikeClient 
       onSubmitBike={createBike}
       stations={stations}
-      suppliers={allSupplier?.data} // Chỉ lấy mảng data truyền xuống
+      suppliers={allSupplier?.data}
     />
   );
 }
