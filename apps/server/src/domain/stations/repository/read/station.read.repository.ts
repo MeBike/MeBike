@@ -23,10 +23,12 @@ import {
   getBikeCounts,
   getIncomingRedistributionCounts,
   resolveStationCounts,
-  stationSelect,
+} from "../station.repository.counts";
+import {
   toStationOrderBy,
   toStationWhere,
-} from "../station.repository.helpers";
+} from "../station.repository.filters";
+import { stationSelect } from "../station.repository.select";
 
 type StationNearestRowDb = PrismaTypes.StationGetPayload<{
   select: typeof stationSelect;
@@ -48,6 +50,12 @@ export type StationReadRepo = Pick<
 export function makeStationReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): StationReadRepo {
+  /**
+   * Bổ sung các số lượng như total bikes, active return slots và available return slots.
+   *
+   * Read path và write path phải dùng cùng một cách tính để response sau
+   * `PATCH` không lệch với dữ liệu mà `GET` trả về sau đó.
+   */
   const attachCounts = <TRow extends { id: string }, TMapped>(
     rows: ReadonlyArray<TRow>,
     mapRow: (row: TRow, counts: ReturnType<typeof resolveStationCounts>) => TMapped,

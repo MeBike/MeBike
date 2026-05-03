@@ -26,17 +26,19 @@ import {
   applyCounts,
   getActiveReturnSlotCounts,
   getBikeCounts,
+  getIncomingRedistributionCounts,
   resolveStationCounts,
-  stationSelect,
-} from "../station.repository.helpers";
+} from "../station.repository.counts";
+import { stationSelect } from "../station.repository.select";
 
 export type StationWriteRepo = Pick<StationCommandRepo, "create" | "update">;
 
 /**
- * Tao write repository cho station domain.
+ * Tạo write repository cho station domain.
  *
- * @param client Prisma client hoac transaction client.
- * @returns Repository gom create/update voi validate geo boundary va hydrate counts.
+ * Repository này chịu trách nhiệm ghi station row, map lỗi unique/geo boundary,
+ * rồi đọc lại resource đã hydrate đầy đủ các giá trị dẫn xuất để response sau
+ * mutation khớp với các query đọc station thông thường.
  */
 export function makeStationWriteRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
@@ -83,13 +85,7 @@ export function makeStationWriteRepository(
   };
 
   /**
-   * Dam bao toa do tram nam trong geo boundary duoc ho tro.
-   *
-   * @param args Toa do va loai thao tac dang thuc hien.
-   * @param args.latitude Vi do can kiem tra.
-   * @param args.longitude Kinh do can kiem tra.
-   * @param args.operation Ten thao tac dang thuc hien de gan vao error context.
-   * @returns Effect fail neu diem nam ngoai supported area hoac thieu boundary row.
+   * Đảm bảo tọa độ trạm vẫn nằm trong geo boundary mà hệ thống hỗ trợ.
    */
   const assertWithinSupportedArea = (args: {
     latitude: number;
@@ -136,10 +132,11 @@ export function makeStationWriteRepository(
     });
 
   /**
-   * Doc lai tram va hydrate bike/return-slot counts sau khi ghi du lieu.
+   * Đọc lại station resource đầy đủ sau mutation.
    *
-   * @param id ID tram can hydrate.
-   * @returns Effect tra ve `Option.none` neu tram khong ton tai.
+   * Các field như `availableReturnSlots` và `incomingRedistributionBikes` là giá
+   * trị dẫn xuất. Nếu write path hydrate thiếu count nào thì response sau update
+   * sẽ lệch với các query read path.
    */
   const loadStationWithCounts = (id: string) =>
     Effect.gen(function* () {
@@ -160,9 +157,10 @@ export function makeStationWriteRepository(
         return Option.none<import("../../models").StationRow>();
       }
 
-      const [countsMap, returnSlotCountsMap] = yield* Effect.all([
+      const [countsMap, returnSlotCountsMap, incomingRedistributionCountsMap] = yield* Effect.all([
         getBikeCounts(client, [id]),
         getActiveReturnSlotCounts(client, [id]),
+        getIncomingRedistributionCounts(client, [id]),
       ]);
 
       return Option.some(
@@ -171,6 +169,7 @@ export function makeStationWriteRepository(
           resolveStationCounts({
             countsMap,
             returnSlotCountsMap,
+            incomingRedistributionCountsMap,
             stationId: id,
           }),
         ),
