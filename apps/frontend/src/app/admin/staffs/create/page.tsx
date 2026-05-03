@@ -7,7 +7,7 @@ import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
 export default function CreateStaffPage() {
   const { createStaff , getTechTeam , techTeam , isLoadingTechTeam} = useUserActions({ hasToken: true });
-  const { stations } = useStationActions({ hasToken: true });
+  const { stations , getAllStations } = useStationActions({ hasToken: true , stationType :"INTERNAL" });
   const { suppliers } = useSupplierActions({ hasToken: true });
   const handleSubmit = async ({ data }: { data: UpdateStaffFormData }) => {
     await createStaff(data);
@@ -15,6 +15,9 @@ export default function CreateStaffPage() {
   useEffect(() => {
     getTechTeam();
   },[getTechTeam])
+  useEffect(() => {
+    getAllStations();
+  },[getAllStations])
   return (
     <div>
       <CreateStaff

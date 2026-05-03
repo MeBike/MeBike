@@ -41,6 +41,11 @@ export const stationColumns = ({
     cell: ({ row }) => row.original.capacity.total,
   },
   {
+    accessorKey: "bikes",
+    header: "Số xe hiện tại",
+    cell: ({ row }) => row.original.bikes.total,
+  },
+  {
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => formatToVNTime(row.original.createdAt),
@@ -137,6 +142,11 @@ export const stationStaffColumns = ({
     accessorKey: "capacity",
     header: "Sức chứa",
     cell: ({ row }) => row.original.capacity.total,
+  },
+  {
+    accessorKey: "bikes",
+    header: "Số xe hiện tại",
+    cell: ({ row }) => row.original.bikes.total,
   },
   {
     accessorKey: "stationType",
