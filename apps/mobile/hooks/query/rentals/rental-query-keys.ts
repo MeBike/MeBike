@@ -15,6 +15,10 @@ export const rentalKeys = {
   meDetail: (scope: string | null | undefined, rentalId: string) => ["rentals", "me", scope ?? "guest", "detail", rentalId] as const,
   meResolvedDetail: (scope: string | null | undefined, rentalId: string) =>
     ["rentals", "me", scope ?? "guest", "resolved-detail", rentalId] as const,
+  meBillingPreview: (scope: string | null | undefined, rentalId: string) =>
+    ["rentals", "me", scope ?? "guest", "billing-preview", rentalId] as const,
+  meBillingDetail: (scope: string | null | undefined, rentalId: string) =>
+    ["rentals", "me", scope ?? "guest", "billing-detail", rentalId] as const,
 
   staff: () => ["rentals", "staff"] as const,
   staffDetail: (rentalId: string) => ["rentals", "staff", "detail", rentalId] as const,

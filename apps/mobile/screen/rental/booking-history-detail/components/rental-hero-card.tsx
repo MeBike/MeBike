@@ -1,13 +1,14 @@
+import { useEffect, useState } from "react";
+import { Pressable, View } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
+import type { Rental } from "@/types/rental-types";
+
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, elevations } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
-import { useEffect, useState } from "react";
-import { View } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import type { Rental } from "@/types/rental-types";
 
 import {
   formatCurrencyText,
@@ -18,6 +19,9 @@ import {
 
 type RentalHeroCardProps = {
   rental: Rental;
+  billingTotalAmount?: number;
+  isBillingLoading?: boolean;
+  onOpenBilling?: () => void;
 };
 
 function getRentalStatusMeta(status: Rental["status"]) {
@@ -44,7 +48,7 @@ function getRentalStatusMeta(status: Rental["status"]) {
   };
 }
 
-export function RentalHeroCard({ rental }: RentalHeroCardProps) {
+export function RentalHeroCard({ billingTotalAmount, isBillingLoading, onOpenBilling, rental }: RentalHeroCardProps) {
   const theme = useTheme();
   const [now, setNow] = useState(() => Date.now());
 
@@ -71,6 +75,10 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
       now,
     }),
   );
+  const displayTotalAmount = billingTotalAmount ?? rental.totalPrice;
+  const totalLabel = displayTotalAmount === undefined && isBillingLoading
+    ? "Đang tính..."
+    : formatCurrencyText(displayTotalAmount, rental.subscriptionId);
 
   return (
     <AppCard
@@ -138,22 +146,29 @@ export function RentalHeroCard({ rental }: RentalHeroCardProps) {
           </XStack>
         </XStack>
 
-        <XStack
-          alignItems="center"
-          backgroundColor="$surfaceMuted"
-          borderRadius="$round"
-          gap="$2"
-          marginTop="$5"
-          paddingHorizontal="$5"
-          paddingVertical="$3"
-        >
-          <AppText tone="muted" variant="subhead">
-            Tổng tiền:
-          </AppText>
-          <AppText tone="success" variant="headline">
-            {formatCurrencyText(rental.totalPrice, rental.subscriptionId)}
-          </AppText>
-        </XStack>
+        <Pressable disabled={!onOpenBilling} onPress={onOpenBilling}>
+          <XStack
+            alignItems="center"
+            backgroundColor="$surfaceMuted"
+            borderColor={onOpenBilling ? "$borderDefault" : "transparent"}
+            borderRadius="$round"
+            borderWidth={onOpenBilling ? borderWidths.subtle : borderWidths.none}
+            gap="$2"
+            marginTop="$5"
+            paddingHorizontal="$5"
+            paddingVertical="$3"
+          >
+            <AppText tone="muted" variant="subhead">
+              Tổng tiền:
+            </AppText>
+            <AppText tone="success" variant="headline">
+              {totalLabel}
+            </AppText>
+            {onOpenBilling
+              ? <IconSymbol color={theme.textTertiary.val} name="chevron-right" size="sm" />
+              : null}
+          </XStack>
+        </Pressable>
       </YStack>
     </AppCard>
   );
