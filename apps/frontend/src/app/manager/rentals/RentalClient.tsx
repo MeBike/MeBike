@@ -103,7 +103,7 @@ export default function RentalClient() {
             </p>
             <DataTable
               columns={rentalColumnForStaff({
-                onView: ({ id }) => router.push(`/staff/rentals/detail/${id}`),
+                onView: ({ id }) => router.push(`/manager/rentals/detail/${id}`),
               })}
               data={staffRentalsData || []}
             />

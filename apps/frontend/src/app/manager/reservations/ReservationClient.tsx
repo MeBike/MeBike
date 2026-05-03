@@ -69,7 +69,7 @@ export default function ReservationClient({
   const router = useRouter();
 
   const handleDetailReservation = (id: string) => {
-    router.push(`/staff/reservations/detail/${id}`); // Path cho Staff
+    router.push(`/manager/reservations/detail/${id}`); // Path cho Staff
   };
 
   const isFiltering =
