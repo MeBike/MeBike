@@ -9,21 +9,22 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { rentalColumnForStaff } from "@/columns/rental-columns";
 import { TableSkeleton } from "@/components/table-skeleton";
-
+import { useDebounce } from "@/utils/useDebounce";
 export default function RentalClient() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(7);
-  
-  // --- BỔ SUNG CÁC STATE FILTER ---
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "">("");
   const [userId, setUserId] = useState<string>("");
   const [bikeId, setBikeId] = useState<string>("");
   const [startStation, setStartStation] = useState<string>("");
   const [endStation, setEndStation] = useState<string>("");
-
   const { stations, getAllStations } = useStationActions({ hasToken: true });
-
+  const debouncedStatusFilter = useDebounce(statusFilter, 500);
+  const debouncedUserId = useDebounce(userId, 500);
+  const debouncedBikeId = useDebounce(bikeId, 500);
+  const debouncedStartStation = useDebounce(startStation, 500);
+  const debouncedEndStation = useDebounce(endStation, 500);
   const {
     staffRentalsData,
     isAllRentalsStaffLoading,
@@ -33,11 +34,11 @@ export default function RentalClient() {
     hasToken: true,
     limit: limit,
     page: page,
-    status: statusFilter as RentalStatus,
-    userId,
-    bikeId,
-    startStation,
-    endStation
+    status: debouncedStatusFilter as RentalStatus || "",
+    userId: debouncedUserId || undefined,
+    bikeId: debouncedBikeId || undefined,
+    startStation: debouncedStartStation || undefined,
+    endStation: debouncedEndStation || undefined,
   });
 
   const [isVisualLoading, setIsVisualLoading] = useState(false);

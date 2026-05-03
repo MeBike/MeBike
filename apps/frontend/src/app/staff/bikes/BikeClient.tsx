@@ -47,12 +47,6 @@ export default function BikeClient({
           setStatusFilter(status);
           setPage(1); 
         }}
-        stations={[]}
-        suppliers={[]}
-        stationId=""
-        setStationId={() => {}}
-        supplierId=""
-        setSupplierId={() => {}}
       />
 
       <div className="min-h-[700px]">

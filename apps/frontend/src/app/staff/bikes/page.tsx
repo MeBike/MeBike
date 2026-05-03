@@ -5,31 +5,26 @@ import BikeClient from "./BikeClient";
 import { useBikeActions } from "@/hooks/use-bike";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { BikeStatus } from "@custom-types";
-
+import { useDebounce } from "@/utils/useDebounce";
 export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const pageSize = 7;
-
+  const debouncedStatusFilter = useDebounce(statusFilter, 500);
   const {
     myBikeInStation,
     isLoadingMyBikeInStation,
     getMyBikeInStation,
   } = useBikeActions({
     hasToken: true,
-    status: statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
+    status: debouncedStatusFilter !== "all" ? (debouncedStatusFilter as BikeStatus) : undefined,
     pageSize: pageSize,
     page: page,
   });
-
-  // Fetch dữ liệu khi page hoặc filter thay đổi
   useEffect(() => {
     getMyBikeInStation();
-  }, [getMyBikeInStation, page, statusFilter]);
-
-  // Xử lý hiệu ứng loading mượt mà
+  }, [getMyBikeInStation, page, debouncedStatusFilter]);
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
-
   useEffect(() => {
     if (isLoadingMyBikeInStation) {
       setIsVisualLoading(true);

@@ -313,13 +313,16 @@ export const useBikeActions = ({
     data: myBikeInStation,
     refetch: refetchMyBikeInStation,
     isLoading: isLoadingMyBikeInStation,
-  } = useGetBikeInMyStationQuery({ page: page, pageSize: pageSize, status: status || "" });
+  } = useGetBikeInMyStationQuery({ page: page, pageSize: pageSize, status: status || ""
+    , stationId : stationId || "",
+    supplierId : supplierId || "",
+   });
   const getMyBikeInStation = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchMyBikeInStation();
-  }, [refetchMyBikeInStation, hasToken, page, pageSize]);
+  }, [refetchMyBikeInStation, hasToken, page, pageSize,status,stationId,supplierId]);
   const {
     data: myBikeInStationDetail,
     refetch: refetchMyBikeInStationDetail,

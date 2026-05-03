@@ -15,14 +15,17 @@ import { cn } from "@/lib/utils";
 interface BikeFiltersProps {
   statusFilter: BikeStatus | "all";
   setStatusFilter: (status: BikeStatus | "all") => void;
+  onReset?: () => void;
 }
 
 export function BikeFilters({
   statusFilter,
   setStatusFilter,
+  onReset
 }: BikeFiltersProps) {
   const handleReset = () => {
     setStatusFilter("all");
+    if (onReset) onReset();
   };
 
   return (

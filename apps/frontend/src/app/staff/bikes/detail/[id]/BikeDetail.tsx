@@ -89,7 +89,7 @@ export function BikeDetailView({
   //   : 0;
   return (
     <>
-      <div className=" bg-slate-50 p-6 dark:bg-background">
+      <div className="bg-slate-50 p-6 dark:bg-background">
         <div className="mx-auto max-w-6xl space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
