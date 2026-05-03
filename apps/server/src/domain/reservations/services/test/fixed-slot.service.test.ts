@@ -1,6 +1,7 @@
 import { Effect, Layer, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { env } from "@/config/env";
 import { BikeRepository } from "@/domain/bikes";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { Prisma } from "@/infrastructure/prisma";
@@ -75,7 +76,7 @@ describe("assignFixedSlotReservations", () => {
   it("creates and assigns daily fixed-slot reservation when bike is available", async () => {
     const slotDate = new Date(Date.UTC(2026, 3, 14));
     const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
-    const createdReservation = { id: "reservation-1", bikeId: null };
+    const createdReservation = { id: "reservation-1" };
     const bike = { id: "bike-1" };
     const template = {
       id: "template-1",
@@ -108,9 +109,22 @@ describe("assignFixedSlotReservations", () => {
     });
 
     mocks.makeReservationCommandRepository.mockImplementation((tx: { state: DraftState }) => ({
-      createReservation: ({ bikeId }: { bikeId?: string | null }) => Effect.sync(() => {
+      createReservation: ({
+        bikeId,
+        startTime,
+        endTime,
+      }: {
+        bikeId?: string | null;
+        startTime: Date;
+        endTime: Date | null;
+      }) => Effect.sync(() => {
         tx.state.reservationId = createdReservation.id;
-        return { ...createdReservation, bikeId: bikeId ?? null };
+        return {
+          id: createdReservation.id,
+          bikeId: bikeId ?? null,
+          startTime,
+          endTime,
+        };
       }),
       assignBikeToPendingReservation: vi.fn(),
     }));
@@ -159,7 +173,19 @@ describe("assignFixedSlotReservations", () => {
     });
     expect(state.reservationId).toBe(createdReservation.id);
     expect(state.bikeStatus).toBe("RESERVED");
-    expect(mocks.enqueueOutboxJobInTx).toHaveBeenCalledTimes(1);
+    expect(mocks.enqueueOutboxJobInTx).toHaveBeenCalledTimes(3);
+    expect(mocks.enqueueOutboxJobInTx).toHaveBeenNthCalledWith(1, expect.anything(), expect.objectContaining({
+      dedupeKey: "reservation:notify:reservation-1",
+    }));
+    expect(mocks.enqueueOutboxJobInTx).toHaveBeenNthCalledWith(2, expect.anything(), expect.objectContaining({
+      dedupeKey: "reservation:expire:reservation-1",
+    }));
+    expect(mocks.enqueueOutboxJobInTx).toHaveBeenNthCalledWith(3, expect.anything(), expect.objectContaining({
+      dedupeKey: "fixed-slot:assigned:reservation-1",
+    }));
+    expect(mocks.enqueueOutboxJobInTx).toHaveBeenNthCalledWith(2, expect.anything(), expect.objectContaining({
+      runAt: new Date(Date.UTC(2026, 3, 14, 2, env.RESERVATION_HOLD_MINUTES, 0)),
+    }));
   });
 
   it("skips templates whose slot start is overnight", async () => {

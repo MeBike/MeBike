@@ -2,6 +2,7 @@ import { Layer } from "effect";
 import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { env } from "@/config/env";
 import { BikeRepository } from "@/domain/bikes";
 import { Prisma } from "@/infrastructure/prisma";
 import { runEffectWithLayer } from "@/test/effect/run";
@@ -23,6 +24,10 @@ describe("assignFixedSlotReservations integration", () => {
   it("creates and assigns a daily fixed-slot reservation", async () => {
     const slotDate = new Date(Date.UTC(2026, 3, 14));
     const slotStart = new Date(Date.UTC(2000, 0, 1, 9, 0, 0));
+    const expectedStartTime = new Date(Date.UTC(2026, 3, 14, 2, 0, 0));
+    const expectedEndTime = new Date(
+      expectedStartTime.getTime() + env.RESERVATION_HOLD_MINUTES * 60 * 1000,
+    );
     const user = await fixture.factories.user({ fullname: "Fixed Slot User" });
     await fixture.factories.wallet({ userId: user.id, balance: 10000n });
     const station = await fixture.factories.station({ name: "Fixed Slot Station", capacity: 2 });
@@ -61,7 +66,7 @@ describe("assignFixedSlotReservations integration", () => {
       where: {
         fixedSlotTemplateId: template.id,
         reservationOption: "FIXED_SLOT",
-        startTime: new Date(Date.UTC(2026, 3, 14, 2, 0, 0)),
+        startTime: expectedStartTime,
       },
     });
 
@@ -69,7 +74,7 @@ describe("assignFixedSlotReservations integration", () => {
     expect(reservation?.userId).toBe(user.id);
     expect(reservation?.bikeId).toBe(bike.id);
     expect(reservation?.stationId).toBe(station.id);
-    expect(reservation?.endTime).toBeNull();
+    expect(reservation?.endTime?.toISOString()).toBe(expectedEndTime.toISOString());
     expect(reservation?.pricingPolicyId).toBe("0195c768-3456-7f01-8234-111111111111");
     expect(reservation?.subscriptionId).toBeNull();
     expect(reservation?.prepaid.toString()).toBe("2000");
@@ -81,9 +86,17 @@ describe("assignFixedSlotReservations integration", () => {
     expect(updatedBike?.status).toBe("RESERVED");
 
     const outbox = await fixture.prisma.jobOutbox.findMany({
-      where: { dedupeKey: `fixed-slot:assigned:${reservation!.id}` },
+      where: {
+        dedupeKey: {
+          in: [
+            `fixed-slot:assigned:${reservation!.id}`,
+            `reservation:notify:${reservation!.id}`,
+            `reservation:expire:${reservation!.id}`,
+          ],
+        },
+      },
     });
-    expect(outbox).toHaveLength(1);
+    expect(outbox).toHaveLength(3);
   });
 
   it("stores fixed-slot start time as the UTC instant for Vietnam local time", async () => {
