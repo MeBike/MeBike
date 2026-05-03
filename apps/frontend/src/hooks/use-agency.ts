@@ -297,15 +297,7 @@ export const useAgencyActions = ({
         });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Chấp nhận yêu cầu trở thành Agency");
-          queryClient.invalidateQueries({
-            queryKey: [],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["data", "agencies"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["stats", "agency", id],
-          });
+          getAgencyRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -337,15 +329,7 @@ export const useAgencyActions = ({
         });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Từ chối yêu cầu trở thành Agency");
-          queryClient.invalidateQueries({
-            queryKey: [],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["data", "agencies"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["stats", "agency", id],
-          });
+          getAgencyRequestDetail();
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
