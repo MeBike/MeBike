@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
-import { useAgencyActions } from "@/hooks/use-agency";
+import { useReservationActions } from "@/hooks/use-reservation";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 function statusBadgeVariant(
   status: string,
@@ -111,16 +111,16 @@ export default function ReservationDetailClient() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
   const {
-    getDetailReservationForAgency,
-    detailReservationForAgency,
-    isLoadingDetailReservationForAgency,
-  } = useAgencyActions({
+    fetchDetailReservation,
+    detailReservation,
+    isLoadingDetailReservation,
+  } = useReservationActions({
     hasToken: true,
-    reservation_id: id,
+    id: id,
   });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
-    if (isLoadingDetailReservationForAgency) {
+    if (isLoadingDetailReservation) {
       setIsVisualLoading(true);
     } else {
       const timer = setTimeout(() => {
@@ -128,18 +128,18 @@ export default function ReservationDetailClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoadingDetailReservationForAgency]);
+  }, [isLoadingDetailReservation]);
   useEffect(() => {
     if (id) {
-      getDetailReservationForAgency();
+      fetchDetailReservation();
     }
-  }, [id, getDetailReservationForAgency]);
+  }, [id, fetchDetailReservation]);
   if (isVisualLoading) return <LoadingScreen />;
-  if (!detailReservationForAgency) {
+  if (!detailReservation) {
     notFound();
   }
 
-  const data = detailReservationForAgency;
+  const data = detailReservation;
   const { label, className } = getStatusReservationConfig(data.status);
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
@@ -285,12 +285,6 @@ export default function ReservationDetailClient() {
                   label="Số điện thoại"
                   value={data.user?.phoneNumber || "Chưa cập nhật"}
                 />
-                <div className="pt-2">
-                  <Badge variant="success" className="rounded-full">
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                    {data.user?.role}
-                  </Badge>
-                </div>
               </div>
             </SectionCard>
 
