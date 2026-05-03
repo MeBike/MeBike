@@ -16,10 +16,10 @@ const REQUEST_STATUS_VI: Record<string, string> = {
   PENDING_APPROVAL: "Chờ phê duyệt",
   APPROVED: "Đã phê duyệt",
   IN_TRANSIT: "Đang vận chuyển",
-  PARTIALLY_COMPLETED: "Hoàn thành 1 phần",
+  PARTIALLY_COMPLETED: "Hoàn tất một phần",
   COMPLETED: "Đã hoàn thành",
   REJECTED: "Bị từ chối",
-  CANCELLED: "Đã hủy",
+  CANCELLED: "Đã hủy bỏ",
 };
 
 const BIKE_STATUS_VI: Record<string, string> = {

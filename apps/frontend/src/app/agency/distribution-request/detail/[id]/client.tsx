@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { RedistributionRequestDetail } from "@/types/DistributionRequest";
-import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
+import { formatToVNTime } from "@/lib/formatVNDate";
+
+// UI Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -13,8 +15,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { formatToVNTime } from "@/lib/formatVNDate";
-import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+
+// Icons
 import {
   ArrowLeft,
   Bike,
@@ -24,21 +36,42 @@ import {
   XCircle,
   Loader2,
   CheckCheck,
-  Truck, // Thêm icon Truck cho Start Transit
+  Truck,
+  Info
 } from "lucide-react";
-import type { RedistributionRequestStatus } from "@/types/DistributionRequest";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger, // Bổ sung import bị thiếu
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CurrentStation, BikeStatus } from "@/types";
 
+// Types
+import type { RedistributionRequestDetail, RedistributionRequestStatus } from "@/types/DistributionRequest";
+import type { CurrentStation, BikeStatus } from "@/types";
+
+// --- CONFIGS & HELPERS ---
+const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; style: string }> = {
+  PENDING_APPROVAL: { label: "Chờ phê duyệt", style: "bg-amber-100 text-amber-800 border-amber-200" },
+  APPROVED: { label: "Đã phê duyệt", style: "bg-blue-100 text-blue-800 border-blue-200" },
+  IN_TRANSIT: { label: "Đang vận chuyển", style: "bg-purple-100 text-purple-800 border-purple-200" },
+  PARTIALLY_COMPLETED: { label: "Hoàn tất một phần", style: "bg-indigo-100 text-indigo-800 border-indigo-200" },
+  COMPLETED: { label: "Đã hoàn thành", style: "bg-green-100 text-green-800 border-green-200" },
+  REJECTED: { label: "Bị từ chối", style: "bg-red-100 text-red-800 border-red-200" },
+  CANCELLED: { label: "Đã hủy bỏ", style: "bg-red-100 text-red-800 border-red-200" },
+};
+
+export const getStatusConfig = (status: BikeStatus) => {
+  switch (status) {
+    case "AVAILABLE": return { label: "Sẵn sàng", color: "bg-green-100 text-green-800 border-green-200" };
+    case "BOOKED": return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
+    case "RESERVED": return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800 border-orange-200" };
+    case "REDISTRIBUTING": return { label: "Đang điều phối", color: "bg-purple-100 text-purple-800 border-purple-200" };
+    case "MAINTENANCE": return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800 border-blue-200" };
+    case "BROKEN": return { label: "Đang hỏng", color: "bg-red-100 text-red-800 border-red-200" };
+    case "UNAVAILABLE": return { label: "Không khả dụng", color: "bg-gray-200 text-gray-800 border-gray-300" };
+    case "LOST": return { label: "Bị mất", color: "bg-rose-100 text-rose-800 border-rose-200" };
+    case "DISABLED": return { label: "Vô hiệu hóa", color: "bg-slate-200 text-slate-800 border-slate-300" };
+    case "": return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500 border-gray-200" };
+    default: return { label: status || "Không xác định", color: "bg-gray-100 text-gray-500 border-gray-200" };
+  }
+};
+
+// --- COMPONENT ---
 interface Props {
   data: RedistributionRequestDetail;
   onApprove: () => Promise<void>;
@@ -50,13 +83,7 @@ interface Props {
 }
 
 export const DistributionRequestDetailClient = ({
-  data,
-  onApprove,
-  onReject,
-  onComplete,
-  listStation,
-  onStartTransit,
-  onCancel,
+  data, onApprove, onReject, onComplete, listStation, onStartTransit, onCancel,
 }: Props) => {
   const router = useRouter();
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -65,80 +92,15 @@ export const DistributionRequestDetailClient = ({
   const [cancelReason, setCancelReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
-  const canApproveReject =
-    listStation?.currentStation.id == data.targetStation.id;
-  const canStartTransit =
-    listStation?.currentStation.id == data.sourceStation.id &&
-    data.status === "APPROVED";
-  const canComplete =
-    listStation?.currentStation.id == data.targetStation.id &&
-    data.status === "IN_TRANSIT";
-  const canCancel = listStation?.currentStation.id === data.sourceStation.id;
-  const getStatusConfig = (status: BikeStatus) => {
-    switch (status) {
-      case "AVAILABLE":
-        return { label: "Sẵn sàng", color: "bg-green-100 text-green-800" };
-      case "BOOKED":
-        return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800" };
-      case "RESERVED":
-        return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800" };
-      case "REDISTRIBUTING":
-        return {
-          label: "Đang điều phối",
-          color: "bg-purple-100 text-purple-800",
-        };
-      case "MAINTENANCE":
-        return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800" };
-      case "BROKEN":
-        return { label: "Đang hỏng", color: "bg-red-100 text-red-800" };
-      case "UNAVAILABLE":
-        return { label: "Không khả dụng", color: "bg-gray-200 text-gray-800" };
-      case "LOST":
-        return { label: "Bị mất", color: "bg-rose-100 text-rose-800" }; // Dùng màu rose/đỏ đậm cho xe mất
-      case "DISABLED":
-        return { label: "Vô hiệu hóa", color: "bg-slate-200 text-slate-800" }; // Dùng màu slate cho xe bị vô hiệu hóa
-      case "":
-        return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500" };
-      default:
-        return {
-          label: status || "Không xác định",
-          color: "bg-gray-100 text-gray-500",
-        };
-    }
-  };
-  const STATUS_MAP: Record<
-    RedistributionRequestStatus,
-    { label: string; style: string }
-  > = {
-    PENDING_APPROVAL: {
-      label: "Chờ phê duyệt",
-      style: "bg-amber-100 text-amber-800 border-amber-200",
-    },
-    APPROVED: {
-      label: "Đã phê duyệt",
-      style: "bg-blue-100 text-blue-800 border-blue-200",
-    },
-    IN_TRANSIT: {
-      label: "Đang vận chuyển",
-      style: "bg-purple-100 text-purple-800 border-purple-200",
-    },
-    PARTIALLY_COMPLETED: {
-      label: "Hoàn tất một phần",
-      style: "bg-indigo-100 text-indigo-800 border-indigo-200",
-    },
-    COMPLETED: {
-      label: "Đã hoàn thành",
-      style: "bg-green-100 text-green-800 border-green-200",
-    },
-    REJECTED: {
-      label: "Đã từ chối",
-      style: "bg-red-100 text-red-800 border-red-200",
-    },
-    CANCELLED: {
-      label: "Đã hủy bỏ",
-      style: "bg-slate-100 text-slate-800 border-slate-200",
-    },
-  };
+
+  // Permissions
+  const currentStationId = listStation?.currentStation.id;
+  const canApproveReject = currentStationId == data.targetStation.id;
+  const canStartTransit = currentStationId == data.sourceStation.id && data.status === "APPROVED";
+  const canComplete = currentStationId == data.targetStation.id && (data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED");
+  const canCancel = currentStationId == data.sourceStation.id;
+  
+  const showCheckboxColumn = data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED";
 
   const handleAction = async (action: () => Promise<void>) => {
     setIsProcessing(true);
@@ -180,95 +142,66 @@ export const DistributionRequestDetailClient = ({
 
   const handleToggleBike = (bikeId: string) => {
     setSelectedBikeIds((prev) =>
-      prev.includes(bikeId)
-        ? prev.filter((id) => id !== bikeId)
-        : [...prev, bikeId],
+      prev.includes(bikeId) ? prev.filter((id) => id !== bikeId) : [...prev, bikeId]
     );
   };
 
-  const statusInfo = STATUS_MAP[data.status] || {
-    label: "Không xác định",
-    style: "bg-gray-100",
-  };
+  // Sử dụng STATUS_MAP trực tiếp, kèm fallback an toàn
+  const statusInfo = STATUS_MAP[data.status] || { label: "Không xác định", style: "bg-gray-100 text-gray-800 border-gray-200" };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between border-b pb-6">
+        <div className="space-y-3">
           <Button
-            variant="ghost"
-            className="pl-0 hover:bg-transparent text-muted-foreground hover:text-primary"
+            variant="ghost" size="sm"
+            className="pl-0 hover:bg-transparent text-muted-foreground hover:text-primary transition-colors"
             onClick={() => router.back()}
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại danh sách
           </Button>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">
               Chi tiết yêu cầu điều phối
             </h1>
-            <Badge
-              className={`px-2.5 py-0.5 rounded-full border text-xs font-medium ${statusInfo.style}`}
-            >
+            <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider w-fit ${statusInfo.style}`}>
               {statusInfo.label}
-            </Badge>
+            </span>
           </div>
         </div>
 
-        {/* Action Buttons Section */}
-        <div className="flex gap-3 flex-wrap">
-          {/* FLOW 1: PENDING APPROVAL -> Approve / Reject / Cancel */}
+        {/* ACTION BUTTONS */}
+        <div className="flex gap-3 flex-wrap pt-2 md:pt-0">
+          
+          {/* FLOW 1: PENDING APPROVAL */}
           {data.status === "PENDING_APPROVAL" && (
             <>
               {canCancel && (
-                <Dialog
-                  open={isCancelDialogOpen}
-                  onOpenChange={setIsCancelDialogOpen}
-                >
+                <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      className="bg-slate-500 hover:bg-slate-600 shadow-sm"
-                      disabled={isProcessing}
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Hủy yêu cầu
+                    <Button variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50" disabled={isProcessing}>
+                      <XCircle className="mr-2 h-4 w-4" /> Hủy yêu cầu
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Hủy yêu cầu điều phối</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4 space-y-2">
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader><DialogTitle>Hủy yêu cầu điều phối</DialogTitle></DialogHeader>
+                    <div className="py-4 space-y-3">
                       <Textarea
                         placeholder="Nhập lý do hủy yêu cầu (tối thiểu 10 ký tự)..."
                         value={cancelReason}
                         onChange={(e) => setCancelReason(e.target.value)}
-                        className="resize-none"
-                        rows={4}
+                        className="resize-none focus-visible:ring-rose-500" rows={4}
                       />
-                      <p
-                        className={`text-xs text-right font-medium ${isValidCancelReason ? "text-green-600" : "text-red-500"}`}
-                      >
+                      <p className={`text-xs text-right font-medium ${isValidCancelReason ? "text-emerald-600" : "text-rose-500"}`}>
                         {cancelReason.trim().length} / 10 ký tự
                       </p>
                     </div>
                     <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsCancelDialogOpen(false)}
-                        disabled={isProcessing}
-                      >
-                        Đóng
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={handleCancelSubmit}
-                        disabled={isProcessing || !isValidCancelReason}
-                      >
-                        {isProcessing && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        Xác nhận hủy
+                      <Button variant="ghost" onClick={() => setIsCancelDialogOpen(false)} disabled={isProcessing}>Đóng</Button>
+                      <Button variant="destructive" onClick={handleCancelSubmit} disabled={isProcessing || !isValidCancelReason}>
+                        {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Xác nhận hủy
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -277,23 +210,11 @@ export const DistributionRequestDetailClient = ({
 
               {canApproveReject && (
                 <>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setShowRejectModal(true)}
-                    disabled={isProcessing}
-                  >
+                  <Button variant="destructive" onClick={() => setShowRejectModal(true)} disabled={isProcessing}>
                     <XCircle className="mr-2 h-4 w-4" /> Từ chối
                   </Button>
-                  <Button
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => handleAction(onApprove)}
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                    ) : (
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                    )}
+                  <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleAction(onApprove)} disabled={isProcessing}>
+                    {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle className="mr-2 h-4 w-4" />}
                     Duyệt yêu cầu
                   </Button>
                 </>
@@ -301,281 +222,192 @@ export const DistributionRequestDetailClient = ({
             </>
           )}
 
-          {/* FLOW 2: APPROVED -> Start Transit */}
+          {/* FLOW 2: APPROVED */}
           {data.status === "APPROVED" && canStartTransit && (
-            <Button
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={() => handleAction(onStartTransit)}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <Loader2 className="animate-spin mr-2 h-4 w-4" />
-              ) : (
-                <Truck className="mr-2 h-4 w-4" />
-              )}
+            <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm" onClick={() => handleAction(onStartTransit)} disabled={isProcessing}>
+              {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Truck className="mr-2 h-4 w-4" />}
               Bắt đầu vận chuyển
             </Button>
           )}
 
-          {/* FLOW 3: IN TRANSIT / PARTIALLY COMPLETED -> Complete */}
-          {(data.status === "IN_TRANSIT" ||
-            data.status === "PARTIALLY_COMPLETED") &&
-            canComplete && (
-              <Button
-                className="bg-emerald-600 hover:bg-emerald-700"
-                onClick={() =>
-                  handleAction(() =>
-                    onComplete({ completedBikeIds: selectedBikeIds }),
-                  )
-                }
-                disabled={isProcessing || selectedBikeIds.length === 0}
-              >
-                {isProcessing ? (
-                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                ) : (
-                  <CheckCheck className="mr-2 h-4 w-4" />
-                )}
-                Hoàn tất ({selectedBikeIds.length} xe)
-              </Button>
-            )}
+          {/* FLOW 3: IN TRANSIT / PARTIALLY COMPLETED */}
+          {(data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED") && canComplete && (
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 shadow-sm"
+              onClick={() => handleAction(() => onComplete({ completedBikeIds: selectedBikeIds }))}
+              disabled={isProcessing || selectedBikeIds.length === 0}
+            >
+              {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+              Hoàn tất ({selectedBikeIds.length} xe)
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Main Content Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="shadow-md border-none bg-slate-50/50">
-              <CardHeader className="pb-3 text-primary">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5 text-blue-500" /> Thông tin
-                  cơ bản
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="flex flex-col gap-1">
-                  <span className="text-muted-foreground font-medium">
-                    Lý do điều phối:
-                  </span>
-                  <span className="text-slate-900 italic">
-                    {data.reason || "Không có lý do cụ thể"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4 border-t pt-4">
-                  <div>
-                    <span className="text-muted-foreground block font-medium">
-                      Số lượng:
-                    </span>
-                    <span className="text-lg font-bold text-blue-600">
-                      {data.requestedQuantity} xe
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block font-medium">
-                      Ngày tạo:
-                    </span>
-                    <span className="font-semibold">
-                      {formatToVNTime(data.createdAt)}
-                    </span>
-                  </div>
-                </div>
-                <div className="border-t pt-4">
-                  <span className="text-muted-foreground block font-medium">
-                    Người yêu cầu:
-                  </span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                      {data.requestedByUser.fullName.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-semibold leading-none">
-                        {data.requestedByUser.fullName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {data.requestedByUser.email}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-md border-none bg-slate-50/50">
-              <CardHeader className="pb-3 text-primary">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-red-500" /> Lộ trình điều phối
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="relative space-y-8 px-8">
-                <div className="absolute left-[2.4rem] top-12 bottom-12 w-0.5 bg-dashed border-l-2 border-dashed border-slate-300"></div>
-                <div className="relative z-10 flex flex-col">
-                  <div className="flex items-start gap-4">
-                    <div className="h-8 w-8 rounded-full bg-white border-2 border-slate-400 flex items-center justify-center shadow-sm">
-                      <div className="h-2 w-2 rounded-full bg-slate-400"></div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">
-                        Trạm nguồn
-                      </p>
-                      <p className="font-bold text-slate-800 uppercase tracking-wide">
-                        {data.sourceStation.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {data.sourceStation.address}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="relative z-10 flex flex-col">
-                  <div className="flex items-start gap-4">
-                    <div className="h-8 w-8 rounded-full bg-white border-2 border-primary flex items-center justify-center shadow-sm">
-                      <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-primary uppercase tracking-wider">
-                        Trạm đích
-                      </p>
-                      <p className="font-bold text-slate-800 uppercase tracking-wide">
-                        {data.targetStation.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {data.targetStation.address}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="shadow-lg border-none overflow-hidden">
-            <CardHeader className="bg-slate-900 text-white py-4">
-              <CardTitle className="text-md font-medium flex items-center gap-2">
-                <Bike className="h-5 w-5" /> Danh sách xe thực tế (
-                {data.items.length})
+      {/* CONTENT SECTION */}
+      <div className="space-y-8">
+        
+        {/* Row 1: Basic Info & Route Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="shadow-sm border-slate-200 overflow-hidden">
+            <CardHeader className="bg-slate-50/80 pb-4 border-b">
+              <CardTitle className="text-base flex items-center gap-2 text-slate-800">
+                <ClipboardList className="h-5 w-5 text-blue-500" /> Thông tin cơ bản
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-slate-50">
-                  <TableRow>
-                    <TableHead className="w-[50px] text-center font-bold"></TableHead>
-                    <TableHead className="font-bold uppercase text-xs">
-                      Mã Chip (Bike ID)
-                    </TableHead>
-                    <TableHead className="font-bold uppercase text-xs">
-                      Trạng thái xe
-                    </TableHead>
-                    <TableHead className="font-bold uppercase text-xs text-right">
-                      Ngày bàn giao
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.items.map((item) => {
-                    // Khai báo biến ở đây, trước khi return JSX
-                    const { label, color } = getStatusConfig(
-                      item.bike.status as BikeStatus,
-                    );
+            <CardContent className="space-y-5 pt-5 text-sm">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-slate-500 font-medium">Lý do điều phối</span>
+                <span className="text-slate-900 font-medium">{data.reason || "Không có lý do cụ thể"}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                  <span className="text-slate-500 block text-xs font-medium uppercase tracking-wider mb-1">Số lượng</span>
+                  <span className="text-xl font-bold text-blue-700">{data.requestedQuantity} xe</span>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <span className="text-slate-500 block text-xs font-medium uppercase tracking-wider mb-1">Ngày tạo</span>
+                  <span className="font-semibold text-slate-700">{formatToVNTime(data.createdAt)}</span>
+                </div>
+              </div>
+              <div className="pt-2">
+                <span className="text-slate-500 block font-medium mb-2">Người yêu cầu</span>
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shadow-sm">
+                    {data.requestedByUser.fullName.charAt(0)}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-slate-900">{data.requestedByUser.fullName}</span>
+                    <span className="text-xs text-slate-500">{data.requestedByUser.email}</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
+          <Card className="shadow-sm border-slate-200 overflow-hidden">
+            <CardHeader className="bg-slate-50/80 pb-4 border-b">
+              <CardTitle className="text-base flex items-center gap-2 text-slate-800">
+                <MapPin className="h-5 w-5 text-red-500" /> Lộ trình điều phối
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="relative pt-8 px-6 md:px-10 pb-8">
+              <div className="absolute left-[2.95rem] md:left-[3.95rem] top-14 bottom-14 w-0.5 border-l-2 border-dashed border-slate-300"></div>
+              <div className="space-y-8">
+                <div className="relative z-10 flex items-start gap-4">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center shadow-sm">
+                    <div className="h-2.5 w-2.5 rounded-full bg-slate-400"></div>
+                  </div>
+                  <div className="pt-1">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạm xuất phát</p>
+                    <p className="font-bold text-slate-900 text-base">{data.sourceStation.name}</p>
+                    <p className="text-sm text-slate-500 mt-1 line-clamp-2">{data.sourceStation.address}</p>
+                  </div>
+                </div>
+                <div className="relative z-10 flex items-start gap-4">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center shadow-sm">
+                    <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse"></div>
+                  </div>
+                  <div className="pt-1">
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Trạm đích đến</p>
+                    <p className="font-bold text-slate-900 text-base">{data.targetStation.name}</p>
+                    <p className="text-sm text-slate-500 mt-1 line-clamp-2">{data.targetStation.address}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Row 2: Table List */}
+        <Card className="shadow-sm border-slate-200 overflow-hidden">
+          <CardHeader className="bg-slate-900 text-white py-4">
+            <CardTitle className="text-base font-medium flex items-center gap-2">
+              <Bike className="h-5 w-5 text-blue-400" /> Danh sách xe thực tế ({data.items.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-slate-50/80">
+                <TableRow className="hover:bg-transparent">
+                  {showCheckboxColumn && (
+                    <TableHead className="w-[60px] text-center font-bold text-slate-600">Chọn</TableHead>
+                  )}
+                  <TableHead className="w-[60px] text-center font-bold text-slate-600">STT</TableHead>
+                  <TableHead className="font-bold text-slate-600">Mã xe (Bike ID)</TableHead>
+                  <TableHead className="font-bold text-slate-600">Trạng thái</TableHead>
+                  <TableHead className="font-bold text-slate-600 text-right pr-6">Thời gian bàn giao</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.items.length > 0 ? (
+                  data.items.map((item, index) => {
+                    const { label, color } = getStatusConfig(item.bike.status as BikeStatus);
                     return (
-                      <TableRow
-                        key={item.id}
-                        className="hover:bg-blue-50/30 transition-colors"
-                      >
-                        <TableCell className="text-center">
-                          {(data.status === "IN_TRANSIT" ||
-                            data.status === "PARTIALLY_COMPLETED") &&
-                            !item.deliveredAt && (
+                      <TableRow key={item.id} className="hover:bg-slate-50 transition-colors">
+                        {showCheckboxColumn && (
+                          <TableCell className="text-center">
+                            {!item.deliveredAt && (
                               <Checkbox
                                 checked={selectedBikeIds.includes(item.bike.id)}
-                                onCheckedChange={() =>
-                                  handleToggleBike(item.bike.id)
-                                }
+                                onCheckedChange={() => handleToggleBike(item.bike.id)}
                               />
                             )}
-                        </TableCell>
-
+                          </TableCell>
+                        )}
+                        <TableCell className="text-center font-medium text-slate-500">{index + 1}</TableCell>
                         <TableCell>
-                          <code className="px-2 py-1 bg-slate-100 rounded text-blue-700 font-bold text-xs">
+                          <code className="px-2.5 py-1 bg-slate-100 rounded border border-slate-200 text-slate-700 font-mono text-xs font-semibold">
                             {item.bike.id}
                           </code>
                         </TableCell>
-
                         <TableCell>
-                          {/* Sử dụng biến đã khai báo */}
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${color}`}
-                          >
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${color}`}>
                             {label}
                           </span>
                         </TableCell>
-
-                        <TableCell className="text-right text-slate-600 font-medium">
-                          {item.deliveredAt
-                            ? formatToVNTime(item.deliveredAt)
-                            : "Chưa có"}
+                        <TableCell className="text-right text-slate-600 font-medium pr-6">
+                          {item.deliveredAt ? formatToVNTime(item.deliveredAt) : (
+                            <span className="text-slate-400 italic font-normal">Chưa bàn giao</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card className="border-dashed border-2 bg-slate-50/30">
-            <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground italic">
-                Ghi chú hệ thống
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-slate-500">
-              Yêu cầu này được xử lý tự động bởi hệ thống quản lý MeBike.
-            </CardContent>
-          </Card>
-        </div>
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={showCheckboxColumn ? 5 : 4} className="h-32 text-center text-slate-500">
+                      Chưa có danh sách xe cụ thể cho yêu cầu này.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Reject Modal */}
       <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Lý do từ chối yêu cầu</DialogTitle>
           </DialogHeader>
-          <div className="py-4 space-y-2">
+          <div className="py-4 space-y-3">
             <Textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Nhập lý do từ chối (tối thiểu 10 ký tự)..."
-              className="resize-none"
-              rows={4}
+              className="resize-none focus-visible:ring-red-500" rows={4}
             />
-            <p
-              className={`text-xs text-right font-medium ${isValidRejectReason ? "text-green-600" : "text-red-500"}`}
-            >
+            <p className={`text-xs text-right font-medium ${isValidRejectReason ? "text-emerald-600" : "text-rose-500"}`}>
               {rejectReason.trim().length} / 10 ký tự
             </p>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowRejectModal(false)}
-              disabled={isProcessing}
-            >
-              Hủy
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleRejectSubmit}
-              disabled={isProcessing || !isValidRejectReason}
-            >
-              {isProcessing && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Xác nhận từ chối
+            <Button variant="ghost" onClick={() => setShowRejectModal(false)} disabled={isProcessing}>Hủy</Button>
+            <Button variant="destructive" onClick={handleRejectSubmit} disabled={isProcessing || !isValidRejectReason}>
+              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Xác nhận từ chối
             </Button>
           </DialogFooter>
         </DialogContent>
