@@ -174,7 +174,7 @@ export default function ProfilePage() {
     if (formData?.verify === "VERIFIED") {
       return;
     }
-    resendVerifyEmail();
+    resendVerifyEmail({email : user.email , fullName : user.fullName , userId : user.id});
     setIsVerifyEmailModalOpen(true);
   };
 
