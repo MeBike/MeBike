@@ -49,9 +49,12 @@ export const authService = {
     );
     return response;
   },
-  resendVerifyEmail: async (): Promise<AxiosResponse<MessageResponse>> => {
+  resendVerifyEmail: async ({data}:{data : {email?:string,
+    fullName?:string,
+    userId?:string
+  }}): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
-      ENDPOINT.AUTH.RESEND_VERIFY_EMAIL
+      ENDPOINT.AUTH.RESEND_VERIFY_EMAIL , data
     );
     return response;
   },
