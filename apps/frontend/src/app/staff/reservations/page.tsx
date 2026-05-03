@@ -36,7 +36,6 @@ export default function Page() {
     bikeId: debouncedBikeId || undefined,
   });
 
-  // 2. FETCH DATA
   useEffect(() => {
     fetchAllReservationsForStaff();
     getAllStations();
@@ -44,10 +43,10 @@ export default function Page() {
     fetchAllReservationsForStaff, 
     getAllStations, 
     currentPage, 
-    statusFilter, 
-    option, 
-    userId, 
-    bikeId
+    debouncedStatusFilter, 
+    debouncedOption, 
+    debouncedUserId, 
+    debouncedBikeId
   ]);
 
   const handleReset = () => {

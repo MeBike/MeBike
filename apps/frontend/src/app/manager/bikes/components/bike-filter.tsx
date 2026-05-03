@@ -17,10 +17,7 @@ interface BikeFiltersProps {
   setStatusFilter: (status: BikeStatus | "all") => void;
   stationId: string;
   setStationId: (id: string) => void;
-  supplierId: string;
-  setSupplierId: (id: string) => void;
   stations: Station[];
-  suppliers: Supplier[];
   onReset?: () => void;
 }
 
@@ -29,23 +26,18 @@ export function BikeFilters({
   setStatusFilter,
   stationId,
   setStationId,
-  supplierId,
-  setSupplierId,
   stations,
-  suppliers,
   onReset,
 }: BikeFiltersProps) {
   const handleReset = () => {
     setStatusFilter("all");
     setStationId("all-stations");
-    setSupplierId("all-suppliers");
     if (onReset) onReset();
   };
 
   const isFiltering =
     statusFilter !== "all" ||
-    (stationId !== "" && stationId !== "all-stations") ||
-    (supplierId !== "" && supplierId !== "all-suppliers");
+    (stationId !== "" && stationId !== "all-stations");
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm transition-all">
@@ -112,28 +104,6 @@ export function BikeFilters({
               <SelectItem value="all-stations">Tất cả các trạm</SelectItem>
               {stations.map((s) => (
                 <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Lọc Nhà cung cấp */}
-        <div className="flex flex-col gap-1.5">
-          <label className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <Package className="h-3 w-3" />
-            Nhà cung cấp
-          </label>
-          <Select
-            value={supplierId || "all-suppliers"}
-            onValueChange={(val) => setSupplierId(val === "all-suppliers" ? "" : val)}
-          >
-            <SelectTrigger className="h-9 w-[220px] border-border/60 bg-background/50 text-sm focus:ring-1 focus:ring-primary">
-              <SelectValue placeholder="Chọn nhà cung cấp" />
-            </SelectTrigger>
-            <SelectContent position="popper" className="max-h-[250px] rounded-lg shadow-xl">
-              <SelectItem value="all-suppliers">Tất cả nhà cung cấp</SelectItem>
-              {suppliers.map((sup) => (
-                <SelectItem key={sup.id} value={sup.id}>{sup.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>

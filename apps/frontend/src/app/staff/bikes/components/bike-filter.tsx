@@ -15,21 +15,29 @@ import { cn } from "@/lib/utils";
 interface BikeFiltersProps {
   statusFilter: BikeStatus | "all";
   setStatusFilter: (status: BikeStatus | "all") => void;
+  stationId: string;
+  setStationId: (id: string) => void;
+  stations: Station[];
   onReset?: () => void;
 }
 
 export function BikeFilters({
   statusFilter,
   setStatusFilter,
-  onReset
+  stationId,
+  setStationId,
+  stations,
+  onReset,
 }: BikeFiltersProps) {
   const handleReset = () => {
     setStatusFilter("all");
+    setStationId("all-stations");
     if (onReset) onReset();
   };
 
   const isFiltering =
-    statusFilter !== "all"
+    statusFilter !== "all" ||
+    (stationId !== "" && stationId !== "all-stations");
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm transition-all">
@@ -51,7 +59,11 @@ export function BikeFilters({
           </Button>
         )}
       </div>
+
+      {/* Body - Các Select nằm gần nhau, không bị kéo giãn */}
       <div className="flex flex-wrap items-center gap-6 p-4">
+        
+        {/* Lọc Trạng thái */}
         <div className="flex flex-col gap-1.5">
           <label className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Tag className="h-3 w-3" />
@@ -74,6 +86,29 @@ export function BikeFilters({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Lọc Trạm xe */}
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <MapPin className="h-3 w-3" />
+            Trạm xe
+          </label>
+          <Select
+            value={stationId || "all-stations"}
+            onValueChange={(val) => setStationId(val === "all-stations" ? "" : val)}
+          >
+            <SelectTrigger className="h-9 w-[220px] border-border/60 bg-background/50 text-sm focus:ring-1 focus:ring-primary">
+              <SelectValue placeholder="Chọn trạm" />
+            </SelectTrigger>
+            <SelectContent position="popper" className="max-h-[250px] rounded-lg shadow-xl">
+              <SelectItem value="all-stations">Tất cả các trạm</SelectItem>
+              {stations.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
       </div>
     </div>
   );
