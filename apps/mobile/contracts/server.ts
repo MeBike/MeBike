@@ -4,6 +4,8 @@ import type { z } from "zod";
 export type BikeSummary = ServerContracts.BikesContracts.BikeSummary;
 export type StationReadSummary = ServerContracts.StationsContracts.StationReadSummary;
 export type StationListResponse = ServerContracts.StationsContracts.StationListResponse;
+export type ActiveCouponRule = ServerContracts.CouponsContracts.ActiveCouponRule;
+export type ActiveCouponRulesResponse = ServerContracts.CouponsContracts.ActiveCouponRulesResponse;
 
 export type ReservationDetail = ServerContracts.ReservationsContracts.ReservationDetail;
 export type ReservationExpandedDetail = ServerContracts.ReservationsContracts.ReservationExpandedDetail;

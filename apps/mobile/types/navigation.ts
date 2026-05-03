@@ -59,6 +59,7 @@ export type RootStackParamList = {
   "UpdateProfile": undefined;
   "MyWallet": undefined;
   "MetroJourney": undefined;
+  "RidingOffers": undefined;
   "Ví": undefined;
   "Subscriptions": undefined;
   "Xe": undefined;
@@ -187,6 +188,10 @@ export type MyWalletNavigationProp = StackNavigationProp<
 export type MetroJourneyNavigationProp = StackNavigationProp<
   RootStackParamList,
   "MetroJourney"
+>;
+export type RidingOffersNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "RidingOffers"
 >;
 export type SubscriptionsNavigationProp = StackNavigationProp<
   RootStackParamList,

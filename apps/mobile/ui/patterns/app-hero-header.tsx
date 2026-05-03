@@ -1,15 +1,16 @@
 import type { ReactNode } from "react";
 
-import { IconSymbol } from "@components/IconSymbol";
-import { radii, spacingRules } from "@theme/metrics";
-import { AppText } from "@ui/primitives/app-text";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, XStack, YStack } from "tamagui";
 
+import { IconSymbol } from "@components/IconSymbol";
+import { radii, spacingRules } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
+
 type AppHeroHeaderSize = "default" | "compact";
-type AppHeroHeaderVariant = "gradient" | "surface";
+type AppHeroHeaderVariant = "brand" | "gradient" | "surface";
 
 type AppHeroHeaderProps = {
   title: string;
@@ -128,6 +129,21 @@ export function AppHeroHeader({
         borderBottomLeftRadius={footer ? radii.xxl : 0}
         borderBottomRightRadius={footer ? radii.xxl : 0}
         borderBottomWidth={1}
+        paddingTop={insets.top + spacingRules.hero.paddingTop}
+        paddingHorizontal={spacingRules.hero.paddingX}
+        paddingBottom={bottomPadding}
+      >
+        {headerContent}
+      </YStack>
+    );
+  }
+
+  if (variant === "brand") {
+    return (
+      <YStack
+        backgroundColor="$actionPrimary"
+        borderBottomLeftRadius={radii.xxl}
+        borderBottomRightRadius={radii.xxl}
         paddingTop={insets.top + spacingRules.hero.paddingTop}
         paddingHorizontal={spacingRules.hero.paddingX}
         paddingBottom={bottomPadding}
