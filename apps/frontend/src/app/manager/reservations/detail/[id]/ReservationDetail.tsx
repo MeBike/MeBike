@@ -1,7 +1,5 @@
 "use client";
-
-import { useParams, useRouter } from "next/navigation";
-import { notFound } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -17,9 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
-import { useReservationActions } from "@/hooks/use-reservation";
+import { useAgencyActions } from "@/hooks/use-agency";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-
 function statusBadgeVariant(
   status: string,
 ): "warning" | "pending" | "success" | "destructive" | "secondary" {
@@ -79,26 +76,51 @@ function Field({
     </div>
   );
 }
-export const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Đang chờ xử lý",
-  FULFILLED: "Thành công",
-  CANCELLED: "Đã hủy",
-  EXPIRED: "Hết hạn",
+export const getStatusReservationConfig = (status: string) => {
+  switch (status) {
+    case "FULFILLED":
+      return { label: "Thành công", className: "bg-green-100 text-green-800" };
+    case "PENDING":
+      return {
+        label: "Đang chờ xử lý",
+        className: "bg-yellow-100 text-yellow-800",
+      };
+    case "EXPIRED":
+      return { label: "Hết hạn", className: "bg-orange-100 text-orange-800" };
+    case "CANCELLED":
+      return { label: "Đã hủy", className: "bg-gray-200 text-gray-800" };
+    default:
+      return { label: status, className: "bg-gray-100 text-gray-800" };
+  }
+};
+const RESERVATION_CONFIG: Record<string, { label: string; color: string }> = {
+  ONE_TIME: {
+    label: "Thuê một lần",
+    color: "bg-purple-100 text-purple-700 border-purple-200",
+  },
+  FIXED_SLOT: {
+    label: "Khung giờ cố định",
+    color: "bg-orange-100 text-orange-700 border-orange-200",
+  },
+  SUBSCRIPTION: {
+    label: "Gói đăng ký",
+    color: "bg-cyan-100 text-cyan-700 border-cyan-200",
+  },
 };
 export default function ReservationDetailClient() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
   const {
-    detailReservationForStaff,
-    fetchDetailReservationForStaff,
-    isLoadingReservationsStaff,
-  } = useReservationActions({
+    getDetailReservationForAgency,
+    detailReservationForAgency,
+    isLoadingDetailReservationForAgency,
+  } = useAgencyActions({
     hasToken: true,
-    id: id,
+    reservation_id: id,
   });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
-    if (isLoadingReservationsStaff) {
+    if (isLoadingDetailReservationForAgency) {
       setIsVisualLoading(true);
     } else {
       const timer = setTimeout(() => {
@@ -106,20 +128,19 @@ export default function ReservationDetailClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoadingReservationsStaff]);
+  }, [isLoadingDetailReservationForAgency]);
   useEffect(() => {
     if (id) {
-      fetchDetailReservationForStaff();
+      getDetailReservationForAgency();
     }
-  }, [id, fetchDetailReservationForStaff]);
+  }, [id, getDetailReservationForAgency]);
   if (isVisualLoading) return <LoadingScreen />;
-  if (!detailReservationForStaff) {
+  if (!detailReservationForAgency) {
     notFound();
   }
 
-  const data = detailReservationForStaff;
-  const isVerified = data.user?.role === "ADMIN" || data.user?.id; // Tùy chỉnh logic verify của bạn
-
+  const data = detailReservationForAgency;
+  const { label, className } = getStatusReservationConfig(data.status);
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -137,16 +158,15 @@ export default function ReservationDetailClient() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
               Chi tiết đặt chỗ
             </h1>
-            <Badge
-              variant={statusBadgeVariant(data.status)}
-              className="rounded-full px-3 py-0.5 text-[11px] font-semibold uppercase"
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
             >
-              {STATUS_LABELS[data.status]}
-            </Badge>
+              {label}
+            </span>
           </div>
           <Button
             variant="outline"
-            onClick={() => router.push("/manager/reservations")}
+            onClick={() => router.push("/staff/reservations")}
           >
             Quay lại danh sách
           </Button>
@@ -159,12 +179,6 @@ export default function ReservationDetailClient() {
             <span className="font-mono text-xs font-bold text-foreground">
               {data.id}
             </span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Tùy chọn: </span>
-            <Badge variant="secondary" className="ml-1 text-[10px]">
-              {data.reservationOption}
-            </Badge>
           </div>
           <div className="sm:ml-auto">
             <span className="text-muted-foreground">Khởi tạo: </span>
@@ -220,7 +234,7 @@ export default function ReservationDetailClient() {
                   </p>
                   <p className="mt-1 text-base font-semibold">
                     {data.endTime
-                      ? "Hiệu lực đến"
+                      ? "Đã hoàn thành"
                       : "Đang trong thời gian đặt"}
                   </p>
                   <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
@@ -241,15 +255,13 @@ export default function ReservationDetailClient() {
                   value={<span className="font-mono">{data.bike?.id}</span>}
                 />
                 <Field
-                  label="Xe được gán"
-                  value={<span className="font-mono">{data.bike?.bikeNumber}</span>}
-                />
-                <Field
                   label="Trạng thái xe"
                   value={
-                    <Badge variant="outline" className="capitalize">
-                      {data.bike?.status}
-                    </Badge>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
+                    >
+                      {label}
+                    </span>
                   }
                 />
                 <Field label="ID Trạm hiện tại" value={data.stationId} />
@@ -273,12 +285,6 @@ export default function ReservationDetailClient() {
                   label="Số điện thoại"
                   value={data.user?.phoneNumber || "Chưa cập nhật"}
                 />
-                <div className="pt-2">
-                  <Badge variant="success" className="rounded-full">
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                    {data.user?.role}
-                  </Badge>
-                </div>
               </div>
             </SectionCard>
 
@@ -294,11 +300,13 @@ export default function ReservationDetailClient() {
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Phương thức:</span>
-                  <span className="font-medium">Ví điện tử / QR</span>
+                  <span className="font-medium">Ví </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Loại đặt:</span>
-                  <span className="font-medium">{data.reservationOption}</span>
+                  <span className="font-medium">
+                    {RESERVATION_CONFIG[data.reservationOption].label}
+                  </span>
                 </div>
               </div>
             </SectionCard>

@@ -419,13 +419,13 @@ export const useAgencyActions = ({
     data: agencyStation,
     refetch: refetchMyAgencyStation,
     isLoading: isLoadingMyAgencyStation,
-  } = useGetMyStationsAgency({ page: page, pageSize: pageSize });
+  } = useGetMyStationsAgency({ page: page, pageSize: pageSize , name});
   const getMyAgencyStation = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchMyAgencyStation();
-  }, [refetchMyAgencyStation, hasToken, page, pageSize]);
+  }, [refetchMyAgencyStation, hasToken, page, pageSize,name]);
   const {
     data: myStationDetail,
     refetch: refetchMyAgencyStationDetail,

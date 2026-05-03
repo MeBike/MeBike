@@ -331,9 +331,6 @@ export const useDistributionRequest = ({
           queryClient.invalidateQueries({
             queryKey: ["distribution-request", "all"],
           });
-          queryClient.invalidateQueries({
-            queryKey: ["manager","distribution-request-data","detail",id],
-          });
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);

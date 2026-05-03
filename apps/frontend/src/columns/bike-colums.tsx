@@ -8,21 +8,30 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
 export const getStatusConfig = (status: BikeStatus) => {
   switch (status) {
+    case "AVAILABLE":
+      return { label: "Sẵn sàng", color: "bg-green-100 text-green-800" };
     case "BOOKED":
       return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800" };
+    case "RESERVED":
+      return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800" };
+    case "REDISTRIBUTING":
+      return { label: "Đang điều phối", color: "bg-purple-100 text-purple-800" };
     case "MAINTENANCE":
       return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800" };
     case "BROKEN":
       return { label: "Đang hỏng", color: "bg-red-100 text-red-800" };
-    case "AVAILABLE":
-      return { label: "Sẵn sàng", color: "bg-green-100 text-green-800" };
-    case "RESERVED":
-      return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800" };
+    case "UNAVAILABLE":
+      return { label: "Không khả dụng", color: "bg-gray-200 text-gray-800" };
+    case "LOST":
+      return { label: "Bị mất", color: "bg-rose-100 text-rose-800" }; // Dùng màu rose/đỏ đậm cho xe mất
+    case "DISABLED":
+      return { label: "Vô hiệu hóa", color: "bg-slate-200 text-slate-800" }; // Dùng màu slate cho xe bị vô hiệu hóa
+    case "":
+      return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500" };
     default:
-      return { label: status, color: "bg-gray-100 text-gray-800" };
+      return { label: status || "Không xác định", color: "bg-gray-100 text-gray-500" };
   }
 };
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
@@ -31,16 +40,8 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 };
 export const bikeColumn = ({
   onView,
-  onEdit,
-  stations = [],
-  suppliers = [],
-  //  onUpdateStatus,
 }: {
   onView?: ({ id }: { id: string }) => void;
-  onEdit?: ({ id }: { id: string }) => void;
-  stations?: Station[];
-  suppliers?: Supplier[];
-  //  onUpdateStatus?: ((data: ) => void) | undefined;
 }): ColumnDef<Bike>[] => [
   {
     accessorKey: "station",

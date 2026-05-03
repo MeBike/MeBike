@@ -5,30 +5,29 @@ import { RentalFilters } from "@/components/rentals/rental-filters";
 import { useRouter } from "next/navigation";
 import type { RentalStatus } from "@custom-types";
 import { useAgencyActions } from "@/hooks/use-agency";
-import { useStationActions } from "@/hooks/use-station"; // Hook lấy danh sách trạm
+import { useStationActions } from "@/hooks/use-station";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { rentalColumnForStaff } from "@/columns/rental-columns";
 import { TableSkeleton } from "@/components/table-skeleton";
-
+import { useDebounce } from "@/utils/useDebounce";
 export default function RentalClient() {
   const router = useRouter();
-  
-  // 1. QUẢN LÝ STATE
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Các state filter nâng cao
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "">("");
   const [userId, setUserId] = useState<string>("");
   const [bikeId, setBikeId] = useState<string>("");
   const [startStation, setStartStation] = useState<string>("");
   const [endStation, setEndStation] = useState<string>("");
-
-  // 2. GỌI API & DATA
   const { stations, getAllStations } = useStationActions({ hasToken: true });
-
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedStatusFilter = useDebounce(statusFilter,500);
+  const debouncedUserId = useDebounce(userId, 500);
+  const debouncedBikeId = useDebounce(bikeId, 500);
+  const debouncedStartStation = useDebounce(startStation, 500);
+  const debouncedEndStation = useDebounce(endStation, 500);
   const {
     rentalInMyStation,
     getRentalInMyStation,
@@ -37,12 +36,11 @@ export default function RentalClient() {
     hasToken: true,
     pageSize: limit,
     page: page,
-    // Truyền đầy đủ params filter vào hook agency
-    ...(statusFilter !== "" && { rental_status: statusFilter as RentalStatus }),
-    userId: userId,
-    bikeId: bikeId,
-    startStation: startStation,
-    endStation: endStation,
+    ...(debouncedStatusFilter !== "" && { rental_status: debouncedStatusFilter as RentalStatus }),
+    userId: debouncedUserId || undefined,
+    bikeId: debouncedBikeId || undefined,
+    startStation: debouncedStartStation || undefined,
+    endStation: debouncedEndStation || undefined,
   });
 
   const [isVisualLoading, setIsVisualLoading] = useState(false);
@@ -63,23 +61,21 @@ export default function RentalClient() {
     }
   }, [isLoadingRentalInMyStation]);
 
-  // Gọi lại API khi bất kỳ filter nào thay đổi
   useEffect(() => {
     getRentalInMyStation();
   }, [
     getRentalInMyStation, 
     page, 
-    statusFilter, 
-    userId, 
-    bikeId, 
-    startStation, 
-    endStation
+    debouncedStatusFilter, 
+    debouncedUserId, 
+    debouncedBikeId, 
+    debouncedStartStation, 
+    debouncedEndStation
   ]);
 
-  // Reset page về 1 khi thay đổi bộ lọc
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, userId, bikeId, startStation, endStation]);
+  }, [debouncedStatusFilter, debouncedUserId, debouncedBikeId, debouncedStartStation, debouncedEndStation]);
 
   // 4. XỬ LÝ SỰ KIỆN
   const handleReset = () => {

@@ -24,7 +24,7 @@ import {
   XCircle,
   Loader2,
   CheckCheck,
-  Truck // Thêm icon Truck cho Start Transit
+  Truck, // Thêm icon Truck cho Start Transit
 } from "lucide-react";
 import type { RedistributionRequestStatus } from "@/types/DistributionRequest";
 import {
@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CurrentStation } from "@/types";
+import { CurrentStation, BikeStatus } from "@/types";
 
 interface Props {
   data: RedistributionRequestDetail;
@@ -65,11 +65,47 @@ export const DistributionRequestDetailClient = ({
   const [cancelReason, setCancelReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
-  const canApproveReject = listStation?.currentStation.id == data.targetStation.id;
-  const canStartTransit = listStation?.currentStation.id == data.sourceStation.id && data.status === "APPROVED";
-  const canComplete = listStation?.currentStation.id == data.targetStation.id && data.status === "IN_TRANSIT";
+  const canApproveReject =
+    listStation?.currentStation.id == data.targetStation.id;
+  const canStartTransit =
+    listStation?.currentStation.id == data.sourceStation.id &&
+    data.status === "APPROVED";
+  const canComplete =
+    listStation?.currentStation.id == data.targetStation.id &&
+    data.status === "IN_TRANSIT";
   const canCancel = listStation?.currentStation.id === data.sourceStation.id;
-
+  const getStatusConfig = (status: BikeStatus) => {
+    switch (status) {
+      case "AVAILABLE":
+        return { label: "Sẵn sàng", color: "bg-green-100 text-green-800" };
+      case "BOOKED":
+        return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800" };
+      case "RESERVED":
+        return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800" };
+      case "REDISTRIBUTING":
+        return {
+          label: "Đang điều phối",
+          color: "bg-purple-100 text-purple-800",
+        };
+      case "MAINTENANCE":
+        return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800" };
+      case "BROKEN":
+        return { label: "Đang hỏng", color: "bg-red-100 text-red-800" };
+      case "UNAVAILABLE":
+        return { label: "Không khả dụng", color: "bg-gray-200 text-gray-800" };
+      case "LOST":
+        return { label: "Bị mất", color: "bg-rose-100 text-rose-800" }; // Dùng màu rose/đỏ đậm cho xe mất
+      case "DISABLED":
+        return { label: "Vô hiệu hóa", color: "bg-slate-200 text-slate-800" }; // Dùng màu slate cho xe bị vô hiệu hóa
+      case "":
+        return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500" };
+      default:
+        return {
+          label: status || "Không xác định",
+          color: "bg-gray-100 text-gray-500",
+        };
+    }
+  };
   const STATUS_MAP: Record<
     RedistributionRequestStatus,
     { label: string; style: string }
@@ -180,14 +216,20 @@ export const DistributionRequestDetailClient = ({
 
         {/* Action Buttons Section */}
         <div className="flex gap-3 flex-wrap">
-          
           {/* FLOW 1: PENDING APPROVAL -> Approve / Reject / Cancel */}
           {data.status === "PENDING_APPROVAL" && (
             <>
               {canCancel && (
-                <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+                <Dialog
+                  open={isCancelDialogOpen}
+                  onOpenChange={setIsCancelDialogOpen}
+                >
                   <DialogTrigger asChild>
-                    <Button variant="destructive" className="bg-slate-500 hover:bg-slate-600 shadow-sm" disabled={isProcessing}>
+                    <Button
+                      variant="destructive"
+                      className="bg-slate-500 hover:bg-slate-600 shadow-sm"
+                      disabled={isProcessing}
+                    >
                       <XCircle className="mr-2 h-4 w-4" />
                       Hủy yêu cầu
                     </Button>
@@ -197,27 +239,35 @@ export const DistributionRequestDetailClient = ({
                       <DialogTitle>Hủy yêu cầu điều phối</DialogTitle>
                     </DialogHeader>
                     <div className="py-4 space-y-2">
-                      <Textarea 
+                      <Textarea
                         placeholder="Nhập lý do hủy yêu cầu (tối thiểu 10 ký tự)..."
                         value={cancelReason}
                         onChange={(e) => setCancelReason(e.target.value)}
                         className="resize-none"
                         rows={4}
                       />
-                      <p className={`text-xs text-right font-medium ${isValidCancelReason ? "text-green-600" : "text-red-500"}`}>
+                      <p
+                        className={`text-xs text-right font-medium ${isValidCancelReason ? "text-green-600" : "text-red-500"}`}
+                      >
                         {cancelReason.trim().length} / 10 ký tự
                       </p>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)} disabled={isProcessing}>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsCancelDialogOpen(false)}
+                        disabled={isProcessing}
+                      >
                         Đóng
                       </Button>
-                      <Button 
-                        variant="destructive" 
-                        onClick={handleCancelSubmit} 
+                      <Button
+                        variant="destructive"
+                        onClick={handleCancelSubmit}
                         disabled={isProcessing || !isValidCancelReason}
                       >
-                        {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isProcessing && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
                         Xác nhận hủy
                       </Button>
                     </DialogFooter>
@@ -227,11 +277,23 @@ export const DistributionRequestDetailClient = ({
 
               {canApproveReject && (
                 <>
-                  <Button variant="destructive" onClick={() => setShowRejectModal(true)} disabled={isProcessing}>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowRejectModal(true)}
+                    disabled={isProcessing}
+                  >
                     <XCircle className="mr-2 h-4 w-4" /> Từ chối
                   </Button>
-                  <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleAction(onApprove)} disabled={isProcessing}>
-                    {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                  <Button
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => handleAction(onApprove)}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                    ) : (
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                    )}
                     Duyệt yêu cầu
                   </Button>
                 </>
@@ -241,23 +303,41 @@ export const DistributionRequestDetailClient = ({
 
           {/* FLOW 2: APPROVED -> Start Transit */}
           {data.status === "APPROVED" && canStartTransit && (
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => handleAction(onStartTransit)} disabled={isProcessing}>
-              {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Truck className="mr-2 h-4 w-4" />}
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => handleAction(onStartTransit)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+              ) : (
+                <Truck className="mr-2 h-4 w-4" />
+              )}
               Bắt đầu vận chuyển
             </Button>
           )}
 
           {/* FLOW 3: IN TRANSIT / PARTIALLY COMPLETED -> Complete */}
-          {(data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED") && canComplete && (
-            <Button
-              className="bg-emerald-600 hover:bg-emerald-700"
-              onClick={() => handleAction(() => onComplete({ completedBikeIds: selectedBikeIds }))}
-              disabled={isProcessing || selectedBikeIds.length === 0}
-            >
-              {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-              Hoàn tất ({selectedBikeIds.length} xe)
-            </Button>
-          )}
+          {(data.status === "IN_TRANSIT" ||
+            data.status === "PARTIALLY_COMPLETED") &&
+            canComplete && (
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700"
+                onClick={() =>
+                  handleAction(() =>
+                    onComplete({ completedBikeIds: selectedBikeIds }),
+                  )
+                }
+                disabled={isProcessing || selectedBikeIds.length === 0}
+              >
+                {isProcessing ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : (
+                  <CheckCheck className="mr-2 h-4 w-4" />
+                )}
+                Hoàn tất ({selectedBikeIds.length} xe)
+              </Button>
+            )}
         </div>
       </div>
 
@@ -274,28 +354,46 @@ export const DistributionRequestDetailClient = ({
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div className="flex flex-col gap-1">
-                  <span className="text-muted-foreground font-medium">Lý do điều phối:</span>
-                  <span className="text-slate-900 italic">{data.reason || "Không có lý do cụ thể"}</span>
+                  <span className="text-muted-foreground font-medium">
+                    Lý do điều phối:
+                  </span>
+                  <span className="text-slate-900 italic">
+                    {data.reason || "Không có lý do cụ thể"}
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 border-t pt-4">
                   <div>
-                    <span className="text-muted-foreground block font-medium">Số lượng:</span>
-                    <span className="text-lg font-bold text-blue-600">{data.requestedQuantity} xe</span>
+                    <span className="text-muted-foreground block font-medium">
+                      Số lượng:
+                    </span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {data.requestedQuantity} xe
+                    </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground block font-medium">Ngày tạo:</span>
-                    <span className="font-semibold">{formatToVNTime(data.createdAt)}</span>
+                    <span className="text-muted-foreground block font-medium">
+                      Ngày tạo:
+                    </span>
+                    <span className="font-semibold">
+                      {formatToVNTime(data.createdAt)}
+                    </span>
                   </div>
                 </div>
                 <div className="border-t pt-4">
-                  <span className="text-muted-foreground block font-medium">Người yêu cầu:</span>
+                  <span className="text-muted-foreground block font-medium">
+                    Người yêu cầu:
+                  </span>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
                       {data.requestedByUser.fullName.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-semibold leading-none">{data.requestedByUser.fullName}</p>
-                      <p className="text-xs text-muted-foreground">{data.requestedByUser.email}</p>
+                      <p className="font-semibold leading-none">
+                        {data.requestedByUser.fullName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {data.requestedByUser.email}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -316,9 +414,15 @@ export const DistributionRequestDetailClient = ({
                       <div className="h-2 w-2 rounded-full bg-slate-400"></div>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Trạm nguồn</p>
-                      <p className="font-bold text-slate-800 uppercase tracking-wide">{data.sourceStation.name}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-1">{data.sourceStation.address}</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">
+                        Trạm nguồn
+                      </p>
+                      <p className="font-bold text-slate-800 uppercase tracking-wide">
+                        {data.sourceStation.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {data.sourceStation.address}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -328,9 +432,15 @@ export const DistributionRequestDetailClient = ({
                       <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-primary uppercase tracking-wider">Trạm đích</p>
-                      <p className="font-bold text-slate-800 uppercase tracking-wide">{data.targetStation.name}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-1">{data.targetStation.address}</p>
+                      <p className="text-xs font-bold text-primary uppercase tracking-wider">
+                        Trạm đích
+                      </p>
+                      <p className="font-bold text-slate-800 uppercase tracking-wide">
+                        {data.targetStation.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {data.targetStation.address}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -341,45 +451,74 @@ export const DistributionRequestDetailClient = ({
           <Card className="shadow-lg border-none overflow-hidden">
             <CardHeader className="bg-slate-900 text-white py-4">
               <CardTitle className="text-md font-medium flex items-center gap-2">
-                <Bike className="h-5 w-5" /> Danh sách xe thực tế ({data.items.length})
+                <Bike className="h-5 w-5" /> Danh sách xe thực tế (
+                {data.items.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader className="bg-slate-50">
                   <TableRow>
-                    <TableHead className="w-[50px] text-center font-bold">Chọn</TableHead>
-                    <TableHead className="font-bold uppercase text-xs">Mã Chip (Bike ID)</TableHead>
-                    <TableHead className="font-bold uppercase text-xs">Trạng thái xe</TableHead>
-                    <TableHead className="font-bold uppercase text-xs text-right">Ngày bàn giao</TableHead>
+                    <TableHead className="w-[50px] text-center font-bold"></TableHead>
+                    <TableHead className="font-bold uppercase text-xs">
+                      Mã Chip (Bike ID)
+                    </TableHead>
+                    <TableHead className="font-bold uppercase text-xs">
+                      Trạng thái xe
+                    </TableHead>
+                    <TableHead className="font-bold uppercase text-xs text-right">
+                      Ngày bàn giao
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.items.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-blue-50/30 transition-colors">
-                      <TableCell className="text-center">
-                        {!item.deliveredAt && (
-                          <Checkbox
-                            checked={selectedBikeIds.includes(item.bike.id)}
-                            onCheckedChange={() => handleToggleBike(item.bike.id)}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <code className="px-2 py-1 bg-slate-100 rounded text-blue-700 font-bold text-xs">
-                          {item.bike.id}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-semibold text-[10px] bg-white">
-                          {item.bike.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-slate-600 font-medium">
-                        {item.deliveredAt ? formatToVNTime(item.deliveredAt) : "Chưa có"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {data.items.map((item) => {
+                    // Khai báo biến ở đây, trước khi return JSX
+                    const { label, color } = getStatusConfig(
+                      item.bike.status as BikeStatus,
+                    );
+
+                    return (
+                      <TableRow
+                        key={item.id}
+                        className="hover:bg-blue-50/30 transition-colors"
+                      >
+                        <TableCell className="text-center">
+                          {(data.status === "IN_TRANSIT" ||
+                            data.status === "PARTIALLY_COMPLETED") &&
+                            !item.deliveredAt && (
+                              <Checkbox
+                                checked={selectedBikeIds.includes(item.bike.id)}
+                                onCheckedChange={() =>
+                                  handleToggleBike(item.bike.id)
+                                }
+                              />
+                            )}
+                        </TableCell>
+
+                        <TableCell>
+                          <code className="px-2 py-1 bg-slate-100 rounded text-blue-700 font-bold text-xs">
+                            {item.bike.id}
+                          </code>
+                        </TableCell>
+
+                        <TableCell>
+                          {/* Sử dụng biến đã khai báo */}
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${color}`}
+                          >
+                            {label}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="text-right text-slate-600 font-medium">
+                          {item.deliveredAt
+                            ? formatToVNTime(item.deliveredAt)
+                            : "Chưa có"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
@@ -414,16 +553,28 @@ export const DistributionRequestDetailClient = ({
               className="resize-none"
               rows={4}
             />
-            <p className={`text-xs text-right font-medium ${isValidRejectReason ? "text-green-600" : "text-red-500"}`}>
+            <p
+              className={`text-xs text-right font-medium ${isValidRejectReason ? "text-green-600" : "text-red-500"}`}
+            >
               {rejectReason.trim().length} / 10 ký tự
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRejectModal(false)} disabled={isProcessing}>
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectModal(false)}
+              disabled={isProcessing}
+            >
               Hủy
             </Button>
-            <Button variant="destructive" onClick={handleRejectSubmit} disabled={isProcessing || !isValidRejectReason}>
-              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button
+              variant="destructive"
+              onClick={handleRejectSubmit}
+              disabled={isProcessing || !isValidRejectReason}
+            >
+              {isProcessing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Xác nhận từ chối
             </Button>
           </DialogFooter>
