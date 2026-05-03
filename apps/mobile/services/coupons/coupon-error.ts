@@ -1,32 +1,29 @@
+import type { z } from "zod";
+
+import { ServerContracts } from "@mebike/shared";
+
 import type { Result } from "@lib/result";
 import type { ServiceError } from "@services/shared/service-error";
 
-import { readJson } from "@lib/api-decode";
-import { asNetworkError as asSharedNetworkError } from "@services/shared/service-error";
+import { asNetworkError as asSharedNetworkError, normalizeServiceErrorCode, parseServiceError } from "@services/shared/service-error";
 
-export type CouponRuleErrorCode = "UNKNOWN";
+type ContractCouponRuleErrorCode = z.infer<
+  typeof ServerContracts.CouponsContracts.CouponRuleErrorCodeSchema
+>;
+
+export type CouponRuleErrorCode = ContractCouponRuleErrorCode | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
 
 export type CouponRuleError = ServiceError<CouponRuleErrorCode>;
 
-export async function parseCouponRuleError(response: Response): Promise<CouponRuleError> {
-  try {
-    const data = await readJson(response) as {
-      error?: unknown;
-      details?: unknown;
-    };
+function isCouponRuleContractErrorCode(code: string): code is ContractCouponRuleErrorCode {
+  return ServerContracts.CouponsContracts.CouponRuleErrorCodeSchema.safeParse(code).success;
+}
 
-    return {
-      _tag: "ApiError",
-      code: "UNKNOWN",
-      message: typeof data.error === "string" ? data.error : undefined,
-      details: data.details && typeof data.details === "object"
-        ? data.details as Record<string, unknown>
-        : undefined,
-    };
-  }
-  catch {
-    return { _tag: "DecodeError" };
-  }
+export async function parseCouponRuleError(response: Response): Promise<CouponRuleError> {
+  return parseServiceError(response, {
+    schema: ServerContracts.CouponsContracts.CouponRuleErrorResponseSchema,
+    mapCode: code => normalizeServiceErrorCode(code, isCouponRuleContractErrorCode),
+  });
 }
 
 export function asNetworkError(error: unknown): Result<never, CouponRuleError> {

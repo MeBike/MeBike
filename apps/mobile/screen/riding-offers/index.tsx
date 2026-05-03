@@ -23,20 +23,20 @@ function formatDiscount(rule: ActiveCouponRule) {
   return `Giảm ${formatCurrency(rule.discountValue)}`;
 }
 
-function formatCondition(rule: ActiveCouponRule) {
-  if (rule.minRidingMinutes > 0) {
-    return `Từ ${rule.minRidingMinutes} phút tính cước`;
+function formatDuration(minutes: number) {
+  if (minutes % 60 === 0) {
+    return `${minutes / 60} giờ`;
   }
 
-  if (rule.minBillableHours > 0) {
-    return `Từ ${rule.minBillableHours} giờ tính cước`;
-  }
-
-  return "Áp dụng cho chuyến đi đủ điều kiện";
+  return `${minutes} phút`;
 }
 
-function RuleCard({ rule }: { rule: ActiveCouponRule }) {
+function RuleCard({ nextMinRidingMinutes, rule }: { nextMinRidingMinutes?: number; rule: ActiveCouponRule }) {
   const theme = useTheme();
+  const thresholdLabel = `Từ ${formatDuration(rule.minRidingMinutes)} đạp xe`;
+  const upperBoundLabel = nextMinRidingMinutes
+    ? `Đến dưới ${formatDuration(nextMinRidingMinutes)}`
+    : null;
 
   return (
     <AppCard
@@ -77,9 +77,18 @@ function RuleCard({ rule }: { rule: ActiveCouponRule }) {
 
       <XStack alignItems="center" gap="$3">
         <IconSymbol color={theme.textTertiary.val} name="clock" size="input" />
-        <AppText flex={1} variant="subhead">
-          {formatCondition(rule)}
-        </AppText>
+        <YStack flex={1} gap="$1" minWidth={0}>
+          <AppText variant="subhead">
+            {thresholdLabel}
+          </AppText>
+          {upperBoundLabel
+            ? (
+                <AppText tone="muted" variant="bodySmall">
+                  {upperBoundLabel}
+                </AppText>
+              )
+            : null}
+        </YStack>
       </XStack>
     </AppCard>
   );
@@ -132,7 +141,7 @@ export default function RidingOffersScreen() {
   const navigation = useNavigation<RidingOffersNavigationProp>();
   const theme = useTheme();
   const query = useActiveCouponRulesQuery();
-  const rules = query.data?.data ?? [];
+  const rules = [...(query.data?.data ?? [])].sort((left, right) => left.minRidingMinutes - right.minRidingMinutes);
 
   return (
     <Screen tone="subtle">
@@ -171,7 +180,13 @@ export default function RidingOffersScreen() {
                 ? <ErrorState onRetry={() => { void query.refetch(); }} />
                 : rules.length === 0
                   ? <EmptyState />
-                  : rules.map(rule => <RuleCard key={rule.id} rule={rule} />)}
+                  : rules.map((rule, index) => (
+                      <RuleCard
+                        key={rule.id}
+                        nextMinRidingMinutes={rules[index + 1]?.minRidingMinutes}
+                        rule={rule}
+                      />
+                    ))}
           </YStack>
 
         </YStack>
