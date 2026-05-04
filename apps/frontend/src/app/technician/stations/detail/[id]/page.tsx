@@ -27,7 +27,7 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-
+import { ROLE_LABELS } from "@/columns/user-columns";
 function SectionCard({
   icon: Icon,
   title,
@@ -219,8 +219,8 @@ export default function StationDetailPage() {
                         </div>
                         <div>
                           <p className="text-sm font-bold">{w.fullName}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase">
-                            {w.role}
+                          <p className="text-[10px] text-muted-foreground">
+                            {ROLE_LABELS[w.role]}
                           </p>
                         </div>
                       </div>
@@ -250,7 +250,7 @@ export default function StationDetailPage() {
             <SectionCard icon={LayoutGrid} title="Cấu hình sức chứa">
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-lg bg-muted p-3 text-center">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                  <p className="text-[10px] text-muted-foreground font-bold">
                     Tổng vị trí
                   </p>
                   <p className="text-xl font-bold text-foreground">
@@ -258,7 +258,7 @@ export default function StationDetailPage() {
                   </p>
                 </div>
                 <div className="rounded-lg bg-secondary/50 p-3 text-center border-border/40 border">
-                  <p className="text-[10px] text-secondary-foreground uppercase font-bold">
+                  <p className="text-[10px] text-secondary-foreground font-bold">
                     Trả xe tối đa
                   </p>
                   <p className="text-xl font-bold text-foreground">
@@ -266,7 +266,7 @@ export default function StationDetailPage() {
                   </p>
                 </div>
                 <div className="rounded-lg bg-muted p-3 text-center">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                  <p className="text-[10px] text-muted-foreground font-bold">
                     Chỗ còn trống
                   </p>
                   <p className="text-xl font-extrabold text-foreground">
@@ -274,7 +274,7 @@ export default function StationDetailPage() {
                   </p>
                 </div>
                 <div className="rounded-lg bg-primary/10 p-3 text-center">
-                  <p className="text-[10px] text-primary uppercase font-bold">
+                  <p className="text-[10px] text-primary font-bold">
                     Chỗ đã đặt
                   </p>
                   <p className="text-xl font-bold text-primary">
@@ -284,10 +284,9 @@ export default function StationDetailPage() {
               </div>
 
               <div className="mt-4 pt-4 border-t border-border/40 space-y-2">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">
+                <p className="text-[10px] font-bold text-muted-foreground mb-2">
                   Chi tiết chỗ trả
                 </p>
-
                 <StatusItem
                   icon={Activity}
                   label="Chỗ trả xe"
