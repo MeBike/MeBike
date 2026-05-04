@@ -40,6 +40,17 @@ describe("operator station context routing e2e", () => {
     return fixture.auth.makeAccessToken({ userId: manager.id, role: "MANAGER" });
   }
 
+  async function createTechnicianToken(stationId?: string) {
+    const technician = await fixture.factories.user({ role: "TECHNICIAN" });
+
+    if (stationId) {
+      const team = await fixture.factories.technicianTeam({ stationId });
+      await fixture.factories.userOrgAssignment({ userId: technician.id, technicianTeamId: team.id });
+    }
+
+    return fixture.auth.makeAccessToken({ userId: technician.id, role: "TECHNICIAN" });
+  }
+
   it("returns current operator station plus all other stations", async () => {
     const currentStation = await fixture.factories.station({
       name: "Current Station",
@@ -140,6 +151,30 @@ describe("operator station context routing e2e", () => {
     const agencyUser = await fixture.factories.user({ role: "AGENCY" });
     await fixture.factories.userOrgAssignment({ userId: agencyUser.id, agencyId: agency.id });
     const token = fixture.auth.makeAccessToken({ userId: agencyUser.id, role: "AGENCY" });
+
+    const response = await fixture.app.request("http://test/v1/operators/station-context", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const body = await response.json() as OperatorsContracts.OperatorStationContextResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.currentStation.id).toBe(currentStation.id);
+    expect(body.otherStations.some(station => station.id === otherStation.id)).toBe(true);
+  });
+
+  it("allows technicians to read station context for their assigned station", async () => {
+    const currentStation = await fixture.factories.station({
+      name: "Technician Station",
+      address: "13 Technician Street, Thu Duc, TP.HCM",
+    });
+    const otherStation = await fixture.factories.station({
+      name: "Technician Other Station",
+      address: "14 Technician Street, Thu Duc, TP.HCM",
+    });
+    const token = await createTechnicianToken(currentStation.id);
 
     const response = await fixture.app.request("http://test/v1/operators/station-context", {
       headers: {

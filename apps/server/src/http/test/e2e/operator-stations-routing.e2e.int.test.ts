@@ -83,7 +83,7 @@ describe("operator stations routing e2e", () => {
     expect(body.id).toBe(hiddenStation.id);
   });
 
-  it("lists only the assigned station for agency", async () => {
+  it("lists all stations for agency", async () => {
     const { agency, token } = await createAgencyToken();
     const currentStation = await fixture.factories.station({
       capacity: 5,
@@ -91,7 +91,7 @@ describe("operator stations routing e2e", () => {
       stationType: "AGENCY",
       agencyId: agency.id,
     });
-    await fixture.factories.station({ capacity: 5, name: "Hidden Station" });
+    const hiddenStation = await fixture.factories.station({ capacity: 5, name: "Hidden Station" });
 
     const response = await fixture.app.request("http://test/v1/agency/stations?page=1&pageSize=20", {
       headers: {
@@ -102,11 +102,13 @@ describe("operator stations routing e2e", () => {
     const body = await response.json() as StationsContracts.StationListResponse;
 
     expect(response.status).toBe(200);
-    expect(body.data).toHaveLength(1);
-    expect(body.data[0]?.id).toBe(currentStation.id);
+    expect(body.data.length).toBeGreaterThanOrEqual(2);
+    expect(body.data.map(station => station.id)).toEqual(
+      expect.arrayContaining([currentStation.id, hiddenStation.id]),
+    );
   });
 
-  it("returns 404 when agency requests a different station detail", async () => {
+  it("allows agency to request a different station detail", async () => {
     const { agency, token } = await createAgencyToken();
     await fixture.factories.station({
       capacity: 5,
@@ -121,6 +123,9 @@ describe("operator stations routing e2e", () => {
       },
     });
 
-    expect(response.status).toBe(404);
+    const body = await response.json() as StationsContracts.StationReadSummary;
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe(hiddenStation.id);
   });
 });

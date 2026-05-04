@@ -36,19 +36,6 @@ function getAgencyStationScope(currentUser: {
 
 const agencyListStations: RouteHandler<StationsRoutes["agencyListStations"]> = async (c) => {
   const query = c.req.valid("query");
-  const stationScopeId = getAgencyStationScope(c.var.currentUser!);
-
-  if (stationScopeId === null) {
-    return c.json<StationListResponse, 200>({
-      data: [],
-      pagination: {
-        page: query.page ?? 1,
-        pageSize: query.pageSize ?? 50,
-        total: 0,
-        totalPages: 0,
-      },
-    }, 200);
-  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -56,7 +43,6 @@ const agencyListStations: RouteHandler<StationsRoutes["agencyListStations"]> = a
 
       const page = yield* service.listStations(
         {
-          id: stationScopeId!,
           name: query.name,
           address: query.address,
           stationType: query.stationType,
@@ -70,13 +56,6 @@ const agencyListStations: RouteHandler<StationsRoutes["agencyListStations"]> = a
           sortDir: query.sortDir ?? "asc",
         },
       );
-
-      if (page.total > 0) {
-        return page;
-      }
-
-      yield* service.getStationById(stationScopeId!);
-
       return page;
     }),
     "GET /v1/agency/stations",
@@ -96,30 +75,18 @@ const agencyListStations: RouteHandler<StationsRoutes["agencyListStations"]> = a
         },
       }, 200)),
     Match.tag("Left", () =>
-      c.json<StationErrorResponse, 404>({
-        error: stationErrorMessages.STATION_NOT_FOUND,
+      c.json<StationErrorResponse, 400>({
+        error: stationErrorMessages.INVALID_QUERY_PARAMS,
         details: {
-          code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
-          stationId: stationScopeId!,
+          code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
         },
-      }, 404)),
+      }, 400)),
     Match.exhaustive,
   );
 };
 
 const agencyGetStation: RouteHandler<StationsRoutes["agencyGetStation"]> = async (c) => {
   const { stationId } = c.req.valid("param");
-  const stationScopeId = getAgencyStationScope(c.var.currentUser!);
-
-  if (stationScopeId === null || stationId !== stationScopeId) {
-    return c.json<StationErrorResponse, 404>({
-      error: stationErrorMessages.STATION_NOT_FOUND,
-      details: {
-        code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
-        stationId,
-      },
-    }, 404);
-  }
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
