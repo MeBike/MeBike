@@ -55,11 +55,13 @@ const getStationContext: RouteHandler<OperatorsRoutes["stationContext"]> = async
           id: currentStation.id,
           name: currentStation.name,
           address: currentStation.address,
+          operationalAvailableSlots: currentStation.availableReturnSlots,
         },
         otherStations: otherStations.map(station => ({
           id: station.id,
           name: station.name,
           address: station.address,
+          operationalAvailableSlots: station.operationalAvailableSlots,
         })),
       } satisfies OperatorsContracts.OperatorStationContextResponse;
     }),
