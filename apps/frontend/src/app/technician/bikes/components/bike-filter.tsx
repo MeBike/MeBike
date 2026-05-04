@@ -21,7 +21,7 @@ interface BikeFiltersProps {
 export function BikeFilters({
   statusFilter,
   setStatusFilter,
-  onReset
+  onReset,
 }: BikeFiltersProps) {
   const handleReset = () => {
     setStatusFilter("all");
@@ -30,17 +30,27 @@ export function BikeFilters({
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm transition-all">
-      {/* Header - Thanh mảnh và hiện đại */}
       <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
         <div className="flex items-center gap-2">
           <ListFilter className="h-4 w-4 text-primary" />
-          <span className="text-sm font-bold tracking-tight">Bộ lọc tìm kiếm</span>
+          <span className="text-sm font-bold tracking-tight">
+            Bộ lọc tìm kiếm
+          </span>
         </div>
+        {statusFilter !== "all" && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
+            className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Body - Các Select nằm gần nhau, không bị kéo giãn */}
       <div className="flex flex-wrap items-center gap-6 p-4">
-        
         {/* Lọc Trạng thái */}
         <div className="flex flex-col gap-1.5">
           <label className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -54,17 +64,21 @@ export function BikeFilters({
             <SelectTrigger className="h-9 w-[180px] border-border/60 bg-background/50 text-sm focus:ring-1 focus:ring-primary">
               <SelectValue placeholder="Chọn trạng thái" />
             </SelectTrigger>
-            <SelectContent position="popper" className="max-h-[250px] rounded-lg shadow-xl">
+            <SelectContent
+              position="popper"
+              className="max-h-[250px] rounded-lg shadow-xl"
+            >
               <SelectItem value="all">Tất cả trạng thái</SelectItem>
               <SelectItem value="AVAILABLE">Sẵn sàng</SelectItem>
               <SelectItem value="BOOKED">Đã đặt</SelectItem>
               <SelectItem value="RESERVED">Đã giữ chỗ</SelectItem>
-              <SelectItem value="MAINTENANCE">Đang bảo trì</SelectItem>
+              <SelectItem value="REDISTRIBUTING">Đang điều phối</SelectItem>
               <SelectItem value="BROKEN">Đang hỏng</SelectItem>
+              <SelectItem value="LOST">Đã mất</SelectItem>
+              <SelectItem value="DISABLED">Tạm ngưng hoạt động</SelectItem>{" "}
             </SelectContent>
           </Select>
         </div>
-
       </div>
     </div>
   );

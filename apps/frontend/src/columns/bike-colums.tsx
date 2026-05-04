@@ -27,7 +27,7 @@ export const getStatusConfig = (status: BikeStatus) => {
     case "LOST":
       return { label: "Bị mất", color: "bg-rose-100 text-rose-800" }; // Dùng màu rose/đỏ đậm cho xe mất
     case "DISABLED":
-      return { label: "Vô hiệu hóa", color: "bg-slate-200 text-slate-800" }; // Dùng màu slate cho xe bị vô hiệu hóa
+      return { label: "Tạm ngưng hoạt động", color: "bg-slate-200 text-slate-800" }; // Dùng màu slate cho xe bị vô hiệu hóa
     case "":
       return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500" };
     default:
