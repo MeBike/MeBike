@@ -3,7 +3,7 @@ import type { AiChatContext } from "@mebike/shared";
 import { Effect, Either, Option } from "effect";
 import { z } from "zod";
 
-import type { BikeRow, BikeService } from "@/domain/bikes";
+import type { BikeQueryService, BikeRow } from "@/domain/bikes";
 import type { RentalCommandService, RentalService, ReturnSlotRow } from "@/domain/rentals";
 import type { ReservationQueryService } from "@/domain/reservations";
 import type { StationQueryService } from "@/domain/stations";
@@ -14,7 +14,7 @@ import { requiredAvailableBikesForNextReservation, stationCanAcceptReservation }
 import { toContractNearbyStation, toContractStationReadSummary } from "@/http/presenters/stations.presenter";
 
 export type CreateCustomerToolsArgs = {
-  readonly bikeService: BikeService;
+  readonly bikeQueryService: BikeQueryService;
   readonly context: AiChatContext | null;
   readonly rentalCommandService: RentalCommandService;
   readonly reservationQueryService: ReservationQueryService;

@@ -121,12 +121,6 @@ export default function StationDetailPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
               Chi tiết trạm
             </h1>
-            <Badge
-              variant="outline"
-              className="rounded-full px-3 py-0.5 font-semibold bg-primary/5 text-primary border-primary/20"
-            >
-              Station Active
-            </Badge>
           </div>
 
           <div className="flex items-center gap-3">

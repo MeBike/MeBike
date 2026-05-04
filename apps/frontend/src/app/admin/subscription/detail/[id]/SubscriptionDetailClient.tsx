@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
+import { formatCurrency } from "@/utils/formatCurrency";
 import type { Subscription } from "@/types";
 
 function SectionCard({
@@ -168,12 +169,7 @@ export default function SubscriptionDetailClient({
                     Giá trị
                   </p>
                   <p className="text-xl font-bold text-green-600">
-                    {typeof data.price === "number"
-                      ? new Intl.NumberFormat("vi-VN", {
-                          style: "currency",
-                          currency: "VND",
-                        }).format(data.price)
-                      : data.price}
+                    {formatCurrency(data.price)}
                   </p>
                 </div>
               </div>

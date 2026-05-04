@@ -275,6 +275,7 @@ describe("reservation use-cases unhappy paths", () => {
       bikeId: null,
       stationId: station.id,
       status: "PENDING",
+      startTime: new Date(Date.now() - 60_000),
       endTime: new Date(Date.now() + env.RESERVATION_HOLD_MINUTES * 60 * 1000),
     });
 
@@ -314,6 +315,25 @@ describe("reservation use-cases unhappy paths", () => {
     expectLeftTag(result, "InvalidReservationTransition");
   });
 
+  it("confirmReservationUseCase fails with InvalidReservationTransition when reservation has not started yet", async () => {
+    const user = await fixture.factories.user();
+    const station = await fixture.factories.station();
+    const bike = await fixture.factories.bike({ stationId: station.id });
+    const now = new Date();
+    const reservation = await fixture.factories.reservation({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      reservationOption: "FIXED_SLOT",
+      status: "PENDING",
+      startTime: new Date(now.getTime() + 30 * 60 * 1000),
+      endTime: new Date(now.getTime() + 60 * 60 * 1000),
+    });
+
+    const result = await runConfirm({ reservationId: reservation.id, userId: user.id, now });
+    expectLeftTag(result, "InvalidReservationTransition");
+  });
+
   it("confirmReservationUseCase fails with InvalidReservationTransition when reservation is already fulfilled", async () => {
     const user = await fixture.factories.user();
     const station = await fixture.factories.station();
@@ -339,6 +359,7 @@ describe("reservation use-cases unhappy paths", () => {
       bikeId: bike.id,
       stationId: station.id,
       status: "PENDING",
+      startTime: new Date(Date.now() - 60_000),
       endTime: new Date(Date.now() + env.RESERVATION_HOLD_MINUTES * 60 * 1000),
     });
 

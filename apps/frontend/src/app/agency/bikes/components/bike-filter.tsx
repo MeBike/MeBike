@@ -81,14 +81,13 @@ export function BikeFilters({
               <SelectItem value="BOOKED">Đã đặt</SelectItem>
               <SelectItem value="RESERVED">Đã giữ chỗ</SelectItem>
               <SelectItem value="REDISTRIBUTING">Đang điều phối</SelectItem>
-              <SelectItem value="DISABLED">Tạm ngưng hoạt động</SelectItem>
+              <SelectItem value="BROKEN">Đang hỏng</SelectItem>
               <SelectItem value="LOST">Đã mất</SelectItem>
+              <SelectItem value="DISABLED">Tạm ngưng hoạt động</SelectItem>
             </SelectContent>
           </Select>
         </div>
-
-        {/* Lọc Trạm xe */}
-        {setStationId && (
+        {/* {setStationId && (
           <div className="flex flex-col gap-1.5">
             <label className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <MapPin className="h-3 w-3" /> Trạm xe
@@ -108,7 +107,7 @@ export function BikeFilters({
               </SelectContent>
             </Select>
           </div>
-        )}
+        )} */}
       </div>
     </div> 
   );

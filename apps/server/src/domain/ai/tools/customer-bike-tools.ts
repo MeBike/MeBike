@@ -30,7 +30,7 @@ export function createCustomerBikeTools(args: CreateCustomerToolsArgs) {
         }
 
         const bike = await Effect.runPromise(
-          args.bikeService.getBikeDetail(bikeId),
+          args.bikeQueryService.getBikeDetail(bikeId),
         );
 
         return {

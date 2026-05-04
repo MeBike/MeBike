@@ -1,8 +1,9 @@
 import { Layer } from "effect";
 
 import {
+  BikeCommandServiceLive,
+  BikeQueryServiceLive,
   BikeRepositoryLive,
-  BikeServiceLive,
   BikeStatsRepositoryLive,
   BikeStatsServiceLive,
 } from "@/domain/bikes";
@@ -13,9 +14,13 @@ export const BikeReposLive = BikeRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
-export const BikeServiceLayer = BikeServiceLive.pipe(
+export const BikeCommandServiceLayer = BikeCommandServiceLive.pipe(
   Layer.provide(BikeReposLive),
   Layer.provide(PrismaLive),
+);
+
+export const BikeQueryServiceLayer = BikeQueryServiceLive.pipe(
+  Layer.provide(BikeReposLive),
 );
 
 export const BikeStatsServiceLayer = BikeStatsServiceLive.pipe(
@@ -26,7 +31,8 @@ export const BikeStatsServiceLayer = BikeStatsServiceLive.pipe(
 export const BikeDepsLive = Layer.mergeAll(
   BikeReposLive,
   BikeStatsRepositoryLive,
-  BikeServiceLayer,
+  BikeCommandServiceLayer,
+  BikeQueryServiceLayer,
   BikeStatsServiceLayer,
   PrismaLive,
 );

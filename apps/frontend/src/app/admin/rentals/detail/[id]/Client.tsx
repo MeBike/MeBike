@@ -15,16 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { RentalRecord } from "@/types";
-function rentalStatusBadgeVariant(
-  status: string
-): "warning" | "pending" | "success" | "destructive" | "secondary" {
-  const s = status?.toUpperCase() || "";
-  if (s.includes("RESERVED") || s.includes("ĐẶT TRƯỚC")) return "warning";
-  if (s.includes("RENTED") || s.includes("THUÊ")) return "pending";
-  if (s.includes("COMPLETED") || s.includes("HOÀN THÀNH")) return "success";
-  if (s.includes("CANCELLED") || s.includes("HỦY")) return "destructive";
-  return "secondary";
-}
+import { formatCurrency } from "@/utils/formatCurrency";
 
 function SectionCard({
   icon: Icon,
@@ -345,19 +336,6 @@ export default function AdminRentalDetailClient({
                   label="Số điện thoại"
                   value={data.user?.phoneNumber || "—"}
                 />
-                {isVerified ? (
-                  <Badge
-                    variant="success"
-                    className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                  >
-                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                    VERIFIED
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="rounded-full text-[11px]">
-                    {data.user?.verify || "Chưa xác minh"}
-                  </Badge>
-                )}
               </div>
             </SectionCard>
 
@@ -367,12 +345,15 @@ export default function AdminRentalDetailClient({
                   Tổng dự kiến
                 </p>
                 <p className="mt-2 text-3xl font-bold text-primary">
-                  {(data.totalPrice ?? 0).toLocaleString("vi-VN")} VND
+                  {formatCurrency(Number(data.totalPrice ?? 0))}
                 </p>
               </div>
-              <p className="mt-4 text-center text-xs text-muted-foreground">
-                Thanh toán sẽ được tính khi chuyến đi kết thúc.
-              </p>
+               <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Phương thức thanh toán:</span>
+                  <span className="font-medium">Ví Mebike</span>
+                </div>
+              </div>
             </SectionCard>
           </div>
         </div>

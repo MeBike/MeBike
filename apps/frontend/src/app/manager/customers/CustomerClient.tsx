@@ -80,10 +80,10 @@ export default function CustomersClient() {
     }
   }, [isLoading]);
   const handleDetailUser = (id: string) => {
-    router.push(`/staff/customers/detail/${id}`);
+    router.push(`/manager/customers/detail/${id}`);
   };
   const handleWalletUser = (id: string) => {
-    router.push(`/staff/customers/wallet/${id}`);
+    router.push(`/manager/customers/wallet/${id}`);
   };
   return (
     <div>

@@ -24,8 +24,8 @@ export const useReservationActions = ({ hasToken, page, pageSize, id , status ,o
     const { data: allReservationsStaff, refetch: refetchReservationsForStaff , isLoading : isLoadingReservationsStaff } =
     useGetAllReservationForStaffQuery({ page:page, pageSize:pageSize , status : status , option : option,userId : userId,bikeId : bikeId }); 
   const { data: reservationStats , refetch : refetchReservationsStats} = useGetReservationStatsQuery();
-  const { data: detailReservation, refetch: refetchDetailReservation } = useGetDetailReservationQuery(id || "");
-    const { data: detailReservationForStaff, refetch: refetchDetailReservationForStaff } = useGetDetailReservationForStaffQuery(id || "");
+  const { data: detailReservation, refetch: refetchDetailReservation, isLoading : isLoadingDetailReservation } = useGetDetailReservationQuery(id || "");
+    const { data: detailReservationForStaff, refetch: refetchDetailReservationForStaff , isLoading:isLoadingReservationDetail } = useGetDetailReservationForStaffQuery(id || "");
   const fetchAllReservations = useCallback(() => {
     if (!hasToken) {
       return;
@@ -72,5 +72,7 @@ export const useReservationActions = ({ hasToken, page, pageSize, id , status ,o
     isLoadingReservationsStaff,
     detailReservationForStaff,
     fetchDetailReservationForStaff,
+    isLoadingDetailReservation,
+    isLoadingReservationDetail
   };
 };

@@ -250,7 +250,7 @@ export const agencyListStations = createRoute({
   },
   responses: {
     200: {
-      description: "List current agency station only",
+      description: "List stations for agency",
       content: {
         "application/json": { schema: StationListResponseSchema },
       },
@@ -259,14 +259,6 @@ export const agencyListStations = createRoute({
       description: "Invalid query",
       content: {
         "application/json": { schema: StationErrorResponseSchema },
-      },
-    },
-    404: {
-      description: "Assigned station not found",
-      content: {
-        "application/json": {
-          schema: StationErrorResponseSchema,
-        },
       },
     },
     401: unauthorizedResponse(),
@@ -337,7 +329,7 @@ export const agencyGetStation = createRoute({
   },
   responses: {
     200: {
-      description: "Get station details for current agency station",
+      description: "Get station details for agency",
       content: {
         "application/json": { schema: StationReadSummarySchemaOpenApi },
       },

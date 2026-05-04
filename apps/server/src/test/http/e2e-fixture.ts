@@ -106,7 +106,7 @@ export function setupHttpE2eFixture(options: E2eFixtureOptions) {
     if (container) {
       await container.stop();
     }
-  });
+  }, 60000);
 
   return {
     get app() {

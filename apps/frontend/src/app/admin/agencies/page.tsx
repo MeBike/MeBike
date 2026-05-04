@@ -4,6 +4,7 @@ import AgencyClient from "./AgencyClient";
 import { useAgencyActions } from "@/hooks/use-agency";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import type { AgencyStatus } from "@/types";
+import { useDebounce } from "@/utils/useDebounce";
 export default function Page() {
   const [page, setPage] = useState(1);
   const [name, setName] = useState<string>("");
@@ -11,15 +12,20 @@ export default function Page() {
   const [contactPhone, setContactPhone] = useState<string>("");
   const [contactName, setContactName] = useState<string>("");
   const [status, setStatus] = useState<AgencyStatus | "all">("all");
+  const debouncedName = useDebounce(name, 500);
+  const debouncedStationAddress = useDebounce(stationAddress, 500);
+  const debouncedContactPhone = useDebounce(contactPhone, 500);
+  const debouncedContactName = useDebounce(contactName, 500);
+  const debouncedStatus = useDebounce(status, 500);
   const { agencies, isLoadingAgencies, getAgencies } = useAgencyActions({
     hasToken: true,
     pageSize: 7,
     page: page,
-    name : name,
-    stationAddress : stationAddress,
-    contactPhone : contactPhone,
-    contactName : contactName,
-    status_agency : status,
+    name: debouncedName,
+    stationAddress: debouncedStationAddress,
+    contactPhone : debouncedContactPhone,
+    contactName : debouncedContactName,
+    status_agency : debouncedStatus,
   });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   useEffect(() => {
@@ -37,15 +43,6 @@ export default function Page() {
   }, [getAgencies,page,name,stationAddress,contactPhone,contactName,status]);
   if (isVisualLoading) {
     return <LoadingScreen />;
-  }
-  if (!agencies) {
-    return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Không tìm thấy thông tin agency.
-        </p>
-      </div>
-    );
   }
   return (
     <>

@@ -6,6 +6,7 @@ import type {
 } from "@/domain/wallets/domain-errors";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
+import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
 import { makePricingPolicyRepository } from "@/domain/pricing";
 import { isWallClockWithinOvernightOperationsWindow } from "@/domain/shared";
@@ -38,7 +39,10 @@ import {
   lockStationForReservationCheck,
   stationCanAcceptReservation,
 } from "../reservation-availability-rule";
+import { scheduleReservationLifecycleJobsInTx } from "../reservation-lifecycle-jobs";
 import { buildFixedSlotLabels } from "./fixed-slot.helpers";
+
+const FIXED_SLOT_HOLD_MINUTES = env.RESERVATION_HOLD_MINUTES;
 
 class FixedSlotAssignmentConflict extends Error {
   constructor() {
@@ -279,6 +283,9 @@ async function runFixedSlotAssignmentTransaction(
       }
 
       const billing = billingResult.right;
+      const reservationEndTime = new Date(
+        labels.slotStartAt.getTime() + FIXED_SLOT_HOLD_MINUTES * 60 * 1000,
+      );
 
       const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, context.now);
       if (!bikeReserved) {
@@ -294,7 +301,7 @@ async function runFixedSlotAssignmentTransaction(
         fixedSlotTemplateId: template.id,
         subscriptionId: billing.subscriptionId,
         startTime: labels.slotStartAt,
-        endTime: null,
+        endTime: reservationEndTime,
         prepaid: billing.prepaid,
         status: "PENDING",
       }).pipe(
@@ -302,6 +309,7 @@ async function runFixedSlotAssignmentTransaction(
           Effect.fail(new FixedSlotAssignmentConflict())),
       );
 
+      yield* scheduleReservationLifecycleJobsInTx(tx, reservation, context.now);
       yield* enqueueAssignedEmail(tx, reservation.id, template, labels, context);
 
       return "ASSIGNED" as const;

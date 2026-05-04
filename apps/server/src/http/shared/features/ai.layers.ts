@@ -2,7 +2,7 @@ import { Layer } from "effect";
 
 import { AiChatServiceLive } from "@/domain/ai";
 
-import { BikeServiceLayer } from "./bike.layers";
+import { BikeQueryServiceLayer } from "./bike.layers";
 import { RentalCommandServiceLayer, RentalServiceLayer } from "./rental.layers";
 import { ReservationQueryServiceLayer } from "./reservation.layers";
 import { StationQueryServiceLayer } from "./station.layers";
@@ -14,7 +14,7 @@ export const AiServiceLayer = AiChatServiceLive.pipe(
   Layer.provide(ReservationQueryServiceLayer),
   Layer.provide(RentalServiceLayer),
   Layer.provide(RentalCommandServiceLayer),
-  Layer.provide(BikeServiceLayer),
+  Layer.provide(BikeQueryServiceLayer),
 );
 
 export const AiDepsLive = Layer.mergeAll(

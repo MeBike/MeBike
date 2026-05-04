@@ -295,11 +295,7 @@ export function makeStationReadRepository(
           client.station.findMany({
             where: { id: { not: excludedId } },
             orderBy: { name: "asc" },
-            select: {
-              id: true,
-              name: true,
-              address: true,
-            },
+            select: stationSelect,
           }),
         catch: cause =>
           new StationRepositoryError({
@@ -307,7 +303,14 @@ export function makeStationReadRepository(
             cause,
           }),
       }).pipe(
-        Effect.map((rows): StationContextRow[] => rows),
+        Effect.flatMap(rows =>
+          attachCounts(rows, (row, counts): StationContextRow => ({
+            id: row.id,
+            name: row.name,
+            address: row.address,
+            operationalAvailableSlots: applyCounts(row, counts).availableReturnSlots,
+          })),
+        ),
         defectOn(StationRepositoryError),
       );
     },

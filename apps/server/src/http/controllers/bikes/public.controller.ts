@@ -3,7 +3,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Option } from "effect";
 
 import {
-  BikeServiceTag,
+  BikeQueryServiceTag,
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
 
@@ -22,7 +22,7 @@ const listBikes: RouteHandler<BikesRoutes["listBikes"]> = async (c) => {
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* BikeServiceTag;
+      const service = yield* BikeQueryServiceTag;
       const page = yield* service.listBikes(
         {
           id: query.id,
@@ -63,7 +63,7 @@ const getBike: RouteHandler<BikesRoutes["getBike"]> = async (c) => {
   const { id } = c.req.valid("param");
 
   const eff = Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
+    const service = yield* BikeQueryServiceTag;
     const bike = yield* service.getBikeDetail(id);
 
     if (Option.isNone(bike)) {

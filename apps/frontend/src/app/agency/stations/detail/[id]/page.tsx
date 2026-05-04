@@ -158,7 +158,7 @@ export default function StationDetailPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* {station.bikes.total < 10 && (
+           {station.bikes.total < 10 && (
               <Button
                 onClick={() =>
                   router.push(
@@ -169,7 +169,7 @@ export default function StationDetailPage() {
               >
                 <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
               </Button>
-            )} */}
+            )} 
             <Button
               variant="outline"
               onClick={() => router.push("/agency/stations")}

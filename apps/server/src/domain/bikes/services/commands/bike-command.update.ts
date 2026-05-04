@@ -53,6 +53,8 @@ export function adminUpdateBikeWithGuards(
       }
 
       if (patch.stationId && patch.stationId !== current.value.stationId) {
+        // Đổi station chỉ hợp lệ khi không phá vỡ flow thuê/đặt chỗ đang hoạt động,
+        // đồng thời vẫn phải tôn trọng sức chứa của station đích trong cùng tx.
         const activeRental = await tx.rental.findFirst({
           where: { bikeId, status: "RENTED" },
           select: { id: true },
@@ -77,6 +79,8 @@ export function adminUpdateBikeWithGuards(
         }
 
         const station = stationOpt.value;
+        // Kiểm tra sức chứa sau khi đã khóa station đích để quyết định dùng chung
+        // một ảnh chụp tuần tự của occupancy, tránh race khi nhiều mutation cùng lúc.
         const availablePlacementSlots = getAvailablePlacementSlots(station);
         if (availablePlacementSlots < 1) {
           throw new BikeStationPlacementCapacityExceeded({

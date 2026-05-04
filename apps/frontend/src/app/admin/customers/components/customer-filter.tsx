@@ -11,10 +11,12 @@ import {
 import { ListFilter, RotateCcw, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VerifyStatus } from "@/types";
+import { formatCurrency } from "@/utils/formatCurrency";
+
 type UserStatusFilter = VerifyStatus | "BANNED" | "all";
 
 interface UserFiltersProps {
-  verifyFilter: UserStatusFilter;
+  verifyFilter: UserStatusFilter | "all" | "";
   setVerifyFilter: (value: UserStatusFilter) => void;
   handleFilterChange: () => void;
   onReset?: () => void;

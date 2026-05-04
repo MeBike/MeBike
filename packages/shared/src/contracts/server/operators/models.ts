@@ -4,6 +4,7 @@ export const OperatorStationContextStationSchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
+  operationalAvailableSlots: z.number(),
 }).openapi("OperatorStationContextStation");
 
 export const OperatorStationContextResponseSchema = z.object({

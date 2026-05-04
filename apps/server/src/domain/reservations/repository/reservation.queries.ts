@@ -54,14 +54,14 @@ export function pendingStatusWhere(): PrismaTypes.ReservationWhereInput {
  * - bikeId is set (concrete bike)
  * - startTime <= now < endTime
  *
- * This intentionally excludes FIXED_SLOT reservations which often have `endTime = null`.
+ * This intentionally excludes future fixed-slot reservations until their hold window starts.
  *
  * VI: "Hold" = khoảng thời gian giữ xe hiện tại:
  * - status = PENDING
  * - có bikeId (đã gán xe cụ thể)
  * - startTime <= now < endTime
  *
- * Cố ý loại FIXED_SLOT vì thường `endTime = null`.
+ * Cố ý loại FIXED_SLOT trong tương lai cho tới khi cửa sổ giữ xe thực sự bắt đầu.
  */
 export function pendingHoldWhere(now: Date): PrismaTypes.ReservationWhereInput {
   return {
