@@ -2,7 +2,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match, Option } from "effect";
 
-import { BikeServiceTag } from "@/domain/bikes";
+import { BikeQueryServiceTag } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
 
 import type { BikeListResponse, BikeNotFoundResponse, BikesRoutes, BikeSummary } from "./shared";
@@ -43,7 +43,7 @@ const agencyListBikes: RouteHandler<BikesRoutes["agencyListBikes"]> = async (c) 
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* BikeServiceTag;
+      const service = yield* BikeQueryServiceTag;
       const page = yield* service.listBikes(
         {
           id: query.id,
@@ -99,7 +99,7 @@ const agencyGetBike: RouteHandler<BikesRoutes["agencyGetBike"]> = async (c) => {
   }
 
   const eff = Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
+    const service = yield* BikeQueryServiceTag;
     const bike = yield* service.getBikeDetail(id);
 
     if (Option.isNone(bike)) {
