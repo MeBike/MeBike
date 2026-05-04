@@ -11,10 +11,22 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ArrowLeft, Info, Activity, LayoutGrid, Users,
-  Clock, Bike, CheckCircle2, AlertTriangle, Wrench, Ban, LucideIcon 
+  Clock, Bike, CheckCircle2, AlertTriangle, Wrench, Ban, 
+  MapPin, Calendar, HelpCircle, TrendingUp, LucideIcon 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Station } from "@/types";
+
+// Định nghĩa interface doanh thu (Bạn có thể move vào types.ts nếu cần dùng chung)
+interface StationReport {
+  id: string;
+  name: string;
+  address: string;
+  totalRentals: number;
+  totalRevenue: number;
+  totalDuration: number;
+  avgDuration: number;
+}
 
 // --- REUSABLE COMPONENTS ---
 function SectionCard({ icon: Icon, title, children, className }: { icon: React.ComponentType<{ className?: string }>; title: string; children: React.ReactNode; className?: string; }) {
@@ -40,7 +52,7 @@ function Field({ label, value, className }: { label: string; value: React.ReactN
 
 function StatusItem({ icon: Icon, label, value, color }: { icon: LucideIcon, label: string, value: number, color: string }) {
   return (
-    <div className="flex items-center justify-between text-sm py-1 border-b border-border/40 last:border-0">
+    <div className="flex items-center justify-between text-sm py-2 border-b border-border/40 last:border-0 last:pb-0">
       <div className="flex items-center gap-2">
         <Icon className={cn("h-4 w-4", color)} />
         <span className="text-muted-foreground">{label}</span>
@@ -61,9 +73,10 @@ interface StationDetailClientProps {
   station: Station;
   isLoading: boolean;
   onUpdateStation: (data: StationSchemaFormData) => Promise<boolean>;
+  revenueData?: StationReport; // <-- Khai báo thêm prop doanh thu
 }
 
-export default function StationDetailClient({ id, station, isLoading, onUpdateStation }: StationDetailClientProps) {
+export default function StationDetailClient({ id, station, isLoading, onUpdateStation, revenueData }: StationDetailClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<StationSchemaFormData>({
@@ -92,10 +105,16 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
+        {/* Header Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" onClick={() => router.push("/admin/stations")}><ArrowLeft className="h-4 w-4" /></Button>
             <h1 className="text-2xl font-bold">{isEditing ? "Chỉnh sửa trạm" : "Chi tiết trạm"}</h1>
+            {!isEditing && (
+              <Badge variant={station.stationType === "AGENCY" ? "default" : "secondary"} className="ml-2">
+                {station.stationType}
+              </Badge>
+            )}
           </div>
           <div className="flex gap-2">
             {isEditing && (
@@ -108,6 +127,7 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
+          {/* CỘT TRÁI: THÔNG TIN & NHÂN VIÊN */}
           <div className="lg:col-span-2 space-y-6">
             <SectionCard icon={Info} title="Thông tin quản lý">
               {isEditing ? (
@@ -133,34 +153,64 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
                     <Input {...register("address")} className={cn(errors.address && "border-destructive focus-visible:ring-destructive")} />
                     <ErrorMsg message={errors.address?.message} />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold">VĨ ĐỘ (LATITUDE)</label>
+                    <Input type="number" step="any" {...register("latitude", { valueAsNumber: true })} className={cn(errors.latitude && "border-destructive focus-visible:ring-destructive")} />
+                    <ErrorMsg message={errors.latitude?.message} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold">KINH ĐỘ (LONGITUDE)</label>
+                    <Input type="number" step="any" {...register("longitude", { valueAsNumber: true })} className={cn(errors.longitude && "border-destructive focus-visible:ring-destructive")} />
+                    <ErrorMsg message={errors.longitude?.message} />
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-6">
                   <Field label="Tên trạm" value={station.name} />
                   <Field label="Loại trạm" value={station.stationType} />
                   <Field label="Địa chỉ" value={station.address} className="col-span-2" />
+                  
+                  <Field label="Vĩ độ (Latitude)" value={station.location.latitude} />
+                  <Field label="Kinh độ (Longitude)" value={station.location.longitude} />
+                  
+                  {station.agencyId && (
+                    <Field label="Mã đại lý" value={<code className="text-xs bg-muted p-1 rounded">{station.agencyId}</code>} className="col-span-2" />
+                  )}
+                  
+                  <div className="col-span-2 border-t pt-4 grid grid-cols-2 gap-6">
+                    <Field label="Ngày tạo" value={new Date(station.createdAt).toLocaleString("vi-VN")} />
+                    <Field label="Cập nhật lần cuối" value={new Date(station.updatedAt).toLocaleString("vi-VN")} />
+                  </div>
                 </div>
               )}
             </SectionCard>
 
             <SectionCard icon={Users} title="Nhân viên phụ trách">
               {station.workers?.length > 0 ? (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {station.workers.map((w) => (
-                    <div key={w.userId} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
-                      <div className="flex gap-2">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">{w.fullName.charAt(0)}</div>
-                        <div><p className="text-sm font-bold">{w.fullName}</p><p className="text-[10px] text-muted-foreground">{w.role}</p></div>
+                    <div key={w.userId} className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg border border-border/40">
+                      <div className="flex gap-3 items-center">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                          {w.fullName.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{w.fullName}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase">{w.role}</p>
+                        </div>
                       </div>
-                      {w.technicianTeamId && <Badge variant="secondary">{w.technicianTeamName || "No Team"}</Badge>}
+                      {w.technicianTeamId && (
+                        <div className="mt-1">
+                          <Badge variant="secondary" className="text-[10px] font-normal">{w.technicianTeamName}</Badge>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-              ) : <p className="text-sm text-muted-foreground">Không có nhân viên.</p>}
+              ) : <p className="text-sm text-muted-foreground">Không có nhân viên phụ trách trạm này.</p>}
             </SectionCard>
-          </div>
 
-          <div className="space-y-6">
+            {/* Đưa Cấu hình sức chứa sang cột trái để cân đối với 2 thẻ bên phải */}
             <SectionCard icon={LayoutGrid} title="Cấu hình sức chứa">
               {isEditing ? (
                 <div className="grid grid-cols-2 gap-4">
@@ -176,23 +226,96 @@ export default function StationDetailClient({ id, station, isLoading, onUpdateSt
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted p-3 text-center rounded-lg"><p className="text-[10px]">TỔNG SLOTS</p><p className="text-lg font-bold">{station.capacity.total}</p></div>
-                  <div className="bg-primary/10 p-3 text-center rounded-lg text-primary"><p className="text-[10px]">TRẢ TỐI ĐA</p><p className="text-lg font-bold">{station.capacity.returnSlotLimit}</p></div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-muted p-3 text-center rounded-lg border border-border/40">
+                    <p className="text-[10px] font-semibold text-muted-foreground">TỔNG SLOTS</p>
+                    <p className="text-xl font-bold">{station.capacity.total}</p>
+                  </div>
+                  <div className="bg-primary/10 p-3 text-center rounded-lg border border-primary/20">
+                    <p className="text-[10px] text-primary font-semibold">ĐANG HOẠT ĐỘNG</p>
+                    <p className="text-xl text-primary font-bold">{station.capacity.totalActiveSlots}</p>
+                  </div>
+                  <div className="bg-secondary/50 p-3 text-center rounded-lg border border-border/40">
+                    <p className="text-[10px] font-semibold text-secondary-foreground">TRẢ TỐI ĐA</p>
+                    <p className="text-xl font-bold">{station.capacity.returnSlotLimit}</p>
+                  </div>
+                  <div className="bg-muted p-3 text-center rounded-lg border border-border/40">
+                    <p className="text-[10px] font-semibold text-muted-foreground">ĐIỀU PHỐI</p>
+                    <p className="text-xl font-bold">{station.capacity.emptyPhysicalSlots}</p>
+                  </div>
+                </div>
+              )}
+              
+              {!isEditing && (
+                <div className="mt-4 pt-4 border-t border-border/40 space-y-2">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Chi tiết Slot</p>
+                  <StatusItem icon={CheckCircle2} label="Slot trả khả dụng" value={station.returnSlots.available} color="text-green-600" />
+                  <StatusItem icon={Activity} label="Slot trả đang hoạt động" value={station.returnSlots.active} color="text-blue-600" />
+                  <StatusItem icon={Wrench} label="Slot điều phối" value={station.redistributionSlots} color="text-orange-500" />
                 </div>
               )}
             </SectionCard>
-            
+          </div>
+
+          {/* CỘT PHẢI: REVENUE & BIKE STATS */}
+          <div className="space-y-6">
+            {!isEditing && (
+              <SectionCard icon={TrendingUp} title="Báo cáo doanh thu">
+                {revenueData ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-green-500/15 bg-green-500/5 px-4 py-5 text-center">
+                      <p className="text-xs font-medium text-muted-foreground uppercase">
+                        Tổng doanh thu
+                      </p>
+                      <p className="mt-1 text-3xl font-bold text-green-600">
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(revenueData.totalRevenue)}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="rounded-lg border border-border/40 bg-muted/20 p-3 text-center">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                          Lượt thuê
+                        </p>
+                        <p className="text-lg font-bold text-foreground">
+                          {revenueData.totalRentals}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-border/40 bg-muted/20 p-3 text-center">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                          Thời gian TB
+                        </p>
+                        <p className="text-lg font-bold text-foreground">
+                          {Math.round(revenueData.avgDuration)} phút
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-sm text-muted-foreground">
+                    Không có dữ liệu doanh thu cho trạm này.
+                  </div>
+                )}
+              </SectionCard>
+            )}
+
             <SectionCard icon={Activity} title="Thống kê xe tại trạm">
               <div className="space-y-4">
-                <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-5 text-center"><p className="text-xs font-medium text-muted-foreground uppercase">Tổng số xe</p><p className="mt-1 text-4xl font-bold text-primary">{station.bikes.total}</p></div>
-                <div className="space-y-2.5 pt-2">
+                <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-5 text-center">
+                  <p className="text-xs font-medium text-muted-foreground uppercase">Tổng số xe</p>
+                  <p className="mt-1 text-4xl font-bold text-primary">{station.bikes.total}</p>
+                </div>
+                <div className="space-y-1 pt-2">
                   <StatusItem icon={CheckCircle2} label="Sẵn sàng" value={station.bikes.available} color="text-green-600" />
                   <StatusItem icon={Clock} label="Đang đặt trước" value={station.bikes.reserved} color="text-amber-600" />
                   <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-blue-600" />
-                  <StatusItem icon={Wrench} label="Xe được điều phối" value={station.bikes.redistributing} color="text-orange-500" />
+                  <StatusItem icon={Wrench} label="Đang được điều phối" value={station.bikes.redistributing} color="text-orange-500" />
                   <StatusItem icon={AlertTriangle} label="Xe hỏng" value={station.bikes.broken} color="text-red-500" />
-                  <StatusItem icon={Ban} label="Xe tạm ngưng hoạt động" value={station.bikes.disabled} color="text-muted-foreground" />
+                  <StatusItem icon={HelpCircle} label="Xe bị mất" value={station.bikes.lost} color="text-red-700 font-bold" />
+                  <StatusItem icon={Ban} label="Tạm ngưng hoạt động" value={station.bikes.disabled} color="text-muted-foreground" />
                 </div>
               </div>
             </SectionCard>
