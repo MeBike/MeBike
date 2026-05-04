@@ -17,7 +17,7 @@ import { useAuth } from "@/providers/auth-providers";
 interface VerifyEmailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (email: string, otp: string) => Promise<void>;
+  onSubmit: (otp: string) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -64,7 +64,7 @@ export function VerifyEmailModal({
 
     setIsSubmitting(true);
     try {
-      await onSubmit(user?.email || "", otpString);
+      await onSubmit(otpString);
       // Only close modal and reset if successful
       setOtp(["", "", "", "", "", ""]);
       setError("");

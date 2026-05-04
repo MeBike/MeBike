@@ -199,13 +199,13 @@ export const useStationActions = ({
     data: myStation,
     refetch: refetchMyStation,
     isLoading: isLoadingMyStation,
-  } = useGetMyStations({ page: page, pageSize: limit });
+  } = useGetMyStations({ page: page, pageSize: limit , name: name });
   const getMyStation = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchMyStation();
-  }, [refetchMyStation, hasToken, page, limit]);
+  }, [refetchMyStation, hasToken, page, limit, name]);
   const {
     data: myStationDetail,
     refetch: refetchMyStationDetail,

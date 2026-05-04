@@ -3,9 +3,17 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bike, MapPin, Building2, Activity, Cpu, Loader2 } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Bike, 
+  MapPin, 
+  Building2, 
+  Activity, 
+  Loader2,
+  Building,
+  Store
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@components/PageHeader";
@@ -17,6 +25,9 @@ import {
   SelectValue,
   SelectScrollUpButton,
   SelectScrollDownButton,
+  SelectGroup,
+  SelectLabel,
+  SelectSeparator,
 } from "@/components/ui/select";
 import { bikeSchema, BikeSchemaFormData } from "@/schemas/bike-schema";
 import type { BikeStatus, Station, Supplier } from "@/types";
@@ -33,6 +44,7 @@ const BIKE_STATUS_LABELS: Record<BikeStatus, string> = {
   REDISTRIBUTING: "Đang điều phối",
   "": "Không xác định",
 };
+
 const VALID_STATUSES: BikeStatus[] = [
   "AVAILABLE",
   "BOOKED",
@@ -77,6 +89,10 @@ export default function CreateBikeClient({
     }
   };
 
+  // Phân loại trạm xe
+  const internalStations = stations?.filter((s) => s.stationType === "INTERNAL") || [];
+  const agencyStations = stations?.filter((s) => s.stationType === "AGENCY") || [];
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <PageHeader
@@ -95,7 +111,7 @@ export default function CreateBikeClient({
               </h3>
 
               <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2">
-                {/* Station Selection (Bắt buộc) */}
+                {/* Station Selection (Cải tiến giao diện) */}
                 <div className="space-y-2">
                   <Label htmlFor="stationId" className="font-semibold text-muted-foreground">
                     Trạm xe <span className="text-destructive">*</span>
@@ -108,18 +124,61 @@ export default function CreateBikeClient({
                       render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                           <SelectTrigger className={`pl-10 ${errors.stationId ? "border-destructive focus-visible:ring-destructive" : ""}`}>
-                            <SelectValue placeholder="Chọn trạm xe" />
+                            <SelectValue placeholder="Chọn trạm xe..." />
                           </SelectTrigger>
-                          <SelectContent className="max-h-60 overflow-y-auto">
+                          <SelectContent className="max-h-72 overflow-y-auto">
                             <SelectScrollUpButton />
-                            {stations && stations.length > 0 ? (
-                              stations.map((station) => (
-                                <SelectItem key={station.id} value={station.id}>
-                                  {station.name}
-                                </SelectItem>
-                              ))
-                            ) : (
+                            
+                            {!stations || stations.length === 0 ? (
                               <SelectItem value="no-stations" disabled>Không có trạm nào</SelectItem>
+                            ) : (
+                              <>
+                                {/* Group: Trạm Nội Bộ */}
+                                {internalStations.length > 0 && (
+                                  <SelectGroup>
+                                    <SelectLabel className="flex items-center gap-2 text-primary bg-muted/50 py-2">
+                                      <Building className="h-4 w-4" /> Trạm Nội Bộ (Internal)
+                                    </SelectLabel>
+                                    {internalStations.map((station) => (
+                                      <SelectItem key={station.id} value={station.id} disabled={station.capacity.emptyPhysicalSlots <= 0}>
+                                        <div className="flex flex-col gap-0.5">
+                                          <span className="font-medium text-sm">{station.name}</span>
+                                          <span className={`text-xs ${station.capacity.emptyPhysicalSlots > 0 ? "text-muted-foreground" : "text-destructive font-medium"}`}>
+                                            {station.capacity.emptyPhysicalSlots > 0 
+                                              ? `Còn ${station.capacity.emptyPhysicalSlots} chỗ trống` 
+                                              : "Đã hết chỗ trống"}
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectGroup>
+                                )}
+
+                                {internalStations.length > 0 && agencyStations.length > 0 && (
+                                  <SelectSeparator className="my-2" />
+                                )}
+
+                                {/* Group: Trạm Đại Lý */}
+                                {agencyStations.length > 0 && (
+                                  <SelectGroup>
+                                    <SelectLabel className="flex items-center gap-2 text-orange-500 bg-muted/50 py-2">
+                                      <Store className="h-4 w-4" /> Trạm Đại Lý (Agency)
+                                    </SelectLabel>
+                                    {agencyStations.map((station) => (
+                                      <SelectItem key={station.id} value={station.id} disabled={station.capacity.emptyPhysicalSlots <= 0}>
+                                        <div className="flex flex-col gap-0.5">
+                                          <span className="font-medium text-sm">{station.name}</span>
+                                          <span className={`text-xs ${station.capacity.emptyPhysicalSlots > 0 ? "text-muted-foreground" : "text-destructive font-medium"}`}>
+                                            {station.capacity.emptyPhysicalSlots > 0 
+                                              ? `Còn ${station.capacity.emptyPhysicalSlots} chỗ trống` 
+                                              : "Đã hết chỗ trống"}
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectGroup>
+                                )}
+                              </>
                             )}
                             <SelectScrollDownButton />
                           </SelectContent>
@@ -130,7 +189,7 @@ export default function CreateBikeClient({
                   {errors.stationId && <p className="text-xs font-medium text-destructive">{errors.stationId.message}</p>}
                 </div>
 
-                {/* Supplier Selection (Bắt buộc) */}
+                {/* Supplier Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="supplierId" className="font-semibold text-muted-foreground">
                     Nhà cung cấp <span className="text-destructive">*</span>
@@ -165,7 +224,7 @@ export default function CreateBikeClient({
                   {errors.supplierId && <p className="text-xs font-medium text-destructive">{errors.supplierId.message}</p>}
                 </div>
 
-                {/* Status Selection (Mặc định AVAILABLE) */}
+                {/* Status Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="status" className="font-semibold text-muted-foreground">
                     Trạng thái <span className="text-destructive">*</span>
@@ -198,6 +257,7 @@ export default function CreateBikeClient({
                 </div>
               </div>
             </div>
+
             <div className="flex items-center gap-3 pt-6 border-t border-border/50">
               <Button type="submit" disabled={isSubmitting} className="min-w-[150px] gradient-primary shadow-glow">
                 {isSubmitting ? (

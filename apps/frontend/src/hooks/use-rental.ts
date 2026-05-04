@@ -94,7 +94,7 @@ export function useRentalsActions({
       return;
     }
     refetchStaffRentals();
-  }, [hasToken, refetchStaffRentals,page,limit,status]);
+  }, [hasToken, refetchStaffRentals,page,limit,status,userId,bikeId,startStation,endStation]);
   const getRentals = useCallback(() => {
     if(!hasToken){
       return;

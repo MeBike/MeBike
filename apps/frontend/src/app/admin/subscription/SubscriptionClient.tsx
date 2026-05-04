@@ -59,7 +59,7 @@ export default function SubscriptionClient() {
 
         <div className="space-y-4 min-h-[400px]">
           <h2 className="text-2xl font-bold px-1">Danh sách vận hành</h2>
-          <div className="bg-card border border-border rounded-lg p-4 flex items-center gap-4 shadow-sm">
+          {/* <div className="bg-card border border-border rounded-lg p-4 flex items-center gap-4 shadow-sm">
             <div className="relative flex-1">
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
@@ -85,7 +85,7 @@ export default function SubscriptionClient() {
             <Button variant="outline" onClick={() => setSearchQuery("")}>
               Đặt lại
             </Button>
-          </div>
+          </div> */}
           {isVisualLoading ? (
             <TableSkeleton />
           ) : (

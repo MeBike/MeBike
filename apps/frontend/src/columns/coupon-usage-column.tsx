@@ -9,6 +9,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {formatCurrency} from "@/utils/formatCurrency";
+import { formatToVNTime } from "@/lib/formatVNDate";
 
 interface UsageLogColumnProps {
   onView: (log: CouponUsageLog) => void;
@@ -32,17 +34,17 @@ export const couponUsageLogColumns = ({
   {
     accessorKey: "couponDiscountAmount",
     header: "Số tiền giảm",
-    cell: ({ row }) => `${row.original.couponDiscountAmount.toLocaleString()} VNĐ`,
+    cell: ({ row }) => `${formatCurrency(row.original.couponDiscountAmount)}`,
   },
   {
     accessorKey: "totalAmount",
     header: "Tổng tiền",
-    cell: ({ row }) => `${row.original.totalAmount.toLocaleString()} VNĐ`,
+    cell: ({ row }) => `${formatCurrency(row.original.totalAmount)}`,
   },
   {
     accessorKey: "startTime",
     header: "Thời gian bắt đầu",
-    cell: ({ row }) => new Date(row.original.startTime).toLocaleString("vi-VN"),
+    cell: ({ row }) => formatToVNTime(row.original.startTime),
   },
   {
     id: "actions",

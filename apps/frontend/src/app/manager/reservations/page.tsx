@@ -6,11 +6,9 @@ import { useReservationActions } from "@/hooks/use-reservation";
 import { useStationActions } from "@/hooks/use-station";
 import type { ReservationStatus, ReservationOption } from "@/types/Reservation";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-
+import { useDebounce } from "@/utils/useDebounce";
 export default function Page() {
   const { stations, getAllStations } = useStationActions({ hasToken: true });
-  
-  // 1. QUẢN LÝ STATE FILTER
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 7;
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,7 +17,11 @@ export default function Page() {
   const [userId, setUserId] = useState<string>("");
   const [bikeId, setBikeId] = useState<string>("");
   const [selectedReservationId, setSelectedReservationId] = useState<string>("");
-
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedUserId = useDebounce(userId, 500);
+  const debouncedBikeId = useDebounce(bikeId, 500);
+  const debouncedStatusFilter = useDebounce(statusFilter as ReservationStatus, 500);
+  const debouncedOption = useDebounce(option as ReservationOption, 500);
   const {
     allReservationsStaff,
     fetchAllReservationsForStaff,
@@ -28,13 +30,12 @@ export default function Page() {
     hasToken: true,
     page: currentPage,
     pageSize: pageSize,
-    status: statusFilter as ReservationStatus,
-    option: option as ReservationOption,
-    userId: userId,
-    bikeId: bikeId,
+    status: debouncedStatusFilter as ReservationStatus || "",
+    option: debouncedOption as ReservationOption || "",
+    userId: debouncedUserId || undefined,
+    bikeId: debouncedBikeId || undefined,
   });
 
-  // 2. FETCH DATA
   useEffect(() => {
     fetchAllReservationsForStaff();
     getAllStations();
@@ -42,12 +43,11 @@ export default function Page() {
     fetchAllReservationsForStaff, 
     getAllStations, 
     currentPage, 
-    statusFilter, 
-    option, 
-    userId, 
-    bikeId
+    debouncedStatusFilter, 
+    debouncedOption, 
+    debouncedUserId, 
+    debouncedBikeId
   ]);
-
   const handleReset = () => {
     setSearchQuery("");
     setStatusFilter("");
@@ -60,8 +60,6 @@ export default function Page() {
   const handleFilterChange = () => {
     setCurrentPage(1);
   };
-
-  // 3. LOADING TRẠNG THÁI
   const [isVisualLoading, setIsVisualLoading] = useState(false);
   useEffect(() => {
     if (isLoadingReservationsStaff) {

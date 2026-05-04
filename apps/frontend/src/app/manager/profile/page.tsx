@@ -170,11 +170,11 @@ export default function ProfilePage() {
     }
     setIsEditing(false);
   };
-  const handleResendVerifyEmail = () => {
+  const handleResendVerifyEmail = async() => {
     if (formData?.verify === "VERIFIED") {
       return;
     }
-    resendVerifyEmail();
+    await resendVerifyEmail({email : user.email , fullName : user.fullName , userId : user.id});
     setIsVerifyEmailModalOpen(true);
   };
 

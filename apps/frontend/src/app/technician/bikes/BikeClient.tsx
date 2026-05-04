@@ -1,71 +1,83 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { useBikeActions } from "@/hooks/use-bike";
 import { bikeColumnForStaff } from "@/columns/bike-colums";
-import { BikeStatus } from "@custom-types";
 import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
-export default function BikeClient() {
+import type { Bike, BikeStatus, Pagination } from "@custom-types";
+
+interface BikeClientProps {
+  data: {
+    bikes: Bike[];
+    pagination?: Pagination;
+    isVisualLoading: boolean;
+  };
+  filters: {
+    statusFilter: BikeStatus | "all";
+    page: number;
+  };
+  actions: {
+    setStatusFilter: Dispatch<SetStateAction<BikeStatus | "all">>;
+    setPage: Dispatch<SetStateAction<number>>;
+  };
+}
+
+export default function BikeClient({
+  data: { bikes, pagination, isVisualLoading },
+  filters: { statusFilter, page },
+  actions: { setStatusFilter, setPage },
+}: BikeClientProps) {
   const router = useRouter();
-  const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
-  const {
-    myBikeInStation,
-    isLoadingMyBikeInStation,
-    getMyBikeInStation
-  } = useBikeActions({
-    hasToken: true,
-    status: statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
-    pageSize: 7,
-    page: page,
-  });
-  const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
-  useEffect(() => {
-    if (isLoadingMyBikeInStation) {
-      setIsVisualLoading(true);
-    } else {
-      const timer = setTimeout(() => {
-        setIsVisualLoading(false);
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoadingMyBikeInStation]);
-  useEffect(() => {
-    getMyBikeInStation();
-  }, [statusFilter]);
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
+          <p className="text-muted-foreground mt-1">Danh sách xe đạp đang có tại trạm của bạn</p>
+        </div>
       </div>
+
       <BikeFilters
         statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
+        setStatusFilter={(status) => {
+          setStatusFilter(status);
+          setPage(1); 
+        }}
+        // stations={[]}
+        // suppliers={[]}
+        // stationId=""
+        // setStationId={() => {}}
+        // supplierId=""
+        // setSupplierId={() => {}}
       />
+
       <div className="min-h-[700px]">
         {isVisualLoading ? (
           <TableSkeleton />
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">
-              Hiển thị {myBikeInStation?.pagination?.page ?? 1} /{" "}
-              {myBikeInStation?.pagination?.totalPages ?? 1} trang
-            </p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">
+                Hiển thị {pagination?.page ?? 1} / {pagination?.totalPages ?? 1} trang
+              </p>
+            </div>
             <DataTable
               columns={bikeColumnForStaff({
                 onView: ({ id }) => router.push(`/technician/bikes/detail/${id}`),
               })}
-              data={myBikeInStation?.data || []}
+              data={bikes}
+              title="Xe đạp tại trạm"
             />
+
             <div className="pt-3">
               <PaginationDemo
-                currentPage={myBikeInStation?.pagination?.page ?? 1}
+                currentPage={pagination?.page ?? 1}
                 onPageChange={setPage}
-                totalPages={myBikeInStation?.pagination?.totalPages ?? 1}
+                totalPages={pagination?.totalPages ?? 1}
               />
             </div>
           </>
