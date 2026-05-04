@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/utils/formatCurrency";
 interface CouponColumnProps {
   onView: (coupon: Coupon) => void;
   onActive: (coupon: Coupon) => void;
@@ -90,7 +91,9 @@ export const couponColumns = ({
     header: "Giá trị giảm",
     cell: ({ row }) => {
       const coupon = row.original;
-      return `${coupon.discountValue} ${coupon.discountType === "PERCENTAGE" ? "%" : "VNĐ"}`;
+      return coupon.discountType === "PERCENTAGE" 
+        ? `${coupon.discountValue}%` 
+        : `${formatCurrency(coupon.discountValue)}`;
     },
   },
   {

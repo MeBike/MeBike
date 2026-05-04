@@ -14,6 +14,7 @@ import { getAssetStatusConfig } from "@/columns/nfc-column";
 import { Badge } from "@/components/ui/badge"; 
 import type { DetailUser, Pagination, VerifyStatus, GetUserDashboardStatsResponse } from "@custom-types";
 import type { AssetNFCCard, AssetStatus } from "@/types"; 
+import { formatCurrency } from "@/utils/formatCurrency";
 import {
   Dialog,
   DialogContent,

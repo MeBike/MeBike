@@ -24,7 +24,6 @@ export default function Page() {
     page: page,
     limit: limit,
     name: debouncedSearchQuery,
-    stationType : "INTERNAL",
   });
   useEffect(() => {
     getAllStations();

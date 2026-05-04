@@ -4,6 +4,7 @@ import type { Reservation } from "@/types/Reservation";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { Button } from "@/components/ui/button";
 import type { Station } from "@/types/Station";
+import { formatCurrency } from "@/utils/formatCurrency";
 import {
   Tooltip,
   TooltipContent,
@@ -87,7 +88,7 @@ export const reservationColumn = ({
     accessorKey: "prepaid",
     header: "Đặt cọc",
     cell: ({ row }) =>
-      `${Number(row.original.prepaid).toLocaleString("vi-VN")} VND`,
+      `${formatCurrency(Number(row.original.prepaid))}`,
   },
   {
     accessorKey: "status",
@@ -192,7 +193,7 @@ export const reservationColumnForStaff = ({
     accessorKey: "prepaid",
     header: "Đặt cọc",
     cell: ({ row }) =>
-      `${Number(row.original.prepaid).toLocaleString("vi-VN")} VND`,
+      `${formatCurrency(Number(row.original.prepaid))}`,
   },
   {
     accessorKey: "status",
