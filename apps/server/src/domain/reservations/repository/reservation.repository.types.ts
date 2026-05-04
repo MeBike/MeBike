@@ -59,7 +59,7 @@ export type ReservationQueryRepo = {
 
   /**
    * "Hold" = PENDING reservation with a concrete bike + endTime in the future.
-   * FIXED_SLOT reservations typically have endTime=null, so they won't match.
+   * Future fixed-slot reservations do not match until their hold window actually starts.
    *
    * EN: Use this to check "is there a current hold right now?" (time-window aware).
    * VI: Dùng để kiểm tra "hiện tại có đang giữ xe không?" (có xét theo khung thời gian).

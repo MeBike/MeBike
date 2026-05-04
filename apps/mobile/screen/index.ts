@@ -24,6 +24,7 @@ export { default as RentalQrScreen } from "./rental/rental-qr";
 export { default as ReservationDetailScreen } from "./reservation-detail-screen";
 export { default as ReservationFlowScreen } from "./reservation-flow";
 export { default as ReservationScreen } from "./reservations";
+export { default as RidingOffersScreen } from "./riding-offers";
 export { default as StaffBikeSwapDetailScreen } from "./staff/bike-swap/detail/staff-bike-swap-detail-screen";
 export { default as StaffBikeSwapListScreen } from "./staff/bike-swap/list/staff-bike-swap-list-screen";
 export { default as StaffDashboardScreen } from "./staff/dashboard/staff-dashboard-screen";

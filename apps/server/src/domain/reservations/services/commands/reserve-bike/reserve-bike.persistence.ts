@@ -5,7 +5,6 @@ import type { SubscriptionCommandService } from "@/domain/subscriptions/services
 import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
-import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
 import { makeStationQueryRepository } from "@/domain/stations";
 import { makeUserQueryRepository } from "@/domain/users";
@@ -20,6 +19,7 @@ import type { PreparedReserveBike, ReserveBikeCommandInput, ReserveBikeFailure }
 import { BikeAlreadyReserved } from "../../../domain-errors";
 import { makeReservationCommandRepository } from "../../../repository/reservation-command.repository";
 import { mapReservationUniqueViolation } from "../../../repository/unique-violation";
+import { scheduleReservationLifecycleJobsInTx } from "../../reservation-lifecycle-jobs";
 
 const RESERVATION_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
@@ -110,50 +110,6 @@ export function persistReserveBikeInTx(args: {
     });
 
     return reservation;
-  });
-}
-
-/**
- * Enqueue các job nhắc hết hạn và auto-expire cho reservation hold.
- *
- * @param tx Transaction client đang dùng.
- * @param reservation Reservation vừa được tạo.
- * @param now Mốc hiện tại để clamp lịch chạy job.
- */
-function scheduleReservationLifecycleJobsInTx(
-  tx: PrismaTypes.TransactionClient,
-  reservation: ReservationRow,
-  now: Date,
-): Effect.Effect<void> {
-  return Effect.gen(function* () {
-    if (!reservation.endTime) {
-      return;
-    }
-
-    const notifyAtMs = reservation.endTime.getTime()
-      - env.EXPIRY_NOTIFY_MINUTES * 60 * 1000;
-    const notifyAt = new Date(Math.max(now.getTime(), notifyAtMs));
-    const expireAt = new Date(Math.max(now.getTime(), reservation.endTime.getTime()));
-
-    yield* enqueueOutboxJobInTx(tx, {
-      type: JobTypes.ReservationNotifyNearExpiry,
-      payload: {
-        version: 1,
-        reservationId: reservation.id,
-      },
-      runAt: notifyAt,
-      dedupeKey: `reservation:notify:${reservation.id}`,
-    });
-
-    yield* enqueueOutboxJobInTx(tx, {
-      type: JobTypes.ReservationExpireHold,
-      payload: {
-        version: 1,
-        reservationId: reservation.id,
-      },
-      runAt: expireAt,
-      dedupeKey: `reservation:expire:${reservation.id}`,
-    });
   });
 }
 

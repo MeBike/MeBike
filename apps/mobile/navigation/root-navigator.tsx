@@ -1,7 +1,8 @@
-import { LoadingScreen } from "@components/LoadingScreen";
-import { useAuthNext } from "@providers/auth-provider-next";
 import { createStackNavigator } from "@react-navigation/stack";
 import React, { useEffect } from "react";
+
+import { LoadingScreen } from "@components/LoadingScreen";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 import type { RootStackParamList } from "../types/navigation";
 
@@ -29,6 +30,7 @@ import {
   ReservationScreen,
   ResetPasswordFormScreen,
   ResetPasswordOTPScreen,
+  RidingOffersScreen,
   StaffBikeSwapDetailScreen,
   StaffBikeSwapListScreen,
   StaffPhoneLookupScreen,
@@ -40,8 +42,8 @@ import {
   UpdateProfileScreen,
 } from "../screen";
 import StationSelectScreen from "../styles/StationSelect";
-import { navigationRef } from "./navigation-ref";
 import MainTabNavigator from "./main-tab-navigator";
+import { navigationRef } from "./navigation-ref";
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -178,6 +180,11 @@ function RootNavigator() {
               <Stack.Screen
                 name="Reservations"
                 component={ReservationScreen}
+                options={standardScreenOptions}
+              />
+              <Stack.Screen
+                name="RidingOffers"
+                component={RidingOffersScreen}
                 options={standardScreenOptions}
               />
               <Stack.Screen

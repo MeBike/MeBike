@@ -107,6 +107,10 @@ export function useProfile() {
     navigation.navigate("Reservations" as never);
   };
 
+  const handleRidingOffers = () => {
+    navigation.navigate("RidingOffers" as never);
+  };
+
   const handleSubscriptions = () => {
     navigation.navigate("Subscriptions" as never);
   };
@@ -140,6 +144,7 @@ export function useProfile() {
     handleChangePassword,
     handleUpdateProfile,
     handleReservations,
+    handleRidingOffers,
     handleSubscriptions,
     handleEnvironmentImpact,
     handleMetroJourney,

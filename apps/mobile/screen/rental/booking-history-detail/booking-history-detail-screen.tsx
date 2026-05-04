@@ -1,4 +1,5 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { useState } from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useTheme, YStack } from "tamagui";
 
@@ -15,6 +16,7 @@ import DetailErrorState from "./components/detail-error-state";
 import DetailLoadingState from "./components/detail-loading-state";
 import { IncidentTypeSheet } from "./components/incident-type-sheet";
 import { RentalActionBar } from "./components/rental-action-bar";
+import { RentalBillingSheet } from "./components/rental-billing-sheet";
 import { RentalHeroCard } from "./components/rental-hero-card";
 import { RentalIdPill } from "./components/rental-id-pill";
 import { RentalIncidentCard } from "./components/rental-incident-card";
@@ -30,6 +32,7 @@ function BookingHistoryDetailScreen() {
   const theme = useTheme();
   const { bookingId } = route.params;
   const vm = useBookingHistoryDetailScreen(bookingId);
+  const [isBillingSheetOpen, setIsBillingSheetOpen] = useState(false);
 
   if (vm.isInitialLoading && !vm.detail) {
     return (
@@ -67,7 +70,12 @@ function BookingHistoryDetailScreen() {
           <AppHeroHeader onBack={() => navigation.goBack()} size="compact" title="Chi tiết thuê xe" />
 
           <YStack gap="$5" marginTop={-spaceScale[5]} paddingHorizontal="$5">
-            <RentalHeroCard rental={vm.booking} />
+            <RentalHeroCard
+              billingTotalAmount={vm.billing.current?.totalAmount}
+              isBillingLoading={vm.billing.isLoading}
+              onOpenBilling={vm.billing.current ? () => setIsBillingSheetOpen(true) : undefined}
+              rental={vm.booking}
+            />
 
             {vm.isOngoing && vm.incident.rentalIncident
               ? (
@@ -133,6 +141,14 @@ function BookingHistoryDetailScreen() {
       />
 
       <RentalRatingSheet {...vm.rating.sheet} />
+
+      <RentalBillingSheet
+        billing={vm.billing.current}
+        bottomInset={vm.layout.bottomInset}
+        onClose={() => setIsBillingSheetOpen(false)}
+        rentalStatus={vm.booking.status}
+        visible={isBillingSheetOpen}
+      />
     </Screen>
   );
 }

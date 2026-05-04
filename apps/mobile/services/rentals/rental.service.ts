@@ -1,11 +1,5 @@
-import type { Result } from "@lib/result";
 import type { z } from "zod";
 
-import { decodeWithSchema, readJson } from "@lib/api-decode";
-import { kyClient } from "@lib/ky-client";
-import { err, ok } from "@lib/result";
-import { routePath, ServerRoutes } from "@lib/server-routes";
-import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
 
 import type {
@@ -20,6 +14,8 @@ import type {
   MyRentalResolvedDetail,
   RejectBikeSwapRequestPayload,
   Rental,
+  RentalBillingDetail,
+  RentalBillingPreview,
   RentalCounts,
   RentalDetail,
   RentalListParams,
@@ -29,9 +25,15 @@ import type {
   RequestBikeSwapPayload,
   ReturnSlotReservation,
 } from "@/types/rental-types";
+import type { Result } from "@lib/result";
 
 import { bikeService } from "@/services/bike.service";
 import { stationService } from "@/services/station.service";
+import { decodeWithSchema, readJson } from "@lib/api-decode";
+import { kyClient } from "@lib/ky-client";
+import { err, ok } from "@lib/result";
+import { routePath, ServerRoutes } from "@lib/server-routes";
+import { toSearchParams } from "@services/shared/search-params";
 
 import type { RentalError } from "./rental-error";
 
@@ -206,6 +208,40 @@ export const rentalServiceV1 = {
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.rentals.getMyRental.responses[200].content["application/json"].schema;
         return decodeRentalResponse(response, okSchema as z.ZodType<Rental>, value => value);
+      }
+
+      return err(await parseRentalError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  getMyRentalBillingPreview: async (rentalId: string): Promise<Result<RentalBillingPreview, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.getMyRentalBillingPreview, { rentalId });
+
+      const response = await kyClient.get(path, { throwHttpErrors: false });
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.getMyRentalBillingPreview.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(response, okSchema as z.ZodType<RentalBillingPreview>, value => value);
+      }
+
+      return err(await parseRentalError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  getMyRentalBillingDetail: async (rentalId: string): Promise<Result<RentalBillingDetail, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.getMyRentalBillingDetail, { rentalId });
+
+      const response = await kyClient.get(path, { throwHttpErrors: false });
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.getMyRentalBillingDetail.responses[200].content["application/json"].schema;
+        return decodeRentalResponse(response, okSchema as z.ZodType<RentalBillingDetail>, value => value);
       }
 
       return err(await parseRentalError(response));

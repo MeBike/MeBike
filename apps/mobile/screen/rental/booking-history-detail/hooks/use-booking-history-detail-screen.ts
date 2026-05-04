@@ -142,9 +142,24 @@ export function useBookingHistoryDetailScreen(bookingId: string) {
 
   const isScreenRefreshing
     = rental.isRefreshing
+      || rental.billing.isRefetching
       || incident.rentalIncidentQuery.isRefetching
       || bikeSwap.bikeSwapRequestQuery.isRefetching
       || rating.isRefreshing;
+
+  const billing = rental.booking?.status === "RENTED" && rental.billing.preview
+    ? {
+        data: rental.billing.preview,
+        mode: "preview" as const,
+        totalAmount: rental.billing.preview.totalPayableAmount,
+      }
+    : rental.booking?.status === "COMPLETED" && rental.billing.detail
+      ? {
+          data: rental.billing.detail,
+          mode: "detail" as const,
+          totalAmount: rental.billing.detail.totalAmount,
+        }
+      : null;
 
   return {
     booking: rental.booking,
@@ -167,6 +182,10 @@ export function useBookingHistoryDetailScreen(bookingId: string) {
     },
     incident,
     rating,
+    billing: {
+      ...rental.billing,
+      current: billing,
+    },
     actions: {
       handleChooseReturnStation,
       handleOpenReturnQr,

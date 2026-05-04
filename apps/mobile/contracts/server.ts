@@ -4,6 +4,8 @@ import type { z } from "zod";
 export type BikeSummary = ServerContracts.BikesContracts.BikeSummary;
 export type StationReadSummary = ServerContracts.StationsContracts.StationReadSummary;
 export type StationListResponse = ServerContracts.StationsContracts.StationListResponse;
+export type ActiveCouponRule = ServerContracts.CouponsContracts.ActiveCouponRule;
+export type ActiveCouponRulesResponse = ServerContracts.CouponsContracts.ActiveCouponRulesResponse;
 
 export type ReservationDetail = ServerContracts.ReservationsContracts.ReservationDetail;
 export type ReservationExpandedDetail = ServerContracts.ReservationsContracts.ReservationExpandedDetail;
@@ -17,6 +19,8 @@ export type Rental = ServerContracts.RentalsContracts.Rental;
 export type RentalWithPrice = ServerContracts.RentalsContracts.RentalWithPrice;
 export type RentalDetail = ServerContracts.RentalsContracts.RentalDetail;
 export type RentalWithPricing = ServerContracts.RentalsContracts.RentalWithPricing;
+export type RentalBillingPreview = ServerContracts.RentalsContracts.RentalBillingPreview;
+export type RentalBillingDetail = ServerContracts.RentalsContracts.RentalBillingDetail;
 export type RentalCounts = ServerContracts.RentalsContracts.RentalStatusCounts;
 export type RentalCountsResponse = ServerContracts.RentalsContracts.RentalCountsResponse;
 export type RentalListItem = ServerContracts.RentalsContracts.RentalListItem;

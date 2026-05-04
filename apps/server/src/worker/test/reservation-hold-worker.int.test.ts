@@ -187,4 +187,66 @@ describe("reservation hold worker integration", () => {
     expect(rentalAfter).toBeNull();
     expect(bikeAfter?.status).toBe("AVAILABLE");
   });
+
+  it("expires fixed-slot hold and releases bike after claim window", async () => {
+    const user = await fixture.factories.user({
+      fullname: "Expired Fixed Slot User",
+      email: "expired-fixed-slot-user@example.com",
+    });
+    const station = await createStation(fixture, {
+      name: "Expired Fixed Slot Station",
+      address: "District 3",
+      capacity: 15,
+      latitude: 10.775658,
+      longitude: 106.700424,
+    });
+    const bike = await fixture.factories.bike({
+      stationId: station.id,
+      status: "RESERVED",
+    });
+    const reservation = await fixture.prisma.reservation.create({
+      data: {
+        id: uuidv7(),
+        userId: user.id,
+        bikeId: bike.id,
+        stationId: station.id,
+        reservationOption: "FIXED_SLOT",
+        startTime: new Date(Date.now() - 60 * 60 * 1000),
+        endTime: new Date(Date.now() - 10 * 60 * 1000),
+        status: "PENDING",
+      },
+    });
+
+    const { producer, send } = makeBossMock();
+    const handler = makeReservationExpireHoldHandler(makeRunEffect(), producer);
+    await handler(makeReservationJob(reservation.id));
+
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenNthCalledWith(
+      1,
+      JobTypes.EmailSend,
+      expect.objectContaining({
+        version: 1,
+        kind: "raw",
+        to: user.email,
+      }),
+      expect.objectContaining({
+        dedupeKey: `reservation:expired:${reservation.id}`,
+      }),
+    );
+
+    const [reservationAfter, bikeAfter] = await Promise.all([
+      fixture.prisma.reservation.findUnique({
+        where: { id: reservation.id },
+        select: { status: true },
+      }),
+      fixture.prisma.bike.findUnique({
+        where: { id: bike.id },
+        select: { status: true },
+      }),
+    ]);
+
+    expect(reservationAfter?.status).toBe("EXPIRED");
+    expect(bikeAfter?.status).toBe("AVAILABLE");
+  });
 });
