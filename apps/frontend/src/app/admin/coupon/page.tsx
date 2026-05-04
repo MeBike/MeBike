@@ -39,7 +39,6 @@ export default function CouponPage() {
       </div>
 
       <div className="bg-white p-6 rounded-xl border shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Tổng quan thống kê</h2>
         <CouponStatsView data={dataCouponStats} />
       </div>
       <section>
@@ -48,7 +47,7 @@ export default function CouponPage() {
           <h2 className="text-xl font-semibold">Danh sách Coupon</h2>
         </div>
         {isLoadingCoupons ? <TableSkeleton /> : (
-          <div className="bg-white rounded-xl border p-2">
+          <div className="p-2">
             <DataTable
               columns={couponColumns({
                 onView: ({ id }) => router.push(`/admin/coupon/detail/${id}`),
@@ -68,14 +67,13 @@ export default function CouponPage() {
         )}
       </section>
 
-      {/* 4. Lịch sử sử dụng */}
       <section>
         <div className="flex items-center gap-2 mb-4">
           <History className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">Lịch sử sử dụng Coupon</h2>
         </div>
         {isLoadingUsageCouponLog ? <TableSkeleton /> : (
-          <div className="bg-white rounded-xl border p-2">
+          <div className="p-2">
             <DataTable
               columns={couponUsageLogColumns({
                 onView: (log) => router.push(`/admin/coupon/usage/${log.rentalId}`),

@@ -4,16 +4,11 @@ import { useEffect, useState } from "react";
 import ReservationClient from "./ReservationClient"; // Path tới file client của bạn
 import { useStationActions } from "@/hooks/use-station";
 import { useAgencyActions } from "@/hooks/use-agency";
-import type {
-  ReservationOption,
-  ReservationStatus,
-} from "@/types/Reservation";
+import type { ReservationOption, ReservationStatus } from "@/types/Reservation";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-
+import { useDebounce } from "@/utils/useDebounce";
 export default function Page() {
   const { stations } = useStationActions({ hasToken: true });
-  
-  // State quản lý filter
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "">("");
   const [option, setReservationOption] = useState<ReservationOption | "">("");
@@ -21,7 +16,11 @@ export default function Page() {
   const [bikeId, setBikeId] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 7;
-
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedStatusFilter = useDebounce(statusFilter, 300);
+  const debouncedOption = useDebounce(option, 300);
+  const debouncedUserId = useDebounce(userId, 300);
+  const debouncedBikeId = useDebounce(bikeId, 300);
   const {
     allReservationsAgency,
     getReservationsForAgency,
@@ -30,9 +29,10 @@ export default function Page() {
     hasToken: true,
     page: currentPage,
     pageSize: pageSize,
-    renservation_status: statusFilter as ReservationStatus,
-    // Lưu ý: Nếu hook useAgencyActions của bạn chưa hỗ trợ option, userId, bikeId 
-    // thì cần bổ sung vào hook đó.
+    renservation_status: (debouncedStatusFilter as ReservationStatus) || "",
+    option: (debouncedOption as ReservationOption) || "",
+    userId: debouncedUserId || "",
+    bikeId: debouncedBikeId || "",
   });
 
   const [isVisualLoading, setIsVisualLoading] = useState(false);
@@ -48,7 +48,7 @@ export default function Page() {
 
   useEffect(() => {
     getReservationsForAgency();
-  }, [getReservationsForAgency, currentPage, statusFilter]);
+  }, [getReservationsForAgency, currentPage, debouncedStatusFilter, debouncedOption, debouncedUserId, debouncedBikeId]);
 
   const handleReset = () => {
     setSearchQuery("");

@@ -201,15 +201,16 @@ export const useAuthActions = () => {
     },
     [useVerifyEmail, queryClient],
   );
-  const resendVerifyEmail = useCallback(() => {
+  const resendVerifyEmail = useCallback((data: { email?: string; fullName?: string; userId?: string }) => {
     return new Promise<void>((resolve, reject) => {
-      useResendVerifyEmail.mutate(undefined, {
+      useResendVerifyEmail.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
             toast.success(
               USERS_MESSAGES.RESEND_EMAIL_VERIFY_SUCCESS ||
                 "Email xác minh đã được gửi lại thành công",
             );
+            queryClient.invalidateQueries({ queryKey: ["user", "me"] });
             resolve();
           } else {
             const errorMessage =

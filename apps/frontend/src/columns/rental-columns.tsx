@@ -9,8 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-// Hàm helper để render status sang tiếng Việt
+import { formatCurrency } from "@/utils/formatCurrency";
 const renderStatus = (status: string) => {
   let label = "Không rõ";
   let className = "bg-gray-100 text-gray-800";
@@ -54,7 +53,7 @@ export const rentalColumn = ({
     accessorKey: "total_price",
     header: "Tổng tiền",
     cell: ({ row }) =>
-      `${Number(row.original.totalPrice).toLocaleString("vi-VN")} VND`,
+      `${formatCurrency(Number(row.original.totalPrice))}`,
   },
   {
     accessorKey: "status",
@@ -121,11 +120,11 @@ export const rentalColumnForStaff = ({
     header: "Mã xe",
     cell: ({ row }) => shortenId(row.original.bikeId) || "Không có",
   },
-  {
+   {
     accessorKey: "total_price",
     header: "Tổng tiền",
     cell: ({ row }) =>
-      `${Number(row.original.totalPrice).toLocaleString("vi-VN")} VND`,
+      `${formatCurrency(Number(row.original.totalPrice))}`,
   },
   {
     accessorKey: "status",

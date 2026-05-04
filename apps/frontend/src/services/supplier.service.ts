@@ -9,10 +9,12 @@ export const supplierService = {
     page,
     pageSize,
     status,
+    name,
   }: {
     page?: number;
     pageSize?: number;
     status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | "";
+    name ?: string;
   }): Promise<AxiosResponse<ApiResponse<Supplier[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Supplier[]>>(
       ENDPOINT.SUPPLIER.BASE,
@@ -20,6 +22,7 @@ export const supplierService = {
         page: page,
         pageSize: pageSize,
         status: status,
+        name : name,
       }
     );
     return response;

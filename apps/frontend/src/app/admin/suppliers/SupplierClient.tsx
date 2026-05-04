@@ -9,7 +9,8 @@ import { columns } from "@/columns/supplier-column";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@components/PaginationCustomer";
-
+import { useDebounce } from "@/utils/useDebounce";
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function SupplierClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -19,20 +20,27 @@ export default function SupplierClient() {
   const [pageSize, setPageSize] = useState<number>(7);
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   const router = useRouter();
-  const { changeStatusSupplier, isLoadingAllSuppliers, allSupplier ,getAllSuppliers} =
-    useSupplierActions({
-      hasToken: true,
-      page: page,
-      pageSize: pageSize,
-      status: statusFilter,
-    });
+  const debouncedStatusFilter = useDebounce(statusFilter, 500);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const {
+    changeStatusSupplier,
+    isLoadingAllSuppliers,
+    allSupplier,
+    getAllSuppliers,
+  } = useSupplierActions({
+    hasToken: true,
+    page: page,
+    pageSize: pageSize,
+    status: debouncedStatusFilter || undefined,
+    name: debouncedSearchQuery || undefined,
+  });
   useEffect(() => {
     getAllSuppliers();
     setPage(1);
-  }, [statusFilter, searchQuery]);
+  }, [debouncedStatusFilter, debouncedSearchQuery]);
   useEffect(() => {
     getAllSuppliers();
-}, [page]);
+  }, [page]);
   useEffect(() => {
     if (isLoadingAllSuppliers) {
       setIsVisualLoading(true);
@@ -52,6 +60,9 @@ export default function SupplierClient() {
   const handleViewSupplier = (supplier: Supplier) => {
     router.push(`/admin/suppliers/${supplier.id}`);
   };
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
   return (
     <div>
       <div className="space-y-6">

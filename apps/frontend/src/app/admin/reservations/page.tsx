@@ -7,7 +7,6 @@ import { useStationActions } from "@/hooks/use-station";
 import type { ReservationStatus, ReservationOption } from "@/types/Reservation";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useDebounce } from "@/utils/useDebounce";
-
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "">("");
@@ -17,9 +16,11 @@ export default function Page() {
   const [bikeId, setBikeId] = useState<string>("");
   const debouncedUserId = useDebounce(userId, 500);
   const debouncedBikeId = useDebounce(bikeId, 500);
+  const debouncedStatusFilter = useDebounce(statusFilter,500);
+  const debouncedOption = useDebounce(option,500);
   const pageSize = 7;
   const [selectedReservationId, setSelectedReservationId] =
-    useState<string>("");
+    useState<string>(""); 
   const { stations, getAllStations } = useStationActions({ hasToken: true });
   const {
     allReservations,
@@ -31,13 +32,11 @@ export default function Page() {
     hasToken: true,
     page: currentPage,
     pageSize: pageSize,
-    status: statusFilter as ReservationStatus,
-    option: option as ReservationOption,
+    status: debouncedStatusFilter as ReservationStatus,
+    option: debouncedOption as ReservationOption,
     userId : debouncedUserId,
     bikeId : debouncedBikeId,
   });
-
-  // 4. EFFECTS GỌI DATA
   useEffect(() => {
     fetchAllReservations();
     fetchReservationStats();

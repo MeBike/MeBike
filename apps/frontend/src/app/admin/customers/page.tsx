@@ -1,35 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import CustomersClient from "./CustomerClient";
+import { useEffect, useState, Dispatch, SetStateAction } from "react";
+
 import { useUserActions } from "@/hooks/use-user";
 import { useNFCCardActions } from "@/hooks/use-nfc";
-import type { VerifyStatus, UserRole } from "@custom-types";
-import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-
-type UserStatusFilter = VerifyStatus | "BANNED" | "all";
+import { useDebounce } from "@/utils/useDebounce";
+import { LoadingScreen } from "@/components/loading-screen/loading-screen"
+import type { DetailUser, Pagination, VerifyStatus, GetUserDashboardStatsResponse } from "@custom-types";
+import CustomersClient from "./CustomerClient";
+type UserStatusFilter = VerifyStatus | "BANNED" | "" | "all";
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("all");
-  const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [verifyFilter, setVerifyFilter] = useState<UserStatusFilter>("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const limit = 10;
-  const verifyQuery =
-    verifyFilter === "VERIFIED" || verifyFilter === "UNVERIFIED"
-      ? verifyFilter
-      : "";
+  const limit = 7;
   const accountStatusQuery = verifyFilter === "BANNED" ? "BANNED" : "";
-
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const {
     users,
     getAllUsers,
@@ -42,24 +29,28 @@ export default function Page() {
     hasToken: true,
     limit: limit,
     page: currentPage,
-    verify: verifyFilter === "all" ? "" : verifyQuery,
-    accountStatus: verifyFilter === "all" ? "" : accountStatusQuery,
+    verify: verifyFilter === "BANNED" ? "" : verifyFilter, 
+    accountStatus: accountStatusQuery,
     fullName: debouncedSearch,
   });
 
-  // Khởi tạo các hàm quản lý NFC (Thêm updateStatusNFC và trạng thái isUpdatingStatus)
-  const { 
-    nfcCards, 
-    assignNFC, 
-    unassignNFC, 
-    updateStatusNFC, 
-    isAssigning, 
-    isUnassigning, 
-    isUpdatingStatus 
+  const {
+    nfcCards,
+    assignNFC,
+    unassignNFC,
+    updateStatusNFC,
+    isAssigning,
+    isUnassigning,
+    isUpdatingStatus,
   } = useNFCCardActions({
     page: 1,
-    pageSize: 200, 
+    pageSize: 200,
   });
+
+  // Tự động quay về trang 1 khi thay đổi nội dung tìm kiếm hoặc bộ lọc
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, verifyFilter]);
 
   useEffect(() => {
     getAllUsers();
@@ -68,21 +59,15 @@ export default function Page() {
   }, [
     debouncedSearch,
     verifyFilter,
-    roleFilter,
     currentPage,
     getAllUsers,
     getAllStatistics,
     getRefetchDashboardStats,
   ]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [roleFilter]);
-
   const handleReset = () => {
     setSearchQuery("");
-    setVerifyFilter("all");
-    setRoleFilter("all");
+    setVerifyFilter("");
     setCurrentPage(1);
   };
 
@@ -106,17 +91,7 @@ export default function Page() {
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-
-  if (!users) {
-    return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <p className="text-muted-foreground">
-          Không tìm thấy thông tin các người dùng.
-        </p>
-      </div>
-    );
-  }
-
+ 
   return (
     <CustomersClient
       data={{
@@ -127,7 +102,7 @@ export default function Page() {
         nfcCardsList: nfcCards?.data || [],
         isAssigning,
         isUnassigning,
-        isUpdatingStatus, // Truyền xuống
+        isUpdatingStatus,
       }}
       filters={{
         searchQuery,
@@ -142,7 +117,7 @@ export default function Page() {
         handleFilterChange,
         assignNFC,
         unassignNFC,
-        updateStatusNFC, // Truyền xuống
+        updateStatusNFC,
       }}
     />
   );

@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Users, UserCheck, TrendingUp, DollarSign, Award } from "lucide-react";
 import type { GetUserDashboardStatsResponse } from "@/types";
+import { formatCurrency } from "@/utils/formatCurrency";
 export function CustomerStats({ stats }: { stats: GetUserDashboardStatsResponse })  {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -69,7 +70,7 @@ export function CustomerStats({ stats }: { stats: GetUserDashboardStatsResponse 
               Tổng doanh thu từ khách hàng
             </p>
             <p className="text-3xl font-bold text-accent mt-1">
-              {stats.totalRevenue.toLocaleString("vi-VN") + " VND" || 0}
+              {formatCurrency(stats.totalRevenue)}
             </p>
           </div>
           <div className="p-3 bg-accent/10 rounded-lg">
@@ -85,7 +86,7 @@ export function CustomerStats({ stats }: { stats: GetUserDashboardStatsResponse 
               Chi tiêu trung bình/khách
             </p>
             <p className="text-3xl font-bold text-purple-500 mt-1">
-              {stats.averageSpending.toLocaleString("vi-VN") + " VND" || 0}
+              {formatCurrency(stats.averageSpending)}
             </p>
           </div>
           <div className="p-3 bg-purple-500/10 rounded-lg">

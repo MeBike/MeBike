@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Star, // Thêm icon Star cho ratings
 } from "lucide-react";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -261,8 +262,7 @@ export function BikeDetailView({
                     Doanh thu
                   </span>
                   <span className="font-bold text-primary">
-                    {(statisticData?.totalRevenue || 0).toLocaleString("vi-VN")}
-                    đ
+                    {formatCurrency(Number(statisticData?.totalRevenue || 0))}
                   </span>
                 </div>
               </div>
@@ -306,7 +306,7 @@ export function BikeDetailView({
                         {formatToVNTime(rental.startTime)}
                       </td>
                       <td className="py-4 text-right font-bold text-primary">
-                        {rental.totalPrice.toLocaleString("vi-VN")}đ
+                        {formatCurrency(Number(rental.totalPrice || 0))}
                       </td>
                     </tr>
                   ))

@@ -8,7 +8,7 @@ import {useGetSupplierByIDQuery,useGetBikeStatsSupplierQuery,useGetAllSupplierQu
 import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
 import {HTTP_STATUS , SUPPLIER_MESSAGE} from "@constants";
 import { SupplierActionProps } from "@custom-types";
-export const useSupplierActions = ({hasToken,supplier_id,page,pageSize,status}: SupplierActionProps) => {
+export const useSupplierActions = ({hasToken,supplier_id,page,pageSize,status,name}: SupplierActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
@@ -19,6 +19,7 @@ export const useSupplierActions = ({hasToken,supplier_id,page,pageSize,status}: 
     page:page,
     pageSize:pageSize,
     status:status,
+    name:name,
   });
   const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
     useGetAllStatsSupplierQuery();
@@ -34,7 +35,7 @@ export const useSupplierActions = ({hasToken,supplier_id,page,pageSize,status}: 
       return;
     }
     refetchAllSuppliers();
-  }, [refetchAllSuppliers, hasToken, router]);
+  }, [refetchAllSuppliers, hasToken, router,page,pageSize,status,name]);
   const getAllStatsSupplier = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
