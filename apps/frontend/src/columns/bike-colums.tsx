@@ -17,7 +17,7 @@ export const getStatusConfig = (status: BikeStatus) => {
     case "RESERVED":
       return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800" };
     case "REDISTRIBUTING":
-      return { label: "Đang điều phối", color: "bg-purple-100 text-purple-800" };
+      return { label: "Chuẩn bị điều phối", color: "bg-purple-100 text-purple-800" };
     case "MAINTENANCE":
       return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800" };
     case "BROKEN":

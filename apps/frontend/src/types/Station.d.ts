@@ -24,17 +24,26 @@ export interface Station {
     total : number;
     returnSlotLimit : number;
     emptyPhysicalSlots : number;
+    totalActiveSlots : number;
   };
+  agencyId : string | null;
   bikes : {
     total: number,
     available: number,
     booked: number,
     broken: number,
+    lost: number,
     reserved: number,
     disabled: number,
     redistributing: number
   }
-  workers : Worker[],
+  workers: Worker[],
+  returnSlots: {
+    available: number,
+    active: number
+  },
+  maintenanceSlots: number,
+  redistributionSlots: number,
   createdAt: string;pickupSlotLimit
   updatedAt: string;
 }
