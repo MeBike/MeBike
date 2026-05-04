@@ -186,7 +186,7 @@ export function createCustomerStationTools(args: CreateCustomerToolsArgs) {
         }
 
         const availableBikes = await Effect.runPromise(
-          args.bikeService.listBikes(
+          args.bikeQueryService.listBikes(
             { stationId, status: "AVAILABLE" },
             { ...bikeToolPage, pageSize: input.limit },
           ),

@@ -3,7 +3,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Match, Option } from "effect";
 
 import {
-  BikeServiceTag,
+  BikeCommandServiceTag,
   softDeleteBikeUseCase,
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
@@ -23,7 +23,7 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* BikeServiceTag;
+      const service = yield* BikeCommandServiceTag;
       const bike = yield* service.createBike({
         stationId: body.stationId,
         supplierId: body.supplierId,
@@ -79,7 +79,7 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
   const body = c.req.valid("json");
 
   const eff = Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
+    const service = yield* BikeCommandServiceTag;
     const bike = yield* service.adminUpdateBike(id, pickDefined(body));
 
     if (Option.isNone(bike)) {

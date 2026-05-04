@@ -22,9 +22,10 @@ export {
   AuthUserQueryServiceLayer,
 } from "./features/auth.layers";
 export {
+  BikeCommandServiceLayer,
   BikeDepsLive,
+  BikeQueryServiceLayer,
   BikeReposLive,
-  BikeServiceLayer,
   BikeStatsServiceLayer,
 } from "./features/bike.layers";
 export {

@@ -13,6 +13,8 @@ import {
 } from "../../domain-errors";
 
 export function getScopedStatusTransitions(currentStatus: BikeStatus): readonly BikeManageableStatus[] {
+  // Role bị scope theo station chỉ được lật trạng thái phục vụ vận hành cơ bản.
+  // Không cho phép đẩy xe ra khỏi các flow booking / reservation / redistribution bằng tay.
   if (currentStatus === "AVAILABLE") {
     return ["BROKEN"] as const;
   }

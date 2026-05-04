@@ -7,9 +7,9 @@ import { Prisma } from "@/infrastructure/prisma";
 import { runEffectEitherWithLayer, runEffectWithLayer } from "@/test/effect/run";
 
 import { bikeRepositoryFactory } from "../../repository/bike.repository";
-import { BikeServiceLive, BikeServiceTag } from "../commands/bike-command.service";
+import { BikeCommandServiceLive, BikeCommandServiceTag } from "../commands/bike-command.live";
 
-export type BikeDeps = BikeServiceTag | BikeRepository | Prisma;
+export type BikeDeps = BikeCommandServiceTag | BikeRepository | Prisma;
 
 export function makeBikeTestLayer(client: PrismaClient) {
   const prismaLayer = Layer.succeed(Prisma, Prisma.make({ client }));
@@ -17,7 +17,7 @@ export function makeBikeTestLayer(client: PrismaClient) {
     BikeRepository,
     BikeRepository.make(bikeRepositoryFactory(client)),
   );
-  const bikeServiceLayer = BikeServiceLive.pipe(
+  const bikeServiceLayer = BikeCommandServiceLive.pipe(
     Layer.provide(bikeRepoLayer),
     Layer.provide(prismaLayer),
   );
@@ -33,7 +33,7 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
       status: "AVAILABLE";
     }) {
       return runEffectWithLayer(
-        Effect.flatMap(BikeServiceTag, service => service.createBike(input)),
+        Effect.flatMap(BikeCommandServiceTag, service => service.createBike(input)),
         layer,
       );
     },
@@ -43,7 +43,7 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
       status: "AVAILABLE";
     }) {
       return runEffectEitherWithLayer(
-        Effect.flatMap(BikeServiceTag, service => service.createBike(input)),
+        Effect.flatMap(BikeCommandServiceTag, service => service.createBike(input)),
         layer,
       );
     },
@@ -53,7 +53,7 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
       supplierId?: string;
     }) {
       return runEffectWithLayer(
-        Effect.flatMap(BikeServiceTag, service => service.adminUpdateBike(bikeId, input)),
+        Effect.flatMap(BikeCommandServiceTag, service => service.adminUpdateBike(bikeId, input)),
         layer,
       );
     },
@@ -63,7 +63,7 @@ export function makeBikeRunners(layer: Layer.Layer<BikeDeps>) {
       supplierId?: string;
     }) {
       return runEffectEitherWithLayer(
-        Effect.flatMap(BikeServiceTag, service => service.adminUpdateBike(bikeId, input)),
+        Effect.flatMap(BikeCommandServiceTag, service => service.adminUpdateBike(bikeId, input)),
         layer,
       );
     },

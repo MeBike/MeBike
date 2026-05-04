@@ -4,7 +4,7 @@ import { convertToModelMessages, stepCountIs, streamText, validateUIMessages } f
 import { Context, Effect, Layer } from "effect";
 
 import { env } from "@/config/env";
-import { BikeServiceTag } from "@/domain/bikes";
+import { BikeQueryServiceTag } from "@/domain/bikes";
 import { RentalCommandServiceTag } from "@/domain/rentals";
 import { RentalServiceTag } from "@/domain/rentals/services/queries/rental.service";
 import { ReservationQueryServiceTag } from "@/domain/reservations";
@@ -49,7 +49,7 @@ export type AiChatService = {
 };
 
 const makeAiChatService = Effect.gen(function* () {
-  const bikeService = yield* BikeServiceTag;
+  const bikeQueryService = yield* BikeQueryServiceTag;
   const rentalCommandService = yield* RentalCommandServiceTag;
   const rentalService = yield* RentalServiceTag;
   const reservationQueryService = yield* ReservationQueryServiceTag;
@@ -67,7 +67,7 @@ const makeAiChatService = Effect.gen(function* () {
       }
 
       const tools = createCustomerTools({
-        bikeService,
+        bikeQueryService,
         context: args.context,
         rentalCommandService,
         reservationQueryService,
