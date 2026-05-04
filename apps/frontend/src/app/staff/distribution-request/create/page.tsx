@@ -26,7 +26,7 @@ export default function CreateDistributionRequestPage() {
     <div className="container mx-auto py-8">
       <CreateDistributionRequestClient
         onSubmitRequest={createDistributeRequest}
-        stations={listStation || { currentStation: { id: "", name: "", address: "" }, otherStations: [] }}
+        stations={listStation || { currentStation: { id: "", name: "", address: "", operationalAvailableSlots: 0 }, otherStations: [] }}
       />
     </div>
   );

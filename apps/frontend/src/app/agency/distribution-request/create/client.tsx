@@ -36,6 +36,7 @@ export default function CreateDistributionRequestClient({
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateRedistributionRequestInput>({
     resolver: zodResolver(CreateRedistributionRequestSchema),
@@ -47,11 +48,26 @@ export default function CreateDistributionRequestClient({
     },
   });
 
-  const sourceStationId = useWatch({ control, name: "sourceStationId" });
+  // 1. Theo dõi trạm đích đang được chọn
+  const targetStationId = useWatch({ control, name: "targetStationId" });
+
+  // 2. Tìm trạm đích tương ứng trong danh sách để lấy số chỗ trống
+  const selectedTargetStation = stations.otherStations?.find(
+    (s) => s.id === targetStationId
+  );
+  
+  // 3. Gán giới hạn max bằng số chỗ trống của trạm đích
+  const maxAvailableSlots = selectedTargetStation?.operationalAvailableSlots || 0;
 
   const onSubmit = async (data: CreateRedistributionRequestInput) => {
+    // Chặn submit nếu số lượng vượt quá số chỗ trống (bảo vệ lần cuối)
+    if (data.requestedQuantity > maxAvailableSlots) {
+       return; 
+    }
+
     try {
       await onSubmitRequest(data);
+      router.push("/agency/distribution-request");
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -93,15 +109,22 @@ export default function CreateDistributionRequestClient({
                     name="targetStationId"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Reset số lượng về 1 mỗi khi đổi trạm
+                          setValue("requestedQuantity", 1); 
+                        }} 
+                        value={field.value}
+                      >
                         <SelectTrigger className={errors.targetStationId ? "border-destructive" : ""}>
                           <SelectValue placeholder="Chọn trạm đích" />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* Loại bỏ trạm hiện tại khỏi danh sách chọn trạm đích */}
+                          {/* Loại bỏ trạm hiện tại, hiển thị số chỗ trống */}
                           {stations.otherStations?.map((s) => (
                             <SelectItem key={s.id} value={s.id}>
-                              {s.name}
+                              {s.name} (Trống: {s.operationalAvailableSlots})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -113,13 +136,40 @@ export default function CreateDistributionRequestClient({
 
                 {/* Quantity */}
                 <div className="space-y-2">
-                  <Label className="font-semibold">Số lượng xe (1-20) <span className="text-destructive">*</span></Label>
+                  <Label className="font-semibold block text-left">
+                    Số lượng xe {maxAvailableSlots > 0 ? `(1-${maxAvailableSlots})` : ""}
+                    <span className="text-destructive ml-1">*</span>
+                  </Label>
+
+                  {/* Hiển thị số chỗ trống tách biệt khỏi thẻ Label để không bị lệch */}
+                  {selectedTargetStation && (
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Chỗ còn trống tại trạm đích: <span className="font-semibold text-foreground">{maxAvailableSlots}</span>
+                    </p>
+                  )}
+
                   <Input
                     type="number"
-                    {...register("requestedQuantity", { valueAsNumber: true })}
+                    {...register("requestedQuantity", { 
+                      valueAsNumber: true,
+                      onChange: (e) => {
+                        const val = parseInt(e.target.value);
+                        if (val > maxAvailableSlots) {
+                          e.target.value = maxAvailableSlots.toString();
+                        }
+                      }
+                    })}
                     placeholder="Nhập số lượng"
+                    min={1}
+                    max={maxAvailableSlots}
+                    disabled={!selectedTargetStation || maxAvailableSlots === 0} 
                   />
                   {errors.requestedQuantity && <p className="text-xs text-destructive">{errors.requestedQuantity.message}</p>}
+                  {selectedTargetStation && maxAvailableSlots === 0 && (
+                    <p className="text-xs text-destructive">
+                      Trạm đích đã hết chỗ trống, vui lòng chọn trạm khác.
+                    </p>
+                  )}
                 </div>
 
                 {/* Reason */}
@@ -130,7 +180,7 @@ export default function CreateDistributionRequestClient({
               </div>
             </div>
 
-            <Button type="submit" disabled={isSubmitting} className="w-full">
+            <Button type="submit" disabled={isSubmitting || maxAvailableSlots === 0} className="w-full">
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Xác nhận gửi yêu cầu"}
             </Button>
           </form>

@@ -147,6 +147,7 @@ export type currentStation = {
   id : string;
   name : string;
   address : string;
+  operationalAvailableSlots : number,
 }
 export interface CurrentStation {
   currentStation : currentStation,
