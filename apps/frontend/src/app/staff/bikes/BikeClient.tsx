@@ -76,7 +76,7 @@ export default function BikeClient({
 
             <DataTable
               columns={bikeColumnForStaff({
-                onView: ({ id }) => router.push(`/manager/bikes/detail/${id}`),
+                onView: ({ id }) => router.push(`/staff/bikes/detail/${id}`),
                 stations: stations,
               })}
               data={bikes}

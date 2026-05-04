@@ -12,10 +12,10 @@ import {
   Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { cn } from "@/lib/utils";
+import { useReservationActions } from "@/hooks/use-reservation";
 import { formatToVNTime } from "@/lib/formatVNDate";
-import { useAgencyActions } from "@/hooks/use-agency";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 function statusBadgeVariant(
   status: string,
@@ -111,16 +111,16 @@ export default function ReservationDetailClient() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
   const {
-    getDetailReservationForAgency,
-    detailReservationForAgency,
-    isLoadingDetailReservationForAgency,
-  } = useAgencyActions({
+    detailReservationForStaff,
+    fetchDetailReservationForStaff,
+    isLoadingReservationDetail,
+  } = useReservationActions({
     hasToken: true,
-    reservation_id: id,
+    id: id,
   });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
-    if (isLoadingDetailReservationForAgency) {
+    if (isLoadingReservationDetail) {
       setIsVisualLoading(true);
     } else {
       const timer = setTimeout(() => {
@@ -128,18 +128,18 @@ export default function ReservationDetailClient() {
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [isLoadingDetailReservationForAgency]);
+  }, [isLoadingReservationDetail]);
   useEffect(() => {
     if (id) {
-      getDetailReservationForAgency();
+      fetchDetailReservationForStaff();
     }
-  }, [id, getDetailReservationForAgency]);
+  }, [id, fetchDetailReservationForStaff]);
   if (isVisualLoading) return <LoadingScreen />;
-  if (!detailReservationForAgency) {
+  if (!detailReservationForStaff) {
     notFound();
   }
 
-  const data = detailReservationForAgency;
+  const data = detailReservationForStaff;
   const { label, className } = getStatusReservationConfig(data.status);
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
@@ -294,7 +294,7 @@ export default function ReservationDetailClient() {
                   Tiền trả trước (Prepaid)
                 </p>
                 <p className="mt-2 text-3xl font-bold text-primary">
-                  {Number(data.prepaid || 0).toLocaleString("vi-VN")} VND
+                  {formatCurrency(data.prepaid || 0)}
                 </p>
               </div>
               <div className="mt-4 space-y-2">

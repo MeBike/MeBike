@@ -17,17 +17,7 @@ import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { useAgencyActions } from "@/hooks/use-agency";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
-function statusBadgeVariant(
-  status: string,
-): "warning" | "pending" | "success" | "destructive" | "secondary" {
-  const s = status?.toUpperCase() || "";
-  if (s.includes("PENDING") || s.includes("WAITING")) return "warning";
-  if (s.includes("CONFIRMED") || s.includes("ACTIVE")) return "pending";
-  if (s.includes("COMPLETED") || s.includes("FINISHED")) return "success";
-  if (s.includes("CANCELLED") || s.includes("REJECTED")) return "destructive";
-  return "secondary";
-}
-
+import { formatCurrency } from "@/utils/formatCurrency";
 function SectionCard({
   icon: Icon,
   title,
@@ -294,13 +284,13 @@ export default function ReservationDetailClient() {
                   Tiền trả trước (Prepaid)
                 </p>
                 <p className="mt-2 text-3xl font-bold text-primary">
-                  {Number(data.prepaid || 0).toLocaleString("vi-VN")} VND
+                  {formatCurrency(data.prepaid ?? 0)}
                 </p>
               </div>
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Phương thức:</span>
-                  <span className="font-medium">Ví </span>
+                  <span className="font-medium">Ví Mebike</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Loại đặt:</span>
