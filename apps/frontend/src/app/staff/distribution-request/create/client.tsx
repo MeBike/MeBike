@@ -16,7 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreateRedistributionRequestSchema, CreateRedistributionRequestInput } from "@/schemas/distribution-request-schema";
+import {
+  CreateRedistributionRequestSchema,
+  CreateRedistributionRequestInput,
+} from "@/schemas/distribution-request-schema";
 import { CurrentStation } from "@/types";
 
 interface CreateDistributionRequestClientProps {
@@ -36,21 +39,36 @@ export default function CreateDistributionRequestClient({
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateRedistributionRequestInput>({
     resolver: zodResolver(CreateRedistributionRequestSchema),
     defaultValues: {
       requestedQuantity: 1,
-      sourceStationId: stations.currentStation.id, // Mặc định là trạm của nhân viên
+      sourceStationId: stations.currentStation.id,
       targetStationId: defaultTargetStationId,
       reason: "",
     },
   });
 
-  // Theo dõi giá trị sourceStationId để disable trong targetStationId
-  const sourceStationId = useWatch({ control, name: "sourceStationId" });
+  // 1. Theo dõi giá trị targetStationId đang được chọn
+  const targetStationId = useWatch({ control, name: "targetStationId" });
+
+  // 2. Tìm trạm đích tương ứng trong danh sách để lấy số chỗ trống
+  const selectedTargetStation = stations.otherStations?.find(
+    (s) => s.id === targetStationId,
+  );
+
+  // 3. Gán giới hạn max bằng số chỗ trống của trạm đích (hoặc 0 nếu chưa chọn trạm)
+  const maxAvailableSlots =
+    selectedTargetStation?.operationalAvailableSlots || 0;
 
   const onSubmit = async (data: CreateRedistributionRequestInput) => {
+    // Ép kiểu an toàn lần cuối trước khi submit phòng khi Zod schema không check max động
+    if (data.requestedQuantity > maxAvailableSlots) {
+      return; // Hoặc bạn có thể set error thủ công ở đây bằng setError()
+    }
+
     try {
       await onSubmitRequest(data);
       router.push("/staff/distribution-request");
@@ -78,50 +96,107 @@ export default function CreateDistributionRequestClient({
               </h3>
 
               <div className="grid grid-cols-1 gap-6">
+                {/* Source Station */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">Trạm xuất</Label>
-                  <Input 
-                    value={`${stations.currentStation.name} (Trạm của bạn)`} 
-                    disabled 
+                  <Label className="font-semibold text-muted-foreground">
+                    Trạm xuất
+                  </Label>
+                  <Input
+                    value={`${stations.currentStation.name} (Trạm của bạn)`}
+                    disabled
                     className="bg-muted"
                   />
-                  <input type="hidden" {...register("sourceStationId")} value={stations.currentStation.id} />
+                  <input
+                    type="hidden"
+                    {...register("sourceStationId")}
+                    value={stations.currentStation.id}
+                  />
                 </div>
 
                 {/* Target Station */}
                 <div className="space-y-2">
-                  <Label className="font-semibold">Trạm đích <span className="text-destructive">*</span></Label>
+                  <Label className="font-semibold">
+                    Trạm đích <span className="text-destructive">*</span>
+                  </Label>
                   <Controller
                     name="targetStationId"
                     control={control}
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className={errors.targetStationId ? "border-destructive" : ""}>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Reset số lượng về 1 mỗi khi đổi trạm đích để tránh bị kẹt số cũ lớn hơn chỗ trống
+                          setValue("requestedQuantity", 1);
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger
+                          className={
+                            errors.targetStationId ? "border-destructive" : ""
+                          }
+                        >
                           <SelectValue placeholder="Chọn trạm đích" />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* Loại bỏ trạm hiện tại khỏi danh sách chọn trạm đích */}
                           {stations.otherStations?.map((s) => (
                             <SelectItem key={s.id} value={s.id}>
-                              {s.name}
+                              {s.name} (Trống: {s.operationalAvailableSlots})
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     )}
                   />
-                  {errors.targetStationId && <p className="text-xs text-destructive">{errors.targetStationId.message}</p>}
+                  {errors.targetStationId && (
+                    <p className="text-xs text-destructive">
+                      {errors.targetStationId.message}
+                    </p>
+                  )}
                 </div>
-
-                {/* Quantity */}
+                {/* Requested Quantity */}
                 <div className="space-y-2">
-                  <Label className="font-semibold">Số lượng xe (1-20) <span className="text-destructive">*</span></Label>
+                  <Label className="font-semibold text-left block">
+                    Số lượng xe{" "}
+                    {maxAvailableSlots > 0 ? `(1-${maxAvailableSlots})` : ""}
+                    <span className="text-destructive ml-1">*</span>
+                  </Label>
+
+                  {selectedTargetStation && (
+                    <p className="text-sm text-muted-foreground">
+                      Chỗ còn trống tại trạm đích:{" "}
+                      <span className="font-semibold text-foreground">
+                        {maxAvailableSlots}
+                      </span>
+                    </p>
+                  )}
+
                   <Input
                     type="number"
-                    {...register("requestedQuantity", { valueAsNumber: true })}
+                    {...register("requestedQuantity", {
+                      valueAsNumber: true,
+                      onChange: (e) => {
+                        const val = parseInt(e.target.value);
+                        if (val > maxAvailableSlots) {
+                          e.target.value = maxAvailableSlots.toString();
+                        }
+                      },
+                    })}
                     placeholder="Nhập số lượng"
+                    min={1}
+                    max={maxAvailableSlots}
+                    disabled={!selectedTargetStation || maxAvailableSlots === 0}
                   />
-                  {errors.requestedQuantity && <p className="text-xs text-destructive">{errors.requestedQuantity.message}</p>}
+
+                  {errors.requestedQuantity && (
+                    <p className="text-xs text-destructive">
+                      {errors.requestedQuantity.message}
+                    </p>
+                  )}
+                  {selectedTargetStation && maxAvailableSlots === 0 && (
+                    <p className="text-xs text-destructive">
+                      Trạm đích đã hết chỗ trống, vui lòng chọn trạm khác.
+                    </p>
+                  )}
                 </div>
 
                 {/* Reason */}
@@ -132,8 +207,16 @@ export default function CreateDistributionRequestClient({
               </div>
             </div>
 
-            <Button type="submit" disabled={isSubmitting} className="w-full">
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Xác nhận gửi yêu cầu"}
+            <Button
+              type="submit"
+              disabled={isSubmitting || maxAvailableSlots === 0}
+              className="w-full"
+            >
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Xác nhận gửi yêu cầu"
+              )}
             </Button>
           </form>
         </CardContent>
