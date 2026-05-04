@@ -2,7 +2,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
-import { BikeServiceTag } from "@/domain/bikes";
+import { BikeCommandServiceTag } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
 
 import type { BikeNotFoundResponse, BikesRoutes, BikeSummary, BikeUpdateConflictResponse } from "./shared";
@@ -44,7 +44,7 @@ const managerUpdateBikeStatus: RouteHandler<BikesRoutes["managerUpdateBikeStatus
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* BikeServiceTag;
+      const service = yield* BikeCommandServiceTag;
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,
@@ -83,7 +83,7 @@ const agencyUpdateBikeStatus: RouteHandler<BikesRoutes["agencyUpdateBikeStatus"]
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* BikeServiceTag;
+      const service = yield* BikeCommandServiceTag;
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,
@@ -122,7 +122,7 @@ const technicianUpdateBikeStatus: RouteHandler<BikesRoutes["technicianUpdateBike
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
-      const service = yield* BikeServiceTag;
+      const service = yield* BikeCommandServiceTag;
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,

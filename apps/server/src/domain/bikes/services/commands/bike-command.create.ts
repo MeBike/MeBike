@@ -25,6 +25,8 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
       const txBikeRepo = makeBikeRepository(tx);
       const txStationRepo = makeStationQueryRepository(tx);
 
+      // Khóa station trước khi kiểm tra sức chứa để tránh 2 admin create đồng thời
+      // cùng nhìn thấy một lượng chỗ trống rồi ghi vượt sức chứa thực tế.
       await lockStationRow(tx, input.stationId);
 
       const [stationOpt, supplier] = await Promise.all([
@@ -44,6 +46,8 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
       }
 
       const station = stationOpt.value;
+      // Rule đặt thêm xe phải bám theo sức chứa đang bị chiếm thực tế của station,
+      // không chỉ nhìn `totalCapacity` thô. Hết chỗ thì fail trước khi ghi.
       const availablePlacementSlots = getAvailablePlacementSlots(station);
       if (availablePlacementSlots < 1) {
         throw new BikeStationPlacementCapacityExceeded({

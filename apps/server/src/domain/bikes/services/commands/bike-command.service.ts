@@ -1,31 +1,35 @@
-import { Effect, Layer, Option } from "effect";
+import { Effect, Option } from "effect";
 
-import { Prisma } from "@/infrastructure/prisma";
+import type { PrismaClient } from "generated/prisma/client";
 
 import type { BikeRepo } from "../../repository/bike.repository";
-import type { BikeService } from "./bike-command.service.types";
+import type { BikeCommandService } from "./bike-command.service.types";
 
 import {
   BikeNotFound,
   InvalidBikeStatus,
 } from "../../domain-errors";
-import { BikeRepository } from "../../repository/bike.repository";
 import { createBikeWithGuards } from "./bike-command.create";
 import { getScopedStatusTransitions } from "./bike-command.helpers";
 import { adminUpdateBikeWithGuards } from "./bike-command.update";
 
-function makeBikeService(
-  repo: BikeRepo,
-  client: import("generated/prisma/client").PrismaClient,
-): BikeService {
+type BikeCommandServiceDeps = {
+  repo: Pick<BikeRepo, "getById" | "transitionStatusInStationAt">;
+  client: PrismaClient;
+};
+
+/**
+ * Service command-side của bike domain.
+ *
+ * Giữ các flow ghi và rule chuyển trạng thái ở đây, còn các thao tác đọc như
+ * list/detail được tách sang `BikeQueryService`.
+ */
+export function makeBikeCommandService({
+  repo,
+  client,
+}: BikeCommandServiceDeps): BikeCommandService {
   return {
     createBike: input => createBikeWithGuards(client, input),
-
-    listBikes: (filter, pageReq) =>
-      repo.listByStationWithOffset(filter.stationId, filter, pageReq),
-
-    getBikeDetail: (bikeId: string) =>
-      repo.getById(bikeId),
 
     adminUpdateBike: (bikeId, patch) =>
       adminUpdateBikeWithGuards(client, bikeId, patch),
@@ -34,6 +38,8 @@ function makeBikeService(
       Effect.gen(function* () {
         const current = yield* repo.getById(bikeId);
 
+        // Operator bị scope theo station chỉ được mutate xe vẫn còn thuộc đúng
+        // station của họ ở thời điểm kiểm tra hiện tại.
         if (Option.isNone(current) || current.value.stationId !== input.stationId) {
           return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
         }
@@ -58,6 +64,9 @@ function makeBikeService(
           return updated.value;
         }
 
+        // Nếu transition miss sau precheck thì thường state đã đổi giữa bước đọc
+        // và bước ghi. Đọc lại một lần để phân biệt xe đã rời scope / biến mất với
+        // trường hợp status vừa đổi nên tập transition hợp lệ cũng đổi theo.
         const latest = yield* repo.getById(bikeId);
         if (Option.isNone(latest) || latest.value.stationId !== input.stationId) {
           return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
@@ -71,21 +80,3 @@ function makeBikeService(
 
   };
 }
-
-const makeBikeServiceEffect = Effect.gen(function* () {
-  const repo = yield* BikeRepository;
-  const { client } = yield* Prisma;
-  return makeBikeService(repo, client);
-});
-
-export class BikeServiceTag extends Effect.Service<BikeServiceTag>()(
-  "BikeService",
-  {
-    effect: makeBikeServiceEffect,
-  },
-) {}
-
-export const BikeServiceLive = Layer.effect(
-  BikeServiceTag,
-  makeBikeServiceEffect.pipe(Effect.map(BikeServiceTag.make)),
-);
