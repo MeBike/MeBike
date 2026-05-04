@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Edit2, Trash2 } from "lucide-react";
+import { Eye, Edit2, Trash2, AlertTriangle } from "lucide-react"; // Thêm icon AlertTriangle
 import type { Station } from "@custom-types";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import {
@@ -18,6 +18,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+
 export const stationColumns = ({
   onEdit,
   onDelete,
@@ -28,12 +29,7 @@ export const stationColumns = ({
   {
     accessorKey: "name",
     header: "Tên trạm",
-    cell: ({ row }) => row.original.name,
-  },
-  {
-    accessorKey: "address",
-    header: "Địa chỉ",
-    cell: ({ row }) => row.original.address,
+    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {
     accessorKey: "capacity",
@@ -43,7 +39,23 @@ export const stationColumns = ({
   {
     accessorKey: "bikes",
     header: "Số xe hiện tại",
-    cell: ({ row }) => row.original.bikes.total,
+    cell: ({ row }) => {
+      const currentBikes = row.original.bikes.total;
+      const needsRedistribution = currentBikes < 10;
+      return (
+        <div className="flex items-center gap-2">
+          <span className={needsRedistribution ? "font-bold text-orange-600" : "font-medium"}>
+            {currentBikes}
+          </span>
+          {needsRedistribution && (
+            <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 border border-orange-200 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+              <AlertTriangle className="w-3 h-3" />
+              Cần điều phối
+            </span>
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "created_at",
@@ -97,13 +109,13 @@ export const stationColumns = ({
             </div>
             <DialogFooter className="gap-2 flex">
               <DialogClose asChild>
-                <button className="px-4 py-2 rounded border" type="button">
+                <button className="px-4 py-2 rounded border hover:bg-muted" type="button">
                   Hủy
                 </button>
               </DialogClose>
               <DialogClose asChild>
                 <button
-                  className="px-4 py-2 bg-red-600 text-white rounded"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
                   type="button"
                   onClick={() => {
                     if (onDelete) onDelete({ id: row.original.id });
@@ -119,6 +131,7 @@ export const stationColumns = ({
     ),
   },
 ];
+
 export const stationStaffColumns = ({
   onView,
   onEdit,
@@ -131,12 +144,7 @@ export const stationStaffColumns = ({
   {
     accessorKey: "name",
     header: "Tên trạm",
-    cell: ({ row }) => row.original.name,
-  },
-  {
-    accessorKey: "address",
-    header: "Địa chỉ",
-    cell: ({ row }) => row.original.address,
+    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {
     accessorKey: "capacity",
@@ -146,22 +154,38 @@ export const stationStaffColumns = ({
   {
     accessorKey: "bikes",
     header: "Số xe hiện tại",
-    cell: ({ row }) => row.original.bikes.total,
+    cell: ({ row }) => {
+      const currentBikes = row.original.bikes.total;
+      const needsRedistribution = currentBikes < 10;
+
+      return (
+        <div className="flex items-center gap-2">
+          <span className={needsRedistribution ? "font-bold text-orange-600" : "font-medium"}>
+            {currentBikes}
+          </span>
+          {needsRedistribution && (
+            <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 border border-orange-200 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+              <AlertTriangle className="w-3 h-3" />
+              Cần điều phối
+            </span>
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "stationType",
     header: "Loại trạm",
-    cell: ({ row }) => row.original.stationType === "INTERNAL" ? "Trạm nội bộ" : "AGENCY",
+    cell: ({ row }) => (
+      <span className={row.original.stationType === "INTERNAL" ? "text-blue-600 font-medium" : "text-purple-600 font-medium"}>
+        {row.original.stationType === "INTERNAL" ? "Trạm nội bộ" : "AGENCY"}
+      </span>
+    ),
   },
   {
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => formatToVNTime(row.original.createdAt),
-  },
-  {
-    accessorKey: "updated_at",
-    header: "Ngày cập nhật",
-    cell: ({ row }) => formatToVNTime(row.original.updatedAt),
   },
   {
     id: "actions",

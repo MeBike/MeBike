@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 export default function CreateDistributionRequestPage() {
   const { createDistributeRequest } = useDistributionRequest({
-    hasToken: true, // Giả sử bạn đã kiểm tra auth ở middleware hoặc context
+    hasToken: true,
   });
   const { getListStation, listStation, isLoadingListStation } = useStationActions({
     hasToken: true,
