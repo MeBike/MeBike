@@ -39,8 +39,8 @@ export default function Page() {
     ...(debouncedStatusFilter !== "" && { status: statusFilter as RentalStatus }),
     ...(debouncedUserId !== "" && { userId: debouncedUserId }),
     ...(debouncedBikeId !== "" && { bikeId: debouncedBikeId }),
-    ...(debouncedStartStation !== "" && { startStation: startStation }),
-    ...(debouncedEndStation !== "" && { endStation: endStation }),
+    ...(debouncedStartStation !== "" && { startStation: debouncedStartStation }),
+    ...(debouncedEndStation !== "" && { endStation: debouncedEndStation }),
   });
 
   useEffect(() => {

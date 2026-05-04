@@ -29,7 +29,7 @@ export default function Page() {
 
   useEffect(() => {
     getAllStaffs();
-  }, [debouncedSearchQuery, debouncedRoleFilter, debouncedRoleFilter, currentPage, getAllStaffs]);
+  }, [debouncedSearchQuery, debouncedRoleFilter, currentPage, getAllStaffs]);
 
   useEffect(() => {
     setCurrentPage(1);

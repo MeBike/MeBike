@@ -25,7 +25,7 @@ export default function Page() {
       pageSize: pageSize,
       page: page,
       stationId:
-        !debouncedStationId || stationId === "all-stations"
+        !debouncedStationId || debouncedStationId === "all-stations"
           ? undefined
           : stationId,
     });

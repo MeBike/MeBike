@@ -31,8 +31,8 @@ export default function Page() {
     status: debouncedStatusFilter !== "all" ? (debouncedStatusFilter as BikeStatus) : undefined,
     pageSize: pageSize,
     page: page,
-    stationId: (!debouncedStationId || stationId === "all-stations") ? undefined : stationId,
-    supplierId: (!debouncedSupplierId || supplierId === "all-suppliers") ? undefined : supplierId,
+    stationId: (!debouncedStationId || debouncedStationId === "all-stations") ? undefined : stationId,
+    supplierId: (!debouncedSupplierId || debouncedSupplierId === "all-suppliers") ? undefined : supplierId,
   });
   useEffect(() => {
     getStatisticsBike();
