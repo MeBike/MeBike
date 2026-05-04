@@ -1,5 +1,11 @@
+import type { Result } from "@lib/result";
 import type { z } from "zod";
 
+import { decodeWithSchema, readJson } from "@lib/api-decode";
+import { kyClient } from "@lib/ky-client";
+import { err, ok } from "@lib/result";
+import { routePath, ServerRoutes } from "@lib/server-routes";
+import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
 
 import type {
@@ -25,15 +31,9 @@ import type {
   RequestBikeSwapPayload,
   ReturnSlotReservation,
 } from "@/types/rental-types";
-import type { Result } from "@lib/result";
 
 import { bikeService } from "@/services/bike.service";
 import { stationService } from "@/services/station.service";
-import { decodeWithSchema, readJson } from "@lib/api-decode";
-import { kyClient } from "@lib/ky-client";
-import { err, ok } from "@lib/result";
-import { routePath, ServerRoutes } from "@lib/server-routes";
-import { toSearchParams } from "@services/shared/search-params";
 
 import type { RentalError } from "./rental-error";
 
