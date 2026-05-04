@@ -9,12 +9,14 @@ import { RevenueReport } from "./components/revenue-report";
 import { StationTableSection } from "./components/station-table-section";
 import { ReportSkeleton } from "./components/loading-skeleton";
 import { TableSkeleton } from "@/components/table-skeleton";
+import { useDebounce } from "@/utils/useDebounce";
 export default function StationsPage() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRevenueReport, setShowRevenueReport] = useState(false);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const {
     getMyStation,
     myStation,
@@ -26,7 +28,7 @@ export default function StationsPage() {
     hasToken: true,
     page: page,
     limit: limit,
-    name: searchQuery,
+    name: debouncedSearchQuery,
   });
   const [isVisualLoading, setIsVisualLoading] = useState(false);
 
@@ -43,14 +45,14 @@ export default function StationsPage() {
 
   useEffect(() => {
     getMyStation();
-  }, [page, getMyStation, limit]);
+  }, [page, getMyStation, limit, debouncedSearchQuery]);
   
   useEffect(() => {
     getListStation();
   }, [getListStation]);
   useEffect(() => {
     setPage(1);
-  }, [searchQuery]);
+  }, [debouncedSearchQuery]);
   return (
     <div>
       <div className="space-y-6">
