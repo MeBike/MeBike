@@ -267,8 +267,7 @@ export default function StationDetailPage() {
 
               <div className="mt-4 pt-4 border-t border-border/40 space-y-2">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Chi tiết chỗ trả</p>
-                <StatusItem icon={CheckCircle2} label="Chỗ còn trống" value={station.returnSlots?.available || 0} color="text-green-600" />
-                <StatusItem icon={Activity} label="Chỗ đã đặt" value={station.returnSlots?.active || 0} color="text-blue-600" />
+                <StatusItem icon={Activity} label="Chỗ trả xe" value={station.returnSlots?.active || 0} color="text-blue-600" />
                 <StatusItem icon={Wrench} label="Điều phối" value={station.redistributionSlots || 0} color="text-orange-500" />
               </div>
             </SectionCard>
@@ -349,7 +348,7 @@ export default function StationDetailPage() {
                   />
                   <StatusItem
                     icon={Wrench}
-                    label="Xe được điều phối"
+                    label="Chuẩn bị điều phối"
                     value={station.bikes.redistributing}
                     color="text-orange-500"
                   />

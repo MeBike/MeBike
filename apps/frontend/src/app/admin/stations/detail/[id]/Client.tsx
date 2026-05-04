@@ -125,7 +125,14 @@ interface StationDetailClientProps {
   onUpdateStation: (data: StationSchemaFormData) => Promise<boolean>;
   revenueData?: StationReport; // <-- Khai báo thêm prop doanh thu
 }
-
+export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Quản trị viên",
+  MANAGER: "Quản lý trạm",
+  STAFF: "Nhân viên trạm",
+  TECHNICIAN: "Kỹ thuật viên",
+  AGENCY: "Agency",
+  USER: "Khách hàng",
+};
 export default function StationDetailClient({
   id,
   station,
@@ -350,7 +357,7 @@ export default function StationDetailClient({
                         <div>
                           <p className="text-sm font-bold">{w.fullName}</p>
                           <p className="text-[10px] text-muted-foreground uppercase">
-                            {w.role}
+                            {ROLE_LABELS[w.role]}
                           </p>
                         </div>
                       </div>
@@ -431,7 +438,7 @@ export default function StationDetailClient({
                   </div>
                   <div className="bg-primary/10 p-3 text-center rounded-lg border border-primary/20">
                     <p className="text-[10px] text-primary font-semibold">
-                      Chỗ Đã Đặt
+                      Chỗ đã đặt
                     </p>
                     <p className="text-xl text-primary font-bold">
                       {station.capacity.totalActiveSlots}
@@ -442,18 +449,12 @@ export default function StationDetailClient({
 
               {!isEditing && (
                 <div className="mt-4 pt-4 border-t border-border/40 space-y-2">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">
-                    Chi tiết chỗ trả
+                  <p className="text-[10px] font-bold text-muted-foreground mb-2">
+                    Chi tiết chỗ đã đặt
                   </p>
                   <StatusItem
-                    icon={CheckCircle2}
-                    label="Chỗ Còn Trống"
-                    value={station.returnSlots.available}
-                    color="text-green-600"
-                  />
-                  <StatusItem
                     icon={Activity}
-                    label="Chỗ Đã Đặt"
+                    label="Chỗ trả xe"
                     value={station.returnSlots.active}
                     color="text-blue-600"
                   />
@@ -544,7 +545,7 @@ export default function StationDetailClient({
                   />
                   <StatusItem
                     icon={Wrench}
-                    label="Đang được điều phối"
+                    label="Chuẩn bị điều phối"
                     value={station.bikes.redistributing}
                     color="text-orange-500"
                   />
