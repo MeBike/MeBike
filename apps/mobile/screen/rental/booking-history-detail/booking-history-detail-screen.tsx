@@ -1,4 +1,7 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { spaceScale } from "@theme/metrics";
+import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { Screen } from "@ui/primitives/screen";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
 import { useTheme, YStack } from "tamagui";
@@ -8,17 +11,12 @@ import type {
   BookingHistoryDetailRouteProp,
 } from "@/types/navigation";
 
-import { spaceScale } from "@theme/metrics";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
-import { Screen } from "@ui/primitives/screen";
-
 import DetailErrorState from "./components/detail-error-state";
 import DetailLoadingState from "./components/detail-loading-state";
 import { IncidentTypeSheet } from "./components/incident-type-sheet";
 import { RentalActionBar } from "./components/rental-action-bar";
 import { RentalBillingSheet } from "./components/rental-billing-sheet";
 import { RentalHeroCard } from "./components/rental-hero-card";
-import { RentalIdPill } from "./components/rental-id-pill";
 import { RentalIncidentCard } from "./components/rental-incident-card";
 import { RentalJourneyCard } from "./components/rental-journey-card";
 import { RentalMetaCard } from "./components/rental-meta-card";
@@ -105,7 +103,6 @@ function BookingHistoryDetailScreen() {
 
             <RentalMetaCard detail={vm.detail} />
             <RentalRatingCard state={vm.rating.cardState} />
-            <RentalIdPill rentalId={vm.booking.id} />
           </YStack>
         </YStack>
       </ScrollView>

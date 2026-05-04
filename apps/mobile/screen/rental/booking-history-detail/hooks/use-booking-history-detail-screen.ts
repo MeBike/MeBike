@@ -1,4 +1,7 @@
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { spaceScale } from "@theme/metrics";
+import { getBikeDisplayLabel } from "@utils/bike";
 import { useCallback, useRef } from "react";
 import { Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,9 +9,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BookingHistoryDetailNavigationProp } from "@/types/navigation";
 
 import { useReturnSlotExpiredEvents } from "@/hooks/use-return-slot-events";
-import { useAuthNext } from "@providers/auth-provider-next";
-import { spaceScale } from "@theme/metrics";
-import { getBikeDisplayLabel } from "@utils/bike";
 
 import { useBookingBikeSwapState } from "./use-booking-bike-swap-state";
 import { useBookingIncidentState } from "./use-booking-incident-state";

@@ -1,12 +1,11 @@
-import { Pressable } from "react-native";
-import { Separator, useTheme, XStack, YStack } from "tamagui";
-
-import type { RentalBillingDetail, RentalBillingPreview, RentalStatus } from "@/types/rental-types";
-
 import { IconSymbol } from "@components/IconSymbol";
 import { spaceScale } from "@theme/metrics";
 import { AppBottomModalCard } from "@ui/patterns/app-bottom-modal-card";
 import { AppText } from "@ui/primitives/app-text";
+import { Pressable } from "react-native";
+import { Separator, useTheme, XStack, YStack } from "tamagui";
+
+import type { RentalBillingDetail, RentalBillingPreview, RentalStatus } from "@/types/rental-types";
 
 import { formatCurrencyText } from "../helpers/formatters";
 
@@ -79,7 +78,7 @@ function CouponRow({ billing }: { billing: BillingSheetData }) {
       <BillingRow
         amount={billing.data.couponDiscountAmount}
         icon="zap"
-        label="Ưu đãi tự động"
+        label={billing.data.bestDiscountRule.name}
         sign="minus"
         tone="success"
       />
