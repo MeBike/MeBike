@@ -88,7 +88,7 @@ export function BikeFilters({
         </div>
 
         {/* Lọc Trạm xe */}
-        <div className="flex flex-col gap-1.5">
+        {/* <div className="flex flex-col gap-1.5">
           <label className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <MapPin className="h-3 w-3" />
             Trạm xe
@@ -107,7 +107,7 @@ export function BikeFilters({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
       </div>
     </div>
