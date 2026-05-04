@@ -7,12 +7,14 @@ import { useAgencyActions } from "@/hooks/use-agency";
 import { StationTableSection } from "./components/station-table-section";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { useDebounce } from "@/utils/useDebounce";
+import { useStationActions } from "@/hooks/use-station";
 export default function StationsPage() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const { listStation, getListStation } = useStationActions({ hasToken: true });
   const { agencyStation, getMyAgencyStation, isLoadingMyAgencyStation } =
     useAgencyActions({
       hasToken: true,
@@ -34,6 +36,7 @@ export default function StationsPage() {
 
   useEffect(() => {
     getMyAgencyStation();
+    getListStation();
   }, [page, getMyAgencyStation, limit, debouncedSearchQuery]);
   useEffect(() => {
     setPage(1);
@@ -49,6 +52,15 @@ export default function StationsPage() {
             <p className="text-muted-foreground text-lg">
               Hệ thống giám sát và vận hành trạm xe đạp thông minh.
             </p>
+            {listStation?.currentStation && (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary shadow-sm">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse"></span>
+                <span>
+                  Đang làm việc tại:{" "}
+                  <strong>{listStation.currentStation.name}</strong>
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div className="space-y-4 min-h-[400px]">

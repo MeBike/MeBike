@@ -34,10 +34,9 @@ export default function StationsPage() {
     if (isLoadingMyStation) {
       setIsVisualLoading(true);
     } else {
-      // Khi API xong, đợi thêm một chút rồi mới tắt Skeleton
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600); // 600ms là khoảng "vàng" để UI mượt mà
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyStation]);

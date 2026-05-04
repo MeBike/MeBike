@@ -140,6 +140,9 @@ export const useBikeActions = ({
           queryClient.invalidateQueries({
             queryKey: ["bikes", "all"],
           });
+          queryClient.invalidateQueries({
+            queryKey: ["stations", "all"],
+          });
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
