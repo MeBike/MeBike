@@ -264,28 +264,28 @@ export default function StationDetailPage() {
             <SectionCard icon={LayoutGrid} title="Cấu hình sức chứa">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="rounded-lg bg-muted p-3 text-center border border-border/40">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Tổng Slots</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Tổng vị trí</p>
                   <p className="text-xl font-bold text-foreground">{station.capacity.total}</p>
                 </div>
-                <div className="rounded-lg bg-primary/10 p-3 text-center border border-primary/20">
-                  <p className="text-[10px] text-primary uppercase font-bold">Đang hoạt động</p>
-                  <p className="text-xl font-bold text-primary">{station.capacity.totalActiveSlots}</p>
-                </div>
-                <div className="rounded-lg bg-secondary/50 p-3 text-center border border-border/40">
-                  <p className="text-[10px] text-secondary-foreground uppercase font-bold">Trả tối đa</p>
+                <div className="rounded-lg bg-secondary/50 p-3 text-center border-border/40 border">
+                  <p className="text-[10px] text-secondary-foreground uppercase font-bold">Trả xe tối đa</p>
                   <p className="text-xl font-bold text-foreground">{station.capacity.returnSlotLimit}</p>
                 </div>
-                <div className="rounded-lg bg-muted p-3 text-center border border-border/40">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Vị trí trống</p>
+                <div className="rounded-lg bg-muted p-3 text-center">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Chỗ còn trống</p>
                   <p className="text-xl font-extrabold text-foreground">{station.capacity.emptyPhysicalSlots}</p>
+                </div>
+                <div className="rounded-lg bg-primary/10 p-3 text-center">
+                  <p className="text-[10px] text-primary uppercase font-bold">Chỗ đã đặt</p>
+                  <p className="text-xl font-bold text-primary">{station.capacity.totalActiveSlots}</p>
                 </div>
               </div>
               
               <div className="mt-4 pt-4 border-t border-border/40 space-y-2">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Trạng thái Slot chi tiết</p>
-                <StatusItem icon={CheckCircle2} label="Slot trả khả dụng" value={station.returnSlots.available} color="text-green-600" />
-                <StatusItem icon={Activity} label="Slot trả đang hoạt động" value={station.returnSlots.active} color="text-blue-600" />
-                <StatusItem icon={Wrench} label="Slot điều phối" value={station.redistributionSlots} color="text-orange-500" />
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Chi tiết chỗ trả</p>
+                <StatusItem icon={CheckCircle2} label="Chỗ còn trống" value={station.returnSlots.available} color="text-green-600" />
+                <StatusItem icon={Activity} label="Chỗ đã đặt" value={station.returnSlots.active} color="text-blue-600" />
+                <StatusItem icon={Wrench} label="Điều phối" value={station.redistributionSlots} color="text-orange-500" />
               </div>
             </SectionCard>
           </div>
