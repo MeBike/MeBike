@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
-import type { ReturnSlotExpiredUpdate } from "@/hooks/use-bike-status-stream";
+import type { ReturnSlotExpiredUpdate } from "@/types/realtime-events";
 
-import { useBikeStatusStreamContext } from "@providers/bike-status-stream-provider";
+import { useRealtimeEventContext } from "@providers/realtime-event-provider";
 
 type Options = {
   enabled?: boolean;
@@ -13,7 +13,7 @@ export function useReturnSlotExpiredEvents(
   options?: Options,
 ) {
   const { enabled = true } = options ?? {};
-  const { subscribeReturnSlotExpired, lastReturnSlotExpired } = useBikeStatusStreamContext();
+  const { subscribeReturnSlotExpired, lastReturnSlotExpired } = useRealtimeEventContext();
 
   useEffect(() => {
     if (!enabled)

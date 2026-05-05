@@ -1,19 +1,20 @@
-import { AuthProviderNext } from "@providers/auth-provider-next";
-import { BikeStatusStreamProvider } from "@providers/bike-status-stream-provider";
-import Providers from "@providers/providers";
 import { NavigationContainer } from "@react-navigation/native";
 import { initStripe } from "@stripe/stripe-react-native";
-import { appFontSources } from "@theme/typography";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import { TamaguiProvider } from "tamagui";
 
+import { AuthProviderNext } from "@providers/auth-provider-next";
+import Providers from "@providers/providers";
+import { RealtimeEventProvider } from "@providers/realtime-event-provider";
+import { appFontSources } from "@theme/typography";
+
 import { runSharedContractsSmokeTest } from "./debug/shared-contract-smoke";
 import { log } from "./lib/log";
-import { navigationRef } from "./navigation/navigation-ref";
 import { STRIPE_PUBLISHABLE_KEY, STRIPE_URL_SCHEME } from "./lib/stripe";
+import { navigationRef } from "./navigation/navigation-ref";
 import RootNavigator from "./navigation/root-navigator";
 import tamaguiConfig from "./tamagui.config";
 
@@ -79,10 +80,10 @@ export default function App() {
       <Providers>
         <NavigationContainer ref={navigationRef}>
           <AuthProviderNext>
-            <BikeStatusStreamProvider>
+            <RealtimeEventProvider>
               <StatusBar style="dark" />
               <RootNavigator />
-            </BikeStatusStreamProvider>
+            </RealtimeEventProvider>
           </AuthProviderNext>
         </NavigationContainer>
       </Providers>
