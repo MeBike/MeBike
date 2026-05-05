@@ -17,15 +17,18 @@ import {
   getErrorMessageFromNFCCode,
   getAxiosErrorCodeMessage,
 } from "@utils";
+import { AssetStatus } from "@/types";
 export interface NFCCardActionProps {
   page?: number;
   pageSize?: number;
   id?: string;
+  status ?: AssetStatus | "all"
 }
 export const useNFCCardActions = ({
   page,
   pageSize,
   id,
+  status
 }: NFCCardActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -37,6 +40,7 @@ export const useNFCCardActions = ({
   } = useGetListNFCQuery({
     page: page || 1,
     pageSize: pageSize || 7,
+    status : status || 'all',
   });
 
   const getNFCCards = useCallback(() => {

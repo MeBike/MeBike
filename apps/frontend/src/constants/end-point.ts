@@ -11,8 +11,8 @@ export const ENDPOINT = {
         REFRESH_TOKEN: "/auth/refresh",
         CHANGE_PASSWORD: "/users/change-password",
         FORGOT_PASSWORD: "/auth/password/reset/send",
-        VERIFY_FORGOT_PASSWORD: "/users/verify-forgot-password",
-        RESET_PASSWORD: "/users/reset-password",
+        VERIFY_FORGOT_PASSWORD: "/auth/password/reset/verify-otp",
+        RESET_PASSWORD: "/auth/password/reset/confirm",
     },
     STATION : {
         BASE : "/stations",
