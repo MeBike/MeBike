@@ -45,7 +45,7 @@ export type CustomerToolName
 
 export const RentalDetailInputSchema = z.object({
   rentalId: z.string().optional(),
-  reference: z.enum(["context", "current", "latest", "id"]).default("context"),
+  reference: z.enum(["current", "latest", "id"]).default("current"),
 });
 
 export const RentalDetailsInputSchema = z.object({
@@ -63,7 +63,7 @@ export const QueryRentalsInputSchema = z.object({
 
 export const ReservationDetailInputSchema = z.object({
   reservationId: z.string().optional(),
-  reference: z.enum(["context", "latestPendingOrActive", "id"]).default("context"),
+  reference: z.enum(["latestPendingOrActive", "id"]).default("latestPendingOrActive"),
 });
 
 export const WalletTransactionDetailInputSchema = z.object({
@@ -71,11 +71,11 @@ export const WalletTransactionDetailInputSchema = z.object({
   reference: z.enum(["latest", "id"]).default("latest"),
 });
 
-export const StationReferenceSchema = z.enum(["context", "id"]);
+export const StationReferenceSchema = z.enum(["id"]);
 
 export const StationDetailInputSchema = z.object({
   stationId: z.string().optional(),
-  reference: StationReferenceSchema.default("context"),
+  reference: StationReferenceSchema.default("id"),
 });
 
 export const StationSearchInputSchema = z.object({
@@ -85,7 +85,7 @@ export const StationSearchInputSchema = z.object({
 
 export const NearbyStationsInputSchema = z.object({
   stationId: z.string().optional(),
-  reference: StationReferenceSchema.default("context"),
+  reference: StationReferenceSchema.default("id"),
   limit: z.number().int().min(1).max(10).default(5),
   maxDistanceMeters: z.number().int().positive().max(50000).optional(),
 });
@@ -97,13 +97,13 @@ export const NearbyStationsFromLocationInputSchema = z.object({
 
 export const StationAvailableBikesInputSchema = z.object({
   stationId: z.string().optional(),
-  reference: StationReferenceSchema.default("context"),
+  reference: StationReferenceSchema.default("id"),
   limit: z.number().int().min(1).max(10).default(5),
 });
 
 export const BikeDetailInputSchema = z.object({
   bikeId: z.string().optional(),
-  reference: z.enum(["context", "id"]).default("context"),
+  reference: z.enum(["id"]).default("id"),
 });
 
 export const rentalToolPage = {
@@ -329,17 +329,12 @@ export async function getStationByIdOrNull(
 }
 
 export async function resolveRentalReference(args: {
-  context: AiChatContext | null;
   rentalId?: string | null;
-  reference: "context" | "current" | "latest" | "id";
+  reference: "current" | "latest" | "id";
   rentalService: RentalService;
   userId: string;
 }) {
   let rentalId = args.rentalId ?? null;
-
-  if (!rentalId && args.reference === "context") {
-    rentalId = args.context?.rentalId ?? null;
-  }
 
   if (!rentalId && args.reference === "current") {
     const rentals = await Effect.runPromise(

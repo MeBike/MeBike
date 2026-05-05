@@ -19,11 +19,6 @@ export const AiChatLocationSchema = z.object({
 
 export const AiChatContextSchema = z.object({
   screen: AiChatScreenSchema.nullable().optional(),
-  rentalId: z.string().nullable().optional(),
-  reservationId: z.string().nullable().optional(),
-  bikeId: z.string().nullable().optional(),
-  stationId: z.string().nullable().optional(),
-  stationName: z.string().nullable().optional(),
   location: AiChatLocationSchema.nullable().optional(),
 }).openapi("AiChatContext");
 

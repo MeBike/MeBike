@@ -66,15 +66,11 @@ export function createCustomerReservationTools(args: CreateCustomerToolsArgs) {
       },
     }),
     getReservationDetail: tool({
-      description: "Get one user-owned reservation detail. Prefer current screen context or the latest pending or active reservation before raw ids.",
+      description: "Get one user-owned reservation detail. Prefer the latest pending or active reservation or an id already returned by another tool before raw ids.",
       inputSchema: ReservationDetailInputSchema,
       outputSchema: ReservationDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof ReservationDetailToolOutputSchema>> => {
         let reservationId = input.reservationId ?? null;
-
-        if (!reservationId && input.reference === "context") {
-          reservationId = args.context?.reservationId ?? null;
-        }
 
         if (!reservationId && input.reference === "latestPendingOrActive") {
           const latest = await Effect.runPromise(

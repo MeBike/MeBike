@@ -136,7 +136,7 @@ const makeAiChatService = Effect.gen(function* () {
           },
         },
         stopWhen: stepCountIs(12),
-        system: buildCustomerAssistantPrompt(args.context),
+        system: buildCustomerAssistantPrompt(),
         messages: modelMessages,
         activeTools,
         tools,

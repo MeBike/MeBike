@@ -30,15 +30,11 @@ import {
 export function createCustomerStationTools(args: CreateCustomerToolsArgs) {
   return {
     getStationDetail: tool({
-      description: "Get one station detail. Prefer the current screen context when a station is already open.",
+      description: "Get one station detail when the station id is already known from prior tool results or explicit user selection.",
       inputSchema: StationDetailInputSchema,
       outputSchema: StationDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof StationDetailToolOutputSchema>> => {
-        let stationId = input.stationId ?? null;
-
-        if (!stationId && input.reference === "context") {
-          stationId = args.context?.stationId ?? null;
-        }
+        const stationId = input.stationId ?? null;
 
         if (!stationId) {
           return { reference: input.reference, detail: null };
@@ -85,7 +81,7 @@ export function createCustomerStationTools(args: CreateCustomerToolsArgs) {
       },
     }),
     getNearbyStationsFromLocation: tool({
-      description: "Get stations near the user's live location when location context is available. Use this for requests like nearest station near me or stations close to my current position.",
+      description: "Get stations near the user's live location when live location is available. Use this for requests like nearest station near me or stations close to my current position.",
       inputSchema: NearbyStationsFromLocationInputSchema,
       outputSchema: NearbyStationsFromLocationToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof NearbyStationsFromLocationToolOutputSchema>> => {
@@ -117,15 +113,11 @@ export function createCustomerStationTools(args: CreateCustomerToolsArgs) {
       },
     }),
     getNearbyStations: tool({
-      description: "Get nearby stations around a known station context. Use this for alternative pickup or return suggestions.",
+      description: "Get nearby stations around a known station. Use this for alternative pickup or return suggestions.",
       inputSchema: NearbyStationsInputSchema,
       outputSchema: NearbyStationsToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof NearbyStationsToolOutputSchema>> => {
-        let stationId = input.stationId ?? null;
-
-        if (!stationId && input.reference === "context") {
-          stationId = args.context?.stationId ?? null;
-        }
+        const stationId = input.stationId ?? null;
 
         if (!stationId) {
           return {
@@ -166,15 +158,11 @@ export function createCustomerStationTools(args: CreateCustomerToolsArgs) {
       },
     }),
     getStationAvailableBikes: tool({
-      description: "Get currently available bikes at one station. Prefer current station context when possible.",
+      description: "Get currently available bikes at one station when the station is already identified.",
       inputSchema: StationAvailableBikesInputSchema,
       outputSchema: StationAvailableBikesToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof StationAvailableBikesToolOutputSchema>> => {
-        let stationId = input.stationId ?? null;
-
-        if (!stationId && input.reference === "context") {
-          stationId = args.context?.stationId ?? null;
-        }
+        const stationId = input.stationId ?? null;
 
         if (!stationId) {
           return {

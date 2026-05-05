@@ -147,7 +147,7 @@ const ReturnSlotAiDetailSchema = RentalsContracts.ReturnSlotReservationSchema.ex
 const ReturnSlotActionFailureCodeSchema = z.enum([
   "INVALID_RENTAL_ID",
   "INVALID_STATION_ID",
-  "MISSING_STATION_CONTEXT",
+  "MISSING_STATION_ID",
   "NO_ACTIVE_RENTAL",
   "STATION_NOT_FOUND",
   "RETURN_CAPACITY_UNAVAILABLE",
@@ -188,12 +188,12 @@ const ReturnSlotActionSuccessSchema = z.object({
 }).strict();
 
 const QueryRentalsScopeSchema = z.enum(["current", "recent", "all"]);
-const RentalDetailReferenceSchema = z.enum(["context", "current", "latest", "id"]);
-const ReservationDetailReferenceSchema = z.enum(["context", "latestPendingOrActive", "id"]);
+const RentalDetailReferenceSchema = z.enum(["current", "latest", "id"]);
+const ReservationDetailReferenceSchema = z.enum(["latestPendingOrActive", "id"]);
 const WalletTransactionDetailReferenceSchema = z.enum(["latest", "id"]);
-const StationDetailReferenceSchema = z.enum(["context", "id"]);
-const BikeDetailReferenceSchema = z.enum(["context", "id"]);
-const ReturnSlotReferenceSchema = z.enum(["context", "current", "latest", "id"]);
+const StationDetailReferenceSchema = z.enum(["id"]);
+const BikeDetailReferenceSchema = z.enum(["id"]);
+const ReturnSlotReferenceSchema = z.enum(["current", "latest", "id"]);
 
 export const QueryRentalsToolOutputSchema = z.object({
   counts: RentalCountsResponseSchema.nullable(),

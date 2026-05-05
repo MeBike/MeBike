@@ -65,12 +65,11 @@ export function createCustomerRentalQueryTools(args: CreateCustomerToolsArgs) {
       },
     }),
     getRentalDetail: tool({
-      description: "Get one user-owned rental detail after you already know which rental to inspect. Prefer current screen context, current rental, latest rental, or an id returned by the rental query tool instead of guessing raw ids.",
+      description: "Get one user-owned rental detail after you already know which rental to inspect. Prefer current rental, latest rental, or an id returned by the rental query tool instead of guessing raw ids.",
       inputSchema: RentalDetailInputSchema,
       outputSchema: RentalDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof RentalDetailToolOutputSchema>> => {
         const rental = await resolveRentalReference({
-          context: args.context,
           rentalId: input.rentalId,
           reference: input.reference,
           rentalService: args.rentalService,

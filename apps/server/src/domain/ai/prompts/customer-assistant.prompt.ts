@@ -1,5 +1,3 @@
-import type { AiChatContext } from "@mebike/shared";
-
 import {
   customerAssistantBoundaryRules,
   customerAssistantLanguageAndFormattingRules,
@@ -10,13 +8,7 @@ import {
   customerAssistantToolRules,
 } from "./customer-assistant.prompt.sections";
 
-export function buildCustomerAssistantPrompt(context: AiChatContext | null) {
-  const screenHint = context?.screen
-    ? `Current screen focus: ${context.screen}.`
-    : null;
-  const stationHint = context?.stationName
-    ? `Current station in focus: ${context.stationName}.`
-    : null;
+export function buildCustomerAssistantPrompt() {
 
   return [
     ...customerAssistantRoleRules,
@@ -26,7 +18,5 @@ export function buildCustomerAssistantPrompt(context: AiChatContext | null) {
     ...customerAssistantStationAndBikeRules,
     ...customerAssistantLanguageAndFormattingRules,
     ...customerAssistantBoundaryRules,
-    screenHint,
-    stationHint,
   ].filter(Boolean).join(" ");
 }
