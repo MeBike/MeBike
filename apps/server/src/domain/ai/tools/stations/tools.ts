@@ -3,31 +3,46 @@ import type { z } from "zod";
 import { tool } from "ai";
 import { Effect } from "effect";
 
-import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
+import type {
+  CustomerToolName,
+  StationToolsArgs,
+} from "../shared/customer-tool-args";
 
+import { toBikeAiDetail } from "../bikes/presenter";
 import {
   bikeToolPage,
-
-  getStationByIdOrNull,
   NearbyStationsFromLocationInputSchema,
   NearbyStationsInputSchema,
   StationAvailableBikesInputSchema,
   StationDetailInputSchema,
   StationSearchInputSchema,
   stationToolPage,
-  toBikeAiDetail,
+} from "../shared/customer-tool-inputs";
+import { getStationByIdOrNull } from "../shared/customer-tool-lookups";
+import {
   toNearbyStationAiDetail,
   toStationAiDetail,
-} from "./customer-tool-helpers";
+} from "./presenter";
 import {
   NearbyStationsFromLocationToolOutputSchema,
   NearbyStationsToolOutputSchema,
   StationAvailableBikesToolOutputSchema,
   StationDetailToolOutputSchema,
   StationSearchToolOutputSchema,
-} from "./customer-tool-schemas";
+} from "./schemas";
 
-export function createCustomerStationTools(args: CreateCustomerToolsArgs) {
+export const customerStationToolNames = [
+  "getStationDetail",
+  "searchStations",
+  "getNearbyStations",
+  "getStationAvailableBikes",
+] as const satisfies readonly CustomerToolName[];
+
+export const customerLocationToolNames = [
+  "getNearbyStationsFromLocation",
+] as const satisfies readonly CustomerToolName[];
+
+export function createCustomerStationTools(args: StationToolsArgs) {
   return {
     getStationDetail: tool({
       description: "Get one station detail when the station id is already known from prior tool results or explicit user selection.",

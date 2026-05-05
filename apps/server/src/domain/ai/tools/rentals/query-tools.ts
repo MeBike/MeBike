@@ -3,27 +3,27 @@ import type { z } from "zod";
 import { tool } from "ai";
 import { Effect, Option } from "effect";
 
-import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
+import type { RentalQueryToolsArgs } from "../shared/customer-tool-args";
 
-import {
-  loadStationSummaryMap,
-  toRentalDetailItem,
-  toRentalSummaryItem,
-} from "./customer-rental-ai-presenter";
 import {
   QueryRentalsInputSchema,
   RentalDetailInputSchema,
   RentalDetailsInputSchema,
   rentalToolPage,
-  resolveRentalReference,
-} from "./customer-tool-helpers";
+} from "../shared/customer-tool-inputs";
+import { resolveRentalReference } from "../shared/customer-tool-lookups";
+import {
+  loadStationSummaryMap,
+  toRentalDetailItem,
+  toRentalSummaryItem,
+} from "./presenter";
 import {
   QueryRentalsToolOutputSchema,
   RentalDetailsToolOutputSchema,
   RentalDetailToolOutputSchema,
-} from "./customer-tool-schemas";
+} from "./schemas";
 
-export function createCustomerRentalQueryTools(args: CreateCustomerToolsArgs) {
+export function createCustomerRentalQueryTools(args: RentalQueryToolsArgs) {
   return {
     queryRentals: tool({
       description: "Query the current user's rental overview or recent rental history. Use this for active rentals, recent rentals, recent completed rentals, and rental counts. Use getRentalDetail only after you already know which single rental to inspect.",

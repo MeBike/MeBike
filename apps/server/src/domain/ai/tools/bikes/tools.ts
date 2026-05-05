@@ -3,16 +3,25 @@ import type { z } from "zod";
 import { tool } from "ai";
 import { Effect, Option } from "effect";
 
-import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
+import type {
+  BikeToolsArgs,
+  CustomerToolName,
+} from "../shared/customer-tool-args";
 
-import {
-  BikeDetailInputSchema,
-  formatLocalDateTime,
-  toBikeAiDetail,
-} from "./customer-tool-helpers";
-import { BikeDetailToolOutputSchema } from "./customer-tool-schemas";
+import { BikeDetailInputSchema } from "../shared/customer-tool-inputs";
+import { toBikeAiDetail } from "./presenter";
+import { BikeDetailToolOutputSchema } from "./schemas";
 
-export function createCustomerBikeTools(args: CreateCustomerToolsArgs) {
+export const customerBikeToolNames = [
+  "getBikeDetail",
+] as const satisfies readonly CustomerToolName[];
+
+export const customerBikeToolNamesWithReservation = [
+  ...customerBikeToolNames,
+  "reserveBike",
+] as const satisfies readonly CustomerToolName[];
+
+export function createCustomerBikeTools(args: BikeToolsArgs) {
   return {
     getBikeDetail: tool({
       description: "Get one bike detail when the bike id is already known from prior tool results or explicit user selection.",
@@ -31,13 +40,7 @@ export function createCustomerBikeTools(args: CreateCustomerToolsArgs) {
 
         return {
           reference: input.reference,
-          detail: Option.isSome(bike)
-            ? {
-                ...toBikeAiDetail(bike.value),
-                createdAtDisplay: formatLocalDateTime(bike.value.createdAt),
-                updatedAtDisplay: formatLocalDateTime(bike.value.updatedAt),
-              }
-            : null,
+          detail: Option.isSome(bike) ? toBikeAiDetail(bike.value) : null,
         };
       },
     }),
