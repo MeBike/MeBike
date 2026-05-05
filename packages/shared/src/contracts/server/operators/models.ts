@@ -1,9 +1,12 @@
 import { z } from "../../../zod";
 
+import { StationTypeSchema } from "../stations";
+
 export const OperatorStationContextStationSchema = z.object({
   id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
+  stationType: StationTypeSchema,
   operationalAvailableSlots: z.number(),
 }).openapi("OperatorStationContextStation");
 

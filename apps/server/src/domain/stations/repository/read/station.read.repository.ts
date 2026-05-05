@@ -308,6 +308,7 @@ export function makeStationReadRepository(
             id: row.id,
             name: row.name,
             address: row.address,
+            stationType: row.stationType,
             operationalAvailableSlots: applyCounts(row, counts).availableReturnSlots,
           })),
         ),

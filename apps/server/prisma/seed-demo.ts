@@ -42,6 +42,9 @@ const DEMO_PASSWORD = "Demo@123456";
 const USERS_TARGET = 32;
 const RENTALS_TARGET = 120;
 const DEMO_NON_CUSTOMER_USERS = 7;
+const DEMO_BIKES_PER_STATION = 5;
+const DEMO_RENTAL_MIN_HOUR = 6;
+const DEMO_RENTAL_MAX_HOUR = 22;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
@@ -132,6 +135,25 @@ function toUtcDate(dayOffset: number, hour: number, minute: number) {
 
 function toUtcDateInMonth(year: number, month: number, day: number, hour: number, minute: number) {
   return new Date(Date.UTC(year, month, day, hour, minute, 0, 0));
+}
+
+function toDemoRentalHour(hour: number) {
+  return Math.max(DEMO_RENTAL_MIN_HOUR, Math.min(DEMO_RENTAL_MAX_HOUR, hour));
+}
+
+function toPastDemoRentalUtcDate(dayOffset: number, hour: number, minute: number) {
+  const safeHour = toDemoRentalHour(hour);
+  const candidate = toUtcDate(dayOffset, safeHour, minute);
+
+  if (candidate.getTime() < Date.now()) {
+    return candidate;
+  }
+
+  return toUtcDate(dayOffset - 1, safeHour, minute);
+}
+
+function toDemoRentalUtcDateInMonth(year: number, month: number, day: number, hour: number, minute: number) {
+  return toUtcDateInMonth(year, month, day, toDemoRentalHour(hour), minute);
 }
 
 function pick<T>(arr: readonly T[], idx: number): T {
@@ -333,8 +355,14 @@ function buildRentals(params: {
   const currentMonth = now.getUTCMonth();
   const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const daysInCurrentMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0)).getUTCDate();
   const daysInPrevMonth = new Date(Date.UTC(prevMonthYear, prevMonth + 1, 0)).getUTCDate();
+  const lastCompletedDayInCurrentMonth = now.getUTCDate() - 1;
+  const completedCurrentMonthYear = lastCompletedDayInCurrentMonth >= 1 ? currentYear : prevMonthYear;
+  const completedCurrentMonthMonth = lastCompletedDayInCurrentMonth >= 1 ? currentMonth : prevMonth;
+  const completedCurrentMonthDays = lastCompletedDayInCurrentMonth >= 1
+    ? lastCompletedDayInCurrentMonth
+    : daysInPrevMonth;
+  const activeRentalDayOffset = now.getUTCHours() >= 14 ? 0 : -1;
 
   const pushCompleted = (count: number, dateFactory: (idx: number) => Date, startIdx = 0) => {
     for (let i = 0; i < count; i++) {
@@ -366,13 +394,19 @@ function buildRentals(params: {
     }
   };
 
-  pushCompleted(12, idx => toUtcDate(0, 8 + (idx % 12), (idx * 7) % 60), 0);
-  pushCompleted(9, idx => toUtcDate(-1, 9 + (idx % 9), (idx * 9) % 60), 100);
+  pushCompleted(12, idx => toPastDemoRentalUtcDate(-1, 8 + (idx % 12), (idx * 7) % 60), 0);
+  pushCompleted(9, idx => toPastDemoRentalUtcDate(-2, 9 + (idx % 9), (idx * 9) % 60), 100);
   pushCompleted(
     36,
     (idx) => {
-      const day = ((idx % Math.max(1, daysInCurrentMonth - 2)) + 1);
-      return toUtcDateInMonth(currentYear, currentMonth, day, 6 + (idx % 14), (idx * 11) % 60);
+      const day = (idx % completedCurrentMonthDays) + 1;
+      return toDemoRentalUtcDateInMonth(
+        completedCurrentMonthYear,
+        completedCurrentMonthMonth,
+        day,
+        6 + (idx % 14),
+        (idx * 11) % 60,
+      );
     },
     200,
   );
@@ -380,7 +414,7 @@ function buildRentals(params: {
     27,
     (idx) => {
       const day = ((idx % daysInPrevMonth) + 1);
-      return toUtcDateInMonth(prevMonthYear, prevMonth, day, 7 + (idx % 12), (idx * 13) % 60);
+      return toDemoRentalUtcDateInMonth(prevMonthYear, prevMonth, day, 7 + (idx % 12), (idx * 13) % 60);
     },
     300,
   );
@@ -388,7 +422,7 @@ function buildRentals(params: {
   const rentedUsers = normalUsers.slice(0, 8);
   const rentedBikes = bikes.slice(0, 8);
   for (let i = 0; i < 8; i++) {
-    const start = toUtcDate(0, 6 + i, (i * 8) % 60);
+    const start = toPastDemoRentalUtcDate(activeRentalDayOffset, 6 + i, (i * 8) % 60);
     rentals.push({
       id: uuidv7(),
       userId: rentedUsers[i]!.id,
@@ -832,7 +866,7 @@ async function main() {
         })),
     });
 
-    const bikesToCreate = Array.from({ length: 40 }, (_, idx) => ({
+    const bikesToCreate = Array.from({ length: stationIds.length * DEMO_BIKES_PER_STATION }, (_, idx) => ({
       id: uuidv7(),
       bikeNumber: `DEMO-${String(idx + 1).padStart(3, "0")}`,
       stationId: pick(stationIds, idx),
