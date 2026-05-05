@@ -7,19 +7,27 @@ import {
   toWalletTransactionDetail,
 } from "@/http/presenters/wallets.presenter";
 
-import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
+import type {
+  CustomerToolName,
+  WalletToolsArgs,
+} from "../shared/customer-tool-args";
 
 import {
   formatLocalDateTime,
   formatMinorVnd,
-  WalletTransactionDetailInputSchema,
-} from "./customer-tool-helpers";
+} from "../shared/customer-tool-formatters";
+import { WalletTransactionDetailInputSchema } from "../shared/customer-tool-inputs";
 import {
   WalletSummaryToolOutputSchema,
   WalletTransactionDetailToolOutputSchema,
-} from "./customer-tool-schemas";
+} from "./schemas";
 
-export function createCustomerWalletTools(args: CreateCustomerToolsArgs) {
+export const customerWalletToolNames = [
+  "getWalletSummary",
+  "getWalletTransactionDetail",
+] as const satisfies readonly CustomerToolName[];
+
+export function createCustomerWalletTools(args: WalletToolsArgs) {
   return {
     getWalletSummary: tool({
       description: "Get the current user's wallet summary and recent wallet transactions.",
@@ -71,7 +79,7 @@ export function createCustomerWalletTools(args: CreateCustomerToolsArgs) {
       },
     }),
     getWalletTransactionDetail: tool({
-      description: "Get one wallet transaction detail. Prefer the latest transaction unless a known transaction id is already available from prior results.",
+      description: "Get one wallet transaction detail. Prefer the latest transaction unless that exact transaction is already known from prior results.",
       inputSchema: WalletTransactionDetailInputSchema,
       outputSchema: WalletTransactionDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof WalletTransactionDetailToolOutputSchema>> => {

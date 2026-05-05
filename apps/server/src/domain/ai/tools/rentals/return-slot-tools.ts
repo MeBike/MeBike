@@ -1,42 +1,46 @@
 import { tool } from "ai";
-import { Cause, Effect, Either, Exit, Match, Option } from "effect";
+import { Effect, Either, Match, Option } from "effect";
 import { z } from "zod";
 
 import type { ReturnSlotFailure } from "@/domain/rentals";
 
-import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
+import type { RentalReturnSlotToolsArgs } from "../shared/customer-tool-args";
 
 import {
-  getStationByIdOrNull,
   RentalDetailInputSchema,
   rentalToolPage,
+} from "../shared/customer-tool-inputs";
+import {
+  getStationByIdOrNull,
   resolveRentalReference,
-  toReturnSlotAiDetail,
-} from "./customer-tool-helpers";
+} from "../shared/customer-tool-lookups";
+import {
+  createActionFailure,
+  runActionTool,
+} from "../shared/customer-tool-runtime";
+import { toReturnSlotAiDetail } from "./presenter";
 import {
   CancelReturnSlotToolOutputSchema,
   CreateReturnSlotToolOutputSchema,
   CurrentReturnSlotToolOutputSchema,
   SwitchReturnSlotToolOutputSchema,
-} from "./customer-tool-schemas";
+} from "./schemas";
 
-const uuidSchema = z.string().uuid();
+const uuidSchema = z.uuidv7();
 
 const ReturnSlotMutationInputSchema = z.object({
-  rentalId: z.string().optional(),
+  rentalId: z.uuidv7().optional(),
   rentalReference: z.enum(["current", "latest", "id"]).default("current"),
-  stationId: z.string().optional(),
-  stationName: z.string().trim().min(1).optional().describe("User-facing station name when known from prior tool results or explicit user selection. Never put raw ids here."),
+  stationId: z.uuidv7().optional(),
+  stationName: z.string().trim().min(1).optional().describe("User-facing station name when known from prior tool results or explicit user selection. Never put raw system identifiers here."),
 });
 
 const CancelReturnSlotInputSchema = z.object({
-  rentalId: z.string().optional(),
+  rentalId: z.uuidv7().optional(),
   rentalReference: z.enum(["current", "latest", "id"]).default("current"),
 });
 
 type CreateReturnSlotToolOutput = z.infer<typeof CreateReturnSlotToolOutputSchema>;
-type SwitchReturnSlotToolOutput = z.infer<typeof SwitchReturnSlotToolOutputSchema>;
-type CancelReturnSlotToolOutput = z.infer<typeof CancelReturnSlotToolOutputSchema>;
 type ReturnSlotActionFailure = Extract<CreateReturnSlotToolOutput, { ok: false }>;
 
 function failReturnSlotAction(
@@ -46,16 +50,13 @@ function failReturnSlotAction(
   suggestedAction: ReturnSlotActionFailure["error"]["suggestedAction"],
   userMessage: string,
 ): ReturnSlotActionFailure {
-  return {
-    ok: false,
-    error: {
-      code,
-      kind,
-      retryable,
-      suggestedAction,
-      userMessage,
-    },
-  };
+  return createActionFailure<ReturnSlotActionFailure>(
+    code,
+    kind,
+    retryable,
+    suggestedAction,
+    userMessage,
+  );
 }
 
 function invalidRentalIdFailure() {
@@ -64,7 +65,7 @@ function invalidRentalIdFailure() {
     "validation",
     false,
     "check_current_rental",
-    "Không xác định được mã chuyến thuê hợp lệ để thực hiện thao tác này.",
+    "Mình chưa xác định được chuyến thuê cần thực hiện thao tác này.",
   );
 }
 
@@ -84,7 +85,7 @@ function invalidStationIdFailure() {
     "validation",
     false,
     "choose_station_again",
-    "Không xác định được mã trạm hợp lệ để giữ chỗ trả xe.",
+    "Mình chưa xác định được trạm phù hợp để giữ chỗ trả xe.",
   );
 }
 
@@ -94,7 +95,7 @@ function missingStationIdFailure() {
     "validation",
     false,
     "search_stations",
-    "Chưa xác định được mã trạm để thực hiện thao tác giữ chỗ trả xe.",
+    "Mình chưa xác định được trạm bạn muốn giữ chỗ trả xe.",
   );
 }
 
@@ -172,7 +173,7 @@ function validateUuidOrNull(value: string | null | undefined) {
 }
 
 function resolveActiveRentalEffect(
-  args: CreateCustomerToolsArgs,
+  args: RentalReturnSlotToolsArgs,
   input: { rentalId?: string; rentalReference: "current" | "latest" | "id" },
 ) {
   return Effect.gen(function* () {
@@ -215,7 +216,7 @@ function resolveActiveRentalEffect(
 }
 
 function resolveTargetStationIdEffect(
-  args: CreateCustomerToolsArgs,
+  _args: RentalReturnSlotToolsArgs,
   input: { stationId?: string },
 ) {
   return Effect.gen(function* () {
@@ -236,7 +237,7 @@ function resolveTargetStationIdEffect(
 }
 
 async function finishReturnSlotSuccess(
-  args: CreateCustomerToolsArgs,
+  args: RentalReturnSlotToolsArgs,
   rentalId: string,
   returnSlot: Parameters<typeof toReturnSlotAiDetail>[0],
 ): Promise<Extract<CreateReturnSlotToolOutput, { ok: true }>> {
@@ -252,10 +253,10 @@ async function finishReturnSlotSuccess(
   };
 }
 
-export function createCustomerRentalReturnSlotTools(args: CreateCustomerToolsArgs) {
+export function createCustomerRentalReturnSlotTools(args: RentalReturnSlotToolsArgs) {
   return {
     getCurrentReturnSlot: tool({
-      description: "Get the user's active return-slot reservation for a rental. Prefer the current active rental before raw ids.",
+      description: "Get the user's active return-slot reservation for a rental. Prefer the current active rental first when possible.",
       inputSchema: RentalDetailInputSchema,
       outputSchema: CurrentReturnSlotToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof CurrentReturnSlotToolOutputSchema>> => {
@@ -319,8 +320,9 @@ export function createCustomerRentalReturnSlotTools(args: CreateCustomerToolsArg
       inputSchema: ReturnSlotMutationInputSchema,
       outputSchema: CreateReturnSlotToolOutputSchema,
       needsApproval: true,
-      execute: async (input): Promise<CreateReturnSlotToolOutput> => {
-        const exit = await Effect.runPromiseExit(Effect.gen(function* () {
+      execute: input => runActionTool({
+        defectMessage: "Không thể giữ chỗ trả xe do lỗi hệ thống ngoài dự kiến.",
+        effect: Effect.gen(function* () {
           const rental = yield* resolveActiveRentalEffect(args, input);
           const stationId = yield* resolveTargetStationIdEffect(args, input);
           const returnSlot = yield* args.rentalCommandService.createReturnSlot({
@@ -332,26 +334,18 @@ export function createCustomerRentalReturnSlotTools(args: CreateCustomerToolsArg
           );
 
           return { rentalId: rental.id, returnSlot };
-        }));
-
-        if (Exit.isSuccess(exit)) {
-          return finishReturnSlotSuccess(args, exit.value.rentalId, exit.value.returnSlot);
-        }
-
-        if (Cause.isFailType(exit.cause)) {
-          return exit.cause.error;
-        }
-
-        throw new Error("Không thể giữ chỗ trả xe do lỗi hệ thống ngoài dự kiến.");
-      },
+        }),
+        mapSuccess: value => finishReturnSlotSuccess(args, value.rentalId, value.returnSlot),
+      }),
     }),
     switchReturnSlot: tool({
       description: "Switch the user's existing return slot to a different station. Use this only when the user clearly asks to change the reserved return station.",
       inputSchema: ReturnSlotMutationInputSchema,
       outputSchema: SwitchReturnSlotToolOutputSchema,
       needsApproval: true,
-      execute: async (input): Promise<SwitchReturnSlotToolOutput> => {
-        const exit = await Effect.runPromiseExit(Effect.gen(function* () {
+      execute: input => runActionTool({
+        defectMessage: "Không thể đổi giữ chỗ trả xe do lỗi hệ thống ngoài dự kiến.",
+        effect: Effect.gen(function* () {
           const rental = yield* resolveActiveRentalEffect(args, input);
           const stationId = yield* resolveTargetStationIdEffect(args, input);
           const returnSlot = yield* args.rentalCommandService.createReturnSlot({
@@ -363,26 +357,18 @@ export function createCustomerRentalReturnSlotTools(args: CreateCustomerToolsArg
           );
 
           return { rentalId: rental.id, returnSlot };
-        }));
-
-        if (Exit.isSuccess(exit)) {
-          return finishReturnSlotSuccess(args, exit.value.rentalId, exit.value.returnSlot);
-        }
-
-        if (Cause.isFailType(exit.cause)) {
-          return exit.cause.error;
-        }
-
-        throw new Error("Không thể đổi giữ chỗ trả xe do lỗi hệ thống ngoài dự kiến.");
-      },
+        }),
+        mapSuccess: value => finishReturnSlotSuccess(args, value.rentalId, value.returnSlot),
+      }),
     }),
     cancelReturnSlot: tool({
       description: "Cancel the user's current return slot for an active rental. Use this only when the user clearly asks to cancel the reserved return slot.",
       inputSchema: CancelReturnSlotInputSchema,
       outputSchema: CancelReturnSlotToolOutputSchema,
       needsApproval: true,
-      execute: async (input): Promise<CancelReturnSlotToolOutput> => {
-        const exit = await Effect.runPromiseExit(Effect.gen(function* () {
+      execute: input => runActionTool({
+        defectMessage: "Không thể hủy giữ chỗ trả xe do lỗi hệ thống ngoài dự kiến.",
+        effect: Effect.gen(function* () {
           const rental = yield* resolveActiveRentalEffect(args, input);
           const cancelled = yield* args.rentalCommandService.cancelReturnSlot({
             rentalId: rental.id,
@@ -392,18 +378,9 @@ export function createCustomerRentalReturnSlotTools(args: CreateCustomerToolsArg
           );
 
           return { rentalId: rental.id, returnSlot: cancelled };
-        }));
-
-        if (Exit.isSuccess(exit)) {
-          return finishReturnSlotSuccess(args, exit.value.rentalId, exit.value.returnSlot);
-        }
-
-        if (Cause.isFailType(exit.cause)) {
-          return exit.cause.error;
-        }
-
-        throw new Error("Không thể hủy giữ chỗ trả xe do lỗi hệ thống ngoài dự kiến.");
-      },
+        }),
+        mapSuccess: value => finishReturnSlotSuccess(args, value.rentalId, value.returnSlot),
+      }),
     }),
   } as const;
 }

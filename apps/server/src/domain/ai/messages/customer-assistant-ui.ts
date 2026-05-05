@@ -4,11 +4,9 @@ import { z } from "zod";
 
 import type { CustomerToolSet } from "../tools/customer-tools";
 
-import {
-  QueryRentalsToolOutputSchema,
-  ReservationSummaryToolOutputSchema,
-  WalletSummaryToolOutputSchema,
-} from "../tools/customer-tool-schemas";
+import { QueryRentalsToolOutputSchema } from "../tools/rentals/schemas";
+import { ReservationSummaryToolOutputSchema } from "../tools/reservations/schemas";
+import { WalletSummaryToolOutputSchema } from "../tools/wallets/schemas";
 
 export const CustomerAssistantMessageMetadataSchema = z.object({
   timestamp: z.string().datetime().optional(),

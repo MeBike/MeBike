@@ -5,7 +5,10 @@ import { Context, Effect, Layer } from "effect";
 
 import { env } from "@/config/env";
 import { BikeQueryServiceTag } from "@/domain/bikes";
-import { RentalCommandServiceTag } from "@/domain/rentals";
+import {
+  RentalBillingDetailServiceTag,
+  RentalCommandServiceTag,
+} from "@/domain/rentals";
 import { RentalServiceTag } from "@/domain/rentals/services/queries/rental.service";
 import {
   ReservationCommandServiceTag,
@@ -53,6 +56,7 @@ export type AiChatService = {
 
 const makeAiChatService = Effect.gen(function* () {
   const bikeQueryService = yield* BikeQueryServiceTag;
+  const rentalBillingDetailService = yield* RentalBillingDetailServiceTag;
   const rentalCommandService = yield* RentalCommandServiceTag;
   const rentalService = yield* RentalServiceTag;
   const reservationCommandService = yield* ReservationCommandServiceTag;
@@ -74,6 +78,7 @@ const makeAiChatService = Effect.gen(function* () {
       const tools = createCustomerTools({
         bikeQueryService,
         context: args.context,
+        rentalBillingDetailService,
         rentalCommandService,
         reservationCommandService,
         reservationQueryService,

@@ -1,47 +1,49 @@
 import { tool } from "ai";
-import { Cause, Effect, Exit, Match, Option } from "effect";
+import { Effect, Match, Option } from "effect";
 import { z } from "zod";
 
 import type {
   CancelReservationFailure,
-  ReservationRow,
   ReserveBikeFailure,
 } from "@/domain/reservations";
 
-import {
-  toContractReservation,
-  toContractReservationExpanded,
-} from "@/http/presenters/reservations.presenter";
-
-import type { CreateCustomerToolsArgs } from "./customer-tool-helpers";
+import type {
+  CustomerToolName,
+  ReservationToolsArgs,
+} from "../shared/customer-tool-args";
 
 import {
-  formatLocalDateTime,
-  formatMinorVnd,
-  getReservationStatusLabel,
-  getStationByIdOrNull,
   rentalToolPage,
   ReservationDetailInputSchema,
-} from "./customer-tool-helpers";
+} from "../shared/customer-tool-inputs";
+import {
+  createActionFailure,
+  runActionTool,
+} from "../shared/customer-tool-runtime";
+import {
+  toReservationActionSuccess,
+  toReservationDetailItem,
+  toReservationSummaryItem,
+} from "./presenter";
 import {
   CancelReservationToolOutputSchema,
   ReservationDetailToolOutputSchema,
   ReservationSummaryToolOutputSchema,
   ReserveBikeToolOutputSchema,
-} from "./customer-tool-schemas";
+} from "./schemas";
 
 const ReserveBikeInputSchema = z.object({
-  bikeId: z.string().uuid(),
-  bikeNumber: z.string().trim().min(1).optional().describe("User-facing bike number when already known from prior tool results or explicit user selection. Never put raw ids here."),
-  stationName: z.string().trim().min(1).optional().describe("User-facing station name when already known from prior tool results or explicit user selection. Never put raw ids here."),
+  bikeId: z.uuidv7(),
+  bikeNumber: z.string().trim().min(1).optional().describe("User-facing bike number when already known from prior tool results or explicit user selection. Never put raw system identifiers here."),
+  stationName: z.string().trim().min(1).optional().describe("User-facing station name when already known from prior tool results or explicit user selection. Never put raw system identifiers here."),
   startTime: z.string().datetime({ offset: true }).optional().describe("Reservation start time in ISO 8601 format with timezone offset. Use the user-chosen pickup time when they specify one. Omit only when the user clearly wants to reserve immediately."),
 });
 
 const CancelReservationInputSchema = z.object({
-  reservationId: z.string().uuid().optional(),
+  reservationId: z.uuidv7().optional(),
   reference: z.enum(["latestPendingOrActive", "id"]).default("latestPendingOrActive"),
-  bikeNumber: z.string().trim().min(1).optional().describe("User-facing bike number when already known from prior tool results or explicit user selection. Never put raw ids here."),
-  stationName: z.string().trim().min(1).optional().describe("User-facing station name when already known from prior tool results or explicit user selection. Never put raw ids here."),
+  bikeNumber: z.string().trim().min(1).optional().describe("User-facing bike number when already known from prior tool results or explicit user selection. Never put raw system identifiers here."),
+  stationName: z.string().trim().min(1).optional().describe("User-facing station name when already known from prior tool results or explicit user selection. Never put raw system identifiers here."),
 });
 
 type ReserveBikeToolOutput = z.infer<typeof ReserveBikeToolOutputSchema>;
@@ -56,16 +58,13 @@ function failReserveBikeAction(
   suggestedAction: ReserveBikeToolFailure["error"]["suggestedAction"],
   userMessage: string,
 ): ReserveBikeToolFailure {
-  return {
-    ok: false,
-    error: {
-      code,
-      kind,
-      retryable,
-      suggestedAction,
-      userMessage,
-    },
-  };
+  return createActionFailure<ReserveBikeToolFailure>(
+    code,
+    kind,
+    retryable,
+    suggestedAction,
+    userMessage,
+  );
 }
 
 function mapReserveBikeFailure(error: ReserveBikeFailure | { readonly _tag: string }): ReserveBikeToolFailure {
@@ -184,16 +183,13 @@ function failCancelReservationAction(
   suggestedAction: CancelReservationToolFailure["error"]["suggestedAction"],
   userMessage: string,
 ): CancelReservationToolFailure {
-  return {
-    ok: false,
-    error: {
-      code,
-      kind,
-      retryable,
-      suggestedAction,
-      userMessage,
-    },
-  };
+  return createActionFailure<CancelReservationToolFailure>(
+    code,
+    kind,
+    retryable,
+    suggestedAction,
+    userMessage,
+  );
 }
 
 function mapCancelReservationFailure(
@@ -241,35 +237,13 @@ function mapCancelReservationFailure(
   );
 }
 
-async function toReservationActionSuccess(
-  args: CreateCustomerToolsArgs,
-  reservation: ReservationRow,
-) {
-  const station = await getStationByIdOrNull(
-    args.stationQueryService,
-    reservation.stationId,
-  );
+export const customerReservationToolNames = [
+  "getReservationSummary",
+  "getReservationDetail",
+  "cancelReservation",
+] as const satisfies readonly CustomerToolName[];
 
-  return {
-    bikeNumber: reservation.bikeNumber,
-    createdAtDisplay: formatLocalDateTime(reservation.createdAt),
-    endTimeDisplay: formatLocalDateTime(reservation.endTime),
-    prepaidDisplay: formatMinorVnd(Number(reservation.prepaid.toString())),
-    reservation: toContractReservation(reservation),
-    startTimeDisplay: formatLocalDateTime(reservation.startTime),
-    station: station
-      ? {
-          id: station.id,
-          name: station.name,
-          address: station.address,
-        }
-      : null,
-    statusLabel: getReservationStatusLabel(reservation.status),
-    updatedAtDisplay: formatLocalDateTime(reservation.updatedAt),
-  };
-}
-
-export function createCustomerReservationTools(args: CreateCustomerToolsArgs) {
+export function createCustomerReservationTools(args: ReservationToolsArgs) {
   return {
     getReservationSummary: tool({
       description: "Get the current user's latest active or pending reservation plus recent reservation history.",
@@ -291,30 +265,14 @@ export function createCustomerReservationTools(args: CreateCustomerToolsArgs) {
 
         return {
           latestPendingOrActive: Option.isSome(latestPendingOrActive)
-            ? {
-                ...toContractReservation(latestPendingOrActive.value),
-                createdAtDisplay: formatLocalDateTime(latestPendingOrActive.value.createdAt),
-                endTimeDisplay: formatLocalDateTime(latestPendingOrActive.value.endTime),
-                prepaidDisplay: formatMinorVnd(Number(latestPendingOrActive.value.prepaid.toString())),
-                startTimeDisplay: formatLocalDateTime(latestPendingOrActive.value.startTime),
-                statusLabel: getReservationStatusLabel(latestPendingOrActive.value.status),
-                updatedAtDisplay: formatLocalDateTime(latestPendingOrActive.value.updatedAt),
-              }
+            ? toReservationSummaryItem(latestPendingOrActive.value)
             : null,
-          reservations: reservations.items.map(reservation => ({
-            ...toContractReservation(reservation),
-            createdAtDisplay: formatLocalDateTime(reservation.createdAt),
-            endTimeDisplay: formatLocalDateTime(reservation.endTime),
-            prepaidDisplay: formatMinorVnd(Number(reservation.prepaid.toString())),
-            startTimeDisplay: formatLocalDateTime(reservation.startTime),
-            statusLabel: getReservationStatusLabel(reservation.status),
-            updatedAtDisplay: formatLocalDateTime(reservation.updatedAt),
-          })),
+          reservations: reservations.items.map(toReservationSummaryItem),
         };
       },
     }),
     getReservationDetail: tool({
-      description: "Get one user-owned reservation detail. Prefer the latest pending or active reservation or an id already returned by another tool before raw ids.",
+      description: "Get one user-owned reservation detail. Prefer the latest pending or active reservation or a reservation already identified by another tool.",
       inputSchema: ReservationDetailInputSchema,
       outputSchema: ReservationDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof ReservationDetailToolOutputSchema>> => {
@@ -338,21 +296,13 @@ export function createCustomerReservationTools(args: CreateCustomerToolsArgs) {
         return {
           reference: input.reference,
           detail: Option.isSome(detail) && detail.value.user.id === args.userId
-            ? {
-                ...toContractReservationExpanded(detail.value),
-                createdAtDisplay: formatLocalDateTime(detail.value.createdAt),
-                endTimeDisplay: formatLocalDateTime(detail.value.endTime),
-                prepaidDisplay: formatMinorVnd(Number(detail.value.prepaid.toString())),
-                startTimeDisplay: formatLocalDateTime(detail.value.startTime),
-                statusLabel: getReservationStatusLabel(detail.value.status),
-                updatedAtDisplay: formatLocalDateTime(detail.value.updatedAt),
-              }
+            ? toReservationDetailItem(detail.value)
             : null,
         };
       },
     }),
     cancelReservation: tool({
-      description: "Cancel the current user's pending reservation. Prefer the latest pending or active reservation unless an exact reservation id is already known from prior tool results.",
+      description: "Cancel the current user's pending reservation. Prefer the latest pending or active reservation unless that exact reservation is already known from prior tool results.",
       inputSchema: CancelReservationInputSchema,
       outputSchema: CancelReservationToolOutputSchema,
       needsApproval: true,
@@ -376,27 +326,19 @@ export function createCustomerReservationTools(args: CreateCustomerToolsArgs) {
           );
         }
 
-        const exit = await Effect.runPromiseExit(
-          args.reservationCommandService.cancelReservation({
+        return runActionTool({
+          defectMessage: "Không thể hủy giữ chỗ xe do lỗi hệ thống ngoài dự kiến.",
+          effect: args.reservationCommandService.cancelReservation({
             reservationId,
             userId: args.userId,
           }).pipe(
             Effect.mapError(error => mapCancelReservationFailure(error)),
           ),
-        );
-
-        if (Exit.isSuccess(exit)) {
-          return {
+          mapSuccess: async reservation => ({
             ok: true,
-            reservation: await toReservationActionSuccess(args, exit.value),
-          };
-        }
-
-        if (Cause.isFailType(exit.cause)) {
-          return exit.cause.error;
-        }
-
-        throw new Error("Không thể hủy giữ chỗ xe do lỗi hệ thống ngoài dự kiến.");
+            reservation: await toReservationActionSuccess(args, reservation),
+          }),
+        });
       },
     }),
     reserveBike: tool({
@@ -404,54 +346,48 @@ export function createCustomerReservationTools(args: CreateCustomerToolsArgs) {
       inputSchema: ReserveBikeInputSchema,
       outputSchema: ReserveBikeToolOutputSchema,
       needsApproval: true,
-      execute: async (input): Promise<ReserveBikeToolOutput> => {
+      execute: (input) => {
         const startTime = input.startTime ? new Date(input.startTime) : new Date();
 
-        const exit = await Effect.runPromiseExit(Effect.gen(function* () {
-          const bike = yield* args.bikeQueryService.getBikeDetail(input.bikeId);
+        return runActionTool({
+          defectMessage: "Không thể giữ chỗ xe do lỗi hệ thống ngoài dự kiến.",
+          effect: Effect.gen(function* () {
+            const bike = yield* args.bikeQueryService.getBikeDetail(input.bikeId);
 
-          if (Option.isNone(bike)) {
-            return yield* Effect.fail(mapReserveBikeFailure({ _tag: "BikeNotFound" }));
-          }
+            if (Option.isNone(bike)) {
+              return yield* Effect.fail(mapReserveBikeFailure({ _tag: "BikeNotFound" }));
+            }
 
-          const stationId = bike.value.stationId ?? null;
+            const stationId = bike.value.stationId ?? null;
 
-          if (!stationId) {
-            return yield* Effect.fail(mapReserveBikeFailure({ _tag: "BikeNotAvailable" }));
-          }
+            if (!stationId) {
+              return yield* Effect.fail(mapReserveBikeFailure({ _tag: "BikeNotAvailable" }));
+            }
 
-          const createdReservation = yield* args.reservationCommandService.reserveBike({
-            userId: args.userId,
-            bikeId: input.bikeId,
-            stationId,
-            reservationOption: "ONE_TIME",
-            startTime,
-            endTime: null,
-          }).pipe(
-            Effect.mapError(error => mapReserveBikeFailure(error)),
-          );
+            const createdReservation = yield* args.reservationCommandService.reserveBike({
+              userId: args.userId,
+              bikeId: input.bikeId,
+              stationId,
+              reservationOption: "ONE_TIME",
+              startTime,
+              endTime: null,
+            }).pipe(
+              Effect.mapError(error => mapReserveBikeFailure(error)),
+            );
 
-          return {
-            bikeNumber: bike.value.bikeNumber,
-            reservation: createdReservation,
-          } as const;
-        }));
-
-        if (Exit.isSuccess(exit)) {
-          return {
+            return {
+              bikeNumber: bike.value.bikeNumber,
+              reservation: createdReservation,
+            } as const;
+          }),
+          mapSuccess: async value => ({
             ok: true,
             reservation: {
-              ...(await toReservationActionSuccess(args, exit.value.reservation)),
-              bikeNumber: exit.value.reservation.bikeNumber ?? exit.value.bikeNumber,
+              ...(await toReservationActionSuccess(args, value.reservation)),
+              bikeNumber: value.reservation.bikeNumber ?? value.bikeNumber,
             },
-          };
-        }
-
-        if (Cause.isFailType(exit.cause)) {
-          return exit.cause.error;
-        }
-
-        throw new Error("Không thể giữ chỗ xe do lỗi hệ thống ngoài dự kiến.");
+          }),
+        });
       },
     }),
   } as const;
