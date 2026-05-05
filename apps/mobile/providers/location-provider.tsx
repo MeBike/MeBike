@@ -1,7 +1,10 @@
-import { log } from "@lib/log";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
+
+import { log } from "@lib/log";
+import { fetchMapboxReverseGeocode } from "@lib/mapbox-geocoding";
 
 type Coordinates = {
   latitude: number;
@@ -12,20 +15,110 @@ type LocationStatus = "idle" | "loading" | "ready" | "denied" | "error";
 
 type LocationContextValue = {
   location: Coordinates | null;
+  locationLabel: string | null;
   status: LocationStatus;
   error: string | null;
   refresh: () => Promise<void>;
 };
 
+const LOCATION_LABEL_CACHE_PREFIX = "ai:location-label:v1";
+
+function buildLocationLabelCacheKey(location: Coordinates) {
+  return `${LOCATION_LABEL_CACHE_PREFIX}:${location.latitude.toFixed(4)}:${location.longitude.toFixed(4)}`;
+}
+
+async function loadCachedLocationLabel(cacheKey: string) {
+  try {
+    const raw = await AsyncStorage.getItem(cacheKey);
+
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as { label?: unknown };
+
+    return typeof parsed.label === "string" && parsed.label.trim().length > 0
+      ? parsed.label.trim()
+      : null;
+  }
+  catch {
+    return null;
+  }
+}
+
+async function saveCachedLocationLabel(cacheKey: string, label: string) {
+  try {
+    await AsyncStorage.setItem(cacheKey, JSON.stringify({ label }));
+  }
+  catch {
+    // Ignore cache write failures for UX-only location labels.
+  }
+}
+
 const LocationContext = createContext<LocationContextValue | null>(null);
 
 export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useState<Coordinates | null>(null);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
   const [status, setStatus] = useState<LocationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const inflightRefreshRef = useRef<Promise<void> | null>(null);
   const watchSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const latestLocationRef = useRef<Coordinates | null>(null);
+  const latestLocationLabelKeyRef = useRef<string | null>(null);
+  const locationLabelRef = useRef<string | null>(null);
+
+  const refreshLocationLabel = useCallback(async (nextLocation: Coordinates, source: string) => {
+    const cacheKey = buildLocationLabelCacheKey(nextLocation);
+
+    if (latestLocationLabelKeyRef.current === cacheKey && locationLabelRef.current) {
+      return;
+    }
+
+    latestLocationLabelKeyRef.current = cacheKey;
+    setLocationLabel(null);
+
+    try {
+      const cachedLocationLabel = await loadCachedLocationLabel(cacheKey);
+
+      if (cachedLocationLabel) {
+        log.debug("Location label cache hit", {
+          cacheKey,
+          label: cachedLocationLabel,
+          source,
+        });
+        setLocationLabel(cachedLocationLabel);
+        return;
+      }
+
+      const reverseGeocodeResult = await fetchMapboxReverseGeocode(nextLocation);
+      const nextLocationLabel = reverseGeocodeResult?.label ?? null;
+
+      if (!nextLocationLabel) {
+        log.warn("Location reverse geocode returned no label", {
+          cacheKey,
+          source,
+        });
+        setLocationLabel(null);
+        latestLocationLabelKeyRef.current = null;
+        return;
+      }
+
+      log.debug("Location reverse geocode success", {
+        cacheKey,
+        label: nextLocationLabel,
+        source,
+      });
+
+      setLocationLabel(nextLocationLabel);
+      void saveCachedLocationLabel(cacheKey, nextLocationLabel);
+    }
+    catch (reverseGeocodeError) {
+      log.warn("Location reverse geocode failed", reverseGeocodeError);
+      setLocationLabel(null);
+      latestLocationLabelKeyRef.current = null;
+    }
+  }, []);
 
   const clearWatchSubscription = useCallback(() => {
     if (!watchSubscriptionRef.current) {
@@ -47,7 +140,12 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     setLocation(nextLocation);
     setStatus("ready");
     setError(null);
-  }, []);
+    void refreshLocationLabel(nextLocation, source);
+  }, [refreshLocationLabel]);
+
+  useEffect(() => {
+    locationLabelRef.current = locationLabel;
+  }, [locationLabel]);
 
   const ensureWatchSubscription = useCallback(async () => {
     if (watchSubscriptionRef.current) {
@@ -97,7 +195,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         if (!servicesEnabled) {
           clearWatchSubscription();
           latestLocationRef.current = null;
+          latestLocationLabelKeyRef.current = null;
           setLocation(null);
+          setLocationLabel(null);
           setStatus("error");
           setError("Location services are disabled");
           return;
@@ -132,7 +232,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
           });
           clearWatchSubscription();
           latestLocationRef.current = null;
+          latestLocationLabelKeyRef.current = null;
           setLocation(null);
+          setLocationLabel(null);
           setStatus("denied");
           setError("Permission denied");
           return;
@@ -204,6 +306,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         }
 
         setLocation(null);
+        setLocationLabel(null);
         setStatus("error");
         setError("Failed to get location");
       }
@@ -247,11 +350,12 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       location,
+      locationLabel,
       status,
       error,
       refresh,
     }),
-    [location, status, error, refresh],
+    [location, locationLabel, status, error, refresh],
   );
 
   return (

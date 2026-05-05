@@ -27,7 +27,7 @@ export function useAiAssistantChat({
   onError,
 }: UseAiAssistantChatOptions = {}) {
   const stableChatId = useRef(chatId ?? createChatId());
-  const { location, status: locationStatus } = useCurrentLocation();
+  const { location, locationLabel, status: locationStatus } = useCurrentLocation();
   const mergedContext = useMemo(() => {
     if (locationStatus !== "ready" || !location) {
       return context ?? null;
@@ -36,8 +36,9 @@ export function useAiAssistantChat({
     return {
       ...(context ?? {}),
       location,
+      ...(locationLabel ? { locationLabel } : {}),
     };
-  }, [context, location, locationStatus]);
+  }, [context, location, locationLabel, locationStatus]);
   const contextRef = useRef(mergedContext);
 
   useEffect(() => {

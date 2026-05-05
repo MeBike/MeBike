@@ -20,6 +20,7 @@ export const AiChatLocationSchema = z.object({
 export const AiChatContextSchema = z.object({
   screen: AiChatScreenSchema.nullable().optional(),
   location: AiChatLocationSchema.nullable().optional(),
+  locationLabel: z.string().trim().min(1).nullable().optional(),
 }).openapi("AiChatContext");
 
 export const AiChatRequestSchema = z.object({
