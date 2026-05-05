@@ -1,13 +1,11 @@
+import type { AiAssistantChatContext, AiAssistantMessage } from "@services/ai";
 import type { ChatRequestOptions, ChatStatus } from "ai";
 
 import { useChat } from "@ai-sdk/react";
-import { lastAssistantMessageIsCompleteWithApprovalResponses } from "ai";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-
-import type { AiAssistantChatContext, AiAssistantMessage } from "@services/ai";
-
 import { useCurrentLocation } from "@providers/location-provider";
 import { createAiAssistantChatTransport } from "@services/ai";
+import { lastAssistantMessageIsCompleteWithApprovalResponses } from "ai";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 export type UseAiAssistantChatOptions = {
   chatId?: string;

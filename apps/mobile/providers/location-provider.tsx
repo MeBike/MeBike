@@ -1,10 +1,9 @@
+import { log } from "@lib/log";
+import { fetchMapboxReverseGeocode } from "@lib/mapbox-geocoding";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
-
-import { log } from "@lib/log";
-import { fetchMapboxReverseGeocode } from "@lib/mapbox-geocoding";
 
 type Coordinates = {
   latitude: number;
