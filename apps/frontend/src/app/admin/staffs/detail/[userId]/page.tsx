@@ -33,7 +33,10 @@ export default function Page({
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetailUser]);
-    if (!detailUserData) {
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
+  if (!detailUserData) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
         <p className="text-muted-foreground">
@@ -42,9 +45,6 @@ export default function Page({
       </div>
     );
   }
-  if (isVisualLoading) {
-      return <LoadingScreen />;
-    }
   const handleSubmit = ({ data }: { data: UpdateUserFormData }) => {
     updateProfileUser(data);
   };

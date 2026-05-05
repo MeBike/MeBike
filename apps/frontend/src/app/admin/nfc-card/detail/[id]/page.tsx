@@ -43,6 +43,15 @@ export default function NFCDetail({
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
+   if (!nfcCardDetail) {
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <p className="text-muted-foreground">
+          Không tìm thấy thông tin thẻ NFC này.
+        </p>
+      </div>
+    );
+  }
   return (
     <NFCDetailClient
       data={{

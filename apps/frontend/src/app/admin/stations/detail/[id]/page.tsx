@@ -39,7 +39,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       return () => clearTimeout(timer);
     }
   }, [isLoadingGetStationByID]);
-
+  
   if (!responseStationDetail) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
@@ -48,9 +48,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     );
   }
 
-  if (isVisualLoading) {
-    return <LoadingScreen />;
-  }
 
   const handleUpdate = async (data: StationSchemaFormData) => {
     try {
