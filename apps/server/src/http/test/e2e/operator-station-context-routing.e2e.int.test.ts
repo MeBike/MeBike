@@ -129,6 +129,7 @@ describe("operator station context routing e2e", () => {
       id: currentStation.id,
       name: "Current Station",
       address: "1 Current Street, Thu Duc, TP.HCM",
+      stationType: "INTERNAL",
       operationalAvailableSlots: expect.any(Number),
     });
     expect(body.otherStations).toEqual(expect.arrayContaining([
@@ -136,12 +137,14 @@ describe("operator station context routing e2e", () => {
         id: otherStationA.id,
         name: "Alpha Station",
         address: "2 Alpha Street, Thu Duc, TP.HCM",
+        stationType: "INTERNAL",
         operationalAvailableSlots: expect.any(Number),
       },
       {
         id: otherStationB.id,
         name: "Beta Station",
         address: "3 Beta Street, Thu Duc, TP.HCM",
+        stationType: "INTERNAL",
         operationalAvailableSlots: expect.any(Number),
       },
     ]));
@@ -182,6 +185,7 @@ describe("operator station context routing e2e", () => {
       id: targetStation.id,
       name: "Redistribution Target",
       address: "17 Target Street, Thu Duc, TP.HCM",
+      stationType: "INTERNAL",
       operationalAvailableSlots: 1,
     });
   });
@@ -219,6 +223,7 @@ describe("operator station context routing e2e", () => {
 
     expect(response.status).toBe(200);
     expect(body.currentStation.id).toBe(currentStation.id);
+    expect(body.currentStation.stationType).toBe("INTERNAL");
     expect(body.otherStations.some(station => station.id === otherStation.id)).toBe(true);
   });
 
@@ -253,6 +258,8 @@ describe("operator station context routing e2e", () => {
 
     expect(response.status).toBe(200);
     expect(body.currentStation.id).toBe(currentStation.id);
+    expect(body.currentStation.stationType).toBe("AGENCY");
+    expect(body.otherStations.find(station => station.id === otherStation.id)?.stationType).toBe("INTERNAL");
     expect(body.otherStations.some(station => station.id === otherStation.id)).toBe(true);
   });
 
@@ -277,6 +284,7 @@ describe("operator station context routing e2e", () => {
 
     expect(response.status).toBe(200);
     expect(body.currentStation.id).toBe(currentStation.id);
+    expect(body.currentStation.stationType).toBe("INTERNAL");
     expect(body.otherStations.some(station => station.id === otherStation.id)).toBe(true);
   });
 
