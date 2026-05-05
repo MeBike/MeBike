@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { formatCurrency } from "@/utils/formatCurrency";
-
+import { getStatusConfig } from "@/columns/bike-colums";
+import type { BikeStatus } from "@/types";
 function SectionCard({
   icon: Icon,
   title,
@@ -119,6 +120,7 @@ export default function AdminRentalDetailPage() {
   const verifyRaw = String(detailData.user?.verify ?? "")
     .trim()
     .toUpperCase();
+  const bikeStatus = getStatusConfig(detailData?.bike.status as BikeStatus);
   const isVerified = verifyRaw === "VERIFIED";
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
@@ -277,7 +279,13 @@ export default function AdminRentalDetailPage() {
                 />
                 <Field
                   label="Trạng thái xe"
-                  value={detailData.bike?.status || "Chưa có dữ liệu"}
+                  value={
+                    <span
+                      className={`px-2 py-1 text-sm font-medium rounded-full ${bikeStatus.color}`}
+                    >
+                      {bikeStatus.label}
+                    </span>
+                  }
                 />
                 <Field
                   label="Nhà cung cấp"
