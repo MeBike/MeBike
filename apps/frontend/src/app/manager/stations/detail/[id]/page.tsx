@@ -110,7 +110,7 @@ export default function StationDetailPage() {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyStationDetail, isLoadingStationRevenueForManager]);
