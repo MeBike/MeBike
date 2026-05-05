@@ -52,6 +52,9 @@ export default function BikeDetailPage({
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetail, isLoadingStatisticsBike]);
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
   if (!detailBike) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
@@ -61,12 +64,9 @@ export default function BikeDetailPage({
       </div>
     );
   }
-  if (isVisualLoading) {
-    return <LoadingScreen />;
-  }
   const handleUpdateBike = async (data: UpdateBikeSchemaFormData) => {
     await updateBike(data,id);
-    getBikeByID(); // Refresh lại dữ liệu sau khi update thành công
+    getBikeByID(); 
   };
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">

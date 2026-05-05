@@ -33,7 +33,6 @@ const DistributionRequestDetailPage = () => {
       getAdminViewDistributionRequestDetail();
     }
   }, [id, getAdminViewDistributionRequestDetail]);
-
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
@@ -44,7 +43,6 @@ const DistributionRequestDetailPage = () => {
       </div>
     );
   }
-
   return (
     <DistributionRequestDetailClient 
       data={adminViewDistributionRequestDetail.data} 
