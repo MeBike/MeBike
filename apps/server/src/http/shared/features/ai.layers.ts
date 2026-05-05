@@ -4,13 +4,17 @@ import { AiChatServiceLive } from "@/domain/ai";
 
 import { BikeQueryServiceLayer } from "./bike.layers";
 import { RentalCommandServiceLayer, RentalServiceLayer } from "./rental.layers";
-import { ReservationQueryServiceLayer } from "./reservation.layers";
+import {
+  ReservationCommandServiceLayer,
+  ReservationQueryServiceLayer,
+} from "./reservation.layers";
 import { StationQueryServiceLayer } from "./station.layers";
 import { WalletQueryServiceLayer } from "./wallet.layers";
 
 export const AiServiceLayer = AiChatServiceLive.pipe(
   Layer.provide(WalletQueryServiceLayer),
   Layer.provide(StationQueryServiceLayer),
+  Layer.provide(ReservationCommandServiceLayer),
   Layer.provide(ReservationQueryServiceLayer),
   Layer.provide(RentalServiceLayer),
   Layer.provide(RentalCommandServiceLayer),

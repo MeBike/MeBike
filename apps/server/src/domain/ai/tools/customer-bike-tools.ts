@@ -15,15 +15,11 @@ import { BikeDetailToolOutputSchema } from "./customer-tool-schemas";
 export function createCustomerBikeTools(args: CreateCustomerToolsArgs) {
   return {
     getBikeDetail: tool({
-      description: "Get one bike detail when the bike id is already known from screen context or prior tool results.",
+      description: "Get one bike detail when the bike id is already known from prior tool results or explicit user selection.",
       inputSchema: BikeDetailInputSchema,
       outputSchema: BikeDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof BikeDetailToolOutputSchema>> => {
-        let bikeId = input.bikeId ?? null;
-
-        if (!bikeId && input.reference === "context") {
-          bikeId = args.context?.bikeId ?? null;
-        }
+        const bikeId = input.bikeId ?? null;
 
         if (!bikeId) {
           return { reference: input.reference, detail: null };

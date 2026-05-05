@@ -17,6 +17,13 @@ const stationTools = [
 
 const bikeTools = [
   "getBikeDetail",
+  "reserveBike",
+] as const satisfies readonly CustomerToolName[];
+
+const reservationTools = [
+  "getReservationSummary",
+  "getReservationDetail",
+  "cancelReservation",
 ] as const satisfies readonly CustomerToolName[];
 
 const returnSlotTools = [
@@ -40,7 +47,7 @@ export function getActiveCustomerTools(
     case "rental":
       return ["queryRentals", ...returnSlotTools, ...returnSlotMutationTools, "getRentalDetail", "getRentalDetails", ...locationTools, ...stationTools, ...bikeTools];
     case "reservation":
-      return ["getReservationSummary", "getReservationDetail", ...locationTools, ...stationTools, ...bikeTools];
+      return [...reservationTools, ...locationTools, ...stationTools, ...bikeTools];
     case "station":
       return [...returnSlotTools, ...returnSlotMutationTools, ...locationTools, ...stationTools, ...bikeTools];
     case "bike":
@@ -54,8 +61,7 @@ export function getActiveCustomerTools(
         ...returnSlotMutationTools,
         "getRentalDetail",
         "getRentalDetails",
-        "getReservationSummary",
-        "getReservationDetail",
+        ...reservationTools,
         ...locationTools,
         ...stationTools,
         ...bikeTools,

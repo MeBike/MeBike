@@ -1,19 +1,18 @@
 import type { ScrollView as ScrollViewType } from "react-native";
 
+import { useAiAssistantChat } from "@hooks/ai/use-ai-assistant-chat";
 import { useRoute } from "@react-navigation/native";
+import { mapAiAssistantMessagesToFeed } from "@services/ai";
+import { borderWidths, radii, spacingRules } from "@theme/metrics";
+import { AppComposerInput } from "@ui/primitives/app-composer-input";
+import { AppText } from "@ui/primitives/app-text";
+import { Screen } from "@ui/primitives/screen";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StatusBar } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XStack, YStack } from "tamagui";
 
 import type { AiAssistantRouteProp } from "@/types/navigation";
-
-import { useAiAssistantChat } from "@hooks/ai/use-ai-assistant-chat";
-import { mapAiAssistantMessagesToFeed } from "@services/ai";
-import { borderWidths, radii, spacingRules } from "@theme/metrics";
-import { AppComposerInput } from "@ui/primitives/app-composer-input";
-import { AppText } from "@ui/primitives/app-text";
-import { Screen } from "@ui/primitives/screen";
 
 import {
   AssistantBubble,
@@ -112,7 +111,7 @@ export default function AiAssistantScreen() {
       <StatusBar barStyle="light-content" />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <YStack flex={1}>
@@ -170,7 +169,7 @@ export default function AiAssistantScreen() {
               gap="$3"
               paddingHorizontal="$4"
               paddingTop="$3"
-              paddingBottom={insets.bottom}
+              paddingBottom="$2"
             >
               {!hasConversation || feedMessages.length < 3
                 ? (

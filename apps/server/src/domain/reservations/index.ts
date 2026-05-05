@@ -10,6 +10,7 @@ export * from "./services/fixed-slot-template.service";
 export * from "./services/fixed-slot/fixed-slot.helpers";
 export * from "./services/fixed-slot/fixed-slot.service";
 export type * from "./services/fixed-slot/fixed-slot.types";
+export * from "./services/reservation-command.service";
 export * from "./services/reservation-query.service";
 export * from "./services/reservation-stats.service";
 export * from "./types";

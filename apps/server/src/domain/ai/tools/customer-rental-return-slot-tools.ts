@@ -11,7 +11,6 @@ import {
   RentalDetailInputSchema,
   rentalToolPage,
   resolveRentalReference,
-  StationReferenceSchema,
   toReturnSlotAiDetail,
 } from "./customer-tool-helpers";
 import {
@@ -25,15 +24,14 @@ const uuidSchema = z.string().uuid();
 
 const ReturnSlotMutationInputSchema = z.object({
   rentalId: z.string().optional(),
-  rentalReference: z.enum(["context", "current", "latest", "id"]).default("current"),
+  rentalReference: z.enum(["current", "latest", "id"]).default("current"),
   stationId: z.string().optional(),
-  stationName: z.string().trim().min(1).optional().describe("User-facing station name when known from current context or prior tool results. Never put raw ids here."),
-  stationReference: StationReferenceSchema.default("context"),
+  stationName: z.string().trim().min(1).optional().describe("User-facing station name when known from prior tool results or explicit user selection. Never put raw ids here."),
 });
 
 const CancelReturnSlotInputSchema = z.object({
   rentalId: z.string().optional(),
-  rentalReference: z.enum(["context", "current", "latest", "id"]).default("current"),
+  rentalReference: z.enum(["current", "latest", "id"]).default("current"),
 });
 
 type CreateReturnSlotToolOutput = z.infer<typeof CreateReturnSlotToolOutputSchema>;
@@ -90,13 +88,13 @@ function invalidStationIdFailure() {
   );
 }
 
-function missingStationContextFailure() {
+function missingStationIdFailure() {
   return failReturnSlotAction(
-    "MISSING_STATION_CONTEXT",
+    "MISSING_STATION_ID",
     "validation",
     false,
     "search_stations",
-    "Chưa xác định được trạm để thực hiện thao tác giữ chỗ trả xe.",
+    "Chưa xác định được mã trạm để thực hiện thao tác giữ chỗ trả xe.",
   );
 }
 
@@ -175,14 +173,10 @@ function validateUuidOrNull(value: string | null | undefined) {
 
 function resolveActiveRentalEffect(
   args: CreateCustomerToolsArgs,
-  input: { rentalId?: string; rentalReference: "context" | "current" | "latest" | "id" },
+  input: { rentalId?: string; rentalReference: "current" | "latest" | "id" },
 ) {
   return Effect.gen(function* () {
     let rentalId = input.rentalId ?? null;
-
-    if (!rentalId && input.rentalReference === "context") {
-      rentalId = args.context?.rentalId ?? null;
-    }
 
     if (!rentalId && input.rentalReference === "current") {
       const rentals = yield* args.rentalService.listMyCurrentRentals(args.userId, {
@@ -222,14 +216,13 @@ function resolveActiveRentalEffect(
 
 function resolveTargetStationIdEffect(
   args: CreateCustomerToolsArgs,
-  input: { stationId?: string; stationReference: "context" | "id" },
+  input: { stationId?: string },
 ) {
   return Effect.gen(function* () {
-    const stationId = input.stationId
-      ?? (input.stationReference === "context" ? args.context?.stationId ?? null : null);
+    const stationId = input.stationId ?? null;
 
     if (!stationId) {
-      return yield* Effect.fail(missingStationContextFailure());
+      return yield* Effect.fail(missingStationIdFailure());
     }
 
     const safeStationId = validateUuidOrNull(stationId);
@@ -262,12 +255,11 @@ async function finishReturnSlotSuccess(
 export function createCustomerRentalReturnSlotTools(args: CreateCustomerToolsArgs) {
   return {
     getCurrentReturnSlot: tool({
-      description: "Get the user's active return-slot reservation for a rental. Prefer current screen context or the current active rental before raw ids.",
+      description: "Get the user's active return-slot reservation for a rental. Prefer the current active rental before raw ids.",
       inputSchema: RentalDetailInputSchema,
       outputSchema: CurrentReturnSlotToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof CurrentReturnSlotToolOutputSchema>> => {
         const rental = await resolveRentalReference({
-          context: args.context,
           rentalId: input.rentalId,
           reference: input.reference,
           rentalService: args.rentalService,
