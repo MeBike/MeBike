@@ -79,7 +79,7 @@ export function createCustomerWalletTools(args: WalletToolsArgs) {
       },
     }),
     getWalletTransactionDetail: tool({
-      description: "Get one wallet transaction detail. Prefer the latest transaction unless a known transaction id is already available from prior results.",
+      description: "Get one wallet transaction detail. Prefer the latest transaction unless that exact transaction is already known from prior results.",
       inputSchema: WalletTransactionDetailInputSchema,
       outputSchema: WalletTransactionDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof WalletTransactionDetailToolOutputSchema>> => {

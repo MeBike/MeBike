@@ -34,16 +34,16 @@ import {
 
 const ReserveBikeInputSchema = z.object({
   bikeId: z.uuidv7(),
-  bikeNumber: z.string().trim().min(1).optional().describe("User-facing bike number when already known from prior tool results or explicit user selection. Never put raw ids here."),
-  stationName: z.string().trim().min(1).optional().describe("User-facing station name when already known from prior tool results or explicit user selection. Never put raw ids here."),
+  bikeNumber: z.string().trim().min(1).optional().describe("User-facing bike number when already known from prior tool results or explicit user selection. Never put raw system identifiers here."),
+  stationName: z.string().trim().min(1).optional().describe("User-facing station name when already known from prior tool results or explicit user selection. Never put raw system identifiers here."),
   startTime: z.string().datetime({ offset: true }).optional().describe("Reservation start time in ISO 8601 format with timezone offset. Use the user-chosen pickup time when they specify one. Omit only when the user clearly wants to reserve immediately."),
 });
 
 const CancelReservationInputSchema = z.object({
   reservationId: z.uuidv7().optional(),
   reference: z.enum(["latestPendingOrActive", "id"]).default("latestPendingOrActive"),
-  bikeNumber: z.string().trim().min(1).optional().describe("User-facing bike number when already known from prior tool results or explicit user selection. Never put raw ids here."),
-  stationName: z.string().trim().min(1).optional().describe("User-facing station name when already known from prior tool results or explicit user selection. Never put raw ids here."),
+  bikeNumber: z.string().trim().min(1).optional().describe("User-facing bike number when already known from prior tool results or explicit user selection. Never put raw system identifiers here."),
+  stationName: z.string().trim().min(1).optional().describe("User-facing station name when already known from prior tool results or explicit user selection. Never put raw system identifiers here."),
 });
 
 type ReserveBikeToolOutput = z.infer<typeof ReserveBikeToolOutputSchema>;
@@ -272,7 +272,7 @@ export function createCustomerReservationTools(args: ReservationToolsArgs) {
       },
     }),
     getReservationDetail: tool({
-      description: "Get one user-owned reservation detail. Prefer the latest pending or active reservation or an id already returned by another tool before raw ids.",
+      description: "Get one user-owned reservation detail. Prefer the latest pending or active reservation or a reservation already identified by another tool.",
       inputSchema: ReservationDetailInputSchema,
       outputSchema: ReservationDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof ReservationDetailToolOutputSchema>> => {
@@ -302,7 +302,7 @@ export function createCustomerReservationTools(args: ReservationToolsArgs) {
       },
     }),
     cancelReservation: tool({
-      description: "Cancel the current user's pending reservation. Prefer the latest pending or active reservation unless an exact reservation id is already known from prior tool results.",
+      description: "Cancel the current user's pending reservation. Prefer the latest pending or active reservation unless that exact reservation is already known from prior tool results.",
       inputSchema: CancelReservationInputSchema,
       outputSchema: CancelReservationToolOutputSchema,
       needsApproval: true,

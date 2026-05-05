@@ -9,6 +9,7 @@ import { createCustomerRentalReturnSlotTools } from "./return-slot-tools";
 export const customerRentalQueryToolNames = [
   "queryRentals",
   "getRentalDetail",
+  "getRentalBillingDetail",
   "getRentalDetails",
 ] as const satisfies readonly CustomerToolName[];
 

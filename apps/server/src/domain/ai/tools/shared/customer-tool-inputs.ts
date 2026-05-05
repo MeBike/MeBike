@@ -5,6 +5,11 @@ export const RentalDetailInputSchema = z.object({
   reference: z.enum(["current", "latest", "id"]).default("current"),
 });
 
+export const RentalBillingDetailInputSchema = z.object({
+  rentalId: z.uuidv7().optional(),
+  reference: z.enum(["latestCompleted", "id"]).default("latestCompleted"),
+});
+
 export const RentalDetailsInputSchema = z.object({
   rentalIds: z.array(z.uuidv7()).min(1).max(20),
 });

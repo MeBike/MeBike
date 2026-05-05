@@ -1,12 +1,13 @@
 import type { z } from "zod";
 
 import { tool } from "ai";
-import { Effect, Option } from "effect";
+import { Effect, Either, Option } from "effect";
 
 import type { RentalQueryToolsArgs } from "../shared/customer-tool-args";
 
 import {
   QueryRentalsInputSchema,
+  RentalBillingDetailInputSchema,
   RentalDetailInputSchema,
   RentalDetailsInputSchema,
   rentalToolPage,
@@ -14,14 +15,30 @@ import {
 import { resolveRentalReference } from "../shared/customer-tool-lookups";
 import {
   loadStationSummaryMap,
+  toRentalBillingDetailItem,
   toRentalDetailItem,
   toRentalSummaryItem,
 } from "./presenter";
 import {
   QueryRentalsToolOutputSchema,
+  RentalBillingDetailToolOutputSchema,
   RentalDetailsToolOutputSchema,
   RentalDetailToolOutputSchema,
 } from "./schemas";
+
+type RentalBillingDetailToolError = NonNullable<z.infer<typeof RentalBillingDetailToolOutputSchema>["error"]>;
+
+function failRentalBillingDetail(
+  code: RentalBillingDetailToolError["code"],
+  userMessage: string,
+  status: RentalBillingDetailToolError["status"] = null,
+): RentalBillingDetailToolError {
+  return {
+    code,
+    status,
+    userMessage,
+  };
+}
 
 export function createCustomerRentalQueryTools(args: RentalQueryToolsArgs) {
   return {
@@ -65,7 +82,7 @@ export function createCustomerRentalQueryTools(args: RentalQueryToolsArgs) {
       },
     }),
     getRentalDetail: tool({
-      description: "Get one user-owned rental detail after you already know which rental to inspect. Prefer current rental, latest rental, or an id returned by the rental query tool instead of guessing raw ids.",
+      description: "Get one user-owned rental detail after you already know which rental to inspect. Prefer the current rental, the latest rental, or a rental already identified by the rental query tool instead of guessing.",
       inputSchema: RentalDetailInputSchema,
       outputSchema: RentalDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof RentalDetailToolOutputSchema>> => {
@@ -88,8 +105,103 @@ export function createCustomerRentalQueryTools(args: RentalQueryToolsArgs) {
         };
       },
     }),
+    getRentalBillingDetail: tool({
+      description: "Get finalized billing detail for one completed rental when the user asks about final price, coupon application, discount breakdown, or why a finished rental cost that amount. Prefer latestCompleted unless that exact completed rental is already known from prior tool results.",
+      inputSchema: RentalBillingDetailInputSchema,
+      outputSchema: RentalBillingDetailToolOutputSchema,
+      execute: async (input): Promise<z.infer<typeof RentalBillingDetailToolOutputSchema>> => {
+        if (input.reference === "id" && !input.rentalId) {
+          return {
+            reference: input.reference,
+            rentalId: null,
+            detail: null,
+            error: failRentalBillingDetail(
+              "MISSING_RENTAL_ID",
+              "Mình chưa xác định được chuyến thuê cần kiểm tra chi tiết hóa đơn này.",
+            ),
+          };
+        }
+
+        let rentalId = input.rentalId ?? null;
+
+        if (!rentalId && input.reference === "latestCompleted") {
+          const rentals = await Effect.runPromise(
+            args.rentalService.listMyRentals(args.userId, { status: "COMPLETED" }, {
+              ...rentalToolPage,
+              pageSize: 1,
+            }),
+          );
+
+          rentalId = rentals.items[0]?.id ?? null;
+        }
+
+        if (!rentalId) {
+          return {
+            reference: input.reference,
+            rentalId: null,
+            detail: null,
+            error: failRentalBillingDetail(
+              "NO_COMPLETED_RENTAL",
+              "Mình chưa thấy chuyến thuê đã hoàn thành nào để kiểm tra hóa đơn cuối cùng.",
+            ),
+          };
+        }
+
+        const detail = await Effect.runPromise(
+          args.rentalBillingDetailService.getForUser({
+            rentalId,
+            userId: args.userId,
+          }).pipe(Effect.either),
+        );
+
+        if (Either.isRight(detail)) {
+          return {
+            reference: input.reference,
+            rentalId,
+            detail: toRentalBillingDetailItem(detail.right),
+            error: null,
+          };
+        }
+
+        if (detail.left._tag === "RentalNotFound") {
+          return {
+            reference: input.reference,
+            rentalId,
+            detail: null,
+            error: failRentalBillingDetail(
+              "RENTAL_NOT_FOUND",
+              "Mình không tìm thấy chuyến thuê này trong lịch sử của bạn để kiểm tra hóa đơn.",
+            ),
+          };
+        }
+
+        if (detail.left._tag === "BillingDetailRequiresCompletedRental") {
+          return {
+            reference: input.reference,
+            rentalId,
+            detail: null,
+            error: failRentalBillingDetail(
+              "BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL",
+              "Chi tiết hóa đơn cuối chỉ có sau khi chuyến thuê đã hoàn thành.",
+              detail.left.status,
+            ),
+          };
+        }
+
+        return {
+          reference: input.reference,
+          rentalId,
+          detail: null,
+          error: failRentalBillingDetail(
+            "BILLING_DETAIL_NOT_READY",
+            "Chuyến thuê này đã hoàn thành nhưng chi tiết hóa đơn cuối đang chưa sẵn sàng.",
+            detail.left.status,
+          ),
+        };
+      },
+    }),
     getRentalDetails: tool({
-      description: "Get details for multiple user-owned rentals at once when you already have their ids from the rental query tool. Use this instead of calling getRentalDetail many times. Never guess raw ids.",
+      description: "Get details for multiple user-owned rentals at once when those rentals are already identified by the rental query tool. Use this instead of calling getRentalDetail many times. Never guess the target rentals.",
       inputSchema: RentalDetailsInputSchema,
       outputSchema: RentalDetailsToolOutputSchema,
       execute: async (input: z.infer<typeof RentalDetailsInputSchema>): Promise<z.infer<typeof RentalDetailsToolOutputSchema>> => {

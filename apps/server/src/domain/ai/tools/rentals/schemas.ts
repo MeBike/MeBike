@@ -12,6 +12,7 @@ import {
 
 const QueryRentalsScopeSchema = z.enum(["current", "recent", "all"]);
 const RentalDetailReferenceSchema = z.enum(["current", "latest", "id"]);
+const RentalBillingDetailReferenceSchema = z.enum(["latestCompleted", "id"]);
 const ReturnSlotReferenceSchema = z.enum(["current", "latest", "id"]);
 
 const RentalSummaryItemSchema = RentalSchema.extend({
@@ -33,6 +34,31 @@ const RentalDetailSchema = RentalSchema.extend({
   statusLabel: z.string(),
   totalPriceDisplay: z.string().nullable(),
   updatedAtDisplay: z.string().nullable(),
+}).strict();
+
+const RentalBillingDetailToolSchema = RentalsContracts.RentalBillingDetailSchema.extend({
+  appliedAtDisplay: z.string().nullable(),
+  baseAmountDisplay: z.string().nullable(),
+  couponApplied: z.boolean(),
+  couponDiscountAmountDisplay: z.string().nullable(),
+  prepaidAmountDisplay: z.string().nullable(),
+  subscriptionDiscountAmountDisplay: z.string().nullable(),
+  subscriptionDiscountApplied: z.boolean(),
+  totalAmountDisplay: z.string().nullable(),
+}).strict();
+
+const RentalBillingDetailErrorCodeSchema = z.enum([
+  "MISSING_RENTAL_ID",
+  "NO_COMPLETED_RENTAL",
+  "RENTAL_NOT_FOUND",
+  "BILLING_DETAIL_REQUIRES_COMPLETED_RENTAL",
+  "BILLING_DETAIL_NOT_READY",
+]);
+
+const RentalBillingDetailErrorSchema = z.object({
+  code: RentalBillingDetailErrorCodeSchema,
+  status: RentalsContracts.RentalStatusSchema.nullable().optional(),
+  userMessage: z.string(),
 }).strict();
 
 const ReturnSlotAiDetailSchema = RentalsContracts.ReturnSlotReservationSchema.extend({
@@ -92,6 +118,13 @@ export const QueryRentalsToolOutputSchema = z.object({
 export const RentalDetailToolOutputSchema = z.object({
   reference: RentalDetailReferenceSchema,
   detail: RentalDetailSchema.nullable(),
+}).strict();
+
+export const RentalBillingDetailToolOutputSchema = z.object({
+  reference: RentalBillingDetailReferenceSchema,
+  rentalId: z.uuidv7().nullable(),
+  detail: RentalBillingDetailToolSchema.nullable(),
+  error: RentalBillingDetailErrorSchema.nullable(),
 }).strict();
 
 export const RentalDetailsToolOutputSchema = z.object({

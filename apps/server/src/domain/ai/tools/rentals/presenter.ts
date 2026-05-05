@@ -1,7 +1,10 @@
 import type { ReturnSlotRow } from "@/domain/rentals";
 
 import { returnSlotExpiresAt } from "@/domain/rentals";
-import { toContractRental } from "@/http/presenters/rentals.presenter";
+import {
+  toContractRental,
+  toContractRentalBillingDetail,
+} from "@/http/presenters/rentals.presenter";
 
 import type { RentalQueryToolsArgs } from "../shared/customer-tool-args";
 
@@ -14,6 +17,7 @@ import {
 import { getStationByIdOrNull } from "../shared/customer-tool-lookups";
 
 type RentalRow = Parameters<typeof toContractRental>[0];
+type RentalBillingDetailRow = Parameters<typeof toContractRentalBillingDetail>[0];
 
 type StationSummary = {
   address: string;
@@ -75,6 +79,24 @@ export function toRentalDetailItem(
     statusLabel: getRentalStatusLabel(rental.status),
     totalPriceDisplay: formatMinorVnd(rental.totalPrice),
     updatedAtDisplay: formatLocalDateTime(rental.updatedAt),
+  };
+}
+
+export function toRentalBillingDetailItem(
+  detail: RentalBillingDetailRow,
+) {
+  const contract = toContractRentalBillingDetail(detail);
+
+  return {
+    ...contract,
+    appliedAtDisplay: formatLocalDateTime(detail.appliedAt),
+    baseAmountDisplay: formatMinorVnd(detail.baseAmount),
+    couponApplied: detail.couponDiscountAmount > 0,
+    couponDiscountAmountDisplay: formatMinorVnd(detail.couponDiscountAmount),
+    prepaidAmountDisplay: formatMinorVnd(detail.prepaidAmount),
+    subscriptionDiscountAmountDisplay: formatMinorVnd(detail.subscriptionDiscountAmount),
+    subscriptionDiscountApplied: detail.subscriptionApplied && detail.subscriptionDiscountAmount > 0,
+    totalAmountDisplay: formatMinorVnd(detail.totalAmount),
   };
 }
 

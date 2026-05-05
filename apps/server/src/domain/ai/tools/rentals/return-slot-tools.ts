@@ -32,7 +32,7 @@ const ReturnSlotMutationInputSchema = z.object({
   rentalId: z.uuidv7().optional(),
   rentalReference: z.enum(["current", "latest", "id"]).default("current"),
   stationId: z.uuidv7().optional(),
-  stationName: z.string().trim().min(1).optional().describe("User-facing station name when known from prior tool results or explicit user selection. Never put raw ids here."),
+  stationName: z.string().trim().min(1).optional().describe("User-facing station name when known from prior tool results or explicit user selection. Never put raw system identifiers here."),
 });
 
 const CancelReturnSlotInputSchema = z.object({
@@ -65,7 +65,7 @@ function invalidRentalIdFailure() {
     "validation",
     false,
     "check_current_rental",
-    "Không xác định được mã chuyến thuê hợp lệ để thực hiện thao tác này.",
+    "Mình chưa xác định được chuyến thuê cần thực hiện thao tác này.",
   );
 }
 
@@ -85,7 +85,7 @@ function invalidStationIdFailure() {
     "validation",
     false,
     "choose_station_again",
-    "Không xác định được mã trạm hợp lệ để giữ chỗ trả xe.",
+    "Mình chưa xác định được trạm phù hợp để giữ chỗ trả xe.",
   );
 }
 
@@ -95,7 +95,7 @@ function missingStationIdFailure() {
     "validation",
     false,
     "search_stations",
-    "Chưa xác định được mã trạm để thực hiện thao tác giữ chỗ trả xe.",
+    "Mình chưa xác định được trạm bạn muốn giữ chỗ trả xe.",
   );
 }
 
@@ -256,7 +256,7 @@ async function finishReturnSlotSuccess(
 export function createCustomerRentalReturnSlotTools(args: RentalReturnSlotToolsArgs) {
   return {
     getCurrentReturnSlot: tool({
-      description: "Get the user's active return-slot reservation for a rental. Prefer the current active rental before raw ids.",
+      description: "Get the user's active return-slot reservation for a rental. Prefer the current active rental first when possible.",
       inputSchema: RentalDetailInputSchema,
       outputSchema: CurrentReturnSlotToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof CurrentReturnSlotToolOutputSchema>> => {

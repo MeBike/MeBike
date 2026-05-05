@@ -2,6 +2,7 @@ import type { AiChatContext } from "@mebike/shared";
 
 import type { BikeQueryService } from "@/domain/bikes";
 import type {
+  RentalBillingDetailService,
   RentalCommandService,
   RentalService,
 } from "@/domain/rentals";
@@ -15,6 +16,7 @@ import type { WalletQueryService } from "@/domain/wallets/services/queries/walle
 export type CreateCustomerToolsArgs = {
   readonly bikeQueryService: BikeQueryService;
   readonly context: AiChatContext | null;
+  readonly rentalBillingDetailService: RentalBillingDetailService;
   readonly rentalCommandService: RentalCommandService;
   readonly reservationCommandService: ReservationCommandService;
   readonly reservationQueryService: ReservationQueryService;
@@ -26,6 +28,7 @@ export type CreateCustomerToolsArgs = {
 
 export type CustomerToolName
   = | "queryRentals"
+    | "getRentalBillingDetail"
     | "getRentalDetails"
     | "getCurrentReturnSlot"
     | "createReturnSlot"
@@ -47,7 +50,7 @@ export type CustomerToolName
 
 export type RentalQueryToolsArgs = Pick<
   CreateCustomerToolsArgs,
-  "rentalService" | "stationQueryService" | "userId"
+  "rentalBillingDetailService" | "rentalService" | "stationQueryService" | "userId"
 >;
 
 export type RentalReturnSlotToolsArgs = Pick<

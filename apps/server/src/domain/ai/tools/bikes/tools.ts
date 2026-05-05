@@ -24,7 +24,7 @@ export const customerBikeToolNamesWithReservation = [
 export function createCustomerBikeTools(args: BikeToolsArgs) {
   return {
     getBikeDetail: tool({
-      description: "Get one bike detail when the bike id is already known from prior tool results or explicit user selection.",
+      description: "Get one bike detail when that bike is already known from prior tool results or explicit user selection.",
       inputSchema: BikeDetailInputSchema,
       outputSchema: BikeDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof BikeDetailToolOutputSchema>> => {

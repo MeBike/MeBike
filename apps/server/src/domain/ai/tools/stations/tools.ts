@@ -45,7 +45,7 @@ export const customerLocationToolNames = [
 export function createCustomerStationTools(args: StationToolsArgs) {
   return {
     getStationDetail: tool({
-      description: "Get one station detail when the station id is already known from prior tool results or explicit user selection.",
+      description: "Get one station detail when that station is already known from prior tool results or explicit user selection.",
       inputSchema: StationDetailInputSchema,
       outputSchema: StationDetailToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof StationDetailToolOutputSchema>> => {
@@ -64,7 +64,7 @@ export function createCustomerStationTools(args: StationToolsArgs) {
       },
     }),
     searchStations: tool({
-      description: "Search stations by name first, then by address if needed. Use this when the user mentions a station by words instead of station id.",
+      description: "Search stations by name first, then by address if needed. Use this when the user mentions a station by words instead of selecting a known station.",
       inputSchema: StationSearchInputSchema,
       outputSchema: StationSearchToolOutputSchema,
       execute: async (input): Promise<z.infer<typeof StationSearchToolOutputSchema>> => {
