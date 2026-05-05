@@ -29,7 +29,7 @@ export default function Page({
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetailUser]);

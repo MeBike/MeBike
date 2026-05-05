@@ -27,7 +27,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingPricingPolicyDetail]);

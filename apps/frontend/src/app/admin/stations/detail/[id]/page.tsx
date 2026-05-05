@@ -25,7 +25,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   useEffect(() => {
     if (id) {
       getStationByID();
-      getStationRevenue(); // <-- Đã thêm gọi fetch doanh thu
+      getStationRevenue();
     }
   }, [id, getStationByID, getStationRevenue]);
 
@@ -35,7 +35,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingGetStationByID]);
