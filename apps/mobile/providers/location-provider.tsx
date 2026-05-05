@@ -1,9 +1,10 @@
-import { log } from "@lib/log";
-import { fetchMapboxReverseGeocode } from "@lib/mapbox-geocoding";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
+
+import { log } from "@lib/log";
+import { fetchMapboxReverseGeocode } from "@lib/mapbox-geocoding";
 
 type Coordinates = {
   latitude: number;
@@ -75,10 +76,13 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     }
 
     latestLocationLabelKeyRef.current = cacheKey;
-    setLocationLabel(null);
 
     try {
       const cachedLocationLabel = await loadCachedLocationLabel(cacheKey);
+
+      if (latestLocationLabelKeyRef.current !== cacheKey) {
+        return;
+      }
 
       if (cachedLocationLabel) {
         log.debug("Location label cache hit", {
@@ -91,6 +95,11 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       }
 
       const reverseGeocodeResult = await fetchMapboxReverseGeocode(nextLocation);
+
+      if (latestLocationLabelKeyRef.current !== cacheKey) {
+        return;
+      }
+
       const nextLocationLabel = reverseGeocodeResult?.label ?? null;
 
       if (!nextLocationLabel) {
@@ -113,6 +122,10 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       void saveCachedLocationLabel(cacheKey, nextLocationLabel);
     }
     catch (reverseGeocodeError) {
+      if (latestLocationLabelKeyRef.current !== cacheKey) {
+        return;
+      }
+
       log.warn("Location reverse geocode failed", reverseGeocodeError);
       setLocationLabel(null);
       latestLocationLabelKeyRef.current = null;
