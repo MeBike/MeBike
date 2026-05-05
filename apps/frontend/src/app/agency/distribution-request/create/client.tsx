@@ -47,24 +47,15 @@ export default function CreateDistributionRequestClient({
       reason: "",
     },
   });
-
-  // 1. Theo dõi trạm đích đang được chọn
   const targetStationId = useWatch({ control, name: "targetStationId" });
-
-  // 2. Tìm trạm đích tương ứng trong danh sách để lấy số chỗ trống
   const selectedTargetStation = stations.otherStations?.find(
     (s) => s.id === targetStationId
   );
-  
-  // 3. Gán giới hạn max bằng số chỗ trống của trạm đích
   const maxAvailableSlots = selectedTargetStation?.operationalAvailableSlots || 0;
-
   const onSubmit = async (data: CreateRedistributionRequestInput) => {
-    // Chặn submit nếu số lượng vượt quá số chỗ trống (bảo vệ lần cuối)
     if (data.requestedQuantity > maxAvailableSlots) {
        return; 
     }
-
     try {
       await onSubmitRequest(data);
       router.push("/agency/distribution-request");
@@ -81,7 +72,6 @@ export default function CreateDistributionRequestClient({
         description="Điều phối xe từ trạm của bạn đến trạm đích"
         backLink="/agency/distribution-request"
       />
-
       <Card className="mx-auto max-w-2xl border-border/50 shadow-sm">
         <CardContent className="p-6 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
