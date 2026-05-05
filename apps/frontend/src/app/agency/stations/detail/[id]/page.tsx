@@ -107,8 +107,9 @@ export default function StationDetailPage() {
     stationId: id,
   });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
-
-  // Xử lý loading visual chung
+  useEffect(() => {
+    getListStation();
+  }, [getListStation]);
   useEffect(() => {
     if (isLoadingMyStationDetail || isLoadingStationRevenueForAgency) {
       setIsVisualLoading(true);
