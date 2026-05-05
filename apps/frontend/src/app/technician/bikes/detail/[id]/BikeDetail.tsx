@@ -107,7 +107,7 @@ export function BikeDetailView({
             </div>
             <Button
               variant="outline"
-              onClick={() => router.push("/staff/bikes")}
+              onClick={() => router.push("/technician/bikes")}
             >
               Danh sách xe
             </Button>
