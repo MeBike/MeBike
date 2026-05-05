@@ -19,16 +19,8 @@ import { notFound } from "next/navigation";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { formatCurrency } from "@/utils/formatCurrency";
-function rentalStatusBadgeVariant(
-  status: string,
-): "warning" | "pending" | "success" | "destructive" | "secondary" {
-  const s = status.toUpperCase();
-  if (s.includes("RESERVED") || s.includes("ĐẶT TRƯỚC")) return "warning";
-  if (s.includes("RENTED") || s.includes("THUÊ")) return "pending";
-  if (s.includes("COMPLETED") || s.includes("HOÀN THÀNH")) return "success";
-  if (s.includes("CANCELLED") || s.includes("HỦY")) return "destructive";
-  return "secondary";
-}
+import { getStatusConfig } from "@/columns/bike-colums";
+import type { BikeStatus } from "@/types";
 
 function SectionCard({
   icon: Icon,
@@ -106,6 +98,7 @@ export default function AdminRentalDetailPage() {
     hasToken: true,
     rental_id: id,
   });
+  const bikeStatus = getStatusConfig(detailData?.bike.status as BikeStatus);
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
   useEffect(() => {
     if (isDetailLoadingForStaff) {
@@ -307,7 +300,13 @@ export default function AdminRentalDetailPage() {
                 />
                 <Field
                   label="Trạng thái xe"
-                  value={detailData.bike?.status || "Chưa có dữ liệu"}
+                  value={
+                    <span
+                      className={`px-2 py-1 text-sm font-medium rounded-full ${bikeStatus.color}`}
+                    >
+                      {bikeStatus.label}
+                    </span>
+                  }
                 />
                 <Field
                   label="Nhà cung cấp"

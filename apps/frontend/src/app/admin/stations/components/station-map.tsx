@@ -1,74 +1,63 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import * as tt from "@tomtom-international/web-sdk-maps";
-import "@tomtom-international/web-sdk-maps/dist/maps.css";
+import { useState, useMemo } from "react";
+import Map, { Marker, MapMouseEvent } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 interface StationMapProps {
   onLocationSelect: (lat: number, lng: number) => void;
-  defaultCenter?: [number, number] | null; 
+  // Lưu ý: Mapbox mặc định tọa độ là [longitude, latitude]
+  defaultCenter?: [number, number] | null;
 }
 
+const HCM_CITY: [number, number] = [106.7865, 10.8415];
+
 export function StationMap({ onLocationSelect, defaultCenter }: StationMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<tt.Map | null>(null);
-  const markerRef = useRef<tt.Marker | null>(null);
-  const HCM_CITY: [number, number] = [106.6601, 10.7626];
+  // Lấy vị trí ban đầu (nếu có defaultCenter thì dùng, không thì lấy HCM_CITY)
+  const initialCenter =
+    defaultCenter && defaultCenter.length === 2 ? defaultCenter : HCM_CITY;
+  
+  // Dùng state để quản lý tọa độ của cờ thay vì dùng useRef
+  const [markerPos, setMarkerPos] = useState<[number, number]>(initialCenter);
 
-  const currentCenter = defaultCenter && defaultCenter.length === 2 ? defaultCenter : HCM_CITY;
-
-  useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY?.trim();
-    if (!mapRef.current || !apiKey) return;
-
-    const map = tt.map({
-      key: apiKey,
-      container: mapRef.current,
-      center: currentCenter, 
+  const initialViewState = useMemo(() => {
+    return {
+      longitude: initialCenter[0],
+      latitude: initialCenter[1],
       zoom: 14,
-    });
-
-    mapInstanceRef.current = map;
-
-    // --- THÊM ĐOẠN NÀY ĐỂ HIỂN THỊ CỜ MẶC ĐỊNH ---
-    const addMarker = (lng: number, lat: number) => {
-      if (markerRef.current) {
-        markerRef.current.setLngLat([lng, lat]);
-      } else {
-        markerRef.current = new tt.Marker({ color: "#ef4444" }) // Màu đỏ cho nổi bật
-          .setLngLat([lng, lat])
-          .addTo(map);
-      }
     };
+  }, [initialCenter]);
 
-    // Đặt cờ ngay khi load xong
-    map.on("load", () => {
-      map.resize();
-      addMarker(currentCenter[0], currentCenter[1]);
-    });
-    // ---------------------------------------------
-
-    map.on("click", (e: any) => {
-      const { lat, lng } = e.lngLat;
-      onLocationSelect(lat, lng);
-      addMarker(lng, lat); // Dùng lại hàm addMarker
-    });
-
-    return () => {
-      map.remove();
-      mapInstanceRef.current = null;
-    };
-  }, []); 
+  // Xử lý sự kiện click trên bản đồ
+  const handleMapClick = (e: MapMouseEvent) => {
+    const { lat, lng } = e.lngLat;
+    
+    // Cập nhật vị trí cờ
+    setMarkerPos([lng, lat]);
+    
+    // Trả data về component cha
+    onLocationSelect(lat, lng);
+  };
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div ref={mapRef} className="w-full h-[500px] relative" />
-      {/* CSS bắt buộc để cờ không bị nằm dưới bản đồ */}
-      <style jsx global>{`
-        .mapboxgl-marker {
-          z-index: 999 !important;
-        }
-      `}</style>
+      <div className="w-full h-[500px] relative">
+        <Map
+          mapboxAccessToken={process.env.NEXT_PUBLIC_MAP_BOX_API_KEY}
+          initialViewState={initialViewState}
+          mapStyle="mapbox://styles/mapbox/streets-v12" // Bạn có thể đổi style tại đây
+          onClick={handleMapClick}
+          style={{ width: "100%", height: "100%" }}
+        >
+          {/* Component Marker của react-map-gl sẽ tự render vị trí dựa vào state */}
+          <Marker 
+            longitude={markerPos[0]} 
+            latitude={markerPos[1]} 
+            color="#ef4444" 
+            anchor="bottom"
+          />
+        </Map>
+      </div>
     </div>
   );
 }

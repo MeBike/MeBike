@@ -883,7 +883,13 @@ export const DISTRIBUTION_REQUEST = {
 };
 export const ENVIRONMENT_POLICY_REQUEST = {};
 export const COUPON_REQUEST = {};
-export const TECHNICIAN_TEAM = {};
+export const TECHNICIAN_TEAM = {
+  TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED: "Trạm đã được gán cho team kỹ thuật",
+  TECHNICIAN_TEAM_NAME_DUPLICATED: "Tên team kỹ thuật đã tồn tại",
+  TECHNICIAN_TEAM_NOT_FOUND: "Không tìm thấy team kỹ thuật",
+  TECHNICIAN_TEAM_STATION_NOT_FOUND : "Không tìm thấy trạm cần gán",
+  TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED : "Team đã đạt số lượng thành viên tối đa",
+};
 export const PRICING_POLICY_REQUEST = {
   ACTIVE_PRICING_POLICY_AMBIGUOUS:
     "Không thể xác định chính sách cần kích hoạt",

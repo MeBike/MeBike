@@ -130,7 +130,7 @@ export default function ReservationClient({
               <SelectContent>
                 <SelectItem value="all">Tất cả trạng thái</SelectItem>
                 <SelectItem value="PENDING">Đang chờ xử lý</SelectItem>
-                <SelectItem value="FULFILLED">Đang hoạt động</SelectItem>
+                <SelectItem value="FULFILLED">Đã hoàn thành</SelectItem>
                 <SelectItem value="EXPIRED">Đã hết hạn</SelectItem>
                 <SelectItem value="CANCELLED">Đã hủy</SelectItem>
               </SelectContent>
