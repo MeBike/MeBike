@@ -215,6 +215,11 @@ const TOOL_ACTIVITY_COPY: Record<string, ToolActivityCopy> = {
     error: "Không thể tải chi tiết chuyến thuê",
     running: "Đang lấy chi tiết chuyến thuê",
   },
+  getRentalBillingDetail: {
+    done: "Đã lấy chi tiết hóa đơn chuyến thuê",
+    error: "Không thể tải chi tiết hóa đơn chuyến thuê",
+    running: "Đang lấy chi tiết hóa đơn chuyến thuê",
+  },
   getRentalDetails: {
     done: "Đã lấy chi tiết nhiều chuyến thuê",
     error: "Không thể tải chi tiết nhiều chuyến thuê",
