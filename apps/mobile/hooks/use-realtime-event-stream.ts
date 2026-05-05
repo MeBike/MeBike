@@ -4,47 +4,40 @@ import { StatusCodes } from "http-status-codes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import EventSource from "react-native-sse";
 
+import type {
+  BikeStatusUpdate,
+  NfcCardSwipeFailedUpdate,
+  ReturnSlotExpiredUpdate,
+} from "@/types/realtime-events";
+
 import { API_BASE_URL } from "@lib/api-base-url";
 import { clearTokens, getAccessToken } from "@lib/auth-tokens";
 import { refreshAccessToken } from "@lib/ky-client";
 import { log } from "@lib/log";
 
-export type BikeStatusUpdate = {
-  userId?: string;
-  bikeId: string;
-  status: string;
-};
+type CustomEventName = "bikeStatusUpdate" | "returnSlotExpired" | "nfcCardSwipeFailed";
 
-export type ReturnSlotExpiredUpdate = {
-  userId: string;
-  rentalId: string;
-  returnSlotId: string;
-  stationId: string;
-  reservedFrom: string;
-  expiredAt: string;
-  at: string;
-};
-
-type CustomEventName = "bikeStatusUpdate" | "returnSlotExpired";
-
-export type UseBikeStatusStreamOptions = {
+export type UseRealtimeEventStreamOptions = {
   autoConnect?: boolean;
   onUpdate?: (payload: BikeStatusUpdate) => void;
   onReturnSlotExpired?: (payload: ReturnSlotExpiredUpdate) => void;
+  onNfcCardSwipeFailed?: (payload: NfcCardSwipeFailedUpdate) => void;
   onError?: (error: Error) => void;
 };
 
 const SSE_UNAUTHORIZED_ERROR = "SSE_UNAUTHORIZED";
 
-export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
-  const { autoConnect = true, onUpdate, onReturnSlotExpired, onError } = options ?? {};
-  const [lastUpdate, setLastUpdate] = useState<BikeStatusUpdate | null>(null);
+export function useRealtimeEventStream(options?: UseRealtimeEventStreamOptions) {
+  const { autoConnect = true, onUpdate, onReturnSlotExpired, onNfcCardSwipeFailed, onError } = options ?? {};
+  const [lastBikeStatusUpdate, setLastBikeStatusUpdate] = useState<BikeStatusUpdate | null>(null);
   const [lastReturnSlotExpired, setLastReturnSlotExpired] = useState<ReturnSlotExpiredUpdate | null>(null);
+  const [lastNfcCardSwipeFailed, setLastNfcCardSwipeFailed] = useState<NfcCardSwipeFailedUpdate | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const eventSourceRef = useRef<EventSource<CustomEventName> | null>(null);
   const onUpdateRef = useRef<typeof onUpdate>(onUpdate);
   const onReturnSlotExpiredRef = useRef<typeof onReturnSlotExpired>(onReturnSlotExpired);
+  const onNfcCardSwipeFailedRef = useRef<typeof onNfcCardSwipeFailed>(onNfcCardSwipeFailed);
   const onErrorRef = useRef<typeof onError>(onError);
   const suppressReconnectRef = useRef(false);
   const isRecoveringAuthRef = useRef(false);
@@ -57,6 +50,10 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
   useEffect(() => {
     onReturnSlotExpiredRef.current = onReturnSlotExpired;
   }, [onReturnSlotExpired]);
+
+  useEffect(() => {
+    onNfcCardSwipeFailedRef.current = onNfcCardSwipeFailed;
+  }, [onNfcCardSwipeFailed]);
 
   useEffect(() => {
     onErrorRef.current = onError;
@@ -150,7 +147,7 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
         try {
           const payload = event.data ? (JSON.parse(event.data) as BikeStatusUpdate) : null;
           if (payload) {
-            setLastUpdate(payload);
+            setLastBikeStatusUpdate(payload);
             onUpdateRef.current?.(payload);
           }
         }
@@ -169,6 +166,19 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
         }
         catch (error) {
           log.warn("Failed to parse return slot expiry update", error);
+        }
+      });
+
+      eventSource.addEventListener("nfcCardSwipeFailed", (event) => {
+        try {
+          const payload = event.data ? (JSON.parse(event.data) as NfcCardSwipeFailedUpdate) : null;
+          if (payload) {
+            setLastNfcCardSwipeFailed(payload);
+            onNfcCardSwipeFailedRef.current?.(payload);
+          }
+        }
+        catch (error) {
+          log.warn("Failed to parse NFC card swipe failure update", error);
         }
       });
 
@@ -229,7 +239,8 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
     disconnect,
     isConnected,
     isConnecting,
-    lastUpdate,
+    lastBikeStatusUpdate,
     lastReturnSlotExpired,
+    lastNfcCardSwipeFailed,
   };
 }

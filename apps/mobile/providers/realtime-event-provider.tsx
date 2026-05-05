@@ -1,13 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, ToastAndroid } from "react-native";
+import { Alert, Platform, ToastAndroid } from "react-native";
 
 import type {
   BikeStatusUpdate,
+  NfcCardSwipeFailedUpdate,
   ReturnSlotExpiredUpdate,
-} from "@/hooks/use-bike-status-stream";
+} from "@/types/realtime-events";
 
-import { useBikeStatusStream } from "@/hooks/use-bike-status-stream";
+import { useRealtimeEventStream } from "@/hooks/use-realtime-event-stream";
 import {
   invalidateAllRentalQueries,
   invalidateRentalSupportQueries,
@@ -17,23 +18,51 @@ import { useAuthNext } from "@providers/auth-provider-next";
 type BikeStatusSubscriber = (payload: BikeStatusUpdate) => void;
 type ReturnSlotSubscriber = (payload: ReturnSlotExpiredUpdate) => void;
 
-type BikeStatusStreamContextValue = {
+const NFC_CARD_ALERT_DEDUPE_MS = 10_000;
+
+const nfcCardSwipeFailedMessages: Record<NfcCardSwipeFailedUpdate["reason"], { title: string; message: string }> = {
+  ACTIVE_RENTAL_EXISTS: {
+    title: "Bạn đang có chuyến thuê",
+    message: "Vui lòng kết thúc chuyến thuê hiện tại trước khi mở khóa xe khác.",
+  },
+  ACTIVE_RESERVATION_EXISTS: {
+    title: "Bạn đang có đặt xe",
+    message: "Vui lòng kiểm tra đơn đặt xe hiện tại trước khi mở khóa xe khác.",
+  },
+  BIKE_RESERVED: {
+    title: "Xe đã được đặt trước",
+    message: "Xe này đang được giữ cho người khác. Vui lòng chọn xe khác.",
+  },
+  INSUFFICIENT_FUNDS: {
+    title: "Số dư không đủ",
+    message: "Vui lòng nạp thêm tiền vào ví để tiếp tục thuê xe.",
+  },
+  OVERNIGHT_OPERATIONS_CLOSED: {
+    title: "Ngoài giờ phục vụ",
+    message: "Hiện ngoài giờ phục vụ. Vui lòng thử lại trong khung giờ hoạt động.",
+  },
+};
+
+type RealtimeEventContextValue = {
   isConnected: boolean;
-  lastUpdate: BikeStatusUpdate | null;
+  lastBikeStatusUpdate: BikeStatusUpdate | null;
   lastReturnSlotExpired: ReturnSlotExpiredUpdate | null;
-  subscribe: (listener: BikeStatusSubscriber) => () => void;
+  lastNfcCardSwipeFailed: NfcCardSwipeFailedUpdate | null;
+  subscribeBikeStatus: (listener: BikeStatusSubscriber) => () => void;
   subscribeReturnSlotExpired: (listener: ReturnSlotSubscriber) => () => void;
 };
 
-const BikeStatusStreamContext = createContext<BikeStatusStreamContextValue | undefined>(undefined);
+const RealtimeEventContext = createContext<RealtimeEventContextValue | undefined>(undefined);
 
-export function BikeStatusStreamProvider({ children }: { children: React.ReactNode }) {
+export function RealtimeEventProvider({ children }: { children: React.ReactNode }) {
   const { hydrate, status } = useAuthNext();
   const queryClient = useQueryClient();
   const subscribersRef = useRef<Set<BikeStatusSubscriber>>(new Set());
   const returnSlotSubscribersRef = useRef<Set<ReturnSlotSubscriber>>(new Set());
-  const [lastUpdate, setLastUpdate] = useState<BikeStatusUpdate | null>(null);
+  const nfcCardAlertDedupeRef = useRef<Map<string, number>>(new Map());
+  const [lastBikeStatusUpdate, setLastBikeStatusUpdate] = useState<BikeStatusUpdate | null>(null);
   const [lastReturnSlotExpired, setLastReturnSlotExpired] = useState<ReturnSlotExpiredUpdate | null>(null);
+  const [lastNfcCardSwipeFailed, setLastNfcCardSwipeFailed] = useState<NfcCardSwipeFailedUpdate | null>(null);
 
   const notifySubscribers = useCallback((payload: BikeStatusUpdate) => {
     subscribersRef.current.forEach((listener) => {
@@ -41,7 +70,7 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
         listener(payload);
       }
       catch (error) {
-        console.warn("[BikeStatusStream] subscriber error", error);
+        console.warn("[RealtimeEvent] bike status subscriber error", error);
       }
     });
   }, []);
@@ -52,14 +81,14 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
         listener(payload);
       }
       catch (error) {
-        console.warn("[BikeStatusStream] return slot subscriber error", error);
+        console.warn("[RealtimeEvent] return slot subscriber error", error);
       }
     });
   }, []);
 
   const handleUpdate = useCallback(
     (payload: BikeStatusUpdate) => {
-      setLastUpdate(payload);
+      setLastBikeStatusUpdate(payload);
       void invalidateAllRentalQueries(queryClient);
       void invalidateRentalSupportQueries(queryClient);
 
@@ -93,18 +122,40 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
     [notifyReturnSlotSubscribers, queryClient],
   );
 
+  const handleNfcCardSwipeFailed = useCallback((payload: NfcCardSwipeFailedUpdate) => {
+    setLastNfcCardSwipeFailed(payload);
+    const now = Date.now();
+    const dedupeKey = `${payload.reason}:${payload.bikeId}`;
+    const lastShownAt = nfcCardAlertDedupeRef.current.get(dedupeKey) ?? 0;
+
+    for (const [key, shownAt] of nfcCardAlertDedupeRef.current) {
+      if (now - shownAt > NFC_CARD_ALERT_DEDUPE_MS) {
+        nfcCardAlertDedupeRef.current.delete(key);
+      }
+    }
+
+    if (now - lastShownAt < NFC_CARD_ALERT_DEDUPE_MS) {
+      return;
+    }
+
+    nfcCardAlertDedupeRef.current.set(dedupeKey, now);
+    const content = nfcCardSwipeFailedMessages[payload.reason];
+    Alert.alert(content.title, content.message);
+  }, []);
+
   const handleError = useCallback((error: Error) => {
     if (error.message === "SSE_UNAUTHORIZED") {
       void hydrate();
     }
 
-    console.warn("[BikeStatusStream] SSE error", error);
+    console.warn("[RealtimeEvent] SSE error", error);
   }, [hydrate]);
 
-  const { isConnected, connect, disconnect } = useBikeStatusStream({
+  const { isConnected, connect, disconnect } = useRealtimeEventStream({
     autoConnect: false,
     onUpdate: handleUpdate,
     onReturnSlotExpired: handleReturnSlotExpired,
+    onNfcCardSwipeFailed: handleNfcCardSwipeFailed,
     onError: handleError,
   });
 
@@ -118,7 +169,7 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
     }
   }, [connect, disconnect, status]);
 
-  const subscribe = useCallback((listener: BikeStatusSubscriber) => {
+  const subscribeBikeStatus = useCallback((listener: BikeStatusSubscriber) => {
     subscribersRef.current.add(listener);
     return () => {
       subscribersRef.current.delete(listener);
@@ -135,21 +186,22 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   const value = useMemo(
     () => ({
       isConnected,
-      lastUpdate,
+      lastBikeStatusUpdate,
       lastReturnSlotExpired,
-      subscribe,
+      lastNfcCardSwipeFailed,
+      subscribeBikeStatus,
       subscribeReturnSlotExpired,
     }),
-    [isConnected, lastReturnSlotExpired, lastUpdate, subscribe, subscribeReturnSlotExpired],
+    [isConnected, lastBikeStatusUpdate, lastNfcCardSwipeFailed, lastReturnSlotExpired, subscribeBikeStatus, subscribeReturnSlotExpired],
   );
 
-  return <BikeStatusStreamContext.Provider value={value}>{children}</BikeStatusStreamContext.Provider>;
+  return <RealtimeEventContext.Provider value={value}>{children}</RealtimeEventContext.Provider>;
 }
 
-export function useBikeStatusStreamContext() {
-  const ctx = useContext(BikeStatusStreamContext);
+export function useRealtimeEventContext() {
+  const ctx = useContext(RealtimeEventContext);
   if (!ctx) {
-    throw new Error("useBikeStatusStreamContext must be used within BikeStatusStreamProvider");
+    throw new Error("useRealtimeEventContext must be used within RealtimeEventProvider");
   }
   return ctx;
 }

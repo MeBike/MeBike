@@ -14,6 +14,7 @@ import {
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
+  NfcCardStatus,
   PrismaClient,
   RentalStatus,
   ReservationOption,
@@ -45,6 +46,8 @@ const DEMO_NON_CUSTOMER_USERS = 7;
 const DEMO_BIKES_PER_STATION = 5;
 const DEMO_RENTAL_MIN_HOUR = 6;
 const DEMO_RENTAL_MAX_HOUR = 22;
+const DEMO_NFC_CARD_UID = "3946298114";
+const DEMO_NFC_CARD_USER_EMAIL = "user02@mebike.local";
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
@@ -674,6 +677,20 @@ async function main() {
         },
       },
     });
+    await prisma.nfcCard.deleteMany({
+      where: {
+        OR: [
+          { uid: DEMO_NFC_CARD_UID },
+          {
+            assignedUser: {
+              email: {
+                in: userEmails,
+              },
+            },
+          },
+        ],
+      },
+    });
 
     await prisma.user.deleteMany({
       where: {
@@ -800,6 +817,19 @@ async function main() {
     );
 
     const userByEmail = new Map(users.map(user => [user.email, user]));
+    const demoNfcCardUser = userByEmail.get(DEMO_NFC_CARD_USER_EMAIL);
+    if (demoNfcCardUser) {
+      await prisma.nfcCard.create({
+        data: {
+          id: uuidv7(),
+          uid: DEMO_NFC_CARD_UID,
+          status: NfcCardStatus.ACTIVE,
+          assignedUserId: demoNfcCardUser.id,
+          issuedAt: new Date(),
+        },
+      });
+    }
+
     const technicianAssignments = technicianTeams
       .map((team, index) => ({
         user: userByEmail.get(`tech${index + 1}@mebike.local`),

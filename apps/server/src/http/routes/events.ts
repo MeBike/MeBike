@@ -4,6 +4,7 @@ import { streamSSE } from "hono/streaming";
 
 import { requireAuthMiddleware } from "@/http/middlewares/auth";
 import { getBikeStatusEventBus } from "@/realtime/bike-status-events";
+import { getNfcCardEventBus } from "@/realtime/nfc-card-events";
 import { getReturnSlotEventBus } from "@/realtime/return-slot-events";
 
 type StreamWriter = {
@@ -12,6 +13,7 @@ type StreamWriter = {
 
 const connections = new Map<string, Set<StreamWriter>>();
 const bikeStatusEventBus = getBikeStatusEventBus();
+const nfcCardEventBus = getNfcCardEventBus();
 const returnSlotEventBus = getReturnSlotEventBus();
 
 bikeStatusEventBus.on("bikeStatusUpdate", (payload: { userId: string }) => {
@@ -33,6 +35,17 @@ returnSlotEventBus.on("returnSlotExpired", (payload: { userId: string }) => {
   const data = JSON.stringify(payload);
   for (const writer of targets) {
     void writer.writeSSE({ event: "returnSlotExpired", data });
+  }
+});
+
+nfcCardEventBus.on("nfcCardSwipeFailed", (payload: { userId: string }) => {
+  const targets = connections.get(payload.userId);
+  if (!targets || targets.size === 0) {
+    return;
+  }
+  const data = JSON.stringify(payload);
+  for (const writer of targets) {
+    void writer.writeSSE({ event: "nfcCardSwipeFailed", data });
   }
 });
 
