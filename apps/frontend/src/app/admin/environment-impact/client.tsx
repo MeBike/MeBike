@@ -24,13 +24,9 @@ export default function Client() {
     pageSize: 7,
     page: page,
   });
-
-  // 2. Load dữ liệu khi trang thay đổi
   useEffect(() => {
     getEnvironmentImpacts();
   }, [page, getEnvironmentImpacts]);
-
-  // Loading state giả lập để UX mượt hơn
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(false);
   useEffect(() => {
     if (isLoadingEnvironmentImpacts) {
@@ -38,7 +34,7 @@ export default function Client() {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingEnvironmentImpacts]);
@@ -47,11 +43,6 @@ export default function Client() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Lịch sử Tác động Môi trường (CO2)</h1>
-        
-        {/* Nút Thêm thường không dùng cho Lịch sử (Log), nhưng bạn có thể mở lại nếu cần */}
-        {/* <Button onClick={() => router.push("/admin/environment-impact/create")}>
-          <Plus className="w-4 h-4 mr-2" /> Thêm bản ghi
-        </Button> */}
       </div>
 
       <div className="min-h-[700px]">

@@ -36,7 +36,7 @@ export default function Client({
   const router = useRouter();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-6xl space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex items-center justify-between rounded-xl border bg-white p-6 shadow-sm">
         <div className="flex items-center gap-4">
