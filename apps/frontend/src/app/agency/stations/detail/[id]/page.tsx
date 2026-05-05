@@ -27,7 +27,7 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import { Badge } from "@/components/ui/badge";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { ROLE_LABELS } from "@/columns/user-columns";
-
+import { useStationActions } from "@/hooks/use-station";
 
 interface StationReport {
   id: string;
@@ -102,7 +102,10 @@ export default function StationDetailPage() {
     hasToken: true,
     station_id: id,
   });
-
+  const { getListStation , listStation } = useStationActions({
+    hasToken: true,
+    stationId: id,
+  });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
 
   // Xử lý loading visual chung
@@ -162,16 +165,19 @@ export default function StationDetailPage() {
 
           <div className="flex items-center gap-3">
             {/* Giữ nguyên nút điều phối */}
-            <Button
-              onClick={() =>
-                router.push(
-                  `/agency/distribution-request/create?targetStationId=${station.id}`,
-                )
-              }
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
-            </Button>
+            {myStationDetail?.id !== listStation?.currentStation?.id &&
+              myStationDetail.bikes.total < 10 && (
+                <Button
+                  onClick={() =>
+                    router.push(
+                      `/agency/distribution-request/create?targetStationId=${station.id}`,
+                    )
+                  }
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
+                </Button>
+              )}
             <Button
               variant="outline"
               onClick={() => router.push("/agency/stations")}

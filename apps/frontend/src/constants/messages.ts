@@ -866,6 +866,10 @@ export const DASHBOARD_MESSAGES = {
 };
 export const AGENCY_MESSAGES = {
   VALIDATION_ERROR: "Thông tin số điện thoại chỉ có 10 chữ số",
+  AGENCY_REQUEST_NOT_FOUND: "Không tìm thấy yêu cầu tạo/cập nhật agency",
+  AGENCY_REQUEST_NOT_OWNED: "Bạn không sở hữu yêu cầu này",
+  INVALID_AGENCY_REQUEST_STATUS_TRANSITION: "Chuyển trạng thái không hợp lệ",
+  STATION_LOCATION_ALREADY_EXISTS: "Vị trí trạm đã tồn tại",
 };
 export const DISTRIBUTION_REQUEST = {
   INSUFFICIENT_AVAILABLE_BIKES:
@@ -884,11 +888,13 @@ export const DISTRIBUTION_REQUEST = {
 export const ENVIRONMENT_POLICY_REQUEST = {};
 export const COUPON_REQUEST = {};
 export const TECHNICIAN_TEAM = {
-  TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED: "Trạm đã được gán cho team kỹ thuật",
+  TECHNICIAN_TEAM_STATION_ALREADY_ASSIGNED:
+    "Trạm đã được gán cho team kỹ thuật",
   TECHNICIAN_TEAM_NAME_DUPLICATED: "Tên team kỹ thuật đã tồn tại",
   TECHNICIAN_TEAM_NOT_FOUND: "Không tìm thấy team kỹ thuật",
-  TECHNICIAN_TEAM_STATION_NOT_FOUND : "Không tìm thấy trạm cần gán",
-  TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED : "Team đã đạt số lượng thành viên tối đa",
+  TECHNICIAN_TEAM_STATION_NOT_FOUND: "Không tìm thấy trạm cần gán",
+  TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED:
+    "Team đã đạt số lượng thành viên tối đa",
 };
 export const PRICING_POLICY_REQUEST = {
   ACTIVE_PRICING_POLICY_AMBIGUOUS:

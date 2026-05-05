@@ -79,14 +79,14 @@ function Field({
 export default function StationDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-  const { getMyStationDetail, myStationDetail, isLoadingMyStationDetail } =
+  const { getMyStationDetail, myStationDetail, isLoadingMyStationDetail , getListStation , listStation } =
     useStationActions({
       hasToken: true,
       stationId: id,
     });
 
   const [isVisualLoading, setIsVisualLoading] = useState(true);
-
+  useEffect(() => {getListStation()},[getListStation])
   useEffect(() => {
     if (isLoadingMyStationDetail) {
       setIsVisualLoading(true);
@@ -139,7 +139,7 @@ export default function StationDetailPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {station.bikes.total < 10 && (
+            {station.bikes.total < 10 && station.id !== listStation?.currentStation?.id && (
               <Button
                 onClick={() =>
                   router.push(
