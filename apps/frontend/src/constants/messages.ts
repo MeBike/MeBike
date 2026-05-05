@@ -1,5 +1,6 @@
 export const USERS_MESSAGES = {
   // đăng ký messages
+  INVALID_CURRENT_PASSWORD : "Bạn đã nhập sai mật khẩu cũ",
   VALIDATION_ERROR: "Vui lòng kiểm tra lại thông tin nhập",
   TECHNICIAN_TEAM_MEMBER_LIMIT_EXCEEDED:
     "Tech team trạm này đã đã số lượng là 3",

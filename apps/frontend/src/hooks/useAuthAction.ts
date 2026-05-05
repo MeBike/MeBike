@@ -55,12 +55,8 @@ export const useAuthActions = () => {
             }
           },
           onError: (error: unknown) => {
-            const errorMessage =
-              error instanceof AxiosError
-                ? error.response?.data?.error || error.message
-                : "Error changing password";
-            console.log("Change password error:", error);
-            toast.error(errorMessage);
+            const code_error = getAxiosErrorCodeMessage(error);
+            toast.error(getErrorMessageUserFromCode(code_error));
             reject(error);
           },
         });
