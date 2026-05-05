@@ -7,15 +7,18 @@ export const nfcService = {
   getListNFC: async ({
     page,
     pageSize,
+    status,
   }: {
     page?: number;
     pageSize?: number;
+    status?: AssetStatus;
   }): Promise<AxiosResponse<ApiResponse<AssetNFCCard[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<AssetNFCCard[]>>(
       ENDPOINT.NFC.BASE,
       {
         page: page,
         pageSize: pageSize,
+        status : status
       },
     );
     return response;
