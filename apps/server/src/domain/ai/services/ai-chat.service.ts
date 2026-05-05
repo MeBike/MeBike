@@ -59,6 +59,7 @@ const makeAiChatService = Effect.gen(function* () {
   const streamCustomerAssistant: AiChatService["streamCustomerAssistant"] = args =>
     Effect.gen(function* () {
       const requestStartedAt = performance.now();
+      const now = new Date();
 
       if (!env.OPENROUTER_API_KEY) {
         return yield* Effect.fail(new AiConfigurationError({
@@ -136,7 +137,7 @@ const makeAiChatService = Effect.gen(function* () {
           },
         },
         stopWhen: stepCountIs(12),
-        system: buildCustomerAssistantPrompt(),
+        system: buildCustomerAssistantPrompt(now),
         messages: modelMessages,
         activeTools,
         tools,

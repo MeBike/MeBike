@@ -11,6 +11,7 @@ import type { WalletQueryService } from "@/domain/wallets/services/queries/walle
 
 import { returnSlotExpiresAt } from "@/domain/rentals";
 import { requiredAvailableBikesForNextReservation, stationCanAcceptReservation } from "@/domain/reservations/services/reservation-availability-rule";
+import { VIETNAM_TIME_ZONE } from "@/domain/shared/business-hours";
 import { toContractNearbyStation, toContractStationReadSummary } from "@/http/presenters/stations.presenter";
 
 export type CreateCustomerToolsArgs = {
@@ -177,8 +178,6 @@ export function formatMinorVnd(value: bigint | number | null): string | null {
   return `${new Intl.NumberFormat("vi-VN").format(numeric)} VND`;
 }
 
-const AI_TIME_ZONE = "Asia/Ho_Chi_Minh";
-
 export function formatLocalDateTime(value: Date | string | null | undefined): string | null {
   if (!value) {
     return null;
@@ -196,7 +195,7 @@ export function formatLocalDateTime(value: Date | string | null | undefined): st
     hour12: false,
     minute: "2-digit",
     month: "2-digit",
-    timeZone: AI_TIME_ZONE,
+    timeZone: VIETNAM_TIME_ZONE,
     year: "numeric",
   });
 }
