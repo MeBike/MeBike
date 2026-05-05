@@ -309,6 +309,28 @@ describe("reservation use-cases integration", () => {
     expectLeftTag(result, "OvernightOperationsClosed");
   });
 
+  it("reserveBikeUseCase rejects when pickup start time falls during overnight closure", async () => {
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 50000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 2 },
+    });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    const allowedNow = new Date("2026-04-20T08:00:00.000Z");
+    const blockedPickupStart = new Date("2026-04-20T19:00:00.000Z");
+    const result = await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: blockedPickupStart,
+      now: allowedNow,
+    });
+
+    expectLeftTag(result, "OvernightOperationsClosed");
+  });
+
   it("confirmReservationUseCase rejects during overnight closure", async () => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 600000n },
