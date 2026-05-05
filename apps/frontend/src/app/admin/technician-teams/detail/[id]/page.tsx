@@ -40,7 +40,7 @@ export default function TechnicianTeamDetailPage({
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600); // Tạo độ trễ nhẹ để UI ổn định
+      }, 1000); // Tạo độ trễ nhẹ để UI ổn định
       return () => clearTimeout(timer);
     }
   }, [isLoadingTechnicianTeamDetail]);
