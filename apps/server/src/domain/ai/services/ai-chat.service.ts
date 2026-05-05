@@ -7,7 +7,10 @@ import { env } from "@/config/env";
 import { BikeQueryServiceTag } from "@/domain/bikes";
 import { RentalCommandServiceTag } from "@/domain/rentals";
 import { RentalServiceTag } from "@/domain/rentals/services/queries/rental.service";
-import { ReservationQueryServiceTag } from "@/domain/reservations";
+import {
+  ReservationCommandServiceTag,
+  ReservationQueryServiceTag,
+} from "@/domain/reservations";
 import { StationQueryServiceTag } from "@/domain/stations";
 import { WalletQueryServiceTag } from "@/domain/wallets/services/queries/wallet-query.service";
 import { getOpenRouterChatModel } from "@/infrastructure/ai/openrouter";
@@ -52,6 +55,7 @@ const makeAiChatService = Effect.gen(function* () {
   const bikeQueryService = yield* BikeQueryServiceTag;
   const rentalCommandService = yield* RentalCommandServiceTag;
   const rentalService = yield* RentalServiceTag;
+  const reservationCommandService = yield* ReservationCommandServiceTag;
   const reservationQueryService = yield* ReservationQueryServiceTag;
   const stationQueryService = yield* StationQueryServiceTag;
   const walletService = yield* WalletQueryServiceTag;
@@ -71,6 +75,7 @@ const makeAiChatService = Effect.gen(function* () {
         bikeQueryService,
         context: args.context,
         rentalCommandService,
+        reservationCommandService,
         reservationQueryService,
         rentalService,
         stationQueryService,
@@ -137,7 +142,11 @@ const makeAiChatService = Effect.gen(function* () {
           },
         },
         stopWhen: stepCountIs(12),
-        system: buildCustomerAssistantPrompt(now),
+        system: buildCustomerAssistantPrompt(
+          Boolean(args.context?.location),
+          args.context?.locationLabel ?? null,
+          now,
+        ),
         messages: modelMessages,
         activeTools,
         tools,

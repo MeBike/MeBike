@@ -1,5 +1,7 @@
 import { isToolUIPart } from "ai";
 
+import { formatVietnamDateTime } from "@/utils/date";
+
 import type { AiAssistantMessage } from "./ai-chat.types";
 
 export type AiAssistantFeedUser = {
@@ -130,12 +132,43 @@ type StructuredReturnSlotSuccessOutput = {
   };
 };
 
+type StructuredReserveBikeSuccessOutput = {
+  ok: true;
+  reservation: {
+    bikeNumber?: string | null;
+    endTimeDisplay?: string | null;
+    prepaidDisplay?: string | null;
+    startTimeDisplay?: string | null;
+    station?: {
+      address?: string;
+      name?: string;
+    } | null;
+    statusLabel?: string;
+  };
+};
+
+type StructuredCancelReservationSuccessOutput = {
+  ok: true;
+  reservation: {
+    bikeNumber?: string | null;
+    endTimeDisplay?: string | null;
+    prepaidDisplay?: string | null;
+    station?: {
+      address?: string;
+      name?: string;
+    } | null;
+    statusLabel?: string;
+  };
+};
+
 type ToolInputRecord = Record<string, unknown>;
 
 const ACTION_TOOL_NAMES = new Set([
   "createReturnSlot",
   "switchReturnSlot",
   "cancelReturnSlot",
+  "reserveBike",
+  "cancelReservation",
 ]);
 
 const TOOL_ACTIVITY_COPY: Record<string, ToolActivityCopy> = {
@@ -169,6 +202,13 @@ const TOOL_ACTIVITY_COPY: Record<string, ToolActivityCopy> = {
     done: "Đã hủy giữ chỗ trả xe",
     error: "Không thể hủy giữ chỗ trả xe",
     running: "Đang chuẩn bị hủy giữ chỗ trả xe",
+  },
+  cancelReservation: {
+    approvalRequested: "Chờ bạn xác nhận hủy giữ chỗ xe",
+    denied: "Bạn đã từ chối hủy giữ chỗ xe",
+    done: "Đã hủy giữ chỗ xe",
+    error: "Không thể hủy giữ chỗ xe",
+    running: "Đang chuẩn bị hủy giữ chỗ xe",
   },
   getRentalDetail: {
     done: "Đã lấy chi tiết chuyến thuê",
@@ -273,6 +313,46 @@ function getStructuredReturnSlotSuccessOutput(part: ToolPart): StructuredReturnS
   return isStructuredReturnSlotSuccessOutput(part.output) ? part.output : null;
 }
 
+function isStructuredReserveBikeSuccessOutput(output: unknown): output is StructuredReserveBikeSuccessOutput {
+  if (!output || typeof output !== "object") {
+    return false;
+  }
+
+  const candidate = output as Record<string, unknown>;
+
+  return candidate.ok === true
+    && !!candidate.reservation
+    && typeof candidate.reservation === "object";
+}
+
+function getStructuredReserveBikeSuccessOutput(part: ToolPart): StructuredReserveBikeSuccessOutput | null {
+  if (part.state !== "output-available" || !("output" in part)) {
+    return null;
+  }
+
+  return isStructuredReserveBikeSuccessOutput(part.output) ? part.output : null;
+}
+
+function isStructuredCancelReservationSuccessOutput(output: unknown): output is StructuredCancelReservationSuccessOutput {
+  if (!output || typeof output !== "object") {
+    return false;
+  }
+
+  const candidate = output as Record<string, unknown>;
+
+  return candidate.ok === true
+    && !!candidate.reservation
+    && typeof candidate.reservation === "object";
+}
+
+function getStructuredCancelReservationSuccessOutput(part: ToolPart): StructuredCancelReservationSuccessOutput | null {
+  if (part.state !== "output-available" || !("output" in part)) {
+    return null;
+  }
+
+  return isStructuredCancelReservationSuccessOutput(part.output) ? part.output : null;
+}
+
 function getActionToolTitle(toolName: string) {
   switch (toolName) {
     case "createReturnSlot":
@@ -281,6 +361,10 @@ function getActionToolTitle(toolName: string) {
       return "Đổi trạm giữ chỗ trả xe";
     case "cancelReturnSlot":
       return "Hủy giữ chỗ trả xe";
+    case "cancelReservation":
+      return "Hủy giữ chỗ xe";
+    case "reserveBike":
+      return "Giữ chỗ xe";
     default:
       return "Xác nhận thao tác";
   }
@@ -294,22 +378,30 @@ function getActionToolApprovalDescription(toolName: string) {
       return "Vui lòng kiểm tra và xác nhận thao tác đổi trạm giữ chỗ trả xe.";
     case "cancelReturnSlot":
       return "Vui lòng kiểm tra và xác nhận thao tác hủy giữ chỗ trả xe.";
+    case "cancelReservation":
+      return "Vui lòng kiểm tra và xác nhận thao tác hủy giữ chỗ xe này.";
+    case "reserveBike":
+      return "Vui lòng kiểm tra và xác nhận thao tác giữ chỗ xe này.";
     default:
       return undefined;
   }
 }
 
+function getBikeSummaryValue(input: ToolInputRecord) {
+  if (typeof input.bikeNumber === "string" && input.bikeNumber.trim().length > 0) {
+    return input.bikeNumber.trim();
+  }
+
+  if (typeof input.bikeId === "string" && input.bikeId.trim().length > 0) {
+    return "Xe đã chọn";
+  }
+
+  return null;
+}
+
 function getStationSummaryValue(input: ToolInputRecord) {
   if (typeof input.stationName === "string" && input.stationName.trim().length > 0) {
     return input.stationName.trim();
-  }
-
-  if (typeof input.stationReference === "string" && input.stationReference === "context") {
-    return "Theo trạm đang mở";
-  }
-
-  if (typeof input.stationId === "string" && input.stationId.trim().length > 0) {
-    return "Trạm đã chọn";
   }
 
   return null;
@@ -322,8 +414,6 @@ function getRentalSummaryValue(input: ToolInputRecord) {
         return "Chuyến thuê hiện tại";
       case "latest":
         return "Chuyến thuê gần nhất";
-      case "context":
-        return "Theo chuyến thuê đang mở";
       default:
         break;
     }
@@ -336,23 +426,44 @@ function getRentalSummaryValue(input: ToolInputRecord) {
   return null;
 }
 
-function getSuggestedActionText(suggestedAction?: string) {
-  switch (suggestedAction) {
-    case "check_current_rental":
-      return "Kiểm tra lại chuyến thuê hiện tại";
-    case "check_current_return_slot":
-      return "Kiểm tra lại giữ chỗ trả xe hiện tại";
-    case "choose_station_again":
-      return "Chọn lại trạm";
-    case "search_stations":
-      return "Tìm trạm phù hợp khác";
-    case "choose_another_station":
-      return "Chọn trạm khác còn chỗ trả";
-    case "retry_later":
-      return "Thử lại sau ít phút";
-    default:
-      return null;
+function getReservationSummaryValue(input: ToolInputRecord) {
+  if (typeof input.reference === "string" && input.reference === "latestPendingOrActive") {
+    return "Đặt chỗ hiện tại";
   }
+
+  if (typeof input.reservationId === "string" && input.reservationId.trim().length > 0) {
+    return "Đặt chỗ đã chọn";
+  }
+
+  return null;
+}
+
+function getReservationStartTimeSummaryValue(input: ToolInputRecord) {
+  if (typeof input.startTime !== "string" || input.startTime.trim().length === 0) {
+    return null;
+  }
+
+  return formatVietnamDateTime(input.startTime);
+}
+
+function getReserveBikeApprovalStartTimeSummaryValue(part: ToolPart) {
+  const input = getToolInputRecord(part);
+
+  if (!input || getToolName(part) !== "reserveBike") {
+    return null;
+  }
+
+  const explicitStartTime = getReservationStartTimeSummaryValue(input);
+
+  if (explicitStartTime) {
+    return explicitStartTime;
+  }
+
+  if (part.state === "approval-requested") {
+    return "Ngay bây giờ";
+  }
+
+  return null;
 }
 
 function getActionCardSummaryItems(
@@ -360,6 +471,8 @@ function getActionCardSummaryItems(
   part: ToolPart,
   failure: StructuredToolFailureOutput | null,
   success: StructuredReturnSlotSuccessOutput | null,
+  reserveBikeSuccess: StructuredReserveBikeSuccessOutput | null,
+  cancelReservationSuccess: StructuredCancelReservationSuccessOutput | null,
 ): AiAssistantActionCardSummaryItem[] {
   if (success) {
     const items: AiAssistantActionCardSummaryItem[] = [];
@@ -387,12 +500,85 @@ function getActionCardSummaryItems(
     return items;
   }
 
-  if (failure) {
-    const suggestedActionText = getSuggestedActionText(failure.error.suggestedAction);
+  if (reserveBikeSuccess) {
+    const items: AiAssistantActionCardSummaryItem[] = [];
+    const bikeNumber = reserveBikeSuccess.reservation.bikeNumber;
+    const stationName = reserveBikeSuccess.reservation.station?.name;
+    const stationAddress = reserveBikeSuccess.reservation.station?.address;
+    const statusLabel = reserveBikeSuccess.reservation.statusLabel;
+    const startTimeDisplay = reserveBikeSuccess.reservation.startTimeDisplay;
+    const endTimeDisplay = reserveBikeSuccess.reservation.endTimeDisplay;
+    const prepaidDisplay = reserveBikeSuccess.reservation.prepaidDisplay;
 
-    return suggestedActionText
-      ? [{ label: "Gợi ý", value: suggestedActionText }]
-      : [];
+    if (bikeNumber) {
+      items.push({ label: "Xe", value: bikeNumber });
+    }
+
+    if (stationName) {
+      items.push({ label: "Trạm", value: stationName });
+    }
+
+    if (stationAddress) {
+      items.push({ label: "Địa điểm", value: stationAddress });
+    }
+
+    if (statusLabel) {
+      items.push({ label: "Trạng thái", value: statusLabel });
+    }
+
+    if (startTimeDisplay) {
+      items.push({ label: "Bắt đầu giữ chỗ", value: startTimeDisplay });
+    }
+
+    if (endTimeDisplay) {
+      items.push({ label: "Giữ đến", value: endTimeDisplay });
+    }
+
+    if (prepaidDisplay) {
+      items.push({ label: "Phí giữ chỗ", value: prepaidDisplay });
+    }
+
+    return items;
+  }
+
+  if (cancelReservationSuccess) {
+    const items: AiAssistantActionCardSummaryItem[] = [];
+    const bikeNumber = cancelReservationSuccess.reservation.bikeNumber;
+    const stationName = cancelReservationSuccess.reservation.station?.name;
+    const stationAddress = cancelReservationSuccess.reservation.station?.address;
+    const statusLabel = cancelReservationSuccess.reservation.statusLabel;
+    const endTimeDisplay = cancelReservationSuccess.reservation.endTimeDisplay;
+    const prepaidDisplay = cancelReservationSuccess.reservation.prepaidDisplay;
+
+    if (bikeNumber) {
+      items.push({ label: "Xe", value: bikeNumber });
+    }
+
+    if (stationName) {
+      items.push({ label: "Trạm", value: stationName });
+    }
+
+    if (stationAddress) {
+      items.push({ label: "Địa điểm", value: stationAddress });
+    }
+
+    if (statusLabel) {
+      items.push({ label: "Trạng thái", value: statusLabel });
+    }
+
+    if (endTimeDisplay) {
+      items.push({ label: "Đã giữ đến", value: endTimeDisplay });
+    }
+
+    if (prepaidDisplay) {
+      items.push({ label: "Phí giữ chỗ", value: prepaidDisplay });
+    }
+
+    return items;
+  }
+
+  if (failure) {
+    return [];
   }
 
   const input = getToolInputRecord(part);
@@ -402,10 +588,19 @@ function getActionCardSummaryItems(
   }
 
   const items: AiAssistantActionCardSummaryItem[] = [];
+  const bikeValue = getBikeSummaryValue(input);
   const stationValue = getStationSummaryValue(input);
   const rentalValue = getRentalSummaryValue(input);
+  const reservationValue = getReservationSummaryValue(input);
+  const reservationStartTimeValue = toolName === "reserveBike"
+    ? getReserveBikeApprovalStartTimeSummaryValue(part)
+    : null;
 
   items.push({ label: "Thao tác", value: getActionToolTitle(toolName) });
+
+  if (bikeValue) {
+    items.push({ label: "Xe", value: bikeValue });
+  }
 
   if (stationValue) {
     items.push({ label: "Trạm", value: stationValue });
@@ -415,10 +610,24 @@ function getActionCardSummaryItems(
     items.push({ label: "Áp dụng cho", value: rentalValue });
   }
 
+  if (reservationValue) {
+    items.push({ label: "Áp dụng cho", value: reservationValue });
+  }
+
+  if (reservationStartTimeValue) {
+    items.push({ label: "Bắt đầu giữ chỗ", value: reservationStartTimeValue });
+  }
+
   return items;
 }
 
-function getActionCardState(part: ToolPart, failure: StructuredToolFailureOutput | null, success: StructuredReturnSlotSuccessOutput | null): AiAssistantActionCardState | null {
+function getActionCardState(
+  part: ToolPart,
+  failure: StructuredToolFailureOutput | null,
+  success: StructuredReturnSlotSuccessOutput | null,
+  reserveBikeSuccess: StructuredReserveBikeSuccessOutput | null,
+  cancelReservationSuccess: StructuredCancelReservationSuccessOutput | null,
+): AiAssistantActionCardState | null {
   if (part.state === "approval-requested") {
     return "approval";
   }
@@ -432,6 +641,14 @@ function getActionCardState(part: ToolPart, failure: StructuredToolFailureOutput
   }
 
   if (success) {
+    return "success";
+  }
+
+  if (cancelReservationSuccess) {
+    return "success";
+  }
+
+  if (reserveBikeSuccess) {
     return "success";
   }
 
@@ -462,6 +679,10 @@ function getActionCardDescription(
       return "Đã đổi sang trạm giữ chỗ trả xe mới.";
     case "cancelReturnSlot":
       return "Đã hủy giữ chỗ trả xe hiện tại.";
+    case "cancelReservation":
+      return "Đã hủy giữ chỗ xe hiện tại.";
+    case "reserveBike":
+      return "Đã giữ chỗ xe thành công.";
     default:
       return undefined;
   }
@@ -476,7 +697,19 @@ function getAiAssistantActionCard(part: ToolPart): AiAssistantActionCard | null 
 
   const failure = getStructuredToolFailureOutput(part);
   const success = getStructuredReturnSlotSuccessOutput(part);
-  const state = getActionCardState(part, failure, success);
+  const reserveBikeSuccess = toolName === "reserveBike"
+    ? getStructuredReserveBikeSuccessOutput(part)
+    : null;
+  const cancelReservationSuccess = toolName === "cancelReservation"
+    ? getStructuredCancelReservationSuccessOutput(part)
+    : null;
+  const state = getActionCardState(
+    part,
+    failure,
+    success,
+    reserveBikeSuccess,
+    cancelReservationSuccess,
+  );
 
   if (!state) {
     return null;
@@ -488,7 +721,7 @@ function getAiAssistantActionCard(part: ToolPart): AiAssistantActionCard | null 
     key: `action:${part.toolCallId}:${part.state}`,
     state,
     suggestedAction: failure?.error.suggestedAction,
-    summaryItems: getActionCardSummaryItems(toolName, part, failure, success),
+    summaryItems: getActionCardSummaryItems(toolName, part, failure, success, reserveBikeSuccess, cancelReservationSuccess),
     title: getActionToolTitle(toolName),
     toolCallId: part.toolCallId,
     toolName,

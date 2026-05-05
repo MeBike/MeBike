@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import type { BikeQueryService, BikeRow } from "@/domain/bikes";
 import type { RentalCommandService, RentalService, ReturnSlotRow } from "@/domain/rentals";
-import type { ReservationQueryService } from "@/domain/reservations";
+import type { ReservationCommandService, ReservationQueryService } from "@/domain/reservations";
 import type { StationQueryService } from "@/domain/stations";
 import type { WalletQueryService } from "@/domain/wallets/services/queries/wallet-query.service";
 
@@ -18,6 +18,7 @@ export type CreateCustomerToolsArgs = {
   readonly bikeQueryService: BikeQueryService;
   readonly context: AiChatContext | null;
   readonly rentalCommandService: RentalCommandService;
+  readonly reservationCommandService: ReservationCommandService;
   readonly reservationQueryService: ReservationQueryService;
   readonly rentalService: RentalService;
   readonly stationQueryService: StationQueryService;
@@ -35,6 +36,8 @@ export type CustomerToolName
     | "getRentalDetail"
     | "getReservationSummary"
     | "getReservationDetail"
+    | "cancelReservation"
+    | "reserveBike"
     | "getStationDetail"
     | "searchStations"
     | "getNearbyStationsFromLocation"

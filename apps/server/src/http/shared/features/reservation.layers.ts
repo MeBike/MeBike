@@ -4,6 +4,7 @@ import {
   FixedSlotTemplateServiceLive,
   ReservationAnalyticsRepositoryLive,
   ReservationCommandRepositoryLive,
+  ReservationCommandServiceLive,
   ReservationQueryRepositoryLive,
   ReservationQueryServiceLive,
   ReservationStatsServiceLive,
@@ -17,7 +18,7 @@ import {
   SubscriptionReposLive,
   SubscriptionServiceLayer,
 } from "./subscription.layers";
-import { WalletDepsLive } from "./wallet.layers";
+import { WalletCommandServiceLayer, WalletDepsLive } from "./wallet.layers";
 
 export const ReservationQueryReposLive = ReservationQueryRepositoryLive.pipe(
   Layer.provide(PrismaLive),
@@ -33,6 +34,12 @@ export const ReservationAnalyticsReposLive = ReservationAnalyticsRepositoryLive.
 
 export const ReservationQueryServiceLayer = ReservationQueryServiceLive.pipe(
   Layer.provide(ReservationQueryReposLive),
+);
+
+export const ReservationCommandServiceLayer = ReservationCommandServiceLive.pipe(
+  Layer.provide(WalletCommandServiceLayer),
+  Layer.provide(SubscriptionServiceLayer),
+  Layer.provide(PrismaLive),
 );
 
 export const ReservationStatsServiceLayer = ReservationStatsServiceLive.pipe(
@@ -52,6 +59,7 @@ export const ReservationDepsLive = Layer.mergeAll(
   ReservationCommandReposLive,
   ReservationAnalyticsReposLive,
   ReservationQueryServiceLayer,
+  ReservationCommandServiceLayer,
   ReservationStatsServiceLayer,
   FixedSlotTemplateServiceLayer,
   BikeReposLive,

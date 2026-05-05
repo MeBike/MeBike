@@ -62,7 +62,7 @@ function getActionCardStateSubtitle(state: AiAssistantActionCard["state"]) {
     case "success":
       return "Hệ thống đã cập nhật";
     case "failure":
-      return "Hệ thống chưa thực hiện được";
+      return "Xem lý do bên dưới và thử lại";
     case "denied":
       return "Không có thay đổi nào được thực hiện";
     default:
