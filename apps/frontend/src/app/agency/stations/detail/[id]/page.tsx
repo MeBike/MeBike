@@ -112,16 +112,14 @@ export default function StationDetailPage() {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyStationDetail, isLoadingStationRevenueForAgency]);
-
-  // Fetch data detail và data doanh thu
   useEffect(() => {
     if (id) {
       getMyStationDetail();
-      getStationRevenueForAgency(); // Gọi fetch doanh thu
+      getStationRevenueForAgency();
     }
   }, [id, getMyStationDetail, getStationRevenueForAgency]);
 
