@@ -18,7 +18,7 @@ import {
   TrendingUp,
   Repeat,
   Users,
-  HelpCircle
+  HelpCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Station } from "@/types";
@@ -102,13 +102,13 @@ export default function StationDetailPage() {
     hasToken: true,
     station_id: id,
   });
-  const { getListStation , listStation } = useStationActions({
+  const { getListStation, listStation } = useStationActions({
     hasToken: true,
-    stationId: id,
   });
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
-
-  // Xử lý loading visual chung
+  useEffect(() => {
+    getListStation();
+  }, [getListStation]);
   useEffect(() => {
     if (isLoadingMyStationDetail || isLoadingStationRevenueForAgency) {
       setIsVisualLoading(true);
@@ -157,7 +157,12 @@ export default function StationDetailPage() {
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl flex items-center gap-3">
               Chi tiết trạm
-              <Badge variant={station.stationType === "AGENCY" ? "default" : "secondary"} className="text-sm">
+              <Badge
+                variant={
+                  station.stationType === "AGENCY" ? "default" : "secondary"
+                }
+                className="text-sm"
+              >
                 {station.stationType}
               </Badge>
             </h1>
@@ -216,7 +221,7 @@ export default function StationDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
                 <Field label="Tên trạm" value={station.name} />
                 <Field label="Loại trạm" value={station.stationType} />
-                
+
                 <Field
                   label="Tọa độ GPS"
                   value={
@@ -226,9 +231,16 @@ export default function StationDetailPage() {
                   }
                 />
                 {station.agencyId && (
-                  <Field label="Mã đại lý" value={<code className="text-xs bg-muted p-1 rounded">{station.agencyId}</code>} />
+                  <Field
+                    label="Mã đại lý"
+                    value={
+                      <code className="text-xs bg-muted p-1 rounded">
+                        {station.agencyId}
+                      </code>
+                    }
+                  />
                 )}
-                
+
                 <Field
                   label="Địa chỉ"
                   value={station.address}
@@ -241,26 +253,38 @@ export default function StationDetailPage() {
               {station.workers && station.workers.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {station.workers.map((w) => (
-                    <div key={w.userId} className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg border border-border/40">
+                    <div
+                      key={w.userId}
+                      className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg border border-border/40"
+                    >
                       <div className="flex gap-3 items-center">
                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                           {w.fullName.charAt(0)}
                         </div>
                         <div>
                           <p className="text-sm font-bold">{w.fullName}</p>
-                          <p className="text-[10px] text-muted-foreground">{ROLE_LABELS[w.role]}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {ROLE_LABELS[w.role]}
+                          </p>
                         </div>
                       </div>
                       {w.technicianTeamId && (
                         <div className="mt-1">
-                          <Badge variant="secondary" className="text-[10px] font-normal">{w.technicianTeamName}</Badge>
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] font-normal"
+                          >
+                            {w.technicianTeamName}
+                          </Badge>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Không có nhân viên phụ trách trạm này.</p>
+                <p className="text-sm text-muted-foreground">
+                  Không có nhân viên phụ trách trạm này.
+                </p>
               )}
             </SectionCard>
 
@@ -268,27 +292,55 @@ export default function StationDetailPage() {
             <SectionCard icon={LayoutGrid} title="Cấu hình sức chứa">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="rounded-lg bg-muted p-3 text-center border border-border/40">
-                  <p className="text-[10px] text-muted-foreground font-bold">Tổng vị trí</p>
-                  <p className="text-xl font-bold text-foreground">{station.capacity.total}</p>
+                  <p className="text-[10px] text-muted-foreground font-bold">
+                    Tổng vị trí
+                  </p>
+                  <p className="text-xl font-bold text-foreground">
+                    {station.capacity.total}
+                  </p>
                 </div>
                 <div className="rounded-lg bg-secondary/50 p-3 text-center border-border/40 border">
-                  <p className="text-[10px] text-secondary-foreground font-bold">Trả xe tối đa</p>
-                  <p className="text-xl font-bold text-foreground">{station.capacity.returnSlotLimit}</p>
+                  <p className="text-[10px] text-secondary-foreground font-bold">
+                    Trả xe tối đa
+                  </p>
+                  <p className="text-xl font-bold text-foreground">
+                    {station.capacity.returnSlotLimit}
+                  </p>
                 </div>
                 <div className="rounded-lg bg-muted p-3 text-center">
-                  <p className="text-[10px] text-muted-foreground font-bold">Chỗ còn trống</p>
-                  <p className="text-xl font-extrabold text-foreground">{station.capacity.emptyPhysicalSlots}</p>
+                  <p className="text-[10px] text-muted-foreground font-bold">
+                    Chỗ còn trống
+                  </p>
+                  <p className="text-xl font-extrabold text-foreground">
+                    {station.capacity.emptyPhysicalSlots}
+                  </p>
                 </div>
                 <div className="rounded-lg bg-primary/10 p-3 text-center">
-                  <p className="text-[10px] text-primary font-bold">Chỗ đã đặt</p>
-                  <p className="text-xl font-bold text-primary">{station.capacity.totalActiveSlots}</p>
+                  <p className="text-[10px] text-primary font-bold">
+                    Chỗ đã đặt
+                  </p>
+                  <p className="text-xl font-bold text-primary">
+                    {station.capacity.totalActiveSlots}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="mt-4 pt-4 border-t border-border/40 space-y-2">
-                <p className="text-[10px] font-bold text-muted-foreground mb-2">Chi tiết chỗ đã đặt</p>
-                <StatusItem icon={Activity} label="Chỗ trả xe" value={station.returnSlots.active} color="text-blue-600" />
-                <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.redistributionSlots} color="text-orange-500" />
+                <p className="text-[10px] font-bold text-muted-foreground mb-2">
+                  Chi tiết chỗ đã đặt
+                </p>
+                <StatusItem
+                  icon={Activity}
+                  label="Chỗ trả xe"
+                  value={station.returnSlots.active}
+                  color="text-blue-600"
+                />
+                <StatusItem
+                  icon={Wrench}
+                  label="Chuẩn bị điều phối"
+                  value={station.redistributionSlots}
+                  color="text-orange-500"
+                />
               </div>
             </SectionCard>
           </div>
@@ -378,11 +430,11 @@ export default function StationDetailPage() {
                     value={station.bikes.broken}
                     color="text-red-500"
                   />
-                  <StatusItem 
-                    icon={HelpCircle} 
-                    label="Xe bị mất" 
-                    value={station.bikes.lost} 
-                    color="text-red-700 font-bold" 
+                  <StatusItem
+                    icon={HelpCircle}
+                    label="Xe bị mất"
+                    value={station.bikes.lost}
+                    color="text-red-700 font-bold"
                   />
                   <StatusItem
                     icon={Ban}
