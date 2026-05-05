@@ -144,7 +144,7 @@ export function BikeDetailView({
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <Field
                   label="Tên xe / Model"
-                  value={`Xe #${bike.bikeNumber}`}
+                  value={`Xe #${bike.bikeNumber || "N/A"}`}
                 />
                 <Field
                   label="Trạng thái"
