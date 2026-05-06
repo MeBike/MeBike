@@ -78,24 +78,21 @@ export function DetailSummaryCard({
               </XStack>
 
               <YStack flex={1} gap="$2">
-                <XStack alignItems="center" flexWrap="wrap" gap="$2">
-                  <AppText
-                    flexShrink={1}
-                    numberOfLines={2}
-                    variant="headline"
-                  >
-                    {title}
-                  </AppText>
+                <AppText
+                  numberOfLines={2}
+                  variant="headline"
+                >
+                  {title}
+                </AppText>
 
-                  <StatusBadge
-                    iconName={statusIcon}
-                    label={getReservationStatusLabel(reservation.status).toUpperCase()}
-                    pulseDot={isPending}
-                    size="compact"
-                    tone={getReservationStatusTone(reservation.status)}
-                    withDot={reservation.status !== "FULFILLED" && reservation.status !== "EXPIRED"}
-                  />
-                </XStack>
+                <StatusBadge
+                  iconName={statusIcon}
+                  label={getReservationStatusLabel(reservation.status).toUpperCase()}
+                  pulseDot={isPending}
+                  size="compact"
+                  tone={getReservationStatusTone(reservation.status)}
+                  withDot={reservation.status !== "FULFILLED" && reservation.status !== "EXPIRED"}
+                />
               </YStack>
             </XStack>
 

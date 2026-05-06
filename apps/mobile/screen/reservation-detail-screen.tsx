@@ -168,51 +168,6 @@ function ReservationDetailScreen() {
             paddingHorizontal="$5"
             paddingBottom={68}
           >
-            <View
-              style={{
-                position: "absolute",
-                top: insets.top + spaceScale[2],
-                right: spaceScale[5],
-                width: 64,
-                borderRadius: radii.round,
-                backgroundColor: theme.surfaceDefault.val,
-                alignItems: "center",
-                paddingVertical: spaceScale[2],
-                zIndex: 5,
-                shadowColor: theme.shadowColor.val,
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.12,
-                shadowRadius: 24,
-                elevation: 6,
-              }}
-            >
-              <Pressable
-                accessibilityLabel="Tải lại chi tiết đặt trước"
-                onPress={fetchReservationDetail}
-                style={{
-                  width: 44,
-                  height: 44,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: radii.round,
-                }}
-              >
-                <IconSymbol color={theme.textTertiary.val} name="refresh" size="md" />
-              </Pressable>
-              <Pressable
-                accessibilityLabel="Thêm tuỳ chọn"
-                style={{
-                  width: 44,
-                  height: 44,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: radii.round,
-                }}
-              >
-                <IconSymbol color={theme.textTertiary.val} name="more-horizontal" size="md" />
-              </Pressable>
-            </View>
-
             <View style={{ flexDirection: "row", alignItems: "center", gap: spaceScale[3], paddingRight: 72 }}>
               <Pressable
                 accessibilityLabel="Quay lại"
