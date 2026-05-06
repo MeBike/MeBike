@@ -2,82 +2,83 @@
 
 import { Dispatch, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Plus, Loader2 } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { bikeColumnForStaff } from "@/columns/bike-colums";
+import { bikeColumn } from "@/columns/bike-colums";
+import { BikeStats } from "./components/bike-stats";
 import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
-import type { Bike, BikeStatus, Pagination } from "@custom-types";
+import type { Bike, BikeStatus, BikeStatistics, Pagination, Station, Supplier } from "@custom-types";
 
 interface BikeClientProps {
   data: {
     bikes: Bike[];
-    pagination?: Pagination;
+    statusCount?: BikeStatistics;
+    paginationBikes?: Pagination;
     isVisualLoading: boolean;
   };
   filters: {
     statusFilter: BikeStatus | "all";
     page: number;
+    bikeId: string; // Thêm dòng này
   };
   actions: {
     setStatusFilter: Dispatch<SetStateAction<BikeStatus | "all">>;
     setPage: Dispatch<SetStateAction<number>>;
+    setBikeId: Dispatch<SetStateAction<string>>; // Thêm dòng này
   };
 }
 
 export default function BikeClient({
-  data: { bikes, pagination, isVisualLoading },
-  filters: { statusFilter, page },
-  actions: { setStatusFilter, setPage },
+  data: {
+    bikes,
+    paginationBikes,
+    isVisualLoading,
+
+  },
+  filters: { statusFilter, page, bikeId },
+  actions: { setStatusFilter, setPage,setBikeId },
 }: BikeClientProps) {
   const router = useRouter();
-
+  
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
-          <p className="text-muted-foreground mt-1">Danh sách xe đạp đang có tại trạm của bạn</p>
-        </div>
+        <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
       </div>
-
+      
       <BikeFilters
         statusFilter={statusFilter}
-        setStatusFilter={(status) => {
-          setStatusFilter(status);
-          setPage(1); 
-        }}
-        // stations={[]}
-        // suppliers={[]}
-        // stationId=""
-        // setStationId={() => {}}
-        // supplierId=""
-        // setSupplierId={() => {}}
+        setStatusFilter={setStatusFilter}
+        bikeId={bikeId} // Thêm dòng này
+        setBikeId={setBikeId} // Thêm dòng này
       />
-
+      
       <div className="min-h-[700px]">
         {isVisualLoading ? (
           <TableSkeleton />
         ) : (
           <>
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-muted-foreground">
-                Hiển thị {pagination?.page ?? 1} / {pagination?.totalPages ?? 1} trang
-              </p>
-            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Hiển thị {paginationBikes?.page ?? 1} /{" "}
+              {paginationBikes?.totalPages ?? 1} trang
+            </p>
+
             <DataTable
-              columns={bikeColumnForStaff({
-                onView: ({ id }) => router.push(`/technician/bikes/detail/${id}`),
+              columns={bikeColumn({
+                onView: ({ id }) => router.push(`/staff/bikes/detail/${id}`),
               })}
               data={bikes}
-              title="Xe đạp tại trạm"
             />
 
             <div className="pt-3">
               <PaginationDemo
-                currentPage={pagination?.page ?? 1}
+                currentPage={paginationBikes?.page ?? 1}
                 onPageChange={setPage}
-                totalPages={pagination?.totalPages ?? 1}
+                totalPages={paginationBikes?.totalPages ?? 1}
               />
             </div>
           </>

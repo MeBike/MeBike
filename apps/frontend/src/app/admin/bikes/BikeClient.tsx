@@ -12,7 +12,6 @@ import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
 import type { Bike, BikeStatus, BikeStatistics, Pagination, Station, Supplier } from "@custom-types";
 
-// Bổ sung các fields mới vào Interface
 interface BikeClientProps {
   data: {
     bikes: Bike[];
@@ -28,12 +27,14 @@ interface BikeClientProps {
     page: number;
     stationId: string;
     supplierId: string;
+    bikeId: string; // Thêm dòng này
   };
   actions: {
     setStatusFilter: Dispatch<SetStateAction<BikeStatus | "all">>;
     setPage: Dispatch<SetStateAction<number>>;
     setStationId: Dispatch<SetStateAction<string>>;
     setSupplierId: Dispatch<SetStateAction<string>>;
+    setBikeId: Dispatch<SetStateAction<string>>; // Thêm dòng này
   };
 }
 
@@ -47,8 +48,8 @@ export default function BikeClient({
     isVisualLoading,
     isLoadingStatusCount,
   },
-  filters: { statusFilter, page, stationId, supplierId },
-  actions: { setStatusFilter, setPage, setStationId, setSupplierId },
+  filters: { statusFilter, page, stationId, supplierId, bikeId },
+  actions: { setStatusFilter, setPage, setStationId, setSupplierId, setBikeId },
 }: BikeClientProps) {
   const router = useRouter();
   
@@ -67,7 +68,6 @@ export default function BikeClient({
       
       {statusCount && <BikeStats stats={statusCount} />}
       
-      {/* Truyền các dữ liệu về trạm và NCC vào BikeFilters */}
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
@@ -75,6 +75,8 @@ export default function BikeClient({
         setStationId={setStationId}
         supplierId={supplierId}
         setSupplierId={setSupplierId}
+        bikeId={bikeId} // Thêm dòng này
+        setBikeId={setBikeId} // Thêm dòng này
         stations={stations}
         suppliers={suppliers}
       />

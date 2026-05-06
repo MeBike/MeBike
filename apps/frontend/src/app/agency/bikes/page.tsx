@@ -10,16 +10,17 @@ import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useAgencyActions } from "@/hooks/use-agency";
 import { useDebounce } from "@/utils/useDebounce";
 
-
 export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const [stationId, setStationId] = useState<string>("");
   const [supplierId, setSupplierId] = useState<string>("");
+  const [bikeId, setBikeId] = useState<string>("");
   const pageSize = 7;
   const debouncedStatusFilter = useDebounce(statusFilter, 500);
   const debouncedStationId = useDebounce(stationId, 500);
   const debouncedSupplierId = useDebounce(supplierId, 500);
+  const debouncedBikeId = useDebounce(bikeId, 500);
   const { stations, getAllStations } = useStationActions({ hasToken: true });
   const {
     myAgencyBikeInStation,
@@ -27,11 +28,21 @@ export default function Page() {
     isLoadingMyAgencyBikeInStation,
   } = useAgencyActions({
     hasToken: true,
-    status: debouncedStatusFilter !== "all" ? (debouncedStatusFilter as BikeStatus) : undefined,
+    status:
+      debouncedStatusFilter !== "all"
+        ? (debouncedStatusFilter as BikeStatus)
+        : undefined,
     pageSize: pageSize,
     page: page,
-    stationId: (!debouncedStationId || debouncedStationId === "all-stations") ? undefined : debouncedStationId,
-    supplierId: (!debouncedSupplierId || debouncedSupplierId === "all-suppliers") ? undefined : debouncedSupplierId,
+    stationId:
+      !debouncedStationId || debouncedStationId === "all-stations"
+        ? undefined
+        : debouncedStationId,
+    supplierId:
+      !debouncedSupplierId || debouncedSupplierId === "all-suppliers"
+        ? undefined
+        : debouncedSupplierId,
+    bike_id: debouncedBikeId || undefined,
   });
   useEffect(() => {
     getAllStations();
@@ -39,7 +50,14 @@ export default function Page() {
 
   useEffect(() => {
     getMyAgencyBikeInStation();
-  }, [getMyAgencyBikeInStation, page, debouncedStatusFilter, debouncedStationId, debouncedSupplierId]);
+  }, [
+    getMyAgencyBikeInStation,
+    page,
+    debouncedStatusFilter,
+    debouncedStationId,
+    debouncedSupplierId,
+    debouncedBikeId,
+  ]);
 
   useEffect(() => {
     setPage(1);
@@ -61,27 +79,18 @@ export default function Page() {
     <BikeClient
       data={{
         bikes: myAgencyBikeInStation?.data || [],
-        pagination: myAgencyBikeInStation?.pagination,
-        stations: stations || [],
+        paginationBikes: myAgencyBikeInStation?.pagination,
         isVisualLoading,
       }}
       filters={{
         statusFilter,
         page,
-        stationId,
-        supplierId,
+        bikeId,
       }}
       actions={{
         setStatusFilter,
         setPage,
-        setStationId,
-        setSupplierId,
-        handleReset: () => {
-          setStatusFilter("all");
-          setStationId("");
-          setSupplierId("");
-          setPage(1);
-        },
+        setBikeId,
       }}
     />
   );
