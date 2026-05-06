@@ -16,11 +16,12 @@ const reservationErrorMessages = {
   reservationConfirmBlockedByActiveRental:
     "Bạn đang có chuyến đi hoạt động nên chưa thể nhận thêm lượt giữ chỗ này.",
   reservationMissingBike: "Lượt giữ chỗ này chưa được gán xe phù hợp.",
+  reservationNotStarted: "Chưa đến thời gian bắt đầu của lượt giữ chỗ này.",
   reservationNotFound: "Không tìm thấy lượt giữ chỗ này.",
   reservationNotOwned: "Bạn không thể thao tác với lượt giữ chỗ của người khác.",
   reservationOptionNotSupported: "Hình thức đặt chỗ này hiện chưa được hỗ trợ.",
   stationReservationAvailabilityTooLow:
-    "Trạm này chỉ cho đặt trước khi số xe khả dụng còn trên 50% sức chứa.",
+    "Trạm này hiện không còn đủ xe khả dụng để nhận thêm lượt đặt trước.",
   subscriptionNotFound: "Không tìm thấy gói tháng đã chọn.",
   subscriptionNotUsable: "Gói tháng hiện chưa thể dùng để đặt xe.",
   subscriptionRequired: "Bạn cần có gói tháng để sử dụng lựa chọn này.",
@@ -74,6 +75,8 @@ function presentReservationApiError(error: Extract<ReservationError, { _tag: "Ap
       return reservationErrorMessages.reservationConfirmBlockedByActiveRental;
     case "RESERVATION_MISSING_BIKE":
       return reservationErrorMessages.reservationMissingBike;
+    case "RESERVATION_NOT_STARTED":
+      return reservationErrorMessages.reservationNotStarted;
     case "RESERVATION_NOT_FOUND":
       return reservationErrorMessages.reservationNotFound;
     case "RESERVATION_NOT_OWNED":

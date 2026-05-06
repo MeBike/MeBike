@@ -3,6 +3,7 @@ import type { ReservationsContracts } from "@mebike/shared";
 import type { ReservationExpandedDetailRow, ReservationRow } from "@/domain/reservations";
 
 type ReservationListItem = ReservationsContracts.ReservationDetail;
+type ConfirmReservationResponse = ReservationsContracts.ConfirmReservationResponse;
 type ReservationExpandedDetail = ReservationsContracts.ReservationExpandedDetail;
 
 export function toContractReservation(row: ReservationRow): ReservationListItem {
@@ -52,5 +53,15 @@ export function toContractReservationExpanded(
       latitude: row.station.latitude,
       longitude: row.station.longitude,
     },
+  };
+}
+
+export function toContractConfirmReservation(args: {
+  reservation: ReservationRow;
+  rentalId: string;
+}): ConfirmReservationResponse {
+  return {
+    reservation: toContractReservation(args.reservation),
+    rentalId: args.rentalId,
   };
 }

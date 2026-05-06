@@ -92,9 +92,9 @@ function ReservationDetailScreen() {
           text: "Bắt đầu",
           onPress: () =>
             confirmReservation(reservationId, {
-              onSuccess: () => {
+              onSuccess: ({ rentalId }) => {
                 fetchReservationDetail();
-                navigation.replace("BookingHistoryDetail", { bookingId: reservationId });
+                navigation.replace("BookingHistoryDetail", { bookingId: rentalId });
               },
             }),
         },
