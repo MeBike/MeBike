@@ -44,12 +44,10 @@ function PaymentOption({
         >
           <YStack gap="$2">
             <XStack alignItems="center" gap="$2">
-              <XStack alignItems="center" flex={1} gap="$2">
-                <IconSymbol color={isActive ? theme.actionPrimary.val : theme.textTertiary.val} name={icon} size="md" />
-                <AppText style={[bikeDetailTextStyles.optionTitle, isActive ? bikeDetailTextStyles.optionTitleActive : null]}>
-                  {title}
-                </AppText>
-              </XStack>
+              <IconSymbol color={isActive ? theme.actionPrimary.val : theme.textTertiary.val} name={icon} size="md" />
+              <AppText style={[bikeDetailTextStyles.optionTitle, isActive ? bikeDetailTextStyles.optionTitleActive : null]}>
+                {title}
+              </AppText>
             </XStack>
 
             <AppText style={[bikeDetailTextStyles.optionSubtitle, isActive ? bikeDetailTextStyles.optionSubtitleActive : null]}>
