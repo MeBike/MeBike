@@ -65,6 +65,7 @@ export default function UpdateProfileScreen() {
         <YStack backgroundColor="$actionPrimary" flex={1}>
           <UpdateProfileHeader
             avatarUrl={avatar}
+            fullName={user?.fullName ?? ""}
             hasPendingAvatar={hasPendingAvatar}
             isBusy={isSaving}
             isEditing={isEditing}

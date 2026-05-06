@@ -63,6 +63,7 @@ function ProfileScreen() {
     closeVerifyModal,
     isVerifyingOtp,
     isRefreshing,
+    isProfileLoading,
     onRefresh,
     isCustomer,
     isRentalCountsLoading,
@@ -155,7 +156,7 @@ function ProfileScreen() {
       iconBackground: theme.surfaceWarning.val,
       onPress: handleChangePassword,
     },
-    ...(profile.verify === "VERIFIED"
+    ...(profile?.verify === "VERIFIED"
       ? []
       : [{
           icon: "mail" as const,
@@ -178,7 +179,7 @@ function ProfileScreen() {
     handleMetroJourney,
     handleUpdateProfile,
     handleVerifyEmailPress,
-    profile.verify,
+    profile?.verify,
     theme.actionPrimary.val,
     theme.statusSuccess.val,
     theme.statusWarning.val,
@@ -197,6 +198,47 @@ function ProfileScreen() {
       destructive: true,
     },
   ], [handleLogout, theme.surfaceDanger.val, theme.textDanger.val]);
+
+  if (!profile) {
+    return (
+      <Screen tone="subtle">
+        <StatusBar barStyle="light-content" backgroundColor={theme.actionPrimary.val} translucent />
+
+        <ScrollView
+          refreshControl={<RefreshControl colors={[theme.actionPrimary.val]} onRefresh={onRefresh} refreshing={isRefreshing} tintColor={theme.actionPrimary.val} />}
+          showsVerticalScrollIndicator={false}
+        >
+          <YStack gap="$6" paddingHorizontal="$5" paddingTop={insets.top + 24} paddingBottom="$7">
+            <AppCard
+              backgroundColor="$surfaceDefault"
+              borderColor="$borderSubtle"
+              borderRadius={radii.xxl}
+              borderWidth={borderWidths.subtle}
+              chrome="flat"
+              gap="$3"
+              style={elevations.whisper}
+            >
+              <AppText variant="title">
+                {isProfileLoading ? "Đang tải thông tin tài khoản" : "Chưa thể tải thông tin tài khoản"}
+              </AppText>
+              <AppText tone="muted" variant="body">
+                {isProfileLoading
+                  ? "Vui lòng đợi trong giây lát."
+                  : "Kéo xuống để thử lại. Nếu lỗi tiếp tục xảy ra, bạn có thể đăng xuất rồi đăng nhập lại."}
+              </AppText>
+            </AppCard>
+
+            <YStack gap="$4">
+              <MenuGroup items={destructiveItems} />
+              <AppText align="center" opacity={0.58} tone="subtle" variant="eyebrow">
+                Phiên bản 1.0.0
+              </AppText>
+            </YStack>
+          </YStack>
+        </ScrollView>
+      </Screen>
+    );
+  }
 
   return (
     <Screen tone="subtle">

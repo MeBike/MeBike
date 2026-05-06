@@ -1,13 +1,14 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
+import { Image } from "react-native";
+import { useTheme, XStack, YStack } from "tamagui";
+
 import type { UserDetail } from "@services/users/user-service";
 
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, radii, spaceScale, spacingRules } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
-import { LinearGradient } from "expo-linear-gradient";
-import { Image, Pressable } from "react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
-import avatarFallback from "@/assets/avatar2.png";
 
 type ProfileHeaderProps = {
   profile: UserDetail;
@@ -21,6 +22,23 @@ type ProfileHeaderProps = {
 const avatarSize = 92;
 const verificationBadgeSize = 28;
 
+function getAvatarFallbackLabel(fullName: string) {
+  const parts = fullName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return "";
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 1).toUpperCase();
+  }
+
+  return `${parts[0].slice(0, 1)}${parts[1].slice(0, 1)}`.toUpperCase();
+}
+
 function ProfileHeader({
   profile,
   completedTrips,
@@ -30,9 +48,16 @@ function ProfileHeader({
   formatDate,
 }: ProfileHeaderProps) {
   const theme = useTheme();
+  const [hasAvatarLoadError, setHasAvatarLoadError] = useState(false);
   const memberSince = formatDate(profile.createdAt || profile.updatedAt);
   const isVerified = profile.verify === "VERIFIED";
   const showCompletedTrips = typeof completedTrips === "number";
+  const shouldShowAvatarImage = Boolean(profile.avatar) && !hasAvatarLoadError;
+  const avatarFallbackLabel = getAvatarFallbackLabel(profile.fullName);
+
+  useEffect(() => {
+    setHasAvatarLoadError(false);
+  }, [profile.avatar]);
 
   return (
     <LinearGradient
@@ -50,17 +75,46 @@ function ProfileHeader({
       <YStack gap="$5">
         <XStack alignItems="center" gap="$5">
           <XStack height={avatarSize} position="relative" width={avatarSize}>
-            <Image
-              source={profile.avatar ? { uri: profile.avatar } : avatarFallback}
-              style={{
-                width: avatarSize,
-                height: avatarSize,
-                borderRadius: avatarSize / 2,
-                borderWidth: 4,
-                borderColor: theme.surfaceDefault.val,
-                backgroundColor: theme.surfaceMuted.val,
-              }}
-            />
+            {shouldShowAvatarImage
+              ? (
+                  <Image
+                    onError={() => setHasAvatarLoadError(true)}
+                    source={{ uri: profile.avatar! }}
+                    style={{
+                      width: avatarSize,
+                      height: avatarSize,
+                      borderRadius: avatarSize / 2,
+                      borderWidth: 4,
+                      borderColor: theme.surfaceDefault.val,
+                      backgroundColor: theme.surfaceMuted.val,
+                    }}
+                  />
+                )
+              : (
+                  <XStack
+                    alignItems="center"
+                    backgroundColor={theme.surfaceDefault.val}
+                    borderColor={theme.surfaceDefault.val}
+                    borderRadius="$round"
+                    borderWidth={4}
+                    height={avatarSize}
+                    justifyContent="center"
+                    width={avatarSize}
+                  >
+                    {avatarFallbackLabel
+                      ? (
+                          <AppText
+                            color={theme.actionPrimary.val}
+                            fontSize={32}
+                            fontWeight="800"
+                            letterSpacing={0.5}
+                          >
+                            {avatarFallbackLabel}
+                          </AppText>
+                        )
+                      : <MaterialIcons color={theme.textSecondary.val} name="account-circle" size={64} />}
+                  </XStack>
+                )}
 
             {isVerified
               ? (
