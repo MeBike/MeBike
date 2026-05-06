@@ -8,7 +8,7 @@ const stepsData = [
     title: "Ứng dụng MeBike",
     description:
       "Khám phá ứng dụng MeBike - giải pháp di chuyển xanh, tiện lợi và thân thiện với môi trường.",
-    image: "/01.ung-dung-mebike.png",
+    image: "/01.ung-dung-mebike.jpg",
     icon: "📱",
   },
   {
@@ -16,7 +16,7 @@ const stepsData = [
     title: "Đăng ký/Đăng nhập tài khoản",
     description:
       "Tạo tài khoản hoặc đăng nhập để bắt đầu trải nghiệm dịch vụ thuê xe đạp thông minh.",
-    image: "/02.dang-ki-dang-nhap-tai-khoan.png",
+    image: "/02.dang-nhap-mebike.jpg",
     icon: "👤",
   },
   {
@@ -24,7 +24,7 @@ const stepsData = [
     title: "Tìm trạm gần nhất",
     description:
       "Sử dụng bản đồ tích hợp để tìm trạm xe đạp gần vị trí của bạn nhất.",
-    image: "/03.tim-tram-gan-nhat.png",
+    image: "/03.tim-tram-gan-nhat.jpg",
     icon: "📍",
   },
   {
@@ -32,7 +32,7 @@ const stepsData = [
     title: "Đặt xe và bắt đầu",
     description:
       "Chọn xe yêu thích, đặt trước và bắt đầu hành trình khám phá thành phố xanh.",
-    image: "/04.dat-xe-va-bat-dau.png",
+    image: "/04.dat-xe.jpg",
     icon: "🚴",
   },
   {
@@ -40,7 +40,7 @@ const stepsData = [
     title: "Đưa QR cho staff để kết thúc phiên thuê",
     description:
       "Khi hoàn thành chuyến đi, đưa mã QR cho nhân viên để kết thúc phiên thuê xe.",
-    image: "/05.dua-qr-cho-staff-de-ket-thuc-phien-thue.png",
+    image: "/05.qr.jpg",
     icon: "✅",
   },
 ];
