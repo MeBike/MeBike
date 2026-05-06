@@ -58,7 +58,16 @@ async function main() {
         ST_GeogFromText(${`SRID=4326;POINT(${station.longitude} ${station.latitude})`}),
         ${updatedAt}
       )
-      ON CONFLICT ("name") DO NOTHING;
+      ON CONFLICT ("id") DO UPDATE
+      SET
+        "name" = EXCLUDED."name",
+        "address" = EXCLUDED."address",
+        "total_capacity" = EXCLUDED."total_capacity",
+        "return_slot_limit" = EXCLUDED."return_slot_limit",
+        "latitude" = EXCLUDED."latitude",
+        "longitude" = EXCLUDED."longitude",
+        "position" = EXCLUDED."position",
+        "updated_at" = EXCLUDED."updated_at";
     `;
   }
 
