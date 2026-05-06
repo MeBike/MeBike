@@ -1,4 +1,4 @@
-import type { Subscription, SubscriptionStatus } from "@/types/subscription-types";
+import type { Subscription, SubscriptionPackage, SubscriptionStatus } from "@/types/subscription-types";
 
 import { SUBSCRIPTION_PACKAGES } from "@constants/subscriptionPackages";
 
@@ -30,6 +30,10 @@ export function formatCurrency(amount: string | number): string {
 
 export function getSubscriptionDisplayPrice(subscription: Pick<Subscription, "packageName" | "price">): number {
   return SUBSCRIPTION_PACKAGES[subscription.packageName]?.price ?? Number(subscription.price) ?? 0;
+}
+
+export function getSubscriptionPackageTitle(packageName: SubscriptionPackage): string {
+  return SUBSCRIPTION_PACKAGES[packageName]?.title ?? packageName;
 }
 
 export function formatDate(date?: string | null): string {
