@@ -11,8 +11,8 @@ import { useTheme, XStack, YStack } from "tamagui";
 
 import type { MapboxDirectionsProfile } from "@/lib/mapbox-directions";
 
-import { borderWidths } from "@theme/metrics";
 import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 
@@ -168,7 +168,7 @@ export function StationSelectMapOverlay({
       pointerEvents="box-none"
       style={{
         position: "absolute",
-        bottom: 0,
+        bottom: -50,
         left: 0,
         right: 0,
       }}
@@ -218,7 +218,7 @@ export function StationSelectMapOverlay({
             : (
                 <Pressable onPress={showRouting ? toggleExpanded : undefined} {...(showRouting ? handlePanResponder.panHandlers : undefined)}>
                   <XStack alignItems="center" justifyContent="space-between" gap="$3" paddingHorizontal="$5" paddingBottom="$4">
-                    <YStack flex={1} gap="$1">
+                    <YStack flex={1} gap="$2">
                       <AppText variant="title">
                         {showRouting
                           ? "Lộ trình đến trạm"
