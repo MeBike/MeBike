@@ -142,8 +142,8 @@ export default function ReservationDetailClient() {
   }
 
   const data = detailReservationForStaff;
-  const { label, color } = getStatusConfig(data.bike.status as BikeStatus);
-  const { label : labelDetail , className} = getStatusReservationConfig(data.status);
+  const { label: bikeStatusLabel, color: bikeStatusColor } = getStatusConfig(data.bike.status as BikeStatus ?? "");
+  const { label: reservationStatusLabel, className: reservationStatusColor } = getStatusReservationConfig(data.status);
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -162,9 +162,9 @@ export default function ReservationDetailClient() {
               Chi tiết đặt chỗ
             </h1>
             <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
+              className={`px-3 py-1 rounded-full text-xs font-medium ${reservationStatusColor}`}
             >
-              {labelDetail}
+              {reservationStatusLabel}
             </span>
           </div>
           <Button
@@ -276,9 +276,9 @@ export default function ReservationDetailClient() {
                   label="Trạng thái xe"
                   value={
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${color}`}
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${bikeStatusColor}`}
                     >
-                      {label}
+                      {bikeStatusLabel}
                     </span>
                   }
                 />
