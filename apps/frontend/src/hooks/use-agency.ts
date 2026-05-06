@@ -71,6 +71,7 @@ export interface AgencyActionProps {
   stationId?: string;
   supplierId?: string;
   option?: string;
+  bike_id ?: string;
 }
 export const useAgencyActions = ({
   hasToken,
@@ -101,6 +102,7 @@ export const useAgencyActions = ({
   stationId,
   supplierId,
   option,
+  bike_id
 }: AgencyActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -425,13 +427,13 @@ export const useAgencyActions = ({
     data: myAgencyBikeInStation,
     refetch: refetchMyAgencyBikeInStation,
     isLoading: isLoadingMyAgencyBikeInStation,
-  } = useGetBikeInMyStationAgencyQuery({ page: page, pageSize: pageSize, status: status, stationId: stationId, supplierId: supplierId });
+  } = useGetBikeInMyStationAgencyQuery({ page: page, pageSize: pageSize, status: status, stationId: stationId, supplierId: supplierId , id : bike_id });
   const getMyAgencyBikeInStation = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchMyAgencyBikeInStation();
-  }, [refetchMyAgencyBikeInStation, hasToken, page, pageSize]);
+  }, [refetchMyAgencyBikeInStation, hasToken, page, pageSize,bike_id,stationId,supplierId,status]);
   const {
     data: myAgencyBikeInStationDetail,
     refetch: refetchMyAgencyBikeInStationDetail,

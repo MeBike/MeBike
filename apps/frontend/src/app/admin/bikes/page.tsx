@@ -8,17 +8,23 @@ import { useSupplierActions } from "@/hooks/use-supplier";
 import { BikeStatus } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useDebounce } from "@/utils/useDebounce";
+
 export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
-  const [supplierId , setSupplierId] = useState<string>("");
-  const [stationId , setStationId] = useState<string>("");
+  const [supplierId, setSupplierId] = useState<string>("");
+  const [bikeId, setBikeId] = useState<string>("");
+  const [stationId, setStationId] = useState<string>("");
   const pageSize = 7;
-  const { stations , getAllStations} = useStationActions({ hasToken: true });
-  const { allSupplier , getAllSuppliers } = useSupplierActions({ hasToken: true });
-  const debouncedStatusFilter = useDebounce(statusFilter,500);
-  const debouncedSupplierId = useDebounce(supplierId,500);
-  const debouncedStationId = useDebounce(stationId,500);
+
+  const { stations, getAllStations } = useStationActions({ hasToken: true });
+  const { allSupplier, getAllSuppliers } = useSupplierActions({ hasToken: true });
+
+  const debouncedStatusFilter = useDebounce(statusFilter, 500);
+  const debouncedSupplierId = useDebounce(supplierId, 500);
+  const debouncedStationId = useDebounce(stationId, 500);
+  const debouncedBikeId = useDebounce(bikeId, 500);
+
   const {
     data,
     statusCount,
@@ -33,16 +39,21 @@ export default function Page() {
     page: page,
     stationId: (!debouncedStationId || debouncedStationId === "all-stations") ? undefined : stationId,
     supplierId: (!debouncedSupplierId || debouncedSupplierId === "all-suppliers") ? undefined : supplierId,
+    bike_id: debouncedBikeId,
   });
+
   useEffect(() => {
     getStatisticsBike();
     getAllSuppliers();
     getAllStations();
-  }, [getStatisticsBike,getAllSuppliers]);
+  }, [getStatisticsBike, getAllSuppliers]);
+
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
+
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
+  
   useEffect(() => {
     if (isLoadingBikes) {
       setIsVisualLoading(true);
@@ -53,9 +64,11 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingBikes]);
+
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
+
   return (
     <BikeClient
       data={{
@@ -72,12 +85,14 @@ export default function Page() {
         page,
         stationId,
         supplierId,
+        bikeId, // Thêm dòng này
       }}
       actions={{
         setStatusFilter,
         setPage,
         setStationId,
         setSupplierId,
+        setBikeId, // Thêm dòng này
       }}
     />
   );

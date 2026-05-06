@@ -21,7 +21,7 @@ export const QUERY_KEYS = {
     BIKE_ACTIVITY_STATS: (bikeId: string) => ["bike-activity-stats", bikeId],
     BIKE_STATS: (bikeId: string) => ["bike-stats", bikeId],
     RENTAL_BIKE: (bikeId: string) => ["bike-rentals-history", bikeId],
-    ALL: (page?: number, limit?: number, status?: string , station_id?: string, supplier_id?: string) => ["bikes", "all", page, limit, station_id, supplier_id, status]
+    ALL: (id ?: string, page?: number, limit?: number, status?: string , station_id?: string, supplier_id?: string) => ["bikes", "all", page, limit, station_id, supplier_id, status, id]
   },
   RENTAL: {
     ALL_ADMIN_STAFF: (
