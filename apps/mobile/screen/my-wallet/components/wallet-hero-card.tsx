@@ -3,7 +3,7 @@ import type { WalletDetail } from "@services/wallets/wallet.service";
 import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, iconSizes, radii, spaceScale, spacingRules } from "@theme/metrics";
 import { AppText } from "@ui/primitives/app-text";
-import { formatBalance, formatWalletStatus } from "@utils/wallet/formatters";
+import { formatBalance } from "@utils/wallet/formatters";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme, View, XStack, YStack } from "tamagui";
 
@@ -14,36 +14,6 @@ type WalletHeroCardProps = {
 
 const walletHeroCornerRadius = radii.xxl + spaceScale[2];
 const walletHeroIconShellSize = iconSizes.xl + spaceScale[1];
-const walletStatusDotSize = spaceScale[2];
-
-function WalletStatusPill({ status }: { status: WalletDetail["status"] }) {
-  const theme = useTheme();
-  const isActive = status === "ACTIVE";
-
-  return (
-    <XStack
-      alignItems="center"
-      alignSelf="flex-start"
-      backgroundColor="$overlayGlass"
-      borderColor="$overlayGlass"
-      borderRadius={radii.round}
-      borderWidth={borderWidths.subtle}
-      gap="$2"
-      paddingHorizontal="$3"
-      paddingVertical="$1"
-    >
-      <XStack
-        backgroundColor={isActive ? theme.statusSuccess.val : theme.statusDanger.val}
-        borderRadius="$round"
-        height={walletStatusDotSize}
-        width={walletStatusDotSize}
-      />
-      <AppText tone="inverted" variant="badgeLabel">
-        {formatWalletStatus(status)}
-      </AppText>
-    </XStack>
-  );
-}
 
 function WalletBalanceSplit({
   label,
@@ -108,13 +78,9 @@ export function WalletHeroCard({ wallet, topInset }: WalletHeroCardProps) {
         </XStack>
 
         <YStack gap="$3">
-          <XStack alignItems="center" flexWrap="wrap" gap="$3">
-            <AppText opacity={0.82} tone="inverted" variant="eyebrow">
-              Số dư tổng
-            </AppText>
-
-            <WalletStatusPill status={wallet.status} />
-          </XStack>
+          <AppText opacity={0.82} tone="inverted" variant="eyebrow">
+            Số dư tổng
+          </AppText>
 
           <XStack alignItems="flex-end" gap="$1">
             <AppText tone="inverted" variant="metricValue">
