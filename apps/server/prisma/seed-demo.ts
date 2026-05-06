@@ -24,6 +24,7 @@ import {
   SupplierStatus,
   UserRole,
   UserVerifyStatus,
+  WalletHoldReason,
   WalletStatus,
 } from "../generated/prisma/client";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
@@ -31,7 +32,7 @@ import { toPrismaDecimal } from "../src/domain/shared/decimal";
 import logger from "../src/lib/logger";
 import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
-import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
+import { DEFAULT_PRICING_POLICY_ID, seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
 import { seedDemoRatings } from "./seed/demo-ratings";
 import { seedRatingReasons } from "./seed/rating-reasons";
@@ -48,9 +49,12 @@ const DEMO_RENTAL_MIN_HOUR = 6;
 const DEMO_RENTAL_MAX_HOUR = 22;
 const DEMO_NFC_CARD_UID = "3946298114";
 const DEMO_NFC_CARD_USER_EMAIL = "user02@mebike.local";
+const DEMO_RENTAL_DEPOSIT_AMOUNT = 500000n;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
+const DEMO_AGENCY_MAIN_STATION_NAME = "Vincom Plaza";
+const REMOVED_STATION_IDS = ["019b6656-ebbb-78a1-a657-7f5a535f3fd7"] as const;
 const LEGACY_DEMO_AGENCY_IDS = [
   "019b17bd-d130-7e7d-be69-91ceef7b9007",
   "019b17bd-d130-7e7d-be69-91ceef7b9008",
@@ -202,8 +206,9 @@ async function seedStations(prisma: PrismaClient) {
         ST_GeogFromText(${`SRID=4326;POINT(${station.longitude} ${station.latitude})`} ),
         ${updatedAt}
       )
-      ON CONFLICT ("name") DO UPDATE
+      ON CONFLICT ("id") DO UPDATE
       SET
+        "name" = EXCLUDED."name",
         "address" = EXCLUDED."address",
         "total_capacity" = EXCLUDED."total_capacity",
         "return_slot_limit" = EXCLUDED."return_slot_limit",
@@ -490,14 +495,10 @@ async function main() {
     await seedDefaultPricingPolicy(prisma);
     await seedDefaultGlobalCouponRules(prisma, { demoMode: true });
     await seedDemoEnvironmentPolicy(prisma);
-    await seedStations(prisma);
     await seedRatingReasons(prisma);
 
-    const stationRows = await prisma.station.findMany({
-      select: { id: true, name: true, latitude: true, longitude: true },
-      orderBy: { name: "asc" },
-    });
-    const stationIds = stationRows.map(s => s.id);
+    const users = buildDemoUsers(stations.length);
+    const userEmails = users.map(u => u.email);
 
     const suppliers = await Promise.all([
       prisma.supplier.upsert({
@@ -541,9 +542,6 @@ async function main() {
         },
       }),
     ]);
-
-    const users = buildDemoUsers(stationRows.length);
-    const userEmails = users.map(u => u.email);
 
     await prisma.ratingReasonLink.deleteMany({
       where: {
@@ -615,6 +613,17 @@ async function main() {
     await prisma.rentalBillingRecord.deleteMany({
       where: {
         rental: {
+          user: {
+            email: {
+              in: userEmails,
+            },
+          },
+        },
+      },
+    });
+    await prisma.walletHold.deleteMany({
+      where: {
+        wallet: {
           user: {
             email: {
               in: userEmails,
@@ -708,6 +717,27 @@ async function main() {
       },
     });
 
+    await prisma.technicianTeam.deleteMany({
+      where: {
+        name: {
+          startsWith: "Demo Tech Team -",
+        },
+      },
+    });
+
+    await prisma.$executeRaw`
+      DELETE FROM "Station"
+      WHERE "id" IN (${REMOVED_STATION_IDS[0]}::uuid)
+    `;
+
+    await seedStations(prisma);
+
+    const stationRows = await prisma.station.findMany({
+      select: { id: true, name: true, latitude: true, longitude: true },
+      orderBy: { name: "asc" },
+    });
+    const stationIds = stationRows.map(s => s.id);
+
     await prisma.user.createMany({
       data: users.map((u, idx) => ({
         id: u.id,
@@ -786,9 +816,9 @@ async function main() {
         "agency_id" = NULL
     `;
 
+    const stationIdByName = new Map(stationRows.map(station => [station.name, station.id]));
     const agencyOwnedStations = [
-      { stationId: stationIds[0], agencyId: mainAgency.id },
-      { stationId: stationIds[1], agencyId: eastAgency.id },
+      { stationId: stationIdByName.get(DEMO_AGENCY_MAIN_STATION_NAME), agencyId: mainAgency.id },
     ].filter((item): item is { stationId: string; agencyId: string } => Boolean(item.stationId));
 
     for (const item of agencyOwnedStations) {
@@ -889,8 +919,8 @@ async function main() {
         .map((u, idx) => ({
           id: uuidv7(),
           userId: u.id,
-          balance: BigInt(250000 + idx * 15000),
-          reservedBalance: BigInt(idx % 4 === 0 ? 10000 : 0),
+          balance: BigInt(900000 + idx * 15000),
+          reservedBalance: 0n,
           status: WalletStatus.ACTIVE,
           updatedAt: new Date(),
         })),
@@ -948,6 +978,7 @@ async function main() {
         id: r.id,
         userId: r.userId,
         bikeId: r.bikeId,
+        pricingPolicyId: DEFAULT_PRICING_POLICY_ID,
         startStationId: r.startStationId,
         endStationId: r.endStationId,
         createdAt: r.createdAt,
@@ -960,6 +991,51 @@ async function main() {
         updatedAt: r.updatedAt,
       })),
     });
+
+    const rentedRentals = rentals.filter(r => r.status === RentalStatus.RENTED);
+    if (rentedRentals.length > 0) {
+      const walletRows = await prisma.wallet.findMany({
+        where: {
+          userId: {
+            in: [...new Set(rentedRentals.map(rental => rental.userId))],
+          },
+        },
+        select: { id: true, userId: true },
+      });
+      const walletByUserId = new Map(walletRows.map(wallet => [wallet.userId, wallet.id]));
+      const holdCountByWalletId = new Map<string, number>();
+
+      for (const rental of rentedRentals) {
+        const walletId = walletByUserId.get(rental.userId);
+        if (!walletId) {
+          continue;
+        }
+
+        const holdId = uuidv7();
+        await prisma.walletHold.create({
+          data: {
+            id: holdId,
+            walletId,
+            rentalId: rental.id,
+            amount: DEMO_RENTAL_DEPOSIT_AMOUNT,
+            reason: WalletHoldReason.RENTAL_DEPOSIT,
+          },
+        });
+        await prisma.rental.update({
+          where: { id: rental.id },
+          data: { depositHoldId: holdId },
+        });
+
+        holdCountByWalletId.set(walletId, (holdCountByWalletId.get(walletId) ?? 0) + 1);
+      }
+
+      for (const [walletId, holdCount] of holdCountByWalletId) {
+        await prisma.wallet.update({
+          where: { id: walletId },
+          data: { reservedBalance: BigInt(holdCount) * DEMO_RENTAL_DEPOSIT_AMOUNT },
+        });
+      }
+    }
 
     await prisma.reservation.createMany({
       data: reservations.map(r => ({
@@ -978,8 +1054,7 @@ async function main() {
       })),
     });
 
-    const rentedBikeIds = rentals
-      .filter(r => r.status === RentalStatus.RENTED)
+    const rentedBikeIds = rentedRentals
       .map(r => r.bikeId)
       .filter((id): id is string => Boolean(id));
 
@@ -1051,6 +1126,7 @@ async function main() {
           id: rental.id,
           userId: rental.userId,
           bikeId: rental.bikeId,
+          pricingPolicyId: DEFAULT_PRICING_POLICY_ID,
           startStationId: rental.startStationId,
           endStationId: rental.endStationId,
           createdAt: rental.createdAt,
@@ -1127,6 +1203,7 @@ async function main() {
           id: rental.id,
           userId: rental.userId,
           bikeId: rental.bikeId,
+          pricingPolicyId: DEFAULT_PRICING_POLICY_ID,
           startStationId: rental.startStationId,
           endStationId: rental.endStationId,
           createdAt: rental.createdAt,
