@@ -1,14 +1,16 @@
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { useCallback, useMemo } from "react";
+import { Alert, Pressable, ScrollView, StatusBar, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme, YStack } from "tamagui";
+
+import { IconSymbol } from "@components/IconSymbol";
 import { useGetStationLookupQuery } from "@hooks/query/reservation/use-get-station-lookup-query";
 import { useReservationActions } from "@hooks/use-reservation-actions";
 import { useAuthNext } from "@providers/auth-provider-next";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { spaceScale } from "@theme/metrics";
-import { AppHeroHeader } from "@ui/patterns/app-hero-header";
+import { radii, spaceScale } from "@theme/metrics";
+import { AppText } from "@ui/primitives/app-text";
 import { Screen } from "@ui/primitives/screen";
-import { useCallback, useMemo } from "react";
-import { Alert, ScrollView, StatusBar, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme, YStack } from "tamagui";
 
 import type {
   ReservationDetailNavigationProp,
@@ -158,9 +160,81 @@ function ReservationDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <YStack>
-          <AppHeroHeader onBack={handleGoBack} title="Chi tiết đặt trước" />
+          <YStack
+            backgroundColor="$actionPrimary"
+            borderBottomLeftRadius={32}
+            borderBottomRightRadius={32}
+            paddingTop={insets.top + spaceScale[4]}
+            paddingHorizontal="$5"
+            paddingBottom={68}
+          >
+            <View
+              style={{
+                position: "absolute",
+                top: insets.top + spaceScale[2],
+                right: spaceScale[5],
+                width: 64,
+                borderRadius: radii.round,
+                backgroundColor: theme.surfaceDefault.val,
+                alignItems: "center",
+                paddingVertical: spaceScale[2],
+                zIndex: 5,
+                shadowColor: theme.shadowColor.val,
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.12,
+                shadowRadius: 24,
+                elevation: 6,
+              }}
+            >
+              <Pressable
+                accessibilityLabel="Tải lại chi tiết đặt trước"
+                onPress={fetchReservationDetail}
+                style={{
+                  width: 44,
+                  height: 44,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: radii.round,
+                }}
+              >
+                <IconSymbol color={theme.textTertiary.val} name="refresh" size="md" />
+              </Pressable>
+              <Pressable
+                accessibilityLabel="Thêm tuỳ chọn"
+                style={{
+                  width: 44,
+                  height: 44,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: radii.round,
+                }}
+              >
+                <IconSymbol color={theme.textTertiary.val} name="more-horizontal" size="md" />
+              </Pressable>
+            </View>
 
-          <YStack marginTop={-spaceScale[7]} paddingHorizontal="$5">
+            <View style={{ flexDirection: "row", alignItems: "center", gap: spaceScale[3], paddingRight: 72 }}>
+              <Pressable
+                accessibilityLabel="Quay lại"
+                onPress={handleGoBack}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: radii.round,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: theme.overlayGlass.val,
+                }}
+              >
+                <IconSymbol color={theme.onSurfaceBrand.val} name="arrow-left" size="lg" />
+              </Pressable>
+              <AppText numberOfLines={1} selectable tone="inverted" variant="xlTitle">
+                Chi tiết đặt trước
+              </AppText>
+            </View>
+          </YStack>
+
+          <YStack marginTop={-spaceScale[9]} paddingHorizontal="$5">
             <DetailSummaryCard
               reservation={reservation}
               stationAddress={resolvedStation?.address}

@@ -1,9 +1,10 @@
+import React from "react";
+import { Spinner, useTheme, XStack, YStack } from "tamagui";
+
 import { IconSymbol } from "@components/IconSymbol";
 import { spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
-import React from "react";
-import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 type DetailActionsProps = {
   isPending: boolean;
@@ -35,13 +36,14 @@ export function DetailActions({
       borderTopWidth={1}
       gap="$3"
       paddingHorizontal="$5"
-      paddingTop="$5"
+      paddingTop="$4"
       paddingBottom={Math.max(bottomInset, spaceScale[4])}
     >
       <AppButton
         disabled={isCancelling || isConfirming}
-        height={56}
+        height={58}
         onPress={onCancel}
+        borderRadius={18}
         tone="danger"
       >
         <XStack alignItems="center" gap="$3">
@@ -54,7 +56,13 @@ export function DetailActions({
         </XStack>
       </AppButton>
 
-      <AppButton disabled={isCancelling || isConfirming} height={56} onPress={onConfirm} tone="primary">
+      <AppButton
+        disabled={isCancelling || isConfirming}
+        height={58}
+        onPress={onConfirm}
+        borderRadius={18}
+        tone="primary"
+      >
         <XStack alignItems="center" gap="$3">
           {isConfirming
             ? <Spinner color="$onActionPrimary" />
