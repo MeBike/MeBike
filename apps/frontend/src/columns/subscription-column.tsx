@@ -21,7 +21,16 @@ export const getVerifyStatusColor = (status: SubscriptionStatus) => {
       return "bg-gray-100 text-gray-800";
   }
 };
-
+const PACKAGE_NAME : Record <string,string> = {
+  basic : "Cơ bản",
+  premium : "Cao cấp",
+  ultra : "Đặc biệt"
+}
+const PACKAGE_COLORS: Record<string, string> = {
+  basic: "bg-gray-100 text-gray-700 border-gray-200",
+  premium: "bg-blue-100 text-blue-700 border-blue-200",
+  ultra: "bg-purple-100 text-purple-700 border-purple-200 shadow-sm",
+};
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   ACTIVE: {
     label: "Đang hoạt động",
@@ -47,10 +56,20 @@ export const subscriptionColumns = ({
     cell: ({ row }) => row.original.user.fullName,
   },
   {
-    accessorKey: "packageName",
-    header: "Tên gói",
-    cell: ({ row }) => row.original.packageName,
+  accessorKey: "packageName",
+  header: "Tên gói",
+  cell: ({ row }) => {
+    const variant = row.original.packageName;
+    const label = PACKAGE_NAME[variant] || variant;
+    const colorClass = PACKAGE_COLORS[variant] || "bg-slate-100 text-slate-600";
+
+    return (
+      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${colorClass}`}>
+        {label}
+      </span>
+    );
   },
+},
   {
     accessorKey: "maxUsages",
     header: "Tối đa",

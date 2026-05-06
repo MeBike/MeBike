@@ -133,7 +133,9 @@ export default function ReservationDetailClient() {
 
   const data = detailReservation;
   const { label, color } = getStatusConfig(data.bike.status as BikeStatus);
-  const { label : labelDetail , className} = getStatusReservationConfig(data.status);
+  const { label: labelDetail, className } = getStatusReservationConfig(
+    data.status,
+  );
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -182,7 +184,6 @@ export default function ReservationDetailClient() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Cột trái */}
           <div className="space-y-6 lg:col-span-2">
             <SectionCard
               icon={MapPin}
@@ -199,41 +200,58 @@ export default function ReservationDetailClient() {
                 </div>
               }
             >
-              <div className="space-y-8">
-                {/* Trạm lấy xe */}
+              <div className="space-y-10 relative">
+                <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-primary via-border to-muted" />
                 <div className="relative pl-8">
-                  <div className="absolute left-0 top-1 h-4 w-4 rounded-full border-4 border-primary bg-background" />
-                  <div className="absolute left-[7px] top-5 h-16 w-0.5 bg-border" />
-                  <p className="text-xs font-bold uppercase text-primary">
-                    Trạm nhận xe
-                  </p>
-                  <p className="mt-1 text-base font-semibold">
-                    {data.station?.name || "N/A"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {data.station?.address}
-                  </p>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>Bắt đầu: {formatToVNTime(data.startTime)}</span>
+                  {/* Dot icon */}
+                  <div className="absolute left-0 top-1 z-10 h-4 w-4 rounded-full border-2 border-primary bg-background shadow-[0_0_0_4px_rgba(59,130,246,0.1)]" />
+
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-primary">
+                      Điểm lấy xe
+                    </p>
+                    <h4 className="text-base font-bold text-foreground leading-tight">
+                      {data.station?.name || "N/A"}
+                    </h4>
+                    <p className="text-sm text-muted-foreground italic">
+                      {data.station?.address}
+                    </p>
+
+                    <div className="mt-3 flex items-center gap-2 w-fit px-3 py-1.5 bg-secondary/50 rounded-lg border border-border">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">
+                        Thời gian nhận:{" "}
+                        <span className="text-foreground">
+                          {formatToVNTime(data.startTime)}
+                        </span>
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Bước 2: Thời hạn giữ xe */}
                 <div className="relative pl-8">
-                  <div className="absolute left-0 top-1 h-4 w-4 rounded-full border-4 border-muted-foreground/30 bg-background" />
-                  <p className="text-xs font-bold uppercase text-muted-foreground">
-                    Thời gian kết thúc phiên đặt trước
-                  </p>
-                  <p className="mt-1 text-base font-semibold">
-                    {data.endTime
-                      ? "Đã hoàn thành"
-                      : "Đang trong thời gian đặt"}
-                  </p>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      Kết thúc:{" "}
-                      {data.endTime ? formatToVNTime(data.endTime) : "--:--"}
-                    </span>
+                  {/* Dot icon (đổi sang màu cảnh báo hoặc đỏ nếu là deadline) */}
+                  <div className="absolute left-0 top-1 z-10 h-4 w-4 rounded-full border-2 border-amber-500 bg-background" />
+
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
+                      Thời hạn đến nhận xe
+                    </p>
+
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-base font-semibold text-foreground">
+                        {data.endTime ? "Hết hạn lúc:" : "Đang chờ nhận xe"}
+                      </p>
+                      <span className="text-sm font-bold text-amber-600">
+                        {data.endTime ? formatToVNTime(data.endTime) : "--:--"}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground max-w-[250px]">
+                      * Vui lòng đến nhận xe trước thời gian này. Sau thời gian
+                      trên, phiên đặt sẽ tự động bị hủy.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -290,7 +308,9 @@ export default function ReservationDetailClient() {
               </div>
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Phương thức thanh toán:</span>
+                  <span className="text-muted-foreground">
+                    Phương thức thanh toán:
+                  </span>
                   <span className="font-medium">Ví Mebike</span>
                 </div>
                 <div className="flex justify-between text-sm">
