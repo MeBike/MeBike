@@ -18,6 +18,8 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import { useReservationActions } from "@/hooks/use-reservation";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { getStatusConfig } from "@/columns/bike-colums";
+import { BikeStatus } from "@/types";
 function SectionCard({
   icon: Icon,
   title,
@@ -130,7 +132,8 @@ export default function ReservationDetailClient() {
   }
 
   const data = detailReservation;
-  const { label, className } = getStatusReservationConfig(data.status);
+  const { label, color } = getStatusConfig(data.bike.status as BikeStatus);
+  const { label : labelDetail , className} = getStatusReservationConfig(data.status);
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -151,7 +154,7 @@ export default function ReservationDetailClient() {
             <span
               className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
             >
-              {label}
+              {labelDetail}
             </span>
           </div>
           <Button
@@ -215,12 +218,10 @@ export default function ReservationDetailClient() {
                     <span>Bắt đầu: {formatToVNTime(data.startTime)}</span>
                   </div>
                 </div>
-
-                {/* Trạm trả xe (Dự kiến hoặc thực tế) */}
                 <div className="relative pl-8">
                   <div className="absolute left-0 top-1 h-4 w-4 rounded-full border-4 border-muted-foreground/30 bg-background" />
                   <p className="text-xs font-bold uppercase text-muted-foreground">
-                    Thời gian kết thúc
+                    Thời gian kết thúc phiên đặt trước
                   </p>
                   <p className="mt-1 text-base font-semibold">
                     {data.endTime
@@ -248,7 +249,7 @@ export default function ReservationDetailClient() {
                   label="Trạng thái xe"
                   value={
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${className}`}
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${color}`}
                     >
                       {label}
                     </span>

@@ -35,7 +35,7 @@ export const ratingColumn = ({
     header: "Đánh giá xe đạp",
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        <span className="font-medium">{row.original.bikeScore}</span>
+        <span className="font-medium">{row.original.bikeScore || "Không có đánh giá"}</span>
         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
       </div>
     ),
@@ -45,7 +45,7 @@ export const ratingColumn = ({
     header: "Đánh giá trạm",
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        <span className="font-medium">{row.original.stationScore}</span>
+        <span className="font-medium">{row.original.stationScore || "Không có đánh giá"}</span>
         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
       </div>
     ),

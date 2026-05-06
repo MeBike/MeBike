@@ -2,17 +2,24 @@
 
 import type React from "react";
 import Header from "@components/ui/layout/Header";
-import { Footer as LandingFooter} from "@components/landing/landing-footer";
+import { Footer as LandingFooter } from "@components/landing/landing-footer";
 import { Card } from "@components/ui/card";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Textarea } from "@components/ui/textarea";
 import { Label } from "@components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@components/ui/select";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { sendContactEmail } from "./actions";
+import { StationMap } from "../admin/stations/components/station-map";
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -127,15 +134,33 @@ export default function ContactPage() {
                             <SelectValue placeholder="Chọn chủ đề cần hỗ trợ" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Vấn đề thuê trả xe đạp">Vấn đề thuê trả xe đạp</SelectItem>
-                            <SelectItem value="Vấn đề nạp tiền vào ví">Vấn đề nạp tiền vào ví</SelectItem>
-                            <SelectItem value="Vấn đề đặt chỗ trước">Vấn đề đặt chỗ trước</SelectItem>
-                            <SelectItem value="Vấn đề bảo trì xe đạp">Vấn đề bảo trì xe đạp</SelectItem>
-                            <SelectItem value="Vấn đề hoàn tiền">Vấn đề hoàn tiền</SelectItem>
-                            <SelectItem value="Vấn đề rút tiền">Vấn đề rút tiền</SelectItem>
-                            <SelectItem value="Vấn đề tài khoản">Vấn đề tài khoản</SelectItem>
-                            <SelectItem value="Vấn đề kỹ thuật ứng dụng">Vấn đề kỹ thuật ứng dụng</SelectItem>
-                            <SelectItem value="Vấn đề thanh toán">Vấn đề thanh toán</SelectItem>
+                            <SelectItem value="Vấn đề thuê trả xe đạp">
+                              Vấn đề thuê trả xe đạp
+                            </SelectItem>
+                            <SelectItem value="Vấn đề nạp tiền vào ví">
+                              Vấn đề nạp tiền vào ví
+                            </SelectItem>
+                            <SelectItem value="Vấn đề đặt chỗ trước">
+                              Vấn đề đặt chỗ trước
+                            </SelectItem>
+                            <SelectItem value="Vấn đề bảo trì xe đạp">
+                              Vấn đề bảo trì xe đạp
+                            </SelectItem>
+                            <SelectItem value="Vấn đề hoàn tiền">
+                              Vấn đề hoàn tiền
+                            </SelectItem>
+                            <SelectItem value="Vấn đề rút tiền">
+                              Vấn đề rút tiền
+                            </SelectItem>
+                            <SelectItem value="Vấn đề tài khoản">
+                              Vấn đề tài khoản
+                            </SelectItem>
+                            <SelectItem value="Vấn đề kỹ thuật ứng dụng">
+                              Vấn đề kỹ thuật ứng dụng
+                            </SelectItem>
+                            <SelectItem value="Vấn đề thanh toán">
+                              Vấn đề thanh toán
+                            </SelectItem>
                             <SelectItem value="Khác">Khác</SelectItem>
                           </SelectContent>
                         </Select>
@@ -213,8 +238,7 @@ export default function ContactPage() {
                         Văn phòng
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        138 Đường 400, Phường Tăng Nhơn Phú, TP. Hồ Chí
-                        Minh
+                        138 Đường 400, Phường Tăng Nhơn Phú, TP. Hồ Chí Minh
                       </p>
                     </div>
                   </div>
@@ -229,9 +253,7 @@ export default function ContactPage() {
                       <h3 className="font-semibold text-foreground mb-1">
                         Giờ làm việc
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Cả tuần
-                      </p>
+                      <p className="text-sm text-muted-foreground">Cả tuần</p>
                       <p className="text-sm text-muted-foreground">
                         05:00 - 22:00
                       </p>
@@ -249,25 +271,14 @@ export default function ContactPage() {
               <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
                 Vị trí văn phòng
               </h2>
-              <Card className="p-8 bg-muted/50">
-                <div className="aspect-video bg-background rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      Bản đồ Google Maps sẽ hiển thị ở đây
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      123 Đường Lê Lợi, Quận 1, TP.HCM
-                    </p>
-                  </div>
-                </div>
-              </Card>
+
+              <div className="aspect-video bg-background rounded-lg flex items-center justify-center">
+                <StationMap onLocationSelect={() => {}} />
+              </div>
             </div>
           </div>
         </section>
       </main>
-
-      <LandingFooter />
     </div>
   );
 }

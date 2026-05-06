@@ -7,52 +7,43 @@ import { Check } from "lucide-react";
 
 const pricingPlans = [
   {
-    name: "Gói Cơ bản",
+    name: "basic",
     price: "119.000",
     unit: "VNĐ/30 ngày",
     description: "30 lượt thuê trong 30 ngày",
     features: [
       "30 lượt thuê xe",
       "Thời hạn 30 ngày",
-      "Ưu tiên hỗ trợ cơ bản",
-      "Bảo hiểm cơ bản",
-      "Tiết kiệm 60% so với thuê lẻ",
     ],
     popular: false,
   },
   {
-    name: "Gói Premium",
+    name: "premium",
     price: "199.000",
     unit: "VNĐ/30 ngày",
     description: "60 lượt thuê trong 30 ngày",
     features: [
       "60 lượt thuê xe",
       "Thời hạn 30 ngày",
-      "Ưu tiên hỗ trợ cao",
-      "Bảo hiểm toàn diện",
-      "Tiết kiệm 70% so với thuê lẻ",
     ],
     popular: true,
   },
   {
-    name: "Gói Unlimited",
+    name: "ultra",
     price: "299.000",
     unit: "VNĐ/30 ngày",
-    description: "Thuê không giới hạn trong 30 ngày",
+    description: "90 lượt thuê trong 30 ngày",
     features: [
-      "Thuê không giới hạn",
+      "90 lượt thuê",
       "Thời hạn 30 ngày",
-      "Hỗ trợ VIP 24/7",
-      "Bảo hiểm toàn diện cao cấp",
-      "Ưu tiên đặt xe cao nhất",
     ],
     popular: false,
   },
 ];
 
 const additionalServices = [
-  { name: "Thuê theo lượt (Ví)", price: "2.000 VNĐ/30 phút" },
-  { name: "Phí phạt quá 24 giờ", price: "50.000 VNĐ/lần" },
+  { name: "Thuê theo lượt (Ví)", price: "2.000 đ/30 phút" },
+  { name: "Phí phạt quá 24 giờ", price: "500.000 đ/lần" },
 ];
 
 export default function PricingPage() {
@@ -115,13 +106,6 @@ export default function PricingPage() {
                       </li>
                     ))}
                   </ul>
-
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
-                  >
-                    Chọn gói này
-                  </Button>
                 </Card>
               ))}
             </div>
@@ -154,63 +138,7 @@ export default function PricingPage() {
             </div>
           </div>
         </section>
-
-        <section className="py-16">
-          <div className="container mx-auto px-4 lg:px-8">
-            <div className="max-w-3xl mx-auto">
-              <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
-                Câu hỏi thường gặp
-              </h2>
-              <div className="space-y-6">
-                <Card className="p-6">
-                  <h3 className="font-semibold text-foreground mb-2">
-                    Gói subscription hoạt động như thế nào?
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Gói subscription cho phép bạn thuê xe với số lượt giới hạn
-                    trong thời gian 30 ngày. Ví dụ: Gói Cơ bản (119.000 VNĐ) cho
-                    30 lượt thuê, Gói Premium (199.000 VNĐ) cho 60 lượt thuê. 1 
-                    lượt thuê được quy ước theo 10 giờ.
-                  </p>
-                </Card>
-
-                <Card className="p-6">
-                  <h3 className="font-semibold text-foreground mb-2">
-                    Thuê theo lượt (Ví) là gì?
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Nếu không có gói subscription, bạn có thể thuê xe theo lượt
-                    với giá 2.000 VNĐ mỗi 30 phút. Thời gian được làm tròn lên
-                    đơn vị 30 phút gần nhất.
-                  </p>
-                </Card>
-
-                <Card className="p-6">
-                  <h3 className="font-semibold text-foreground mb-2">
-                    Có thể trả xe ở trạm khác không?
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Không, bạn không thể trả xe tại trạm nào khác trạm ban đầu.
-                  </p>
-                </Card>
-
-                <Card className="p-6">
-                  <h3 className="font-semibold text-foreground mb-2">
-                    Phí phạt khi trả muộn?
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Nếu thời gian thuê xe vượt quá 24 giờ, bạn sẽ bị tính thêm
-                    phí phạt 50.000 VNĐ. Hãy trả xe đúng hạn để tránh phát sinh
-                    chi phí không đáng có.
-                  </p>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
-
-      <LandingFooter />
     </div>
   );
 }
