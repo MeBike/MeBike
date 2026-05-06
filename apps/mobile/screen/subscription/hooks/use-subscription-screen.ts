@@ -1,19 +1,19 @@
-import type { SubscriptionSectionKey } from "@components/subscription/subscription-toggle";
-
-import { useActivateSubscriptionMutation } from "@hooks/mutations/subscription/use-activate-subscription-mutation";
-import { useSubscribeMutation } from "@hooks/mutations/subscription/use-subscribe-mutation";
-import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
-import { isSubscriptionError } from "@services/subscription.service";
 import { useQueryClient } from "@tanstack/react-query";
-import { toSubscriptionStatusLabel } from "@utils/subscription";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
 import type { Subscription, SubscriptionPackage } from "@/types/subscription-types";
+import type { SubscriptionSectionKey } from "@components/subscription/subscription-toggle";
 
 import { presentSubscriptionError } from "@/presenters/subscriptions/subscription-error-presenter";
+import { useActivateSubscriptionMutation } from "@hooks/mutations/subscription/use-activate-subscription-mutation";
+import { useSubscribeMutation } from "@hooks/mutations/subscription/use-subscribe-mutation";
+import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
+import { useAuthNext } from "@providers/auth-provider-next";
+import { isSubscriptionError } from "@services/subscription.service";
+import { getSubscriptionPackageTitle, toSubscriptionStatusLabel } from "@utils/subscription";
+
 import { loadSubscriptionSection, saveSubscriptionSection } from "../lib/section-storage";
 
 const PAGE_SIZE = 20;
@@ -88,9 +88,11 @@ export function useSubscriptionScreen() {
       return;
     }
 
+    const packageTitle = getSubscriptionPackageTitle(packageName);
+
     Alert.alert(
       "Xác nhận đăng ký",
-      `Bạn chắc chắn đăng ký gói ${packageName.toUpperCase()}?`,
+      `Bạn chắc chắn đăng ký ${packageTitle}?`,
       [
         { text: "Hủy", style: "cancel" },
         {
@@ -101,7 +103,7 @@ export function useSubscriptionScreen() {
               { packageName },
               {
                 onSuccess: () => {
-                  Alert.alert("Thành công", "Đăng ký gói tháng thành công");
+                  Alert.alert("Thành công", `Đăng ký ${packageTitle} thành công`);
                   queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
                 },
                 onError: (error) => {
