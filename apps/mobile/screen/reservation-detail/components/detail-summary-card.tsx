@@ -6,7 +6,7 @@ import type { Reservation } from "@/types/reservation-types";
 
 import { formatCurrency } from "@/utils/reservation-screen-utils";
 import { IconSymbol } from "@components/IconSymbol";
-import { spaceScale } from "@theme/metrics";
+import { radii, spaceScale } from "@theme/metrics";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
 import { StatusBadge } from "@ui/primitives/status-badge";
@@ -58,7 +58,7 @@ export function DetailSummaryCard({
         elevation: 5,
       }}
     >
-      <AppCard borderRadius={24} elevated={false} overflow="hidden" padding="$0">
+      <AppCard borderRadius={radii.xxl} elevated={false} overflow="hidden" padding="$0">
         <YStack>
           <YStack gap="$4" paddingTop="$6" paddingHorizontal="$6" paddingBottom="$5">
             <XStack alignItems="center" gap="$4">

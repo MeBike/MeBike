@@ -2,7 +2,7 @@ import React from "react";
 import { Spinner, useTheme, XStack, YStack } from "tamagui";
 
 import { IconSymbol } from "@components/IconSymbol";
-import { spaceScale } from "@theme/metrics";
+import { radii, spaceScale } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppText } from "@ui/primitives/app-text";
 
@@ -43,7 +43,7 @@ export function DetailActions({
         disabled={isCancelling || isConfirming}
         height={58}
         onPress={onCancel}
-        borderRadius={18}
+        borderRadius={radii.lg}
         tone="danger"
       >
         <XStack alignItems="center" gap="$3">
@@ -60,7 +60,7 @@ export function DetailActions({
         disabled={isCancelling || isConfirming}
         height={58}
         onPress={onConfirm}
-        borderRadius={18}
+        borderRadius={radii.lg}
         tone="primary"
       >
         <XStack alignItems="center" gap="$3">
