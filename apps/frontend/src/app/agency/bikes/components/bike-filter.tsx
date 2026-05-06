@@ -78,8 +78,8 @@ export function BikeFilters({
             <SelectContent className="rounded-lg shadow-xl">
               <SelectItem value="all">Tất cả trạng thái</SelectItem>
               <SelectItem value="AVAILABLE">Sẵn sàng</SelectItem>
-              <SelectItem value="BOOKED">Đã đặt</SelectItem>
-              <SelectItem value="RESERVED">Đã giữ chỗ</SelectItem>
+              <SelectItem value="BOOKED">Đang thuê</SelectItem>
+              <SelectItem value="RESERVED">Đặt trước</SelectItem>
               <SelectItem value="REDISTRIBUTING">Chuẩn bị điều phối</SelectItem>
               <SelectItem value="BROKEN">Đang hỏng</SelectItem>
               <SelectItem value="LOST">Đã mất</SelectItem>

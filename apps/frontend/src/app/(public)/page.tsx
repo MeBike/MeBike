@@ -16,7 +16,6 @@ export default function Home() {
       <HowItWorks />
       <Stations />
       <CTA />
-      <Footer />
     </div>
   );
 }

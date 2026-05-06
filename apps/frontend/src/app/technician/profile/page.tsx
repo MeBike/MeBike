@@ -284,7 +284,7 @@ export default function ProfilePage() {
                       : "bg-accent/20 text-accent-foreground"
                   )}
                 >
-                  {formData?.role === "ADMIN" ? "Quản trị viên" : "Nhân viên"}
+                  Kỹ thuật viên
                 </p>
               </div>
             </div>
