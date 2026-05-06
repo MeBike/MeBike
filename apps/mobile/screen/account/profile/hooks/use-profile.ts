@@ -1,9 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert } from "react-native";
-
-import type { UserDetail } from "@services/users/user-service";
 
 import { authQueryKeys } from "@/hooks/query/auth-next/auth-query-keys";
 import { useMyRentalCountsQuery } from "@hooks/query/rentals/use-my-rental-counts-query";
@@ -12,33 +10,14 @@ import { useAuthNext } from "@providers/auth-provider-next";
 
 import { useProfileEmailVerification } from "./use-profile-email-verification";
 
-function buildProfile(user: UserDetail | null | undefined): UserDetail {
-  return {
-    id: user?.id ?? "",
-    fullName: user?.fullName ?? "",
-    email: user?.email ?? "",
-    accountStatus: user?.accountStatus ?? "ACTIVE",
-    verify: user?.verify ?? "UNVERIFIED",
-    location: user?.location ?? null,
-    username: user?.username ?? null,
-    phoneNumber: user?.phoneNumber ?? null,
-    avatar: user?.avatar ?? null,
-    role: user?.role ?? "USER",
-    orgAssignment: user?.orgAssignment ?? null,
-    nfcCardUid: user?.nfcCardUid ?? null,
-    createdAt: user?.createdAt ?? "",
-    updatedAt: user?.updatedAt ?? "",
-  };
-}
-
 export function useProfile() {
   const navigation = useNavigation();
-  const { user, logout, isCustomer, hydrate } = useAuthNext();
+  const { user, logout, isCustomer, hydrate, isLoading } = useAuthNext();
   const queryClient = useQueryClient();
   const hasToken = Boolean(user?.id);
   const shouldLoadRentalCounts = hasToken && isCustomer;
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const profile = useMemo(() => buildProfile(user), [user]);
+  const profile = user;
 
   const { data: rentalCounts, isLoading: isRentalCountsLoading } = useMyRentalCountsQuery({
     enabled: shouldLoadRentalCounts,
@@ -135,6 +114,7 @@ export function useProfile() {
     isResendingOtp,
     isVerifyingOtp,
     isRefreshing,
+    isProfileLoading: isLoading && !profile,
     onRefresh,
     isCustomer,
     isRentalCountsLoading,
