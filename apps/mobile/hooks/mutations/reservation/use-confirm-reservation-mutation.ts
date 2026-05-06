@@ -1,12 +1,10 @@
-import { useMutation } from "@tanstack/react-query";
-
-import type { Reservation } from "@/types/reservation-types";
-import type { ReservationError } from "@services/reservations";
+import type { ConfirmReservationResult, ReservationError } from "@services/reservations";
 
 import { reservationService } from "@services/reservations";
+import { useMutation } from "@tanstack/react-query";
 
 export function useConfirmReservationMutation() {
-  return useMutation<Reservation, ReservationError, string>({
+  return useMutation<ConfirmReservationResult, ReservationError, string>({
     mutationFn: async (reservationId: string) => {
       const result = await reservationService.confirmReservation(reservationId);
       if (!result.ok) {

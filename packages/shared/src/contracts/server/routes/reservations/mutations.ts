@@ -1,6 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import {
+  ConfirmReservationResponseSchema,
   CreateReservationRequestSchema,
   ReservationDetailResponseSchema,
   ReservationErrorCodeSchema,
@@ -88,7 +89,7 @@ export const confirmReservationRoute = createRoute({
       description: "Reservation confirmed successfully",
       content: {
         "application/json": {
-          schema: ReservationDetailResponseSchema,
+          schema: ConfirmReservationResponseSchema,
         },
       },
     },
@@ -108,6 +109,16 @@ export const confirmReservationRoute = createRoute({
               value: {
                 error: "Reservation does not belong to user",
                 details: { code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_OWNED },
+              },
+            },
+            NotStarted: {
+              value: {
+                error: "Reservation cannot be confirmed before its start time",
+                details: {
+                  code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_STARTED,
+                  startTime: "2026-04-20T10:00:00.000Z",
+                  currentTime: "2026-04-20T09:55:00.000Z",
+                },
               },
             },
             InvalidTransition: {

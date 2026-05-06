@@ -33,4 +33,9 @@ export type PreparedConfirmReservation = ConfirmPendingReservationResult & {
   readonly requiredBalance: bigint;
 };
 
+export type ConfirmReservationSuccess = {
+  readonly reservation: ReservationRow;
+  readonly rentalId: string;
+};
+
 export type ConfirmReservationFailure = ReservationServiceFailure;

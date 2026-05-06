@@ -12,6 +12,7 @@ import type {
 import type {
   ConfirmReservationFailure,
   ConfirmReservationInput,
+  ConfirmReservationSuccess,
 } from "./commands/confirm-reservation.service";
 import type {
   ReserveBikeFailure,
@@ -28,7 +29,7 @@ export type ReservationCommandService = {
   ) => Effect.Effect<ReservationRow, ReserveBikeFailure>;
   confirmReservation: (
     input: ConfirmReservationInput,
-  ) => Effect.Effect<ReservationRow, ConfirmReservationFailure>;
+  ) => Effect.Effect<ConfirmReservationSuccess, ConfirmReservationFailure>;
   cancelReservation: (
     input: CancelReservationInput,
   ) => Effect.Effect<ReservationRow, CancelReservationFailure>;

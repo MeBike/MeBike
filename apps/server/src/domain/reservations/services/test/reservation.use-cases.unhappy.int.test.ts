@@ -315,7 +315,7 @@ describe("reservation use-cases unhappy paths", () => {
     expectLeftTag(result, "InvalidReservationTransition");
   });
 
-  it("confirmReservationUseCase fails with InvalidReservationTransition when reservation has not started yet", async () => {
+  it("confirmReservationUseCase fails with ReservationNotStarted when reservation has not started yet", async () => {
     const user = await fixture.factories.user();
     const station = await fixture.factories.station();
     const bike = await fixture.factories.bike({ stationId: station.id });
@@ -331,7 +331,7 @@ describe("reservation use-cases unhappy paths", () => {
     });
 
     const result = await runConfirm({ reservationId: reservation.id, userId: user.id, now });
-    expectLeftTag(result, "InvalidReservationTransition");
+    expectLeftTag(result, "ReservationNotStarted");
   });
 
   it("confirmReservationUseCase fails with InvalidReservationTransition when reservation is already fulfilled", async () => {

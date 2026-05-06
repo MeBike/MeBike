@@ -130,7 +130,7 @@ describe("reservation use-cases integration", () => {
       now,
     });
 
-    expectRight(confirmResult);
+    const confirmed = expectRight(confirmResult);
 
     const activePricingPolicy = await fixture.prisma.pricingPolicy.findFirst({
       where: { status: "ACTIVE" },
@@ -143,6 +143,7 @@ describe("reservation use-cases integration", () => {
     const rental = await fixture.prisma.rental.findFirst({ where: { reservationId: reservation.id } });
     expect(rental?.status).toBe("RENTED");
     expect(rental?.reservationId).toBe(reservation.id);
+    expect(confirmed.rentalId).toBe(rental?.id);
     expect(rental?.bikeId).toBe(bike.id);
     expect(rental?.pricingPolicyId).toBe(reservation.pricingPolicyId);
     expect(rental?.depositHoldId).not.toBeNull();
