@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 
 const pricingPlans = [
   {
-    name: "basic",
+    name: "Cơ bản",
     price: "119.000",
     unit: "VNĐ/30 ngày",
     description: "30 lượt thuê trong 30 ngày",
@@ -18,7 +18,7 @@ const pricingPlans = [
     popular: false,
   },
   {
-    name: "premium",
+    name: "Cao cấp",
     price: "199.000",
     unit: "VNĐ/30 ngày",
     description: "60 lượt thuê trong 30 ngày",
@@ -29,7 +29,7 @@ const pricingPlans = [
     popular: true,
   },
   {
-    name: "ultra",
+    name: "Đặc biệt",
     price: "299.000",
     unit: "VNĐ/30 ngày",
     description: "90 lượt thuê trong 30 ngày",
@@ -59,7 +59,7 @@ export default function PricingPage() {
                 Bảng giá dịch vụ
               </h1>
               <p className="text-xl text-muted-foreground text-pretty">
-                3 gói subscription với số lượt thuê khác nhau trong 30 ngày
+                3 gói tháng với số lượt thuê khác nhau trong 30 ngày
               </p>
             </div>
           </div>
