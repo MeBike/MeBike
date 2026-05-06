@@ -1,7 +1,7 @@
+import type { Reservation } from "@/types/reservation-types";
+
 import { formatBikeNumber } from "@utils/bike";
 import { formatVietnamDateTime } from "@utils/date";
-
-import type { Reservation } from "@/types/reservation-types";
 
 export function formatReservationDateTime(value?: string | null) {
   if (!value) {
@@ -24,12 +24,4 @@ export function getReservationIdentityTitle(reservation: Reservation) {
 
 export function getReservationIdentityIcon(reservation: Reservation) {
   return reservation.bikeId ? "bike" : "location";
-}
-
-export function getShortReservationId(reservationId: string) {
-  if (reservationId.length <= 18) {
-    return reservationId;
-  }
-
-  return `${reservationId.slice(0, 8)}...${reservationId.slice(-6)}`;
 }
