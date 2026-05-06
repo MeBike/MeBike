@@ -102,15 +102,17 @@ export function UpdateProfileHeader({
               borderColor="$overlayGlass"
               borderRadius="$round"
               borderWidth={borderWidths.subtle}
+              height={avatarImageSize}
               justifyContent="center"
               overflow="hidden"
+              width={avatarImageSize}
             >
               {shouldShowAvatarImage
                 ? (
                     <Image
                       onError={() => setHasAvatarLoadError(true)}
                       source={{ uri: avatarUrl }}
-                      style={{ width: avatarImageSize, height: avatarImageSize }}
+                      style={{ width: avatarImageSize, height: avatarImageSize, borderRadius: avatarImageSize / 2 }}
                     />
                   )
                 : avatarFallbackLabel
