@@ -8,6 +8,7 @@ export type ActiveCouponRule = ServerContracts.CouponsContracts.ActiveCouponRule
 export type ActiveCouponRulesResponse = ServerContracts.CouponsContracts.ActiveCouponRulesResponse;
 
 export type ReservationDetail = ServerContracts.ReservationsContracts.ReservationDetail;
+export type ConfirmReservationResponse = ServerContracts.ReservationsContracts.ConfirmReservationResponse;
 export type ReservationExpandedDetail = ServerContracts.ReservationsContracts.ReservationExpandedDetail;
 export type CreateReservationPayload = ServerContracts.ReservationsContracts.CreateReservationRequest;
 export type PaginatedReservations = ServerContracts.ReservationsContracts.ListMyReservationsResponse;

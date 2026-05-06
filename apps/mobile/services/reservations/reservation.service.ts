@@ -9,6 +9,7 @@ import { toSearchParams } from "@services/shared/search-params";
 import { StatusCodes } from "http-status-codes";
 
 import type {
+  ConfirmReservationResponse,
   CreateReservationPayload,
   PaginatedReservations,
   Reservation,
@@ -23,6 +24,11 @@ import type { ReservationError } from "./reservation-error";
 import { asNetworkError, parseReservationError } from "./reservation-error";
 
 export type { CreateReservationPayload };
+
+export type ConfirmReservationResult = {
+  reservation: Reservation;
+  rentalId: string;
+};
 
 type ReservationListParams = {
   page?: number;
@@ -187,7 +193,7 @@ export const reservationService = {
     }
   },
 
-  confirmReservation: async (reservationId: string): Promise<Result<Reservation, ReservationError>> => {
+  confirmReservation: async (reservationId: string): Promise<Result<ConfirmReservationResult, ReservationError>> => {
     try {
       const path = routePath(ServerRoutes.reservations.confirmReservation, { reservationId });
 
@@ -195,7 +201,10 @@ export const reservationService = {
 
       if (response.status === StatusCodes.OK) {
         const okSchema = ServerRoutes.reservations.confirmReservation.responses[200].content["application/json"].schema;
-        return decodeReservationResponse(response, okSchema as z.ZodType<ReservationDetail>, mapReservation);
+        return decodeReservationResponse(response, okSchema as z.ZodType<ConfirmReservationResponse>, value => ({
+          reservation: mapReservation(value.reservation),
+          rentalId: value.rentalId,
+        }));
       }
 
       return err(await parseReservationError(response));

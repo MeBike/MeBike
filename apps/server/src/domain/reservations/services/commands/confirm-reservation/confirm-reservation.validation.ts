@@ -21,6 +21,7 @@ import {
   ReservationMissingBike,
   ReservationNotFound,
   ReservationNotOwned,
+  ReservationNotStarted,
 } from "../../../domain-errors";
 import { makeReservationQueryRepository } from "../../../repository/reservation-query.repository";
 
@@ -46,6 +47,7 @@ export function validatePendingReservationForConfirmationInTx(
   | ReservationNotFound
   | ReservationNotOwned
   | ReservationMissingBike
+  | ReservationNotStarted
   | InvalidReservationTransition
 > {
   return Effect.gen(function* () {
@@ -72,10 +74,10 @@ export function validatePendingReservationForConfirmationInTx(
     }
 
     if (reservation.startTime > input.now) {
-      return yield* Effect.fail(new InvalidReservationTransition({
+      return yield* Effect.fail(new ReservationNotStarted({
         reservationId: reservation.id,
-        from: reservation.status,
-        to: "FULFILLED",
+        startTime: reservation.startTime.toISOString(),
+        currentTime: input.now.toISOString(),
       }));
     }
 

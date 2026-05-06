@@ -1,3 +1,5 @@
+import type { ConfirmReservationResult } from "@services/reservations";
+
 import { useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 import { Alert } from "react-native";
@@ -17,6 +19,11 @@ type ReservationOption = "MỘT LẦN" | "GÓI THÁNG";
 
 type MutationCallbacks = {
   onSuccess?: () => void;
+  onError?: (message: string) => void;
+};
+
+type ConfirmReservationCallbacks = {
+  onSuccess?: (result: ConfirmReservationResult) => void;
   onError?: (message: string) => void;
 };
 
@@ -150,7 +157,7 @@ export function useReservationMutations({ ensureAuthenticated }: UseReservationM
   );
 
   const confirmReservation = useCallback(
-    (reservationIdToConfirm: string, callbacks?: MutationCallbacks) => {
+    (reservationIdToConfirm: string, callbacks?: ConfirmReservationCallbacks) => {
       if (!ensureAuthenticated()) {
         return;
       }
@@ -163,10 +170,10 @@ export function useReservationMutations({ ensureAuthenticated }: UseReservationM
       }
 
       confirmReservationMutation.mutate(reservationIdToConfirm, {
-        onSuccess: () => {
+        onSuccess: (result) => {
           Alert.alert("Thành công", "Bắt đầu hành trình của bạn ngay thôi!");
           invalidateReservationQueries();
-          callbacks?.onSuccess?.();
+          callbacks?.onSuccess?.(result);
         },
         onError: (error) => {
           const message = getReservationErrorMessage(
