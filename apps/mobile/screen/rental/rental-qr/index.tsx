@@ -330,7 +330,7 @@ function RentalQrScreen() {
             {[
               "Nếu đã giữ chỗ trước, hãy đến đúng bãi trả xe đã chọn. Nếu chưa, hãy đến trạm còn chỗ trống.",
               "Đến quầy hoặc gặp nhân viên hỗ trợ của MeBike tại trạm.",
-              "Nhấn “Trình mã QR” và đưa màn hình này cho họ quét.",
+              "Đưa màn hình mã QR này cho nhân viên quét.",
               "Giữ mở ứng dụng cho đến khi nhân viên xác nhận đã kết thúc phiên thuê.",
             ].map((text, index) => (
               <View key={text} style={styles.instructionItem}>

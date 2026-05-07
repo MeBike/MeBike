@@ -37,7 +37,7 @@ export function RentalActionBar({
       <AppText align="center" tone={hasReturnSlot ? "muted" : "muted"} variant="body">
         {hasReturnSlot
           ? `Vui lòng đưa mã QR cho nhân viên tại ${returnStationName ?? "bãi trả đã chọn"} để trả xe.`
-          : "Đưa mã QR cho nhân viên tại trạm còn chỗ. Giữ chỗ trước nếu muốn chắc suất."}
+          : "Đưa mã QR cho nhân viên tại trạm còn chỗ. Giữ chỗ trước để đảm bảo còn chỗ trả xe."}
       </AppText>
 
       <XStack gap="$3">

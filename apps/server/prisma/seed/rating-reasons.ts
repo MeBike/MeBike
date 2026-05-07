@@ -11,10 +11,8 @@ export const ratingReasonsSeed: ReadonlyArray<{
 }> = [
   { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe chạy êm, vận hành tốt" },
   { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe sạch sẽ" },
-  { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.bike, message: "Xe còn nhiều pin" },
   { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Phanh chưa tốt" },
   { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Xe bẩn hoặc có mùi" },
-  { type: RatingReasonType.ISSUE, appliesTo: AppliesToEnum.bike, message: "Pin yếu" },
 
   { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm dễ tìm" },
   { type: RatingReasonType.COMPLIMENT, appliesTo: AppliesToEnum.station, message: "Trạm gọn gàng, an toàn" },

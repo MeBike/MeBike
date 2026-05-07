@@ -12,7 +12,7 @@ const reservationErrorMessages = {
   insufficientWalletBalance: "Số dư ví không đủ để đặt xe.",
   invalidReservationTransition: "Không thể chuyển lượt giữ chỗ sang trạng thái này.",
   networkError: "Không thể kết nối tới máy chủ.",
-  overnightOperationsClosed: "Hệ thống tạm ngưng thao tác này từ 23:00 đến 05:00 giờ Việt Nam. Vui lòng thử lại sau 05:00.",
+  overnightOperationsClosed: "Không thể thực hiện thao tác này từ 23:00 đến 05:00. Vui lòng thử lại sau 05:00.",
   reservationConfirmBlockedByActiveRental:
     "Bạn đang có chuyến đi hoạt động nên chưa thể nhận thêm lượt giữ chỗ này.",
   reservationMissingBike: "Lượt giữ chỗ này chưa được gán xe phù hợp.",
