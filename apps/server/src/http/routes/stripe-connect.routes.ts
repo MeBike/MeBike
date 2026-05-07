@@ -12,5 +12,7 @@ export function registerStripeConnectRoutes(app: import("@hono/zod-openapi").Ope
     middleware: [requireAuthMiddleware] as const,
   } satisfies RouteConfig;
 
+  app.get("/stripe-connect/return", WalletStripeController.handleStripeConnectReturnRedirect);
+  app.get("/stripe-connect/refresh", WalletStripeController.handleStripeConnectRefreshRedirect);
   app.openapi(startStripeConnectOnboardingRoute, WalletStripeController.startStripeConnectOnboarding);
 }
