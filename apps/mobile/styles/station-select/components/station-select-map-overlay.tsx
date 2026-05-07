@@ -170,7 +170,7 @@ export function StationSelectMapOverlay({
       pointerEvents="box-none"
       style={{
         position: "absolute",
-        bottom: isAuthenticated ? -50 : 0,
+        bottom: isAuthenticated ? -25 : 0,
         left: 0,
         right: 0,
       }}
