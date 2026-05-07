@@ -187,14 +187,11 @@ export default function StationDetailClient({
               {isEditing ? "Chỉnh sửa trạm" : "Chi tiết trạm"}
             </h1>
             {!isEditing && (
-              <Badge
-                variant={
-                  station.stationType === "AGENCY" ? "default" : "secondary"
-                }
-                className="ml-2"
+              <span
+                className={station.stationType === "INTERNAL" ? "text-blue-600 font-medium text-sm bg-blue-100 px-2 py-0.5 rounded" : "text-purple-600 font-medium text-sm bg-purple-100 px-2 py-0.5 rounded"}
               >
-                {station.stationType}
-              </Badge>
+                {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
+              </span>
             )}
           </div>
           <div className="flex gap-2">

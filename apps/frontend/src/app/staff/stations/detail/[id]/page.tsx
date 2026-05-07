@@ -114,7 +114,6 @@ export default function StationDetailPage() {
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header Section */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button
@@ -127,14 +126,11 @@ export default function StationDetailPage() {
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl flex items-center gap-3">
               Chi tiết trạm
-              <Badge
-                variant={
-                  station.stationType === "AGENCY" ? "default" : "secondary"
-                }
-                className="text-sm"
+              <span
+                className={station.stationType === "INTERNAL" ? "text-blue-600 font-medium text-sm bg-blue-100 px-2 py-0.5 rounded" : "text-purple-600 font-medium text-sm bg-purple-100 px-2 py-0.5 rounded"}
               >
                 {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
-              </Badge>
+              </span>
             </h1>
           </div>
 

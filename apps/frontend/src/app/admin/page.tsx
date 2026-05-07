@@ -10,6 +10,7 @@ import { useUserActions } from "@/hooks/use-user";
 import { useBikeActions } from "@/hooks/use-bike";
 import { useRentalsActions } from "@/hooks/use-rental";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { ProfileHeader } from "@/components/dashboard/profile-header";
 export default function DashboardPage() {
   const { user } = useAuth();
   const { newRegistrationStats, getNewRegistrationStats } = useUserActions({
@@ -56,6 +57,7 @@ export default function DashboardPage() {
   }
   return (
     <div>
+      <ProfileHeader user={user} />
       <div className="space-y-8">
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-4">
