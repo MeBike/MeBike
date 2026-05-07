@@ -1,4 +1,4 @@
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, type LinkingOptions } from "@react-navigation/native";
 import { initStripe } from "@stripe/stripe-react-native";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -17,10 +17,20 @@ import { STRIPE_PUBLISHABLE_KEY, STRIPE_URL_SCHEME } from "./lib/stripe";
 import { navigationRef } from "./navigation/navigation-ref";
 import RootNavigator from "./navigation/root-navigator";
 import tamaguiConfig from "./tamagui.config";
+import type { RootStackParamList } from "./types/navigation";
 
 void SplashScreen.preventAutoHideAsync().catch(() => {
   // ignore repeated calls during fast refresh
 });
+
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: [`${STRIPE_URL_SCHEME}://`],
+  config: {
+    screens: {
+      MyWallet: "wallet",
+    },
+  },
+};
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -78,7 +88,7 @@ export default function App() {
   return (
     <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
       <Providers>
-        <NavigationContainer ref={navigationRef}>
+        <NavigationContainer linking={linking} ref={navigationRef}>
           <AuthProviderNext>
             <RealtimeEventProvider>
               <StatusBar style="dark" />

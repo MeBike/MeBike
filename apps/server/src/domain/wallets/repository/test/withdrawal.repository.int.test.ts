@@ -3,7 +3,7 @@ import { uuidv7 } from "uuidv7";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { expectDefect } from "@/test/effect/assertions";
+import { expectDefect, expectLeftTag } from "@/test/effect/assertions";
 import { setupPrismaIntFixture } from "@/test/prisma/prisma-int-fixture";
 
 import { WithdrawalRepositoryError } from "../../domain-errors";
@@ -89,11 +89,11 @@ describe("withdrawalRepository Integration", () => {
     expect(withdrawal.payoutCurrency).toBe("usd");
   });
 
-  it("createPending is idempotent - returns existing record on duplicate idempotencyKey", async () => {
+  it("createPending fails with WithdrawalUniqueViolation on duplicate idempotencyKey", async () => {
     const { userId, walletId } = await createUserAndWallet();
     const idempotencyKey = `withdraw:${uuidv7()}`;
 
-    const first = await Effect.runPromise(
+    await Effect.runPromise(
       repo.createPending(makeVndWithdrawalData({
         userId,
         walletId,
@@ -102,19 +102,16 @@ describe("withdrawalRepository Integration", () => {
       })),
     );
 
-    // Second call with same idempotencyKey should return the existing record
-    const second = await Effect.runPromise(
+    const result = await Effect.runPromise(
       repo.createPending(makeVndWithdrawalData({
         userId,
         walletId,
         amount: 99999n,
         idempotencyKey,
-      })),
+      })).pipe(Effect.either),
     );
 
-    expect(second.id).toBe(first.id);
-    expect(second.amount).toBe(25000n);
-    expect(second.currency).toBe("vnd");
+    expectLeftTag(result, "WithdrawalUniqueViolation");
   });
 
   it("findById returns Some for existing record", async () => {
@@ -169,6 +166,60 @@ describe("withdrawalRepository Integration", () => {
     const found = await Effect.runPromise(
       repo.findByIdempotencyKey(`withdraw:${uuidv7()}`),
     );
+    expect(Option.isNone(found)).toBe(true);
+  });
+
+  it("listByUserId returns paginated withdrawals scoped to owner", async () => {
+    const first = await createUserAndWallet();
+    const second = await createUserAndWallet();
+
+    await Effect.runPromise(
+      repo.createPending(makeVndWithdrawalData({
+        ...first,
+        amount: 10000n,
+        idempotencyKey: `withdraw:${uuidv7()}`,
+      })),
+    );
+    await Effect.runPromise(
+      repo.createPending(makeVndWithdrawalData({
+        ...first,
+        amount: 20000n,
+        idempotencyKey: `withdraw:${uuidv7()}`,
+      })),
+    );
+    await Effect.runPromise(
+      repo.createPending(makeVndWithdrawalData({
+        ...second,
+        amount: 30000n,
+        idempotencyKey: `withdraw:${uuidv7()}`,
+      })),
+    );
+
+    const page = await Effect.runPromise(
+      repo.listByUserId(first.userId, { page: 1, pageSize: 10 }),
+    );
+
+    expect(page.total).toBe(2);
+    expect(page.items).toHaveLength(2);
+    expect(page.items.every(withdrawal => withdrawal.userId === first.userId)).toBe(true);
+  });
+
+  it("findByIdForUser returns None when withdrawal belongs to another user", async () => {
+    const owner = await createUserAndWallet();
+    const other = await createUserAndWallet();
+
+    const created = await Effect.runPromise(
+      repo.createPending(makeVndWithdrawalData({
+        ...owner,
+        amount: 18000n,
+        idempotencyKey: `withdraw:${uuidv7()}`,
+      })),
+    );
+
+    const found = await Effect.runPromise(
+      repo.findByIdForUser(other.userId, created.id),
+    );
+
     expect(Option.isNone(found)).toBe(true);
   });
 

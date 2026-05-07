@@ -11,6 +11,7 @@ import {
   requestWithdrawalUseCase,
 } from "@/domain/wallets";
 import { WalletCommandServiceTag } from "@/domain/wallets/services/commands/wallet-command.service";
+import { WithdrawalServiceTag } from "@/domain/wallets/services/commands/withdrawal.service";
 import { WalletQueryServiceTag } from "@/domain/wallets/services/queries/wallet-query.service";
 import {
   toWalletDetail,
@@ -103,6 +104,70 @@ const listMyWalletTransactions: RouteHandler<WalletsRoutes["listMyWalletTransact
           c.json<WalletsContracts.WalletErrorResponse, 404>({
             error: walletErrorMessages.WALLET_NOT_FOUND,
             details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+      )),
+    Match.exhaustive,
+  );
+};
+
+const listMyWalletWithdrawals: RouteHandler<WalletsRoutes["listMyWalletWithdrawals"]> = async (c) => {
+  const userId = c.var.currentUser?.userId ?? null;
+  if (!userId) {
+    return c.json(unauthorizedBody, 401);
+  }
+
+  const query = c.req.valid("query");
+  const page = query.page ?? 1;
+  const pageSize = query.pageSize ?? 50;
+
+  const withdrawals = await c.var.runPromise(
+    withLoggedCause(
+      Effect.flatMap(WithdrawalServiceTag, service =>
+        service.listForUser({ userId, pageReq: { page, pageSize } })),
+      "GET /v1/wallets/me/withdrawals",
+    ),
+  );
+
+  return c.json<WalletsContracts.ListMyWalletWithdrawalsResponse, 200>({
+    data: withdrawals.items.map(toWalletWithdrawalDetail),
+    pagination: {
+      page: withdrawals.page,
+      pageSize: withdrawals.pageSize,
+      total: withdrawals.total,
+      totalPages: withdrawals.totalPages,
+    },
+  }, 200);
+};
+
+const getMyWalletWithdrawal: RouteHandler<WalletsRoutes["getMyWalletWithdrawal"]> = async (c) => {
+  const userId = c.var.currentUser?.userId ?? null;
+  if (!userId) {
+    return c.json(unauthorizedBody, 401);
+  }
+
+  const { withdrawalId } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(WithdrawalServiceTag, service => service.getByIdForUser({ userId, withdrawalId })),
+    "GET /v1/wallets/me/withdrawals/:withdrawalId",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<WalletsContracts.GetMyWalletWithdrawalResponse, 200>(toWalletWithdrawalDetail(right), 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("WithdrawalNotFound", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WITHDRAWAL_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_NOT_FOUND },
+          }, 404)),
+        Match.orElse(() =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WITHDRAWAL_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_NOT_FOUND },
           }, 404)),
       )),
     Match.exhaustive,
@@ -429,6 +494,8 @@ export const WalletMeController = {
   createWalletWithdrawal,
   creditMyWallet,
   debitMyWallet,
+  getMyWalletWithdrawal,
   getMyWallet,
+  listMyWalletWithdrawals,
   listMyWalletTransactions,
 } as const;

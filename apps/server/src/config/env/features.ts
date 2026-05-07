@@ -9,9 +9,9 @@ export const walletEnvSchema = z.object({
   MIN_WITHDRAWAL_AMOUNT: z.coerce.number().default(5),
   TOPUP_RECONCILE_STALE_MINUTES: z.coerce.number().default(15),
   TOPUP_RECONCILE_SWEEP_CRON: z.string().default("*/5 * * * *"),
-  WITHDRAWAL_PROCESSING_TTL_MINUTES: z.coerce.number().default(10),
-  WITHDRAWAL_SLA_MINUTES: z.coerce.number().default(5),
-  WITHDRAWAL_SWEEP_CRON: z.string().default("*/5 * * * *"),
+  WITHDRAWAL_PROCESSING_TTL_MINUTES: z.coerce.number().default(2),
+  WITHDRAWAL_SLA_MINUTES: z.coerce.number().default(1),
+  WITHDRAWAL_SWEEP_CRON: z.string().default("*/1 * * * *"),
 });
 
 export const stationEnvSchema = z.object({

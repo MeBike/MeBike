@@ -1,20 +1,20 @@
+import { borderWidths, elevations, radii, spaceScale } from "@theme/metrics";
 import { StyleSheet } from "react-native";
 
-import { borderWidths, elevations, radii, spaceScale } from "@theme/metrics";
-
-export type QrModalThemePalette = {
+export type WalletAmountSheetThemePalette = {
   overlayScrim: string;
   surfaceDefault: string;
   borderDefault: string;
   surfaceMuted: string;
   actionPrimary: string;
-  surfaceAccent: string;
   textPrimary: string;
+  textSecondary: string;
+  textTertiary: string;
+  textDanger: string;
   shadowColor: string;
-  onActionPrimary: string;
 };
 
-export function createQrModalStyles(theme: QrModalThemePalette) {
+export function createWalletAmountSheetStyles(theme: WalletAmountSheetThemePalette) {
   return StyleSheet.create({
     overlayShell: {
       flex: 1,
@@ -85,6 +85,11 @@ export function createQrModalStyles(theme: QrModalThemePalette) {
       borderColor: theme.actionPrimary,
       backgroundColor: theme.surfaceDefault,
     },
+    amountFieldError: {
+      borderWidth: borderWidths.strong,
+      borderColor: theme.textDanger,
+      backgroundColor: theme.surfaceDefault,
+    },
     amountInput: {
       flex: 1,
       fontSize: 22,
@@ -93,6 +98,14 @@ export function createQrModalStyles(theme: QrModalThemePalette) {
       letterSpacing: -0.4,
       color: theme.textPrimary,
       paddingVertical: spaceScale[4],
+    },
+    feedbackText: {
+      marginTop: spaceScale[2],
+      color: theme.textDanger,
+    },
+    helperText: {
+      marginTop: spaceScale[3],
+      color: theme.textSecondary,
     },
     quickAmountsRow: {
       flexDirection: "row",
@@ -110,23 +123,15 @@ export function createQrModalStyles(theme: QrModalThemePalette) {
       alignItems: "center",
       justifyContent: "center",
     },
-    quickAmountChipActive: {
-      backgroundColor: theme.actionPrimary,
-      borderColor: theme.actionPrimary,
-      ...elevations.soft,
-      shadowColor: theme.actionPrimary,
-    },
     quickAmountChipPressed: {
       opacity: 0.92,
     },
     primaryButton: {
       minHeight: 72,
       borderRadius: radii.xxl,
-      backgroundColor: theme.actionPrimary,
       alignItems: "center",
       justifyContent: "center",
       ...elevations.soft,
-      shadowColor: theme.actionPrimary,
     },
     primaryButtonPressed: {
       opacity: 0.95,
