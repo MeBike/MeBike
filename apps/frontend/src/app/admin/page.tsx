@@ -58,7 +58,7 @@ export default function DashboardPage() {
   return (
     <div>
       <ProfileHeader user={user} />
-      <div className="space-y-8">
+      <div className="space-y-8 pt-6">
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-4">
             Thống kê tổng quan
