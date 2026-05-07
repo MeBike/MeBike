@@ -4,22 +4,13 @@ import { Card } from "@/components/ui/card";
 import type { DetailUser } from "@/types";
 import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
 import { formatToVNTime } from "@/lib/formatVNDate";
+import { getRoleColor, ROLE_LABELS } from "@/columns/user-columns";
 interface ProfileHeaderProps {
   user: DetailUser;
   avatarPreview?: string;
 }
 
 export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "default";
-      case "staff":
-        return "secondary";
-      default:
-        return "outline";
-    }
-  };
 
   const getInitials = (name: string) => {
     return name
@@ -56,9 +47,10 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
             <h2 className="text-2xl font-bold text-foreground">
               {user.fullName}
             </h2>
-            <Badge variant={getRoleBadgeVariant(user.role)} className="w-fit">
-              {user.role.toUpperCase()}
-            </Badge>
+            <span
+              className={`inline-flex px-1 py-1 rounded-full text-xxs font-medium whitespace-nowrap ${getRoleColor(user.role)}`}>
+              {ROLE_LABELS[user.role]}
+            </span>
             {user.verify === "VERIFIED" && (
               <Badge
                 variant="outline"
