@@ -138,7 +138,7 @@ export default function StaffDashboardScreen() {
     <Screen tone="subtle">
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-        <AppHeroHeader size="compact" title="Công cụ nhân viên" />
+        <AppHeroHeader size="compact" title="Công cụ vận hành" />
 
         <YStack gap="$5" padding="$4">
           <AppText variant="sectionTitle">Công cụ hỗ trợ</AppText>

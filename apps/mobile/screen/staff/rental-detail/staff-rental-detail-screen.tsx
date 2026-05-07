@@ -25,10 +25,9 @@ import StaffEndRentalCard from "./components/staff-end-rental-card";
 import { StaffJourneyCard } from "./components/staff-journey-card";
 import { StaffPartyCard } from "./components/staff-party-card";
 import { StaffSummaryCard } from "./components/staff-summary-card";
-import { StaffWarningCard } from "./components/staff-warning-card";
 import { useStaffRentalDetailScreen } from "./hooks";
 
-const DEFAULT_END_REASON = "Kết thúc phiên thuê bởi nhân viên";
+const DEFAULT_END_REASON = "";
 
 function getStatusMeta(status: string) {
   switch (status) {
@@ -128,17 +127,6 @@ function StaffRentalDetailScreen() {
           <YStack gap="$5" padding="$5">
             <StaffSummaryCard booking={booking} />
             <StaffJourneyCard booking={booking} />
-
-            {booking.status === "RENTED" && !booking.returnSlot
-              ? (
-                  <StaffWarningCard
-                    description={managedStation
-                      ? `Khách hàng chưa đặt chỗ trả xe trước. Bạn vẫn có thể thu xe tại ${managedStation.name} nếu hệ thống xác nhận còn chỗ trống.`
-                      : "Khách hàng chưa đặt chỗ trả xe và tài khoản của bạn chưa có trạm được gán để xác nhận thu xe."}
-                    title={managedStation ? "Chưa có chỗ trả xe trước" : "Không thể kết thúc phiên"}
-                  />
-                )
-              : null}
 
             <StaffPartyCard booking={booking} />
           </YStack>

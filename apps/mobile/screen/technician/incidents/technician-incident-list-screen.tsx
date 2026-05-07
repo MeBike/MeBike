@@ -15,6 +15,7 @@ import {
   formatIncidentDuration,
   getIncidentSeverityLabel,
   getIncidentSeverityTone,
+  getIncidentSourceLabel,
   getIncidentStatusLabel,
   getIncidentStatusTone,
   getIncidentTypeLabel,
@@ -148,7 +149,7 @@ function IncidentRow({
               tone={getIncidentSeverityTone(incident.severity)}
               withDot={false}
             />
-            <StatusBadge label="Trong chuyến thuê" size="compact" tone="neutral" withDot={false} />
+            <StatusBadge label={getIncidentSourceLabel(incident.source)} size="compact" tone="neutral" withDot={false} />
           </XStack>
 
           <YStack gap="$3">

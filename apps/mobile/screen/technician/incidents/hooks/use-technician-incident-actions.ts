@@ -85,7 +85,7 @@ export function useTechnicianIncidentActions({
 
     Alert.alert(
       "Từ chối sự cố",
-      "Nếu từ chối, hệ thống sẽ điều phối kỹ thuật viên khác cho sự cố này.",
+      "Bạn có chắc muốn từ chối sự cố này?",
       [
         { text: "Hủy", style: "cancel" },
         {

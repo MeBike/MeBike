@@ -40,7 +40,7 @@ const rentalErrorMessages = {
   notEnoughBalanceToRent: "Số dư ví không đủ để bắt đầu chuyến đi.",
   notFoundRentedRental: "Bạn hiện không có chuyến đi đang diễn ra.",
   noAvailableBike: "Hiện không còn xe phù hợp để đổi.",
-  overnightOperationsClosed: "Hệ thống tạm ngưng thao tác này từ 23:00 đến 05:00 giờ Việt Nam. Vui lòng thử lại sau 05:00.",
+  overnightOperationsClosed: "Không thể thực hiện thao tác này từ 23:00 đến 05:00. Vui lòng thử lại sau 05:00.",
   provideAtLeastOneUpdatedFieldBesidesReason: "Bạn cần chọn ít nhất một thông tin để cập nhật.",
   rentalNotFound: "Không tìm thấy chuyến đi này.",
   rentalUpdateFailed: "Không thể cập nhật chuyến đi lúc này.",

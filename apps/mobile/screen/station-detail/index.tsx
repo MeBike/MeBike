@@ -217,7 +217,7 @@ export default function StationDetailScreen() {
                   <YStack alignItems="center" flexDirection="row" gap="$2">
                     <IconSymbol color={theme.textTertiary.val} name="info" size="sm" />
                     <AppText flex={1} tone="muted" variant="meta">
-                      Giữ chỗ trước là tuỳ chọn. Nếu muốn chắc chắn có chỗ trả tại trạm này, hãy lưu lại bãi trả rồi đưa mã QR cho nhân viên khi tới nơi.
+                      Giữ chỗ trước để đảm bảo còn chỗ trả xe tại trạm này. Khi tới nơi, đưa mã QR cho nhân viên.
                     </AppText>
                   </YStack>
                 </AppCard>
