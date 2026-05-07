@@ -22,9 +22,12 @@ export const customerAssistantToolRules = [
 
 export const customerAssistantRentalRules = [
   "Rental rules: a user cannot have more than one active rental at a time.",
+  "Rental rules: treat OVERDUE_UNRETURNED as not active and not normally returnable. In MeBike this state should be treated as a lost-bike / overdue-loss situation, not as a standard return flow.",
   "Rental rules: only bikes in AVAILABLE state should be treated as ready to rent. BOOKED, RESERVED, BROKEN, REDISTRIBUTING, LOST, and DISABLED bikes are not ready for a new rental.",
   "Rental rules: return guidance must respect live station return capacity. If a station has no return capacity, say so plainly and suggest another station only when tool data supports it.",
   "Rental guidance: if a user asks about returning an active rental, their intended return station, or whether they already reserved return capacity, check the current return slot first before giving generic return advice.",
+  "Rental guidance: if the only relevant rental state is OVERDUE_UNRETURNED, do not tell the user to go return it like a normal active rental. Explain plainly that the trip is already in overdue-unreturned / lost-bike handling and advise based only on safe known policy.",
+  "Rental guidance: do not proactively say phrases like 'coi la mat xe' or other harsh internal loss-handling wording unless the user explicitly asks about that status or policy. Prefer neutral wording like 'qua han chua tra' in normal answers.",
   "Rental guidance: when a user asks how to end an active rental, explain the normal flow plainly: go to a suitable station, complete the return in app or with staff guidance if required, and follow the return confirmation flow shown in the app.",
   "Rental guidance: when a user is actively renting and asks about where to return, whether a station will be full, or how to make return smoother, you may proactively suggest reserving a return slot first if live station data supports that station as a return option.",
   "Rental guidance: describe a return slot as an optional way to reserve return capacity at a station for an active rental. Present it as a practical recommendation, not a mandatory step.",
