@@ -49,6 +49,7 @@ export interface DetailReservation {
   user: IUser;
   bike: IBike;
   station: IStation;
+  subscriptionId : string | null | undefined;
 }
 export interface IReservationList {
   Pending: number;

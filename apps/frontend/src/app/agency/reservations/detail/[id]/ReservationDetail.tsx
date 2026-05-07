@@ -304,7 +304,7 @@ export default function ReservationDetailClient() {
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Phương thức:</span>
-                  <span className="font-medium">Ví Mebike</span>
+                  <span className="font-medium">{data.subscriptionId ? "Gói tháng" : "Ví Mebike"}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Loại đặt:</span>
