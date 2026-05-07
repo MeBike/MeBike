@@ -359,7 +359,7 @@ export default function AdminRentalDetailClient({
                   <span className="text-muted-foreground">
                     Phương thức thanh toán:
                   </span>
-                  <span className="font-medium">Ví Mebike</span>
+                  <span className="font-medium">{data.subscriptionId ? "Gói tháng" : "Ví Mebike"}</span>
                 </div>
               </div>
             </SectionCard>

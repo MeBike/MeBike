@@ -364,7 +364,7 @@ export default function AdminRentalDetailPage() {
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Phương thức:</span>
-                  <span className="font-medium">Ví Mebike</span>
+                  <span className="font-medium">{detailData.subscriptionId ? "Gói tháng" : "Ví Mebike"}</span>
                 </div>
               </div>
             </SectionCard>
