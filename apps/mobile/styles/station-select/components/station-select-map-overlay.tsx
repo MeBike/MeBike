@@ -23,6 +23,7 @@ import { StationSelectRoutingPanel } from "./station-select-routing-panel";
 
 type StationSelectMapOverlayProps = {
   safeBottom: number;
+  isAuthenticated: boolean;
   showingNearby: boolean;
   isLoadingNearbyStations: boolean;
   isResolvingNearbyLocation: boolean;
@@ -50,6 +51,7 @@ type StationSelectMapOverlayProps = {
 
 export function StationSelectMapOverlay({
   safeBottom,
+  isAuthenticated,
   showingNearby,
   isLoadingNearbyStations,
   isResolvingNearbyLocation,
@@ -168,7 +170,7 @@ export function StationSelectMapOverlay({
       pointerEvents="box-none"
       style={{
         position: "absolute",
-        bottom: -50,
+        bottom: isAuthenticated ? -50 : 0,
         left: 0,
         right: 0,
       }}
