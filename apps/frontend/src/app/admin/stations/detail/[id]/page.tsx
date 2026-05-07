@@ -39,7 +39,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       return () => clearTimeout(timer);
     }
   }, [isLoadingGetStationByID]);
-  
+  if(isVisualLoading){
+    return <LoadingScreen/>
+  }
   if (!responseStationDetail) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
@@ -68,7 +70,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       station={responseStationDetail as Station}
       isLoading={isLoadingGetStationByID}
       onUpdateStation={handleUpdate}
-      revenueData={currentStationRevenue} // <-- Truyền prop doanh thu xuống Client
+      revenueData={currentStationRevenue} 
     />
   );
 }
