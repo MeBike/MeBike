@@ -4,7 +4,7 @@ import { uuidv7 } from "uuidv7";
 
 import { env } from "@/config/env";
 import { defectOn } from "@/domain/shared";
-import { UserQueryServiceTag } from "@/domain/users";
+import { UserCommandServiceTag, UserQueryServiceTag } from "@/domain/users";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
@@ -13,7 +13,10 @@ import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { WithdrawalUniqueViolation } from "../../domain-errors";
+import type {
+  WithdrawalProviderError,
+  WithdrawalUniqueViolation,
+} from "../../domain-errors";
 import type { CreateWalletWithdrawalInput, WalletWithdrawalRow } from "../../models";
 
 import {
@@ -24,6 +27,7 @@ import {
   WithdrawalUserNotFound,
 } from "../../domain-errors";
 import { makeWithdrawalRepository } from "../../repository/withdrawal.repository";
+import { StripeWithdrawalServiceTag } from "../providers/stripe-withdrawal.service";
 import { convertVndToUsdMinor, VND_PER_USD } from "./withdrawal-fx";
 
 const WITHDRAWAL_CURRENCY = "vnd" as const;
@@ -113,6 +117,34 @@ function ensureUserCanRequestWithdrawal(
   }
 
   return Effect.succeed(user);
+}
+
+function refreshStripePayoutStatus(
+  user: WithdrawalUser,
+): Effect.Effect<WithdrawalUser, StripeConnectNotLinked | StripePayoutsNotEnabled | WithdrawalProviderError, UserCommandServiceTag | StripeWithdrawalServiceTag> {
+  const accountId = user.stripeConnectedAccountId;
+  if (!accountId) {
+    return Effect.fail(new StripeConnectNotLinked({ userId: user.id }));
+  }
+
+  return Effect.gen(function* () {
+    const stripeService = yield* StripeWithdrawalServiceTag;
+    const userCommandService = yield* UserCommandServiceTag;
+    const account = yield* stripeService.retrieveConnectedAccount(accountId);
+
+    if (account.payouts_enabled === true) {
+      yield* userCommandService.setStripePayoutsEnabledByAccountId(accountId, true);
+      return {
+        ...user,
+        stripePayoutsEnabled: true,
+      } satisfies WithdrawalUser;
+    }
+
+    return yield* Effect.fail(new StripePayoutsNotEnabled({
+      userId: user.id,
+      accountId,
+    }));
+  });
 }
 
 /**
@@ -282,11 +314,12 @@ export function requestWithdrawalUseCase(
   | InvalidWithdrawalRequest
   | StripeConnectNotLinked
   | StripePayoutsNotEnabled
+  | WithdrawalProviderError
   | DuplicateWithdrawalRequest
   | InsufficientWalletBalance
   | WalletNotFound
   | WithdrawalUserNotFound,
-  Prisma | UserQueryServiceTag
+  Prisma | UserCommandServiceTag | UserQueryServiceTag | StripeWithdrawalServiceTag
 > {
   return Effect.gen(function* () {
     const request = yield* normalizeWithdrawalRequest(input);
@@ -294,7 +327,9 @@ export function requestWithdrawalUseCase(
     const { client } = yield* Prisma;
 
     const user = yield* loadWithdrawalUser(userService, input.userId);
-    yield* ensureUserCanRequestWithdrawal(user);
+    yield* ensureUserCanRequestWithdrawal(user).pipe(
+      Effect.catchTag("StripePayoutsNotEnabled", () => refreshStripePayoutStatus(user)),
+    );
 
     return yield* requestWithdrawalInTransaction({
       client,

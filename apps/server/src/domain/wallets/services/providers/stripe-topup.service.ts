@@ -238,7 +238,7 @@ export const StripeTopupServiceLive = Layer.effect(
                     currency,
                     unit_amount: amountMinor,
                     product_data: {
-                      name: "Wallet top-up",
+                      name: "Nạp tiền ví MeBike",
                     },
                   },
                 },
@@ -273,7 +273,7 @@ export const StripeTopupServiceLive = Layer.effect(
               currency: input.attempt.currency,
               automatic_payment_methods: { enabled: true },
               metadata: buildAttemptMetadata(input.attempt),
-              description: "Wallet top-up",
+              description: "Nạp tiền ví MeBike",
             }, { idempotencyKey: input.attempt.id }),
           catch: cause =>
             new TopupProviderError({

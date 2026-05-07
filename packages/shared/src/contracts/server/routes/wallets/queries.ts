@@ -4,8 +4,11 @@ import {
   AdminListUserWalletTransactionsQuerySchema,
   AdminListUserWalletTransactionsResponseSchema,
   GetMyWalletResponseSchema,
+  GetMyWalletWithdrawalResponseSchema,
   ListMyWalletTransactionsQuerySchema,
   ListMyWalletTransactionsResponseSchema,
+  ListMyWalletWithdrawalsQuerySchema,
+  ListMyWalletWithdrawalsResponseSchema,
   WalletErrorCodeSchema,
   walletErrorMessages,
 } from "../../wallets/schemas";
@@ -22,6 +25,13 @@ const WalletUserIdParamSchema = z.object({
     description: "User identifier",
   }),
 }).openapi("WalletUserIdParam");
+
+const WalletWithdrawalIdParamSchema = z.object({
+  withdrawalId: z.uuidv7().openapi({
+    example: "019b17bd-d130-7e7d-be69-91ceef7b6999",
+    description: "Wallet withdrawal identifier",
+  }),
+}).openapi("WalletWithdrawalIdParam");
 
 export const getMyWalletRoute = createRoute({
   method: "get",
@@ -76,6 +86,54 @@ export const listMyWalletTransactionsRoute = createRoute({
       example: {
         error: walletErrorMessages.WALLET_NOT_FOUND,
         details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+      },
+    }),
+  },
+});
+
+export const listMyWalletWithdrawalsRoute = createRoute({
+  method: "get",
+  path: "/v1/wallets/me/withdrawals",
+  tags: ["Wallets"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ListMyWalletWithdrawalsQuerySchema,
+  },
+  responses: {
+    200: paginatedResponse(ListMyWalletWithdrawalsResponseSchema, "Paginated wallet withdrawals"),
+    401: unauthorizedResponse(),
+  },
+});
+
+export const getMyWalletWithdrawalRoute = createRoute({
+  method: "get",
+  path: "/v1/wallets/me/withdrawals/{withdrawalId}",
+  tags: ["Wallets"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: WalletWithdrawalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Current user's wallet withdrawal",
+      content: {
+        "application/json": {
+          schema: GetMyWalletWithdrawalResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    404: notFoundResponse({
+      description: "Withdrawal not found",
+      schema: z.object({
+        error: z.string(),
+        details: z.object({
+          code: WalletErrorCodeSchema,
+        }),
+      }),
+      example: {
+        error: walletErrorMessages.WITHDRAWAL_NOT_FOUND,
+        details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_NOT_FOUND },
       },
     }),
   },

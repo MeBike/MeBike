@@ -3,6 +3,7 @@ import type { StripeContracts, WalletsContracts } from "@mebike/shared";
 
 import { Effect, Match } from "effect";
 
+import { env } from "@/config/env";
 import { withLoggedCause } from "@/domain/shared";
 import { handleStripeWebhookUseCase, startStripeConnectOnboardingUseCase } from "@/domain/wallets";
 import { StripeClient, StripeWebhookError, verifyStripeWebhook } from "@/infrastructure/stripe";
@@ -61,14 +62,14 @@ const startStripeConnectOnboarding: RouteHandler<StripeRoutes["startStripeConnec
   );
 };
 
-async function handleStripeWebhook(c: import("hono").Context) {
+async function handleStripeWebhookRequest(c: import("hono").Context, webhookSecret: string | undefined) {
   const payload = await c.req.text();
   const signature = c.req.header("stripe-signature");
 
   const result = await c.var.runPromise(
     Effect.gen(function* () {
       const stripe = (yield* StripeClient).client;
-      const event = yield* verifyStripeWebhook(stripe, payload, signature);
+      const event = yield* verifyStripeWebhook(stripe, payload, signature, webhookSecret);
       return yield* handleStripeWebhookUseCase(event);
     }).pipe(Effect.either),
   );
@@ -90,7 +91,16 @@ async function handleStripeWebhook(c: import("hono").Context) {
   );
 }
 
+async function handleStripeWebhook(c: import("hono").Context) {
+  return handleStripeWebhookRequest(c, env.STRIPE_WEBHOOK_SECRET);
+}
+
+async function handleStripeConnectWebhook(c: import("hono").Context) {
+  return handleStripeWebhookRequest(c, env.STRIPE_CONNECT_WEBHOOK_SECRET);
+}
+
 export const WalletStripeController = {
   handleStripeWebhook,
+  handleStripeConnectWebhook,
   startStripeConnectOnboarding,
 } as const;

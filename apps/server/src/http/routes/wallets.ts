@@ -21,6 +21,16 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     middleware: [requireAuthMiddleware] as const,
   } satisfies RouteConfig;
 
+  const listMyWalletWithdrawalsRoute = {
+    ...wallets.listMyWalletWithdrawals,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
+  const getMyWalletWithdrawalRoute = {
+    ...wallets.getMyWalletWithdrawal,
+    middleware: [requireAuthMiddleware] as const,
+  } satisfies RouteConfig;
+
   const createStripeTopupSessionRoute = {
     ...wallets.createStripeTopupSession,
     middleware: [requireAuthMiddleware] as const,
@@ -38,6 +48,8 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
 
   app.openapi(getMyWalletRoute, WalletMeController.getMyWallet);
   app.openapi(listMyWalletTransactionsRoute, WalletMeController.listMyWalletTransactions);
+  app.openapi(listMyWalletWithdrawalsRoute, WalletMeController.listMyWalletWithdrawals);
+  app.openapi(getMyWalletWithdrawalRoute, WalletMeController.getMyWalletWithdrawal);
   // app.openapi(wallets.creditMyWallet, WalletMeController.creditMyWallet);
   // app.openapi(wallets.debitMyWallet, WalletMeController.debitMyWallet);
   app.openapi(createStripeTopupSessionRoute, WalletMeController.createStripeTopupSession);
