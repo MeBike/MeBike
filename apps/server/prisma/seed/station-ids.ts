@@ -1,4 +1,6 @@
 export const STATION_IDS: Record<string, string> = {
+  "Ga An Phú": "019e00b6-e9b1-718a-8689-95f114f4abdf",
+  "Ga Phước Long": "019b6656-ebbb-78a1-a657-7f5a535f3fd7",
   "Vincom Plaza": "019b6656-ebab-7cc3-bd43-e2b2e76f4a6a",
   "Ga Thủ Đức": "019b6656-ebbd-7061-8966-1111dfe19055",
   "Ga Bến xe Suối Tiên": "019b6656-ebbf-791c-9009-56db1912ca9c",

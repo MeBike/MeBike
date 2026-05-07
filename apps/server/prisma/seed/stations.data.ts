@@ -9,6 +9,22 @@ export type StationSeed = {
 
 export const stations: StationSeed[] = [
   {
+    name: "Ga An Phú",
+    address: "Quận 2, TP.HCM",
+    latitude: 10.802193051123062,
+    longitude: 106.74222481840934,
+    capacity: 20,
+    updatedAt: "2025-10-18T19:57:05.496Z",
+  },
+  {
+    name: "Ga Phước Long",
+    address: "Quận 9, TP.HCM",
+    latitude: 10.821332229646496,
+    longitude: 106.75817490122758,
+    capacity: 20,
+    updatedAt: "2025-10-18T19:57:05.496Z",
+  },
+  {
     name: "Vincom Plaza",
     address: "12 Đ. Phan Văn Trị, Hạnh Thông",
     latitude: 10.827042967785143,

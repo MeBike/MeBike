@@ -27,8 +27,11 @@ import {
   WalletHoldReason,
   WalletStatus,
 } from "../generated/prisma/client";
+import { formatBikeNumber } from "../src/domain/bikes/bike-number";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
+import { calculateUsageChargeMinor } from "../src/domain/pricing/calculator";
 import { toPrismaDecimal } from "../src/domain/shared/decimal";
+import { toMinorUnit } from "../src/domain/shared/money";
 import logger from "../src/lib/logger";
 import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
@@ -45,17 +48,18 @@ const DEMO_PASSWORD = "Demo@123456";
 const USERS_TARGET = 32;
 const RENTALS_TARGET = 120;
 const DEMO_NON_CUSTOMER_USERS = 7;
-const DEMO_BIKES_PER_STATION = 5;
+const DEMO_DEFAULT_BIKES_PER_STATION = 15;
+const DEMO_BIKES_PER_STATION_OVERRIDES: Record<string, number> = {
+  "Ga Bình Thái": 5,
+};
 const DEMO_RENTAL_MIN_HOUR = 6;
 const DEMO_RENTAL_MAX_HOUR = 22;
 const DEMO_NFC_CARD_UID = "3946298114";
 const DEMO_NFC_CARD_USER_EMAIL = "user02@mebike.local";
-const DEMO_RENTAL_DEPOSIT_AMOUNT = 500000n;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
 const DEMO_AGENCY_MAIN_STATION_NAME = "Vincom Plaza";
-const REMOVED_STATION_IDS = ["019b6656-ebbb-78a1-a657-7f5a535f3fd7"] as const;
 const LEGACY_DEMO_AGENCY_IDS = [
   "019b17bd-d130-7e7d-be69-91ceef7b9007",
   "019b17bd-d130-7e7d-be69-91ceef7b9008",
@@ -349,13 +353,21 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
   return users;
 }
 
+type PricingConfig = {
+  baseRate: bigint;
+  billingUnitMinutes: number;
+  reservationFee: bigint;
+  depositRequired: bigint;
+};
+
 function buildRentals(params: {
   users: readonly DemoUser[];
   bikes: readonly { id: string; stationId: string | null }[];
   stationIds: readonly string[];
   subscriptionIdsByUserId: ReadonlyMap<string, string>;
+  pricing: PricingConfig;
 }): DemoRental[] {
-  const { users, bikes, stationIds, subscriptionIdsByUserId } = params;
+  const { users, bikes, stationIds, subscriptionIdsByUserId, pricing } = params;
   const normalUsers = users.filter(u => u.role === UserRole.USER);
   const rentals: DemoRental[] = [];
 
@@ -385,6 +397,9 @@ function buildRentals(params: {
       const endStation = pick(stationIds, idx + 3);
       const subscriptionId = idx % 3 === 0 ? (subscriptionIdsByUserId.get(user.id) ?? null) : null;
 
+      const baseCharge = calculateUsageChargeMinor({ durationMinutes: duration, policy: pricing });
+      const totalPrice = subscriptionId ? 0n : baseCharge;
+
       rentals.push({
         id: uuidv7(),
         userId: user.id,
@@ -395,7 +410,7 @@ function buildRentals(params: {
         startTime: start,
         endTime: end,
         duration,
-        totalPrice: 8000 + duration * 220,
+        totalPrice: Number(totalPrice),
         subscriptionId,
         status: RentalStatus.COMPLETED,
         updatedAt: end,
@@ -429,7 +444,7 @@ function buildRentals(params: {
   );
 
   const rentedUsers = normalUsers.slice(0, 8);
-  const rentedBikes = bikes.slice(0, 8);
+  const rentedBikes = Array.from({ length: 8 }, (_, i) => pick(bikes, i));
   for (let i = 0; i < 8; i++) {
     const start = toPastDemoRentalUtcDate(activeRentalDayOffset, 6 + i, (i * 8) % 60);
     rentals.push({
@@ -456,10 +471,11 @@ function buildReservations(params: {
   users: readonly DemoUser[];
   bikes: readonly { id: string; stationId: string | null }[];
   subscriptionIdsByUserId: ReadonlyMap<string, string>;
+  pricing: PricingConfig;
 }): DemoReservation[] {
-  const { users, bikes, subscriptionIdsByUserId } = params;
+  const { users, bikes, subscriptionIdsByUserId, pricing } = params;
   const normalUsers = users.filter(u => u.role === UserRole.USER).slice(8, 18);
-  const reservationBikes = bikes.slice(8, 18);
+  const reservationBikes = Array.from({ length: 10 }, (_, i) => pick(bikes, i + 8));
 
   return reservationBikes.map((bike, idx) => {
     const user = normalUsers[idx]!;
@@ -476,7 +492,7 @@ function buildReservations(params: {
       subscriptionId,
       startTime,
       endTime,
-      prepaid: subscriptionId ? 0 : 5000,
+      prepaid: subscriptionId ? 0 : Number(pricing.reservationFee),
       status: ReservationStatus.PENDING,
       createdAt: new Date(startTime.getTime() - 30 * 60 * 1000),
       updatedAt: new Date(startTime.getTime() - 20 * 60 * 1000),
@@ -498,6 +514,16 @@ async function main() {
     await seedDemoEnvironmentPolicy(prisma);
     await seedRatingReasons(prisma);
     await seedDefaultSystemConfigs(prisma);
+
+    const pricingRow = await prisma.pricingPolicy.findUniqueOrThrow({
+      where: { id: DEFAULT_PRICING_POLICY_ID },
+    });
+    const pricing: PricingConfig = {
+      baseRate: toMinorUnit(pricingRow.baseRate),
+      billingUnitMinutes: pricingRow.billingUnitMinutes,
+      reservationFee: toMinorUnit(pricingRow.reservationFee),
+      depositRequired: toMinorUnit(pricingRow.depositRequired),
+    };
 
     const users = buildDemoUsers(stations.length);
     const userEmails = users.map(u => u.email);
@@ -727,11 +753,6 @@ async function main() {
       },
     });
 
-    await prisma.$executeRaw`
-      DELETE FROM "Station"
-      WHERE "id" IN (${REMOVED_STATION_IDS[0]}::uuid)
-    `;
-
     await seedStations(prisma);
 
     const stationRows = await prisma.station.findMany({
@@ -916,26 +937,21 @@ async function main() {
       });
     }
 
-    await prisma.wallet.createMany({
-      data: users
-        .map((u, idx) => ({
+    let bikeCounter = 0;
+    const bikesToCreate = stationRows.flatMap((station) => {
+      const bikeCount = DEMO_BIKES_PER_STATION_OVERRIDES[station.name] ?? DEMO_DEFAULT_BIKES_PER_STATION;
+      return Array.from({ length: bikeCount }, () => {
+        bikeCounter++;
+        return {
           id: uuidv7(),
-          userId: u.id,
-          balance: BigInt(900000 + idx * 15000),
-          reservedBalance: 0n,
-          status: WalletStatus.ACTIVE,
+          bikeNumber: formatBikeNumber(bikeCounter),
+          stationId: station.id,
+          supplierId: suppliers[bikeCounter % suppliers.length]!.id,
+          status: BikeStatus.AVAILABLE,
           updatedAt: new Date(),
-        })),
+        };
+      });
     });
-
-    const bikesToCreate = Array.from({ length: stationIds.length * DEMO_BIKES_PER_STATION }, (_, idx) => ({
-      id: uuidv7(),
-      bikeNumber: `DEMO-${String(idx + 1).padStart(3, "0")}`,
-      stationId: pick(stationIds, idx),
-      supplierId: suppliers[idx % suppliers.length]!.id,
-      status: BikeStatus.AVAILABLE,
-      updatedAt: new Date(),
-    }));
 
     await prisma.bike.createMany({ data: bikesToCreate });
     await setBikeNumberSequence(prisma, bikesToCreate.length);
@@ -963,17 +979,141 @@ async function main() {
       subscriptions.map(s => [s.userId, s.id]),
     );
 
+    const bikesIndex = bikesToCreate.map(b => ({ id: b.id, stationId: b.stationId }));
+
     const rentals = buildRentals({
       users,
-      bikes: bikesToCreate.map(b => ({ id: b.id, stationId: b.stationId })),
+      bikes: bikesIndex,
       stationIds,
       subscriptionIdsByUserId,
+      pricing,
     });
     const reservations = buildReservations({
       users,
-      bikes: bikesToCreate.map(b => ({ id: b.id, stationId: b.stationId })),
+      bikes: bikesIndex,
       subscriptionIdsByUserId,
+      pricing,
     });
+
+    const INITIAL_DEPOSIT_BASE = 1500000n;
+    const INITIAL_DEPOSIT_INCREMENT = 15000n;
+
+    const userWalletDeductions = new Map<string, { debits: bigint; reserved: bigint }>();
+    for (const rental of rentals) {
+      const current = userWalletDeductions.get(rental.userId) ?? { debits: 0n, reserved: 0n };
+      if (rental.status === RentalStatus.COMPLETED) {
+        current.debits += BigInt(rental.totalPrice ?? 0);
+      }
+      if (rental.status === RentalStatus.RENTED) {
+        current.reserved += pricing.depositRequired;
+      }
+      userWalletDeductions.set(rental.userId, current);
+    }
+    for (const res of reservations) {
+      if (!res.subscriptionId && res.prepaid > 0) {
+        const current = userWalletDeductions.get(res.userId) ?? { debits: 0n, reserved: 0n };
+        current.debits += BigInt(res.prepaid);
+        userWalletDeductions.set(res.userId, current);
+      }
+    }
+
+    const walletData = users.map((u, idx) => {
+      const deductions = userWalletDeductions.get(u.id) ?? { debits: 0n, reserved: 0n };
+      const initialDeposit = INITIAL_DEPOSIT_BASE + BigInt(idx) * INITIAL_DEPOSIT_INCREMENT;
+      return {
+        id: uuidv7(),
+        userId: u.id,
+        initialDeposit,
+        balance: initialDeposit - deductions.debits,
+        reservedBalance: deductions.reserved,
+        status: WalletStatus.ACTIVE,
+        updatedAt: new Date(),
+      };
+    });
+    await prisma.wallet.createMany({
+      data: walletData.map(({ initialDeposit: _id, ...w }) => ({
+        id: w.id,
+        userId: w.userId,
+        balance: w.balance,
+        reservedBalance: w.reservedBalance,
+        status: w.status,
+        updatedAt: w.updatedAt,
+      })),
+    });
+
+    const walletRows = await prisma.wallet.findMany({
+      select: { id: true, userId: true },
+    });
+    const walletByUserId = new Map(walletRows.map(w => [w.userId, w.id]));
+
+    const walletTransactions: {
+      id: string;
+      walletId: string;
+      amount: bigint;
+      fee: bigint;
+      description: string | null;
+      hash: string | null;
+      type: string;
+      status: string;
+      createdAt: Date;
+    }[] = [];
+
+    for (const wd of walletData) {
+      walletTransactions.push({
+        id: uuidv7(),
+        walletId: wd.id,
+        amount: wd.initialDeposit,
+        fee: 0n,
+        description: "Demo initial deposit",
+        hash: null,
+        type: "DEPOSIT",
+        status: "SUCCESS",
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      });
+    }
+
+    const completedRentals = rentals.filter(r => r.status === RentalStatus.COMPLETED);
+    for (const rental of completedRentals) {
+      if (rental.totalPrice && rental.totalPrice > 0) {
+        const walletId = walletByUserId.get(rental.userId);
+        if (!walletId) {
+          continue;
+        }
+        walletTransactions.push({
+          id: uuidv7(),
+          walletId,
+          amount: BigInt(rental.totalPrice),
+          fee: 0n,
+          description: "Demo rental payment",
+          hash: null,
+          type: "DEBIT",
+          status: "SUCCESS",
+          createdAt: rental.endTime!,
+        });
+      }
+    }
+
+    for (const res of reservations) {
+      if (!res.subscriptionId && res.prepaid > 0) {
+        const walletId = walletByUserId.get(res.userId);
+        if (!walletId) {
+          continue;
+        }
+        walletTransactions.push({
+          id: uuidv7(),
+          walletId,
+          amount: BigInt(res.prepaid),
+          fee: 0n,
+          description: "Demo reservation fee",
+          hash: null,
+          type: "DEBIT",
+          status: "SUCCESS",
+          createdAt: res.createdAt,
+        });
+      }
+    }
+
+    await prisma.walletTransaction.createMany({ data: walletTransactions });
 
     await prisma.rental.createMany({
       data: rentals.map(r => ({
@@ -994,17 +1134,27 @@ async function main() {
       })),
     });
 
+    const billingRecords = completedRentals.map((r) => {
+      const baseCharge = calculateUsageChargeMinor({ durationMinutes: r.duration!, policy: pricing });
+      const isSubscription = Boolean(r.subscriptionId);
+      return {
+        id: uuidv7(),
+        rentalId: r.id,
+        pricingPolicyId: DEFAULT_PRICING_POLICY_ID,
+        totalDurationMinutes: r.duration!,
+        baseAmount: toPrismaDecimal(isSubscription ? 0 : Number(baseCharge)),
+        couponDiscountAmount: toPrismaDecimal(0),
+        subscriptionDiscountAmount: toPrismaDecimal(isSubscription ? Number(baseCharge) : 0),
+        depositForfeited: false,
+        totalAmount: toPrismaDecimal(r.totalPrice ?? 0),
+      };
+    });
+    if (billingRecords.length > 0) {
+      await prisma.rentalBillingRecord.createMany({ data: billingRecords });
+    }
+
     const rentedRentals = rentals.filter(r => r.status === RentalStatus.RENTED);
     if (rentedRentals.length > 0) {
-      const walletRows = await prisma.wallet.findMany({
-        where: {
-          userId: {
-            in: [...new Set(rentedRentals.map(rental => rental.userId))],
-          },
-        },
-        select: { id: true, userId: true },
-      });
-      const walletByUserId = new Map(walletRows.map(wallet => [wallet.userId, wallet.id]));
       const holdCountByWalletId = new Map<string, number>();
 
       for (const rental of rentedRentals) {
@@ -1019,7 +1169,7 @@ async function main() {
             id: holdId,
             walletId,
             rentalId: rental.id,
-            amount: DEMO_RENTAL_DEPOSIT_AMOUNT,
+            amount: pricing.depositRequired,
             reason: WalletHoldReason.RENTAL_DEPOSIT,
           },
         });
@@ -1029,13 +1179,6 @@ async function main() {
         });
 
         holdCountByWalletId.set(walletId, (holdCountByWalletId.get(walletId) ?? 0) + 1);
-      }
-
-      for (const [walletId, holdCount] of holdCountByWalletId) {
-        await prisma.wallet.update({
-          where: { id: walletId },
-          data: { reservedBalance: BigInt(holdCount) * DEMO_RENTAL_DEPOSIT_AMOUNT },
-        });
       }
     }
 
@@ -1105,17 +1248,21 @@ async function main() {
     ) {
       const endTime = toUtcDate(-3, 11, 15);
       const startTime = new Date(endTime.getTime() - 52 * 60 * 1000);
+      const duration = 52;
+      const startStation = agencyOwnedStations[0].stationId;
+      const endStation = agencyOwnedStations[0].stationId;
+      const totalPrice = Number(calculateUsageChargeMinor({ durationMinutes: duration, policy: pricing }));
       const rental = {
         id: uuidv7(),
         userId: agencyStatsMainUser.id,
         bikeId: agencyStatsMainBike.id,
-        startStationId: agencyOwnedStations[0].stationId,
-        endStationId: agencyOwnedStations[0].stationId,
+        startStationId: startStation,
+        endStationId: endStation,
         createdAt: new Date(startTime.getTime() - 5 * 60 * 1000),
         startTime,
         endTime,
-        duration: 52,
-        totalPrice: 36000,
+        duration,
+        totalPrice,
         subscriptionId: null,
         status: RentalStatus.COMPLETED,
         updatedAt: endTime,
@@ -1182,17 +1329,21 @@ async function main() {
     ) {
       const endTime = toUtcDate(-5, 15, 10);
       const startTime = new Date(endTime.getTime() - 38 * 60 * 1000);
+      const duration = 38;
+      const startStation = agencyOwnedStations[1].stationId;
+      const endStation = agencyOwnedStations[1].stationId;
+      const totalPrice = Number(calculateUsageChargeMinor({ durationMinutes: duration, policy: pricing }));
       const rental = {
         id: uuidv7(),
         userId: agencyStatsEastUser.id,
         bikeId: agencyStatsEastBike.id,
-        startStationId: agencyOwnedStations[1].stationId,
-        endStationId: agencyOwnedStations[1].stationId,
+        startStationId: startStation,
+        endStationId: endStation,
         createdAt: new Date(startTime.getTime() - 5 * 60 * 1000),
         startTime,
         endTime,
-        duration: 38,
-        totalPrice: 29000,
+        duration,
+        totalPrice,
         subscriptionId: null,
         status: RentalStatus.COMPLETED,
         updatedAt: endTime,
