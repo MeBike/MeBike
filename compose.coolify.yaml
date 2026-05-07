@@ -102,6 +102,7 @@ services:
       PORT: 4000
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       PRISMA_TRANSACTION_TIMEOUT_MS: ${PRISMA_TRANSACTION_TIMEOUT_MS:-10000}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/secrets/firebase-admin.json}
       REDIS_URL: redis://redis:6379
       IOT_MQTT_URL: mqtt://mosquitto:1883
       IOT_MQTT_USERNAME: ${IOT_MQTT_USERNAME}
@@ -124,6 +125,8 @@ services:
         condition: service_healthy
     networks:
       - mebike-internal
+    volumes:
+      - ${FIREBASE_ADMIN_CREDENTIALS_HOST_PATH}:/app/secrets/firebase-admin.json:ro
     expose:
       - "4000"
 

@@ -123,6 +123,7 @@ export default function StationSelectScreen() {
 
       <StationSelectMapOverlay
         safeBottom={insets.bottom}
+        isAuthenticated={isAuthenticated}
         showingNearby={showingNearby}
         isLoadingNearbyStations={isLoadingNearbyStations}
         isResolvingNearbyLocation={isResolvingNearbyLocation}
