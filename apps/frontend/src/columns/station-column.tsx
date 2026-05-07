@@ -178,7 +178,7 @@ export const stationStaffColumns = ({
     header: "Loại trạm",
     cell: ({ row }) => (
       <span className={row.original.stationType === "INTERNAL" ? "text-blue-600 font-medium" : "text-purple-600 font-medium"}>
-        {row.original.stationType === "INTERNAL" ? "Trạm nội bộ" : "AGENCY"}
+        {row.original.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
       </span>
     ),
   },

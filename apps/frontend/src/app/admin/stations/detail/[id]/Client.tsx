@@ -246,8 +246,8 @@ export default function StationDetailClient({
                         errors.stationType && "border-destructive",
                       )}
                     >
-                      <option value="INTERNAL">INTERNAL</option>
-                      <option value="AGENCY">AGENCY</option>
+                      <option value="INTERNAL">Trạm nội bộ</option>
+                      <option value="AGENCY">Trạm đối tác</option>
                     </select>
                     <ErrorMsg message={errors.stationType?.message} />
                   </div>

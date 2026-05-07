@@ -159,7 +159,7 @@ export default function StationDetailPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl flex items-center gap-3">
               Chi tiết trạm
               <Badge variant={station.stationType === "AGENCY" ? "default" : "secondary"} className="text-sm">
-                {station.stationType}
+                {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
               </Badge>
             </h1>
           </div>

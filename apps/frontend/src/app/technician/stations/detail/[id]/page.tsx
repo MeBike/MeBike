@@ -133,7 +133,7 @@ export default function StationDetailPage() {
                 }
                 className="text-sm"
               >
-                {station.stationType}
+                {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
               </Badge>
             </h1>
           </div>
