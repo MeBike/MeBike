@@ -246,11 +246,6 @@ export default function ReservationDetailClient() {
                         {data.endTime ? formatToVNTime(data.endTime) : "--:--"}
                       </span>
                     </div>
-
-                    <p className="text-xs text-muted-foreground max-w-[250px]">
-                      * Vui lòng đến nhận xe trước thời gian này. Sau thời gian
-                      trên, phiên đặt sẽ tự động bị hủy.
-                    </p>
                   </div>
                 </div>
               </div>
