@@ -47,7 +47,16 @@ const DEMO_PASSWORD = "Demo@123456";
 
 const USERS_TARGET = 32;
 const RENTALS_TARGET = 120;
-const DEMO_NON_CUSTOMER_USERS = 7;
+function slugifyStation(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036F]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+const DEMO_NON_CUSTOMER_USERS = 5 + stations.length;
 const DEMO_DEFAULT_BIKES_PER_STATION = 15;
 const DEMO_BIKES_PER_STATION_OVERRIDES: Record<string, number> = {
   "Ga Bình Thái": 5,
@@ -278,24 +287,15 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
       role: UserRole.ADMIN,
       verify: UserVerifyStatus.VERIFIED,
     },
-    {
+    ...stations.map((station, idx) => ({
       id: uuidv7(),
-      fullname: "Demo Staff 1",
-      email: "staff1@mebike.local",
-      phoneNumber: "0900000002",
-      username: "demo_staff_1",
+      fullname: `Demo Staff ${station.name}`,
+      email: `staff.${slugifyStation(station.name)}@mebike.local`,
+      phoneNumber: `090${String(idx + 10).padStart(7, "0")}`,
+      username: `demo_staff_${slugifyStation(station.name)}`,
       role: UserRole.STAFF,
       verify: UserVerifyStatus.VERIFIED,
-    },
-    {
-      id: uuidv7(),
-      fullname: "Demo Staff 2",
-      email: "staff2@mebike.local",
-      phoneNumber: "0900000003",
-      username: "demo_staff_2",
-      role: UserRole.STAFF,
-      verify: UserVerifyStatus.VERIFIED,
-    },
+    })),
     {
       id: uuidv7(),
       fullname: "Demo Manager",
@@ -901,18 +901,12 @@ async function main() {
       }))
       .filter(item => item.user !== undefined) as DemoOrgAssignment[];
     const orgAssignments = [
-      {
-        user: userByEmail.get("staff1@mebike.local"),
-        stationId: pick(stationIds, 2),
+      ...stationRows.map(station => ({
+        user: userByEmail.get(`staff.${slugifyStation(station.name)}@mebike.local`),
+        stationId: station.id,
         agencyId: null,
         technicianTeamId: null,
-      },
-      {
-        user: userByEmail.get("staff2@mebike.local"),
-        stationId: pick(stationIds, 3),
-        agencyId: null,
-        technicianTeamId: null,
-      },
+      })),
       {
         user: userByEmail.get("manager@mebike.local"),
         stationId: pick(stationIds, 0),
@@ -1419,8 +1413,9 @@ async function main() {
     const tech1 = users.find(user => user.email === "tech1@mebike.local");
     const tech1Assignment = orgAssignments.find(item => item.user.email === "tech1@mebike.local");
     const user01 = users.find(user => user.email === "user01@mebike.local");
-    const staff1 = users.find(user => user.email === "staff1@mebike.local");
-    const staff1Assignment = orgAssignments.find(item => item.user.email === "staff1@mebike.local");
+    const firstStation = stationRows[0];
+    const staff1 = firstStation ? users.find(user => user.email === `staff.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
+    const staff1Assignment = firstStation ? orgAssignments.find(item => item.user.email === `staff.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
     const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
     const user01IncidentStation = stationRows.find(station => station.id === user01ActiveRental?.startStationId);
@@ -1556,7 +1551,7 @@ async function main() {
     logger.info(
       {
         admin: "admin@mebike.local",
-        staff: "staff1@mebike.local",
+        staff: firstStation ? `staff.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
         manager: "manager@mebike.local",
         agency: "agency1@mebike.local",
         agency2: "agency2@mebike.local",
