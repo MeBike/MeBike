@@ -60,7 +60,7 @@ interface Props {
   onComplete: (payload: { completedBikeIds: string[] }) => Promise<void>;
   listStation?: CurrentStation;
   // Thêm prop phân quyền
-  userRole?: "MANAGER" | "AGENCY"; 
+  userRole?: "AGENCY"; 
 }
 
 export const DistributionRequestDetailClient = ({
@@ -69,7 +69,7 @@ export const DistributionRequestDetailClient = ({
   onReject,
   onComplete,
   listStation,
-  userRole = "MANAGER", // Mặc định là Manager nếu không truyền
+  userRole = "AGENCY", // Mặc định là Manager nếu không truyền
 }: Props) => {
   const router = useRouter();
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -133,7 +133,7 @@ export const DistributionRequestDetailClient = ({
   const canApproveOrReject = isAgency; 
 
   // Quyền hoàn tất: Dành cho Manager tại trạm đích HOẶC Agency
-  const canCompleteRequest = (userRole === "MANAGER" && isTargetStation) || isAgency;
+  const canCompleteRequest =  isAgency && isTargetStation;
 
   // Cột checkbox chỉ hiển thị khi có quyền Nhận xe và đơn đang ở trạng thái có thể nhận
   const isReceivingStatus = data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED";
