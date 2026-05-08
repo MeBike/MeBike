@@ -75,7 +75,11 @@ const DEMO_NFC_CARD_USER_EMAIL = "user02@mebike.local";
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
 const DEMO_AGENCY_MAIN_STATION_NAME = "Vincom Plaza";
-const DEMO_AGENCY_STATION_NAMES = new Set([DEMO_AGENCY_MAIN_STATION_NAME]);
+const DEMO_AGENCY_STATION_NAMES = new Set([
+  DEMO_AGENCY_MAIN_STATION_NAME,
+  "Saigon Centre",
+  "Mega Mall Thảo Điền",
+]);
 const LEGACY_DEMO_AGENCY_IDS = [
   "019b17bd-d130-7e7d-be69-91ceef7b9007",
   "019b17bd-d130-7e7d-be69-91ceef7b9008",
@@ -685,6 +689,17 @@ async function main() {
         },
       },
     });
+    await prisma.walletTransaction.deleteMany({
+      where: {
+        wallet: {
+          user: {
+            email: {
+              in: userEmails,
+            },
+          },
+        },
+      },
+    });
     await prisma.wallet.deleteMany({
       where: {
         user: {
@@ -839,7 +854,9 @@ async function main() {
 
     const stationIdByName = new Map(stationRows.map(station => [station.name, station.id]));
     const agencyOwnedStations = [
-      { stationId: stationIdByName.get(DEMO_AGENCY_MAIN_STATION_NAME), agencyId: mainAgency.id },
+      { stationId: stationIdByName.get("Vincom Plaza"), agencyId: mainAgency.id },
+      { stationId: stationIdByName.get("Saigon Centre"), agencyId: eastAgency.id },
+      { stationId: stationIdByName.get("Mega Mall Thảo Điền"), agencyId: mainAgency.id },
     ].filter((item): item is { stationId: string; agencyId: string } => Boolean(item.stationId));
 
     for (const item of agencyOwnedStations) {
