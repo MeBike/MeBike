@@ -45,7 +45,8 @@ import { stations } from "./seed/stations.data";
 
 const DEMO_PASSWORD = "Demo@123456";
 
-const USERS_TARGET = 32;
+const DEMO_CUSTOMER_USERS = 25;
+const USERS_TARGET = DEMO_CUSTOMER_USERS;
 const RENTALS_TARGET = 120;
 function slugifyStation(name: string): string {
   return name
@@ -69,7 +70,6 @@ const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
 const DEMO_AGENCY_MAIN_STATION_NAME = "Vincom Plaza";
 const DEMO_AGENCY_STATION_NAMES = new Set([DEMO_AGENCY_MAIN_STATION_NAME]);
-const DEMO_NON_CUSTOMER_USERS = 1 + stations.length * 2 + stations.filter(s => DEMO_AGENCY_STATION_NAMES.has(s.name)).length;
 const LEGACY_DEMO_AGENCY_IDS = [
   "019b17bd-d130-7e7d-be69-91ceef7b9007",
   "019b17bd-d130-7e7d-be69-91ceef7b9008",
@@ -331,7 +331,7 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
     });
   }
 
-  for (let i = 1; i <= USERS_TARGET - DEMO_NON_CUSTOMER_USERS; i++) {
+  for (let i = 1; i <= USERS_TARGET; i++) {
     const order = String(i).padStart(2, "0");
     users.push({
       id: uuidv7(),
