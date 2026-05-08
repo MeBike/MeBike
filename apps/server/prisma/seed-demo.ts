@@ -322,7 +322,7 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
   users.push(...stations.slice(0, technicianCount).map((station, index) => ({
     id: uuidv7(),
     fullname: `Demo Technician ${station.name}`,
-    email: `technician.${slugifyStation(station.name)}@mebike.local`,
+    email: `tech.${slugifyStation(station.name)}@mebike.local`,
     phoneNumber: `092${String(index + 1).padStart(7, "0")}`,
     username: `demo_technician_${slugifyStation(station.name)}`,
     role: UserRole.TECHNICIAN,
@@ -877,7 +877,7 @@ async function main() {
 
     const technicianAssignments = technicianTeams
       .map((team, index) => ({
-        user: userByEmail.get(`technician.${slugifyStation(stationRows[index]!.name)}@mebike.local`),
+        user: userByEmail.get(`tech.${slugifyStation(stationRows[index]!.name)}@mebike.local`),
         stationId: null,
         agencyId: null,
         technicianTeamId: team.id,
@@ -1390,8 +1390,8 @@ async function main() {
 
     const user01 = users.find(user => user.email === "user01@mebike.local");
     const firstStation = stationRows[0];
-    const tech1 = firstStation ? users.find(user => user.email === `technician.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
-    const tech1Assignment = firstStation ? orgAssignments.find(item => item.user.email === `technician.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
+    const tech1 = firstStation ? users.find(user => user.email === `tech.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
+    const tech1Assignment = firstStation ? orgAssignments.find(item => item.user.email === `tech.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
     const staff1 = firstStation ? users.find(user => user.email === `staff.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
     const staff1Assignment = firstStation ? orgAssignments.find(item => item.user.email === `staff.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
@@ -1534,7 +1534,7 @@ async function main() {
         agency: agencyOwnedStations[0]
           ? `agency.${slugifyStation(stationRows.find(s => s.id === agencyOwnedStations[0].stationId)!.name)}@mebike.local`
           : undefined,
-        technician: firstStation ? `technician.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
+        technician: firstStation ? `tech.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
         user: "user01@mebike.local",
         password: DEMO_PASSWORD,
       },
