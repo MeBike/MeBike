@@ -109,13 +109,16 @@ export const DistributionRequestDetailClient = ({
   const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const handleAction = async (action: () => Promise<void>) => {
-    setIsProcessing(true);
-    await action();
-    setSelectedBikeIds([]);
-    setIsProcessing(false);
-    setShowRejectModal(false);
-  };
+  const handleAction = async (action: () => Promise<void>) => {  
+    setIsProcessing(true);  
+    try {  
+      await action();  
+      setSelectedBikeIds([]);  
+    } finally {  
+      setIsProcessing(false);  
+    }  
+  };  
+
   const isValid = rejectReason.trim().length >= 10;
   const handleRejectSubmit = async () => {
     if (!isValid) return;
@@ -170,11 +173,7 @@ export const DistributionRequestDetailClient = ({
     data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED";
   const showCheckboxColumn = isReceivingStatus && canCompleteRequest;
   const isValidCancelReason = cancelReason.trim().length >= 10;
-  const handleStartTransit = async () => {
-    setIsProcessing(true);
-    await onStartTransit();
-    setIsProcessing(false);
-  };
+  const handleStartTransit = () => handleAction(onStartTransit);  
 
   const handleCancel = async () => {
     if (!isValidCancelReason) return;
