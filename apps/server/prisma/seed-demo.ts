@@ -48,13 +48,18 @@ const DEMO_PASSWORD = "Demo@123456";
 const DEMO_CUSTOMER_USERS = 25;
 const USERS_TARGET = DEMO_CUSTOMER_USERS;
 const RENTALS_TARGET = 120;
-function slugifyStation(name: string): string {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036F]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+const STATION_ORDER_BY_NAME = new Map(stations.map((station, index) => [station.name, index + 1] as const));
+
+function getStationOrder(name: string): number {
+  return STATION_ORDER_BY_NAME.get(name) ?? 1;
+}
+
+function buildRoleEmail(prefix: "staff" | "manager" | "agency" | "tech", stationName: string): string {
+  return `${prefix}${getStationOrder(stationName)}@mebike.local`;
+}
+
+function buildRoleUsername(prefix: "staff" | "manager" | "agency" | "tech", stationName: string): string {
+  return `demo_${prefix}_${getStationOrder(stationName)}`;
 }
 
 const DEMO_DEFAULT_BIKES_PER_STATION = 15;
@@ -290,19 +295,19 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
     },
     ...stations.map((station, idx) => ({
       id: uuidv7(),
-      fullname: `Demo Staff ${station.name}`,
-      email: `staff.${slugifyStation(station.name)}@mebike.local`,
+      fullname: `Demo Staff ${getStationOrder(station.name)} (${station.name})`,
+      email: buildRoleEmail("staff", station.name),
       phoneNumber: `090${String(idx + 10).padStart(7, "0")}`,
-      username: `demo_staff_${slugifyStation(station.name)}`,
+      username: buildRoleUsername("staff", station.name),
       role: UserRole.STAFF,
       verify: UserVerifyStatus.VERIFIED,
     })),
     ...stations.map((station, idx) => ({
       id: uuidv7(),
-      fullname: `Demo Manager ${station.name}`,
-      email: `manager.${slugifyStation(station.name)}@mebike.local`,
+      fullname: `Demo Manager ${getStationOrder(station.name)} (${station.name})`,
+      email: buildRoleEmail("manager", station.name),
       phoneNumber: `090${String(idx + 30).padStart(7, "0")}`,
-      username: `demo_manager_${slugifyStation(station.name)}`,
+      username: buildRoleUsername("manager", station.name),
       role: UserRole.MANAGER,
       verify: UserVerifyStatus.VERIFIED,
     })),
@@ -310,10 +315,10 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
       .filter(s => DEMO_AGENCY_STATION_NAMES.has(s.name))
       .map((station, idx) => ({
         id: uuidv7(),
-        fullname: `Demo Agency ${station.name}`,
-        email: `agency.${slugifyStation(station.name)}@mebike.local`,
+        fullname: `Demo Agency ${getStationOrder(station.name)} (${station.name})`,
+        email: buildRoleEmail("agency", station.name),
         phoneNumber: `090${String(idx + 50).padStart(7, "0")}`,
-        username: `demo_agency_${slugifyStation(station.name)}`,
+        username: buildRoleUsername("agency", station.name),
         role: UserRole.AGENCY,
         verify: UserVerifyStatus.VERIFIED,
       })),
@@ -321,10 +326,10 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
 
   users.push(...stations.slice(0, technicianCount).map((station, index) => ({
     id: uuidv7(),
-    fullname: `Demo Technician ${station.name}`,
-    email: `tech.${slugifyStation(station.name)}@mebike.local`,
+    fullname: `Demo Tech ${getStationOrder(station.name)} (${station.name})`,
+    email: buildRoleEmail("tech", station.name),
     phoneNumber: `092${String(index + 1).padStart(7, "0")}`,
-    username: `demo_technician_${slugifyStation(station.name)}`,
+    username: buildRoleUsername("tech", station.name),
     role: UserRole.TECHNICIAN,
     verify: UserVerifyStatus.VERIFIED,
   })));
@@ -877,7 +882,7 @@ async function main() {
 
     const technicianAssignments = technicianTeams
       .map((team, index) => ({
-        user: userByEmail.get(`tech.${slugifyStation(stationRows[index]!.name)}@mebike.local`),
+        user: userByEmail.get(buildRoleEmail("tech", stationRows[index]!.name)),
         stationId: null,
         agencyId: null,
         technicianTeamId: team.id,
@@ -885,13 +890,13 @@ async function main() {
       .filter(item => item.user !== undefined) as DemoOrgAssignment[];
     const orgAssignments = [
       ...stationRows.map(station => ({
-        user: userByEmail.get(`staff.${slugifyStation(station.name)}@mebike.local`),
+        user: userByEmail.get(buildRoleEmail("staff", station.name)),
         stationId: station.id,
         agencyId: null,
         technicianTeamId: null,
       })),
       ...stationRows.map(station => ({
-        user: userByEmail.get(`manager.${slugifyStation(station.name)}@mebike.local`),
+        user: userByEmail.get(buildRoleEmail("manager", station.name)),
         stationId: station.id,
         agencyId: null,
         technicianTeamId: null,
@@ -899,7 +904,7 @@ async function main() {
       ...agencyOwnedStations.map((item) => {
         const station = stationRows.find(s => s.id === item.stationId);
         return {
-          user: station ? userByEmail.get(`agency.${slugifyStation(station.name)}@mebike.local`) : undefined,
+          user: station ? userByEmail.get(buildRoleEmail("agency", station.name)) : undefined,
           stationId: null as string | null,
           agencyId: item.agencyId,
           technicianTeamId: null as string | null,
@@ -1221,10 +1226,10 @@ async function main() {
     const agencyStatsMainUser = userByEmail.get("user01@mebike.local");
     const agencyStatsEastUser = userByEmail.get("user02@mebike.local");
     const agencyStatsMainOperator = agencyOwnedStations[0]
-      ? userByEmail.get(`agency.${slugifyStation(stationRows.find(s => s.id === agencyOwnedStations[0].stationId)!.name)}@mebike.local`)
+      ? userByEmail.get(buildRoleEmail("agency", stationRows.find(s => s.id === agencyOwnedStations[0].stationId)!.name))
       : undefined;
     const agencyStatsEastOperator = agencyOwnedStations[1]
-      ? userByEmail.get(`agency.${slugifyStation(stationRows.find(s => s.id === agencyOwnedStations[1].stationId)!.name)}@mebike.local`)
+      ? userByEmail.get(buildRoleEmail("agency", stationRows.find(s => s.id === agencyOwnedStations[1].stationId)!.name))
       : undefined;
 
     if (
@@ -1390,10 +1395,10 @@ async function main() {
 
     const user01 = users.find(user => user.email === "user01@mebike.local");
     const firstStation = stationRows[0];
-    const tech1 = firstStation ? users.find(user => user.email === `tech.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
-    const tech1Assignment = firstStation ? orgAssignments.find(item => item.user.email === `tech.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
-    const staff1 = firstStation ? users.find(user => user.email === `staff.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
-    const staff1Assignment = firstStation ? orgAssignments.find(item => item.user.email === `staff.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
+    const tech1 = firstStation ? users.find(user => user.email === buildRoleEmail("tech", firstStation.name)) : undefined;
+    const tech1Assignment = firstStation ? orgAssignments.find(item => item.user.email === buildRoleEmail("tech", firstStation.name)) : undefined;
+    const staff1 = firstStation ? users.find(user => user.email === buildRoleEmail("staff", firstStation.name)) : undefined;
+    const staff1Assignment = firstStation ? orgAssignments.find(item => item.user.email === buildRoleEmail("staff", firstStation.name)) : undefined;
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
     const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
     const user01IncidentStation = stationRows.find(station => station.id === user01ActiveRental?.startStationId);
@@ -1529,12 +1534,12 @@ async function main() {
     logger.info(
       {
         admin: "admin@mebike.local",
-        staff: firstStation ? `staff.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
-        manager: firstStation ? `manager.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
+        staff: firstStation ? buildRoleEmail("staff", firstStation.name) : undefined,
+        manager: firstStation ? buildRoleEmail("manager", firstStation.name) : undefined,
         agency: agencyOwnedStations[0]
-          ? `agency.${slugifyStation(stationRows.find(s => s.id === agencyOwnedStations[0].stationId)!.name)}@mebike.local`
+          ? buildRoleEmail("agency", stationRows.find(s => s.id === agencyOwnedStations[0].stationId)!.name)
           : undefined,
-        technician: firstStation ? `tech.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
+        technician: firstStation ? buildRoleEmail("tech", firstStation.name) : undefined,
         user: "user01@mebike.local",
         password: DEMO_PASSWORD,
       },
