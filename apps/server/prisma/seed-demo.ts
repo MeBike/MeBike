@@ -74,6 +74,7 @@ const DEMO_NFC_CARD_USER_EMAIL = "user02@mebike.local";
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
+const DEMO_AGENCY_MEGA_ID = "019b17bd-d130-7e7d-be69-91ceef7b9009";
 const DEMO_AGENCY_MAIN_STATION_NAME = "Vincom Plaza";
 const DEMO_AGENCY_STATION_NAMES = new Set([
   DEMO_AGENCY_MAIN_STATION_NAME,
@@ -285,6 +286,27 @@ async function seedDemoEnvironmentPolicy(prisma: PrismaClient) {
       },
     });
   });
+}
+
+async function truncateAllPublicTables(prisma: PrismaClient) {
+  await prisma.$executeRawUnsafe(`
+    DO $$
+    DECLARE
+      stmt text;
+    BEGIN
+      SELECT 'TRUNCATE TABLE '
+        || string_agg(format('%I.%I', schemaname, tablename), ', ')
+        || ' RESTART IDENTITY CASCADE'
+      INTO stmt
+      FROM pg_tables
+      WHERE schemaname = 'public'
+        AND tablename <> '_prisma_migrations';
+
+      IF stmt IS NOT NULL THEN
+        EXECUTE stmt;
+      END IF;
+    END $$;
+  `);
 }
 
 function buildDemoUsers(technicianCount: number): DemoUser[] {
@@ -509,6 +531,8 @@ async function main() {
 
   try {
     const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+
+    await truncateAllPublicTables(prisma);
 
     await upsertVietnamBoundary(prisma);
     await seedDefaultPricingPolicy(prisma);
@@ -814,7 +838,7 @@ async function main() {
       },
     });
 
-    const [mainAgency, eastAgency] = await Promise.all([
+    const [mainAgency, eastAgency, megaAgency] = await Promise.all([
       prisma.agency.upsert({
         where: { id: DEMO_AGENCY_MAIN_ID },
         create: {
@@ -843,6 +867,20 @@ async function main() {
           status: "ACTIVE",
         },
       }),
+      prisma.agency.upsert({
+        where: { id: DEMO_AGENCY_MEGA_ID },
+        create: {
+          id: DEMO_AGENCY_MEGA_ID,
+          name: "Demo Agency Mega",
+          contactPhone: "02873000003",
+          status: "ACTIVE",
+        },
+        update: {
+          name: "Demo Agency Mega",
+          contactPhone: "02873000003",
+          status: "ACTIVE",
+        },
+      }),
     ]);
 
     await prisma.$executeRaw`
@@ -856,7 +894,7 @@ async function main() {
     const agencyOwnedStations = [
       { stationId: stationIdByName.get("Vincom Plaza"), agencyId: mainAgency.id },
       { stationId: stationIdByName.get("Saigon Centre"), agencyId: eastAgency.id },
-      { stationId: stationIdByName.get("Mega Mall Thảo Điền"), agencyId: mainAgency.id },
+      { stationId: stationIdByName.get("Mega Mall Thảo Điền"), agencyId: megaAgency.id },
     ].filter((item): item is { stationId: string; agencyId: string } => Boolean(item.stationId));
 
     for (const item of agencyOwnedStations) {
