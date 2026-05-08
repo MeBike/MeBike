@@ -307,6 +307,15 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
     },
     {
       id: uuidv7(),
+      fullname: "Demo Manager Binh Thai",
+      email: "manager.binhthai@mebike.local",
+      phoneNumber: "0900000008",
+      username: "demo_manager_binh_thai",
+      role: UserRole.MANAGER,
+      verify: UserVerifyStatus.VERIFIED,
+    },
+    {
+      id: uuidv7(),
       fullname: "Demo Agency Operator 1",
       email: "agency1@mebike.local",
       phoneNumber: "0900000005",
@@ -907,6 +916,12 @@ async function main() {
       {
         user: userByEmail.get("manager@mebike.local"),
         stationId: pick(stationIds, 0),
+        agencyId: null,
+        technicianTeamId: null,
+      },
+      {
+        user: userByEmail.get("manager.binhthai@mebike.local"),
+        stationId: stationIdByName.get("Ga Bình Thái") ?? null,
         agencyId: null,
         technicianTeamId: null,
       },
