@@ -814,7 +814,7 @@ async function main() {
       },
     });
 
-    const [mainAgency, _eastAgency] = await Promise.all([
+    const [mainAgency, eastAgency] = await Promise.all([
       prisma.agency.upsert({
         where: { id: DEMO_AGENCY_MAIN_ID },
         create: {
