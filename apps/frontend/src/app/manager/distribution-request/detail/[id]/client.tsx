@@ -96,10 +96,32 @@ export const DistributionRequestDetailClient = ({
     }
   };
 
+  // --- LOGIC: CHỌN TỪNG XE ---
   const handleToggleBike = (bikeId: string) => {
     setSelectedBikeIds((prev) =>
       prev.includes(bikeId) ? prev.filter((id) => id !== bikeId) : [...prev, bikeId]
     );
+  };
+
+  // --- LOGIC: CHỌN TẤT CẢ ---
+  // Lọc ra các xe chưa được bàn giao (hợp lệ để tick)
+  const selectableBikes = data.items
+    .filter((item) => !item.deliveredAt)
+    .map((item) => item.bike.id);
+
+  // Kiểm tra xem tất cả các xe hợp lệ đã được chọn hay chưa
+  const isAllSelected = 
+    selectableBikes.length > 0 && 
+    selectableBikes.length === selectedBikeIds.length;
+
+  const handleToggleAll = () => {
+    if (isAllSelected) {
+      // Nếu đã chọn tất cả rồi thì bỏ chọn
+      setSelectedBikeIds([]);
+    } else {
+      // Nếu chưa chọn hết thì chọn toàn bộ các xe hợp lệ
+      setSelectedBikeIds(selectableBikes);
+    }
   };
 
   const statusInfo = STATUS_MAP[data.status] || { label: "Không xác định", style: "bg-gray-100 text-gray-800 border-gray-200" };
@@ -242,7 +264,7 @@ export const DistributionRequestDetailClient = ({
 
         {/* Row 2: Table List (Full Width) */}
         <Card className="shadow-sm border-slate-200 overflow-hidden">
-          <CardHeader className="bg-slate-900 text-white py-4">
+          <CardHeader className="bg-slate-900 text-white py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-base font-medium flex items-center gap-2">
               <Bike className="h-5 w-5 text-blue-400" /> Danh sách xe thực tế ({data.items.length})
             </CardTitle>
@@ -252,7 +274,15 @@ export const DistributionRequestDetailClient = ({
               <TableHeader className="bg-slate-50/80">
                 <TableRow className="hover:bg-transparent">
                   {showCheckboxColumn && (
-                    <TableHead className="w-[60px] text-center font-bold text-slate-600">Chọn</TableHead>
+                    <TableHead className="w-[60px] text-center font-bold text-slate-600">
+                      {/* --- CHECKBOX CHỌN TẤT CẢ --- */}
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={handleToggleAll}
+                        disabled={selectableBikes.length === 0}
+                        aria-label="Chọn tất cả"
+                      />
+                    </TableHead>
                   )}
                   <TableHead className="w-[60px] text-center font-bold text-slate-600">STT</TableHead>
                   <TableHead className="font-bold text-slate-600">Mã xe (Bike ID)</TableHead>
