@@ -63,7 +63,6 @@ const DistributionRequestDetailPage = () => {
   
   return (
     <DistributionRequestDetailClient 
-      user={user as DetailUser}
       listStation={listStation}
       data={agencyViewDistributionRequestDetail.data}
       onApprove={() => agencyApproveDistributeRequest(id)}
