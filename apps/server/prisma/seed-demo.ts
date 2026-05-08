@@ -307,7 +307,7 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
       verify: UserVerifyStatus.VERIFIED,
     })),
     ...stations
-      .filter(s => DEMO_AGENCY_STATION_NAMES.includes(s.name))
+      .filter(s => DEMO_AGENCY_STATION_NAMES.has(s.name))
       .map((station, idx) => ({
         id: uuidv7(),
         fullname: `Demo Agency ${station.name}`,
