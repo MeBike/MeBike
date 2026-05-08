@@ -319,17 +319,15 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
       })),
   ];
 
-  for (let i = 1; i <= technicianCount; i++) {
-    users.push({
-      id: uuidv7(),
-      fullname: buildDemoTechnicianFullName(i),
-      email: `tech${i}@mebike.local`,
-      phoneNumber: `092${String(i).padStart(7, "0")}`,
-      username: `demo_tech_${i}`,
-      role: UserRole.TECHNICIAN,
-      verify: UserVerifyStatus.VERIFIED,
-    });
-  }
+  users.push(...stations.slice(0, technicianCount).map((station, index) => ({
+    id: uuidv7(),
+    fullname: `Demo Technician ${station.name}`,
+    email: `technician.${slugifyStation(station.name)}@mebike.local`,
+    phoneNumber: `092${String(index + 1).padStart(7, "0")}`,
+    username: `demo_technician_${slugifyStation(station.name)}`,
+    role: UserRole.TECHNICIAN,
+    verify: UserVerifyStatus.VERIFIED,
+  })));
 
   for (let i = 1; i <= USERS_TARGET; i++) {
     const order = String(i).padStart(2, "0");
@@ -879,7 +877,7 @@ async function main() {
 
     const technicianAssignments = technicianTeams
       .map((team, index) => ({
-        user: userByEmail.get(`tech${index + 1}@mebike.local`),
+        user: userByEmail.get(`technician.${slugifyStation(stationRows[index]!.name)}@mebike.local`),
         stationId: null,
         agencyId: null,
         technicianTeamId: team.id,
