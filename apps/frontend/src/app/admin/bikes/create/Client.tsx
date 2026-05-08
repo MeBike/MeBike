@@ -162,7 +162,7 @@ export default function CreateBikeClient({
                                 {agencyStations.length > 0 && (
                                   <SelectGroup>
                                     <SelectLabel className="flex items-center gap-2 text-orange-500 bg-muted/50 py-2">
-                                      <Store className="h-4 w-4" /> Trạm Đại Lý (Agency)
+                                      <Store className="h-4 w-4" /> Trạm Đại Lý
                                     </SelectLabel>
                                     {agencyStations.map((station) => (
                                       <SelectItem key={station.id} value={station.id} disabled={station.capacity.emptyPhysicalSlots <= 0}>

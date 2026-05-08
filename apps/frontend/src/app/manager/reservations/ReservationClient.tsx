@@ -80,7 +80,7 @@ export default function ReservationClient({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            Quản lý đặt trước (Staff)
+            Quản lý đặt trước
           </h1>
           <p className="mt-1 text-muted-foreground">
             Theo dõi và quản lý các đơn đặt trước xe đạp tại trạm

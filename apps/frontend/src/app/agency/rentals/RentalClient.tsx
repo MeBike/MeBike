@@ -93,7 +93,7 @@ export default function RentalClient() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            Quản lý đơn thuê (Agency)
+            Quản lý đơn thuê
           </h1>
           <p className="text-muted-foreground mt-1">
             Theo dõi và quản lý các phiên thuê xe tại trạm của bạn
