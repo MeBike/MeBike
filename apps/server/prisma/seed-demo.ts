@@ -56,7 +56,6 @@ function slugifyStation(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
-const DEMO_NON_CUSTOMER_USERS = 5 + stations.length;
 const DEMO_DEFAULT_BIKES_PER_STATION = 15;
 const DEMO_BIKES_PER_STATION_OVERRIDES: Record<string, number> = {
   "Ga Bình Thái": 5,
@@ -69,6 +68,8 @@ const DEMO_NFC_CARD_USER_EMAIL = "user02@mebike.local";
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
 const DEMO_AGENCY_MAIN_STATION_NAME = "Vincom Plaza";
+const DEMO_AGENCY_STATION_NAMES = new Set([DEMO_AGENCY_MAIN_STATION_NAME]);
+const DEMO_NON_CUSTOMER_USERS = 1 + stations.length * 2 + stations.filter(s => DEMO_AGENCY_STATION_NAMES.has(s.name)).length;
 const LEGACY_DEMO_AGENCY_IDS = [
   "019b17bd-d130-7e7d-be69-91ceef7b9007",
   "019b17bd-d130-7e7d-be69-91ceef7b9008",
@@ -296,42 +297,26 @@ function buildDemoUsers(technicianCount: number): DemoUser[] {
       role: UserRole.STAFF,
       verify: UserVerifyStatus.VERIFIED,
     })),
-    {
+    ...stations.map((station, idx) => ({
       id: uuidv7(),
-      fullname: "Demo Manager",
-      email: "manager@mebike.local",
-      phoneNumber: "0900000004",
-      username: "demo_manager",
+      fullname: `Demo Manager ${station.name}`,
+      email: `manager.${slugifyStation(station.name)}@mebike.local`,
+      phoneNumber: `090${String(idx + 30).padStart(7, "0")}`,
+      username: `demo_manager_${slugifyStation(station.name)}`,
       role: UserRole.MANAGER,
       verify: UserVerifyStatus.VERIFIED,
-    },
-    {
-      id: uuidv7(),
-      fullname: "Demo Manager Binh Thai",
-      email: "manager.binhthai@mebike.local",
-      phoneNumber: "0900000008",
-      username: "demo_manager_binh_thai",
-      role: UserRole.MANAGER,
-      verify: UserVerifyStatus.VERIFIED,
-    },
-    {
-      id: uuidv7(),
-      fullname: "Demo Agency Operator 1",
-      email: "agency1@mebike.local",
-      phoneNumber: "0900000005",
-      username: "demo_agency_1",
-      role: UserRole.AGENCY,
-      verify: UserVerifyStatus.VERIFIED,
-    },
-    {
-      id: uuidv7(),
-      fullname: "Demo Agency Operator 2",
-      email: "agency2@mebike.local",
-      phoneNumber: "0900000006",
-      username: "demo_agency_2",
-      role: UserRole.AGENCY,
-      verify: UserVerifyStatus.VERIFIED,
-    },
+    })),
+    ...stations
+      .filter(s => DEMO_AGENCY_STATION_NAMES.includes(s.name))
+      .map((station, idx) => ({
+        id: uuidv7(),
+        fullname: `Demo Agency ${station.name}`,
+        email: `agency.${slugifyStation(station.name)}@mebike.local`,
+        phoneNumber: `090${String(idx + 50).padStart(7, "0")}`,
+        username: `demo_agency_${slugifyStation(station.name)}`,
+        role: UserRole.AGENCY,
+        verify: UserVerifyStatus.VERIFIED,
+      })),
   ];
 
   for (let i = 1; i <= technicianCount; i++) {
@@ -810,7 +795,7 @@ async function main() {
       },
     });
 
-    const [mainAgency, eastAgency] = await Promise.all([
+    const [mainAgency, _eastAgency] = await Promise.all([
       prisma.agency.upsert({
         where: { id: DEMO_AGENCY_MAIN_ID },
         create: {
@@ -907,30 +892,21 @@ async function main() {
         agencyId: null,
         technicianTeamId: null,
       })),
-      {
-        user: userByEmail.get("manager@mebike.local"),
-        stationId: pick(stationIds, 0),
+      ...stationRows.map(station => ({
+        user: userByEmail.get(`manager.${slugifyStation(station.name)}@mebike.local`),
+        stationId: station.id,
         agencyId: null,
         technicianTeamId: null,
-      },
-      {
-        user: userByEmail.get("manager.binhthai@mebike.local"),
-        stationId: stationIdByName.get("Ga Bình Thái") ?? null,
-        agencyId: null,
-        technicianTeamId: null,
-      },
-      {
-        user: userByEmail.get("agency1@mebike.local"),
-        stationId: null,
-        agencyId: mainAgency.id,
-        technicianTeamId: null,
-      },
-      {
-        user: userByEmail.get("agency2@mebike.local"),
-        stationId: null,
-        agencyId: eastAgency.id,
-        technicianTeamId: null,
-      },
+      })),
+      ...agencyOwnedStations.map((item) => {
+        const station = stationRows.find(s => s.id === item.stationId);
+        return {
+          user: station ? userByEmail.get(`agency.${slugifyStation(station.name)}@mebike.local`) : undefined,
+          stationId: null as string | null,
+          agencyId: item.agencyId,
+          technicianTeamId: null as string | null,
+        };
+      }),
       ...technicianAssignments,
     ].filter(item => item.user !== undefined) as DemoOrgAssignment[];
 
@@ -1246,8 +1222,12 @@ async function main() {
     const agencyStatsEastBike = bikesToCreate.find(b => b.stationId === agencyOwnedStations[1]?.stationId);
     const agencyStatsMainUser = userByEmail.get("user01@mebike.local");
     const agencyStatsEastUser = userByEmail.get("user02@mebike.local");
-    const agencyStatsMainOperator = userByEmail.get("agency1@mebike.local");
-    const agencyStatsEastOperator = userByEmail.get("agency2@mebike.local");
+    const agencyStatsMainOperator = agencyOwnedStations[0]
+      ? userByEmail.get(`agency.${slugifyStation(stationRows.find(s => s.id === agencyOwnedStations[0].stationId)!.name)}@mebike.local`)
+      : undefined;
+    const agencyStatsEastOperator = agencyOwnedStations[1]
+      ? userByEmail.get(`agency.${slugifyStation(stationRows.find(s => s.id === agencyOwnedStations[1].stationId)!.name)}@mebike.local`)
+      : undefined;
 
     if (
       agencyOwnedStations[0]?.stationId
@@ -1552,9 +1532,10 @@ async function main() {
       {
         admin: "admin@mebike.local",
         staff: firstStation ? `staff.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
-        manager: "manager@mebike.local",
-        agency: "agency1@mebike.local",
-        agency2: "agency2@mebike.local",
+        manager: firstStation ? `manager.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
+        agency: agencyOwnedStations[0]
+          ? `agency.${slugifyStation(stationRows.find(s => s.id === agencyOwnedStations[0].stationId)!.name)}@mebike.local`
+          : undefined,
         technician: "tech1@mebike.local",
         user: "user01@mebike.local",
         password: DEMO_PASSWORD,
