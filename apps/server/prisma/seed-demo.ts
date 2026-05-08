@@ -64,6 +64,7 @@ function buildRoleUsername(prefix: "staff" | "manager" | "agency" | "tech", stat
 
 const DEMO_DEFAULT_BIKES_PER_STATION = 15;
 const DEMO_BIKES_PER_STATION_OVERRIDES: Record<string, number> = {
+  "Ga Bến Thành": 40,
   "Ga Bình Thái": 5,
 };
 const DEMO_RENTAL_MIN_HOUR = 6;

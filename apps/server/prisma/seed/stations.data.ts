@@ -13,7 +13,7 @@ export const stations: StationSeed[] = [
     address: "Quận 2, TP.HCM",
     latitude: 10.802193051123062,
     longitude: 106.74222481840934,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -21,7 +21,7 @@ export const stations: StationSeed[] = [
     address: "Quận 9, TP.HCM",
     latitude: 10.821332229646496,
     longitude: 106.75817490122758,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -29,7 +29,7 @@ export const stations: StationSeed[] = [
     address: "12 Đ. Phan Văn Trị, Hạnh Thông",
     latitude: 10.827042967785143,
     longitude: 106.68918225574863,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -37,7 +37,7 @@ export const stations: StationSeed[] = [
     address: "TP. Thủ Đức, TP.HCM",
     latitude: 10.846551383334344,
     longitude: 106.77139531432846,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -45,15 +45,23 @@ export const stations: StationSeed[] = [
     address: "TP. Thủ Đức, TP.HCM",
     latitude: 10.879575879472359,
     longitude: 106.81414171920561,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
+  },
+  {
+    name: "Ga Bến Thành",
+    address: "Quận 1, TP.HCM",
+    latitude: 10.770403938354347,
+    longitude: 106.69681752189798,
+    capacity: 40,
+    updatedAt: "2025-10-23T23:28:25.693Z",
   },
   {
     name: "Saigon Centre",
     address: "65 - 67 Lê Lợi",
     latitude: 10.773209415716304,
     longitude: 106.7010351086317,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-23T23:28:25.693Z",
   },
   {
@@ -61,7 +69,7 @@ export const stations: StationSeed[] = [
     address: "Quận 1, TP.HCM",
     latitude: 10.781584470394145,
     longitude: 106.70796607595611,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -69,7 +77,7 @@ export const stations: StationSeed[] = [
     address: "Quận 9, TP.HCM",
     latitude: 10.832355431391214,
     longitude: 106.76367736344302,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -77,7 +85,7 @@ export const stations: StationSeed[] = [
     address: "TP. Thủ Đức, TP.HCM",
     latitude: 10.8589919283164,
     longitude: 106.78881555653011,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -85,7 +93,7 @@ export const stations: StationSeed[] = [
     address: "Quận Bình Thạnh, TP.HCM",
     latitude: 10.798535681557295,
     longitude: 106.72330903178633,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -93,7 +101,7 @@ export const stations: StationSeed[] = [
     address: "Quận 9, TP.HCM",
     latitude: 10.808513022278614,
     longitude: 106.75522516839601,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -101,7 +109,7 @@ export const stations: StationSeed[] = [
     address: "TP. Thủ Đức, TP.HCM",
     latitude: 10.866359625195212,
     longitude: 106.80118031289986,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -109,7 +117,7 @@ export const stations: StationSeed[] = [
     address: "Quận 1, TP.HCM",
     latitude: 10.775783933088647,
     longitude: 106.70264137176426,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -117,7 +125,15 @@ export const stations: StationSeed[] = [
     address: "Quận Bình Thạnh, TP.HCM",
     latitude: 10.79658465149512,
     longitude: 106.71614452961144,
-    capacity: 20,
+    capacity: 40,
+    updatedAt: "2025-10-18T19:57:05.496Z",
+  },
+  {
+    name: "Ga Thảo Điền",
+    address: "763J Quốc Hương, An Khánh",
+    latitude: 10.80049124452225,
+    longitude: 106.73369435537892,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
   {
@@ -125,7 +141,7 @@ export const stations: StationSeed[] = [
     address: "161 Võ Nguyên Giáp, An Khánh",
     latitude: 10.802414203861971,
     longitude: 106.7411486098582,
-    capacity: 20,
+    capacity: 40,
     updatedAt: "2025-10-18T19:57:05.496Z",
   },
 ];
