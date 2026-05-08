@@ -1390,10 +1390,10 @@ async function main() {
       });
     }
 
-    const tech1 = users.find(user => user.email === "tech1@mebike.local");
-    const tech1Assignment = orgAssignments.find(item => item.user.email === "tech1@mebike.local");
     const user01 = users.find(user => user.email === "user01@mebike.local");
     const firstStation = stationRows[0];
+    const tech1 = firstStation ? users.find(user => user.email === `technician.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
+    const tech1Assignment = firstStation ? orgAssignments.find(item => item.user.email === `technician.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
     const staff1 = firstStation ? users.find(user => user.email === `staff.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
     const staff1Assignment = firstStation ? orgAssignments.find(item => item.user.email === `staff.${slugifyStation(firstStation.name)}@mebike.local`) : undefined;
     const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
@@ -1536,7 +1536,7 @@ async function main() {
         agency: agencyOwnedStations[0]
           ? `agency.${slugifyStation(stationRows.find(s => s.id === agencyOwnedStations[0].stationId)!.name)}@mebike.local`
           : undefined,
-        technician: "tech1@mebike.local",
+        technician: firstStation ? `technician.${slugifyStation(firstStation.name)}@mebike.local` : undefined,
         user: "user01@mebike.local",
         password: DEMO_PASSWORD,
       },
