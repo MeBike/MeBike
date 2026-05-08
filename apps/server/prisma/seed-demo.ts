@@ -4,11 +4,11 @@ import bcrypt from "bcrypt";
 import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
+import type { ReservationOption, ReservationStatus } from "../generated/prisma/client";
+
 import {
   AccountStatus,
-  AssignmentStatus,
   BikeStatus,
-  BikeSwapStatus,
   ConfirmationMethod,
   HandoverStatus,
   IncidentSeverity,
@@ -17,8 +17,6 @@ import {
   NfcCardStatus,
   PrismaClient,
   RentalStatus,
-  ReservationOption,
-  ReservationStatus,
   SubscriptionPackage,
   SubscriptionStatus,
   SupplierStatus,
@@ -414,8 +412,6 @@ function buildRentals(params: {
   const completedCurrentMonthDays = lastCompletedDayInCurrentMonth >= 1
     ? lastCompletedDayInCurrentMonth
     : daysInPrevMonth;
-  const activeRentalDayOffset = now.getUTCHours() >= 14 ? 0 : -1;
-
   const pushCompleted = (count: number, dateFactory: (idx: number) => Date, startIdx = 0) => {
     for (let i = 0; i < count; i++) {
       const idx = startIdx + i;
@@ -474,61 +470,16 @@ function buildRentals(params: {
     300,
   );
 
-  const rentedUsers = normalUsers.slice(0, 8);
-  const rentedBikes = Array.from({ length: 8 }, (_, i) => pick(bikes, i));
-  for (let i = 0; i < 8; i++) {
-    const start = toPastDemoRentalUtcDate(activeRentalDayOffset, 6 + i, (i * 8) % 60);
-    rentals.push({
-      id: uuidv7(),
-      userId: rentedUsers[i]!.id,
-      bikeId: rentedBikes[i]!.id,
-      startStationId: rentedBikes[i]!.stationId ?? pick(stationIds, i),
-      endStationId: null,
-      createdAt: new Date(start.getTime() - 8 * 60 * 1000),
-      startTime: start,
-      endTime: null,
-      duration: Math.max(1, Math.floor((Date.now() - start.getTime()) / 60000)),
-      totalPrice: null,
-      subscriptionId: i % 2 === 0 ? (subscriptionIdsByUserId.get(rentedUsers[i]!.id) ?? null) : null,
-      status: RentalStatus.RENTED,
-      updatedAt: new Date(),
-    });
-  }
-
   return rentals.slice(0, RENTALS_TARGET);
 }
 
-function buildReservations(params: {
+function buildReservations(_params: {
   users: readonly DemoUser[];
   bikes: readonly { id: string; stationId: string | null }[];
   subscriptionIdsByUserId: ReadonlyMap<string, string>;
   pricing: PricingConfig;
 }): DemoReservation[] {
-  const { users, bikes, subscriptionIdsByUserId, pricing } = params;
-  const normalUsers = users.filter(u => u.role === UserRole.USER).slice(8, 18);
-  const reservationBikes = Array.from({ length: 10 }, (_, i) => pick(bikes, i + 8));
-
-  return reservationBikes.map((bike, idx) => {
-    const user = normalUsers[idx]!;
-    const startTime = toUtcDate(1 + (idx % 10), 7 + (idx % 8), (idx * 6) % 60);
-    const endTime = new Date(startTime.getTime() + 30 * 60 * 1000);
-    const subscriptionId = idx % 3 === 0 ? (subscriptionIdsByUserId.get(user.id) ?? null) : null;
-
-    return {
-      id: uuidv7(),
-      userId: user.id,
-      bikeId: bike.id,
-      stationId: bike.stationId!,
-      reservationOption: subscriptionId ? ReservationOption.SUBSCRIPTION : ReservationOption.ONE_TIME,
-      subscriptionId,
-      startTime,
-      endTime,
-      prepaid: subscriptionId ? 0 : Number(pricing.reservationFee),
-      status: ReservationStatus.PENDING,
-      createdAt: new Date(startTime.getTime() - 30 * 60 * 1000),
-      updatedAt: new Date(startTime.getTime() - 20 * 60 * 1000),
-    };
-  });
+  return [];
 }
 
 async function main() {
@@ -1456,123 +1407,7 @@ async function main() {
       });
     }
 
-    const user01 = users.find(user => user.email === "user01@mebike.local");
     const firstStation = stationRows[0];
-    const tech1 = firstStation ? users.find(user => user.email === buildRoleEmail("tech", firstStation.name)) : undefined;
-    const tech1Assignment = firstStation ? orgAssignments.find(item => item.user.email === buildRoleEmail("tech", firstStation.name)) : undefined;
-    const staff1 = firstStation ? users.find(user => user.email === buildRoleEmail("staff", firstStation.name)) : undefined;
-    const staff1Assignment = firstStation ? orgAssignments.find(item => item.user.email === buildRoleEmail("staff", firstStation.name)) : undefined;
-    const user01ActiveRental = rentals.find(rental => rental.status === RentalStatus.RENTED && rental.userId === user01?.id);
-    const mainAgencyStationId = agencyOwnedStations[0]?.stationId ?? null;
-    const user01IncidentStation = stationRows.find(station => station.id === user01ActiveRental?.startStationId);
-
-    if (user01 && tech1 && tech1Assignment?.technicianTeamId && user01ActiveRental?.bikeId) {
-      const reportedAt = new Date(Date.now() - 12 * 60 * 1000);
-      const assignedAt = new Date(Date.now() - 9 * 60 * 1000);
-      const existingActiveIncident = await prisma.incidentReport.findFirst({
-        where: {
-          bikeId: user01ActiveRental.bikeId,
-          status: {
-            in: [IncidentStatus.OPEN, IncidentStatus.ASSIGNED, IncidentStatus.IN_PROGRESS],
-          },
-        },
-        select: { id: true },
-      });
-
-      const technicianIncidentId = existingActiveIncident?.id ?? uuidv7();
-
-      await prisma.incidentReport.upsert({
-        where: { id: technicianIncidentId },
-        create: {
-          id: technicianIncidentId,
-          reporterUserId: user01.id,
-          rentalId: user01ActiveRental.id,
-          bikeId: user01ActiveRental.bikeId,
-          stationId: null,
-          source: IncidentSource.DURING_RENTAL,
-          incidentType: "FLAT_TIRE",
-          severity: IncidentSeverity.HIGH,
-          description: "Demo technician incident for user01 active rental",
-          latitude: user01IncidentStation?.latitude,
-          longitude: user01IncidentStation?.longitude,
-          bikeLocked: true,
-          status: IncidentStatus.OPEN,
-          reportedAt,
-        },
-        update: {
-          reporterUserId: user01.id,
-          rentalId: user01ActiveRental.id,
-          stationId: null,
-          source: IncidentSource.DURING_RENTAL,
-          incidentType: "FLAT_TIRE",
-          severity: IncidentSeverity.HIGH,
-          description: "Demo technician incident for user01 active rental",
-          latitude: user01IncidentStation?.latitude,
-          longitude: user01IncidentStation?.longitude,
-          bikeLocked: true,
-          status: IncidentStatus.OPEN,
-          reportedAt,
-          resolvedAt: null,
-          closedAt: null,
-        },
-      });
-
-      await prisma.technicianAssignment.deleteMany({
-        where: { incidentReportId: technicianIncidentId },
-      });
-
-      await prisma.technicianAssignment.create({
-        data: {
-          id: uuidv7(),
-          incidentReportId: technicianIncidentId,
-          technicianTeamId: tech1Assignment.technicianTeamId,
-          technicianUserId: tech1.id,
-          assignedAt,
-          status: AssignmentStatus.ASSIGNED,
-          distanceMeters: 1800,
-          durationSeconds: 420,
-          routeGeometry: null,
-        },
-      });
-
-      logger.info(
-        {
-          incidentFor: user01.email,
-          assignedTechnician: tech1.email,
-          rentalId: user01ActiveRental.id,
-          incidentId: technicianIncidentId,
-        },
-        "Seeded demo technician incident assignment",
-      );
-    }
-
-    if (user01 && staff1 && (mainAgencyStationId ?? staff1Assignment?.stationId) && user01ActiveRental?.bikeId) {
-      const bikeSwapStationId = mainAgencyStationId ?? staff1Assignment!.stationId!;
-
-      await prisma.bikeSwapRequest.create({
-        data: {
-          id: uuidv7(),
-          rentalId: user01ActiveRental.id,
-          userId: user01.id,
-          oldBikeId: user01ActiveRental.bikeId,
-          stationId: bikeSwapStationId,
-          status: BikeSwapStatus.PENDING,
-          reason: null,
-          createdAt: new Date(Date.now() - 5 * 60 * 1000),
-          updatedAt: new Date(Date.now() - 5 * 60 * 1000),
-        },
-      });
-
-      logger.info(
-        {
-          bikeSwapRequestFor: user01.email,
-          handledBy: staff1.email,
-          stationId: bikeSwapStationId,
-        },
-        "Seeded demo pending bike swap request",
-      );
-    }
-
     await seedDemoRatings(prisma, rentals);
 
     logger.info("Demo seed completed");
@@ -1585,14 +1420,6 @@ async function main() {
           + agencyStatsRentals.filter(r => r.status === RentalStatus.COMPLETED).length,
       },
       "Completed rentals seeded",
-    );
-    logger.info(
-      { pending: reservations.filter(r => r.status === ReservationStatus.PENDING).length },
-      "Pending reservations seeded",
-    );
-    logger.info(
-      { rented: rentals.filter(r => r.status === RentalStatus.RENTED).length },
-      "Rented rentals seeded",
     );
     logger.info(
       {
