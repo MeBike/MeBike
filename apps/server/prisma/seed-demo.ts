@@ -1368,7 +1368,7 @@ async function main() {
             incidentType: "BRAKE",
             severity: IncidentSeverity.CRITICAL,
             description: "Demo critical agency incident",
-            bikeLocked: true,
+            bikeLocked: false,
             status: IncidentStatus.OPEN,
             reportedAt: new Date(endTime.getTime() + 30 * 60 * 1000),
           },
