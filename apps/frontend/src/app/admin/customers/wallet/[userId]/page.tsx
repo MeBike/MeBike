@@ -52,6 +52,10 @@ export default function Page({
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetailUser,isLoadingTransactions,isLoadingWallet]);
+  
+  if (isVisualLoading) {
+      return <LoadingScreen />;
+  }
   if (!detailUserData) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
@@ -61,9 +65,6 @@ export default function Page({
       </div>
     );
   }
-  if (isVisualLoading) {
-      return <LoadingScreen />;
-    }
   return (
     <CustomerWalletDetail
       user={detailUserData.data}
