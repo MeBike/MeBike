@@ -42,7 +42,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
-      PGADMIN_CONFIG_LOGIN_BANNER: "Authorized access only. Activity may be monitored."
+      PGADMIN_CONFIG_LOGIN_BANNER: "'Authorized access only. Activity may be monitored.'"
     depends_on:
       postgres:
         condition: service_healthy
