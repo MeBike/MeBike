@@ -112,6 +112,7 @@ export default function CreateDistributionRequestClient({
                     value={stations.currentStation.id}
                   />
                 </div>
+                <Label>Số lượng xe hiện tại của trạm xuất : <span className="text-red-600 font-semibold">{stations.currentStation.operationalAvailableSlots}</span></Label>
 
                 {/* Target Station */}
                 <div className="space-y-2">
@@ -164,7 +165,7 @@ export default function CreateDistributionRequestClient({
                   {selectedTargetStation && (
                     <p className="text-sm text-muted-foreground">
                       Chỗ còn trống tại trạm đích:{" "}
-                      <span className="font-semibold text-foreground">
+                      <span className="font-semibold text-foreground text-red-600">
                         {maxAvailableSlots}
                       </span>
                     </p>
