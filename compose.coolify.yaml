@@ -35,6 +35,24 @@ services:
       retries: 10
       start_period: 5s
 
+  pgadmin:
+    image: dpage/pgadmin4:9
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
+      PGADMIN_CONFIG_LOGIN_BANNER: "Authorized access only. Activity may be monitored."
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mebike-internal
+    volumes:
+      - mebike-pgadmin-data:/var/lib/pgadmin
+    expose:
+      - "80"
+
   mosquitto:
     image: eclipse-mosquitto:2
     restart: unless-stopped
@@ -205,3 +223,4 @@ volumes:
   mebike-postgres-data:
   mebike-redis-data:
   mebike-mosquitto-data:
+  mebike-pgadmin-data:
