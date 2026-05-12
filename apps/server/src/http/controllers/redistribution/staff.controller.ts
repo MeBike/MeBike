@@ -139,8 +139,8 @@ const createRedistributionRequest: RouteHandler<
                 code: RedistributionReqErrorCodeSchema.enum
                   .EXCEEDED_MIN_BIKES_AT_STATION,
                 stationId: error.stationId,
-                minBikes: error.minBikes,
-                restBikesAfterFulfillment: error.restBikesAfterFulfillment,
+                minAvailableBikes: error.minAvailableBikes,
+                availableBikesAfterFulfillment: error.availableBikesAfterFulfillment,
               },
             },
             400,

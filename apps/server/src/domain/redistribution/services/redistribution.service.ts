@@ -58,7 +58,7 @@ import {
   RedistributionRepository,
 } from "../repository/redistribution.repository";
 
-const MIN_BIKES_AT_STATION = 10;
+const MIN_AVAILABLE_BIKES_AT_STATION = 10;
 
 export type RedistributionService = {
   getMyListInStation: (
@@ -235,9 +235,9 @@ function makeRedistributionService(
     });
 
   const getUserStationId = (user: UserRow) =>
-    user.orgAssignment?.station?.id
-    ?? user.orgAssignment?.agency?.stationId
-    ?? undefined;
+    user.orgAssignment?.station?.id ??
+    user.orgAssignment?.agency?.stationId ??
+    undefined;
 
   const getIncompletedRequestAt = (stationId: string) =>
     repo.findWhere({
@@ -258,8 +258,7 @@ function makeRedistributionService(
 
     if (filter.status) {
       where.status = filter.status;
-    }
-    else if (filter.statuses && filter.statuses.length > 0) {
+    } else if (filter.statuses && filter.statuses.length > 0) {
       where.status = { in: filter.statuses };
     }
 
@@ -365,9 +364,9 @@ function makeRedistributionService(
 
         // Authorization: users can only view request related to their station
         const req = reqOpt.value;
-        const hasAccess
-          = req.sourceStation.id === stationId
-            || req.targetStation.id === stationId;
+        const hasAccess =
+          req.sourceStation.id === stationId ||
+          req.targetStation.id === stationId;
 
         if (!hasAccess) {
           return yield* Effect.fail(
@@ -383,9 +382,11 @@ function makeRedistributionService(
         return req;
       }),
 
-    createRequestTo: args =>
+    createRequestTo: (args) =>
       Effect.gen(function* () {
-        const existingReqOpt = yield* getIncompletedRequestAt(args.sourceStationId);
+        const existingReqOpt = yield* getIncompletedRequestAt(
+          args.sourceStationId,
+        );
         if (Option.isSome(existingReqOpt)) {
           const existingReq = existingReqOpt.value;
           return yield* Effect.fail(
@@ -405,7 +406,8 @@ function makeRedistributionService(
             Effect.catchTag("StationNotFound", () =>
               Effect.fail(
                 new StationNotFound({ stationId: args.sourceStationId }),
-              )),
+              ),
+            ),
           );
 
         // Authorization: user must belong to source station
@@ -426,7 +428,8 @@ function makeRedistributionService(
             Effect.catchTag("StationNotFound", () =>
               Effect.fail(
                 new StationNotFound({ stationId: args.targetStationId }),
-              )),
+              ),
+            ),
           );
 
         if (targetStation.availableReturnSlots < args.requestedQuantity) {
@@ -443,28 +446,20 @@ function makeRedistributionService(
         const bikeIds: string[] = [];
 
         // Transaction
-        return yield* runPrismaTransaction(client, tx =>
+        return yield* runPrismaTransaction(client, (tx) =>
           Effect.gen(function* () {
             const txBikeRepo = makeBikeRepository(tx);
             const txRedistributionRepo = makeRedistributionRepository(tx);
 
             // Fetch bikes + check minimum remaining bikes
-            const [availableBikes, totalBikes] = yield* Effect.all([
-              Effect.promise(() =>
-                tx.bike.findMany({
-                  where: { stationId: sourceStation.id, status: "AVAILABLE" },
-                  take: args.requestedQuantity,
-                  select: { id: true },
-                }),
-              ),
-              Effect.promise(() =>
-                tx.bike.count({
-                  where: { stationId: sourceStation.id },
-                }),
-              ),
-            ]);
 
-            const restBikes = totalBikes - availableBikes.length;
+            const availableBikes = yield* Effect.promise(() =>
+              tx.bike.findMany({
+                where: { stationId: sourceStation.id, status: "AVAILABLE" },
+                take: args.requestedQuantity,
+                select: { id: true },
+              }),
+            );
 
             if (availableBikes.length < args.requestedQuantity) {
               return yield* Effect.fail(
@@ -476,17 +471,19 @@ function makeRedistributionService(
               );
             }
 
-            if (restBikes < MIN_BIKES_AT_STATION) {
+            const restBikes = availableBikes.length - args.requestedQuantity;
+
+            if (restBikes < MIN_AVAILABLE_BIKES_AT_STATION) {
               return yield* Effect.fail(
                 new ExceededMinBikesAtStation({
                   stationId: args.sourceStationId,
-                  minBikes: MIN_BIKES_AT_STATION,
-                  restBikesAfterFulfillment: restBikes,
+                  minAvailableBikes: MIN_AVAILABLE_BIKES_AT_STATION,
+                  availableBikesAfterFulfillment: restBikes,
                 }),
               );
             }
 
-            bikeIds.push(...availableBikes.map(b => b.id));
+            bikeIds.push(...availableBikes.map((b) => b.id));
 
             // Marks bikes as redistributing
             yield* txBikeRepo.updateManyStatusAt(
@@ -499,15 +496,16 @@ function makeRedistributionService(
               ...args,
               bikeIds,
             });
-          })).pipe(
-          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+          }),
+        ).pipe(
+          Effect.catchTag("PrismaTransactionError", (err) => Effect.die(err)),
         );
       }),
 
-    cancel: args =>
+    cancel: (args) =>
       Effect.gen(function* () {
         const now = new Date();
-        return yield* runPrismaTransaction(client, tx =>
+        return yield* runPrismaTransaction(client, (tx) =>
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
@@ -545,7 +543,7 @@ function makeRedistributionService(
               );
             }
 
-            const bikeIds = existing.items.map(item => item.bikeId);
+            const bikeIds = existing.items.map((item) => item.bikeId);
 
             // Restore bikes to AVAILABLE if any were marked REDISTRIBUTING
             if (bikeIds.length > 0) {
@@ -556,8 +554,8 @@ function makeRedistributionService(
               );
             }
 
-            const updatedOpt
-              = yield* txRedistributionRepo.updateAndFindWithPopulation(
+            const updatedOpt =
+              yield* txRedistributionRepo.updateAndFindWithPopulation(
                 {
                   id: args.requestId,
                 },
@@ -568,15 +566,16 @@ function makeRedistributionService(
               );
 
             return Option.getOrThrow(updatedOpt);
-          })).pipe(
-          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+          }),
+        ).pipe(
+          Effect.catchTag("PrismaTransactionError", (err) => Effect.die(err)),
         );
       }),
 
-    startTransition: args =>
+    startTransition: (args) =>
       Effect.gen(function* () {
         const now = new Date();
-        return yield* runPrismaTransaction(client, tx =>
+        return yield* runPrismaTransaction(client, (tx) =>
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
@@ -614,7 +613,7 @@ function makeRedistributionService(
               );
             }
 
-            const bikeIds = req.items.map(item => item.bikeId);
+            const bikeIds = req.items.map((item) => item.bikeId);
             const bikeQuantity = bikeIds.length;
 
             if (bikeQuantity === 0) {
@@ -627,8 +626,8 @@ function makeRedistributionService(
 
             yield* txBikeRepo.updateManyStationAt(bikeIds, null, now);
 
-            const updatedOpt
-              = yield* txRedistributionRepo.updateAndFindWithPopulation(
+            const updatedOpt =
+              yield* txRedistributionRepo.updateAndFindWithPopulation(
                 {
                   id: args.requestId,
                 },
@@ -639,17 +638,18 @@ function makeRedistributionService(
               );
 
             return Option.getOrThrow(updatedOpt);
-          })).pipe(
-          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+          }),
+        ).pipe(
+          Effect.catchTag("PrismaTransactionError", (err) => Effect.die(err)),
         );
       }),
 
     // start keeping redistribution slots for target station after request approved
-    approve: args =>
+    approve: (args) =>
       Effect.gen(function* () {
         const user = yield* assertUserExists(args.approvedByUserId);
         const stationId = getUserStationId(user)!;
-        return yield* runPrismaTransaction(client, tx =>
+        return yield* runPrismaTransaction(client, (tx) =>
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txStationRepo = makeStationQueryRepository(tx);
@@ -705,8 +705,8 @@ function makeRedistributionService(
               );
             }
 
-            const updatedOpt
-              = yield* txRedistributionRepo.updateAndFindWithPopulation(
+            const updatedOpt =
+              yield* txRedistributionRepo.updateAndFindWithPopulation(
                 {
                   id: args.requestId,
                 },
@@ -717,16 +717,17 @@ function makeRedistributionService(
               );
 
             return Option.getOrThrow(updatedOpt);
-          })).pipe(
-          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+          }),
+        ).pipe(
+          Effect.catchTag("PrismaTransactionError", (err) => Effect.die(err)),
         );
       }),
 
-    reject: args =>
+    reject: (args) =>
       Effect.gen(function* () {
         const user = yield* assertUserExists(args.rejectedByUserId);
         const stationId = getUserStationId(user)!;
-        return yield* runPrismaTransaction(client, tx =>
+        return yield* runPrismaTransaction(client, (tx) =>
           Effect.gen(function* () {
             const txRedistributionRepo = makeRedistributionRepository(tx);
             const txBikeRepo = makeBikeRepository(tx);
@@ -767,7 +768,7 @@ function makeRedistributionService(
               );
             }
 
-            const bikeIds = existing.items.map(item => item.bike.id);
+            const bikeIds = existing.items.map((item) => item.bike.id);
 
             // Restore bikes to AVAILABLE
             if (bikeIds.length > 0) {
@@ -778,8 +779,8 @@ function makeRedistributionService(
               );
             }
 
-            const updatedOpt
-              = yield* txRedistributionRepo.updateAndFindWithPopulation(
+            const updatedOpt =
+              yield* txRedistributionRepo.updateAndFindWithPopulation(
                 {
                   id: args.requestId,
                 },
@@ -791,8 +792,9 @@ function makeRedistributionService(
               );
 
             return Option.getOrThrow(updatedOpt);
-          })).pipe(
-          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+          }),
+        ).pipe(
+          Effect.catchTag("PrismaTransactionError", (err) => Effect.die(err)),
         );
       }),
 
@@ -830,8 +832,8 @@ function makeRedistributionService(
             }
 
             if (
-              req.status !== RedistributionStatus.IN_TRANSIT
-              && req.status !== RedistributionStatus.PARTIALLY_COMPLETED
+              req.status !== RedistributionStatus.IN_TRANSIT &&
+              req.status !== RedistributionStatus.PARTIALLY_COMPLETED
             ) {
               return yield* Effect.fail(
                 new CannotConfirmNonTransitedRedistribution({
@@ -843,10 +845,10 @@ function makeRedistributionService(
 
             // Comparison logic
             const unconfirmedBikeIds = req.items
-              .filter(item => item.bike.status === BikeStatus.REDISTRIBUTING)
-              .map(item => item.bike.id);
+              .filter((item) => item.bike.status === BikeStatus.REDISTRIBUTING)
+              .map((item) => item.bike.id);
 
-            const validCompletedBikeIds = completedBikeIds.filter(id =>
+            const validCompletedBikeIds = completedBikeIds.filter((id) =>
               unconfirmedBikeIds.includes(id),
             );
 
@@ -862,8 +864,7 @@ function makeRedistributionService(
               );
             }
 
-            const isFullMatch
-              = unconfirmedBikeIds.length === validLength;
+            const isFullMatch = unconfirmedBikeIds.length === validLength;
 
             const finalStatus = isFullMatch
               ? RedistributionStatus.COMPLETED
@@ -898,19 +899,19 @@ function makeRedistributionService(
                       : undefined,
                 },
               )
-              .pipe(Effect.map(o => Option.getOrThrow(o)));
+              .pipe(Effect.map((o) => Option.getOrThrow(o)));
 
             return updatedReq;
           });
         }).pipe(
-          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+          Effect.catchTag("PrismaTransactionError", (err) => Effect.die(err)),
         );
       }),
 
     adminListRequests: (filter, page) =>
       repo.listWithOffset(toRedistributionWhere(filter), page),
 
-    adminGetById: requestId => repo.findAndPopulate({ id: requestId }),
+    adminGetById: (requestId) => repo.findAndPopulate({ id: requestId }),
 
     getHistoryForStaff: (userId, filter, page) =>
       repo.listWithOffset(
