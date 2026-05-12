@@ -73,9 +73,6 @@ function Field({
     </div>
   );
 }
-
-// --- MAIN PAGE ---
-
 export default function StationDetailPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
@@ -135,7 +132,7 @@ export default function StationDetailPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {station.bikes.total < 10 && station.id !== listStation?.currentStation?.id && (
+            {station.id !== listStation?.currentStation?.id && (
               <Button
                 onClick={() =>
                   router.push(

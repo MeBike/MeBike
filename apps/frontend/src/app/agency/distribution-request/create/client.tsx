@@ -3,12 +3,11 @@
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Repeat, Loader2 } from "lucide-react";
+import { Repeat, Loader2, Info, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { PageHeader } from "@components/PageHeader";
 import {
   Select,
   SelectContent,
@@ -16,8 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreateRedistributionRequestSchema, CreateRedistributionRequestInput } from "@/schemas/distribution-request-schema";
+import {
+  CreateRedistributionRequestSchema,
+  CreateRedistributionRequestInput,
+} from "@/schemas/distribution-request-schema";
 import { CurrentStation } from "@/types";
+import { useAgencyActions } from "@/hooks/use-agency";
 
 interface CreateDistributionRequestClientProps {
   onSubmitRequest: (data: CreateRedistributionRequestInput) => Promise<void>;
@@ -31,6 +34,15 @@ export default function CreateDistributionRequestClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultTargetStationId = searchParams.get("targetStationId") || "";
+  
+  // Dùng hook của Agency với ID là trạm xuất (trạm của bạn)
+  const {
+    myStationDetail,
+    getMyStationDetail,
+    isLoadingMyAgencyStation
+  } = useAgencyActions({
+    station_id: stations.currentStation.id 
+  });
 
   const {
     register,
@@ -47,13 +59,23 @@ export default function CreateDistributionRequestClient({
       reason: "",
     },
   });
+
   const targetStationId = useWatch({ control, name: "targetStationId" });
   const selectedTargetStation = stations.otherStations?.find(
     (s) => s.id === targetStationId
   );
-  const maxAvailableSlots = selectedTargetStation?.operationalAvailableSlots || 0;
+
+  // 1. Số chỗ trống tại trạm đích
+  const targetAvailableSlots = selectedTargetStation?.operationalAvailableSlots || 0;
+  
+  // 2. Số xe khả dụng tại trạm xuất (Agency)
+  const sourceAvailableBikes = myStationDetail?.bikes?.available || 0;
+
+  // 3. Giới hạn tối đa = Min(chỗ trống trạm đích, xe khả dụng trạm xuất)
+  const maxLimit = Math.min(targetAvailableSlots, sourceAvailableBikes);
+
   const onSubmit = async (data: CreateRedistributionRequestInput) => {
-    if (data.requestedQuantity > maxAvailableSlots) {
+    if (data.requestedQuantity > maxLimit) {
        return; 
     }
     try {
@@ -67,12 +89,24 @@ export default function CreateDistributionRequestClient({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <PageHeader
-        title="Tạo yêu cầu điều phối"
-        description="Điều phối xe từ trạm của bạn đến trạm đích"
-        backLink="/agency/distribution-request"
-      />
-      <Card className="mx-auto max-w-2xl border-border/50 shadow-sm">
+      
+      {/* Tự code Header đơn giản thay thế cho PageHeader */}
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => router.back()}
+          className="h-9 w-9"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Tạo yêu cầu điều phối</h1>
+          <p className="text-sm text-muted-foreground">Điều phối xe từ trạm của bạn đến trạm đích</p>
+        </div>
+      </div>
+      
+      <Card className="">
         <CardContent className="p-6 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-6">
@@ -82,16 +116,54 @@ export default function CreateDistributionRequestClient({
               </h3>
 
               <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <Label className="font-semibold text-muted-foreground">Trạm xuất</Label>
+                {/* Source Station */}
+                <div className="space-y-3">
+                  <Label className="font-semibold text-muted-foreground">Trạm xuất (Trạm của bạn)</Label>
                   <Input 
-                    value={`${stations.currentStation.name} (Trạm của bạn)`} 
+                    value={stations.currentStation.name} 
                     disabled 
-                    className="bg-muted"
+                    className="bg-muted font-medium"
                   />
                   <input type="hidden" {...register("sourceStationId")} value={stations.currentStation.id} />
+
+                  {/* Hiển thị chi tiết số lượng xe bằng UI Cards */}
+                  {myStationDetail?.bikes && (
+                    <div className="bg-muted/30 p-4 rounded-xl border border-border/50 space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Info className="h-4 w-4 text-primary" />
+                        Tình trạng xe tại trạm xuất
+                      </div>
+                      
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">Tổng xe</span>
+                          <span className="font-semibold text-base">{myStationDetail.bikes.total}</span>
+                        </div>
+                        
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">Khả dụng</span>
+                          <span className="font-bold text-base text-green-600">{myStationDetail.bikes.available}</span>
+                        </div>
+                        
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">Đang đặt</span>
+                          <span className="font-semibold text-base text-blue-600">{myStationDetail.bikes.booked}</span>
+                        </div>
+                        
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">Bảo trì / Hỏng</span>
+                          <span className="font-semibold text-base text-destructive">{myStationDetail.bikes.broken}</span>
+                        </div>
+                        
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">Đang điều phối</span>
+                          <span className="font-semibold text-base text-orange-500">{myStationDetail.bikes.redistributing}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <Label>Số lượng xe hiện tại của trạm xuất : <span className="text-red-600 font-semibold">{stations.currentStation.operationalAvailableSlots}</span></Label>
+
                 {/* Target Station */}
                 <div className="space-y-2">
                   <Label className="font-semibold">Trạm đích <span className="text-destructive">*</span></Label>
@@ -102,7 +174,6 @@ export default function CreateDistributionRequestClient({
                       <Select 
                         onValueChange={(value) => {
                           field.onChange(value);
-                          // Reset số lượng về 1 mỗi khi đổi trạm
                           setValue("requestedQuantity", 1); 
                         }} 
                         value={field.value}
@@ -111,10 +182,9 @@ export default function CreateDistributionRequestClient({
                           <SelectValue placeholder="Chọn trạm đích" />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* Loại bỏ trạm hiện tại, hiển thị số chỗ trống */}
                           {stations.otherStations?.map((s) => (
                             <SelectItem key={s.id} value={s.id}>
-                              {s.name} (Trống: {s.operationalAvailableSlots})
+                              {s.name} (Chỗ trống: {s.operationalAvailableSlots})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -124,18 +194,18 @@ export default function CreateDistributionRequestClient({
                   {errors.targetStationId && <p className="text-xs text-destructive">{errors.targetStationId.message}</p>}
                 </div>
 
-                {/* Quantity */}
+                {/* Requested Quantity */}
                 <div className="space-y-2">
                   <Label className="font-semibold block text-left">
-                    Số lượng xe {maxAvailableSlots > 0 ? `(1-${maxAvailableSlots})` : ""}
-                    <span className="text-destructive ml-1">*</span>
+                    Số lượng xe cần điều phối 
+                    <span className="text-destructive ml-1">{maxLimit > 0 ? `(Tối đa: ${maxLimit})` : ""}</span>
                   </Label>
 
-                  {/* Hiển thị số chỗ trống tách biệt khỏi thẻ Label để không bị lệch */}
                   {selectedTargetStation && (
-                    <p className="text-sm text-muted-foreground mb-1">
-                      Chỗ còn trống tại trạm đích: <span className="font-semibold text-foreground text-red-600">{maxAvailableSlots}</span>
-                    </p>
+                    <div className="text-sm text-muted-foreground mb-2 space-y-1">
+                      <p>Chỗ trống tại trạm đích: <span className="font-semibold text-red-600">{targetAvailableSlots}</span></p>
+                      <p>Xe khả dụng tại trạm xuất: <span className="font-semibold text-red-600">{sourceAvailableBikes}</span></p>
+                    </div>
                   )}
 
                   <Input
@@ -144,20 +214,26 @@ export default function CreateDistributionRequestClient({
                       valueAsNumber: true,
                       onChange: (e) => {
                         const val = parseInt(e.target.value);
-                        if (val > maxAvailableSlots) {
-                          e.target.value = maxAvailableSlots.toString();
+                        if (val > maxLimit) {
+                          e.target.value = maxLimit.toString();
                         }
                       }
                     })}
                     placeholder="Nhập số lượng"
                     min={1}
-                    max={maxAvailableSlots}
-                    disabled={!selectedTargetStation || maxAvailableSlots === 0} 
+                    max={maxLimit}
+                    disabled={!selectedTargetStation || maxLimit === 0} 
                   />
+                  
                   {errors.requestedQuantity && <p className="text-xs text-destructive">{errors.requestedQuantity.message}</p>}
-                  {selectedTargetStation && maxAvailableSlots === 0 && (
+                  {selectedTargetStation && targetAvailableSlots === 0 && (
                     <p className="text-xs text-destructive">
-                      Trạm đích đã hết chỗ trống, vui lòng chọn trạm khác.
+                      Trạm đích đã hết chỗ trống.
+                    </p>
+                  )}
+                  {selectedTargetStation && sourceAvailableBikes === 0 && (
+                    <p className="text-xs text-destructive">
+                      Trạm xuất không còn xe khả dụng để điều phối.
                     </p>
                   )}
                 </div>
@@ -170,7 +246,11 @@ export default function CreateDistributionRequestClient({
               </div>
             </div>
 
-            <Button type="submit" disabled={isSubmitting || maxAvailableSlots === 0} className="w-full">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || maxLimit === 0 || !selectedTargetStation} 
+              className="w-full"
+            >
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Xác nhận gửi yêu cầu"}
             </Button>
           </form>
