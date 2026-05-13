@@ -76,10 +76,15 @@ export const DistributionRequestDetailClient = ({
 
   const handleAction = async (action: () => Promise<void>) => {
     setIsProcessing(true);
-    await action();
-    setSelectedBikeIds([]);
-    setIsProcessing(false);
-    setShowRejectModal(false);
+    try {
+      await action();
+      setSelectedBikeIds([]);
+      setShowRejectModal(false);
+    } catch (error) {
+      console.error("Action failed:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const isValid = rejectReason.trim().length >= 10;
