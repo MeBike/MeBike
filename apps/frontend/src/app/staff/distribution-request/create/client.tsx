@@ -3,7 +3,7 @@
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Repeat, Loader2, Info , ArrowLeft} from "lucide-react";
+import { Repeat, Loader2, Info, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,17 +88,21 @@ export default function CreateDistributionRequestClient({
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          size="icon" 
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => router.back()}
           className="h-9 w-9"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Tạo yêu cầu điều phối</h1>
-          <p className="text-sm text-muted-foreground">Điều phối xe từ trạm của bạn đến trạm đích</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Tạo yêu cầu điều phối
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Điều phối xe từ trạm của bạn đến trạm đích
+          </p>
         </div>
       </div>
 
@@ -165,8 +169,8 @@ export default function CreateDistributionRequestClient({
                             {myStationDetail.bikes.booked}
                           </span>
                         </div>
-                        
-                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
                           <span className="text-xs text-muted-foreground font-medium">
                             Đã đặt trước
                           </span>
@@ -190,6 +194,14 @@ export default function CreateDistributionRequestClient({
                           </span>
                           <span className="font-semibold text-base text-orange-500">
                             {myStationDetail.bikes.redistributing}
+                          </span>
+                        </div>
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">
+                            Tạm ngưng hoạt động
+                          </span>
+                          <span className="font-semibold text-base text-grey-500">
+                            {myStationDetail.bikes.disabled}
                           </span>
                         </div>
                       </div>
@@ -242,8 +254,9 @@ export default function CreateDistributionRequestClient({
                 <div className="space-y-2">
                   <Label className="font-semibold text-left block">
                     Số lượng xe cần điều phối{" "}
-                
-                    <span className="text-destructive ml-1">{maxLimit > 0 ? `(Tối đa: ${maxLimit})` : ""}</span>
+                    <span className="text-destructive ml-1">
+                      {maxLimit > 0 ? `(Tối đa: ${maxLimit})` : ""}
+                    </span>
                   </Label>
 
                   {selectedTargetStation && (

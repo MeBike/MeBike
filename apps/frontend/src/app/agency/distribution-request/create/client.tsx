@@ -159,6 +159,11 @@ export default function CreateDistributionRequestClient({
                           <span className="text-xs text-muted-foreground font-medium">Đang điều phối</span>
                           <span className="font-semibold text-base text-orange-500">{myStationDetail.bikes.redistributing}</span>
                         </div>
+
+                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">Tạm ngưng hoạt động</span>
+                          <span className="font-semibold text-base text-grey-500">{myStationDetail.bikes.disabled}</span>
+                        </div>
                       </div>
                     </div>
                   )}

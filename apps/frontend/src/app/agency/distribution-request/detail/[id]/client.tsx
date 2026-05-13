@@ -109,15 +109,18 @@ export const DistributionRequestDetailClient = ({
   const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const handleAction = async (action: () => Promise<void>) => {  
-    setIsProcessing(true);  
-    try {  
-      await action();  
-      setSelectedBikeIds([]);  
-    } finally {  
-      setIsProcessing(false);  
-    }  
-  };  
+   const handleAction = async (action: () => Promise<void>) => {
+    setIsProcessing(true);
+    try {
+      await action();
+      setSelectedBikeIds([]);
+      setShowRejectModal(false);
+    } catch (error) {
+      console.error("Action failed:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const isValid = rejectReason.trim().length >= 10;
   const handleRejectSubmit = async () => {
