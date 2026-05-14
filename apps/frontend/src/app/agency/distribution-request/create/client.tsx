@@ -61,17 +61,10 @@ export default function CreateDistributionRequestClient({
   const selectedTargetStation = stations.otherStations?.find(
     (s) => s.id === targetStationId,
   );
-
-  // 1. Số chỗ trống tại trạm đích
   const targetAvailableSlots =
     selectedTargetStation?.operationalAvailableSlots || 0;
-
-  // 2. Số xe khả dụng tại trạm xuất (Agency)
   const sourceAvailableBikes = myStationDetail?.bikes?.available || 0;
-
-  // 3. Giới hạn tối đa = Min(chỗ trống trạm đích, xe khả dụng trạm xuất)
   const maxLimit = Math.min(targetAvailableSlots, sourceAvailableBikes);
-
   const onSubmit = async (data: CreateRedistributionRequestInput) => {
     if (data.requestedQuantity > maxLimit) {
       return;
