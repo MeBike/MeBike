@@ -342,7 +342,7 @@ export default function CreateDistributionRequestClient({
                   isSubmitting ||
                   maxLimit === 0 ||
                   !selectedTargetStation ||
-                  sourceAvailableBikes < 10
+                  sourceAvailableBikes <= 10
                 }
                 className="w-full"
               >
