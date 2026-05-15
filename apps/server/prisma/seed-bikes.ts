@@ -47,7 +47,9 @@ const STATUS_BY_LEGACY_LABEL: Record<string, BikeStatus> = {
   "ĐANG ĐƯỢC THUÊ": BikeStatus.BOOKED,
   "BỊ HỎNG": BikeStatus.BROKEN,
   "ĐÃ ĐẶT TRƯỚC": BikeStatus.RESERVED,
-  "ĐANG PHÂN PHỐI": BikeStatus.REDISTRIBUTING,
+  "CHỜ PHÂN PHỐI": BikeStatus.PENDING_DISPATCH,
+  "ĐANG VẬN CHUYỂN": BikeStatus.TRANSPORTING,
+  "THAY THẾ": BikeStatus.SWAPPING,
   "MẤT": BikeStatus.LOST,
   "BỊ VÔ HIỆU HÓA": BikeStatus.DISABLED,
 };
