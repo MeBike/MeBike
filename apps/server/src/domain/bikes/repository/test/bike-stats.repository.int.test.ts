@@ -25,7 +25,7 @@ describe("bikeStatsRepository Integration", () => {
     return fixture.factories.station({ name, latitude: 10.0, longitude: 20.0 });
   };
 
-  const createBike = async (stationId: string, status: "AVAILABLE" | "BOOKED" | "DISABLED" | "REDISTRIBUTING" | "LOST") => {
+  const createBike = async (stationId: string, status: "AVAILABLE" | "BOOKED" | "RESERVED" | "PENDING_DISPATCH" | "TRANSPORTING" | "SWAPPING" | "LOST" | "DISABLED" | "BROKEN") => {
     return fixture.factories.bike({ stationId, status });
   };
 
@@ -56,14 +56,18 @@ describe("bikeStatsRepository Integration", () => {
     const { id: stationId } = await createStation("Stats Station");
     await createBike(stationId, "BOOKED");
     await createBike(stationId, "AVAILABLE");
-    await createBike(stationId, "REDISTRIBUTING");
+    await createBike(stationId, "RESERVED");
+    await createBike(stationId, "PENDING_DISPATCH");
+    await createBike(stationId, "TRANSPORTING");
+    await createBike(stationId, "SWAPPING");
     await createBike(stationId, "LOST");
     await createBike(stationId, "DISABLED");
+    await createBike(stationId, "BROKEN");
 
     const result = await Effect.runPromise(repo.getRentalStats());
-    expect(result.totalActiveBikes).toBe(2);
+    expect(result.totalActiveBikes).toBe(7);
     expect(result.rentedBikes).toBe(1);
-    expect(result.percentage).toBe(50);
+    expect(result.percentage).toBe(14.285714285714285);
   });
 
   it("getBikeStatistics returns status counts", async () => {

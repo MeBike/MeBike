@@ -19,7 +19,7 @@ export const customerAssistantToolRules = [
 
 export const customerAssistantRentalRules = [
   "Rental rules: a user cannot have more than one active rental at a time.",
-  "Rental rules: only bikes in AVAILABLE state should be treated as ready to rent. BOOKED, RESERVED, BROKEN, REDISTRIBUTING, LOST, and DISABLED bikes are not ready for a new rental.",
+  "Rental rules: only bikes in AVAILABLE state should be treated as ready to rent. BOOKED, RESERVED, BROKEN, PENDING_DISPATCH, TRANSPORTING, SWAPPING, LOST, and DISABLED bikes are not ready for a new rental.",
   "Rental rules: return guidance must respect live station return capacity. If a station has no return capacity, say so plainly and suggest another station only when tool data supports it.",
   "Rental guidance: if a user asks about returning an active rental, their intended return station, or whether they already reserved return capacity, check the current return slot first before giving generic return advice.",
   "Rental guidance: when a user asks how to end an active rental, explain the normal flow plainly: go to a suitable station, complete the return in app or with staff guidance if required, and follow the return confirmation flow shown in the app.",
@@ -40,12 +40,12 @@ export const customerAssistantReservationRules = [
 
 export const customerAssistantStationAndBikeRules = [
   "Station rules: prefer live station counts over generic advice. If a station has no available bikes or no return capacity, say that clearly.",
-  "Bike rules: if a bike is BROKEN, RESERVED, BOOKED, REDISTRIBUTING, LOST, or DISABLED, advise the user not to use it.",
+  "Bike rules: if a bike is BROKEN, RESERVED, BOOKED, PENDING_DISPATCH, TRANSPORTING, SWAPPING, LOST, or DISABLED, advise the user not to use it.",
   "If rental state, reservation state, station data, and bike data conflict, explain that the data looks inconsistent and advise the user to contact support or station staff.",
 ] as const;
 
 export const customerAssistantLanguageAndFormattingRules = [
-  "Tool payloads may contain internal enum codes such as AVAILABLE, BOOKED, RESERVED, BROKEN, REDISTRIBUTING, LOST, DISABLED, PENDING, ACTIVE, COMPLETED, CANCELLED, EXPIRED, or FULFILLED.",
+  "Tool payloads may contain internal enum codes such as AVAILABLE, BOOKED, RESERVED, BROKEN, PENDING_DISPATCH, TRANSPORTING, SWAPPING, LOST, DISABLED, PENDING, ACTIVE, COMPLETED, CANCELLED, EXPIRED, or FULFILLED.",
   "Use those codes for reasoning only. Never expose raw enum codes in user-facing Vietnamese answers unless the user explicitly asks for the exact system code.",
   "Prefer natural Vietnamese wording and any localized labels provided by tool results over raw enum names.",
   "For direct status questions such as whether the user currently has an active rental or reservation, answer the core yes-or-no result in the first sentence.",

@@ -40,7 +40,9 @@ export type AgencyCurrentStationStats = {
   readonly bookedBikes: number;
   readonly brokenBikes: number;
   readonly reservedBikes: number;
-  readonly redistributingBikes: number;
+  readonly pendingDispatchBikes: number;
+  readonly transportingBikes: number;
+  readonly swappingBikes: number;
   readonly lostBikes: number;
   readonly disabledBikes: number;
   readonly emptySlots: number;

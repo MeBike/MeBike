@@ -73,7 +73,9 @@ export function emptyStats(
     booked: 0,
     broken: 0,
     reserved: 0,
-    redistributing: 0,
+    pendingDispatch: 0,
+    transporting: 0,
+    swapping: 0,
     lost: 0,
     disabled: 0,
   };
@@ -133,8 +135,14 @@ export function updateStatsWithCount(
     case "RESERVED":
       update.reserved = count;
       break;
-    case "REDISTRIBUTING":
-      update.redistributing = count;
+    case "PENDING_DISPATCH":
+      update.pendingDispatch = count;
+      break;
+    case "TRANSPORTING":
+      update.transporting = count;
+      break;
+    case "SWAPPING":
+      update.swapping = count;
       break;
     case "LOST":
       update.lost = count;

@@ -110,7 +110,7 @@ export function startIncidentUseCase(
             });
 
             yield* bikeRepo.updateStatus(incident.bike.id, "BROKEN");
-            yield* bikeRepo.updateStatus(availableBike.value.id, "DISABLED");
+            yield* bikeRepo.updateStatus(availableBike.value.id, "SWAPPING");
           }
         }
 

@@ -451,8 +451,7 @@ function makeRedistributionService(
             const txBikeRepo = makeBikeRepository(tx);
             const txRedistributionRepo = makeRedistributionRepository(tx);
 
-            // Fetch bikes + check minimum remaining bikes
-
+            // Fetch bikes + check minimum remaining available bikes
             const availableBikes = yield* Effect.promise(() =>
               tx.bike.findMany({
                 where: { stationId: sourceStation.id, status: "AVAILABLE" },
@@ -485,10 +484,10 @@ function makeRedistributionService(
 
             bikeIds.push(...availableBikes.map((b) => b.id));
 
-            // Marks bikes as redistributing
+            // Marks bikes as pending dispatch
             yield* txBikeRepo.updateManyStatusAt(
               bikeIds,
-              BikeStatus.REDISTRIBUTING,
+              BikeStatus.PENDING_DISPATCH,
               now,
             );
 
@@ -545,7 +544,7 @@ function makeRedistributionService(
 
             const bikeIds = existing.items.map((item) => item.bikeId);
 
-            // Restore bikes to AVAILABLE if any were marked REDISTRIBUTING
+            // Restore bikes to AVAILABLE if any were marked PENDING_DISPATCH
             if (bikeIds.length > 0) {
               yield* txBikeRepo.updateManyStatusAt(
                 bikeIds,
@@ -624,7 +623,11 @@ function makeRedistributionService(
               );
             }
 
-            yield* txBikeRepo.updateManyStationAt(bikeIds, null, now);
+            yield* txBikeRepo.updateManyStatusAt(
+              bikeIds,
+              BikeStatus.TRANSPORTING,
+              now
+            );
 
             const updatedOpt =
               yield* txRedistributionRepo.updateAndFindWithPopulation(
@@ -845,7 +848,7 @@ function makeRedistributionService(
 
             // Comparison logic
             const unconfirmedBikeIds = req.items
-              .filter((item) => item.bike.status === BikeStatus.REDISTRIBUTING)
+              .filter((item) => item.bike.status === BikeStatus.TRANSPORTING)
               .map((item) => item.bike.id);
 
             const validCompletedBikeIds = completedBikeIds.filter((id) =>

@@ -12,7 +12,9 @@ import { defectOn } from "@/domain/shared";
 import type {
   BikeIsDisabled,
   BikeIsLost,
-  BikeIsRedistributing,
+  BikeIsPendingDispatch,
+  BikeIsTransporting,
+  BikeIsSwapping,
   BikeNotAvailable,
 } from "../../../domain-errors";
 import type { ReservationRow } from "../../../models";
@@ -118,7 +120,7 @@ function bookReservedBikeForConfirmationInTx(
   now: Date,
 ): Effect.Effect<
   void,
-  BikeNotFound | BikeNotAvailable | BikeIsRedistributing | BikeIsLost | BikeIsDisabled
+  BikeNotFound | BikeNotAvailable | BikeIsPendingDispatch | BikeIsTransporting | BikeIsSwapping | BikeIsLost | BikeIsDisabled
 > {
   return Effect.gen(function* () {
     const bikeRepo = makeBikeRepository(tx);

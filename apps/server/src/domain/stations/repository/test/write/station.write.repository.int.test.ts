@@ -153,7 +153,7 @@ describe("stationWriteRepository Integration", () => {
     });
     const bike = await kit.fixture.factories.bike({
       stationId: source.id,
-      status: "REDISTRIBUTING",
+      status: "PENDING_DISPATCH",
     });
 
     await kit.fixture.prisma.redistributionRequest.create({

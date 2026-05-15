@@ -6,19 +6,25 @@ import {
   BikeAlreadyReserved,
   BikeIsDisabled,
   BikeIsLost,
-  BikeIsRedistributing,
+  BikeIsPendingDispatch,
+  BikeIsTransporting,
+  BikeIsSwapping,
   BikeNotAvailable,
 } from "../domain-errors";
 
 type ReservationBikeStatusFailure
   = | BikeAlreadyReserved
-    | BikeIsRedistributing
+    | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
     | BikeIsLost
     | BikeIsDisabled
     | BikeNotAvailable;
 
 type ReservationTransitionBikeStatusFailure
-  = | BikeIsRedistributing
+  = | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
     | BikeIsLost
     | BikeIsDisabled
     | BikeNotAvailable;
@@ -34,8 +40,12 @@ export function reserveFailureFromBikeStatus(args: {
       return Option.none();
     case "RESERVED":
       return Option.some(new BikeAlreadyReserved({ bikeId }));
-    case "REDISTRIBUTING":
-      return Option.some(new BikeIsRedistributing({ bikeId }));
+    case "PENDING_DISPATCH":
+      return Option.some(new BikeIsPendingDispatch({ bikeId }));
+    case "TRANSPORTING":
+      return Option.some(new BikeIsTransporting({ bikeId }));
+    case "SWAPPING":
+      return Option.some(new BikeIsSwapping({ bikeId }));
     case "LOST":
       return Option.some(new BikeIsLost({ bikeId }));
     case "DISABLED":
@@ -52,8 +62,12 @@ export function reservationTransitionFailureFromBikeStatus(args: {
   const { bikeId, status } = args;
 
   switch (status) {
-    case "REDISTRIBUTING":
-      return new BikeIsRedistributing({ bikeId });
+    case "PENDING_DISPATCH":
+      return new BikeIsPendingDispatch({ bikeId });
+    case "TRANSPORTING":
+      return new BikeIsTransporting({ bikeId });
+    case "SWAPPING":
+      return new BikeIsSwapping({ bikeId });
     case "LOST":
       return new BikeIsLost({ bikeId });
     case "DISABLED":

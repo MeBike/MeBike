@@ -7,8 +7,10 @@ import {
   BikeIsBroken,
   BikeIsDisabled,
   BikeIsLost,
-  BikeIsRedistributing,
+  BikeIsTransporting,
+  BikeIsSwapping,
   BikeIsReserved,
+  BikeIsPendingDispatch,
   InvalidBikeStatus,
 } from "../domain-errors";
 
@@ -17,7 +19,9 @@ export type StartRentalBikeStatusFailure
     | BikeIsBroken
     | BikeIsReserved
     | BikeIsDisabled
-    | BikeIsRedistributing
+    | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
     | BikeIsLost
     | InvalidBikeStatus;
 
@@ -36,8 +40,12 @@ export function startRentalFailureFromBikeStatus(args: {
       return Option.some(new BikeIsBroken({ bikeId }));
     case "RESERVED":
       return Option.some(new BikeIsReserved({ bikeId }));
-    case "REDISTRIBUTING":
-      return Option.some(new BikeIsRedistributing({ bikeId }));
+    case "PENDING_DISPATCH":
+      return Option.some(new BikeIsPendingDispatch({ bikeId }));
+    case "TRANSPORTING":
+      return Option.some(new BikeIsTransporting({ bikeId }));
+    case "SWAPPING":
+      return Option.some(new BikeIsSwapping({ bikeId }));
     case "LOST":
       return Option.some(new BikeIsLost({ bikeId }));
     case "DISABLED":

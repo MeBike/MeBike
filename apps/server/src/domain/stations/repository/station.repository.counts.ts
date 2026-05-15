@@ -19,7 +19,9 @@ export type BikeCounts = Pick<
   | "bookedBikes"
   | "brokenBikes"
   | "reservedBikes"
-  | "redistributingBikes"
+  | "pendingDispatchBikes"
+  | "transportingBikes"
+  | "swappingBikes"
   | "lostBikes"
   | "disabledBikes"
   | "activeReturnSlots"
@@ -36,7 +38,9 @@ export function createEmptyBikeCounts(): BikeCounts {
     brokenBikes: 0,
     lostBikes: 0,
     reservedBikes: 0,
-    redistributingBikes: 0,
+    pendingDispatchBikes: 0,
+    transportingBikes: 0,
+    swappingBikes: 0,
     disabledBikes: 0,
     activeReturnSlots: 0,
     availableReturnSlots: 0,
@@ -221,8 +225,14 @@ export function getBikeCounts(
           case "RESERVED":
             counts.reservedBikes += inc;
             break;
-          case "REDISTRIBUTING":
-            counts.redistributingBikes += inc;
+          case "PENDING_DISPATCH":
+            counts.pendingDispatchBikes += inc;
+            break;
+          case "TRANSPORTING":
+            counts.transportingBikes += inc;
+            break;
+          case "SWAPPING":
+            counts.swappingBikes += inc;
             break;
           case "DISABLED":
             counts.disabledBikes += inc;

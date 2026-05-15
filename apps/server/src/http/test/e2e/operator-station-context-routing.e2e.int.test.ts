@@ -84,7 +84,7 @@ describe("operator station context routing e2e", () => {
     });
     const bike = await fixture.factories.bike({
       stationId: sourceStation.id,
-      status: "REDISTRIBUTING",
+      status: "PENDING_DISPATCH",
     });
 
     await fixture.prisma.redistributionRequest.create({

@@ -38,9 +38,11 @@ export function setupReservationRepositoryIntTestKit() {
       | "BOOKED"
       | "BROKEN"
       | "RESERVED"
-      | "REDISTRIBUTING"
+      | "PENDING_DISPATCH"
       | "LOST"
-      | "DISABLED";
+      | "DISABLED"
+      | "TRANSPORTING"
+      | "SWAPPING";
   }) {
     const bike = await fixture.factories.bike({
       stationId: args.stationId,

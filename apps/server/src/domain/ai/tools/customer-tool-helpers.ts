@@ -146,7 +146,9 @@ const bikeStatusLabels = {
   BOOKED: "Đang được thuê",
   BROKEN: "Bị hỏng",
   RESERVED: "Đã đặt trước",
-  REDISTRIBUTING: "Đang điều phối",
+  PENDING_DISPATCH: "Đang chờ điều phối",
+  TRANSPORTING: "Đang vận chuyển",
+  SWAPPING: "Đang hoán đổi",
   LOST: "Xe bị mất",
   DISABLED: "Đã bị vô hiệu hóa",
 } as const;
@@ -157,7 +159,9 @@ const bikeRentabilityLabels = {
   BROKEN: "Không nên sử dụng vì xe đang hỏng",
   NO_STATION: "Không thể thuê vì xe không ở trạm nào",
   RESERVED: "Không sẵn sàng để thuê vì xe đã được đặt trước",
-  REDISTRIBUTING: "Không sẵn sàng để thuê vì xe đang được điều phối",
+  PENDING_DISPATCH: "Không sẵn sàng để thuê vì xe đang chờ điều phối",
+  TRANSPORTING: "Không nên sử dụng vì xe đang được vận chuyển",
+  SWAPPING: "Không nên sử dụng vì xe đang được hoán đổi",
   LOST: "Không nên sử dụng vì xe bị mất",
   DISABLED: "Không sẵn sàng để thuê vì xe đã bị vô hiệu hóa",
 } as const;
@@ -282,8 +286,12 @@ function getBikeRentabilityReason(bike: {
       return "RESERVED" as const;
     case "BROKEN":
       return "BROKEN" as const;
-    case "REDISTRIBUTING":
-      return "REDISTRIBUTING" as const;
+    case "PENDING_DISPATCH":
+      return "PENDING_DISPATCH" as const;
+    case "TRANSPORTING":
+      return "TRANSPORTING" as const;
+    case "SWAPPING":
+      return "SWAPPING" as const;
     case "LOST":
       return "LOST" as const;
     case "DISABLED":

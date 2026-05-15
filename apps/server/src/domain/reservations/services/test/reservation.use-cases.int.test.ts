@@ -266,7 +266,9 @@ describe("reservation use-cases integration", () => {
   });
 
   it.each([
-    { status: "REDISTRIBUTING", tag: "BikeIsRedistributing" },
+    { status: "PENDING_DISPATCH", tag: "BikeIsPendingDispatch" },
+    { status: "TRANSPORTING", tag: "BikeIsTransporting" },
+    { status: "SWAPPING", tag: "BikeIsSwapping" },
     { status: "LOST", tag: "BikeIsLost" },
     { status: "DISABLED", tag: "BikeIsDisabled" },
   ] as const)("reserveBikeUseCase fails when bike status is $status", async ({ status, tag }) => {

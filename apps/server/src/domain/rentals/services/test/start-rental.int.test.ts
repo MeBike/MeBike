@@ -200,7 +200,9 @@ describe("startRentalUseCase Integration", () => {
     { status: "LOST", tag: "BikeIsLost" },
     { status: "RESERVED", tag: "BikeIsReserved" },
     { status: "DISABLED", tag: "BikeIsDisabled" },
-    { status: "REDISTRIBUTING", tag: "BikeIsRedistributing" },
+    { status: "PENDING_DISPATCH", tag: "BikeIsPendingDispatch" },
+    { status: "TRANSPORTING", tag: "BikeIsTransporting" },
+    { status: "SWAPPING", tag: "BikeIsSwapping" },
   ] as const)("fails when bike status is $status", async ({ status, tag }) => {
     const { user } = await givenUserWithWallet(fixture, {
       wallet: { balance: 5000n },
