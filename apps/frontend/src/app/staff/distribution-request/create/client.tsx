@@ -3,7 +3,7 @@
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Repeat, Loader2, Info, ArrowLeft } from "lucide-react";
+import { Repeat, Loader2, Info, ArrowLeft , AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +51,6 @@ export default function CreateDistributionRequestClient({
     },
   });
 
-  // Lấy thông tin chi tiết của trạm hiện tại
   const { myStationDetail } = useStationActions({
     stationId: stations.currentStation.id,
   });
@@ -60,17 +59,10 @@ export default function CreateDistributionRequestClient({
   const selectedTargetStation = stations.otherStations?.find(
     (s) => s.id === targetStationId,
   );
-
-  // 1. Số chỗ trống tại trạm đích
   const targetAvailableSlots =
     selectedTargetStation?.operationalAvailableSlots || 0;
-
-  // 2. Số xe khả dụng (có thể điều phối) tại trạm xuất
   const sourceAvailableBikes = myStationDetail?.bikes?.available || 0;
-
-  // 3. Giới hạn tối đa = Min(chỗ trống trạm đích, xe khả dụng trạm xuất)
   const maxLimit = Math.min(targetAvailableSlots, sourceAvailableBikes);
-
   const onSubmit = async (data: CreateRedistributionRequestInput) => {
     if (data.requestedQuantity > maxLimit) {
       return;
@@ -133,7 +125,6 @@ export default function CreateDistributionRequestClient({
                   />
 
                   {/* Hiển thị chi tiết số lượng xe từ myStationDetail */}
-                  {/* Hiển thị chi tiết số lượng xe từ myStationDetail */}
                   {myStationDetail?.bikes && (
                     <div className="bg-muted/30 p-4 rounded-xl border border-border/50 space-y-3">
                       <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -152,13 +143,27 @@ export default function CreateDistributionRequestClient({
                           </span>
                         </div>
 
-                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                        {/* Ô SẴN SÀNG: Thêm cảnh báo đỏ nếu < 10 */}
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm relative">
                           <span className="text-xs text-muted-foreground font-medium">
                             Sẵn sàng
                           </span>
-                          <span className="font-bold text-base text-green-600">
-                            {myStationDetail.bikes.available}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`font-bold text-base ${
+                                sourceAvailableBikes < 10
+                                  ? "text-destructive"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {myStationDetail.bikes.available}
+                            </span>
+                            {sourceAvailableBikes < 10 && (
+                              <span className="bg-destructive/10 text-destructive text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                Không đủ
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
@@ -318,19 +323,35 @@ export default function CreateDistributionRequestClient({
               </div>
             </div>
 
-            <Button
-              type="submit"
-              disabled={
-                isSubmitting || maxLimit === 0 || !selectedTargetStation
-              }
-              className="w-full"
-            >
-              {isSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                "Xác nhận gửi yêu cầu"
+            <div className="space-y-4">
+              {/* CẢNH BÁO KHI TRẠM XUẤT CÓ < 10 XE */}
+              {sourceAvailableBikes < 10 && (
+                <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive border border-destructive/20">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <p>
+                    Không thể gửi yêu cầu. Trạm xuất cần có ít nhất{" "}
+                    <strong>10 xe khả dụng</strong> để thực hiện điều phối.
+                  </p>
+                </div>
               )}
-            </Button>
+
+              <Button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  maxLimit === 0 ||
+                  !selectedTargetStation ||
+                  sourceAvailableBikes < 10
+                }
+                className="w-full"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  "Xác nhận gửi yêu cầu"
+                )}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
