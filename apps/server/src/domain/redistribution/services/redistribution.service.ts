@@ -452,25 +452,40 @@ function makeRedistributionService(
             const txRedistributionRepo = makeRedistributionRepository(tx);
 
             // Fetch bikes + check minimum remaining available bikes
-            const availableBikes = yield* Effect.promise(() =>
-              tx.bike.findMany({
-                where: { stationId: sourceStation.id, status: "AVAILABLE" },
-                take: args.requestedQuantity,
-                select: { id: true },
-              }),
-            );
+            const [totalAvailableCount, pickedBikes] = yield* Effect.all([
+              Effect.promise(() =>
+                tx.bike.count({
+                  where: {
+                    stationId: sourceStation.id,
+                    status: "AVAILABLE",
+                  },
+                }),
+              ),
 
-            if (availableBikes.length < args.requestedQuantity) {
+              Effect.promise(() =>
+                tx.bike.findMany({
+                  where: {
+                    stationId: sourceStation.id,
+                    status: "AVAILABLE",
+                  },
+                  take: args.requestedQuantity,
+                  select: { id: true },
+                }),
+              ),
+            ]);
+
+            const pickedCount = pickedBikes.length
+            if (pickedCount < args.requestedQuantity) {
               return yield* Effect.fail(
                 new NotEnoughBikesAtStation({
                   stationId: args.sourceStationId,
                   required: args.requestedQuantity,
-                  available: availableBikes.length,
+                  available: pickedCount,
                 }),
               );
             }
 
-            const restBikes = availableBikes.length - args.requestedQuantity;
+            const restBikes = totalAvailableCount - pickedCount;
 
             if (restBikes < MIN_AVAILABLE_BIKES_AT_STATION) {
               return yield* Effect.fail(
@@ -482,7 +497,7 @@ function makeRedistributionService(
               );
             }
 
-            bikeIds.push(...availableBikes.map((b) => b.id));
+            bikeIds.push(...pickedBikes.map((b) => b.id));
 
             // Marks bikes as pending dispatch
             yield* txBikeRepo.updateManyStatusAt(
@@ -626,7 +641,7 @@ function makeRedistributionService(
             yield* txBikeRepo.updateManyStatusAt(
               bikeIds,
               BikeStatus.TRANSPORTING,
-              now
+              now,
             );
 
             const updatedOpt =
