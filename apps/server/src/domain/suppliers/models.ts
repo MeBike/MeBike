@@ -41,6 +41,7 @@ export type SupplierBikeStats = {
   available: number;
   booked: number;
   broken: number;
+  fixed: number;
   reserved: number;
   pendingDispatch: number;
   transporting: number;

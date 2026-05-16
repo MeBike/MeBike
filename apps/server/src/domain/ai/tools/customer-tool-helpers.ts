@@ -145,6 +145,7 @@ const bikeStatusLabels = {
   AVAILABLE: "Có sẵn",
   BOOKED: "Đang được thuê",
   BROKEN: "Bị hỏng",
+  FIXED: "Đã sửa xong (chờ xác nhận)",
   RESERVED: "Đã đặt trước",
   PENDING_DISPATCH: "Đang chờ điều phối",
   TRANSPORTING: "Đang vận chuyển",
@@ -157,6 +158,7 @@ const bikeRentabilityLabels = {
   AVAILABLE: "Sẵn sàng để thuê",
   BOOKED: "Đang được thuê",
   BROKEN: "Không nên sử dụng vì xe đang hỏng",
+  FIXED: "Chưa thể thuê, xe đã sửa nhưng chờ xác nhận",
   NO_STATION: "Không thể thuê vì xe không ở trạm nào",
   RESERVED: "Không sẵn sàng để thuê vì xe đã được đặt trước",
   PENDING_DISPATCH: "Không sẵn sàng để thuê vì xe đang chờ điều phối",
@@ -286,6 +288,8 @@ function getBikeRentabilityReason(bike: {
       return "RESERVED" as const;
     case "BROKEN":
       return "BROKEN" as const;
+    case "FIXED":
+      return "FIXED" as const;
     case "PENDING_DISPATCH":
       return "PENDING_DISPATCH" as const;
     case "TRANSPORTING":

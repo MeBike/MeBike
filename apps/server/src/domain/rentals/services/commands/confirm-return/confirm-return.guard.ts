@@ -204,6 +204,7 @@ export function ensureReturnDestinationReadyInTx(args: {
       reservedBikes: stationSnapshot.reservedBikes,
       pendingDispatchBikes: stationSnapshot.pendingDispatchBikes,
       brokenBikes: stationSnapshot.brokenBikes,
+      fixedBikes: stationSnapshot.fixedBikes,
     });
     const physicalRemaining = stationSnapshot.totalCapacity
       - totalInStationBikes

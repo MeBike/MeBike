@@ -77,6 +77,7 @@ export const BikeStatisticsSchema = z.object({
   RESERVED: z.number(),
   AVAILABLE: z.number(),
   RENTED: z.number(),
+  FIXED: z.number(),
   PENDING_DISPATCH: z.number(),
   TRANSPORTING: z.number(),
   SWAPPING: z.number(),

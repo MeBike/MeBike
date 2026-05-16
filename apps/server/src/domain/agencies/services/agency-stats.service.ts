@@ -56,6 +56,7 @@ function emptyMetrics(totalCapacity: number, returnSlotLimit: number) {
       availableBikes: 0,
       bookedBikes: 0,
       brokenBikes: 0,
+      fixedBikes: 0,
       reservedBikes: 0,
       pendingDispatchBikes: 0,
       transportingBikes: 0,

@@ -214,6 +214,7 @@ export type ReturnSlotStationCapacityRow = {
   reservedBikes: number;
   pendingDispatchBikes: number;
   brokenBikes: number;
+  fixedBikes: number;
   activeReturnSlots: number;
   incomingRedistributionBikes: number;
 };

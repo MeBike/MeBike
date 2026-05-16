@@ -18,6 +18,7 @@ export type BikeCounts = Pick<
   | "availableBikes"
   | "bookedBikes"
   | "brokenBikes"
+  | "fixedBikes"
   | "reservedBikes"
   | "pendingDispatchBikes"
   | "transportingBikes"
@@ -36,6 +37,7 @@ export function createEmptyBikeCounts(): BikeCounts {
     availableBikes: 0,
     bookedBikes: 0,
     brokenBikes: 0,
+    fixedBikes: 0,
     lostBikes: 0,
     reservedBikes: 0,
     pendingDispatchBikes: 0,
@@ -50,15 +52,28 @@ export function createEmptyBikeCounts(): BikeCounts {
 }
 
 export function countInStationBikes({
-  totalCapacity, availableBikes, reservedBikes, pendingDispatchBikes, brokenBikes,
+  totalCapacity,
+  availableBikes,
+  reservedBikes,
+  pendingDispatchBikes,
+  brokenBikes,
+  fixedBikes,
 }: {
   totalCapacity: number;
   availableBikes: number;
   reservedBikes: number;
   pendingDispatchBikes: number;
   brokenBikes: number;
+  fixedBikes: number;
 }): number {
-  return Math.min(totalCapacity, availableBikes + reservedBikes + pendingDispatchBikes + brokenBikes);
+  return Math.min(
+    totalCapacity,
+    availableBikes +
+      reservedBikes +
+      pendingDispatchBikes +
+      brokenBikes +
+      fixedBikes,
+  );
 }
 
 /**
@@ -74,19 +89,28 @@ export function countInStationBikes({
  * Hàm này clamp về `0` vì đây là giá trị hiển thị trên resource trả về; API
  * không nên trả số âm cho số lượng slot còn lại.
  */
-function computeAvailableReturnSlots(station: StationBaseRow, counts: BikeCounts) {
+function computeAvailableReturnSlots(
+  station: StationBaseRow,
+  counts: BikeCounts,
+) {
   const totalInStationBikes = countInStationBikes({
     totalCapacity: station.totalCapacity,
     availableBikes: counts.availableBikes,
     reservedBikes: counts.reservedBikes,
     pendingDispatchBikes: counts.pendingDispatchBikes,
     brokenBikes: counts.brokenBikes,
+    fixedBikes: counts.fixedBikes,
   });
   return Math.max(
     0,
     Math.min(
-      station.totalCapacity - totalInStationBikes - counts.activeReturnSlots - counts.incomingRedistributionBikes,
-      station.returnSlotLimit - counts.activeReturnSlots - counts.incomingRedistributionBikes,
+      station.totalCapacity -
+        totalInStationBikes -
+        counts.activeReturnSlots -
+        counts.incomingRedistributionBikes,
+      station.returnSlotLimit -
+        counts.activeReturnSlots -
+        counts.incomingRedistributionBikes,
     ),
   );
 }
@@ -103,14 +127,23 @@ export function applyCounts(
 ): StationRow {
   const resolved = counts ?? createEmptyBikeCounts();
 
-  const createdAt
-    = station.createdAt instanceof Date
+  const createdAt =
+    station.createdAt instanceof Date
       ? station.createdAt.toISOString()
       : new Date(station.createdAt).toISOString();
-  const updatedAt
-    = station.updatedAt instanceof Date
+  const updatedAt =
+    station.updatedAt instanceof Date
       ? station.updatedAt.toISOString()
       : new Date(station.updatedAt).toISOString();
+
+  const inStationBikes = countInStationBikes({
+    totalCapacity: station.totalCapacity,
+    availableBikes: resolved.availableBikes,
+    reservedBikes: resolved.reservedBikes,
+    pendingDispatchBikes: resolved.pendingDispatchBikes,
+    brokenBikes: resolved.brokenBikes,
+    fixedBikes: resolved.fixedBikes,
+  });
 
   return {
     id: station.id,
@@ -128,7 +161,7 @@ export function applyCounts(
     activeReturnSlots: resolved.activeReturnSlots,
     incomingRedistributionBikes: resolved.incomingRedistributionBikes,
     availableReturnSlots: computeAvailableReturnSlots(station, resolved),
-    emptySlots: Math.max(0, station.totalCapacity - resolved.totalBikes),
+    emptySlots: Math.max(0, station.totalCapacity - inStationBikes),
   };
 }
 
@@ -143,7 +176,8 @@ export function resolveStationCounts(args: {
   return {
     ...counts,
     activeReturnSlots: args.returnSlotCountsMap.get(args.stationId) ?? 0,
-    incomingRedistributionBikes: args.incomingRedistributionCountsMap?.get(args.stationId) ?? 0,
+    incomingRedistributionBikes:
+      args.incomingRedistributionCountsMap?.get(args.stationId) ?? 0,
   };
 }
 
@@ -167,7 +201,7 @@ export function getActiveReturnSlotCounts(
         },
         _count: { _all: true },
       }),
-    catch: cause =>
+    catch: (cause) =>
       new StationRepositoryError({
         operation: "getActiveReturnSlotCounts.groupBy",
         cause,
@@ -209,7 +243,7 @@ export function getBikeCounts(
         },
         _count: { _all: true },
       }),
-    catch: cause =>
+    catch: (cause) =>
       new StationRepositoryError({
         operation: "getBikeCounts.groupBy",
         cause,
@@ -240,6 +274,9 @@ export function getBikeCounts(
             break;
           case "BROKEN":
             counts.brokenBikes += inc;
+            break;
+          case "FIXED":
+            counts.fixedBikes += inc;
             break;
           case "RESERVED":
             counts.reservedBikes += inc;
@@ -295,7 +332,7 @@ export function getIncomingRedistributionCounts(
           },
         },
       }),
-    catch: cause =>
+    catch: (cause) =>
       new StationRepositoryError({
         operation: "getIncomingRedistributionCounts.findMany",
         cause,

@@ -197,6 +197,7 @@ describe("startRentalUseCase Integration", () => {
   it.each([
     { status: "BOOKED", tag: "BikeAlreadyRented" },
     { status: "BROKEN", tag: "BikeIsBroken" },
+    { status: "FIXED", tag: "BikeIsFixed" },
     { status: "LOST", tag: "BikeIsLost" },
     { status: "RESERVED", tag: "BikeIsReserved" },
     { status: "DISABLED", tag: "BikeIsDisabled" },

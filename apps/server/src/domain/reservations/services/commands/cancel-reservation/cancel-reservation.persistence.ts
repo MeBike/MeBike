@@ -15,6 +15,8 @@ import type {
   BikeIsTransporting,
   BikeIsSwapping,
   BikeNotAvailable,
+  BikeIsBroken,
+  BikeIsFixed,
 } from "../../../domain-errors";
 import type { ReservationRow } from "../../../models";
 import type {
@@ -116,7 +118,15 @@ function releaseReservedBikeForCancellationInTx(
   now: Date,
 ): Effect.Effect<
   void,
-  BikeNotFound | BikeNotAvailable | BikeIsPendingDispatch | BikeIsTransporting | BikeIsSwapping | BikeIsLost | BikeIsDisabled
+  | BikeNotFound
+  | BikeNotAvailable
+  | BikeIsPendingDispatch
+  | BikeIsTransporting
+  | BikeIsSwapping
+  | BikeIsLost
+  | BikeIsDisabled
+  | BikeIsBroken
+  | BikeIsFixed
 > {
   return Effect.gen(function* () {
     const bikeRepo = makeBikeRepository(tx);

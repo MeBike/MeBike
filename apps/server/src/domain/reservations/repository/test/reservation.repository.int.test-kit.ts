@@ -37,6 +37,7 @@ export function setupReservationRepositoryIntTestKit() {
       | "AVAILABLE"
       | "BOOKED"
       | "BROKEN"
+      | "FIXED"
       | "RESERVED"
       | "PENDING_DISPATCH"
       | "LOST"

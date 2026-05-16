@@ -59,6 +59,10 @@ export class BikeIsBroken extends Data.TaggedError("BikeIsBroken")<{
   readonly bikeId: string;
 }> {}
 
+export class BikeIsFixed extends Data.TaggedError("BikeIsFixed")<{
+  readonly bikeId: string;
+}> {}
+
 export class BikeIsLost extends Data.TaggedError("BikeIsLost")<{
   readonly bikeId: string;
 }> {}
@@ -224,6 +228,7 @@ export type RentalServiceFailure
     | BikeIsLost
     | BikeIsReserved
     | BikeIsPendingDispatch
+    | BikeIsFixed
     | BikeIsTransporting
     | BikeIsSwapping
     | BikeIsDisabled

@@ -176,6 +176,9 @@ function summarizeBikeStatuses(bikes: Array<{ status: string }>) {
       case "BROKEN":
         counts.brokenBikes += 1;
         break;
+      case "FIXED":
+        counts.fixedBikes += 1;
+        break;
       case "RESERVED":
         counts.reservedBikes += 1;
         break;
@@ -202,6 +205,7 @@ function summarizeBikeStatuses(bikes: Array<{ status: string }>) {
     availableBikes: 0,
     bookedBikes: 0,
     brokenBikes: 0,
+    fixedBikes: 0,
     reservedBikes: 0,
     pendingDispatchBikes: 0,
     transportingBikes: 0,

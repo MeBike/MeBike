@@ -109,6 +109,7 @@ const BikeRentabilityReasonSchema = z.enum([
   "BOOKED",
   "RESERVED",
   "BROKEN",
+  "FIXED",
   "PENDING_DISPATCH",
   "TRANSPORTING",
   "SWAPPING",

@@ -86,6 +86,10 @@ export class BikeIsBroken extends Data.TaggedError("BikeIsBroken")<{
   readonly bikeId: string;
 }> {}
 
+export class BikeIsFixed extends Data.TaggedError("BikeIsFixed")<{
+  readonly bikeId: string;
+}> {}
+
 export class BikeIsLost extends Data.TaggedError("BikeIsLost")<{
   readonly bikeId: string;
 }> {}
@@ -216,6 +220,7 @@ export type ReservationServiceFailure
     | BikeIsDisabled
     | BikeIsBroken
     | BikeIsLost
+    | BikeIsFixed
     | StationReservationAvailabilityTooLow
     | ReservationOptionNotSupported
     | ReservationNotFound

@@ -4,6 +4,7 @@ export const BikeStatusSchema = z.enum([
   "AVAILABLE",
   "BOOKED",
   "BROKEN",
+  "FIXED",
   "RESERVED",
   "PENDING_DISPATCH",
   "TRANSPORTING",

@@ -40,6 +40,7 @@ export function toContractStationReadSummary(
         reservedBikes: station.reservedBikes,
         pendingDispatchBikes: station.pendingDispatchBikes,
         brokenBikes: station.brokenBikes,
+        fixedBikes: station.fixedBikes,
       }),
       returnSlotLimit: station.returnSlotLimit,
       totalActiveSlots: countTotalActiveSlots({
@@ -54,6 +55,7 @@ export function toContractStationReadSummary(
       available: station.availableBikes,
       booked: station.bookedBikes,
       broken: station.brokenBikes,
+      fixed: station.fixedBikes,
       reserved: station.reservedBikes,
       pendingDispatch: station.pendingDispatchBikes,
       transporting: station.transportingBikes,
@@ -101,6 +103,7 @@ export function toContractStationSummary(
     availableBikes: station.availableBikes,
     bookedBikes: station.bookedBikes,
     brokenBikes: station.brokenBikes,
+    fixedBikes: station.fixedBikes,
     reservedBikes: station.reservedBikes,
     pendingDispatchBikes: station.pendingDispatchBikes,
     transportingBikes: station.transportingBikes,

@@ -12,11 +12,13 @@ import {
   BikeIsReserved,
   BikeIsPendingDispatch,
   InvalidBikeStatus,
+  BikeIsFixed,
 } from "../domain-errors";
 
 export type StartRentalBikeStatusFailure
   = | BikeAlreadyRented
     | BikeIsBroken
+    | BikeIsFixed
     | BikeIsReserved
     | BikeIsDisabled
     | BikeIsPendingDispatch
@@ -38,6 +40,8 @@ export function startRentalFailureFromBikeStatus(args: {
       return Option.some(new BikeAlreadyRented({ bikeId }));
     case "BROKEN":
       return Option.some(new BikeIsBroken({ bikeId }));
+    case "FIXED":
+      return Option.some(new BikeIsFixed({ bikeId }));
     case "RESERVED":
       return Option.some(new BikeIsReserved({ bikeId }));
     case "PENDING_DISPATCH":

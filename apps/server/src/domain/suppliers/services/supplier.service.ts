@@ -72,6 +72,7 @@ export function emptyStats(
     available: 0,
     booked: 0,
     broken: 0,
+    fixed: 0,
     reserved: 0,
     pendingDispatch: 0,
     transporting: 0,
@@ -131,6 +132,9 @@ export function updateStatsWithCount(
       break;
     case "BROKEN":
       update.broken = count;
+      break;
+    case "FIXED":
+      update.fixed = count;
       break;
     case "RESERVED":
       update.reserved = count;

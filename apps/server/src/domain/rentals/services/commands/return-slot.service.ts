@@ -177,6 +177,7 @@ export function createReturnSlot(
           reservedBikes: stationSnapshot.reservedBikes,
           pendingDispatchBikes: stationSnapshot.pendingDispatchBikes,
           brokenBikes: stationSnapshot.brokenBikes,
+          fixedBikes: stationSnapshot.fixedBikes,
         });
         if (availableReturnSlots(
           stationSnapshot.totalCapacity,

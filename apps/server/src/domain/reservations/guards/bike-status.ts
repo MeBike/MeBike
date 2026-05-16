@@ -10,6 +10,8 @@ import {
   BikeIsTransporting,
   BikeIsSwapping,
   BikeNotAvailable,
+  BikeIsBroken,
+  BikeIsFixed,
 } from "../domain-errors";
 
 type ReservationBikeStatusFailure
@@ -18,6 +20,8 @@ type ReservationBikeStatusFailure
     | BikeIsTransporting
     | BikeIsSwapping
     | BikeIsLost
+    | BikeIsBroken
+    | BikeIsFixed
     | BikeIsDisabled
     | BikeNotAvailable;
 
@@ -26,6 +30,8 @@ type ReservationTransitionBikeStatusFailure
     | BikeIsTransporting
     | BikeIsSwapping
     | BikeIsLost
+    | BikeIsBroken
+    | BikeIsFixed
     | BikeIsDisabled
     | BikeNotAvailable;
 
@@ -48,6 +54,10 @@ export function reserveFailureFromBikeStatus(args: {
       return Option.some(new BikeIsSwapping({ bikeId }));
     case "LOST":
       return Option.some(new BikeIsLost({ bikeId }));
+    case "BROKEN":
+      return Option.some(new BikeIsBroken({ bikeId }));
+    case "FIXED":
+      return Option.some(new BikeIsFixed({ bikeId }));
     case "DISABLED":
       return Option.some(new BikeIsDisabled({ bikeId }));
     default:
@@ -70,6 +80,10 @@ export function reservationTransitionFailureFromBikeStatus(args: {
       return new BikeIsSwapping({ bikeId });
     case "LOST":
       return new BikeIsLost({ bikeId });
+    case "BROKEN":
+      return new BikeIsBroken({ bikeId });
+    case "FIXED":
+      return new BikeIsFixed({ bikeId });
     case "DISABLED":
       return new BikeIsDisabled({ bikeId });
     default:

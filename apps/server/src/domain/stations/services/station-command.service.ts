@@ -143,6 +143,7 @@ export function makeStationCommandService(args: {
         reservedBikes: current.reservedBikes,
         pendingDispatchBikes: current.pendingDispatchBikes,
         brokenBikes: current.brokenBikes,
+        fixedBikes: current.fixedBikes,
       });
       if (
         next.totalCapacity !== current.totalCapacity

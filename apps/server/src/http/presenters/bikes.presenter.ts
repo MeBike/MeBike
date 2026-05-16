@@ -55,6 +55,7 @@ export function toBikeStatistics(
     RESERVED: row.RESERVED,
     AVAILABLE: row.AVAILABLE,
     RENTED: row.RENTED,
+    FIXED: row.FIXED,
     PENDING_DISPATCH: row.PENDING_DISPATCH,
     TRANSPORTING: row.TRANSPORTING,
     SWAPPING: row.SWAPPING,
