@@ -21,6 +21,7 @@ export type DeviceDenyReason
     | "BIKE_NOT_AT_STATION"
     | "BIKE_NOT_FOUND"
     | "BIKE_PENDING_DISPATCH"
+    | "BIKE_FIXED"
     | "BIKE_RESERVED"
     | "BIKE_UNAVAILABLE"
     | "BIKE_TRANSPORTING"
@@ -77,56 +78,62 @@ export type DeviceTapDecisionService = {
  * Map lỗi domain reservation sang mã deny reason dùng cho luồng tap.
  */
 function mapReservationFailureToDenyReason(failure: ReservationServiceFailure): DeviceDenyReason {
-  return Match.value(failure).pipe(
-    Match.tag("OvernightOperationsClosed", () => "OVERNIGHT_OPERATIONS_CLOSED"),
-    Match.tag("BikeAlreadyReserved", () => "BIKE_RESERVED"),
-    Match.tag("BikeNotFound", () => "BIKE_NOT_FOUND"),
-    Match.tag("BikeNotAvailable", () => "BIKE_UNAVAILABLE"),
-    Match.tag("BikeNotFoundInStation", () => "BIKE_NOT_AT_STATION"),
-    Match.tag("BikeIsPendingDispatch", () => "BIKE_PENDING_DISPATCH"),
-    Match.tag("BikeIsLost", () => "BIKE_LOST"),
-    Match.tag("BikeIsDisabled", () => "BIKE_DISABLED"),
-    Match.tag("ReservationNotFound", () => "RESERVATION_NOT_FOUND"),
-    Match.tag("ReservationNotOwned", () => "RESERVATION_NOT_OWNED"),
-    Match.tag("ReservationMissingBike", () => "RESERVATION_MISSING_BIKE"),
-    Match.tag("InvalidReservationTransition", () => "RESERVATION_INVALID"),
-    Match.tag("ReservationConfirmBlockedByActiveRental", () => "ACTIVE_RENTAL_EXISTS"),
-    Match.tag("WalletNotFound", () => "WALLET_NOT_FOUND"),
-    Match.tag("InsufficientWalletBalance", () => "INSUFFICIENT_FUNDS"),
-    Match.tag("ActiveReservationExists", () => "ACTIVE_RESERVATION_EXISTS"),
-    Match.tag("SubscriptionRequired", () => "SUBSCRIPTION_REQUIRED"),
-    Match.tag("ReservationOptionNotSupported", () => "RESERVATION_OPTION_UNSUPPORTED"),
-    Match.tag("StationReservationAvailabilityTooLow", () => "STATION_RESERVATION_UNAVAILABLE"),
-    Match.orElse(() => "RESERVATION_DENIED"),
-  ) as DeviceDenyReason;
+  switch (failure._tag) {
+    case "OvernightOperationsClosed": return "OVERNIGHT_OPERATIONS_CLOSED";
+    case "FixedSlotTemplateStartOutsideOperatingHours": return "OVERNIGHT_OPERATIONS_CLOSED";
+    case "BikeAlreadyReserved": return "BIKE_RESERVED";
+    case "BikeNotFound": return "BIKE_NOT_FOUND";
+    case "BikeNotAvailable": return "BIKE_UNAVAILABLE";
+    case "BikeNotFoundInStation": return "BIKE_NOT_AT_STATION";
+    case "BikeIsPendingDispatch": return "BIKE_PENDING_DISPATCH";
+    case "BikeIsTransporting": return "BIKE_TRANSPORTING";
+    case "BikeIsSwapping": return "BIKE_SWAPPING";
+    case "BikeIsBroken": return "BIKE_BROKEN";
+    case "BikeIsFixed": return "BIKE_FIXED";
+    case "BikeIsLost": return "BIKE_LOST";
+    case "BikeIsDisabled": return "BIKE_DISABLED";
+    case "ReservationNotFound": return "RESERVATION_NOT_FOUND";
+    case "ReservationNotOwned": return "RESERVATION_NOT_OWNED";
+    case "ReservationMissingBike": return "RESERVATION_MISSING_BIKE";
+    case "InvalidReservationTransition": return "RESERVATION_INVALID";
+    case "ReservationConfirmBlockedByActiveRental": return "ACTIVE_RENTAL_EXISTS";
+    case "WalletNotFound": return "WALLET_NOT_FOUND";
+    case "InsufficientWalletBalance": return "INSUFFICIENT_FUNDS";
+    case "ActiveReservationExists": return "ACTIVE_RESERVATION_EXISTS";
+    case "SubscriptionRequired": return "SUBSCRIPTION_REQUIRED";
+    case "ReservationOptionNotSupported": return "RESERVATION_OPTION_UNSUPPORTED";
+    case "StationReservationAvailabilityTooLow": return "STATION_RESERVATION_UNAVAILABLE";
+    default: return "RESERVATION_DENIED";
+  }
 }
 
 /**
  * Map lỗi domain rental sang mã deny reason dùng cho luồng tap.
  */
 function mapRentalFailureToDenyReason(failure: RentalServiceFailure): DeviceDenyReason {
-  return Match.value(failure).pipe(
-    Match.tag("OvernightOperationsClosed", () => "OVERNIGHT_OPERATIONS_CLOSED"),
-    Match.tag("ActiveRentalExists", () => "ACTIVE_RENTAL_EXISTS"),
-    Match.tag("BikeAlreadyRented", () => "BIKE_ALREADY_RENTED"),
-    Match.tag("BikeNotFound", () => "BIKE_NOT_FOUND"),
-    Match.tag("BikeMissingStation", () => "BIKE_NOT_AT_STATION"),
-    Match.tag("BikeNotFoundInStation", () => "BIKE_NOT_AT_STATION"),
-    Match.tag("BikeIsBroken", () => "BIKE_BROKEN"),
-    Match.tag("BikeIsReserved", () => "BIKE_RESERVED"),
-    Match.tag("BikeIsPendingDispatch", () => "BIKE_PENDING_DISPATCH"),
-    Match.tag("BikeIsTransporting", () => "BIKE_TRANSPORTING"),
-    Match.tag("BikeIsSwapping", () => "BIKE_SWAPPING"),
-    Match.tag("BikeIsLost", () => "BIKE_LOST"),
-    Match.tag("BikeIsDisabled", () => "BIKE_DISABLED"),
-    Match.tag("InvalidBikeStatus", () => "BIKE_UNAVAILABLE"),
-    Match.tag("UserWalletNotFound", () => "WALLET_NOT_FOUND"),
-    Match.tag("InsufficientBalanceToRent", () => "INSUFFICIENT_FUNDS"),
-    Match.tag("SubscriptionNotFound", () => "SUBSCRIPTION_NOT_FOUND"),
-    Match.tag("SubscriptionNotUsable", () => "SUBSCRIPTION_NOT_USABLE"),
-    Match.tag("SubscriptionUsageExceeded", () => "SUBSCRIPTION_USAGE_EXCEEDED"),
-    Match.orElse(() => "RENTAL_DENIED"),
-  ) as DeviceDenyReason;
+  switch (failure._tag) {
+    case "OvernightOperationsClosed": return "OVERNIGHT_OPERATIONS_CLOSED";
+    case "ActiveRentalExists": return "ACTIVE_RENTAL_EXISTS";
+    case "BikeAlreadyRented": return "BIKE_ALREADY_RENTED";
+    case "BikeNotFound": return "BIKE_NOT_FOUND";
+    case "BikeMissingStation": return "BIKE_NOT_AT_STATION";
+    case "BikeNotFoundInStation": return "BIKE_NOT_AT_STATION";
+    case "BikeIsBroken": return "BIKE_BROKEN";
+    case "BikeIsFixed": return "BIKE_FIXED";
+    case "BikeIsReserved": return "BIKE_RESERVED";
+    case "BikeIsPendingDispatch": return "BIKE_PENDING_DISPATCH";
+    case "BikeIsTransporting": return "BIKE_TRANSPORTING";
+    case "BikeIsSwapping": return "BIKE_SWAPPING";
+    case "BikeIsLost": return "BIKE_LOST";
+    case "BikeIsDisabled": return "BIKE_DISABLED";
+    case "InvalidBikeStatus": return "BIKE_UNAVAILABLE";
+    case "UserWalletNotFound": return "WALLET_NOT_FOUND";
+    case "InsufficientBalanceToRent": return "INSUFFICIENT_FUNDS";
+    case "SubscriptionNotFound": return "SUBSCRIPTION_NOT_FOUND";
+    case "SubscriptionNotUsable": return "SUBSCRIPTION_NOT_USABLE";
+    case "SubscriptionUsageExceeded": return "SUBSCRIPTION_USAGE_EXCEEDED";
+    default: return "RENTAL_DENIED";
+  }
 }
 
 function mapNfcCardStatusToDenyReason(status: import("generated/prisma/client").NfcCardStatus): DeviceDenyReason {
