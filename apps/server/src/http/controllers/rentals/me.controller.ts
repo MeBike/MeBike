@@ -623,7 +623,7 @@ const createMyReturnSlot: RouteHandler<
             stationId,
             totalCapacity,
             returnSlotLimit,
-            totalBikes,
+            totalInStationBikes,
             activeReturnSlots,
           }) =>
             c.json(
@@ -635,7 +635,7 @@ const createMyReturnSlot: RouteHandler<
                   stationId,
                   totalCapacity,
                   returnSlotLimit,
-                  totalBikes,
+                  totalInStationBikes,
                   activeReturnSlots,
                 },
               },

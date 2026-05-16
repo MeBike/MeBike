@@ -20,9 +20,11 @@ export type DeviceDenyReason
     | "BIKE_LOST"
     | "BIKE_NOT_AT_STATION"
     | "BIKE_NOT_FOUND"
-    | "BIKE_REDISTRIBUTING"
+    | "BIKE_PENDING_DISPATCH"
     | "BIKE_RESERVED"
     | "BIKE_UNAVAILABLE"
+    | "BIKE_TRANSPORTING"
+    | "BIKE_SWAPPING"
     | "CARD_BLOCKED"
     | "CARD_INACTIVE"
     | "CARD_LOST"
@@ -81,7 +83,7 @@ function mapReservationFailureToDenyReason(failure: ReservationServiceFailure): 
     Match.tag("BikeNotFound", () => "BIKE_NOT_FOUND"),
     Match.tag("BikeNotAvailable", () => "BIKE_UNAVAILABLE"),
     Match.tag("BikeNotFoundInStation", () => "BIKE_NOT_AT_STATION"),
-    Match.tag("BikeIsRedistributing", () => "BIKE_REDISTRIBUTING"),
+    Match.tag("BikeIsPendingDispatch", () => "BIKE_PENDING_DISPATCH"),
     Match.tag("BikeIsLost", () => "BIKE_LOST"),
     Match.tag("BikeIsDisabled", () => "BIKE_DISABLED"),
     Match.tag("ReservationNotFound", () => "RESERVATION_NOT_FOUND"),
@@ -112,7 +114,9 @@ function mapRentalFailureToDenyReason(failure: RentalServiceFailure): DeviceDeny
     Match.tag("BikeNotFoundInStation", () => "BIKE_NOT_AT_STATION"),
     Match.tag("BikeIsBroken", () => "BIKE_BROKEN"),
     Match.tag("BikeIsReserved", () => "BIKE_RESERVED"),
-    Match.tag("BikeIsRedistributing", () => "BIKE_REDISTRIBUTING"),
+    Match.tag("BikeIsPendingDispatch", () => "BIKE_PENDING_DISPATCH"),
+    Match.tag("BikeIsTransporting", () => "BIKE_TRANSPORTING"),
+    Match.tag("BikeIsSwapping", () => "BIKE_SWAPPING"),
     Match.tag("BikeIsLost", () => "BIKE_LOST"),
     Match.tag("BikeIsDisabled", () => "BIKE_DISABLED"),
     Match.tag("InvalidBikeStatus", () => "BIKE_UNAVAILABLE"),

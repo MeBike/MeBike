@@ -313,7 +313,7 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
           )),
         Match.tag(
           "ReturnSlotCapacityExceeded",
-          ({ stationId, totalCapacity, returnSlotLimit, totalBikes, activeReturnSlots }) =>
+          ({ stationId, totalCapacity, returnSlotLimit, totalInStationBikes, activeReturnSlots }) =>
             c.json(
               {
                 error: rentalErrorMessages.RETURN_SLOT_CAPACITY_EXCEEDED,
@@ -322,7 +322,7 @@ const confirmRentalReturnByOperatorHandler: RouteHandler<
                   stationId,
                   totalCapacity,
                   returnSlotLimit,
-                  totalBikes,
+                  totalInStationBikes,
                   activeReturnSlots,
                 },
               },

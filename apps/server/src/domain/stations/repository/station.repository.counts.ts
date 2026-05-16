@@ -49,6 +49,18 @@ export function createEmptyBikeCounts(): BikeCounts {
   };
 }
 
+export function countInStationBikes({
+  totalCapacity, availableBikes, reservedBikes, pendingDispatchBikes, brokenBikes,
+}: {
+  totalCapacity: number;
+  availableBikes: number;
+  reservedBikes: number;
+  pendingDispatchBikes: number;
+  brokenBikes: number;
+}): number {
+  return Math.min(totalCapacity, availableBikes + reservedBikes + pendingDispatchBikes + brokenBikes);
+}
+
 /**
  * Tính số return slots còn có thể nhận tại station ở thời điểm hiện tại.
  *
@@ -63,10 +75,17 @@ export function createEmptyBikeCounts(): BikeCounts {
  * không nên trả số âm cho số lượng slot còn lại.
  */
 function computeAvailableReturnSlots(station: StationBaseRow, counts: BikeCounts) {
+  const totalInStationBikes = countInStationBikes({
+    totalCapacity: station.totalCapacity,
+    availableBikes: counts.availableBikes,
+    reservedBikes: counts.reservedBikes,
+    pendingDispatchBikes: counts.pendingDispatchBikes,
+    brokenBikes: counts.brokenBikes,
+  });
   return Math.max(
     0,
     Math.min(
-      station.totalCapacity - counts.totalBikes - counts.activeReturnSlots - counts.incomingRedistributionBikes,
+      station.totalCapacity - totalInStationBikes - counts.activeReturnSlots - counts.incomingRedistributionBikes,
       station.returnSlotLimit - counts.activeReturnSlots - counts.incomingRedistributionBikes,
     ),
   );

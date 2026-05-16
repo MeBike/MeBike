@@ -22,6 +22,7 @@ import { makeRentalRepository } from "../../../repository/rental.repository";
 import { makeReturnSlotRepository } from "../../../repository/return-slot.repository";
 import { makeRentalReturnConfirmationWriteRepository } from "../../../repository/write/rental.return-confirmation-write.repository";
 import { returnSlotActiveAfter } from "../return-slot-expiry";
+import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 
 /**
  * Nạp rental cần xác nhận và chặn sớm nếu rental không còn ở trạng thái đang thuê.
@@ -197,8 +198,15 @@ export function ensureReturnDestinationReadyInTx(args: {
     }
 
     const stationSnapshot = stationSnapshotOpt.value;
+    const totalInStationBikes = countInStationBikes({
+      totalCapacity: stationSnapshot.totalCapacity,
+      availableBikes: stationSnapshot.availableBikes,
+      reservedBikes: stationSnapshot.reservedBikes,
+      pendingDispatchBikes: stationSnapshot.pendingDispatchBikes,
+      brokenBikes: stationSnapshot.brokenBikes,
+    });
     const physicalRemaining = stationSnapshot.totalCapacity
-      - stationSnapshot.totalBikes
+      - totalInStationBikes
       - stationSnapshot.activeReturnSlots
       - stationSnapshot.incomingRedistributionBikes;
 
@@ -207,7 +215,7 @@ export function ensureReturnDestinationReadyInTx(args: {
         stationId: args.input.stationId,
         totalCapacity: stationSnapshot.totalCapacity,
         returnSlotLimit: stationSnapshot.returnSlotLimit,
-        totalBikes: stationSnapshot.totalBikes,
+        totalInStationBikes: totalInStationBikes,
         activeReturnSlots: stationSnapshot.activeReturnSlots,
         incomingRedistributionBikes: stationSnapshot.incomingRedistributionBikes,
       }));

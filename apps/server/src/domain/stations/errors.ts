@@ -38,7 +38,7 @@ export class StationCapacitySplitInvalid extends Data.TaggedError("StationCapaci
 export class StationCapacityBelowActiveUsage extends Data.TaggedError("StationCapacityBelowActiveUsage")<{
   readonly stationId: string;
   readonly totalCapacity: number;
-  readonly totalBikes: number;
+  readonly totalInStationBikes: number;
   readonly activeReturnSlots: number;
   readonly incomingRedistributionBikes: number;
 }> {}

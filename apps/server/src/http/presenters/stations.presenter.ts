@@ -5,6 +5,7 @@ import type {
   StationRevenueStats,
   StationRow,
 } from "@/domain/stations";
+import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 
 function countTotalActiveSlots({
   activeReturnSlots,
@@ -33,6 +34,13 @@ export function toContractStationReadSummary(
     },
     capacity: {
       total: station.totalCapacity,
+      totalInStationBikes: countInStationBikes({
+        totalCapacity: station.totalCapacity,
+        availableBikes: station.availableBikes,
+        reservedBikes: station.reservedBikes,
+        pendingDispatchBikes: station.pendingDispatchBikes,
+        brokenBikes: station.brokenBikes,
+      }),
       returnSlotLimit: station.returnSlotLimit,
       totalActiveSlots: countTotalActiveSlots({
         activeReturnSlots: station.activeReturnSlots,
