@@ -34,6 +34,7 @@ export const useBikeActions = ({
   status,
   pageSize,
   page,
+  bike_id,
 }: BikeActionProps) => {
   const router = useRouter();
   const {
@@ -95,6 +96,7 @@ export const useBikeActions = ({
     stationId: stationId || "",
     supplierId: supplierId || "",
     status: status || "",
+    id : bike_id || "",
   });
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
@@ -119,7 +121,7 @@ export const useBikeActions = ({
       return;
     }
     fetchBike();
-  }, [hasToken, router, fetchBike]);
+  }, [hasToken, router, fetchBike,page,pageSize,stationId,supplierId,status,bike_id]);
   const getStatisticsBike = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -319,13 +321,14 @@ export const useBikeActions = ({
   } = useGetBikeInMyStationQuery({ page: page, pageSize: pageSize, status: status || ""
     , stationId : stationId || "",
     supplierId : supplierId || "",
+    id : bike_id || "",
    });
   const getMyBikeInStation = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchMyBikeInStation();
-  }, [refetchMyBikeInStation, hasToken, page, pageSize,status,stationId,supplierId]);
+  }, [refetchMyBikeInStation, hasToken, page, pageSize,status,stationId,supplierId,bike_id]);
   const {
     data: myBikeInStationDetail,
     refetch: refetchMyBikeInStationDetail,

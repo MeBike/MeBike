@@ -3,29 +3,34 @@
 import { useState, useEffect } from "react";
 import BikeClient from "./BikeClient";
 import { useBikeActions } from "@/hooks/use-bike";
-import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { BikeStatus } from "@custom-types";
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useDebounce } from "@/utils/useDebounce";
 export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
+  const [bikeId, setBikeId] = useState<string>("");
   const pageSize = 7;
-  const debouncedStatusFilter  = useDebounce(statusFilter, 500);
-  const {
-    myBikeInStation,
-    isLoadingMyBikeInStation,
-    getMyBikeInStation,
-  } = useBikeActions({
-    hasToken: true,
-    status: debouncedStatusFilter !== "all" ? (debouncedStatusFilter as BikeStatus) : undefined,
-    pageSize: pageSize,
-    page: page,
-  });
+  const debouncedStatusFilter = useDebounce(statusFilter, 500);
+  const debouncedBikeId = useDebounce(bikeId, 500);
+  const { myBikeInStation, getMyBikeInStation, isLoadingMyBikeInStation } =
+    useBikeActions({
+      hasToken: true,
+      status:
+        debouncedStatusFilter !== "all"
+          ? (debouncedStatusFilter as BikeStatus)
+          : undefined,
+      pageSize: pageSize,
+      page: page,
+      bike_id : debouncedBikeId,
+    });
   useEffect(() => {
     getMyBikeInStation();
-  }, [getMyBikeInStation, page, debouncedStatusFilter]);
+  }, [page, debouncedStatusFilter,debouncedBikeId]);
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
-
   useEffect(() => {
     if (isLoadingMyBikeInStation) {
       setIsVisualLoading(true);
@@ -36,25 +41,25 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyBikeInStation]);
-
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
-
   return (
     <BikeClient
       data={{
         bikes: myBikeInStation?.data || [],
-        pagination: myBikeInStation?.pagination,
+        paginationBikes: myBikeInStation?.pagination,
         isVisualLoading,
       }}
       filters={{
         statusFilter,
         page,
+        bikeId
       }}
       actions={{
         setStatusFilter,
         setPage,
+        setBikeId
       }}
     />
   );

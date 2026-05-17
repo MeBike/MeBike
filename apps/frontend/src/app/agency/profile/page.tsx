@@ -284,7 +284,7 @@ export default function ProfilePage() {
                       : "bg-accent/20 text-accent-foreground"
                   )}
                 >
-                  {formData?.role === "ADMIN" ? "Quản trị viên" : "Nhân viên"}
+                  Agency
                 </p>
               </div>
             </div>
@@ -458,7 +458,7 @@ export default function ProfilePage() {
                   Cập nhật mật khẩu của bạn
                 </p>
               </div>
-              <Link href="/staff/profile/change-password">
+              <Link href="/agency/profile/change-password">
                 <Button variant="outline" className="cursor-pointer">
                   Thay đổi
                 </Button>

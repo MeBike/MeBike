@@ -49,6 +49,19 @@ function getIncidentHeadline(incidentType: string) {
   return formatIncidentTitle(incidentType);
 }
 
+function getRentalStatusLabel(status: string | null | undefined) {
+  switch (status) {
+    case "RENTED":
+      return "Đang thuê";
+    case "COMPLETED":
+      return "Hoàn thành";
+    case "OVERDUE_UNRETURNED":
+      return "Quá hạn chưa trả";
+    default:
+      return status ?? "";
+  }
+}
+
 function SectionCard({
   accentTone = "accent",
   children,
@@ -332,7 +345,7 @@ export default function TechnicianIncidentDetailScreen() {
               value={incident.reporterUser.phoneNumber}
             />
             <DetailRow emptyLabel="Chưa có mã chuyến" label="Mã chuyến thuê" value={incident.rental?.id ? `${incident.rental.id.slice(0, 10)}...` : ""} />
-            <DetailRow emptyLabel="Chưa có trạng thái" isLast label="Trạng thái chuyến" value={incident.rental?.status ?? ""} valueTone="warning" />
+            <DetailRow emptyLabel="Chưa có trạng thái" isLast label="Trạng thái chuyến" value={getRentalStatusLabel(incident.rental?.status)} valueTone="warning" />
           </SectionCard>
 
           <SectionCard accentTone="success" icon="bike" title="Thông tin xe & Vị trí">

@@ -21,6 +21,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
@@ -73,6 +74,19 @@ export default function CustomersClient({
   const [nfcModal, setNfcModal] = useState({ isOpen: false, userId: "", userName: "" });
   const [selectedNfcId, setSelectedNfcId] = useState("");
 
+  // Thêm state cho Dialog xác nhận
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => Promise<void> | void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
   const handleDetailUser = (id: string) => router.push(`/admin/customers/detail/${id}`);
   const handleWalletUser = (id: string) => router.push(`/admin/customers/wallet/${id}`);
 
@@ -89,25 +103,37 @@ export default function CustomersClient({
     }
   };
 
-  const handleUnassignNFC = async (cardId: string) => {
-    if (confirm("Bạn có chắc chắn muốn thu hồi thẻ NFC này khỏi khách hàng?")) {
-      try {
-        await unassignNFC({ nfcId: cardId, userId: nfcModal.userId });
-      } catch (error) {
-        console.error(error);
+  const handleUnassignNFC = (cardId: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Xác nhận thu hồi thẻ",
+      description: "Bạn có chắc chắn muốn thu hồi thẻ NFC này khỏi khách hàng?",
+      onConfirm: async () => {
+        try {
+          await unassignNFC({ nfcId: cardId, userId: nfcModal.userId });
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
       }
-    }
+    });
   };
 
-  const handleUpdateCardStatus = async (cardId: string, newStatus: AssetStatus) => {
+  const handleUpdateCardStatus = (cardId: string, newStatus: AssetStatus) => {
     const actionName = newStatus === "BLOCKED" ? "khóa tạm thời" : newStatus === "ACTIVE" ? "mở khóa" : "báo mất";
-    if (confirm(`Bạn có chắc chắn muốn ${actionName} thẻ này?`)) {
-      try {
-        await updateStatusNFC({ nfcId: cardId, data: { status: newStatus } });
-      } catch (error) {
-        console.error(error);
+    setConfirmDialog({
+      isOpen: true,
+      title: `Xác nhận ${actionName}`,
+      description: `Bạn có chắc chắn muốn ${actionName} thẻ này?`,
+      onConfirm: async () => {
+        try {
+          await updateStatusNFC({ nfcId: cardId, data: { status: newStatus } });
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+        }
       }
-    }
+    });
   };
 
   return (
@@ -307,6 +333,29 @@ export default function CustomersClient({
             </div>
 
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Confirm dùng để thay thế window.confirm */}
+      <Dialog 
+        open={confirmDialog.isOpen} 
+        onOpenChange={(isOpen) => setConfirmDialog((prev) => ({ ...prev, isOpen }))}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{confirmDialog.title}</DialogTitle>
+            <DialogDescription className="pt-2">
+              {confirmDialog.description}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}>
+              Hủy
+            </Button>
+            <Button onClick={confirmDialog.onConfirm}>
+              Xác nhận
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

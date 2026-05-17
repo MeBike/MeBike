@@ -39,14 +39,6 @@ export function Footer() {
                   Tin tức
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="#"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Tuyển dụng
-                </Link>
-              </li>
             </ul>
           </div>
 

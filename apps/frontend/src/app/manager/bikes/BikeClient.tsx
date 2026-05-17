@@ -6,29 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { bikeColumnForStaff } from "@/columns/bike-colums";
+import { bikeColumn } from "@/columns/bike-colums";
 import { BikeStats } from "./components/bike-stats";
 import { BikeFilters } from "./components/bike-filter";
 import { TableSkeleton } from "@/components/table-skeleton";
 import type { Bike, BikeStatus, BikeStatistics, Pagination, Station, Supplier } from "@custom-types";
 
-// Bổ sung các fields mới vào Interface
 interface BikeClientProps {
   data: {
     bikes: Bike[];
+    statusCount?: BikeStatistics;
     paginationBikes?: Pagination;
-    stations: Station[];
     isVisualLoading: boolean;
   };
   filters: {
     statusFilter: BikeStatus | "all";
     page: number;
-    stationId: string;
+    bikeId: string; // Thêm dòng này
   };
   actions: {
     setStatusFilter: Dispatch<SetStateAction<BikeStatus | "all">>;
     setPage: Dispatch<SetStateAction<number>>;
-    setStationId: Dispatch<SetStateAction<string>>;
+    setBikeId: Dispatch<SetStateAction<string>>; // Thêm dòng này
   };
 }
 
@@ -36,32 +35,26 @@ export default function BikeClient({
   data: {
     bikes,
     paginationBikes,
-    stations,
     isVisualLoading,
+
   },
-  filters: { statusFilter, page, stationId },
-  actions: { setStatusFilter, setPage, setStationId },
+  filters: { statusFilter, page, bikeId },
+  actions: { setStatusFilter, setPage,setBikeId },
 }: BikeClientProps) {
   const router = useRouter();
   
-  if (isVisualLoading) {
-    return <Loader2 className="m-auto animate-spin" />;
-  }
   
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Quản lý xe đạp</h1>
-        <Button onClick={() => router.push("/manager/bikes/create")}>
-          <Plus className="mr-2 h-4 w-4" /> Thêm xe
-        </Button>
       </div>
+      
       <BikeFilters
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
-        stationId={stationId}
-        setStationId={setStationId}
-        stations={stations}
+        bikeId={bikeId} // Thêm dòng này
+        setBikeId={setBikeId} // Thêm dòng này
       />
       
       <div className="min-h-[700px]">
@@ -75,9 +68,8 @@ export default function BikeClient({
             </p>
 
             <DataTable
-              columns={bikeColumnForStaff({
+              columns={bikeColumn({
                 onView: ({ id }) => router.push(`/manager/bikes/detail/${id}`),
-                stations: stations,
               })}
               data={bikes}
             />

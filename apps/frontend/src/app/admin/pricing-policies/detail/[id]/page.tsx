@@ -27,10 +27,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingPricingPolicyDetail]);
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
   if (!pricingPolicyDetail) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
@@ -39,9 +42,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         </p>
       </div>
     );
-  }
-  if (isVisualLoading) {
-    return <LoadingScreen />;
   }
   return (
     <PricingPolicyDetailClient

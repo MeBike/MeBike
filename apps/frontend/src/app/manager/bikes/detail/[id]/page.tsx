@@ -29,7 +29,7 @@ export default function BikeDetailPage({
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyBikeInStationDetail]);
@@ -54,7 +54,7 @@ export default function BikeDetailPage({
   };
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button
@@ -65,9 +65,11 @@ export default function BikeDetailPage({
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+              Chi tiết xe
+            </h1>
           </div>
           <div className="flex items-center gap-2">
-            {/* Tích hợp Dialog vào đây */}
             {myBikeInStationDetail && (
               <SimpleUpdateBikeDialog
                 bike={myBikeInStationDetail}
@@ -83,8 +85,6 @@ export default function BikeDetailPage({
             </Button>
           </div>
         </div>
-
-        {/* Content */}
         <BikeDetailView bike={myBikeInStationDetail || null} />
       </div>
     </div>

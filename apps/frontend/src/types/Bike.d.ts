@@ -95,6 +95,7 @@ export interface BikeActionProps {
   status?: BikeStatus;
   pageSize?: number;
   page?: number;
+  bike_id?:string;
 }
 export interface BikeFiltersProps {
   statusFilter: BikeStatus | "all";

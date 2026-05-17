@@ -34,11 +34,11 @@ export default function CreateStationPage() {
     defaultValues: {
       name: "",
       address: "",
-      latitude: 0,
-      longitude: 0,
+      latitude: 10.8415,
+      longitude: 106.7865,
       totalCapacity: 0,
-      stationType: "INTERNAL", // Thêm vào đây
-      returnSlotLimit: 10, // Thêm vào đây
+      stationType: "INTERNAL",
+      returnSlotLimit: 10,
     },
   });
 

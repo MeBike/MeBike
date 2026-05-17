@@ -70,6 +70,15 @@ export type StripeWithdrawalService = {
   ) => Effect.Effect<StripeConnectOnboardingResult, WithdrawalProviderError>;
 
   /**
+   * Đọc lại connected account từ Stripe để đồng bộ trạng thái payouts khi webhook bị miss.
+   *
+   * @param accountId Stripe connected account id.
+   */
+  retrieveConnectedAccount: (
+    accountId: string,
+  ) => Effect.Effect<Stripe.Account, WithdrawalProviderError>;
+
+  /**
    * Tạo transfer từ platform balance sang connected account.
    *
    * @param input Dữ liệu tạo transfer.
@@ -182,6 +191,17 @@ export const StripeWithdrawalServiceLive = Layer.effect(
         })),
       );
 
+    const retrieveConnectedAccount: StripeWithdrawalService["retrieveConnectedAccount"] = accountId =>
+      Effect.tryPromise({
+        try: () => stripe.accounts.retrieve(accountId),
+        catch: cause =>
+          new WithdrawalProviderError({
+            operation: "stripe.accounts.retrieve",
+            provider: "stripe",
+            cause,
+          }),
+      });
+
     const createTransfer: StripeWithdrawalService["createTransfer"] = input =>
       Effect.tryPromise({
         try: () =>
@@ -234,6 +254,7 @@ export const StripeWithdrawalServiceLive = Layer.effect(
     const service: StripeWithdrawalService = {
       createConnectedAccount,
       createAccountLink,
+      retrieveConnectedAccount,
       createTransfer,
       createPayout,
       retrievePayout,

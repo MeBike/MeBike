@@ -2,10 +2,8 @@ import { IconSymbol } from "@components/IconSymbol";
 import { borderWidths, spaceScale } from "@theme/metrics";
 import { AppBottomModalCard } from "@ui/patterns/app-bottom-modal-card";
 import { AppButton } from "@ui/primitives/app-button";
-import { AppCard } from "@ui/primitives/app-card";
 import { AppInput } from "@ui/primitives/app-input";
 import { AppText } from "@ui/primitives/app-text";
-import { formatVietnamDateTime } from "@utils/date";
 import React from "react";
 import { useTheme, XStack, YStack } from "tamagui";
 
@@ -31,7 +29,7 @@ type Props = {
   }) => void;
 };
 
-const DEFAULT_REASON = "Kết thúc phiên thuê bởi nhân viên";
+const FALLBACK_REASON = "Hỗ trợ khách trả xe";
 
 export default function StaffEndRentalCard({
   bottomInset,
@@ -45,8 +43,7 @@ export default function StaffEndRentalCard({
   onSubmit,
 }: Props) {
   const theme = useTheme();
-  const activeReturnSlot = booking.returnSlot;
-  const endStation = activeReturnSlot?.station ?? managedStation;
+  const endStation = booking.returnSlot?.station ?? managedStation;
   const canEndRental = booking.status === "RENTED" && Boolean(endStation);
 
   const handleConfirm = () => {
@@ -57,7 +54,7 @@ export default function StaffEndRentalCard({
 
     onSubmit({
       confirmationMethod: "MANUAL",
-      reason: note.trim() ? note.trim() : DEFAULT_REASON,
+      reason: note.trim() ? note.trim() : FALLBACK_REASON,
       stationId: endStation.id,
     });
   };
@@ -105,52 +102,6 @@ export default function StaffEndRentalCard({
               .
             </AppText>
           </YStack>
-
-          {/*
-          <AppCard
-            borderColor="$borderSubtle"
-            borderRadius="$4"
-            borderWidth={borderWidths.subtle}
-            chrome="flat"
-            gap="$3"
-            padding="$4"
-            tone="muted"
-          >
-            <XStack alignItems="flex-start" gap="$3">
-              <YStack
-                alignItems="center"
-                backgroundColor="$surfaceDefault"
-                borderRadius="$round"
-                height={36}
-                justifyContent="center"
-                width={36}
-              >
-                <IconSymbol
-                  color={activeReturnSlot ? theme.statusWarning.val : theme.textBrand.val}
-                  name="location"
-                  size="sm"
-                  variant="filled"
-                />
-              </YStack>
-
-              <YStack flex={1} gap="$1">
-                <AppText variant="bodyStrong">
-                  {activeReturnSlot
-                    ? activeReturnSlot.station.name
-                    : (managedStation?.name ?? "Chưa xác định được trạm trả xe")}
-                </AppText>
-                <AppText tone="muted" variant="bodySmall">
-                  {activeReturnSlot
-                    ? `Giữ chỗ từ ${formatVietnamDateTime(activeReturnSlot.reservedFrom)}`
-                    : managedStation
-                      ? "Khách chưa giữ chỗ trước. Hệ thống sẽ kiểm tra chỗ trống hiện tại tại trạm của bạn khi xác nhận trả xe."
-                      : "Không tìm thấy trạm được gán cho bạn để xác nhận trả xe."}
-                </AppText>
-              </YStack>
-            </XStack>
-          </AppCard>
-          */}
-
           <YStack gap="$2">
             <AppText variant="subhead">Ghi chú (Tùy chọn)</AppText>
             <AppInput

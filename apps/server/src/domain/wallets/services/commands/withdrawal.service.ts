@@ -2,6 +2,8 @@ import type { Option } from "effect";
 
 import { Context, Effect, Layer } from "effect";
 
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+
 import type { WithdrawalUniqueViolation } from "../../domain-errors";
 import type {
   CreateWalletWithdrawalInput,
@@ -71,6 +73,28 @@ export type WithdrawalService = {
     createdBefore: Date,
     limit: number,
   ) => Effect.Effect<ReadonlyArray<WalletWithdrawalRow>>;
+
+  /**
+   * List withdrawal theo owner user.
+   *
+   * @param args Dữ liệu truy vấn withdrawal.
+   * @param args.userId ID user sở hữu withdrawal.
+   * @param args.pageReq Thông tin phân trang.
+   */
+  listForUser: (
+    args: { userId: string; pageReq: PageRequest<"createdAt"> },
+  ) => Effect.Effect<PageResult<WalletWithdrawalRow>>;
+
+  /**
+   * Đọc withdrawal theo scope owner user.
+   *
+   * @param args Dữ liệu truy vấn withdrawal.
+   * @param args.userId ID user sở hữu withdrawal.
+   * @param args.withdrawalId ID withdrawal cần đọc.
+   */
+  getByIdForUser: (
+    args: { userId: string; withdrawalId: string },
+  ) => Effect.Effect<WalletWithdrawalRow, WithdrawalNotFound>;
 };
 
 export class WithdrawalServiceTag extends Context.Tag("WithdrawalService")<
@@ -123,12 +147,25 @@ export const WithdrawalServiceLive = Layer.effect(
     const findProcessingBefore: WithdrawalService["findProcessingBefore"] = (createdBefore, limit) =>
       repo.findProcessingBefore(createdBefore, limit);
 
+    const listForUser: WithdrawalService["listForUser"] = ({ userId, pageReq }) =>
+      repo.listByUserId(userId, pageReq);
+
+    const getByIdForUser: WithdrawalService["getByIdForUser"] = ({ userId, withdrawalId }) =>
+      repo.findByIdForUser(userId, withdrawalId).pipe(
+        Effect.flatMap(maybe =>
+          maybe._tag === "Some"
+            ? Effect.succeed(maybe.value)
+            : Effect.fail(new WithdrawalNotFound({ withdrawalId }))),
+      );
+
     const service: WithdrawalService = {
       createPending,
       getById,
+      getByIdForUser,
       findByIdempotencyKey,
       findByStripePayoutId,
       findProcessingBefore,
+      listForUser,
     };
 
     return service;

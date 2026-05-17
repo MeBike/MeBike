@@ -20,10 +20,10 @@ export default function CreateDistributionRequestPage() {
     return <LoadingScreen />;
   }
   return (
-    <div className="container mx-auto py-8">
+    <div className="">
       <CreateDistributionRequestClient
         onSubmitRequest={agencyCreateDistributeRequest}
-        stations={listStation || { currentStation: { id: "", name: "", address: "" }, otherStations: [] }}
+        stations={listStation || { currentStation: { id: "", name: "", address: "", operationalAvailableSlots: 0  }, otherStations: [] }}
       />
     </div>
   );

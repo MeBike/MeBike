@@ -123,7 +123,7 @@ export default function StationMap({
                   id="route-line"
                   style={{
                     lineColor: "#2563EB",
-                    lineWidth: 4,
+                    lineWidth: 3,
                     lineCap: "round",
                     lineJoin: "round",
                   }}

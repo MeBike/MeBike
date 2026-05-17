@@ -101,7 +101,7 @@ export function handleStripeTopupWebhookEvent(
     return yield* settleSuccessfulTopup(client, attempt, {
       providerRef: session.id,
       amountMinor: receivedMinor,
-      description: "Stripe top-up",
+      description: "Nạp tiền vào ví",
       hash: `stripe:checkout:${session.id}`,
       errorOperation: "stripe.webhook.handleCheckoutSession",
     });
@@ -194,7 +194,7 @@ export function handleStripePaymentIntentWebhookEvent(
     return yield* settleSuccessfulTopup(client, attempt, {
       providerRef: paymentIntent.id,
       amountMinor: receivedMinor,
-      description: "Stripe top-up via PaymentSheet",
+      description: "Nạp tiền vào ví",
       hash: `stripe:payment_intent:${paymentIntent.id}`,
       errorOperation: "stripe.webhook.handlePaymentIntent",
     });

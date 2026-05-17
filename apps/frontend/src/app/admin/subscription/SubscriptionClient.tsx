@@ -109,7 +109,7 @@ export default function SubscriptionClient() {
 
               <div className="pt-3">
                 <PaginationDemo
-                  currentPage={subscriptionsData?.pagination.currentPage ?? 1}
+                  currentPage={subscriptionsData?.pagination.page ?? 1}
                   totalPages={subscriptionsData?.pagination?.totalPages ?? 1}
                   onPageChange={setPage}
                 />

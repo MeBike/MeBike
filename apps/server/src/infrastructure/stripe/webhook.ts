@@ -10,7 +10,18 @@ export class StripeWebhookError extends Data.TaggedError("StripeWebhookError")<{
   readonly cause?: unknown;
 }> {}
 
-export function verifyStripeWebhook(stripe: Stripe, payload: string | Buffer, signatureHeader: string | undefined, secret: string | undefined = env.STRIPE_WEBHOOK_SECRET): Effect.Effect<Stripe.Event, StripeWebhookError, never> {
+function getConfiguredStripeWebhookSecrets(): ReadonlyArray<string> {
+  return [env.STRIPE_WEBHOOK_SECRET, env.STRIPE_CONNECT_WEBHOOK_SECRET].filter(
+    (secret): secret is string => Boolean(secret),
+  );
+}
+
+export function verifyStripeWebhook(
+  stripe: Stripe,
+  payload: string | Buffer,
+  signatureHeader: string | undefined,
+  secret: string | ReadonlyArray<string> | undefined = getConfiguredStripeWebhookSecrets(),
+): Effect.Effect<Stripe.Event, StripeWebhookError, never> {
   return Effect.try({
     try: () => {
       if (!signatureHeader) {
@@ -18,12 +29,32 @@ export function verifyStripeWebhook(stripe: Stripe, payload: string | Buffer, si
           message: "Missing Stripe signature header.",
         });
       }
-      if (!secret) {
+      const secrets = Array.isArray(secret)
+        ? secret.filter(candidate => candidate.length > 0)
+        : secret
+          ? [secret]
+          : [];
+
+      if (secrets.length === 0) {
         throw new StripeWebhookError({
-          message: "STRIPE_WEBHOOK_SECRET is required to verify Stripe webhooks.",
+          message: "A Stripe webhook secret is required to verify Stripe webhooks.",
         });
       }
-      return stripe.webhooks.constructEvent(payload, signatureHeader, secret);
+
+      let lastCause: unknown;
+      for (const candidate of secrets) {
+        try {
+          return stripe.webhooks.constructEvent(payload, signatureHeader, candidate);
+        }
+        catch (cause) {
+          lastCause = cause;
+        }
+      }
+
+      throw new StripeWebhookError({
+        message: "Failed to verify Stripe webhook signature.",
+        cause: lastCause,
+      });
     },
     catch: cause =>
       cause instanceof StripeWebhookError

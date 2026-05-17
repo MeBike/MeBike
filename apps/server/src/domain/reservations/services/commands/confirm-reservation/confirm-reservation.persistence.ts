@@ -19,10 +19,10 @@ import type {
   BikeIsBroken,
   BikeIsFixed,
 } from "../../../domain-errors";
-import type { ReservationRow } from "../../../models";
 import type {
   ConfirmReservationCommandInput,
   ConfirmReservationFailure,
+  ConfirmReservationSuccess,
   PreparedConfirmReservation,
 } from "./confirm-reservation.types";
 
@@ -46,7 +46,7 @@ export function persistConfirmReservationInTx(args: {
   readonly tx: PrismaTypes.TransactionClient;
   readonly input: ConfirmReservationCommandInput;
   readonly prepared: PreparedConfirmReservation;
-}): Effect.Effect<ReservationRow, ConfirmReservationFailure> {
+}): Effect.Effect<ConfirmReservationSuccess, ConfirmReservationFailure> {
   return Effect.gen(function* () {
     const { tx, input, prepared } = args;
     const txRentalRepo = makeRentalRepository(tx);
@@ -98,13 +98,18 @@ export function persistConfirmReservationInTx(args: {
       defectOn(RentalRepositoryError),
     );
 
-    return yield* txReservationCommandRepo.updateStatus({
+    const reservation = yield* txReservationCommandRepo.updateStatus({
       reservationId: prepared.reservation.id,
       status: "FULFILLED",
       updatedAt: input.now,
     }).pipe(
       Effect.catchTag("ReservationNotFound", err => Effect.die(err)),
     );
+
+    return {
+      reservation,
+      rentalId: createdRental.id,
+    };
   });
 }
 

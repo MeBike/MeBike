@@ -16,7 +16,8 @@ import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import { RentalRecord } from "@/types";
 import { formatCurrency } from "@/utils/formatCurrency";
-
+import { getStatusConfig } from "@/columns/bike-colums";
+import type { BikeStatus } from "@/types";
 function SectionCard({
   icon: Icon,
   title,
@@ -34,7 +35,7 @@ function SectionCard({
     <div
       className={cn(
         "overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm",
-        className
+        className,
       )}
     >
       <div className="flex items-center gap-2 border-b border-border/60 px-5 py-4">
@@ -72,8 +73,8 @@ const renderStatus = (status: string) => {
   } else if (status === "COMPLETED") {
     label = "Đã hoàn thành";
     className = "bg-green-100 text-green-800";
-  } else if (status === "OVERDUE_UNRETURNED"){
-    label = "Quá hạn chưa trả"; 
+  } else if (status === "OVERDUE_UNRETURNED") {
+    label = "Quá hạn chưa trả";
     className = "bg-red-100 text-red-800";
   }
   return (
@@ -82,8 +83,6 @@ const renderStatus = (status: string) => {
     </span>
   );
 };
-
-
 
 interface AdminRentalDetailClientProps {
   id: string;
@@ -126,7 +125,10 @@ export default function AdminRentalDetailClient({
             <h1 className="text-2xl font-bold text-foreground">
               Chi tiết đơn thuê
             </h1>
-            <Button variant="outline" onClick={() => router.push("/admin/rentals")}>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/admin/rentals")}
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Quay lại danh sách
             </Button>
@@ -138,9 +140,11 @@ export default function AdminRentalDetailClient({
       </div>
     );
   }
-
+  const bikeStatus = getStatusConfig(data.bike?.status as BikeStatus);
   const hasEnd = Boolean(data.endTime && data.endStation);
-  const verifyRaw = String(data.user?.verify ?? "").trim().toUpperCase();
+  const verifyRaw = String(data.user?.verify ?? "")
+    .trim()
+    .toUpperCase();
   const isVerified = verifyRaw === "VERIFIED";
 
   return (
@@ -218,7 +222,7 @@ export default function AdminRentalDetailClient({
                       "h-3 w-3 shrink-0 rounded-full border-2 bg-muted",
                       hasEnd
                         ? "border-muted-foreground/50"
-                        : "border-muted-foreground/30"
+                        : "border-muted-foreground/30",
                     )}
                   />
                 </div>
@@ -253,7 +257,7 @@ export default function AdminRentalDetailClient({
                         "mt-1 font-medium",
                         hasEnd
                           ? "text-foreground"
-                          : "italic text-muted-foreground"
+                          : "italic text-muted-foreground",
                       )}
                     >
                       {data.endStation?.name || "Chưa trả xe"}
@@ -265,9 +269,7 @@ export default function AdminRentalDetailClient({
                     )}
                     <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 shrink-0" />
-                      {data.endTime
-                        ? formatToVNTime(data.endTime)
-                        : "--:--:--"}
+                      {data.endTime ? formatToVNTime(data.endTime) : "--:--:--"}
                     </div>
                   </div>
                 </div>
@@ -276,7 +278,7 @@ export default function AdminRentalDetailClient({
 
             <SectionCard icon={Bike} title="Phương tiện">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                 <Field
+                <Field
                   label="Mã xe"
                   value={
                     data.bike?.id ? (
@@ -292,7 +294,9 @@ export default function AdminRentalDetailClient({
                   label="Xe được gán"
                   value={
                     data.bike?.bikeNumber ? (
-                      <span className="font-mono text-xs">{data.bike.bikeNumber}</span>
+                      <span className="font-mono text-xs">
+                        {data.bike.bikeNumber}
+                      </span>
                     ) : (
                       <span className="italic text-muted-foreground">
                         Chưa gán xe
@@ -302,7 +306,13 @@ export default function AdminRentalDetailClient({
                 />
                 <Field
                   label="Trạng thái xe"
-                  value={data.bike?.status || "Chưa có dữ liệu"}
+                  value={
+                    <span
+                      className={`px-2 py-1 text-sm font-medium rounded-full ${bikeStatus.color}`}
+                    >
+                      {bikeStatus.label}
+                    </span>
+                  }
                 />
                 <Field
                   label="Nhà cung cấp"
@@ -318,11 +328,7 @@ export default function AdminRentalDetailClient({
               <div className="space-y-4">
                 <Field
                   label="Tên người dùng"
-                  value={
-                    data.user?.username ||
-                    data.user?.fullname ||
-                    "—"
-                  }
+                  value={data.user?.username || data.user?.fullname || "—"}
                 />
                 <Field
                   label="Email"
@@ -348,10 +354,12 @@ export default function AdminRentalDetailClient({
                   {formatCurrency(Number(data.totalPrice ?? 0))}
                 </p>
               </div>
-               <div className="mt-4 space-y-2">
+              <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Phương thức thanh toán:</span>
-                  <span className="font-medium">Ví Mebike</span>
+                  <span className="text-muted-foreground">
+                    Phương thức thanh toán:
+                  </span>
+                  <span className="font-medium">{data.subscriptionId ? "Gói tháng" : "Ví Mebike"}</span>
                 </div>
               </div>
             </SectionCard>

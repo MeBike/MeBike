@@ -115,7 +115,7 @@ function settlePaymentIntent(
       const outcome = yield* settleSuccessfulTopup(client, attempt, {
         providerRef: paymentIntent.id,
         amountMinor: receivedMinor,
-        description: "Stripe top-up via PaymentSheet",
+        description: "Nạp tiền vào ví",
         hash: `stripe:payment_intent:${paymentIntent.id}`,
         errorOperation: "stripe.reconcile.paymentIntent",
       });
@@ -179,7 +179,7 @@ function settleCheckoutSession(
       const outcome = yield* settleSuccessfulTopup(client, attempt, {
         providerRef: session.id,
         amountMinor: receivedMinor,
-        description: "Stripe top-up",
+        description: "Nạp tiền vào ví",
         hash: `stripe:checkout:${session.id}`,
         errorOperation: "stripe.reconcile.checkoutSession",
       });

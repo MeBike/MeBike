@@ -117,24 +117,23 @@ export function handleStripePayoutWebhookUseCase(
                 return false;
               }
 
-              const settled = yield* txWalletHoldRepo.settleByWithdrawalId(
-                withdrawal.id,
-                now,
-              );
-              if (!settled) {
-                // Legacy rows may not have a hold; treat as already settled.
-                return true;
-              }
-
               yield* txWalletRepo.releaseReservedBalance({
                 walletId: withdrawal.walletId,
                 amount: withdrawal.amount,
               });
 
+              const settled = yield* txWalletHoldRepo.settleByWithdrawalId(
+                withdrawal.id,
+                now,
+              );
+              if (!settled) {
+                // Legacy rows may not have a hold; still settle wallet balance.
+              }
+
               yield* debitWallet(txWalletRepo, {
                 userId: withdrawal.userId,
                 amount: withdrawal.amount,
-                description: "Withdrawal settled",
+                description: "Rút tiền về tài khoản",
                 hash: withdrawal.idempotencyKey,
                 type: "DEBIT",
               });
@@ -173,19 +172,18 @@ export function handleStripePayoutWebhookUseCase(
                 return false;
               }
 
+              yield* txWalletRepo.releaseReservedBalance({
+                walletId: withdrawal.walletId,
+                amount: withdrawal.amount,
+              });
+
               const released = yield* txWalletHoldRepo.releaseByWithdrawalId(
                 withdrawal.id,
                 now,
               );
               if (!released) {
-                // Legacy rows may not have a hold; treat as already released.
-                return true;
+                // Legacy rows may not have a hold; reserved balance still must be released.
               }
-
-              yield* txWalletRepo.releaseReservedBalance({
-                walletId: withdrawal.walletId,
-                amount: withdrawal.amount,
-              });
 
               return true;
             })).pipe(

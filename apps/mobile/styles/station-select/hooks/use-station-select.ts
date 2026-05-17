@@ -47,6 +47,22 @@ export function useStationSelect() {
     showingNearby && Boolean(currentLocation),
   );
 
+  const visibleStations = React.useMemo(() => {
+    if (!showingNearby) {
+      return allStations;
+    }
+
+    if (!currentLocation) {
+      return allStations;
+    }
+
+    if (isLoadingNearbyStations && nearbyStations.length === 0) {
+      return allStations;
+    }
+
+    return nearbyStations;
+  }, [allStations, currentLocation, isLoadingNearbyStations, nearbyStations, showingNearby]);
+
   const handleSelectStation = (stationId: string) => {
     navigation.navigate("StationDetail", {
       stationId,
@@ -92,13 +108,14 @@ export function useStationSelect() {
     }
   }, [refreshLocation]);
 
-  const stations = showingNearby ? nearbyStations : allStations;
-
   const selectedStation = React.useMemo(() => {
     if (!selectedStationId)
       return null;
-    return stations.find(s => s.id === selectedStationId) ?? null;
-  }, [selectedStationId, stations]);
+
+    return allStations.find(s => s.id === selectedStationId)
+      ?? nearbyStations.find(s => s.id === selectedStationId)
+      ?? null;
+  }, [allStations, nearbyStations, selectedStationId]);
 
   const destination = React.useMemo(() => {
     if (!selectedStation)
@@ -121,7 +138,7 @@ export function useStationSelect() {
   const isRouting = routeQuery.isFetching;
 
   const handleSelectStationForRoute = async (stationId: string) => {
-    const station = stations.find(s => s.id === stationId);
+    const station = visibleStations.find(s => s.id === stationId);
     if (!station)
       return;
 
@@ -173,7 +190,7 @@ export function useStationSelect() {
   };
 
   return {
-    stations,
+    stations: visibleStations,
     refreshing,
     showingNearby,
     selectedStationId,

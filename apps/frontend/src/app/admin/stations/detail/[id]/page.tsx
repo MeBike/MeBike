@@ -25,7 +25,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   useEffect(() => {
     if (id) {
       getStationByID();
-      getStationRevenue(); // <-- Đã thêm gọi fetch doanh thu
+      getStationRevenue();
     }
   }, [id, getStationByID, getStationRevenue]);
 
@@ -35,11 +35,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingGetStationByID]);
-
+  if(isVisualLoading){
+    return <LoadingScreen/>
+  }
   if (!responseStationDetail) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
@@ -48,9 +50,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     );
   }
 
-  if (isVisualLoading) {
-    return <LoadingScreen />;
-  }
 
   const handleUpdate = async (data: StationSchemaFormData) => {
     try {
@@ -71,7 +70,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
       station={responseStationDetail as Station}
       isLoading={isLoadingGetStationByID}
       onUpdateStation={handleUpdate}
-      revenueData={currentStationRevenue} // <-- Truyền prop doanh thu xuống Client
+      revenueData={currentStationRevenue} 
     />
   );
 }

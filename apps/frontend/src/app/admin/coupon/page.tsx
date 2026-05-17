@@ -75,9 +75,7 @@ export default function CouponPage() {
         {isLoadingUsageCouponLog ? <TableSkeleton /> : (
           <div className="p-2">
             <DataTable
-              columns={couponUsageLogColumns({
-                onView: (log) => router.push(`/admin/coupon/usage/${log.rentalId}`),
-              })}
+              columns={couponUsageLogColumns()}
               data={dataUsageCouponLog?.data || []}
             />
             <div className="mt-4">

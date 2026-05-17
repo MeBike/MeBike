@@ -37,7 +37,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 
-// Types
+import { getStatusConfig } from "@/columns/bike-colums";
 import type { RedistributionRequestDetail, RedistributionRequestStatus } from "@/types/DistributionRequest";
 import type { CurrentStation, BikeStatus } from "@/types";
 
@@ -50,22 +50,6 @@ export const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; st
   COMPLETED: { label: "Đã hoàn thành", style: "bg-green-100 text-green-800 border-green-200" },
   REJECTED: { label: "Đã từ chối", style: "bg-red-100 text-red-800 border-red-200" },
   CANCELLED: { label: "Đã hủy bỏ", style: "bg-red-100 text-red-800 border-red-200" },
-};
-
-export const getStatusConfig = (status: BikeStatus) => {
-  switch (status) {
-    case "AVAILABLE": return { label: "Sẵn sàng", color: "bg-green-100 text-green-800 border-green-200" };
-    case "BOOKED": return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
-    case "RESERVED": return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800 border-orange-200" };
-    case "REDISTRIBUTING": return { label: "Đang điều phối", color: "bg-purple-100 text-purple-800 border-purple-200" };
-    case "MAINTENANCE": return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800 border-blue-200" };
-    case "BROKEN": return { label: "Đang hỏng", color: "bg-red-100 text-red-800 border-red-200" };
-    case "UNAVAILABLE": return { label: "Không khả dụng", color: "bg-gray-200 text-gray-800 border-gray-300" };
-    case "LOST": return { label: "Bị mất", color: "bg-rose-100 text-rose-800 border-rose-200" };
-    case "DISABLED": return { label: "Vô hiệu hóa", color: "bg-slate-200 text-slate-800 border-slate-300" };
-    case "": return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500 border-gray-200" };
-    default: return { label: status || "Không xác định", color: "bg-gray-100 text-gray-500 border-gray-200" };
-  }
 };
 
 // --- COMPONENT ---
@@ -92,10 +76,15 @@ export const DistributionRequestDetailClient = ({
 
   const handleAction = async (action: () => Promise<void>) => {
     setIsProcessing(true);
-    await action();
-    setSelectedBikeIds([]);
-    setIsProcessing(false);
-    setShowRejectModal(false);
+    try {
+      await action();
+      setSelectedBikeIds([]);
+      setShowRejectModal(false);
+    } catch (error) {
+      console.error("Action failed:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const isValid = rejectReason.trim().length >= 10;
@@ -112,10 +101,32 @@ export const DistributionRequestDetailClient = ({
     }
   };
 
+  // --- LOGIC: CHỌN TỪNG XE ---
   const handleToggleBike = (bikeId: string) => {
     setSelectedBikeIds((prev) =>
       prev.includes(bikeId) ? prev.filter((id) => id !== bikeId) : [...prev, bikeId]
     );
+  };
+
+  // --- LOGIC: CHỌN TẤT CẢ ---
+  // Lọc ra các xe chưa được bàn giao (hợp lệ để tick)
+  const selectableBikes = data.items
+    .filter((item) => !item.deliveredAt)
+    .map((item) => item.bike.id);
+
+  // Kiểm tra xem tất cả các xe hợp lệ đã được chọn hay chưa
+  const isAllSelected = 
+    selectableBikes.length > 0 && 
+    selectableBikes.length === selectedBikeIds.length;
+
+  const handleToggleAll = () => {
+    if (isAllSelected) {
+      // Nếu đã chọn tất cả rồi thì bỏ chọn
+      setSelectedBikeIds([]);
+    } else {
+      // Nếu chưa chọn hết thì chọn toàn bộ các xe hợp lệ
+      setSelectedBikeIds(selectableBikes);
+    }
   };
 
   const statusInfo = STATUS_MAP[data.status] || { label: "Không xác định", style: "bg-gray-100 text-gray-800 border-gray-200" };
@@ -258,7 +269,7 @@ export const DistributionRequestDetailClient = ({
 
         {/* Row 2: Table List (Full Width) */}
         <Card className="shadow-sm border-slate-200 overflow-hidden">
-          <CardHeader className="bg-slate-900 text-white py-4">
+          <CardHeader className="bg-slate-900 text-white py-4 flex flex-row items-center justify-between">
             <CardTitle className="text-base font-medium flex items-center gap-2">
               <Bike className="h-5 w-5 text-blue-400" /> Danh sách xe thực tế ({data.items.length})
             </CardTitle>
@@ -268,7 +279,15 @@ export const DistributionRequestDetailClient = ({
               <TableHeader className="bg-slate-50/80">
                 <TableRow className="hover:bg-transparent">
                   {showCheckboxColumn && (
-                    <TableHead className="w-[60px] text-center font-bold text-slate-600">Chọn</TableHead>
+                    <TableHead className="w-[60px] text-center font-bold text-slate-600">
+                      {/* --- CHECKBOX CHỌN TẤT CẢ --- */}
+                      <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={handleToggleAll}
+                        disabled={selectableBikes.length === 0}
+                        aria-label="Chọn tất cả"
+                      />
+                    </TableHead>
                   )}
                   <TableHead className="w-[60px] text-center font-bold text-slate-600">STT</TableHead>
                   <TableHead className="font-bold text-slate-600">Mã xe (Bike ID)</TableHead>

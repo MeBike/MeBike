@@ -89,9 +89,9 @@ export default function AgencyRequestClient() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Quản lý Agency</h1>
-        <Button onClick={() => router.push("/admin/bikes/create")}>
+        {/* <Button onClick={() => router.push("/admin/agency/create")}>
           <Plus className="w-4 h-4 mr-2" /> Thêm agency
-        </Button>
+        </Button> */}
       </div>
       <AgencyFilters 
         status={status}

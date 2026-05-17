@@ -28,7 +28,7 @@ export default function BikeDetailPage({
       } else {
         const timer = setTimeout(() => {
           setIsVisualLoading(false);
-        }, 600);
+        }, 1000);
         return () => clearTimeout(timer);
       }
     }, [isLoadingMyBikeInStationDetail]);
@@ -42,8 +42,8 @@ export default function BikeDetailPage({
       notFound();
     }
   return (
-    <div className="min-h-[calc(100vh-5rem)] p-6 dark:bg-background">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="min-h-[calc(100vh-5rem)] p-4 dark:bg-background">
+      <div className="space-y-6">
         <BikeDetailView 
           bike={myBikeInStationDetail} 
         />

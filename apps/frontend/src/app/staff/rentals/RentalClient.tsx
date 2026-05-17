@@ -42,7 +42,6 @@ export default function RentalClient() {
   });
 
   const [isVisualLoading, setIsVisualLoading] = useState(false);
-
   useEffect(() => {
     getAllStations();
   }, [getAllStations]);
@@ -73,8 +72,6 @@ export default function RentalClient() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Quản lý đơn thuê</h1>
-
-      {/* --- SỬA CÁCH TRUYỀN PROPS Ở ĐÂY --- */}
       <RentalFilters
         stations={stations || []}
         filters={{

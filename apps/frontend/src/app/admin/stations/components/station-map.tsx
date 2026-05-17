@@ -1,74 +1,69 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import * as tt from "@tomtom-international/web-sdk-maps";
-import "@tomtom-international/web-sdk-maps/dist/maps.css";
+import { useState, useMemo } from "react";
+import Map, { Marker, MapMouseEvent } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 interface StationMapProps {
   onLocationSelect: (lat: number, lng: number) => void;
-  defaultCenter?: [number, number] | null; 
+  // Lưu ý: Mapbox mặc định tọa độ là [longitude, latitude]
+  defaultCenter?: [number, number] | null;
 }
 
-export function StationMap({ onLocationSelect, defaultCenter }: StationMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<tt.Map | null>(null);
-  const markerRef = useRef<tt.Marker | null>(null);
-  const HCM_CITY: [number, number] = [106.6601, 10.7626];
+// 1. Tọa độ chuẩn xác của khu vực Đại học FPT TP.HCM / Khu Công Nghệ Cao (D9)
+const FPT_CAMPUS_CITY: [number, number] = [106.8098, 10.8411];
 
-  const currentCenter = defaultCenter && defaultCenter.length === 2 ? defaultCenter : HCM_CITY;
+export function StationMap({
+  onLocationSelect,
+  defaultCenter,
+}: StationMapProps) {
+  // Lấy vị trí ban đầu (nếu có defaultCenter thì dùng, không thì lấy FPT)
+  const initialCenter =
+    defaultCenter && defaultCenter.length === 2 ? defaultCenter : FPT_CAMPUS_CITY;
 
-  useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY?.trim();
-    if (!mapRef.current || !apiKey) return;
+  // Dùng state để quản lý tọa độ của cờ thay vì dùng useRef
+  const [markerPos, setMarkerPos] = useState<[number, number]>(initialCenter);
 
-    const map = tt.map({
-      key: apiKey,
-      container: mapRef.current,
-      center: currentCenter, 
-      zoom: 14,
-    });
-
-    mapInstanceRef.current = map;
-
-    // --- THÊM ĐOẠN NÀY ĐỂ HIỂN THỊ CỜ MẶC ĐỊNH ---
-    const addMarker = (lng: number, lat: number) => {
-      if (markerRef.current) {
-        markerRef.current.setLngLat([lng, lat]);
-      } else {
-        markerRef.current = new tt.Marker({ color: "#ef4444" }) // Màu đỏ cho nổi bật
-          .setLngLat([lng, lat])
-          .addTo(map);
-      }
+  const initialViewState = useMemo(() => {
+    return {
+      longitude: initialCenter[0],
+      latitude: initialCenter[1],
+      // 2. Ép Zoom lên 16 để thấy rõ tên trường học, sông hồ, 3D toà nhà như mobile
+      zoom: 16, 
     };
+  }, [initialCenter]);
 
-    // Đặt cờ ngay khi load xong
-    map.on("load", () => {
-      map.resize();
-      addMarker(currentCenter[0], currentCenter[1]);
-    });
-    // ---------------------------------------------
+  // Xử lý sự kiện click trên bản đồ
+  const handleMapClick = (e: MapMouseEvent) => {
+    const { lat, lng } = e.lngLat;
 
-    map.on("click", (e: any) => {
-      const { lat, lng } = e.lngLat;
-      onLocationSelect(lat, lng);
-      addMarker(lng, lat); // Dùng lại hàm addMarker
-    });
+    // Cập nhật vị trí cờ
+    setMarkerPos([lng, lat]);
 
-    return () => {
-      map.remove();
-      mapInstanceRef.current = null;
-    };
-  }, []); 
+    // Trả data về component cha
+    onLocationSelect(lat, lng);
+  };
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div ref={mapRef} className="w-full h-[500px] relative" />
-      {/* CSS bắt buộc để cờ không bị nằm dưới bản đồ */}
-      <style jsx global>{`
-        .mapboxgl-marker {
-          z-index: 999 !important;
-        }
-      `}</style>
+      <div className="w-full h-[500px] relative">
+        <Map
+          mapboxAccessToken={process.env.NEXT_PUBLIC_MAP_BOX_API_KEY}
+          initialViewState={initialViewState}
+          // Chuẩn Standard kết hợp với zoom 16 là bao đẹp, bao chi tiết
+          mapStyle="mapbox://styles/mapbox/standard"
+          onClick={handleMapClick}
+          style={{ width: "100%", height: "100%" }}
+        >
+          {/* Component Marker của react-map-gl sẽ tự render vị trí dựa vào state */}
+          <Marker
+            longitude={markerPos[0]}
+            latitude={markerPos[1]}
+            color="#ef4444"
+            anchor="bottom"
+          />
+        </Map>
+      </div>
     </div>
   );
 }

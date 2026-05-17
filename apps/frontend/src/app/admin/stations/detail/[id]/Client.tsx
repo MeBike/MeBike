@@ -188,19 +188,19 @@ export default function StationDetailClient({
             <Button variant="outline" size="icon" onClick={() => router.push("/admin/stations")} className="h-9 w-9 rounded-full">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">
-                  {isEditing ? "Chỉnh sửa trạm" : station.name}
-                </h1>
-                {!isEditing && (
-                  <Badge variant={station.stationType === "AGENCY" ? "default" : "secondary"} className="rounded-full px-3">
-                    {station.stationType}
-                  </Badge>
-                )}
-              </div>
-              {!isEditing && <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="h-3 w-3"/> {station.address}</p>}
-            </div>
+            <h1 className="text-2xl font-bold">
+              {isEditing ? "Chỉnh sửa trạm" : "Chi tiết trạm"}
+            </h1>
+            {!isEditing && (
+              <Badge
+                variant={
+                  station.stationType === "AGENCY" ? "default" : "secondary"
+                }
+                className="ml-2"
+              >
+                {station.stationType}
+              </Badge>
+            )}
           </div>
           <div className="flex gap-2">
             {isEditing && (
@@ -264,11 +264,17 @@ export default function StationDetailClient({
                     <Input {...register("name")} className={cn(errors.name && "border-destructive")} />
                     <ErrorMsg message={errors.name?.message} />
                   </div>
-                  <div className="col-span-2 sm:col-span-1 space-y-1.5">
-                    <label className="text-[11px] font-semibold text-muted-foreground uppercase">Loại trạm</label>
-                    <select {...register("stationType")} className={cn("flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm", errors.stationType && "border-destructive")}>
-                      <option value="INTERNAL">INTERNAL (Nội bộ)</option>
-                      <option value="AGENCY">AGENCY (Đại lý)</option>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold">LOẠI TRẠM</label>
+                    <select
+                      {...register("stationType")}
+                      className={cn(
+                        "w-full h-10 border rounded-md px-2 text-sm",
+                        errors.stationType && "border-destructive",
+                      )}
+                    >
+                      <option value="INTERNAL">INTERNAL</option>
+                      <option value="AGENCY">AGENCY</option>
                     </select>
                     <ErrorMsg message={errors.stationType?.message} />
                   </div>

@@ -242,7 +242,6 @@ const Page = () => {
         )}
       </div>
       <CTA/>
-      <Footer />
     </div>
   );
 };

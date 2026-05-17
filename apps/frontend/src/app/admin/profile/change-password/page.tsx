@@ -56,7 +56,7 @@ export default function ChangePasswordPage() {
 
   return (
     <div>
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <Link

@@ -39,6 +39,7 @@ export const ReservationErrorCodeSchema = z
     "RESERVATION_NOT_FOUND",
     "RESERVATION_NOT_OWNED",
     "RESERVATION_MISSING_BIKE",
+    "RESERVATION_NOT_STARTED",
     "INVALID_RESERVATION_TRANSITION",
     "OVERNIGHT_OPERATIONS_CLOSED",
   ])
@@ -69,6 +70,7 @@ export const reservationErrorMessages = {
   RESERVATION_NOT_FOUND: "Reservation not found",
   RESERVATION_NOT_OWNED: "Reservation does not belong to user",
   RESERVATION_MISSING_BIKE: "Reservation missing bike assignment",
+  RESERVATION_NOT_STARTED: "Reservation cannot be confirmed before its start time",
   INVALID_RESERVATION_TRANSITION: "Invalid reservation status transition",
   OVERNIGHT_OPERATIONS_CLOSED: "Operations are closed overnight",
 } as const;
@@ -91,6 +93,7 @@ export const ReservationErrorDetailSchema = z.object({
   totalCapacity: z.number().optional(),
   availableBikes: z.number().optional(),
   requiredAvailableBikes: z.number().optional(),
+  startTime: z.string().optional(),
   currentTime: z.string().optional(),
   windowStart: z.string().optional(),
   windowEnd: z.string().optional(),
@@ -113,6 +116,10 @@ export const CreateReservationRequestSchema = z.object({
 }).openapi("CreateReservationRequest");
 
 export const ReservationDetailResponseSchema = ReservationDetailSchema.openapi("ReservationDetailResponse");
+export const ConfirmReservationResponseSchema = z.object({
+  reservation: ReservationDetailSchema,
+  rentalId: z.uuidv7(),
+}).openapi("ConfirmReservationResponse");
 export const ReservationExpandedDetailResponseSchema = ReservationExpandedDetailSchema.openapi("ReservationExpandedDetailResponse");
 export const ReservationSummaryStatsResponseSchema = ReservationSummaryStatsSchema.openapi("ReservationSummaryStatsResponse");
 
@@ -152,6 +159,7 @@ export const ListStaffReservationsResponseSchema = z.object({
 export type ReservationErrorResponse = z.infer<typeof ReservationErrorResponseSchema>;
 export type CreateReservationRequest = z.infer<typeof CreateReservationRequestSchema>;
 export type ReservationDetailResponse = z.infer<typeof ReservationDetailResponseSchema>;
+export type ConfirmReservationResponse = z.infer<typeof ConfirmReservationResponseSchema>;
 export type ReservationExpandedDetailResponse = z.infer<typeof ReservationExpandedDetailResponseSchema>;
 export type ReservationSummaryStatsResponse = z.infer<typeof ReservationSummaryStatsResponseSchema>;
 export type ListMyReservationsResponse = z.infer<typeof ListMyReservationsResponseSchema>;

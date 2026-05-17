@@ -1,4 +1,5 @@
 import type {
+  ConfirmReservationResponse,
   CreateReservationPayload,
   PaginatedReservations,
   ReservationDetail,
@@ -8,6 +9,7 @@ import type {
 } from "@/contracts/server";
 
 export type {
+  ConfirmReservationResponse,
   CreateReservationPayload,
   PaginatedReservations,
   ReservationDetail,

@@ -7,7 +7,8 @@ const getBikeInMyStation = async (
   pageSize?: number,
   stationId?: string,
   supplierId?: string,
-  status?: BikeStatus
+  status?: BikeStatus,
+  id?:string,
 ) => {
   try {
     const query: Record<string, number | string> = {
@@ -17,6 +18,7 @@ const getBikeInMyStation = async (
     if(stationId) query.stationId = stationId;
     if(supplierId) query.supplierId = supplierId;
     if(status) query.status = status;
+    if(id) query.id = id;
     const response = await bikeService.getBikeInMyStation(query);
     if (response.status === HTTP_STATUS.OK) {
       return response.data;
@@ -32,16 +34,18 @@ export const useGetBikeInMyStationQuery = ({
   stationId,
   supplierId,
   status,
+  id,
 }: {
   page?: number;
   pageSize?: number;
   stationId?: string;
   supplierId?: string;
   status?: BikeStatus;
+  id?:string;
 }) => {
   return useQuery({
-    queryKey: ["data","bike-in-my-station",page,pageSize,stationId,supplierId,status],
-    queryFn: () => getBikeInMyStation(page, pageSize, stationId, supplierId, status),
+    queryKey: ["data","bike-in-my-station",page,pageSize,stationId,supplierId,status,id],
+    queryFn: () => getBikeInMyStation(page, pageSize, stationId, supplierId, status,id),
     enabled:false,
   });
 };

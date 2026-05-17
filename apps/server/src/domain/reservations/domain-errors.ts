@@ -123,6 +123,16 @@ export class ReservationMissingBike extends Data.TaggedError("ReservationMissing
 }> {}
 
 /**
+ * EN: Reservation cannot be confirmed before its start time.
+ * VI: Chưa đến thời điểm bắt đầu nên không thể xác nhận reservation.
+ */
+export class ReservationNotStarted extends Data.TaggedError("ReservationNotStarted")<{
+  readonly reservationId: string;
+  readonly startTime: string;
+  readonly currentTime: string;
+}> {}
+
+/**
  * EN: Reservation status transition is invalid.
  * VI: Chuyển trạng thái reservation không hợp lệ.
  */
@@ -226,6 +236,7 @@ export type ReservationServiceFailure
     | ReservationNotFound
     | ReservationNotOwned
     | ReservationMissingBike
+    | ReservationNotStarted
     | InvalidReservationTransition
     | ReservationOperatingHourFailure
     | SubscriptionRequired

@@ -27,7 +27,7 @@ export default function AgencyDetailPage({
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingAgencyStats]);
