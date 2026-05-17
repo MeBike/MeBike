@@ -354,10 +354,6 @@ export default function StationDetailClient({
                   <div className="space-y-1 px-1">
                     <StatusItem icon={Activity} label="Chỗ khách trả xe" value={station.returnSlots.active} color="text-blue-600" />
                     <StatusItem icon={Wrench} label="Chỗ xe điều phối" value={station.redistributionSlots} color="text-orange-500" />
-                    <div className="pt-3 mt-3 border-t border-border/40 flex justify-between text-sm">
-                      <span className="text-muted-foreground">Giới hạn khách trả:</span>
-                      <span className="font-semibold">{station.capacity.returnSlotLimit}</span>
-                    </div>
                   </div>
                 </div>
               )}
@@ -378,7 +374,7 @@ export default function StationDetailClient({
                 </h4>
                 <div className="space-y-1">
                   <StatusItem icon={CheckCircle2} label="Sẵn sàng cho thuê" value={station.bikes.available} color="text-emerald-600" boldValue />
-                  <StatusItem icon={Clock} label="Đã đặt trước (Booked)" value={station.bikes.booked} color="text-amber-600" />
+                  <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.booked} color="text-amber-600" />
                 </div>
               </div>
 
@@ -391,6 +387,7 @@ export default function StationDetailClient({
                   <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
                   <StatusItem icon={RefreshCcw} label="Đang đổi xe" value={station.bikes.swapping} color="text-blue-500" />
                   <StatusItem icon={Truck} label="Đang vận chuyển" value={station.bikes.transporting} color="text-indigo-500" />
+                  <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-indigo-500" />
                 </div>
               </div>
 
