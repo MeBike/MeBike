@@ -1,8 +1,10 @@
 import { Effect, Layer, Option } from "effect";
 
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { defectOn } from "@/domain/shared";
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { getPrismaUniqueViolationTarget, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { WalletWithdrawalStatus } from "generated/prisma/client";
@@ -24,6 +26,14 @@ export type WithdrawalRepositoryType = {
   findById: (id: string) => Effect.Effect<Option.Option<WalletWithdrawalRow>>;
   findByStripePayoutId: (
     payoutId: string,
+  ) => Effect.Effect<Option.Option<WalletWithdrawalRow>>;
+  listByUserId: (
+    userId: string,
+    pageReq: PageRequest<"createdAt">,
+  ) => Effect.Effect<PageResult<WalletWithdrawalRow>>;
+  findByIdForUser: (
+    userId: string,
+    withdrawalId: string,
   ) => Effect.Effect<Option.Option<WalletWithdrawalRow>>;
   findProcessingBefore: (
     createdBefore: Date,
@@ -90,46 +100,16 @@ async function insertWithdrawal(
   });
 }
 
-async function findByIdempotencyKey(
-  tx: PrismaClient | PrismaTypes.TransactionClient,
-  idempotencyKey: string,
-) {
-  return tx.walletWithdrawal.findFirst({
-    where: { idempotencyKey },
-    select: selectWithdrawalRow,
-  });
-}
-
 export function makeWithdrawalRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): WithdrawalRepositoryType {
   return {
     createPending: input =>
       Effect.tryPromise({
-        try: async () => {
-          try {
-            const row = await insertWithdrawal(client, input);
-            return toWithdrawalRow(row);
-          }
-          catch (err) {
-            if (isPrismaUniqueViolation(err)) {
-              // TODO(wallets): This currently makes repository-level createPending behave idempotently
-              // by returning the existing withdrawal on duplicate idempotencyKey.
-              // That conflicts with request-withdrawal flow, which still expects duplicates to surface
-              // as WithdrawalUniqueViolation so it can map them to DuplicateWithdrawalRequest / HTTP 409.
-              // Revisit this behavior and align repository, service, and controller semantics.
-              const existing = await findByIdempotencyKey(client, input.idempotencyKey);
-              if (existing) {
-                return toWithdrawalRow(existing);
-              }
-            }
-            throw err;
-          }
-        },
+        try: async () => toWithdrawalRow(await insertWithdrawal(client, input)),
         catch: (err) => {
           const uniqueViolation = toUniqueViolation(err, "createPending");
           if (uniqueViolation) {
-            // TODO(tests): add integration coverage for idempotency unique violations.
             return uniqueViolation;
           }
           return new WithdrawalRepositoryError({
@@ -170,6 +150,59 @@ export function makeWithdrawalRepository(
             cause: err,
           }),
       }).pipe(defectOn(WithdrawalRepositoryError)),
+
+    listByUserId: (userId, pageReq) => {
+      const { page, pageSize, skip, take } = normalizedPage(pageReq);
+
+      return Effect.gen(function* () {
+        const where = { userId } satisfies PrismaTypes.WalletWithdrawalWhereInput;
+
+        const [total, rows] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.walletWithdrawal.count({ where }),
+            catch: err =>
+              new WithdrawalRepositoryError({
+                operation: "listByUserId.count",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.walletWithdrawal.findMany({
+                where,
+                orderBy: { createdAt: "desc" },
+                skip,
+                take,
+                select: selectWithdrawalRow,
+              }),
+            catch: err =>
+              new WithdrawalRepositoryError({
+                operation: "listByUserId.findMany",
+                cause: err,
+              }),
+          }),
+        ]);
+
+        return makePageResult(rows.map(toWithdrawalRow), total, page, pageSize);
+      }).pipe(defectOn(WithdrawalRepositoryError));
+    },
+
+    findByIdForUser: (userId, withdrawalId) =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.walletWithdrawal.findFirst({
+            where: { id: withdrawalId, userId },
+            select: selectWithdrawalRow,
+          });
+          return Option.fromNullable(row).pipe(Option.map(toWithdrawalRow));
+        },
+        catch: err =>
+          new WithdrawalRepositoryError({
+            operation: "findByIdForUser",
+            cause: err,
+          }),
+      }).pipe(defectOn(WithdrawalRepositoryError)),
+
     findProcessingBefore: (createdBefore, limit) =>
       Effect.tryPromise({
         try: async () => {

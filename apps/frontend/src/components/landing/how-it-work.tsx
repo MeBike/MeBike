@@ -6,28 +6,28 @@ const steps = [
     title: "Ứng dụng MeBike",
     description:
       "Khám phá ứng dụng MeBike - giải pháp di chuyển xanh, tiện lợi và thân thiện với môi trường.",
-    image: "/01.ung-dung-mebike.png",
+    image: "/01.ung-dung-mebike.jpg",
   },
   {
     number: "02",
     title: "Đăng ký/Đăng nhập tài khoản",
     description:
       "Tạo tài khoản hoặc đăng nhập để bắt đầu trải nghiệm dịch vụ thuê xe đạp thông minh.",
-    image: "/02.dang-ki-dang-nhap-tai-khoan.png",
+    image: "/02.dang-nhap-mebike.jpg",
   },
   {
     number: "03",
     title: "Tìm trạm gần nhất",
     description:
       "Sử dụng bản đồ tích hợp để tìm trạm xe đạp gần vị trí của bạn nhất.",
-    image: "/03.tim-tram-gan-nhat.png",
+    image: "/03.tim-tram-gan-nhat.jpg",
   },
   {
     number: "04",
     title: "Đặt xe và bắt đầu",
     description:
       "Chọn xe yêu thích, đặt trước và bắt đầu hành trình khám phá thành phố xanh.",
-    image: "/04.dat-xe-va-bat-dau.png",
+    image: "/04.dat-xe.jpg",
   },
 ];
 
@@ -50,12 +50,14 @@ export function HowItWorks() {
               key={index}
               className={`flex flex-col ${index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"} items-center gap-12`}
             >
-              <div className="flex-1">
-                <Card className="flex items-center justify-center min-h-[400px]">
+              <div className="flex-1 w-full">
+                {/* Thêm padding (p-6), nền nhẹ, và responsive chiều cao (min-h-[300px] cho mobile) */}
+                <Card className="flex items-center justify-center p-6 min-h-[300px] md:min-h-[400px] bg-slate-50/50 dark:bg-slate-900/50">
                   <Image
                     src={step.image || "/placeholder.svg"}
                     alt={step.title}
-                    className="w-full h-auto object-contain max-h-[600px]"
+                    // Dùng mx-auto để đảm bảo căn giữa, rounded-md để góc ảnh mượt hơn
+                    className="w-full h-auto object-contain max-h-[400px] md:max-h-[500px] mx-auto rounded-md"
                     width={640}
                     height={400}
                   />

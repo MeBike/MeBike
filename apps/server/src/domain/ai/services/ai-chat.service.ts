@@ -5,9 +5,15 @@ import { Context, Effect, Layer } from "effect";
 
 import { env } from "@/config/env";
 import { BikeQueryServiceTag } from "@/domain/bikes";
-import { RentalCommandServiceTag } from "@/domain/rentals";
+import {
+  RentalBillingDetailServiceTag,
+  RentalCommandServiceTag,
+} from "@/domain/rentals";
 import { RentalServiceTag } from "@/domain/rentals/services/queries/rental.service";
-import { ReservationQueryServiceTag } from "@/domain/reservations";
+import {
+  ReservationCommandServiceTag,
+  ReservationQueryServiceTag,
+} from "@/domain/reservations";
 import { StationQueryServiceTag } from "@/domain/stations";
 import { WalletQueryServiceTag } from "@/domain/wallets/services/queries/wallet-query.service";
 import { getOpenRouterChatModel } from "@/infrastructure/ai/openrouter";
@@ -50,8 +56,10 @@ export type AiChatService = {
 
 const makeAiChatService = Effect.gen(function* () {
   const bikeQueryService = yield* BikeQueryServiceTag;
+  const rentalBillingDetailService = yield* RentalBillingDetailServiceTag;
   const rentalCommandService = yield* RentalCommandServiceTag;
   const rentalService = yield* RentalServiceTag;
+  const reservationCommandService = yield* ReservationCommandServiceTag;
   const reservationQueryService = yield* ReservationQueryServiceTag;
   const stationQueryService = yield* StationQueryServiceTag;
   const walletService = yield* WalletQueryServiceTag;
@@ -59,6 +67,7 @@ const makeAiChatService = Effect.gen(function* () {
   const streamCustomerAssistant: AiChatService["streamCustomerAssistant"] = args =>
     Effect.gen(function* () {
       const requestStartedAt = performance.now();
+      const now = new Date();
 
       if (!env.OPENROUTER_API_KEY) {
         return yield* Effect.fail(new AiConfigurationError({
@@ -69,7 +78,9 @@ const makeAiChatService = Effect.gen(function* () {
       const tools = createCustomerTools({
         bikeQueryService,
         context: args.context,
+        rentalBillingDetailService,
         rentalCommandService,
+        reservationCommandService,
         reservationQueryService,
         rentalService,
         stationQueryService,
@@ -136,7 +147,11 @@ const makeAiChatService = Effect.gen(function* () {
           },
         },
         stopWhen: stepCountIs(12),
-        system: buildCustomerAssistantPrompt(args.context),
+        system: buildCustomerAssistantPrompt(
+          Boolean(args.context?.location),
+          args.context?.locationLabel ?? null,
+          now,
+        ),
         messages: modelMessages,
         activeTools,
         tools,

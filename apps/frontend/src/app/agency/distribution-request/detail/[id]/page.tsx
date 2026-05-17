@@ -37,7 +37,7 @@ const DistributionRequestDetailPage = () => {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingAgencyViewDistributionRequestDetail]);
@@ -63,7 +63,6 @@ const DistributionRequestDetailPage = () => {
   
   return (
     <DistributionRequestDetailClient 
-      user={user as DetailUser}
       listStation={listStation}
       data={agencyViewDistributionRequestDetail.data}
       onApprove={() => agencyApproveDistributeRequest(id)}

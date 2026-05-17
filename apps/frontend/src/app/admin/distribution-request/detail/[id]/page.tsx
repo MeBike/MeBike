@@ -24,7 +24,7 @@ const DistributionRequestDetailPage = () => {
       } else {
         const timer = setTimeout(() => {
           setIsVisualLoading(false);
-        }, 600);
+        }, 1000);
         return () => clearTimeout(timer);
       }
     }, [isLoadingAdminViewDistributionRequestDetail]);
@@ -33,7 +33,6 @@ const DistributionRequestDetailPage = () => {
       getAdminViewDistributionRequestDetail();
     }
   }, [id, getAdminViewDistributionRequestDetail]);
-
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
@@ -44,7 +43,6 @@ const DistributionRequestDetailPage = () => {
       </div>
     );
   }
-
   return (
     <DistributionRequestDetailClient 
       data={adminViewDistributionRequestDetail.data} 

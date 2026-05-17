@@ -83,29 +83,6 @@ export function RequestBikeCard({ request }: RequestBikeCardProps) {
           )
         : null}
 
-      {request.status === "PENDING"
-        ? (
-            <AppCard borderRadius={22} chrome="flat" padding="$4" tone="muted">
-              <XStack alignItems="flex-start" gap="$3">
-                <IconSymbol color={theme.actionPrimary.val} name="info" size="input" />
-                <AppText flex={1} tone="muted" variant="bodySmall">
-                  Hệ thống sẽ tự động chọn 1 xe
-                  {" "}
-                  <AppText tone="default" variant="bodyStrong">
-                    AVAILABLE
-                  </AppText>
-                  {" "}
-                  tại trạm để giao cho khách khi bạn bấm
-                  {" "}
-                  <AppText tone="default" variant="bodyStrong">
-                    Chấp nhận
-                  </AppText>
-                  .
-                </AppText>
-              </XStack>
-            </AppCard>
-          )
-        : null}
     </AppCard>
   );
 }

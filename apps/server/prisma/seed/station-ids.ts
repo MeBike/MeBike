@@ -1,9 +1,8 @@
 export const STATION_IDS: Record<string, string> = {
-  "Ga An Phú": "019b6656-ebab-7cc3-bd43-e2b2e76f4a6a",
-  "Ga Phước Long": "019b6656-ebbb-78a1-a657-7f5a535f3fd7",
+  "Vincom Plaza": "019b6656-ebab-7cc3-bd43-e2b2e76f4a6a",
   "Ga Thủ Đức": "019b6656-ebbd-7061-8966-1111dfe19055",
   "Ga Bến xe Suối Tiên": "019b6656-ebbf-791c-9009-56db1912ca9c",
-  "Ga Bến Thành": "019b6656-ebc1-7317-a263-3f7b71652a64",
+  "Saigon Centre": "019b6656-ebc1-7317-a263-3f7b71652a64",
   "Ga Ba Son": "019b6656-ebc3-714d-88aa-b9ee2587630e",
   "Ga Bình Thái": "019b6656-ebc5-7155-a4ca-50ebbf4a32b7",
   "Ga Khu Công nghệ cao": "019b6656-ebc7-704d-b7e1-7b94302fe441",
@@ -12,5 +11,5 @@ export const STATION_IDS: Record<string, string> = {
   "Ga Đại học Quốc gia": "019b6656-ebcd-76af-9b03-616de9653d80",
   "Ga Nhà hát Thành phố": "019b6656-ebcf-71f7-9813-bce898701d85",
   "Ga Công viên Văn Thánh": "019b6656-ebd0-75f3-b1ba-fa08e92eb25c",
-  "Ga Thảo Điền": "019b6656-ebd2-7e76-9dc0-2a953947ea09",
+  "Mega Mall Thảo Điền": "019b6656-ebd2-7e76-9dc0-2a953947ea09",
 };

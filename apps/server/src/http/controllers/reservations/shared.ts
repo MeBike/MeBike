@@ -8,6 +8,7 @@ export const {
 } = ReservationsContracts;
 
 export type ReservationErrorResponse = ReservationsContracts.ReservationErrorResponse;
+export type ConfirmReservationResponse = ReservationsContracts.ConfirmReservationResponse;
 export type ReservationDetailResponse = ReservationsContracts.ReservationDetailResponse;
 export type ReservationExpandedDetailResponse = ReservationsContracts.ReservationExpandedDetailResponse;
 export type ListMyReservationsResponse = ReservationsContracts.ListMyReservationsResponse;

@@ -79,6 +79,10 @@ export function prepareReserveBikeInTx(
       return yield* Effect.fail(makeOvernightOperationsClosedError(input.now));
     }
 
+    if (isWithinOvernightOperationsWindow(input.startTime)) {
+      return yield* Effect.fail(makeOvernightOperationsClosedError(input.startTime));
+    }
+
     if (input.reservationOption === "FIXED_SLOT") {
       return yield* Effect.fail(
         new ReservationOptionNotSupported({ option: input.reservationOption }),

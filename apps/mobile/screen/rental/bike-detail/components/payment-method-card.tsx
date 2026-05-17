@@ -1,13 +1,15 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { borderWidths } from "@theme/metrics";
-import { AppCard } from "@ui/primitives/app-card";
-import { AppText } from "@ui/primitives/app-text";
 import React from "react";
 import { Pressable } from "react-native";
 import { useTheme, XStack, YStack } from "tamagui";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
+
+import { IconSymbol } from "@components/IconSymbol";
+import { borderWidths } from "@theme/metrics";
+import { AppCard } from "@ui/primitives/app-card";
+import { AppText } from "@ui/primitives/app-text";
+import { getSubscriptionPackageTitle } from "@utils/subscription";
 
 import type { PaymentMode } from "../types";
 
@@ -41,17 +43,13 @@ function PaymentOption({
           padding="$3"
         >
           <YStack gap="$2">
-            <XStack alignItems="center" gap="$2" justifyContent="space-between">
+            <XStack alignItems="center" gap="$2">
               <XStack alignItems="center" flex={1} gap="$2">
                 <IconSymbol color={isActive ? theme.actionPrimary.val : theme.textTertiary.val} name={icon} size="md" />
                 <AppText style={[bikeDetailTextStyles.optionTitle, isActive ? bikeDetailTextStyles.optionTitleActive : null]}>
                   {title}
                 </AppText>
               </XStack>
-
-              {isActive
-                ? <IconSymbol color={theme.actionPrimary.val} name="check-circle" size="input" />
-                : null}
             </XStack>
 
             <AppText style={[bikeDetailTextStyles.optionSubtitle, isActive ? bikeDetailTextStyles.optionSubtitleActive : null]}>
@@ -100,7 +98,7 @@ function SubscriptionSelector({
               >
                 <YStack flex={1} gap="$1" paddingRight="$2">
                   <AppText numberOfLines={1} style={bikeDetailTextStyles.subscriptionTitle}>
-                    {subscription.packageName}
+                    {getSubscriptionPackageTitle(subscription.packageName)}
                   </AppText>
                   <AppText style={bikeDetailTextStyles.subscriptionMeta}>
                     {remaining != null ? `${remaining} / ${subscription.maxUsages} lượt còn lại` : "Không giới hạn lượt"}

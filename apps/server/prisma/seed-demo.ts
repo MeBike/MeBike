@@ -14,6 +14,7 @@ import {
   IncidentSeverity,
   IncidentSource,
   IncidentStatus,
+  NfcCardStatus,
   PrismaClient,
   RentalStatus,
   ReservationOption,
@@ -23,6 +24,7 @@ import {
   SupplierStatus,
   UserRole,
   UserVerifyStatus,
+  WalletHoldReason,
   WalletStatus,
 } from "../generated/prisma/client";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
@@ -30,7 +32,7 @@ import { toPrismaDecimal } from "../src/domain/shared/decimal";
 import logger from "../src/lib/logger";
 import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
-import { seedDefaultPricingPolicy } from "./seed-pricing-policy";
+import { DEFAULT_PRICING_POLICY_ID, seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
 import { seedDemoRatings } from "./seed/demo-ratings";
 import { seedRatingReasons } from "./seed/rating-reasons";
@@ -42,9 +44,17 @@ const DEMO_PASSWORD = "Demo@123456";
 const USERS_TARGET = 32;
 const RENTALS_TARGET = 120;
 const DEMO_NON_CUSTOMER_USERS = 7;
+const DEMO_BIKES_PER_STATION = 5;
+const DEMO_RENTAL_MIN_HOUR = 6;
+const DEMO_RENTAL_MAX_HOUR = 22;
+const DEMO_NFC_CARD_UID = "3946298114";
+const DEMO_NFC_CARD_USER_EMAIL = "user02@mebike.local";
+const DEMO_RENTAL_DEPOSIT_AMOUNT = 500000n;
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
+const DEMO_AGENCY_MAIN_STATION_NAME = "Vincom Plaza";
+const REMOVED_STATION_IDS = ["019b6656-ebbb-78a1-a657-7f5a535f3fd7"] as const;
 const LEGACY_DEMO_AGENCY_IDS = [
   "019b17bd-d130-7e7d-be69-91ceef7b9007",
   "019b17bd-d130-7e7d-be69-91ceef7b9008",
@@ -134,6 +144,25 @@ function toUtcDateInMonth(year: number, month: number, day: number, hour: number
   return new Date(Date.UTC(year, month, day, hour, minute, 0, 0));
 }
 
+function toDemoRentalHour(hour: number) {
+  return Math.max(DEMO_RENTAL_MIN_HOUR, Math.min(DEMO_RENTAL_MAX_HOUR, hour));
+}
+
+function toPastDemoRentalUtcDate(dayOffset: number, hour: number, minute: number) {
+  const safeHour = toDemoRentalHour(hour);
+  const candidate = toUtcDate(dayOffset, safeHour, minute);
+
+  if (candidate.getTime() < Date.now()) {
+    return candidate;
+  }
+
+  return toUtcDate(dayOffset - 1, safeHour, minute);
+}
+
+function toDemoRentalUtcDateInMonth(year: number, month: number, day: number, hour: number, minute: number) {
+  return toUtcDateInMonth(year, month, day, toDemoRentalHour(hour), minute);
+}
+
 function pick<T>(arr: readonly T[], idx: number): T {
   return arr[idx % arr.length]!;
 }
@@ -177,8 +206,9 @@ async function seedStations(prisma: PrismaClient) {
         ST_GeogFromText(${`SRID=4326;POINT(${station.longitude} ${station.latitude})`} ),
         ${updatedAt}
       )
-      ON CONFLICT ("name") DO UPDATE
+      ON CONFLICT ("id") DO UPDATE
       SET
+        "name" = EXCLUDED."name",
         "address" = EXCLUDED."address",
         "total_capacity" = EXCLUDED."total_capacity",
         "return_slot_limit" = EXCLUDED."return_slot_limit",
@@ -333,8 +363,14 @@ function buildRentals(params: {
   const currentMonth = now.getUTCMonth();
   const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const daysInCurrentMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0)).getUTCDate();
   const daysInPrevMonth = new Date(Date.UTC(prevMonthYear, prevMonth + 1, 0)).getUTCDate();
+  const lastCompletedDayInCurrentMonth = now.getUTCDate() - 1;
+  const completedCurrentMonthYear = lastCompletedDayInCurrentMonth >= 1 ? currentYear : prevMonthYear;
+  const completedCurrentMonthMonth = lastCompletedDayInCurrentMonth >= 1 ? currentMonth : prevMonth;
+  const completedCurrentMonthDays = lastCompletedDayInCurrentMonth >= 1
+    ? lastCompletedDayInCurrentMonth
+    : daysInPrevMonth;
+  const activeRentalDayOffset = now.getUTCHours() >= 14 ? 0 : -1;
 
   const pushCompleted = (count: number, dateFactory: (idx: number) => Date, startIdx = 0) => {
     for (let i = 0; i < count; i++) {
@@ -366,13 +402,19 @@ function buildRentals(params: {
     }
   };
 
-  pushCompleted(12, idx => toUtcDate(0, 8 + (idx % 12), (idx * 7) % 60), 0);
-  pushCompleted(9, idx => toUtcDate(-1, 9 + (idx % 9), (idx * 9) % 60), 100);
+  pushCompleted(12, idx => toPastDemoRentalUtcDate(-1, 8 + (idx % 12), (idx * 7) % 60), 0);
+  pushCompleted(9, idx => toPastDemoRentalUtcDate(-2, 9 + (idx % 9), (idx * 9) % 60), 100);
   pushCompleted(
     36,
     (idx) => {
-      const day = ((idx % Math.max(1, daysInCurrentMonth - 2)) + 1);
-      return toUtcDateInMonth(currentYear, currentMonth, day, 6 + (idx % 14), (idx * 11) % 60);
+      const day = (idx % completedCurrentMonthDays) + 1;
+      return toDemoRentalUtcDateInMonth(
+        completedCurrentMonthYear,
+        completedCurrentMonthMonth,
+        day,
+        6 + (idx % 14),
+        (idx * 11) % 60,
+      );
     },
     200,
   );
@@ -380,7 +422,7 @@ function buildRentals(params: {
     27,
     (idx) => {
       const day = ((idx % daysInPrevMonth) + 1);
-      return toUtcDateInMonth(prevMonthYear, prevMonth, day, 7 + (idx % 12), (idx * 13) % 60);
+      return toDemoRentalUtcDateInMonth(prevMonthYear, prevMonth, day, 7 + (idx % 12), (idx * 13) % 60);
     },
     300,
   );
@@ -388,7 +430,7 @@ function buildRentals(params: {
   const rentedUsers = normalUsers.slice(0, 8);
   const rentedBikes = bikes.slice(0, 8);
   for (let i = 0; i < 8; i++) {
-    const start = toUtcDate(0, 6 + i, (i * 8) % 60);
+    const start = toPastDemoRentalUtcDate(activeRentalDayOffset, 6 + i, (i * 8) % 60);
     rentals.push({
       id: uuidv7(),
       userId: rentedUsers[i]!.id,
@@ -453,14 +495,10 @@ async function main() {
     await seedDefaultPricingPolicy(prisma);
     await seedDefaultGlobalCouponRules(prisma, { demoMode: true });
     await seedDemoEnvironmentPolicy(prisma);
-    await seedStations(prisma);
     await seedRatingReasons(prisma);
 
-    const stationRows = await prisma.station.findMany({
-      select: { id: true, name: true, latitude: true, longitude: true },
-      orderBy: { name: "asc" },
-    });
-    const stationIds = stationRows.map(s => s.id);
+    const users = buildDemoUsers(stations.length);
+    const userEmails = users.map(u => u.email);
 
     const suppliers = await Promise.all([
       prisma.supplier.upsert({
@@ -504,9 +542,6 @@ async function main() {
         },
       }),
     ]);
-
-    const users = buildDemoUsers(stationRows.length);
-    const userEmails = users.map(u => u.email);
 
     await prisma.ratingReasonLink.deleteMany({
       where: {
@@ -586,6 +621,17 @@ async function main() {
         },
       },
     });
+    await prisma.walletHold.deleteMany({
+      where: {
+        wallet: {
+          user: {
+            email: {
+              in: userEmails,
+            },
+          },
+        },
+      },
+    });
     await prisma.rental.deleteMany({
       where: {
         user: {
@@ -640,6 +686,20 @@ async function main() {
         },
       },
     });
+    await prisma.nfcCard.deleteMany({
+      where: {
+        OR: [
+          { uid: DEMO_NFC_CARD_UID },
+          {
+            assignedUser: {
+              email: {
+                in: userEmails,
+              },
+            },
+          },
+        ],
+      },
+    });
 
     await prisma.user.deleteMany({
       where: {
@@ -656,6 +716,27 @@ async function main() {
         },
       },
     });
+
+    await prisma.technicianTeam.deleteMany({
+      where: {
+        name: {
+          startsWith: "Demo Tech Team -",
+        },
+      },
+    });
+
+    await prisma.$executeRaw`
+      DELETE FROM "Station"
+      WHERE "id" IN (${REMOVED_STATION_IDS[0]}::uuid)
+    `;
+
+    await seedStations(prisma);
+
+    const stationRows = await prisma.station.findMany({
+      select: { id: true, name: true, latitude: true, longitude: true },
+      orderBy: { name: "asc" },
+    });
+    const stationIds = stationRows.map(s => s.id);
 
     await prisma.user.createMany({
       data: users.map((u, idx) => ({
@@ -735,9 +816,9 @@ async function main() {
         "agency_id" = NULL
     `;
 
+    const stationIdByName = new Map(stationRows.map(station => [station.name, station.id]));
     const agencyOwnedStations = [
-      { stationId: stationIds[0], agencyId: mainAgency.id },
-      { stationId: stationIds[1], agencyId: eastAgency.id },
+      { stationId: stationIdByName.get(DEMO_AGENCY_MAIN_STATION_NAME), agencyId: mainAgency.id },
     ].filter((item): item is { stationId: string; agencyId: string } => Boolean(item.stationId));
 
     for (const item of agencyOwnedStations) {
@@ -766,6 +847,19 @@ async function main() {
     );
 
     const userByEmail = new Map(users.map(user => [user.email, user]));
+    const demoNfcCardUser = userByEmail.get(DEMO_NFC_CARD_USER_EMAIL);
+    if (demoNfcCardUser) {
+      await prisma.nfcCard.create({
+        data: {
+          id: uuidv7(),
+          uid: DEMO_NFC_CARD_UID,
+          status: NfcCardStatus.ACTIVE,
+          assignedUserId: demoNfcCardUser.id,
+          issuedAt: new Date(),
+        },
+      });
+    }
+
     const technicianAssignments = technicianTeams
       .map((team, index) => ({
         user: userByEmail.get(`tech${index + 1}@mebike.local`),
@@ -825,14 +919,14 @@ async function main() {
         .map((u, idx) => ({
           id: uuidv7(),
           userId: u.id,
-          balance: BigInt(250000 + idx * 15000),
-          reservedBalance: BigInt(idx % 4 === 0 ? 10000 : 0),
+          balance: BigInt(900000 + idx * 15000),
+          reservedBalance: 0n,
           status: WalletStatus.ACTIVE,
           updatedAt: new Date(),
         })),
     });
 
-    const bikesToCreate = Array.from({ length: 40 }, (_, idx) => ({
+    const bikesToCreate = Array.from({ length: stationIds.length * DEMO_BIKES_PER_STATION }, (_, idx) => ({
       id: uuidv7(),
       bikeNumber: `DEMO-${String(idx + 1).padStart(3, "0")}`,
       stationId: pick(stationIds, idx),
@@ -884,6 +978,7 @@ async function main() {
         id: r.id,
         userId: r.userId,
         bikeId: r.bikeId,
+        pricingPolicyId: DEFAULT_PRICING_POLICY_ID,
         startStationId: r.startStationId,
         endStationId: r.endStationId,
         createdAt: r.createdAt,
@@ -896,6 +991,51 @@ async function main() {
         updatedAt: r.updatedAt,
       })),
     });
+
+    const rentedRentals = rentals.filter(r => r.status === RentalStatus.RENTED);
+    if (rentedRentals.length > 0) {
+      const walletRows = await prisma.wallet.findMany({
+        where: {
+          userId: {
+            in: [...new Set(rentedRentals.map(rental => rental.userId))],
+          },
+        },
+        select: { id: true, userId: true },
+      });
+      const walletByUserId = new Map(walletRows.map(wallet => [wallet.userId, wallet.id]));
+      const holdCountByWalletId = new Map<string, number>();
+
+      for (const rental of rentedRentals) {
+        const walletId = walletByUserId.get(rental.userId);
+        if (!walletId) {
+          continue;
+        }
+
+        const holdId = uuidv7();
+        await prisma.walletHold.create({
+          data: {
+            id: holdId,
+            walletId,
+            rentalId: rental.id,
+            amount: DEMO_RENTAL_DEPOSIT_AMOUNT,
+            reason: WalletHoldReason.RENTAL_DEPOSIT,
+          },
+        });
+        await prisma.rental.update({
+          where: { id: rental.id },
+          data: { depositHoldId: holdId },
+        });
+
+        holdCountByWalletId.set(walletId, (holdCountByWalletId.get(walletId) ?? 0) + 1);
+      }
+
+      for (const [walletId, holdCount] of holdCountByWalletId) {
+        await prisma.wallet.update({
+          where: { id: walletId },
+          data: { reservedBalance: BigInt(holdCount) * DEMO_RENTAL_DEPOSIT_AMOUNT },
+        });
+      }
+    }
 
     await prisma.reservation.createMany({
       data: reservations.map(r => ({
@@ -914,8 +1054,7 @@ async function main() {
       })),
     });
 
-    const rentedBikeIds = rentals
-      .filter(r => r.status === RentalStatus.RENTED)
+    const rentedBikeIds = rentedRentals
       .map(r => r.bikeId)
       .filter((id): id is string => Boolean(id));
 
@@ -987,6 +1126,7 @@ async function main() {
           id: rental.id,
           userId: rental.userId,
           bikeId: rental.bikeId,
+          pricingPolicyId: DEFAULT_PRICING_POLICY_ID,
           startStationId: rental.startStationId,
           endStationId: rental.endStationId,
           createdAt: rental.createdAt,
@@ -1063,6 +1203,7 @@ async function main() {
           id: rental.id,
           userId: rental.userId,
           bikeId: rental.bikeId,
+          pricingPolicyId: DEFAULT_PRICING_POLICY_ID,
           startStationId: rental.startStationId,
           endStationId: rental.endStationId,
           createdAt: rental.createdAt,

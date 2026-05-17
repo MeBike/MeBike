@@ -26,7 +26,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingMyAgencyBikeInStationDetail]);
@@ -59,6 +59,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+              Chi tiết xe
+            </h1>
           </div>
           <div className="flex items-center gap-2">
             {myAgencyBikeInStationDetail && (
@@ -70,7 +73,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             )}
             <Button
               variant="outline"
-              onClick={() => router.push("/staff/bikes")}
+              onClick={() => router.push("/agency/bikes")}
             >
               Danh sách xe
             </Button>

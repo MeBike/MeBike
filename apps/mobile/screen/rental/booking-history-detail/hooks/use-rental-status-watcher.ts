@@ -1,10 +1,11 @@
-import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
-import { useBikeStatusEvents } from "@hooks/use-bike-status-events";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import type { BikeStatusUpdate } from "@/hooks/use-bike-status-stream";
+import type { BikeStatusUpdate } from "@/types/realtime-events";
 import type { MyRentalResolvedDetail } from "@/types/rental-types";
+
+import { invalidateMyRentalQueries } from "@hooks/rentals/rental-cache";
+import { useBikeStatusEvents } from "@hooks/use-bike-status-events";
 
 type Options = {
   booking?: MyRentalResolvedDetail["rental"];

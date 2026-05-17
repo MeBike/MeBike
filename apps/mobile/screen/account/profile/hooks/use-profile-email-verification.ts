@@ -1,8 +1,8 @@
-import type { UserDetail } from "@services/users/user-service";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
+
+import type { UserDetail } from "@services/users/user-service";
 
 import { useResendVerifyEmailMutation } from "@/hooks/mutations/AuthNext/use-resend-verify-email-mutation";
 import { useVerifyEmailOtpMutation } from "@/hooks/mutations/AuthNext/use-verify-email-otp-mutation";
@@ -10,7 +10,7 @@ import { authQueryKeys } from "@/hooks/query/auth-next/auth-query-keys";
 import { presentAuthError } from "@/presenters/auth/auth-error-presenter";
 
 type UseProfileEmailVerificationParams = {
-  profile: UserDetail;
+  profile: UserDetail | null;
   hydrate: () => Promise<void>;
 };
 
@@ -24,6 +24,11 @@ export function useProfileEmailVerification({
   const verifyOtpMutation = useVerifyEmailOtpMutation();
 
   const handleResendOtp = useCallback(async () => {
+    if (!profile) {
+      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản. Vui lòng thử lại.");
+      return false;
+    }
+
     if (profile.verify === "VERIFIED") {
       Alert.alert("Thông báo", "Email của bạn đã được xác thực.");
       return false;
@@ -49,9 +54,14 @@ export function useProfileEmailVerification({
       Alert.alert("Lỗi", "Không thể gửi lại OTP. Vui lòng thử lại.");
       return false;
     }
-  }, [profile.email, profile.fullName, profile.id, profile.verify, resendOtpMutation]);
+  }, [profile, resendOtpMutation]);
 
   const handleVerifyEmail = useCallback(async (otp: string) => {
+    if (!profile) {
+      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản. Vui lòng thử lại.");
+      return;
+    }
+
     try {
       const result = await verifyOtpMutation.mutateAsync({ userId: profile.id, otp });
 
@@ -70,7 +80,7 @@ export function useProfileEmailVerification({
     catch {
       Alert.alert("Lỗi", "Xác thực thất bại. Vui lòng thử lại.");
     }
-  }, [hydrate, profile.id, queryClient, verifyOtpMutation]);
+  }, [hydrate, profile, queryClient, verifyOtpMutation]);
 
   const openVerifyModal = useCallback(() => {
     setIsVerifyEmailModalOpen(true);

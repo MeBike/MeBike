@@ -28,21 +28,21 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingAgencyRequestDetail]);
+  if (isVisualLoading) {
+    return <LoadingScreen />;
+  }
   if (!agencyRequestDetail) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
         <p className="text-muted-foreground">
-          Không tìm thấy thông tin người dùng.
+          Không tìm thấy thông tin yêu cầu này.
         </p>
       </div>
     );
-  }
-  if (isVisualLoading) {
-    return <LoadingScreen />;
   }
   return (
     <AgencyRequestDetailClient

@@ -3,9 +3,24 @@ import type { DeviceTapEvent } from "@mebike/shared";
 import { Effect, Layer } from "effect";
 
 import type { MqttPublishError } from "@/infrastructure/mqtt";
+import type { NfcCardSwipeFailedReason } from "@/realtime/nfc-card-events";
+
+import { notifyNfcCardSwipeFailed } from "@/realtime/nfc-card-events";
 
 import { DeviceCommandServiceTag } from "./device-command.live";
 import { DeviceTapDecisionServiceTag } from "./device-tap-decision.service";
+
+const NFC_CARD_SWIPE_FAILED_REASONS = new Set<string>([
+  "ACTIVE_RENTAL_EXISTS",
+  "ACTIVE_RESERVATION_EXISTS",
+  "BIKE_RESERVED",
+  "INSUFFICIENT_FUNDS",
+  "OVERNIGHT_OPERATIONS_CLOSED",
+]);
+
+function toNfcCardSwipeFailedReason(reason: string): NfcCardSwipeFailedReason | null {
+  return NFC_CARD_SWIPE_FAILED_REASONS.has(reason) ? reason as NfcCardSwipeFailedReason : null;
+}
 
 /**
  * Kết quả cuối cùng của một tap event sau khi server ra quyết định.
@@ -83,6 +98,17 @@ const makeDeviceTapServiceEffect = Effect.gen(function* () {
         const decision = yield* decisionService.decideTapEvent(event, options);
 
         if (decision._tag === "Deny") {
+          const alertReason = toNfcCardSwipeFailedReason(decision.reason);
+          if (decision.userId && alertReason) {
+            yield* Effect.promise(() => notifyNfcCardSwipeFailed({
+              userId: decision.userId!,
+              requestId: event.requestId,
+              bikeId: event.deviceId,
+              reason: alertReason,
+              at: new Date(options?.now ?? Date.now()).toISOString(),
+            }));
+          }
+
           return yield* denyTap(event, decision.reason, {
             userId: decision.userId,
             reservationId: decision.reservationId,

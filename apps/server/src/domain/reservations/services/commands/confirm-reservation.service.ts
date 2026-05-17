@@ -4,10 +4,10 @@ import { defectOn } from "@/domain/shared";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type { ReservationRow } from "../../models";
 import type {
   ConfirmReservationFailure,
   ConfirmReservationInput,
+  ConfirmReservationSuccess,
 } from "./confirm-reservation/confirm-reservation.types";
 
 import { persistConfirmReservationInTx } from "./confirm-reservation/confirm-reservation.persistence";
@@ -16,6 +16,7 @@ import { prepareConfirmReservationInTx } from "./confirm-reservation/confirm-res
 export type {
   ConfirmReservationFailure,
   ConfirmReservationInput,
+  ConfirmReservationSuccess,
 } from "./confirm-reservation/confirm-reservation.types";
 
 /**
@@ -30,7 +31,7 @@ export type {
 export function confirmReservation(
   input: ConfirmReservationInput,
 ): Effect.Effect<
-  ReservationRow,
+  ConfirmReservationSuccess,
   ConfirmReservationFailure,
   Prisma
 > {

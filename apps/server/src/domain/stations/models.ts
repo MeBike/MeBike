@@ -15,6 +15,7 @@ export type StationContextRow = {
   id: string;
   name: string;
   address: string;
+  stationType: StationType;
   operationalAvailableSlots: number;
 };
 

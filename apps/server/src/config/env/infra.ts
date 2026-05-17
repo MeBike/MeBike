@@ -33,4 +33,5 @@ export const mapboxEnvSchema = z.object({
 export const stripeEnvSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_CONNECT_WEBHOOK_SECRET: z.string().optional(),
 });

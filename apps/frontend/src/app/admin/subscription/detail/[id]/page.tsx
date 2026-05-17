@@ -37,7 +37,7 @@ export default function Page({
     } else {
       const timer = setTimeout(() => {
         setIsVisualLoading(false);
-      }, 600);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [isLoadingSubscriptionDetail]);
@@ -50,7 +50,6 @@ export default function Page({
     return (
       <div className="flex h-[50vh] w-full flex-col items-center justify-center gap-4">
         <p className="text-lg font-medium text-muted-foreground">Không tìm thấy thông tin gói cước.</p>
-        <Button onClick={() => router.back()}>Quay lại</Button>
       </div>
     );
   }

@@ -2,7 +2,7 @@ export interface Agency {
   id: string;
   name: string;
   contactPhone: string;
-  station : IStationPropInAgency;
+  station ?: IStationPropInAgency;
   status: AgencyStatus;
   createdAt: string;
   updatedAt: string;

@@ -3,18 +3,16 @@
 import { useState, useEffect } from "react";
 import BikeClient from "./BikeClient";
 import { useBikeActions } from "@/hooks/use-bike";
-import { useStationActions } from "@/hooks/use-station";
 import { BikeStatus } from "@custom-types";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useDebounce } from "@/utils/useDebounce";
 export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
-  const [stationId, setStationId] = useState<string>("");
+  const [bikeId, setBikeId] = useState<string>("");
   const pageSize = 7;
-  const { stations, getAllStations } = useStationActions({ hasToken: true });
   const debouncedStatusFilter = useDebounce(statusFilter, 500);
-  const debouncedStationId = useDebounce(stationId, 500);
+  const debouncedBikeId = useDebounce(bikeId, 500);
   const { myBikeInStation, getMyBikeInStation, isLoadingMyBikeInStation } =
     useBikeActions({
       hasToken: true,
@@ -24,15 +22,11 @@ export default function Page() {
           : undefined,
       pageSize: pageSize,
       page: page,
-      stationId:
-        !debouncedStationId || debouncedStationId === "all-stations"
-          ? undefined
-          : stationId,
+      bike_id : debouncedBikeId,
     });
   useEffect(() => {
     getMyBikeInStation();
-    getAllStations();
-  }, [page, debouncedStatusFilter, debouncedStationId]);
+  }, [page, debouncedStatusFilter,debouncedBikeId]);
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
@@ -55,18 +49,17 @@ export default function Page() {
       data={{
         bikes: myBikeInStation?.data || [],
         paginationBikes: myBikeInStation?.pagination,
-        stations: stations || [],
         isVisualLoading,
       }}
       filters={{
         statusFilter,
         page,
-        stationId,
+        bikeId
       }}
       actions={{
         setStatusFilter,
         setPage,
-        setStationId,
+        setBikeId
       }}
     />
   );

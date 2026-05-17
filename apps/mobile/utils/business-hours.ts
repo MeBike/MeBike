@@ -51,7 +51,7 @@ export function parseTimeStringToWallClockDate(value: string): Date {
 }
 
 export function getOvernightOperationsClosedMessage(): string {
-  return "Hệ thống tạm ngưng thao tác này từ 23:00 đến 05:00 giờ Việt Nam. Vui lòng thử lại sau 05:00.";
+  return "Không thể thực hiện thao tác này từ 23:00 đến 05:00. Vui lòng thử lại sau 05:00.";
 }
 
 export function getFixedSlotOperatingHoursMessage(): string {

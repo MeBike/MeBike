@@ -17,14 +17,17 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 export const getStatusReservationConfig = (status: string) => {
   switch (status) {
     case "FULFILLED":
-      return { label: "Thành công", className: "bg-green-100 text-green-800" };
+      return {
+        label: "Đã hoàn thành",
+        className: "bg-green-100 text-green-800",
+      };
     case "PENDING":
       return {
         label: "Đang chờ xử lý",
         className: "bg-yellow-100 text-yellow-800",
       };
     case "EXPIRED":
-      return { label: "Hết hạn", className: "bg-orange-100 text-orange-800" };
+      return { label: "Đã hết hạn", className: "bg-orange-100 text-orange-800" };
     case "CANCELLED":
       return { label: "Đã hủy", className: "bg-gray-200 text-gray-800" };
     default:

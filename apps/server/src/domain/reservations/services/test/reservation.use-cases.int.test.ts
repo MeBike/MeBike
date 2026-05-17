@@ -130,7 +130,7 @@ describe("reservation use-cases integration", () => {
       now,
     });
 
-    expectRight(confirmResult);
+    const confirmed = expectRight(confirmResult);
 
     const activePricingPolicy = await fixture.prisma.pricingPolicy.findFirst({
       where: { status: "ACTIVE" },
@@ -143,6 +143,7 @@ describe("reservation use-cases integration", () => {
     const rental = await fixture.prisma.rental.findFirst({ where: { reservationId: reservation.id } });
     expect(rental?.status).toBe("RENTED");
     expect(rental?.reservationId).toBe(reservation.id);
+    expect(confirmed.rentalId).toBe(rental?.id);
     expect(rental?.bikeId).toBe(bike.id);
     expect(rental?.pricingPolicyId).toBe(reservation.pricingPolicyId);
     expect(rental?.depositHoldId).not.toBeNull();
@@ -306,6 +307,28 @@ describe("reservation use-cases integration", () => {
       stationId: station.id,
       startTime: blockedNow,
       now: blockedNow,
+    });
+
+    expectLeftTag(result, "OvernightOperationsClosed");
+  });
+
+  it("reserveBikeUseCase rejects when pickup start time falls during overnight closure", async () => {
+    const { user } = await givenUserWithWallet(fixture, {
+      wallet: { balance: 50000n },
+    });
+    const { station, bike } = await givenStationWithAvailableBike(fixture, {
+      station: { capacity: 2 },
+    });
+    await fixture.factories.bike({ stationId: station.id, status: "AVAILABLE" });
+
+    const allowedNow = new Date("2026-04-20T08:00:00.000Z");
+    const blockedPickupStart = new Date("2026-04-20T19:00:00.000Z");
+    const result = await runReserve({
+      userId: user.id,
+      bikeId: bike.id,
+      stationId: station.id,
+      startTime: blockedPickupStart,
+      now: allowedNow,
     });
 
     expectLeftTag(result, "OvernightOperationsClosed");

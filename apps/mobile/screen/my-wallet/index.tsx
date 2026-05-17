@@ -15,12 +15,13 @@ import { useTheme, XStack, YStack } from "tamagui";
 
 import { walletQueryKeys } from "@/hooks/query/wallet/wallet-query-keys";
 
+import { WalletActionBar } from "./components/wallet-action-bar";
 import { WalletHeroCard } from "./components/wallet-hero-card";
-import { WalletTopUpCta } from "./components/wallet-top-up-cta";
 import { WalletTransactionRow } from "./components/wallet-transaction-row";
 import { useMyWalletScreen } from "./hooks/use-my-wallet-screen";
-import { QRModal } from "./modals/qr-modal";
 import { TransactionDetailModal } from "./modals/transaction-detail-modal";
+import { WalletTopUpSheet } from "./modals/wallet-top-up-sheet";
+import { WalletWithdrawSheet } from "./modals/wallet-withdraw-sheet";
 
 const walletRefreshButtonSize = spaceScale[7];
 
@@ -28,7 +29,8 @@ function MyWalletScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const queryClient = useQueryClient();
-  const [showQR, setShowQR] = useState(false);
+  const [isTopUpSheetOpen, setIsTopUpSheetOpen] = useState(false);
+  const [isWithdrawSheetOpen, setIsWithdrawSheetOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<WalletTransactionDetail | null>(null);
@@ -61,7 +63,11 @@ function MyWalletScreen() {
   };
 
   const handleTopUp = () => {
-    setShowQR(true);
+    setIsTopUpSheetOpen(true);
+  };
+
+  const handleWithdraw = () => {
+    setIsWithdrawSheetOpen(true);
   };
 
   const handleTransactionPress = (transaction: WalletTransactionDetail) => {
@@ -111,7 +117,7 @@ function MyWalletScreen() {
         <WalletHeroCard topInset={insets.top} wallet={wallet.myWallet} />
 
         <View style={{ marginTop: -spaceScale[6], paddingHorizontal: spaceScale[5] }}>
-          <WalletTopUpCta onPress={handleTopUp} />
+          <WalletActionBar onTopUpPress={handleTopUp} onWithdrawPress={handleWithdraw} />
         </View>
 
         <YStack gap="$3" paddingHorizontal="$5" paddingTop="$5">
@@ -173,10 +179,17 @@ function MyWalletScreen() {
         </YStack>
       </ScrollView>
 
-      <QRModal
-        onClose={() => setShowQR(false)}
+      <WalletTopUpSheet
+        onClose={() => setIsTopUpSheetOpen(false)}
         onSuccess={onRefresh}
-        visible={showQR}
+        visible={isTopUpSheetOpen}
+      />
+
+      <WalletWithdrawSheet
+        availableBalance={wallet.myWallet.availableBalance}
+        onClose={() => setIsWithdrawSheetOpen(false)}
+        onSuccess={onRefresh}
+        visible={isWithdrawSheetOpen}
       />
 
       <TransactionDetailModal

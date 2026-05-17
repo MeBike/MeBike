@@ -182,10 +182,10 @@ const makeDeviceTapDecisionServiceEffect = Effect.gen(function* () {
     deviceAccessCommandService.confirmReservation({ reservationId, userId, now }).pipe(
       Effect.matchEffect({
         onFailure: failure => deny(mapReservationFailureToDenyReason(failure), { userId }),
-        onSuccess: reservation =>
+        onSuccess: confirmed =>
           unlock({
             userId,
-            reservationId: reservation.id,
+            reservationId: confirmed.reservation.id,
           }),
       }),
     );

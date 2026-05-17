@@ -12,13 +12,7 @@ import {
 import {formatCurrency} from "@/utils/formatCurrency";
 import { formatToVNTime } from "@/lib/formatVNDate";
 
-interface UsageLogColumnProps {
-  onView: (log: CouponUsageLog) => void;
-}
-
-export const couponUsageLogColumns = ({
-  onView,
-}: UsageLogColumnProps): ColumnDef<CouponUsageLog>[] => [
+export const couponUsageLogColumns = (): ColumnDef<CouponUsageLog>[] => [
   {
     accessorKey: "rentalId",
     header: "Mã thuê xe",
@@ -45,26 +39,5 @@ export const couponUsageLogColumns = ({
     accessorKey: "startTime",
     header: "Thời gian bắt đầu",
     cell: ({ row }) => formatToVNTime(row.original.startTime),
-  },
-  {
-    id: "actions",
-    header: "Thao tác",
-    cell: ({ row }) => (
-      <div className="flex items-center pl-4.5">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => onView?.(row.original)}
-            >
-              <Eye className="w-4 h-4 text-muted-foreground" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Xem chi tiết log</TooltipContent>
-        </Tooltip>
-      </div>
-    ),
   },
 ];

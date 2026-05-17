@@ -9,7 +9,9 @@ import {
   adminGetUserWalletRoute,
   adminListUserWalletTransactionsRoute,
   getMyWalletRoute,
+  getMyWalletWithdrawalRoute,
   listMyWalletTransactionsRoute,
+  listMyWalletWithdrawalsRoute,
 } from "./queries";
 
 export * from "../../wallets/schemas";
@@ -19,6 +21,8 @@ export * from "./queries";
 export const walletsRoutes = {
   getMyWallet: getMyWalletRoute,
   listMyWalletTransactions: listMyWalletTransactionsRoute,
+  listMyWalletWithdrawals: listMyWalletWithdrawalsRoute,
+  getMyWalletWithdrawal: getMyWalletWithdrawalRoute,
   adminGetUserWallet: adminGetUserWalletRoute,
   adminListUserWalletTransactions: adminListUserWalletTransactionsRoute,
   creditMyWallet: creditMyWalletRoute,

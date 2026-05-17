@@ -70,13 +70,14 @@ export const agencyColumn = ({
     accessorKey: "address",
     header: "Địa chỉ",
     cell: ({ row }) => {
-      return row.original.station.address || "Không có";
+      return row.original.station?.address ?? "Không có";
     },
   },
     {
     accessorKey: "contact-phone",
     header: "SĐT",
     cell: ({ row }) => {
+      
       return row.original.contactPhone || "Không có";
     },
   },
@@ -84,7 +85,8 @@ export const agencyColumn = ({
     accessorKey: "station-name",
     header: "Tên trạm",
     cell: ({ row }) => {
-      return row.original.station.name || "Không có";
+      if(row.original.station === null) return "Không có"
+       return row.original.station?.name ?? "Không có";
     },
   },
   {

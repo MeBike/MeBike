@@ -1,34 +1,25 @@
-
 "use client";
 import type React from "react";
 import { useState } from "react";
 import { Sidebar } from "./sidebar";
 import type { DetailUser } from "@/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 interface DashboardLayoutProps {
   children: React.ReactNode;
   user: DetailUser;
 }
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
-  const [sidebarCollapsed,] = useState(false);
+  const [sidebarCollapsed] = useState(false);
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar  />
+      <Sidebar />
       <div
         className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}
       >
         <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="flex h-16 items-center justify-between px-6">
-            <div className="flex-1 max-w-md">
-              {/* <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Tìm kiếm xe, khách hàng, đơn thuê..."
-                  className="pl-9 bg-muted/50"
-                />
-              </div> */}
-            </div>
+            <div className="flex-1 max-w-md"></div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3 pl-4 border-l border-border">
                 <div className="text-right hidden md:block">
@@ -39,14 +30,16 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                     {user?.role || "user"}
                   </p>
                 </div>
-                <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted">
-                  <Image
+                <Avatar className="w-10 h-10 border-2 border-primary/20">
+                  <AvatarImage
                     src={user.avatar || "/placeholder.svg"}
                     alt={user?.fullName || "User"}
-                    fill
                     className="object-cover"
                   />
-                </div>
+                  <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
+                    {user?.fullName || "U"}
+                  </AvatarFallback>
+                </Avatar>
               </div>
             </div>
           </div>

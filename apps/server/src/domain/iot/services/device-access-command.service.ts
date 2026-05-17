@@ -7,7 +7,7 @@ import type {
 import type { StartRentalInput } from "@/domain/rentals/types";
 import type {
   ConfirmReservationInput,
-  ReservationRow,
+  ConfirmReservationSuccess,
   ReservationServiceFailure,
 } from "@/domain/reservations";
 
@@ -28,7 +28,7 @@ import { Prisma } from "@/infrastructure/prisma";
 export type DeviceAccessCommandService = {
   readonly confirmReservation: (
     input: ConfirmReservationInput,
-  ) => Effect.Effect<ReservationRow, ReservationServiceFailure>;
+  ) => Effect.Effect<ConfirmReservationSuccess, ReservationServiceFailure>;
   readonly startRental: (
     input: StartRentalInput,
   ) => Effect.Effect<RentalRow, RentalServiceFailure>;
@@ -49,12 +49,12 @@ type DeviceAccessCommandDeps = {
  */
 function provideConfirmReservationDeps(
   effect: Effect.Effect<
-    ReservationRow,
+    ConfirmReservationSuccess,
     ReservationServiceFailure,
     Prisma
   >,
   deps: DeviceAccessCommandDeps,
-): Effect.Effect<ReservationRow, ReservationServiceFailure> {
+): Effect.Effect<ConfirmReservationSuccess, ReservationServiceFailure> {
   return effect.pipe(
     Effect.provideService(Prisma, deps.prisma),
   );

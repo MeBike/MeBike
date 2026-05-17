@@ -10,11 +10,13 @@ import {
 } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
 import {
+  toContractConfirmReservation,
   toContractReservation,
   toContractReservationExpanded,
 } from "@/http/presenters/reservations.presenter";
 
 import type {
+  ConfirmReservationResponse,
   ListMyReservationsResponse,
   ReservationDetailResponse,
   ReservationErrorResponse,
@@ -246,7 +248,7 @@ const confirmReservationHandler: RouteHandler<ReservationsRoutes["confirmReserva
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<ReservationDetailResponse, 200>(toContractReservation(right), 200)),
+      c.json<ConfirmReservationResponse, 200>(toContractConfirmReservation(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("OvernightOperationsClosed", ({ currentTime, windowStart, windowEnd }) =>
@@ -290,6 +292,16 @@ const confirmReservationHandler: RouteHandler<ReservationsRoutes["confirmReserva
             details: {
               code: ReservationErrorCodeSchema.enum.RESERVATION_MISSING_BIKE,
               reservationId: missingId,
+            },
+          }, 400)),
+        Match.tag("ReservationNotStarted", ({ reservationId: missingId, startTime, currentTime }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.RESERVATION_NOT_STARTED,
+            details: {
+              code: ReservationErrorCodeSchema.enum.RESERVATION_NOT_STARTED,
+              reservationId: missingId,
+              startTime,
+              currentTime,
             },
           }, 400)),
         Match.tag("InvalidReservationTransition", ({ reservationId: missingId, from, to }) =>

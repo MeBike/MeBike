@@ -15,7 +15,6 @@ export default function GuideLayout({
     <div className="min-h-screen bg-background">
       <Header />
       <main>{children}</main>
-      <Footer/>
     </div>
   );
 }

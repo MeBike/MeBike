@@ -1,7 +1,8 @@
-import { useBikeStatusStreamContext } from "@providers/bike-status-stream-provider";
 import { useEffect } from "react";
 
-import type { BikeStatusUpdate } from "@/hooks/use-bike-status-stream";
+import type { BikeStatusUpdate } from "@/types/realtime-events";
+
+import { useRealtimeEventContext } from "@providers/realtime-event-provider";
 
 type Options = {
   enabled?: boolean;
@@ -9,14 +10,14 @@ type Options = {
 
 export function useBikeStatusEvents(onUpdate: (payload: BikeStatusUpdate) => void, options?: Options) {
   const { enabled = true } = options ?? {};
-  const { subscribe, lastUpdate } = useBikeStatusStreamContext();
+  const { subscribeBikeStatus, lastBikeStatusUpdate } = useRealtimeEventContext();
 
   useEffect(() => {
     if (!enabled)
       return;
-    const unsubscribe = subscribe(onUpdate);
+    const unsubscribe = subscribeBikeStatus(onUpdate);
     return () => unsubscribe();
-  }, [enabled, onUpdate, subscribe]);
+  }, [enabled, onUpdate, subscribeBikeStatus]);
 
-  return { lastUpdate };
+  return { lastUpdate: lastBikeStatusUpdate };
 }

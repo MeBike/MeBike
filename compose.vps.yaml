@@ -82,6 +82,7 @@ services:
       NODE_ENV: production
       PORT: 4000
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/secrets/firebase-admin.json}
       REDIS_URL: redis://redis:6379
     depends_on:
       postgres:
@@ -91,6 +92,8 @@ services:
     networks:
       - mebike-internal
       - traefik-public
+    volumes:
+      - ${FIREBASE_ADMIN_CREDENTIALS_HOST_PATH}:/app/secrets/firebase-admin.json:ro
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_NETWORK}"
@@ -112,6 +115,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/secrets/firebase-admin.json}
       REDIS_URL: redis://redis:6379
     depends_on:
       postgres:
@@ -120,6 +124,8 @@ services:
         condition: service_healthy
     networks:
       - mebike-internal
+    volumes:
+      - ${FIREBASE_ADMIN_CREDENTIALS_HOST_PATH}:/app/secrets/firebase-admin.json:ro
     command: ["pnpm", "--filter", "server", "exec", "prisma", "migrate", "deploy"]
 
 networks:

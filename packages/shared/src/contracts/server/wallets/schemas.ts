@@ -22,6 +22,7 @@ export const WalletErrorCodeSchema = z
     "TOPUP_INVALID_REQUEST",
     "TOPUP_PROVIDER_ERROR",
     "TOPUP_INTERNAL_ERROR",
+    "WITHDRAWAL_NOT_FOUND",
     "WITHDRAWAL_INVALID_REQUEST",
     "WITHDRAWAL_NOT_ENABLED",
     "WITHDRAWAL_DUPLICATE",
@@ -35,6 +36,7 @@ export const walletErrorMessages = {
   TOPUP_INVALID_REQUEST: "Invalid top-up request",
   TOPUP_PROVIDER_ERROR: "Top-up provider error",
   TOPUP_INTERNAL_ERROR: "Top-up internal error",
+  WITHDRAWAL_NOT_FOUND: "Withdrawal not found",
   WITHDRAWAL_INVALID_REQUEST: "Invalid withdrawal request",
   WITHDRAWAL_NOT_ENABLED: "Withdrawal not enabled",
   WITHDRAWAL_DUPLICATE: "Duplicate withdrawal request",
@@ -105,9 +107,15 @@ export const WalletWithdrawalRequestSchema = z.object({
 
 export const WalletWithdrawalResponseSchema = WalletWithdrawalDetailSchema.openapi("WalletWithdrawalResponse");
 
+export const GetMyWalletWithdrawalResponseSchema = WalletWithdrawalDetailSchema.openapi("GetMyWalletWithdrawalResponse");
+
 export const ListMyWalletTransactionsQuerySchema = z.object({
   ...paginationQueryFields,
 }).openapi("ListMyWalletTransactionsQuery");
+
+export const ListMyWalletWithdrawalsQuerySchema = z.object({
+  ...paginationQueryFields,
+}).openapi("ListMyWalletWithdrawalsQuery");
 
 export const AdminListUserWalletTransactionsQuerySchema = z.object({
   ...paginationQueryFields,
@@ -121,6 +129,11 @@ export const ListMyWalletTransactionsResponseSchema = z.object({
   data: WalletTransactionDetailSchema.array(),
   pagination: PaginationSchema,
 }).openapi("ListMyWalletTransactionsResponse");
+
+export const ListMyWalletWithdrawalsResponseSchema = z.object({
+  data: WalletWithdrawalDetailSchema.array(),
+  pagination: PaginationSchema,
+}).openapi("ListMyWalletWithdrawalsResponse");
 
 export const AdminListUserWalletTransactionsResponseSchema = z.object({
   data: z.object({
@@ -141,6 +154,9 @@ export type StripeTopupPaymentSheetRequest = z.infer<typeof StripeTopupPaymentSh
 export type StripeTopupPaymentSheetResponse = z.infer<typeof StripeTopupPaymentSheetResponseSchema>;
 export type WalletWithdrawalRequest = z.infer<typeof WalletWithdrawalRequestSchema>;
 export type WalletWithdrawalResponse = z.infer<typeof WalletWithdrawalResponseSchema>;
+export type GetMyWalletWithdrawalResponse = z.infer<typeof GetMyWalletWithdrawalResponseSchema>;
+export type ListMyWalletWithdrawalsQuery = z.infer<typeof ListMyWalletWithdrawalsQuerySchema>;
+export type ListMyWalletWithdrawalsResponse = z.infer<typeof ListMyWalletWithdrawalsResponseSchema>;
 export type ListMyWalletTransactionsResponse = z.infer<typeof ListMyWalletTransactionsResponseSchema>;
 export type AdminListUserWalletTransactionsQuery = z.infer<typeof AdminListUserWalletTransactionsQuerySchema>;
 export type AdminListUserWalletTransactionsResponse = z.infer<typeof AdminListUserWalletTransactionsResponseSchema>;

@@ -5,11 +5,12 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {useGetAllTechnicianTeamQuery , useGetTechnicianTeamDetailQuery} from "@queries";
-import { useCreateTechnicianTeamMutation } from "./mutations";
+import { useCreateTechnicianTeamMutation,useUpdateTechnicianTeamMutation } from "./mutations";
 import {HTTP_STATUS} from "@constants";
 import { TechnicianStatus } from "@/types/TechnicianTeam";
-import { CreateTechnicianTeamSchema } from "@/schemas/technician-schema";
+import { CreateTechnicianTeamSchema , UpdateTechnicianTeamSchema } from "@/schemas/technician-schema";
 import { getErrorMessageFromTechnicianTeamCode , getAxiosErrorCodeMessage } from "@utils";
+import { id } from "date-fns/locale";
 export interface TechnicianActionProps {
   hasToken: boolean , 
   supplier_id ?: string,
@@ -39,7 +40,22 @@ export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,sta
     }
     refetchAllTechnicianTeam();
   }, [hasToken, router,station_id,page,pageSize,status]);
+  const {
+    refetch : refetchTechnicianTeamDetail,
+    data: technicianTeamDetail,
+    isLoading: isLoadingTechnicianTeamDetail,
+  } = useGetTechnicianTeamDetailQuery(
+    teamId || ""
+  );
+  const getTechnicianTeamDetail = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchTechnicianTeamDetail();
+  }, [hasToken, router]);
   const useCreateTechnicianTeam = useCreateTechnicianTeamMutation();
+  const useUpdateTechnicianTeam = useUpdateTechnicianTeamMutation();
   const createTechnicianTeam = useCallback(
     async (technicianTeamData: CreateTechnicianTeamSchema) => {
       if (!hasToken) {
@@ -61,20 +77,32 @@ export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,sta
     },
     [hasToken, router, queryClient, useCreateTechnicianTeam]
   );
-  const {
-    refetch : refetchTechnicianTeamDetail,
-    data: technicianTeamDetail,
-    isLoading: isLoadingTechnicianTeamDetail,
-  } = useGetTechnicianTeamDetailQuery(
-    teamId || ""
+  const updateTechnicianTeam = useCallback(
+    async (teamId: string, technicianTeamData: UpdateTechnicianTeamSchema) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useUpdateTechnicianTeam.mutateAsync({teamId, technicianTeamData});
+        if(result.status === HTTP_STATUS.OK){
+          toast.success("Cập nhật đội kỹ thuật thành công");
+          getTechnicianTeam();
+          getTechnicianTeamDetail();
+          // queryClient.invalidateQueries({
+          //   queryKey: ["data", "technician-team-detail" , teamId]
+          // });
+        }
+        return result;
+      } catch (error) {
+        const code_error = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromTechnicianTeamCode(code_error));
+        throw error; 
+      }
+    },
+    [hasToken, router, queryClient, useUpdateTechnicianTeam,getTechnicianTeam,getTechnicianTeamDetail,teamId]
   );
-  const getTechnicianTeamDetail = useCallback(() => {
-    if (!hasToken) {
-      router.push("/login");
-      return;
-    }
-    refetchTechnicianTeamDetail();
-  }, [hasToken, router]);
+
   return {
     getTechnicianTeam,
     isLoadingAllTechnicianTeam,
@@ -82,7 +110,8 @@ export const useTechnicianTeamActions = ({hasToken,supplier_id,page,pageSize,sta
     createTechnicianTeam,
     technicianTeamDetail,
     getTechnicianTeamDetail,
-    isLoadingTechnicianTeamDetail
+    isLoadingTechnicianTeamDetail,
+    updateTechnicianTeam
 
   };
 };

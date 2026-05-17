@@ -1,12 +1,11 @@
-import { Check, ShieldAlert, TriangleAlert, XCircle } from "lucide-react-native";
-import { useTheme, XStack, YStack } from "tamagui";
-
 import type { AiAssistantActionCard } from "@services/ai";
 
 import { borderWidths, iconSizes, radii } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
 import { AppText } from "@ui/primitives/app-text";
+import { Check, ShieldAlert, TriangleAlert, XCircle } from "lucide-react-native";
+import { useTheme, XStack, YStack } from "tamagui";
 
 const ACTION_CARD_MAX_WIDTH = 360;
 
@@ -62,7 +61,7 @@ function getActionCardStateSubtitle(state: AiAssistantActionCard["state"]) {
     case "success":
       return "Hệ thống đã cập nhật";
     case "failure":
-      return "Hệ thống chưa thực hiện được";
+      return "Xem lý do bên dưới và thử lại";
     case "denied":
       return "Không có thay đổi nào được thực hiện";
     default:

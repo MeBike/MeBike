@@ -13,9 +13,9 @@ export const getStatusConfig = (status: BikeStatus) => {
     case "AVAILABLE":
       return { label: "Sẵn sàng", color: "bg-green-100 text-green-800" };
     case "BOOKED":
-      return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800" };
+      return { label: "Đang thuê", color: "bg-yellow-100 text-yellow-800" };
     case "RESERVED":
-      return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800" };
+      return { label: "Đặt trước", color: "bg-orange-100 text-orange-800" };
     case "REDISTRIBUTING":
       return { label: "Chuẩn bị điều phối", color: "bg-purple-100 text-purple-800" };
     case "MAINTENANCE":
@@ -25,9 +25,9 @@ export const getStatusConfig = (status: BikeStatus) => {
     case "UNAVAILABLE":
       return { label: "Không khả dụng", color: "bg-gray-200 text-gray-800" };
     case "LOST":
-      return { label: "Bị mất", color: "bg-rose-100 text-rose-800" }; // Dùng màu rose/đỏ đậm cho xe mất
+      return { label: "Đã mất", color: "bg-rose-100 text-rose-800" }; 
     case "DISABLED":
-      return { label: "Tạm ngưng hoạt động", color: "bg-slate-200 text-slate-800" }; // Dùng màu slate cho xe bị vô hiệu hóa
+      return { label: "Tạm ngưng hoạt động", color: "bg-slate-200 text-slate-800" }; 
     case "":
       return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500" };
     default:
