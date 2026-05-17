@@ -21,9 +21,12 @@ const bikeStatusLabels = {
   BOOKED: "Đang được thuê",
   BROKEN: "Bị hỏng",
   RESERVED: "Đã đặt trước",
-  REDISTRIBUTING: "Đang điều phối",
   LOST: "Xe bị mất",
   DISABLED: "Đã bị vô hiệu hóa",
+  FIXED: "Đã sửa chữa",
+  PENDING_DISPATCH: "Chờ điều phối",
+  TRANSPORTING: "Đang vận chuyển",
+  SWAPPING: "Đang đổi xe gặp sự cố",
 } as const;
 
 export const bikeRentabilityLabels = {
@@ -32,9 +35,12 @@ export const bikeRentabilityLabels = {
   BROKEN: "Không nên sử dụng vì xe đang hỏng",
   NO_STATION: "Không thể thuê vì xe không ở trạm nào",
   RESERVED: "Không sẵn sàng để thuê vì xe đã được đặt trước",
-  REDISTRIBUTING: "Không sẵn sàng để thuê vì xe đang được điều phối",
   LOST: "Không nên sử dụng vì xe bị mất",
   DISABLED: "Không sẵn sàng để thuê vì xe đã bị vô hiệu hóa",
+  FIXED: "Không sẵn sàng để thuê vì xe vừa được sửa chữa",
+  PENDING_DISPATCH: "Không sẵn sàng để thuê vì xe đang chờ điều phối",
+  TRANSPORTING: "Không sẵn sàng để thuê vì xe đang được vận chuyển",
+  SWAPPING: "Không sẵn sàng để thuê vì xe đang trong quá trình đổi xe gặp sự cố",
 } as const;
 
 const returnSlotStatusLabels = {
@@ -90,25 +96,10 @@ export function getReturnSlotStatusLabel(status: keyof typeof returnSlotStatusLa
   return returnSlotStatusLabels[status];
 }
 
-export function getBikeRentabilityReason(bike: Pick<BikeRow, "stationId" | "status">) {
+export function getBikeRentabilityReason(bike: Pick<BikeRow, "stationId" | "status">): "NO_STATION" | BikeRow["status"] {
   if (!bike.stationId) {
-    return "NO_STATION" as const;
+    return "NO_STATION";
   }
 
-  switch (bike.status) {
-    case "AVAILABLE":
-      return "AVAILABLE" as const;
-    case "BOOKED":
-      return "BOOKED" as const;
-    case "RESERVED":
-      return "RESERVED" as const;
-    case "BROKEN":
-      return "BROKEN" as const;
-    case "REDISTRIBUTING":
-      return "REDISTRIBUTING" as const;
-    case "LOST":
-      return "LOST" as const;
-    case "DISABLED":
-      return "DISABLED" as const;
-  }
+  return bike.status;
 }
