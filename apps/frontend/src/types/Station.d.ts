@@ -25,17 +25,20 @@ export interface Station {
     returnSlotLimit : number;
     emptyPhysicalSlots : number;
     totalActiveSlots : number;
+    totalInStationBikes : number;
   };
   agencyId : string | null;
   bikes : {
     total: number,
+    pendingDispatch : number,
+    swapping : number,
+    transporting : number,
     available: number,
     booked: number,
     broken: number,
     lost: number,
     reserved: number,
     disabled: number,
-    redistributing: number
   }
   workers: Worker[],
   returnSlots: {
