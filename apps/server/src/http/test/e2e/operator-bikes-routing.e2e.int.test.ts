@@ -292,7 +292,7 @@ describe("operator bikes routing e2e", () => {
       capacity: 5,
       agencyId: agency.id,
     });
-    const bike = await fixture.factories.bike({ stationId: station.id, status: "BROKEN" });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "FIXED" });
 
     const response = await fixture.app.request(`http://test/v1/agency/bikes/${bike.id}/status`, {
       method: "PATCH",
