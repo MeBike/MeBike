@@ -9,14 +9,14 @@ import { WalletCommandServiceTag } from "@/domain/wallets";
 import logger from "@/lib/logger";
 
 import type {
+  BikeIsBroken,
   BikeIsDisabled,
+  BikeIsFixed,
   BikeIsLost,
   BikeIsPendingDispatch,
-  BikeIsTransporting,
   BikeIsSwapping,
+  BikeIsTransporting,
   BikeNotAvailable,
-  BikeIsBroken,
-  BikeIsFixed,
 } from "../../../domain-errors";
 import type { ReservationRow } from "../../../models";
 import type {
@@ -118,15 +118,15 @@ function releaseReservedBikeForCancellationInTx(
   now: Date,
 ): Effect.Effect<
   void,
-  | BikeNotFound
-  | BikeNotAvailable
-  | BikeIsPendingDispatch
-  | BikeIsTransporting
-  | BikeIsSwapping
-  | BikeIsLost
-  | BikeIsDisabled
-  | BikeIsBroken
-  | BikeIsFixed
+    | BikeNotFound
+    | BikeNotAvailable
+    | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
+    | BikeIsLost
+    | BikeIsDisabled
+    | BikeIsBroken
+    | BikeIsFixed
 > {
   return Effect.gen(function* () {
     const bikeRepo = makeBikeRepository(tx);

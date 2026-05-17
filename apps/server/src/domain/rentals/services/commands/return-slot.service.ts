@@ -9,6 +9,7 @@ import {
   makeOvernightOperationsClosedError,
 } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
+import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -30,7 +31,6 @@ import {
   ReturnSlotRepository,
 } from "../../repository/return-slot.repository";
 import { returnSlotActiveAfter } from "./return-slot-expiry";
-import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 
 export type ReturnSlotFailure
   = | RentalNotFound
@@ -74,7 +74,6 @@ function availableReturnSlots(
   returnSlotLimit: number,
   incomingRedistributionBikes: number,
 ) {
-
   const physicalRemaining = totalCapacity - totalInStationBikes - activeReturnSlots - incomingRedistributionBikes;
   const operationalRemaining = returnSlotLimit - activeReturnSlots - incomingRedistributionBikes;
   return Math.min(physicalRemaining, operationalRemaining);

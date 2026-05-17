@@ -68,11 +68,11 @@ export function countInStationBikes({
 }): number {
   return Math.min(
     totalCapacity,
-    availableBikes +
-      reservedBikes +
-      pendingDispatchBikes +
-      brokenBikes +
-      fixedBikes,
+    availableBikes
+    + reservedBikes
+    + pendingDispatchBikes
+    + brokenBikes
+    + fixedBikes,
   );
 }
 
@@ -104,13 +104,13 @@ function computeAvailableReturnSlots(
   return Math.max(
     0,
     Math.min(
-      station.totalCapacity -
-        totalInStationBikes -
-        counts.activeReturnSlots -
-        counts.incomingRedistributionBikes,
-      station.returnSlotLimit -
-        counts.activeReturnSlots -
-        counts.incomingRedistributionBikes,
+      station.totalCapacity
+      - totalInStationBikes
+      - counts.activeReturnSlots
+      - counts.incomingRedistributionBikes,
+      station.returnSlotLimit
+      - counts.activeReturnSlots
+      - counts.incomingRedistributionBikes,
     ),
   );
 }
@@ -127,12 +127,12 @@ export function applyCounts(
 ): StationRow {
   const resolved = counts ?? createEmptyBikeCounts();
 
-  const createdAt =
-    station.createdAt instanceof Date
+  const createdAt
+    = station.createdAt instanceof Date
       ? station.createdAt.toISOString()
       : new Date(station.createdAt).toISOString();
-  const updatedAt =
-    station.updatedAt instanceof Date
+  const updatedAt
+    = station.updatedAt instanceof Date
       ? station.updatedAt.toISOString()
       : new Date(station.updatedAt).toISOString();
 
@@ -201,7 +201,7 @@ export function getActiveReturnSlotCounts(
         },
         _count: { _all: true },
       }),
-    catch: (cause) =>
+    catch: cause =>
       new StationRepositoryError({
         operation: "getActiveReturnSlotCounts.groupBy",
         cause,
@@ -243,7 +243,7 @@ export function getBikeCounts(
         },
         _count: { _all: true },
       }),
-    catch: (cause) =>
+    catch: cause =>
       new StationRepositoryError({
         operation: "getBikeCounts.groupBy",
         cause,
@@ -332,7 +332,7 @@ export function getIncomingRedistributionCounts(
           },
         },
       }),
-    catch: (cause) =>
+    catch: cause =>
       new StationRepositoryError({
         operation: "getIncomingRedistributionCounts.findMany",
         cause,

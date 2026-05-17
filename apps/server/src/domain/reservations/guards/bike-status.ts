@@ -4,14 +4,14 @@ import type { BikeStatus } from "generated/prisma/enums";
 
 import {
   BikeAlreadyReserved,
+  BikeIsBroken,
   BikeIsDisabled,
+  BikeIsFixed,
   BikeIsLost,
   BikeIsPendingDispatch,
-  BikeIsTransporting,
   BikeIsSwapping,
+  BikeIsTransporting,
   BikeNotAvailable,
-  BikeIsBroken,
-  BikeIsFixed,
 } from "../domain-errors";
 
 type ReservationBikeStatusFailure
