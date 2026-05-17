@@ -474,7 +474,7 @@ function makeRedistributionService(
               ),
             ]);
 
-            const pickedCount = pickedBikes.length
+            const pickedCount = pickedBikes.length;
             if (pickedCount < args.requestedQuantity) {
               return yield* Effect.fail(
                 new NotEnoughBikesAtStation({
