@@ -39,6 +39,7 @@ export interface Station {
     lost: number,
     reserved: number,
     disabled: number,
+    fixed : number,
   }
   workers: Worker[],
   returnSlots: {

@@ -28,7 +28,8 @@ import {
   MapPin,
   Bike,
   Wallet,
-  CalendarCheck
+  CalendarCheck,
+  Hammer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Station } from "@/types";
@@ -373,22 +374,23 @@ export default function StationDetailClient({
               {/* Cột 1: Tại trạm */}
               <div className="pt-4 md:pt-0 first:pt-0 md:pr-4">
                 <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                  <MapPin className="h-3.5 w-3.5" /> Trực tiếp tại trạm
+                  <MapPin className="h-3.5 w-3.5" /> Xe nội trạm
                 </h4>
                 <div className="space-y-1">
                   <StatusItem icon={CheckCircle2} label="Sẵn sàng cho thuê" value={station.bikes.available} color="text-emerald-600" boldValue />
                   <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.booked} color="text-amber-600" />
+                  <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
+                  <StatusItem icon={AlertTriangle} label="Đang bị hỏng" value={station.bikes.broken} color="text-red-500" />
+                  <StatusItem icon={Hammer} label="Đã sửa" value={station.bikes.fixed} color="text-red-500" />
                 </div>
               </div>
-
               {/* Cột 2: Luân chuyển */}
               <div className="pt-6 md:pt-0 md:px-4">
                 <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                  <RefreshCcw className="h-3.5 w-3.5" /> Luân chuyển & Điều phối
+                  <RefreshCcw className="h-3.5 w-3.5" /> Xe ngoại trạm
                 </h4>
                 <div className="space-y-1">
-                  <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
-                  <StatusItem icon={RefreshCcw} label="Đang đổi xe" value={station.bikes.swapping} color="text-blue-500" />
+                  <StatusItem icon={RefreshCcw} label="Hỗ trợ sự cố" value={station.bikes.swapping} color="text-blue-500" />
                   <StatusItem icon={Truck} label="Đang vận chuyển" value={station.bikes.transporting} color="text-indigo-500" />
                   <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-indigo-500" />
                 </div>
@@ -397,11 +399,10 @@ export default function StationDetailClient({
               {/* Cột 3: Sự cố */}
               <div className="pt-6 md:pt-0 md:pl-4">
                 <h4 className="flex items-center gap-2 text-[11px] font-bold text-destructive uppercase tracking-wider mb-4">
-                  <ShieldAlert className="h-3.5 w-3.5" /> Sự cố & Ngưng hoạt động
+                  <ShieldAlert className="h-3.5 w-3.5" /> Xe ngưng hoạt động
                 </h4>
                 <div className="space-y-1">
-                  <StatusItem icon={AlertTriangle} label="Xe đang hỏng" value={station.bikes.broken} color="text-red-500" />
-                  <StatusItem icon={HelpCircle} label="Xe bị mất" value={station.bikes.lost} color="text-red-600" />
+                  <StatusItem icon={HelpCircle} label="Bị mất" value={station.bikes.lost} color="text-red-600" />
                   <StatusItem icon={Ban} label="Tạm ngưng hệ thống" value={station.bikes.disabled} color="text-slate-500" />
                 </div>
               </div>
