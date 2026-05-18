@@ -372,11 +372,26 @@ export function makeReturnSlotRepository(
         for (const row of bikeStatusRows) {
           const count = Number((row as any)._count?.id ?? (row as any)._count?._all ?? (row as any)._count ?? 0);
           switch (row.status) {
-            case "AVAILABLE": availableBikes += count; break;
-            case "RESERVED": reservedBikes += count; break;
-            case "PENDING_DISPATCH": pendingDispatchBikes += count; break;
-            case "BROKEN": brokenBikes += count; break;
-            case "FIXED": fixedBikes += count; break;
+            case "AVAILABLE": {
+              availableBikes += count;
+              break;
+            }
+            case "RESERVED": {
+              reservedBikes += count;
+              break;
+            }
+            case "PENDING_DISPATCH": {
+              pendingDispatchBikes += count;
+              break;
+            }
+            case "BROKEN": {
+              brokenBikes += count;
+              break;
+            }
+            case "FIXED": {
+              fixedBikes += count;
+              break;
+            }
           }
         }
 

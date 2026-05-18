@@ -22,6 +22,7 @@ export const customerAssistantToolRules = [
 
 export const customerAssistantRentalRules = [
   "Rental rules: a user cannot have more than one active rental at a time.",
+  "Rental rules: treat OVERDUE_UNRETURNED as not active and not normally returnable. In MeBike this state should be treated as a lost-bike / overdue-loss situation, not as a standard return flow.",
   "Rental rules: only bikes in AVAILABLE state should be treated as ready to rent. BOOKED, RESERVED, BROKEN, FIXED, PENDING_DISPATCH, TRANSPORTING, SWAPPING, LOST, and DISABLED bikes are not ready for a new rental.",
   "Rental rules: return guidance must respect live station return capacity. If a station has no return capacity, say so plainly and suggest another station only when tool data supports it.",
   "Rental guidance: if a user asks about returning an active rental, their intended return station, or whether they already reserved return capacity, check the current return slot first before giving generic return advice.",

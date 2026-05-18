@@ -16,8 +16,8 @@ import type {
   BikeIsDisabled,
   BikeIsLost,
   BikeIsPendingDispatch,
-  BikeIsTransporting,
   BikeIsSwapping,
+  BikeIsTransporting,
 } from "../../../domain-errors";
 import type { PreparedReserveBike, ReserveBikeCommandInput, ReserveBikeFailure } from "./reserve-bike.types";
 

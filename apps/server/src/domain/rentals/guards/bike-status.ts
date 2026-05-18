@@ -6,13 +6,13 @@ import {
   BikeAlreadyRented,
   BikeIsBroken,
   BikeIsDisabled,
-  BikeIsLost,
-  BikeIsTransporting,
-  BikeIsSwapping,
-  BikeIsReserved,
-  BikeIsPendingDispatch,
-  InvalidBikeStatus,
   BikeIsFixed,
+  BikeIsLost,
+  BikeIsPendingDispatch,
+  BikeIsReserved,
+  BikeIsSwapping,
+  BikeIsTransporting,
+  InvalidBikeStatus,
 } from "../domain-errors";
 
 export type StartRentalBikeStatusFailure

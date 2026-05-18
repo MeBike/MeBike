@@ -8,10 +8,13 @@ const BikeRentabilityReasonSchema = z.enum([
   "BOOKED",
   "RESERVED",
   "BROKEN",
-  "REDISTRIBUTING",
   "LOST",
   "DISABLED",
   "NO_STATION",
+  "FIXED",
+  "PENDING_DISPATCH",
+  "TRANSPORTING",
+  "SWAPPING",
 ]);
 
 export const BikeAiDetailSchema = z.object({

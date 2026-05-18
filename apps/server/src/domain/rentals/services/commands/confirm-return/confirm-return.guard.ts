@@ -5,6 +5,7 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { isWithinOvernightOperationsWindow, makeOvernightOperationsClosedError } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
+import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 
 import type { RentalRow } from "../../../models";
 import type { ConfirmRentalReturnInput } from "../../../types";
@@ -22,7 +23,6 @@ import { makeRentalRepository } from "../../../repository/rental.repository";
 import { makeReturnSlotRepository } from "../../../repository/return-slot.repository";
 import { makeRentalReturnConfirmationWriteRepository } from "../../../repository/write/rental.return-confirmation-write.repository";
 import { returnSlotActiveAfter } from "../return-slot-expiry";
-import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 
 /**
  * Nạp rental cần xác nhận và chặn sớm nếu rental không còn ở trạng thái đang thuê.
@@ -216,7 +216,7 @@ export function ensureReturnDestinationReadyInTx(args: {
         stationId: args.input.stationId,
         totalCapacity: stationSnapshot.totalCapacity,
         returnSlotLimit: stationSnapshot.returnSlotLimit,
-        totalInStationBikes: totalInStationBikes,
+        totalInStationBikes,
         activeReturnSlots: stationSnapshot.activeReturnSlots,
         incomingRedistributionBikes: stationSnapshot.incomingRedistributionBikes,
       }));

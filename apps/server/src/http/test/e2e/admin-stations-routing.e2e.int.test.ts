@@ -310,7 +310,7 @@ describe("admin stations routing e2e", () => {
     expect(response.status).toBe(400);
     expect(body.details?.code).toBe("CAPACITY_BELOW_ACTIVE_USAGE");
     expect(body.details?.totalCapacity).toBe(2);
-    expect(body.details?.totalBikes).toBe(2);
+    expect(body.details?.totalInStationBikes).toBe(2);
     expect(body.details?.activeReturnSlots).toBe(1);
   });
 

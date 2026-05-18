@@ -1,6 +1,6 @@
 import type { DeviceTapEvent } from "@mebike/shared";
 
-import { Effect, Layer, Match, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { RentalServiceFailure } from "@/domain/rentals";
 import type { ReservationServiceFailure } from "@/domain/reservations";
