@@ -7,6 +7,7 @@ import { appEnvSchema } from "./env/app";
 import {
   authEnvSchema,
   fixedSlotEnvSchema,
+  redistributionEnvSchema,
   reservationEnvSchema,
   returnSlotEnvSchema,
   stationEnvSchema,
@@ -40,6 +41,7 @@ const envSchema = z.object({
   ...returnSlotEnvSchema.shape,
   ...fixedSlotEnvSchema.shape,
   ...subscriptionEnvSchema.shape,
+  ...redistributionEnvSchema.shape,
 });
 
 export type Env = z.infer<typeof envSchema>;

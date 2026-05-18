@@ -59,6 +59,10 @@ export class BikeIsBroken extends Data.TaggedError("BikeIsBroken")<{
   readonly bikeId: string;
 }> {}
 
+export class BikeIsFixed extends Data.TaggedError("BikeIsFixed")<{
+  readonly bikeId: string;
+}> {}
+
 export class BikeIsLost extends Data.TaggedError("BikeIsLost")<{
   readonly bikeId: string;
 }> {}
@@ -67,7 +71,15 @@ export class BikeIsReserved extends Data.TaggedError("BikeIsReserved")<{
   readonly bikeId: string;
 }> {}
 
-export class BikeIsRedistributing extends Data.TaggedError("BikeIsRedistributing")<{
+export class BikeIsPendingDispatch extends Data.TaggedError("BikeIsPendingDispatch")<{
+  readonly bikeId: string;
+}> {}
+
+export class BikeIsTransporting extends Data.TaggedError("BikeIsTransporting")<{
+  readonly bikeId: string;
+}> {}
+
+export class BikeIsSwapping extends Data.TaggedError("BikeIsSwapping")<{
   readonly bikeId: string;
 }> {}
 
@@ -172,7 +184,7 @@ export class ReturnSlotCapacityExceeded extends Data.TaggedError(
     readonly stationId: string;
     readonly totalCapacity: number;
     readonly returnSlotLimit: number;
-    readonly totalBikes: number;
+    readonly totalInStationBikes: number;
     readonly activeReturnSlots: number;
     readonly incomingRedistributionBikes: number;
   }> {}
@@ -215,7 +227,10 @@ export type RentalServiceFailure
     | BikeIsBroken
     | BikeIsLost
     | BikeIsReserved
-    | BikeIsRedistributing
+    | BikeIsPendingDispatch
+    | BikeIsFixed
+    | BikeIsTransporting
+    | BikeIsSwapping
     | BikeIsDisabled
     | InvalidBikeStatus
     | UserWalletNotFound

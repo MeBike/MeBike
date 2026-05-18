@@ -27,6 +27,7 @@ import { handleEmailJob } from "./email-worker";
 import { makeEnvironmentImpactCalculateRentalHandler } from "./environment-impact-worker";
 import { makeFixedSlotAssignHandler } from "./fixed-slot-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
+import { makeRedistributionPendingExpireSweepHandler } from "./redistribution-pending-expire-worker";
 import { makeRentalOverdueSweepHandler } from "./rental-overdue-worker";
 import {
   makeReservationExpireHoldHandler,
@@ -131,6 +132,7 @@ async function main() {
   await setupQueue(runtime, JobTypes.WalletTopupReconcileSweep);
   await setupQueue(runtime, JobTypes.WalletWithdrawalExecute);
   await setupQueue(runtime, JobTypes.WalletWithdrawalSweep);
+  await setupQueue(runtime, JobTypes.RedistributionPendingExpireSweep);
 
   await ensureSchedules(scheduler);
 
@@ -202,6 +204,12 @@ async function main() {
     makeWithdrawalSweepHandler(runWorkerEffect),
   );
   WorkerLog.workerRegistered(JobTypes.WalletWithdrawalSweep, withdrawalSweepWorkerId);
+
+  const redistributionPendingExpireSweepWorkerId = await runtime.register(
+    JobTypes.RedistributionPendingExpireSweep,
+    makeRedistributionPendingExpireSweepHandler(runWorkerEffect),
+  );
+  WorkerLog.workerRegistered(JobTypes.RedistributionPendingExpireSweep, redistributionPendingExpireSweepWorkerId);
 
   const stopDispatcher = startOutboxDispatcher({
     db,
@@ -285,4 +293,11 @@ async function ensureSchedules(scheduler: JobScheduler) {
     { tz: fixedSlotScheduleTz },
   );
   WorkerLog.scheduleEnsured(JobTypes.RentalOverdueSweep, `* * * * * (${fixedSlotScheduleTz})`);
+
+  await scheduler.schedule(
+    JobTypes.RedistributionPendingExpireSweep,
+    env.REDISTRIBUTION_PENDING_EXPIRE_SWEEP_CRON,
+    { version: 1 },
+  );
+  WorkerLog.scheduleEnsured(JobTypes.RedistributionPendingExpireSweep, env.REDISTRIBUTION_PENDING_EXPIRE_SWEEP_CRON);
 }

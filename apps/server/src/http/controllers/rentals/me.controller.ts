@@ -130,11 +130,27 @@ const createRental: RouteHandler<RentalsRoutes["createRental"]> = async (c) => {
             },
             400,
           )),
-        Match.tag("BikeIsRedistributing", () =>
+        Match.tag("BikeIsPendingDispatch", () =>
           c.json<RentalsContracts.RentalErrorResponse, 400>(
             {
-              error: rentalErrorMessages.BIKE_IS_REDISTRIBUTING,
-              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_REDISTRIBUTING },
+              error: rentalErrorMessages.BIKE_IS_PENDING_DISPATCH,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_PENDING_DISPATCH },
+            },
+            400,
+          )),
+        Match.tag("BikeIsTransporting", () =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>(
+            {
+              error: rentalErrorMessages.BIKE_IS_TRANSPORTING,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_TRANSPORTING },
+            },
+            400,
+          )),
+        Match.tag("BikeIsSwapping", () =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>(
+            {
+              error: rentalErrorMessages.BIKE_IS_SWAPPING,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_SWAPPING },
             },
             400,
           )),
@@ -607,7 +623,7 @@ const createMyReturnSlot: RouteHandler<
             stationId,
             totalCapacity,
             returnSlotLimit,
-            totalBikes,
+            totalInStationBikes,
             activeReturnSlots,
           }) =>
             c.json(
@@ -619,7 +635,7 @@ const createMyReturnSlot: RouteHandler<
                   stationId,
                   totalCapacity,
                   returnSlotLimit,
-                  totalBikes,
+                  totalInStationBikes,
                   activeReturnSlots,
                 },
               },

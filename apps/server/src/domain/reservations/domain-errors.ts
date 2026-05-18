@@ -70,7 +70,23 @@ export class BikeNotAvailable extends Data.TaggedError("BikeNotAvailable")<{
   readonly status: string;
 }> {}
 
-export class BikeIsRedistributing extends Data.TaggedError("BikeIsRedistributing")<{
+export class BikeIsPendingDispatch extends Data.TaggedError("BikeIsPendingDispatch")<{
+  readonly bikeId: string;
+}> {}
+
+export class BikeIsTransporting extends Data.TaggedError("BikeIsTransporting")<{
+  readonly bikeId: string;
+}> {}
+
+export class BikeIsSwapping extends Data.TaggedError("BikeIsSwapping")<{
+  readonly bikeId: string;
+}> {}
+
+export class BikeIsBroken extends Data.TaggedError("BikeIsBroken")<{
+  readonly bikeId: string;
+}> {}
+
+export class BikeIsFixed extends Data.TaggedError("BikeIsFixed")<{
   readonly bikeId: string;
 }> {}
 
@@ -208,9 +224,13 @@ export type ReservationServiceFailure
     | BikeNotFound
     | BikeNotFoundInStation
     | BikeNotAvailable
-    | BikeIsRedistributing
-    | BikeIsLost
+    | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
     | BikeIsDisabled
+    | BikeIsBroken
+    | BikeIsLost
+    | BikeIsFixed
     | StationReservationAvailabilityTooLow
     | ReservationOptionNotSupported
     | ReservationNotFound

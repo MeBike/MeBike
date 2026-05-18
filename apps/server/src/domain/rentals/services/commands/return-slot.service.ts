@@ -9,6 +9,7 @@ import {
   makeOvernightOperationsClosedError,
 } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
+import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -68,12 +69,12 @@ type RentalScopedInput = {
  */
 function availableReturnSlots(
   totalCapacity: number,
-  totalBikes: number,
+  totalInStationBikes: number,
   activeReturnSlots: number,
   returnSlotLimit: number,
   incomingRedistributionBikes: number,
 ) {
-  const physicalRemaining = totalCapacity - totalBikes - activeReturnSlots - incomingRedistributionBikes;
+  const physicalRemaining = totalCapacity - totalInStationBikes - activeReturnSlots - incomingRedistributionBikes;
   const operationalRemaining = returnSlotLimit - activeReturnSlots - incomingRedistributionBikes;
   return Math.min(physicalRemaining, operationalRemaining);
 }
@@ -169,9 +170,17 @@ export function createReturnSlot(
         }
 
         const stationSnapshot = stationSnapshotOpt.value;
+        const totalInStationBikes = countInStationBikes({
+          totalCapacity: stationSnapshot.totalCapacity,
+          availableBikes: stationSnapshot.availableBikes,
+          reservedBikes: stationSnapshot.reservedBikes,
+          pendingDispatchBikes: stationSnapshot.pendingDispatchBikes,
+          brokenBikes: stationSnapshot.brokenBikes,
+          fixedBikes: stationSnapshot.fixedBikes,
+        });
         if (availableReturnSlots(
           stationSnapshot.totalCapacity,
-          stationSnapshot.totalBikes,
+          totalInStationBikes,
           stationSnapshot.activeReturnSlots,
           stationSnapshot.returnSlotLimit,
           stationSnapshot.incomingRedistributionBikes,
@@ -180,7 +189,7 @@ export function createReturnSlot(
             stationId: input.stationId,
             totalCapacity: stationSnapshot.totalCapacity,
             returnSlotLimit: stationSnapshot.returnSlotLimit,
-            totalBikes: stationSnapshot.totalBikes,
+            totalInStationBikes,
             activeReturnSlots: stationSnapshot.activeReturnSlots,
             incomingRedistributionBikes: stationSnapshot.incomingRedistributionBikes,
           }));

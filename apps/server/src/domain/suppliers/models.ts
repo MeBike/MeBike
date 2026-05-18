@@ -41,8 +41,11 @@ export type SupplierBikeStats = {
   available: number;
   booked: number;
   broken: number;
+  fixed: number;
   reserved: number;
-  redistributing: number;
+  pendingDispatch: number;
+  transporting: number;
+  swapping: number;
   lost: number;
   disabled: number;
 };

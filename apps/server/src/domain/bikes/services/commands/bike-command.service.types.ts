@@ -14,7 +14,7 @@ import type {
 } from "../../domain-errors";
 import type { BikeRow } from "../../models";
 
-export type BikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN">;
+export type BikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN" | "FIXED">;
 export type AdminBikeManageableStatus = Extract<BikeStatus, "AVAILABLE" | "BROKEN" | "DISABLED">;
 
 export type CreateBikeInput = {

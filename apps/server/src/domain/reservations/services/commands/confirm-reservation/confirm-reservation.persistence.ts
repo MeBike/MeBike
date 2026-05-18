@@ -10,9 +10,13 @@ import { rentalUniqueViolationToFailure } from "@/domain/rentals/services/shared
 import { defectOn } from "@/domain/shared";
 
 import type {
+  BikeIsBroken,
   BikeIsDisabled,
+  BikeIsFixed,
   BikeIsLost,
-  BikeIsRedistributing,
+  BikeIsPendingDispatch,
+  BikeIsSwapping,
+  BikeIsTransporting,
   BikeNotAvailable,
 } from "../../../domain-errors";
 import type {
@@ -123,7 +127,15 @@ function bookReservedBikeForConfirmationInTx(
   now: Date,
 ): Effect.Effect<
   void,
-  BikeNotFound | BikeNotAvailable | BikeIsRedistributing | BikeIsLost | BikeIsDisabled
+    | BikeNotFound
+    | BikeNotAvailable
+    | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
+    | BikeIsLost
+    | BikeIsDisabled
+    | BikeIsBroken
+    | BikeIsFixed
 > {
   return Effect.gen(function* () {
     const bikeRepo = makeBikeRepository(tx);

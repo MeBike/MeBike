@@ -18,8 +18,11 @@ export type BikeCounts = Pick<
   | "availableBikes"
   | "bookedBikes"
   | "brokenBikes"
+  | "fixedBikes"
   | "reservedBikes"
-  | "redistributingBikes"
+  | "pendingDispatchBikes"
+  | "transportingBikes"
+  | "swappingBikes"
   | "lostBikes"
   | "disabledBikes"
   | "activeReturnSlots"
@@ -34,15 +37,43 @@ export function createEmptyBikeCounts(): BikeCounts {
     availableBikes: 0,
     bookedBikes: 0,
     brokenBikes: 0,
+    fixedBikes: 0,
     lostBikes: 0,
     reservedBikes: 0,
-    redistributingBikes: 0,
+    pendingDispatchBikes: 0,
+    transportingBikes: 0,
+    swappingBikes: 0,
     disabledBikes: 0,
     activeReturnSlots: 0,
     availableReturnSlots: 0,
     emptySlots: 0,
     incomingRedistributionBikes: 0,
   };
+}
+
+export function countInStationBikes({
+  totalCapacity,
+  availableBikes,
+  reservedBikes,
+  pendingDispatchBikes,
+  brokenBikes,
+  fixedBikes,
+}: {
+  totalCapacity: number;
+  availableBikes: number;
+  reservedBikes: number;
+  pendingDispatchBikes: number;
+  brokenBikes: number;
+  fixedBikes: number;
+}): number {
+  return Math.min(
+    totalCapacity,
+    availableBikes
+    + reservedBikes
+    + pendingDispatchBikes
+    + brokenBikes
+    + fixedBikes,
+  );
 }
 
 /**
@@ -58,12 +89,28 @@ export function createEmptyBikeCounts(): BikeCounts {
  * Hàm này clamp về `0` vì đây là giá trị hiển thị trên resource trả về; API
  * không nên trả số âm cho số lượng slot còn lại.
  */
-function computeAvailableReturnSlots(station: StationBaseRow, counts: BikeCounts) {
+function computeAvailableReturnSlots(
+  station: StationBaseRow,
+  counts: BikeCounts,
+) {
+  const totalInStationBikes = countInStationBikes({
+    totalCapacity: station.totalCapacity,
+    availableBikes: counts.availableBikes,
+    reservedBikes: counts.reservedBikes,
+    pendingDispatchBikes: counts.pendingDispatchBikes,
+    brokenBikes: counts.brokenBikes,
+    fixedBikes: counts.fixedBikes,
+  });
   return Math.max(
     0,
     Math.min(
-      station.totalCapacity - counts.totalBikes - counts.activeReturnSlots - counts.incomingRedistributionBikes,
-      station.returnSlotLimit - counts.activeReturnSlots - counts.incomingRedistributionBikes,
+      station.totalCapacity
+      - totalInStationBikes
+      - counts.activeReturnSlots
+      - counts.incomingRedistributionBikes,
+      station.returnSlotLimit
+      - counts.activeReturnSlots
+      - counts.incomingRedistributionBikes,
     ),
   );
 }
@@ -89,6 +136,15 @@ export function applyCounts(
       ? station.updatedAt.toISOString()
       : new Date(station.updatedAt).toISOString();
 
+  const inStationBikes = countInStationBikes({
+    totalCapacity: station.totalCapacity,
+    availableBikes: resolved.availableBikes,
+    reservedBikes: resolved.reservedBikes,
+    pendingDispatchBikes: resolved.pendingDispatchBikes,
+    brokenBikes: resolved.brokenBikes,
+    fixedBikes: resolved.fixedBikes,
+  });
+
   return {
     id: station.id,
     name: station.name,
@@ -105,7 +161,7 @@ export function applyCounts(
     activeReturnSlots: resolved.activeReturnSlots,
     incomingRedistributionBikes: resolved.incomingRedistributionBikes,
     availableReturnSlots: computeAvailableReturnSlots(station, resolved),
-    emptySlots: Math.max(0, station.totalCapacity - resolved.totalBikes),
+    emptySlots: Math.max(0, station.totalCapacity - inStationBikes),
   };
 }
 
@@ -120,7 +176,8 @@ export function resolveStationCounts(args: {
   return {
     ...counts,
     activeReturnSlots: args.returnSlotCountsMap.get(args.stationId) ?? 0,
-    incomingRedistributionBikes: args.incomingRedistributionCountsMap?.get(args.stationId) ?? 0,
+    incomingRedistributionBikes:
+      args.incomingRedistributionCountsMap?.get(args.stationId) ?? 0,
   };
 }
 
@@ -218,11 +275,20 @@ export function getBikeCounts(
           case "BROKEN":
             counts.brokenBikes += inc;
             break;
+          case "FIXED":
+            counts.fixedBikes += inc;
+            break;
           case "RESERVED":
             counts.reservedBikes += inc;
             break;
-          case "REDISTRIBUTING":
-            counts.redistributingBikes += inc;
+          case "PENDING_DISPATCH":
+            counts.pendingDispatchBikes += inc;
+            break;
+          case "TRANSPORTING":
+            counts.transportingBikes += inc;
+            break;
+          case "SWAPPING":
+            counts.swappingBikes += inc;
             break;
           case "DISABLED":
             counts.disabledBikes += inc;

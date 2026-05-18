@@ -9,9 +9,13 @@ import { WalletCommandServiceTag } from "@/domain/wallets";
 import logger from "@/lib/logger";
 
 import type {
+  BikeIsBroken,
   BikeIsDisabled,
+  BikeIsFixed,
   BikeIsLost,
-  BikeIsRedistributing,
+  BikeIsPendingDispatch,
+  BikeIsSwapping,
+  BikeIsTransporting,
   BikeNotAvailable,
 } from "../../../domain-errors";
 import type { ReservationRow } from "../../../models";
@@ -114,7 +118,15 @@ function releaseReservedBikeForCancellationInTx(
   now: Date,
 ): Effect.Effect<
   void,
-  BikeNotFound | BikeNotAvailable | BikeIsRedistributing | BikeIsLost | BikeIsDisabled
+    | BikeNotFound
+    | BikeNotAvailable
+    | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
+    | BikeIsLost
+    | BikeIsDisabled
+    | BikeIsBroken
+    | BikeIsFixed
 > {
   return Effect.gen(function* () {
     const bikeRepo = makeBikeRepository(tx);

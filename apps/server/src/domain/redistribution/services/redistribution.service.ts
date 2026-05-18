@@ -58,7 +58,7 @@ import {
   RedistributionRepository,
 } from "../repository/redistribution.repository";
 
-const MIN_BIKES_AT_STATION = 10;
+const MIN_AVAILABLE_BIKES_AT_STATION = 10;
 
 export type RedistributionService = {
   getMyListInStation: (
@@ -385,7 +385,9 @@ function makeRedistributionService(
 
     createRequestTo: args =>
       Effect.gen(function* () {
-        const existingReqOpt = yield* getIncompletedRequestAt(args.sourceStationId);
+        const existingReqOpt = yield* getIncompletedRequestAt(
+          args.sourceStationId,
+        );
         if (Option.isSome(existingReqOpt)) {
           const existingReq = existingReqOpt.value;
           return yield* Effect.fail(
@@ -448,50 +450,58 @@ function makeRedistributionService(
             const txBikeRepo = makeBikeRepository(tx);
             const txRedistributionRepo = makeRedistributionRepository(tx);
 
-            // Fetch bikes + check minimum remaining bikes
-            const [availableBikes, totalBikes] = yield* Effect.all([
+            // Fetch bikes + check minimum remaining available bikes
+            const [totalAvailableCount, pickedBikes] = yield* Effect.all([
+              Effect.promise(() =>
+                tx.bike.count({
+                  where: {
+                    stationId: sourceStation.id,
+                    status: "AVAILABLE",
+                  },
+                }),
+              ),
+
               Effect.promise(() =>
                 tx.bike.findMany({
-                  where: { stationId: sourceStation.id, status: "AVAILABLE" },
+                  where: {
+                    stationId: sourceStation.id,
+                    status: "AVAILABLE",
+                  },
                   take: args.requestedQuantity,
                   select: { id: true },
                 }),
               ),
-              Effect.promise(() =>
-                tx.bike.count({
-                  where: { stationId: sourceStation.id },
-                }),
-              ),
             ]);
 
-            const restBikes = totalBikes - availableBikes.length;
-
-            if (availableBikes.length < args.requestedQuantity) {
+            const pickedCount = pickedBikes.length;
+            if (pickedCount < args.requestedQuantity) {
               return yield* Effect.fail(
                 new NotEnoughBikesAtStation({
                   stationId: args.sourceStationId,
                   required: args.requestedQuantity,
-                  available: availableBikes.length,
+                  available: pickedCount,
                 }),
               );
             }
 
-            if (restBikes < MIN_BIKES_AT_STATION) {
+            const restBikes = totalAvailableCount - pickedCount;
+
+            if (restBikes < MIN_AVAILABLE_BIKES_AT_STATION) {
               return yield* Effect.fail(
                 new ExceededMinBikesAtStation({
                   stationId: args.sourceStationId,
-                  minBikes: MIN_BIKES_AT_STATION,
-                  restBikesAfterFulfillment: restBikes,
+                  minAvailableBikes: MIN_AVAILABLE_BIKES_AT_STATION,
+                  availableBikesAfterFulfillment: restBikes,
                 }),
               );
             }
 
-            bikeIds.push(...availableBikes.map(b => b.id));
+            bikeIds.push(...pickedBikes.map(b => b.id));
 
-            // Marks bikes as redistributing
+            // Marks bikes as pending dispatch
             yield* txBikeRepo.updateManyStatusAt(
               bikeIds,
-              BikeStatus.REDISTRIBUTING,
+              BikeStatus.PENDING_DISPATCH,
               now,
             );
 
@@ -547,7 +557,7 @@ function makeRedistributionService(
 
             const bikeIds = existing.items.map(item => item.bikeId);
 
-            // Restore bikes to AVAILABLE if any were marked REDISTRIBUTING
+            // Restore bikes to AVAILABLE if any were marked PENDING_DISPATCH
             if (bikeIds.length > 0) {
               yield* txBikeRepo.updateManyStatusAt(
                 bikeIds,
@@ -625,7 +635,11 @@ function makeRedistributionService(
               );
             }
 
-            yield* txBikeRepo.updateManyStationAt(bikeIds, null, now);
+            yield* txBikeRepo.updateManyStatusAt(
+              bikeIds,
+              BikeStatus.TRANSPORTING,
+              now,
+            );
 
             const updatedOpt
               = yield* txRedistributionRepo.updateAndFindWithPopulation(
@@ -843,7 +857,7 @@ function makeRedistributionService(
 
             // Comparison logic
             const unconfirmedBikeIds = req.items
-              .filter(item => item.bike.status === BikeStatus.REDISTRIBUTING)
+              .filter(item => item.bike.status === BikeStatus.TRANSPORTING)
               .map(item => item.bike.id);
 
             const validCompletedBikeIds = completedBikeIds.filter(id =>
@@ -862,8 +876,7 @@ function makeRedistributionService(
               );
             }
 
-            const isFullMatch
-              = unconfirmedBikeIds.length === validLength;
+            const isFullMatch = unconfirmedBikeIds.length === validLength;
 
             const finalStatus = isFullMatch
               ? RedistributionStatus.COMPLETED

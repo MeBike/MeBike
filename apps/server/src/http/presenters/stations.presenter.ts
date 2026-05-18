@@ -6,6 +6,8 @@ import type {
   StationRow,
 } from "@/domain/stations";
 
+import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
+
 function countTotalActiveSlots({
   activeReturnSlots,
   incomingRedistributionBikes,
@@ -33,6 +35,14 @@ export function toContractStationReadSummary(
     },
     capacity: {
       total: station.totalCapacity,
+      totalInStationBikes: countInStationBikes({
+        totalCapacity: station.totalCapacity,
+        availableBikes: station.availableBikes,
+        reservedBikes: station.reservedBikes,
+        pendingDispatchBikes: station.pendingDispatchBikes,
+        brokenBikes: station.brokenBikes,
+        fixedBikes: station.fixedBikes,
+      }),
       returnSlotLimit: station.returnSlotLimit,
       totalActiveSlots: countTotalActiveSlots({
         activeReturnSlots: station.activeReturnSlots,
@@ -46,8 +56,11 @@ export function toContractStationReadSummary(
       available: station.availableBikes,
       booked: station.bookedBikes,
       broken: station.brokenBikes,
+      fixed: station.fixedBikes,
       reserved: station.reservedBikes,
-      redistributing: station.redistributingBikes,
+      pendingDispatch: station.pendingDispatchBikes,
+      transporting: station.transportingBikes,
+      swapping: station.swappingBikes,
       lost: station.lostBikes,
       disabled: station.disabledBikes,
     },
@@ -91,8 +104,11 @@ export function toContractStationSummary(
     availableBikes: station.availableBikes,
     bookedBikes: station.bookedBikes,
     brokenBikes: station.brokenBikes,
+    fixedBikes: station.fixedBikes,
     reservedBikes: station.reservedBikes,
-    redistributingBikes: station.redistributingBikes,
+    pendingDispatchBikes: station.pendingDispatchBikes,
+    transportingBikes: station.transportingBikes,
+    swappingBikes: station.swappingBikes,
     lostBikes: station.lostBikes,
     disabledBikes: station.disabledBikes,
     emptySlots: station.emptySlots,

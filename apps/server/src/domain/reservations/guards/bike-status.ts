@@ -4,22 +4,34 @@ import type { BikeStatus } from "generated/prisma/enums";
 
 import {
   BikeAlreadyReserved,
+  BikeIsBroken,
   BikeIsDisabled,
+  BikeIsFixed,
   BikeIsLost,
-  BikeIsRedistributing,
+  BikeIsPendingDispatch,
+  BikeIsSwapping,
+  BikeIsTransporting,
   BikeNotAvailable,
 } from "../domain-errors";
 
 type ReservationBikeStatusFailure
   = | BikeAlreadyReserved
-    | BikeIsRedistributing
+    | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
     | BikeIsLost
+    | BikeIsBroken
+    | BikeIsFixed
     | BikeIsDisabled
     | BikeNotAvailable;
 
 type ReservationTransitionBikeStatusFailure
-  = | BikeIsRedistributing
+  = | BikeIsPendingDispatch
+    | BikeIsTransporting
+    | BikeIsSwapping
     | BikeIsLost
+    | BikeIsBroken
+    | BikeIsFixed
     | BikeIsDisabled
     | BikeNotAvailable;
 
@@ -34,10 +46,18 @@ export function reserveFailureFromBikeStatus(args: {
       return Option.none();
     case "RESERVED":
       return Option.some(new BikeAlreadyReserved({ bikeId }));
-    case "REDISTRIBUTING":
-      return Option.some(new BikeIsRedistributing({ bikeId }));
+    case "PENDING_DISPATCH":
+      return Option.some(new BikeIsPendingDispatch({ bikeId }));
+    case "TRANSPORTING":
+      return Option.some(new BikeIsTransporting({ bikeId }));
+    case "SWAPPING":
+      return Option.some(new BikeIsSwapping({ bikeId }));
     case "LOST":
       return Option.some(new BikeIsLost({ bikeId }));
+    case "BROKEN":
+      return Option.some(new BikeIsBroken({ bikeId }));
+    case "FIXED":
+      return Option.some(new BikeIsFixed({ bikeId }));
     case "DISABLED":
       return Option.some(new BikeIsDisabled({ bikeId }));
     default:
@@ -52,10 +72,18 @@ export function reservationTransitionFailureFromBikeStatus(args: {
   const { bikeId, status } = args;
 
   switch (status) {
-    case "REDISTRIBUTING":
-      return new BikeIsRedistributing({ bikeId });
+    case "PENDING_DISPATCH":
+      return new BikeIsPendingDispatch({ bikeId });
+    case "TRANSPORTING":
+      return new BikeIsTransporting({ bikeId });
+    case "SWAPPING":
+      return new BikeIsSwapping({ bikeId });
     case "LOST":
       return new BikeIsLost({ bikeId });
+    case "BROKEN":
+      return new BikeIsBroken({ bikeId });
+    case "FIXED":
+      return new BikeIsFixed({ bikeId });
     case "DISABLED":
       return new BikeIsDisabled({ bikeId });
     default:

@@ -11,6 +11,7 @@ export const JobTypes = {
   WalletTopupReconcileSweep: "wallets.topup.reconcileSweep",
   WalletWithdrawalExecute: "wallets.withdraw.execute",
   WalletWithdrawalSweep: "wallets.withdraw.sweep",
+  RedistributionPendingExpireSweep: "redistribution.pendingExpireSweep",
 } as const;
 
 export type JobType = (typeof JobTypes)[keyof typeof JobTypes];

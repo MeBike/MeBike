@@ -305,12 +305,17 @@ export function makeReturnSlotRepository(
           return Option.none();
         }
 
-        const [totalBikes, activeReturnSlots, incomingRedistributionBikes] = yield* Effect.all([
+        const [bikeStatusRows, activeReturnSlots, incomingRedistributionBikes] = yield* Effect.all([
           Effect.tryPromise({
-            try: () => client.bike.count({ where: { stationId } }),
+            try: () =>
+              client.bike.groupBy({
+                by: ["status"],
+                where: { stationId },
+                _count: { id: true },
+              }),
             catch: cause =>
               new RentalRepositoryError({
-                operation: "returnSlot.getStationCapacitySnapshot.totalBikes",
+                operation: "returnSlot.getStationCapacitySnapshot.bikeStatusCounts",
                 cause,
               }),
           }),
@@ -358,11 +363,47 @@ export function makeReturnSlotRepository(
           ),
         ]);
 
+        // Aggregate bike counts by status
+        let availableBikes = 0;
+        let reservedBikes = 0;
+        let pendingDispatchBikes = 0;
+        let brokenBikes = 0;
+        let fixedBikes = 0;
+        for (const row of bikeStatusRows) {
+          const count = Number((row as any)._count?.id ?? (row as any)._count?._all ?? (row as any)._count ?? 0);
+          switch (row.status) {
+            case "AVAILABLE": {
+              availableBikes += count;
+              break;
+            }
+            case "RESERVED": {
+              reservedBikes += count;
+              break;
+            }
+            case "PENDING_DISPATCH": {
+              pendingDispatchBikes += count;
+              break;
+            }
+            case "BROKEN": {
+              brokenBikes += count;
+              break;
+            }
+            case "FIXED": {
+              fixedBikes += count;
+              break;
+            }
+          }
+        }
+
         return Option.some({
           stationId: station.id,
           totalCapacity: station.totalCapacity,
           returnSlotLimit: station.returnSlotLimit,
-          totalBikes,
+          availableBikes,
+          reservedBikes,
+          pendingDispatchBikes,
+          brokenBikes,
+          fixedBikes,
           activeReturnSlots,
           incomingRedistributionBikes,
         });

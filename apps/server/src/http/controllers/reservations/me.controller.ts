@@ -99,11 +99,27 @@ const reserveBikeHandler: RouteHandler<ReservationsRoutes["reserveBike"]> = asyn
               stationId,
             },
           }, 400)),
-        Match.tag("BikeIsRedistributing", ({ bikeId }) =>
+        Match.tag("BikeIsPendingDispatch", ({ bikeId }) =>
           c.json<ReservationErrorResponse, 400>({
-            error: reservationErrorMessages.BIKE_IS_REDISTRIBUTING,
+            error: reservationErrorMessages.BIKE_IS_PENDING_DISPATCH,
             details: {
-              code: ReservationErrorCodeSchema.enum.BIKE_IS_REDISTRIBUTING,
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_PENDING_DISPATCH,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsTransporting", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_TRANSPORTING,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_TRANSPORTING,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsSwapping", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_SWAPPING,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_SWAPPING,
               bikeId,
             },
           }, 400)),
@@ -306,11 +322,27 @@ const confirmReservationHandler: RouteHandler<ReservationsRoutes["confirmReserva
               bikeId,
             },
           }, 400)),
-        Match.tag("BikeIsRedistributing", ({ bikeId }) =>
+        Match.tag("BikeIsPendingDispatch", ({ bikeId }) =>
           c.json<ReservationErrorResponse, 400>({
-            error: reservationErrorMessages.BIKE_IS_REDISTRIBUTING,
+            error: reservationErrorMessages.BIKE_IS_PENDING_DISPATCH,
             details: {
-              code: ReservationErrorCodeSchema.enum.BIKE_IS_REDISTRIBUTING,
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_PENDING_DISPATCH,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsTransporting", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_TRANSPORTING,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_TRANSPORTING,
+              bikeId,
+            },
+          }, 400)),
+        Match.tag("BikeIsSwapping", ({ bikeId }) =>
+          c.json<ReservationErrorResponse, 400>({
+            error: reservationErrorMessages.BIKE_IS_SWAPPING,
+            details: {
+              code: ReservationErrorCodeSchema.enum.BIKE_IS_SWAPPING,
               bikeId,
             },
           }, 400)),

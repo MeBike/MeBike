@@ -243,14 +243,14 @@ const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) =
               code: StationErrorCodeSchema.enum.CAPACITY_SPLIT_INVALID,
             },
           }, 400)),
-        Match.tag("StationCapacityBelowActiveUsage", ({ stationId, totalCapacity, totalBikes, activeReturnSlots, incomingRedistributionBikes }) =>
+        Match.tag("StationCapacityBelowActiveUsage", ({ stationId, totalCapacity, totalInStationBikes, activeReturnSlots, incomingRedistributionBikes }) =>
           c.json<StationErrorResponse, 400>({
             error: stationErrorMessages.CAPACITY_BELOW_ACTIVE_USAGE,
             details: {
               code: StationErrorCodeSchema.enum.CAPACITY_BELOW_ACTIVE_USAGE,
               stationId,
               totalCapacity,
-              totalBikes,
+              totalInStationBikes,
               activeReturnSlots,
               incomingRedistributionBikes,
             },

@@ -88,8 +88,8 @@ export const createRedistributionRequest = createRoute({
                   code: RedistributionReqErrorCodeSchema.enum
                     .EXCEEDED_MIN_BIKES_AT_STATION,
                   stationId: "station-id",
-                  minBikes: 20,
-                  restBikesAfterFulfillment: 15,
+                  minAvailableBikes: 20,
+                  availableBikesAfterFulfillment: 15,
                 },
               },
             },

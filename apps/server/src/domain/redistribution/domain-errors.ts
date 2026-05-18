@@ -126,8 +126,8 @@ export class ExceededMinBikesAtStation extends Data.TaggedError(
   "ExceededMinBikesAtStation",
 )<{
     readonly stationId: string;
-    readonly minBikes: number;
-    readonly restBikesAfterFulfillment: number;
+    readonly minAvailableBikes: number;
+    readonly availableBikesAfterFulfillment: number;
   }> {}
 
 export class CannotCancelNonPendingRedistribution extends Data.TaggedError(

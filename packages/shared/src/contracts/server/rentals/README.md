@@ -100,7 +100,9 @@ The rental system uses comprehensive error codes with detailed context:
 - `BIKE_IS_RESERVED` - Bike reserved by other user
 - `BIKE_IS_LOST` - Bike is lost
 - `BIKE_IS_DISABLED` - Bike is disabled
-- `BIKE_IS_REDISTRIBUTING` - Bike is being redistributed
+- `BIKE_IS_PENDING_DISPATCH` - Bike is pending dispatch
+- `BIKE_IS_TRANSPORTING` - Bike is transporting
+- `BIKE_IS_SWAPPING` - Bike is swapping
 - `INVALID_BIKE_STATUS` - Invalid bike status
 
 ### Payment & Wallet

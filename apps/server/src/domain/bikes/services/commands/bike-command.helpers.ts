@@ -14,12 +14,17 @@ import {
 
 export function getScopedStatusTransitions(currentStatus: BikeStatus): readonly BikeManageableStatus[] {
   // Role bị scope theo station chỉ được lật trạng thái phục vụ vận hành cơ bản.
+  // Technician: BROKEN → FIXED (đánh dấu đã sửa xong, chờ cập nhật).
   // Không cho phép đẩy xe ra khỏi các flow booking / reservation / redistribution bằng tay.
   if (currentStatus === "AVAILABLE") {
     return ["BROKEN"] as const;
   }
 
   if (currentStatus === "BROKEN") {
+    return ["FIXED"] as const;
+  }
+
+  if (currentStatus === "FIXED") {
     return ["AVAILABLE"] as const;
   }
 

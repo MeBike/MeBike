@@ -15,7 +15,9 @@ import { makeStationQueryRepository } from "@/domain/stations";
 import type {
   BikeIsDisabled,
   BikeIsLost,
-  BikeIsRedistributing,
+  BikeIsPendingDispatch,
+  BikeIsSwapping,
+  BikeIsTransporting,
 } from "../../../domain-errors";
 import type { PreparedReserveBike, ReserveBikeCommandInput, ReserveBikeFailure } from "./reserve-bike.types";
 
@@ -65,7 +67,7 @@ export function prepareReserveBikeInTx(
   input: ReserveBikeCommandInput,
 ): Effect.Effect<
   PreparedReserveBike,
-  ReserveBikeFailure | BikeIsRedistributing | BikeIsLost | BikeIsDisabled
+  ReserveBikeFailure | BikeIsPendingDispatch | BikeIsTransporting | BikeIsSwapping | BikeIsLost | BikeIsDisabled
 > {
   return Effect.gen(function* () {
     const txBikeRepo = makeBikeRepository(tx);
