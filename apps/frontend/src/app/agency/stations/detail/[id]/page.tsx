@@ -28,6 +28,7 @@ import {
   Wallet,
   CalendarCheck,
   Hammer,
+  PieChart,
 } from "lucide-react";
 import { Station } from "@/types";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,7 @@ function MetricCard({
   bgClass: string;
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-border/50 bg-card p-5 shadow-sm">
+    <div className="flex items-center gap-4 rounded-xl border border-border/50 bg-card p-5 shadow-sm transition-all hover:shadow-md">
       <div
         className={cn(
           "flex h-12 w-12 shrink-0 items-center justify-center rounded-full",
@@ -101,7 +102,7 @@ function SectionCard({
         className,
       )}
     >
-      <div className="flex items-center gap-2 border-b border-border/30 px-6 py-4">
+      <div className="flex items-center gap-2 border-b border-border/30 px-6 py-4 bg-muted/10">
         <Icon className="h-5 w-5 text-primary" />
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
       </div>
@@ -197,7 +198,7 @@ export default function StationDetailPage() {
 
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
 
-  // Xử lý loading
+  // Xử lý loading đồng bộ
   useEffect(() => {
     getListStation();
   }, [getListStation]);
@@ -226,8 +227,9 @@ export default function StationDetailPage() {
   }
 
   const station = myStationDetail as Station;
+  const isOwnStation = station.id === listStation?.currentStation?.id;
 
-  // Trích xuất doanh thu
+  // Trích xuất dữ liệu báo cáo từ API
   const rawRevenueData =
     (responseStationRevenueForAgency as any)?.data ||
     responseStationRevenueForAgency;
@@ -237,13 +239,14 @@ export default function StationDetailPage() {
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50/50 p-6 dark:bg-background pb-10">
       <div className="mx-auto max-w-7xl space-y-6">
+        
         {/* HEADER ACTIONS */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 shrink-0 rounded-full"
+              className="h-9 w-9 shrink-0 rounded-full shadow-sm"
               onClick={() => router.back()}
             >
               <ArrowLeft className="h-4 w-4" />
@@ -255,31 +258,29 @@ export default function StationDetailPage() {
               <span
                 className={
                   station.stationType === "INTERNAL"
-                    ? "text-blue-600 font-medium text-sm bg-blue-100 px-2 py-0.5 rounded"
-                    : "text-purple-600 font-medium text-sm bg-purple-100 px-2 py-0.5 rounded"
+                    ? "text-blue-600 font-medium text-sm bg-blue-100 px-2 py-0.5 rounded shadow-sm"
+                    : "text-purple-600 font-medium text-sm bg-purple-100 px-2 py-0.5 rounded shadow-sm"
                 }
               >
-                {station.stationType === "INTERNAL"
-                  ? "Trạm nội bộ"
-                  : "Trạm đối tác"}
+                {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
               </span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {myStationDetail?.id !== listStation?.currentStation?.id && (
+            {!isOwnStation && (
               <Button
                 onClick={() =>
                   router.push(
                     `/agency/distribution-request/create?targetStationId=${station.id}`,
                   )
                 }
-                className="bg-orange-500 hover:bg-orange-600 text-white"
+                className="bg-orange-500 hover:bg-orange-600 text-white shadow-sm"
               >
                 <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
               </Button>
             )}
-            <Button variant="outline" onClick={() => router.back()}>
+            <Button variant="outline" onClick={() => router.back()} className="shadow-sm">
               Quay lại danh sách
             </Button>
           </div>
@@ -313,36 +314,43 @@ export default function StationDetailPage() {
           </div>
         </div>
 
-        {/* TOP METRICS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {myStationDetail?.id === listStation?.currentStation?.id && (
-            <MetricCard
-              title="Tổng doanh thu"
-              value={
-                currentStationRevenue
-                  ? new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(currentStationRevenue.totalRevenue)
-                  : "0 ₫"
-              }
-              icon={Wallet}
-              colorClass="text-emerald-600 dark:text-emerald-400"
-              bgClass="bg-emerald-100 dark:bg-emerald-500/10"
-            />
+        {/* TẦNG 1: TOP METRICS (Hàng ngang 4 thẻ đồng đều tăm tắp) */}
+        <div
+          className={cn(
+            "grid grid-cols-1 gap-4 sm:grid-cols-2",
+            isOwnStation ? "lg:grid-cols-4" : "lg:grid-cols-2"
           )}
-          <MetricCard
-            title="Tổng lượt thuê"
-            value={currentStationRevenue?.totalRentals || 0}
-            subtitle={
-              currentStationRevenue
-                ? `TB: ${Math.round(currentStationRevenue.avgDuration)} phút/lượt`
-                : ""
-            }
-            icon={CalendarCheck}
-            colorClass="text-blue-600 dark:text-blue-400"
-            bgClass="bg-blue-100 dark:bg-blue-500/10"
-          />
+        >
+          {isOwnStation && (
+            <>
+              <MetricCard
+                title="Tổng doanh thu"
+                value={
+                  currentStationRevenue
+                    ? new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(currentStationRevenue.totalRevenue)
+                    : "0 ₫"
+                }
+                icon={Wallet}
+                colorClass="text-emerald-600 dark:text-emerald-400"
+                bgClass="bg-emerald-100 dark:bg-emerald-500/10"
+              />
+              <MetricCard
+                title="Tổng lượt thuê"
+                value={currentStationRevenue?.totalRentals || 0}
+                subtitle={
+                  currentStationRevenue
+                    ? `TB: ${Math.round(currentStationRevenue.avgDuration)} phút/lượt`
+                    : ""
+                }
+                icon={CalendarCheck}
+                colorClass="text-blue-600 dark:text-blue-400"
+                bgClass="bg-blue-100 dark:bg-blue-500/10"
+              />
+            </>
+          )}
           <MetricCard
             title="Tổng vị trí bãi đỗ"
             value={station.capacity.total}
@@ -353,7 +361,7 @@ export default function StationDetailPage() {
           />
           <MetricCard
             title="Xe thực tế tại trạm"
-            value={station.bikes.total || station.capacity.totalInStationBikes}
+            value={station.capacity.totalInStationBikes ?? station.bikes.total}
             subtitle={`Sẵn sàng: ${station.bikes.available} xe`}
             icon={Bike}
             colorClass="text-amber-600 dark:text-amber-400"
@@ -361,19 +369,114 @@ export default function StationDetailPage() {
           />
         </div>
 
-        {/* MIDDLE CONTENT GRID (2 Trái - 1 Phải) */}
+        {/* TẦNG 2: CHI TIẾT TRẠNG THÁI PHƯƠNG TIỆN (Đặt full-width ngay dưới Tầng 1) */}
+        <div className="w-full">
+          <SectionCard
+            icon={Activity}
+            title="Chi tiết trạng thái phương tiện"
+            className="w-full"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:divide-x divide-y md:divide-y-0 divide-border/40">
+              {/* Cột 1: Xe nội trạm */}
+              <div className="pt-4 md:pt-0 first:pt-0 md:pr-4">
+                <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
+                  <MapPin className="h-3.5 w-3.5" /> Xe nội trạm
+                </h4>
+                <div className="space-y-1">
+                  <StatusItem
+                    icon={CheckCircle2}
+                    label="Sẵn sàng cho thuê"
+                    value={station.bikes.available}
+                    color="text-emerald-600"
+                    boldValue
+                  />
+                  <StatusItem
+                    icon={Clock}
+                    label="Đã đặt trước"
+                    value={station.bikes.reserved}
+                    color="text-amber-600"
+                  />
+                  <StatusItem
+                    icon={Wrench}
+                    label="Chuẩn bị điều phối"
+                    value={station.bikes.pendingDispatch}
+                    color="text-orange-500"
+                  />
+                  <StatusItem
+                    icon={AlertTriangle}
+                    label="Đang bị hỏng"
+                    value={station.bikes.broken}
+                    color="text-red-500"
+                  />
+                  <StatusItem
+                    icon={Hammer}
+                    label="Đã sửa"
+                    value={station.bikes.fixed}
+                    color="text-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Cột 2: Xe ngoại trạm */}
+              <div className="pt-6 md:pt-0 md:px-4">
+                <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
+                  <RefreshCcw className="h-3.5 w-3.5" /> Xe ngoại trạm
+                </h4>
+                <div className="space-y-1">
+                  <StatusItem
+                    icon={RefreshCcw}
+                    label="Hỗ trợ sự cố (Swapping)"
+                    value={station.bikes.swapping}
+                    color="text-blue-500"
+                  />
+                  <StatusItem
+                    icon={Truck}
+                    label="Đang vận chuyển"
+                    value={station.bikes.transporting}
+                    color="text-indigo-500"
+                  />
+                  <StatusItem
+                    icon={Bike}
+                    label="Đang thuê (Booked)"
+                    value={station.bikes.booked}
+                    color="text-blue-600"
+                  />
+                </div>
+              </div>
+
+              {/* Cột 3: Xe ngưng hoạt động */}
+              <div className="pt-6 md:pt-0 md:pl-4">
+                <h4 className="flex items-center gap-2 text-[11px] font-bold text-destructive uppercase tracking-wider mb-4">
+                  <ShieldAlert className="h-3.5 w-3.5" /> Xe ngưng hoạt động
+                </h4>
+                <div className="space-y-1">
+                  <StatusItem
+                    icon={HelpCircle}
+                    label="Bị mất"
+                    value={station.bikes.lost}
+                    color="text-red-600"
+                  />
+                  <StatusItem
+                    icon={Ban}
+                    label="Tạm ngưng hệ thống"
+                    value={station.bikes.disabled}
+                    color="text-slate-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+
+        {/* TẦNG 3: MIDDLE CONTENT GRID (Các cấu trúc quản trị phụ đẩy xuống đáy) */}
         <div className="grid gap-6 lg:grid-cols-3 items-start">
           {/* CỘT TRÁI (Thông tin chung & Nhân sự) */}
           <div className="lg:col-span-2 space-y-6">
             <SectionCard icon={Info} title="Thông tin quản lý">
               <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                 <Field label="Tên trạm" value={station.name} />
-                {
-                  station.stationType === "AGENCY" && (<Field label="Loại trạm" value={"Đại lý"} />)
-                }
-                {
-                  station.stationType === "INTERNAL" && (<Field label="Loại trạm" value={"Nội bộ"} />)
-                }
+                {station.stationType === "AGENCY" && <Field label="Loại trạm" value={"Đại lý"} />}
+                {station.stationType === "INTERNAL" && <Field label="Loại trạm" value={"Nội bộ"} />}
                 <Field
                   label="Địa chỉ"
                   value={station.address}
@@ -408,7 +511,7 @@ export default function StationDetailPage() {
                   {station.workers.map((w) => (
                     <div
                       key={w.userId}
-                      className="flex items-center gap-3 p-3.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors"
+                      className="flex items-center gap-3 p-3.5 rounded-xl border border-border/40 bg-muted/10 hover:bg-muted/30 transition-colors"
                     >
                       <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shadow-sm">
                         {w.fullName.charAt(0)}
@@ -433,8 +536,8 @@ export default function StationDetailPage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-8 text-center border-2 border-dashed border-border/50 rounded-xl">
-                  <Users className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                <div className="py-8 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/5">
+                  <Users className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
                     Chưa có nhân viên nào được phân công.
                   </p>
@@ -443,44 +546,45 @@ export default function StationDetailPage() {
             </SectionCard>
           </div>
 
-          {/* CỘT PHẢI (Sức chứa & Doanh thu) */}
+          {/* CỘT PHẢI (Sức chứa bãi đỗ độc lập & Phân bổ bãi đỗ) */}
           <div className="lg:col-span-1 space-y-6">
-            <SectionCard icon={LayoutGrid} title="Quản lý chỗ đỗ">
-              <div className="space-y-5">
-                <div className="flex items-center justify-between p-4 rounded-xl bg-muted/40 border border-border/50">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                      Chỗ trống thực tế
-                    </p>
-                    <p className="text-3xl font-bold text-foreground">
-                      {station.capacity.emptyPhysicalSlots ??
-                        station.returnSlots?.available ??
-                        0}{" "}
-                      <span className="text-sm font-normal text-muted-foreground">
-                        / {station.capacity.total}
-                      </span>
-                    </p>
-                  </div>
-                  <LayoutGrid className="h-8 w-8 text-muted-foreground/30" />
+            <SectionCard icon={LayoutGrid} title="Tình trạng chỗ đỗ">
+              <div className="flex items-center justify-between p-5 rounded-xl bg-muted/30 border border-border/50">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                    Chỗ trống thực tế
+                  </p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {station.capacity.emptyPhysicalSlots ??
+                      station.returnSlots?.available ??
+                      0}{" "}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      / {station.capacity.total}
+                    </span>
+                  </p>
                 </div>
-                <div className="space-y-1 px-1">
-                  <StatusItem
-                    icon={Activity}
-                    label="Chỗ khách trả xe"
-                    value={station.returnSlots?.active || 0}
-                    color="text-blue-600"
-                  />
-                  <StatusItem
-                    icon={Wrench}
-                    label="Chỗ xe điều phối"
-                    value={station.redistributionSlots || 0}
-                    color="text-orange-500"
-                  />
-                  
-                </div>
+                <LayoutGrid className="h-8 w-8 text-muted-foreground/30" />
               </div>
             </SectionCard>
-            {myStationDetail?.id === listStation?.currentStation?.id && (
+
+            <SectionCard icon={PieChart} title="Phân bổ chỗ đỗ">
+              <div className="space-y-1">
+                <StatusItem
+                  icon={Activity}
+                  label="Chỗ khách trả xe"
+                  value={station.returnSlots?.active || 0}
+                  color="text-blue-600"
+                />
+                <StatusItem
+                  icon={Wrench}
+                  label="Chỗ xe điều phối"
+                  value={station.redistributionSlots || 0}
+                  color="text-orange-500"
+                />
+              </div>
+            </SectionCard>
+
+            {isOwnStation && (
               <SectionCard icon={TrendingUp} title="Báo cáo nhanh">
                 {currentStationRevenue ? (
                   <div className="space-y-4">
@@ -522,102 +626,6 @@ export default function StationDetailPage() {
           </div>
         </div>
 
-        {/* BOTTOM SECTION - TRẠNG THÁI PHƯƠNG TIỆN */}
-        <SectionCard
-          icon={Activity}
-          title="Chi tiết trạng thái phương tiện"
-          className="w-full"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:divide-x divide-y md:divide-y-0 divide-border/40">
-            {/* Cột 1: Xe nội trạm */}
-            <div className="pt-4 md:pt-0 first:pt-0 md:pr-4">
-              <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                <MapPin className="h-3.5 w-3.5" /> Xe nội trạm
-              </h4>
-              <div className="space-y-1">
-                <StatusItem
-                  icon={CheckCircle2}
-                  label="Sẵn sàng cho thuê"
-                  value={station.bikes.available}
-                  color="text-emerald-600"
-                  boldValue
-                />
-                <StatusItem
-                  icon={Clock}
-                  label="Đã đặt trước"
-                  value={station.bikes.reserved}
-                  color="text-amber-600"
-                />
-                <StatusItem
-                  icon={Wrench}
-                  label="Chuẩn bị điều phối"
-                  value={station.bikes.pendingDispatch}
-                  color="text-orange-500"
-                />
-                <StatusItem
-                  icon={AlertTriangle}
-                  label="Đang bị hỏng"
-                  value={station.bikes.broken}
-                  color="text-red-500"
-                />
-                <StatusItem
-                  icon={Hammer}
-                  label="Đã sửa"
-                  value={station.bikes.fixed}
-                  color="text-red-500"
-                />
-              </div>
-            </div>
-
-            {/* Cột 2: Xe ngoại trạm */}
-            <div className="pt-6 md:pt-0 md:px-4">
-              <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                <RefreshCcw className="h-3.5 w-3.5" /> Xe ngoại trạm
-              </h4>
-              <div className="space-y-1">
-                <StatusItem
-                  icon={RefreshCcw}
-                  label="Hỗ trợ sự cố (Swapping)"
-                  value={station.bikes.swapping}
-                  color="text-blue-500"
-                />
-                <StatusItem
-                  icon={Truck}
-                  label="Đang vận chuyển"
-                  value={station.bikes.transporting}
-                  color="text-indigo-500"
-                />
-                <StatusItem
-                  icon={Bike}
-                  label="Đang thuê (Booked)"
-                  value={station.bikes.booked}
-                  color="text-indigo-500"
-                />
-              </div>
-            </div>
-
-            {/* Cột 3: Xe ngưng hoạt động */}
-            <div className="pt-6 md:pt-0 md:pl-4">
-              <h4 className="flex items-center gap-2 text-[11px] font-bold text-destructive uppercase tracking-wider mb-4">
-                <ShieldAlert className="h-3.5 w-3.5" /> Xe ngưng hoạt động
-              </h4>
-              <div className="space-y-1">
-                <StatusItem
-                  icon={HelpCircle}
-                  label="Bị mất"
-                  value={station.bikes.lost}
-                  color="text-red-600"
-                />
-                <StatusItem
-                  icon={Ban}
-                  label="Tạm ngưng hệ thống"
-                  value={station.bikes.disabled}
-                  color="text-slate-500"
-                />
-              </div>
-            </div>
-          </div>
-        </SectionCard>
       </div>
     </div>
   );
