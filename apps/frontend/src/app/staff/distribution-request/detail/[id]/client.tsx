@@ -260,7 +260,8 @@ export const DistributionRequestDetailClient = ({ data, onStartTransit, onCancel
               <TableHeader className="bg-slate-50/80">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-[80px] text-center font-bold text-slate-600">STT</TableHead>
-                  <TableHead className="font-bold text-slate-600">Mã xe (Bike ID)</TableHead>
+                  
+                  <TableHead className="font-bold text-slate-600">Mã số xe</TableHead>
                   <TableHead className="font-bold text-slate-600">Trạng thái</TableHead>
                   <TableHead className="font-bold text-slate-600 text-right pr-6">Thời gian bàn giao</TableHead>
                 </TableRow>
@@ -276,7 +277,7 @@ export const DistributionRequestDetailClient = ({ data, onStartTransit, onCancel
                         </TableCell>
                         <TableCell>
                           <code className="px-2.5 py-1 bg-slate-100 rounded border border-slate-200 text-slate-700 font-mono text-xs font-semibold">
-                            {item.bike.id}
+                            {item.bike.bikeNumber}
                           </code>
                         </TableCell>
                         <TableCell>
