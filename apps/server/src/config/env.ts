@@ -12,6 +12,7 @@ import {
   stationEnvSchema,
   subscriptionEnvSchema,
   walletEnvSchema,
+  redistributionEnvSchema,
 } from "./env/features";
 import {
   databaseEnvSchema,
@@ -40,6 +41,7 @@ const envSchema = z.object({
   ...returnSlotEnvSchema.shape,
   ...fixedSlotEnvSchema.shape,
   ...subscriptionEnvSchema.shape,
+  ...redistributionEnvSchema.shape,
 });
 
 export type Env = z.infer<typeof envSchema>;

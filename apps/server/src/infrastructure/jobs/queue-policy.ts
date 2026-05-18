@@ -84,6 +84,12 @@ const DEFAULT_QUEUE_OPTIONS: Record<JobType, JobQueueOptions> = {
     retryBackoff: true,
     retryDelayMax: 10 * 60,
   },
+  [JobTypes.RedistributionPendingExpireSweep]: {
+    retryLimit: 3,
+    retryDelay: 60,
+    retryBackoff: true,
+    retryDelayMax: 10 * 60,
+  },
 };
 
 export function resolveQueueOptions(
