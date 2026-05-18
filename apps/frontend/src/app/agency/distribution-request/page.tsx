@@ -4,6 +4,7 @@ import { useDistributionRequest } from "@/hooks/use-distribution-request";
 import DistributionRequestClient from "./client";
 import { RedistributionRequestStatus } from "@/types/DistributionRequest";
 import { useDebounce } from "@/utils/useDebounce";
+import { useStationActions } from "@/hooks/use-station";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 export default function Page() {
   const [page, setPage] = useState(1);
@@ -13,6 +14,8 @@ export default function Page() {
   const pageSize = 10;
   const debouncedStatusFilter = useDebounce(statusFilter, 500);
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
+  const { listStation, getListStation, isLoadingListStation } =
+      useStationActions({ hasToken: true });
   const {
     agencyViewDistributionRequest,
     isFetchingAgencyViewDistributionRequest,
@@ -38,12 +41,18 @@ export default function Page() {
       return () => clearTimeout(timer);
     }
   }, [isFetchingAgencyViewDistributionRequest]);
-  if (isVisualLoading) {
+  useEffect(() => {
+    getListStation();
+  }, [getListStation]);
+
+  if (isVisualLoading || isLoadingListStation || !listStation) {
     return <LoadingScreen />;
   }
+
   return (
     <DistributionRequestClient
       data={{
+        listStation: listStation,
         requests: requests,
         pagination: agencyViewDistributionRequest?.pagination,
         isVisualLoading: isFetchingAgencyViewDistributionRequest,

@@ -1,12 +1,14 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { redistributionColumn } from "@/columns/distribution-request-column";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AlertTriangle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -15,11 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ListFilter, RotateCcw, Activity, Plus } from "lucide-react"; // Thêm Plus icon
-import type { RedistributionRequest, RedistributionRequestStatus } from "@/types/DistributionRequest";
-import type { Pagination } from "@custom-types";
+import type {
+  RedistributionRequest,
+  RedistributionRequestStatus,
+} from "@/types/DistributionRequest";
+import type { CurrentStation, Pagination } from "@custom-types";
+import { useStationActions } from "@/hooks/use-station";
+import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 
 interface DistributionRequestClientProps {
   data: {
+    listStation: CurrentStation | undefined;
     requests: RedistributionRequest[];
     pagination?: Pagination;
     isVisualLoading: boolean;
@@ -29,33 +37,67 @@ interface DistributionRequestClientProps {
     page: number;
   };
   actions: {
-    setStatusFilter: Dispatch<SetStateAction<RedistributionRequestStatus | "all">>;
+    setStatusFilter: Dispatch<
+      SetStateAction<RedistributionRequestStatus | "all">
+    >;
     setPage: Dispatch<SetStateAction<number>>;
     handleReset: () => void;
   };
 }
 
 export default function DistributionRequestClient({
-  data: { requests, pagination, isVisualLoading },
+  data: { requests, pagination, isVisualLoading, listStation },
   filters: { statusFilter, page },
   actions: { setStatusFilter, setPage, handleReset },
 }: DistributionRequestClientProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-
+  const { myStationDetail, getMyStationDetail, isLoadingMyStationDetail } =
+    useStationActions({
+      stationId: listStation?.currentStation.id,
+    });
   const isFiltering = statusFilter !== "all";
-
+  useEffect(() => {
+    if (listStation?.currentStation?.id) {
+      getMyStationDetail();
+    }
+  }, [getMyStationDetail, listStation?.currentStation?.id]);
   return (
     <div className="space-y-6">
       {/* Header - Trả lại nút Tạo yêu cầu cho Tấn đù đây */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Điều phối xe tại trạm</h1>
-          <p className="text-muted-foreground mt-1">Theo dõi và tạo các yêu cầu luân chuyển xe cho trạm của bạn</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Điều phối xe tại trạm
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Theo dõi và tạo các yêu cầu luân chuyển xe cho trạm của bạn
+          </p>
         </div>
-        <Button onClick={() => router.push("/staff/distribution-request/create")}>
-          <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu
-        </Button>
+        <div className="flex items-center gap-2">
+          {isLoadingMyStationDetail || !myStationDetail ? (
+            <Badge
+              variant="secondary"
+              className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-pulse text-muted-foreground"
+            >
+              <Activity className="h-3.5 w-3.5" /> Đang kiểm tra trạm...
+            </Badge>
+          ) : myStationDetail.bikes?.available <= 10 ? (
+            <Badge
+              variant="destructive"
+              className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-fade-in"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" /> Không đủ xe để điều phối
+            </Badge>
+          ) : null}
+          <Button
+            onClick={() => router.push("/staff/distribution-request/create")}
+            disabled={isLoadingMyStationDetail || !myStationDetail || myStationDetail.bikes?.available <= 10}
+            className="shadow-sm"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu
+          </Button>
+        </div>
       </div>
 
       {/* --- BỘ LỌC ĐỒNG BỘ --- */}
@@ -63,7 +105,9 @@ export default function DistributionRequestClient({
         <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
           <div className="flex items-center gap-2">
             <ListFilter className="h-4 w-4 text-primary" />
-            <span className="text-sm font-bold tracking-tight">Bộ lọc tìm kiếm</span>
+            <span className="text-sm font-bold tracking-tight">
+              Bộ lọc tìm kiếm
+            </span>
           </div>
           {isFiltering && (
             <Button
@@ -112,14 +156,16 @@ export default function DistributionRequestClient({
         ) : (
           <>
             <p className="text-sm text-muted-foreground ml-1">
-              Hiển thị {pagination?.page ?? 1} / {pagination?.totalPages ?? 1} trang
+              Hiển thị {pagination?.page ?? 1} / {pagination?.totalPages ?? 1}{" "}
+              trang
             </p>
 
             <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
               <DataTable
                 title="Danh sách yêu cầu điều phối"
                 columns={redistributionColumn({
-                  onView: ({ id }) => router.push(`/staff/distribution-request/detail/${id}`),
+                  onView: ({ id }) =>
+                    router.push(`/staff/distribution-request/detail/${id}`),
                 })}
                 data={requests || []}
                 searchValue={searchQuery}
