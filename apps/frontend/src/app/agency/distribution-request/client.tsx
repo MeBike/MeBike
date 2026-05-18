@@ -9,7 +9,7 @@ import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { RedistributionRequest, RedistributionRequestStatus } from "@/types/DistributionRequest";
-import type { CurrentStation, currentStation, Pagination } from "@custom-types";
+import type { CurrentStation, Pagination } from "@custom-types";
 import { Plus, Activity, AlertTriangle } from "lucide-react";
 import { useAgencyActions } from "@/hooks/use-agency";
 interface DistributionRequestClientProps {
@@ -39,7 +39,7 @@ export default function DistributionRequestClient({
   const { myStationDetail, getMyStationDetail, isLoadingMyStationDetail } =
     useAgencyActions({
       hasToken: true,
-      station_id: listStation?.currentStation?.id!,
+      station_id: listStation?.currentStation?.id ?? "",
     });
 
   useEffect(() => {
