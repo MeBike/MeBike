@@ -140,7 +140,7 @@ export const CreateRedistributionRequestSchema = z
   .object({
     sourceStationId: z.uuidv7(),
     targetStationId: z.uuidv7(),
-    requestedQuantity: z.number().int().positive().max(20),
+    requestedQuantity: z.number().int().positive(),
     reason: z.string().optional(),
   })
   .superRefine((data, ctx) => {
