@@ -462,7 +462,7 @@ export const DistributionRequestDetailClient = ({
                     STT
                   </TableHead>
                   <TableHead className="font-bold text-slate-600">
-                    Mã xe (Bike ID)
+                    Mã số xe
                   </TableHead>
                   <TableHead className="font-bold text-slate-600">
                     Trạng thái
@@ -500,7 +500,7 @@ export const DistributionRequestDetailClient = ({
                         </TableCell>
                         <TableCell>
                           <code className="px-2.5 py-1 bg-slate-100 rounded border border-slate-200 text-slate-700 font-mono text-xs font-semibold">
-                            {item.bike.id}
+                            {item.bike.bikeNumber}
                           </code>
                         </TableCell>
                         <TableCell>
