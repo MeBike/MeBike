@@ -1,9 +1,9 @@
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 
 import type { QueueJob } from "@/infrastructure/jobs/ports";
+import type { Prisma } from "@/infrastructure/prisma";
 
 import { cancelExpiredPendingRedistributions } from "@/domain/redistribution/services/redistribution-pending-expire.service";
-import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
 
 import type { EffectRunner } from "./worker-runtime";

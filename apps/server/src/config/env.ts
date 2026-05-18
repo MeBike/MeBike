@@ -7,12 +7,12 @@ import { appEnvSchema } from "./env/app";
 import {
   authEnvSchema,
   fixedSlotEnvSchema,
+  redistributionEnvSchema,
   reservationEnvSchema,
   returnSlotEnvSchema,
   stationEnvSchema,
   subscriptionEnvSchema,
   walletEnvSchema,
-  redistributionEnvSchema,
 } from "./env/features";
 import {
   databaseEnvSchema,

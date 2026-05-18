@@ -27,13 +27,13 @@ import { handleEmailJob } from "./email-worker";
 import { makeEnvironmentImpactCalculateRentalHandler } from "./environment-impact-worker";
 import { makeFixedSlotAssignHandler } from "./fixed-slot-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
+import { makeRedistributionPendingExpireSweepHandler } from "./redistribution-pending-expire-worker";
 import { makeRentalOverdueSweepHandler } from "./rental-overdue-worker";
 import {
   makeReservationExpireHoldHandler,
   makeReservationNotifyNearExpiryHandler,
 } from "./reservation-hold/index";
 import { makeReturnSlotExpireSweepHandler } from "./return-slot-expiry-worker";
-import { makeRedistributionPendingExpireSweepHandler } from "./redistribution-pending-expire-worker";
 import { makeTopupReconciliationSweepHandler } from "./wallet-topup-reconciliation-worker";
 import { makeWithdrawalExecuteHandler, makeWithdrawalSweepHandler } from "./wallet-withdrawal-worker";
 import { attachJobRuntimeLogging, WorkerLog } from "./worker-logging";
