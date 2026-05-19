@@ -7,11 +7,14 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { redistributionColumn } from "@/columns/distribution-request-column";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import type { RedistributionRequest, RedistributionRequestStatus } from "@/types/DistributionRequest";
-import type { CurrentStation, currentStation, Pagination } from "@custom-types";
-import { Plus } from "lucide-react";
+import type { CurrentStation, Pagination } from "@custom-types";
+import { Plus, Activity, AlertTriangle } from "lucide-react";
+import { useAgencyActions } from "@/hooks/use-agency";
 interface DistributionRequestClientProps {
   data: {
+    listStation?: CurrentStation;
     requests: RedistributionRequest[];
     pagination?: Pagination;
     isVisualLoading: boolean;
@@ -27,12 +30,23 @@ interface DistributionRequestClientProps {
 }
 
 export default function DistributionRequestClient({
-  data: { requests, pagination, isVisualLoading },
+  data: { requests, pagination, isVisualLoading, listStation },
   filters: { statusFilter, page },
   actions: { setPage, setStatusFilter },
 }: DistributionRequestClientProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const { myStationDetail, getMyStationDetail, isLoadingMyStationDetail } =
+    useAgencyActions({
+      hasToken: true,
+      station_id: listStation?.currentStation?.id ?? "",
+    });
+
+  useEffect(() => {
+    if (listStation?.currentStation?.id) {
+      getMyStationDetail();
+    }
+  }, [getMyStationDetail, listStation?.currentStation?.id]);
 
   const handleReset = () => {
     setStatusFilter("all");
@@ -52,9 +66,30 @@ export default function DistributionRequestClient({
             Theo dõi và quản lý các yêu cầu luân chuyển xe trong hệ thống
           </p>
         </div>
-        <Button onClick={() => router.push("/agency/distribution-request/create")}>
-          <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu điều phối
-        </Button>
+        <div className="flex items-center gap-2">
+          {isLoadingMyStationDetail || !myStationDetail ? (
+            <Badge
+              variant="secondary"
+              className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-pulse text-muted-foreground"
+            >
+              <Activity className="h-3.5 w-3.5" /> Đang kiểm tra trạm...
+            </Badge>
+          ) : myStationDetail.bikes?.available <= 10 ? (
+            <Badge
+              variant="destructive"
+              className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-fade-in"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" /> Không đủ xe để điều phối
+            </Badge>
+          ) : null}
+          <Button 
+            onClick={() => router.push("/agency/distribution-request/create")}
+            disabled={isLoadingMyStationDetail || !myStationDetail || myStationDetail.bikes?.available <= 10}
+            className="shadow-sm"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu điều phối
+          </Button>
+        </div>
       </div>
 
       {/* 2. Khối Bộ Lọc (Giống y chang bên Customer) */}

@@ -18,7 +18,7 @@ export const stationSchema = z
       .min(1, "Số lượng trả xe tối đa không được để trống")
       .max(40, "Không được quá 40 chiếc"),
   })
-  .refine((data) => data.returnSlotLimit < data.totalCapacity, {
+  .refine((data) => data.returnSlotLimit <= data.totalCapacity, {
     message: "Số lượng trả xe phải nhỏ hơn sức chứa",
     path: ["returnSlotLimit"],
   });
