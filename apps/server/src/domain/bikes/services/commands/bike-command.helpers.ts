@@ -31,22 +31,15 @@ const ROLE_TRANSITIONS_MAP: Record<
     AVAILABLE: ["BROKEN"] as const,
     FIXED: ["AVAILABLE"] as const,
   },
-  // Nhóm mặc định dành cho trường hợp không truyền role hoặc role không khớp
-  DEFAULT: {
-    AVAILABLE: ["BROKEN"] as const,
-    BROKEN: ["FIXED"] as const,
-    FIXED: ["AVAILABLE"] as const,
-  },
 };
 
 export function getScopedStatusTransitions(
   currentStatus: BikeStatus,
-  role?: string,
+  role: string,
 ): readonly BikeManageableStatus[] {
   // Role bị scope theo station chỉ được lật trạng thái phục vụ vận hành cơ bản.
   // Không cho phép đẩy xe ra khỏi các flow booking / reservation / redistribution bằng tay.
-  const roleConfig
-    = ROLE_TRANSITIONS_MAP[role || "DEFAULT"] ?? ROLE_TRANSITIONS_MAP.DEFAULT;
+  const roleConfig = ROLE_TRANSITIONS_MAP[role];
 
   return roleConfig[currentStatus] ?? ([] as const);
 }
