@@ -48,6 +48,7 @@ const managerUpdateBikeStatus: RouteHandler<BikesRoutes["managerUpdateBikeStatus
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,
+        role: c.var.currentUser?.role,
       });
 
       return yield* loadBikeSummary(bike);
@@ -87,6 +88,7 @@ const agencyUpdateBikeStatus: RouteHandler<BikesRoutes["agencyUpdateBikeStatus"]
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,
+        role: c.var.currentUser?.role,
       });
 
       return yield* loadBikeSummary(bike);
@@ -126,6 +128,7 @@ const technicianUpdateBikeStatus: RouteHandler<BikesRoutes["technicianUpdateBike
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,
+        role: c.var.currentUser?.role,
       });
 
       return yield* loadBikeSummary(bike);

@@ -1,6 +1,9 @@
 import type { BikeStatus, Prisma, PrismaClient } from "generated/prisma/client";
 
-import type { AdminBikeManageableStatus, BikeManageableStatus } from "./bike-command.service.types";
+import type {
+  AdminBikeManageableStatus,
+  BikeManageableStatus,
+} from "./bike-command.service.types";
 
 import {
   BikeCurrentlyRented,
@@ -12,23 +15,40 @@ import {
   InvalidBikeStatus,
 } from "../../domain-errors";
 
-export function getScopedStatusTransitions(currentStatus: BikeStatus): readonly BikeManageableStatus[] {
+const ROLE_TRANSITIONS_MAP: Record<
+  string,
+  Partial<Record<BikeStatus, readonly BikeManageableStatus[]>>
+> = {
+  TECHNICIAN: {
+    AVAILABLE: ["BROKEN"] as const,
+    BROKEN: ["FIXED"] as const,
+  },
+  MANAGER: {
+    AVAILABLE: ["BROKEN"] as const,
+    FIXED: ["AVAILABLE"] as const,
+  },
+  AGENCY: {
+    AVAILABLE: ["BROKEN"] as const,
+    FIXED: ["AVAILABLE"] as const,
+  },
+  // Nhóm mặc định dành cho trường hợp không truyền role hoặc role không khớp
+  DEFAULT: {
+    AVAILABLE: ["BROKEN"] as const,
+    BROKEN: ["FIXED"] as const,
+    FIXED: ["AVAILABLE"] as const,
+  },
+};
+
+export function getScopedStatusTransitions(
+  currentStatus: BikeStatus,
+  role?: string,
+): readonly BikeManageableStatus[] {
   // Role bị scope theo station chỉ được lật trạng thái phục vụ vận hành cơ bản.
-  // Technician: BROKEN → FIXED (đánh dấu đã sửa xong, chờ cập nhật).
   // Không cho phép đẩy xe ra khỏi các flow booking / reservation / redistribution bằng tay.
-  if (currentStatus === "AVAILABLE") {
-    return ["BROKEN"] as const;
-  }
+  const roleConfig =
+    ROLE_TRANSITIONS_MAP[role || "DEFAULT"] ?? ROLE_TRANSITIONS_MAP["DEFAULT"];
 
-  if (currentStatus === "BROKEN") {
-    return ["FIXED"] as const;
-  }
-
-  if (currentStatus === "FIXED") {
-    return ["AVAILABLE"] as const;
-  }
-
-  return [] as const;
+  return roleConfig[currentStatus] ?? ([] as const);
 }
 
 /**
@@ -36,7 +56,9 @@ export function getScopedStatusTransitions(currentStatus: BikeStatus): readonly 
  * Chỉ cho phép các trạng thái phục vụ vận hành/bảo trì, không cho phép admin ép xe
  * đang ở luồng thuê/đặt chỗ (`BOOKED`, `RESERVED`) quay về trạng thái sẵn sàng.
  */
-export function getAdminAllowedStatusTransitions(currentStatus: BikeStatus): readonly AdminBikeManageableStatus[] {
+export function getAdminAllowedStatusTransitions(
+  currentStatus: BikeStatus,
+): readonly AdminBikeManageableStatus[] {
   if (currentStatus === "AVAILABLE") {
     return ["BROKEN", "DISABLED"] as const;
   }
@@ -55,31 +77,35 @@ export function getAdminAllowedStatusTransitions(currentStatus: BikeStatus): rea
 export function isBikeCreateDomainPassThroughError(
   cause: unknown,
 ): cause is
-| BikeStationNotFound
-| BikeStationPlacementCapacityExceeded
-| BikeSupplierNotFound {
-  return cause instanceof BikeStationNotFound
-    || cause instanceof BikeStationPlacementCapacityExceeded
-    || cause instanceof BikeSupplierNotFound;
+  | BikeStationNotFound
+  | BikeStationPlacementCapacityExceeded
+  | BikeSupplierNotFound {
+  return (
+    cause instanceof BikeStationNotFound ||
+    cause instanceof BikeStationPlacementCapacityExceeded ||
+    cause instanceof BikeSupplierNotFound
+  );
 }
 
 export function isBikeUpdateDomainPassThroughError(
   cause: unknown,
 ): cause is
-| BikeCurrentlyRented
-| BikeCurrentlyReserved
-| InvalidBikeStatus
-| BikeNotFound
-| BikeStationNotFound
-| BikeStationPlacementCapacityExceeded
-| BikeSupplierNotFound {
-  return cause instanceof BikeCurrentlyRented
-    || cause instanceof BikeCurrentlyReserved
-    || cause instanceof InvalidBikeStatus
-    || cause instanceof BikeNotFound
-    || cause instanceof BikeStationNotFound
-    || cause instanceof BikeStationPlacementCapacityExceeded
-    || cause instanceof BikeSupplierNotFound;
+  | BikeCurrentlyRented
+  | BikeCurrentlyReserved
+  | InvalidBikeStatus
+  | BikeNotFound
+  | BikeStationNotFound
+  | BikeStationPlacementCapacityExceeded
+  | BikeSupplierNotFound {
+  return (
+    cause instanceof BikeCurrentlyRented ||
+    cause instanceof BikeCurrentlyReserved ||
+    cause instanceof InvalidBikeStatus ||
+    cause instanceof BikeNotFound ||
+    cause instanceof BikeStationNotFound ||
+    cause instanceof BikeStationPlacementCapacityExceeded ||
+    cause instanceof BikeSupplierNotFound
+  );
 }
 
 /**
@@ -92,7 +118,10 @@ export function getAvailablePlacementSlots(station: {
   totalBikes: number;
   activeReturnSlots: number;
 }) {
-  return Math.max(0, station.totalCapacity - station.totalBikes - station.activeReturnSlots);
+  return Math.max(
+    0,
+    station.totalCapacity - station.totalBikes - station.activeReturnSlots,
+  );
 }
 
 export async function lockStationRow(
