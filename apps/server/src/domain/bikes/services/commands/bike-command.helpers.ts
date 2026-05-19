@@ -45,8 +45,8 @@ export function getScopedStatusTransitions(
 ): readonly BikeManageableStatus[] {
   // Role bị scope theo station chỉ được lật trạng thái phục vụ vận hành cơ bản.
   // Không cho phép đẩy xe ra khỏi các flow booking / reservation / redistribution bằng tay.
-  const roleConfig =
-    ROLE_TRANSITIONS_MAP[role || "DEFAULT"] ?? ROLE_TRANSITIONS_MAP["DEFAULT"];
+  const roleConfig
+    = ROLE_TRANSITIONS_MAP[role || "DEFAULT"] ?? ROLE_TRANSITIONS_MAP.DEFAULT;
 
   return roleConfig[currentStatus] ?? ([] as const);
 }
@@ -77,34 +77,34 @@ export function getAdminAllowedStatusTransitions(
 export function isBikeCreateDomainPassThroughError(
   cause: unknown,
 ): cause is
-  | BikeStationNotFound
-  | BikeStationPlacementCapacityExceeded
-  | BikeSupplierNotFound {
+| BikeStationNotFound
+| BikeStationPlacementCapacityExceeded
+| BikeSupplierNotFound {
   return (
-    cause instanceof BikeStationNotFound ||
-    cause instanceof BikeStationPlacementCapacityExceeded ||
-    cause instanceof BikeSupplierNotFound
+    cause instanceof BikeStationNotFound
+    || cause instanceof BikeStationPlacementCapacityExceeded
+    || cause instanceof BikeSupplierNotFound
   );
 }
 
 export function isBikeUpdateDomainPassThroughError(
   cause: unknown,
 ): cause is
-  | BikeCurrentlyRented
-  | BikeCurrentlyReserved
-  | InvalidBikeStatus
-  | BikeNotFound
-  | BikeStationNotFound
-  | BikeStationPlacementCapacityExceeded
-  | BikeSupplierNotFound {
+| BikeCurrentlyRented
+| BikeCurrentlyReserved
+| InvalidBikeStatus
+| BikeNotFound
+| BikeStationNotFound
+| BikeStationPlacementCapacityExceeded
+| BikeSupplierNotFound {
   return (
-    cause instanceof BikeCurrentlyRented ||
-    cause instanceof BikeCurrentlyReserved ||
-    cause instanceof InvalidBikeStatus ||
-    cause instanceof BikeNotFound ||
-    cause instanceof BikeStationNotFound ||
-    cause instanceof BikeStationPlacementCapacityExceeded ||
-    cause instanceof BikeSupplierNotFound
+    cause instanceof BikeCurrentlyRented
+    || cause instanceof BikeCurrentlyReserved
+    || cause instanceof InvalidBikeStatus
+    || cause instanceof BikeNotFound
+    || cause instanceof BikeStationNotFound
+    || cause instanceof BikeStationPlacementCapacityExceeded
+    || cause instanceof BikeSupplierNotFound
   );
 }
 
