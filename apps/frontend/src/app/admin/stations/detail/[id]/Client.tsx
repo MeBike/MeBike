@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { stationSchema, StationSchemaFormData } from "@/schemas/station-schema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { formatToVNTime } from "@/lib/formatVNDate";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -28,7 +29,9 @@ import {
   MapPin,
   Bike,
   Wallet,
-  CalendarCheck
+  CalendarCheck,
+  Hammer,
+  PieChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Station } from "@/types";
@@ -78,7 +81,7 @@ function MetricCard({
   bgClass: string;
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-border/50 bg-card p-5 shadow-sm">
+    <div className="flex items-center gap-4 rounded-xl border border-border/50 bg-card p-5 shadow-sm transition-all hover:shadow-md">
       <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-full", bgClass)}>
         <Icon className={cn("h-6 w-6", colorClass)} />
       </div>
@@ -103,12 +106,12 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border border-border/50 bg-card shadow-sm h-full", className)}>
-      <div className="flex items-center gap-2 border-b border-border/30 px-6 py-4">
+    <div className={cn("rounded-xl border border-border/50 bg-card shadow-sm h-full flex flex-col", className)}>
+      <div className="flex items-center gap-2 border-b border-border/30 px-6 py-4 bg-muted/10">
         <Icon className="h-5 w-5 text-primary" />
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-6 flex-1">{children}</div>
     </div>
   );
 }
@@ -122,12 +125,24 @@ function Field({ label, value, className }: { label: string; value: React.ReactN
   );
 }
 
-function StatusItem({ icon: Icon, label, value, color, boldValue = false }: { icon: LucideIcon; label: string; value: number; color: string; boldValue?: boolean }) {
+function StatusItem({
+  icon: Icon,
+  label,
+  value,
+  color,
+  boldValue = false,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  color: string;
+  boldValue?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between py-2.5">
       <div className="flex items-center gap-3">
         <div className={cn("p-1.5 rounded-md bg-muted/50", color.replace("text-", "text-").replace("500", "500").replace("600", "600"))}>
-           <Icon className={cn("h-4 w-4", color)} />
+          <Icon className={cn("h-4 w-4", color)} />
         </div>
         <span className="text-sm text-muted-foreground font-medium">{label}</span>
       </div>
@@ -151,7 +166,7 @@ export default function StationDetailClient({
 }: StationDetailClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const {
     register,
     handleSubmit,
@@ -185,22 +200,24 @@ export default function StationDetailClient({
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => router.push("/admin/stations")} className="h-9 w-9 rounded-full">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => router.push("/admin/stations")}
+              className="h-9 w-9 rounded-full shadow-sm"
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl font-bold">
-              {isEditing ? "Chỉnh sửa trạm" : "Chi tiết trạm"}
-            </h1>
-            {!isEditing && (
-              <Badge
-                variant={
-                  station.stationType === "AGENCY" ? "default" : "secondary"
-                }
-                className="ml-2"
-              >
-                {station.stationType}
-              </Badge>
-            )}
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight">
+                {isEditing ? "Chỉnh sửa trạm" : "Tổng quan trạm"}
+              </h1>
+              {!isEditing && (
+                <Badge variant={station.stationType === "INTERNAL" ? "default" : "secondary"} className="px-2 py-0.5 shadow-sm">
+                  {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="flex gap-2">
             {isEditing && (
@@ -208,13 +225,33 @@ export default function StationDetailClient({
                 Hủy
               </Button>
             )}
-            <Button onClick={isEditing ? handleSubmit(onSave) : handleEdit} disabled={isSubmitting} className="min-w-[120px]">
+            <Button
+              onClick={isEditing ? handleSubmit(onSave) : handleEdit}
+              disabled={isSubmitting}
+              className="min-w-[140px] shadow-sm"
+            >
               {isEditing ? (isSubmitting ? "Đang lưu..." : "Lưu thay đổi") : "Chỉnh sửa thông tin"}
             </Button>
           </div>
         </div>
 
-        {/* TOP METRICS (Hàng ngang 4 thẻ, rất cân đối) */}
+        {/* METADATA BAR */}
+        <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-muted/30 px-5 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-1">
+          <div>
+            <span className="text-muted-foreground font-medium uppercase text-[11px] tracking-wider mr-2">ID Trạm:</span>
+            <span className="font-mono text-sm font-semibold text-foreground">{station.id}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground font-medium uppercase text-[11px] tracking-wider mr-2">Khởi tạo:</span>
+            <span className="text-sm font-medium text-foreground">{formatToVNTime(station.createdAt)}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground font-medium uppercase text-[11px] tracking-wider mr-2">Cập nhật:</span>
+            <span className="text-sm font-medium text-foreground">{formatToVNTime(station.updatedAt)}</span>
+          </div>
+        </div>
+        
+        {/* TOP METRICS (TẦNG 1: Bức tranh toàn cảnh 4 cột) */}
         {!isEditing && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
@@ -250,13 +287,57 @@ export default function StationDetailClient({
             />
           </div>
         )}
+        {!isEditing && (
+          <SectionCard icon={Activity} title="Chi tiết trạng thái phương tiện" className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:divide-x divide-y md:divide-y-0 divide-border/40">
+              
+              {/* Cột 1: Tại trạm */}
+              <div className="pt-4 md:pt-0 first:pt-0 md:pr-4">
+                <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
+                  <MapPin className="h-3.5 w-3.5" /> Xe nội trạm
+                </h4>
+                <div className="space-y-1">
+                  <StatusItem icon={CheckCircle2} label="Sẵn sàng cho thuê" value={station.bikes.available} color="text-emerald-600" boldValue />
+                  <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.reserved} color="text-amber-600" />
+                  <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
+                  <StatusItem icon={AlertTriangle} label="Đang bị hỏng" value={station.bikes.broken} color="text-red-500" />
+                  <StatusItem icon={Hammer} label="Đã sửa" value={station.bikes.fixed} color="text-indigo-500" />
+                </div>
+              </div>
 
-        {/* MIDDLE CONTENT GRID (Chia tỷ lệ 2 Cột Trái - 1 Cột Phải) */}
+              {/* Cột 2: Luân chuyển */}
+              <div className="pt-6 md:pt-0 md:px-4">
+                <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
+                  <RefreshCcw className="h-3.5 w-3.5" /> Xe ngoại trạm
+                </h4>
+                <div className="space-y-1">
+                  <StatusItem icon={RefreshCcw} label="Hỗ trợ sự cố" value={station.bikes.swapping} color="text-blue-500" />
+                  <StatusItem icon={Truck} label="Đang vận chuyển" value={station.bikes.transporting} color="text-indigo-500" />
+                  <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-blue-600" />
+                </div>
+              </div>
+
+              {/* Cột 3: Sự cố */}
+              <div className="pt-6 md:pt-0 md:pl-4">
+                <h4 className="flex items-center gap-2 text-[11px] font-bold text-destructive uppercase tracking-wider mb-4">
+                  <ShieldAlert className="h-3.5 w-3.5" /> Xe ngưng hoạt động
+                </h4>
+                <div className="space-y-1">
+                  <StatusItem icon={HelpCircle} label="Bị mất" value={station.bikes.lost} color="text-red-600" />
+                  <StatusItem icon={Ban} label="Tạm ngưng hệ thống" value={station.bikes.disabled} color="text-slate-500" />
+                </div>
+              </div>
+
+            </div>
+          </SectionCard>
+        )}
+
+        {/* MIDDLE CONTENT GRID (TẦNG 2: 2 Cột Trái - 1 Cột Phải) */}
         <div className="grid gap-6 lg:grid-cols-3 items-start">
           
-          {/* CỘT TRÁI (Chiếm 2 phần) */}
+          {/* CỘT TRÁI: THÔNG TIN & NHÂN SỰ */}
           <div className="lg:col-span-2 space-y-6">
-            <SectionCard icon={Info} title="Thông tin chung">
+            <SectionCard icon={Info} title="Thông tin quản lý">
               {isEditing ? (
                 <div className="grid grid-cols-2 gap-5">
                   <div className="col-span-2 sm:col-span-1 space-y-1.5">
@@ -264,17 +345,14 @@ export default function StationDetailClient({
                     <Input {...register("name")} className={cn(errors.name && "border-destructive")} />
                     <ErrorMsg message={errors.name?.message} />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold">LOẠI TRẠM</label>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase">Loại trạm</label>
                     <select
                       {...register("stationType")}
-                      className={cn(
-                        "w-full h-10 border rounded-md px-2 text-sm",
-                        errors.stationType && "border-destructive",
-                      )}
+                      className={cn("flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm", errors.stationType && "border-destructive")}
                     >
-                      <option value="INTERNAL">INTERNAL</option>
-                      <option value="AGENCY">AGENCY</option>
+                      <option value="INTERNAL">Trạm nội bộ</option>
+                      <option value="AGENCY">Trạm đối tác</option>
                     </select>
                     <ErrorMsg message={errors.stationType?.message} />
                   </div>
@@ -297,10 +375,16 @@ export default function StationDetailClient({
               ) : (
                 <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                   <Field label="Tên trạm" value={station.name} />
-                  <Field label="Loại trạm" value={station.stationType} />
+                  <Field label="Loại trạm" value={station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"} />
                   <Field label="Địa chỉ" value={station.address} className="col-span-2" />
                   <Field label="Tọa độ" value={`${station.location.latitude}, ${station.location.longitude}`} className="col-span-2 sm:col-span-1" />
-                  {station.agencyId && <Field label="Mã đại lý" value={<code className="text-xs bg-muted p-1.5 rounded-md">{station.agencyId}</code>} className="col-span-2 sm:col-span-1" />}
+                  {station.agencyId && (
+                    <Field
+                      label="Mã đại lý"
+                      value={<code className="text-xs bg-muted p-1.5 rounded-md border border-border/50">{station.agencyId}</code>}
+                      className="col-span-2 sm:col-span-1"
+                    />
+                  )}
                 </div>
               )}
             </SectionCard>
@@ -309,8 +393,8 @@ export default function StationDetailClient({
               {station.workers?.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {station.workers.map((w) => (
-                    <div key={w.userId} className="flex items-center gap-3 p-3.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors">
-                      <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                    <div key={w.userId} className="flex items-center gap-3 p-3.5 rounded-xl border border-border/40 bg-muted/10 hover:bg-muted/30 transition-colors">
+                      <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shadow-sm">
                         {w.fullName.charAt(0)}
                       </div>
                       <div className="flex-1 overflow-hidden">
@@ -318,23 +402,25 @@ export default function StationDetailClient({
                         <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{ROLE_LABELS[w.role]}</p>
                       </div>
                       {w.technicianTeamId && (
-                         <Badge variant="outline" className="text-[10px] whitespace-nowrap bg-background">Team {w.technicianTeamName}</Badge>
+                        <Badge variant="outline" className="text-[10px] whitespace-nowrap bg-background">
+                          Team {w.technicianTeamName}
+                        </Badge>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="py-8 text-center border-2 border-dashed border-border/50 rounded-xl">
-                  <Users className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                <div className="py-8 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/5">
+                  <Users className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">Chưa có nhân viên nào được phân công.</p>
                 </div>
               )}
             </SectionCard>
           </div>
 
-          {/* CỘT PHẢI (Chiếm 1 phần) */}
-          <div className="lg:col-span-1">
-            <SectionCard icon={LayoutGrid} title="Quản lý chỗ đỗ">
+          {/* CỘT PHẢI: KHÔNG GIAN BÃI ĐỖ */}
+          <div className="lg:col-span-1 space-y-6">
+            <SectionCard icon={LayoutGrid} title="Tình trạng chỗ đỗ">
               {isEditing ? (
                 <div className="grid gap-5">
                   <div className="space-y-1.5">
@@ -349,69 +435,33 @@ export default function StationDetailClient({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-5">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-muted/40 border border-border/50">
-                     <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Chỗ trống hiện tại</p>
-                        <p className="text-3xl font-bold text-foreground">{station.returnSlots.available} <span className="text-sm font-normal text-muted-foreground">/ {station.capacity.total}</span></p>
-                     </div>
-                     <LayoutGrid className="h-8 w-8 text-muted-foreground/30" />
+                <div className="flex items-center justify-between p-5 rounded-xl bg-muted/30 border border-border/50">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Chỗ trống hiện tại</p>
+                    <p className="text-3xl font-bold text-foreground">
+                      {station.returnSlots.available} <span className="text-sm font-normal text-muted-foreground">/ {station.capacity.total}</span>
+                    </p>
                   </div>
-                  <div className="space-y-1 px-1">
-                    <StatusItem icon={Activity} label="Chỗ khách trả xe" value={station.returnSlots.active} color="text-blue-600" />
-                    <StatusItem icon={Wrench} label="Chỗ xe điều phối" value={station.redistributionSlots} color="text-orange-500" />
-                  </div>
+                  <LayoutGrid className="h-8 w-8 text-muted-foreground/30" />
                 </div>
               )}
             </SectionCard>
+
+            {!isEditing && (
+              <SectionCard icon={PieChart} title="Phân bổ chỗ đỗ">
+                <div className="space-y-1">
+                  <StatusItem icon={Activity} label="Chỗ khách trả xe" value={station.returnSlots.active} color="text-blue-600" />
+                  <StatusItem icon={Wrench} label="Chỗ xe điều phối" value={station.redistributionSlots} color="text-orange-500" />
+                  {/* <div className="pt-3 mt-3 border-t border-border/40 flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground font-medium">Giới hạn khách trả:</span>
+                    <span className="font-bold text-foreground">{station.capacity.returnSlotLimit}</span>
+                  </div> */}
+                </div>
+              </SectionCard>
+            )}
           </div>
-          
         </div>
 
-        {/* BOTTOM SECTION - TRẠNG THÁI PHƯƠNG TIỆN (Dàn ngang mượt mà, giải quyết vấn đề thọt) */}
-        {!isEditing && (
-          <SectionCard icon={Activity} title="Chi tiết trạng thái phương tiện" className="w-full">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:divide-x divide-y md:divide-y-0 divide-border/40">
-              
-              {/* Cột 1: Tại trạm */}
-              <div className="pt-4 md:pt-0 first:pt-0 md:pr-4">
-                <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                  <MapPin className="h-3.5 w-3.5" /> Trực tiếp tại trạm
-                </h4>
-                <div className="space-y-1">
-                  <StatusItem icon={CheckCircle2} label="Sẵn sàng cho thuê" value={station.bikes.available} color="text-emerald-600" boldValue />
-                  <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.booked} color="text-amber-600" />
-                </div>
-              </div>
-
-              {/* Cột 2: Luân chuyển */}
-              <div className="pt-6 md:pt-0 md:px-4">
-                <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                  <RefreshCcw className="h-3.5 w-3.5" /> Luân chuyển & Điều phối
-                </h4>
-                <div className="space-y-1">
-                  <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
-                  <StatusItem icon={RefreshCcw} label="Đang đổi xe" value={station.bikes.swapping} color="text-blue-500" />
-                  <StatusItem icon={Truck} label="Đang vận chuyển" value={station.bikes.transporting} color="text-indigo-500" />
-                  <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-indigo-500" />
-                </div>
-              </div>
-
-              {/* Cột 3: Sự cố */}
-              <div className="pt-6 md:pt-0 md:pl-4">
-                <h4 className="flex items-center gap-2 text-[11px] font-bold text-destructive uppercase tracking-wider mb-4">
-                  <ShieldAlert className="h-3.5 w-3.5" /> Sự cố & Ngưng hoạt động
-                </h4>
-                <div className="space-y-1">
-                  <StatusItem icon={AlertTriangle} label="Xe đang hỏng" value={station.bikes.broken} color="text-red-500" />
-                  <StatusItem icon={HelpCircle} label="Xe bị mất" value={station.bikes.lost} color="text-red-600" />
-                  <StatusItem icon={Ban} label="Tạm ngưng hệ thống" value={station.bikes.disabled} color="text-slate-500" />
-                </div>
-              </div>
-
-            </div>
-          </SectionCard>
-        )}
       </div>
     </div>
   );

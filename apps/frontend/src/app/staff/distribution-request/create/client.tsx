@@ -3,7 +3,7 @@
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Repeat, Loader2, Info, ArrowLeft , AlertCircle } from "lucide-react";
+import { Repeat, Loader2, Info, ArrowLeft, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -195,10 +195,26 @@ export default function CreateDistributionRequestClient({
 
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
                           <span className="text-xs text-muted-foreground font-medium">
-                            Đang điều phối
+                            Chuẩn bị điều phối
                           </span>
                           <span className="font-semibold text-base text-orange-500">
-                            {myStationDetail.bikes.redistributing}
+                            {myStationDetail.bikes.pendingDispatch}
+                          </span>
+                        </div>
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">
+                            Đang vận chuyển
+                          </span>
+                          <span className="font-semibold text-base text-orange-500">
+                            {myStationDetail.bikes.transporting}
+                          </span>
+                        </div>
+                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">
+                            Hỗ trợ sự cố
+                          </span>
+                          <span className="font-semibold text-base text-orange-500">
+                            {myStationDetail.bikes.swapping}
                           </span>
                         </div>
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
@@ -275,7 +291,7 @@ export default function CreateDistributionRequestClient({
                       <p>
                         Xe khả dụng tại trạm xuất:{" "}
                         <span className="font-semibold text-red-600">
-                          {sourceAvailableBikes}
+                          {Math.max(0, sourceAvailableBikes - 10)}(dành sẵn 10 xe cho khách thuê)
                         </span>
                       </p>
                     </div>
