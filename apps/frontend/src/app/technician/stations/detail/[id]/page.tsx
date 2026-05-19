@@ -360,7 +360,7 @@ export default function StationDetailPage() {
                 <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.reserved} color="text-amber-600" />
                 <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
                 <StatusItem icon={AlertTriangle} label="Đang bị hỏng" value={station.bikes.broken} color="text-red-500" />
-                <StatusItem icon={Hammer} label="Đã sửa" value={station.bikes.fixed} color="text-red-500" />
+                <StatusItem icon={Hammer} label="Đã sửa" value={station.bikes.fixed} color="text-indigo-500" />
               </div>
             </div>
 
@@ -372,7 +372,7 @@ export default function StationDetailPage() {
               <div className="space-y-1">
                 <StatusItem icon={RefreshCcw} label="Hỗ trợ sự cố" value={station.bikes.swapping} color="text-blue-500" />
                 <StatusItem icon={Truck} label="Đang vận chuyển" value={station.bikes.transporting} color="text-indigo-500" />
-                <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-indigo-500" />
+                <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-blue-500" />
               </div>
             </div>
 

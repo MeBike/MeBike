@@ -291,7 +291,7 @@ export default function CreateDistributionRequestClient({
                       <p>
                         Xe khả dụng tại trạm xuất:{" "}
                         <span className="font-semibold text-red-600">
-                          {sourceAvailableBikes-10}(dành sẵn 10 xe cho khách thuê)
+                          {Math.max(0, sourceAvailableBikes - 10)}(dành sẵn 10 xe cho khách thuê)
                         </span>
                       </p>
                     </div>

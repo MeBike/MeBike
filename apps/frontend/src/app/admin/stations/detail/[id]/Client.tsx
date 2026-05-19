@@ -298,7 +298,7 @@ export default function StationDetailClient({
                 </h4>
                 <div className="space-y-1">
                   <StatusItem icon={CheckCircle2} label="Sẵn sàng cho thuê" value={station.bikes.available} color="text-emerald-600" boldValue />
-                  <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.booked} color="text-amber-600" />
+                  <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.reserved} color="text-amber-600" />
                   <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
                   <StatusItem icon={AlertTriangle} label="Đang bị hỏng" value={station.bikes.broken} color="text-red-500" />
                   <StatusItem icon={Hammer} label="Đã sửa" value={station.bikes.fixed} color="text-indigo-500" />
@@ -375,7 +375,7 @@ export default function StationDetailClient({
               ) : (
                 <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                   <Field label="Tên trạm" value={station.name} />
-                  <Field label="Loại trạm" value={station.stationType === "INTERNAL" ? "Nội bộ" : "Đại lý"} />
+                  <Field label="Loại trạm" value={station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"} />
                   <Field label="Địa chỉ" value={station.address} className="col-span-2" />
                   <Field label="Tọa độ" value={`${station.location.latitude}, ${station.location.longitude}`} className="col-span-2 sm:col-span-1" />
                   {station.agencyId && (
