@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import type { DetailUser } from "@/types";
 import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
 import { formatToVNTime } from "@/lib/formatVNDate";
+import { NotificationBell } from "../notifications/notification-bell";
 import { getRoleColor, ROLE_LABELS } from "@/columns/user-columns";
 interface ProfileHeaderProps {
   user: DetailUser;

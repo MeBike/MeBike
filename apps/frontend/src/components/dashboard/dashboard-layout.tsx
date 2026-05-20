@@ -5,6 +5,7 @@ import { Sidebar } from "./sidebar";
 import type { DetailUser } from "@/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
+import { NotificationBell } from "../notifications/notification-bell";
 interface DashboardLayoutProps {
   children: React.ReactNode;
   user: DetailUser;
@@ -30,6 +31,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                     {user?.role || "user"}
                   </p>
                 </div>
+                <NotificationBell/>
                 <Avatar className="w-10 h-10 border-2 border-primary/20">
                   <AvatarImage
                     src={user.avatar || "/placeholder.svg"}

@@ -38,6 +38,7 @@
     "nodemailer": "^6.9.15",
     "nprogress": "^0.2.0",
     "postcss": "^8.5.6",
+    "radix-ui": "^1.4.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.65.0",
