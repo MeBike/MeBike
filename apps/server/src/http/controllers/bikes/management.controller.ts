@@ -36,11 +36,13 @@ function invalidStatusResponse(status: string): BikeUpdateConflictResponse {
 const managerUpdateBikeStatus: RouteHandler<BikesRoutes["managerUpdateBikeStatus"]> = async (c) => {
   const { id } = c.req.valid("param");
   const body = c.req.valid("json");
-  const stationId = c.var.currentUser?.operatorStationId;
+  const currentUser = c.var.currentUser;
 
-  if (!stationId) {
+  if (!currentUser || !currentUser.operatorStationId) {
     return c.json<BikeNotFoundResponse, 404>(notFoundResponse(id), 404);
   }
+
+  const stationId = currentUser.operatorStationId;
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -48,6 +50,7 @@ const managerUpdateBikeStatus: RouteHandler<BikesRoutes["managerUpdateBikeStatus
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,
+        role: currentUser.role,
       });
 
       return yield* loadBikeSummary(bike);
@@ -75,11 +78,13 @@ const managerUpdateBikeStatus: RouteHandler<BikesRoutes["managerUpdateBikeStatus
 const agencyUpdateBikeStatus: RouteHandler<BikesRoutes["agencyUpdateBikeStatus"]> = async (c) => {
   const { id } = c.req.valid("param");
   const body = c.req.valid("json");
-  const stationId = c.var.currentUser?.operatorStationId;
+  const currentUser = c.var.currentUser;
 
-  if (!stationId) {
+  if (!currentUser || !currentUser.operatorStationId) {
     return c.json<BikeNotFoundResponse, 404>(notFoundResponse(id), 404);
   }
+
+  const stationId = currentUser.operatorStationId;
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -87,6 +92,7 @@ const agencyUpdateBikeStatus: RouteHandler<BikesRoutes["agencyUpdateBikeStatus"]
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,
+        role: currentUser.role,
       });
 
       return yield* loadBikeSummary(bike);
@@ -114,11 +120,13 @@ const agencyUpdateBikeStatus: RouteHandler<BikesRoutes["agencyUpdateBikeStatus"]
 const technicianUpdateBikeStatus: RouteHandler<BikesRoutes["technicianUpdateBikeStatus"]> = async (c) => {
   const { id } = c.req.valid("param");
   const body = c.req.valid("json");
-  const stationId = c.var.currentUser?.operatorStationId;
+  const currentUser = c.var.currentUser;
 
-  if (!stationId) {
+  if (!currentUser || !currentUser.operatorStationId) {
     return c.json<BikeNotFoundResponse, 404>(notFoundResponse(id), 404);
   }
+
+  const stationId = currentUser.operatorStationId;
 
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -126,6 +134,7 @@ const technicianUpdateBikeStatus: RouteHandler<BikesRoutes["technicianUpdateBike
       const bike = yield* service.updateBikeStatusInStationScope(id, {
         stationId,
         status: body.status,
+        role: currentUser.role,
       });
 
       return yield* loadBikeSummary(bike);
