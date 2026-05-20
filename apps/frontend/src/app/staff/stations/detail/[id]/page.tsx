@@ -17,6 +17,7 @@ import {
   Wrench,
   Ban,
   Repeat,
+  Bell,
   Users,
   HelpCircle,
   LucideIcon,
@@ -181,8 +182,32 @@ export default function StationDetailPage() {
 
   const [isVisualLoading, setIsVisualLoading] = useState(true);
   
-  // --- THÊM STATE ĐỂ CHẶN SPAM THÔNG BÁO ---
+  // --- STATE QUẢN LÝ THÔNG BÁO ---
   const [hasNotified, setHasNotified] = useState(false);
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
+
+  // Kiểm tra thời gian cooldown chống spam từ localStorage khi load trang
+  useEffect(() => {
+    if (!id) return;
+    const lastSentStr = localStorage.getItem(`low_bike_notif_sent_${id}`);
+    if (lastSentStr) {
+      const lastSent = parseInt(lastSentStr, 10);
+      const now = Date.now();
+      const COOLDOWN_TIME = 5 * 60 * 1000; // Cooldown 5 phút
+      if (now - lastSent < COOLDOWN_TIME) {
+        setHasNotified(true);
+        const remaining = COOLDOWN_TIME - (now - lastSent);
+        const timer = setTimeout(() => {
+          setHasNotified(false);
+        }, remaining);
+        return () => clearTimeout(timer);
+      } else {
+        setHasNotified(false);
+      }
+    } else {
+      setHasNotified(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     getListStation();
@@ -205,37 +230,34 @@ export default function StationDetailPage() {
     }
   }, [id, getMyStationDetail]);
 
-  // --- THÊM USE-EFFECT ĐỂ XỬ LÝ LOGIC BẮN THÔNG BÁO ---
-  useEffect(() => {
+  // --- HÀM XỬ LÝ GỬI THÔNG BÁO THỦ CÔNG ---
+  const handleSendNotification = async () => {
     if (!myStationDetail) return;
-    
     const currentStation = myStationDetail as Station;
-    
-    // Nếu xe sẵn sàng <= 10 và chưa bắn thông báo trong lần mở trang này
-    if (currentStation.bikes.available <= 10 && !hasNotified) {
-      const sendAlert = async () => {
-        try {
-          // Gọi API Route vừa tạo
-          const response = await axios.post("/api/notifications/low-bike", {
-            stationId: currentStation.id,
-            stationName: currentStation.name,
-            availableBikes: currentStation.bikes.available,
-          });
+    if (currentStation.bikes.available > 10 || isSendingNotification || hasNotified) return;
 
-          if (response.data.success) {
-            setHasNotified(true); // Cập nhật state để không gọi lại nữa
-            toast.warning(`Đã tự động gửi yêu cầu điều phối xe! Trạm hiện chỉ còn ${currentStation.bikes.available} xe.`);
-          }
-        } catch (error) {
-          console.error("Lỗi khi gửi push notification:", error);
-          // Không cần show lỗi cho user nếu bắn thông báo ngầm thất bại
-        }
-      };
-
-      sendAlert();
+    setIsSendingNotification(true);
+    try {
+      const response = await axios.post("/api/notifications/low-bike", {
+        stationId: currentStation.id,
+        stationName: currentStation.name,
+        availableBikes: currentStation.bikes.available,
+      });
+      if (response.data.success) {
+        setHasNotified(true);
+        // Lưu timestamp vào localStorage để chống spam kể cả khi tải lại trang
+        localStorage.setItem(`low_bike_notif_sent_${currentStation.id}`, Date.now().toString());
+        toast.success(`Đã gửi yêu cầu điều phối xe! Trạm hiện chỉ còn ${currentStation.bikes.available} xe.`);
+      } else {
+        toast.error("Gửi yêu cầu điều phối thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi push notification:", error);
+      toast.error("Có lỗi xảy ra khi gửi yêu cầu điều phối.");
+    } finally {
+      setIsSendingNotification(false);
     }
-  }, [myStationDetail, hasNotified]);
-  // ----------------------------------------------------
+  };
 
   if (isVisualLoading) return <LoadingScreen />;
   if (!myStationDetail) {
@@ -288,6 +310,23 @@ export default function StationDetailPage() {
                 <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
               </Button>
             )}
+            <Button
+              onClick={handleSendNotification}
+              disabled={station.bikes.available > 10 || isSendingNotification || hasNotified}
+              className={cn(
+                "shadow-sm transition-all duration-200 active:scale-95",
+                station.bikes.available <= 10 && !hasNotified
+                  ? "bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 shadow-rose-200 dark:shadow-none"
+                  : "bg-muted/50 border border-border text-muted-foreground/60 cursor-not-allowed"
+              )}
+            >
+              <Bell className={cn("w-4 h-4 mr-2", station.bikes.available <= 10 && !hasNotified && "animate-bounce")} />
+              {isSendingNotification
+                ? "Đang gửi yêu cầu..."
+                : hasNotified
+                ? "Đã gửi thông báo"
+                : "Gửi thông báo thiếu xe"}
+            </Button>
             <Button
               variant="outline"
               onClick={() => router.push("/staff/stations")}

@@ -33,7 +33,6 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
   return (
     <Card className="p-6">
       <div className="flex flex-col md:flex-row gap-6">
-        <NotificationBell />
         <Avatar className="w-24 h-24 border-4 border-primary/20">
           <AvatarImage
             src={avatarPreview || user.avatar || "/placeholder.svg"}
