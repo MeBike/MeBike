@@ -26,6 +26,7 @@ export type CreateBikeInput = {
 export type BikeStationScopedStatusUpdateInput = {
   stationId: string;
   status: BikeManageableStatus;
+  role: string;
 };
 
 export type AdminBikeUpdatePatch = Partial<{

@@ -365,4 +365,84 @@ describe("operator bikes routing e2e", () => {
     expect(response.status).toBe(400);
     expect(body.details?.code).toBe("INVALID_BIKE_STATUS");
   });
+
+  it("allows technician to transition a broken bike to fixed", async () => {
+    const station = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "BROKEN" });
+    const token = await createOperatorToken("TECHNICIAN", station.id);
+
+    const response = await fixture.app.request(`http://test/v1/technician/bikes/${bike.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "FIXED" }),
+    });
+
+    const body = await response.json() as { status: string };
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("FIXED");
+  });
+
+  it("returns 400 when technician tries to transition a fixed bike to available", async () => {
+    const station = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "FIXED" });
+    const token = await createOperatorToken("TECHNICIAN", station.id);
+
+    const response = await fixture.app.request(`http://test/v1/technician/bikes/${bike.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "AVAILABLE" }),
+    });
+
+    const body = await response.json() as { details?: { code?: string } };
+
+    expect(response.status).toBe(400);
+    expect(body.details?.code).toBe("INVALID_BIKE_STATUS");
+  });
+
+  it("allows manager to transition a fixed bike to available", async () => {
+    const station = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "FIXED" });
+    const token = await createOperatorToken("MANAGER", station.id);
+
+    const response = await fixture.app.request(`http://test/v1/manager/bikes/${bike.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "AVAILABLE" }),
+    });
+
+    const body = await response.json() as { status: string };
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("AVAILABLE");
+  });
+
+  it("returns 400 when manager tries to transition a broken bike to fixed", async () => {
+    const station = await fixture.factories.station({ capacity: 5 });
+    const bike = await fixture.factories.bike({ stationId: station.id, status: "BROKEN" });
+    const token = await createOperatorToken("MANAGER", station.id);
+
+    const response = await fixture.app.request(`http://test/v1/manager/bikes/${bike.id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "FIXED" }),
+    });
+
+    const body = await response.json() as { details?: { code?: string } };
+
+    expect(response.status).toBe(400);
+    expect(body.details?.code).toBe("INVALID_BIKE_STATUS");
+  });
 });

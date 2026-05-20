@@ -44,7 +44,7 @@ export function makeBikeCommandService({
           return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
         }
 
-        const allowed = getScopedStatusTransitions(current.value.status);
+        const allowed = getScopedStatusTransitions(current.value.status, input.role);
         if (!allowed.includes(input.status)) {
           return yield* Effect.fail(new InvalidBikeStatus({
             status: input.status,
@@ -74,7 +74,7 @@ export function makeBikeCommandService({
 
         return yield* Effect.fail(new InvalidBikeStatus({
           status: input.status,
-          allowed: getScopedStatusTransitions(latest.value.status),
+          allowed: getScopedStatusTransitions(latest.value.status, input.role),
         }));
       }),
 
