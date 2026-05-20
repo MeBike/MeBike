@@ -33,6 +33,10 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { ROLE_LABELS } from "@/columns/user-columns";
 
+// --- THÊM IMPORT CHO NOTIFICATION ---
+import axios from "axios";
+import { toast } from "sonner"; // Hoặc đổi sang thư viện toast bạn đang dùng (react-hot-toast, components/ui/use-toast...)
+
 // --- REUSABLE COMPONENTS ---
 function MetricCard({
   title,
@@ -176,6 +180,9 @@ export default function StationDetailPage() {
   });
 
   const [isVisualLoading, setIsVisualLoading] = useState(true);
+  
+  // --- THÊM STATE ĐỂ CHẶN SPAM THÔNG BÁO ---
+  const [hasNotified, setHasNotified] = useState(false);
 
   useEffect(() => {
     getListStation();
@@ -197,6 +204,38 @@ export default function StationDetailPage() {
       getMyStationDetail();
     }
   }, [id, getMyStationDetail]);
+
+  // --- THÊM USE-EFFECT ĐỂ XỬ LÝ LOGIC BẮN THÔNG BÁO ---
+  useEffect(() => {
+    if (!myStationDetail) return;
+    
+    const currentStation = myStationDetail as Station;
+    
+    // Nếu xe sẵn sàng <= 10 và chưa bắn thông báo trong lần mở trang này
+    if (currentStation.bikes.available <= 10 && !hasNotified) {
+      const sendAlert = async () => {
+        try {
+          // Gọi API Route vừa tạo
+          const response = await axios.post("/api/notifications/low-bike", {
+            stationId: currentStation.id,
+            stationName: currentStation.name,
+            availableBikes: currentStation.bikes.available,
+          });
+
+          if (response.data.success) {
+            setHasNotified(true); // Cập nhật state để không gọi lại nữa
+            toast.warning(`Đã tự động gửi yêu cầu điều phối xe! Trạm hiện chỉ còn ${currentStation.bikes.available} xe.`);
+          }
+        } catch (error) {
+          console.error("Lỗi khi gửi push notification:", error);
+          // Không cần show lỗi cho user nếu bắn thông báo ngầm thất bại
+        }
+      };
+
+      sendAlert();
+    }
+  }, [myStationDetail, hasNotified]);
+  // ----------------------------------------------------
 
   if (isVisualLoading) return <LoadingScreen />;
   if (!myStationDetail) {

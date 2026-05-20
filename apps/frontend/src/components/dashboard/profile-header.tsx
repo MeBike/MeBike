@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import type { DetailUser } from "@/types";
 import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
 import { formatToVNTime } from "@/lib/formatVNDate";
+import { NotificationBell } from "../notifications/notification-bell";
 import { getRoleColor, ROLE_LABELS } from "@/columns/user-columns";
 interface ProfileHeaderProps {
   user: DetailUser;
@@ -32,6 +33,7 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
   return (
     <Card className="p-6">
       <div className="flex flex-col md:flex-row gap-6">
+        <NotificationBell />
         <Avatar className="w-24 h-24 border-4 border-primary/20">
           <AvatarImage
             src={avatarPreview || user.avatar || "/placeholder.svg"}
