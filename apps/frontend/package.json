@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.5.0",
+    "firebase-admin": "^13.7.0",
     "lucide": "^0.544.0",
     "lucide-react": "^0.544.0",
     "mapbox-gl": "^3.22.0",
