@@ -87,7 +87,7 @@ interface Props {
   onComplete: (payload: { completedBikeIds: string[] }) => Promise<void>;
   onStartTransit: () => Promise<void>;
   listStation?: CurrentStation;
-  // Thêm prop phân quyền
+  onBack : () => Promise<void>;
   onCancel: (reason: string) => Promise<void>;
   userRole?: "AGENCY";
 }
@@ -96,6 +96,7 @@ export const DistributionRequestDetailClient = ({
   data,
   onApprove,
   onReject,
+  onBack,
   onComplete,
   listStation,
   onStartTransit,
@@ -309,6 +310,24 @@ export const DistributionRequestDetailClient = ({
                 <CheckCheck className="mr-2 h-4 w-4" />
               )}
               Hoàn tất ({selectedBikeIds.length} xe)
+            </Button>
+          )}
+          {isReceivingStatus && canCompleteRequest && (
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 shadow-sm"
+              onClick={() =>
+                handleAction(() =>
+                  onBack(),
+                )
+              }
+              disabled={isProcessing || selectedBikeIds.length === 0}
+            >
+              {isProcessing ? (
+                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+              ) : (
+                <ArrowLeft className="mr-2 h-4 w-4" />
+              )}
+              Hoàn xe
             </Button>
           )}
           {data.status === "APPROVED" && canCancelRequest && (

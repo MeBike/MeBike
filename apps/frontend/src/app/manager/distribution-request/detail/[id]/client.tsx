@@ -57,6 +57,7 @@ interface Props {
   data: RedistributionRequestDetail;
   onApprove: () => Promise<void>;
   onReject: (reason: string) => Promise<void>;
+  onBack : () => Promise<void>;
   onComplete: (payload: { completedBikeIds: string[] }) => Promise<void>;
   listStation?: CurrentStation;
 }
@@ -67,6 +68,7 @@ export const DistributionRequestDetailClient = ({
   onReject,
   onComplete,
   listStation,
+  onBack,
 }: Props) => {
   const router = useRouter();
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -173,7 +175,6 @@ export const DistributionRequestDetailClient = ({
                 </Button>
               </>
             )}
-
             {(data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED") && (
               <Button
                 className="bg-blue-600 hover:bg-blue-700 shadow-sm"
@@ -182,6 +183,16 @@ export const DistributionRequestDetailClient = ({
               >
                 {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCheck className="mr-2 h-4 w-4" />}
                 Hoàn tất ({selectedBikeIds.length} xe)
+              </Button>
+            )}
+            {(data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED") &&  (
+              <Button
+                className="bg-orange-600 hover:bg-orange-700 shadow-sm"
+                onClick={() => handleAction(() => onBack())}
+                disabled={isProcessing }
+              >
+                {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowLeft className="mr-2 h-4 w-4" />}
+                Hoàn xe
               </Button>
             )}
           </div>
