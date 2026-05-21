@@ -2,6 +2,7 @@ import { Data, Effect, Layer } from "effect";
 import { applicationDefault, getApps, initializeApp } from "firebase-admin/app";
 import { getStorage } from "firebase-admin/storage";
 import { Buffer } from "node:buffer";
+import process from "node:process";
 
 import { env } from "@/config/env";
 
@@ -50,18 +51,22 @@ export type UploadedStorageObject = {
 };
 
 async function createBucket() {
-  const bucketName = env.FIREBASE_STORAGE_BUCKET;
+  const bucketName = env.SERVER_FIREBASE_STORAGE_BUCKET;
 
   if (!bucketName) {
     throw new FirebaseStorageInitError({
-      message: "FIREBASE_STORAGE_BUCKET is required to use Firebase Storage.",
+      message: "SERVER_FIREBASE_STORAGE_BUCKET is required to use Firebase Storage.",
     });
+  }
+
+  if (env.SERVER_GOOGLE_APPLICATION_CREDENTIALS && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = env.SERVER_GOOGLE_APPLICATION_CREDENTIALS;
   }
 
   const existingApp = getApps().find(app => app.name === FIREBASE_STORAGE_APP_NAME);
   const app = existingApp ?? initializeApp({
     credential: applicationDefault(),
-    projectId: env.FIREBASE_PROJECT_ID,
+    projectId: env.SERVER_FIREBASE_PROJECT_ID,
     storageBucket: bucketName,
   }, FIREBASE_STORAGE_APP_NAME);
 
@@ -119,13 +124,13 @@ export type FirebaseStorageService = {
 };
 
 const makeFirebaseStorage = Effect.succeed({
-  bucket: env.FIREBASE_STORAGE_BUCKET ?? null,
+  bucket: env.SERVER_FIREBASE_STORAGE_BUCKET ?? null,
   buildDownloadUrl: ({ path, downloadToken }) => {
-    const bucketName = env.FIREBASE_STORAGE_BUCKET;
+    const bucketName = env.SERVER_FIREBASE_STORAGE_BUCKET;
 
     if (!bucketName) {
       throw new FirebaseStorageInitError({
-        message: "FIREBASE_STORAGE_BUCKET is required to build Firebase download URLs.",
+        message: "SERVER_FIREBASE_STORAGE_BUCKET is required to build Firebase download URLs.",
       });
     }
 
