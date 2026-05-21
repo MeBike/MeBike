@@ -28,16 +28,12 @@ export const getStatusConfig = (status: BikeStatus) => {
       return { label: "Tạm ngưng hoạt động", color: "bg-slate-200 text-slate-800" };
     case "FIXED":
       return { label: "Đã sửa", color: "bg-slate-200 text-slate-800" };
-      
-    // --- CÁC TRẠNG THÁI MỚI THÊM VÀO ---
     case "PENDING_DISPATCH":
       return { label: "Chờ điều phối", color: "bg-purple-100 text-purple-800" };
     case "TRANSPORTING":
       return { label: "Đang vận chuyển", color: "bg-teal-100 text-teal-800" };
     case "SWAPPING":
       return { label: "Đang hoán đổi", color: "bg-fuchsia-100 text-fuchsia-800" }; 
-    // -----------------------------------
-
     case "":
       return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500" };
     default:
