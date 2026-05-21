@@ -21,9 +21,9 @@ export const emailEnvSchema = z.object({
 });
 
 export const firebaseEnvSchema = z.object({
-  FIREBASE_PROJECT_ID: z.string().optional(),
-  FIREBASE_STORAGE_BUCKET: z.string().optional(),
-  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
+  SERVER_FIREBASE_PROJECT_ID: z.string().optional(),
+  SERVER_FIREBASE_STORAGE_BUCKET: z.string().optional(),
+  SERVER_GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
 });
 
 export const mapboxEnvSchema = z.object({
