@@ -34,6 +34,7 @@ import { formatToVNTime } from "@/lib/formatVNDate";
 import { Badge } from "@/components/ui/badge";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { ROLE_LABELS } from "@/columns/user-columns";
+import { StationLayoutMap } from "@/components/StationLayoutMap";
 
 interface StationReport {
   id: string;
@@ -62,27 +63,26 @@ function MetricCard({
   bgClass: string;
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-border/50 bg-card p-5 shadow-sm transition-all hover:shadow-md">
-      <div
-        className={cn(
-          "flex h-12 w-12 shrink-0 items-center justify-center rounded-full",
-          bgClass,
-        )}
-      >
-        <Icon className={cn("h-6 w-6", colorClass)} />
-      </div>
-      <div>
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <h3 className="mt-0.5 text-2xl font-bold text-foreground">{value}</h3>
-        {subtitle && (
-          <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
-        )}
+    <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-background p-6 shadow-sm transition-all hover:shadow-md hover:border-border/80 group">
+      {/* Background decoration */}
+      <div className={cn("absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-50 blur-2xl transition-all group-hover:scale-110", bgClass)} />
+      
+      <div className="relative z-10 flex items-start justify-between">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <div className="flex flex-col">
+            <span className="text-3xl font-bold tracking-tight text-foreground">{value}</span>
+            {subtitle && <span className="mt-1 text-xs font-medium text-muted-foreground">{subtitle}</span>}
+          </div>
+        </div>
+        <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl", bgClass)}>
+          <Icon className={cn("h-6 w-6", colorClass)} />
+        </div>
       </div>
     </div>
   );
 }
 
-// --- CARD LAYOUT ---
 function SectionCard({
   icon: Icon,
   title,
@@ -95,13 +95,8 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-border/50 bg-card shadow-sm h-full flex flex-col",
-        className,
-      )}
-    >
-      <div className="flex items-center gap-2 border-b border-border/30 px-6 py-4 bg-muted/10">
+    <div className={cn("rounded-2xl border border-border/50 bg-background shadow-sm flex flex-col overflow-hidden", className)}>
+      <div className="flex items-center gap-2 border-b border-border/40 px-6 py-4 bg-muted/20">
         <Icon className="h-5 w-5 text-primary" />
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
       </div>
@@ -110,27 +105,15 @@ function SectionCard({
   );
 }
 
-// --- TEXT FIELD ---
-function Field({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: React.ReactNode;
-  className?: string;
-}) {
+function Field({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
   return (
     <div className={className}>
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-        {label}
-      </p>
-      <div className="text-sm font-medium text-foreground">{value}</div>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
+      <div className="text-sm font-medium text-foreground bg-muted/20 px-3 py-2 rounded-lg border border-border/40">{value}</div>
     </div>
   );
 }
 
-// --- LIST ITEM ROW ---
 function StatusItem({
   icon: Icon,
   label,
@@ -144,33 +127,18 @@ function StatusItem({
   color: string;
   boldValue?: boolean;
 }) {
+  const bgColor = color.replace("text-", "bg-").concat("/10");
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-border/40 last:border-0 last:pb-0">
+    <div className="flex items-center justify-between p-3 rounded-xl border border-border/30 hover:bg-muted/20 transition-colors">
       <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            "p-1.5 rounded-md bg-muted/50",
-            color
-              .replace("text-", "text-")
-              .replace("500", "500")
-              .replace("600", "600"),
-          )}
-        >
+        <div className={cn("p-2 rounded-lg", bgColor)}>
           <Icon className={cn("h-4 w-4", color)} />
         </div>
-        <span className="text-sm text-muted-foreground font-medium">
-          {label}
-        </span>
+        <span className="text-sm font-medium text-foreground/80">{label}</span>
       </div>
-      <span
-        className={cn(
-          "text-sm",
-          boldValue ? "font-bold" : "font-semibold",
-          color,
-        )}
-      >
+      <Badge variant="outline" className={cn("px-2.5 py-0.5 text-sm", boldValue ? "font-bold" : "font-semibold", color, bgColor, "border-transparent")}>
         {value || 0}
-      </span>
+      </Badge>
     </div>
   );
 }
@@ -230,77 +198,53 @@ export default function StationDetailPage() {
     rawRevenueData?.stations?.find((s: StationReport) => s.id === id);
 
   return (
-    <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50/50 p-6 dark:bg-background pb-10">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-background pb-12 pt-6">
+      <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
         
-        {/* HEADER ACTIONS */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        {/* HEADER & METADATA */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => router.back()}
+                className="h-10 w-10 rounded-full bg-white dark:bg-card hover:bg-muted"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                    Chi tiết trạm
+                  </h1>
+                  <Badge variant={station.stationType === "INTERNAL" ? "default" : "secondary"} className="rounded-full px-3 shadow-sm">
+                    {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
             <Button
               variant="outline"
-              size="icon"
-              className="h-9 w-9 shrink-0 rounded-full shadow-sm"
-              onClick={() => router.back()}
+              className="shadow-sm rounded-full"
+              onClick={() => router.push("/manager/stations")}
             >
-              <ArrowLeft className="h-4 w-4" />
+              Quay lại danh sách
             </Button>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl flex items-center gap-3">
-                Chi tiết trạm
-              </h1>
-              <span
-                className={
-                  station.stationType === "INTERNAL"
-                    ? "text-blue-600 font-medium text-sm bg-blue-100 px-2 py-0.5 rounded shadow-sm"
-                    : "text-purple-600 font-medium text-sm bg-purple-100 px-2 py-0.5 rounded shadow-sm"
-                }
-              >
-                {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
-              </span>
-            </div>
           </div>
 
-          <Button
-            variant="outline"
-            className="shadow-sm"
-            onClick={() => router.push("/manager/stations")}
-          >
-            Quay lại danh sách
-          </Button>
-        </div>
-
-        {/* METADATA BAR */}
-        <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-muted/30 px-5 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-1">
-          <div>
-            <span className="text-muted-foreground font-medium uppercase text-[11px] tracking-wider mr-2">
-              ID Trạm:
-            </span>
-            <span className="font-mono text-sm font-semibold text-foreground">
-              {station.id}
-            </span>
-          </div>
-          <div>
-            <span className="text-muted-foreground font-medium uppercase text-[11px] tracking-wider mr-2">
-              Khởi tạo:
-            </span>
-            <span className="text-sm font-medium text-foreground">
-              {formatToVNTime(station.createdAt)}
-            </span>
-          </div>
-          <div>
-            <span className="text-muted-foreground font-medium uppercase text-[11px] tracking-wider mr-2">
-              Cập nhật:
-            </span>
-            <span className="text-sm font-medium text-foreground">
-              {formatToVNTime(station.updatedAt)}
-            </span>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center gap-1.5"><Badge variant="outline" className="font-mono bg-white dark:bg-card">ID: {station.id}</Badge></div>
+            <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> Khởi tạo: {formatToVNTime(station.createdAt)}</div>
+            <div className="flex items-center gap-1.5"><RefreshCcw className="w-3.5 h-3.5"/> Cập nhật: {formatToVNTime(station.updatedAt)}</div>
           </div>
         </div>
 
-        {/* TẦNG 1: TOP METRICS (Gom gọn "Xe thực tế tại trạm" lên đây thành hàng 4 card song song) */}
+        {/* TẦNG 1: TOP METRICS */}
         <div
           className={cn(
-            "grid grid-cols-1 gap-4 sm:grid-cols-2",
+            "grid grid-cols-1 gap-5 sm:grid-cols-2",
             isOwnStation ? "lg:grid-cols-4" : "lg:grid-cols-2"
           )}
         >
@@ -318,7 +262,7 @@ export default function StationDetailPage() {
                 }
                 icon={Wallet}
                 colorClass="text-emerald-600 dark:text-emerald-400"
-                bgClass="bg-emerald-100 dark:bg-emerald-500/10"
+                bgClass="bg-emerald-100 dark:bg-emerald-500/20"
               />
               <MetricCard
                 title="Tổng lượt thuê"
@@ -330,17 +274,17 @@ export default function StationDetailPage() {
                 }
                 icon={CalendarCheck}
                 colorClass="text-blue-600 dark:text-blue-400"
-                bgClass="bg-blue-100 dark:bg-blue-500/10"
+                bgClass="bg-blue-100 dark:bg-blue-500/20"
               />
             </>
           )}
           <MetricCard
             title="Tổng vị trí bãi đỗ"
             value={station.capacity.total}
-            subtitle={`Còn trống: ${station.capacity.emptyPhysicalSlots ?? station.returnSlots?.available ?? 0} chỗ`}
+            subtitle={`Trả tối đa: ${station.capacity.returnSlotLimit} chỗ`}
             icon={LayoutGrid}
             colorClass="text-indigo-600 dark:text-indigo-400"
-            bgClass="bg-indigo-100 dark:bg-indigo-500/10"
+            bgClass="bg-indigo-100 dark:bg-indigo-500/20"
           />
           <MetricCard
             title="Xe thực tế tại trạm"
@@ -348,171 +292,120 @@ export default function StationDetailPage() {
             subtitle={`Sẵn sàng: ${station.bikes.available} xe`}
             icon={Bike}
             colorClass="text-amber-600 dark:text-amber-400"
-            bgClass="bg-amber-100 dark:bg-amber-500/10"
+            bgClass="bg-amber-100 dark:bg-amber-500/20"
           />
         </div>
 
-        {/* TẦNG 2: CHI TIẾT TRẠNG THÁI PHƯƠNG TIỆN (Nằm full-width ngay dưới 4 card chỉ số) */}
-        <div className="w-full">
-          <SectionCard
-            icon={Activity}
-            title="Chi tiết trạng thái phương tiện"
-            className="w-full"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:divide-x divide-y md:divide-y-0 divide-border/40">
-              {/* Cột 1: Xe nội trạm */}
-              <div className="pt-4 md:pt-0 first:pt-0 md:pr-4">
-                <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                  <MapPin className="h-3.5 w-3.5" /> Xe nội trạm
-                </h4>
-                <div className="space-y-1">
-                  <StatusItem
-                    icon={CheckCircle2}
-                    label="Sẵn sàng cho thuê"
-                    value={station.bikes.available}
-                    color="text-emerald-600"
-                    boldValue
-                  />
-                  <StatusItem
-                    icon={Clock}
-                    label="Đã đặt trước"
-                    value={station.bikes.reserved}
-                    color="text-amber-600"
-                  />
-                  <StatusItem
-                    icon={Wrench}
-                    label="Chuẩn bị điều phối"
-                    value={station.bikes.pendingDispatch}
-                    color="text-orange-500"
-                  />
-                  <StatusItem
-                    icon={AlertTriangle}
-                    label="Đang bị hỏng"
-                    value={station.bikes.broken}
-                    color="text-red-500"
-                  />
-                  <StatusItem
-                    icon={Hammer}
-                    label="Đã sửa"
-                    value={station.bikes.fixed}
-                    color="text-indigo-500"
-                  />
-                </div>
-              </div>
+        {/* TẦNG 2: BẢN ĐỒ 2D VÀ CHI TIẾT TRẠNG THÁI */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          
+          {/* Sơ đồ bãi đỗ chiếm 2/3 */}
+          <div className="xl:col-span-2">
+              <StationLayoutMap station={station} />
+          </div>
 
-              {/* Cột 2: Xe ngoại trạm */}
-              <div className="pt-6 md:pt-0 md:px-4">
-                <h4 className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">
-                  <RefreshCcw className="h-3.5 w-3.5" /> Xe ngoại trạm
-                </h4>
-                <div className="space-y-1">
-                  <StatusItem
-                    icon={RefreshCcw}
-                    label="Hỗ trợ sự cố (Swapping)"
-                    value={station.bikes.swapping}
-                    color="text-blue-500"
-                  />
-                  <StatusItem
-                    icon={Truck}
-                    label="Đang vận chuyển"
-                    value={station.bikes.transporting}
-                    color="text-indigo-500"
-                  />
-                  <StatusItem
-                    icon={Bike}
-                    label="Đang thuê (Booked)"
-                    value={station.bikes.booked}
-                    color="text-blue-600"
-                  />
-                </div>
+          {/* Phân bổ chỗ đỗ chiếm 1/3 */}
+          <div className="xl:col-span-1">
+            <SectionCard icon={PieChart} title="Phân bổ không gian bãi đỗ" className="h-full">
+              <div className="flex flex-col items-center justify-center py-4 mb-6 bg-muted/20 rounded-xl border border-border/40">
+                <p className="text-sm font-medium text-muted-foreground mb-1">Chỗ trống hiện tại</p>
+                <p className="text-4xl font-black text-foreground">
+                  {station.capacity.emptyPhysicalSlots ?? station.returnSlots?.available ?? 0} <span className="text-lg font-medium text-muted-foreground">/ {station.capacity.total}</span>
+                </p>
               </div>
-
-              {/* Cột 3: Xe ngưng hoạt động */}
-              <div className="pt-6 md:pt-0 md:pl-4">
-                <h4 className="flex items-center gap-2 text-[11px] font-bold text-destructive uppercase tracking-wider mb-4">
-                  <ShieldAlert className="h-3.5 w-3.5" /> Xe ngưng hoạt động
-                </h4>
-                <div className="space-y-1">
-                  <StatusItem
-                    icon={HelpCircle}
-                    label="Bị mất"
-                    value={station.bikes.lost}
-                    color="text-red-600"
-                  />
-                  <StatusItem
-                    icon={Ban}
-                    label="Tạm ngưng hệ thống"
-                    value={station.bikes.disabled}
-                    color="text-slate-500"
-                  />
-                </div>
-              </div>
-            </div>
-          </SectionCard>
-        </div>
-
-        {/* TẦNG 3: MIDDLE CONTENT GRID (Các bảng thông tin quản lý đẩy xuống dưới cùng) */}
-        <div className="grid gap-6 lg:grid-cols-3 items-start">
-          {/* CỘT TRÁI (Thông tin chung & Nhân sự) */}
-          <div className="lg:col-span-2 space-y-6">
-            <SectionCard icon={Info} title="Thông tin quản lý">
-              <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                <Field label="Tên trạm" value={station.name} />
-                <Field
-                  label="Loại trạm"
-                  value={station.stationType === "INTERNAL" ? "Nội bộ" : "Đại lý"}
-                />
-                <Field
-                  label="Địa chỉ"
-                  value={station.address}
-                  className="col-span-2"
-                />
-                <Field
-                  label="Tọa độ GPS"
-                  value={
-                    station.location.latitude
-                      ? `${station.location.latitude}, ${station.location.longitude}`
-                      : "N/A"
-                  }
-                  className="col-span-2 sm:col-span-1"
-                />
-                {station.agencyId && (
-                  <Field
-                    label="Mã đại lý"
-                    value={
-                      <code className="text-xs bg-muted p-1.5 rounded-md border border-border/50">
-                        {station.agencyId}
-                      </code>
-                    }
-                    className="col-span-2 sm:col-span-1"
-                  />
-                )}
+              <div className="space-y-3">
+                <StatusItem icon={Activity} label="Chỗ chờ khách trả xe" value={station.returnSlots?.active || 0} color="text-blue-600" />
+                <StatusItem icon={Wrench} label="Chỗ chờ xe điều phối" value={station.redistributionSlots || 0} color="text-orange-500" />
               </div>
             </SectionCard>
+          </div>
 
+          {/* Chi tiết xe chiếm full width */}
+          <div className="xl:col-span-3">
+            <SectionCard icon={Activity} title="Chi tiết trạng thái phương tiện" className="w-full">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Nhóm 1 */}
+                <div className="bg-muted/10 rounded-xl p-5 border border-border/30">
+                  <h4 className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border/40">
+                    <MapPin className="h-4 w-4" /> Xe nội trạm
+                  </h4>
+                  <div className="space-y-2.5">
+                    <StatusItem icon={CheckCircle2} label="Sẵn sàng cho thuê" value={station.bikes.available} color="text-emerald-600" boldValue />
+                    <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.reserved} color="text-amber-600" />
+                    <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
+                    <StatusItem icon={AlertTriangle} label="Đang bị hỏng" value={station.bikes.broken} color="text-red-500" />
+                    <StatusItem icon={Hammer} label="Đã sửa" value={station.bikes.fixed} color="text-indigo-500" />
+                  </div>
+                </div>
+
+                {/* Nhóm 2 */}
+                <div className="bg-muted/10 rounded-xl p-5 border border-border/30">
+                  <h4 className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border/40">
+                    <RefreshCcw className="h-4 w-4" /> Xe luân chuyển
+                  </h4>
+                  <div className="space-y-2.5">
+                    <StatusItem icon={RefreshCcw} label="Hỗ trợ sự cố" value={station.bikes.swapping} color="text-blue-500" />
+                    <StatusItem icon={Truck} label="Đang vận chuyển" value={station.bikes.transporting} color="text-indigo-500" />
+                    <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-blue-600" />
+                  </div>
+                </div>
+
+                {/* Nhóm 3 */}
+                <div className="bg-red-50/50 dark:bg-red-950/10 rounded-xl p-5 border border-red-100 dark:border-red-900/30">
+                  <h4 className="flex items-center gap-2 text-xs font-bold text-destructive uppercase tracking-wider mb-4 pb-2 border-b border-red-100 dark:border-red-900/30">
+                    <ShieldAlert className="h-4 w-4" /> Sự cố / Mất mát
+                  </h4>
+                  <div className="space-y-2.5">
+                    <StatusItem icon={HelpCircle} label="Bị mất" value={station.bikes.lost} color="text-red-600" />
+                    <StatusItem icon={Ban} label="Tạm ngưng hệ thống" value={station.bikes.disabled} color="text-slate-500" />
+                  </div>
+                </div>
+
+              </div>
+            </SectionCard>
+          </div>
+        </div>
+
+        {/* TẦNG 3: THÔNG TIN CƠ BẢN VÀ NHÂN SỰ */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          
+          <SectionCard icon={Info} title="Thông tin cơ bản">
+            <div className="grid grid-cols-2 gap-y-6 gap-x-6">
+              <Field label="Tên trạm" value={station.name} className="col-span-2 sm:col-span-1" />
+              <Field label="Loại trạm" value={station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"} className="col-span-2 sm:col-span-1" />
+              <Field label="Địa chỉ" value={station.address} className="col-span-2" />
+              <Field label="Tọa độ (Lat, Lng)" value={station.location.latitude ? `${station.location.latitude}, ${station.location.longitude}` : "N/A"} className="col-span-2 sm:col-span-1 font-mono" />
+              {station.agencyId ? (
+                <Field
+                  label="Mã đại lý"
+                  value={<code className="text-xs text-primary">{station.agencyId}</code>}
+                  className="col-span-2 sm:col-span-1"
+                />
+              ) : (
+                <Field label="Mã đại lý" value={<span className="text-muted-foreground italic">Không có</span>} className="col-span-2 sm:col-span-1" />
+              )}
+            </div>
+          </SectionCard>
+
+          <div className="space-y-6">
             <SectionCard icon={Users} title="Nhân viên phụ trách">
-              {station.workers && station.workers.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {station.workers?.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4">
                   {station.workers.map((w) => (
-                    <div
-                      key={w.userId}
-                      className="flex items-center gap-3 p-3.5 rounded-xl border border-border/40 bg-muted/10 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shadow-sm">
+                    <div key={w.userId} className="flex items-center gap-3 p-4 rounded-xl border border-border/40 bg-muted/10 hover:bg-muted/40 transition-colors">
+                      <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shadow-sm border border-primary/20">
                         {w.fullName.charAt(0)}
                       </div>
                       <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-bold truncate">
-                          {w.fullName}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
-                          {ROLE_LABELS[w.role]}
-                        </p>
+                        <p className="text-sm font-bold truncate text-foreground">{w.fullName}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{ROLE_LABELS[w.role]}</p>
                       </div>
                       {w.technicianTeamId && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] whitespace-nowrap bg-background"
+                        <Badge 
+                          variant="secondary" 
+                          className="max-w-[90px] sm:max-w-[120px] truncate text-[10px] bg-background shadow-sm inline-block text-center"
+                          title={`Team ${w.technicianTeamName}`}
                         >
                           Team {w.technicianTeamName}
                         </Badge>
@@ -521,60 +414,20 @@ export default function StationDetailPage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-8 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/5">
-                  <Users className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Chưa có nhân viên nào được phân công.
-                  </p>
+                <div className="flex flex-col items-center justify-center py-6 px-4 text-center border-2 border-dashed border-border/60 rounded-xl bg-muted/10">
+                  <Users className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                  <p className="text-sm font-medium text-foreground">Chưa có nhân sự</p>
                 </div>
               )}
             </SectionCard>
-          </div>
 
-          {/* CỘT PHẢI (Sức chứa bãi đỗ & Báo cáo nhanh) */}
-          <div className="lg:col-span-1 space-y-6">
-            <SectionCard icon={LayoutGrid} title="Tình trạng chỗ đỗ">
-              <div className="flex items-center justify-between p-5 rounded-xl bg-muted/30 border border-border/50">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                    Chỗ trống hiện tại
-                  </p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {station.capacity.emptyPhysicalSlots ??
-                      station.returnSlots?.available ??
-                      0}{" "}
-                    <span className="text-sm font-normal text-muted-foreground">
-                      / {station.capacity.total}
-                    </span>
-                  </p>
-                </div>
-                <LayoutGrid className="h-8 w-8 text-muted-foreground/30" />
-              </div>
-            </SectionCard>
-
-            <SectionCard icon={PieChart} title="Phân bổ chỗ đỗ">
-              <div className="space-y-1">
-                <StatusItem
-                  icon={Activity}
-                  label="Chỗ khách trả xe"
-                  value={station.returnSlots?.active || 0}
-                  color="text-blue-600"
-                />
-                <StatusItem
-                  icon={Wrench}
-                  label="Chỗ xe điều phối"
-                  value={station.redistributionSlots || 0}
-                  color="text-orange-500"
-                />
-              </div>
-            </SectionCard>
-
+            {/* BÁO CÁO NHANH CHO QUẢN LÝ (Chỉ hiện khi là trạm của họ) */}
             {isOwnStation && (
               <SectionCard icon={TrendingUp} title="Báo cáo nhanh">
                 {currentStationRevenue ? (
                   <div className="space-y-4">
-                    <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-5 text-center">
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <div className="rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-5 text-center">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Tổng doanh thu
                       </p>
                       <p className="mt-1 text-3xl font-bold text-green-600 dark:text-green-500">
@@ -584,21 +437,13 @@ export default function StationDetailPage() {
                         }).format(currentStationRevenue.totalRevenue)}
                       </p>
                     </div>
-                    <div className="flex justify-between items-center px-2">
-                      <span className="text-sm text-muted-foreground">
-                        Tổng lượt thuê:
-                      </span>
-                      <span className="text-sm font-bold">
-                        {currentStationRevenue.totalRentals} lượt
-                      </span>
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-muted/20 border border-border/30">
+                      <span className="text-sm text-muted-foreground font-medium">Tổng lượt thuê:</span>
+                      <span className="text-sm font-bold">{currentStationRevenue.totalRentals} lượt</span>
                     </div>
-                    <div className="flex justify-between items-center px-2">
-                      <span className="text-sm text-muted-foreground">
-                        Thời gian thuê TB:
-                      </span>
-                      <span className="text-sm font-bold">
-                        {Math.round(currentStationRevenue.avgDuration)} phút
-                      </span>
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-muted/20 border border-border/30">
+                      <span className="text-sm text-muted-foreground font-medium">Thời gian thuê TB:</span>
+                      <span className="text-sm font-bold">{Math.round(currentStationRevenue.avgDuration)} phút</span>
                     </div>
                   </div>
                 ) : (
