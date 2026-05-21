@@ -19,7 +19,7 @@ const getAgencyViewHistoryDistributionRequest = async ({
     };
     if (status) query.status = status;
     if (targetStationId) query.targetStationId = targetStationId;
-    const response = await distributionRequestService.getHistoryForManager(query);
+    const response = await distributionRequestService.getHistoryForAgency(query);
     if (response.status === 200) {
       return response;
     }
