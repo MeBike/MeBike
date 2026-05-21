@@ -30,6 +30,7 @@ export type BikeStatus =
   | "LOST"
   | "DISABLED"
   | "REDISTRIBUTING"
+  | "FIXED"
   | "";
 export interface BikeActivityStats {
   bikeId: string;

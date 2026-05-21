@@ -229,7 +229,7 @@ export const useBikeActions = ({
     ],
   );
   const technicianUpdateBikeStatus = useCallback(
-    async (id: string, status: "AVAILABLE" | "BROKEN") => {
+    async (id: string, status: "AVAILABLE" | "BROKEN" | "FIXED") => {
       if (!hasToken) {
         router.push("/login");
         return;
