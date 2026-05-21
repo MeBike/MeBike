@@ -114,6 +114,7 @@ export function BikeFilters({
               <SelectItem value="BROKEN">Đang hỏng</SelectItem>
               <SelectItem value="LOST">Đã mất</SelectItem>
               <SelectItem value="DISABLED">Tạm ngưng hoạt động</SelectItem>
+              <SelectItem value="FIXED">Đã sửa</SelectItem>
             </SelectContent>
           </Select>
         </div>

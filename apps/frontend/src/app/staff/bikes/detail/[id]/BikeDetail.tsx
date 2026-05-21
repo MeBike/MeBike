@@ -191,9 +191,7 @@ export function BikeDetailView({
               <Field
                 label="Trạm hiện tại"
                 value={
-                  bike.station?.name ||
-                  `Tên trạm: ${bike.station.name}` ||
-                  "Ngoài trạm"
+                  bike.station?.name || "Đang di chuyển"
                 }
               />
             </SectionCard>

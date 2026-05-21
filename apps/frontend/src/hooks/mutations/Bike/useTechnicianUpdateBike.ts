@@ -9,7 +9,7 @@ export const useTechnicianUpdateBikeStatus = () => {
       status,
     }: {
       id: string;
-      status: "AVAILABLE" | "BROKEN";
+      status: "AVAILABLE" | "BROKEN" | "FIXED";
     }) => bikeService.updateBikeStatusTechnician({ id, status }),
   });
 };

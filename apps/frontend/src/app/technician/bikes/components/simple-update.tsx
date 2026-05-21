@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, CheckCircle2, ArrowRight } from "lucide-react";
+import { Wrench, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,20 +12,18 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import type { Bike, BikeStatus } from "@/types";
-
+import { ArrowRight } from "lucide-react";
 interface SimpleUpdateBikeDialogProps {
   bike: Bike;
-  onUpdate: (data: { status: "AVAILABLE" }) => Promise<void>;
+  onUpdate: (data: {status: "FIXED" | "BROKEN" }) => Promise<void>;
   isUpdating: boolean;
 }
 
-// Bổ sung type "FIXED" nếu trong BikeStatus của bạn chưa có
-export const getStatusConfig = (status: BikeStatus | "FIXED") => {
+// Cấu hình màu và nhãn cho trạng thái xe
+export const getStatusConfig = (status: BikeStatus) => {
   switch (status) {
     case "AVAILABLE":
       return { label: "Sẵn sàng", color: "bg-green-100 text-green-800" };
-    case "FIXED":
-      return { label: "Đã sửa xong", color: "bg-emerald-100 text-emerald-800" };
     case "BOOKED":
       return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800" };
     case "RESERVED":
@@ -42,6 +40,8 @@ export const getStatusConfig = (status: BikeStatus | "FIXED") => {
       return { label: "Bị mất", color: "bg-rose-100 text-rose-800" };
     case "DISABLED":
       return { label: "Tạm ngưng hoạt động", color: "bg-slate-200 text-slate-800" };
+    case "FIXED":
+      return { label: "Đã sửa", color: "bg-slate-200 text-slate-800" };    
     case "":
       return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500" };
     default:
@@ -55,10 +55,10 @@ export function SimpleUpdateBikeDialog({
   isUpdating,
 }: SimpleUpdateBikeDialogProps) {
   const [open, setOpen] = useState(false);
-  const currentStatus = bike.status as BikeStatus | "FIXED";
-  const targetStatus = "AVAILABLE"; // Luôn luôn là AVAILABLE đối với Staff
+  const currentStatus = bike.status as BikeStatus;
+  const targetStatus = currentStatus === "BROKEN" ? "FIXED" : "BROKEN";
   
-  const handleConfirmReady = async () => {
+  const handleToggleStatus = async () => {
     try {
       await onUpdate({ status: targetStatus });
       setOpen(false);
@@ -67,31 +67,31 @@ export function SimpleUpdateBikeDialog({
     }
   };
 
-  // Nút chỉ bấm được khi xe đang ở trạng thái FIXED
-  const canUpdate = currentStatus === "FIXED";
-  
+  const canUpdate = currentStatus === "AVAILABLE" || currentStatus === "BROKEN";
   const currentConfig = getStatusConfig(currentStatus);
   const targetConfig = getStatusConfig(targetStatus);
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="default"
+          variant={currentStatus === "AVAILABLE" ? "destructive" : "outline"} 
           size="sm" 
           disabled={!canUpdate}
           className="gap-2"
         >
-          <CheckCircle2 className="h-4 w-4" />
-          Đưa vào hoạt động
+          {currentStatus === "AVAILABLE" ? (
+            <AlertTriangle className="h-4 w-4" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4" />
+          )}
+          {currentStatus === "AVAILABLE" ? "Báo hỏng xe" : "Xác nhận sửa xong"}
         </Button>
       </DialogTrigger>
-      
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Xác nhận đưa xe vào hoạt động</DialogTitle>
+          <DialogTitle>Xác nhận thay đổi trạng thái</DialogTitle>
           <DialogDescription>
-            Bạn đang xác nhận xe <strong>#{bike.bikeNumber || bike.id.slice(-6)}</strong> đã sẵn sàng để khách thuê.
+            Bạn đang thực hiện thay đổi trạng thái cho xe <strong>#{bike.bikeNumber || bike.id.slice(-6)}</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -108,7 +108,9 @@ export function SimpleUpdateBikeDialog({
             </span>
           </div>
           <p className="text-center text-sm text-muted-foreground">
-            Xác nhận xe đã được kiểm tra kỹ thuật và đủ điều kiện để hoạt động trở lại.
+            {targetStatus === "BROKEN" 
+              ? "Lưu ý: Xe sẽ không thể được thuê sau khi báo hỏng." 
+              : "Xác nhận xe đã được kiểm tra và sẵn sàng hoạt động trở lại."}
           </p>
         </div>
 
@@ -117,11 +119,11 @@ export function SimpleUpdateBikeDialog({
             Hủy
           </Button>
           <Button 
-            onClick={handleConfirmReady} 
+            onClick={handleToggleStatus} 
             disabled={isUpdating}
-            variant="default"
+            variant={targetStatus === "FIXED" ? "default" : "destructive"}
           >
-            {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Xác nhận sẵn sàng"}
+            {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Xác nhận"}
           </Button>
         </div>
       </DialogContent>
