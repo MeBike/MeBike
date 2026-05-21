@@ -54,6 +54,11 @@ export const getStatusConfig = (status: BikeStatus) => {
         label: "Tạm ngưng hoạt động",
         color: "bg-slate-200 text-slate-800",
       };
+    case "FIXED":
+      return {
+        label: "Đã sửa ",
+        color: "bg-slate-200 text-slate-800",
+      };  
     default:
       return {
         label: status,
@@ -159,9 +164,7 @@ export function BikeDetailView({ bike }: { bike: BikeType | null }) {
               <Field
                 label="Trạm hiện tại"
                 value={
-                  bike.station?.name ||
-                  `Tên trạm: ${bike.station.name}` ||
-                  "Đang di chuyển"
+                  bike.station?.name || "Đang di chuyển"
                 }
               />
             </div>

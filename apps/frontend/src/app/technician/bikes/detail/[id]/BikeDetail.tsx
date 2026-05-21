@@ -119,7 +119,7 @@ export function BikeDetailView({
             <div className="space-y-4">
               <Field 
                 label="Trạm hiện tại" 
-                value={bike.station?.name || `Tên trạm: ${bike.station.name}` || "Đang di chuyển"} 
+                value={bike.station?.name || "Đang di chuyển"} 
               />
             </div>
           </SectionCard>

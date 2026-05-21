@@ -15,7 +15,7 @@ import type { Bike, BikeStatus } from "@/types";
 import { ArrowRight } from "lucide-react";
 interface SimpleUpdateBikeDialogProps {
   bike: Bike;
-  onUpdate: (data: { bike_id: string; status: "FIXED" | "BROKEN" }) => Promise<void>;
+  onUpdate: (data: {status: "FIXED" | "BROKEN" }) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -41,7 +41,7 @@ export const getStatusConfig = (status: BikeStatus) => {
     case "DISABLED":
       return { label: "Tạm ngưng hoạt động", color: "bg-slate-200 text-slate-800" };
     case "FIXED":
-      return { label: "Đã sửa xong", color: "bg-slate-200 text-slate-800" };    
+      return { label: "Đã sửa", color: "bg-slate-200 text-slate-800" };    
     case "":
       return { label: "Chưa xác định", color: "bg-gray-100 text-gray-500" };
     default:
@@ -60,14 +60,14 @@ export function SimpleUpdateBikeDialog({
   
   const handleToggleStatus = async () => {
     try {
-      await onUpdate({ bike_id: bike.id, status: targetStatus });
+      await onUpdate({ status: targetStatus });
       setOpen(false);
     } catch (error) {
       console.error("Update failed", error);
     }
   };
 
-  const canUpdate = currentStatus === "AVAILABLE" || currentStatus === "BROKEN";;
+  const canUpdate = currentStatus === "AVAILABLE" || currentStatus === "BROKEN";
   const currentConfig = getStatusConfig(currentStatus);
   const targetConfig = getStatusConfig(targetStatus);
   return (
